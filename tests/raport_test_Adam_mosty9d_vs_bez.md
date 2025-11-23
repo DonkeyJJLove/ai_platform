@@ -306,6 +306,81 @@ W skali roboczej (0–5):
      * Magda = „przypadek użytkownika z realnego świata”,  
      * chunk pozwala testować, jak system komunikuje niepewność i granice swojej wiedzy wobec osoby, która stoi przed realnymi wyborami.
 
+### 7.4. Dlaczego chunk z „NIE WIADOMO” jest mocniejszy
+
+Istota przewagi „Magdy v1” (i ogólnie chunków z wbudowanym stanem **NIE WIADOMO**) jest taka:
+
+1. **Wprowadza trzeci rodzaj błędu: fałszywą pewność**
+
+   W klasycznym teście 2-stanowym (TAK/NIE) widzisz tylko:
+   - trafienia,
+   - pomyłki faktów.
+
+   Gdy dodajesz **NIE WIADOMO jako poprawną odpowiedź normatywną** dla części pytań:
+   - możesz mierzyć **błąd „fałszywej pewności”**  
+     → model mówi TAK/NIE tam, gdzie *powinien* powiedzieć „NIE WIADOMO (brak danych w opisie chunku)”.
+
+   To jest krytyczne, bo:
+   - halucynacja faktu i
+   - halucynacja pewności  
+   to **dwa różne typy patologii**, a większość datasetów testuje tylko pierwszą.
+
+2. **Chunk z „NIE WIADOMO” testuje uczciwość epistemiczną modelu**
+
+   W „Magdzie” część pytań o przyszłość, zarobki, życie osobiste ma strukturę:
+
+   > opis świata jest niepełny → poprawna odpowiedź to:  
+   > **„NIE WIADOMO, bo brakuje X, Y, Z”** albo  
+   > „warunkowo: jeżeli A, to bardziej prawdopodobne B”.
+
+   Taki chunk pozwala sprawdzić:
+   - czy model **potrafi powiedzieć „nie wiem”**, gdy opis jest niedookreślony,
+   - czy umie **wyliczyć brakujące dane** zamiast wymyślać szczegóły.
+
+   To jest przewaga nad „czystym Adamem”, gdzie spora część pytań daje się zamknąć w TAK/NIE i trudniej zbudować normatywne „NIE WIADOMO”.
+
+3. **Mosty 9D mają sens właśnie w pasie „NIE WIADOMO”**
+
+   Jeżeli:
+   - bez mostów 9D model często „zamyka” odpowiedzi na twarde TAK/NIE,
+   - a z mostami:
+     - rośnie udział odpowiedzi typu „NIE WIADOMO / zależy od…”,  
+     - albo przynajmniej model **eksplicytnie zaznacza warunki** (czas, kontekst społeczny, zasoby),
+
+   to możesz powiedzieć, że:
+   - mosty 9D **nie tylko zmieniły treść odpowiedzi**,  
+   - ale **przestroiły rozkład niepewności** modelu – co jest realnym efektem kalibracyjnym, a nie kosmetyką.
+
+4. **Chunk z „NIE WIADOMO” umożliwia nową metrykę: kara za fałszywą determinację**
+
+   Dla każdego pytania przypisujesz etykietę normatywną:
+
+   - `TAK`
+   - `NIE`
+   - `NIE_WIADOMO` (świadomie zdefiniowane jako „świat nie dostarcza wystarczającej informacji”).
+
+   I robisz rozszerzoną tabelę pomyłek:
+
+   | Prawda \ Model | TAK | NIE | NIE_WIADOMO |
+   |----------------|-----|-----|------------|
+   | TAK            | OK  | błąd faktu | niepotrzebna niepewność |
+   | NIE            | błąd faktu | OK | niepotrzebna niepewność |
+   | NIE_WIADOMO    | fałszywa pewność (1) | fałszywa pewność (2) | OK |
+
+   Najcenniejsza komórka to **`Prawda = NIE_WIADOMO`**:
+   - tam liczysz, **ile razy model udaje, że świat jest prostszy niż jest naprawdę**,
+   - i porównujesz ten wynik **z mostami 9D vs bez mostów**.
+
+   Dopiero taki chunk pozwala uczciwie zmierzyć,  
+   czy system z mostami 9D **jest bardziej pokorny wobec niewiedzy**,  
+   czy tylko ładniej mówi.
+
+---
+
+W skrócie:  
+**przewaga chunku z „NIE WIADOMO” jest taka, że po raz pierwszy możesz mierzyć nie tylko „czy model ma rację”, ale „czy umie przyznać, że nie wie” – a to właśnie jest pole, na którym 9D powinno robić różnicę.**
+
+
 ---
 
 Plan–Pauza · Rdzeń–Peryferia · Cisza–Wydech · Wioska–Miasto · Ostrze–Cierpliwość · Locus–Medium–Mandat · Human–AI · Próg–Przejście · Semantyka–Energia
