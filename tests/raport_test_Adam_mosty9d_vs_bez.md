@@ -103,11 +103,9 @@ Prompt typu:
 zawierał:
 
 * reżim:
-
   * ABSOLUTNY REŻIM NAUKOWY / FAKTÓW / REALIZMU,
   * jawne odwołanie do mostów 9D (Próg–Przejście, Cisza–Wydech, Rdzeń–Peryferia),
 * jednoznaczną instrukcję:
-
   * **„jeśli tekst nie daje podstaw, preferuj uczciwe NIE WIADOMO”**,
   * **policz błędy_faktów i halucynacje_decyzyjne** na końcu.
 
