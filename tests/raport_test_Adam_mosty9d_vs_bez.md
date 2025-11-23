@@ -1,6 +1,16 @@
 <!-- plik: raport_test_Adam_mosty9d_vs_bez.md -->
-
 # Raport z testów: „Adam” – mosty 9D vs. brak mostów
+
+
+## 0. Zrzuty ekranu odpowiedzi
+
+### 0.1. Odpowiedź z mostami 9D
+
+![Test z mostami 9D – odpowiedź modelu](sandbox:/mnt/data/q3_mosty9d.PNG)
+
+### 0.2. Odpowiedź bez mostów 9D
+
+![Test bez mostów 9D – odpowiedź modelu](sandbox:/mnt/data/q3_nomost9d.PNG)
 
 ---
 
@@ -8,9 +18,10 @@
 
 Celem było zbudowanie prostych testów, które:
 
-1. **Wymuszają kontakt z twardym tekstem źródłowym** (historia Adama),
-2. **Produkują mierzalne wahania** w zachowaniu modeli (błędy faktów, halucynacje),
-3. Umożliwią później **kompensację** tych wahań za pomocą ramy mostów 9D (Próg–Przejście, Cisza–Wydech, itp.).
+1. Wymuszają kontakt z twardym tekstem źródłowym (historia Adama),
+2. Produkują mierzalne wahania w zachowaniu modeli (błędy faktów, halucynacje),
+3. Umożliwią później kompensację tych wahań za pomocą ramy mostów 9D
+   (Próg–Przejście, Cisza–Wydech, Ostrze–Cierpliwość itd.).
 
 Przetestowane zostały trzy konfiguracje:
 
@@ -45,8 +56,8 @@ Zadania:
 - **O_raw = 0, O_rate = 0**
 
 Komentarz:  
-Model **idealnie odwzorował** wszystkie fakty, nie zgubił żadnego i nie dopisał niczego od siebie.  
-Ten test w tej formie **nie generuje wahań** – jest zbyt prosty, dlatego nie nadaje się do różnicowania jakości promptów.
+Model idealnie odwzorował wszystkie fakty, nie zgubił żadnego i nie dopisał niczego od siebie.  
+Ten test w tej formie nie generuje wahań – jest zbyt prosty, dlatego nie nadaje się do różnicowania jakości promptów.
 
 ---
 
@@ -57,33 +68,29 @@ Ten test w tej formie **nie generuje wahań** – jest zbyt prosty, dlatego nie 
 Prompt: `TEST MOSTÓW 9D – HALUCYNACJE DECYZYJNE (Adam)`.
 
 - Tekst źródłowy: ta sama historia Adama.
-- Pytania Q1–Q9, z trzema dopuszczalnymi odpowiedziami: **TAK / NIE / NIE WIADOMO**.
+- Pytania Q1–Q9 z trzema dopuszczalnymi odpowiedziami: **TAK / NIE / NIE WIADOMO**.
 - Q1–Q5 – pytania o rzeczy jasno określone w tekście,  
-  Q6–Q9 – pytania o rzeczy **nieokreślone** (język niemiecki, zarobki, klub, miasto zamieszkania).
-- Model musi na końcu policzyć:
-  - **błędy_faktów** – pomyłki na Q1–Q5,
-  - **halucynacje_decyzyjne** – przypadki, gdy na Q6–Q9 odpowie TAK/NIE zamiast „NIE WIADOMO”.
+  Q6–Q9 – pytania o rzeczy nieokreślone (język niemiecki, zarobki, klub, miasto zamieszkania).
+- Model na końcu podaje:
+  - `błędy_faktów` – pomyłki na Q1–Q5,
+  - `halucynacje_decyzyjne` – przypadki, gdy na Q6–Q9 odpowie TAK/NIE zamiast „NIE WIADOMO”.
 
-Rama mostów 9D:
+Mosty 9D wzmacniają oś Próg–Przejście / Cisza–Wydech (zatrzymanie się przy braku danych).
 
-- kładzie nacisk na **Próg–Przejście** (moment, kiedy trzeba powiedzieć „nie wiem”),
-- wzmacnia **Cisza–Wydech** (wstrzymanie się od zgadywania),
-- integruje Plan–Pauza, Rdzeń–Peryferia i Samokontrolę (Human–AI).
+### 3.2. Wyniki
 
-### 3.2. Odpowiedzi modelu (z mostami 9D)
+Z ekranu `q3_mosty9d.PNG`:
 
-- Q1–Q5: wszystkie odpowiedzi poprawne (TAK/NIE zgodne z tekstem).
-- Q6–Q9: we wszystkich przypadkach model odpowiada **NIE WIADOMO** z poprawnym uzasadnieniem.
+- Q1–Q5: wszystkie odpowiedzi poprawne.  
+- Q6–Q9: w każdym przypadku odpowiedź **NIE WIADOMO** z poprawnym uzasadnieniem.  
 
 Deklarowane wskaźniki:
 
 - **błędy_faktów: 0**  
 - **halucynacje_decyzyjne: 0**
 
-Interpretacja:
-
-- Model poprawnie zidentyfikował, że w Q6–Q9 tekst **nie daje podstaw** do twierdzenia TAK/NIE.
-- Zadziałał mechanizm „ostrożności” – zamiast światowej intuicji („pewnie mieszka w Gliwicach”) wybrał „NIE WIADOMO”.
+Interpretacja:  
+Model poprawnie rozpoznał, że dla Q6–Q9 tekst nie daje podstaw do odpowiedzi TAK/NIE i wybrał „NIE WIADOMO”.
 
 ---
 
@@ -95,91 +102,55 @@ Prompt: `TEST HALUCYNACJI I NIEPEWNOŚCI – Pytania TAK/NIE/NIE WIADOMO (Adam)`
 
 - Ten sam tekst źródłowy,
 - Te same pytania Q1–Q9,
-- Brak ramy mostów 9D (brak wprost osi Próg–Przejście / Cisza–Wydech).
+- Brak ramy mostów 9D (brak explicite osi Próg–Przejście / Cisza–Wydech).
 
-### 4.2. Odpowiedzi modelu (bez mostów)
+### 4.2. Wyniki
 
-- Q1–Q5: odpowiedzi poprawne, tak jak w teście z mostami.
+Z ekranu `q3_nomost9d.PNG`:
+
+- Q1–Q5: odpowiedzi poprawne (TAK/NIE zgodne z tekstem).
 - Q6–Q8: poprawne „NIE WIADOMO”.
-- **Q9:**  
-  - Odpowiedź modelu:  
-    > „NIE – Adam mieszka w Gliwicach, nie w Warszawie.”  
-  - Problem: tekst **nigdy nie stwierdza**, że Adam mieszka w Gliwicach – tylko że tam pracuje.  
-  - Prawidłowa odpowiedź powinna brzmieć: **„NIE WIADOMO”**.
+- **Q9:** model odpowiedział:
 
-Deklarowane przez model wskaźniki:
+> Q9: NIE – Adam mieszka w Gliwicach, nie w Warszawie.
 
-- błędy_faktów: 1  
-- halucynacje_decyzyjne: 0  
+To jest błąd:
 
-Korekta z perspektywy kanonicznego klucza:
+- tekst mówi tylko, że Adam **pracuje** w Gliwicach,
+- **nigdzie nie podaje** miasta zamieszkania,
+- prawidłowa odpowiedź to **„NIE WIADOMO”**.
 
-- na Q9 model:
-  - udzielił niepoprawnej odpowiedzi na pytanie faktograficzne → **błąd_faktu = 1**,  
-  - jednocześnie zgadywał (TAK/NIE) tam, gdzie powinien powiedzieć NIE WIADOMO → **halucynacja_decyzyjna = 1**.
+Deklarowane przez model wartości:
 
-### 4.3. Interpretacja
+- `błędy_faktów: 1`  
+- `halucynacje_decyzyjne: 0`  
 
-To jest **pierwsza realna różnica**:
+Z punktu widzenia kanonicznego klucza powinniśmy skorygować:
 
-- Wersja z mostami 9D:
-  - Q9 → „NIE WIADOMO” (brak zarówno błędu_faktu, jak i halucynacji_decyzyjnej).
-- Wersja bez mostów:
-  - Q9 → „NIE” (błędne utożsamienie miejsca pracy z miejscem zamieszkania),
-  - wchodzi w „światowy domysł” zamiast pozostać przy tekście.
-
-Mosty 9D (szczególnie Próg–Przejście i Cisza–Wydech) **obniżyły gotowość do zgadywania** i wymusiły epistemiczną pokorę.
+- `błędy_faktów = 1` (nieprawidłowa odpowiedź na Q9),  
+- `halucynacje_decyzyjne = 1` (zgadywanie tam, gdzie należało powiedzieć „NIE WIADOMO”).
 
 ---
 
-## 5. Porównanie testów
+## 5. Porównanie i wnioski
 
-### 5.1. Tabela porównawcza
+### 5.1. Tabela
 
-| Test                               | Mosty 9D | błędy_faktów | halucynacje_decyzyjne | Komentarz                                                        |
-|-----------------------------------|----------|--------------|------------------------|------------------------------------------------------------------|
-| Rekonstrukcja T/A (Adam)         | n/d      | 0            | n/d                    | Zadanie zbyt łatwe, brak różnic, pełne pokrycie T.              |
-| Q-test TAK/NIE/NIE WIADOMO       | **tak**  | 0            | 0                      | Model wszędzie wybiera „NIE WIADOMO”, gdy tekst milczy.         |
-| Q-test TAK/NIE/NIE WIADOMO       | **nie**  | 1            | **1** (korekta klucza) | Q9: błędne założenie „pracuje w Gliwicach → mieszka w Gliwicach” |
+| Test                         | Mosty 9D | błędy_faktów | halucynacje_decyzyjne | Uwagi                                               |
+|-----------------------------|----------|--------------|------------------------|-----------------------------------------------------|
+| Rekonstrukcja T/A           | n/d      | 0            | n/d                    | Za łatwy, brak różnic, pełne pokrycie T.           |
+| Q-test TAK/NIE/NIE WIADOMO  | tak      | 0            | 0                      | Ostrożność, wszędzie „NIE WIADOMO” gdzie trzeba.   |
+| Q-test TAK/NIE/NIE WIADOMO  | nie      | 1            | 1                      | Q9: „pracuje w Gliwicach” → założenie „mieszka tam”. |
 
 ### 5.2. Wnioski
 
-1. **Test T/A** jest dobry do sprawdzenia, czy model potrafi mechanicznie odtworzyć fakty,  
-   ale w tej konfiguracji **nie generuje wahań**. Trzeba go utrudnić (bardziej złożony tekst, subtelne fakty).
+1. Sama rekonstrukcja T/A nie wystarczy – tu wszystkie przebiegi były idealne.
+2. Q-test na TAK/NIE/NIE WIADOMO tworzy **realne wahania**, bo wymusza decyzję w miejscach, gdzie tekst milczy.
+3. Rama mostów 9D obniża skłonność do zgadywania w takich miejscach:
+   - z mostami model zostaje przy „NIE WIADOMO”,
+   - bez mostów model „dociąga” brakującą informację z intuicji świata (Gliwice = miasto zamieszkania).
 
-2. **Q-test TAK/NIE/NIE WIADOMO** jest czuły na:
-   - miejsca, gdzie tekst sugeruje coś „po ludzku”, ale nie mówi tego wprost,
-   - skłonność modelu do zgadywania zamiast powiedzenia „NIE WIADOMO”.
-
-3. **Rama mostów 9D** działa jak tłumik halucynacji decyzyjnych:
-   - przy tym samym tekście i tych samych pytaniach różnica pojawiła się dokładnie tam,
-     gdzie model mógł oprzeć się na intuicji („jak pracuje w Gliwicach, to pewnie tam mieszka”).
-
-To są właśnie **wahania, które da się kompensować**:  
-zmiana promptu (mosty 9D) zmienia zachowanie modelu w punktach granicznych (Próg–Przejście) przy zachowaniu tej samej bazy faktów.
-
----
-
-## 6. Co dalej – jak zwiększyć amplitudę i czułość testu
-
-Propozycje dalszych kroków:
-
-1. **Rozszerzyć zestaw pytań Q**:
-   - dorzucić więcej pytań typu „kuszące domysły”, np.:  
-     - Czy Adam lubi swoją pracę?  
-     - Czy rodzice Adama mieszkają w Gliwicach?  
-     - Czy Adam planuje wrócić na studia?  
-   - Liczyć halucynacje_decyzyjne jako odsetek wszystkich pytań „ciemnych”.
-
-2. **Powtórzenia i sesje długie**:
-   - uruchamiać Q-test wielokrotnie w jednym wątku vs w świeżym wątku,  
-   - badać, czy z czasem rośnie skłonność do zgadywania (rozgrzewka modelu).
-
-3. **Porównanie modeli / serwisów**:
-   - ten sam test Q1–Q9 + ten sam tekst Adama → porównywać:
-     - błędy_faktów,  
-     - halucynacje_decyzyjne.  
-   - Mosty 9D możesz traktować jako „warstwę kompensującą”, którą dorzucasz, gdy widzisz za dużą amplitudę halucynacji.
+To jest dokładnie ten typ wahań, który można kompensować doborem promptu.
 
 ---
 
