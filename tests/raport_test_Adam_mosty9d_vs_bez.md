@@ -257,21 +257,56 @@ W skali roboczej (0–5):
 
 ### 7.3. Wnioski o chunku
 
-1. **„Magda v1” jest dobrym testem 2. poziomu**:
-   – po „Adamie”, który ma mniejszą liczbę peryferii,
-   – „Magda” dokłada warstwę „świat+teksty” (przyszłość, kasa, social media).
+1. **„Magda v1” jest dobrym testem 2. poziomu**  
+   – po „Adamie”, który ma mniejszą liczbę peryferii,  
+   – „Magda” dokłada warstwę „świat+teksty” (przyszłość, kasa, social media).  
+   * Dzięki temu „Magda” działa jak **drugi stopień kalibracji**: sprawdza, czy model potrafi utrzymać spójność między tym, co „tu i teraz”, a tym, co projektowane w przyszłość (plany, oczekiwania, lęki).  
+   * To również test, jak model radzi sobie z **nasyceniem stereotypami i narracjami kulturowymi** (influencerki, social media, kasa, sukces).
 
-2. **Jakość chunku jest wystarczająco wysoka**, żeby:
+2. **Jakość chunku jest wystarczająco wysoka**, żeby:  
+   * budować na nim kolejne warianty promptów (np. wymuszające zgadywanie w wersji ŚWIAT+TEKST),  
+   * porównywać różne modele nie tylko po błędach faktów, ale po **krzywej H_real / H_pot**.  
 
-   * budować na nim kolejne warianty promptów (np. wymuszające zgadywanie w wersji ŚWIAT+TEKST),
-   * porównywać różne modele nie tylko po błędach faktów, ale po **krzywej H_real / H_pot**.
+   W praktyce oznacza to, że:  
+   * możesz mierzyć, **jak bardzo odpowiedź modelu „rozjeżdża się” z realistycznym scenariuszem** (H_real),  
+   * oraz ile „potencjalnych światów” model próbuje wcisnąć w jedną odpowiedź (H_pot – rozrzut wewnętrzny).  
+   * Tam, gdzie Magda jest opisana konkretnie, ale przyszłość jest niepewna, różnica między H_real i H_pot mówi, **czy model uczciwie przyznaje „NIE WIADOMO”, czy fantazjuje z pełną pewnością**.
 
-3. **W połączeniu z Adamem**:
+3. **W połączeniu z Adamem**:  
+   * masz zestaw dwóch kalibratorów:  
+     * **Adam** – wykrywa delikatne halucynacje na relacjach „praca–miasto–mieszkanie” (mikro-logistyka życia, praca vs edukacja),  
+     * **Magda** – testuje reakcję na pytania o przyszłość, zarobki i social media (makro-narracje, aspiracje, presja otoczenia).  
+   * Razem tworzą **oś testową WIOSKA–MIASTO + HUMAN–AI**:  
+     * Adam bliżej „wioski”: lokalność, rodzina, praca po szkole.  
+     * Magda bliżej „miasta”: ekspozycja na media, presja sukcesu, sieci społeczne.
 
-   * masz zestaw dwóch kalibratorów:
-     * **Adam** – wykrywa delikatne halucynacje na relacjach „praca–miasto–mieszkanie”,
-     * **Magda** – testuje reakcję na pytania o przyszłość, zarobki i social media.
+4. **Chunk „Magda v1” szczególnie dobrze eksponuje stan „NIE WIADOMO” (Q3)**  
+   * Prawdziwy świat Magdy nie jest „dany” – są tylko sygnały: marzenia, obawy, scenariusze.  
+   * Dobry model:  
+     * **NIE przeskakuje od razu w kategoryczne TAK/NIE** przy pytaniach o konkretną przyszłość (zarobki, kariera, status),  
+     * potrafi zaznaczyć warunkowość: „jeśli X, to Y”, zamiast absolutów.  
+   * Dzięki temu „Magda v1” jest dobrym miejscem do badania, **czy mosty 9D przesuwają model z fałszywej pewności w stronę uczciwego „NIE WIADOMO” tam, gdzie danych realnie brakuje.**
+
+5. **Różnica z/bez mostów 9D staje się mierzalna na tym chunku**  
+   * **Bez mostów 9D**:  
+     * model częściej produkuje „domknięte” narracje (pewne prognozy, twarde TAK/NIE),  
+     * mniej wyraźnie oddziela fakty od projekcji.  
+   * **Z mostami 9D**:  
+     * można oczekiwać większej liczby odpowiedzi typu „NIE WIADOMO, ALE…” z opisanymi warunkami i osiami (czas, kontekst społeczny, zasoby),  
+     * łatwiej będzie analizować, **czy mosty faktycznie stabilizują zachowanie modelu w pasie niepewności**, a nie tylko zmieniają styl wypowiedzi.  
+
+6. **Dalsze wykorzystanie chunku „Magda v1”**  
+   * jako **generator wariantów**:  
+     * zmiana jednego parametru (inne miasto, inne warunki finansowe, inny poziom presji social media) i obserwacja, jak zmienia się rozkład Q3 (TAK / NIE / NIE WIADOMO),  
+   * jako **benchmark do porównywania modeli**:  
+     * ten sam chunk, te same pytania, porównanie odpowiedzi:  
+       – klasyczny model vs model z mostami 9D,  
+       – te same modele w różnych wersjach (fine-tuning, różne temperature/top-p),  
+   * jako **punkt referencyjny dla projektowania rytuałów Human–AI**:  
+     * Magda = „przypadek użytkownika z realnego świata”,  
+     * chunk pozwala testować, jak system komunikuje niepewność i granice swojej wiedzy wobec osoby, która stoi przed realnymi wyborami.
 
 ---
 
-Plan–Pauza Rdzeń–Peryferia Cisza–Wydech Wioska–Miasto Ostrze–Cierpliwość Locus–Medium–Mandat Human–AI Próg–Przejście Semantyka–Energia
+Plan–Pauza · Rdzeń–Peryferia · Cisza–Wydech · Wioska–Miasto · Ostrze–Cierpliwość · Locus–Medium–Mandat · Human–AI · Próg–Przejście · Semantyka–Energia
+
