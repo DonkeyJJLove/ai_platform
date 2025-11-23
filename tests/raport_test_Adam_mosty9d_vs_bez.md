@@ -37,11 +37,9 @@ Ten raport jest analogiczny do `raport_test_Adam_mosty9d_vs_bez.md`, ale oparty 
 Celem było:
 
 1. **Sprawdzić**, jak różne modele (lub te same modele z różnymi promptami) radzą sobie z odpowiedziami TAK/NIE/NIE WIADOMO dla tekstu, który:
-
    * ma twardy rdzeń faktów,
    * zawiera elementy „kuszące” do dopowiedzeń (studia, zarobki, Instagram, przyszłość).
-2. **Zmierzć**:
-
+2. **Zmierzyć**:
    * błędy faktów na pytaniach z jednoznaczną odpowiedzią (Q1–Q5),
    * halucynacje decyzyjne na pytaniach, gdzie poprawna odpowiedź to „NIE WIADOMO” (Q6–Q8).
 3. **Ocenić jakość samego chunku** „Magda v1” jako:
