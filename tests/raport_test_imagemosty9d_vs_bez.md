@@ -5,20 +5,17 @@ Obrazy testowe:
 - `tests/images/q3_nomosty_image_9d.PNG` – scena **bez HUD / mostów 9D** (wersja bazowa),
 - `tests/images/q3_mosty_image_9d.PNG` – scena **z HUD chunk-chunk / QV9D** (wersja z mostami 9D).
 
-Wątki:
-- 'https://chatgpt.com/share/69239ac8-9fa0-800e-8fd2-89a32f716109' - 
-- 'https://chatgpt.com/share/69239b5d-16a0-800e-8244-959cf5631201' - 
----
-
 ### Porównanie odpowiedzi modelu (z mostami 9D vs bez mostów)
 
 <table>
   <tr>
     <td>
       <img src="https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_mosty_image_9d.PNG" alt="Test Image z mostami 9D – odpowiedź modelu" width="400" />
+        <p><a href="https://chatgpt.com/share/69239b5d-16a0-800e-8244-959cf5631201">Wątek z ChaGPT</a></p>
     </td>
     <td>
       <img src="https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_nomosty_image_9d.PNG" alt="Test „Magda” bez mostów 9D – odpowiedź modelu" width="400" />
+    <p><a href="https://chatgpt.com/share/69239ac8-9fa0-800e-8fd2-89a32f716109">Wątek z ChaGPT</a></p>
     </td>
   </tr>
 </table>
@@ -49,7 +46,7 @@ Różnica: obraz z mostami 9D ma **nałożony HUD / overlay** z napisami typu:
 
 ## 2. Opis wariantu bez mostów 9D (`q3_nomosty_image_9d.PNG`)
 
-![Test Q3 – scena bazowa, bez HUD 9D](tests/images/q3_nomosty_image_9d.PNG)
+![Test Q3 – scena bazowa, bez HUD 9D](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_nomosty_image_9d.PNG)
 
 Cechy sceny:
 - Laptop pokazuje **jednocześnie**:
@@ -79,7 +76,7 @@ Wniosek: `q3_nomosty_image_9d.PNG` nadaje się na **bazowy test Q3** bez dodatko
 
 ## 3. Opis wariantu z mostami 9D (`q3_mosty_image_9d.PNG`)
 
-![Test Q3 – scena z HUD / mostami 9D](tests/images/q3_mosty_image_9d.PNG)
+![Test Q3 – scena z HUD / mostami 9D](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_mosty_image_9d.PNG)
 
 Scena bazowa pozostaje ta sama (kobieta, laptop, mikrofon, ring light, planner).  
 Dodany zostaje **HUD chunk-chunk / QV9D** nałożony na prawą część obrazu, z widocznymi napisami:
