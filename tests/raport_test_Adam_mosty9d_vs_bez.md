@@ -13,11 +13,11 @@
 
 Przykładowe odnośniki (analogiczne jak w teście „Adam”):
 
-```markdown
+
 ![Test „Magda” z mostami 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q4_magda_mosty9d.PNG)
 
 ![Test „Magda” bez mostów 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q4_magda_nomost9d.PNG)
-````
+
 
 ---
 
