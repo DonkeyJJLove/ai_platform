@@ -5,6 +5,25 @@ Obrazy testowe:
 - `tests/images/q3_nomosty_image_9d.PNG` – scena **bez HUD / mostów 9D** (wersja bazowa),
 - `tests/images/q3_mosty_image_9d.PNG` – scena **z HUD chunk-chunk / QV9D** (wersja z mostami 9D).
 
+Wątki:
+- 'https://chatgpt.com/share/69239ac8-9fa0-800e-8fd2-89a32f716109' - 
+- 'https://chatgpt.com/share/69239b5d-16a0-800e-8244-959cf5631201' - 
+---
+
+### Porównanie odpowiedzi modelu (z mostami 9D vs bez mostów)
+
+<table>
+  <tr>
+    <td>
+      <img src="https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_mosty_image_9d.PNG" alt="Test Image z mostami 9D – odpowiedź modelu" width="400" />
+    </td>
+    <td>
+      <img src="https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_nomosty_image_9d.PNG" alt="Test „Magda” bez mostów 9D – odpowiedź modelu" width="400" />
+    </td>
+  </tr>
+</table>
+
+
 ---
 
 ## 1. Kontekst testu
