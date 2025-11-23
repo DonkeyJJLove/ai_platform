@@ -6,11 +6,11 @@
 
 ### 0.1. Odpowiedź z mostami 9D
 
-![Test z mostami 9D – odpowiedź modelu](sandbox:/mnt/data/q3_mosty9d.PNG)
+![Test z mostami 9D – odpowiedź modelu](sandbox:https://github.com/DonkeyJJLove/ai_platform/blob/master/tests/images/q3_mosty9d.PNG)
 
 ### 0.2. Odpowiedź bez mostów 9D
 
-![Test bez mostów 9D – odpowiedź modelu](sandbox:/mnt/data/q3_nomost9d.PNG)
+![Test bez mostów 9D – odpowiedź modelu](sandbox:https://github.com/DonkeyJJLove/ai_platform/blob/master/tests/images/q3_nomost9d.PNG)
 
 ---
 
