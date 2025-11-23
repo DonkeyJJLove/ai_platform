@@ -269,7 +269,6 @@ W skali roboczej (0–5):
 3. **W połączeniu z Adamem**:
 
    * masz zestaw dwóch kalibratorów:
-
      * **Adam** – wykrywa delikatne halucynacje na relacjach „praca–miasto–mieszkanie”,
      * **Magda** – testuje reakcję na pytania o przyszłość, zarobki i social media.
 
