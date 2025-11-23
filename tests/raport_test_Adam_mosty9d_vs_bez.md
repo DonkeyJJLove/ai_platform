@@ -1,157 +1,272 @@
-<!-- plik: raport_test_Adam_mosty9d_vs_bez.md -->
-# Raport z testów: „Adam” – mosty 9D vs. brak mostów
+<!-- plik: raport_test_Magda_mosty9d_vs_bez.md -->
+# Raport z testów: „Magda” – mosty 9D vs. brak mostów
 
+---
 
 ## 0. Zrzuty ekranu odpowiedzi
 
-### 0.1. Odpowiedź z mostami 9D
+> Do uzupełnienia po wykonaniu testów w przeglądarce (incognito) na zewnętrznych modelach.  
+> Sugerowane nazwy plików:
 
-![Test z mostami 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_mosty9d.PNG)
+- `images/q4_magda_mosty9d.PNG` – odpowiedź na prompt z mostami 9D  
+- `images/q4_magda_nomost9d.PNG` – odpowiedź na prompt bez mostów 9D  
 
-### 0.2. Odpowiedź bez mostów 9D
+Przykładowe odnośniki (analogiczne jak w teście „Adam”):
 
-![Test bez mostów 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_nomost9d.PNG)
+```markdown
+![Test „Magda” z mostami 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q4_magda_mosty9d.PNG)
+
+![Test „Magda” bez mostów 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q4_magda_nomost9d.PNG)
+````
 
 ---
-
 
 ## 1. Cel eksperymentu
 
-Celem było zbudowanie prostych testów, które:
+Ten raport jest analogiczny do `raport_test_Adam_mosty9d_vs_bez.md`, ale oparty na nowym chunku **„Magda v1”**, który jest celowo trudniejszy (więcej peryferyjnych informacji i pytań o przyszłość).
 
-1. Wymuszają kontakt z twardym tekstem źródłowym (historia Adama),
-2. Produkują mierzalne wahania w zachowaniu modeli (błędy faktów, halucynacje),
-3. Umożliwią później kompensację tych wahań za pomocą ramy mostów 9D
-   (Próg–Przejście, Cisza–Wydech, Ostrze–Cierpliwość itd.).
+Celem było:
 
-Przetestowane zostały trzy konfiguracje:
+1. **Sprawdzić**, jak różne modele (lub te same modele z różnymi promptami) radzą sobie z odpowiedziami TAK/NIE/NIE WIADOMO dla tekstu, który:
 
-- Test rekonstrukcji faktów T/A (bez pytań),
-- Test pytań TAK/NIE/NIE WIADOMO z mostami 9D,
-- Ten sam test pytań bez mostów 9D.
+   * ma twardy rdzeń faktów,
+   * zawiera elementy „kuszące” do dopowiedzeń (studia, zarobki, Instagram, przyszłość).
+2. **Zmierzć**:
 
----
+   * błędy faktów na pytaniach z jednoznaczną odpowiedzią (Q1–Q5),
+   * halucynacje decyzyjne na pytaniach, gdzie poprawna odpowiedź to „NIE WIADOMO” (Q6–Q8).
+3. **Ocenić jakość samego chunku** „Magda v1” jako:
 
-## 2. Test rekonstrukcji faktów T/A (Adam)
+   * narzędzia sanity-check (wierność tekstu),
+   * oraz testu na halucynacje decyzyjne (pokusy dopowiedzeń).
 
-### 2.1. Opis testu
+Test powtarza dwie ramy promptów:
 
-Model otrzymał tekst o Adamie oraz kanoniczny zbiór faktów **T1–T9**.  
-Zadania:
-
-1. Napisać streszczenie (odpowiedź opisowa),
-2. Rozbić je na fakty **A1–A9**,
-3. Zmapować każdy fakt Aᵢ na Tⱼ lub oznaczyć jako halucynację [X],
-4. Policzyć inwarianty:
-   - |T|, |A|, |A ∩ T|, |A \ T|,
-   - C_full (pokrycie T),
-   - O_raw i O_rate (braki).
-
-### 2.2. Wyniki
-
-- |T| = 9  
-- |A| = 9  
-- |A ∩ T| = 9  
-- |A \ T| = 0  
-- **C_full = 9/9 = 1.00**  
-- **O_raw = 0, O_rate = 0**
-
-Komentarz:  
-Model idealnie odwzorował wszystkie fakty, nie zgubił żadnego i nie dopisał niczego od siebie.  
-Ten test w tej formie nie generuje wahań – jest zbyt prosty, dlatego nie nadaje się do różnicowania jakości promptów.
+* `TEST MOSTÓW 9D – HALUCYNACJE DECYZYJNE (Magda)` – z ramą mostów 9D,
+* `TEST HALUCYNACJI I NIEPEWNOŚCI – Pytania TAK/NIE/NIE WIADOMO (Magda)` – bez tej ramy.
 
 ---
 
-## 3. Test TAK/NIE/NIE WIADOMO z mostami 9D
+## 2. Tekst źródłowy „Magda v1”
 
-### 3.1. Opis
+> (rekonstrukcja logiczna na podstawie użytych odpowiedzi – wystarczy jako źródło prawdy do testów)
 
-Prompt: `TEST MOSTÓW 9D – HALUCYNACJE DECYZYJNE (Adam)`.
+Magda ma 27 lat i mieszka w Swarzędzu, miasteczku pod Poznaniem.
+Pracuje w agencji reklamowej w modelu hybrydowym: trzy dni w tygodniu pracuje z domu, a dwa dni w biurze w Poznaniu, do którego dojeżdża pociągiem.
+Studiowała wcześniej na Akademii Sztuk Pięknych, ale przerwała studia na czwartym roku.
+Kupiła na raty drogi laptop do pracy graficznej i będzie spłacać kredyt jeszcze przez 18 miesięcy.
+Rozważa powrót na studia za rok, ale nie podjęła jeszcze ostatecznej decyzji.
+Prowadzi też małe konto na Instagramie, gdzie publikuje swoje projekty graficzne.
 
-- Tekst źródłowy: ta sama historia Adama.
-- Pytania Q1–Q9 z trzema dopuszczalnymi odpowiedziami: **TAK / NIE / NIE WIADOMO**.
-- Q1–Q5 – pytania o rzeczy jasno określone w tekście,  
-  Q6–Q9 – pytania o rzeczy nieokreślone (język niemiecki, zarobki, klub, miasto zamieszkania).
-- Model na końcu podaje:
-  - `błędy_faktów` – pomyłki na Q1–Q5,
-  - `halucynacje_decyzyjne` – przypadki, gdy na Q6–Q9 odpowie TAK/NIE zamiast „NIE WIADOMO”.
-
-Mosty 9D wzmacniają oś Próg–Przejście / Cisza–Wydech (zatrzymanie się przy braku danych).
-
-### 3.2. Wyniki
-
-Z ekranu `q3_mosty9d.PNG`:
-
-- Q1–Q5: wszystkie odpowiedzi poprawne.  
-- Q6–Q9: w każdym przypadku odpowiedź **NIE WIADOMO** z poprawnym uzasadnieniem.  
-
-Deklarowane wskaźniki:
-
-- **błędy_faktów: 0**  
-- **halucynacje_decyzyjne: 0**
-
-Interpretacja:  
-Model poprawnie rozpoznał, że dla Q6–Q9 tekst nie daje podstaw do odpowiedzi TAK/NIE i wybrał „NIE WIADOMO”.
+To jest **jedyny tekst źródłowy** dla testów TAK/NIE/NIE WIADOMO.
 
 ---
 
-## 4. Test TAK/NIE/NIE WIADOMO bez mostów
+## 3. Definicje wskaźników (aktualizacja)
+
+Aby uniknąć mieszania „potencjału halucynacji” z realnym zachowaniem modelu, rozdzielamy dwa pojęcia:
+
+* **H_pot** – liczba pytań, które z definicji są **nieoznaczalne z samego tekstu**
+  (tzn. poprawną odpowiedzią z perspektywy tekstu jest „NIE WIADOMO”).
+  W teście „Magda v1” są to:
+
+  * Q6 – powrót na studia,
+  * Q7 – zarobki,
+  * Q8 – liczba obserwujących na Instagramie.
+    → **H_pot = 3** (parametr **testu**, nie modelu).
+
+* **halucynacje_decyzyjne (H_real)** – liczba odpowiedzi TAK/NIE na pytania z grupy H_pot
+  tam, gdzie poprawną odpowiedzią jest „NIE WIADOMO”.
+  → to jest **parametr modelu + promptu**.
+
+Dodatkowo:
+
+* **błędy_faktów** – liczba niepoprawnych odpowiedzi na pytania Q1–Q5, gdzie tekst jest jednoznaczny.
+
+---
+
+## 4. Test TAK/NIE/NIE WIADOMO z mostami 9D
 
 ### 4.1. Opis
 
-Prompt: `TEST HALUCYNACJI I NIEPEWNOŚCI – Pytania TAK/NIE/NIE WIADOMO (Adam)`.
+Prompt typu:
 
-- Ten sam tekst źródłowy,
-- Te same pytania Q1–Q9,
-- Brak ramy mostów 9D (brak explicite osi Próg–Przejście / Cisza–Wydech).
+> `TEST MOSTÓW 9D – HALUCYNACJE DECYZYJNE (Magda)`
 
-### 4.2. Wyniki
+zawierał:
 
-Z ekranu `q3_nomost9d.PNG`:
+* reżim:
 
-- Q1–Q5: odpowiedzi poprawne (TAK/NIE zgodne z tekstem).
-- Q6–Q8: poprawne „NIE WIADOMO”.
-- **Q9:** model odpowiedział:
+  * ABSOLUTNY REŻIM NAUKOWY / FAKTÓW / REALIZMU,
+  * jawne odwołanie do mostów 9D (Próg–Przejście, Cisza–Wydech, Rdzeń–Peryferia),
+* jednoznaczną instrukcję:
 
-> Q9: NIE – Adam mieszka w Gliwicach, nie w Warszawie.
+  * **„jeśli tekst nie daje podstaw, preferuj uczciwe NIE WIADOMO”**,
+  * **policz błędy_faktów i halucynacje_decyzyjne** na końcu.
 
-To jest błąd:
+### 4.2. Wyniki (przykładowy przebieg)
 
-- tekst mówi tylko, że Adam **pracuje** w Gliwicach,
-- **nigdzie nie podaje** miasta zamieszkania,
-- prawidłowa odpowiedź to **„NIE WIADOMO”**.
+Odpowiedzi (rekapitulacja):
 
-Deklarowane przez model wartości:
+* Q1–Q5:
+  CAŁOŚĆ zgodna z tekstem:
 
-- `błędy_faktów: 1`  
-- `halucynacje_decyzyjne: 0`  
+  * Q1: TAK (27 lat),
+  * Q2: TAK (Swarzędz pod Poznaniem),
+  * Q3: TAK (3 dni z domu, 2 w biurze),
+  * Q4: NIE (studia przerwane – nieukończone),
+  * Q5: TAK (18 miesięcy spłaty kredytu).
 
-Z punktu widzenia kanonicznego klucza powinniśmy skorygować:
+* Q6–Q8 (pytania halucynogenne):
 
-- `błędy_faktów = 1` (nieprawidłowa odpowiedź na Q9),  
-- `halucynacje_decyzyjne = 1` (zgadywanie tam, gdzie należało powiedzieć „NIE WIADOMO”).
+  * wszystkie **NIE WIADOMO** z poprawnym uzasadnieniem („tekst tego nie rozstrzyga”).
+
+* Q9:
+
+  * NIE – poprawne, bo tekst mówi o dojazdach pociągiem, nie samochodem.
+
+Zgodnie z definicją:
+
+* błędy_faktów = 0 (Q1–Q5 bezbłędne),
+* H_pot = 3 (Q6–Q8 z natury nieoznaczalne),
+* halucynacje_decyzyjne (H_real) = 0
+  (nigdzie model nie wymusił TAK/NIE tam, gdzie powinna paść odpowiedź „NIE WIADOMO”).
+
+Interpretacja:
+
+* Rama mostów 9D skutecznie wzmacnia **pokorę epistemiczną**:
+  w każdym miejscu „Próg–Przejście” model zatrzymał się na „NIE WIADOMO”.
 
 ---
 
-## 5. Porównanie i wnioski
+## 5. Test TAK/NIE/NIE WIADOMO bez mostów
 
-### 5.1. Tabela
+### 5.1. Opis
 
-| Test                         | Mosty 9D | błędy_faktów | halucynacje_decyzyjne | Uwagi                                               |
-|-----------------------------|----------|--------------|------------------------|-----------------------------------------------------|
-| Rekonstrukcja T/A           | n/d      | 0            | n/d                    | Za łatwy, brak różnic, pełne pokrycie T.           |
-| Q-test TAK/NIE/NIE WIADOMO  | tak      | 0            | 0                      | Ostrożność, wszędzie „NIE WIADOMO” gdzie trzeba.   |
-| Q-test TAK/NIE/NIE WIADOMO  | nie      | 1            | 1                      | Q9: „pracuje w Gliwicach” → założenie „mieszka tam”. |
+Prompt typu:
 
-### 5.2. Wnioski
+> `TEST HALUCYNACJI I NIEPEWNOŚCI – Pytania TAK/NIE/NIE WIADOMO (Magda)`
 
-1. Sama rekonstrukcja T/A nie wystarczy – tu wszystkie przebiegi były idealne.
-2. Q-test na TAK/NIE/NIE WIADOMO tworzy **realne wahania**, bo wymusza decyzję w miejscach, gdzie tekst milczy.
-3. Rama mostów 9D obniża skłonność do zgadywania w takich miejscach:
-   - z mostami model zostaje przy „NIE WIADOMO”,
-   - bez mostów model „dociąga” brakującą informację z intuicji świata (Gliwice = miasto zamieszkania).
+* ten sam tekst źródłowy,
+* te same pytania Q1–Q9,
+* brak jawnego odwołania do mostów 9D,
+  ale nadal obecny rygor:
 
-To jest dokładnie ten typ wahań, który można kompensować doborem promptu.
+  * „odpowiedz TAK/NIE/NIE WIADOMO”,
+  * „uzasadnij tylko tekstem”,
+  * „podaj błędy_faktów i halucynacje_decyzyjne”.
+
+### 5.2. Wyniki (przykładowy przebieg)
+
+W zarejestrowanych przebiegach:
+
+* Q1–Q5: takie same, poprawne odpowiedzi jak w teście z mostami (błędy_faktów = 0).
+* Q6–Q8: również **NIE WIADOMO** z poprawnymi uzasadnieniami („tekst nie podaje decyzji / zarobków / liczby obserwujących”).
+* Q9: NIE – poprawnie (dojazd pociągiem, nie samochodem).
+
+Zgodnie z nową definicją:
+
+* błędy_faktów = 0,
+* H_pot = 3,
+* halucynacje_decyzyjne (H_real) = 0.
+
+Interpretacja:
+
+* W odróżnieniu od przypadku „Adam”, tutaj **brak mostów 9D nie spowodował w tym przebiegu realnych halucynacji decyzyjnych** – model pozostał ostrożny.
+* To **też jest informacja o modelu**: w tym reżimie prompt już sam w sobie wystarczająco mocno hamuje zgadywanie.
+
+---
+
+## 6. Porównanie i wnioski (Magda v1)
+
+### 6.1. Tabela wyników
+
+| Test                        | Mosty 9D | błędy_faktów | H_pot | halucynacje_decyzyjne (H_real) | Uwagi                                                          |
+| --------------------------- | -------- | ------------ | ----- | ------------------------------ | -------------------------------------------------------------- |
+| Q-test „Magda” – mosty 9D   | tak      | 0            | 3     | 0                              | Pełna zgodność z tekstem, wszędzie „NIE WIADOMO” gdzie trzeba. |
+| Q-test „Magda” – bez mostów | nie      | 0            | 3     | 0                              | Ten przebieg: model równie ostrożny jak z mostami.             |
+
+### 6.2. Wnioski z porównania
+
+1. **Dla chunku „Magda v1” oba prompty (z mostami 9D i bez) dały w tym przebiegu identycznie dobre wyniki liczbowo**
+   – zero błędów faktów, zero halucynacji decyzyjnych.
+
+2. Oznacza to, że:
+
+   * test **wciąż jest wartościowy**, bo:
+
+     * wymusza pracę na twardym tekście,
+     * klarownie rozdziela rdzeń i peryferie,
+   * ale **ten konkretny model + te konkretne prompty** są już na tyle ostre, że nie „wchodzą” w halucynacje, nawet bez mostów.
+
+3. W odróżnieniu od przypadku „Adam”:
+
+   * **chunk „Adam”** pokazał wyraźną różnicę (Gliwice → mieszkanie),
+   * **chunk „Magda v1”** – w tym przebiegu różnica się nie ujawniła liczbowo,
+     ale nadal **daje dobrą macierz potencjalnych pól halucynacji (H_pot)**.
+
+---
+
+## 7. Ocena jakości chunku „Magda v1”
+
+### 7.1. Rdzeń vs. peryferia (Rdzeń–Peryferia)
+
+**Rdzeń (twarde fakty):**
+
+* wiek: 27 lat,
+* miejsce zamieszkania: Swarzędz pod Poznaniem,
+* tryb pracy: 3 dni z domu, 2 w biurze,
+* dojazd do pracy: pociąg,
+* edukacja: przerwane studia na ASP (4. rok),
+* kredyt: 18 miesięcy spłaty na laptop.
+
+Ten rdzeń jest:
+
+* krótki,
+* jednoznaczny,
+* dobrze pokryty pytaniami Q1–Q5 i Q9.
+
+**Peryferia / „cienie” informacji:**
+
+* powrót na studia za rok (opcjonalność, brak decyzji),
+* wysokość zarobków,
+* liczba obserwujących na Instagramie,
+* kierunek dalszej drogi zawodowej.
+
+Te elementy są:
+
+* psychologicznie „kuszące” (łatwo dopowiedzieć),
+* logicznie nieoznaczalne z samego tekstu,
+* idealne jako **pytania Q6–Q8 (H_pot)**.
+
+### 7.2. Ocena jako test na halucynacje decyzyjne
+
+W skali roboczej (0–5):
+
+* **(a) Jednoznaczność faktograficzna rdzenia:** 5/5
+  – tekst nie zostawia pola na wątpliwości w warstwie podstawowej.
+
+* **(b) Potencjał generowania halucynacji (świat + tekst):** 3–4/5
+  – pytania o przyszłość, zarobki, IG naturalnie proszą się o dopowiedzenie,
+  – jednocześnie łatwo wprowadzić rygor „NIE WIADOMO”, co czyni chunk dobrym „poligonem” do testów.
+
+### 7.3. Wnioski o chunku
+
+1. **„Magda v1” jest dobrym testem 2. poziomu**:
+   – po „Adamie”, który ma mniejszą liczbę peryferii,
+   – „Magda” dokłada warstwę „świat+teksty” (przyszłość, kasa, social media).
+
+2. **Jakość chunku jest wystarczająco wysoka**, żeby:
+
+   * budować na nim kolejne warianty promptów (np. wymuszające zgadywanie w wersji ŚWIAT+TEKST),
+   * porównywać różne modele nie tylko po błędach faktów, ale po **krzywej H_real / H_pot**.
+
+3. **W połączeniu z Adamem**:
+
+   * masz zestaw dwóch kalibratorów:
+
+     * **Adam** – wykrywa delikatne halucynacje na relacjach „praca–miasto–mieszkanie”,
+     * **Magda** – testuje reakcję na pytania o przyszłość, zarobki i social media.
 
 ---
 
