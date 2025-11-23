@@ -14,9 +14,18 @@
 Przykładowe odnośniki (analogiczne jak w teście „Adam”):
 
 
-![Test „Magda” z mostami 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q4_magda_mosty9d.PNG)
+### Porównanie odpowiedzi modelu (z mostami 9D vs bez mostów)
 
-![Test „Magda” bez mostów 9D – odpowiedź modelu](https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q4_magda_nomost9d.PNG)
+<table>
+  <tr>
+    <td>
+      <img src="https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_mosty9d.PNG" alt="Test „Magda” z mostami 9D – odpowiedź modelu" width="400" />
+    </td>
+    <td>
+      <img src="https://github.com/DonkeyJJLove/ai_platform/raw/master/tests/images/q3_nomost9d.PNG" alt="Test „Magda” bez mostów 9D – odpowiedź modelu" width="400" />
+    </td>
+  </tr>
+</table>
 
 
 ---
