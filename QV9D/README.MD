@@ -14,6 +14,7 @@ Kluczową cechą HMK-9D jest to, że **relacje między krokami** również są o
 
 Aby uchwycić globalną organizację takiego systemu, HMK-9D wprowadza pojęcie **mozaikowego pola sterowania**. Zbiór kroków `Δ` z danego epizodu traktowany jest jako indeksowana rodzina kafelków, a do każdego z nich przypisuje się trójkę `(z(Δ), r(Δ), E(Δ))`. Powstaje w ten sposób pole `Φ`, w którym każdy punkt odpowiada jednej decyzji `chunk–chunk→`, ale równocześnie niesie informację o swojej lokalnej geometrii (cechy `z(Δ)`), konfiguracji relacji `[x9D]` (`r(Δ)`) oraz koszcie energetycznym `E(Δ)`. Protokół nie zakłada, że to pole jest gładkie; przeciwnie, jest ono dyskretne, „płytkowane”, zgodnie z intuicją „mosaic warfare” znaną z prac DARPA: sterowanie systemem polega nie na pojedynczej, globalnej komendzie, lecz na **przełączaniu i przegrupowywaniu kafelków**, tak aby globalna konfiguracja minimalizowała `E_total` w granicach wyznaczonych przez `R*(K)`.
 
+
 ## Schemat działania protokołu HMK-9D
 
 ```mermaid
