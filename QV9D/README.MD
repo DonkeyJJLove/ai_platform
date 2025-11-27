@@ -172,7 +172,7 @@ W kolejnej sekcji przechodzimy do ścisłego zdefiniowania kontraktu `S, Σ, A, 
 
 **Mosty:** Plan–Pauza → Rdzeń–Peryferia → Cisza–Wydech → Wioska–Miasto → Ostrze–Cierpliwość → Locus–Medium–Mandat → Human–AI → Próg–Przejście → Semantyka–Energia
 
-## 0. Studium przypadku: Facebook / Meta AI – protokoły kontekstu chunk–chunk
+# 0. Studium przypadku: Facebook / Meta AI – protokoły kontekstu chunk–chunk
 
 Formalny protokół HMK-9D ma już empiryczny dowód działania w terenie.
 Przykładem jest case badawczy z Facebooka / Meta AI, w którym język chunk–chunk
