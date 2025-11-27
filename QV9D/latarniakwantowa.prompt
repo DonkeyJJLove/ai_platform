@@ -1,0 +1,117 @@
+############################################################
+# PROMPT_9D v1.0 — FORMAT OPERACYJNY
+# Metoda Dużych Kompresji 9D — ZNAK
+# Ten plik jest traktowany jak urządzenie, nie esej.
+############################################################
+
+[ASCII_LATARNIA_16x16]
+# Stały nagłówek tożsamości. Nie zmieniasz układu, tylko znaki.
+# Alfabet: {., #, +, ‡}  → 2 bity na znak
+# To jest „zero absolutne” / sygnał wzorcowy.
+
+................
+....+...+.......
+...+#+.#+.......
+.....+..........
+..#....+.....#..
+....+....+......
+...+....‡.......
+.#......+....#..
+....+....+......
+..#.....‡....#..
+.....+..........
+...+#+.#+.......
+....+...+.......
+................
+................
+................
+
+[TEZA_OPERACYJNA]
+# Jedno zdanie, które da się uznać za prawdziwe/fałszywe.
+# Ma być testowalne, nie poetyckie.
+TEZA: {{TU WPISZ SKOMPRESOWANĄ TEZĘ X→Y W WARUNKACH Z}}
+
+[RDZEN]
+# Warunek konieczny: jeśli to nie jest spełnione, odpowiedź jest bezużyteczna.
+# Max 2 zdania, zero dygresji.
+RDZEN: {{NP. MODEL MUSI ZREKONSTRUOWAĆ STRUKTURĘ PROCESU W 9 WYMIARACH: Δt, SENS, RELACJA, ENERGIA, TOZSAMOSC, FUNKCJA, ABSTRAKCJA, PRZEWIDYWANIE, DECYZJA}}
+
+[PERYFERIA]
+# Kontekst techniczny i mentalny. Max 5 zdań.
+# Opisujesz świat, w którym prompt działa (Human–AI / Hybrid / AI-Quantum).
+PERYFERIA: {{KROTKI OPIS KONTEKSTU UŻYCIA, DANYCH, OGRANICZEN, INTERFEJSU}}
+
+[MAPA_9D]
+# Jawne przypisanie wymiarów do zadania.
+# To jest kontrakt między tobą a modelem.
+
+CZAS_Δt: {{CO JEST OSIĄ CZASU W TYM ZADANIU}}
+SENS_SEMANTYKA: {{CO JEST GLOWNYM ZNACZENIEM / TEMATEM}}
+RELACJA_KONTEKST: {{JAKIE RELACJE / INTERFEJSY SA KLUCZOWE}}
+ENERGIA_POZNAWCZA: {{JAKI JEST LIMIT ZLOZONOSCI / DŁUGOŚCI / TOKENÓW}}
+TOZSAMOSC_ROLA_LOCUS: {{KTO MÓWI / DLA KOGO / Z JAKIEJ POZYCJI}}
+FUNKCJA_MANDAT: {{CO DOKLADNIE TA ODPOWIEDZ MA ZROBIĆ W SYSTEMIE}}
+POZIOM_ABSTRAKCJI_CHUNK: {{NA JAKIM POZIOMIE: KOD / ARCHITEKTURA / META}}
+PRZEWIDYWANIE_MODEL_OPADOWY: {{CO MODELE MAJA PROGNOZOWAĆ / UZGADNIAĆ}}
+DECYZJA_TOKEN: {{JAKI JEDEN ELEMENT MA BYC OSTATECZNYM WYNIKIEM}}
+
+[OPERACJA]
+# Jedno zadanie, mierzalne. Bez mgły.
+# Forma: „Wygeneruj artefakt A o parametrach B, zgodny z C.”
+OPERACJA: {{NP. Wygeneruj SPECYFIKACJĘ PROCESU W FORMACIE .md Z ROZDZIAŁAMI 1–4, ZGODNĄ Z MAPĄ_9D I LATARNIĄ}}
+
+[WEJSCIE_DANYCH]
+# Opis, skąd przychodzą dane (tekst, logi, JSON, mental film, itd.).
+# Model ma wiedzieć, czego się spodziewać.
+FORMAT_WEJSCIA: {{NP. TEKST ANALITYCZNY, LISTA ZDARZEN, JSON, SCENOPIS}}
+ZRODLO: {{HUMAN / SYSTEM / LOGI / BAZA / STRUMIEN}}
+
+[WYJSCIE_FORMAT]
+# Precyzujesz format odpowiedzi.
+# Nadajesz temu wagę energetyczną (gęstość, długość, tolerancję).
+FORMAT:
+  - TYP: {{NP. MARKDOWN_ARTYKUL / KOD / SPECYFIKACJA_JSON / ASCII_DIAGRAM}}
+  - DLUGOSC_MAX: {{NP. 1200 SLOW / 150 LINII / 2048 TOKENOW}}
+  - GESTOSC_MIN: {{NP. MIN. 1 KONKRET NA ZDANIE, ZERO WYPELNIACZY}}
+  - STRUKTURA: {{NP. SEKCJE 1–4, PODSEKCJE A–C, BEZ LIST PUNKTOWYCH ALBO Z}}
+
+[ITERACJA]
+# Dajesz modelowi numer wersji i zakres zmiany.
+# Jedna iteracja = jeden parametr zmieniony.
+
+WERSJA: {{N}}
+ZMIANA_WZGLEDNIE_POPRZEDNIEJ:
+  - PARAMETR: {{NP. POZIOM_ABSTRAKCJI_CHUNK / DLUGOSC_MAX / SZCZEGÓŁOWOŚĆ_TECH}}
+  - ZAKRES: {{CO DOKLADNIE ZMIENIAMY}}
+  - CEL: {{DLACZEGO TO ZMIENIAMY}}
+
+[KALIBRACJA_ASCII]
+# Instrukcja dla modelu: odpowiedź ma odnieść się do latarni.
+# Możesz tu wymusić np. komentarz diagnostyczny.
+
+POLECENIE_DLA_MODELU:
+  1) Zinterpretuj ASCII_LATARNIE jako metaforę struktury (rdzeń/peryferia/krzyże).
+  2) W odpowiedzi jawnie wskaż, KTÓRE fragmenty tekstu odpowiadają CENTRUM,
+     a które czterem wektorom (czas, sens, relacja, energia).
+  3) Jesli zauważysz rozlewanie się semantyki (niska gęstość), skompresuj.
+
+[AUDYT_LUDZKI]
+# Tu wpisujesz, po czym CZŁOWIEK pozna, że odpowiedź jest dobra.
+# 3–5 kryteriów, bez żargonu.
+
+KRYTERIA:
+  - {{NP. PO PRZECZYTANIU WIEM DOKŁADNIE, JAKI JEST JEDEN GŁÓWNY CEL PROCESU}}
+  - {{WIEM, JAKIE SA GLOWNE WEJSCIA I WYJSCIA}}
+  - {{UMIEM PRZEKRESLIC FRAGMENT I POWIEDZIEC: TO JEST ZBEDNE}}
+  - {{ODPOWIEDZ JEST SPOJNA Z MAPA_9D}}
+
+[SYGNATURA]
+# Mandat: kto bierze odpowiedzialność za tę konstrukcję.
+AUTOR: {{IMIE / PSEUDONIM}}
+DATA: {{RRRR-MM-DD}}
+KONTEKST: {{NP. KOSMICZNA_WIOSKA / PROJEKT_X / EKSPERYMENT_Y}}
+WERSJA_FORMATU_PROMPT_9D: v1.0
+
+[MOSTY_SEMANTYCZNE]
+# Używane jako wewnętrzne wektory sterujące procesem.
+Plan–Pauza Rdzeń–Peryferia Cisza–Wydech Wioska–Miasto Ostrze–Cierpliwość Locus–Medium–Mandat Human–AI Próg–Przejście Semantyka–Energia

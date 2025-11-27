@@ -1,0 +1,80 @@
+{
+  "version": "1.0",
+  "generated_by": "Scan-9D.ps1",
+  "generated_at": "2025-11-22T19:30:00+01:00",
+
+  "root": {
+    "id": "GLX_PROJECT",
+    "kind": "project",
+    "label": "GLX + chunk-chunk + glitchlab + swarm + HA2D + hipotezy_nadawcze_LLM"
+  },
+
+  "nodes": [
+    {
+      "id": "REPO_chunk-chunk",
+      "kind": "repo",
+      "role": "protocol_core",
+      "path": "..\\..\\chunk-chunk",
+      "github_url": "https://github.com/DonkeyJJLove/chunk-chunk",
+      "most": "SEMANTYKA-ENERGIA",
+      "features": {
+        "lines_of_code": 0,
+        "files": 0
+      }
+    },
+    {
+      "id": "REPO_glitchlab",
+      "kind": "repo",
+      "role": "image_mosaic_gui",
+      "path": "..\\..\\glitchlab",
+      "github_url": "https://github.com/DonkeyJJLove/glitchlab",
+      "most": "HUMAN-AI‡",
+      "features": {
+        "lines_of_code": 0,
+        "files": 0
+      }
+    },
+    {
+      "id": "REPO_swarm",
+      "kind": "repo",
+      "role": "orchestrator",
+      "path": "..\\..\\swarm",
+      "github_url": "https://github.com/DonkeyJJLove/swarm",
+      "most": "WIOSKA-MIASTO",
+      "features": {}
+    },
+    {
+      "id": "REPO_HA2D",
+      "kind": "repo",
+      "role": "analysis_engine",
+      "path": "..\\..\\HA2D",
+      "github_url": "https://github.com/DonkeyJJLove/HA2D",
+      "most": "OSTRZE-CIERPLIWOSC",
+      "features": {}
+    },
+    {
+      "id": "REPO_hipotezy_LLM",
+      "kind": "repo",
+      "role": "theory_spec",
+      "path": "..\\..\\hipotezy_nadawcze_LLM",
+      "github_url": "https://github.com/DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "most": "PLAN-PAUZA",
+      "features": {}
+    }
+  ],
+
+  "edges": [
+    { "from": "REPO_chunk-chunk", "to": "REPO_glitchlab", "kind": "provides_language" },
+    { "from": "REPO_glitchlab", "to": "REPO_HA2D", "kind": "emits_metrics" },
+    { "from": "REPO_glitchlab", "to": "REPO_swarm", "kind": "requires_orchestration" },
+    { "from": "REPO_hipotezy_LLM", "to": "REPO_chunk-chunk", "kind": "provides_theory" }
+  ],
+
+  "metrics": {
+    "last_scan": {
+      "repos_found": 5,
+      "dirs_scanned": 0,
+      "errors": []
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "updated": "2025-11-22T21:24:24.9712249+01:00",
+  "latarnia_id": "LAT_GLX_PROJECT_MOSAIC",
+  "description": "Mozaika repozytoriów GitHub użytkownika jako elementów woluminu 9D w koncepcji ZION–KRÓLESTWO–NIEBIESKIE.",
+  "repos": [
+    {
+      "name": "chunk-chunk",
+      "url": "https://github.com/DonkeyJJLove/chunk-chunk",
+      "zion": "KRÓLESTWO-NIEBIESKIE: rdzeń protokołu.",
+      "role": "Rdzeń protokołu kompresji 9D (procesy, mosty, pipeline).",
+      "layer": "SEM/WIOSKA-MIASTO"
+    },
+    {
+      "name": "glitchlab",
+      "url": "https://github.com/DonkeyJJLove/glitchlab",
+      "zion": "KRÓLESTWO-NIEBIESKIE: strefa eksperymentu.",
+      "role": "Laboratorium anomalii, glitche, eksperymenty na strukturach 9D.",
+      "layer": "SEM/WIOSKA-MIASTO"
+    },
+    {
+      "name": "swarm",
+      "url": "https://github.com/DonkeyJJLove/swarm",
+      "zion": "KRÓLESTWO-NIEBIESKIE: warstwa rojowa.",
+      "role": "Rój / federacja agentów i mikro-podmiotów, dystrybucja pracy.",
+      "layer": "SEM/WIOSKA-MIASTO"
+    },
+    {
+      "name": "HA2D",
+      "url": "https://github.com/DonkeyJJLove/HA2D",
+      "zion": "KRÓLESTWO-NIEBIESKIE: brama Human–AI.",
+      "role": "Interfejs Human–AI, płaszczyzny 2D/9D, rytuały komunikacji.",
+      "layer": "MAND/HUMAN-AI‡"
+    },
+    {
+      "name": "hipotezy_nadawcze_LLM",
+      "url": "https://github.com/DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "zion": "KRÓLESTWO-NIEBIESKIE: warstwa doktryny.",
+      "role": "Hipotezy nadawcze, meta-język, analiza sposobów emisji treści przez LLM.",
+      "layer": "SEM/SEMANTYKA-ENERGIA"
+    },
+    {
+      "name": "writeups",
+      "url": "https://github.com/DonkeyJJLove/writeups",
+      "zion": "KRÓLESTWO-NIEBIESKIE: kronika i ewangelia projektu.",
+      "role": "Narracje, raporty, opisy eksperymentów; spójnik między kodem a światem.",
+      "layer": "MAND/LOCUS-MEDIUM-MANDAT"
+    }
+  ],
+  "volume": "QV9D",
+  "owner": "DonkeyJJLove",
+  "version": "1.0",
+  "generated_by": "Scan-9D.ps1",
+  "root": {
+    "id": "GLX_PROJECT",
+    "kind": "project",
+    "label": "GLX + chunk-chunk + glitchlab + swarm + HA2D + hipotezy_nadawcze_LLM"
+  },
+  "nodes": [
+    {
+      "id": "REPO_MOUT",
+      "kind": "repo",
+      "label": "MOUT",
+      "role": "unknown",
+      "path": "C:\\Users\\donke\\PycharmProjects\\QV9D\\MOUT",
+      "most": "RDZEN-PERYFERIA",
+      "weight_9D": {
+        "base": 1.0
+      }
+    }
+  ],
+  "edges": [],
+  "metrics": {
+    "last_scan": {
+      "repos_found": 1,
+      "dirs_scanned": 1101,
+      "timestamp": "2025-11-22T22:21:58.5571015+01:00"
+    }
+  },
+  "weights_9D": [
+    {
+      "id": "CISZA-WYDECH",
+      "k_base": 1.0
+    },
+    {
+      "id": "PLAN-PAUZA",
+      "k_base": 1.0
+    },
+    {
+      "id": "RDZEN-PERYFERIA",
+      "k_base": 1.0
+    },
+    {
+      "id": "WIOSKA-MIASTO",
+      "k_base": 1.0
+    },
+    {
+      "id": "OSTRZE-CIERPLIWOSC",
+      "k_base": 1.0
+    },
+    {
+      "id": "LOCUS-MEDIUM-MANDAT",
+      "k_base": 1.0
+    },
+    {
+      "id": "HUMAN-AI‡",
+      "k_base": 1.0
+    },
+    {
+      "id": "PROG-PRZEJSCIE",
+      "k_base": 1.0
+    },
+    {
+      "id": "SEMANTYKA-ENERGIA",
+      "k_base": 1.0
+    }
+  ],
+  "generated_at": "2025-11-22T22:21:58.5577880+01:00"
+}
