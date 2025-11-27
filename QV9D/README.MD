@@ -1,4 +1,4 @@
-# Wprowadzenie – Protokół HoloMozaikowej Kompresji 9D (HMK-9D 4 GlitchLab)AAAA
+# Wprowadzenie – Protokół HoloMozaikowej Kompresji 9D (HMK-9D 4 GlitchLab)AA
 
 Współczesne systemy Human–AI funkcjonują nie jako pojedyncze, statyczne automaty decyzyjne, lecz jako gęste, wielowarstwowe sieci procesów, w których kolejne decyzje nadpisują siebie wzajemnie w czasie. Tradycyjne ujęcie — w którym „stan” `s ∈ S` przechodzi w działanie `a ∈ A` przy pomocy polityki `π(a|s)` — jest w tym kontekście konieczne, ale niewystarczające. Brakuje w nim opisu **samej geometrii protokołu**, czyli tego, w jaki sposób system buduje ciągi kroków, porcjuje informację w `chunk–chunk→`, kształtuje relacje między tymi krokami i jak ta struktura wpływa na globalny błąd `R(F, g)` oraz dolną granicę `R*(K)`.
 
