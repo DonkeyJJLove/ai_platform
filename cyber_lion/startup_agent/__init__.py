@@ -6,12 +6,24 @@ from .journal import EvolutionJournal
 from .local_build import BoundedLocalBuildRunner, BuildReceipt
 from .market_intelligence import Contradiction, MarketEvidenceBook, MarketObservation
 from .models import EvolutionState, Experiment, MarketSignal, ProductHypothesis, VentureVector
-from .orchestrator import AIDrivenStartupAgent, CyclePlan, ExperimentOutcome
+from .orchestrator import AIDrivenStartupAgent, CyclePlan, ExperimentOutcome, ProviderCyclePlan
+from .providers import (
+    HypothesisProvider,
+    MarketSourceProvider,
+    ProviderContext,
+    ProviderCoordinator,
+    ProviderReceipt,
+    SoftwareProposalProvider,
+    StaticHypothesisProvider,
+    StaticMarketProvider,
+)
 
 __all__ = [
     "AIDrivenStartupAgent", "BoundedLocalBuildRunner", "BuildReceipt", "Contradiction", "CyclePlan",
     "EvolutionJournal", "EvolutionState", "Experiment", "ExperimentOutcome", "GateDecision",
-    "MarketEvidenceBook", "MarketObservation", "MarketSignal", "ProductHypothesis",
-    "SafeTemplateBuilder", "SoftwareBuildPlanner", "SoftwareBuildSpec", "StartupAuthorityGate",
-    "StartupEvolutionAgent", "VentureVector",
+    "HypothesisProvider", "MarketEvidenceBook", "MarketObservation", "MarketSignal",
+    "MarketSourceProvider", "ProductHypothesis", "ProviderContext", "ProviderCoordinator",
+    "ProviderCyclePlan", "ProviderReceipt", "SafeTemplateBuilder", "SoftwareBuildPlanner",
+    "SoftwareBuildSpec", "SoftwareProposalProvider", "StartupAuthorityGate", "StartupEvolutionAgent",
+    "StaticHypothesisProvider", "StaticMarketProvider", "VentureVector",
 ]
