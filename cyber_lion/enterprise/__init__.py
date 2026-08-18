@@ -5,6 +5,7 @@ from .control_plane import (
     ExecutionReceipt,
     GateDecision,
 )
+from .federation import RepositoryFederationRegistry, RepositoryManifest
 from .models import (
     AgentSpec,
     EnterpriseModelError,
@@ -23,6 +24,8 @@ __all__ = [
     "GateDecision",
     "MissionSpec",
     "MosaicDelta",
+    "RepositoryFederationRegistry",
+    "RepositoryManifest",
     "SwarmPlanner",
     "SwarmSpec",
 ]
