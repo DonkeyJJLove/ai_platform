@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/repository-manifest/v1",
+  "title": "Cyber-Lion Repository Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "repository",
+    "cyber_lion",
+    "capabilities",
+    "authority",
+    "observability",
+    "security",
+    "epistemic"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "repository": {
+      "type": "object",
+      "required": ["id", "url", "owner", "default_branch"],
+      "properties": {
+        "id": {"type": "string"},
+        "url": {"type": "string"},
+        "owner": {"type": "string"},
+        "default_branch": {"type": "string"},
+        "vcs_ref": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "cyber_lion": {
+      "type": "object",
+      "required": ["tile_id", "roles", "layers", "disposition"],
+      "properties": {
+        "tile_id": {"type": "string"},
+        "roles": {"type": "array", "items": {"type": "string"}},
+        "layers": {"type": "array", "items": {"enum": ["INF", "SEM", "MAND"]}},
+        "disposition": {"type": "array", "items": {"enum": ["KEEP", "REFINE", "EXTRACT", "GENERALIZE", "INTEGRATE", "DEPRECATE", "EXPERIMENTAL", "UNKNOWN"]}}
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {"type": "array", "items": {"type": "string"}},
+    "authority": {
+      "type": "object",
+      "required": ["maximum_level", "required_gates"],
+      "properties": {
+        "maximum_level": {"type": "string"},
+        "required_gates": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "observability": {
+      "type": "object",
+      "required": ["logs", "metrics", "traces"],
+      "properties": {
+        "logs": {"type": "array", "items": {"type": "string"}},
+        "metrics": {"type": "array", "items": {"type": "string"}},
+        "traces": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "required": ["trust_boundaries"],
+      "properties": {
+        "trust_boundaries": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "epistemic": {
+      "type": "object",
+      "required": ["status", "confidence"],
+      "properties": {
+        "status": {"type": "string"},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}
