@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/event-envelope/v1",
+  "title": "Cyber-Lion Event Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "occurred_at",
+    "correlation_id",
+    "entity",
+    "source",
+    "provenance",
+    "authority",
+    "epistemic_state",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "event_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "ObservationCreated",
+        "DeltaDetected",
+        "StructureExtracted",
+        "HypothesisGenerated",
+        "HypothesisUpdated",
+        "EvidenceAttached",
+        "AnomalyDetected",
+        "SimulationRequested",
+        "SimulationCompleted",
+        "DecisionProposed",
+        "GateRequested",
+        "GateApplied",
+        "ActionAuthorized",
+        "ActionExecuted",
+        "OutcomeObserved",
+        "MemoryCandidateCreated",
+        "MemoryCommitted",
+        "AuthorityDegraded",
+        "ArtifactSuperseded",
+        "ReplayRequested",
+        "ReplayCompleted"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "correlation_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "causation_id": {"type": ["string", "null"], "maxLength": 256},
+    "entity": {"type": "object"},
+    "source": {"type": "object"},
+    "provenance": {
+      "type": "object",
+      "required": ["epistemic_status", "upstream"],
+      "properties": {
+        "epistemic_status": {
+          "type": "string",
+          "enum": [
+            "FACT",
+            "OBSERVED",
+            "DERIVED",
+            "HYPOTHESIS",
+            "SPECULATION",
+            "MODEL_RESULT",
+            "RESULT",
+            "NEGATIVE_RESULT",
+            "SUPERSEDED",
+            "UNKNOWN"
+          ]
+        },
+        "upstream": {"type": "array", "items": {"type": "string"}},
+        "transformation_chain": {"type": "array", "items": {"type": "string"}},
+        "content_hash": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "authority": {
+      "type": "object",
+      "required": ["requested", "effective", "policy_ids", "gate_event_id"],
+      "properties": {
+        "requested": {"type": "string"},
+        "effective": {"type": "string"},
+        "policy_ids": {"type": "array", "items": {"type": "string"}},
+        "gate_event_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "epistemic_state": {
+      "type": "string",
+      "enum": ["UNKNOWN", "UNDERSTOOD", "FORMALISED"]
+    },
+    "payload": {"type": "object"}
+  }
+}
