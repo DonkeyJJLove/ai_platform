@@ -1,15 +1,47 @@
-# CYBER-LION — Architecture Analysis Root
+# CYBER-LION — AI-Native Enterprise Control Plane
 
-Status: **ANALYTICAL BASELINE / pre-implementation**  
-Branch: `cyber-lion/00-architecture-analysis`
+Status: **EXECUTABLE ARCHITECTURE / ACTIVE EVOLUTION**
 
-Cyber-Lion is defined here as a **federated system-of-systems**, not a monolith and not a rewrite of the existing repositories. The architecture is organized by capabilities, state transitions, information flow and authority rather than repository names.
+Cyber-Lion is a **federated AI-Native enterprise operating system** built from the DonkeyJJLove repository ecosystem. It is not a monolith and does not equate repository boundaries with subsystem or authority boundaries.
+
+Its purpose is to create and evolve agents, compose them into dynamic Mosaic Cells and swarms, connect research to software and execution, and preserve identity, provenance, observability, security and rollback across every consequential transition.
+
+## Core operating model
+
+```text
+WORLD / MARKET / SYSTEM
+          ↓
+      OBSERVATION
+          ↓
+    R&D / HYPOTHESIS
+          ↓
+        MISSION
+          ↓
+      AGENT FOUNDRY
+          ↓
+     AgentSpec[]
+          ↓
+  MosaicCell / SwarmSpec
+          ↓
+   proposal / software Δ
+          ↓
+ GLITCHLAB / INVARIANTS
+          ↓
+  POLICY / AUTHORITY GATE
+          ↓
+     EXECUTION MESH
+          ↓
+        EFFECT
+          ↓
+ OBSERVABILITY / OUTCOME
+          ↓
+ MEMORY / R&D / NEXT Δ
+```
 
 ## Governing invariants
 
 ```text
 OPEN INTELLIGENCE != OPEN AUTHORITY
-
 NO ACTION WITHOUT IDENTITY
 NO AUTHORITY WITHOUT PROVENANCE
 NO ESCALATION WITHOUT APPLIED GATE
@@ -20,64 +52,95 @@ NO GLOBAL CLAIM FROM LOCAL OBSERVATION
 NO LOST OBSERVABILITY WITHOUT AUTHORITY DEGRADATION
 NO PROBABILISTIC OUTPUT DIRECTLY AS EXECUTION
 NO FORMALISED RULE LEFT AS REPEATED LLM GUESS
+NO SWARM MEMBER WITHOUT AGENT SPEC
+NO AGENT SPAWN WITHOUT IDENTITY + BUDGET + AUTHORITY CEILING
+NO ENTERPRISE CHANGE WITHOUT DELTA + TEST + ROLLBACK
 ```
 
-## Analytical outputs
+## Implemented foundations
 
-1. [`REPOSITORY_INVENTORY.md`](REPOSITORY_INVENTORY.md) — actual roles, assets, maturity and debt.
-2. [`CAPABILITY_MAP.md`](CAPABILITY_MAP.md) — capabilities independent of repository boundaries.
-3. [`TARGET_ARCHITECTURE.md`](TARGET_ARCHITECTURE.md) — target federated architecture and ownership.
-4. [`CONTRACT_MAP.md`](CONTRACT_MAP.md) — contracts required before cross-repository integration.
-5. [`EVENT_DATA_MODEL.md`](EVENT_DATA_MODEL.md) — shared identity/event/gate/execution model.
-6. [`MIGRATION_MAP.md`](MIGRATION_MAP.md) — ordered CURRENT → COMPATIBILITY → MIGRATION → TARGET plan.
-7. [`SCIENTIFIC_STATUS.md`](SCIENTIFIC_STATUS.md) — epistemic status of constructs and evidence.
+Current executable Cyber-Lion includes:
 
-## Architecture rule
+- `EntityIdentity` and lossless SBOM/AID compatibility,
+- typed `EventEnvelope`, provenance and authority,
+- `CapabilityRegistry`,
+- provider plane with provenance receipts,
+- Startup Evolution Agent,
+- provenance/time-aware MarketEvidenceBook,
+- SoftwareBuildPlanner and safe template generation,
+- bounded local build runner,
+- EvolutionJournal/replay,
+- startup CLI/JSON import,
+- `AgentSpec`, `MissionSpec`, `SwarmSpec`, `MosaicDelta`,
+- deterministic capability-based `SwarmPlanner`.
 
-A Git repository is an organizational boundary, **not automatically a subsystem boundary**. A repository may provide several capabilities; one capability may depend on several repositories.
+## Enterprise architecture
 
-## Current high-level reconstruction
+The current repository ecosystem is treated as federated organs:
 
 ```text
-                         CYBER-LION
-                              |
-                     ai_platform contracts
-                     registry / control plane
-                              |
-        +---------------------+---------------------+
-        |                     |                     |
-   COGNITION / SEM       AUTHORITY / MAND      EXECUTION / INF
-        |                     |                     |
- chunk-chunk               sbom/AID               swarm
- HA2D                      local gates             tool workers
- hipotezy                  policy contracts        sandbox boundary
-        |                     |                     |
-        +----------+----------+----------+----------+
-                   |                     |
-             STRUCTURE / DELTA      SIMULATION / RISK
-                   |                     |
-          glitchlab + mosaic      SymulacjaKaskadySieciowej
-                   |
-              EVIDENCE CORPUS
-                   |
-                writeups
+ai_platform              → Enterprise Control Plane / Agent Foundry
+glitchlab                → Enterprise Evolution Compiler
+chunk-chunk              → Process Semantics / HMK-9D
+HA2D                     → Context / Memory / Human-AI Adaptation Lab
+swarm                    → Distributed Execution Mesh
+sbom                     → Identity / Provenance / Composition Intelligence
+mosaic_lab_pro.py        → Structural Intelligence Engine
+SymulacjaKaskadySieciowej→ Simulation / Falsification Engine
+hipotezy_nadawcze_LLM    → Epistemic Hypothesis Lab
+writeups                 → R&D / Enterprise Research Memory
 ```
 
-This diagram is a migration hypothesis. `REPOSITORY_INVENTORY.md` and `CAPABILITY_MAP.md` identify which parts already exist as executable mechanisms and which remain specifications or research constructs.
+Full synthesis: [`enterprise/README.md`](enterprise/README.md).
 
-## Mandatory migration discipline
+Key documents:
+
+1. [`enterprise/AI_NATIVE_ENTERPRISE.md`](enterprise/AI_NATIVE_ENTERPRISE.md) — enterprise state model and repository roles.
+2. [`enterprise/AGENT_SWARM_MODEL.md`](enterprise/AGENT_SWARM_MODEL.md) — single-agent, Mosaic Cell and dynamic swarm contracts.
+3. [`enterprise/GENERATION_EVOLUTION_PROTOCOL.md`](enterprise/GENERATION_EVOLUTION_PROTOCOL.md) — safe generation/update rules for the polymorphic ecosystem.
+4. [`enterprise/RND_OPERATING_MODEL.md`](enterprise/RND_OPERATING_MODEL.md) — R&D evidence and promotion pipeline.
+5. [`enterprise/REPOSITORY_EVOLUTION_PLAN.md`](enterprise/REPOSITORY_EVOLUTION_PLAN.md) — concrete roadmap for every repository.
+
+## Three planes
+
+```text
+SEM  — observation, cognition, representation, simulation, proposals
+MAND — identity, provenance, policy, memory, authority, gates
+INF  — processes, APIs, files, networks, deployment, external effects
+```
+
+Fundamental relation:
+
+```text
+SEM proposal != MAND authorization != INF effect
+```
+
+## Architecture analysis retained
+
+The original archaeology remains relevant and is preserved as evidence for migration decisions:
+
+- [`REPOSITORY_INVENTORY.md`](REPOSITORY_INVENTORY.md)
+- [`CAPABILITY_MAP.md`](CAPABILITY_MAP.md)
+- [`TARGET_ARCHITECTURE.md`](TARGET_ARCHITECTURE.md)
+- [`CONTRACT_MAP.md`](CONTRACT_MAP.md)
+- [`EVENT_DATA_MODEL.md`](EVENT_DATA_MODEL.md)
+- [`MIGRATION_MAP.md`](MIGRATION_MAP.md)
+- [`SCIENTIFIC_STATUS.md`](SCIENTIFIC_STATUS.md)
+
+## Migration discipline
 
 ```text
 archaeology
-→ architecture specification
-→ identity contract
-→ event contract
-→ capability registry
-→ adapters
-→ local enforcement integration
-→ observability/replay
-→ adversarial validation
+→ typed contract
+→ compatibility adapter
+→ provider implementation
+→ consumer integration
+→ negative/adversarial tests
+→ observability proof
+→ deterministic gate
+→ bounded execution
+→ outcome/replay
 → deprecate legacy only after compatibility proof
 ```
 
-No later Cyber-Lion PR should bypass this dependency order without documenting why.
+Cyber-Lion should evolve aggressively in **proposal and research space**, while consequential execution remains narrow, reconstructable and revocable.

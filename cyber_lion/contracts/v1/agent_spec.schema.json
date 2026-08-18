@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/agent-spec/v1",
+  "title": "Cyber-Lion AgentSpec v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "agent_id", "version", "role", "mission", "capabilities",
+    "authority_ceiling", "execution_domain", "risk_class"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "agent_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "role": {"type": "string", "minLength": 1},
+    "mission": {"type": "string", "minLength": 1},
+    "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "authority_ceiling": {"enum": ["none", "read", "local_write", "external_write", "financial", "deploy", "privileged"]},
+    "execution_domain": {"type": "string", "minLength": 1},
+    "observability_events": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "memory_read": {"type": "boolean"},
+    "memory_write": {"type": "boolean"},
+    "memory_policy_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "max_runtime_seconds": {"type": "integer", "exclusiveMinimum": 0},
+    "max_cost_units": {"type": "number", "minimum": 0},
+    "risk_class": {"enum": ["GREEN", "AMBER", "RED"]},
+    "provider_class": {"type": "string"},
+    "is_verifier": {"type": "boolean"},
+    "process_profile": {"type": ["string", "null"]}
+  }
+}
