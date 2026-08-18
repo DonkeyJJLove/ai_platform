@@ -10,6 +10,13 @@ from .engine import StartupEvolutionAgent
 from .local_build import BoundedLocalBuildRunner, BuildReceipt
 from .market_intelligence import MarketEvidenceBook
 from .models import EvolutionState, Experiment, ProductHypothesis, StartupModelError, VentureVector
+from .providers import (
+    HypothesisProvider,
+    MarketSourceProvider,
+    ProviderContext,
+    ProviderCoordinator,
+    ProviderReceipt,
+)
 
 
 @dataclass(frozen=True)
@@ -21,6 +28,15 @@ class CyclePlan:
     scaffold: Dict[str, str]
     authority: GateDecision
     score: float
+
+
+@dataclass(frozen=True)
+class ProviderCyclePlan:
+    """Cycle plan plus immutable provider provenance for the observations/hypotheses used."""
+
+    plan: CyclePlan
+    market_receipts: tuple[ProviderReceipt, ...]
+    hypothesis_receipts: tuple[ProviderReceipt, ...]
 
 
 @dataclass(frozen=True)
@@ -56,6 +72,7 @@ class AIDrivenStartupAgent:
         self.builder = SafeTemplateBuilder()
         self.authority_gate = StartupAuthorityGate()
         self.local_build_runner = BoundedLocalBuildRunner()
+        self.provider_coordinator = ProviderCoordinator()
         self.evidence = MarketEvidenceBook()
 
     def plan(
@@ -76,6 +93,32 @@ class AIDrivenStartupAgent:
         scaffold = self.builder.render(build_spec)
         authority = self.authority_gate.decide(experiment, gate_event_id=gate_event_id)
         return CyclePlan(state, hypothesis, experiment, build_spec, scaffold, authority, score)
+
+    def plan_from_providers(
+        self,
+        context: ProviderContext,
+        market_providers: Sequence[MarketSourceProvider],
+        hypothesis_providers: Sequence[HypothesisProvider],
+        *,
+        previous: Optional[EvolutionState] = None,
+        gate_event_id: Optional[str] = None,
+    ) -> ProviderCyclePlan:
+        """Collect observations/proposals through provider contracts, then use the normal plan path.
+
+        Provider outputs are inputs only. `gate_event_id` can be supplied only by the caller
+        representing the authority plane; no provider interface contains a way to grant it.
+        """
+        context.validate()
+        observations, market_receipts = self.provider_coordinator.collect_market(context, market_providers)
+        self.evidence.extend(observations)
+        hypotheses, hypothesis_receipts = self.provider_coordinator.propose_hypotheses(
+            context, observations, hypothesis_providers
+        )
+        hypotheses = self.provider_coordinator.deduplicate_hypotheses(hypotheses)
+        if not hypotheses:
+            raise StartupModelError("hypothesis providers produced no valid hypotheses")
+        plan = self.plan(hypotheses, previous=previous, gate_event_id=gate_event_id)
+        return ProviderCyclePlan(plan, tuple(market_receipts), tuple(hypothesis_receipts))
 
     def build_local(self, plan: CyclePlan) -> BuildReceipt:
         """Materialize/test a local-only plan after the authority decision allows it."""
