@@ -1,0 +1,25 @@
+# IDE / local state
+.idea/
+.vscode/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+
+# Secrets / local configuration
+.env
+.env.*
+!.env.sample
+
+# Generated state
+*.log
+.DS_Store
+Thumbs.db
