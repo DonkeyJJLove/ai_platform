@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Sequence
 from .authority import GateDecision, StartupAuthorityGate
 from .build_planner import SafeTemplateBuilder, SoftwareBuildPlanner, SoftwareBuildSpec
 from .engine import StartupEvolutionAgent
+from .local_build import BoundedLocalBuildRunner, BuildReceipt
 from .market_intelligence import MarketEvidenceBook
 from .models import EvolutionState, Experiment, ProductHypothesis, StartupModelError, VentureVector
 
@@ -54,6 +55,7 @@ class AIDrivenStartupAgent:
         self.build_planner = SoftwareBuildPlanner()
         self.builder = SafeTemplateBuilder()
         self.authority_gate = StartupAuthorityGate()
+        self.local_build_runner = BoundedLocalBuildRunner()
         self.evidence = MarketEvidenceBook()
 
     def plan(
@@ -74,6 +76,14 @@ class AIDrivenStartupAgent:
         scaffold = self.builder.render(build_spec)
         authority = self.authority_gate.decide(experiment, gate_event_id=gate_event_id)
         return CyclePlan(state, hypothesis, experiment, build_spec, scaffold, authority, score)
+
+    def build_local(self, plan: CyclePlan) -> BuildReceipt:
+        """Materialize/test a local-only plan after the authority decision allows it."""
+        if plan.authority.decision != "ALLOW":
+            raise StartupModelError(
+                f"local build requires autonomous ALLOW decision, got {plan.authority.decision}"
+            )
+        return self.local_build_runner.run(plan.build_spec, plan.scaffold)
 
     @staticmethod
     def apply_outcome(state: EvolutionState, experiment: Experiment, outcome: ExperimentOutcome) -> EvolutionState:
@@ -109,8 +119,6 @@ class AIDrivenStartupAgent:
             delta = evidence_step if dimension == "evidence_strength" else value_step
             values[dimension] = min(1.0, max(0.0, values[dimension] + delta))
 
-        # Learning velocity rises when a real experiment yields high-quality evidence,
-        # regardless of whether the hypothesis wins or loses.
         values["learning_velocity"] = min(
             1.0,
             max(values["learning_velocity"], values["learning_velocity"] + 0.08 * outcome.evidence_quality),
