@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "repository": {
+    "id": "DonkeyJJLove/ai_platform",
+    "url": "https://github.com/DonkeyJJLove/ai_platform",
+    "owner": "DonkeyJJLove",
+    "default_branch": "master",
+    "vcs_ref": null
+  },
+  "cyber_lion": {
+    "tile_id": "control-plane.cyber-lion",
+    "roles": ["EnterpriseControlPlane", "AgentFoundry", "SwarmPlanner", "FederationRegistry", "AuthorityPolicyEngine"],
+    "layers": ["INF", "SEM", "MAND"],
+    "disposition": ["KEEP", "REFINE", "INTEGRATE"]
+  },
+  "capabilities": [
+    "agent.spec",
+    "mission.spec",
+    "swarm.plan",
+    "mosaic.delta",
+    "repository.discover",
+    "action.propose",
+    "gate.evaluate",
+    "execution.receipt",
+    "event.envelope"
+  ],
+  "authority": {
+    "maximum_level": "external_write",
+    "required_gates": ["cyber-lion.mand.policy", "independent.verifier"]
+  },
+  "observability": {
+    "logs": ["mission.lifecycle", "swarm.lifecycle", "gate.decision", "execution.receipt", "authority.degradation"],
+    "metrics": ["swarm.count", "gate.allow", "gate.deny", "observability.coverage", "authority.expansion.count"],
+    "traces": ["evidence→mission→swarm→proposal→gate→execution→receipt→outcome"]
+  },
+  "security": {
+    "trust_boundaries": [
+      "repository registration != credentials",
+      "AgentSpec != runtime identity",
+      "GateDecision != external side effect",
+      "model proposal != authority",
+      "authority expansion requires independent deterministic gate",
+      "consequential execution requires causal gate binding and observable receipt"
+    ]
+  },
+  "epistemic": {
+    "status": "ENGINEERING_CANDIDATE",
+    "confidence": 0.88
+  }
+}
