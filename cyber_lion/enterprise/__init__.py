@@ -1,4 +1,10 @@
 """Cyber-Lion AI-Native enterprise agent/swarm contracts."""
+from .control_plane import (
+    ActionProposal,
+    ExecutionControlPlane,
+    ExecutionReceipt,
+    GateDecision,
+)
 from .models import (
     AgentSpec,
     EnterpriseModelError,
@@ -9,8 +15,12 @@ from .models import (
 from .planner import SwarmPlanner
 
 __all__ = [
+    "ActionProposal",
     "AgentSpec",
     "EnterpriseModelError",
+    "ExecutionControlPlane",
+    "ExecutionReceipt",
+    "GateDecision",
     "MissionSpec",
     "MosaicDelta",
     "SwarmPlanner",
