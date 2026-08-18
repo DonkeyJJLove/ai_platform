@@ -1,0 +1,29 @@
+name: Cyber-Lion Contracts
+on:
+  pull_request:
+    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml"]
+  push:
+    branches: ["cyber-lion/**"]
+    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml"]
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Parse JSON schemas
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('cyber_lion/contracts').rglob('*.json'):
+              json.loads(path.read_text(encoding='utf-8'))
+              print('parsed', path)
+          PY
+      - name: Compile contract package
+        run: python -m compileall -q cyber_lion/contracts
+      - name: Run contract tests
+        run: python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v

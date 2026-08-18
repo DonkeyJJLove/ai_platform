@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/entity-identity/v1",
+  "title": "Cyber-Lion Entity Identity Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "entity_id", "entity_type", "owner", "environment"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "entity_id": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},
+    "entity_type": {"type": "string", "enum": ["application", "repository", "service", "agent", "model", "tool", "artifact", "experiment", "execution", "dataset", "workload", "other"]},
+    "owner": {"type": "string", "minLength": 1, "maxLength": 256},
+    "repo": {"type": ["string", "null"], "pattern": "^[^/\\s]+/[^/\\s]+$"},
+    "version": {"type": ["string", "null"], "maxLength": 128},
+    "vcs_ref": {"type": ["string", "null"], "maxLength": 256},
+    "environment": {"type": "string", "enum": ["lab", "dev", "test", "stage", "prod", "local", "unknown"]},
+    "runtime": {"type": ["string", "null"], "maxLength": 256},
+    "parent_entity": {"type": ["string", "null"], "maxLength": 256},
+    "created_at": {"type": ["string", "null"], "format": "date-time"},
+    "compat": {"type": "object", "additionalProperties": true, "properties": {"aid": {"type": ["object", "null"], "additionalProperties": true}}}
+  }
+}
