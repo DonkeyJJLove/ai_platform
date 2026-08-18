@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/swarm-spec/v1",
+  "title": "Cyber-Lion SwarmSpec v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "swarm_id", "mission_id", "member_agent_ids", "covered_capabilities",
+    "topology", "authority_ceiling", "risk_class", "observability_quorum"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "swarm_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "member_agent_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "covered_capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "topology": {"enum": ["direct_cell", "capability_mosaic", "hub_spoke_with_verifier", "segmented_peer_review"]},
+    "authority_ceiling": {"enum": ["none", "read", "local_write", "external_write", "financial", "deploy", "privileged"]},
+    "risk_class": {"enum": ["GREEN", "AMBER", "RED"]},
+    "observability_quorum": {"type": "number", "minimum": 0, "maximum": 1},
+    "verifier_agent_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "estimated_cost_units": {"type": "number", "minimum": 0}
+  }
+}
