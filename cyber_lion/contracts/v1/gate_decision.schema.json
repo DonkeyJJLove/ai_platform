@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/gate-decision/v1",
+  "title": "Cyber-Lion GateDecision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "gate_event_id", "proposal_id", "decision", "effective_authority", "policy_ids", "rationale"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "gate_event_id": {"type": "string", "minLength": 1},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["ALLOW", "DENY"]},
+    "effective_authority": {"enum": ["none", "read", "local_write", "external_write", "financial", "deploy", "privileged"]},
+    "policy_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "rationale": {"type": "string", "minLength": 1},
+    "verifier_agent_id": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"decision": {"const": "ALLOW"}}, "required": ["decision"]},
+      "then": {"properties": {"policy_ids": {"minItems": 1}}}
+    },
+    {
+      "if": {"properties": {"decision": {"const": "DENY"}}, "required": ["decision"]},
+      "then": {"properties": {"effective_authority": {"const": "none"}}}
+    }
+  ]
+}
