@@ -49,6 +49,24 @@ VALID = {
     ]
 }
 
+# Explicit BUILD-stage fixture: market/evidence/differentiation are already strong,
+# while technical feasibility and delivery velocity remain the dominant bottleneck.
+# That deterministically selects a local_prototype experiment with autonomous ALLOW.
+BUILD_LOCAL = json.loads(json.dumps(VALID))
+BUILD_LOCAL["hypotheses"][0]["baseline"].update(
+    {
+        "market_pull": 0.82,
+        "evidence_strength": 0.72,
+        "technical_feasibility": 0.40,
+        "differentiation": 0.72,
+        "distribution_access": 0.62,
+        "delivery_velocity": 0.42,
+        "security_readiness": 0.82,
+        "unit_economics": 0.62,
+        "learning_velocity": 0.82,
+    }
+)
+
 
 class StartupCliTests(unittest.TestCase):
     def test_run_cycle_returns_machine_readable_plan(self):
@@ -79,10 +97,16 @@ class StartupCliTests(unittest.TestCase):
             self.assertEqual(result["startup_id"], "s1")
 
     def test_build_local_runs_only_when_plan_allows_it(self):
-        result = run_cycle(VALID, build_local=True)
-        # The fixture is deliberately in BUILD/prototype territory, so local authority is bounded.
+        result = run_cycle(BUILD_LOCAL, build_local=True)
+        self.assertEqual(result["experiment_type"], "prototype")
+        self.assertEqual(result["authority"]["decision"], "ALLOW")
         self.assertIsNotNone(result["build_receipt"])
         self.assertEqual(result["build_receipt"]["status"], "PASS")
+
+    def test_build_local_refuses_approval_required_plan(self):
+        # Default fixture selects an external market experiment. --build-local must not bypass it.
+        with self.assertRaises(StartupModelError):
+            run_cycle(VALID, build_local=True)
 
     def test_cli_returns_error_code_for_bad_input(self):
         with tempfile.TemporaryDirectory() as tmp:
