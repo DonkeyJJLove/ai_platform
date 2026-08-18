@@ -1,14 +1,14 @@
-name: Cyber-Lion Contracts
+name: Cyber-Lion Core
 on:
   pull_request:
-    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml"]
+    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md"]
   push:
     branches: ["cyber-lion/**"]
-    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml"]
+    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md"]
 permissions:
   contents: read
 jobs:
-  contracts:
+  core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,9 @@ jobs:
               json.loads(path.read_text(encoding='utf-8'))
               print('parsed', path)
           PY
-      - name: Compile contract package
-        run: python -m compileall -q cyber_lion/contracts
-      - name: Run contract tests
+      - name: Compile Cyber-Lion package
+        run: python -m compileall -q cyber_lion
+      - name: Run Cyber-Lion tests
         run: python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
+      - name: Run Startup Evolution demo
+        run: python -m cyber_lion.startup_agent.demo > /tmp/startup-agent-demo.json
