@@ -98,7 +98,7 @@ class StartupCliTests(unittest.TestCase):
 
     def test_build_local_runs_only_when_plan_allows_it(self):
         result = run_cycle(BUILD_LOCAL, build_local=True)
-        self.assertEqual(result["experiment_type"], "prototype")
+        self.assertEqual(result["experiment"]["experiment_type"], "prototype")
         self.assertEqual(result["authority"]["decision"], "ALLOW")
         self.assertIsNotNone(result["build_receipt"])
         self.assertEqual(result["build_receipt"]["status"], "PASS")
