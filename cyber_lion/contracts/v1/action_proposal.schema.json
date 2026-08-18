@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/action-proposal/v1",
+  "title": "Cyber-Lion ActionProposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "proposal_id", "mission_id", "swarm_id", "proposer_agent_id", "capability", "requested_authority", "action_class", "target", "consequential", "evidence_refs", "required_observability"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "swarm_id": {"type": "string", "minLength": 1},
+    "proposer_agent_id": {"type": "string", "minLength": 1},
+    "capability": {"type": "string", "minLength": 1},
+    "requested_authority": {"enum": ["none", "read", "local_write", "external_write", "financial", "deploy", "privileged"]},
+    "action_class": {"type": "string", "minLength": 1},
+    "target": {"type": "string", "minLength": 1},
+    "consequential": {"type": "boolean"},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "required_observability": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "verifier_agent_id": {"type": ["string", "null"]},
+    "payload_digest": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"consequential": {"const": true}}, "required": ["consequential"]},
+      "then": {
+        "properties": {
+          "evidence_refs": {"minItems": 1},
+          "required_observability": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}
