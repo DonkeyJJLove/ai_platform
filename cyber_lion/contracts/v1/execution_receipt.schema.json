@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/execution-receipt/v1",
+  "title": "Cyber-Lion ExecutionReceipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "receipt_id", "proposal_id", "gate_event_id", "executor_agent_id", "outcome", "effect_digest", "observed_events"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "receipt_id": {"type": "string", "minLength": 1},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "gate_event_id": {"type": "string", "minLength": 1},
+    "executor_agent_id": {"type": "string", "minLength": 1},
+    "outcome": {"enum": ["SUCCEEDED", "FAILED", "PARTIAL", "ABORTED"]},
+    "effect_digest": {"type": "string", "minLength": 1},
+    "observed_events": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "side_effect_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
+}
