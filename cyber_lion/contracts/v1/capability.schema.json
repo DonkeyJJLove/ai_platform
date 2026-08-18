@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"cyberlion://schemas/capability/v1",
+  "title":"Cyber-Lion Capability Descriptor v1",
+  "type":"object","additionalProperties":false,
+  "required":["schema_version","capability_id","provider_entity","version","inputs","outputs","side_effects","required_authority","required_gates","epistemic_status"],
+  "properties":{
+    "schema_version":{"const":"1.0.0"},
+    "capability_id":{"type":"string","minLength":3,"pattern":"^[a-z0-9][a-z0-9._:-]*$"},
+    "provider_entity":{"type":"string","minLength":1},"version":{"type":"string","minLength":1},
+    "inputs":{"type":"array","items":{"type":"string"}},"outputs":{"type":"array","items":{"type":"string"}},
+    "side_effects":{"type":"array","items":{"type":"string","enum":["none","read","write","execute","network","memory","authority","external"]},"minItems":1,"uniqueItems":true},
+    "required_authority":{"type":"string","minLength":1},"required_gates":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "observability_events":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "epistemic_status":{"type":"string","enum":["FORMALISED","UNDERSTOOD","EXPERIMENTAL","UNKNOWN"]}
+  }
+}

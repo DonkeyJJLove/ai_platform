@@ -1,0 +1,16 @@
+{
+  "schema_version":"1.0.0",
+  "generated_from":"repository-archaeology-2026-08-18",
+  "repositories":[
+    {"id":"DonkeyJJLove/ai_platform","default_branch":"master","roles":["control_plane","contracts","qv9d_mapping"],"layers":["SEM","MAND"],"maturity":"SPECIFICATION","disposition":["KEEP","REFINE","GENERALIZE","INTEGRATE"]},
+    {"id":"DonkeyJJLove/chunk-chunk","default_branch":"master","roles":["context_compression","context_routing","hmk9d"],"layers":["SEM"],"maturity":"SPECIFICATION","disposition":["KEEP","REFINE","EXPERIMENTAL","INTEGRATE"]},
+    {"id":"DonkeyJJLove/glitchlab","default_branch":"master","roles":["delta_analysis","anomaly_analysis","structure_graph","invariants"],"layers":["SEM","MAND"],"maturity":"MIXED","disposition":["KEEP","REFINE","EXTRACT","INTEGRATE"]},
+    {"id":"DonkeyJJLove/HA2D","default_branch":"master","roles":["cognitive_state","memory_semantics","human_ai_hud"],"layers":["SEM","MAND"],"maturity":"SPECIFICATION","disposition":["KEEP","REFINE","EXPERIMENTAL"]},
+    {"id":"DonkeyJJLove/hipotezy_nadawcze_LLM","default_branch":"main","roles":["hypothesis_research","communication_epistemology"],"layers":["SEM"],"maturity":"RESEARCH","disposition":["KEEP","EXPERIMENTAL"]},
+    {"id":"DonkeyJJLove/mosaic_lab_pro.py","default_branch":"main","roles":["structure_graph","abstraction_engine","visualization"],"layers":["SEM","INF"],"maturity":"EXECUTABLE_PROTOTYPE","disposition":["KEEP","EXTRACT","REFINE"]},
+    {"id":"DonkeyJJLove/sbom","default_branch":"main","roles":["aid_identity","supply_chain_provenance","gate_evidence"],"layers":["MAND","INF"],"maturity":"MIXED","disposition":["KEEP","GENERALIZE","INTEGRATE"]},
+    {"id":"DonkeyJJLove/swarm","default_branch":"master","roles":["execution_mesh","telemetry_transport","workload_runtime"],"layers":["INF","MAND"],"maturity":"EXECUTABLE_LAB","disposition":["KEEP","REFINE","INTEGRATE"]},
+    {"id":"DonkeyJJLove/SymulacjaKaskadySieciowej","default_branch":"main","roles":["simulation","monte_carlo","sensitivity_analysis"],"layers":["SEM","INF"],"maturity":"EXECUTABLE_MODEL","disposition":["KEEP","GENERALIZE","INTEGRATE"]},
+    {"id":"DonkeyJJLove/writeups","default_branch":"master","roles":["research_corpus","evidence_source","publication"],"layers":["SEM","MAND"],"maturity":"RESEARCH_CORPUS","disposition":["KEEP","REFINE","INTEGRATE"]}
+  ]
+}
