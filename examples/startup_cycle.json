@@ -1,0 +1,60 @@
+{
+  "startup_id": "cyber-lion-demo-startup",
+  "max_signal_age_days": 90,
+  "hypotheses": [
+    {
+      "hypothesis_id": "agent-runtime-control",
+      "customer": "AI-native software teams",
+      "problem": "Teams ship agentic workflows faster than they can observe and constrain consequential execution.",
+      "solution": "A path-aware execution control plane with provenance and deterministic gates.",
+      "revenue_model": "B2B platform subscription + usage",
+      "baseline": {
+        "market_pull": 0.45,
+        "evidence_strength": 0.25,
+        "technical_feasibility": 0.62,
+        "differentiation": 0.55,
+        "distribution_access": 0.32,
+        "delivery_velocity": 0.68,
+        "security_readiness": 0.76,
+        "unit_economics": 0.45,
+        "learning_velocity": 0.72
+      },
+      "assumptions": [
+        "buyers have consequential agent workflows",
+        "control can be added without destroying delivery velocity"
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "customer-pain-001",
+      "hypothesis_id": "agent-runtime-control",
+      "source": "customer-interview-001",
+      "source_class": "customer",
+      "observed_at": "2026-08-17T10:00:00+00:00",
+      "captured_at": "2026-08-17T10:30:00+00:00",
+      "topic": "agent-control-pain",
+      "signal_kind": "pain",
+      "direction": "supports",
+      "magnitude": 0.9,
+      "confidence": 0.85,
+      "claim": "The team manually reviews consequential tool calls before shipping.",
+      "evidence_ref": "interview://001"
+    },
+    {
+      "observation_id": "customer-demand-002",
+      "hypothesis_id": "agent-runtime-control",
+      "source": "customer-interview-002",
+      "source_class": "customer",
+      "observed_at": "2026-08-18T08:00:00+00:00",
+      "captured_at": "2026-08-18T08:15:00+00:00",
+      "topic": "agent-control-demand",
+      "signal_kind": "demand",
+      "direction": "supports",
+      "magnitude": 0.82,
+      "confidence": 0.75,
+      "claim": "The team is willing to evaluate a runtime control layer in a pilot.",
+      "evidence_ref": "interview://002"
+    }
+  ]
+}
