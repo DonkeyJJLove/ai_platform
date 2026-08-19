@@ -1,9 +1,10 @@
 name: Cyber-Lion Core
 on:
+  workflow_dispatch:
   pull_request:
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md"]
   push:
-    branches: ["cyber-lion/**"]
+    branches: ["master", "cyber-lion/**"]
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md"]
 permissions:
   contents: read
