@@ -17,7 +17,7 @@ OBS = "sha256:" + "2" * 64
 
 def parent_grant() -> AuthorityGrant:
     return AuthorityGrant(
-        schema_version="1.0.0",
+        schema_version="1.1.0",
         grant_id="grant:root",
         issuer_subject_id="root:governance",
         subject_id="workload:builder-parent",
@@ -44,7 +44,7 @@ def parent_grant() -> AuthorityGrant:
 
 def child_grant() -> AuthorityGrant:
     return AuthorityGrant(
-        schema_version="1.0.0",
+        schema_version="1.1.0",
         grant_id="grant:child",
         issuer_subject_id="workload:builder-parent",
         subject_id="workload:builder-child",
@@ -69,15 +69,31 @@ def child_grant() -> AuthorityGrant:
     )
 
 
+def legacy_grant() -> AuthorityGrant:
+    return dataclasses.replace(
+        parent_grant(),
+        schema_version="1.0.0",
+        delegation_allowed=False,
+        delegation_depth_budget=0,
+    )
+
+
 class AuthorityGrantContractTests(unittest.TestCase):
     def test_valid_contract_and_canonical_digest(self):
         grant = parent_grant().validate()
         self.assertEqual(grant.digest(), grant.digest())
         payload = json.loads(grant.canonical_payload())
+        self.assertEqual(payload["schema_version"], "1.1.0")
         self.assertEqual(payload["grant_id"], "grant:root")
         self.assertNotIn("signature", payload)
         self.assertTrue(payload["delegation_allowed"])
         self.assertEqual(payload["delegation_depth_budget"], 2)
+
+    def test_legacy_v1_canonical_payload_omits_delegation_fields(self):
+        payload = json.loads(legacy_grant().canonical_payload())
+        self.assertEqual(payload["schema_version"], "1.0.0")
+        self.assertNotIn("delegation_allowed", payload)
+        self.assertNotIn("delegation_depth_budget", payload)
 
     def test_invalid_shape_fails_closed(self):
         invalid = (
@@ -99,11 +115,28 @@ class AuthorityGrantContractTests(unittest.TestCase):
             {"delegation_allowed": True, "delegation_depth_budget": 0},
         )
         for mutation in invalid:
-            with self.subTest(mutation=mutation), self.assertRaises(AuthorityGrantError):
+            with self.subTest(mutation=mutation), self.assertRaises(
+                AuthorityGrantError
+            ):
                 dataclasses.replace(parent_grant(), **mutation).validate()
 
+    def test_v1_cannot_express_active_delegation(self):
+        for mutation in (
+            {"delegation_allowed": True, "delegation_depth_budget": 1},
+            {"delegation_allowed": False, "delegation_depth_budget": 1},
+        ):
+            with self.subTest(mutation=mutation), self.assertRaises(
+                AuthorityGrantError
+            ):
+                dataclasses.replace(legacy_grant(), **mutation).validate()
+
     def test_schema_required_fields_match_nondefault_runtime_contract(self):
-        schema_path = Path(__file__).parents[1] / "contracts" / "v1" / "authority_grant.schema.json"
+        schema_path = (
+            Path(__file__).parents[1]
+            / "contracts"
+            / "v1"
+            / "authority_grant.schema.json"
+        )
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
         required_runtime = {
             field.name
@@ -113,16 +146,14 @@ class AuthorityGrantContractTests(unittest.TestCase):
         }
         self.assertEqual(set(schema["required"]), required_runtime)
         self.assertFalse(schema["additionalProperties"])
-        self.assertFalse(schema["properties"]["delegation_allowed"]["default"])
-        self.assertEqual(schema["properties"]["delegation_depth_budget"]["default"], 0)
-
-    def test_omitted_delegation_fields_default_fail_closed(self):
-        legacy_shape = dataclasses.replace(
-            parent_grant(), delegation_allowed=False, delegation_depth_budget=0
+        self.assertEqual(
+            schema["properties"]["schema_version"]["enum"],
+            ["1.0.0", "1.1.0"],
         )
-        self.assertFalse(legacy_shape.delegation_allowed)
-        self.assertEqual(legacy_shape.delegation_depth_budget, 0)
-        legacy_shape.validate()
+        self.assertFalse(schema["properties"]["delegation_allowed"]["default"])
+        self.assertEqual(
+            schema["properties"]["delegation_depth_budget"]["default"], 0
+        )
 
 
 class AuthorityAttenuationTests(unittest.TestCase):
@@ -137,8 +168,13 @@ class AuthorityAttenuationTests(unittest.TestCase):
             {"resource_scope": ("repo:ai_platform", "repo:glitchlab")},
         )
         for mutation in mutations:
-            with self.subTest(mutation=mutation), self.assertRaises(AuthorityGrantError):
-                validate_attenuation(parent_grant(), dataclasses.replace(child_grant(), **mutation))
+            with self.subTest(mutation=mutation), self.assertRaises(
+                AuthorityGrantError
+            ):
+                validate_attenuation(
+                    parent_grant(),
+                    dataclasses.replace(child_grant(), **mutation),
+                )
 
     def test_incomparable_authority_classes_are_not_interchangeable(self):
         substitutions = (
@@ -146,8 +182,12 @@ class AuthorityAttenuationTests(unittest.TestCase):
             ("deploy", "financial"),
         )
         for parent_authority, child_authority in substitutions:
-            parent = dataclasses.replace(parent_grant(), authority_ceiling=parent_authority)
-            child = dataclasses.replace(child_grant(), authority_ceiling=child_authority)
+            parent = dataclasses.replace(
+                parent_grant(), authority_ceiling=parent_authority
+            )
+            child = dataclasses.replace(
+                child_grant(), authority_ceiling=child_authority
+            )
             with self.subTest(
                 parent=parent_authority, child=child_authority
             ), self.assertRaises(AuthorityGrantError):
@@ -162,38 +202,69 @@ class AuthorityAttenuationTests(unittest.TestCase):
             ("external_write", "local_write"),
         )
         for parent_authority, child_authority in accepted:
-            parent = dataclasses.replace(parent_grant(), authority_ceiling=parent_authority)
-            child = dataclasses.replace(child_grant(), authority_ceiling=child_authority)
-            with self.subTest(parent=parent_authority, child=child_authority):
+            parent = dataclasses.replace(
+                parent_grant(), authority_ceiling=parent_authority
+            )
+            child = dataclasses.replace(
+                child_grant(), authority_ceiling=child_authority
+            )
+            with self.subTest(
+                parent=parent_authority, child=child_authority
+            ):
                 self.assertIs(validate_attenuation(parent, child), child)
 
     def test_equal_semantic_authority_class_is_valid(self):
-        parent = dataclasses.replace(parent_grant(), authority_ceiling="deploy")
-        child = dataclasses.replace(child_grant(), authority_ceiling="deploy")
+        parent = dataclasses.replace(
+            parent_grant(), authority_ceiling="deploy"
+        )
+        child = dataclasses.replace(
+            child_grant(), authority_ceiling="deploy"
+        )
         self.assertIs(validate_attenuation(parent, child), child)
 
     def test_parent_must_explicitly_allow_delegation(self):
         parent = dataclasses.replace(
-            parent_grant(), delegation_allowed=False, delegation_depth_budget=0
+            parent_grant(),
+            delegation_allowed=False,
+            delegation_depth_budget=0,
         )
         with self.assertRaises(AuthorityGrantError):
             validate_attenuation(parent, child_grant())
 
     def test_delegation_depth_budget_must_strictly_decrease(self):
-        child = dataclasses.replace(child_grant(), delegation_depth_budget=2)
+        child = dataclasses.replace(
+            child_grant(), delegation_depth_budget=2
+        )
         with self.assertRaises(AuthorityGrantError):
             validate_attenuation(parent_grant(), child)
 
     def test_delegation_can_end_at_leaf(self):
         child = dataclasses.replace(
-            child_grant(), delegation_allowed=False, delegation_depth_budget=0
+            child_grant(),
+            delegation_allowed=False,
+            delegation_depth_budget=0,
         )
         self.assertIs(validate_attenuation(parent_grant(), child), child)
+
+    def test_legacy_version_cannot_enter_delegation_lineage(self):
+        with self.assertRaises(AuthorityGrantError):
+            validate_attenuation(
+                parent_grant(),
+                dataclasses.replace(
+                    child_grant(),
+                    schema_version="1.0.0",
+                    delegation_allowed=False,
+                    delegation_depth_budget=0,
+                ),
+            )
 
     def test_parent_constraints_cannot_be_removed(self):
         with self.assertRaises(AuthorityGrantError):
             validate_attenuation(
-                parent_grant(), dataclasses.replace(child_grant(), constraints=("read-only-child",))
+                parent_grant(),
+                dataclasses.replace(
+                    child_grant(), constraints=("read-only-child",)
+                ),
             )
 
     def test_lineage_and_issuer_binding_are_exact(self):
@@ -203,8 +274,13 @@ class AuthorityAttenuationTests(unittest.TestCase):
             {"grant_id": "grant:root"},
         )
         for mutation in mutations:
-            with self.subTest(mutation=mutation), self.assertRaises(AuthorityGrantError):
-                validate_attenuation(parent_grant(), dataclasses.replace(child_grant(), **mutation))
+            with self.subTest(mutation=mutation), self.assertRaises(
+                AuthorityGrantError
+            ):
+                validate_attenuation(
+                    parent_grant(),
+                    dataclasses.replace(child_grant(), **mutation),
+                )
 
     def test_domain_capability_epoch_and_policy_binding_cannot_drift(self):
         mutations = (
@@ -218,8 +294,13 @@ class AuthorityAttenuationTests(unittest.TestCase):
             {"observability_contract_digest": "sha256:" + "4" * 64},
         )
         for mutation in mutations:
-            with self.subTest(mutation=mutation), self.assertRaises(AuthorityGrantError):
-                validate_attenuation(parent_grant(), dataclasses.replace(child_grant(), **mutation))
+            with self.subTest(mutation=mutation), self.assertRaises(
+                AuthorityGrantError
+            ):
+                validate_attenuation(
+                    parent_grant(),
+                    dataclasses.replace(child_grant(), **mutation),
+                )
 
     def test_child_cannot_predate_or_outlive_parent(self):
         mutations = (
@@ -227,8 +308,13 @@ class AuthorityAttenuationTests(unittest.TestCase):
             {"expires_at": "2026-08-19T16:00:01Z"},
         )
         for mutation in mutations:
-            with self.subTest(mutation=mutation), self.assertRaises(AuthorityGrantError):
-                validate_attenuation(parent_grant(), dataclasses.replace(child_grant(), **mutation))
+            with self.subTest(mutation=mutation), self.assertRaises(
+                AuthorityGrantError
+            ):
+                validate_attenuation(
+                    parent_grant(),
+                    dataclasses.replace(child_grant(), **mutation),
+                )
 
 
 if __name__ == "__main__":

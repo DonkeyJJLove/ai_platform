@@ -1,4 +1,4 @@
-"""Provider-neutral authentication boundary for AuthorityGrant v1.
+"""Provider-neutral authentication boundary for versioned AuthorityGrant contracts.
 
 This module proves only that an AuthorityGrant payload was signed by the externally
 bound issuer key for a trusted domain and expected mission context. Authentication
@@ -13,7 +13,10 @@ from typing import Callable, Iterable
 from .authority_grant import AuthorityGrant, AuthorityGrantError
 
 Verifier = Callable[[bytes, str, str, str], bool]
-_DOMAIN_PREFIX = b"CYBER-LION/AUTHORITY-GRANT/1.0.0\x00"
+_DOMAIN_PREFIXES = {
+    "1.0.0": b"CYBER-LION/AUTHORITY-GRANT/1.0.0\x00",
+    "1.1.0": b"CYBER-LION/AUTHORITY-GRANT/1.1.0\x00",
+}
 
 
 class AuthorityVerificationError(AuthorityGrantError):
@@ -23,7 +26,7 @@ class AuthorityVerificationError(AuthorityGrantError):
 def _require_exact_authority_grant(grant: object) -> AuthorityGrant:
     """Reject polymorphic grant objects before any grant-controlled method executes."""
     if type(grant) is not AuthorityGrant:
-        raise AuthorityVerificationError("grant must be exact AuthorityGrant v1")
+        raise AuthorityVerificationError("grant must be exact AuthorityGrant")
     return grant
 
 
@@ -57,7 +60,7 @@ class AuthorityVerificationContext:
 
 @dataclass(frozen=True)
 class IssuerKeyBinding:
-    """Externally trusted issuer-to-key binding; never selected by AuthorityGrant v1."""
+    """Externally trusted issuer-to-key binding; never selected by AuthorityGrant."""
 
     issuer_subject_id: str
     trust_domain: str
@@ -65,7 +68,9 @@ class IssuerKeyBinding:
     algorithm: str
 
     def validate(self) -> "IssuerKeyBinding":
-        _bounded_text(self.issuer_subject_id, field_name="issuer_subject_id", limit=256)
+        _bounded_text(
+            self.issuer_subject_id, field_name="issuer_subject_id", limit=256
+        )
         _bounded_text(self.trust_domain, field_name="trust_domain", limit=256)
         _bounded_text(self.key_id, field_name="key_id", limit=256)
         _bounded_text(self.algorithm, field_name="algorithm", limit=128)
@@ -89,15 +94,24 @@ class AuthenticatedAuthorityGrant:
     grant_digest: str
 
 
-def authority_grant_signature_payload(grant: AuthorityGrant, trust_domain: str) -> bytes:
-    """Build the deterministic domain-separated bytes that an issuer signs."""
+def authority_grant_signature_payload(
+    grant: AuthorityGrant, trust_domain: str
+) -> bytes:
+    """Build deterministic domain-separated bytes for the grant's signed version."""
     grant = _require_exact_authority_grant(grant)
     _bounded_text(trust_domain, field_name="trust_domain", limit=256)
     try:
         canonical = grant.canonical_payload()
+        prefix = _DOMAIN_PREFIXES[grant.schema_version]
     except AuthorityGrantError as exc:
-        raise AuthorityVerificationError("grant contract validation failed") from exc
-    return _DOMAIN_PREFIX + trust_domain.encode("utf-8") + b"\x00" + canonical
+        raise AuthorityVerificationError(
+            "grant contract validation failed"
+        ) from exc
+    except KeyError as exc:
+        raise AuthorityVerificationError(
+            "unsupported authority-grant signed contract version"
+        ) from exc
+    return prefix + trust_domain.encode("utf-8") + b"\x00" + canonical
 
 
 def authenticate_authority_grant(
@@ -110,27 +124,41 @@ def authenticate_authority_grant(
     """Authenticate a grant without admitting it as current or executable authority."""
     grant = _require_exact_authority_grant(grant)
     if not isinstance(context, AuthorityVerificationContext):
-        raise AuthorityVerificationError("context must be AuthorityVerificationContext")
+        raise AuthorityVerificationError(
+            "context must be AuthorityVerificationContext"
+        )
     context.validate()
     try:
         grant.validate()
     except AuthorityGrantError as exc:
-        raise AuthorityVerificationError("grant contract validation failed") from exc
+        raise AuthorityVerificationError(
+            "grant contract validation failed"
+        ) from exc
 
-    expected_context = (context.tenant_id, context.organization_id, context.mission_id)
+    expected_context = (
+        context.tenant_id,
+        context.organization_id,
+        context.mission_id,
+    )
     actual_context = (grant.tenant_id, grant.organization_id, grant.mission_id)
     if actual_context != expected_context:
-        raise AuthorityVerificationError("grant does not bind to expected authority context")
+        raise AuthorityVerificationError(
+            "grant does not bind to expected authority context"
+        )
 
     try:
         bindings = tuple(issuer_keys)
     except Exception as exc:
-        raise AuthorityVerificationError("issuer key bindings unavailable") from exc
+        raise AuthorityVerificationError(
+            "issuer key bindings unavailable"
+        ) from exc
 
     eligible: list[IssuerKeyBinding] = []
     for binding in bindings:
         if not isinstance(binding, IssuerKeyBinding):
-            raise AuthorityVerificationError("issuer key binding has invalid type")
+            raise AuthorityVerificationError(
+                "issuer key binding has invalid type"
+            )
         binding.validate()
         if (
             binding.issuer_subject_id == grant.issuer_subject_id
@@ -139,16 +167,24 @@ def authenticate_authority_grant(
             eligible.append(binding)
 
     if len(eligible) != 1:
-        raise AuthorityVerificationError("issuer key binding is missing or ambiguous")
+        raise AuthorityVerificationError(
+            "issuer key binding is missing or ambiguous"
+        )
 
     binding = eligible[0]
     payload = authority_grant_signature_payload(grant, context.trust_domain)
     try:
-        accepted = verifier(payload, grant.signature, binding.key_id, binding.algorithm)
+        accepted = verifier(
+            payload, grant.signature, binding.key_id, binding.algorithm
+        )
     except Exception as exc:
-        raise AuthorityVerificationError("authority-grant verifier failed closed") from exc
+        raise AuthorityVerificationError(
+            "authority-grant verifier failed closed"
+        ) from exc
     if accepted is not True:
-        raise AuthorityVerificationError("authority-grant signature verification failed")
+        raise AuthorityVerificationError(
+            "authority-grant signature verification failed"
+        )
 
     return AuthenticatedAuthorityGrant(
         grant_id=grant.grant_id,
