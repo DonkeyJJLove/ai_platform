@@ -3,12 +3,14 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import hmac
+import inspect
 import unittest
 from unittest.mock import patch
 
 from cyber_lion.enterprise.authority_grant import AuthorityGrant
 from cyber_lion.enterprise.authority_revocation import (
     AuthorityEpochState,
+    AuthorityEpochStateOwner,
     AuthorityRevocationError,
     EpochAdmittedAuthorityGrant,
     authenticate_and_admit_authority_grant,
@@ -93,10 +95,14 @@ def state(
     return dataclasses.replace(value, **changes)
 
 
+def owner(initial_state: AuthorityEpochState | None = None) -> AuthorityEpochStateOwner:
+    return AuthorityEpochStateOwner(initial_state if initial_state is not None else state())
+
+
 def admit(
     value: AuthorityGrant,
     *,
-    epoch_state: AuthorityEpochState | None = None,
+    state_owner: AuthorityEpochStateOwner | None = None,
     context: AuthorityVerificationContext = CONTEXT,
     checker=verifier,
 ):
@@ -105,7 +111,7 @@ def admit(
         (BINDING,),
         checker,
         context=context,
-        epoch_state=epoch_state or state(),
+        epoch_state_owner=state_owner if state_owner is not None else owner(),
     )
 
 
@@ -157,6 +163,42 @@ class AuthorityEpochTransitionTests(unittest.TestCase):
                 value.validate()
 
 
+class AuthorityEpochStateOwnerTests(unittest.TestCase):
+    def test_owner_requires_exact_valid_initial_state(self):
+        with self.assertRaises(AuthorityRevocationError):
+            owner(state(epoch=-1))
+
+        class SubstitutedAuthorityEpochState(AuthorityEpochState):
+            pass
+
+        base = state()
+        substituted = SubstitutedAuthorityEpochState(
+            **{
+                field.name: getattr(base, field.name)
+                for field in dataclasses.fields(AuthorityEpochState)
+            }
+        )
+        with self.assertRaises(AuthorityRevocationError):
+            owner(substituted)
+
+    def test_owner_advance_is_atomic_and_rejected_transition_keeps_current(self):
+        current = state(epoch=7, revoked=("grant:1",))
+        state_owner = owner(current)
+
+        expanded = state(epoch=7, revoked=("grant:1", "grant:2"))
+        self.assertIs(state_owner.advance(expanded), expanded)
+        self.assertIs(state_owner.current(), expanded)
+
+        invalid = state(epoch=7, revoked=("grant:2",))
+        with self.assertRaises(AuthorityRevocationError):
+            state_owner.advance(invalid)
+        self.assertIs(state_owner.current(), expanded)
+
+        forward = state(epoch=8, revoked=())
+        self.assertIs(state_owner.advance(forward), forward)
+        self.assertIs(state_owner.current(), forward)
+
+
 class AuthorityRevocationAdmissionTests(unittest.TestCase):
     def test_authenticated_current_non_revoked_grant_is_admitted(self):
         value = signed()
@@ -166,31 +208,52 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
         self.assertEqual(result.epoch, 7)
         self.assertEqual(result.grant_digest, value.digest())
 
+    def test_public_admission_requires_owner_not_raw_snapshot(self):
+        parameters = inspect.signature(
+            authenticate_and_admit_authority_grant
+        ).parameters
+        self.assertIn("epoch_state_owner", parameters)
+        self.assertNotIn("epoch_state", parameters)
+        with self.assertRaises(TypeError):
+            authenticate_and_admit_authority_grant(
+                signed(),
+                (BINDING,),
+                verifier,
+                context=CONTEXT,
+                epoch_state=state(),
+            )
+
     def test_current_epoch_revoked_grant_is_rejected(self):
         with self.assertRaises(AuthorityRevocationError):
-            admit(signed(), epoch_state=state(revoked=("grant:1",)))
+            admit(
+                signed(),
+                state_owner=owner(state(revoked=("grant:1",))),
+            )
 
     def test_stale_and_future_epoch_grants_are_rejected(self):
+        state_owner = owner(state(epoch=7))
         for grant_epoch in (6, 8):
             value = signed(unsigned(epoch=grant_epoch))
             with self.subTest(grant_epoch=grant_epoch), self.assertRaises(
                 AuthorityRevocationError
             ):
-                admit(value)
+                admit(value, state_owner=state_owner)
 
     def test_revocation_is_specific_to_one_epoch(self):
+        state_owner = owner(
+            state(epoch=7, revoked=("grant:stable-id",))
+        )
         old = signed(unsigned(epoch=7, grant_id="grant:stable-id"))
         with self.assertRaises(AuthorityRevocationError):
-            admit(
-                old,
-                epoch_state=state(epoch=7, revoked=("grant:stable-id",)),
-            )
+            admit(old, state_owner=state_owner)
 
+        fresh_state = state(epoch=8, revoked=())
+        self.assertIs(state_owner.advance(fresh_state), fresh_state)
         fresh = signed(unsigned(epoch=8, grant_id="grant:stable-id"))
-        result = admit(fresh, epoch_state=state(epoch=8, revoked=()))
+        result = admit(fresh, state_owner=state_owner)
         self.assertEqual((result.grant_id, result.epoch), ("grant:stable-id", 8))
 
-    def test_epoch_state_must_match_trusted_context(self):
+    def test_owner_context_must_match_trusted_context_before_verifier(self):
         mutations = (
             {"trust_domain": "other.test"},
             {"tenant_id": "tenant:b"},
@@ -210,7 +273,7 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
             ):
                 admit(
                     signed(),
-                    epoch_state=state(**mutation),
+                    state_owner=owner(state(**mutation)),
                     checker=counting_verifier,
                 )
             self.assertEqual(calls["verifier"], 0)
@@ -302,6 +365,56 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
 
         with self.assertRaises(AuthorityVerificationError):
             admit(signed(), checker=broken)
+
+    def test_admission_rechecks_owner_state_after_authentication(self):
+        value = signed()
+        state_owner = owner(state(epoch=7))
+
+        def revoking_verifier(payload, signature, key_id, algorithm):
+            state_owner.advance(state(epoch=7, revoked=("grant:1",)))
+            return verifier(payload, signature, key_id, algorithm)
+
+        with self.assertRaises(AuthorityRevocationError):
+            admit(
+                value,
+                state_owner=state_owner,
+                checker=revoking_verifier,
+            )
+        self.assertEqual(
+            state_owner.current().revoked_grant_ids,
+            ("grant:1",),
+        )
+
+    def test_rollback_or_unrevoked_snapshot_cannot_bypass_admission(self):
+        rollback_owner = owner(state(epoch=7))
+        current_epoch = state(epoch=8)
+        self.assertIs(rollback_owner.advance(current_epoch), current_epoch)
+
+        rollback_snapshot = state(epoch=7)
+        with self.assertRaises(AuthorityRevocationError):
+            rollback_owner.advance(rollback_snapshot)
+        self.assertIs(rollback_owner.current(), current_epoch)
+
+        with self.assertRaises(AuthorityRevocationError):
+            admit(
+                signed(unsigned(epoch=7)),
+                state_owner=rollback_owner,
+            )
+        self.assertIs(rollback_owner.current(), current_epoch)
+
+        revoked_state = state(epoch=7, revoked=("grant:1",))
+        unrevocation_owner = owner(revoked_state)
+        unrevoked_snapshot = state(epoch=7, revoked=())
+        with self.assertRaises(AuthorityRevocationError):
+            unrevocation_owner.advance(unrevoked_snapshot)
+        self.assertIs(unrevocation_owner.current(), revoked_state)
+
+        with self.assertRaises(AuthorityRevocationError):
+            admit(
+                signed(unsigned(epoch=7, grant_id="grant:1")),
+                state_owner=unrevocation_owner,
+            )
+        self.assertIs(unrevocation_owner.current(), revoked_state)
 
     def test_epoch_admission_result_is_not_effect_authority(self):
         result = admit(signed())
