@@ -8,11 +8,10 @@ import unittest
 from unittest.mock import patch
 
 import cyber_lion.enterprise.authority_revocation as authority_revocation_module
-from cyber_lion.enterprise.authority_grant import AuthorityGrant
+from cyber_lion.enterprise.authority_grant import AuthorityGrant, AuthorityGrantError
 from cyber_lion.enterprise.authority_revocation import (
     AuthorityEpochState,
     AuthorityLineageRootAnchor,
-    AuthorityRevocationError,
     EpochAdmittedAuthorityLineage,
     advance_canonical_authority_epoch_state,
     authenticate_and_admit_authority_lineage,
@@ -259,19 +258,19 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             AuthorityLineageRootAnchor(chain[0].grant_id, "0" * 64),
         )
         for bad in bad_anchors:
-            with self.subTest(anchor=bad), self.assertRaises(AuthorityRevocationError):
+            with self.subTest(anchor=bad), self.assertRaises(AuthorityGrantError):
                 self.admit(chain, root_anchor=bad)
 
     def test_invalid_root_anchor_shape_fails_closed(self):
         chain = lineage()
         bad = AuthorityLineageRootAnchor(chain[0].grant_id, "not-a-digest")
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(chain, root_anchor=bad)
 
     def test_root_must_have_no_parent(self):
         root = sign(root_unsigned(parent_grant_id="grant:outside"))
         chain = (root, sign(mid_unsigned()), sign(leaf_unsigned()))
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(chain, root_anchor=anchor(root))
 
     def test_duplicate_or_cyclic_grant_ids_fail_before_verifier(self):
@@ -283,7 +282,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             calls["verifier"] += 1
             return verifier(*args)
 
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(
                 (chain[0], chain[1], duplicate_leaf),
                 checker=counting_verifier,
@@ -299,7 +298,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
         )
         for chain in variants:
             with self.subTest(ids=tuple(item.grant_id for item in chain)), self.assertRaises(
-                AuthorityRevocationError
+                AuthorityGrantError
             ):
                 self.admit(chain)
 
@@ -312,7 +311,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             )
         )
         child = sign(mid_unsigned())
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit((legacy_root, child), root_anchor=anchor(legacy_root))
 
     def test_context_and_attenuation_drift_fail_before_authentication(self):
@@ -325,8 +324,14 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             dataclasses.replace(root, delegation_allowed=False, delegation_depth_budget=0),
         )
         for changed in mutations:
-            chain = (changed, mid, leaf) if changed.grant_id == root.grant_id else (root, changed, leaf)
-            with self.subTest(grant=changed.grant_id), self.assertRaises(AuthorityRevocationError):
+            chain = (
+                (changed, mid, leaf)
+                if changed.grant_id == root.grant_id
+                else (root, changed, leaf)
+            )
+            with self.subTest(grant=changed.grant_id), self.assertRaises(
+                AuthorityGrantError
+            ):
                 self.admit(chain, root_anchor=anchor(chain[0]))
 
     def test_forged_signature_at_any_hop_rejects_entire_lineage(self):
@@ -337,7 +342,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             altered = list(base)
             altered[index] = dataclasses.replace(altered[index], signature="0" * 64)
             chain = tuple(altered)
-            with self.subTest(index=index), self.assertRaises(AuthorityRevocationError):
+            with self.subTest(index=index), self.assertRaises(AuthorityGrantError):
                 self.admit(chain, root_anchor=anchor(chain[0]))
 
     def test_unregistered_context_fails_before_verifier(self):
@@ -348,7 +353,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             return verifier(*args)
 
         chain = lineage()
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(chain, checker=counting_verifier)
         self.assertEqual(calls["verifier"], 0)
 
@@ -366,7 +371,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             self.reset_registry()
             self.register(epoch_state(revoked=(grant_id,)))
             with self.subTest(grant_id=grant_id), self.assertRaises(
-                AuthorityRevocationError
+                AuthorityGrantError
             ):
                 self.admit(chain)
 
@@ -377,7 +382,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             mid = sign(mid_unsigned(epoch=candidate_epoch))
             leaf = sign(leaf_unsigned(epoch=candidate_epoch))
             with self.subTest(epoch=candidate_epoch), self.assertRaises(
-                AuthorityRevocationError
+                AuthorityGrantError
             ):
                 self.admit((root, mid, leaf), root_anchor=anchor(root))
 
@@ -391,7 +396,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
                 advance_canonical_authority_epoch_state(epoch_state(epoch=8))
             return verifier(*args)
 
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(lineage(), checker=advancing_verifier)
         self.assertEqual(calls["count"], 3)
 
@@ -407,7 +412,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
                 )
             return verifier(*args)
 
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(lineage(), checker=revoking_verifier)
         self.assertEqual(calls["count"], 3)
 
@@ -434,7 +439,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
             calls["verifier"] += 1
             return verifier(*args)
 
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit((root, substituted, leaf), checker=counting_verifier)
         self.assertEqual(calls["verifier"], 0)
 
@@ -442,7 +447,9 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
         self.register()
         chain = lineage()
         missing_mid = tuple(
-            binding for binding in BINDINGS if binding.issuer_subject_id != "workload:parent"
+            binding
+            for binding in BINDINGS
+            if binding.issuer_subject_id != "workload:parent"
         )
         duplicate_mid = BINDINGS + (
             IssuerKeyBinding(
@@ -451,7 +458,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
         )
         for bindings in (missing_mid, duplicate_mid):
             with self.subTest(bindings=len(bindings)), self.assertRaises(
-                AuthorityRevocationError
+                AuthorityGrantError
             ):
                 self.admit(chain, bindings=bindings)
 
@@ -465,7 +472,7 @@ class AuthorityLineageAdmissionTests(CanonicalRegistryIsolation, unittest.TestCa
                 raise RuntimeError("provider unavailable")
             return verifier(*args)
 
-        with self.assertRaises(AuthorityRevocationError):
+        with self.assertRaises(AuthorityGrantError):
             self.admit(lineage(), checker=broken_verifier)
         self.assertEqual(calls["count"], 2)
 
