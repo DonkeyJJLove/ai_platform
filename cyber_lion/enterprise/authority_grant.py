@@ -41,6 +41,16 @@ def _validate_unique(values: Tuple[str, ...], *, field_name: str, allow_empty: b
         raise AuthorityGrantError(f"{field_name} must be unique")
 
 
+def _validate_authority_attenuation(parent_authority: str, child_authority: str) -> None:
+    """Fail closed when scalar rank cannot prove semantic authority containment."""
+    parent_rank = authority_rank(parent_authority)
+    child_rank = authority_rank(child_authority)
+    if child_rank > parent_rank:
+        raise AuthorityGrantError("child authority cannot exceed parent authority")
+    if child_rank == parent_rank and child_authority != parent_authority:
+        raise AuthorityGrantError("equal-rank authority classes are not interchangeable")
+
+
 @dataclass(frozen=True)
 class AuthorityGrant:
     """Mission-scoped authority envelope; presence of this object is not signature proof."""
@@ -149,8 +159,7 @@ def validate_attenuation(parent: AuthorityGrant, child: AuthorityGrant) -> Autho
         if parent_value != child_value:
             raise AuthorityGrantError(f"child {name} must equal parent {name}")
 
-    if authority_rank(child.authority_ceiling) > authority_rank(parent.authority_ceiling):
-        raise AuthorityGrantError("child authority cannot exceed parent authority")
+    _validate_authority_attenuation(parent.authority_ceiling, child.authority_ceiling)
     if not set(child.actions).issubset(parent.actions):
         raise AuthorityGrantError("child actions must be a subset of parent actions")
     if not set(child.resource_scope).issubset(parent.resource_scope):
