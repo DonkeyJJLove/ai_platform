@@ -113,6 +113,24 @@ class AuthorityAttenuationTests(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaises(AuthorityGrantError):
                 validate_attenuation(parent_grant(), dataclasses.replace(child_grant(), **mutation))
 
+    def test_equal_rank_authority_classes_are_not_interchangeable(self):
+        substitutions = (
+            ("financial", "deploy"),
+            ("deploy", "financial"),
+        )
+        for parent_authority, child_authority in substitutions:
+            parent = dataclasses.replace(parent_grant(), authority_ceiling=parent_authority)
+            child = dataclasses.replace(child_grant(), authority_ceiling=child_authority)
+            with self.subTest(
+                parent=parent_authority, child=child_authority
+            ), self.assertRaises(AuthorityGrantError):
+                validate_attenuation(parent, child)
+
+    def test_equal_rank_same_authority_class_is_valid(self):
+        parent = dataclasses.replace(parent_grant(), authority_ceiling="deploy")
+        child = dataclasses.replace(child_grant(), authority_ceiling="deploy")
+        self.assertIs(validate_attenuation(parent, child), child)
+
     def test_parent_constraints_cannot_be_removed(self):
         with self.assertRaises(AuthorityGrantError):
             validate_attenuation(
