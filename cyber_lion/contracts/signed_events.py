@@ -126,7 +126,7 @@ class VerifiedEventEnvelope:
     correlation_id: str
     sequence: int
     nonce: str
-    event: EventEnvelope
+    signed_payload: bytes
 
 
 def verify_signed_event(
@@ -149,8 +149,9 @@ def verify_signed_event(
     occurred = _utc(signed.event.occurred_at)
     if occurred < _utc(identity.issued_at) or occurred >= _utc(identity.expires_at):
         raise SignedEventError("event occurred outside workload identity validity")
+    payload = signed.canonical_payload()
     try:
-        accepted = verifier(signed.canonical_payload(), signed.signature, signed.key_id, signed.algorithm)
+        accepted = verifier(payload, signed.signature, signed.key_id, signed.algorithm)
     except Exception as exc:
         raise SignedEventError("signed-event verifier failed closed") from exc
     if accepted is not True:
@@ -167,5 +168,5 @@ def verify_signed_event(
         raise SignedEventError("signed event rejected as replay")
     return VerifiedEventEnvelope(
         signed.signer_subject_id, signed.signer_proof_digest, signed.event.event_id,
-        signed.event.correlation_id, signed.sequence, signed.nonce, signed.event,
+        signed.event.correlation_id, signed.sequence, signed.nonce, payload,
     )

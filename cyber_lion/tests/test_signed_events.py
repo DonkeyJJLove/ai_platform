@@ -1,6 +1,5 @@
 from __future__ import annotations
 import dataclasses
-from datetime import datetime
 import hashlib
 import hmac
 import unittest
@@ -18,7 +17,6 @@ IDENTITY = VerifiedWorkloadIdentity(
     "cyber-lion-control-plane", "a" * 64, "key:test",
     "2026-08-19T13:00:00Z", "2026-08-19T15:00:00Z",
 )
-
 def event(event_id="event:1", *, occurred_at="2026-08-19T14:00:00Z", payload=None):
     return EventEnvelope(
         "1.0.0", event_id, "ObservationCreated", occurred_at, "corr:1",
@@ -45,7 +43,6 @@ def verifier(payload, signature, key_id, algorithm):
 
 def verify(value, guard=None, identity=IDENTITY, checker=verifier):
     return verify_signed_event(value, identity, checker, guard or InMemoryReplayGuard())
-
 class SignedEventTests(unittest.TestCase):
     def test_valid_event_is_verified_without_authority_grant(self):
         result = verify(signed())
@@ -69,6 +66,12 @@ class SignedEventTests(unittest.TestCase):
         changed = dataclasses.replace(base.event, payload={"value": 2})
         with self.assertRaises(SignedEventError):
             verify(dataclasses.replace(base, event=changed))
+
+    def test_verified_result_keeps_exact_immutable_signed_payload(self):
+        value = signed(); expected = value.canonical_payload(); result = verify(value)
+        value.event.payload["value"] = 999
+        self.assertEqual(result.signed_payload, expected)
+        self.assertFalse(hasattr(result, "event"))
 
     def test_event_time_must_fit_verified_identity_window(self):
         for when in ("2026-08-19T12:59:59Z", "2026-08-19T15:00:00Z"):
