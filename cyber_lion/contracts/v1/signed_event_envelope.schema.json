@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/signed-event-envelope/v1",
+  "title": "Cyber-Lion Signed Event Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version","tenant_id","organization_id","trust_domain","audience","signer_subject_id","signer_proof_digest","key_id","algorithm","sequence","nonce","event","signature"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "tenant_id": {"type": "string","minLength": 1,"maxLength": 256},
+    "organization_id": {"type": "string","minLength": 1,"maxLength": 256},
+    "trust_domain": {"type": "string","minLength": 1,"maxLength": 256},
+    "audience": {"type": "string","minLength": 1,"maxLength": 256},
+    "signer_subject_id": {"type": "string","minLength": 1,"maxLength": 256},
+    "signer_proof_digest": {"type": "string","pattern": "^[0-9a-f]{64}$"},
+    "key_id": {"type": "string","minLength": 1,"maxLength": 256},
+    "algorithm": {"type": "string","minLength": 1,"maxLength": 128},
+    "sequence": {"type": "integer","minimum": 1},
+    "nonce": {"type": "string","minLength": 1,"maxLength": 256},
+    "event": {"$ref": "cyberlion://schemas/event-envelope/v1"},
+    "signature": {"type": "string","minLength": 1,"maxLength": 8192}
+  }
+}
