@@ -7,13 +7,16 @@ import inspect
 import unittest
 from unittest.mock import patch
 
+import cyber_lion.enterprise.authority_revocation as authority_revocation_module
 from cyber_lion.enterprise.authority_grant import AuthorityGrant
 from cyber_lion.enterprise.authority_revocation import (
     AuthorityEpochState,
     AuthorityEpochStateOwner,
     AuthorityRevocationError,
     EpochAdmittedAuthorityGrant,
+    advance_canonical_authority_epoch_state,
     authenticate_and_admit_authority_grant,
+    register_canonical_authority_epoch_state,
     validate_epoch_transition,
 )
 from cyber_lion.enterprise.authority_verification import (
@@ -99,10 +102,20 @@ def owner(initial_state: AuthorityEpochState | None = None) -> AuthorityEpochSta
     return AuthorityEpochStateOwner(initial_state if initial_state is not None else state())
 
 
+def context_key(
+    context: AuthorityVerificationContext = CONTEXT,
+) -> tuple[str, str, str, str]:
+    return (
+        context.trust_domain,
+        context.tenant_id,
+        context.organization_id,
+        context.mission_id,
+    )
+
+
 def admit(
     value: AuthorityGrant,
     *,
-    state_owner: AuthorityEpochStateOwner | None = None,
     context: AuthorityVerificationContext = CONTEXT,
     checker=verifier,
 ):
@@ -111,8 +124,32 @@ def admit(
         (BINDING,),
         checker,
         context=context,
-        epoch_state_owner=state_owner if state_owner is not None else owner(),
     )
+
+
+class CanonicalRegistryIsolation:
+    def setUp(self):
+        self._registry_patcher = patch.object(
+            authority_revocation_module,
+            "_CANONICAL_AUTHORITY_EPOCH_REGISTRY",
+            authority_revocation_module._AuthorityEpochRegistry(),
+        )
+        self.registry = self._registry_patcher.start()
+
+    def tearDown(self):
+        self._registry_patcher.stop()
+
+    def reset_registry(self):
+        self.registry = authority_revocation_module._AuthorityEpochRegistry()
+        authority_revocation_module._CANONICAL_AUTHORITY_EPOCH_REGISTRY = self.registry
+
+    def register(self, initial_state: AuthorityEpochState | None = None):
+        return register_canonical_authority_epoch_state(
+            initial_state if initial_state is not None else state()
+        )
+
+    def current(self, context: AuthorityVerificationContext = CONTEXT):
+        return self.registry.resolve(context_key(context)).current()
 
 
 class AuthorityEpochTransitionTests(unittest.TestCase):
@@ -199,8 +236,45 @@ class AuthorityEpochStateOwnerTests(unittest.TestCase):
         self.assertIs(state_owner.current(), forward)
 
 
-class AuthorityRevocationAdmissionTests(unittest.TestCase):
+class AuthorityEpochRegistryTests(CanonicalRegistryIsolation, unittest.TestCase):
+    def test_registration_is_one_shot_and_duplicate_cannot_replace_owner(self):
+        canonical = state(revoked=("grant:1",))
+        self.assertIs(self.register(canonical), canonical)
+        canonical_owner = self.registry.resolve(context_key())
+
+        with self.assertRaises(AuthorityRevocationError):
+            self.register(state(revoked=()))
+
+        self.assertIs(self.registry.resolve(context_key()), canonical_owner)
+        self.assertIs(canonical_owner.current(), canonical)
+
+    def test_registry_advance_requires_registration_and_preserves_owner_identity(self):
+        with self.assertRaises(AuthorityRevocationError):
+            advance_canonical_authority_epoch_state(state(epoch=8))
+
+        initial = state(epoch=7, revoked=("grant:1",))
+        self.register(initial)
+        canonical_owner = self.registry.resolve(context_key())
+
+        expanded = state(epoch=7, revoked=("grant:1", "grant:2"))
+        self.assertIs(advance_canonical_authority_epoch_state(expanded), expanded)
+        self.assertIs(self.registry.resolve(context_key()), canonical_owner)
+        self.assertIs(canonical_owner.current(), expanded)
+
+        invalid = state(epoch=7, revoked=("grant:2",))
+        with self.assertRaises(AuthorityRevocationError):
+            advance_canonical_authority_epoch_state(invalid)
+        self.assertIs(canonical_owner.current(), expanded)
+
+    def test_registry_has_no_unregister_or_owner_replacement_path(self):
+        self.assertFalse(hasattr(self.registry, "unregister"))
+        self.assertFalse(hasattr(self.registry, "replace_owner"))
+        self.assertFalse(hasattr(self.registry, "set_owner"))
+
+
+class AuthorityRevocationAdmissionTests(CanonicalRegistryIsolation, unittest.TestCase):
     def test_authenticated_current_non_revoked_grant_is_admitted(self):
+        self.register()
         value = signed()
         result = admit(value)
         self.assertIsInstance(result, EpochAdmittedAuthorityGrant)
@@ -208,52 +282,62 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
         self.assertEqual(result.epoch, 7)
         self.assertEqual(result.grant_digest, value.digest())
 
-    def test_public_admission_requires_owner_not_raw_snapshot(self):
+    def test_public_admission_accepts_no_caller_selected_state_owner_or_registry(self):
         parameters = inspect.signature(
             authenticate_and_admit_authority_grant
         ).parameters
-        self.assertIn("epoch_state_owner", parameters)
         self.assertNotIn("epoch_state", parameters)
+        self.assertNotIn("epoch_state_owner", parameters)
+        self.assertNotIn("registry", parameters)
+
+        parallel = owner(state())
         with self.assertRaises(TypeError):
             authenticate_and_admit_authority_grant(
                 signed(),
                 (BINDING,),
                 verifier,
                 context=CONTEXT,
-                epoch_state=state(),
+                epoch_state_owner=parallel,
             )
+
+    def test_unregistered_context_fails_before_verifier(self):
+        calls = {"verifier": 0}
+
+        def counting_verifier(*_):
+            calls["verifier"] += 1
+            return True
+
+        with self.assertRaises(AuthorityRevocationError):
+            admit(signed(), checker=counting_verifier)
+        self.assertEqual(calls["verifier"], 0)
 
     def test_current_epoch_revoked_grant_is_rejected(self):
+        self.register(state(revoked=("grant:1",)))
         with self.assertRaises(AuthorityRevocationError):
-            admit(
-                signed(),
-                state_owner=owner(state(revoked=("grant:1",))),
-            )
+            admit(signed())
 
     def test_stale_and_future_epoch_grants_are_rejected(self):
-        state_owner = owner(state(epoch=7))
+        self.register(state(epoch=7))
         for grant_epoch in (6, 8):
             value = signed(unsigned(epoch=grant_epoch))
             with self.subTest(grant_epoch=grant_epoch), self.assertRaises(
                 AuthorityRevocationError
             ):
-                admit(value, state_owner=state_owner)
+                admit(value)
 
     def test_revocation_is_specific_to_one_epoch(self):
-        state_owner = owner(
-            state(epoch=7, revoked=("grant:stable-id",))
-        )
+        self.register(state(epoch=7, revoked=("grant:stable-id",)))
         old = signed(unsigned(epoch=7, grant_id="grant:stable-id"))
         with self.assertRaises(AuthorityRevocationError):
-            admit(old, state_owner=state_owner)
+            admit(old)
 
         fresh_state = state(epoch=8, revoked=())
-        self.assertIs(state_owner.advance(fresh_state), fresh_state)
+        self.assertIs(advance_canonical_authority_epoch_state(fresh_state), fresh_state)
         fresh = signed(unsigned(epoch=8, grant_id="grant:stable-id"))
-        result = admit(fresh, state_owner=state_owner)
+        result = admit(fresh)
         self.assertEqual((result.grant_id, result.epoch), ("grant:stable-id", 8))
 
-    def test_owner_context_must_match_trusted_context_before_verifier(self):
+    def test_registered_different_context_cannot_satisfy_trusted_context(self):
         mutations = (
             {"trust_domain": "other.test"},
             {"tenant_id": "tenant:b"},
@@ -262,6 +346,8 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
         )
 
         for mutation in mutations:
+            self.reset_registry()
+            self.register(state(**mutation))
             calls = {"verifier": 0}
 
             def counting_verifier(*_):
@@ -271,14 +357,11 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaises(
                 AuthorityRevocationError
             ):
-                admit(
-                    signed(),
-                    state_owner=owner(state(**mutation)),
-                    checker=counting_verifier,
-                )
+                admit(signed(), checker=counting_verifier)
             self.assertEqual(calls["verifier"], 0)
 
     def test_authenticated_result_must_bind_exact_payload_and_digest(self):
+        self.register()
         value = signed()
         legitimate_payload = authority_grant_signature_payload(
             value,
@@ -357,6 +440,7 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
         )
 
     def test_authentication_failure_and_exception_remain_fail_closed(self):
+        self.register()
         with self.assertRaises(AuthorityVerificationError):
             admit(signed(), checker=lambda *_: False)
 
@@ -366,57 +450,93 @@ class AuthorityRevocationAdmissionTests(unittest.TestCase):
         with self.assertRaises(AuthorityVerificationError):
             admit(signed(), checker=broken)
 
-    def test_admission_rechecks_owner_state_after_authentication(self):
+    def test_admission_rechecks_canonical_state_after_authentication(self):
+        self.register(state(epoch=7))
         value = signed()
-        state_owner = owner(state(epoch=7))
 
         def revoking_verifier(payload, signature, key_id, algorithm):
-            state_owner.advance(state(epoch=7, revoked=("grant:1",)))
+            advance_canonical_authority_epoch_state(
+                state(epoch=7, revoked=("grant:1",))
+            )
             return verifier(payload, signature, key_id, algorithm)
 
         with self.assertRaises(AuthorityRevocationError):
-            admit(
-                value,
-                state_owner=state_owner,
-                checker=revoking_verifier,
-            )
-        self.assertEqual(
-            state_owner.current().revoked_grant_ids,
-            ("grant:1",),
-        )
+            admit(value, checker=revoking_verifier)
+        self.assertEqual(self.current().revoked_grant_ids, ("grant:1",))
 
     def test_rollback_or_unrevoked_snapshot_cannot_bypass_admission(self):
-        rollback_owner = owner(state(epoch=7))
+        self.register(state(epoch=7))
         current_epoch = state(epoch=8)
-        self.assertIs(rollback_owner.advance(current_epoch), current_epoch)
+        self.assertIs(advance_canonical_authority_epoch_state(current_epoch), current_epoch)
 
         rollback_snapshot = state(epoch=7)
         with self.assertRaises(AuthorityRevocationError):
-            rollback_owner.advance(rollback_snapshot)
-        self.assertIs(rollback_owner.current(), current_epoch)
+            advance_canonical_authority_epoch_state(rollback_snapshot)
+        self.assertIs(self.current(), current_epoch)
 
         with self.assertRaises(AuthorityRevocationError):
-            admit(
-                signed(unsigned(epoch=7)),
-                state_owner=rollback_owner,
-            )
-        self.assertIs(rollback_owner.current(), current_epoch)
+            admit(signed(unsigned(epoch=7)))
+        self.assertIs(self.current(), current_epoch)
 
+        self.reset_registry()
         revoked_state = state(epoch=7, revoked=("grant:1",))
-        unrevocation_owner = owner(revoked_state)
+        self.register(revoked_state)
         unrevoked_snapshot = state(epoch=7, revoked=())
         with self.assertRaises(AuthorityRevocationError):
-            unrevocation_owner.advance(unrevoked_snapshot)
-        self.assertIs(unrevocation_owner.current(), revoked_state)
+            advance_canonical_authority_epoch_state(unrevoked_snapshot)
+        self.assertIs(self.current(), revoked_state)
 
         with self.assertRaises(AuthorityRevocationError):
-            admit(
+            admit(signed(unsigned(epoch=7, grant_id="grant:1")))
+        self.assertIs(self.current(), revoked_state)
+
+    def test_fresh_or_parallel_owner_cannot_substitute_current_authority_state(self):
+        canonical_revoked = state(epoch=7, revoked=("grant:1",))
+        self.register(canonical_revoked)
+        canonical_owner = self.registry.resolve(context_key())
+        parallel_unrevoked = owner(state(epoch=7, revoked=()))
+        self.assertIsNot(parallel_unrevoked, canonical_owner)
+
+        with self.assertRaises(AuthorityRevocationError):
+            self.register(state(epoch=7, revoked=()))
+        self.assertIs(self.registry.resolve(context_key()), canonical_owner)
+        self.assertIs(self.current(), canonical_revoked)
+
+        with self.assertRaises(TypeError):
+            authenticate_and_admit_authority_grant(
                 signed(unsigned(epoch=7, grant_id="grant:1")),
-                state_owner=unrevocation_owner,
+                (BINDING,),
+                verifier,
+                context=CONTEXT,
+                epoch_state_owner=parallel_unrevoked,
             )
-        self.assertIs(unrevocation_owner.current(), revoked_state)
+        with self.assertRaises(AuthorityRevocationError):
+            admit(signed(unsigned(epoch=7, grant_id="grant:1")))
+        self.assertIs(self.current(), canonical_revoked)
+
+        self.reset_registry()
+        self.register(state(epoch=7))
+        current_epoch = state(epoch=8)
+        self.assertIs(advance_canonical_authority_epoch_state(current_epoch), current_epoch)
+        canonical_owner = self.registry.resolve(context_key())
+        parallel_stale = owner(state(epoch=7))
+        self.assertIsNot(parallel_stale, canonical_owner)
+
+        old_grant = signed(unsigned(epoch=7))
+        with self.assertRaises(TypeError):
+            authenticate_and_admit_authority_grant(
+                old_grant,
+                (BINDING,),
+                verifier,
+                context=CONTEXT,
+                epoch_state_owner=parallel_stale,
+            )
+        with self.assertRaises(AuthorityRevocationError):
+            admit(old_grant)
+        self.assertIs(self.current(), current_epoch)
 
     def test_epoch_admission_result_is_not_effect_authority(self):
+        self.register()
         result = admit(signed())
         for forbidden in (
             "authority",
