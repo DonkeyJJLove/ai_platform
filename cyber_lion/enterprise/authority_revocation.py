@@ -7,6 +7,7 @@ or execute effects.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from threading import Lock
 from typing import Iterable
 
 from .authority_grant import AuthorityGrant, AuthorityGrantError
@@ -37,7 +38,7 @@ def _bounded_text(value: object, *, field_name: str, limit: int = 256) -> str:
 
 @dataclass(frozen=True)
 class AuthorityEpochState:
-    """Trusted mission-scoped epoch and revocation snapshot."""
+    """Immutable mission-scoped epoch and revocation snapshot."""
 
     trust_domain: str
     tenant_id: str
@@ -107,6 +108,78 @@ def validate_epoch_transition(
     return candidate
 
 
+def _trusted_context(
+    context: AuthorityVerificationContext,
+) -> tuple[str, str, str, str]:
+    return (
+        context.trust_domain,
+        context.tenant_id,
+        context.organization_id,
+        context.mission_id,
+    )
+
+
+class AuthorityEpochStateOwner:
+    """Trusted process-local owner of one monotonic current authority-epoch state."""
+
+    def __init__(self, initial_state: AuthorityEpochState) -> None:
+        if type(initial_state) is not AuthorityEpochState:
+            raise AuthorityRevocationError(
+                "initial state must be exact AuthorityEpochState"
+            )
+        initial_state.validate()
+        self._lock = Lock()
+        self._state = initial_state
+
+    def current(self) -> AuthorityEpochState:
+        """Return the immutable current state snapshot."""
+        with self._lock:
+            return self._state
+
+    def advance(self, candidate: AuthorityEpochState) -> AuthorityEpochState:
+        """Atomically replace current state only after a valid monotonic transition."""
+        if type(candidate) is not AuthorityEpochState:
+            raise AuthorityRevocationError(
+                "candidate state must be exact AuthorityEpochState"
+            )
+        with self._lock:
+            accepted = validate_epoch_transition(self._state, candidate)
+            self._state = accepted
+            return accepted
+
+    def _require_context(
+        self,
+        trusted_context: tuple[str, str, str, str],
+    ) -> None:
+        with self._lock:
+            if self._state.authority_context() != trusted_context:
+                raise AuthorityRevocationError(
+                    "epoch state owner does not bind to trusted authority context"
+                )
+
+    def _admit_authenticated(
+        self,
+        grant: AuthorityGrant,
+        authenticated: AuthenticatedAuthorityGrant,
+        *,
+        context: AuthorityVerificationContext,
+        trusted_context: tuple[str, str, str, str],
+    ) -> EpochAdmittedAuthorityGrant:
+        # Hold the owner lock across the final currentness check so advance() and
+        # admission cannot interleave between state selection and revocation decision.
+        with self._lock:
+            if self._state.authority_context() != trusted_context:
+                raise AuthorityRevocationError(
+                    "epoch state owner does not bind to trusted authority context"
+                )
+            return _admit_authenticated_grant(
+                grant,
+                authenticated,
+                context=context,
+                epoch_state=self._state,
+            )
+
+
 def _admit_authenticated_grant(
     grant: AuthorityGrant,
     authenticated: AuthenticatedAuthorityGrant,
@@ -169,30 +242,24 @@ def authenticate_and_admit_authority_grant(
     verifier: Verifier,
     *,
     context: AuthorityVerificationContext,
-    epoch_state: AuthorityEpochState,
+    epoch_state_owner: AuthorityEpochStateOwner,
 ) -> EpochAdmittedAuthorityGrant:
-    """Authenticate first, then admit only the exact current non-revoked epoch grant."""
+    """Authenticate first, then admit against the owner's current monotonic state."""
     if type(grant) is not AuthorityGrant:
         raise AuthorityRevocationError("grant must be exact AuthorityGrant v1")
     if type(context) is not AuthorityVerificationContext:
         raise AuthorityRevocationError(
             "context must be exact AuthorityVerificationContext"
         )
-    if type(epoch_state) is not AuthorityEpochState:
-        raise AuthorityRevocationError("epoch_state must be exact AuthorityEpochState")
+    if type(epoch_state_owner) is not AuthorityEpochStateOwner:
+        raise AuthorityRevocationError(
+            "epoch_state_owner must be exact AuthorityEpochStateOwner"
+        )
 
     context.validate()
-    epoch_state.validate()
-    trusted_context = (
-        context.trust_domain,
-        context.tenant_id,
-        context.organization_id,
-        context.mission_id,
-    )
-    if epoch_state.authority_context() != trusted_context:
-        raise AuthorityRevocationError(
-            "epoch state does not bind to trusted authority context"
-        )
+    trusted_context = _trusted_context(context)
+    # Reject a wrong owner before invoking the cryptographic verifier.
+    epoch_state_owner._require_context(trusted_context)
 
     authenticated = authenticate_authority_grant(
         grant,
@@ -200,9 +267,11 @@ def authenticate_and_admit_authority_grant(
         verifier,
         context=context,
     )
-    return _admit_authenticated_grant(
+    # Re-enter the owner after authentication. The final decision is therefore
+    # made against the state current at admission, not a pre-verification snapshot.
+    return epoch_state_owner._admit_authenticated(
         grant,
         authenticated,
         context=context,
-        epoch_state=epoch_state,
+        trusted_context=trusted_context,
     )
