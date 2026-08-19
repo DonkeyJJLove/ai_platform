@@ -67,6 +67,29 @@
     "epoch": {"type": "integer", "minimum": 0},
     "policy_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "observability_contract_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
-    "signature": {"type": "string", "minLength": 1}
-  }
+    "signature": {"type": "string", "minLength": 1},
+    "delegation_allowed": {"type": "boolean", "default": false},
+    "delegation_depth_budget": {"type": "integer", "minimum": 0, "default": 0}
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["delegation_allowed"],
+        "properties": {"delegation_allowed": {"const": true}}
+      },
+      "then": {
+        "required": ["delegation_depth_budget"],
+        "properties": {"delegation_depth_budget": {"minimum": 1}}
+      }
+    },
+    {
+      "if": {
+        "required": ["delegation_allowed"],
+        "properties": {"delegation_allowed": {"const": false}}
+      },
+      "then": {
+        "properties": {"delegation_depth_budget": {"const": 0}}
+      }
+    }
+  ]
 }

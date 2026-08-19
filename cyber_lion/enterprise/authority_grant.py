@@ -3,6 +3,10 @@
 This module defines authority data and one-hop delegation invariants only. It does not
 verify signatures, consult revocation state, or execute effects. Those remain separate
 MAND/EXEC responsibilities.
+
+Delegation authority is explicit and semantically ordered. ``delegation_depth_budget``
+is a remaining lineage-depth ceiling, not a global or sibling issuance quota; enforcing
+cardinality across independently issued grants requires separate authoritative state.
 """
 from __future__ import annotations
 
@@ -11,11 +15,38 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import re
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, FrozenSet, Tuple
 
 from .models import EnterpriseModelError, authority_rank
 
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+# Explicit semantic containment relation. The two high-impact classes ``financial``
+# and ``deploy`` are intentionally incomparable, while ``privileged`` dominates both.
+# This replaces delegation-time scalar rank comparison with a partial order.
+_AUTHORITY_CONTAINS: Dict[str, FrozenSet[str]] = {
+    "none": frozenset({"none"}),
+    "read": frozenset({"none", "read"}),
+    "local_write": frozenset({"none", "read", "local_write"}),
+    "external_write": frozenset({"none", "read", "local_write", "external_write"}),
+    "financial": frozenset(
+        {"none", "read", "local_write", "external_write", "financial"}
+    ),
+    "deploy": frozenset(
+        {"none", "read", "local_write", "external_write", "deploy"}
+    ),
+    "privileged": frozenset(
+        {
+            "none",
+            "read",
+            "local_write",
+            "external_write",
+            "financial",
+            "deploy",
+            "privileged",
+        }
+    ),
+}
 
 
 class AuthorityGrantError(EnterpriseModelError):
@@ -42,13 +73,16 @@ def _validate_unique(values: Tuple[str, ...], *, field_name: str, allow_empty: b
 
 
 def _validate_authority_attenuation(parent_authority: str, child_authority: str) -> None:
-    """Fail closed when scalar rank cannot prove semantic authority containment."""
-    parent_rank = authority_rank(parent_authority)
-    child_rank = authority_rank(child_authority)
-    if child_rank > parent_rank:
-        raise AuthorityGrantError("child authority cannot exceed parent authority")
-    if child_rank == parent_rank and child_authority != parent_authority:
-        raise AuthorityGrantError("equal-rank authority classes are not interchangeable")
+    """Require semantic containment in the explicit authority partial order."""
+    try:
+        contained = _AUTHORITY_CONTAINS[parent_authority]
+        _AUTHORITY_CONTAINS[child_authority]
+    except KeyError as exc:
+        raise AuthorityGrantError(f"unknown authority class: {exc.args[0]}") from exc
+    if child_authority not in contained:
+        raise AuthorityGrantError(
+            "child authority must be semantically contained in parent authority"
+        )
 
 
 @dataclass(frozen=True)
@@ -75,6 +109,8 @@ class AuthorityGrant:
     policy_digest: str
     observability_contract_digest: str
     signature: str
+    delegation_allowed: bool = False
+    delegation_depth_budget: int = 0
 
     def validate(self) -> "AuthorityGrant":
         required = (
@@ -105,6 +141,24 @@ class AuthorityGrant:
         authority_rank(self.authority_ceiling)
         if not isinstance(self.epoch, int) or isinstance(self.epoch, bool) or self.epoch < 0:
             raise AuthorityGrantError("grant epoch must be a non-negative integer")
+        if type(self.delegation_allowed) is not bool:
+            raise AuthorityGrantError("delegation_allowed must be a boolean")
+        if (
+            not isinstance(self.delegation_depth_budget, int)
+            or isinstance(self.delegation_depth_budget, bool)
+            or self.delegation_depth_budget < 0
+        ):
+            raise AuthorityGrantError(
+                "delegation_depth_budget must be a non-negative integer"
+            )
+        if self.delegation_allowed and self.delegation_depth_budget == 0:
+            raise AuthorityGrantError(
+                "delegation_allowed requires a positive delegation_depth_budget"
+            )
+        if not self.delegation_allowed and self.delegation_depth_budget != 0:
+            raise AuthorityGrantError(
+                "delegation_depth_budget must be zero when delegation is not allowed"
+            )
         if _utc(self.issued_at) >= _utc(self.expires_at):
             raise AuthorityGrantError("grant validity window is invalid")
         if not _DIGEST_RE.fullmatch(self.policy_digest):
@@ -140,6 +194,12 @@ def validate_attenuation(parent: AuthorityGrant, child: AuthorityGrant) -> Autho
         raise AuthorityGrantError("child must bind to the exact parent grant")
     if child.issuer_subject_id != parent.subject_id:
         raise AuthorityGrantError("child issuer must equal parent grant subject")
+    if not parent.delegation_allowed:
+        raise AuthorityGrantError("parent grant does not permit delegation")
+    if child.delegation_depth_budget >= parent.delegation_depth_budget:
+        raise AuthorityGrantError(
+            "child delegation_depth_budget must be strictly smaller than parent budget"
+        )
 
     exact_bindings = (
         ("tenant_id", parent.tenant_id, child.tenant_id),
