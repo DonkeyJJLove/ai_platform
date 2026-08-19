@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberlion://schemas/workload-identity-proof/v1",
+  "title": "Cyber-Lion Workload Identity Proof v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "proof_id", "subject_id", "trust_domain", "tenant_id",
+    "organization_id", "audience", "environment", "repository", "vcs_ref",
+    "issuer_id", "key_id", "algorithm", "issued_at", "expires_at", "signature"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "proof_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "subject_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "trust_domain": {"type": "string", "minLength": 1, "maxLength": 256},
+    "tenant_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "organization_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "audience": {"type": "string", "minLength": 1, "maxLength": 256},
+    "environment": {"type": "string", "minLength": 1, "maxLength": 128},
+    "repository": {"type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$"},
+    "vcs_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "issuer_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "key_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "algorithm": {"type": "string", "minLength": 1, "maxLength": 128},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "signature": {"type": "string", "minLength": 1, "maxLength": 8192}
+  }
+}
