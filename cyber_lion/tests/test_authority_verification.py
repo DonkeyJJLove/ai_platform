@@ -81,6 +81,50 @@ class AuthorityVerificationTests(unittest.TestCase):
         self.assertEqual(result.key_id, "key:issuer")
         self.assertEqual(result.trust_domain, "cyber-lion.test")
 
+    def test_subclass_object_substitution_fails_before_verifier(self):
+        calls = {"validate": 0, "canonical_payload": 0, "digest": 0, "verifier": 0}
+
+        class SubstitutedAuthorityGrant(AuthorityGrant):
+            def validate(self):
+                calls["validate"] += 1
+                return self
+
+            def canonical_payload(self):
+                calls["canonical_payload"] += 1
+                return b"attacker-controlled-signed-payload"
+
+            def digest(self):
+                calls["digest"] += 1
+                return "attacker-controlled-digest"
+
+        base = unsigned()
+        value = SubstitutedAuthorityGrant(
+            **{
+                field.name: getattr(base, field.name)
+                for field in dataclasses.fields(AuthorityGrant)
+            }
+        )
+        self.assertIsInstance(value, AuthorityGrant)
+        self.assertIsNot(type(value), AuthorityGrant)
+
+        with self.assertRaises(AuthorityVerificationError):
+            authority_grant_signature_payload(value, CONTEXT.trust_domain)
+        self.assertEqual(
+            calls,
+            {"validate": 0, "canonical_payload": 0, "digest": 0, "verifier": 0},
+        )
+
+        def accepting_verifier(*_):
+            calls["verifier"] += 1
+            return True
+
+        with self.assertRaises(AuthorityVerificationError):
+            authenticate(value, checker=accepting_verifier)
+        self.assertEqual(
+            calls,
+            {"validate": 0, "canonical_payload": 0, "digest": 0, "verifier": 0},
+        )
+
     def test_forged_and_tampered_grants_fail_closed(self):
         value = signed()
         with self.assertRaises(AuthorityVerificationError):
