@@ -20,6 +20,13 @@ class AuthorityVerificationError(AuthorityGrantError):
     """Raised when AuthorityGrant authentication cannot be proven."""
 
 
+def _require_exact_authority_grant(grant: object) -> AuthorityGrant:
+    """Reject polymorphic grant objects before any grant-controlled method executes."""
+    if type(grant) is not AuthorityGrant:
+        raise AuthorityVerificationError("grant must be exact AuthorityGrant v1")
+    return grant
+
+
 def _bounded_text(value: object, *, field_name: str, limit: int) -> str:
     if (
         not isinstance(value, str)
@@ -84,8 +91,7 @@ class AuthenticatedAuthorityGrant:
 
 def authority_grant_signature_payload(grant: AuthorityGrant, trust_domain: str) -> bytes:
     """Build the deterministic domain-separated bytes that an issuer signs."""
-    if not isinstance(grant, AuthorityGrant):
-        raise AuthorityVerificationError("grant must be AuthorityGrant v1")
+    grant = _require_exact_authority_grant(grant)
     _bounded_text(trust_domain, field_name="trust_domain", limit=256)
     try:
         canonical = grant.canonical_payload()
@@ -102,8 +108,7 @@ def authenticate_authority_grant(
     context: AuthorityVerificationContext,
 ) -> AuthenticatedAuthorityGrant:
     """Authenticate a grant without admitting it as current or executable authority."""
-    if not isinstance(grant, AuthorityGrant):
-        raise AuthorityVerificationError("grant must be AuthorityGrant v1")
+    grant = _require_exact_authority_grant(grant)
     if not isinstance(context, AuthorityVerificationContext):
         raise AuthorityVerificationError("context must be AuthorityVerificationContext")
     context.validate()
