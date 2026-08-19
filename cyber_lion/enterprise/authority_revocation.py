@@ -1,18 +1,30 @@
-"""Mission-scoped monotonic epoch/revocation admission for AuthorityGrant v1.
+"""Mission-scoped monotonic epoch/revocation admission for AuthorityGrant.
 
 This module adds epoch-specific revocation admission after cryptographic authentication.
 A trusted process bootstrap must install exactly one canonical state per authority context;
-normal admission callers cannot select a snapshot, owner, or registry. This module does
-not authorize actions, check wall-clock currentness, persist revocation state, coordinate
-multiple processes/nodes, or execute effects.
+normal admission callers cannot select a snapshot, owner, or registry.
+
+Full-lineage admission composes the existing single-grant authentication and one-hop
+attenuation primitives. A trusted root anchor is supplied from outside the candidate
+lineage, every hop is authenticated, and final epoch/revocation admission is atomic
+against one canonical state snapshot. Lineage evidence is not execution permission.
+
+This module does not authorize actions, check wall-clock currentness, persist revocation
+state, coordinate multiple processes/nodes, or execute effects.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import re
 from threading import Lock
 from typing import Iterable
 
-from .authority_grant import AuthorityGrant, AuthorityGrantError
+from .authority_grant import (
+    AuthorityGrant,
+    AuthorityGrantError,
+    validate_attenuation,
+)
 from .authority_verification import (
     AuthenticatedAuthorityGrant,
     AuthorityVerificationContext,
@@ -22,9 +34,12 @@ from .authority_verification import (
     authority_grant_signature_payload,
 )
 
+_GRANT_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
+_LINEAGE_DOMAIN_PREFIX = b"CYBER-LION/AUTHORITY-LINEAGE/1.0.0\x00"
+
 
 class AuthorityRevocationError(AuthorityGrantError):
-    """Raised when epoch/revocation admission cannot be proven safely."""
+    """Raised when epoch/revocation or lineage admission cannot be proven safely."""
 
 
 def _bounded_text(value: object, *, field_name: str, limit: int = 256) -> str:
@@ -87,6 +102,44 @@ class EpochAdmittedAuthorityGrant:
     mission_id: str
     epoch: int
     grant_digest: str
+
+
+@dataclass(frozen=True)
+class AuthorityLineageRootAnchor:
+    """Trusted external identity of the exact root grant for one lineage."""
+
+    root_grant_id: str
+    root_grant_digest: str
+
+    def validate(self) -> "AuthorityLineageRootAnchor":
+        if type(self) is not AuthorityLineageRootAnchor:
+            raise AuthorityRevocationError(
+                "root anchor must be exact AuthorityLineageRootAnchor"
+            )
+        _bounded_text(self.root_grant_id, field_name="root_grant_id")
+        if (
+            not isinstance(self.root_grant_digest, str)
+            or not _GRANT_DIGEST_RE.fullmatch(self.root_grant_digest)
+        ):
+            raise AuthorityRevocationError("root_grant_digest must be canonical sha256 hex")
+        return self
+
+
+@dataclass(frozen=True)
+class EpochAdmittedAuthorityLineage:
+    """Authenticated root-to-leaf lineage evidence; never execution permission."""
+
+    root_grant_id: str
+    leaf_grant_id: str
+    leaf_subject_id: str
+    grant_ids: tuple[str, ...]
+    grant_digests: tuple[str, ...]
+    lineage_digest: str
+    trust_domain: str
+    tenant_id: str
+    organization_id: str
+    mission_id: str
+    epoch: int
 
 
 def validate_epoch_transition(
@@ -181,6 +234,35 @@ class AuthorityEpochStateOwner:
                 epoch_state=self._state,
             )
 
+    def _admit_authenticated_lineage(
+        self,
+        lineage: tuple[AuthorityGrant, ...],
+        authenticated_lineage: tuple[AuthenticatedAuthorityGrant, ...],
+        *,
+        context: AuthorityVerificationContext,
+        trusted_context: tuple[str, str, str, str],
+    ) -> tuple[EpochAdmittedAuthorityGrant, ...]:
+        """Admit every authenticated hop against one exact current state snapshot."""
+        if type(lineage) is not tuple or type(authenticated_lineage) is not tuple:
+            raise AuthorityRevocationError("lineage admission requires immutable tuples")
+        if not lineage or len(lineage) != len(authenticated_lineage):
+            raise AuthorityRevocationError("lineage authentication evidence is incomplete")
+
+        with self._lock:
+            if self._state.authority_context() != trusted_context:
+                raise AuthorityRevocationError(
+                    "epoch state owner does not bind to trusted authority context"
+                )
+            return tuple(
+                _admit_authenticated_grant(
+                    grant,
+                    authenticated,
+                    context=context,
+                    epoch_state=self._state,
+                )
+                for grant, authenticated in zip(lineage, authenticated_lineage)
+            )
+
 
 class _AuthorityEpochRegistry:
     """One-shot process-local canonical owner registry keyed by authority context."""
@@ -240,7 +322,7 @@ class _AuthorityEpochRegistry:
 
 # This registry is the process-local canonical state authority. Trusted bootstrap code
 # installs initial context state before normal admission. There is deliberately no
-# unregister or owner-replacement path in this B2 slice.
+# unregister or owner-replacement path in this slice.
 _CANONICAL_AUTHORITY_EPOCH_REGISTRY = _AuthorityEpochRegistry()
 
 
@@ -295,7 +377,9 @@ def _admit_authenticated_grant(
         authenticated.grant_digest,
     )
     if actual_binding != expected_binding:
-        raise AuthorityRevocationError("authenticated grant binding does not match raw grant")
+        raise AuthorityRevocationError(
+            "authenticated grant binding does not match raw grant"
+        )
 
     if grant.epoch != epoch_state.epoch:
         raise AuthorityRevocationError("grant epoch is not the admitted mission epoch")
@@ -314,6 +398,20 @@ def _admit_authenticated_grant(
     )
 
 
+def _lineage_digest(grant_digests: tuple[str, ...]) -> str:
+    if type(grant_digests) is not tuple or not grant_digests:
+        raise AuthorityRevocationError("grant_digests must be a non-empty immutable tuple")
+    if any(
+        not isinstance(value, str) or not _GRANT_DIGEST_RE.fullmatch(value)
+        for value in grant_digests
+    ):
+        raise AuthorityRevocationError("grant_digests contain invalid values")
+    payload = _LINEAGE_DOMAIN_PREFIX + b"\x00".join(
+        value.encode("ascii") for value in grant_digests
+    )
+    return hashlib.sha256(payload).hexdigest()
+
+
 def authenticate_and_admit_authority_grant(
     grant: AuthorityGrant,
     issuer_keys: Iterable[IssuerKeyBinding],
@@ -323,7 +421,7 @@ def authenticate_and_admit_authority_grant(
 ) -> EpochAdmittedAuthorityGrant:
     """Authenticate, then admit only against the canonical current context state."""
     if type(grant) is not AuthorityGrant:
-        raise AuthorityRevocationError("grant must be exact AuthorityGrant v1")
+        raise AuthorityRevocationError("grant must be exact AuthorityGrant")
     if type(context) is not AuthorityVerificationContext:
         raise AuthorityRevocationError(
             "context must be exact AuthorityVerificationContext"
@@ -349,4 +447,90 @@ def authenticate_and_admit_authority_grant(
         authenticated,
         context=context,
         trusted_context=trusted_context,
+    )
+
+
+def authenticate_and_admit_authority_lineage(
+    lineage: tuple[AuthorityGrant, ...],
+    issuer_keys: Iterable[IssuerKeyBinding],
+    verifier: Verifier,
+    *,
+    context: AuthorityVerificationContext,
+    root_anchor: AuthorityLineageRootAnchor,
+) -> EpochAdmittedAuthorityLineage:
+    """Authenticate and atomically admit one explicitly ordered trusted-root lineage."""
+    if type(lineage) is not tuple or not lineage:
+        raise AuthorityRevocationError("lineage must be a non-empty immutable tuple")
+    if any(type(grant) is not AuthorityGrant for grant in lineage):
+        raise AuthorityRevocationError("lineage must contain exact AuthorityGrant values")
+    if type(context) is not AuthorityVerificationContext:
+        raise AuthorityRevocationError(
+            "context must be exact AuthorityVerificationContext"
+        )
+    if type(root_anchor) is not AuthorityLineageRootAnchor:
+        raise AuthorityRevocationError(
+            "root_anchor must be exact AuthorityLineageRootAnchor"
+        )
+
+    context.validate()
+    root_anchor.validate()
+
+    root = lineage[0]
+    if root.parent_grant_id is not None:
+        raise AuthorityRevocationError("trusted lineage root must not have a parent")
+
+    grant_ids = tuple(grant.grant_id for grant in lineage)
+    if len(set(grant_ids)) != len(grant_ids):
+        raise AuthorityRevocationError("lineage grant IDs must be unique and acyclic")
+
+    if root.grant_id != root_anchor.root_grant_id:
+        raise AuthorityRevocationError("lineage root does not match trusted root grant ID")
+    root_digest = root.digest()
+    if root_digest != root_anchor.root_grant_digest:
+        raise AuthorityRevocationError("lineage root does not match trusted root digest")
+
+    for parent, child in zip(lineage, lineage[1:]):
+        validate_attenuation(parent, child)
+
+    try:
+        bindings = tuple(issuer_keys)
+    except Exception as exc:
+        raise AuthorityRevocationError("issuer key bindings unavailable") from exc
+
+    trusted_context = _trusted_context(context)
+    # Resolve before cryptographic verification so unregistered contexts fail before any
+    # external verifier call. Re-enter the same owner after every signature is checked.
+    epoch_state_owner = _CANONICAL_AUTHORITY_EPOCH_REGISTRY.resolve(trusted_context)
+    epoch_state_owner._require_context(trusted_context)
+
+    authenticated_lineage = tuple(
+        authenticate_authority_grant(
+            grant,
+            bindings,
+            verifier,
+            context=context,
+        )
+        for grant in lineage
+    )
+
+    admitted = epoch_state_owner._admit_authenticated_lineage(
+        lineage,
+        authenticated_lineage,
+        context=context,
+        trusted_context=trusted_context,
+    )
+    grant_digests = tuple(item.grant_digest for item in admitted)
+
+    return EpochAdmittedAuthorityLineage(
+        root_grant_id=root.grant_id,
+        leaf_grant_id=lineage[-1].grant_id,
+        leaf_subject_id=lineage[-1].subject_id,
+        grant_ids=grant_ids,
+        grant_digests=grant_digests,
+        lineage_digest=_lineage_digest(grant_digests),
+        trust_domain=context.trust_domain,
+        tenant_id=context.tenant_id,
+        organization_id=context.organization_id,
+        mission_id=context.mission_id,
+        epoch=admitted[0].epoch,
     )
