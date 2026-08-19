@@ -83,8 +83,9 @@ class ConformanceResult:
                       self.supply_chain)
         if any(v not in _STATUS for v in (*components, self.overall)):
             raise EnterpriseModelError("invalid conformance status")
-        if "FAIL" in components and (self.overall != "FAIL" or self.promotion_decision == "PROMOTE"):
-            raise EnterpriseModelError("failure requires overall FAIL")
+        if "FAIL" in components:
+            if self.overall != "FAIL" or self.promotion_decision == "PROMOTE":
+                raise EnterpriseModelError("failure requires overall FAIL")
         elif any(v in {"PARTIAL", "UNKNOWN"} for v in components):
             if self.overall != "PARTIAL" or self.promotion_decision != "HOLD":
                 raise EnterpriseModelError("partial/unknown conformance cannot promote")
