@@ -9,6 +9,11 @@ import re
 from typing import Callable
 
 _REPO_RE = re.compile(r"^[^/\s]+/[^/\s]+$")
+_MAX_LENGTHS = {
+    "proof_id": 256, "subject_id": 256, "trust_domain": 256, "tenant_id": 256,
+    "organization_id": 256, "audience": 256, "environment": 128, "vcs_ref": 256,
+    "issuer_id": 256, "key_id": 256, "algorithm": 128, "signature": 8192,
+}
 Verifier = Callable[[bytes, str, str, str], bool]
 
 
@@ -46,13 +51,18 @@ class WorkloadIdentityProof:
     signature: str
 
     def validate(self) -> "WorkloadIdentityProof":
-        values = (
-            self.proof_id, self.subject_id, self.trust_domain, self.tenant_id,
-            self.organization_id, self.audience, self.environment, self.repository,
-            self.vcs_ref, self.issuer_id, self.key_id, self.algorithm, self.signature,
+        names = (
+            "proof_id", "subject_id", "trust_domain", "tenant_id", "organization_id",
+            "audience", "environment", "repository", "vcs_ref", "issuer_id", "key_id",
+            "algorithm", "issued_at", "expires_at", "signature",
         )
-        if self.schema_version != "1.0.0" or not all(v.strip() for v in values):
+        values = {name: getattr(self, name) for name in names}
+        if self.schema_version != "1.0.0" or any(
+            not isinstance(value, str) or not value.strip() for value in values.values()
+        ):
             raise WorkloadIdentityError("identity proof fields/schema are invalid")
+        if any(len(values[name]) > limit for name, limit in _MAX_LENGTHS.items()):
+            raise WorkloadIdentityError("identity proof field exceeds schema maxLength")
         if not _REPO_RE.fullmatch(self.repository):
             raise WorkloadIdentityError("repository must use owner/name form")
         if _utc(self.issued_at) >= _utc(self.expires_at):
@@ -77,6 +87,18 @@ class WorkloadIdentityProof:
 
 
 @dataclass(frozen=True)
+class WorkloadIdentityContext:
+    trust_domain: str
+    tenant_id: str
+    organization_id: str
+    audience: str
+    environment: str
+    repository: str
+    vcs_ref: str
+    issuer_id: str
+
+
+@dataclass(frozen=True)
 class VerifiedWorkloadIdentity:
     subject_id: str
     trust_domain: str
@@ -90,7 +112,8 @@ class VerifiedWorkloadIdentity:
 
 
 def verify_workload_identity(
-    proof: WorkloadIdentityProof, verifier: Verifier, *, now: datetime
+    proof: WorkloadIdentityProof, verifier: Verifier, *, now: datetime,
+    context: WorkloadIdentityContext,
 ) -> VerifiedWorkloadIdentity:
     proof.validate()
     if now.tzinfo is None:
@@ -98,6 +121,16 @@ def verify_workload_identity(
     current = now.astimezone(timezone.utc)
     if current < _utc(proof.issued_at) or current >= _utc(proof.expires_at):
         raise WorkloadIdentityError("identity proof is not currently valid")
+    actual = (
+        proof.trust_domain, proof.tenant_id, proof.organization_id, proof.audience,
+        proof.environment, proof.repository, proof.vcs_ref, proof.issuer_id,
+    )
+    expected = (
+        context.trust_domain, context.tenant_id, context.organization_id, context.audience,
+        context.environment, context.repository, context.vcs_ref, context.issuer_id,
+    )
+    if actual != expected:
+        raise WorkloadIdentityError("identity proof context mismatch")
     try:
         accepted = verifier(proof.canonical_payload(), proof.signature, proof.key_id, proof.algorithm)
     except Exception as exc:
