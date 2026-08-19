@@ -144,3 +144,11 @@ archaeology
 ```
 
 Cyber-Lion should evolve aggressively in **proposal and research space**, while consequential execution remains narrow, reconstructable and revocable.
+
+## Workload identity proof boundary
+
+`EntityIdentity` remains descriptive identity; it is not cryptographic attestation. RCCM-1E-I adds an adapter-neutral `WorkloadIdentityProof` whose canonical signed payload is verified through an injected verifier boundary and yields a separate `VerifiedWorkloadIdentity`.
+
+Verification fails closed for invalid signatures, signed-field tampering, invalid validity windows, stale/not-yet-valid proofs, verifier rejection, and verifier exceptions. `VerifiedWorkloadIdentity` deliberately contains no authority or capability grant: **verified identity != authorization**.
+
+The standard-library HMAC profile used by unit tests is a deterministic test fixture only. It is not a production workload identity provider, does not implement custom PKI, and does not access or persist real private-key material.
