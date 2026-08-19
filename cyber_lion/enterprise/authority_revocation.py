@@ -1,16 +1,17 @@
-"""Mission-scoped monotonic epoch/revocation admission for AuthorityGrant.
+"""Mission-scoped monotonic epoch/revocation and lineage admission for AuthorityGrant.
 
-This module adds epoch-specific revocation admission after cryptographic authentication.
-A trusted process bootstrap must install exactly one canonical state per authority context;
-normal admission callers cannot select a snapshot, owner, or registry.
+A trusted process bootstrap installs exactly one canonical epoch-state owner per authority
+context and, separately, one canonical root anchor per context+epoch. Normal admission
+callers cannot select a snapshot, owner, registry, or root anchor.
 
 Full-lineage admission composes the existing single-grant authentication and one-hop
-attenuation primitives. A trusted root anchor is supplied from outside the candidate
-lineage, every hop is authenticated, and final epoch/revocation admission is atomic
-against one canonical state snapshot. Lineage evidence is not execution permission.
+attenuation primitives. The canonical root anchor is resolved from trusted bootstrap
+state, every hop is authenticated, and final epoch/revocation admission is atomic against
+one canonical state snapshot. Lineage evidence is not execution permission.
 
-This module does not authorize actions, check wall-clock currentness, persist revocation
-state, coordinate multiple processes/nodes, or execute effects.
+This module does not authorize actions, check wall-clock currentness, persist authority
+state, coordinate multiple processes/nodes, establish a production constitutional root,
+or execute effects.
 """
 from __future__ import annotations
 
@@ -53,6 +54,12 @@ def _bounded_text(value: object, *, field_name: str, limit: int = 256) -> str:
     return value
 
 
+def _valid_epoch(value: object, *, field_name: str = "epoch") -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise AuthorityRevocationError(f"{field_name} must be a non-negative integer")
+    return value
+
+
 @dataclass(frozen=True)
 class AuthorityEpochState:
     """Immutable mission-scoped epoch and revocation snapshot."""
@@ -71,8 +78,7 @@ class AuthorityEpochState:
         _bounded_text(self.tenant_id, field_name="tenant_id")
         _bounded_text(self.organization_id, field_name="organization_id")
         _bounded_text(self.mission_id, field_name="mission_id")
-        if not isinstance(self.epoch, int) or isinstance(self.epoch, bool) or self.epoch < 0:
-            raise AuthorityRevocationError("epoch must be a non-negative integer")
+        _valid_epoch(self.epoch)
         if type(self.revoked_grant_ids) is not tuple:
             raise AuthorityRevocationError("revoked_grant_ids must be an immutable tuple")
         for grant_id in self.revoked_grant_ids:
@@ -106,7 +112,7 @@ class EpochAdmittedAuthorityGrant:
 
 @dataclass(frozen=True)
 class AuthorityLineageRootAnchor:
-    """Trusted external identity of the exact root grant for one lineage."""
+    """Trusted-bootstrap identity of the exact root grant for one context epoch."""
 
     root_grant_id: str
     root_grant_digest: str
@@ -220,8 +226,6 @@ class AuthorityEpochStateOwner:
         context: AuthorityVerificationContext,
         trusted_context: tuple[str, str, str, str],
     ) -> EpochAdmittedAuthorityGrant:
-        # Hold the owner lock across final currentness selection and admission so
-        # advance() cannot interleave between state selection and revocation decision.
         with self._lock:
             if self._state.authority_context() != trusted_context:
                 raise AuthorityRevocationError(
@@ -272,7 +276,6 @@ class _AuthorityEpochRegistry:
         self._owners: dict[tuple[str, str, str, str], AuthorityEpochStateOwner] = {}
 
     def register(self, initial_state: AuthorityEpochState) -> AuthorityEpochState:
-        """Install the one canonical owner for a context; replacement is forbidden."""
         if type(initial_state) is not AuthorityEpochState:
             raise AuthorityRevocationError(
                 "canonical initial state must be exact AuthorityEpochState"
@@ -292,7 +295,6 @@ class _AuthorityEpochRegistry:
         self,
         trusted_context: tuple[str, str, str, str],
     ) -> AuthorityEpochStateOwner:
-        """Resolve only the previously bootstrapped canonical owner for a context."""
         if type(trusted_context) is not tuple or len(trusted_context) != 4:
             raise AuthorityRevocationError("trusted authority context is invalid")
         with self._lock:
@@ -304,7 +306,6 @@ class _AuthorityEpochRegistry:
         return owner
 
     def advance(self, candidate: AuthorityEpochState) -> AuthorityEpochState:
-        """Advance the already-registered canonical owner for candidate's context."""
         if type(candidate) is not AuthorityEpochState:
             raise AuthorityRevocationError(
                 "candidate state must be exact AuthorityEpochState"
@@ -320,10 +321,74 @@ class _AuthorityEpochRegistry:
         return owner.advance(candidate)
 
 
-# This registry is the process-local canonical state authority. Trusted bootstrap code
-# installs initial context state before normal admission. There is deliberately no
-# unregister or owner-replacement path in this slice.
+class _AuthorityLineageRootRegistry:
+    """One-shot canonical root-anchor registry keyed by authority context and epoch."""
+
+    def __init__(self) -> None:
+        self._lock = Lock()
+        self._anchors: dict[
+            tuple[str, str, str, str, int], AuthorityLineageRootAnchor
+        ] = {}
+
+    def register(
+        self,
+        trusted_context: tuple[str, str, str, str],
+        epoch: int,
+        root_anchor: AuthorityLineageRootAnchor,
+        *,
+        epoch_state_owner: AuthorityEpochStateOwner,
+    ) -> AuthorityLineageRootAnchor:
+        if type(trusted_context) is not tuple or len(trusted_context) != 4:
+            raise AuthorityRevocationError("trusted authority context is invalid")
+        _valid_epoch(epoch)
+        if type(root_anchor) is not AuthorityLineageRootAnchor:
+            raise AuthorityRevocationError(
+                "root anchor must be exact AuthorityLineageRootAnchor"
+            )
+        root_anchor.validate()
+        if type(epoch_state_owner) is not AuthorityEpochStateOwner:
+            raise AuthorityRevocationError(
+                "root registration requires canonical AuthorityEpochStateOwner"
+            )
+
+        key = (*trusted_context, epoch)
+        with epoch_state_owner._lock:
+            if epoch_state_owner._state.authority_context() != trusted_context:
+                raise AuthorityRevocationError(
+                    "epoch state owner does not bind to trusted authority context"
+                )
+            if epoch_state_owner._state.epoch != epoch:
+                raise AuthorityRevocationError(
+                    "root anchor can only be registered for the current canonical epoch"
+                )
+            with self._lock:
+                if key in self._anchors:
+                    raise AuthorityRevocationError(
+                        "canonical lineage root anchor is already registered"
+                    )
+                self._anchors[key] = root_anchor
+        return root_anchor
+
+    def resolve(
+        self,
+        trusted_context: tuple[str, str, str, str],
+        epoch: int,
+    ) -> AuthorityLineageRootAnchor:
+        if type(trusted_context) is not tuple or len(trusted_context) != 4:
+            raise AuthorityRevocationError("trusted authority context is invalid")
+        _valid_epoch(epoch)
+        key = (*trusted_context, epoch)
+        with self._lock:
+            root_anchor = self._anchors.get(key)
+        if root_anchor is None:
+            raise AuthorityRevocationError(
+                "canonical lineage root anchor is not registered for this epoch"
+            )
+        return root_anchor
+
+
 _CANONICAL_AUTHORITY_EPOCH_REGISTRY = _AuthorityEpochRegistry()
+_CANONICAL_AUTHORITY_LINEAGE_ROOT_REGISTRY = _AuthorityLineageRootRegistry()
 
 
 def register_canonical_authority_epoch_state(
@@ -338,6 +403,34 @@ def advance_canonical_authority_epoch_state(
 ) -> AuthorityEpochState:
     """Monotonically advance the canonical process-local state for its context."""
     return _CANONICAL_AUTHORITY_EPOCH_REGISTRY.advance(candidate)
+
+
+def register_canonical_authority_lineage_root_anchor(
+    context: AuthorityVerificationContext,
+    epoch: int,
+    root_anchor: AuthorityLineageRootAnchor,
+) -> AuthorityLineageRootAnchor:
+    """Trusted-bootstrap binding of one exact root anchor to current context+epoch."""
+    if type(context) is not AuthorityVerificationContext:
+        raise AuthorityRevocationError(
+            "context must be exact AuthorityVerificationContext"
+        )
+    context.validate()
+    _valid_epoch(epoch)
+    if type(root_anchor) is not AuthorityLineageRootAnchor:
+        raise AuthorityRevocationError(
+            "root_anchor must be exact AuthorityLineageRootAnchor"
+        )
+    root_anchor.validate()
+
+    trusted_context = _trusted_context(context)
+    epoch_state_owner = _CANONICAL_AUTHORITY_EPOCH_REGISTRY.resolve(trusted_context)
+    return _CANONICAL_AUTHORITY_LINEAGE_ROOT_REGISTRY.register(
+        trusted_context,
+        epoch,
+        root_anchor,
+        epoch_state_owner=epoch_state_owner,
+    )
 
 
 def _admit_authenticated_grant(
@@ -429,8 +522,6 @@ def authenticate_and_admit_authority_grant(
 
     context.validate()
     trusted_context = _trusted_context(context)
-    # Resolve the canonical owner before invoking the verifier. Unregistered contexts
-    # fail closed, and normal callers have no owner/state/registry argument to select.
     epoch_state_owner = _CANONICAL_AUTHORITY_EPOCH_REGISTRY.resolve(trusted_context)
     epoch_state_owner._require_context(trusted_context)
 
@@ -440,8 +531,6 @@ def authenticate_and_admit_authority_grant(
         verifier,
         context=context,
     )
-    # The owner identity cannot be replaced in the registry. Re-enter the same canonical
-    # owner after authentication so epoch/revocation changes during verification are seen.
     return epoch_state_owner._admit_authenticated(
         grant,
         authenticated,
@@ -456,9 +545,8 @@ def authenticate_and_admit_authority_lineage(
     verifier: Verifier,
     *,
     context: AuthorityVerificationContext,
-    root_anchor: AuthorityLineageRootAnchor,
 ) -> EpochAdmittedAuthorityLineage:
-    """Authenticate and atomically admit one explicitly ordered trusted-root lineage."""
+    """Authenticate and atomically admit one canonically rooted ordered lineage."""
     if type(lineage) is not tuple or not lineage:
         raise AuthorityRevocationError("lineage must be a non-empty immutable tuple")
     if any(type(grant) is not AuthorityGrant for grant in lineage):
@@ -467,15 +555,10 @@ def authenticate_and_admit_authority_lineage(
         raise AuthorityRevocationError(
             "context must be exact AuthorityVerificationContext"
         )
-    if type(root_anchor) is not AuthorityLineageRootAnchor:
-        raise AuthorityRevocationError(
-            "root_anchor must be exact AuthorityLineageRootAnchor"
-        )
 
     context.validate()
-    root_anchor.validate()
-
     root = lineage[0]
+    _valid_epoch(root.epoch, field_name="root epoch")
     if root.parent_grant_id is not None:
         raise AuthorityRevocationError("trusted lineage root must not have a parent")
 
@@ -483,11 +566,19 @@ def authenticate_and_admit_authority_lineage(
     if len(set(grant_ids)) != len(grant_ids):
         raise AuthorityRevocationError("lineage grant IDs must be unique and acyclic")
 
+    trusted_context = _trusted_context(context)
+    epoch_state_owner = _CANONICAL_AUTHORITY_EPOCH_REGISTRY.resolve(trusted_context)
+    epoch_state_owner._require_context(trusted_context)
+    root_anchor = _CANONICAL_AUTHORITY_LINEAGE_ROOT_REGISTRY.resolve(
+        trusted_context,
+        root.epoch,
+    )
+
     if root.grant_id != root_anchor.root_grant_id:
-        raise AuthorityRevocationError("lineage root does not match trusted root grant ID")
+        raise AuthorityRevocationError("lineage root does not match canonical root grant ID")
     root_digest = root.digest()
     if root_digest != root_anchor.root_grant_digest:
-        raise AuthorityRevocationError("lineage root does not match trusted root digest")
+        raise AuthorityRevocationError("lineage root does not match canonical root digest")
 
     for parent, child in zip(lineage, lineage[1:]):
         validate_attenuation(parent, child)
@@ -496,12 +587,6 @@ def authenticate_and_admit_authority_lineage(
         bindings = tuple(issuer_keys)
     except Exception as exc:
         raise AuthorityRevocationError("issuer key bindings unavailable") from exc
-
-    trusted_context = _trusted_context(context)
-    # Resolve before cryptographic verification so unregistered contexts fail before any
-    # external verifier call. Re-enter the same owner after every signature is checked.
-    epoch_state_owner = _CANONICAL_AUTHORITY_EPOCH_REGISTRY.resolve(trusted_context)
-    epoch_state_owner._require_context(trusted_context)
 
     authenticated_lineage = tuple(
         authenticate_authority_grant(
