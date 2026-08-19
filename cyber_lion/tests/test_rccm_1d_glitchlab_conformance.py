@@ -1,5 +1,6 @@
 from __future__ import annotations
 import copy
+import dataclasses
 import unittest
 from cyber_lion.enterprise.conformance import (
     ControlledChangeDryRunReceipt, ConformanceResult, current_partial_conformance,
@@ -72,6 +73,9 @@ class RCCM1DConformanceTests(unittest.TestCase):
         with self.assertRaises(EnterpriseModelError):
             ConformanceResult("PASS", "PASS", "PASS", "PASS", "UNKNOWN", "UNKNOWN",
                               "UNKNOWN", "UNKNOWN", "PASS", "PROMOTE").validate()
+        failed = ConformanceResult("FAIL", "PASS", "PASS", "PASS", "UNKNOWN", "UNKNOWN",
+                                   "UNKNOWN", "UNKNOWN", "FAIL", "HOLD").validate()
+        self.assertEqual(failed.overall, "FAIL")
 
     def test_controlled_change_gate_can_run_without_executing_effect(self):
         builder = AgentSpec("builder", "1.0.0", "builder", "dry-run", ("code.write",),
@@ -101,9 +105,11 @@ class RCCM1DConformanceTests(unittest.TestCase):
             snapshot.provider_id, snapshot.provider_commit, snapshot.manifest_digest,
             proposal.proposal_id, decision.gate_event_id, decision.decision,
             proposal.payload_digest or "sha256:none", result.digest(),
-        ).validate()
+        ).validate(proposal, decision)
         self.assertFalse(receipt.executed)
         self.assertIsNone(receipt.actual_effect_digest)
+        with self.assertRaises(EnterpriseModelError):
+            dataclasses.replace(receipt, proposal_id="proposal:other").validate(proposal, decision)
 
     def test_dry_run_receipt_cannot_claim_actual_effect(self):
         with self.assertRaises(EnterpriseModelError):

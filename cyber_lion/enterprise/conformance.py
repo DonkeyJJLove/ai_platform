@@ -51,7 +51,7 @@ class ControlledChangeDryRunReceipt:
     executed: bool = False
     actual_effect_digest: str | None = None
 
-    def validate(self) -> "ControlledChangeDryRunReceipt":
+    def validate(self, proposal: Any = None, decision: Any = None) -> "ControlledChangeDryRunReceipt":
         required = (self.provider_id, self.provider_commit, self.manifest_digest,
                     self.proposal_id, self.gate_event_id, self.requested_effect_digest,
                     self.conformance_digest)
@@ -59,6 +59,8 @@ class ControlledChangeDryRunReceipt:
             raise EnterpriseModelError("invalid dry-run receipt")
         if self.executed or self.actual_effect_digest is not None:
             raise EnterpriseModelError("dry-run receipt cannot claim an effect")
+        if proposal is None or decision is None or (self.proposal_id, self.gate_event_id, self.gate_decision) != (proposal.proposal_id, decision.gate_event_id, decision.decision) or decision.proposal_id != proposal.proposal_id:
+            raise EnterpriseModelError("dry-run receipt binding mismatch")
         return self
 
 
@@ -81,9 +83,9 @@ class ConformanceResult:
                       self.supply_chain)
         if any(v not in _STATUS for v in (*components, self.overall)):
             raise EnterpriseModelError("invalid conformance status")
-        if "FAIL" in components and self.overall != "FAIL":
+        if "FAIL" in components and (self.overall != "FAIL" or self.promotion_decision == "PROMOTE"):
             raise EnterpriseModelError("failure requires overall FAIL")
-        if any(v in {"PARTIAL", "UNKNOWN"} for v in components):
+        elif any(v in {"PARTIAL", "UNKNOWN"} for v in components):
             if self.overall != "PARTIAL" or self.promotion_decision != "HOLD":
                 raise EnterpriseModelError("partial/unknown conformance cannot promote")
         return self
