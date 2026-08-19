@@ -3,6 +3,12 @@
 This module defines authority data and one-hop delegation invariants only. It does not
 verify signatures, consult revocation state, or execute effects. Those remain separate
 MAND/EXEC responsibilities.
+
+AuthorityGrant 1.0.0 preserves its historical canonical signed bytes and cannot express
+delegation. AuthorityGrant 1.1.0 adds explicit delegation authority, a semantic authority
+partial order, and a remaining lineage-depth ceiling. The depth ceiling is not a global
+or sibling issuance quota; enforcing cardinality across independently issued grants
+requires separate authoritative state.
 """
 from __future__ import annotations
 
@@ -11,11 +17,38 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import re
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, FrozenSet, Tuple
 
 from .models import EnterpriseModelError, authority_rank
 
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+_SUPPORTED_SCHEMA_VERSIONS = frozenset({"1.0.0", "1.1.0"})
+
+# Explicit semantic containment relation. The two high-impact classes ``financial``
+# and ``deploy`` are intentionally incomparable, while ``privileged`` dominates both.
+_AUTHORITY_CONTAINS: Dict[str, FrozenSet[str]] = {
+    "none": frozenset({"none"}),
+    "read": frozenset({"none", "read"}),
+    "local_write": frozenset({"none", "read", "local_write"}),
+    "external_write": frozenset({"none", "read", "local_write", "external_write"}),
+    "financial": frozenset(
+        {"none", "read", "local_write", "external_write", "financial"}
+    ),
+    "deploy": frozenset(
+        {"none", "read", "local_write", "external_write", "deploy"}
+    ),
+    "privileged": frozenset(
+        {
+            "none",
+            "read",
+            "local_write",
+            "external_write",
+            "financial",
+            "deploy",
+            "privileged",
+        }
+    ),
+}
 
 
 class AuthorityGrantError(EnterpriseModelError):
@@ -32,7 +65,9 @@ def _utc(value: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def _validate_unique(values: Tuple[str, ...], *, field_name: str, allow_empty: bool = False) -> None:
+def _validate_unique(
+    values: Tuple[str, ...], *, field_name: str, allow_empty: bool = False
+) -> None:
     if not allow_empty and not values:
         raise AuthorityGrantError(f"{field_name} must not be empty")
     if any(not isinstance(value, str) or not value.strip() for value in values):
@@ -41,14 +76,19 @@ def _validate_unique(values: Tuple[str, ...], *, field_name: str, allow_empty: b
         raise AuthorityGrantError(f"{field_name} must be unique")
 
 
-def _validate_authority_attenuation(parent_authority: str, child_authority: str) -> None:
-    """Fail closed when scalar rank cannot prove semantic authority containment."""
-    parent_rank = authority_rank(parent_authority)
-    child_rank = authority_rank(child_authority)
-    if child_rank > parent_rank:
-        raise AuthorityGrantError("child authority cannot exceed parent authority")
-    if child_rank == parent_rank and child_authority != parent_authority:
-        raise AuthorityGrantError("equal-rank authority classes are not interchangeable")
+def _validate_authority_attenuation(
+    parent_authority: str, child_authority: str
+) -> None:
+    """Require semantic containment in the explicit authority partial order."""
+    try:
+        contained = _AUTHORITY_CONTAINS[parent_authority]
+        _AUTHORITY_CONTAINS[child_authority]
+    except KeyError as exc:
+        raise AuthorityGrantError(f"unknown authority class: {exc.args[0]}") from exc
+    if child_authority not in contained:
+        raise AuthorityGrantError(
+            "child authority must be semantically contained in parent authority"
+        )
 
 
 @dataclass(frozen=True)
@@ -75,6 +115,8 @@ class AuthorityGrant:
     policy_digest: str
     observability_contract_digest: str
     signature: str
+    delegation_allowed: bool = False
+    delegation_depth_budget: int = 0
 
     def validate(self) -> "AuthorityGrant":
         required = (
@@ -91,33 +133,75 @@ class AuthorityGrant:
             self.observability_contract_digest,
             self.signature,
         )
-        if self.schema_version != "1.0.0" or any(
+        if self.schema_version not in _SUPPORTED_SCHEMA_VERSIONS or any(
             not isinstance(value, str) or not value.strip() for value in required
         ):
             raise AuthorityGrantError("grant required fields/schema are invalid")
         if self.parent_grant_id is not None and (
-            not isinstance(self.parent_grant_id, str) or not self.parent_grant_id.strip()
+            not isinstance(self.parent_grant_id, str)
+            or not self.parent_grant_id.strip()
         ):
-            raise AuthorityGrantError("parent_grant_id must be null or a non-empty string")
+            raise AuthorityGrantError(
+                "parent_grant_id must be null or a non-empty string"
+            )
         _validate_unique(self.actions, field_name="actions")
         _validate_unique(self.resource_scope, field_name="resource_scope")
         _validate_unique(self.constraints, field_name="constraints", allow_empty=True)
         authority_rank(self.authority_ceiling)
-        if not isinstance(self.epoch, int) or isinstance(self.epoch, bool) or self.epoch < 0:
+        if (
+            not isinstance(self.epoch, int)
+            or isinstance(self.epoch, bool)
+            or self.epoch < 0
+        ):
             raise AuthorityGrantError("grant epoch must be a non-negative integer")
+        if type(self.delegation_allowed) is not bool:
+            raise AuthorityGrantError("delegation_allowed must be a boolean")
+        if (
+            not isinstance(self.delegation_depth_budget, int)
+            or isinstance(self.delegation_depth_budget, bool)
+            or self.delegation_depth_budget < 0
+        ):
+            raise AuthorityGrantError(
+                "delegation_depth_budget must be a non-negative integer"
+            )
+
+        if self.schema_version == "1.0.0":
+            if self.delegation_allowed or self.delegation_depth_budget != 0:
+                raise AuthorityGrantError(
+                    "AuthorityGrant 1.0.0 cannot express delegation"
+                )
+        else:
+            if self.delegation_allowed and self.delegation_depth_budget == 0:
+                raise AuthorityGrantError(
+                    "delegation_allowed requires a positive delegation_depth_budget"
+                )
+            if (
+                not self.delegation_allowed
+                and self.delegation_depth_budget != 0
+            ):
+                raise AuthorityGrantError(
+                    "delegation_depth_budget must be zero when delegation is not allowed"
+                )
+
         if _utc(self.issued_at) >= _utc(self.expires_at):
             raise AuthorityGrantError("grant validity window is invalid")
         if not _DIGEST_RE.fullmatch(self.policy_digest):
             raise AuthorityGrantError("policy_digest must be canonical sha256")
         if not _DIGEST_RE.fullmatch(self.observability_contract_digest):
-            raise AuthorityGrantError("observability_contract_digest must be canonical sha256")
+            raise AuthorityGrantError(
+                "observability_contract_digest must be canonical sha256"
+            )
         return self
 
     def canonical_payload(self) -> bytes:
-        """Canonical unsigned payload for a later external signature verifier."""
+        """Canonical unsigned payload, versioned without rewriting historical v1.0 bytes."""
         self.validate()
         value: Dict[str, Any] = asdict(self)
         value.pop("signature")
+        if self.schema_version == "1.0.0":
+            # These fields did not exist in the historical v1.0 signed contract.
+            value.pop("delegation_allowed")
+            value.pop("delegation_depth_budget")
         value["actions"] = list(self.actions)
         value["resource_scope"] = list(self.resource_scope)
         value["constraints"] = list(self.constraints)
@@ -129,19 +213,32 @@ class AuthorityGrant:
         ).hexdigest()
 
 
-def validate_attenuation(parent: AuthorityGrant, child: AuthorityGrant) -> AuthorityGrant:
+def validate_attenuation(
+    parent: AuthorityGrant, child: AuthorityGrant
+) -> AuthorityGrant:
     """Validate one-hop delegation without inferring semantics absent from the contracts."""
     parent.validate()
     child.validate()
 
+    if parent.schema_version != "1.1.0" or child.schema_version != "1.1.0":
+        raise AuthorityGrantError(
+            "delegation requires AuthorityGrant 1.1.0 on both parent and child"
+        )
     if child.grant_id == parent.grant_id:
         raise AuthorityGrantError("child grant_id must differ from parent grant_id")
     if child.parent_grant_id != parent.grant_id:
         raise AuthorityGrantError("child must bind to the exact parent grant")
     if child.issuer_subject_id != parent.subject_id:
         raise AuthorityGrantError("child issuer must equal parent grant subject")
+    if not parent.delegation_allowed:
+        raise AuthorityGrantError("parent grant does not permit delegation")
+    if child.delegation_depth_budget >= parent.delegation_depth_budget:
+        raise AuthorityGrantError(
+            "child delegation_depth_budget must be strictly smaller than parent budget"
+        )
 
     exact_bindings = (
+        ("schema_version", parent.schema_version, child.schema_version),
         ("tenant_id", parent.tenant_id, child.tenant_id),
         ("organization_id", parent.organization_id, child.organization_id),
         ("mission_id", parent.mission_id, child.mission_id),
@@ -159,11 +256,15 @@ def validate_attenuation(parent: AuthorityGrant, child: AuthorityGrant) -> Autho
         if parent_value != child_value:
             raise AuthorityGrantError(f"child {name} must equal parent {name}")
 
-    _validate_authority_attenuation(parent.authority_ceiling, child.authority_ceiling)
+    _validate_authority_attenuation(
+        parent.authority_ceiling, child.authority_ceiling
+    )
     if not set(child.actions).issubset(parent.actions):
         raise AuthorityGrantError("child actions must be a subset of parent actions")
     if not set(child.resource_scope).issubset(parent.resource_scope):
-        raise AuthorityGrantError("child resource_scope must be a subset of parent scope")
+        raise AuthorityGrantError(
+            "child resource_scope must be a subset of parent scope"
+        )
     if not set(parent.constraints).issubset(child.constraints):
         raise AuthorityGrantError("child cannot remove parent constraints")
     if _utc(child.issued_at) < _utc(parent.issued_at):
