@@ -16,7 +16,6 @@ from cyber_lion.enterprise.runtime_attestation import (
 NOW = datetime(2026, 8, 20, 15, 0, tzinfo=timezone.utc)
 ARTIFACT = b"verified-executor-bytes-v1"
 ARTIFACT_DIGEST = hashlib.sha256(ARTIFACT).hexdigest()
-AUTH = "a" * 64
 COMMIT = "1" * 40
 TREE = "2" * 40
 WORKFLOW_SHA = "3" * 40
@@ -38,7 +37,6 @@ def attestation(**changes) -> RuntimeAttestation:
         runner_environment="github-hosted",
         runtime_instance_id="runtime-a",
         mission_id="LION-FLEET-EXECUTOR-ATTESTATION-V1",
-        authority_digest=AUTH,
         artifact_digest=ARTIFACT_DIGEST,
         issuer="https://token.actions.githubusercontent.com",
         provenance_ref="github-attestation:att-1",
@@ -60,7 +58,6 @@ def context() -> RuntimeAttestationContext:
         run_id=item.run_id,
         run_attempt=item.run_attempt,
         mission_id=item.mission_id,
-        authority_digest=item.authority_digest,
         issuer=item.issuer,
     )
 
@@ -82,7 +79,6 @@ class AnchoredBackend:
             run_id=item.run_id,
             run_attempt=item.run_attempt,
             mission_id=item.mission_id,
-            authority_digest=item.authority_digest,
             artifact_digest=item.artifact_digest,
             issuer=item.issuer,
             provenance_ref=item.provenance_ref,
@@ -98,14 +94,19 @@ class RuntimeAttestationTests(unittest.TestCase):
             replay_guard=InMemoryRuntimeReplayGuard(),
         )
 
+    def test_runtime_contract_has_no_authority_channel(self) -> None:
+        self.assertFalse(hasattr(attestation(), "authority_digest"))
+        self.assertFalse(hasattr(context(), "authority_digest"))
+
     def test_valid_attestation_binds_real_artifact_bytes(self) -> None:
         verified = self.verifier().verify(attestation(), artifact_bytes=ARTIFACT, now=NOW, context=context())
         self.assertEqual(verified.implementation_digest, ARTIFACT_DIGEST)
+        self.assertFalse(hasattr(verified, "authority_digest"))
 
     def test_self_declared_wrong_implementation_digest_cannot_override_real_bytes(self) -> None:
         item = attestation(artifact_digest="f" * 64)
         with self.assertRaises(RuntimeAttestationVerificationError):
-            self.verifier(item).verify(item, artifact_bytes=ARTIFACT, now=NOW, context=replace(context(), authority_digest=AUTH))
+            self.verifier(item).verify(item, artifact_bytes=ARTIFACT, now=NOW, context=context())
 
     def test_forged_attestation_payload_denied(self) -> None:
         trusted = attestation()
@@ -132,10 +133,6 @@ class RuntimeAttestationTests(unittest.TestCase):
     def test_wrong_mission_denied(self) -> None:
         with self.assertRaises(RuntimeAttestationVerificationError):
             self.verifier().verify(attestation(mission_id="other"), artifact_bytes=ARTIFACT, now=NOW, context=context())
-
-    def test_wrong_authority_denied(self) -> None:
-        with self.assertRaises(RuntimeAttestationVerificationError):
-            self.verifier().verify(attestation(authority_digest="b" * 64), artifact_bytes=ARTIFACT, now=NOW, context=context())
 
     def test_artifact_modified_after_attestation_denied(self) -> None:
         with self.assertRaises(RuntimeAttestationVerificationError):
