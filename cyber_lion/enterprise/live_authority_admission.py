@@ -11,7 +11,7 @@ import hashlib
 import json
 
 from .authority_grant import AuthorityGrant, AuthorityGrantError, validate_attenuation
-from .authority_source import AuthorityLookupKey, AuthorityLineageRecord, AuthoritySource, AuthoritySourceError
+from .authority_source import AuthorityLookupKey, AuthorityLineageRecord, AuthoritySource
 from .authority_verification import (
     AuthenticatedAuthorityGrant,
     AuthorityVerificationContext,
@@ -22,6 +22,8 @@ from .authority_verification import (
 from .persistent_authority_state import (
     DurableReplayGuard,
     PersistentAuthorityStateError,
+    PersistentBindingFinalization,
+    PersistentBindingFinalizer,
     PersistentEpochSnapshot,
     PersistentEpochStateProvider,
     PersistentRootAnchor,
@@ -157,6 +159,7 @@ class LiveAuthorityAdmission:
         epoch_provider: PersistentEpochStateProvider,
         root_provider: PersistentRootAnchorProvider,
         replay_guard: DurableReplayGuard,
+        binding_finalizer: PersistentBindingFinalizer,
     ) -> None:
         if not isinstance(authority_source, AuthoritySource):
             raise LiveAuthorityAdmissionError("authority_source is invalid")
@@ -177,6 +180,8 @@ class LiveAuthorityAdmission:
             raise LiveAuthorityAdmissionError("root provider is unavailable")
         if not callable(getattr(replay_guard, "consume", None)):
             raise LiveAuthorityAdmissionError("replay guard is unavailable")
+        if type(binding_finalizer) is not PersistentBindingFinalizer:
+            raise LiveAuthorityAdmissionError("binding finalizer is unavailable")
         self._source = authority_source
         self._context = context
         self._issuer_keys = issuer_keys
@@ -184,6 +189,7 @@ class LiveAuthorityAdmission:
         self._epoch_provider = epoch_provider
         self._root_provider = root_provider
         self._replay_guard = replay_guard
+        self._binding_finalizer = binding_finalizer
 
     @property
     def context(self) -> AuthorityVerificationContext:
@@ -404,3 +410,35 @@ class LiveAuthorityAdmission:
         if actual != expected:
             raise LiveAuthorityAdmissionError("live admission receipt is stale or forged")
         return admitted
+
+    def finalize_binding(
+        self,
+        admitted: LiveAdmittedAuthority,
+        *,
+        runtime_evidence_digest: str,
+        binding_nonce: str,
+        now: datetime,
+    ) -> PersistentBindingFinalization:
+        if type(admitted) is not LiveAdmittedAuthority:
+            raise LiveAuthorityAdmissionError("live admission receipt must be exact LiveAdmittedAuthority")
+        if now.tzinfo is None:
+            raise LiveAuthorityAdmissionError("trusted now must be timezone-aware")
+        _sha256(runtime_evidence_digest, name="runtime_evidence_digest")
+        _text(binding_nonce, name="binding_nonce")
+        revalidated = self.revalidate(admitted, now=now)
+        finalized_at = now.astimezone(timezone.utc).isoformat()
+        try:
+            return self._binding_finalizer.finalize(
+                self._context_key(),
+                expected_epoch=revalidated.epoch,
+                expected_state_version=revalidated.epoch_state_version,
+                grant_id=revalidated.grant_id,
+                expected_root_grant_id=revalidated.root_grant_id,
+                expected_root_grant_digest=revalidated.root_grant_digest,
+                live_admission_digest=revalidated.digest(),
+                runtime_evidence_digest=runtime_evidence_digest,
+                binding_nonce=binding_nonce,
+                finalized_at=finalized_at,
+            )
+        except PersistentAuthorityStateError as exc:
+            raise LiveAuthorityAdmissionError("binding finalization failed closed") from exc

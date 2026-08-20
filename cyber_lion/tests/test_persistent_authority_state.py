@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
@@ -27,6 +26,7 @@ from cyber_lion.enterprise.live_authority_admission import (
 from cyber_lion.enterprise.persistent_authority_state import (
     DurableReplayGuard,
     PersistentAuthorityStateError,
+    PersistentBindingFinalizer,
     PersistentEpochStateProvider,
     PersistentRootAnchorProvider,
     SQLiteAuthorityStateStore,
@@ -109,6 +109,7 @@ def build_admission(store: SQLiteAuthorityStateStore, source: AuthoritySource, *
         epoch_provider=PersistentEpochStateProvider(store),
         root_provider=PersistentRootAnchorProvider(store),
         replay_guard=DurableReplayGuard(store, domain="live-authority-admission"),
+        binding_finalizer=PersistentBindingFinalizer(store),
     )
 
 
@@ -161,6 +162,14 @@ class PersistentAuthorityStateTests(unittest.TestCase):
             with self.assertRaises(PersistentAuthorityStateError):
                 store.register_root(CONTEXT, epoch=7, root_grant_id="g2", root_grant_digest="b" * 64)
 
+    def test_root_registration_checks_epoch_inside_write_transaction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.advance_epoch(CONTEXT, epoch=8, revoked_grant_ids=())
+            with self.assertRaises(PersistentAuthorityStateError):
+                store.register_root(CONTEXT, epoch=7, root_grant_id="g", root_grant_digest="a" * 64)
+
     def test_concurrent_replay_has_exactly_one_winner(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
@@ -196,6 +205,187 @@ class PersistentAuthorityStateTests(unittest.TestCase):
             restarted = SQLiteAuthorityStateStore(path)
             with self.assertRaises(LiveAuthorityAdmissionError):
                 admit(build_admission(restarted, source))
+
+    def test_binding_finalization_is_restart_durable_and_replay_denied(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "authority.db")
+            grant = make_grant()
+            store = SQLiteAuthorityStateStore(path)
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.register_root(CONTEXT, epoch=7, root_grant_id=grant.grant_id, root_grant_digest=grant.digest())
+            live = build_admission(store, StaticSource((make_record(grant),)))
+            receipt = admit(live, nonce="admit-finalize")
+            finalized = live.finalize_binding(
+                receipt,
+                runtime_evidence_digest="4" * 64,
+                binding_nonce="bind-finalize",
+                now=NOW,
+            )
+            self.assertEqual(finalized.authority_state_version, receipt.epoch_state_version)
+            self.assertEqual(finalized.root_grant_digest, receipt.root_grant_digest)
+
+            restarted = SQLiteAuthorityStateStore(path)
+            with self.assertRaises(PersistentAuthorityStateError):
+                restarted.finalize_binding(
+                    CONTEXT,
+                    expected_epoch=receipt.epoch,
+                    expected_state_version=receipt.epoch_state_version,
+                    grant_id=receipt.grant_id,
+                    expected_root_grant_id=receipt.root_grant_id,
+                    expected_root_grant_digest=receipt.root_grant_digest,
+                    live_admission_digest=receipt.digest(),
+                    runtime_evidence_digest="4" * 64,
+                    binding_nonce="bind-finalize",
+                    finalized_at=NOW.isoformat(),
+                )
+
+    def test_concurrent_binding_finalization_has_exactly_one_winner(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
+            grant = make_grant()
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.register_root(CONTEXT, epoch=7, root_grant_id=grant.grant_id, root_grant_digest=grant.digest())
+            snapshot = store.current_epoch(CONTEXT)
+            barrier = threading.Barrier(8)
+            results: list[bool] = []
+            lock = threading.Lock()
+
+            def worker() -> None:
+                barrier.wait()
+                try:
+                    store.finalize_binding(
+                        CONTEXT,
+                        expected_epoch=snapshot.epoch,
+                        expected_state_version=snapshot.version,
+                        grant_id=GRANT,
+                        expected_root_grant_id=grant.grant_id,
+                        expected_root_grant_digest=grant.digest(),
+                        live_admission_digest="e" * 64,
+                        runtime_evidence_digest="4" * 64,
+                        binding_nonce="same-binding",
+                        finalized_at=NOW.isoformat(),
+                    )
+                    value = True
+                except PersistentAuthorityStateError:
+                    value = False
+                with lock:
+                    results.append(value)
+
+            threads = [threading.Thread(target=worker) for _ in range(8)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            self.assertEqual(results.count(True), 1)
+            self.assertEqual(results.count(False), 7)
+
+    def test_stale_state_revocation_epoch_and_root_deny_finalization(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            grant = make_grant()
+            store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.register_root(CONTEXT, epoch=7, root_grant_id=grant.grant_id, root_grant_digest=grant.digest())
+            snapshot = store.current_epoch(CONTEXT)
+            store.advance_epoch(CONTEXT, epoch=7, revoked_grant_ids=(GRANT,))
+            with self.assertRaises(PersistentAuthorityStateError):
+                store.finalize_binding(
+                    CONTEXT,
+                    expected_epoch=snapshot.epoch,
+                    expected_state_version=snapshot.version,
+                    grant_id=GRANT,
+                    expected_root_grant_id=grant.grant_id,
+                    expected_root_grant_digest=grant.digest(),
+                    live_admission_digest="e" * 64,
+                    runtime_evidence_digest="4" * 64,
+                    binding_nonce="stale",
+                    finalized_at=NOW.isoformat(),
+                )
+
+        with tempfile.TemporaryDirectory() as directory:
+            grant = make_grant()
+            store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.register_root(CONTEXT, epoch=7, root_grant_id=grant.grant_id, root_grant_digest=grant.digest())
+            snapshot = store.current_epoch(CONTEXT)
+            store.advance_epoch(CONTEXT, epoch=8, revoked_grant_ids=())
+            with self.assertRaises(PersistentAuthorityStateError):
+                store.finalize_binding(
+                    CONTEXT,
+                    expected_epoch=snapshot.epoch,
+                    expected_state_version=snapshot.version,
+                    grant_id=GRANT,
+                    expected_root_grant_id=grant.grant_id,
+                    expected_root_grant_digest=grant.digest(),
+                    live_admission_digest="e" * 64,
+                    runtime_evidence_digest="4" * 64,
+                    binding_nonce="epoch",
+                    finalized_at=NOW.isoformat(),
+                )
+
+        with tempfile.TemporaryDirectory() as directory:
+            grant = make_grant()
+            store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.register_root(CONTEXT, epoch=7, root_grant_id=grant.grant_id, root_grant_digest=grant.digest())
+            snapshot = store.current_epoch(CONTEXT)
+            with self.assertRaises(PersistentAuthorityStateError):
+                store.finalize_binding(
+                    CONTEXT,
+                    expected_epoch=snapshot.epoch,
+                    expected_state_version=snapshot.version,
+                    grant_id=GRANT,
+                    expected_root_grant_id=grant.grant_id,
+                    expected_root_grant_digest="0" * 64,
+                    live_admission_digest="e" * 64,
+                    runtime_evidence_digest="4" * 64,
+                    binding_nonce="root",
+                    finalized_at=NOW.isoformat(),
+                )
+
+    def test_concurrent_revoke_vs_finalize_is_linearizable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            grant = make_grant()
+            store = SQLiteAuthorityStateStore(str(Path(directory) / "authority.db"))
+            store.bootstrap_context(CONTEXT, epoch=7)
+            store.register_root(CONTEXT, epoch=7, root_grant_id=grant.grant_id, root_grant_digest=grant.digest())
+            snapshot = store.current_epoch(CONTEXT)
+            barrier = threading.Barrier(2)
+            results: list[str] = []
+            lock = threading.Lock()
+
+            def finalize_worker() -> None:
+                barrier.wait()
+                try:
+                    store.finalize_binding(
+                        CONTEXT,
+                        expected_epoch=snapshot.epoch,
+                        expected_state_version=snapshot.version,
+                        grant_id=GRANT,
+                        expected_root_grant_id=grant.grant_id,
+                        expected_root_grant_digest=grant.digest(),
+                        live_admission_digest="e" * 64,
+                        runtime_evidence_digest="4" * 64,
+                        binding_nonce="race-revoke",
+                        finalized_at=NOW.isoformat(),
+                    )
+                    result = "finalized"
+                except PersistentAuthorityStateError:
+                    result = "denied"
+                with lock:
+                    results.append(result)
+
+            def revoke_worker() -> None:
+                barrier.wait()
+                store.advance_epoch(CONTEXT, epoch=7, revoked_grant_ids=(GRANT,))
+                with lock:
+                    results.append("revoked")
+
+            first = threading.Thread(target=finalize_worker)
+            second = threading.Thread(target=revoke_worker)
+            first.start(); second.start(); first.join(); second.join()
+            self.assertIn("revoked", results)
+            self.assertIn(results[0] if results[0] in {"finalized", "denied"} else results[1], {"finalized", "denied"})
+            self.assertIn(GRANT, store.current_epoch(CONTEXT).revoked_grant_ids)
 
     def test_revoked_stale_expired_future_missing_root_and_signature_failure_denied(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

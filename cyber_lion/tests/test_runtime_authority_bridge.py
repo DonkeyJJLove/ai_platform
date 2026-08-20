@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime, timezone
 import inspect
+from pathlib import Path
+import tempfile
 import unittest
 
 from cyber_lion.contracts.runtime_authority_binding import RuntimeEvidenceReference
@@ -15,10 +17,15 @@ from cyber_lion.enterprise.authority_source import (
     canonical_source_lineage_digest,
 )
 from cyber_lion.enterprise.authority_verification import AuthorityVerificationContext, IssuerKeyBinding
-from cyber_lion.enterprise.live_authority_admission import LiveAdmittedAuthority, LiveAuthorityAdmission
-from cyber_lion.enterprise.persistent_authority_state import PersistentEpochSnapshot, PersistentRootAnchor
+from cyber_lion.enterprise.live_authority_admission import LiveAuthorityAdmission
+from cyber_lion.enterprise.persistent_authority_state import (
+    DurableReplayGuard,
+    PersistentBindingFinalizer,
+    PersistentEpochStateProvider,
+    PersistentRootAnchorProvider,
+    SQLiteAuthorityStateStore,
+)
 from cyber_lion.enterprise.runtime_authority_bridge import (
-    InMemoryRuntimeAuthorityReplayGuard,
     RuntimeAuthorityBridge,
     RuntimeAuthorityBridgeError,
     verify_authority_bound_n2_pair,
@@ -29,6 +36,7 @@ BASE = "1" * 40
 HEAD = "2" * 40
 MISSION = "LION-FLEET-EXECUTOR-ATTESTATION-V1"
 GRANT_ID = "grant-fleet-n2"
+CONTEXT = ("lion.test", "tenant-1", "org-1", MISSION)
 NOW = datetime(2026, 8, 20, 15, 0, tzinfo=timezone.utc)
 
 
@@ -98,49 +106,6 @@ class MutableSource(AuthoritySource):
         return (self.value,)
 
 
-class MutableEpochProvider:
-    def __init__(self, epoch=9, version=1, revoked=()):
-        self.epoch = epoch
-        self.version = version
-        self.revoked = tuple(revoked)
-
-    def current(self, context):
-        return PersistentEpochSnapshot(*context, self.epoch, self.revoked, self.version)
-
-    def revoke(self, grant_id):
-        if grant_id not in self.revoked:
-            self.revoked = self.revoked + (grant_id,)
-            self.version += 1
-
-    def advance(self):
-        self.epoch += 1
-        self.version += 1
-        self.revoked = ()
-
-
-class MutableRootProvider:
-    def __init__(self, value: AuthorityGrant):
-        self.by_epoch = {value.epoch: PersistentRootAnchor("lion.test", "tenant-1", "org-1", MISSION, value.epoch, value.grant_id, value.digest())}
-
-    def resolve(self, context, epoch):
-        return self.by_epoch[epoch]
-
-    def replace_digest(self, epoch, digest):
-        current = self.by_epoch[epoch]
-        self.by_epoch[epoch] = replace(current, root_grant_digest=digest)
-
-
-class AdmissionReplay:
-    def __init__(self):
-        self.seen = set()
-
-    def consume(self, digest, *, consumed_at):
-        if digest in self.seen:
-            return False
-        self.seen.add(digest)
-        return True
-
-
 class SignatureVerifier:
     def __init__(self, callback=None):
         self.callback = callback
@@ -153,29 +118,31 @@ class SignatureVerifier:
         return signature == "externally-verified-signature" and key_id == "authority-key-1" and algorithm == "test-ed25519"
 
 
-def admission(*, value=None, state=None, root=None, verifier=None, source=None):
-    value = value or grant()
-    source = source or MutableSource(record(value))
-    state = state or MutableEpochProvider(epoch=value.epoch)
-    root = root or MutableRootProvider(value)
+def admission(*, verifier=None):
+    value = grant()
+    temp = tempfile.TemporaryDirectory()
+    store = SQLiteAuthorityStateStore(str(Path(temp.name) / "authority.db"))
+    store.bootstrap_context(CONTEXT, epoch=value.epoch)
+    store.register_root(CONTEXT, epoch=value.epoch, root_grant_id=value.grant_id, root_grant_digest=value.digest())
+    source = MutableSource(record(value))
     verifier = verifier or SignatureVerifier()
+    finalizer = PersistentBindingFinalizer(store)
     subject = LiveAuthorityAdmission(
         authority_source=source,
         context=AuthorityVerificationContext("lion.test", "tenant-1", "org-1", MISSION),
         issuer_keys=(IssuerKeyBinding("issuer-root", "lion.test", "authority-key-1", "test-ed25519"),),
         signature_verifier=verifier,
-        epoch_provider=state,
-        root_provider=root,
-        replay_guard=AdmissionReplay(),
+        epoch_provider=PersistentEpochStateProvider(store),
+        root_provider=PersistentRootAnchorProvider(store),
+        replay_guard=DurableReplayGuard(store, domain="live-authority-admission"),
+        binding_finalizer=finalizer,
     )
-    return subject, source, state, root, verifier
+    return subject, source, store, finalizer, verifier, temp
 
 
-def bridge(live=None, replay=None):
-    live = live or admission()[0]
+def bridge(live):
     return RuntimeAuthorityBridge(
         live_admission=live,
-        replay_guard=replay or InMemoryRuntimeAuthorityReplayGuard(),
         repository=REPO,
         pr_number=41,
         base_sha=BASE,
@@ -196,12 +163,20 @@ def bind(subject, slot="a", **kwargs):
 
 
 class RuntimeAuthorityBridgeTests(unittest.TestCase):
+    def make_bridge(self, *, verifier=None):
+        live, source, store, finalizer, verifier, temp = admission(verifier=verifier)
+        self.addCleanup(temp.cleanup)
+        return bridge(live), live, source, store, finalizer, verifier
+
     def test_valid_live_admission_binding_pass(self):
-        result = bind(bridge())
+        subject, *_ = self.make_bridge()
+        result = bind(subject)
         self.assertEqual(result.runtime_instance_id, "runtime-a")
         self.assertEqual(result.authority_state_version, 1)
         self.assertEqual(len(result.live_admission_digest), 64)
         self.assertEqual(len(result.live_admission_replay_digest), 64)
+        self.assertEqual(len(result.live_finalization_digest), 64)
+        self.assertEqual(len(result.live_finalization_key_digest), 64)
         self.assertEqual(len(result.binding_digest), 64)
 
     def test_authentication_only_constructor_path_absent(self):
@@ -209,21 +184,23 @@ class RuntimeAuthorityBridgeTests(unittest.TestCase):
         self.assertIn("live_admission", parameters)
         self.assertNotIn("authority_source", parameters)
         self.assertNotIn("authenticator", parameters)
+        self.assertNotIn("replay_guard", parameters)
 
-    def test_caller_cannot_inject_admission_receipt(self):
+    def test_caller_cannot_inject_admission_or_finalization_receipt(self):
         parameters = inspect.signature(RuntimeAuthorityBridge.bind).parameters
         self.assertNotIn("admitted", parameters)
         self.assertNotIn("live_admitted_authority", parameters)
+        self.assertNotIn("finalized", parameters)
 
     def test_forged_live_admitted_authority_denied(self):
-        live, *_ = admission()
+        _, live, _, _, _, _ = self.make_bridge()
         receipt = live.admit(repository=REPO, pr_number=41, base_sha=BASE, head_sha=HEAD, mission_id=MISSION, grant_id=GRANT_ID, now=NOW, replay_nonce="one")
         forged = replace(receipt, authority_ceiling="external_write")
         with self.assertRaises(Exception):
             live.revalidate(forged, now=NOW)
 
     def test_wrong_lineage_provenance_root_state_and_key_denied(self):
-        live, source, state, root, _ = admission()
+        _, live, _, _, _, _ = self.make_bridge()
         receipt = live.admit(repository=REPO, pr_number=41, base_sha=BASE, head_sha=HEAD, mission_id=MISSION, grant_id=GRANT_ID, now=NOW, replay_nonce="one")
         for altered in (
             replace(receipt, lineage_digest="0" * 64),
@@ -238,81 +215,122 @@ class RuntimeAuthorityBridgeTests(unittest.TestCase):
                 live.revalidate(altered, now=NOW)
 
     def test_revoked_during_authentication_denied(self):
-        state = MutableEpochProvider()
-        verifier = SignatureVerifier(lambda call: state.revoke(GRANT_ID) if call == 1 else None)
-        live, *_ = admission(state=state, verifier=verifier)
+        holder = {}
+        verifier = SignatureVerifier(lambda call: holder["store"].advance_epoch(CONTEXT, epoch=9, revoked_grant_ids=(GRANT_ID,)) if call == 1 else None)
+        subject, _, _, store, _, _ = self.make_bridge(verifier=verifier)
+        holder["store"] = store
         with self.assertRaises(RuntimeAuthorityBridgeError):
-            bind(bridge(live))
+            bind(subject)
 
     def test_epoch_change_during_authentication_denied(self):
-        state = MutableEpochProvider()
-        verifier = SignatureVerifier(lambda call: state.advance() if call == 1 else None)
-        live, *_ = admission(state=state, verifier=verifier)
+        holder = {}
+        verifier = SignatureVerifier(lambda call: holder["store"].advance_epoch(CONTEXT, epoch=10, revoked_grant_ids=()) if call == 1 else None)
+        subject, _, _, store, _, _ = self.make_bridge(verifier=verifier)
+        holder["store"] = store
         with self.assertRaises(RuntimeAuthorityBridgeError):
-            bind(bridge(live))
+            bind(subject)
 
-    def test_revocation_during_revalidation_denied(self):
-        state = MutableEpochProvider()
-        verifier = SignatureVerifier(lambda call: state.revoke(GRANT_ID) if call == 2 else None)
-        live, *_ = admission(state=state, verifier=verifier)
-        with self.assertRaises(RuntimeAuthorityBridgeError):
-            bind(bridge(live))
+    def test_revoke_after_revalidate_before_finalize_denied(self):
+        subject, _, _, store, finalizer, _ = self.make_bridge()
+        original = finalizer.finalize
 
-    def test_epoch_change_during_revalidation_denied(self):
-        state = MutableEpochProvider()
-        verifier = SignatureVerifier(lambda call: state.advance() if call == 2 else None)
-        live, *_ = admission(state=state, verifier=verifier)
+        def revoke_then_finalize(context, **kwargs):
+            store.advance_epoch(CONTEXT, epoch=9, revoked_grant_ids=(GRANT_ID,))
+            return original(context, **kwargs)
+
+        finalizer.finalize = revoke_then_finalize
         with self.assertRaises(RuntimeAuthorityBridgeError):
-            bind(bridge(live))
+            bind(subject)
+
+    def test_epoch_advance_after_revalidate_before_finalize_denied(self):
+        subject, _, _, store, finalizer, _ = self.make_bridge()
+        original = finalizer.finalize
+
+        def advance_then_finalize(context, **kwargs):
+            store.advance_epoch(CONTEXT, epoch=10, revoked_grant_ids=())
+            return original(context, **kwargs)
+
+        finalizer.finalize = advance_then_finalize
+        with self.assertRaises(RuntimeAuthorityBridgeError):
+            bind(subject)
+
+    def test_no_signature_verification_occurs_inside_finalization(self):
+        subject, _, _, _, finalizer, verifier = self.make_bridge()
+        original = finalizer.finalize
+        observed = []
+
+        def checked_finalize(context, **kwargs):
+            observed.append(verifier.calls)
+            result = original(context, **kwargs)
+            observed.append(verifier.calls)
+            return result
+
+        finalizer.finalize = checked_finalize
+        bind(subject)
+        self.assertEqual(observed[0], observed[1])
+        self.assertGreater(observed[0], 0)
 
     def test_expired_before_binding_denied(self):
+        subject, *_ = self.make_bridge()
         with self.assertRaises(RuntimeAuthorityBridgeError):
-            bind(bridge(), now=datetime(2026, 8, 22, 15, 0, tzinfo=timezone.utc))
+            bind(subject, now=datetime(2026, 8, 22, 15, 0, tzinfo=timezone.utc))
 
     def test_wrong_runtime_head_denied_before_admission(self):
+        subject, *_ = self.make_bridge()
         with self.assertRaises(RuntimeAuthorityBridgeError):
-            bridge().bind(runtime("a", head_sha="3" * 40), grant_id=GRANT_ID, admission_nonce="a", binding_nonce="b", now=NOW)
+            subject.bind(runtime("a", head_sha="3" * 40), grant_id=GRANT_ID, admission_nonce="a", binding_nonce="b", now=NOW)
 
-    def test_binding_replay_denied(self):
-        subject = bridge()
-        bind(subject, nonce_suffix="1", bind_suffix="same")
-        with self.assertRaises(RuntimeAuthorityBridgeError):
-            bind(subject, nonce_suffix="2", bind_suffix="same")
+    def test_binding_finalization_replay_denied(self):
+        subject, live, _, _, _, _ = self.make_bridge()
+        first = bind(subject, nonce_suffix="1", bind_suffix="same")
+        self.assertEqual(len(first.live_finalization_key_digest), 64)
+        receipt = live.admit(repository=REPO, pr_number=41, base_sha=BASE, head_sha=HEAD, mission_id=MISSION, grant_id=GRANT_ID, now=NOW, replay_nonce="manual")
+        with self.assertRaises(Exception):
+            live.finalize_binding(
+                receipt,
+                runtime_evidence_digest=runtime("a").runtime_evidence_digest,
+                binding_nonce="bind-a-same",
+                now=NOW,
+            )
 
     def test_two_distinct_runtime_records_share_one_live_authority_root(self):
-        subject = bridge()
+        subject, *_ = self.make_bridge()
         first = bind(subject, "a", nonce_suffix="1", bind_suffix="1")
         second = bind(subject, "b", nonce_suffix="2", bind_suffix="2")
         pair = verify_authority_bound_n2_pair(first, second)
         self.assertNotEqual(pair[0].runtime_instance_id, pair[1].runtime_instance_id)
         self.assertEqual(pair[0].authority_root_grant_digest, pair[1].authority_root_grant_digest)
         self.assertEqual(pair[0].authority_state_version, pair[1].authority_state_version)
+        self.assertNotEqual(pair[0].live_finalization_digest, pair[1].live_finalization_digest)
 
     def test_duplicate_runtime_cannot_satisfy_authority_bound_n2(self):
-        subject = bridge()
+        subject, *_ = self.make_bridge()
         first = bind(subject, "a", nonce_suffix="1", bind_suffix="1")
         with self.assertRaises(RuntimeAuthorityBridgeError):
             verify_authority_bound_n2_pair(first, first)
 
     def test_different_live_authority_root_denied_for_n2(self):
-        subject = bridge()
+        subject, *_ = self.make_bridge()
         first = bind(subject, "a", nonce_suffix="1", bind_suffix="1")
         second = bind(subject, "b", nonce_suffix="2", bind_suffix="2")
         altered = replace(second, authority_root_grant_digest="9" * 64)
         with self.assertRaises(RuntimeAuthorityBridgeError):
             verify_authority_bound_n2_pair(first, altered)
 
-    def test_binding_digest_changes_with_live_admission_fields(self):
-        subject = bridge()
+    def test_binding_digest_changes_with_live_admission_and_finalization(self):
+        subject, *_ = self.make_bridge()
         first = bind(subject, "a", nonce_suffix="1", bind_suffix="1")
         second = bind(subject, "b", nonce_suffix="2", bind_suffix="2")
         self.assertNotEqual(first.live_admission_digest, second.live_admission_digest)
         self.assertNotEqual(first.live_admission_replay_digest, second.live_admission_replay_digest)
+        self.assertNotEqual(first.live_finalization_digest, second.live_finalization_digest)
+        self.assertNotEqual(first.live_finalization_key_digest, second.live_finalization_key_digest)
         self.assertNotEqual(first.binding_digest, second.binding_digest)
 
     def test_runtime_reference_has_no_authority_input(self):
         self.assertFalse(hasattr(runtime("a"), "authority_digest"))
         self.assertFalse(hasattr(runtime("a"), "live_admission_digest"))
+        self.assertFalse(hasattr(runtime("a"), "live_finalization_digest"))
 
 
 if __name__ == "__main__":

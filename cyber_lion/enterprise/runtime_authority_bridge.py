@@ -1,10 +1,7 @@
 """Post-execution bridge from immutable runtime evidence to current live authority."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
-from threading import Lock
-from typing import Protocol
 
 from cyber_lion.contracts.runtime_authority_binding import (
     AuthorityAttestationBinding,
@@ -20,39 +17,13 @@ class RuntimeAuthorityBridgeError(RuntimeAuthorityBindingError):
     """Raised when runtime evidence cannot be bound to current authority safely."""
 
 
-@dataclass(frozen=True)
-class RuntimeAuthorityReplayKey:
-    runtime_evidence_digest: str
-    binding_nonce: str
-
-
-class RuntimeAuthorityReplayGuard(Protocol):
-    def consume(self, key: RuntimeAuthorityReplayKey) -> bool: ...
-
-
-class InMemoryRuntimeAuthorityReplayGuard:
-    """Process-local reference guard for bounded experiments; not durable production state."""
-
-    def __init__(self) -> None:
-        self._lock = Lock()
-        self._seen: set[RuntimeAuthorityReplayKey] = set()
-
-    def consume(self, key: RuntimeAuthorityReplayKey) -> bool:
-        with self._lock:
-            if key in self._seen:
-                return False
-            self._seen.add(key)
-            return True
-
-
 class RuntimeAuthorityBridge:
-    """Bind runtime evidence only through a current LiveAuthorityAdmission boundary."""
+    """Bind runtime evidence only through a linearized LiveAuthorityAdmission boundary."""
 
     def __init__(
         self,
         *,
         live_admission: LiveAuthorityAdmission,
-        replay_guard: RuntimeAuthorityReplayGuard,
         repository: str,
         pr_number: int,
         base_sha: str,
@@ -61,10 +32,7 @@ class RuntimeAuthorityBridge:
     ) -> None:
         if type(live_admission) is not LiveAuthorityAdmission:
             raise RuntimeAuthorityBridgeError("live_admission must be exact LiveAuthorityAdmission")
-        if not callable(getattr(replay_guard, "consume", None)):
-            raise RuntimeAuthorityBridgeError("replay_guard is invalid")
         self._live_admission = live_admission
-        self._replay_guard = replay_guard
         self._repository = repository
         self._pr_number = pr_number
         self._base_sha = base_sha
@@ -120,16 +88,36 @@ class RuntimeAuthorityBridge:
                 now=now,
                 replay_nonce=admission_nonce,
             )
-            admitted = self._live_admission.revalidate(admitted, now=now)
+            finalized = self._live_admission.finalize_binding(
+                admitted,
+                runtime_evidence_digest=runtime.runtime_evidence_digest,
+                binding_nonce=binding_nonce,
+                now=now,
+            )
         except LiveAuthorityAdmissionError as exc:
-            raise RuntimeAuthorityBridgeError("live authority admission failed closed") from exc
+            raise RuntimeAuthorityBridgeError("live authority admission/finalization failed closed") from exc
         if type(admitted) is not LiveAdmittedAuthority:
             raise RuntimeAuthorityBridgeError("live authority admission result is invalid")
         admitted.validate()
+        finalized.validate()
+        if finalized.live_admission_digest != admitted.digest():
+            raise RuntimeAuthorityBridgeError("binding finalization is not bound to live admission")
+        if finalized.runtime_evidence_digest != runtime.runtime_evidence_digest:
+            raise RuntimeAuthorityBridgeError("binding finalization is not bound to runtime evidence")
+        if finalized.binding_nonce != binding_nonce:
+            raise RuntimeAuthorityBridgeError("binding finalization nonce mismatch")
+        if (
+            finalized.epoch != admitted.epoch
+            or finalized.authority_state_version != admitted.epoch_state_version
+            or finalized.grant_id != admitted.grant_id
+            or finalized.root_grant_id != admitted.root_grant_id
+            or finalized.root_grant_digest != admitted.root_grant_digest
+        ):
+            raise RuntimeAuthorityBridgeError("binding finalization authority state mismatch")
 
         binding = AuthorityAttestationBinding(
-            schema_version="1.1.0",
-            binding_id=f"runtime-authority:{runtime.runtime_evidence_digest}:{admitted.digest()}",
+            schema_version="1.2.0",
+            binding_id=f"runtime-authority:{runtime.runtime_evidence_digest}:{admitted.digest()}:{finalized.digest()}",
             binding_nonce=binding_nonce,
             mission_id=self._mission_id,
             repository=self._repository,
@@ -154,18 +142,10 @@ class RuntimeAuthorityBridge:
             authority_state_version=admitted.epoch_state_version,
             authority_root_grant_digest=admitted.root_grant_digest,
             authority_admitted_at=admitted.admitted_at,
+            live_finalization_digest=finalized.digest(),
+            live_finalization_key_digest=finalized.finalization_key_digest,
+            authority_finalized_at=finalized.finalized_at,
         ).validate()
-
-        replay_key = RuntimeAuthorityReplayKey(
-            runtime.runtime_evidence_digest,
-            binding_nonce,
-        )
-        try:
-            accepted = self._replay_guard.consume(replay_key)
-        except Exception as exc:
-            raise RuntimeAuthorityBridgeError("runtime-authority replay guard failed closed") from exc
-        if accepted is not True:
-            raise RuntimeAuthorityBridgeError("runtime-authority binding replay rejected")
 
         return AuthorityBoundRuntimeEvidence(
             runtime_evidence_digest=runtime.runtime_evidence_digest,
@@ -187,6 +167,9 @@ class RuntimeAuthorityBridge:
             authority_state_version=admitted.epoch_state_version,
             authority_root_grant_digest=admitted.root_grant_digest,
             authority_admitted_at=admitted.admitted_at,
+            live_finalization_digest=finalized.digest(),
+            live_finalization_key_digest=finalized.finalization_key_digest,
+            authority_finalized_at=finalized.finalized_at,
             binding_digest=binding.digest(),
         ).validate()
 
@@ -240,6 +223,10 @@ def verify_authority_bound_n2_pair(
         raise RuntimeAuthorityBridgeError("duplicate live admission receipt cannot satisfy N2")
     if first.live_admission_replay_digest == second.live_admission_replay_digest:
         raise RuntimeAuthorityBridgeError("duplicate live admission replay receipt cannot satisfy N2")
+    if first.live_finalization_digest == second.live_finalization_digest:
+        raise RuntimeAuthorityBridgeError("duplicate live finalization receipt cannot satisfy N2")
+    if first.live_finalization_key_digest == second.live_finalization_key_digest:
+        raise RuntimeAuthorityBridgeError("duplicate live finalization key cannot satisfy N2")
     if first.binding_digest == second.binding_digest:
         raise RuntimeAuthorityBridgeError("duplicate authority binding cannot satisfy N2")
     return (first, second)

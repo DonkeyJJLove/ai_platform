@@ -121,6 +121,9 @@ def authority_bound(slot: str) -> AuthorityBoundRuntimeEvidence:
         authority_state_version=3,
         authority_root_grant_digest="3" * 64,
         authority_admitted_at="2026-08-20T15:00:00+00:00",
+        live_finalization_digest=("8" if slot == "a" else "9") * 64,
+        live_finalization_key_digest=("0" if slot == "a" else "a") * 64,
+        authority_finalized_at="2026-08-20T15:00:01+00:00",
         binding_digest=("c" if slot == "a" else "d") * 64,
     ).validate()
 
@@ -172,6 +175,8 @@ class AttestedN2Tests(unittest.TestCase):
         self.assertEqual(first.authority_lineage_digest, second.authority_lineage_digest)
         self.assertEqual(first.authority_state_version, second.authority_state_version)
         self.assertEqual(first.authority_root_grant_digest, second.authority_root_grant_digest)
+        self.assertNotEqual(first.live_finalization_digest, second.live_finalization_digest)
+        self.assertNotEqual(first.live_finalization_key_digest, second.live_finalization_key_digest)
 
     def test_post_execution_authority_binding_rejects_duplicate_runtime(self) -> None:
         first = authority_bound("a")
@@ -187,6 +192,16 @@ class AttestedN2Tests(unittest.TestCase):
     def test_post_execution_authority_binding_rejects_different_state_version(self) -> None:
         first = authority_bound("a")
         second = replace(authority_bound("b"), authority_state_version=4)
+        with self.assertRaises(RuntimeAuthorityBridgeError):
+            verify_authority_bound_n2_pair(first, second)
+
+    def test_post_execution_authority_binding_rejects_duplicate_finalization(self) -> None:
+        first = authority_bound("a")
+        second = replace(
+            authority_bound("b"),
+            live_finalization_digest=first.live_finalization_digest,
+            live_finalization_key_digest=first.live_finalization_key_digest,
+        )
         with self.assertRaises(RuntimeAuthorityBridgeError):
             verify_authority_bound_n2_pair(first, second)
 

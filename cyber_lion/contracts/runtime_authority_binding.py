@@ -81,7 +81,7 @@ class RuntimeEvidenceReference:
 
 @dataclass(frozen=True)
 class AuthorityAttestationBinding:
-    """Canonical current authority admission bound after execution to runtime evidence."""
+    """Canonical linearized authority admission bound after execution to runtime evidence."""
 
     schema_version: str
     binding_id: str
@@ -109,14 +109,17 @@ class AuthorityAttestationBinding:
     authority_state_version: int
     authority_root_grant_digest: str
     authority_admitted_at: str
+    live_finalization_digest: str
+    live_finalization_key_digest: str
+    authority_finalized_at: str
 
     def validate(self) -> "AuthorityAttestationBinding":
-        if self.schema_version != "1.1.0":
+        if self.schema_version != "1.2.0":
             raise RuntimeAuthorityBindingError("unsupported binding schema_version")
         for name in (
             "binding_id", "binding_nonce", "mission_id", "runtime_instance_id", "run_id",
             "provenance_ref", "grant_id", "authority_provenance_id", "authority_key_id",
-            "authority_algorithm", "authority_admitted_at",
+            "authority_algorithm", "authority_admitted_at", "authority_finalized_at",
         ):
             _text(getattr(self, name), name)
         if not isinstance(self.repository, str) or not _REPO.fullmatch(self.repository):
@@ -139,6 +142,7 @@ class AuthorityAttestationBinding:
             "runtime_evidence_digest", "artifact_digest", "authority_lineage_digest",
             "authenticated_grant_digest", "live_admission_digest",
             "live_admission_replay_digest", "authority_root_grant_digest",
+            "live_finalization_digest", "live_finalization_key_digest",
         ):
             _sha256(getattr(self, name), name)
         return self
@@ -151,6 +155,7 @@ class AuthorityAttestationBinding:
             "authority_admitted_at": self.authority_admitted_at,
             "authority_algorithm": self.authority_algorithm,
             "authority_epoch": self.authority_epoch,
+            "authority_finalized_at": self.authority_finalized_at,
             "authority_key_id": self.authority_key_id,
             "authority_lineage_digest": self.authority_lineage_digest,
             "authority_provenance_id": self.authority_provenance_id,
@@ -163,6 +168,8 @@ class AuthorityAttestationBinding:
             "head_sha": self.head_sha,
             "live_admission_digest": self.live_admission_digest,
             "live_admission_replay_digest": self.live_admission_replay_digest,
+            "live_finalization_digest": self.live_finalization_digest,
+            "live_finalization_key_digest": self.live_finalization_key_digest,
             "mission_id": self.mission_id,
             "pr_number": self.pr_number,
             "provenance_ref": self.provenance_ref,
@@ -202,13 +209,17 @@ class AuthorityBoundRuntimeEvidence:
     authority_state_version: int
     authority_root_grant_digest: str
     authority_admitted_at: str
+    live_finalization_digest: str
+    live_finalization_key_digest: str
+    authority_finalized_at: str
     binding_digest: str
 
     def validate(self) -> "AuthorityBoundRuntimeEvidence":
         for name in (
             "runtime_evidence_digest", "artifact_digest", "authority_lineage_digest",
             "authenticated_grant_digest", "live_admission_digest",
-            "live_admission_replay_digest", "authority_root_grant_digest", "binding_digest",
+            "live_admission_replay_digest", "authority_root_grant_digest",
+            "live_finalization_digest", "live_finalization_key_digest", "binding_digest",
         ):
             _sha256(getattr(self, name), name)
         _sha40(self.base_sha, "base_sha")
@@ -216,6 +227,7 @@ class AuthorityBoundRuntimeEvidence:
         for name in (
             "runtime_instance_id", "provenance_ref", "mission_id", "grant_id",
             "authority_provenance_id", "authority_ceiling", "authority_admitted_at",
+            "authority_finalized_at",
         ):
             _text(getattr(self, name), name)
         if not isinstance(self.repository, str) or not _REPO.fullmatch(self.repository):
