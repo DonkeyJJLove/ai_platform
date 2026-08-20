@@ -22,7 +22,6 @@ from cyber_lion.enterprise.runtime_authority_bridge import (
 NOW = datetime(2026, 8, 20, 15, 0, tzinfo=timezone.utc)
 ARTIFACT = b"fleet-runtime-verifier-v1"
 DIGEST = hashlib.sha256(ARTIFACT).hexdigest()
-AUTH = "a" * 64
 COMMIT = "1" * 40
 TREE = "2" * 40
 WORKFLOW = "3" * 40
@@ -46,7 +45,6 @@ def item(slot: str) -> RuntimeAttestation:
         runner_environment="github-hosted",
         runtime_instance_id=f"runtime-{slot}",
         mission_id=MISSION,
-        authority_digest=AUTH,
         artifact_digest=DIGEST,
         issuer="https://token.actions.githubusercontent.com",
         provenance_ref=f"github-attestation:n2:{slot}",
@@ -66,7 +64,6 @@ def ctx(value: RuntimeAttestation) -> RuntimeAttestationContext:
         run_id=value.run_id,
         run_attempt=value.run_attempt,
         mission_id=value.mission_id,
-        authority_digest=value.authority_digest,
         issuer=value.issuer,
     )
 
@@ -88,7 +85,6 @@ class ExactBackend:
             run_id=value.run_id,
             run_attempt=value.run_attempt,
             mission_id=value.mission_id,
-            authority_digest=value.authority_digest,
             artifact_digest=value.artifact_digest,
             issuer=value.issuer,
             provenance_ref=value.provenance_ref,
@@ -125,6 +121,11 @@ def authority_bound(slot: str) -> AuthorityBoundRuntimeEvidence:
 
 
 class AttestedN2Tests(unittest.TestCase):
+    def test_runtime_observation_contains_no_authority(self) -> None:
+        first = item("a")
+        self.assertFalse(hasattr(first, "authority_digest"))
+        self.assertFalse(hasattr(verified(first), "authority_digest"))
+
     def test_two_distinct_verified_runtime_records_form_candidate_N2_evidence(self) -> None:
         first, second = verify_n2_pair(verified(item("a")), verified(item("b")))
         self.assertNotEqual(first.runtime_instance_id, second.runtime_instance_id)
@@ -156,13 +157,6 @@ class AttestedN2Tests(unittest.TestCase):
     def test_wrong_commit_breaks_common_mission_evidence(self) -> None:
         first = verified(item("a"))
         altered = replace(item("b"), commit_sha="4" * 40)
-        second = verified(altered)
-        with self.assertRaises(RuntimeAttestationVerificationError):
-            verify_n2_pair(first, second)
-
-    def test_wrong_authority_breaks_common_mission_evidence(self) -> None:
-        first = verified(item("a"))
-        altered = replace(item("b"), authority_digest="b" * 64)
         second = verified(altered)
         with self.assertRaises(RuntimeAttestationVerificationError):
             verify_n2_pair(first, second)
