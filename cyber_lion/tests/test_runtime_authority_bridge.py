@@ -281,17 +281,53 @@ class RuntimeAuthorityBridgeTests(unittest.TestCase):
             subject.bind(runtime("a", head_sha="3" * 40), grant_id=GRANT_ID, admission_nonce="a", binding_nonce="b", now=NOW)
 
     def test_binding_finalization_replay_denied(self):
-        subject, live, _, _, _, _ = self.make_bridge()
-        first = bind(subject, nonce_suffix="1", bind_suffix="same")
-        self.assertEqual(len(first.live_finalization_key_digest), 64)
-        receipt = live.admit(repository=REPO, pr_number=41, base_sha=BASE, head_sha=HEAD, mission_id=MISSION, grant_id=GRANT_ID, now=NOW, replay_nonce="manual")
+        _, live, _, _, _, _ = self.make_bridge()
+        runtime_digest = runtime("a").runtime_evidence_digest
+        binding_nonce = "bind-a-same"
+
+        receipt = live.admit(
+            repository=REPO,
+            pr_number=41,
+            base_sha=BASE,
+            head_sha=HEAD,
+            mission_id=MISSION,
+            grant_id=GRANT_ID,
+            now=NOW,
+            replay_nonce="manual-1",
+        )
+        first = live.finalize_binding(
+            receipt,
+            runtime_evidence_digest=runtime_digest,
+            binding_nonce=binding_nonce,
+            now=NOW,
+        )
+        self.assertEqual(len(first.finalization_key_digest), 64)
+
         with self.assertRaises(Exception):
             live.finalize_binding(
                 receipt,
-                runtime_evidence_digest=runtime("a").runtime_evidence_digest,
-                binding_nonce="bind-a-same",
+                runtime_evidence_digest=runtime_digest,
+                binding_nonce=binding_nonce,
                 now=NOW,
             )
+
+        fresh_receipt = live.admit(
+            repository=REPO,
+            pr_number=41,
+            base_sha=BASE,
+            head_sha=HEAD,
+            mission_id=MISSION,
+            grant_id=GRANT_ID,
+            now=NOW,
+            replay_nonce="manual-2",
+        )
+        second = live.finalize_binding(
+            fresh_receipt,
+            runtime_evidence_digest=runtime_digest,
+            binding_nonce=binding_nonce,
+            now=NOW,
+        )
+        self.assertNotEqual(first.finalization_key_digest, second.finalization_key_digest)
 
     def test_two_distinct_runtime_records_share_one_live_authority_root(self):
         subject, *_ = self.make_bridge()
