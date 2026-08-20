@@ -25,7 +25,6 @@ jobs:
         slot: [a, b]
     env:
       MISSION_ID: LION-FLEET-EXECUTOR-ATTESTATION-V1
-      AUTHORITY_DIGEST: ${{ vars.LION_FLEET_AUTHORITY_DIGEST }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       EXTERNAL_ISSUER: https://token.actions.githubusercontent.com
     steps:
@@ -64,7 +63,7 @@ jobs:
         with:
           subject-path: cyber_lion/enterprise/runtime_attestation.py
 
-      - name: Emit runtime evidence record
+      - name: Emit pure runtime evidence record
         shell: bash
         env:
           SLOT: ${{ matrix.slot }}
@@ -83,8 +82,6 @@ jobs:
           now = datetime.now(timezone.utc)
           runtime_instance = f"{os.environ['GITHUB_RUN_ID']}:{os.environ['GITHUB_RUN_ATTEMPT']}:{slot}:{os.environ['RUNNER_NAME']}"
           provenance_ref = os.environ.get("PROVENANCE_REF", "")
-          authority = os.environ.get("AUTHORITY_DIGEST", "")
-          authority_state = "BOUND" if len(authority) == 64 and all(ch in "0123456789abcdef" for ch in authority) else "MISSING"
           record = {
               "schema_version": "1.0.0",
               "attestation_id": provenance_ref,
@@ -100,8 +97,6 @@ jobs:
               "runner_environment": os.environ["RUNNER_ENVIRONMENT"],
               "runtime_instance_id": runtime_instance,
               "mission_id": os.environ["MISSION_ID"],
-              "authority_digest": authority,
-              "authority_binding_state": authority_state,
               "artifact_digest": os.environ["IMPLEMENTATION_DIGEST"],
               "implementation_digest": os.environ["IMPLEMENTATION_DIGEST"],
               "issuer": os.environ["EXTERNAL_ISSUER"],
@@ -112,6 +107,9 @@ jobs:
               "runner_name": os.environ["RUNNER_NAME"],
               "scientific_level_claim": "NONE",
           }
+          forbidden = {"authority_digest", "authority_binding_state", "authority", "grant_id"}
+          if forbidden.intersection(record):
+              raise SystemExit("runtime evidence contains forbidden authority field")
           Path(f"n2-evidence/runtime-{slot}.json").write_text(
               json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
               encoding="utf-8",
