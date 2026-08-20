@@ -23,8 +23,15 @@ jobs:
       fail-fast: false
       matrix:
         slot: [a, b]
+    env:
+      MISSION_ID: LION-FLEET-EXECUTOR-ATTESTATION-V1
+      AUTHORITY_DIGEST: ${{ vars.LION_FLEET_AUTHORITY_DIGEST }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXTERNAL_ISSUER: https://token.actions.githubusercontent.com
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Establish isolated runtime marker
         shell: bash
@@ -37,15 +44,19 @@ jobs:
           test -f "/tmp/lion-n2-${{ matrix.slot }}"
           test ! -e "/tmp/lion-n2-${other}"
 
-      - name: Derive implementation digest from checked-out bytes
+      - name: Derive implementation and tree digests from checked-out bytes
         id: implementation
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
           target="cyber_lion/enterprise/runtime_attestation.py"
           digest="$(sha256sum "$target" | awk '{print $1}')"
+          tree_sha="$(git rev-parse 'HEAD^{tree}')"
           test "${#digest}" -eq 64
+          test "${#tree_sha}" -eq 40
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "tree_sha=$tree_sha" >> "$GITHUB_OUTPUT"
 
       - name: Attest implementation artifact
         id: implementation_attestation
@@ -58,32 +69,47 @@ jobs:
         env:
           SLOT: ${{ matrix.slot }}
           IMPLEMENTATION_DIGEST: ${{ steps.implementation.outputs.digest }}
+          TREE_SHA: ${{ steps.implementation.outputs.tree_sha }}
           PROVENANCE_REF: ${{ steps.implementation_attestation.outputs.attestation-id }}
-          MISSION_ID: LION-FLEET-EXECUTOR-ATTESTATION-V1
         run: |
           set -euo pipefail
           mkdir -p n2-evidence
           python - <<'PY'
           import json, os
+          from datetime import datetime, timedelta, timezone
           from pathlib import Path
 
           slot = os.environ["SLOT"]
+          now = datetime.now(timezone.utc)
+          runtime_instance = f"{os.environ['GITHUB_RUN_ID']}:{os.environ['GITHUB_RUN_ATTEMPT']}:{slot}:{os.environ['RUNNER_NAME']}"
+          provenance_ref = os.environ.get("PROVENANCE_REF", "")
+          authority = os.environ.get("AUTHORITY_DIGEST", "")
+          authority_state = "BOUND" if len(authority) == 64 and all(ch in "0123456789abcdef" for ch in authority) else "MISSING"
           record = {
               "schema_version": "1.0.0",
-              "mission_id": os.environ["MISSION_ID"],
-              "slot": slot,
+              "attestation_id": provenance_ref,
+              "subject_id": f"github-actions:{os.environ['GITHUB_REPOSITORY_ID']}:{runtime_instance}",
               "repository": os.environ["GITHUB_REPOSITORY"],
               "repository_id": os.environ["GITHUB_REPOSITORY_ID"],
-              "commit_sha": os.environ["GITHUB_SHA"],
+              "commit_sha": os.environ["HEAD_SHA"],
+              "tree_sha": os.environ["TREE_SHA"],
               "workflow_ref": os.environ["GITHUB_WORKFLOW_REF"],
               "workflow_sha": os.environ["GITHUB_WORKFLOW_SHA"],
               "run_id": os.environ["GITHUB_RUN_ID"],
               "run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
-              "runner_name": os.environ["RUNNER_NAME"],
               "runner_environment": os.environ["RUNNER_ENVIRONMENT"],
-              "runtime_instance_id": f"{os.environ['GITHUB_RUN_ID']}:{os.environ['GITHUB_RUN_ATTEMPT']}:{slot}:{os.environ['RUNNER_NAME']}",
+              "runtime_instance_id": runtime_instance,
+              "mission_id": os.environ["MISSION_ID"],
+              "authority_digest": authority,
+              "authority_binding_state": authority_state,
+              "artifact_digest": os.environ["IMPLEMENTATION_DIGEST"],
               "implementation_digest": os.environ["IMPLEMENTATION_DIGEST"],
-              "provenance_ref": os.environ.get("PROVENANCE_REF", ""),
+              "issuer": os.environ["EXTERNAL_ISSUER"],
+              "provenance_ref": provenance_ref,
+              "issued_at": now.isoformat(),
+              "expires_at": (now + timedelta(minutes=10)).isoformat(),
+              "slot": slot,
+              "runner_name": os.environ["RUNNER_NAME"],
               "scientific_level_claim": "NONE",
           }
           Path(f"n2-evidence/runtime-{slot}.json").write_text(
