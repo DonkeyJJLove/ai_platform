@@ -1,8 +1,8 @@
 """Fail-closed GitHub merge admission bound to admitted Cyber-Lion authority.
 
-This module is deliberately GitHub-effect specific.  It consumes existing authority
-lineage admission as evidence, binds that evidence to one exact pull-request state, and
-atomically consumes the leaf grant for one merge effect.  It does not call GitHub.
+This module is deliberately GitHub-effect specific. It supports a non-consuming live
+admission path for CI evidence and a consuming path for one merge effect. Neither path
+calls GitHub. Positive non-consuming evidence is not execution permission.
 """
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from .authority_revocation import (
     EpochAdmittedAuthorityLineage,
     authenticate_and_admit_authority_lineage,
 )
+from .authority_source import AuthorityLookupKey, AuthoritySource, AuthoritySourceError
 from .authority_verification import AuthorityVerificationContext, IssuerKeyBinding, Verifier
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -49,7 +50,7 @@ def _sha(value: object, *, field_name: str) -> str:
 
 @dataclass(frozen=True)
 class MergeIntent:
-    """Requested GitHub merge effect.  All fields participate in exact binding."""
+    """Requested GitHub merge effect. All fields participate in exact binding."""
 
     repository: str
     pr_number: int
@@ -177,6 +178,104 @@ class MergeAdmissionDecision:
 
 
 @dataclass(frozen=True)
+class NonConsumingMergeAdmissionEvidence:
+    """Immutable positive live-admission evidence; never merge execution permission."""
+
+    admission_id: str
+    repository: str
+    pr_number: int
+    base_sha: str
+    head_sha: str
+    merge_method: str
+    mission_id: str
+    grant_id: str
+    grant_digest: str
+    lineage_digest: str
+    source_lineage_digest: str
+    epoch: int
+    authority_provenance_id: str
+    authority_source_kind: str
+
+    def validate(self) -> "NonConsumingMergeAdmissionEvidence":
+        _text(self.admission_id, field_name="admission_id")
+        MergeIntent(
+            self.repository,
+            self.pr_number,
+            self.base_sha,
+            self.head_sha,
+            self.merge_method,
+        ).validate()
+        for name, value in (
+            ("mission_id", self.mission_id),
+            ("grant_id", self.grant_id),
+            ("grant_digest", self.grant_digest),
+            ("lineage_digest", self.lineage_digest),
+            ("source_lineage_digest", self.source_lineage_digest),
+            ("authority_provenance_id", self.authority_provenance_id),
+            ("authority_source_kind", self.authority_source_kind),
+        ):
+            _text(value, field_name=name)
+        if self.authority_source_kind != "trusted-control-plane":
+            raise MergeAdmissionError("non-consuming evidence requires trusted-control-plane source")
+        if not isinstance(self.epoch, int) or isinstance(self.epoch, bool) or self.epoch < 0:
+            raise MergeAdmissionError("non-consuming evidence epoch is invalid")
+        return self
+
+
+@dataclass(frozen=True)
+class NonConsumingMergeAdmissionResult:
+    """Fail-closed live admission result with positive evidence only on ALLOW."""
+
+    admission_id: str
+    decision: str
+    rationale: str
+    repository: str
+    pr_number: int
+    base_sha: str
+    head_sha: str
+    merge_method: str
+    evidence: NonConsumingMergeAdmissionEvidence | None = None
+
+    def validate(self) -> "NonConsumingMergeAdmissionResult":
+        _text(self.admission_id, field_name="admission_id")
+        _text(self.rationale, field_name="rationale", limit=1024)
+        if self.decision not in {"ALLOW", "DENY"}:
+            raise MergeAdmissionError("decision must be ALLOW or DENY")
+        MergeIntent(
+            self.repository,
+            self.pr_number,
+            self.base_sha,
+            self.head_sha,
+            self.merge_method,
+        ).validate()
+        if self.decision == "ALLOW":
+            if type(self.evidence) is not NonConsumingMergeAdmissionEvidence:
+                raise MergeAdmissionError("ALLOW requires exact non-consuming evidence")
+            self.evidence.validate()
+            expected = (
+                self.admission_id,
+                self.repository,
+                self.pr_number,
+                self.base_sha,
+                self.head_sha,
+                self.merge_method,
+            )
+            actual = (
+                self.evidence.admission_id,
+                self.evidence.repository,
+                self.evidence.pr_number,
+                self.evidence.base_sha,
+                self.evidence.head_sha,
+                self.evidence.merge_method,
+            )
+            if actual != expected:
+                raise MergeAdmissionError("non-consuming evidence does not bind result")
+        elif self.evidence is not None:
+            raise MergeAdmissionError("DENY must not carry positive admission evidence")
+        return self
+
+
+@dataclass(frozen=True)
 class MergeExecutionReceipt:
     receipt_id: str
     admission_id: str
@@ -211,11 +310,7 @@ class MergeExecutionReceipt:
             ("lineage_digest", self.lineage_digest),
         ):
             _text(value, field_name=name)
-        if (
-            not isinstance(self.epoch, int)
-            or isinstance(self.epoch, bool)
-            or self.epoch < 0
-        ):
+        if not isinstance(self.epoch, int) or isinstance(self.epoch, bool) or self.epoch < 0:
             raise MergeAdmissionError("receipt epoch is invalid")
         if self.outcome not in {"SUCCEEDED", "FAILED", "PARTIAL", "ABORTED"}:
             raise MergeAdmissionError("invalid merge execution outcome")
@@ -227,9 +322,7 @@ class MergeAuthorityConsumptionOwner:
 
     def __init__(self) -> None:
         self._lock = Lock()
-        self._consumed: dict[
-            tuple[str, str, int], tuple[str, str, str, int]
-        ] = {}
+        self._consumed: dict[tuple[str, str, int], tuple[str, str, str, int]] = {}
 
     def consume(
         self,
@@ -270,6 +363,22 @@ def _deny(intent: MergeIntent, admission_id: str, rationale: str) -> MergeAdmiss
     ).validate()
 
 
+def _deny_non_consuming(
+    intent: MergeIntent, admission_id: str, rationale: str
+) -> NonConsumingMergeAdmissionResult:
+    return NonConsumingMergeAdmissionResult(
+        admission_id=admission_id,
+        decision="DENY",
+        rationale=rationale,
+        repository=intent.repository,
+        pr_number=intent.pr_number,
+        base_sha=intent.base_sha,
+        head_sha=intent.head_sha,
+        merge_method=intent.merge_method,
+        evidence=None,
+    ).validate()
+
+
 def _bind_leaf(
     *,
     leaf: AuthorityGrant,
@@ -281,7 +390,6 @@ def _bind_leaf(
     if type(admitted) is not EpochAdmittedAuthorityLineage:
         raise MergeAdmissionError("lineage admission evidence has invalid type")
     leaf.validate()
-
     if admitted.leaf_grant_id != leaf.grant_id:
         raise MergeAdmissionError("admitted lineage leaf does not match authority leaf")
     if not admitted.grant_digests or admitted.grant_digests[-1] != leaf.digest():
@@ -296,6 +404,129 @@ def _bind_leaf(
         raise MergeAdmissionError("authority leaf does not bind exact merge method")
 
 
+def _authenticate_and_bind(
+    *,
+    intent: MergeIntent,
+    trusted_state: TrustedPullRequestState,
+    lineage: tuple[AuthorityGrant, ...],
+    issuer_keys: Iterable[IssuerKeyBinding],
+    verifier: Verifier,
+    context: AuthorityVerificationContext,
+) -> tuple[EpochAdmittedAuthorityLineage, AuthorityGrant]:
+    if type(trusted_state) is not TrustedPullRequestState:
+        raise MergeAdmissionError("trusted_state must be exact TrustedPullRequestState")
+    trusted_state.validate()
+    if intent.binding() != trusted_state.binding():
+        raise MergeAdmissionError("merge intent does not match trusted GitHub state")
+    if type(lineage) is not tuple or not lineage:
+        raise MergeAdmissionError("authority lineage is unavailable")
+    admitted = authenticate_and_admit_authority_lineage(
+        lineage,
+        issuer_keys,
+        verifier,
+        context=context,
+    )
+    leaf = lineage[-1]
+    _bind_leaf(leaf=leaf, admitted=admitted, intent=intent)
+    return admitted, leaf
+
+
+def _bind_lookup_key(
+    *,
+    intent: MergeIntent,
+    lookup_key: AuthorityLookupKey,
+    context: AuthorityVerificationContext,
+) -> None:
+    if type(lookup_key) is not AuthorityLookupKey:
+        raise MergeAdmissionError("lookup_key must be exact AuthorityLookupKey")
+    lookup_key.validate()
+    context.validate()
+    expected = (
+        intent.repository,
+        intent.pr_number,
+        intent.base_sha,
+        intent.head_sha,
+        context.mission_id,
+    )
+    actual = (
+        lookup_key.repository,
+        lookup_key.pr_number,
+        lookup_key.base_sha,
+        lookup_key.head_sha,
+        lookup_key.mission_id,
+    )
+    if actual != expected:
+        raise MergeAdmissionError("authority lookup key does not bind exact trusted merge state")
+
+
+def admit_merge_non_consuming(
+    *,
+    intent: MergeIntent,
+    trusted_state: TrustedPullRequestState,
+    authority_source: AuthoritySource,
+    lookup_key: AuthorityLookupKey,
+    issuer_keys: Iterable[IssuerKeyBinding],
+    verifier: Verifier,
+    context: AuthorityVerificationContext,
+    admission_id: str,
+) -> NonConsumingMergeAdmissionResult:
+    """Resolve trusted authority and admit exact live PR state without consuming it."""
+    if type(intent) is not MergeIntent:
+        raise MergeAdmissionError("intent must be exact MergeIntent")
+    intent.validate()
+    _text(admission_id, field_name="admission_id")
+    try:
+        if type(context) is not AuthorityVerificationContext:
+            raise MergeAdmissionError("context must be exact AuthorityVerificationContext")
+        if not isinstance(authority_source, AuthoritySource):
+            raise MergeAdmissionError("authority_source must implement AuthoritySource")
+        _bind_lookup_key(intent=intent, lookup_key=lookup_key, context=context)
+        record = authority_source.resolve_exact(lookup_key)
+        admitted, leaf = _authenticate_and_bind(
+            intent=intent,
+            trusted_state=trusted_state,
+            lineage=record.lineage,
+            issuer_keys=issuer_keys,
+            verifier=verifier,
+            context=context,
+        )
+        if leaf.grant_id != lookup_key.grant_id:
+            raise MergeAdmissionError("authority leaf does not match exact lookup grant_id")
+        evidence = NonConsumingMergeAdmissionEvidence(
+            admission_id=admission_id,
+            repository=intent.repository,
+            pr_number=intent.pr_number,
+            base_sha=intent.base_sha,
+            head_sha=intent.head_sha,
+            merge_method=intent.merge_method,
+            mission_id=context.mission_id,
+            grant_id=leaf.grant_id,
+            grant_digest=leaf.digest(),
+            lineage_digest=admitted.lineage_digest,
+            source_lineage_digest=record.lineage_digest,
+            epoch=admitted.epoch,
+            authority_provenance_id=record.provenance_id,
+            authority_source_kind=record.source_kind,
+        ).validate()
+        return NonConsumingMergeAdmissionResult(
+            admission_id=admission_id,
+            decision="ALLOW",
+            rationale="exact trusted authority, current epoch, and live GitHub state admitted without consumption",
+            repository=intent.repository,
+            pr_number=intent.pr_number,
+            base_sha=intent.base_sha,
+            head_sha=intent.head_sha,
+            merge_method=intent.merge_method,
+            evidence=evidence,
+        ).validate()
+    except Exception as exc:
+        return _deny_non_consuming(
+            intent,
+            admission_id,
+            str(exc) or "non-consuming merge admission failed closed",
+        )
+
+
 def admit_merge(
     *,
     intent: MergeIntent,
@@ -307,36 +538,22 @@ def admit_merge(
     consumption_owner: MergeAuthorityConsumptionOwner,
     admission_id: str,
 ) -> MergeAdmissionDecision:
-    """Authenticate/admit lineage, exact-bind GitHub state, and consume once.
-
-    Any uncertainty or validation failure returns DENY.  No exception from authority
-    verification or admission is allowed to become an implicit permission.
-    """
+    """Authenticate/admit lineage, exact-bind GitHub state, and consume once."""
     if type(intent) is not MergeIntent:
         raise MergeAdmissionError("intent must be exact MergeIntent")
     intent.validate()
     _text(admission_id, field_name="admission_id")
-
     try:
-        if type(trusted_state) is not TrustedPullRequestState:
-            raise MergeAdmissionError("trusted_state must be exact TrustedPullRequestState")
-        trusted_state.validate()
-        if intent.binding() != trusted_state.binding():
-            raise MergeAdmissionError("merge intent does not match trusted GitHub state")
-        if type(lineage) is not tuple or not lineage:
-            raise MergeAdmissionError("authority lineage is unavailable")
         if type(consumption_owner) is not MergeAuthorityConsumptionOwner:
             raise MergeAdmissionError("consumption owner has invalid type")
-
-        admitted = authenticate_and_admit_authority_lineage(
-            lineage,
-            issuer_keys,
-            verifier,
+        admitted, leaf = _authenticate_and_bind(
+            intent=intent,
+            trusted_state=trusted_state,
+            lineage=lineage,
+            issuer_keys=issuer_keys,
+            verifier=verifier,
             context=context,
         )
-        leaf = lineage[-1]
-        _bind_leaf(leaf=leaf, admitted=admitted, intent=intent)
-
         grant_digest = leaf.digest()
         consumption_owner.consume(
             grant_id=leaf.grant_id,
@@ -358,7 +575,7 @@ def admit_merge(
             lineage_digest=admitted.lineage_digest,
             epoch=admitted.epoch,
         ).validate()
-    except (AuthorityRevocationError, MergeAdmissionError, ValueError, TypeError) as exc:
+    except (AuthorityRevocationError, AuthoritySourceError, MergeAdmissionError, ValueError, TypeError) as exc:
         return _deny(intent, admission_id, str(exc) or "merge admission failed closed")
 
 
@@ -379,7 +596,6 @@ def issue_merge_execution_receipt(
     assert decision.grant_digest is not None
     assert decision.lineage_digest is not None
     assert decision.epoch is not None
-
     payload = (
         f"{decision.admission_id}\x00{decision.repository}\x00{decision.pr_number}\x00"
         f"{decision.base_sha}\x00{decision.head_sha}\x00{merge_sha}\x00"
@@ -387,7 +603,6 @@ def issue_merge_execution_receipt(
         f"{decision.lineage_digest}\x00{decision.epoch}\x00{executor}\x00{outcome}"
     ).encode("utf-8")
     receipt_id = "merge-receipt:" + hashlib.sha256(payload).hexdigest()
-
     return MergeExecutionReceipt(
         receipt_id=receipt_id,
         admission_id=decision.admission_id,
