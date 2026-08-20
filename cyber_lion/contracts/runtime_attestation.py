@@ -1,4 +1,4 @@
-"""Adapter-neutral runtime attestation contract for fleet execution evidence."""
+"""Adapter-neutral pure runtime observation contract for fleet execution evidence."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -34,7 +34,7 @@ def _utc(value: str) -> datetime:
 
 @dataclass(frozen=True)
 class RuntimeAttestation:
-    """Untrusted runtime claim bundle. It is never admission evidence by itself."""
+    """Untrusted pure runtime observation. It carries no authority or permission."""
 
     schema_version: str
     attestation_id: str
@@ -50,7 +50,6 @@ class RuntimeAttestation:
     runner_environment: str
     runtime_instance_id: str
     mission_id: str
-    authority_digest: str
     artifact_digest: str
     issuer: str
     provenance_ref: str
@@ -72,10 +71,9 @@ class RuntimeAttestation:
             value = _text(getattr(self, name), name, 40)
             if not _SHA40.fullmatch(value):
                 raise RuntimeAttestationError(f"{name} must be a full lowercase git SHA")
-        for name in ("authority_digest", "artifact_digest"):
-            value = _text(getattr(self, name), name, 64)
-            if not _SHA256.fullmatch(value):
-                raise RuntimeAttestationError(f"{name} must be sha256 hex")
+        value = _text(self.artifact_digest, "artifact_digest", 64)
+        if not _SHA256.fullmatch(value):
+            raise RuntimeAttestationError("artifact_digest must be sha256 hex")
         if isinstance(self.run_attempt, bool) or not isinstance(self.run_attempt, int) or self.run_attempt < 1:
             raise RuntimeAttestationError("run_attempt must be a positive integer")
         if _utc(self.issued_at) >= _utc(self.expires_at):
@@ -87,7 +85,6 @@ class RuntimeAttestation:
         payload = {
             "artifact_digest": self.artifact_digest,
             "attestation_id": self.attestation_id,
-            "authority_digest": self.authority_digest,
             "commit_sha": self.commit_sha,
             "expires_at": self.expires_at,
             "issued_at": self.issued_at,
@@ -123,12 +120,11 @@ class RuntimeAttestationContext:
     run_id: str
     run_attempt: int
     mission_id: str
-    authority_digest: str
     issuer: str
 
     def binding(self) -> tuple[object, ...]:
         return (
             self.repository, self.repository_id, self.commit_sha, self.tree_sha,
             self.workflow_ref, self.workflow_sha, self.run_id, self.run_attempt,
-            self.mission_id, self.authority_digest, self.issuer,
+            self.mission_id, self.issuer,
         )
