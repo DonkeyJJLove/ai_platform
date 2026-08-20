@@ -6,12 +6,17 @@ import hashlib
 import unittest
 
 from cyber_lion.contracts.runtime_attestation import RuntimeAttestation, RuntimeAttestationContext
+from cyber_lion.contracts.runtime_authority_binding import AuthorityBoundRuntimeEvidence
 from cyber_lion.enterprise.runtime_attestation import (
     ExternalAttestationEvidence,
     InMemoryRuntimeReplayGuard,
     RuntimeAttestationVerificationError,
     RuntimeAttestationVerifier,
     verify_n2_pair,
+)
+from cyber_lion.enterprise.runtime_authority_bridge import (
+    RuntimeAuthorityBridgeError,
+    verify_authority_bound_n2_pair,
 )
 
 NOW = datetime(2026, 8, 20, 15, 0, tzinfo=timezone.utc)
@@ -99,6 +104,26 @@ def verified(value: RuntimeAttestation):
     return verifier.verify(value, artifact_bytes=ARTIFACT, now=NOW, context=ctx(value))
 
 
+def authority_bound(slot: str) -> AuthorityBoundRuntimeEvidence:
+    return AuthorityBoundRuntimeEvidence(
+        runtime_evidence_digest=("4" if slot == "a" else "5") * 64,
+        runtime_instance_id=f"runtime-{slot}",
+        provenance_ref=f"github-attestation:{slot}",
+        artifact_digest=("6" if slot == "a" else "7") * 64,
+        mission_id=MISSION,
+        repository=REPO,
+        base_sha="8" * 40,
+        head_sha="9" * 40,
+        grant_id="grant-n2",
+        authority_lineage_digest="a" * 64,
+        authenticated_grant_digest="b" * 64,
+        authority_epoch=9,
+        authority_provenance_id="control-plane:authority:n2",
+        authority_ceiling="read",
+        binding_digest=("c" if slot == "a" else "d") * 64,
+    ).validate()
+
+
 class AttestedN2Tests(unittest.TestCase):
     def test_two_distinct_verified_runtime_records_form_candidate_N2_evidence(self) -> None:
         first, second = verify_n2_pair(verified(item("a")), verified(item("b")))
@@ -141,6 +166,22 @@ class AttestedN2Tests(unittest.TestCase):
         second = verified(altered)
         with self.assertRaises(RuntimeAttestationVerificationError):
             verify_n2_pair(first, second)
+
+    def test_post_execution_authority_binding_preserves_two_runtime_identities(self) -> None:
+        first, second = verify_authority_bound_n2_pair(authority_bound("a"), authority_bound("b"))
+        self.assertNotEqual(first.runtime_instance_id, second.runtime_instance_id)
+        self.assertEqual(first.authority_lineage_digest, second.authority_lineage_digest)
+
+    def test_post_execution_authority_binding_rejects_duplicate_runtime(self) -> None:
+        first = authority_bound("a")
+        with self.assertRaises(RuntimeAuthorityBridgeError):
+            verify_authority_bound_n2_pair(first, first)
+
+    def test_post_execution_authority_binding_rejects_different_authority_root(self) -> None:
+        first = authority_bound("a")
+        second = replace(authority_bound("b"), authority_lineage_digest="e" * 64)
+        with self.assertRaises(RuntimeAuthorityBridgeError):
+            verify_authority_bound_n2_pair(first, second)
 
 
 if __name__ == "__main__":
