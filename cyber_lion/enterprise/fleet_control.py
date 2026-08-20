@@ -1,8 +1,8 @@
 """Deterministic fleet-control primitives for bounded software-factory experiments.
 
 This module is a control-plane slice, not an executor. Scale promotion is accepted only
-through an injected trusted evidence verifier. Parent authority is resolved externally.
-Scheduler state and leases persist across planning cycles.
+through externally anchored verifier identity and evidence. Parent authority is resolved
+externally. Scheduler state and leases persist across planning cycles.
 """
 from __future__ import annotations
 
@@ -56,8 +56,6 @@ def _path_overlap(left: str, right: str) -> bool:
 
 @dataclass(frozen=True)
 class DroneSpec:
-    """Immutable exact binding for one coding drone."""
-
     drone_id: str
     mission_id: str
     parent_mission_id: str
@@ -146,6 +144,76 @@ class ParentAuthoritySource(Protocol):
 
 
 @dataclass(frozen=True)
+class TrustedVerifierIdentity:
+    verifier_id: str
+    mission_id: str
+    capabilities: Tuple[str, ...]
+    identity_digest: str
+    trust_anchor_id: str
+
+    def validate_for(self, mission_id: str, capability: str) -> "TrustedVerifierIdentity":
+        for value, field in (
+            (self.verifier_id, "verifier_id"),
+            (self.mission_id, "mission_id"),
+            (self.identity_digest, "identity_digest"),
+            (self.trust_anchor_id, "trust_anchor_id"),
+        ):
+            _require_text(value, field)
+        if not self.capabilities or len(set(self.capabilities)) != len(self.capabilities):
+            raise FleetException("trusted verifier capabilities must be unique and non-empty")
+        if self.mission_id not in {mission_id, "*"}:
+            raise FleetException("trusted verifier mission binding mismatch")
+        if capability not in self.capabilities:
+            raise FleetException("trusted verifier lacks required capability")
+        return self
+
+
+class VerifierTrustSource(Protocol):
+    def resolve_verifier(
+        self,
+        verifier_id: str,
+        mission_id: str,
+        required_capability: str,
+    ) -> TrustedVerifierIdentity:
+        ...
+
+
+@dataclass(frozen=True)
+class VerifierBinding:
+    mission_id: str
+    verifier_id: str
+    evidence_ref: str
+    identity_digest: str
+    trust_anchor_id: str
+    capability: str = "mission_result_verify"
+
+    def validate_against(
+        self,
+        identity: TrustedVerifierIdentity,
+        mission_id: str,
+    ) -> "VerifierBinding":
+        for value, field in (
+            (self.mission_id, "mission_id"),
+            (self.verifier_id, "verifier_id"),
+            (self.evidence_ref, "evidence_ref"),
+            (self.identity_digest, "identity_digest"),
+            (self.trust_anchor_id, "trust_anchor_id"),
+            (self.capability, "capability"),
+        ):
+            _require_text(value, field)
+        identity.validate_for(mission_id, self.capability)
+        if self.mission_id != mission_id:
+            raise FleetException("verifier binding mission mismatch")
+        if self.verifier_id != identity.verifier_id:
+            raise FleetException("verifier binding identity mismatch")
+        if self.identity_digest != identity.identity_digest:
+            raise FleetException("verifier identity digest mismatch")
+        if self.trust_anchor_id != identity.trust_anchor_id:
+            raise FleetException("verifier trust anchor mismatch")
+        return self
+
+
+@dataclass(frozen=True)
 class FleetCapabilitySnapshot:
     """Untrusted claim bundle; never sufficient for scale promotion by itself."""
 
@@ -229,14 +297,18 @@ class VerifiedFleetCapability:
     adversarial_suite_verified: bool
     sustained_operation_verified: bool
     verifier_id: str
+    verifier_identity_digest: str
+    trust_anchor_id: str
     evidence_refs: Tuple[str, ...]
 
     def validate_for(
         self,
         snapshot: FleetCapabilitySnapshot,
         requested_concurrency: int,
+        identity: TrustedVerifierIdentity,
     ) -> "VerifiedFleetCapability":
         snapshot.validate()
+        identity.validate_for("*", "fleet_scale_verify")
         if self.snapshot_digest != snapshot.digest():
             raise FleetException("verified capability does not bind exact snapshot digest")
         if self.verified_concurrency < requested_concurrency:
@@ -249,18 +321,30 @@ class VerifiedFleetCapability:
             raise FleetException("trusted evidence lacks independent executor/sandbox capacity")
         if not self.gates_passed:
             raise FleetException("trusted fleet scale gates did not pass")
-        _require_text(self.verifier_id, "verifier_id")
+        if self.verifier_id != identity.verifier_id:
+            raise FleetException("fleet verification verifier-id mismatch")
+        if self.verifier_identity_digest != identity.identity_digest:
+            raise FleetException("fleet verification identity digest mismatch")
+        if self.trust_anchor_id != identity.trust_anchor_id:
+            raise FleetException("fleet verification trust anchor mismatch")
         if not self.evidence_refs:
             raise FleetException("verified capability requires evidence_refs")
         return self
 
 
 class FleetEvidenceVerifier(Protocol):
+    verifier_id: str
+
     def verify(
         self,
         snapshot: FleetCapabilitySnapshot,
         requested_concurrency: int,
     ) -> VerifiedFleetCapability:
+        ...
+
+
+class FleetVerifierResolver(Protocol):
+    def resolve_fleet_verifier(self, verifier_id: str) -> FleetEvidenceVerifier:
         ...
 
 
@@ -274,10 +358,19 @@ class ScaleAdmission:
 
 
 class FleetAdmissionGate:
-    """Scale gate that trusts only an injected verifier boundary, never raw claims."""
+    """Scale gate over a trusted verifier identity + resolver boundary."""
 
-    def __init__(self, verifier: FleetEvidenceVerifier) -> None:
-        self._verifier = verifier
+    def __init__(
+        self,
+        *,
+        verifier_id: str,
+        trust_source: VerifierTrustSource,
+        resolver: FleetVerifierResolver,
+    ) -> None:
+        _require_text(verifier_id, "verifier_id")
+        self._verifier_id = verifier_id
+        self._trust_source = trust_source
+        self._resolver = resolver
 
     def evaluate(self, snapshot: FleetCapabilitySnapshot, requested_concurrency: int) -> ScaleAdmission:
         snapshot.validate()
@@ -288,10 +381,23 @@ class FleetAdmissionGate:
                 return ScaleAdmission(1, False, "L0", "no demonstrated executor+sandbox pair")
             return ScaleAdmission(1, True, "L1", "single executor context demonstrated")
 
-        verified = self._verifier.verify(snapshot, requested_concurrency)
+        identity = self._trust_source.resolve_verifier(
+            self._verifier_id,
+            "*",
+            "fleet_scale_verify",
+        )
+        if not isinstance(identity, TrustedVerifierIdentity):
+            raise FleetException("verifier trust source returned invalid identity")
+        identity.validate_for("*", "fleet_scale_verify")
+
+        verifier = self._resolver.resolve_fleet_verifier(identity.verifier_id)
+        if getattr(verifier, "verifier_id", None) != identity.verifier_id:
+            raise FleetException("resolved fleet verifier identity mismatch")
+
+        verified = verifier.verify(snapshot, requested_concurrency)
         if not isinstance(verified, VerifiedFleetCapability):
-            raise FleetException("trusted verifier returned invalid capability evidence")
-        verified.validate_for(snapshot, requested_concurrency)
+            raise FleetException("fleet verifier returned invalid capability evidence")
+        verified.validate_for(snapshot, requested_concurrency, identity)
 
         if requested_concurrency == 100 and not verified.adversarial_suite_verified:
             return ScaleAdmission(100, False, "L3", "100-way admission requires adversarial suite evidence")
@@ -305,29 +411,21 @@ class FleetAdmissionGate:
             requested_concurrency,
             True,
             level,
-            "trusted evidence verified all required scale gates",
+            "trusted identity and evidence verified all required scale gates",
             verification_digest=verified.snapshot_digest,
         )
 
 
-@dataclass(frozen=True)
-class VerifierBinding:
-    mission_id: str
-    verifier_id: str
-    evidence_ref: str
-
-    def validate(self) -> "VerifierBinding":
-        _require_text(self.mission_id, "mission_id")
-        _require_text(self.verifier_id, "verifier_id")
-        _require_text(self.evidence_ref, "evidence_ref")
-        return self
-
-
 class MissionRegistry:
-    """Persistent mission state with trusted parent-authority and verifier bindings."""
+    """Persistent mission state with trusted authority and verifier bindings."""
 
-    def __init__(self, authority_source: ParentAuthoritySource) -> None:
+    def __init__(
+        self,
+        authority_source: ParentAuthoritySource,
+        verifier_trust_source: VerifierTrustSource,
+    ) -> None:
         self._authority_source = authority_source
+        self._verifier_trust_source = verifier_trust_source
         self._drones: Dict[str, DroneSpec] = {}
         self._state: Dict[str, str] = {}
         self._heartbeat: Dict[str, int] = {}
@@ -347,16 +445,38 @@ class MissionRegistry:
         self._state[drone.mission_id] = "STARTING"
         self._heartbeat[drone.mission_id] = 0
 
-    def register_verifier(self, binding: VerifierBinding) -> None:
-        binding.validate()
-        self._require_mission(binding.mission_id)
-        drone = self._drones[binding.mission_id]
-        if binding.verifier_id == drone.drone_id:
-            raise FleetException("builder cannot be registered as independent verifier")
-        existing = self._verifiers.setdefault(binding.mission_id, {})
+    def bind_verifier(self, mission_id: str, verifier_id: str, evidence_ref: str) -> VerifierBinding:
+        self._require_mission(mission_id)
+        _require_text(verifier_id, "verifier_id")
+        _require_text(evidence_ref, "evidence_ref")
+        drone = self._drones[mission_id]
+        if verifier_id == drone.drone_id:
+            raise FleetException("builder cannot be bound as independent verifier")
+
+        identity = self._verifier_trust_source.resolve_verifier(
+            verifier_id,
+            mission_id,
+            "mission_result_verify",
+        )
+        if not isinstance(identity, TrustedVerifierIdentity):
+            raise FleetException("verifier trust source returned invalid identity")
+        identity.validate_for(mission_id, "mission_result_verify")
+        if identity.verifier_id == drone.drone_id:
+            raise FleetException("trusted verifier identity aliases builder")
+
+        binding = VerifierBinding(
+            mission_id=mission_id,
+            verifier_id=identity.verifier_id,
+            evidence_ref=evidence_ref,
+            identity_digest=identity.identity_digest,
+            trust_anchor_id=identity.trust_anchor_id,
+        ).validate_against(identity, mission_id)
+
+        existing = self._verifiers.setdefault(mission_id, {})
         if binding.verifier_id in existing:
             raise FleetException("duplicate verifier binding")
         existing[binding.verifier_id] = binding
+        return binding
 
     def set_state(self, mission_id: str, state: str) -> None:
         self._require_mission(mission_id)
@@ -403,14 +523,23 @@ class MissionRegistry:
             raise FleetException("result requires evidence_refs")
         if outcome not in {"SUCCEEDED", "FAILED", "ABORTED"}:
             raise FleetException("invalid result outcome")
+
         if outcome == "SUCCEEDED":
             if not verifier_id:
                 raise FleetException("successful result requires independent verifier")
             binding = self._verifiers.get(mission_id, {}).get(verifier_id)
             if binding is None:
-                raise FleetException("successful result requires registered mission verifier")
+                raise FleetException("successful result requires trusted mission verifier binding")
+            identity = self._verifier_trust_source.resolve_verifier(
+                verifier_id,
+                mission_id,
+                binding.capability,
+            )
+            if not isinstance(identity, TrustedVerifierIdentity):
+                raise FleetException("verifier trust source returned invalid identity")
+            binding.validate_against(identity, mission_id)
             if binding.evidence_ref not in evidence_refs:
-                raise FleetException("result evidence is not bound to registered verifier")
+                raise FleetException("result evidence is not bound to trusted verifier")
             self._state[mission_id] = "DONE"
         elif outcome == "FAILED":
             self._state[mission_id] = "FAILED"
@@ -446,8 +575,6 @@ class MissionRegistry:
 
 
 class DependencyGraph:
-    """Dynamic mission DAG with cycle rejection."""
-
     def __init__(self) -> None:
         self._deps: Dict[str, frozenset[str]] = {}
 
@@ -496,8 +623,6 @@ class DependencyGraph:
 
 
 class LeaseRegistry:
-    """Persistent repository coordination plus exclusive branch/path write leases."""
-
     def __init__(self) -> None:
         self._repository_leases: Dict[str, set[str]] = {}
         self._branch_leases: Dict[Tuple[str, str], str] = {}
@@ -553,8 +678,6 @@ class LeaseRegistry:
 
 
 class FleetScheduler:
-    """Persistent scheduler over MissionRegistry and LeaseRegistry."""
-
     def __init__(self, registry: MissionRegistry, leases: LeaseRegistry) -> None:
         self._registry = registry
         self._leases = leases
