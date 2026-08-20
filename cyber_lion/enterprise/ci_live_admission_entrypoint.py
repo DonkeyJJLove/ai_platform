@@ -1,12 +1,14 @@
 """Fail-closed process entrypoint for Cyber-Lion CI live merge admission.
 
-The entrypoint receives exact PR/bootstrap bindings from trusted runtime environment,
-loads capability-reduced authority and verifier providers selected by that environment,
-and delegates all security decisions to ``run_live_admission``. It emits one sanitized
-JSON object and exits zero only for a validated ALLOW receipt.
+The production composition path starts from exact trusted PR identity, resolves exactly
+one immutable authority bootstrap through a read-only trusted-control-plane provider,
+then evaluates live non-consuming admission with separately selected authority and
+signature-verifier providers. Provider selection is trusted runtime configuration,
+never PR-tree authority.
 
-Provider selection is runtime configuration, never PR-tree authority. This module does
-not consume authority, persist credentials, call GitHub, or expose mutation operations.
+The module emits one sanitized JSON object, exits zero only for a validated ALLOW,
+does not consume authority, persist credentials, call GitHub, or expose mutation
+operations.
 """
 from __future__ import annotations
 
@@ -25,6 +27,11 @@ from .ci_live_admission import (
     run_live_admission,
 )
 from .merge_admission import TrustedPullRequestState
+from .pr_authority_bootstrap import (
+    PRAuthorityBootstrapLookupKey,
+    PRAuthorityBootstrapTransport,
+    TrustedControlPlanePRAuthorityBootstrapSource,
+)
 
 
 class CILiveAdmissionEntrypointError(ValueError):
@@ -78,7 +85,7 @@ def load_pr_state(env: Mapping[str, str]) -> TrustedPullRequestState:
 
 
 def load_bootstrap(env: Mapping[str, str]) -> CILiveAdmissionBootstrap:
-    """Load public authority/bootstrap bindings from trusted process configuration."""
+    """Legacy library helper; production ``main`` does not use env bootstrap fields."""
     return CILiveAdmissionBootstrap(
         trust_domain=_required_env(env, "CYBER_LION_TRUST_DOMAIN", limit=256),
         tenant_id=_required_env(env, "CYBER_LION_TENANT_ID", limit=256),
@@ -97,7 +104,7 @@ def load_bootstrap(env: Mapping[str, str]) -> CILiveAdmissionBootstrap:
 
 
 def load_issuer_key_bindings(env: Mapping[str, str]) -> tuple[IssuerKeyBinding, ...]:
-    """Decode externally trusted issuer/key identifiers; no key material is stored here."""
+    """Legacy library helper; production ``main`` uses discovered issuer bindings."""
     raw = _required_env(env, "CYBER_LION_ISSUER_KEYS_JSON", limit=65536)
     try:
         decoded = json.loads(raw)
@@ -154,8 +161,39 @@ def load_provider(env: Mapping[str, str], variable: str) -> Callable[..., Any]:
     return provider
 
 
+class ReadOnlyPRAuthorityBootstrapTransport(PRAuthorityBootstrapTransport):
+    """Capability-reduced adapter around one injected exact bootstrap lookup."""
+
+    __slots__ = ("_lookup",)
+
+    def __init__(
+        self,
+        lookup: Callable[..., tuple[Mapping[str, object], ...]],
+    ) -> None:
+        if not callable(lookup):
+            raise CILiveAdmissionEntrypointError("bootstrap lookup must be callable")
+        self._lookup = lookup
+
+    def lookup_exact(
+        self,
+        *,
+        repository: str,
+        pr_number: int,
+        base_sha: str,
+        head_sha: str,
+        merge_method: str,
+    ) -> tuple[Mapping[str, object], ...]:
+        return self._lookup(
+            repository=repository,
+            pr_number=pr_number,
+            base_sha=base_sha,
+            head_sha=head_sha,
+            merge_method=merge_method,
+        )
+
+
 def _public_receipt(receipt: object) -> dict[str, object]:
-    """Project a receipt to public CI evidence without provider-controlled rationale text."""
+    """Project a receipt to public CI evidence without provider-controlled rationale."""
     decision = getattr(receipt, "decision", None)
     payload: dict[str, object] = {
         "runtime_version": getattr(receipt, "runtime_version", None),
@@ -177,7 +215,14 @@ def _public_receipt(receipt: object) -> dict[str, object]:
 
 
 def _emit(payload: Mapping[str, object]) -> None:
-    print(json.dumps(dict(payload), sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+    print(
+        json.dumps(
+            dict(payload),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+    )
 
 
 def execute(
@@ -186,7 +231,7 @@ def execute(
     lookup_exact: Callable[..., tuple[Mapping[str, object], ...]],
     verifier: Callable[[bytes, str, str, str], bool],
 ) -> int:
-    """Run one complete CI admission evaluation using already loaded providers."""
+    """Legacy library composition using explicit trusted bootstrap env fields."""
     pr_state = load_pr_state(env)
     bootstrap = load_bootstrap(env)
     issuer_keys = load_issuer_key_bindings(env)
@@ -204,18 +249,66 @@ def execute(
     return admission_exit_code(receipt)
 
 
+def execute_composed(
+    *,
+    env: Mapping[str, str],
+    bootstrap_lookup_exact: Callable[..., tuple[Mapping[str, object], ...]],
+    authority_lookup_exact: Callable[..., tuple[Mapping[str, object], ...]],
+    verifier: Callable[[bytes, str, str, str], bool],
+) -> int:
+    """Resolve trusted PR bootstrap exactly, then run one live admission evaluation."""
+    pr_state = load_pr_state(env)
+    admission_id = _required_env(env, "CYBER_LION_ADMISSION_ID", limit=512)
+
+    discovery_key = PRAuthorityBootstrapLookupKey(
+        repository=pr_state.repository,
+        pr_number=pr_state.pr_number,
+        base_sha=pr_state.base_sha,
+        head_sha=pr_state.head_sha,
+        merge_method=pr_state.merge_method,
+    ).validate()
+
+    bootstrap_source = TrustedControlPlanePRAuthorityBootstrapSource(
+        ReadOnlyPRAuthorityBootstrapTransport(bootstrap_lookup_exact)
+    )
+    record = bootstrap_source.resolve_exact(discovery_key)
+
+    receipt = run_live_admission(
+        pr_state=pr_state,
+        bootstrap=record.to_live_admission_bootstrap(),
+        authority_transport=ReadOnlyAuthorityControlPlaneTransport(
+            authority_lookup_exact
+        ),
+        issuer_keys=record.issuer_key_bindings,
+        verifier=verifier,
+        admission_id=admission_id,
+    )
+    _emit(_public_receipt(receipt))
+    return admission_exit_code(receipt)
+
+
 def main(
     argv: list[str] | None = None,
     *,
     env: Mapping[str, str] | None = None,
 ) -> int:
-    """Load trusted providers, run admission, and fail closed on configuration errors."""
+    """Run the production composed path and fail closed on discovery/config errors."""
     del argv
     source = os.environ if env is None else env
     try:
-        lookup_exact = load_provider(source, "CYBER_LION_AUTHORITY_PROVIDER")
+        bootstrap_lookup = load_provider(
+            source, "CYBER_LION_BOOTSTRAP_PROVIDER"
+        )
+        authority_lookup = load_provider(
+            source, "CYBER_LION_AUTHORITY_PROVIDER"
+        )
         verifier = load_provider(source, "CYBER_LION_VERIFIER_PROVIDER")
-        return execute(env=source, lookup_exact=lookup_exact, verifier=verifier)
+        return execute_composed(
+            env=source,
+            bootstrap_lookup_exact=bootstrap_lookup,
+            authority_lookup_exact=authority_lookup,
+            verifier=verifier,
+        )
     except Exception:
         _emit({"status": "ERROR", "error": "CONFIGURATION_OR_RUNTIME_ERROR"})
         return 2
