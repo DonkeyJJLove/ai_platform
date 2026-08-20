@@ -1,8 +1,8 @@
 """Deterministic fleet-control primitives for bounded software-factory experiments.
 
 This module is a control-plane slice, not an executor. Scale promotion is accepted only
-through externally anchored verifier identity and evidence. Parent authority is resolved
-externally. Scheduler state and leases persist across planning cycles.
+through externally anchored verifier identity, implementation provenance and evidence.
+Parent authority is resolved externally. Scheduler state and leases persist across cycles.
 """
 from __future__ import annotations
 
@@ -23,9 +23,9 @@ DRONE_STATES = {
     "STARTING", "RUNNING", "WAITING", "BLOCKED",
     "DEGRADED", "FAILED", "DONE", "TERMINATED",
 }
+TERMINAL_STATES = {"FAILED", "DONE", "TERMINATED"}
 SCALE_LEVELS = (1, 2, 5, 10, 25, 50, 100)
 PROMOTION_EPISTEMIC_CLASSES = {"OBSERVED", "ANCHORED"}
-TERMINAL_STATES = {"FAILED", "DONE", "TERMINATED"}
 
 
 def _require_text(value: str, field: str) -> None:
@@ -80,7 +80,7 @@ class DroneSpec:
             _require_text(getattr(self, field_name), field_name)
         authority_rank(self.authority_ceiling)
         if self.branch.startswith("refs/"):
-            raise FleetException("branch must be a repository branch name, not a ref path")
+            raise FleetException("branch must be a repository branch name")
         if len(self.baseline_sha) != 40 or any(
             ch not in "0123456789abcdef" for ch in self.baseline_sha.lower()
         ):
@@ -150,6 +150,7 @@ class TrustedVerifierIdentity:
     capabilities: Tuple[str, ...]
     identity_digest: str
     trust_anchor_id: str
+    implementation_digest: str
 
     def validate_for(self, mission_id: str, capability: str) -> "TrustedVerifierIdentity":
         for value, field in (
@@ -157,6 +158,7 @@ class TrustedVerifierIdentity:
             (self.mission_id, "mission_id"),
             (self.identity_digest, "identity_digest"),
             (self.trust_anchor_id, "trust_anchor_id"),
+            (self.implementation_digest, "implementation_digest"),
         ):
             _require_text(value, field)
         if not self.capabilities or len(set(self.capabilities)) != len(self.capabilities):
@@ -185,6 +187,7 @@ class VerifierBinding:
     evidence_ref: str
     identity_digest: str
     trust_anchor_id: str
+    implementation_digest: str
     capability: str = "mission_result_verify"
 
     def validate_against(
@@ -198,6 +201,7 @@ class VerifierBinding:
             (self.evidence_ref, "evidence_ref"),
             (self.identity_digest, "identity_digest"),
             (self.trust_anchor_id, "trust_anchor_id"),
+            (self.implementation_digest, "implementation_digest"),
             (self.capability, "capability"),
         ):
             _require_text(value, field)
@@ -210,6 +214,8 @@ class VerifierBinding:
             raise FleetException("verifier identity digest mismatch")
         if self.trust_anchor_id != identity.trust_anchor_id:
             raise FleetException("verifier trust anchor mismatch")
+        if self.implementation_digest != identity.implementation_digest:
+            raise FleetException("verifier implementation provenance mismatch")
         return self
 
 
@@ -299,6 +305,7 @@ class VerifiedFleetCapability:
     verifier_id: str
     verifier_identity_digest: str
     trust_anchor_id: str
+    verifier_implementation_digest: str
     evidence_refs: Tuple[str, ...]
 
     def validate_for(
@@ -327,6 +334,8 @@ class VerifiedFleetCapability:
             raise FleetException("fleet verification identity digest mismatch")
         if self.trust_anchor_id != identity.trust_anchor_id:
             raise FleetException("fleet verification trust anchor mismatch")
+        if self.verifier_implementation_digest != identity.implementation_digest:
+            raise FleetException("fleet verification implementation provenance mismatch")
         if not self.evidence_refs:
             raise FleetException("verified capability requires evidence_refs")
         return self
@@ -334,6 +343,7 @@ class VerifiedFleetCapability:
 
 class FleetEvidenceVerifier(Protocol):
     verifier_id: str
+    implementation_digest: str
 
     def verify(
         self,
@@ -358,7 +368,7 @@ class ScaleAdmission:
 
 
 class FleetAdmissionGate:
-    """Scale gate over a trusted verifier identity + resolver boundary."""
+    """Scale gate over trusted verifier identity + implementation provenance."""
 
     def __init__(
         self,
@@ -382,9 +392,7 @@ class FleetAdmissionGate:
             return ScaleAdmission(1, True, "L1", "single executor context demonstrated")
 
         identity = self._trust_source.resolve_verifier(
-            self._verifier_id,
-            "*",
-            "fleet_scale_verify",
+            self._verifier_id, "*", "fleet_scale_verify"
         )
         if not isinstance(identity, TrustedVerifierIdentity):
             raise FleetException("verifier trust source returned invalid identity")
@@ -393,6 +401,8 @@ class FleetAdmissionGate:
         verifier = self._resolver.resolve_fleet_verifier(identity.verifier_id)
         if getattr(verifier, "verifier_id", None) != identity.verifier_id:
             raise FleetException("resolved fleet verifier identity mismatch")
+        if getattr(verifier, "implementation_digest", None) != identity.implementation_digest:
+            raise FleetException("resolved fleet verifier implementation mismatch")
 
         verified = verifier.verify(snapshot, requested_concurrency)
         if not isinstance(verified, VerifiedFleetCapability):
@@ -411,7 +421,7 @@ class FleetAdmissionGate:
             requested_concurrency,
             True,
             level,
-            "trusted identity and evidence verified all required scale gates",
+            "trusted identity, implementation provenance and evidence verified",
             verification_digest=verified.snapshot_digest,
         )
 
@@ -452,26 +462,22 @@ class MissionRegistry:
         drone = self._drones[mission_id]
         if verifier_id == drone.drone_id:
             raise FleetException("builder cannot be bound as independent verifier")
-
         identity = self._verifier_trust_source.resolve_verifier(
-            verifier_id,
-            mission_id,
-            "mission_result_verify",
+            verifier_id, mission_id, "mission_result_verify"
         )
         if not isinstance(identity, TrustedVerifierIdentity):
             raise FleetException("verifier trust source returned invalid identity")
         identity.validate_for(mission_id, "mission_result_verify")
         if identity.verifier_id == drone.drone_id:
             raise FleetException("trusted verifier identity aliases builder")
-
         binding = VerifierBinding(
             mission_id=mission_id,
             verifier_id=identity.verifier_id,
             evidence_ref=evidence_ref,
             identity_digest=identity.identity_digest,
             trust_anchor_id=identity.trust_anchor_id,
+            implementation_digest=identity.implementation_digest,
         ).validate_against(identity, mission_id)
-
         existing = self._verifiers.setdefault(mission_id, {})
         if binding.verifier_id in existing:
             raise FleetException("duplicate verifier binding")
@@ -523,7 +529,6 @@ class MissionRegistry:
             raise FleetException("result requires evidence_refs")
         if outcome not in {"SUCCEEDED", "FAILED", "ABORTED"}:
             raise FleetException("invalid result outcome")
-
         if outcome == "SUCCEEDED":
             if not verifier_id:
                 raise FleetException("successful result requires independent verifier")
@@ -531,9 +536,7 @@ class MissionRegistry:
             if binding is None:
                 raise FleetException("successful result requires trusted mission verifier binding")
             identity = self._verifier_trust_source.resolve_verifier(
-                verifier_id,
-                mission_id,
-                binding.capability,
+                verifier_id, mission_id, binding.capability
             )
             if not isinstance(identity, TrustedVerifierIdentity):
                 raise FleetException("verifier trust source returned invalid identity")
@@ -562,12 +565,10 @@ class MissionRegistry:
         return tuple(sorted(self._drones))
 
     def snapshot(self) -> Tuple[Tuple[str, str, int], ...]:
-        return tuple(
-            sorted(
-                (mission_id, self._state[mission_id], self._heartbeat[mission_id])
-                for mission_id in self._drones
-            )
-        )
+        return tuple(sorted(
+            (mission_id, self._state[mission_id], self._heartbeat[mission_id])
+            for mission_id in self._drones
+        ))
 
     def _require_mission(self, mission_id: str) -> None:
         if mission_id not in self._drones:
@@ -593,13 +594,11 @@ class DependencyGraph:
 
     def ready(self, completed_missions: Iterable[str]) -> Tuple[str, ...]:
         completed = frozenset(completed_missions)
-        return tuple(
-            sorted(
-                mission_id
-                for mission_id, deps in self._deps.items()
-                if mission_id not in completed and deps.issubset(completed)
-            )
-        )
+        return tuple(sorted(
+            mission_id
+            for mission_id, deps in self._deps.items()
+            if mission_id not in completed and deps.issubset(completed)
+        ))
 
     @staticmethod
     def _has_cycle(graph: Mapping[str, frozenset[str]]) -> bool:
@@ -690,7 +689,6 @@ class FleetScheduler:
     ) -> Tuple[str, ...]:
         if not isinstance(max_parallel, int) or max_parallel <= 0 or max_parallel > 100:
             raise FleetException("max_parallel must be in [1,100]")
-
         self._release_terminal_leases()
         graph = DependencyGraph()
         completed = {
@@ -703,7 +701,6 @@ class FleetScheduler:
             if current_heads.get(spec.repository) != spec.baseline_sha:
                 raise FleetException(f"stale baseline: {spec.repository}:{mission_id}")
             graph.add_mission(mission_id, spec.dependencies)
-
         selected: list[str] = []
         for mission_id in graph.ready(completed):
             if len(selected) >= max_parallel:
