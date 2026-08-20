@@ -1,4 +1,4 @@
-"""Trusted admission boundary for externally attested fleet runtime evidence."""
+"""Trusted admission boundary for externally attested pure runtime observations."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,7 +31,6 @@ class ExternalAttestationEvidence:
     run_id: str
     run_attempt: int
     mission_id: str
-    authority_digest: str
     artifact_digest: str
     issuer: str
     provenance_ref: str
@@ -83,7 +82,6 @@ class VerifiedRuntimeAttestation:
     run_id: str
     run_attempt: int
     mission_id: str
-    authority_digest: str
     artifact_digest: str
     implementation_digest: str
     attestation_digest: str
@@ -131,7 +129,7 @@ class RuntimeAttestationVerifier:
             attestation.repository, attestation.repository_id, attestation.commit_sha,
             attestation.tree_sha, attestation.workflow_ref, attestation.workflow_sha,
             attestation.run_id, attestation.run_attempt, attestation.mission_id,
-            attestation.authority_digest, attestation.issuer,
+            attestation.issuer,
         )
         if actual_binding != context.binding():
             raise RuntimeAttestationVerificationError("runtime attestation context mismatch")
@@ -151,15 +149,13 @@ class RuntimeAttestationVerifier:
             attestation.digest(), attestation.subject_id, attestation.runtime_instance_id,
             attestation.repository, attestation.commit_sha, attestation.workflow_sha,
             attestation.run_id, attestation.run_attempt, attestation.mission_id,
-            attestation.authority_digest, computed_digest, attestation.issuer,
-            attestation.provenance_ref,
+            computed_digest, attestation.issuer, attestation.provenance_ref,
         )
         actual_external = (
             evidence.attestation_digest, evidence.subject_id, evidence.runtime_instance_id,
             evidence.repository, evidence.commit_sha, evidence.workflow_sha,
             evidence.run_id, evidence.run_attempt, evidence.mission_id,
-            evidence.authority_digest, evidence.artifact_digest, evidence.issuer,
-            evidence.provenance_ref,
+            evidence.artifact_digest, evidence.issuer, evidence.provenance_ref,
         )
         if actual_external != expected_external or not evidence.trust_anchor_id:
             raise RuntimeAttestationVerificationError("external provenance binding mismatch")
@@ -188,7 +184,6 @@ class RuntimeAttestationVerifier:
             run_id=attestation.run_id,
             run_attempt=attestation.run_attempt,
             mission_id=attestation.mission_id,
-            authority_digest=attestation.authority_digest,
             artifact_digest=computed_digest,
             implementation_digest=computed_digest,
             attestation_digest=attestation.digest(),
@@ -201,15 +196,13 @@ def verify_n2_pair(
     first: VerifiedRuntimeAttestation,
     second: VerifiedRuntimeAttestation,
 ) -> tuple[VerifiedRuntimeAttestation, VerifiedRuntimeAttestation]:
-    """Prove two distinct runtime evidence records without claiming L2 by itself."""
+    """Prove two distinct runtime observations without claiming L2 by itself."""
     if not isinstance(first, VerifiedRuntimeAttestation) or not isinstance(second, VerifiedRuntimeAttestation):
         raise RuntimeAttestationVerificationError("N2 evidence must be verified runtime evidence")
     if first.mission_id != second.mission_id:
         raise RuntimeAttestationVerificationError("N2 evidence must share one mission root")
     if first.repository != second.repository or first.commit_sha != second.commit_sha:
         raise RuntimeAttestationVerificationError("N2 evidence repository/commit mismatch")
-    if first.authority_digest != second.authority_digest:
-        raise RuntimeAttestationVerificationError("N2 evidence authority mismatch")
     if first.runtime_instance_id == second.runtime_instance_id:
         raise RuntimeAttestationVerificationError("one runtime instance cannot satisfy N2")
     if first.attestation_digest == second.attestation_digest:
