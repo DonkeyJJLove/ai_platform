@@ -189,6 +189,16 @@ class LiveAuthorityAdmission:
     def context(self) -> AuthorityVerificationContext:
         return self._context
 
+    @staticmethod
+    def _utc(value: str) -> datetime:
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except (AttributeError, ValueError) as exc:
+            raise LiveAuthorityAdmissionError("grant timestamp is invalid") from exc
+        if parsed.tzinfo is None:
+            raise LiveAuthorityAdmissionError("grant timestamp must be timezone-aware")
+        return parsed.astimezone(timezone.utc)
+
     def _context_key(self) -> tuple[str, str, str, str]:
         return (
             self._context.trust_domain,
