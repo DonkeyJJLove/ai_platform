@@ -7,6 +7,7 @@ from cyber_lion.enterprise.authority_source import (
     AuthorityLookupKey,
     AuthoritySource,
     AuthoritySourceError,
+    canonical_pr_authority_resource,
     canonical_source_lineage_digest,
 )
 
@@ -18,7 +19,17 @@ MISSION = "RCCM-1E-GOV"
 GRANT = "grant-live-merge-1"
 
 
-def make_grant(*, grant_id=GRANT, mission_id=MISSION, parent_grant_id=None):
+def make_grant(
+    *,
+    grant_id=GRANT,
+    mission_id=MISSION,
+    parent_grant_id=None,
+    resource_scope=None,
+):
+    if resource_scope is None:
+        resource_scope = (
+            f"github:repo:{REPO}:pr:31:base:{BASE}:head:{HEAD}",
+        )
     return AuthorityGrant(
         schema_version="1.1.0",
         grant_id=grant_id,
@@ -30,9 +41,7 @@ def make_grant(*, grant_id=GRANT, mission_id=MISSION, parent_grant_id=None):
         capability_id="github-merge",
         capability_version="1.0.0",
         actions=("merge_pull_request",),
-        resource_scope=(
-            f"github:repo:{REPO}:pr:31:base:{BASE}:head:{HEAD}",
-        ),
+        resource_scope=resource_scope,
         authority_ceiling="external_write",
         constraints=("merge_method:merge",),
         parent_grant_id=parent_grant_id,
@@ -60,9 +69,17 @@ def make_key(**overrides):
     return AuthorityLookupKey(**values)
 
 
-def make_record(*, key=None, lineage=None, digest=None, provenance="control-plane:record:1", source_kind="trusted-control-plane"):
+def make_record(
+    *,
+    key=None,
+    lineage=None,
+    digest=None,
+    provenance="control-plane:record:1",
+    source_kind="trusted-control-plane",
+):
     key = key or make_key()
-    lineage = lineage or (make_grant(),)
+    if lineage is None:
+        lineage = (make_grant(resource_scope=(canonical_pr_authority_resource(key),)),)
     return AuthorityLineageRecord(
         lookup_key=key,
         lineage=lineage,
@@ -91,6 +108,14 @@ class AuthoritySourceContractTests(unittest.TestCase):
         with self.assertRaises(AuthoritySourceError):
             make_key(head_sha="abc123").validate()
 
+    def test_canonical_pr_resource_binding_is_exact(self):
+        key = make_key()
+        self.assertEqual(
+            canonical_pr_authority_resource(key),
+            f"github:repo:{REPO}:pr:31:base:{BASE}:head:{HEAD}",
+        )
+        self.assertIs(make_record(key=key).validate().lookup_key, key)
+
     def test_lineage_digest_is_deterministic(self):
         lineage = (make_grant(),)
         first = canonical_source_lineage_digest(lineage)
@@ -109,6 +134,42 @@ class AuthoritySourceContractTests(unittest.TestCase):
         record = make_record(lineage=(wrong_mission,))
         with self.assertRaisesRegex(AuthoritySourceError, "mission_id"):
             record.validate()
+
+    def test_record_rejects_resource_scope_repository_mismatch(self):
+        wrong = make_grant(
+            resource_scope=(
+                f"github:repo:OtherOwner/other:pr:31:base:{BASE}:head:{HEAD}",
+            )
+        )
+        with self.assertRaisesRegex(AuthoritySourceError, "exact PR resource"):
+            make_record(lineage=(wrong,)).validate()
+
+    def test_record_rejects_resource_scope_pr_mismatch(self):
+        wrong = make_grant(
+            resource_scope=(
+                f"github:repo:{REPO}:pr:32:base:{BASE}:head:{HEAD}",
+            )
+        )
+        with self.assertRaisesRegex(AuthoritySourceError, "exact PR resource"):
+            make_record(lineage=(wrong,)).validate()
+
+    def test_record_rejects_resource_scope_base_mismatch(self):
+        wrong = make_grant(
+            resource_scope=(
+                f"github:repo:{REPO}:pr:31:base:{'3' * 40}:head:{HEAD}",
+            )
+        )
+        with self.assertRaisesRegex(AuthoritySourceError, "exact PR resource"):
+            make_record(lineage=(wrong,)).validate()
+
+    def test_record_rejects_resource_scope_head_mismatch(self):
+        wrong = make_grant(
+            resource_scope=(
+                f"github:repo:{REPO}:pr:31:base:{BASE}:head:{'4' * 40}",
+            )
+        )
+        with self.assertRaisesRegex(AuthoritySourceError, "exact PR resource"):
+            make_record(lineage=(wrong,)).validate()
 
     def test_record_rejects_tampered_lineage_digest(self):
         record = make_record(digest="0" * 64)
