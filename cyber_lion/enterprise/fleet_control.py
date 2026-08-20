@@ -1,14 +1,16 @@
 """Deterministic fleet-control primitives for bounded software-factory experiments.
 
-This module is deliberately a control-plane slice, not an executor. It records immutable
-drone contracts, exact dependency/lease state and evidence-backed scale admission. It
-never creates model contexts, sandboxes, credentials or GitHub effects by itself.
+This module is a control-plane slice, not an executor. Scale promotion is accepted only
+through an injected trusted evidence verifier. Parent authority is resolved externally.
+Scheduler state and leases persist across planning cycles.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
+import json
 from pathlib import PurePosixPath
-from typing import Dict, Iterable, Mapping, Sequence, Tuple
+from typing import Dict, Iterable, Mapping, Protocol, Tuple
 
 from .models import EnterpriseModelError, authority_rank
 
@@ -18,17 +20,12 @@ class FleetException(EnterpriseModelError):
 
 
 DRONE_STATES = {
-    "STARTING",
-    "RUNNING",
-    "WAITING",
-    "BLOCKED",
-    "DEGRADED",
-    "FAILED",
-    "DONE",
-    "TERMINATED",
+    "STARTING", "RUNNING", "WAITING", "BLOCKED",
+    "DEGRADED", "FAILED", "DONE", "TERMINATED",
 }
 SCALE_LEVELS = (1, 2, 5, 10, 25, 50, 100)
 PROMOTION_EPISTEMIC_CLASSES = {"OBSERVED", "ANCHORED"}
+TERMINAL_STATES = {"FAILED", "DONE", "TERMINATED"}
 
 
 def _require_text(value: str, field: str) -> None:
@@ -59,7 +56,7 @@ def _path_overlap(left: str, right: str) -> bool:
 
 @dataclass(frozen=True)
 class DroneSpec:
-    """Immutable contract for one coding drone."""
+    """Immutable exact binding for one coding drone."""
 
     drone_id: str
     mission_id: str
@@ -70,7 +67,6 @@ class DroneSpec:
     workspace: str
     sandbox_id: str
     authority_ceiling: str
-    parent_authority_ceiling: str
     write_scope: Tuple[str, ...]
     read_scope: Tuple[str, ...]
     test_scope: Tuple[str, ...]
@@ -80,50 +76,78 @@ class DroneSpec:
 
     def validate(self) -> "DroneSpec":
         for field_name in (
-            "drone_id",
-            "mission_id",
-            "parent_mission_id",
-            "repository",
-            "baseline_sha",
-            "branch",
-            "workspace",
-            "sandbox_id",
+            "drone_id", "mission_id", "parent_mission_id", "repository",
+            "baseline_sha", "branch", "workspace", "sandbox_id",
         ):
             _require_text(getattr(self, field_name), field_name)
-
+        authority_rank(self.authority_ceiling)
         if self.branch.startswith("refs/"):
             raise FleetException("branch must be a repository branch name, not a ref path")
-        if len(self.baseline_sha) != 40 or any(ch not in "0123456789abcdef" for ch in self.baseline_sha.lower()):
+        if len(self.baseline_sha) != 40 or any(
+            ch not in "0123456789abcdef" for ch in self.baseline_sha.lower()
+        ):
             raise FleetException("baseline_sha must be a full 40-character hex SHA")
-
         _validate_scope(self.write_scope, "write_scope")
         _validate_scope(self.read_scope, "read_scope")
         _validate_scope(self.test_scope, "test_scope")
-
         if not isinstance(self.dependencies, tuple) or len(set(self.dependencies)) != len(self.dependencies):
             raise FleetException("dependencies must be a unique tuple")
         if self.mission_id in self.dependencies:
             raise FleetException("mission cannot depend on itself")
-
+        if not isinstance(self.evidence_refs, tuple) or not self.evidence_refs:
+            raise FleetException("drone contract requires evidence_refs")
         if not isinstance(self.resource_budget, tuple) or not self.resource_budget:
             raise FleetException("resource_budget must be a non-empty tuple")
-        budget_keys = [key for key, _ in self.resource_budget]
-        if len(set(budget_keys)) != len(budget_keys):
+        keys = [key for key, _ in self.resource_budget]
+        if len(set(keys)) != len(keys):
             raise FleetException("resource_budget keys must be unique")
         for key, value in self.resource_budget:
             _require_text(key, "resource_budget key")
             if not isinstance(value, (int, float)) or value < 0:
                 raise FleetException("resource_budget values must be non-negative numbers")
-
-        if authority_rank(self.authority_ceiling) > authority_rank(self.parent_authority_ceiling):
-            raise FleetException("child authority exceeds parent authority")
-
         return self
 
 
 @dataclass(frozen=True)
+class ParentAuthorityAdmission:
+    mission_id: str
+    parent_mission_id: str
+    repository: str
+    baseline_sha: str
+    authority_ceiling: str
+    grant_digest: str
+
+    def validate_for(self, drone: DroneSpec) -> "ParentAuthorityAdmission":
+        drone.validate()
+        for value, field in (
+            (self.mission_id, "mission_id"),
+            (self.parent_mission_id, "parent_mission_id"),
+            (self.repository, "repository"),
+            (self.baseline_sha, "baseline_sha"),
+            (self.grant_digest, "grant_digest"),
+        ):
+            _require_text(value, field)
+        authority_rank(self.authority_ceiling)
+        if (
+            self.mission_id != drone.mission_id
+            or self.parent_mission_id != drone.parent_mission_id
+            or self.repository != drone.repository
+            or self.baseline_sha != drone.baseline_sha
+        ):
+            raise FleetException("parent authority admission binding mismatch")
+        if authority_rank(drone.authority_ceiling) > authority_rank(self.authority_ceiling):
+            raise FleetException("child authority exceeds trusted parent admission")
+        return self
+
+
+class ParentAuthoritySource(Protocol):
+    def resolve_parent_authority(self, drone: DroneSpec) -> ParentAuthorityAdmission:
+        ...
+
+
+@dataclass(frozen=True)
 class FleetCapabilitySnapshot:
-    """Evidence-bound observations used to admit a fleet scale level."""
+    """Untrusted claim bundle; never sufficient for scale promotion by itself."""
 
     epistemic_class: str
     executor_ids: Tuple[str, ...]
@@ -153,17 +177,91 @@ class FleetCapabilitySnapshot:
             raise FleetException("invalid capability epistemic_class")
         if self.process_fanout < 1:
             raise FleetException("process_fanout must be positive")
-        if not isinstance(self.executor_ids, tuple) or len(set(self.executor_ids)) != len(self.executor_ids):
-            raise FleetException("executor_ids must be a tuple of unique identifiers")
-        if not isinstance(self.sandbox_ids, tuple) or len(set(self.sandbox_ids)) != len(self.sandbox_ids):
-            raise FleetException("sandbox_ids must be a tuple of unique identifiers")
-        if any(not item for item in self.executor_ids + self.sandbox_ids):
-            raise FleetException("executor/sandbox identifiers must be non-empty")
-        if not isinstance(self.evidence_refs, tuple) or not self.evidence_refs:
-            raise FleetException("capability snapshot requires evidence_refs")
-        if len(set(self.evidence_refs)) != len(self.evidence_refs):
-            raise FleetException("evidence_refs must be unique")
+        for values, field in (
+            (self.executor_ids, "executor_ids"),
+            (self.sandbox_ids, "sandbox_ids"),
+            (self.evidence_refs, "evidence_refs"),
+        ):
+            if not isinstance(values, tuple) or not values:
+                raise FleetException(f"{field} must be a non-empty tuple")
+            if len(set(values)) != len(values) or any(not item for item in values):
+                raise FleetException(f"{field} must contain unique non-empty values")
         return self
+
+    def digest(self) -> str:
+        self.validate()
+        payload = {
+            "epistemic_class": self.epistemic_class,
+            "executor_ids": self.executor_ids,
+            "sandbox_ids": self.sandbox_ids,
+            "process_fanout": self.process_fanout,
+            "sandbox_isolation_verified": self.sandbox_isolation_verified,
+            "authority_isolation_verified": self.authority_isolation_verified,
+            "branch_ownership_verified": self.branch_ownership_verified,
+            "path_ownership_verified": self.path_ownership_verified,
+            "mission_identity_verified": self.mission_identity_verified,
+            "evidence_complete": self.evidence_complete,
+            "scheduler_stability_verified": self.scheduler_stability_verified,
+            "no_unexplained_mutation_verified": self.no_unexplained_mutation_verified,
+            "bounded_retries_verified": self.bounded_retries_verified,
+            "duplicate_execution_control_verified": self.duplicate_execution_control_verified,
+            "deadlock_control_verified": self.deadlock_control_verified,
+            "ci_pressure_acceptable": self.ci_pressure_acceptable,
+            "resource_pressure_acceptable": self.resource_pressure_acceptable,
+            "observability_verified": self.observability_verified,
+            "replay_verified": self.replay_verified,
+            "adversarial_suite_verified": self.adversarial_suite_verified,
+            "sustained_operation_verified": self.sustained_operation_verified,
+            "evidence_refs": self.evidence_refs,
+        }
+        raw = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        return sha256(raw).hexdigest()
+
+
+@dataclass(frozen=True)
+class VerifiedFleetCapability:
+    snapshot_digest: str
+    verified_concurrency: int
+    executor_ids: Tuple[str, ...]
+    sandbox_ids: Tuple[str, ...]
+    epistemic_class: str
+    gates_passed: bool
+    adversarial_suite_verified: bool
+    sustained_operation_verified: bool
+    verifier_id: str
+    evidence_refs: Tuple[str, ...]
+
+    def validate_for(
+        self,
+        snapshot: FleetCapabilitySnapshot,
+        requested_concurrency: int,
+    ) -> "VerifiedFleetCapability":
+        snapshot.validate()
+        if self.snapshot_digest != snapshot.digest():
+            raise FleetException("verified capability does not bind exact snapshot digest")
+        if self.verified_concurrency < requested_concurrency:
+            raise FleetException("trusted verifier did not verify requested concurrency")
+        if self.executor_ids != snapshot.executor_ids or self.sandbox_ids != snapshot.sandbox_ids:
+            raise FleetException("trusted verifier executor/sandbox binding mismatch")
+        if self.epistemic_class not in PROMOTION_EPISTEMIC_CLASSES:
+            raise FleetException("trusted scale evidence must be OBSERVED or ANCHORED")
+        if len(self.executor_ids) < requested_concurrency or len(self.sandbox_ids) < requested_concurrency:
+            raise FleetException("trusted evidence lacks independent executor/sandbox capacity")
+        if not self.gates_passed:
+            raise FleetException("trusted fleet scale gates did not pass")
+        _require_text(self.verifier_id, "verifier_id")
+        if not self.evidence_refs:
+            raise FleetException("verified capability requires evidence_refs")
+        return self
+
+
+class FleetEvidenceVerifier(Protocol):
+    def verify(
+        self,
+        snapshot: FleetCapabilitySnapshot,
+        requested_concurrency: int,
+    ) -> VerifiedFleetCapability:
+        ...
 
 
 @dataclass(frozen=True)
@@ -172,90 +270,68 @@ class ScaleAdmission:
     admitted: bool
     scientific_level: str
     rationale: str
+    verification_digest: str | None = None
 
 
 class FleetAdmissionGate:
-    """Fail-closed promotion gate for 1→2→5→10→25→50→100."""
+    """Scale gate that trusts only an injected verifier boundary, never raw claims."""
 
-    _COMMON_SCALE_GATES = (
-        "sandbox_isolation_verified",
-        "authority_isolation_verified",
-        "branch_ownership_verified",
-        "path_ownership_verified",
-        "mission_identity_verified",
-        "evidence_complete",
-        "scheduler_stability_verified",
-        "no_unexplained_mutation_verified",
-        "bounded_retries_verified",
-        "duplicate_execution_control_verified",
-        "deadlock_control_verified",
-        "ci_pressure_acceptable",
-        "resource_pressure_acceptable",
-        "observability_verified",
-        "replay_verified",
-    )
+    def __init__(self, verifier: FleetEvidenceVerifier) -> None:
+        self._verifier = verifier
 
     def evaluate(self, snapshot: FleetCapabilitySnapshot, requested_concurrency: int) -> ScaleAdmission:
         snapshot.validate()
         if requested_concurrency not in SCALE_LEVELS:
             raise FleetException(f"unsupported scale level: {requested_concurrency}")
-
-        if len(snapshot.executor_ids) < 1 or len(snapshot.sandbox_ids) < 1:
-            return ScaleAdmission(requested_concurrency, False, "L0", "no demonstrated executor+sandbox pair")
-
         if requested_concurrency == 1:
+            if not snapshot.executor_ids or not snapshot.sandbox_ids:
+                return ScaleAdmission(1, False, "L0", "no demonstrated executor+sandbox pair")
             return ScaleAdmission(1, True, "L1", "single executor context demonstrated")
 
-        if snapshot.epistemic_class not in PROMOTION_EPISTEMIC_CLASSES:
-            return ScaleAdmission(
-                requested_concurrency,
-                False,
-                "L1",
-                "scale promotion requires OBSERVED or ANCHORED evidence",
-            )
-        if len(snapshot.executor_ids) < requested_concurrency:
-            return ScaleAdmission(
-                requested_concurrency,
-                False,
-                "L1",
-                "insufficient independent executor contexts",
-            )
-        if len(snapshot.sandbox_ids) < requested_concurrency:
-            return ScaleAdmission(
-                requested_concurrency,
-                False,
-                "L1",
-                "insufficient isolated sandboxes",
-            )
+        verified = self._verifier.verify(snapshot, requested_concurrency)
+        if not isinstance(verified, VerifiedFleetCapability):
+            raise FleetException("trusted verifier returned invalid capability evidence")
+        verified.validate_for(snapshot, requested_concurrency)
 
-        missing = [name for name in self._COMMON_SCALE_GATES if not getattr(snapshot, name)]
-        if missing:
-            return ScaleAdmission(
-                requested_concurrency,
-                False,
-                "L1",
-                "scale gates failed: " + ",".join(sorted(missing)),
-            )
-
-        if requested_concurrency == 100 and not snapshot.adversarial_suite_verified:
+        if requested_concurrency == 100 and not verified.adversarial_suite_verified:
             return ScaleAdmission(100, False, "L3", "100-way admission requires adversarial suite evidence")
-
         if requested_concurrency == 100:
-            level = "L5" if snapshot.sustained_operation_verified else "L4"
+            level = "L5" if verified.sustained_operation_verified else "L4"
         elif requested_concurrency >= 25:
             level = "L3"
         else:
             level = "L2"
-        return ScaleAdmission(requested_concurrency, True, level, "all required scale gates satisfied")
+        return ScaleAdmission(
+            requested_concurrency,
+            True,
+            level,
+            "trusted evidence verified all required scale gates",
+            verification_digest=verified.snapshot_digest,
+        )
+
+
+@dataclass(frozen=True)
+class VerifierBinding:
+    mission_id: str
+    verifier_id: str
+    evidence_ref: str
+
+    def validate(self) -> "VerifierBinding":
+        _require_text(self.mission_id, "mission_id")
+        _require_text(self.verifier_id, "verifier_id")
+        _require_text(self.evidence_ref, "evidence_ref")
+        return self
 
 
 class MissionRegistry:
-    """Deterministic runtime mission state with heartbeat/result replay guards."""
+    """Persistent mission state with trusted parent-authority and verifier bindings."""
 
-    def __init__(self) -> None:
+    def __init__(self, authority_source: ParentAuthoritySource) -> None:
+        self._authority_source = authority_source
         self._drones: Dict[str, DroneSpec] = {}
         self._state: Dict[str, str] = {}
         self._heartbeat: Dict[str, int] = {}
+        self._verifiers: Dict[str, Dict[str, VerifierBinding]] = {}
 
     def register(self, drone: DroneSpec) -> None:
         drone.validate()
@@ -263,9 +339,24 @@ class MissionRegistry:
             raise FleetException(f"duplicate mission dispatch: {drone.mission_id}")
         if any(existing.drone_id == drone.drone_id for existing in self._drones.values()):
             raise FleetException(f"duplicate drone identity: {drone.drone_id}")
+        admission = self._authority_source.resolve_parent_authority(drone)
+        if not isinstance(admission, ParentAuthorityAdmission):
+            raise FleetException("authority source returned invalid admission")
+        admission.validate_for(drone)
         self._drones[drone.mission_id] = drone
         self._state[drone.mission_id] = "STARTING"
         self._heartbeat[drone.mission_id] = 0
+
+    def register_verifier(self, binding: VerifierBinding) -> None:
+        binding.validate()
+        self._require_mission(binding.mission_id)
+        drone = self._drones[binding.mission_id]
+        if binding.verifier_id == drone.drone_id:
+            raise FleetException("builder cannot be registered as independent verifier")
+        existing = self._verifiers.setdefault(binding.mission_id, {})
+        if binding.verifier_id in existing:
+            raise FleetException("duplicate verifier binding")
+        existing[binding.verifier_id] = binding
 
     def set_state(self, mission_id: str, state: str) -> None:
         self._require_mission(mission_id)
@@ -288,8 +379,12 @@ class MissionRegistry:
         drone = self._drones[mission_id]
         if drone.drone_id != drone_id:
             raise FleetException("cross-mission/drone authority request denied")
+        admission = self._authority_source.resolve_parent_authority(drone)
+        admission.validate_for(drone)
         if authority_rank(requested_authority) > authority_rank(drone.authority_ceiling):
             raise FleetException("requested authority exceeds drone authority ceiling")
+        if authority_rank(requested_authority) > authority_rank(admission.authority_ceiling):
+            raise FleetException("requested authority exceeds trusted parent admission")
 
     def report_result(
         self,
@@ -308,10 +403,14 @@ class MissionRegistry:
             raise FleetException("result requires evidence_refs")
         if outcome not in {"SUCCEEDED", "FAILED", "ABORTED"}:
             raise FleetException("invalid result outcome")
-        drone = self._drones[mission_id]
         if outcome == "SUCCEEDED":
-            if not verifier_id or verifier_id == drone.drone_id:
+            if not verifier_id:
                 raise FleetException("successful result requires independent verifier")
+            binding = self._verifiers.get(mission_id, {}).get(verifier_id)
+            if binding is None:
+                raise FleetException("successful result requires registered mission verifier")
+            if binding.evidence_ref not in evidence_refs:
+                raise FleetException("result evidence is not bound to registered verifier")
             self._state[mission_id] = "DONE"
         elif outcome == "FAILED":
             self._state[mission_id] = "FAILED"
@@ -321,6 +420,17 @@ class MissionRegistry:
     def terminate(self, mission_id: str) -> None:
         self._require_mission(mission_id)
         self._state[mission_id] = "TERMINATED"
+
+    def spec(self, mission_id: str) -> DroneSpec:
+        self._require_mission(mission_id)
+        return self._drones[mission_id]
+
+    def state(self, mission_id: str) -> str:
+        self._require_mission(mission_id)
+        return self._state[mission_id]
+
+    def mission_ids(self) -> Tuple[str, ...]:
+        return tuple(sorted(self._drones))
 
     def snapshot(self) -> Tuple[Tuple[str, str, int], ...]:
         return tuple(
@@ -386,7 +496,7 @@ class DependencyGraph:
 
 
 class LeaseRegistry:
-    """Repository coordination plus exclusive branch/path write leases."""
+    """Persistent repository coordination plus exclusive branch/path write leases."""
 
     def __init__(self) -> None:
         self._repository_leases: Dict[str, set[str]] = {}
@@ -396,15 +506,17 @@ class LeaseRegistry:
     def claim(self, drone: DroneSpec) -> None:
         drone.validate()
         branch_key = (drone.repository, drone.branch)
-        existing_branch = self._branch_leases.get(branch_key)
-        if existing_branch and existing_branch != drone.drone_id:
+        owner = self._branch_leases.get(branch_key)
+        if owner and owner != drone.drone_id:
             raise FleetException("branch lease conflict")
-
         for path in drone.write_scope:
-            for (repository, leased_path), owner in self._path_leases.items():
-                if repository == drone.repository and owner != drone.drone_id and _path_overlap(path, leased_path):
+            for (repository, leased_path), existing_owner in self._path_leases.items():
+                if (
+                    repository == drone.repository
+                    and existing_owner != drone.drone_id
+                    and _path_overlap(path, leased_path)
+                ):
                     raise FleetException(f"path lease conflict: {path} overlaps {leased_path}")
-
         self._repository_leases.setdefault(drone.repository, set()).add(drone.drone_id)
         self._branch_leases[branch_key] = drone.drone_id
         for path in drone.write_scope:
@@ -441,48 +553,59 @@ class LeaseRegistry:
 
 
 class FleetScheduler:
-    """Deterministically select conflict-free ready missions."""
+    """Persistent scheduler over MissionRegistry and LeaseRegistry."""
+
+    def __init__(self, registry: MissionRegistry, leases: LeaseRegistry) -> None:
+        self._registry = registry
+        self._leases = leases
 
     def plan(
         self,
-        drones: Sequence[DroneSpec],
         *,
         current_heads: Mapping[str, str],
-        completed_missions: Iterable[str] = (),
         max_parallel: int = 1,
     ) -> Tuple[str, ...]:
         if not isinstance(max_parallel, int) or max_parallel <= 0 or max_parallel > 100:
             raise FleetException("max_parallel must be in [1,100]")
 
-        validated = [drone.validate() for drone in drones]
-        mission_ids = [drone.mission_id for drone in validated]
-        drone_ids = [drone.drone_id for drone in validated]
-        if len(set(mission_ids)) != len(mission_ids):
-            raise FleetException("duplicate mission dispatch")
-        if len(set(drone_ids)) != len(drone_ids):
-            raise FleetException("duplicate drone identity")
-
-        for drone in validated:
-            if current_heads.get(drone.repository) != drone.baseline_sha:
-                raise FleetException(f"stale baseline: {drone.repository}:{drone.mission_id}")
-
+        self._release_terminal_leases()
         graph = DependencyGraph()
-        by_mission = {drone.mission_id: drone for drone in validated}
-        for drone in sorted(validated, key=lambda item: item.mission_id):
-            graph.add_mission(drone.mission_id, drone.dependencies)
+        completed = {
+            mission_id
+            for mission_id in self._registry.mission_ids()
+            if self._registry.state(mission_id) == "DONE"
+        }
+        for mission_id in self._registry.mission_ids():
+            spec = self._registry.spec(mission_id)
+            if current_heads.get(spec.repository) != spec.baseline_sha:
+                raise FleetException(f"stale baseline: {spec.repository}:{mission_id}")
+            graph.add_mission(mission_id, spec.dependencies)
 
-        ready = graph.ready(completed_missions)
-        leases = LeaseRegistry()
         selected: list[str] = []
-        for mission_id in ready:
+        for mission_id in graph.ready(completed):
             if len(selected) >= max_parallel:
                 break
-            drone = by_mission[mission_id]
+            if self._registry.state(mission_id) not in {"STARTING", "WAITING"}:
+                continue
+            spec = self._registry.spec(mission_id)
             try:
-                leases.claim(drone)
+                self._leases.claim(spec)
             except FleetException as exc:
                 if "lease conflict" in str(exc):
                     continue
                 raise
+            self._registry.set_state(mission_id, "RUNNING")
             selected.append(mission_id)
         return tuple(selected)
+
+    def _release_terminal_leases(self) -> None:
+        for mission_id in self._registry.mission_ids():
+            if self._registry.state(mission_id) in TERMINAL_STATES:
+                self._leases.release(self._registry.spec(mission_id).drone_id)
+
+
+def deterministic_fleet_state(
+    registry: MissionRegistry,
+    leases: LeaseRegistry,
+) -> Tuple[Tuple[str, ...], Tuple[Tuple[str, str, int], ...], Tuple[Tuple[str, str, str], ...]]:
+    return (registry.mission_ids(), registry.snapshot(), leases.snapshot())
