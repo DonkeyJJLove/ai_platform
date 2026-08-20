@@ -1,0 +1,131 @@
+name: LION Fleet Attestation N2
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "cyber_lion/contracts/runtime_attestation.py"
+      - "cyber_lion/enterprise/runtime_attestation.py"
+      - "cyber_lion/tests/test_runtime_attestation.py"
+      - "cyber_lion/tests/test_fleet_attested_admission.py"
+      - ".github/workflows/fleet-attestation-n2.yml"
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  n2-runtime-evidence:
+    name: N2 runtime evidence / ${{ matrix.slot }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [a, b]
+    env:
+      MISSION_ID: LION-FLEET-EXECUTOR-ATTESTATION-V1
+      HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXTERNAL_ISSUER: https://token.actions.githubusercontent.com
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Establish isolated runtime marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          other="a"
+          if [ "${{ matrix.slot }}" = "a" ]; then other="b"; fi
+          test ! -e "/tmp/lion-n2-${other}"
+          printf '%s\n' "${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${{ matrix.slot }}:${RUNNER_NAME}" > "/tmp/lion-n2-${{ matrix.slot }}"
+          test -f "/tmp/lion-n2-${{ matrix.slot }}"
+          test ! -e "/tmp/lion-n2-${other}"
+
+      - name: Derive implementation and tree digests from checked-out bytes
+        id: implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          target="cyber_lion/enterprise/runtime_attestation.py"
+          digest="$(sha256sum "$target" | awk '{print $1}')"
+          tree_sha="$(git rev-parse 'HEAD^{tree}')"
+          test "${#digest}" -eq 64
+          test "${#tree_sha}" -eq 40
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "tree_sha=$tree_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Attest implementation artifact
+        id: implementation_attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: cyber_lion/enterprise/runtime_attestation.py
+
+      - name: Emit pure runtime evidence record
+        shell: bash
+        env:
+          SLOT: ${{ matrix.slot }}
+          IMPLEMENTATION_DIGEST: ${{ steps.implementation.outputs.digest }}
+          TREE_SHA: ${{ steps.implementation.outputs.tree_sha }}
+          PROVENANCE_REF: ${{ steps.implementation_attestation.outputs.attestation-id }}
+        run: |
+          set -euo pipefail
+          mkdir -p n2-evidence
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+
+          slot = os.environ["SLOT"]
+          now = datetime.now(timezone.utc)
+          runtime_instance = f"{os.environ['GITHUB_RUN_ID']}:{os.environ['GITHUB_RUN_ATTEMPT']}:{slot}:{os.environ['RUNNER_NAME']}"
+          provenance_ref = os.environ.get("PROVENANCE_REF", "")
+          record = {
+              "schema_version": "1.0.0",
+              "attestation_id": provenance_ref,
+              "subject_id": f"github-actions:{os.environ['GITHUB_REPOSITORY_ID']}:{runtime_instance}",
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "repository_id": os.environ["GITHUB_REPOSITORY_ID"],
+              "commit_sha": os.environ["HEAD_SHA"],
+              "tree_sha": os.environ["TREE_SHA"],
+              "workflow_ref": os.environ["GITHUB_WORKFLOW_REF"],
+              "workflow_sha": os.environ["GITHUB_WORKFLOW_SHA"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "runner_environment": os.environ["RUNNER_ENVIRONMENT"],
+              "runtime_instance_id": runtime_instance,
+              "mission_id": os.environ["MISSION_ID"],
+              "artifact_digest": os.environ["IMPLEMENTATION_DIGEST"],
+              "implementation_digest": os.environ["IMPLEMENTATION_DIGEST"],
+              "issuer": os.environ["EXTERNAL_ISSUER"],
+              "provenance_ref": provenance_ref,
+              "issued_at": now.isoformat(),
+              "expires_at": (now + timedelta(minutes=10)).isoformat(),
+              "slot": slot,
+              "runner_name": os.environ["RUNNER_NAME"],
+              "scientific_level_claim": "NONE",
+          }
+          forbidden = {"authority_digest", "authority_binding_state", "authority", "grant_id"}
+          if forbidden.intersection(record):
+              raise SystemExit("runtime evidence contains forbidden authority field")
+          Path(f"n2-evidence/runtime-{slot}.json").write_text(
+              json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          test -s "n2-evidence/runtime-${SLOT}.json"
+
+      - name: Attest runtime evidence record
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: n2-evidence/runtime-${{ matrix.slot }}.json
+
+      - name: Upload runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-n2-runtime-${{ matrix.slot }}
+          path: n2-evidence/runtime-${{ matrix.slot }}.json
+          if-no-files-found: error
+          retention-days: 7
