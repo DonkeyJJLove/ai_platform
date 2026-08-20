@@ -84,6 +84,17 @@ class AuthorityLookupKey:
         )
 
 
+def canonical_pr_authority_resource(key: AuthorityLookupKey) -> str:
+    """Canonical exact PR resource that the authority leaf must contain."""
+    if type(key) is not AuthorityLookupKey:
+        raise AuthoritySourceError("key must be exact AuthorityLookupKey")
+    key.validate()
+    return (
+        f"github:repo:{key.repository}:pr:{key.pr_number}:"
+        f"base:{key.base_sha}:head:{key.head_sha}"
+    )
+
+
 def canonical_source_lineage_digest(lineage: tuple[AuthorityGrant, ...]) -> str:
     """Hash one immutable root-to-leaf lineage without treating it as admission proof."""
     if type(lineage) is not tuple or not lineage:
@@ -143,6 +154,9 @@ class AuthorityLineageRecord:
         leaf = self.lineage[-1]
         if leaf.grant_id != self.lookup_key.grant_id:
             raise AuthoritySourceError("lineage leaf does not match lookup grant_id")
+        expected_resource = canonical_pr_authority_resource(self.lookup_key)
+        if expected_resource not in leaf.resource_scope:
+            raise AuthoritySourceError("lineage leaf does not bind exact PR resource")
         expected_digest = canonical_source_lineage_digest(self.lineage)
         if self.lineage_digest != expected_digest:
             raise AuthoritySourceError("lineage_digest does not match immutable lineage")
