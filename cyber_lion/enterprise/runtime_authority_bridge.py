@@ -1,7 +1,8 @@
-"""Post-execution bridge from immutable runtime evidence to canonical authority."""
+"""Post-execution bridge from immutable runtime evidence to current live authority."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from threading import Lock
 from typing import Protocol
 
@@ -11,26 +12,17 @@ from cyber_lion.contracts.runtime_authority_binding import (
     RuntimeAuthorityBindingError,
     RuntimeEvidenceReference,
 )
-from .authority_grant import AuthorityGrant
-from .authority_source import AuthorityLookupKey, AuthoritySource, AuthoritySourceError
-from .authority_verification import AuthenticatedAuthorityGrant
+from .authority_source import AuthorityLookupKey
+from .live_authority_admission import LiveAdmittedAuthority, LiveAuthorityAdmission, LiveAuthorityAdmissionError
 
 
 class RuntimeAuthorityBridgeError(RuntimeAuthorityBindingError):
-    """Raised when runtime evidence cannot be bound to canonical authority safely."""
-
-
-class AuthorityGrantAuthenticator(Protocol):
-    def authenticate(self, grant: AuthorityGrant) -> AuthenticatedAuthorityGrant:
-        """Authenticate a canonical grant using trust material external to the runtime."""
-        ...
+    """Raised when runtime evidence cannot be bound to current authority safely."""
 
 
 @dataclass(frozen=True)
 class RuntimeAuthorityReplayKey:
     runtime_evidence_digest: str
-    authority_lineage_digest: str
-    authenticated_grant_digest: str
     binding_nonce: str
 
 
@@ -54,13 +46,12 @@ class InMemoryRuntimeAuthorityReplayGuard:
 
 
 class RuntimeAuthorityBridge:
-    """Resolve authority from an external AuthoritySource and bind it to immutable runtime evidence."""
+    """Bind runtime evidence only through a current LiveAuthorityAdmission boundary."""
 
     def __init__(
         self,
         *,
-        authority_source: AuthoritySource,
-        authenticator: AuthorityGrantAuthenticator,
+        live_admission: LiveAuthorityAdmission,
         replay_guard: RuntimeAuthorityReplayGuard,
         repository: str,
         pr_number: int,
@@ -68,14 +59,11 @@ class RuntimeAuthorityBridge:
         head_sha: str,
         mission_id: str,
     ) -> None:
-        if not isinstance(authority_source, AuthoritySource):
-            raise RuntimeAuthorityBridgeError("authority_source must be AuthoritySource")
-        if not callable(getattr(authenticator, "authenticate", None)):
-            raise RuntimeAuthorityBridgeError("authenticator is invalid")
+        if type(live_admission) is not LiveAuthorityAdmission:
+            raise RuntimeAuthorityBridgeError("live_admission must be exact LiveAuthorityAdmission")
         if not callable(getattr(replay_guard, "consume", None)):
             raise RuntimeAuthorityBridgeError("replay_guard is invalid")
-        self._authority_source = authority_source
-        self._authenticator = authenticator
+        self._live_admission = live_admission
         self._replay_guard = replay_guard
         self._repository = repository
         self._pr_number = pr_number
@@ -90,13 +78,17 @@ class RuntimeAuthorityBridge:
             mission_id=mission_id,
             grant_id="validation-placeholder",
         ).validate()
+        if live_admission.context.mission_id != mission_id:
+            raise RuntimeAuthorityBridgeError("live admission context mismatch")
 
     def bind(
         self,
         runtime: RuntimeEvidenceReference,
         *,
         grant_id: str,
+        admission_nonce: str,
         binding_nonce: str,
+        now: datetime,
     ) -> AuthorityBoundRuntimeEvidence:
         if not isinstance(runtime, RuntimeEvidenceReference):
             raise RuntimeAuthorityBridgeError("runtime evidence reference is required")
@@ -110,42 +102,34 @@ class RuntimeAuthorityBridge:
             raise RuntimeAuthorityBridgeError("runtime evidence does not match bridge context")
         if not isinstance(grant_id, str) or not grant_id.strip():
             raise RuntimeAuthorityBridgeError("grant_id is required")
+        if not isinstance(admission_nonce, str) or not admission_nonce.strip():
+            raise RuntimeAuthorityBridgeError("admission_nonce is required")
         if not isinstance(binding_nonce, str) or not binding_nonce.strip():
             raise RuntimeAuthorityBridgeError("binding_nonce is required")
-
-        key = AuthorityLookupKey(
-            repository=self._repository,
-            pr_number=self._pr_number,
-            base_sha=self._base_sha,
-            head_sha=self._head_sha,
-            mission_id=self._mission_id,
-            grant_id=grant_id,
-        )
-        try:
-            record = self._authority_source.resolve_exact(key)
-        except AuthoritySourceError as exc:
-            raise RuntimeAuthorityBridgeError("canonical authority unavailable") from exc
-        record.validate()
-        leaf = record.lineage[-1]
-        if type(leaf) is not AuthorityGrant:
-            raise RuntimeAuthorityBridgeError("authority leaf has invalid type")
+        if not isinstance(now, datetime) or now.tzinfo is None:
+            raise RuntimeAuthorityBridgeError("trusted now must be timezone-aware")
 
         try:
-            authenticated = self._authenticator.authenticate(leaf)
-        except Exception as exc:
-            raise RuntimeAuthorityBridgeError("authority authentication failed closed") from exc
-        if not isinstance(authenticated, AuthenticatedAuthorityGrant):
-            raise RuntimeAuthorityBridgeError("authority authentication result is invalid")
-        if (
-            authenticated.grant_id != leaf.grant_id
-            or authenticated.mission_id != self._mission_id
-            or authenticated.grant_digest != leaf.digest()
-        ):
-            raise RuntimeAuthorityBridgeError("authenticated grant binding mismatch")
+            admitted = self._live_admission.admit(
+                repository=self._repository,
+                pr_number=self._pr_number,
+                base_sha=self._base_sha,
+                head_sha=self._head_sha,
+                mission_id=self._mission_id,
+                grant_id=grant_id,
+                now=now,
+                replay_nonce=admission_nonce,
+            )
+            admitted = self._live_admission.revalidate(admitted, now=now)
+        except LiveAuthorityAdmissionError as exc:
+            raise RuntimeAuthorityBridgeError("live authority admission failed closed") from exc
+        if type(admitted) is not LiveAdmittedAuthority:
+            raise RuntimeAuthorityBridgeError("live authority admission result is invalid")
+        admitted.validate()
 
         binding = AuthorityAttestationBinding(
-            schema_version="1.0.0",
-            binding_id=f"runtime-authority:{runtime.runtime_evidence_digest}:{record.lineage_digest}",
+            schema_version="1.1.0",
+            binding_id=f"runtime-authority:{runtime.runtime_evidence_digest}:{admitted.digest()}",
             binding_nonce=binding_nonce,
             mission_id=self._mission_id,
             repository=self._repository,
@@ -158,19 +142,22 @@ class RuntimeAuthorityBridge:
             run_attempt=runtime.run_attempt,
             provenance_ref=runtime.provenance_ref,
             artifact_digest=runtime.artifact_digest,
-            grant_id=leaf.grant_id,
-            authority_lineage_digest=record.lineage_digest,
-            authenticated_grant_digest=authenticated.grant_digest,
-            authority_epoch=leaf.epoch,
-            authority_provenance_id=record.provenance_id,
-            authority_key_id=authenticated.key_id,
-            authority_algorithm=authenticated.algorithm,
+            grant_id=admitted.grant_id,
+            authority_lineage_digest=admitted.lineage_digest,
+            authenticated_grant_digest=admitted.leaf_grant_digest,
+            authority_epoch=admitted.epoch,
+            authority_provenance_id=admitted.provenance_id,
+            authority_key_id=admitted.leaf_key_id,
+            authority_algorithm=admitted.leaf_algorithm,
+            live_admission_digest=admitted.digest(),
+            live_admission_replay_digest=admitted.replay_digest,
+            authority_state_version=admitted.epoch_state_version,
+            authority_root_grant_digest=admitted.root_grant_digest,
+            authority_admitted_at=admitted.admitted_at,
         ).validate()
 
         replay_key = RuntimeAuthorityReplayKey(
             runtime.runtime_evidence_digest,
-            record.lineage_digest,
-            authenticated.grant_digest,
             binding_nonce,
         )
         try:
@@ -189,12 +176,17 @@ class RuntimeAuthorityBridge:
             repository=self._repository,
             base_sha=self._base_sha,
             head_sha=self._head_sha,
-            grant_id=leaf.grant_id,
-            authority_lineage_digest=record.lineage_digest,
-            authenticated_grant_digest=authenticated.grant_digest,
-            authority_epoch=leaf.epoch,
-            authority_provenance_id=record.provenance_id,
-            authority_ceiling=leaf.authority_ceiling,
+            grant_id=admitted.grant_id,
+            authority_lineage_digest=admitted.lineage_digest,
+            authenticated_grant_digest=admitted.leaf_grant_digest,
+            authority_epoch=admitted.epoch,
+            authority_provenance_id=admitted.provenance_id,
+            authority_ceiling=admitted.authority_ceiling,
+            live_admission_digest=admitted.digest(),
+            live_admission_replay_digest=admitted.replay_digest,
+            authority_state_version=admitted.epoch_state_version,
+            authority_root_grant_digest=admitted.root_grant_digest,
+            authority_admitted_at=admitted.admitted_at,
             binding_digest=binding.digest(),
         ).validate()
 
@@ -203,7 +195,7 @@ def verify_authority_bound_n2_pair(
     first: AuthorityBoundRuntimeEvidence,
     second: AuthorityBoundRuntimeEvidence,
 ) -> tuple[AuthorityBoundRuntimeEvidence, AuthorityBoundRuntimeEvidence]:
-    """Validate two distinct runtime records under one compatible canonical authority root."""
+    """Validate two distinct runtime records under one compatible live authority root."""
     if not isinstance(first, AuthorityBoundRuntimeEvidence) or not isinstance(second, AuthorityBoundRuntimeEvidence):
         raise RuntimeAuthorityBridgeError("N2 pair requires authority-bound runtime evidence")
     first.validate()
@@ -219,6 +211,8 @@ def verify_authority_bound_n2_pair(
         first.authority_epoch,
         first.authority_provenance_id,
         first.authority_ceiling,
+        first.authority_state_version,
+        first.authority_root_grant_digest,
     )
     common_second = (
         second.mission_id,
@@ -231,15 +225,21 @@ def verify_authority_bound_n2_pair(
         second.authority_epoch,
         second.authority_provenance_id,
         second.authority_ceiling,
+        second.authority_state_version,
+        second.authority_root_grant_digest,
     )
     if common_first != common_second:
-        raise RuntimeAuthorityBridgeError("N2 runtime evidence does not share one authority root")
+        raise RuntimeAuthorityBridgeError("N2 runtime evidence does not share one live authority root")
     if first.runtime_instance_id == second.runtime_instance_id:
         raise RuntimeAuthorityBridgeError("one runtime instance cannot satisfy authority-bound N2")
     if first.runtime_evidence_digest == second.runtime_evidence_digest:
         raise RuntimeAuthorityBridgeError("duplicate runtime evidence cannot satisfy authority-bound N2")
     if first.provenance_ref == second.provenance_ref:
         raise RuntimeAuthorityBridgeError("duplicate provenance cannot satisfy authority-bound N2")
+    if first.live_admission_digest == second.live_admission_digest:
+        raise RuntimeAuthorityBridgeError("duplicate live admission receipt cannot satisfy N2")
+    if first.live_admission_replay_digest == second.live_admission_replay_digest:
+        raise RuntimeAuthorityBridgeError("duplicate live admission replay receipt cannot satisfy N2")
     if first.binding_digest == second.binding_digest:
         raise RuntimeAuthorityBridgeError("duplicate authority binding cannot satisfy N2")
     return (first, second)

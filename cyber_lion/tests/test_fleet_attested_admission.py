@@ -116,6 +116,11 @@ def authority_bound(slot: str) -> AuthorityBoundRuntimeEvidence:
         authority_epoch=9,
         authority_provenance_id="control-plane:authority:n2",
         authority_ceiling="read",
+        live_admission_digest=("e" if slot == "a" else "f") * 64,
+        live_admission_replay_digest=("1" if slot == "a" else "2") * 64,
+        authority_state_version=3,
+        authority_root_grant_digest="3" * 64,
+        authority_admitted_at="2026-08-20T15:00:00+00:00",
         binding_digest=("c" if slot == "a" else "d") * 64,
     ).validate()
 
@@ -165,15 +170,23 @@ class AttestedN2Tests(unittest.TestCase):
         first, second = verify_authority_bound_n2_pair(authority_bound("a"), authority_bound("b"))
         self.assertNotEqual(first.runtime_instance_id, second.runtime_instance_id)
         self.assertEqual(first.authority_lineage_digest, second.authority_lineage_digest)
+        self.assertEqual(first.authority_state_version, second.authority_state_version)
+        self.assertEqual(first.authority_root_grant_digest, second.authority_root_grant_digest)
 
     def test_post_execution_authority_binding_rejects_duplicate_runtime(self) -> None:
         first = authority_bound("a")
         with self.assertRaises(RuntimeAuthorityBridgeError):
             verify_authority_bound_n2_pair(first, first)
 
-    def test_post_execution_authority_binding_rejects_different_authority_root(self) -> None:
+    def test_post_execution_authority_binding_rejects_different_live_root(self) -> None:
         first = authority_bound("a")
-        second = replace(authority_bound("b"), authority_lineage_digest="e" * 64)
+        second = replace(authority_bound("b"), authority_root_grant_digest="e" * 64)
+        with self.assertRaises(RuntimeAuthorityBridgeError):
+            verify_authority_bound_n2_pair(first, second)
+
+    def test_post_execution_authority_binding_rejects_different_state_version(self) -> None:
+        first = authority_bound("a")
+        second = replace(authority_bound("b"), authority_state_version=4)
         with self.assertRaises(RuntimeAuthorityBridgeError):
             verify_authority_bound_n2_pair(first, second)
 

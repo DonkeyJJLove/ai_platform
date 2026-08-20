@@ -81,7 +81,7 @@ class RuntimeEvidenceReference:
 
 @dataclass(frozen=True)
 class AuthorityAttestationBinding:
-    """Canonical authority record bound after execution to immutable runtime evidence."""
+    """Canonical current authority admission bound after execution to runtime evidence."""
 
     schema_version: str
     binding_id: str
@@ -104,14 +104,19 @@ class AuthorityAttestationBinding:
     authority_provenance_id: str
     authority_key_id: str
     authority_algorithm: str
+    live_admission_digest: str
+    live_admission_replay_digest: str
+    authority_state_version: int
+    authority_root_grant_digest: str
+    authority_admitted_at: str
 
     def validate(self) -> "AuthorityAttestationBinding":
-        if self.schema_version != "1.0.0":
+        if self.schema_version != "1.1.0":
             raise RuntimeAuthorityBindingError("unsupported binding schema_version")
         for name in (
             "binding_id", "binding_nonce", "mission_id", "runtime_instance_id", "run_id",
             "provenance_ref", "grant_id", "authority_provenance_id", "authority_key_id",
-            "authority_algorithm",
+            "authority_algorithm", "authority_admitted_at",
         ):
             _text(getattr(self, name), name)
         if not isinstance(self.repository, str) or not _REPO.fullmatch(self.repository):
@@ -122,11 +127,18 @@ class AuthorityAttestationBinding:
             raise RuntimeAuthorityBindingError("run_attempt must be positive")
         if isinstance(self.authority_epoch, bool) or not isinstance(self.authority_epoch, int) or self.authority_epoch < 0:
             raise RuntimeAuthorityBindingError("authority_epoch must be non-negative")
+        if (
+            isinstance(self.authority_state_version, bool)
+            or not isinstance(self.authority_state_version, int)
+            or self.authority_state_version < 1
+        ):
+            raise RuntimeAuthorityBindingError("authority_state_version must be positive")
         _sha40(self.base_sha, "base_sha")
         _sha40(self.head_sha, "head_sha")
         for name in (
             "runtime_evidence_digest", "artifact_digest", "authority_lineage_digest",
-            "authenticated_grant_digest",
+            "authenticated_grant_digest", "live_admission_digest",
+            "live_admission_replay_digest", "authority_root_grant_digest",
         ):
             _sha256(getattr(self, name), name)
         return self
@@ -136,16 +148,21 @@ class AuthorityAttestationBinding:
         payload = {
             "artifact_digest": self.artifact_digest,
             "authenticated_grant_digest": self.authenticated_grant_digest,
+            "authority_admitted_at": self.authority_admitted_at,
             "authority_algorithm": self.authority_algorithm,
             "authority_epoch": self.authority_epoch,
             "authority_key_id": self.authority_key_id,
             "authority_lineage_digest": self.authority_lineage_digest,
             "authority_provenance_id": self.authority_provenance_id,
+            "authority_root_grant_digest": self.authority_root_grant_digest,
+            "authority_state_version": self.authority_state_version,
             "base_sha": self.base_sha,
             "binding_id": self.binding_id,
             "binding_nonce": self.binding_nonce,
             "grant_id": self.grant_id,
             "head_sha": self.head_sha,
+            "live_admission_digest": self.live_admission_digest,
+            "live_admission_replay_digest": self.live_admission_replay_digest,
             "mission_id": self.mission_id,
             "pr_number": self.pr_number,
             "provenance_ref": self.provenance_ref,
@@ -180,23 +197,35 @@ class AuthorityBoundRuntimeEvidence:
     authority_epoch: int
     authority_provenance_id: str
     authority_ceiling: str
+    live_admission_digest: str
+    live_admission_replay_digest: str
+    authority_state_version: int
+    authority_root_grant_digest: str
+    authority_admitted_at: str
     binding_digest: str
 
     def validate(self) -> "AuthorityBoundRuntimeEvidence":
         for name in (
             "runtime_evidence_digest", "artifact_digest", "authority_lineage_digest",
-            "authenticated_grant_digest", "binding_digest",
+            "authenticated_grant_digest", "live_admission_digest",
+            "live_admission_replay_digest", "authority_root_grant_digest", "binding_digest",
         ):
             _sha256(getattr(self, name), name)
         _sha40(self.base_sha, "base_sha")
         _sha40(self.head_sha, "head_sha")
         for name in (
             "runtime_instance_id", "provenance_ref", "mission_id", "grant_id",
-            "authority_provenance_id", "authority_ceiling",
+            "authority_provenance_id", "authority_ceiling", "authority_admitted_at",
         ):
             _text(getattr(self, name), name)
         if not isinstance(self.repository, str) or not _REPO.fullmatch(self.repository):
             raise RuntimeAuthorityBindingError("repository must use owner/name form")
         if isinstance(self.authority_epoch, bool) or not isinstance(self.authority_epoch, int) or self.authority_epoch < 0:
             raise RuntimeAuthorityBindingError("authority_epoch must be non-negative")
+        if (
+            isinstance(self.authority_state_version, bool)
+            or not isinstance(self.authority_state_version, int)
+            or self.authority_state_version < 1
+        ):
+            raise RuntimeAuthorityBindingError("authority_state_version must be positive")
         return self
