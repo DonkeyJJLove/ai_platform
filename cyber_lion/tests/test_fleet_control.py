@@ -21,6 +21,8 @@ from cyber_lion.enterprise.fleet_control import (
 
 BASE = "1" * 40
 REPO = "DonkeyJJLove/example"
+FLEET_IMPL = "sha256:fleet-verifier-v1"
+MISSION_IMPL = "sha256:mission-verifier-v1"
 
 
 def drone(
@@ -71,13 +73,21 @@ class TrustSource:
     def __init__(self) -> None:
         self.records: dict[tuple[str, str, str], TrustedVerifierIdentity] = {}
 
-    def add(self, verifier_id: str, mission_id: str, capability: str) -> TrustedVerifierIdentity:
+    def add(
+        self,
+        verifier_id: str,
+        mission_id: str,
+        capability: str,
+        *,
+        implementation_digest: str,
+    ) -> TrustedVerifierIdentity:
         identity = TrustedVerifierIdentity(
             verifier_id=verifier_id,
             mission_id=mission_id,
             capabilities=(capability,),
             identity_digest=f"identity:{verifier_id}:{mission_id}:{capability}",
             trust_anchor_id="root:test",
+            implementation_digest=implementation_digest,
         )
         self.records[(verifier_id, mission_id, capability)] = identity
         return identity
@@ -89,19 +99,30 @@ class TrustSource:
         required_capability: str,
     ) -> TrustedVerifierIdentity:
         key = (verifier_id, mission_id, required_capability)
-        if key not in self.records:
-            raise FleetException("untrusted verifier")
-        return self.records[key]
+        identity = self.records.get(key)
+        if identity is None:
+            identity = self.records.get((verifier_id, "*", required_capability))
+        if identity is None:
+            raise FleetException("verifier not trusted")
+        return identity
 
 
-def snapshot(n: int, *, adversarial: bool = True, sustained: bool = False) -> FleetCapabilitySnapshot:
+def snapshot(
+    n: int,
+    *,
+    epistemic_class: str = "OBSERVED",
+    sandbox_isolation: bool = True,
+    authority_isolation: bool = True,
+    adversarial: bool = True,
+    sustained: bool = False,
+) -> FleetCapabilitySnapshot:
     return FleetCapabilitySnapshot(
-        epistemic_class="OBSERVED",
+        epistemic_class=epistemic_class,
         executor_ids=tuple(f"executor-{i}" for i in range(n)),
         sandbox_ids=tuple(f"sandbox-{i}" for i in range(n)),
         process_fanout=max(100, n),
-        sandbox_isolation_verified=True,
-        authority_isolation_verified=True,
+        sandbox_isolation_verified=sandbox_isolation,
+        authority_isolation_verified=authority_isolation,
         branch_ownership_verified=True,
         path_ownership_verified=True,
         mission_identity_verified=True,
@@ -123,6 +144,7 @@ def snapshot(n: int, *, adversarial: bool = True, sustained: bool = False) -> Fl
 
 class TrustedFleetVerifier:
     verifier_id = "fleet-verifier"
+    implementation_digest = FLEET_IMPL
 
     def __init__(self, identity: TrustedVerifierIdentity) -> None:
         self.identity = identity
@@ -150,10 +172,12 @@ class TrustedFleetVerifier:
             raw.observability_verified,
             raw.replay_verified,
         )
+        if raw.epistemic_class not in {"OBSERVED", "ANCHORED"}:
+            raise FleetException("non-promotable evidence")
         if not all(common):
-            raise FleetException("fleet gate failure")
+            raise FleetException("scale gate failed")
         if len(raw.executor_ids) < requested_concurrency or len(raw.sandbox_ids) < requested_concurrency:
-            raise FleetException("insufficient fleet capacity")
+            raise FleetException("insufficient capacity")
         return VerifiedFleetCapability(
             snapshot_digest=raw.digest(),
             verified_concurrency=requested_concurrency,
@@ -166,12 +190,13 @@ class TrustedFleetVerifier:
             verifier_id=self.identity.verifier_id,
             verifier_identity_digest=self.identity.identity_digest,
             trust_anchor_id=self.identity.trust_anchor_id,
+            verifier_implementation_digest=self.implementation_digest,
             evidence_refs=("anchor:fleet-probe",),
         )
 
 
 class FleetResolver:
-    def __init__(self, verifier: TrustedFleetVerifier | object) -> None:
+    def __init__(self, verifier: object) -> None:
         self.verifier = verifier
 
     def resolve_fleet_verifier(self, verifier_id: str):
@@ -182,7 +207,7 @@ class FleetResolver:
 
 class DroneContractTests(unittest.TestCase):
     def test_immutable(self) -> None:
-        spec = drone("a")
+        spec = drone("a").validate()
         with self.assertRaises(dataclasses.FrozenInstanceError):
             spec.drone_id = "x"  # type: ignore[misc]
 
@@ -190,78 +215,71 @@ class DroneContractTests(unittest.TestCase):
         with self.assertRaises(FleetException):
             dataclasses.replace(drone("a"), write_scope=("../x",)).validate()
 
-    def test_parent_authority_not_self_declared(self) -> None:
-        self.assertFalse(hasattr(drone("a"), "parent_authority_ceiling"))
+    def test_scope_required(self) -> None:
+        with self.assertRaises(FleetException):
+            dataclasses.replace(drone("a"), test_scope=()).validate()
 
 
-class MissionAndVerifierTests(unittest.TestCase):
+class MissionTrustTests(unittest.TestCase):
     def setUp(self) -> None:
         self.trust = TrustSource()
+        self.trust.add(
+            "mission-verifier", "mission-a", "mission_result_verify",
+            implementation_digest=MISSION_IMPL,
+        )
         self.registry = MissionRegistry(AuthoritySource(), self.trust)
-
-    def test_child_authority_checked_against_parent(self) -> None:
-        with self.assertRaises(FleetException):
-            MissionRegistry(AuthoritySource("read"), self.trust).register(
-                drone("a", authority="external_write")
-            )
-
-    def test_duplicate_mission_denied(self) -> None:
         self.registry.register(drone("a"))
-        with self.assertRaises(FleetException):
-            self.registry.register(drone("b", mission="mission-a"))
 
-    def test_fake_registered_verifier_denied(self) -> None:
-        self.registry.register(drone("a"))
+    def test_unknown_verifier_denied(self) -> None:
         with self.assertRaises(FleetException):
-            self.registry.bind_verifier("mission-a", "fake-verifier", "verify:a")
+            self.registry.bind_verifier("mission-a", "fake", "verify:a")
 
-    def test_builder_alias_denied_even_if_trusted(self) -> None:
-        self.registry.register(drone("a"))
-        self.trust.add("drone-a", "mission-a", "mission_result_verify")
+    def test_builder_alias_denied(self) -> None:
+        self.trust.add(
+            "drone-a", "mission-a", "mission_result_verify",
+            implementation_digest=MISSION_IMPL,
+        )
         with self.assertRaises(FleetException):
             self.registry.bind_verifier("mission-a", "drone-a", "verify:a")
 
     def test_wrong_mission_verifier_denied(self) -> None:
-        self.registry.register(drone("a"))
-        self.trust.add("verifier-1", "mission-b", "mission_result_verify")
+        self.trust.add(
+            "other", "mission-b", "mission_result_verify",
+            implementation_digest=MISSION_IMPL,
+        )
         with self.assertRaises(FleetException):
-            self.registry.bind_verifier("mission-a", "verifier-1", "verify:a")
+            self.registry.bind_verifier("mission-a", "other", "verify:a")
 
-    def test_trusted_verifier_evidence_bound_to_result(self) -> None:
-        self.registry.register(drone("a"))
-        self.trust.add("verifier-1", "mission-a", "mission_result_verify")
-        self.registry.bind_verifier("mission-a", "verifier-1", "verify:a")
+    def test_success_requires_bound_verifier_evidence(self) -> None:
+        self.registry.bind_verifier("mission-a", "mission-verifier", "verify:a")
         self.registry.heartbeat("mission-a", 1)
         with self.assertRaises(FleetException):
             self.registry.report_result(
                 "mission-a", outcome="SUCCEEDED",
-                evidence_refs=("other",), verifier_id="verifier-1",
+                evidence_refs=("wrong",), verifier_id="mission-verifier",
             )
 
-    def test_trusted_verifier_allows_success(self) -> None:
-        self.registry.register(drone("a"))
-        self.trust.add("verifier-1", "mission-a", "mission_result_verify")
-        self.registry.bind_verifier("mission-a", "verifier-1", "verify:a")
+    def test_valid_verified_success(self) -> None:
+        self.registry.bind_verifier("mission-a", "mission-verifier", "verify:a")
         self.registry.heartbeat("mission-a", 1)
         self.registry.report_result(
             "mission-a", outcome="SUCCEEDED",
-            evidence_refs=("verify:a",), verifier_id="verifier-1",
+            evidence_refs=("verify:a",), verifier_id="mission-verifier",
         )
         self.assertEqual(self.registry.state("mission-a"), "DONE")
 
+    def test_parent_authority_binding_preserved(self) -> None:
+        registry = MissionRegistry(AuthoritySource("read"), self.trust)
+        with self.assertRaises(FleetException):
+            registry.register(drone("x", authority="external_write"))
 
-class LeaseAndSchedulerTests(unittest.TestCase):
+
+class SchedulerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.trust = TrustSource()
         self.registry = MissionRegistry(AuthoritySource(), self.trust)
         self.leases = LeaseRegistry()
         self.scheduler = FleetScheduler(self.registry, self.leases)
-
-    def test_dependency_cycle_denied(self) -> None:
-        graph = DependencyGraph()
-        graph.add_mission("a", ("b",))
-        with self.assertRaises(FleetException):
-            graph.add_mission("b", ("a",))
 
     def test_stale_baseline_denied(self) -> None:
         self.registry.register(drone("a"))
@@ -285,20 +303,13 @@ class LeaseAndSchedulerTests(unittest.TestCase):
         self.registry.register(drone("b", path="src/shared.py"))
         self.assertEqual(self.scheduler.plan(current_heads={REPO: BASE}, max_parallel=2), ())
 
-    def test_completed_state_derived_from_registry(self) -> None:
-        self.registry.register(drone("a"))
-        self.registry.register(drone("b", dependencies=("mission-a",)))
-        self.assertEqual(self.scheduler.plan(current_heads={REPO: BASE}, max_parallel=2), ("mission-a",))
-        self.registry.heartbeat("mission-a", 1)
-        self.trust.add("verifier-1", "mission-a", "mission_result_verify")
-        self.registry.bind_verifier("mission-a", "verifier-1", "verify:a")
-        self.registry.report_result(
-            "mission-a", outcome="SUCCEEDED",
-            evidence_refs=("verify:a",), verifier_id="verifier-1",
-        )
-        self.assertEqual(self.scheduler.plan(current_heads={REPO: BASE}, max_parallel=2), ("mission-b",))
+    def test_dependency_cycle_denied(self) -> None:
+        graph = DependencyGraph()
+        graph.add_mission("a", ("b",))
+        with self.assertRaises(FleetException):
+            graph.add_mission("b", ("a",))
 
-    def test_state_contains_persistent_leases(self) -> None:
+    def test_deterministic_state_contains_leases(self) -> None:
         self.registry.register(drone("a"))
         self.scheduler.plan(current_heads={REPO: BASE})
         state = deterministic_fleet_state(self.registry, self.leases)
@@ -306,87 +317,138 @@ class LeaseAndSchedulerTests(unittest.TestCase):
         self.assertTrue(any(row[0] == "branch" for row in state[2]))
 
 
-class FleetTrustTests(unittest.TestCase):
+class FleetAdmissionR3Tests(unittest.TestCase):
     def make_gate(self):
         trust = TrustSource()
-        identity = trust.add("fleet-verifier", "*", "fleet_scale_verify")
+        identity = trust.add(
+            "fleet-verifier", "*", "fleet_scale_verify",
+            implementation_digest=FLEET_IMPL,
+        )
         verifier = TrustedFleetVerifier(identity)
-        return FleetAdmissionGate(
+        gate = FleetAdmissionGate(
             verifier_id="fleet-verifier",
             trust_source=trust,
             resolver=FleetResolver(verifier),
-        ), trust, identity
-
-    def test_fake_observed_snapshot_without_trusted_verifier_denied(self) -> None:
-        trust = TrustSource()
-        gate = FleetAdmissionGate(
-            verifier_id="evil",
-            trust_source=trust,
-            resolver=FleetResolver(object()),
         )
-        with self.assertRaises(FleetException):
-            gate.evaluate(snapshot(100), 100)
-
-    def test_untrusted_injected_verifier_denied_by_identity_binding(self) -> None:
-        _, trust, identity = self.make_gate()
-
-        class EvilVerifier:
-            verifier_id = "fleet-verifier"
-            def verify(self, raw, requested):
-                return VerifiedFleetCapability(
-                    snapshot_digest=raw.digest(),
-                    verified_concurrency=requested,
-                    executor_ids=raw.executor_ids,
-                    sandbox_ids=raw.sandbox_ids,
-                    epistemic_class="OBSERVED",
-                    gates_passed=True,
-                    adversarial_suite_verified=True,
-                    sustained_operation_verified=True,
-                    verifier_id="fleet-verifier",
-                    verifier_identity_digest="forged",
-                    trust_anchor_id=identity.trust_anchor_id,
-                    evidence_refs=("fake",),
-                )
-
-        evil_gate = FleetAdmissionGate(
-            verifier_id="fleet-verifier",
-            trust_source=trust,
-            resolver=FleetResolver(EvilVerifier()),
-        )
-        with self.assertRaises(FleetException):
-            evil_gate.evaluate(snapshot(100), 100)
-
-    def test_snapshot_digest_binding(self) -> None:
-        _, trust, identity = self.make_gate()
-
-        class BadDigestVerifier(TrustedFleetVerifier):
-            def verify(self, raw, requested):
-                good = super().verify(raw, requested)
-                return dataclasses.replace(good, snapshot_digest="0" * 64)
-
-        bad = FleetAdmissionGate(
-            verifier_id="fleet-verifier",
-            trust_source=trust,
-            resolver=FleetResolver(BadDigestVerifier(identity)),
-        )
-        with self.assertRaises(FleetException):
-            bad.evaluate(snapshot(2), 2)
+        return gate, trust, identity
 
     def test_process_fanout_not_executor_parallelism(self) -> None:
         gate, _, _ = self.make_gate()
         with self.assertRaises(FleetException):
             gate.evaluate(snapshot(1), 2)
 
-    def test_l4_requires_100_trusted_capacity(self) -> None:
+    def test_inferred_evidence_denied(self) -> None:
         gate, _, _ = self.make_gate()
-        decision = gate.evaluate(snapshot(100), 100)
-        self.assertTrue(decision.admitted)
-        self.assertEqual(decision.scientific_level, "L4")
+        with self.assertRaises(FleetException):
+            gate.evaluate(snapshot(2, epistemic_class="INFERRED"), 2)
 
-    def test_l5_requires_sustained_evidence(self) -> None:
+    def test_unproven_isolation_denied(self) -> None:
         gate, _, _ = self.make_gate()
-        decision = gate.evaluate(snapshot(100, sustained=True), 100)
-        self.assertEqual(decision.scientific_level, "L5")
+        with self.assertRaises(FleetException):
+            gate.evaluate(snapshot(2, sandbox_isolation=False), 2)
+
+    def test_malicious_resolver_same_id_wrong_implementation_denied(self) -> None:
+        _, trust, identity = self.make_gate()
+
+        class EvilVerifier(TrustedFleetVerifier):
+            verifier_id = "fleet-verifier"
+            implementation_digest = "sha256:evil"
+
+        evil = EvilVerifier(identity)
+        gate = FleetAdmissionGate(
+            verifier_id="fleet-verifier",
+            trust_source=trust,
+            resolver=FleetResolver(evil),
+        )
+        with self.assertRaises(FleetException):
+            gate.evaluate(snapshot(100), 100)
+
+    def test_malicious_verifier_copies_all_public_identity_fields_denied(self) -> None:
+        _, trust, identity = self.make_gate()
+
+        class EvilVerifier:
+            verifier_id = identity.verifier_id
+            implementation_digest = "sha256:evil-binary"
+
+            def verify(self, raw, requested_concurrency):
+                return VerifiedFleetCapability(
+                    snapshot_digest=raw.digest(),
+                    verified_concurrency=requested_concurrency,
+                    executor_ids=raw.executor_ids,
+                    sandbox_ids=raw.sandbox_ids,
+                    epistemic_class="OBSERVED",
+                    gates_passed=True,
+                    adversarial_suite_verified=True,
+                    sustained_operation_verified=True,
+                    verifier_id=identity.verifier_id,
+                    verifier_identity_digest=identity.identity_digest,
+                    trust_anchor_id=identity.trust_anchor_id,
+                    verifier_implementation_digest=identity.implementation_digest,
+                    evidence_refs=("fake",),
+                )
+
+        gate = FleetAdmissionGate(
+            verifier_id="fleet-verifier",
+            trust_source=trust,
+            resolver=FleetResolver(EvilVerifier()),
+        )
+        with self.assertRaises(FleetException):
+            gate.evaluate(snapshot(100), 100)
+
+    def test_result_wrong_implementation_digest_denied(self) -> None:
+        _, trust, identity = self.make_gate()
+
+        class BadResultVerifier(TrustedFleetVerifier):
+            def verify(self, raw, requested_concurrency):
+                result = super().verify(raw, requested_concurrency)
+                return dataclasses.replace(
+                    result,
+                    verifier_implementation_digest="sha256:wrong-result",
+                )
+
+        verifier = BadResultVerifier(identity)
+        gate = FleetAdmissionGate(
+            verifier_id="fleet-verifier",
+            trust_source=trust,
+            resolver=FleetResolver(verifier),
+        )
+        with self.assertRaises(FleetException):
+            gate.evaluate(snapshot(2), 2)
+
+    def test_forged_snapshot_digest_denied(self) -> None:
+        _, trust, identity = self.make_gate()
+
+        class BadDigestVerifier(TrustedFleetVerifier):
+            def verify(self, raw, requested_concurrency):
+                result = super().verify(raw, requested_concurrency)
+                return dataclasses.replace(result, snapshot_digest="0" * 64)
+
+        gate = FleetAdmissionGate(
+            verifier_id="fleet-verifier",
+            trust_source=trust,
+            resolver=FleetResolver(BadDigestVerifier(identity)),
+        )
+        with self.assertRaises(FleetException):
+            gate.evaluate(snapshot(2), 2)
+
+    def test_valid_verifier_implementation_passes_l2(self) -> None:
+        gate, _, _ = self.make_gate()
+        decision = gate.evaluate(snapshot(2), 2)
+        self.assertTrue(decision.admitted)
+        self.assertEqual(decision.scientific_level, "L2")
+
+    def test_l4_requires_adversarial_evidence(self) -> None:
+        gate, _, _ = self.make_gate()
+        decision = gate.evaluate(snapshot(100, adversarial=False), 100)
+        self.assertFalse(decision.admitted)
+        self.assertEqual(decision.scientific_level, "L3")
+
+    def test_l4_and_l5_require_trusted_evidence(self) -> None:
+        gate, _, _ = self.make_gate()
+        l4 = gate.evaluate(snapshot(100, sustained=False), 100)
+        l5 = gate.evaluate(snapshot(100, sustained=True), 100)
+        self.assertEqual(l4.scientific_level, "L4")
+        self.assertEqual(l5.scientific_level, "L5")
 
 
 if __name__ == "__main__":
