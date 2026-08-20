@@ -166,11 +166,25 @@ def _exact_query(query: str, expected: frozenset[str]) -> dict[str, str]:
     return {key: values[0] for key, values in decoded.items()}
 
 
+def _unique_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise TrustedControlPlaneServiceError(
+                "request body fields are not canonical"
+            )
+        result[key] = value
+    return result
+
+
 def _exact_json_body(raw_body: bytes) -> Mapping[str, object]:
     if type(raw_body) is not bytes or len(raw_body) > _MAX_REQUEST_BODY:
         raise TrustedControlPlaneServiceError("request body is invalid")
     try:
-        decoded = json.loads(raw_body.decode("utf-8"))
+        decoded = json.loads(
+            raw_body.decode("utf-8"),
+            object_pairs_hook=_unique_json_object,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise TrustedControlPlaneServiceError("request body is invalid") from exc
     if not isinstance(decoded, Mapping) or frozenset(decoded.keys()) != _VERIFY_BODY_FIELDS:

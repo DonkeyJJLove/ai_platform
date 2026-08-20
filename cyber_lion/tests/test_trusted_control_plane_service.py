@@ -282,6 +282,32 @@ class TrustedControlPlaneServiceTests(unittest.TestCase):
                 self.assertEqual(response.status, 400)
         self.assertEqual(self.verifier.calls, [])
 
+    def test_verify_rejects_duplicate_json_keys_before_verifier(self):
+        cases = [
+            (
+                b'{"payload_base64":"eA==","signature":"sig",'
+                b'"key_id":"key-A","key_id":"key-B","algorithm":"ed25519"}'
+            ),
+            (
+                b'{"payload_base64":"eA==","signature":"sig",'
+                b'"key_id":"key","key_id":"key","algorithm":"ed25519"}'
+            ),
+        ]
+        for raw in cases:
+            with self.subTest(raw=raw):
+                response = self.dispatch(
+                    "POST",
+                    "/v1/verify-signature",
+                    body=raw,
+                    content_type="application/json",
+                )
+                self.assertEqual(response.status, 400)
+                self.assertEqual(
+                    response.payload,
+                    {"status": "ERROR", "error": "REQUEST_REJECTED"},
+                )
+        self.assertEqual(self.verifier.calls, [])
+
     def test_backend_exceptions_and_invalid_verifier_results_fail_closed(self):
         class BrokenStore(Store):
             def ready(self):
