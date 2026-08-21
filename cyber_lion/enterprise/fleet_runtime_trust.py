@@ -12,7 +12,7 @@ from dataclasses import asdict
 from hashlib import sha256
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import tempfile
 from typing import Any, Mapping
 
@@ -51,11 +51,23 @@ def _strict_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return value
 
 
-def _read_json(path: Path) -> tuple[dict[str, Any], bytes, str]:
+def _stable_stat(path: Path) -> tuple[int, int, int, int]:
+    try:
+        stat = path.stat()
+    except OSError as exc:
+        raise FleetRuntimeTrustError(f"external runtime material unavailable: {path}") from exc
+    return (int(stat.st_dev), int(stat.st_ino), int(stat.st_size), int(stat.st_mtime_ns))
+
+
+def _read_json(path: Path) -> tuple[dict[str, Any], bytes, str, str]:
+    before = _stable_stat(path)
     try:
         raw = path.read_bytes()
     except OSError as exc:
         raise FleetRuntimeTrustError(f"runtime manifest unavailable: {path}") from exc
+    after = _stable_stat(path)
+    if before != after:
+        raise FleetRuntimeTrustError("runtime manifest changed during observation")
     if not raw or len(raw) > _MAX_MANIFEST_BYTES:
         raise FleetRuntimeTrustError("runtime manifest size invalid")
     try:
@@ -69,10 +81,16 @@ def _read_json(path: Path) -> tuple[dict[str, Any], bytes, str]:
     if not isinstance(value, dict):
         raise FleetRuntimeTrustError("runtime manifest must be a JSON object")
     canonical = canonical_json(value)
-    return value, raw, sha256(canonical).hexdigest()
+    return (
+        value,
+        raw,
+        sha256(canonical).hexdigest(),
+        sha256(raw).hexdigest(),
+    )
 
 
 def _sha256_file(path: Path) -> str:
+    before = _stable_stat(path)
     digest = sha256()
     try:
         with path.open("rb") as handle:
@@ -83,7 +101,15 @@ def _sha256_file(path: Path) -> str:
                 digest.update(block)
     except OSError as exc:
         raise FleetRuntimeTrustError(f"external runtime artifact unavailable: {path}") from exc
+    after = _stable_stat(path)
+    if before != after:
+        raise FleetRuntimeTrustError("external runtime artifact changed during observation")
     return digest.hexdigest()
+
+
+def _assert_unchanged(path: Path, expected_digest: str) -> None:
+    if _sha256_file(path) != expected_digest:
+        raise FleetRuntimeTrustError("external runtime material changed before commit")
 
 
 def _sha256_hex(value: object, name: str) -> str:
@@ -159,10 +185,10 @@ def _physical_output_paths(
         raise FleetRuntimeTrustError("runtime trust outputs must remain outside repository")
     return {
         "root": resolved_root,
-        "verification": resolved_root / Path(VERIFICATION_TRUST_PATH).name,
-        "reconciliation": resolved_root / Path(RECONCILIATION_TRUST_PATH).name,
-        "pins": resolved_root / Path(F005_H_PINS_PATH).name,
-        "receipt": resolved_root / Path(PROVISIONING_RECEIPT_PATH).name,
+        "verification": resolved_root / PureWindowsPath(VERIFICATION_TRUST_PATH).name,
+        "reconciliation": resolved_root / PureWindowsPath(RECONCILIATION_TRUST_PATH).name,
+        "pins": resolved_root / PureWindowsPath(F005_H_PINS_PATH).name,
+        "receipt": resolved_root / PureWindowsPath(PROVISIONING_RECEIPT_PATH).name,
     }
 
 
@@ -219,7 +245,10 @@ def _validate_verification_manifest(
         },
         "verification runtime manifest",
     )
-    if value["schema_version"] != "1.0.0" or value["kind"] != "VERIFICATION_RUNTIME_TRUST":
+    if (
+        value["schema_version"] != "1.0.0"
+        or value["kind"] != "VERIFICATION_RUNTIME_TRUST"
+    ):
         raise FleetRuntimeTrustError("verification runtime manifest version/kind mismatch")
     if value["repository"] != config.repository:
         raise FleetRuntimeTrustError("verification repository substitution denied")
@@ -265,7 +294,10 @@ def _validate_reconciliation_manifest(
         },
         "reconciliation runtime manifest",
     )
-    if value["schema_version"] != "1.0.0" or value["kind"] != "RECONCILIATION_RUNTIME_TRUST":
+    if (
+        value["schema_version"] != "1.0.0"
+        or value["kind"] != "RECONCILIATION_RUNTIME_TRUST"
+    ):
         raise FleetRuntimeTrustError("reconciliation runtime manifest version/kind mismatch")
     if value["repository"] != config.repository:
         raise FleetRuntimeTrustError("reconciliation repository substitution denied")
@@ -313,7 +345,10 @@ def _verifier_identity_digest(
 def _immutable_output_set(paths: Mapping[str, Path], payloads: Mapping[str, bytes]) -> None:
     root = paths["root"]
     root.mkdir(parents=True, exist_ok=True)
-    targets = {name: paths[name] for name in ("verification", "reconciliation", "pins", "receipt")}
+    targets = {
+        name: paths[name]
+        for name in ("verification", "reconciliation", "pins", "receipt")
+    }
     existing = {name: path.is_file() for name, path in targets.items()}
     if any(existing.values()) and not all(existing.values()):
         raise FleetRuntimeTrustError("partial runtime trust output set denied")
@@ -324,7 +359,9 @@ def _immutable_output_set(paths: Mapping[str, Path], payloads: Mapping[str, byte
             except OSError as exc:
                 raise FleetRuntimeTrustError("existing trust output unreadable") from exc
             if current != payloads[name]:
-                raise FleetRuntimeTrustError("immutable runtime trust output substitution denied")
+                raise FleetRuntimeTrustError(
+                    "immutable runtime trust output substitution denied"
+                )
         return
 
     created: list[Path] = []
@@ -348,7 +385,9 @@ def _immutable_output_set(paths: Mapping[str, Path], payloads: Mapping[str, byte
                     pass
         for target in targets.values():
             if not target.is_file():
-                raise FleetRuntimeTrustError("runtime trust output materialization incomplete")
+                raise FleetRuntimeTrustError(
+                    "runtime trust output materialization incomplete"
+                )
     except Exception:
         for target in created:
             try:
@@ -406,18 +445,30 @@ def provision_runtime_trust(
     }
     outputs = _physical_output_paths(repo_root, physical_output_root)
 
-    verification_manifest, _, verification_manifest_digest = _read_json(
-        paths["verification_manifest"]
-    )
-    verification_anchor, verification_anchor_raw, _ = _read_json(
-        paths["verification_anchor"]
-    )
-    reconciliation_manifest, _, reconciliation_manifest_digest = _read_json(
-        paths["reconciliation_manifest"]
-    )
-    reconciliation_anchor, reconciliation_anchor_raw, _ = _read_json(
-        paths["reconciliation_anchor"]
-    )
+    (
+        verification_manifest,
+        verification_manifest_raw,
+        verification_manifest_digest,
+        verification_manifest_file_digest,
+    ) = _read_json(paths["verification_manifest"])
+    (
+        verification_anchor,
+        verification_anchor_raw,
+        _,
+        verification_anchor_file_digest,
+    ) = _read_json(paths["verification_anchor"])
+    (
+        reconciliation_manifest,
+        reconciliation_manifest_raw,
+        reconciliation_manifest_digest,
+        reconciliation_manifest_file_digest,
+    ) = _read_json(paths["reconciliation_manifest"])
+    (
+        reconciliation_anchor,
+        reconciliation_anchor_raw,
+        _,
+        reconciliation_anchor_file_digest,
+    ) = _read_json(paths["reconciliation_anchor"])
 
     verifier_implementation_digest = _sha256_file(paths["verifier_implementation"])
     reconciliation_implementation_digest = _sha256_file(
@@ -455,7 +506,9 @@ def provision_runtime_trust(
         anchor_digest=verification_anchor_digest,
     )
     verification_pins = VerificationTrustPins(
-        verifier_id=_text(verification_manifest["verifier_id"], "verifier_id", limit=256),
+        verifier_id=_text(
+            verification_manifest["verifier_id"], "verifier_id", limit=256
+        ),
         verifier_identity_digest=verifier_identity_digest,
         verifier_implementation_digest=verifier_implementation_digest,
         trust_anchor_id=_text(
@@ -464,7 +517,9 @@ def provision_runtime_trust(
         trust_anchor_digest=verification_anchor_digest,
     ).validate()
     reconciliation_pins = ReconciliationTrustPins(
-        source_id=_text(reconciliation_manifest["source_id"], "source_id", limit=256),
+        source_id=_text(
+            reconciliation_manifest["source_id"], "source_id", limit=256
+        ),
         source_instance_id=_text(
             reconciliation_manifest["source_instance_id"],
             "source_instance_id",
@@ -513,7 +568,8 @@ def provision_runtime_trust(
         "asserts_fleet_closure": False,
     }
     receipt_id = sha256(
-        b"LION/F005-I-RUNTIME-TRUST-RECEIPT/1\0" + canonical_json(receipt_payload)
+        b"LION/F005-I-RUNTIME-TRUST-RECEIPT/1\0"
+        + canonical_json(receipt_payload)
     ).hexdigest()
     receipt = RuntimeTrustProvisioningReceipt(
         schema_version="1.0.0",
@@ -521,6 +577,21 @@ def provision_runtime_trust(
         **receipt_payload,
     ).validate()
     receipt_bytes = canonical_json(asdict(receipt)) + b"\n"
+
+    # Re-observe every external input immediately before durable output creation.
+    # Any change makes the entire provisioning attempt fail closed.
+    _assert_unchanged(paths["verification_manifest"], verification_manifest_file_digest)
+    _assert_unchanged(paths["verification_anchor"], verification_anchor_file_digest)
+    _assert_unchanged(paths["reconciliation_manifest"], reconciliation_manifest_file_digest)
+    _assert_unchanged(paths["reconciliation_anchor"], reconciliation_anchor_file_digest)
+    _assert_unchanged(paths["verifier_implementation"], verifier_implementation_digest)
+    _assert_unchanged(
+        paths["reconciliation_implementation"], reconciliation_implementation_digest
+    )
+    if sha256(verification_manifest_raw).hexdigest() != verification_manifest_file_digest:
+        raise FleetRuntimeTrustError("verification manifest observation mismatch")
+    if sha256(reconciliation_manifest_raw).hexdigest() != reconciliation_manifest_file_digest:
+        raise FleetRuntimeTrustError("reconciliation manifest observation mismatch")
 
     _immutable_output_set(
         outputs,
@@ -562,8 +633,12 @@ def main(argv: list[str] | None = None) -> int:
         expected_verifier_id=args.expected_verifier_id,
         expected_verification_trust_anchor_id=args.expected_verification_trust_anchor_id,
         expected_reconciliation_source_id=args.expected_reconciliation_source_id,
-        expected_reconciliation_source_instance_id=args.expected_reconciliation_source_instance_id,
-        expected_reconciliation_trust_anchor_id=args.expected_reconciliation_trust_anchor_id,
+        expected_reconciliation_source_instance_id=(
+            args.expected_reconciliation_source_instance_id
+        ),
+        expected_reconciliation_trust_anchor_id=(
+            args.expected_reconciliation_trust_anchor_id
+        ),
     ).validate()
     receipt = provision_runtime_trust(
         config,
