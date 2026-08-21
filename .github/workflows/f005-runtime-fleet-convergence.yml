@@ -1,0 +1,54 @@
+name: F005 Runtime Fleet Convergence
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA to bind
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA to bind
+        required: true
+        type: string
+      snapshot_path:
+        description: Absolute path to authoritative runtime snapshot JSON on the LION runtime runner
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-fleet-convergence:
+    name: F005 Runtime Fleet Convergence Evidence
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Compile runtime convergence verifier
+        run: python -m compileall -q cyber_lion/contracts/fleet_runtime_convergence.py cyber_lion/enterprise/fleet_runtime_convergence.py
+      - name: Run runtime convergence contract tests
+        run: python -m unittest cyber_lion.tests.test_fleet_runtime_convergence -v
+      - name: Verify authoritative runtime convergence snapshot
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          SNAPSHOT_PATH: ${{ inputs.snapshot_path }}
+        run: |
+          test -f "$SNAPSHOT_PATH"
+          python -m cyber_lion.enterprise.fleet_runtime_convergence \
+            --snapshot "$SNAPSHOT_PATH" \
+            --repository "DonkeyJJLove/ai_platform" \
+            --expected-master "$EXPECTED_MASTER" \
+            --expected-master-tree "$EXPECTED_MASTER_TREE" \
+            --max-age-seconds 300 | tee /tmp/f005-runtime-convergence-receipt.json
+      - name: Publish receipt to step summary
+        run: |
+          echo '### F005 Runtime Fleet Convergence' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/f005-runtime-convergence-receipt.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
