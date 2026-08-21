@@ -102,21 +102,45 @@ class RuntimeCompositionTests(unittest.TestCase):
         coordination = sqlite3.connect(self.paths["coordination"])
         reconciliation = sqlite3.connect(self.paths["reconciliation"])
         try:
-            status_tables = {row[0] for row in status.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            coordination_tables = {row[0] for row in coordination.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            reconciliation_tables = {row[0] for row in reconciliation.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            self.assertTrue(set(composition_module._STATUS_SCHEMA).issubset(status_tables))
-            self.assertTrue(set(composition_module._COORDINATION_SCHEMA).issubset(coordination_tables))
-            self.assertTrue(set(composition_module._RECONCILIATION_SCHEMA).issubset(reconciliation_tables))
             self.assertEqual(status.execute("SELECT COUNT(*) FROM fleet_identity").fetchone()[0], 0)
             self.assertEqual(status.execute("SELECT COUNT(*) FROM fleet_runtime").fetchone()[0], 0)
             self.assertEqual(status.execute("SELECT COUNT(*) FROM fleet_receipt").fetchone()[0], 0)
-            self.assertEqual(coordination.execute("SELECT COUNT(*) FROM fleet_coordination_mission").fetchone()[0], 0)
-            self.assertEqual(reconciliation.execute("SELECT COUNT(*) FROM reconciliation_report").fetchone()[0], 0)
+            self.assertEqual(
+                coordination.execute(
+                    "SELECT COUNT(*) FROM fleet_coordination_mission"
+                ).fetchone()[0],
+                0,
+            )
+            self.assertEqual(
+                reconciliation.execute(
+                    "SELECT COUNT(*) FROM reconciliation_report"
+                ).fetchone()[0],
+                0,
+            )
         finally:
             status.close()
             coordination.close()
             reconciliation.close()
+
+    def test_canonical_schema_is_derived_from_store_constructors(self):
+        canonical = composition_module._derive_canonical_schema_fingerprints(
+            self.config(),
+            verification_source=composition_module.FailClosedVerificationSource(),
+            clock=lambda: NOW,
+        )
+        status_names = {
+            item["name"] for item in canonical["status"]["objects"]
+        }
+        coordination_names = {
+            item["name"] for item in canonical["coordination"]["objects"]
+        }
+        self.assertIn("fleet_source_batch", status_names)
+        self.assertIn("fleet_source_observation", status_names)
+        self.assertIn("fleet_source_checkpoint", status_names)
+        self.assertIn("fleet_event_no_update", status_names)
+        self.assertIn("fleet_coordination_dependency", coordination_names)
+        self.assertIn("fleet_coordination_plan", coordination_names)
+        self.assertIn("fleet_coordination_plan_no_update", coordination_names)
 
     def test_bootstrap_reopen_preserves_semantic_state(self):
         first = self.bootstrap()
@@ -144,28 +168,81 @@ class RuntimeCompositionTests(unittest.TestCase):
         self.root.mkdir(parents=True)
         self.paths["status"].touch()
         with self.assertRaises(FleetRuntimeCompositionError):
-            open_runtime_composition(self.config(), clock=lambda: NOW, physical_paths=self.paths)
+            open_runtime_composition(
+                self.config(), clock=lambda: NOW, physical_paths=self.paths
+            )
 
-    def test_registry_instance_substitution_is_denied_on_reopen(self):
+    def test_registry_instance_substitution_is_denied_before_reopen(self):
         self.bootstrap()
         wrong = self.config(registry_instance_id="other-registry")
-        with self.assertRaises(Exception):
+        with self.assertRaises(FleetRuntimeCompositionError):
             open_runtime_composition(wrong, clock=lambda: NOW, physical_paths=self.paths)
 
-    def test_coordinator_instance_substitution_is_denied_on_reopen(self):
+    def test_coordinator_instance_substitution_is_denied_before_reopen(self):
         self.bootstrap()
         wrong = self.config(coordinator_instance_id="other-coordinator")
-        with self.assertRaises(Exception):
+        with self.assertRaises(FleetRuntimeCompositionError):
             open_runtime_composition(wrong, clock=lambda: NOW, physical_paths=self.paths)
 
-    def test_schema_conflict_is_denied_not_reinitialized(self):
+    def test_missing_canonical_table_is_denied_without_silent_repair(self):
         self.bootstrap()
         conn = sqlite3.connect(self.paths["status"])
-        conn.execute("DROP TABLE fleet_runtime")
+        conn.execute("DROP TABLE fleet_source_checkpoint")
+        conn.commit()
+        conn.close()
+
+        with self.assertRaises(FleetRuntimeCompositionError):
+            open_runtime_composition(
+                self.config(), clock=lambda: NOW, physical_paths=self.paths
+            )
+
+        conn = sqlite3.connect(self.paths["status"])
+        try:
+            names = {
+                row[0]
+                for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )
+            }
+            self.assertNotIn("fleet_source_checkpoint", names)
+        finally:
+            conn.close()
+
+    def test_missing_canonical_column_is_denied(self):
+        self.bootstrap()
+        conn = sqlite3.connect(self.paths["status"])
+        conn.execute("PRAGMA foreign_keys=OFF")
+        conn.execute("ALTER TABLE fleet_mission RENAME TO fleet_mission_original")
+        conn.execute("CREATE TABLE fleet_mission(mission_id TEXT PRIMARY KEY)")
+        conn.execute("DROP TABLE fleet_mission_original")
         conn.commit()
         conn.close()
         with self.assertRaises(FleetRuntimeCompositionError):
-            open_runtime_composition(self.config(), clock=lambda: NOW, physical_paths=self.paths)
+            open_runtime_composition(
+                self.config(), clock=lambda: NOW, physical_paths=self.paths
+            )
+
+    def test_missing_canonical_trigger_is_denied(self):
+        self.bootstrap()
+        conn = sqlite3.connect(self.paths["status"])
+        conn.execute("DROP TRIGGER fleet_event_no_update")
+        conn.commit()
+        conn.close()
+        with self.assertRaises(FleetRuntimeCompositionError):
+            open_runtime_composition(
+                self.config(), clock=lambda: NOW, physical_paths=self.paths
+            )
+
+    def test_altered_canonical_schema_with_extra_object_is_denied(self):
+        self.bootstrap()
+        conn = sqlite3.connect(self.paths["reconciliation"])
+        conn.execute("CREATE TABLE unexpected_schema_object(value TEXT)")
+        conn.commit()
+        conn.close()
+        with self.assertRaises(FleetRuntimeCompositionError):
+            open_runtime_composition(
+                self.config(), clock=lambda: NOW, physical_paths=self.paths
+            )
 
     def test_configuration_digest_binds_repository_instances_and_trust_pins(self):
         original = self.config()
@@ -178,12 +255,15 @@ class RuntimeCompositionTests(unittest.TestCase):
                 trust_anchor_id=RPINS.trust_anchor_id,
             )
         )
+        changed_repository = self.config(repository="DonkeyJJLove/other")
         self.assertNotEqual(original.digest(), changed.digest())
         self.assertNotEqual(original.digest(), changed_pins.digest())
+        self.assertNotEqual(original.digest(), changed_repository.digest())
 
-    def test_composition_does_not_duplicate_persistence_schema_or_fabricate_state(self):
+    def test_composition_does_not_duplicate_persistence_ddl_or_fabricate_state(self):
         source = inspect.getsource(composition_module)
-        self.assertNotIn("CREATE TABLE", source)
+        self.assertNotIn("CREATE TABLE IF NOT EXISTS", source)
+        self.assertNotIn("CREATE TRIGGER IF NOT EXISTS", source)
         for forbidden in (
             ".register_identity(",
             ".bind_runtime(",
