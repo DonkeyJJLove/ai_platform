@@ -2,19 +2,18 @@ from __future__ import annotations
 
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from cyber_lion.contracts.fleet_runtime_trust import (
-    F005_H_PINS_PATH,
-    PROVISIONING_RECEIPT_PATH,
-    RECONCILIATION_TRUST_PATH,
     REPOSITORY,
     RUNTIME_INSTANCE_ID,
-    VERIFICATION_TRUST_PATH,
     RuntimeTrustProvisioningConfig,
 )
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.enterprise.fleet_runtime_trust import (
     FleetRuntimeTrustError,
     provision_runtime_trust,
@@ -24,10 +23,14 @@ from cyber_lion.enterprise.verifier_identity_runtime import RUNTIME_FACTORY_VERS
 
 MASTER = sha256(b"F005-I-test-master").hexdigest()[:40]
 TREE = sha256(b"F005-I-test-tree").hexdigest()[:40]
+DEPLOYMENT_ROOT = r"C:\Users\d2j3\Documents\LION\runtime\f005"
 
 
 class RuntimeTrustProvisioningTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.env = mock.patch.dict(os.environ, {"LION_FLEET_RUNTIME_ROOT": DEPLOYMENT_ROOT}, clear=False)
+        self.env.start()
+        self.logical = resolve_fleet_runtime_paths()
         self.tmp = tempfile.TemporaryDirectory()
         self.base = Path(self.tmp.name)
         self.repo = self.base / "repo"
@@ -74,6 +77,7 @@ class RuntimeTrustProvisioningTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
+        self.env.stop()
 
     @staticmethod
     def _write_json(path: Path, value: dict) -> None:
@@ -273,10 +277,10 @@ class RuntimeTrustProvisioningTests(unittest.TestCase):
         self.assertTrue(
             config.provisioning_receipt_path.endswith("trust-provisioning-receipt.json")
         )
-        self.assertEqual(config.verification_trust_path, VERIFICATION_TRUST_PATH)
-        self.assertEqual(config.reconciliation_trust_path, RECONCILIATION_TRUST_PATH)
-        self.assertEqual(config.f005_h_pins_path, F005_H_PINS_PATH)
-        self.assertEqual(config.provisioning_receipt_path, PROVISIONING_RECEIPT_PATH)
+        self.assertEqual(config.verification_trust_path, self.logical.verification_trust_path)
+        self.assertEqual(config.reconciliation_trust_path, self.logical.reconciliation_trust_path)
+        self.assertEqual(config.f005_h_pins_path, self.logical.f005_h_pins_path)
+        self.assertEqual(config.provisioning_receipt_path, self.logical.trust_provisioning_receipt_path)
 
 
 if __name__ == "__main__":

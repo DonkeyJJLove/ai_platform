@@ -3,17 +3,17 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
 from cyber_lion.contracts.fleet_runtime_reconciliation_ingestion import (
-    RECONCILIATION_DB_PATH,
-    RECONCILIATION_TRUST_PATH,
-    OBSERVATION_PATH,
     RuntimeReconciliationIngestionConfig,
 )
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.enterprise.fleet_reconciliation import ReconciliationStore
 from cyber_lion.enterprise.fleet_runtime_reconciliation_ingestion import (
     RuntimeReconciliationIngestionError,
@@ -23,6 +23,7 @@ from cyber_lion.enterprise.fleet_runtime_reconciliation_ingestion import (
 REPO = "DonkeyJJLove/ai_platform"
 MASTER = "a" * 40
 TREE = "b" * 40
+DEPLOYMENT_ROOT = r"C:\Users\d2j3\Documents\LION\runtime\f005"
 PINS = ReconciliationTrustPins(
     source_id="lion-runtime-reconciliation-source",
     source_instance_id="lion-runtime-reconciliation-source-01",
@@ -33,6 +34,9 @@ PINS = ReconciliationTrustPins(
 
 class RuntimeReconciliationIngestionTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.env = mock.patch.dict(os.environ, {"LION_FLEET_RUNTIME_ROOT": DEPLOYMENT_ROOT}, clear=False)
+        self.env.start()
+        self.logical = resolve_fleet_runtime_paths()
         self.tmp = tempfile.TemporaryDirectory()
         root = Path(self.tmp.name)
         self.repo_root = root / "repo"
@@ -53,6 +57,7 @@ class RuntimeReconciliationIngestionTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
+        self.env.stop()
 
     def observation_value(self, *, revision: int = 1, master: str = MASTER, observed_at: str = "2026-08-21T20:45:00+00:00", branches=None):
         if branches is None:
@@ -102,8 +107,8 @@ class RuntimeReconciliationIngestionTests(unittest.TestCase):
     def ingest(self, config):
         return ingest_repository_inventory(
             config,
-            observation_file=OBSERVATION_PATH,
-            reconciliation_trust_file=RECONCILIATION_TRUST_PATH,
+            observation_file=self.logical.repository_inventory_path,
+            reconciliation_trust_file=self.logical.reconciliation_trust_path,
             repository_root=str(self.repo_root),
             physical_paths={
                 "observation": self.observation,
@@ -114,9 +119,9 @@ class RuntimeReconciliationIngestionTests(unittest.TestCase):
 
     def test_contract_binds_exact_runtime_paths(self):
         cfg = self.config("2" * 64)
-        self.assertEqual(cfg.reconciliation_db_path, RECONCILIATION_DB_PATH)
-        self.assertEqual(cfg.observation_path, OBSERVATION_PATH)
-        self.assertEqual(cfg.reconciliation_trust_path, RECONCILIATION_TRUST_PATH)
+        self.assertEqual(cfg.reconciliation_db_path, self.logical.reconciliation_db_path)
+        self.assertEqual(cfg.observation_path, self.logical.repository_inventory_path)
+        self.assertEqual(cfg.reconciliation_trust_path, self.logical.reconciliation_trust_path)
 
     def test_first_ingest_records_exact_one_inventory_head_only(self):
         digest = self.write_observation(self.observation_value())

@@ -6,7 +6,7 @@ authority, leases, effects, or closure evidence.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 import json
 from pathlib import PureWindowsPath
@@ -15,11 +15,7 @@ from typing import Any, Mapping
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
 from cyber_lion.contracts.fleet_status import VerificationTrustPins
-
-RUNTIME_ROOT = r"C:\LION\runtime\f005"
-STATUS_DB_PATH = RUNTIME_ROOT + r"\status.sqlite"
-COORDINATION_DB_PATH = RUNTIME_ROOT + r"\coordination.sqlite"
-RECONCILIATION_DB_PATH = RUNTIME_ROOT + r"\reconciliation.sqlite"
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -73,10 +69,10 @@ class RuntimeCompositionConfig:
     coordinator_instance_id: str
     verification_pins: VerificationTrustPins
     reconciliation_pins: ReconciliationTrustPins
-    runtime_root: str = RUNTIME_ROOT
-    status_db_path: str = STATUS_DB_PATH
-    coordination_db_path: str = COORDINATION_DB_PATH
-    reconciliation_db_path: str = RECONCILIATION_DB_PATH
+    runtime_root: str = field(default_factory=lambda: resolve_fleet_runtime_paths().runtime_root)
+    status_db_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().status_db_path)
+    coordination_db_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().coordination_db_path)
+    reconciliation_db_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().reconciliation_db_path)
 
     def validate(self) -> "RuntimeCompositionConfig":
         if not _REPO.fullmatch(_text(self.repository, "repository")):
@@ -92,10 +88,11 @@ class RuntimeCompositionConfig:
             raise FleetRuntimeCompositionContractError("reconciliation_pins must use exact contract type")
         self.verification_pins.validate()
         self.reconciliation_pins.validate()
-        _exact_windows_path(self.runtime_root, RUNTIME_ROOT, "runtime_root")
-        _exact_windows_path(self.status_db_path, STATUS_DB_PATH, "status_db_path")
-        _exact_windows_path(self.coordination_db_path, COORDINATION_DB_PATH, "coordination_db_path")
-        _exact_windows_path(self.reconciliation_db_path, RECONCILIATION_DB_PATH, "reconciliation_db_path")
+        paths = resolve_fleet_runtime_paths()
+        _exact_windows_path(self.runtime_root, paths.runtime_root, "runtime_root")
+        _exact_windows_path(self.status_db_path, paths.status_db_path, "status_db_path")
+        _exact_windows_path(self.coordination_db_path, paths.coordination_db_path, "coordination_db_path")
+        _exact_windows_path(self.reconciliation_db_path, paths.reconciliation_db_path, "reconciliation_db_path")
         paths = {
             PureWindowsPath(self.status_db_path),
             PureWindowsPath(self.coordination_db_path),
@@ -154,10 +151,11 @@ class RuntimeCompositionReceipt:
         _sha40(self.current_master, "current_master")
         _sha40(self.current_master_tree, "current_master_tree")
         _text(self.composition_instance_id, "composition_instance_id")
-        _exact_windows_path(self.runtime_root, RUNTIME_ROOT, "runtime_root")
-        _exact_windows_path(self.status_db_path, STATUS_DB_PATH, "status_db_path")
-        _exact_windows_path(self.coordination_db_path, COORDINATION_DB_PATH, "coordination_db_path")
-        _exact_windows_path(self.reconciliation_db_path, RECONCILIATION_DB_PATH, "reconciliation_db_path")
+        paths = resolve_fleet_runtime_paths()
+        _exact_windows_path(self.runtime_root, paths.runtime_root, "runtime_root")
+        _exact_windows_path(self.status_db_path, paths.status_db_path, "status_db_path")
+        _exact_windows_path(self.coordination_db_path, paths.coordination_db_path, "coordination_db_path")
+        _exact_windows_path(self.reconciliation_db_path, paths.reconciliation_db_path, "reconciliation_db_path")
         for name in ("status_mission_count", "coordination_mission_count", "reconciliation_inventory_count"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:

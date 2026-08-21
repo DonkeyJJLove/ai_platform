@@ -2,21 +2,20 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import inspect
+import os
 from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest import mock
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
 from cyber_lion.contracts.fleet_runtime_composition import (
-    COORDINATION_DB_PATH,
-    RECONCILIATION_DB_PATH,
-    RUNTIME_ROOT,
-    STATUS_DB_PATH,
     FleetRuntimeCompositionContractError,
     RuntimeCompositionConfig,
 )
 from cyber_lion.contracts.fleet_status import VerificationTrustPins
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.enterprise import fleet_runtime_composition as composition_module
 from cyber_lion.enterprise.fleet_runtime_composition import (
     FleetRuntimeCompositionError,
@@ -28,6 +27,7 @@ REPO = "DonkeyJJLove/ai_platform"
 MASTER = "6" * 40
 TREE = "9" * 40
 NOW = datetime(2026, 8, 21, 18, 0, tzinfo=timezone.utc)
+DEPLOYMENT_ROOT = r"C:\Users\d2j3\Documents\LION\runtime\f005"
 VPINS = VerificationTrustPins(
     verifier_id="F005-H-verifier",
     verifier_identity_digest="1" * 64,
@@ -45,6 +45,9 @@ RPINS = ReconciliationTrustPins(
 
 class RuntimeCompositionTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.env = mock.patch.dict(os.environ, {"LION_FLEET_RUNTIME_ROOT": DEPLOYMENT_ROOT}, clear=False)
+        self.env.start()
+        self.logical = resolve_fleet_runtime_paths()
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name) / "runtime" / "f005"
         self.paths = {
@@ -56,6 +59,7 @@ class RuntimeCompositionTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
+        self.env.stop()
 
     def config(self, **overrides) -> RuntimeCompositionConfig:
         values = dict(
@@ -86,12 +90,12 @@ class RuntimeCompositionTests(unittest.TestCase):
 
     def test_contract_binds_exact_windows_runtime_paths(self):
         config = self.config()
-        self.assertEqual(config.runtime_root, RUNTIME_ROOT)
-        self.assertEqual(config.status_db_path, STATUS_DB_PATH)
-        self.assertEqual(config.coordination_db_path, COORDINATION_DB_PATH)
-        self.assertEqual(config.reconciliation_db_path, RECONCILIATION_DB_PATH)
+        self.assertEqual(config.runtime_root, self.logical.runtime_root)
+        self.assertEqual(config.status_db_path, self.logical.status_db_path)
+        self.assertEqual(config.coordination_db_path, self.logical.coordination_db_path)
+        self.assertEqual(config.reconciliation_db_path, self.logical.reconciliation_db_path)
         with self.assertRaises(FleetRuntimeCompositionContractError):
-            self.config(status_db_path=r"C:\LION\runtime\other\status.sqlite")
+            self.config(status_db_path=r"D:\other\runtime\status.sqlite")
 
     def test_bootstrap_uses_canonical_stores_and_empty_state_is_not_closable(self):
         receipt = self.bootstrap()
@@ -293,7 +297,9 @@ class RuntimeCompositionTests(unittest.TestCase):
 
     def test_workflow_binds_exact_external_pins_path_and_denies_repository_file(self):
         workflow = self.workflow_source()
-        self.assertIn("C:\\LION\\runtime\\f005\\trust\\f005-h-pins.json", workflow)
+        self.assertIn("LION_FLEET_RUNTIME_ROOT", workflow)
+        self.assertIn("trust\\f005-h-pins.json", workflow)
+        self.assertNotIn("C:\\LION\\runtime\\f005", workflow)
         self.assertIn("if not pins_path.is_absolute()", workflow)
         self.assertIn("if not pins_path.is_file()", workflow)
         self.assertIn("resolved.relative_to(workspace)", workflow)

@@ -72,7 +72,7 @@ jobs:
       run:
         shell: pwsh
     env:
-      TRUST_ROOT: 'C:\LION\runtime\f005\trust'
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -172,17 +172,19 @@ jobs:
 
       - name: Verify exact F005-H compatible outputs
         run: |
+          $trustRoot = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'trust'
           foreach ($path in @(
-            'C:\LION\runtime\f005\trust\verification-trust.json',
-            'C:\LION\runtime\f005\trust\reconciliation-trust.json',
-            'C:\LION\runtime\f005\trust\f005-h-pins.json',
-            'C:\LION\runtime\f005\trust\trust-provisioning-receipt.json'
+            (Join-Path $trustRoot 'verification-trust.json'),
+            (Join-Path $trustRoot 'reconciliation-trust.json'),
+            (Join-Path $trustRoot 'f005-h-pins.json'),
+            (Join-Path $trustRoot 'trust-provisioning-receipt.json')
           )) {
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
               throw "runtime trust output missing: $path"
             }
           }
-          $pins = Get-Content -LiteralPath 'C:\LION\runtime\f005\trust\f005-h-pins.json' -Raw | ConvertFrom-Json
+          $pinsPath = Join-Path $trustRoot 'f005-h-pins.json'
+          $pins = Get-Content -LiteralPath $pinsPath -Raw | ConvertFrom-Json
           if ($null -eq $pins.verification -or $null -eq $pins.reconciliation) {
             throw 'F005-H pins contract incomplete'
           }

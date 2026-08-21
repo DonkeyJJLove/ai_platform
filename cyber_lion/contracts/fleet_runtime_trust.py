@@ -6,7 +6,7 @@ operational authority.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 import json
 from pathlib import PureWindowsPath
@@ -15,14 +15,10 @@ from typing import Any, Mapping
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
 from cyber_lion.contracts.fleet_status import VerificationTrustPins
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
 RUNTIME_INSTANCE_ID = "lion-runtime-01"
-TRUST_ROOT = r"C:\LION\runtime\f005\trust"
-VERIFICATION_TRUST_PATH = TRUST_ROOT + r"\verification-trust.json"
-RECONCILIATION_TRUST_PATH = TRUST_ROOT + r"\reconciliation-trust.json"
-F005_H_PINS_PATH = TRUST_ROOT + r"\f005-h-pins.json"
-PROVISIONING_RECEIPT_PATH = TRUST_ROOT + r"\trust-provisioning-receipt.json"
 
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -85,11 +81,11 @@ class RuntimeTrustProvisioningConfig:
     expected_reconciliation_source_id: str
     expected_reconciliation_source_instance_id: str
     expected_reconciliation_trust_anchor_id: str
-    trust_root: str = TRUST_ROOT
-    verification_trust_path: str = VERIFICATION_TRUST_PATH
-    reconciliation_trust_path: str = RECONCILIATION_TRUST_PATH
-    f005_h_pins_path: str = F005_H_PINS_PATH
-    provisioning_receipt_path: str = PROVISIONING_RECEIPT_PATH
+    trust_root: str = field(default_factory=lambda: resolve_fleet_runtime_paths().trust_root)
+    verification_trust_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().verification_trust_path)
+    reconciliation_trust_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().reconciliation_trust_path)
+    f005_h_pins_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().f005_h_pins_path)
+    provisioning_receipt_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().trust_provisioning_receipt_path)
 
     def validate(self) -> "RuntimeTrustProvisioningConfig":
         if self.repository != REPOSITORY:
@@ -106,21 +102,22 @@ class RuntimeTrustProvisioningConfig:
             "expected_reconciliation_trust_anchor_id",
         ):
             _text(getattr(self, name), name, limit=256)
-        _exact_windows_path(self.trust_root, TRUST_ROOT, "trust_root")
+        paths = resolve_fleet_runtime_paths()
+        _exact_windows_path(self.trust_root, paths.trust_root, "trust_root")
         _exact_windows_path(
             self.verification_trust_path,
-            VERIFICATION_TRUST_PATH,
+            paths.verification_trust_path,
             "verification_trust_path",
         )
         _exact_windows_path(
             self.reconciliation_trust_path,
-            RECONCILIATION_TRUST_PATH,
+            paths.reconciliation_trust_path,
             "reconciliation_trust_path",
         )
-        _exact_windows_path(self.f005_h_pins_path, F005_H_PINS_PATH, "f005_h_pins_path")
+        _exact_windows_path(self.f005_h_pins_path, paths.f005_h_pins_path, "f005_h_pins_path")
         _exact_windows_path(
             self.provisioning_receipt_path,
-            PROVISIONING_RECEIPT_PATH,
+            paths.trust_provisioning_receipt_path,
             "provisioning_receipt_path",
         )
         outputs = {

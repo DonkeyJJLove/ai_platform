@@ -40,7 +40,7 @@ jobs:
       run:
         shell: pwsh
     env:
-      SNAPSHOT_PATH: 'C:\LION\runtime\f005\fleet-convergence-snapshot.json'
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -79,11 +79,19 @@ jobs:
           COORDINATION_DB: ${{ inputs.coordination_db_path }}
           RECONCILIATION_DB: ${{ inputs.reconciliation_db_path }}
         run: |
+          $expected = @{
+            status = (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'status.sqlite')
+            coordination = (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'coordination.sqlite')
+            reconciliation = (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation.sqlite')
+          }
           foreach ($entry in @(
             @{ Name = 'status'; Path = $env:STATUS_DB },
             @{ Name = 'coordination'; Path = $env:COORDINATION_DB },
             @{ Name = 'reconciliation'; Path = $env:RECONCILIATION_DB }
           )) {
+            if ($entry.Path -ne $expected[$entry.Name]) {
+              throw "$($entry.Name) runtime source path substitution denied: $($entry.Path)"
+            }
             if (-not [System.IO.Path]::IsPathFullyQualified($entry.Path)) {
               throw "$($entry.Name) runtime source path is not absolute: $($entry.Path)"
             }
@@ -101,6 +109,7 @@ jobs:
           COORDINATION_DB: ${{ inputs.coordination_db_path }}
           RECONCILIATION_DB: ${{ inputs.reconciliation_db_path }}
         run: |
+          $snapshotPath = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'fleet-convergence-snapshot.json'
           python -m cyber_lion.enterprise.fleet_runtime_snapshot_source `
             --repository "DonkeyJJLove/ai_platform" `
             --expected-master "$env:EXPECTED_MASTER" `
@@ -109,8 +118,8 @@ jobs:
             --status-db "$env:STATUS_DB" `
             --coordination-db "$env:COORDINATION_DB" `
             --reconciliation-db "$env:RECONCILIATION_DB" `
-            --output "$env:SNAPSHOT_PATH"
-          if (-not (Test-Path -LiteralPath $env:SNAPSHOT_PATH -PathType Leaf)) {
+            --output "$snapshotPath"
+          if (-not (Test-Path -LiteralPath $snapshotPath -PathType Leaf)) {
             throw "authoritative runtime snapshot was not materialized"
           }
 
@@ -120,8 +129,9 @@ jobs:
           EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
         run: |
           $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-convergence-receipt.json"
+          $snapshotPath = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'fleet-convergence-snapshot.json'
           python -m cyber_lion.enterprise.fleet_runtime_convergence `
-            --snapshot "$env:SNAPSHOT_PATH" `
+            --snapshot "$snapshotPath" `
             --repository "DonkeyJJLove/ai_platform" `
             --expected-master "$env:EXPECTED_MASTER" `
             --expected-master-tree "$env:EXPECTED_MASTER_TREE" `

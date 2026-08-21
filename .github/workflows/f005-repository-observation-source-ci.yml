@@ -16,6 +16,8 @@ jobs:
   observation-source-ci:
     name: F005-K Repository Observation Source
     runs-on: ubuntu-latest
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -32,7 +34,7 @@ jobs:
       - name: Verify no runtime observation materialized in CI
         shell: bash
         run: |
-          target='C:\LION\runtime\f005\reconciliation-source\repository-'
+          target="${LION_FLEET_RUNTIME_ROOT}\\reconciliation-source\\repository-"
           target+='inventory.json'
           if test -e "$target"; then
             echo "FAIL: runtime observation materialized during CI: $target" >&2

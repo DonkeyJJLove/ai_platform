@@ -39,6 +39,8 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -77,7 +79,7 @@ jobs:
           COORDINATOR_INSTANCE: ${{ inputs.coordinator_instance }}
           PINS_FILE: ${{ inputs.pins_file }}
         run: |
-          $expectedPins = 'C:\LION\runtime\f005\trust\f005-h-pins.json'
+          $expectedPins = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'trust\f005-h-pins.json'
           if ($env:PINS_FILE -ne $expectedPins) {
             throw "runtime trust pins path mismatch: actual=$env:PINS_FILE expected=$expectedPins"
           }
@@ -131,9 +133,9 @@ jobs:
       - name: Verify F005-G compatible runtime store paths
         run: |
           foreach ($path in @(
-            'C:\LION\runtime\f005\status.sqlite',
-            'C:\LION\runtime\f005\coordination.sqlite',
-            'C:\LION\runtime\f005\reconciliation.sqlite'
+            (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'status.sqlite'),
+            (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'coordination.sqlite'),
+            (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation.sqlite')
           )) {
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
               throw "canonical runtime store missing after composition: $path"
