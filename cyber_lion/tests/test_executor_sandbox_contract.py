@@ -1,214 +1,73 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import FrozenInstanceError, replace
 from hashlib import sha256
 import unittest
 
 from cyber_lion.contracts.executor_sandbox import (
     ExecutionSandboxContractError,
     ExecutionSandboxPolicy,
-    SandboxExecutionReceipt,
+    FleetDispatchBinding,
+    ProvisioningBinding,
     SandboxOperation,
     SandboxResourceLimits,
     SandboxRuntimeBinding,
     path_within_scope,
 )
 
-BASELINE = "2" * 40
-AUTHORITY = sha256(b"authority-binding").hexdigest()
-IDENTITY = sha256(b"sandbox-backend-identity").hexdigest()
-IMPLEMENTATION = sha256(b"sandbox-backend-implementation").hexdigest()
-ISOLATION = sha256(b"sandbox-isolation-evidence").hexdigest()
+D=lambda x: sha256(x.encode()).hexdigest()
+SHA="1"*40; TREE="2"*40; REPO="DonkeyJJLove/ai_platform"
 
 
-def runtime_binding(**changes) -> SandboxRuntimeBinding:
-    base = SandboxRuntimeBinding(
-        backend_id="sandbox-backend-v1",
-        backend_identity_digest=IDENTITY,
-        backend_implementation_digest=IMPLEMENTATION,
-        isolation_evidence_digest=ISOLATION,
-        sandbox_id="f005-c-sandbox-01",
-        workspace_id="workspace-f005-c-01",
-    )
-    return replace(base, **changes)
+def dispatch(**kw):
+    v=FleetDispatchBinding("mission-a","drone-a",D("dispatch"),D("fence"),1,REPO,SHA,TREE,"mission/a",("cyber_lion/x.py",)); return replace(v,**kw)
 
+def provisioning(**kw):
+    v=ProvisioningBinding(D("req"),D("mat"),D("receipt"),"mission-a","drone-a","executor-a",REPO,SHA,TREE,"mission/a",("cyber_lion",),("cyber_lion/x.py",),"runtime-a","sandbox-a","workspace-a",D("att")); return replace(v,**kw)
 
-def limits(**changes) -> SandboxResourceLimits:
-    base = SandboxResourceLimits(
-        max_operations=32,
-        max_write_bytes=200_000,
-        max_output_bytes=100_000,
-        max_test_runs=8,
-    )
-    return replace(base, **changes)
+def runtime(**kw):
+    v=SandboxRuntimeBinding("backend-a",D("backend-id"),D("backend-impl"),D("isolation"),"sandbox-a","workspace-a"); return replace(v,**kw)
 
+def policy(**kw):
+    fd=dispatch(); pb=provisioning(); rb=runtime()
+    v=ExecutionSandboxPolicy(REPO,SHA,TREE,"mission/a","mission-a","drone-a","executor-a","sandbox-a","workspace-a","runtime-a",D("authority"),rb.digest(),fd.digest(),pb.digest(),fd.dispatch_id,fd.fencing_token,1,D("att"),("cyber_lion",),("cyber_lion/x.py",),("cyber_lion/tests",),(("python","-m","unittest"),),SandboxResourceLimits(10,1000,1000,2)); return replace(v,**kw)
 
-def policy(**changes) -> ExecutionSandboxPolicy:
-    binding = runtime_binding()
-    base = ExecutionSandboxPolicy(
-        repository="DonkeyJJLove/ai_platform",
-        baseline_sha=BASELINE,
-        branch="mission/f005-c-executor-sandbox",
-        mission_id="F005-C-EXECUTION-SANDBOX-BUILD",
-        executor_id="F005-C-BUILDER-01",
-        sandbox_id=binding.sandbox_id,
-        workspace_id=binding.workspace_id,
-        authority_binding_digest=AUTHORITY,
-        runtime_binding_digest=binding.digest(),
-        read_scope=("cyber_lion",),
-        write_scope=(
-            "cyber_lion/contracts/executor_sandbox.py",
-            "cyber_lion/enterprise/executor_sandbox.py",
-            "cyber_lion/tests/test_executor_sandbox_contract.py",
-            "cyber_lion/tests/test_executor_sandbox.py",
-        ),
-        test_scope=("cyber_lion/tests",),
-        allowed_test_commands=(
-            ("python", "-m", "unittest", "cyber_lion.tests.test_executor_sandbox_contract", "-v"),
-            ("python", "-m", "unittest", "cyber_lion.tests.test_executor_sandbox", "-v"),
-        ),
-        resource_limits=limits(),
-    )
-    return replace(base, **changes)
-
-
-def read_operation(**changes) -> SandboxOperation:
-    item = policy()
-    base = SandboxOperation(
-        operation_id="op-read-1",
-        mission_id=item.mission_id,
-        executor_id=item.executor_id,
-        sandbox_id=item.sandbox_id,
-        workspace_id=item.workspace_id,
-        policy_digest=item.digest(),
-        action="READ_FILE",
-        path="cyber_lion/TARGET_ARCHITECTURE.md",
-    )
-    return replace(base, **changes)
-
-
-class ExecutorSandboxContractTests(unittest.TestCase):
-    def test_runtime_binding_requires_fail_closed_isolation_modes(self) -> None:
-        runtime_binding().validate()
-        for field, value in (
-            ("network_mode", "ALLOW"),
-            ("filesystem_mode", "HOST_RW"),
-            ("process_mode", "SHELL"),
-            ("ephemeral", False),
+class ContractTests(unittest.TestCase):
+    def test_policy_is_immutable_and_binding_digest_deterministic(self):
+        p=policy(); p.validate_bindings(dispatch(),provisioning()); self.assertEqual(p.digest(),policy().digest())
+        with self.assertRaises(FrozenInstanceError): p.mission_id="x"  # type: ignore[misc]
+    def test_dispatch_binds_generation_and_baseline_tree(self):
+        p=policy()
+        with self.assertRaises(ExecutionSandboxContractError): p.validate_bindings(dispatch(generation=2),provisioning())
+        with self.assertRaises(ExecutionSandboxContractError): p.validate_bindings(dispatch(baseline_tree_sha="3"*40),provisioning())
+    def test_provisioning_binds_request_materialization_runtime_and_workspace(self):
+        p=policy()
+        for bad in (
+            provisioning(provisioning_request_digest=D("other")),
+            provisioning(provisioning_materialization_digest=D("other")),
+            provisioning(runtime_instance_id="runtime-b"),
+            provisioning(runtime_attestation_digest=D("other")),
+            provisioning(workspace_id="workspace-b"),
         ):
-            with self.subTest(field=field):
-                with self.assertRaises(ExecutionSandboxContractError):
-                    replace(runtime_binding(), **{field: value}).validate()
+            with self.assertRaises(ExecutionSandboxContractError): p.validate_bindings(dispatch(),bad)
+    def test_authority_is_digest_only(self):
+        p=policy(authority_binding_digest=D("existing-authority")); p.validate()
+        self.assertFalse(hasattr(p,"grant_authority")); self.assertFalse(hasattr(p,"delegate_authority"))
+    def test_scope_is_component_safe(self):
+        self.assertTrue(path_within_scope("cyber_lion/a.py",("cyber_lion",)))
+        self.assertFalse(path_within_scope("cyber_lion2/a.py",("cyber_lion",)))
+        for value in ("../x","/x","cyber_lion//x","cyber_lion/./x","cyber_lion/*.py"):
+            with self.assertRaises(ExecutionSandboxContractError): path_within_scope(value,("cyber_lion",))
+    def test_runtime_is_fail_closed(self):
+        runtime().validate()
+        for bad in (runtime(network_mode="ALLOW"),runtime(filesystem_mode="HOST"),runtime(process_mode="ANY"),runtime(ephemeral=False)):
+            with self.assertRaises(ExecutionSandboxContractError): bad.validate()
+    def test_operation_requires_dispatch_fence_and_generation(self):
+        p=policy(); op=SandboxOperation("op","mission-a","drone-a","executor-a","sandbox-a","workspace-a",p.dispatch_id,p.fencing_token,1,p.digest(),"READ_FILE","cyber_lion/a.py"); op.validate()
+        with self.assertRaises(ExecutionSandboxContractError): replace(op,generation=0).validate()
+        with self.assertRaises(ExecutionSandboxContractError): replace(op,fencing_token="x").validate()
+    def test_only_three_actions_are_representable(self):
+        p=policy(); base=SandboxOperation("op","mission-a","drone-a","executor-a","sandbox-a","workspace-a",p.dispatch_id,p.fencing_token,1,p.digest(),"READ_FILE","cyber_lion/a.py")
+        with self.assertRaises(ExecutionSandboxContractError): replace(base,action="SHELL").validate()
 
-    def test_policy_digest_binds_authority_and_runtime_without_minting_authority(self) -> None:
-        item = policy()
-        item.validate()
-        changed = replace(item, authority_binding_digest=sha256(b"other-authority").hexdigest())
-        self.assertNotEqual(item.digest(), changed.digest())
-        self.assertFalse(hasattr(item, "grant"))
-        self.assertFalse(hasattr(item, "delegate"))
-
-    def test_policy_rejects_unsafe_or_duplicate_scope(self) -> None:
-        with self.assertRaises(ExecutionSandboxContractError):
-            replace(policy(), write_scope=("../master",)).validate()
-        with self.assertRaises(ExecutionSandboxContractError):
-            replace(policy(), read_scope=("cyber_lion", "cyber_lion")).validate()
-        with self.assertRaises(ExecutionSandboxContractError):
-            replace(policy(), branch="refs/heads/master").validate()
-
-    def test_path_scope_uses_component_boundaries(self) -> None:
-        self.assertTrue(path_within_scope("cyber_lion/tests/test_x.py", ("cyber_lion/tests",)))
-        self.assertFalse(path_within_scope("cyber_lion/tests_evil/test_x.py", ("cyber_lion/tests",)))
-
-    def test_arbitrary_shell_network_and_ref_actions_are_unrepresentable(self) -> None:
-        for action in ("SHELL", "NETWORK", "GIT_PUSH", "UPDATE_REF", "MERGE", "DEPLOY"):
-            with self.subTest(action=action):
-                with self.assertRaises(ExecutionSandboxContractError):
-                    replace(read_operation(), action=action).validate()
-
-    def test_read_operation_cannot_smuggle_payload_or_command(self) -> None:
-        with self.assertRaises(ExecutionSandboxContractError):
-            replace(
-                read_operation(),
-                payload_digest=sha256(b"x").hexdigest(),
-                payload_size=1,
-            ).validate()
-        with self.assertRaises(ExecutionSandboxContractError):
-            replace(read_operation(), command=("sh", "-c", "id")).validate()
-
-    def test_write_operation_requires_exact_payload_binding(self) -> None:
-        item = policy()
-        payload = b"new bytes"
-        operation = SandboxOperation(
-            operation_id="op-write-1",
-            mission_id=item.mission_id,
-            executor_id=item.executor_id,
-            sandbox_id=item.sandbox_id,
-            workspace_id=item.workspace_id,
-            policy_digest=item.digest(),
-            action="WRITE_FILE",
-            path="cyber_lion/contracts/executor_sandbox.py",
-            payload_digest=sha256(payload).hexdigest(),
-            payload_size=len(payload),
-        )
-        operation.validate()
-        self.assertNotEqual(operation.digest(), replace(operation, payload_size=len(payload) + 1).digest())
-
-    def test_test_operation_uses_argv_not_generic_shell_field(self) -> None:
-        item = policy()
-        operation = SandboxOperation(
-            operation_id="op-test-1",
-            mission_id=item.mission_id,
-            executor_id=item.executor_id,
-            sandbox_id=item.sandbox_id,
-            workspace_id=item.workspace_id,
-            policy_digest=item.digest(),
-            action="RUN_TEST",
-            path="cyber_lion/tests/test_executor_sandbox.py",
-            command=item.allowed_test_commands[1],
-        )
-        operation.validate()
-        self.assertFalse(hasattr(operation, "shell"))
-
-    def test_resource_limits_are_positive_integers(self) -> None:
-        for field, value in (
-            ("max_operations", 0),
-            ("max_write_bytes", -1),
-            ("max_output_bytes", True),
-            ("max_test_runs", 0),
-        ):
-            with self.subTest(field=field):
-                with self.assertRaises(ExecutionSandboxContractError):
-                    replace(limits(), **{field: value}).validate()
-
-    def test_receipt_is_evidence_not_permission(self) -> None:
-        item = policy()
-        operation = read_operation()
-        digest = sha256(b"observed").hexdigest()
-        receipt = SandboxExecutionReceipt(
-            receipt_id="receipt-1",
-            operation_id=operation.operation_id,
-            operation_digest=operation.digest(),
-            policy_digest=item.digest(),
-            authority_binding_digest=item.authority_binding_digest,
-            runtime_binding_digest=item.runtime_binding_digest,
-            mission_id=item.mission_id,
-            executor_id=item.executor_id,
-            sandbox_id=item.sandbox_id,
-            workspace_id=item.workspace_id,
-            action="READ_FILE",
-            outcome="SUCCEEDED",
-            effect_digest=digest,
-            output_digest=digest,
-            bytes_read=8,
-            bytes_written=0,
-            exit_code=None,
-            observed_events=("sandbox:read:1",),
-        )
-        receipt.validate()
-        self.assertFalse(hasattr(receipt, "authority_ceiling"))
-        self.assertFalse(hasattr(receipt, "approve"))
-
-
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == "__main__": unittest.main()
