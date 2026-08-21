@@ -29,10 +29,46 @@ jobs:
       - name: Run F005-K regressions
         run: |
           python -m unittest cyber_lion.tests.test_fleet_repository_observation_source -v
-      - name: Assert CI-only boundary
+      - name: Verify no runtime observation materialized in CI
         shell: bash
         run: |
-          test ! -e 'C:\LION\runtime\f005\reconciliation-source\repository-inventory.json'
-          grep -q 'class GitHubReadSource' cyber_lion/enterprise/fleet_repository_observation_source.py
-          grep -q 'class AuthoritativeOwnershipProvider' cyber_lion/enterprise/fleet_repository_observation_source.py
-          ! grep -q 'workflow_dispatch.*repository-inventory' .github/workflows/f005-repository-observation-source-ci.yml
+          target='C:\LION\runtime\f005\reconciliation-source\repository-'
+          target+='inventory.json'
+          if test -e "$target"; then
+            echo "FAIL: runtime observation materialized during CI: $target" >&2
+            exit 1
+          fi
+          echo "PASS: runtime observation absent"
+      - name: Verify GitHubReadSource interface present
+        shell: bash
+        run: |
+          if ! grep -Fq 'class GitHubReadSource' cyber_lion/enterprise/fleet_repository_observation_source.py; then
+            echo 'FAIL: GitHubReadSource interface missing' >&2
+            exit 1
+          fi
+          echo 'PASS: GitHubReadSource interface present'
+      - name: Verify AuthoritativeOwnershipProvider interface present
+        shell: bash
+        run: |
+          if ! grep -Fq 'class AuthoritativeOwnershipProvider' cyber_lion/enterprise/fleet_repository_observation_source.py; then
+            echo 'FAIL: AuthoritativeOwnershipProvider interface missing' >&2
+            exit 1
+          fi
+          echo 'PASS: AuthoritativeOwnershipProvider interface present'
+      - name: Verify CI workflow does not invoke observation materialization
+        shell: bash
+        run: |
+          workflow='.github/workflows/f005-repository-observation-source-ci.yml'
+          module='python -m cyber_lion.enterprise.'
+          module+='fleet_repository_observation_source'
+          output='repository-'
+          output+='inventory.json'
+          if grep -Fq "$module" "$workflow"; then
+            echo "FAIL: CI workflow invokes observation producer module" >&2
+            exit 1
+          fi
+          if grep -Fq "$output" "$workflow"; then
+            echo "FAIL: CI workflow contains runtime observation output literal" >&2
+            exit 1
+          fi
+          echo 'PASS: CI workflow cannot materialize runtime observation'
