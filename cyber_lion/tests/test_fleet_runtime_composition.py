@@ -78,6 +78,12 @@ class RuntimeCompositionTests(unittest.TestCase):
             physical_paths=self.paths,
         )
 
+    def workflow_source(self) -> str:
+        repo_root = Path(__file__).resolve().parents[2]
+        return (repo_root / ".github" / "workflows" / "f005-runtime-composition.yml").read_text(
+            encoding="utf-8"
+        )
+
     def test_contract_binds_exact_windows_runtime_paths(self):
         config = self.config()
         self.assertEqual(config.runtime_root, RUNTIME_ROOT)
@@ -273,6 +279,32 @@ class RuntimeCompositionTests(unittest.TestCase):
             ".close_mission(",
         ):
             self.assertNotIn(forbidden, source)
+
+    def test_workflow_uses_external_pins_file_transport(self):
+        workflow = self.workflow_source()
+        self.assertIn("pins_file:", workflow)
+        self.assertNotIn("pins_json:", workflow)
+        self.assertIn("PINS_FILE: ${{ inputs.pins_file }}", workflow)
+        self.assertIn("pins_path.read_bytes().decode(\"utf-8\")", workflow)
+        self.assertIn('"--pins-json", pins_json', workflow)
+        self.assertNotIn("PINS_JSON", workflow)
+        self.assertNotIn('--pins-json "$env:PINS_JSON"', workflow)
+        self.assertIn("$bootstrap | python -", workflow)
+
+    def test_workflow_binds_exact_external_pins_path_and_denies_repository_file(self):
+        workflow = self.workflow_source()
+        self.assertIn("C:\\LION\\runtime\\f005\\trust\\f005-h-pins.json", workflow)
+        self.assertIn("if not pins_path.is_absolute()", workflow)
+        self.assertIn("if not pins_path.is_file()", workflow)
+        self.assertIn("resolved.relative_to(workspace)", workflow)
+        self.assertIn("runtime trust pins file must be outside repository workspace", workflow)
+
+    def test_workflow_does_not_send_json_content_through_native_argv(self):
+        workflow = self.workflow_source()
+        self.assertNotIn("python -m cyber_lion.enterprise.fleet_runtime_composition", workflow)
+        self.assertIn("sys.argv = [", workflow)
+        self.assertIn("runpy.run_module", workflow)
+        self.assertIn("pins_path.read_bytes()", workflow)
 
 
 if __name__ == "__main__":
