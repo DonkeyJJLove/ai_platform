@@ -1,0 +1,38 @@
+name: F005-L Branch Ownership Registry CI
+
+on:
+  pull_request:
+    paths:
+      - 'cyber_lion/contracts/branch_ownership_registry.py'
+      - 'cyber_lion/enterprise/branch_ownership_registry.py'
+      - 'cyber_lion/tests/test_branch_ownership_registry.py'
+      - '.github/workflows/f005-branch-ownership-registry-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  branch-ownership-registry-ci:
+    name: F005-L Branch Ownership Registry Provider
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Compile F005-L slice
+        run: |
+          python -m compileall -q \
+            cyber_lion/contracts/branch_ownership_registry.py \
+            cyber_lion/enterprise/branch_ownership_registry.py
+      - name: Run F005-L regressions
+        run: |
+          python -m unittest cyber_lion.tests.test_branch_ownership_registry -v
+      - name: Assert read-only provider boundary
+        shell: bash
+        run: |
+          grep -q 'class FileBranchOwnershipRegistryProvider' cyber_lion/enterprise/branch_ownership_registry.py
+          grep -q 'def resolve' cyber_lion/enterprise/branch_ownership_registry.py
+          ! grep -qE 'requests\.(post|put|patch|delete)|gh workflow run|sqlite3\.connect' cyber_lion/enterprise/branch_ownership_registry.py
+          ! grep -q 'materialize_observation' cyber_lion/enterprise/branch_ownership_registry.py
