@@ -1,0 +1,108 @@
+name: F005 Runtime Composition
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA to bind
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA to bind
+        required: true
+        type: string
+      composition_instance:
+        description: Runtime composition instance identifier
+        required: true
+        type: string
+      registry_instance:
+        description: Fleet status registry instance identifier
+        required: true
+        type: string
+      coordinator_instance:
+        description: Fleet coordination instance identifier
+        required: true
+        type: string
+      pins_json:
+        description: JSON object containing verification and reconciliation trust pins
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-composition:
+    name: F005 Runtime Composition Root
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind workflow to exact checked-out master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          if ($env:GITHUB_SHA -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: checkout=$env:GITHUB_SHA expected=$env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
+          }
+
+      - name: Compile runtime composition
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/fleet_runtime_composition.py `
+            cyber_lion/enterprise/fleet_runtime_composition.py
+
+      - name: Run runtime composition regressions
+        run: |
+          python -m unittest cyber_lion.tests.test_fleet_runtime_composition -v
+
+      - name: Bootstrap or reopen canonical durable stores
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          COMPOSITION_INSTANCE: ${{ inputs.composition_instance }}
+          REGISTRY_INSTANCE: ${{ inputs.registry_instance }}
+          COORDINATOR_INSTANCE: ${{ inputs.coordinator_instance }}
+          PINS_JSON: ${{ inputs.pins_json }}
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-composition-receipt.json"
+          python -m cyber_lion.enterprise.fleet_runtime_composition `
+            --repository "DonkeyJJLove/ai_platform" `
+            --expected-master "$env:EXPECTED_MASTER" `
+            --expected-master-tree "$env:EXPECTED_MASTER_TREE" `
+            --composition-instance "$env:COMPOSITION_INSTANCE" `
+            --registry-instance "$env:REGISTRY_INSTANCE" `
+            --coordinator-instance "$env:COORDINATOR_INSTANCE" `
+            --pins-json "$env:PINS_JSON" | Tee-Object -FilePath $receipt
+
+      - name: Verify F005-G compatible runtime store paths
+        run: |
+          foreach ($path in @(
+            'C:\LION\runtime\f005\status.sqlite',
+            'C:\LION\runtime\f005\coordination.sqlite',
+            'C:\LION\runtime\f005\reconciliation.sqlite'
+          )) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "canonical runtime store missing after composition: $path"
+            }
+          }
+
+      - name: Publish composition receipt
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-composition-receipt.json"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005 Runtime Composition'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
+          Get-Content -LiteralPath $receipt | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'
