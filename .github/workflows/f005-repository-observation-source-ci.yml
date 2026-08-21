@@ -1,0 +1,38 @@
+name: F005-K Repository Observation Source CI
+
+on:
+  pull_request:
+    paths:
+      - 'cyber_lion/contracts/fleet_repository_observation_source.py'
+      - 'cyber_lion/enterprise/fleet_repository_observation_source.py'
+      - 'cyber_lion/tests/test_fleet_repository_observation_source.py'
+      - '.github/workflows/f005-repository-observation-source-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observation-source-ci:
+    name: F005-K Repository Observation Source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Compile F005-K slice
+        run: |
+          python -m compileall -q \
+            cyber_lion/contracts/fleet_repository_observation_source.py \
+            cyber_lion/enterprise/fleet_repository_observation_source.py
+      - name: Run F005-K regressions
+        run: |
+          python -m unittest cyber_lion.tests.test_fleet_repository_observation_source -v
+      - name: Assert CI-only boundary
+        shell: bash
+        run: |
+          test ! -e 'C:\LION\runtime\f005\reconciliation-source\repository-inventory.json'
+          grep -q 'class GitHubReadSource' cyber_lion/enterprise/fleet_repository_observation_source.py
+          grep -q 'class AuthoritativeOwnershipProvider' cyber_lion/enterprise/fleet_repository_observation_source.py
+          ! grep -q 'workflow_dispatch.*repository-inventory' .github/workflows/f005-repository-observation-source-ci.yml
