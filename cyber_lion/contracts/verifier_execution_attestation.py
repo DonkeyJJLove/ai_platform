@@ -1,6 +1,6 @@
-"""Immutable contracts for verifier execution independence attestation.
+"""Immutable contracts for verifier execution independence attestation B1.
 
-These objects are evidence only. They do not grant repository authority, consume
+All objects are evidence-only. They grant no repository authority, cannot consume
 merge authority, mutate refs, or promote mission state.
 """
 from __future__ import annotations
@@ -17,6 +17,7 @@ _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _REPO = re.compile(r"^[^/\s]+/[^/\s]+$")
 _ROLES = frozenset({"BUILDER", "VERIFICATION_ATTACH", "VERIFIER"})
 _RESULTS = frozenset({"PASS", "FAIL"})
+_CI_STATES = frozenset({"SUCCESS", "FAILURE", "CANCELLED", "TIMED_OUT", "UNKNOWN"})
 
 
 class VerifierExecutionAttestationError(ValueError):
@@ -89,6 +90,29 @@ class ExactVerificationTarget:
 
 
 @dataclass(frozen=True)
+class FixedSourcePin:
+    source_id: str
+    source_instance_id: str
+    source_implementation_digest: str
+    trust_anchor_id: str
+
+    def validate(self) -> "FixedSourcePin":
+        for name in ("source_id", "source_instance_id", "trust_anchor_id"):
+            _text(getattr(self, name), name)
+        _sha256(self.source_implementation_digest, "source_implementation_digest")
+        return self
+
+    def binding(self) -> tuple[str, str, str, str]:
+        self.validate()
+        return (
+            self.source_id,
+            self.source_instance_id,
+            self.source_implementation_digest,
+            self.trust_anchor_id,
+        )
+
+
+@dataclass(frozen=True)
 class ExecutorParticipationRecord:
     subject_id: str
     runtime_instance_id: str
@@ -126,6 +150,7 @@ class ExecutorParticipationRecord:
 @dataclass(frozen=True)
 class TrustedParticipationHistory:
     source_id: str
+    source_instance_id: str
     trust_anchor_id: str
     source_implementation_digest: str
     observed_at: str
@@ -133,9 +158,10 @@ class TrustedParticipationHistory:
     history_digest: str
 
     def validate(self) -> "TrustedParticipationHistory":
-        _text(self.source_id, "source_id")
-        _text(self.trust_anchor_id, "trust_anchor_id")
-        _sha256(self.source_implementation_digest, "source_implementation_digest")
+        FixedSourcePin(
+            self.source_id, self.source_instance_id,
+            self.source_implementation_digest, self.trust_anchor_id,
+        ).validate()
         _utc(self.observed_at, "observed_at")
         if type(self.records) is not tuple:
             raise VerifierExecutionAttestationError("records must be a tuple")
@@ -149,6 +175,7 @@ class TrustedParticipationHistory:
             raise VerifierExecutionAttestationError("duplicate participation record")
         expected = sha256(canonical_json({
             "source_id": self.source_id,
+            "source_instance_id": self.source_instance_id,
             "trust_anchor_id": self.trust_anchor_id,
             "source_implementation_digest": self.source_implementation_digest,
             "observed_at": self.observed_at,
@@ -161,28 +188,131 @@ class TrustedParticipationHistory:
 
     @classmethod
     def build(
-        cls,
-        *,
-        source_id: str,
-        trust_anchor_id: str,
-        source_implementation_digest: str,
-        observed_at: str,
+        cls, *, source_id: str, source_instance_id: str, trust_anchor_id: str,
+        source_implementation_digest: str, observed_at: str,
         records: Tuple[ExecutorParticipationRecord, ...],
     ) -> "TrustedParticipationHistory":
-        for record in records:
-            record.validate()
-        digest = sha256(canonical_json({
+        raw = {
             "source_id": source_id,
+            "source_instance_id": source_instance_id,
             "trust_anchor_id": trust_anchor_id,
             "source_implementation_digest": source_implementation_digest,
             "observed_at": observed_at,
-            "record_digests": [record.digest() for record in records],
-        })).hexdigest()
-        return cls(source_id, trust_anchor_id, source_implementation_digest, observed_at, records, digest).validate()
+            "record_digests": [record.validate().digest() for record in records],
+        }
+        return cls(
+            source_id, source_instance_id, trust_anchor_id, source_implementation_digest,
+            observed_at, records, sha256(canonical_json(raw)).hexdigest(),
+        ).validate()
+
+    def source_binding(self) -> tuple[str, str, str, str]:
+        return FixedSourcePin(
+            self.source_id, self.source_instance_id,
+            self.source_implementation_digest, self.trust_anchor_id,
+        ).binding()
+
+
+@dataclass(frozen=True)
+class TrustedCIEvidence:
+    source_id: str
+    source_instance_id: str
+    source_implementation_digest: str
+    trust_anchor_id: str
+    repository: str
+    pr_number: int
+    base_sha: str
+    head_sha: str
+    tree_sha: str
+    ci_run_id: str
+    workflow: str
+    conclusion: str
+    observed_at: str
+    provenance_ref: str
+    evidence_digest: str
+
+    def validate(self) -> "TrustedCIEvidence":
+        FixedSourcePin(
+            self.source_id, self.source_instance_id,
+            self.source_implementation_digest, self.trust_anchor_id,
+        ).validate()
+        ExactVerificationTarget(
+            self.repository, self.pr_number, self.base_sha, self.head_sha, self.tree_sha,
+            self.ci_run_id, "ci-evidence-validation", "ci-evidence-validation",
+        ).validate()
+        _text(self.workflow, "workflow")
+        if self.conclusion not in _CI_STATES:
+            raise VerifierExecutionAttestationError("CI conclusion is invalid")
+        _utc(self.observed_at, "observed_at")
+        _text(self.provenance_ref, "provenance_ref")
+        _sha256(self.evidence_digest, "evidence_digest")
+        return self
+
+    def source_binding(self) -> tuple[str, str, str, str]:
+        return FixedSourcePin(
+            self.source_id, self.source_instance_id,
+            self.source_implementation_digest, self.trust_anchor_id,
+        ).binding()
+
+    def target_binding(self) -> tuple[object, ...]:
+        self.validate()
+        return (
+            self.repository, self.pr_number, self.base_sha, self.head_sha,
+            self.tree_sha, self.ci_run_id,
+        )
+
+    def digest(self) -> str:
+        self.validate()
+        return sha256(canonical_json(asdict(self))).hexdigest()
+
+
+@dataclass(frozen=True)
+class TrustedSemanticVerificationResult:
+    source_id: str
+    source_instance_id: str
+    source_implementation_digest: str
+    trust_anchor_id: str
+    verification_id: str
+    verifier_subject_id: str
+    verifier_runtime_instance_id: str
+    verifier_implementation_digest: str
+    target_digest: str
+    semantic_evidence_digest: str
+    result: str
+    observed_at: str
+    provenance_ref: str
+    evidence_digest: str
+
+    def validate(self) -> "TrustedSemanticVerificationResult":
+        FixedSourcePin(
+            self.source_id, self.source_instance_id,
+            self.source_implementation_digest, self.trust_anchor_id,
+        ).validate()
+        for name in ("verification_id", "verifier_subject_id", "verifier_runtime_instance_id", "provenance_ref"):
+            _text(getattr(self, name), name)
+        for name in (
+            "verifier_implementation_digest", "target_digest",
+            "semantic_evidence_digest", "evidence_digest",
+        ):
+            _sha256(getattr(self, name), name)
+        if self.result not in _RESULTS:
+            raise VerifierExecutionAttestationError("semantic verification result is invalid")
+        _utc(self.observed_at, "observed_at")
+        return self
+
+    def source_binding(self) -> tuple[str, str, str, str]:
+        return FixedSourcePin(
+            self.source_id, self.source_instance_id,
+            self.source_implementation_digest, self.trust_anchor_id,
+        ).binding()
+
+    def digest(self) -> str:
+        self.validate()
+        return sha256(canonical_json(asdict(self))).hexdigest()
 
 
 @dataclass(frozen=True)
 class VerifierExecutionAttestation:
+    """Caller-visible request binding; it contains no self-declared PASS result."""
     attestation_id: str
     verifier_subject_id: str
     verifier_runtime_instance_id: str
@@ -191,25 +321,25 @@ class VerifierExecutionAttestation:
     runtime_attestation_digest: str
     target: ExactVerificationTarget
     participation_history_digest: str
+    ci_evidence_digest: str
+    semantic_verification_result_digest: str
     evidence_bundle_digest: str
-    verification_result: str
-    external_attestation_ref: str
     issued_at: str
     expires_at: str
 
     def validate(self) -> "VerifierExecutionAttestation":
-        for name in ("attestation_id", "verifier_subject_id", "verifier_runtime_instance_id", "external_attestation_ref"):
+        for name in ("attestation_id", "verifier_subject_id", "verifier_runtime_instance_id"):
             _text(getattr(self, name), name)
         for name in (
             "verifier_implementation_digest", "workload_identity_proof_digest",
-            "runtime_attestation_digest", "participation_history_digest", "evidence_bundle_digest",
+            "runtime_attestation_digest", "participation_history_digest",
+            "ci_evidence_digest", "semantic_verification_result_digest",
+            "evidence_bundle_digest",
         ):
             _sha256(getattr(self, name), name)
         if type(self.target) is not ExactVerificationTarget:
             raise VerifierExecutionAttestationError("target must use exact contract type")
         self.target.validate()
-        if self.verification_result not in _RESULTS:
-            raise VerifierExecutionAttestationError("verification_result is invalid")
         if _utc(self.issued_at, "issued_at") >= _utc(self.expires_at, "expires_at"):
             raise VerifierExecutionAttestationError("attestation validity window is invalid")
         return self
@@ -225,28 +355,20 @@ class VerifierExecutionAttestation:
 
 
 def evidence_bundle_digest(
-    *,
-    target: ExactVerificationTarget,
-    workload_identity_proof_digest: str,
-    runtime_attestation_digest: str,
-    verifier_implementation_digest: str,
-    participation_history_digest: str,
-    semantic_evidence_digest: str,
+    *, target: ExactVerificationTarget, workload_identity_proof_digest: str,
+    runtime_attestation_digest: str, verifier_implementation_digest: str,
+    participation_history_digest: str, ci_evidence_digest: str,
+    semantic_verification_result_digest: str,
 ) -> str:
     target.validate()
-    for value, name in (
-        (workload_identity_proof_digest, "workload_identity_proof_digest"),
-        (runtime_attestation_digest, "runtime_attestation_digest"),
-        (verifier_implementation_digest, "verifier_implementation_digest"),
-        (participation_history_digest, "participation_history_digest"),
-        (semantic_evidence_digest, "semantic_evidence_digest"),
-    ):
-        _sha256(value, name)
-    return sha256(canonical_json({
-        "target_digest": target.digest(),
+    values = {
         "workload_identity_proof_digest": workload_identity_proof_digest,
         "runtime_attestation_digest": runtime_attestation_digest,
         "verifier_implementation_digest": verifier_implementation_digest,
         "participation_history_digest": participation_history_digest,
-        "semantic_evidence_digest": semantic_evidence_digest,
-    })).hexdigest()
+        "ci_evidence_digest": ci_evidence_digest,
+        "semantic_verification_result_digest": semantic_verification_result_digest,
+    }
+    for name, value in values.items():
+        _sha256(value, name)
+    return sha256(canonical_json({"target_digest": target.digest(), **values})).hexdigest()
