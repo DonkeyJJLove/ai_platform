@@ -1,7 +1,8 @@
-"""Fail-closed verifier execution independence admission.
+"""Fail-closed B1 verifier-execution independence admission.
 
-This module evaluates evidence only. It exposes no repository mutation, merge,
-release, deployment, authority-consumption, lease, or credential capability.
+Trusted identity, runtime, participation, CI and semantic results are resolved only
+through composition-root-owned fixed sources. The public admission call accepts no
+caller-supplied trusted evidence and exposes no effect or authority capability.
 """
 from __future__ import annotations
 
@@ -12,7 +13,10 @@ from typing import Protocol
 
 from cyber_lion.contracts.verifier_execution_attestation import (
     ExactVerificationTarget,
+    FixedSourcePin,
+    TrustedCIEvidence,
     TrustedParticipationHistory,
+    TrustedSemanticVerificationResult,
     VerifierExecutionAttestation,
     VerifierExecutionAttestationError,
     evidence_bundle_digest,
@@ -25,17 +29,64 @@ class VerifierExecutionAdmissionError(ValueError):
     """Raised when verifier independence cannot be proven exactly."""
 
 
+class TrustedWorkloadIdentitySource(Protocol):
+    @property
+    def source_id(self) -> str: ...
+    @property
+    def source_instance_id(self) -> str: ...
+    @property
+    def source_implementation_digest(self) -> str: ...
+    @property
+    def trust_anchor_id(self) -> str: ...
+    def resolve(self, target: ExactVerificationTarget) -> VerifiedWorkloadIdentity: ...
+
+
+class TrustedRuntimeAttestationSource(Protocol):
+    @property
+    def source_id(self) -> str: ...
+    @property
+    def source_instance_id(self) -> str: ...
+    @property
+    def source_implementation_digest(self) -> str: ...
+    @property
+    def trust_anchor_id(self) -> str: ...
+    def resolve(self, target: ExactVerificationTarget) -> VerifiedRuntimeAttestation: ...
+
+
 class TrustedExecutionParticipationSource(Protocol):
     @property
     def source_id(self) -> str: ...
-
     @property
-    def trust_anchor_id(self) -> str: ...
-
+    def source_instance_id(self) -> str: ...
     @property
     def source_implementation_digest(self) -> str: ...
-
+    @property
+    def trust_anchor_id(self) -> str: ...
     def resolve(self, target: ExactVerificationTarget) -> TrustedParticipationHistory: ...
+
+
+class TrustedCIEvidenceSource(Protocol):
+    @property
+    def source_id(self) -> str: ...
+    @property
+    def source_instance_id(self) -> str: ...
+    @property
+    def source_implementation_digest(self) -> str: ...
+    @property
+    def trust_anchor_id(self) -> str: ...
+    def resolve(self, target: ExactVerificationTarget) -> TrustedCIEvidence: ...
+
+
+class TrustedSemanticVerificationSource(Protocol):
+    @property
+    def source_id(self) -> str: ...
+    @property
+    def source_instance_id(self) -> str: ...
+    @property
+    def source_implementation_digest(self) -> str: ...
+    @property
+    def trust_anchor_id(self) -> str: ...
+    def resolve(self, target: ExactVerificationTarget) -> TrustedSemanticVerificationResult: ...
 
 
 class VerifierExecutionReplayGuard(Protocol):
@@ -44,7 +95,6 @@ class VerifierExecutionReplayGuard(Protocol):
 
 class InMemoryVerifierExecutionReplayGuard:
     """Atomic process-local reference guard. Durable deployment is external."""
-
     def __init__(self) -> None:
         self._lock = Lock()
         self._seen: set[str] = set()
@@ -64,99 +114,91 @@ class VerifierExecutionAdmissionResult:
     verifier_subject_id: str
     verifier_runtime_instance_id: str
     participation_history_digest: str
+    ci_evidence_digest: str
+    semantic_verification_result_digest: str
     evidence_bundle_digest: str
     verification_result: str
 
 
+@dataclass(frozen=True)
+class _PinnedSource:
+    provider: object
+    pin: FixedSourcePin
+
+    def validate_provider(self) -> None:
+        self.pin.validate()
+        actual = (
+            getattr(self.provider, "source_id", None),
+            getattr(self.provider, "source_instance_id", None),
+            getattr(self.provider, "source_implementation_digest", None),
+            getattr(self.provider, "trust_anchor_id", None),
+        )
+        if actual != self.pin.binding():
+            raise VerifierExecutionAdmissionError("trusted source identity substitution denied")
+        if not callable(getattr(self.provider, "resolve", None)):
+            raise VerifierExecutionAdmissionError("trusted source has no resolve capability")
+
+
 class VerifierExecutionAdmission:
-    """Composition-root-pinned independence gate for one exact verification target."""
+    """Composition-root-pinned B1 gate for one exact verification target."""
 
     def __init__(
-        self,
-        *,
-        expected_target: ExactVerificationTarget,
-        participation_source: TrustedExecutionParticipationSource,
-        expected_participation_source_id: str,
-        expected_participation_trust_anchor_id: str,
-        expected_participation_implementation_digest: str,
+        self, *, expected_target: ExactVerificationTarget,
+        workload_source: TrustedWorkloadIdentitySource, workload_source_pin: FixedSourcePin,
+        runtime_source: TrustedRuntimeAttestationSource, runtime_source_pin: FixedSourcePin,
+        participation_source: TrustedExecutionParticipationSource, participation_source_pin: FixedSourcePin,
+        ci_source: TrustedCIEvidenceSource, ci_source_pin: FixedSourcePin,
+        semantic_source: TrustedSemanticVerificationSource, semantic_source_pin: FixedSourcePin,
         replay_guard: VerifierExecutionReplayGuard,
     ) -> None:
         expected_target.validate()
-        if not expected_participation_source_id or not expected_participation_trust_anchor_id:
-            raise VerifierExecutionAdmissionError("participation source pins are required")
-        if len(expected_participation_implementation_digest) != 64:
-            raise VerifierExecutionAdmissionError("participation implementation digest pin is invalid")
-        if not callable(getattr(participation_source, "resolve", None)):
-            raise VerifierExecutionAdmissionError("trusted participation source is required")
         if not callable(getattr(replay_guard, "consume", None)):
             raise VerifierExecutionAdmissionError("replay guard is required")
         self._target = expected_target
-        self._source = participation_source
-        self._source_id = expected_participation_source_id
-        self._source_anchor = expected_participation_trust_anchor_id
-        self._source_impl = expected_participation_implementation_digest
+        self._workload = _PinnedSource(workload_source, workload_source_pin)
+        self._runtime = _PinnedSource(runtime_source, runtime_source_pin)
+        self._participation = _PinnedSource(participation_source, participation_source_pin)
+        self._ci = _PinnedSource(ci_source, ci_source_pin)
+        self._semantic = _PinnedSource(semantic_source, semantic_source_pin)
+        for source in (self._workload, self._runtime, self._participation, self._ci, self._semantic):
+            source.validate_provider()
         self._replay = replay_guard
-
-    def _history(self) -> TrustedParticipationHistory:
-        actual = (
-            getattr(self._source, "source_id", None),
-            getattr(self._source, "trust_anchor_id", None),
-            getattr(self._source, "source_implementation_digest", None),
-        )
-        expected = (self._source_id, self._source_anchor, self._source_impl)
-        if actual != expected:
-            raise VerifierExecutionAdmissionError("participation source identity substitution denied")
-        try:
-            history = self._source.resolve(self._target)
-        except Exception as exc:
-            raise VerifierExecutionAdmissionError("participation history source failed closed") from exc
-        if type(history) is not TrustedParticipationHistory:
-            raise VerifierExecutionAdmissionError("participation source returned wrong type")
-        try:
-            history.validate()
-        except Exception as exc:
-            raise VerifierExecutionAdmissionError("participation history validation failed") from exc
-        history_binding = (
-            history.source_id,
-            history.trust_anchor_id,
-            history.source_implementation_digest,
-        )
-        if history_binding != expected:
-            raise VerifierExecutionAdmissionError("participation history pin mismatch")
-        if not history.records:
-            raise VerifierExecutionAdmissionError("participation history is missing")
-        return history
 
     @staticmethod
     def _utc(value: str) -> datetime:
         try:
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        except ValueError as exc:
-            raise VerifierExecutionAdmissionError("attestation time is invalid") from exc
+        except (AttributeError, ValueError) as exc:
+            raise VerifierExecutionAdmissionError("evidence timestamp is invalid") from exc
         if parsed.tzinfo is None:
-            raise VerifierExecutionAdmissionError("attestation time must be timezone-aware")
+            raise VerifierExecutionAdmissionError("evidence timestamp must be timezone-aware")
         return parsed.astimezone(timezone.utc)
 
-    def admit(
-        self,
-        attestation: VerifierExecutionAttestation,
-        *,
-        workload_identity: VerifiedWorkloadIdentity,
-        runtime_attestation: VerifiedRuntimeAttestation,
-        semantic_evidence_digest: str,
-        now: datetime,
-    ) -> VerifierExecutionAdmissionResult:
+    def _resolve(self, pinned: _PinnedSource, expected_type: type, label: str):
+        pinned.validate_provider()
+        try:
+            value = pinned.provider.resolve(self._target)
+        except Exception as exc:
+            raise VerifierExecutionAdmissionError(f"{label} source failed closed") from exc
+        if type(value) is not expected_type:
+            raise VerifierExecutionAdmissionError(f"{label} source returned wrong type")
+        if hasattr(value, "validate"):
+            try:
+                value.validate()
+            except Exception as exc:
+                raise VerifierExecutionAdmissionError(f"{label} evidence validation failed") from exc
+        if hasattr(value, "source_binding") and value.source_binding() != pinned.pin.binding():
+            raise VerifierExecutionAdmissionError(f"{label} evidence source pin mismatch")
+        return value
+
+    def admit(self, attestation: VerifierExecutionAttestation, *, now: datetime) -> VerifierExecutionAdmissionResult:
         if type(attestation) is not VerifierExecutionAttestation:
             raise VerifierExecutionAdmissionError("exact verifier attestation type required")
         try:
             attestation.validate()
         except VerifierExecutionAttestationError as exc:
             raise VerifierExecutionAdmissionError("verifier execution attestation invalid") from exc
-        if type(workload_identity) is not VerifiedWorkloadIdentity:
-            raise VerifierExecutionAdmissionError("verified workload identity required")
-        if type(runtime_attestation) is not VerifiedRuntimeAttestation:
-            raise VerifierExecutionAdmissionError("verified runtime attestation required")
-        if now.tzinfo is None:
+        if not isinstance(now, datetime) or now.tzinfo is None:
             raise VerifierExecutionAdmissionError("trusted current time must be timezone-aware")
         current = now.astimezone(timezone.utc)
         if current < self._utc(attestation.issued_at) or current >= self._utc(attestation.expires_at):
@@ -164,36 +206,30 @@ class VerifierExecutionAdmission:
         if attestation.target != self._target:
             raise VerifierExecutionAdmissionError("verification target mismatch")
 
-        if workload_identity.subject_id != attestation.verifier_subject_id:
+        workload = self._resolve(self._workload, VerifiedWorkloadIdentity, "workload identity")
+        if current < self._utc(workload.issued_at) or current >= self._utc(workload.expires_at):
+            raise VerifierExecutionAdmissionError("verified workload identity is not currently valid")
+        if workload.subject_id != attestation.verifier_subject_id:
             raise VerifierExecutionAdmissionError("workload subject binding mismatch")
-        if workload_identity.proof_digest != attestation.workload_identity_proof_digest:
+        if workload.proof_digest != attestation.workload_identity_proof_digest:
             raise VerifierExecutionAdmissionError("workload proof digest binding mismatch")
 
+        runtime = self._resolve(self._runtime, VerifiedRuntimeAttestation, "runtime attestation")
         runtime_binding = (
-            runtime_attestation.subject_id,
-            runtime_attestation.runtime_instance_id,
-            runtime_attestation.implementation_digest,
-            runtime_attestation.attestation_digest,
-            runtime_attestation.repository,
-            runtime_attestation.commit_sha,
-            runtime_attestation.mission_id,
+            runtime.subject_id, runtime.runtime_instance_id, runtime.implementation_digest,
+            runtime.attestation_digest, runtime.repository, runtime.commit_sha, runtime.mission_id,
         )
         expected_runtime = (
-            attestation.verifier_subject_id,
-            attestation.verifier_runtime_instance_id,
-            attestation.verifier_implementation_digest,
-            attestation.runtime_attestation_digest,
-            self._target.repository,
-            self._target.head_sha,
-            self._target.mission_id,
+            attestation.verifier_subject_id, attestation.verifier_runtime_instance_id,
+            attestation.verifier_implementation_digest, attestation.runtime_attestation_digest,
+            self._target.repository, self._target.head_sha, self._target.mission_id,
         )
         if runtime_binding != expected_runtime:
             raise VerifierExecutionAdmissionError("runtime attestation binding mismatch")
 
-        history = self._history()
+        history = self._resolve(self._participation, TrustedParticipationHistory, "participation history")
         if history.history_digest != attestation.participation_history_digest:
             raise VerifierExecutionAdmissionError("participation history digest mismatch")
-
         relevant = tuple(
             record for record in history.records
             if record.repository == self._target.repository
@@ -203,8 +239,10 @@ class VerifierExecutionAdmission:
         )
         if not relevant:
             raise VerifierExecutionAdmissionError("participation history does not cover exact target")
-
         forbidden_roles = {"BUILDER", "VERIFICATION_ATTACH"}
+        roles = {record.participation_role for record in relevant}
+        if not forbidden_roles.issubset(roles):
+            raise VerifierExecutionAdmissionError("participation history is incomplete or ambiguous")
         for record in relevant:
             if record.participation_role not in forbidden_roles:
                 continue
@@ -213,18 +251,45 @@ class VerifierExecutionAdmission:
             if record.runtime_instance_id == attestation.verifier_runtime_instance_id:
                 raise VerifierExecutionAdmissionError("verifier runtime participated in builder/attach role")
 
-        # Require both builder and verification-attach history for the exact target.
-        roles = {record.participation_role for record in relevant}
-        if not forbidden_roles.issubset(roles):
-            raise VerifierExecutionAdmissionError("participation history is incomplete or ambiguous")
+        ci = self._resolve(self._ci, TrustedCIEvidence, "CI evidence")
+        expected_ci = (
+            self._target.repository, self._target.pr_number, self._target.base_sha,
+            self._target.head_sha, self._target.tree_sha, self._target.ci_run_id,
+        )
+        if ci.target_binding() != expected_ci:
+            raise VerifierExecutionAdmissionError("CI evidence target mismatch")
+        if ci.conclusion != "SUCCESS":
+            raise VerifierExecutionAdmissionError("CI evidence is not successful")
+        if ci.digest() != attestation.ci_evidence_digest:
+            raise VerifierExecutionAdmissionError("CI evidence digest binding mismatch")
+
+        semantic = self._resolve(self._semantic, TrustedSemanticVerificationResult, "semantic verification")
+        if semantic.target_digest != self._target.digest():
+            raise VerifierExecutionAdmissionError("semantic verification target mismatch")
+        semantic_binding = (
+            semantic.verifier_subject_id,
+            semantic.verifier_runtime_instance_id,
+            semantic.verifier_implementation_digest,
+        )
+        if semantic_binding != (
+            attestation.verifier_subject_id,
+            attestation.verifier_runtime_instance_id,
+            attestation.verifier_implementation_digest,
+        ):
+            raise VerifierExecutionAdmissionError("semantic verifier identity binding mismatch")
+        if semantic.result != "PASS":
+            raise VerifierExecutionAdmissionError("trusted semantic verification did not PASS")
+        if semantic.digest() != attestation.semantic_verification_result_digest:
+            raise VerifierExecutionAdmissionError("semantic verification digest binding mismatch")
 
         expected_bundle = evidence_bundle_digest(
             target=self._target,
-            workload_identity_proof_digest=workload_identity.proof_digest,
-            runtime_attestation_digest=runtime_attestation.attestation_digest,
-            verifier_implementation_digest=runtime_attestation.implementation_digest,
+            workload_identity_proof_digest=workload.proof_digest,
+            runtime_attestation_digest=runtime.attestation_digest,
+            verifier_implementation_digest=runtime.implementation_digest,
             participation_history_digest=history.history_digest,
-            semantic_evidence_digest=semantic_evidence_digest,
+            ci_evidence_digest=ci.digest(),
+            semantic_verification_result_digest=semantic.digest(),
         )
         if attestation.evidence_bundle_digest != expected_bundle:
             raise VerifierExecutionAdmissionError("evidence bundle digest mismatch")
@@ -243,6 +308,8 @@ class VerifierExecutionAdmission:
             verifier_subject_id=attestation.verifier_subject_id,
             verifier_runtime_instance_id=attestation.verifier_runtime_instance_id,
             participation_history_digest=history.history_digest,
+            ci_evidence_digest=ci.digest(),
+            semantic_verification_result_digest=semantic.digest(),
             evidence_bundle_digest=expected_bundle,
-            verification_result=attestation.verification_result,
+            verification_result="PASS",
         )
