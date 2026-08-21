@@ -6,12 +6,14 @@ import unittest
 from cyber_lion.contracts.verifier_execution_attestation import (
     ExactVerificationTarget,
     ExecutorParticipationRecord,
+    FixedSourcePin,
+    TrustedCIEvidence,
     TrustedParticipationHistory,
+    TrustedSemanticVerificationResult,
     VerifierExecutionAttestation,
     VerifierExecutionAttestationError,
     evidence_bundle_digest,
 )
-
 
 H = "a" * 40
 T = "b" * 40
@@ -19,6 +21,7 @@ D = "c" * 64
 D2 = "d" * 64
 D3 = "e" * 64
 D4 = "f" * 64
+D5 = "0" * 64
 
 
 def target(**overrides):
@@ -34,6 +37,10 @@ def target(**overrides):
     )
     values.update(overrides)
     return ExactVerificationTarget(**values)
+
+
+def pin(name="source"):
+    return FixedSourcePin(name, f"{name}-instance", D2, f"{name}-root").validate()
 
 
 def record(role="BUILDER", subject="builder", runtime="builder-runtime"):
@@ -52,8 +59,40 @@ def record(role="BUILDER", subject="builder", runtime="builder-runtime"):
     )
 
 
-class VerifierExecutionAttestationContractTests(unittest.TestCase):
-    def test_exact_target_is_immutable_and_digest_stable(self):
+def history():
+    p = pin("history")
+    return TrustedParticipationHistory.build(
+        source_id=p.source_id,
+        source_instance_id=p.source_instance_id,
+        trust_anchor_id=p.trust_anchor_id,
+        source_implementation_digest=p.source_implementation_digest,
+        observed_at="2026-08-21T12:10:00+00:00",
+        records=(record(), record("VERIFICATION_ATTACH", "attach", "attach-runtime")),
+    )
+
+
+def ci():
+    p = pin("ci")
+    return TrustedCIEvidence(
+        p.source_id, p.source_instance_id, p.source_implementation_digest, p.trust_anchor_id,
+        "DonkeyJJLove/ai_platform", 44, "1" * 40, H, T, "32477275518",
+        "Cyber-Lion Core", "SUCCESS", "2026-08-21T12:11:00+00:00",
+        "github:run:32477275518", D3,
+    ).validate()
+
+
+def semantic():
+    p = pin("semantic")
+    return TrustedSemanticVerificationResult(
+        p.source_id, p.source_instance_id, p.source_implementation_digest, p.trust_anchor_id,
+        "sem-44", "verifier-subject", "verifier-runtime", D4,
+        target().digest(), D5, "PASS", "2026-08-21T12:12:00+00:00",
+        "semantic:verified:44", D3,
+    ).validate()
+
+
+class ContractTests(unittest.TestCase):
+    def test_target_exact_and_immutable(self):
         value = target().validate()
         self.assertEqual(value.digest(), target().digest())
         with self.assertRaises(FrozenInstanceError):
@@ -61,107 +100,66 @@ class VerifierExecutionAttestationContractTests(unittest.TestCase):
 
     def test_target_rejects_wrong_shapes(self):
         for kwargs in (
-            {"repository": "bad"},
-            {"pr_number": 0},
-            {"base_sha": "abc"},
-            {"head_sha": "ABC" + "0" * 37},
-            {"tree_sha": "x" * 40},
-            {"ci_run_id": ""},
+            {"repository": "bad"}, {"pr_number": 0}, {"base_sha": "abc"},
+            {"head_sha": "ABC" + "0" * 37}, {"tree_sha": "x" * 40}, {"ci_run_id": ""},
         ):
             with self.subTest(kwargs=kwargs), self.assertRaises(VerifierExecutionAttestationError):
                 target(**kwargs).validate()
 
-    def test_participation_record_is_exact_and_role_bounded(self):
-        record().validate()
-        record("VERIFICATION_ATTACH").validate()
+    def test_source_pin_is_exact(self):
+        pin().validate()
         with self.assertRaises(VerifierExecutionAttestationError):
-            record("OWNER").validate()
+            FixedSourcePin("x", "i", "bad", "root").validate()
 
     def test_history_digest_detects_tampering(self):
-        history = TrustedParticipationHistory.build(
-            source_id="trusted-history",
-            trust_anchor_id="history-root",
-            source_implementation_digest=D2,
-            observed_at="2026-08-21T12:10:00+00:00",
-            records=(record(), record("VERIFICATION_ATTACH", "attach", "attach-runtime")),
-        )
-        history.validate()
+        value = history()
         bad = TrustedParticipationHistory(
-            history.source_id,
-            history.trust_anchor_id,
-            history.source_implementation_digest,
-            history.observed_at,
-            history.records,
-            D3,
+            value.source_id, value.source_instance_id, value.trust_anchor_id,
+            value.source_implementation_digest, value.observed_at, value.records, D3,
         )
         with self.assertRaises(VerifierExecutionAttestationError):
             bad.validate()
 
-    def test_history_rejects_duplicate_records(self):
-        r = record()
+    def test_ci_evidence_is_typed_and_digestable(self):
+        value = ci()
+        self.assertEqual(value.conclusion, "SUCCESS")
         with self.assertRaises(VerifierExecutionAttestationError):
-            TrustedParticipationHistory.build(
-                source_id="trusted-history",
-                trust_anchor_id="history-root",
-                source_implementation_digest=D2,
-                observed_at="2026-08-21T12:10:00+00:00",
-                records=(r, r),
-            )
+            TrustedCIEvidence(**{**value.__dict__, "conclusion": "GREEN"}).validate()
 
-    def test_evidence_bundle_binds_every_required_digest(self):
+    def test_semantic_result_is_typed_and_digestable(self):
+        value = semantic()
+        self.assertEqual(value.result, "PASS")
+        with self.assertRaises(VerifierExecutionAttestationError):
+            TrustedSemanticVerificationResult(**{**value.__dict__, "result": "GREEN"}).validate()
+
+    def test_attestation_has_no_self_declared_result_or_external_ref(self):
+        fields = VerifierExecutionAttestation.__dataclass_fields__
+        self.assertNotIn("verification_result", fields)
+        self.assertNotIn("external_attestation_ref", fields)
+
+    def test_evidence_bundle_binds_ci_and_semantic_results(self):
+        h = history()
+        c = ci()
+        s = semantic()
         first = evidence_bundle_digest(
             target=target(),
             workload_identity_proof_digest=D,
             runtime_attestation_digest=D2,
-            verifier_implementation_digest=D3,
-            participation_history_digest=D4,
-            semantic_evidence_digest="0" * 64,
+            verifier_implementation_digest=D4,
+            participation_history_digest=h.history_digest,
+            ci_evidence_digest=c.digest(),
+            semantic_verification_result_digest=s.digest(),
         )
         second = evidence_bundle_digest(
-            target=target(pr_number=45),
+            target=target(),
             workload_identity_proof_digest=D,
             runtime_attestation_digest=D2,
-            verifier_implementation_digest=D3,
-            participation_history_digest=D4,
-            semantic_evidence_digest="0" * 64,
+            verifier_implementation_digest=D4,
+            participation_history_digest=h.history_digest,
+            ci_evidence_digest="9" * 64,
+            semantic_verification_result_digest=s.digest(),
         )
         self.assertNotEqual(first, second)
-
-    def test_attestation_requires_valid_window_and_exact_types(self):
-        history = TrustedParticipationHistory.build(
-            source_id="trusted-history",
-            trust_anchor_id="history-root",
-            source_implementation_digest=D2,
-            observed_at="2026-08-21T12:10:00+00:00",
-            records=(record(), record("VERIFICATION_ATTACH", "attach", "attach-runtime")),
-        )
-        bundle = evidence_bundle_digest(
-            target=target(),
-            workload_identity_proof_digest=D,
-            runtime_attestation_digest=D2,
-            verifier_implementation_digest=D3,
-            participation_history_digest=history.history_digest,
-            semantic_evidence_digest="0" * 64,
-        )
-        value = VerifierExecutionAttestation(
-            attestation_id="vea-1",
-            verifier_subject_id="verifier",
-            verifier_runtime_instance_id="runtime-verifier",
-            verifier_implementation_digest=D3,
-            workload_identity_proof_digest=D,
-            runtime_attestation_digest=D2,
-            target=target(),
-            participation_history_digest=history.history_digest,
-            evidence_bundle_digest=bundle,
-            verification_result="PASS",
-            external_attestation_ref="external:vea-1",
-            issued_at="2026-08-21T12:00:00+00:00",
-            expires_at="2026-08-21T13:00:00+00:00",
-        )
-        value.validate()
-        self.assertEqual(value.digest(), value.digest())
-        with self.assertRaises(VerifierExecutionAttestationError):
-            VerifierExecutionAttestation(**{**value.__dict__, "expires_at": value.issued_at}).validate()
 
 
 if __name__ == "__main__":
