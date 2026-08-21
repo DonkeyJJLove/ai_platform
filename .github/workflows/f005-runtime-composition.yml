@@ -23,8 +23,8 @@ on:
         description: Fleet coordination instance identifier
         required: true
         type: string
-      pins_json:
-        description: JSON object containing verification and reconciliation trust pins
+      pins_file:
+        description: Absolute external path to the canonical F005-H trust pins JSON file
         required: true
         type: string
 
@@ -75,17 +75,58 @@ jobs:
           COMPOSITION_INSTANCE: ${{ inputs.composition_instance }}
           REGISTRY_INSTANCE: ${{ inputs.registry_instance }}
           COORDINATOR_INSTANCE: ${{ inputs.coordinator_instance }}
-          PINS_JSON: ${{ inputs.pins_json }}
+          PINS_FILE: ${{ inputs.pins_file }}
         run: |
+          $expectedPins = 'C:\LION\runtime\f005\trust\f005-h-pins.json'
+          if ($env:PINS_FILE -ne $expectedPins) {
+            throw "runtime trust pins path mismatch: actual=$env:PINS_FILE expected=$expectedPins"
+          }
+
           $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-composition-receipt.json"
-          python -m cyber_lion.enterprise.fleet_runtime_composition `
-            --repository "DonkeyJJLove/ai_platform" `
-            --expected-master "$env:EXPECTED_MASTER" `
-            --expected-master-tree "$env:EXPECTED_MASTER_TREE" `
-            --composition-instance "$env:COMPOSITION_INSTANCE" `
-            --registry-instance "$env:REGISTRY_INSTANCE" `
-            --coordinator-instance "$env:COORDINATOR_INSTANCE" `
-            --pins-json "$env:PINS_JSON" | Tee-Object -FilePath $receipt
+          $bootstrap = @'
+          import os
+          from pathlib import Path
+          import runpy
+          import sys
+
+          pins_path = Path(os.environ["PINS_FILE"])
+          workspace = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+
+          if not pins_path.is_absolute():
+              raise SystemExit("runtime trust pins path must be absolute")
+          if not pins_path.is_file():
+              raise SystemExit("runtime trust pins file missing or not a regular file")
+
+          resolved = pins_path.resolve()
+          try:
+              resolved.relative_to(workspace)
+          except ValueError:
+              pass
+          else:
+              raise SystemExit("runtime trust pins file must be outside repository workspace")
+
+          try:
+              pins_json = pins_path.read_bytes().decode("utf-8")
+          except UnicodeDecodeError as exc:
+              raise SystemExit("runtime trust pins file is not UTF-8") from exc
+
+          sys.argv = [
+              "fleet_runtime_composition",
+              "--repository", "DonkeyJJLove/ai_platform",
+              "--expected-master", os.environ["EXPECTED_MASTER"],
+              "--expected-master-tree", os.environ["EXPECTED_MASTER_TREE"],
+              "--composition-instance", os.environ["COMPOSITION_INSTANCE"],
+              "--registry-instance", os.environ["REGISTRY_INSTANCE"],
+              "--coordinator-instance", os.environ["COORDINATOR_INSTANCE"],
+              "--pins-json", pins_json,
+          ]
+          runpy.run_module("cyber_lion.enterprise.fleet_runtime_composition", run_name="__main__")
+          '@
+
+          $bootstrap | python - | Tee-Object -FilePath $receipt
+          if ($LASTEXITCODE -ne 0) {
+            throw "runtime composition bootstrap failed"
+          }
 
       - name: Verify F005-G compatible runtime store paths
         run: |
