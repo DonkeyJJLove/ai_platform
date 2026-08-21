@@ -1,0 +1,643 @@
+{
+  "$id": "https://cyber-lion.local/contracts/v1/fleet_status_snapshot.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "aggregate": {
+      "additionalProperties": false,
+      "properties": {
+        "active_authority_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "active_missions": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "active_write_lease_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "blocked_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "degraded_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "done_not_closed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "failed_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "idle_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "missions_in_reconciliation": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "missions_in_verification": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reachable_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "running_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stale_heartbeat_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_known_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unknown_state_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unreachable_drones": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unresolved_effect_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "waiting_drones": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_known_drones",
+        "reachable_drones",
+        "unreachable_drones",
+        "active_missions",
+        "idle_drones",
+        "running_drones",
+        "waiting_drones",
+        "blocked_drones",
+        "degraded_drones",
+        "failed_drones",
+        "done_not_closed",
+        "missions_in_verification",
+        "missions_in_reconciliation",
+        "active_authority_count",
+        "active_write_lease_count",
+        "unresolved_effect_count",
+        "stale_heartbeat_count",
+        "unknown_state_count"
+      ],
+      "type": "object"
+    },
+    "anomalies": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "anomaly_id": {
+            "type": "string"
+          },
+          "anomaly_type": {
+            "type": "string"
+          },
+          "drone_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "INFO",
+              "WARNING",
+              "ERROR",
+              "BLOCKING"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "anomaly_id",
+          "anomaly_type",
+          "severity",
+          "mission_id",
+          "drone_id",
+          "evidence_refs",
+          "observed_at"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "drone_records": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "active_lease_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "authority_observed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "authority_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "authority_state": {
+            "enum": [
+              "ACTIVE",
+              "EXPIRED",
+              "NONE",
+              "REVOKED",
+              "UNKNOWN",
+              "UNUSABLE_STALE_OBSERVABILITY"
+            ],
+            "type": "string"
+          },
+          "baseline_sha": {
+            "pattern": "^[0-9a-f]{40}$",
+            "type": "string"
+          },
+          "baseline_tree_sha": {
+            "pattern": "^[0-9a-f]{40}$",
+            "type": "string"
+          },
+          "branch": {
+            "type": "string"
+          },
+          "branch_head": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{40}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "closure_state": {
+            "enum": [
+              "CLOSED",
+              "OPEN",
+              "READY_TO_CLOSE",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "current_blocker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_operation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dependency_state": {
+            "enum": [
+              "BLOCKED",
+              "READY",
+              "UNKNOWN",
+              "WAITING"
+            ],
+            "type": "string"
+          },
+          "drone_id": {
+            "type": "string"
+          },
+          "effect_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effect_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effect_state": {
+            "enum": [
+              "APPLIED",
+              "ATTEMPTED",
+              "FAILED_NO_EFFECT",
+              "NONE",
+              "PREPARED",
+              "RECONCILE_REQUIRED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "epistemic_class": {
+            "enum": [
+              "ANCHORED",
+              "INFERRED",
+              "OBSERVED",
+              "SIMULATED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "evidence_state": {
+            "enum": [
+              "COMPLETE",
+              "CONFLICT",
+              "MISSING",
+              "PARTIAL",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "executor_id": {
+            "type": "string"
+          },
+          "heartbeat_age_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heartbeat_deadline_seconds": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heartbeat_sequence": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "heartbeat_state": {
+            "enum": [
+              "HEALTHY",
+              "MISSING",
+              "NOT_EXPECTED",
+              "STALE",
+              "UNKNOWN",
+              "WAITING_FIRST_HEARTBEAT"
+            ],
+            "type": "string"
+          },
+          "last_heartbeat_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_observed_at": {
+            "type": "string"
+          },
+          "last_receipt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lease_state": {
+            "enum": [
+              "ACTIVE",
+              "NONE",
+              "RELEASED",
+              "STALE_HELD",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "mission_id": {
+            "type": "string"
+          },
+          "mission_phase": {
+            "enum": [
+              "AUTHORIZE",
+              "BOOTSTRAP",
+              "CLOSE",
+              "IDLE",
+              "IMPLEMENT",
+              "INTEGRATE",
+              "OBSERVE",
+              "PLAN",
+              "RECONCILE",
+              "UNKNOWN",
+              "VERIFY"
+            ],
+            "type": "string"
+          },
+          "mission_status": {
+            "enum": [
+              "BLOCKED",
+              "DEGRADED",
+              "DONE",
+              "FAILED",
+              "RUNNING",
+              "STARTING",
+              "TERMINATED",
+              "UNKNOWN",
+              "UNREACHABLE",
+              "WAITING"
+            ],
+            "type": "string"
+          },
+          "parent_mission_id": {
+            "type": "string"
+          },
+          "read_scope": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "receipt_chain_head_digest": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reconciliation_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reconciliation_state": {
+            "enum": [
+              "FAILED",
+              "NOT_REQUIRED",
+              "PENDING",
+              "RESOLVED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "runtime_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sandbox_evidence_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sandbox_id": {
+            "type": "string"
+          },
+          "sandbox_state": {
+            "enum": [
+              "CLEANED",
+              "DEAD",
+              "DEGRADED",
+              "NONE",
+              "RUNNING",
+              "STARTING",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "verification_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification_state": {
+            "enum": [
+              "FAIL",
+              "PASS",
+              "PENDING",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "verifier_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "write_scope": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "drone_id",
+          "executor_id",
+          "runtime_id",
+          "mission_id",
+          "parent_mission_id",
+          "mission_phase",
+          "mission_status",
+          "closure_state",
+          "repository",
+          "baseline_sha",
+          "baseline_tree_sha",
+          "branch",
+          "branch_head",
+          "read_scope",
+          "write_scope",
+          "authority_state",
+          "authority_ref",
+          "authority_observed_at",
+          "lease_state",
+          "active_lease_refs",
+          "sandbox_id",
+          "sandbox_state",
+          "sandbox_evidence_ref",
+          "heartbeat_state",
+          "heartbeat_sequence",
+          "heartbeat_deadline_seconds",
+          "heartbeat_age_seconds",
+          "last_heartbeat_at",
+          "current_operation",
+          "current_blocker",
+          "dependency_state",
+          "verification_state",
+          "verifier_id",
+          "verification_ref",
+          "effect_state",
+          "effect_id",
+          "effect_ref",
+          "reconciliation_state",
+          "reconciliation_ref",
+          "evidence_state",
+          "epistemic_class",
+          "evidence_refs",
+          "last_receipt_id",
+          "receipt_chain_head_digest",
+          "last_observed_at"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "observed_at": {
+      "type": "string"
+    },
+    "registry_instance_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "scope_class": {
+      "const": "SINGLE_RUNTIME_DURABLE_FLEET_STATUS_ONLY"
+    },
+    "snapshot_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "type": "string"
+    },
+    "snapshot_revision": {
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "snapshot_revision",
+    "snapshot_digest",
+    "observed_at",
+    "registry_instance_id",
+    "scope_class",
+    "aggregate",
+    "drone_records",
+    "anomalies"
+  ],
+  "title": "LION Fleet Canonical Status Snapshot",
+  "type": "object"
+}
