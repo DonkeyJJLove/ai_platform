@@ -1,7 +1,8 @@
-"""Durable single-runtime status state for FCSR P0 R1R."""
+"""Durable single-runtime status state for FCSR P0 R1R + R2 source journal."""
 from __future__ import annotations
 
 from contextlib import contextmanager
+from dataclasses import asdict
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -19,6 +20,17 @@ from cyber_lion.contracts.fleet_status import (
     TrustedVerificationEvidence,
     VerificationTrustPins,
     canonical_json,
+)
+from cyber_lion.contracts.fleet_status_sources import (
+    MissingStatusSource,
+    ReconciledStatusFact,
+    SourceCheckpoint,
+    SourceConflict,
+    StatusSourceBatch,
+    StatusSourceIdentity,
+    StatusSourceObservation,
+    StatusSourceRead,
+    canonical_json as source_canonical_json,
 )
 
 TERMINAL_MISSIONS = frozenset({"DONE", "FAILED", "TERMINATED"})
@@ -44,6 +56,16 @@ def _utc(value: datetime) -> str:
     return value.astimezone(timezone.utc).isoformat()
 
 
+def _parse_utc(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (AttributeError, ValueError) as exc:
+        raise FleetStatusStateError("source timestamp invalid") from exc
+    if parsed.tzinfo is None:
+        raise FleetStatusStateError("source timestamp must be timezone-aware")
+    return parsed.astimezone(timezone.utc)
+
+
 def _now(clock: Callable[[], datetime]) -> str:
     return _utc(clock())
 
@@ -67,6 +89,19 @@ def _receipt_digest(previous: str, receipt_id: str, mission_id: str, source_ref:
         "source_ref": source_ref,
         "observed_at": observed_at,
     })).hexdigest()
+
+
+def _source_batch_digest(identity_digest: str, sequence: int, source_observed_at: str, read_digest: str) -> str:
+    return sha256(source_canonical_json({
+        "source_identity_digest": identity_digest,
+        "source_sequence": sequence,
+        "source_observed_at": source_observed_at,
+        "read_digest": read_digest,
+    })).hexdigest()
+
+
+def _source_chain_digest(previous: str, batch_digest: str) -> str:
+    return sha256((previous + batch_digest).encode("ascii")).hexdigest()
 
 
 class FleetStatusStore:
@@ -218,6 +253,68 @@ class FleetStatusStore:
                 observed_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS fleet_source_batch(
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_id TEXT NOT NULL,
+                source_kind TEXT NOT NULL,
+                source_instance_id TEXT NOT NULL,
+                source_implementation_digest TEXT NOT NULL,
+                trust_anchor_id TEXT NOT NULL,
+                source_identity_digest TEXT NOT NULL,
+                source_sequence INTEGER NOT NULL,
+                source_observed_at TEXT NOT NULL,
+                ingested_at TEXT NOT NULL,
+                read_digest TEXT NOT NULL,
+                batch_digest TEXT NOT NULL UNIQUE,
+                previous_source_chain_digest TEXT NOT NULL,
+                source_chain_digest TEXT NOT NULL UNIQUE,
+                UNIQUE(source_id, source_sequence)
+            );
+
+            CREATE TABLE IF NOT EXISTS fleet_source_observation(
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                batch_digest TEXT NOT NULL REFERENCES fleet_source_batch(batch_digest),
+                observation_index INTEGER NOT NULL,
+                observation_id TEXT NOT NULL,
+                observation_digest TEXT NOT NULL,
+                mission_id TEXT,
+                drone_id TEXT,
+                dimension TEXT NOT NULL,
+                state TEXT NOT NULL,
+                provenance_ref TEXT NOT NULL,
+                evidence_digest TEXT NOT NULL,
+                epistemic_class TEXT NOT NULL,
+                observation_json TEXT NOT NULL,
+                UNIQUE(batch_digest, observation_index),
+                UNIQUE(batch_digest, observation_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS fleet_source_checkpoint(
+                source_id TEXT PRIMARY KEY,
+                source_identity_digest TEXT NOT NULL,
+                source_kind TEXT NOT NULL,
+                source_instance_id TEXT NOT NULL,
+                source_implementation_digest TEXT NOT NULL,
+                trust_anchor_id TEXT NOT NULL,
+                source_sequence INTEGER NOT NULL,
+                source_observed_at TEXT NOT NULL,
+                read_digest TEXT NOT NULL,
+                batch_digest TEXT NOT NULL,
+                source_chain_digest TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS fleet_source_decision(
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                decision_id TEXT NOT NULL UNIQUE,
+                mission_id TEXT,
+                drone_id TEXT,
+                dimension TEXT NOT NULL,
+                decision_type TEXT NOT NULL,
+                decision_digest TEXT NOT NULL UNIQUE,
+                decision_json TEXT NOT NULL,
+                observed_at TEXT NOT NULL
+            );
+
             CREATE TRIGGER IF NOT EXISTS fleet_event_no_update
             BEFORE UPDATE ON fleet_event BEGIN SELECT RAISE(ABORT,'fleet_event is append-only'); END;
             CREATE TRIGGER IF NOT EXISTS fleet_event_no_delete
@@ -226,6 +323,18 @@ class FleetStatusStore:
             BEFORE UPDATE ON fleet_receipt BEGIN SELECT RAISE(ABORT,'fleet_receipt is append-only'); END;
             CREATE TRIGGER IF NOT EXISTS fleet_receipt_no_delete
             BEFORE DELETE ON fleet_receipt BEGIN SELECT RAISE(ABORT,'fleet_receipt is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS fleet_source_batch_no_update
+            BEFORE UPDATE ON fleet_source_batch BEGIN SELECT RAISE(ABORT,'fleet_source_batch is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS fleet_source_batch_no_delete
+            BEFORE DELETE ON fleet_source_batch BEGIN SELECT RAISE(ABORT,'fleet_source_batch is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS fleet_source_observation_no_update
+            BEFORE UPDATE ON fleet_source_observation BEGIN SELECT RAISE(ABORT,'fleet_source_observation is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS fleet_source_observation_no_delete
+            BEFORE DELETE ON fleet_source_observation BEGIN SELECT RAISE(ABORT,'fleet_source_observation is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS fleet_source_decision_no_update
+            BEFORE UPDATE ON fleet_source_decision BEGIN SELECT RAISE(ABORT,'fleet_source_decision is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS fleet_source_decision_no_delete
+            BEFORE DELETE ON fleet_source_decision BEGIN SELECT RAISE(ABORT,'fleet_source_decision is append-only'); END;
             """
         )
 
@@ -322,6 +431,408 @@ class FleetStatusStore:
         finally:
             if close:
                 c.close()
+
+    def ingest_source_read(self, read: StatusSourceRead) -> SourceCheckpoint:
+        """Journal one pinned read after adapter/trust validation; sequence is registry-owned."""
+        if type(read) is not StatusSourceRead:
+            raise FleetStatusStateError("source read must use exact contract type")
+        read.validate()
+        ingested_at = _now(self._clock)
+        source_time = _parse_utc(read.source_observed_at)
+        if source_time > _parse_utc(ingested_at):
+            raise FleetStatusStateError("source observation time cannot be in the future")
+        identity = read.source_identity
+        identity_digest = identity.digest()
+        read_digest = read.digest()
+        with self._write() as c:
+            checkpoint = c.execute(
+                "SELECT * FROM fleet_source_checkpoint WHERE source_id=?",
+                (identity.source_id,),
+            ).fetchone()
+            if checkpoint is None:
+                sequence = 1
+                previous_chain = "0" * 64
+            else:
+                expected_identity = (
+                    checkpoint["source_identity_digest"], checkpoint["source_kind"],
+                    checkpoint["source_instance_id"], checkpoint["source_implementation_digest"],
+                    checkpoint["trust_anchor_id"],
+                )
+                actual_identity = (
+                    identity_digest, identity.source_kind, identity.source_instance_id,
+                    identity.source_implementation_digest, identity.trust_anchor_id,
+                )
+                if actual_identity != expected_identity:
+                    raise FleetStatusStateError("source identity/implementation substitution denied")
+                previous_time = _parse_utc(checkpoint["source_observed_at"])
+                if source_time < previous_time:
+                    raise FleetStatusStateError("source time regression denied")
+                if source_time == previous_time:
+                    if read_digest != checkpoint["read_digest"]:
+                        raise FleetStatusStateError("same source time with different content denied")
+                    return SourceCheckpoint(
+                        identity.source_id, identity_digest, int(checkpoint["source_sequence"]),
+                        checkpoint["source_observed_at"], checkpoint["read_digest"],
+                        checkpoint["batch_digest"], checkpoint["source_chain_digest"],
+                    ).validate()
+                sequence = int(checkpoint["source_sequence"]) + 1
+                previous_chain = checkpoint["source_chain_digest"]
+
+            batch_digest = _source_batch_digest(identity_digest, sequence, read.source_observed_at, read_digest)
+            source_chain_digest = _source_chain_digest(previous_chain, batch_digest)
+            c.execute(
+                """INSERT INTO fleet_source_batch(
+                   source_id,source_kind,source_instance_id,source_implementation_digest,trust_anchor_id,
+                   source_identity_digest,source_sequence,source_observed_at,ingested_at,read_digest,batch_digest,
+                   previous_source_chain_digest,source_chain_digest
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    identity.source_id, identity.source_kind, identity.source_instance_id,
+                    identity.source_implementation_digest, identity.trust_anchor_id, identity_digest,
+                    sequence, read.source_observed_at, ingested_at, read_digest, batch_digest,
+                    previous_chain, source_chain_digest,
+                ),
+            )
+            for index, observation in enumerate(read.observations):
+                payload = observation.canonical_dict()
+                c.execute(
+                    """INSERT INTO fleet_source_observation(
+                       batch_digest,observation_index,observation_id,observation_digest,mission_id,drone_id,
+                       dimension,state,provenance_ref,evidence_digest,epistemic_class,observation_json
+                       ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        batch_digest, index, observation.observation_id, observation.digest(),
+                        observation.mission_id, observation.drone_id, observation.dimension, observation.state,
+                        observation.provenance_ref, observation.evidence_digest, observation.epistemic_class,
+                        source_canonical_json(payload).decode("utf-8"),
+                    ),
+                )
+            c.execute(
+                """INSERT INTO fleet_source_checkpoint(
+                   source_id,source_identity_digest,source_kind,source_instance_id,source_implementation_digest,
+                   trust_anchor_id,source_sequence,source_observed_at,read_digest,batch_digest,source_chain_digest
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                   ON CONFLICT(source_id) DO UPDATE SET
+                   source_identity_digest=excluded.source_identity_digest,
+                   source_kind=excluded.source_kind,
+                   source_instance_id=excluded.source_instance_id,
+                   source_implementation_digest=excluded.source_implementation_digest,
+                   trust_anchor_id=excluded.trust_anchor_id,
+                   source_sequence=excluded.source_sequence,
+                   source_observed_at=excluded.source_observed_at,
+                   read_digest=excluded.read_digest,
+                   batch_digest=excluded.batch_digest,
+                   source_chain_digest=excluded.source_chain_digest""",
+                (
+                    identity.source_id, identity_digest, identity.source_kind, identity.source_instance_id,
+                    identity.source_implementation_digest, identity.trust_anchor_id, sequence,
+                    read.source_observed_at, read_digest, batch_digest, source_chain_digest,
+                ),
+            )
+            self._append_event(
+                c,
+                event_type="SOURCE_BATCH_INGESTED",
+                mission_id=None,
+                payload={
+                    "source_id": identity.source_id,
+                    "source_sequence": sequence,
+                    "batch_digest": batch_digest,
+                    "source_chain_digest": source_chain_digest,
+                },
+                observed_at=ingested_at,
+            )
+            self._bump(c)
+        return SourceCheckpoint(
+            identity.source_id, identity_digest, sequence, read.source_observed_at,
+            read_digest, batch_digest, source_chain_digest,
+        ).validate()
+
+    def verify_source_chains(self, conn: sqlite3.Connection | None = None) -> dict[str, str]:
+        c = conn or self.open_query_reader()
+        close = conn is None
+        try:
+            heads: dict[str, str] = {}
+            sources = [row[0] for row in c.execute("SELECT DISTINCT source_id FROM fleet_source_batch ORDER BY source_id")]
+            for source_id in sources:
+                previous = "0" * 64
+                expected_sequence = 1
+                last_batch = None
+                for batch in c.execute("SELECT * FROM fleet_source_batch WHERE source_id=? ORDER BY source_sequence", (source_id,)):
+                    if int(batch["source_sequence"]) != expected_sequence:
+                        raise FleetStatusStateError("source sequence gap/corruption")
+                    identity = StatusSourceIdentity(
+                        batch["source_id"], batch["source_kind"], batch["source_instance_id"],
+                        batch["source_implementation_digest"], batch["trust_anchor_id"],
+                    ).validate()
+                    if identity.digest() != batch["source_identity_digest"]:
+                        raise FleetStatusStateError("source identity digest corruption")
+                    observation_digests: list[str] = []
+                    observations = c.execute(
+                        "SELECT * FROM fleet_source_observation WHERE batch_digest=? ORDER BY observation_index",
+                        (batch["batch_digest"],),
+                    ).fetchall()
+                    for index, observation in enumerate(observations):
+                        if int(observation["observation_index"]) != index:
+                            raise FleetStatusStateError("source observation index corruption")
+                        payload = json.loads(observation["observation_json"])
+                        if not isinstance(payload, dict):
+                            raise FleetStatusStateError("source observation payload corruption")
+                        typed = dict(payload)
+                        items = typed.get("value_items")
+                        if not isinstance(items, list) or any(not isinstance(item, list) or len(item) != 2 for item in items):
+                            raise FleetStatusStateError("source observation value_items corruption")
+                        typed["value_items"] = tuple((str(item[0]), str(item[1])) for item in items)
+                        try:
+                            StatusSourceObservation(**typed).validate()
+                        except Exception as exc:
+                            raise FleetStatusStateError("source observation contract corruption") from exc
+                        digest = sha256(source_canonical_json(payload)).hexdigest()
+                        if digest != observation["observation_digest"]:
+                            raise FleetStatusStateError("source observation digest corruption")
+                        if payload.get("observation_id") != observation["observation_id"]:
+                            raise FleetStatusStateError("source observation identity corruption")
+                        observation_digests.append(digest)
+                    read_digest = sha256(source_canonical_json({
+                        "source_identity": identity.canonical_dict(),
+                        "source_observed_at": batch["source_observed_at"],
+                        "observation_digests": observation_digests,
+                    })).hexdigest()
+                    if read_digest != batch["read_digest"]:
+                        raise FleetStatusStateError("source read digest corruption")
+                    expected_batch = _source_batch_digest(
+                        batch["source_identity_digest"], int(batch["source_sequence"]),
+                        batch["source_observed_at"], batch["read_digest"],
+                    )
+                    if expected_batch != batch["batch_digest"]:
+                        raise FleetStatusStateError("source batch digest corruption")
+                    expected_chain = _source_chain_digest(previous, expected_batch)
+                    if batch["previous_source_chain_digest"] != previous or batch["source_chain_digest"] != expected_chain:
+                        raise FleetStatusStateError("source hash chain corruption")
+                    previous = expected_chain
+                    last_batch = batch
+                    expected_sequence += 1
+                checkpoint = c.execute("SELECT * FROM fleet_source_checkpoint WHERE source_id=?", (source_id,)).fetchone()
+                if checkpoint is None or last_batch is None:
+                    raise FleetStatusStateError("source checkpoint missing")
+                if (
+                    int(checkpoint["source_sequence"]) != int(last_batch["source_sequence"])
+                    or checkpoint["batch_digest"] != last_batch["batch_digest"]
+                    or checkpoint["source_chain_digest"] != previous
+                    or checkpoint["read_digest"] != last_batch["read_digest"]
+                    or checkpoint["source_observed_at"] != last_batch["source_observed_at"]
+                ):
+                    raise FleetStatusStateError("source checkpoint corruption")
+                heads[source_id] = previous
+            return heads
+        finally:
+            if close:
+                c.close()
+
+    def verify_source_decisions(self, conn: sqlite3.Connection | None = None) -> None:
+        c = conn or self.open_query_reader()
+        close = conn is None
+        try:
+            for row in c.execute("SELECT * FROM fleet_source_decision ORDER BY seq"):
+                try:
+                    payload = json.loads(row["decision_json"])
+                except json.JSONDecodeError as exc:
+                    raise FleetStatusStateError("source decision JSON corruption") from exc
+                if not isinstance(payload, dict) or payload.get("decision_type") != row["decision_type"]:
+                    raise FleetStatusStateError("source decision type corruption")
+                digest = sha256(source_canonical_json(payload)).hexdigest()
+                if digest != row["decision_digest"]:
+                    raise FleetStatusStateError("source decision digest corruption")
+                dtype = row["decision_type"]
+                try:
+                    if dtype == "FACT":
+                        value = dict(payload["fact"])
+                        value["value_items"] = tuple(tuple(item) for item in value["value_items"])
+                        value["source_ids"] = tuple(value["source_ids"])
+                        value["evidence_refs"] = tuple(value["evidence_refs"])
+                        ReconciledStatusFact(**value).validate()
+                    elif dtype == "CONFLICT":
+                        value = dict(payload["conflict"])
+                        value["source_ids"] = tuple(value["source_ids"])
+                        value["observation_ids"] = tuple(value["observation_ids"])
+                        value["evidence_refs"] = tuple(value["evidence_refs"])
+                        SourceConflict(**value).validate()
+                    elif dtype == "MISSING":
+                        value = dict(payload["missing"])
+                        value["expected_source_kinds"] = tuple(value["expected_source_kinds"])
+                        MissingStatusSource(**value).validate()
+                    else:
+                        raise FleetStatusStateError("unknown source decision type")
+                except FleetStatusStateError:
+                    raise
+                except Exception as exc:
+                    raise FleetStatusStateError("source decision contract corruption") from exc
+        finally:
+            if close:
+                c.close()
+
+    def source_observation_rows(
+        self,
+        conn: sqlite3.Connection | None = None,
+        *,
+        current_only: bool = True,
+    ) -> list[dict[str, object]]:
+        c = conn or self.open_query_reader()
+        close = conn is None
+        try:
+            if current_only:
+                rows = c.execute(
+                    """SELECT b.source_id,b.source_kind,b.source_instance_id,b.source_implementation_digest,
+                       b.trust_anchor_id,b.source_sequence,b.source_observed_at,b.ingested_at,b.batch_digest,
+                       b.source_chain_digest,o.observation_json
+                       FROM fleet_source_batch b
+                       JOIN fleet_source_checkpoint cp
+                         ON cp.source_id=b.source_id AND cp.source_sequence=b.source_sequence
+                       JOIN fleet_source_observation o ON b.batch_digest=o.batch_digest
+                       ORDER BY b.source_id,o.observation_index"""
+                ).fetchall()
+            else:
+                rows = c.execute(
+                    """SELECT b.source_id,b.source_kind,b.source_instance_id,b.source_implementation_digest,
+                       b.trust_anchor_id,b.source_sequence,b.source_observed_at,b.ingested_at,b.batch_digest,
+                       b.source_chain_digest,o.observation_json
+                       FROM fleet_source_observation o JOIN fleet_source_batch b ON b.batch_digest=o.batch_digest
+                       ORDER BY b.source_id,b.source_sequence,o.observation_index"""
+                ).fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            if close:
+                c.close()
+
+    def source_checkpoints(self, conn: sqlite3.Connection | None = None) -> list[dict[str, object]]:
+        c = conn or self.open_query_reader()
+        close = conn is None
+        try:
+            rows = c.execute("SELECT * FROM fleet_source_checkpoint ORDER BY source_id").fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            if close:
+                c.close()
+
+    def record_source_decisions(
+        self,
+        facts: tuple[ReconciledStatusFact, ...],
+        conflicts: tuple[SourceConflict, ...],
+        missing: tuple[MissingStatusSource, ...] = (),
+    ) -> None:
+        if type(facts) is not tuple or type(conflicts) is not tuple or type(missing) is not tuple:
+            raise FleetStatusStateError("source decisions must be tuples")
+        observed_at = _now(self._clock)
+        decisions: list[tuple[str, str | None, str | None, str, str, str, str]] = []
+        for fact in facts:
+            if type(fact) is not ReconciledStatusFact:
+                raise FleetStatusStateError("invalid reconciled fact")
+            fact.validate()
+            payload = {
+                "decision_type": "FACT",
+                "decision_observed_at": observed_at,
+                "fact": {
+                    **asdict(fact),
+                    "value_items": [list(item) for item in fact.value_items],
+                    "source_ids": list(fact.source_ids),
+                    "evidence_refs": list(fact.evidence_refs),
+                },
+            }
+            raw = source_canonical_json(payload)
+            digest = sha256(raw).hexdigest()
+            decision_id = f"fact:{fact.mission_id}:{fact.dimension}:{digest}"
+            decisions.append((decision_id, fact.mission_id, fact.value_dict().get("drone_id"), fact.dimension, "FACT", digest, raw.decode()))
+        for conflict in conflicts:
+            if type(conflict) is not SourceConflict:
+                raise FleetStatusStateError("invalid source conflict")
+            conflict.validate()
+            payload = {
+                "decision_type": "CONFLICT",
+                "decision_observed_at": observed_at,
+                "conflict": {
+                    **asdict(conflict),
+                    "source_ids": list(conflict.source_ids),
+                    "observation_ids": list(conflict.observation_ids),
+                    "evidence_refs": list(conflict.evidence_refs),
+                },
+            }
+            raw = source_canonical_json(payload)
+            digest = sha256(raw).hexdigest()
+            decision_id = f"conflict:{conflict.conflict_id}:{digest}"
+            decisions.append((decision_id, conflict.mission_id, conflict.drone_id, conflict.dimension, "CONFLICT", digest, raw.decode()))
+        for item in missing:
+            if type(item) is not MissingStatusSource:
+                raise FleetStatusStateError("invalid missing source decision")
+            item.validate()
+            payload = {
+                "decision_type": "MISSING",
+                "decision_observed_at": observed_at,
+                "missing": {
+                    **asdict(item),
+                    "expected_source_kinds": list(item.expected_source_kinds),
+                },
+            }
+            raw = source_canonical_json(payload)
+            digest = sha256(raw).hexdigest()
+            decision_id = f"missing:{item.mission_id}:{item.dimension}:{digest}"
+            decisions.append((decision_id, item.mission_id, item.drone_id, item.dimension, "MISSING", digest, raw.decode()))
+        if not decisions:
+            return
+        with self._write() as c:
+            inserted = 0
+            for decision_id, mission_id, drone_id, dimension, decision_type, digest, raw in decisions:
+                cursor = c.execute(
+                    """INSERT OR IGNORE INTO fleet_source_decision(
+                       decision_id,mission_id,drone_id,dimension,decision_type,decision_digest,decision_json,observed_at
+                       ) VALUES(?,?,?,?,?,?,?,?)""",
+                    (decision_id, mission_id, drone_id, dimension, decision_type, digest, raw, observed_at),
+                )
+                inserted += cursor.rowcount
+            if inserted:
+                self._append_event(
+                    c, event_type="SOURCE_RECONCILIATION_DECISION", mission_id=None,
+                    payload={"inserted": inserted}, observed_at=observed_at,
+                )
+                self._bump(c)
+
+    def latest_source_decisions(self, conn: sqlite3.Connection | None = None) -> list[dict[str, object]]:
+        c = conn or self.open_query_reader()
+        close = conn is None
+        try:
+            rows = c.execute(
+                """SELECT d.* FROM fleet_source_decision d
+                   JOIN (
+                     SELECT COALESCE(mission_id,'' ) AS mission_key,dimension,MAX(seq) AS max_seq
+                     FROM fleet_source_decision GROUP BY COALESCE(mission_id,''),dimension
+                   ) x ON COALESCE(d.mission_id,'')=x.mission_key AND d.dimension=x.dimension AND d.seq=x.max_seq
+                   ORDER BY d.seq"""
+            ).fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            if close:
+                c.close()
+
+    def identity_row(self, mission_id: str) -> dict[str, object] | None:
+        reader = self.open_query_reader()
+        try:
+            row = reader.execute("SELECT * FROM fleet_identity WHERE mission_id=?", (mission_id,)).fetchone()
+            return dict(row) if row is not None else None
+        finally:
+            reader.close()
+
+    def runtime_row(self, mission_id: str) -> dict[str, object] | None:
+        reader = self.open_query_reader()
+        try:
+            row = reader.execute("SELECT * FROM fleet_runtime WHERE mission_id=?", (mission_id,)).fetchone()
+            return dict(row) if row is not None else None
+        finally:
+            reader.close()
+
+    def has_receipt(self, receipt_id: str) -> bool:
+        reader = self.open_query_reader()
+        try:
+            return reader.execute("SELECT 1 FROM fleet_receipt WHERE receipt_id=?", (receipt_id,)).fetchone() is not None
+        finally:
+            reader.close()
 
     def register_identity(self, identity: FleetStatusIdentity) -> None:
         identity.validate()
@@ -501,7 +1012,16 @@ class FleetStatusStore:
             self._bump(c)
         return evidence
 
-    def mark_verified_done(self, mission_id: str) -> None:
+    def mark_verified_done(
+        self,
+        mission_id: str,
+        *,
+        phase: str = "VERIFY",
+        branch_head: str | None = None,
+        current_operation: str | None = None,
+        current_blocker: str | None = None,
+        dependency_state: str = "READY",
+    ) -> None:
         observed_at = _now(self._clock)
         with self._write() as c:
             row = c.execute(
@@ -517,9 +1037,11 @@ class FleetStatusStore:
                 """INSERT INTO fleet_mission(mission_id,phase,status,closure_state,current_operation,current_blocker,
                    dependency_state,branch_head,observed_at)
                    VALUES(?,?,?,?,?,?,?,?,?)
-                   ON CONFLICT(mission_id) DO UPDATE SET status='DONE',closure_state='READY_TO_CLOSE',
-                   observed_at=excluded.observed_at""",
-                (mission_id, "VERIFY", "DONE", "READY_TO_CLOSE", None, None, "READY", None, observed_at),
+                   ON CONFLICT(mission_id) DO UPDATE SET phase=excluded.phase,status='DONE',
+                   closure_state='READY_TO_CLOSE',current_operation=excluded.current_operation,
+                   current_blocker=excluded.current_blocker,dependency_state=excluded.dependency_state,
+                   branch_head=excluded.branch_head,observed_at=excluded.observed_at""",
+                (mission_id, phase, "DONE", "READY_TO_CLOSE", current_operation, current_blocker, dependency_state, branch_head, observed_at),
             )
             self._append_event(c, event_type="MISSION_DONE", mission_id=mission_id,
                                payload={"verification_id": row["verification_id"]}, observed_at=observed_at)
@@ -586,9 +1108,10 @@ class FleetStatusStore:
 
     def close_mission(self, mission_id: str) -> None:
         observed_at = _now(self._clock)
-        # Validate chains before obtaining the write lock. Any corruption fails closed.
         self.verify_event_chain()
         self.verify_receipt_chain()
+        self.verify_source_chains()
+        self.verify_source_decisions()
         with self._write() as c:
             mission = c.execute("SELECT * FROM fleet_mission WHERE mission_id=?", (mission_id,)).fetchone()
             if mission is None or mission["status"] not in TERMINAL_MISSIONS:
@@ -597,6 +1120,17 @@ class FleetStatusStore:
                 verification = c.execute("SELECT verification_state FROM fleet_verification WHERE mission_id=?", (mission_id,)).fetchone()
                 if verification is None or verification["verification_state"] != "PASS":
                     raise FleetStatusStateError("verification evidence incomplete")
+            active_conflict = c.execute(
+                """SELECT 1 FROM fleet_source_decision d
+                   JOIN (
+                     SELECT dimension,MAX(seq) AS max_seq FROM fleet_source_decision
+                     WHERE mission_id=? GROUP BY dimension
+                   ) x ON d.dimension=x.dimension AND d.seq=x.max_seq
+                   WHERE d.mission_id=? AND d.decision_type='CONFLICT' LIMIT 1""",
+                (mission_id, mission_id),
+            ).fetchone()
+            if active_conflict is not None:
+                raise FleetStatusStateError("active source conflict prevents closure")
             for kind, terminal in (
                 ("authority", TERMINAL_AUTHORITY),
                 ("effect", TERMINAL_EFFECT),
@@ -621,12 +1155,14 @@ class FleetStatusStore:
             self._bump(c)
 
     def snapshot_rows(self) -> dict[str, object]:
-        """One read transaction, one trusted time, chain-valid or unavailable."""
+        """One read transaction, one trusted time, all chains valid or unavailable."""
         conn = self.open_query_reader()
         try:
             conn.execute("BEGIN")
             self.verify_event_chain(conn)
             receipt_head = self.verify_receipt_chain(conn)
+            source_heads = self.verify_source_chains(conn)
+            self.verify_source_decisions(conn)
             meta = dict(conn.execute("SELECT * FROM fleet_meta WHERE singleton=1").fetchone())
             data = {
                 "observed_at": _now(self._clock),
@@ -640,6 +1176,9 @@ class FleetStatusStore:
                 "leases": [dict(r) for r in conn.execute("SELECT * FROM fleet_lease")],
                 "receipts": [dict(r) for r in conn.execute("SELECT * FROM fleet_receipt ORDER BY seq")],
                 "receipt_head": receipt_head,
+                "source_heads": source_heads,
+                "source_observations": self.source_observation_rows(conn),
+                "source_decisions": self.latest_source_decisions(conn),
             }
             conn.execute("COMMIT")
             return data
