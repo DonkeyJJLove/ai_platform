@@ -7,7 +7,7 @@ never emits reconciliation reports, convergence receipts, closure facts, or auth
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 import json
 from pathlib import PureWindowsPath
@@ -15,12 +15,10 @@ import re
 from typing import Any, Mapping, Tuple
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
 RUNTIME_SOURCE_INSTANCE_ID = "lion-runtime-reconciliation-source-01"
-RECONCILIATION_DB_PATH = r"C:\LION\runtime\f005\reconciliation.sqlite"
-RECONCILIATION_TRUST_PATH = r"C:\LION\runtime\f005\trust\reconciliation-trust.json"
-OBSERVATION_PATH = r"C:\LION\runtime\f005\reconciliation-source\repository-inventory.json"
 
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -71,9 +69,9 @@ class RuntimeReconciliationIngestionConfig:
     source_instance_id: str
     observation_sha256: str
     trust_sha256: str
-    reconciliation_db_path: str = RECONCILIATION_DB_PATH
-    observation_path: str = OBSERVATION_PATH
-    reconciliation_trust_path: str = RECONCILIATION_TRUST_PATH
+    reconciliation_db_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().reconciliation_db_path)
+    observation_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().repository_inventory_path)
+    reconciliation_trust_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().reconciliation_trust_path)
 
     def validate(self) -> "RuntimeReconciliationIngestionConfig":
         if self.repository != REPOSITORY:
@@ -84,9 +82,10 @@ class RuntimeReconciliationIngestionConfig:
             raise RuntimeReconciliationIngestionContractError("source instance substitution denied")
         _sha256(self.observation_sha256, "observation_sha256")
         _sha256(self.trust_sha256, "trust_sha256")
-        _exact_path(self.reconciliation_db_path, RECONCILIATION_DB_PATH, "reconciliation_db_path")
-        _exact_path(self.observation_path, OBSERVATION_PATH, "observation_path")
-        _exact_path(self.reconciliation_trust_path, RECONCILIATION_TRUST_PATH, "reconciliation_trust_path")
+        paths = resolve_fleet_runtime_paths()
+        _exact_path(self.reconciliation_db_path, paths.reconciliation_db_path, "reconciliation_db_path")
+        _exact_path(self.observation_path, paths.repository_inventory_path, "observation_path")
+        _exact_path(self.reconciliation_trust_path, paths.reconciliation_trust_path, "reconciliation_trust_path")
         return self
 
     def digest(self) -> str:

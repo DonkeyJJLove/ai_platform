@@ -18,19 +18,15 @@ from typing import Any, Mapping
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
 from cyber_lion.contracts.fleet_runtime_trust import (
-    F005_H_PINS_PATH,
-    PROVISIONING_RECEIPT_PATH,
-    RECONCILIATION_TRUST_PATH,
     REPOSITORY,
     RUNTIME_INSTANCE_ID,
-    TRUST_ROOT,
-    VERIFICATION_TRUST_PATH,
     RuntimeTrustProvisioningConfig,
     RuntimeTrustProvisioningReceipt,
     canonical_json,
     f005_h_pins_payload,
 )
 from cyber_lion.contracts.fleet_status import VerificationTrustPins
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.enterprise.verifier_identity_runtime import RUNTIME_FACTORY_VERSION
 
 
@@ -175,7 +171,8 @@ def _physical_output_paths(
             raise FleetRuntimeTrustError(
                 "F005-I production provisioning requires Windows lion-runtime"
             )
-        root = Path(TRUST_ROOT)
+        logical = resolve_fleet_runtime_paths()
+        root = Path(logical.trust_root)
     else:
         root = Path(physical_output_root)
         if not root.is_absolute():
@@ -183,12 +180,13 @@ def _physical_output_paths(
     resolved_root = root.resolve(strict=False)
     if resolved_root == repository_root or repository_root in resolved_root.parents:
         raise FleetRuntimeTrustError("runtime trust outputs must remain outside repository")
+    logical = resolve_fleet_runtime_paths()
     return {
         "root": resolved_root,
-        "verification": resolved_root / PureWindowsPath(VERIFICATION_TRUST_PATH).name,
-        "reconciliation": resolved_root / PureWindowsPath(RECONCILIATION_TRUST_PATH).name,
-        "pins": resolved_root / PureWindowsPath(F005_H_PINS_PATH).name,
-        "receipt": resolved_root / PureWindowsPath(PROVISIONING_RECEIPT_PATH).name,
+        "verification": resolved_root / PureWindowsPath(logical.verification_trust_path).name,
+        "reconciliation": resolved_root / PureWindowsPath(logical.reconciliation_trust_path).name,
+        "pins": resolved_root / PureWindowsPath(logical.f005_h_pins_path).name,
+        "receipt": resolved_root / PureWindowsPath(logical.trust_provisioning_receipt_path).name,
     }
 
 

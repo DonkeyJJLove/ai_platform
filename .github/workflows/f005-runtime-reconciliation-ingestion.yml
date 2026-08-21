@@ -47,6 +47,8 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -88,13 +90,16 @@ jobs:
           if ($env:SOURCE_INSTANCE -ne 'lion-runtime-reconciliation-source-01') {
             throw "source instance substitution denied"
           }
-          if ($env:OBSERVATION_FILE -ne 'C:\LION\runtime\f005\reconciliation-source\repository-inventory.json') {
+          $expectedObservation = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-source\repository-inventory.json'
+          $expectedTrust = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'trust\reconciliation-trust.json'
+          $expectedReconciliation = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation.sqlite'
+          if ($env:OBSERVATION_FILE -ne $expectedObservation) {
             throw "repository observation path substitution denied"
           }
-          if ($env:TRUST_FILE -ne 'C:\LION\runtime\f005\trust\reconciliation-trust.json') {
+          if ($env:TRUST_FILE -ne $expectedTrust) {
             throw "reconciliation trust path substitution denied"
           }
-          if ($env:RECONCILIATION_DB -ne 'C:\LION\runtime\f005\reconciliation.sqlite') {
+          if ($env:RECONCILIATION_DB -ne $expectedReconciliation) {
             throw "reconciliation database path substitution denied"
           }
           foreach ($entry in @(

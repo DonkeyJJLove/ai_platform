@@ -2,16 +2,18 @@ from __future__ import annotations
 
 from dataclasses import replace
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from cyber_lion.contracts.branch_ownership_registry import (
     BranchOwnershipProviderConfig,
     BranchOwnershipRecord,
     BranchOwnershipRegistrySnapshot,
-    REGISTRY_PATH,
 )
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.enterprise.branch_ownership_registry import (
     BranchOwnershipRegistryError,
     FileBranchOwnershipRegistryProvider,
@@ -21,10 +23,14 @@ from cyber_lion.enterprise.branch_ownership_registry import (
 REPO = "DonkeyJJLove/ai_platform"
 HEAD = "a" * 40
 BASE = "b" * 40
+DEPLOYMENT_ROOT = r"C:\Users\d2j3\Documents\LION\runtime\f005"
 
 
 class BranchOwnershipRegistryTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.env = mock.patch.dict(os.environ, {"LION_FLEET_RUNTIME_ROOT": DEPLOYMENT_ROOT}, clear=False)
+        self.env.start()
+        self.logical = resolve_fleet_runtime_paths()
         self.tmp = tempfile.TemporaryDirectory()
         self.registry = Path(self.tmp.name) / "branch-ownership-registry.json"
         self.config = BranchOwnershipProviderConfig(
@@ -34,6 +40,7 @@ class BranchOwnershipRegistryTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
+        self.env.stop()
 
     def record(self, **overrides):
         values = dict(
@@ -179,7 +186,7 @@ class BranchOwnershipRegistryTests(unittest.TestCase):
         self.assertEqual(canonical_registry_bytes(one), canonical_registry_bytes(two))
 
     def test_provider_contract_path_is_exact(self):
-        self.assertEqual(self.config.registry_path, REGISTRY_PATH)
+        self.assertEqual(self.config.registry_path, self.logical.branch_ownership_registry_path)
 
 
 if __name__ == "__main__":

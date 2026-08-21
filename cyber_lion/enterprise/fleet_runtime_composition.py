@@ -22,10 +22,6 @@ from typing import Any, Callable, Mapping
 
 from cyber_lion.contracts.fleet_reconciliation import ReconciliationTrustPins
 from cyber_lion.contracts.fleet_runtime_composition import (
-    COORDINATION_DB_PATH,
-    RECONCILIATION_DB_PATH,
-    RUNTIME_ROOT,
-    STATUS_DB_PATH,
     RuntimeCompositionConfig,
     RuntimeCompositionReceipt,
     canonical_json,
@@ -517,10 +513,10 @@ def bootstrap_runtime_composition(
         current_master=config.current_master,
         current_master_tree=config.current_master_tree,
         composition_instance_id=config.composition_instance_id,
-        runtime_root=RUNTIME_ROOT,
-        status_db_path=STATUS_DB_PATH,
-        coordination_db_path=COORDINATION_DB_PATH,
-        reconciliation_db_path=RECONCILIATION_DB_PATH,
+        runtime_root=config.runtime_root,
+        status_db_path=config.status_db_path,
+        coordination_db_path=config.coordination_db_path,
+        reconciliation_db_path=config.reconciliation_db_path,
         status_mission_count=after["status_mission_count"],
         coordination_mission_count=after["coordination_mission_count"],
         reconciliation_inventory_count=after["reconciliation_inventory_count"],

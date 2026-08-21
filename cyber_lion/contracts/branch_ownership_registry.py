@@ -1,16 +1,17 @@
 """F005-L durable authoritative branch-ownership registry contracts."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 import json
 from pathlib import PureWindowsPath
 import re
 from typing import Any, Mapping, Tuple
 
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
+
 REPOSITORY = "DonkeyJJLove/ai_platform"
 RUNTIME_SOURCE_INSTANCE_ID = "lion-runtime-reconciliation-source-01"
-REGISTRY_PATH = r"C:\LION\runtime\f005\reconciliation-source\branch-ownership-registry.json"
 SCHEMA_VERSION = "1.0.0"
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -172,7 +173,7 @@ class BranchOwnershipRegistrySnapshot:
 class BranchOwnershipProviderConfig:
     repository: str
     source_instance_id: str
-    registry_path: str = REGISTRY_PATH
+    registry_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().branch_ownership_registry_path)
     minimum_registry_revision: int = 1
 
     def validate(self) -> "BranchOwnershipProviderConfig":
@@ -181,7 +182,8 @@ class BranchOwnershipProviderConfig:
         if self.source_instance_id != RUNTIME_SOURCE_INSTANCE_ID:
             raise BranchOwnershipRegistryContractError("provider source instance substitution denied")
         path = PureWindowsPath(self.registry_path)
-        if not path.is_absolute() or path != PureWindowsPath(REGISTRY_PATH):
+        expected = PureWindowsPath(resolve_fleet_runtime_paths().branch_ownership_registry_path)
+        if not path.is_absolute() or path != expected:
             raise BranchOwnershipRegistryContractError("registry path substitution denied")
         if isinstance(self.minimum_registry_revision, bool) or not isinstance(self.minimum_registry_revision, int) or self.minimum_registry_revision < 1:
             raise BranchOwnershipRegistryContractError("minimum_registry_revision invalid")

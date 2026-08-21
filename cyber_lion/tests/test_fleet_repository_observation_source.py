@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+import os
 import tempfile
 import unittest
+from unittest import mock
 
 from cyber_lion.contracts.fleet_repository_observation_source import (
     AncestryEvidence,
@@ -23,6 +25,7 @@ TREE = "b" * 40
 BASE = "c" * 40
 HEAD1 = "d" * 40
 HEAD2 = "e" * 40
+DEPLOYMENT_ROOT = r"C:\Users\d2j3\Documents\LION\runtime\f005"
 
 
 class FakeGitHub:
@@ -86,6 +89,13 @@ def owned(branch, *, provenance="ownership:registry", superseded=None, supersess
 
 
 class RepositoryObservationSourceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.env = mock.patch.dict(os.environ, {"LION_FLEET_RUNTIME_ROOT": DEPLOYMENT_ROOT}, clear=False)
+        self.env.start()
+
+    def tearDown(self) -> None:
+        self.env.stop()
+
     def config(self):
         return ObservationConfig(REPO, MASTER, TREE, 1).validate()
 

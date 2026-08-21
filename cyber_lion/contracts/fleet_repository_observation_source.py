@@ -1,16 +1,17 @@
 """Contracts for F005-K read-only live repository observation production."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 import json
 from pathlib import PureWindowsPath
 import re
 from typing import Any, Mapping, Tuple
 
+from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
+
 REPOSITORY = "DonkeyJJLove/ai_platform"
 DEFAULT_BRANCH = "master"
-OUTPUT_PATH = r"C:\LION\runtime\f005\reconciliation-source\repository-inventory.json"
 _SCHEMA_VERSION = "1.0.0"
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _OWNERSHIP = frozenset({"ACTIVE", "TERMINAL", "UNOWNED", "UNKNOWN"})
@@ -51,7 +52,7 @@ class ObservationConfig:
     expected_master_tree: str
     inventory_revision: int
     default_branch: str = DEFAULT_BRANCH
-    output_path: str = OUTPUT_PATH
+    output_path: str = field(default_factory=lambda: resolve_fleet_runtime_paths().repository_inventory_path)
 
     def validate(self) -> "ObservationConfig":
         if self.repository != REPOSITORY:
@@ -63,7 +64,8 @@ class ObservationConfig:
         if isinstance(self.inventory_revision, bool) or not isinstance(self.inventory_revision, int) or self.inventory_revision < 1:
             raise RepositoryObservationContractError("inventory_revision invalid")
         path = PureWindowsPath(self.output_path)
-        if not path.is_absolute() or path != PureWindowsPath(OUTPUT_PATH):
+        expected = PureWindowsPath(resolve_fleet_runtime_paths().repository_inventory_path)
+        if not path.is_absolute() or path != expected:
             raise RepositoryObservationContractError("output path substitution denied")
         return self
 

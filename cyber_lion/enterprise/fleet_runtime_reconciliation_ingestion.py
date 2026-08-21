@@ -12,11 +12,8 @@ from typing import Any, Mapping
 
 from cyber_lion.contracts.fleet_reconciliation import BranchEvidence, ReconciliationTrustPins, RepositoryInventory
 from cyber_lion.contracts.fleet_runtime_reconciliation_ingestion import (
-    RECONCILIATION_DB_PATH,
-    RECONCILIATION_TRUST_PATH,
     REPOSITORY,
     RUNTIME_SOURCE_INSTANCE_ID,
-    OBSERVATION_PATH,
     ObservedBranch,
     RuntimeReconciliationIngestionConfig,
     RuntimeReconciliationIngestionReceipt,

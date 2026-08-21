@@ -11,7 +11,6 @@ from typing import Callable, Protocol, Sequence
 
 from cyber_lion.contracts.fleet_repository_observation_source import (
     DEFAULT_BRANCH,
-    OUTPUT_PATH,
     AncestryEvidence,
     LiveBranch,
     ObservationConfig,
