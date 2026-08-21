@@ -1,0 +1,202 @@
+name: F005 Runtime Trust Provisioning
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA to bind
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA to bind
+        required: true
+        type: string
+      runtime_instance:
+        description: Exact runtime instance (must be lion-runtime-01)
+        required: true
+        type: string
+      expected_verifier_id:
+        description: Expected verifier identity
+        required: true
+        type: string
+      expected_verification_trust_anchor_id:
+        description: Expected verification trust anchor identity
+        required: true
+        type: string
+      expected_reconciliation_source_id:
+        description: Expected reconciliation source identity
+        required: true
+        type: string
+      expected_reconciliation_source_instance_id:
+        description: Expected reconciliation source instance identity
+        required: true
+        type: string
+      expected_reconciliation_trust_anchor_id:
+        description: Expected reconciliation trust anchor identity
+        required: true
+        type: string
+      verification_manifest_path:
+        description: Absolute external verification runtime manifest path
+        required: true
+        type: string
+      verifier_implementation_path:
+        description: Absolute external verifier implementation artifact path
+        required: true
+        type: string
+      verification_anchor_manifest_path:
+        description: Absolute external verification trust-anchor manifest path
+        required: true
+        type: string
+      reconciliation_manifest_path:
+        description: Absolute external reconciliation runtime manifest path
+        required: true
+        type: string
+      reconciliation_implementation_path:
+        description: Absolute external reconciliation implementation artifact path
+        required: true
+        type: string
+      reconciliation_anchor_manifest_path:
+        description: Absolute external reconciliation trust-anchor manifest path
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-trust-provisioning:
+    name: F005 Runtime Trust Provisioning
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      TRUST_ROOT: 'C:\LION\runtime\f005\trust'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind workflow to exact checked-out master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          RUNTIME_INSTANCE: ${{ inputs.runtime_instance }}
+        run: |
+          if ($env:GITHUB_SHA -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: checkout=$env:GITHUB_SHA expected=$env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
+          }
+          if ($env:RUNTIME_INSTANCE -ne 'lion-runtime-01') {
+            throw "runtime instance substitution denied"
+          }
+
+      - name: Compile and test runtime trust provisioner
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/fleet_runtime_trust.py `
+            cyber_lion/enterprise/fleet_runtime_trust.py
+          python -m unittest cyber_lion.tests.test_fleet_runtime_trust -v
+
+      - name: Require external trust material outside repository
+        env:
+          VERIFICATION_MANIFEST: ${{ inputs.verification_manifest_path }}
+          VERIFIER_IMPLEMENTATION: ${{ inputs.verifier_implementation_path }}
+          VERIFICATION_ANCHOR: ${{ inputs.verification_anchor_manifest_path }}
+          RECONCILIATION_MANIFEST: ${{ inputs.reconciliation_manifest_path }}
+          RECONCILIATION_IMPLEMENTATION: ${{ inputs.reconciliation_implementation_path }}
+          RECONCILIATION_ANCHOR: ${{ inputs.reconciliation_anchor_manifest_path }}
+        run: |
+          $workspace = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE).TrimEnd('\')
+          foreach ($entry in @(
+            @{ Name = 'verification manifest'; Path = $env:VERIFICATION_MANIFEST },
+            @{ Name = 'verifier implementation'; Path = $env:VERIFIER_IMPLEMENTATION },
+            @{ Name = 'verification anchor'; Path = $env:VERIFICATION_ANCHOR },
+            @{ Name = 'reconciliation manifest'; Path = $env:RECONCILIATION_MANIFEST },
+            @{ Name = 'reconciliation implementation'; Path = $env:RECONCILIATION_IMPLEMENTATION },
+            @{ Name = 'reconciliation anchor'; Path = $env:RECONCILIATION_ANCHOR }
+          )) {
+            if (-not [System.IO.Path]::IsPathFullyQualified($entry.Path)) {
+              throw "$($entry.Name) path is not absolute"
+            }
+            if (-not (Test-Path -LiteralPath $entry.Path -PathType Leaf)) {
+              throw "$($entry.Name) material not found"
+            }
+            $resolved = [System.IO.Path]::GetFullPath((Resolve-Path -LiteralPath $entry.Path).Path)
+            if ($resolved -eq $workspace -or $resolved.StartsWith($workspace + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+              throw "$($entry.Name) must remain outside repository"
+            }
+          }
+
+      - name: Provision immutable runtime trust bindings
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          RUNTIME_INSTANCE: ${{ inputs.runtime_instance }}
+          EXPECTED_VERIFIER_ID: ${{ inputs.expected_verifier_id }}
+          EXPECTED_VERIFICATION_ANCHOR_ID: ${{ inputs.expected_verification_trust_anchor_id }}
+          EXPECTED_RECONCILIATION_SOURCE_ID: ${{ inputs.expected_reconciliation_source_id }}
+          EXPECTED_RECONCILIATION_SOURCE_INSTANCE_ID: ${{ inputs.expected_reconciliation_source_instance_id }}
+          EXPECTED_RECONCILIATION_ANCHOR_ID: ${{ inputs.expected_reconciliation_trust_anchor_id }}
+          VERIFICATION_MANIFEST: ${{ inputs.verification_manifest_path }}
+          VERIFIER_IMPLEMENTATION: ${{ inputs.verifier_implementation_path }}
+          VERIFICATION_ANCHOR: ${{ inputs.verification_anchor_manifest_path }}
+          RECONCILIATION_MANIFEST: ${{ inputs.reconciliation_manifest_path }}
+          RECONCILIATION_IMPLEMENTATION: ${{ inputs.reconciliation_implementation_path }}
+          RECONCILIATION_ANCHOR: ${{ inputs.reconciliation_anchor_manifest_path }}
+        run: |
+          $safeReceipt = Join-Path $env:RUNNER_TEMP 'f005-i-safe-receipt.json'
+          python -m cyber_lion.enterprise.fleet_runtime_trust `
+            --repository 'DonkeyJJLove/ai_platform' `
+            --expected-master "$env:EXPECTED_MASTER" `
+            --expected-master-tree "$env:EXPECTED_MASTER_TREE" `
+            --runtime-instance "$env:RUNTIME_INSTANCE" `
+            --repository-root "$env:GITHUB_WORKSPACE" `
+            --expected-verifier-id "$env:EXPECTED_VERIFIER_ID" `
+            --expected-verification-trust-anchor-id "$env:EXPECTED_VERIFICATION_ANCHOR_ID" `
+            --expected-reconciliation-source-id "$env:EXPECTED_RECONCILIATION_SOURCE_ID" `
+            --expected-reconciliation-source-instance-id "$env:EXPECTED_RECONCILIATION_SOURCE_INSTANCE_ID" `
+            --expected-reconciliation-trust-anchor-id "$env:EXPECTED_RECONCILIATION_ANCHOR_ID" `
+            --verification-manifest "$env:VERIFICATION_MANIFEST" `
+            --verifier-implementation "$env:VERIFIER_IMPLEMENTATION" `
+            --verification-anchor-manifest "$env:VERIFICATION_ANCHOR" `
+            --reconciliation-manifest "$env:RECONCILIATION_MANIFEST" `
+            --reconciliation-implementation "$env:RECONCILIATION_IMPLEMENTATION" `
+            --reconciliation-anchor-manifest "$env:RECONCILIATION_ANCHOR" `
+            | Set-Content -LiteralPath $safeReceipt -Encoding utf8
+
+      - name: Verify exact F005-H compatible outputs
+        run: |
+          foreach ($path in @(
+            'C:\LION\runtime\f005\trust\verification-trust.json',
+            'C:\LION\runtime\f005\trust\reconciliation-trust.json',
+            'C:\LION\runtime\f005\trust\f005-h-pins.json',
+            'C:\LION\runtime\f005\trust\trust-provisioning-receipt.json'
+          )) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "runtime trust output missing: $path"
+            }
+          }
+          $pins = Get-Content -LiteralPath 'C:\LION\runtime\f005\trust\f005-h-pins.json' -Raw | ConvertFrom-Json
+          if ($null -eq $pins.verification -or $null -eq $pins.reconciliation) {
+            throw 'F005-H pins contract incomplete'
+          }
+          if ($null -ne $pins.verification_state -or $null -ne $pins.closable -or $null -ne $pins.authority) {
+            throw 'F005-H pins contain forbidden operational claims'
+          }
+
+      - name: Publish non-secret provisioning receipt metadata
+        run: |
+          $safeReceipt = Join-Path $env:RUNNER_TEMP 'f005-i-safe-receipt.json'
+          $safe = Get-Content -LiteralPath $safeReceipt -Raw | ConvertFrom-Json
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005 Runtime Trust Provisioning'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "- receipt_id: $($safe.receipt_id)"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "- outputs_digest: $($safe.outputs_digest)"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "- f005_h_pins_digest: $($safe.f005_h_pins_digest)"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '- verification PASS asserted: false'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '- fleet closure asserted: false'
