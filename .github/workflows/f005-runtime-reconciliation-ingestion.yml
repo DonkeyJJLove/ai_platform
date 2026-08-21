@@ -1,0 +1,152 @@
+name: F005 Runtime Reconciliation Ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA to bind
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA to bind
+        required: true
+        type: string
+      source_instance:
+        description: Exact trusted reconciliation source instance
+        required: true
+        type: string
+      observation_file:
+        description: Absolute external immutable repository observation path
+        required: true
+        type: string
+      observation_sha256:
+        description: Exact SHA256 of immutable repository observation bytes
+        required: true
+        type: string
+      reconciliation_trust_file:
+        description: Absolute external reconciliation trust pins path
+        required: true
+        type: string
+      reconciliation_trust_sha256:
+        description: Exact SHA256 of reconciliation trust pins bytes
+        required: true
+        type: string
+      reconciliation_db:
+        description: Exact canonical reconciliation SQLite path
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-reconciliation-ingestion:
+    name: F005 Runtime Reconciliation Inventory Ingestion
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          if ($env:GITHUB_SHA -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: checkout=$env:GITHUB_SHA expected=$env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
+          }
+
+      - name: Compile runtime reconciliation ingestion
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/fleet_runtime_reconciliation_ingestion.py `
+            cyber_lion/enterprise/fleet_runtime_reconciliation_ingestion.py
+
+      - name: Run runtime reconciliation ingestion tests
+        run: |
+          python -m unittest cyber_lion.tests.test_fleet_runtime_reconciliation_ingestion -v
+
+      - name: Validate exact external inputs before effect
+        env:
+          SOURCE_INSTANCE: ${{ inputs.source_instance }}
+          OBSERVATION_FILE: ${{ inputs.observation_file }}
+          OBSERVATION_SHA256: ${{ inputs.observation_sha256 }}
+          TRUST_FILE: ${{ inputs.reconciliation_trust_file }}
+          TRUST_SHA256: ${{ inputs.reconciliation_trust_sha256 }}
+          RECONCILIATION_DB: ${{ inputs.reconciliation_db }}
+        run: |
+          if ($env:SOURCE_INSTANCE -ne 'lion-runtime-reconciliation-source-01') {
+            throw "source instance substitution denied"
+          }
+          if ($env:OBSERVATION_FILE -ne 'C:\LION\runtime\f005\reconciliation-source\repository-inventory.json') {
+            throw "repository observation path substitution denied"
+          }
+          if ($env:TRUST_FILE -ne 'C:\LION\runtime\f005\trust\reconciliation-trust.json') {
+            throw "reconciliation trust path substitution denied"
+          }
+          if ($env:RECONCILIATION_DB -ne 'C:\LION\runtime\f005\reconciliation.sqlite') {
+            throw "reconciliation database path substitution denied"
+          }
+          foreach ($entry in @(
+            @{ Name='observation'; Path=$env:OBSERVATION_FILE },
+            @{ Name='trust'; Path=$env:TRUST_FILE },
+            @{ Name='reconciliation'; Path=$env:RECONCILIATION_DB }
+          )) {
+            if (-not [System.IO.Path]::IsPathFullyQualified($entry.Path)) {
+              throw "$($entry.Name) path must be absolute"
+            }
+            if (-not (Test-Path -LiteralPath $entry.Path -PathType Leaf)) {
+              throw "$($entry.Name) file missing"
+            }
+          }
+          if ((Get-FileHash -LiteralPath $env:OBSERVATION_FILE -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:OBSERVATION_SHA256) {
+            throw "repository observation digest mismatch"
+          }
+          if ((Get-FileHash -LiteralPath $env:TRUST_FILE -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:TRUST_SHA256) {
+            throw "reconciliation trust digest mismatch"
+          }
+
+      - name: Ingest exactly one authoritative inventory head
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          SOURCE_INSTANCE: ${{ inputs.source_instance }}
+          OBSERVATION_FILE: ${{ inputs.observation_file }}
+          OBSERVATION_SHA256: ${{ inputs.observation_sha256 }}
+          TRUST_FILE: ${{ inputs.reconciliation_trust_file }}
+          TRUST_SHA256: ${{ inputs.reconciliation_trust_sha256 }}
+          RECONCILIATION_DB: ${{ inputs.reconciliation_db }}
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-reconciliation-ingestion-receipt.json"
+          python -m cyber_lion.enterprise.fleet_runtime_reconciliation_ingestion `
+            --repository "DonkeyJJLove/ai_platform" `
+            --expected-master "$env:EXPECTED_MASTER" `
+            --expected-master-tree "$env:EXPECTED_MASTER_TREE" `
+            --source-instance "$env:SOURCE_INSTANCE" `
+            --observation-file "$env:OBSERVATION_FILE" `
+            --observation-sha256 "$env:OBSERVATION_SHA256" `
+            --reconciliation-trust-file "$env:TRUST_FILE" `
+            --reconciliation-trust-sha256 "$env:TRUST_SHA256" `
+            --reconciliation-db "$env:RECONCILIATION_DB" `
+            --repository-root "$env:GITHUB_WORKSPACE" | Tee-Object -FilePath $receipt
+          if ($LASTEXITCODE -ne 0) {
+            throw "runtime reconciliation ingestion failed"
+          }
+
+      - name: Publish non-closure ingestion receipt
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-reconciliation-ingestion-receipt.json"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005 Runtime Reconciliation Inventory Ingestion'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
+          Get-Content -LiteralPath $receipt | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'
