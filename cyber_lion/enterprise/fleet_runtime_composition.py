@@ -7,7 +7,7 @@ facts and never declares the fleet closable.
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -416,5 +416,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    from dataclasses import asdict
     raise SystemExit(main())
