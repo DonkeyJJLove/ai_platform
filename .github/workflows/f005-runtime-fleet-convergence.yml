@@ -11,8 +11,20 @@ on:
         description: Exact live master tree SHA to bind
         required: true
         type: string
-      snapshot_path:
-        description: Absolute path to authoritative runtime snapshot JSON on the LION runtime runner
+      source_instance:
+        description: Authoritative runtime source instance identifier
+        required: true
+        type: string
+      status_db_path:
+        description: Absolute path to durable fleet status SQLite database on lion-runtime
+        required: true
+        type: string
+      coordination_db_path:
+        description: Absolute path to durable fleet coordination SQLite database on lion-runtime
+        required: true
+        type: string
+      reconciliation_db_path:
+        description: Absolute path to durable fleet reconciliation SQLite database on lion-runtime
         required: true
         type: string
 
@@ -24,31 +36,101 @@ jobs:
     name: F005 Runtime Fleet Convergence Evidence
     runs-on: [self-hosted, lion-runtime]
     timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      SNAPSHOT_PATH: 'C:\LION\runtime\f005\fleet-convergence-snapshot.json'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - name: Compile runtime convergence verifier
-        run: python -m compileall -q cyber_lion/contracts/fleet_runtime_convergence.py cyber_lion/enterprise/fleet_runtime_convergence.py
-      - name: Run runtime convergence contract tests
-        run: python -m unittest cyber_lion.tests.test_fleet_runtime_convergence -v
+
+      - name: Bind workflow to exact checked-out master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          if ($env:GITHUB_SHA -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: checkout=$env:GITHUB_SHA expected=$env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
+          }
+
+      - name: Compile runtime convergence producer and verifier
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/fleet_runtime_snapshot_source.py `
+            cyber_lion/enterprise/fleet_runtime_snapshot_source.py `
+            cyber_lion/contracts/fleet_runtime_convergence.py `
+            cyber_lion/enterprise/fleet_runtime_convergence.py
+
+      - name: Run runtime convergence source and verifier tests
+        run: |
+          python -m unittest cyber_lion.tests.test_fleet_runtime_snapshot_source -v
+          python -m unittest cyber_lion.tests.test_fleet_runtime_convergence -v
+
+      - name: Require authoritative runtime stores
+        env:
+          STATUS_DB: ${{ inputs.status_db_path }}
+          COORDINATION_DB: ${{ inputs.coordination_db_path }}
+          RECONCILIATION_DB: ${{ inputs.reconciliation_db_path }}
+        run: |
+          foreach ($entry in @(
+            @{ Name = 'status'; Path = $env:STATUS_DB },
+            @{ Name = 'coordination'; Path = $env:COORDINATION_DB },
+            @{ Name = 'reconciliation'; Path = $env:RECONCILIATION_DB }
+          )) {
+            if (-not [System.IO.Path]::IsPathFullyQualified($entry.Path)) {
+              throw "$($entry.Name) runtime source path is not absolute: $($entry.Path)"
+            }
+            if (-not (Test-Path -LiteralPath $entry.Path -PathType Leaf)) {
+              throw "$($entry.Name) authoritative runtime source not found: $($entry.Path)"
+            }
+          }
+
+      - name: Materialize authoritative runtime convergence snapshot
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          SOURCE_INSTANCE: ${{ inputs.source_instance }}
+          STATUS_DB: ${{ inputs.status_db_path }}
+          COORDINATION_DB: ${{ inputs.coordination_db_path }}
+          RECONCILIATION_DB: ${{ inputs.reconciliation_db_path }}
+        run: |
+          python -m cyber_lion.enterprise.fleet_runtime_snapshot_source `
+            --repository "DonkeyJJLove/ai_platform" `
+            --expected-master "$env:EXPECTED_MASTER" `
+            --expected-master-tree "$env:EXPECTED_MASTER_TREE" `
+            --source-instance "$env:SOURCE_INSTANCE" `
+            --status-db "$env:STATUS_DB" `
+            --coordination-db "$env:COORDINATION_DB" `
+            --reconciliation-db "$env:RECONCILIATION_DB" `
+            --output "$env:SNAPSHOT_PATH"
+          if (-not (Test-Path -LiteralPath $env:SNAPSHOT_PATH -PathType Leaf)) {
+            throw "authoritative runtime snapshot was not materialized"
+          }
+
       - name: Verify authoritative runtime convergence snapshot
         env:
           EXPECTED_MASTER: ${{ inputs.expected_master }}
           EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
-          SNAPSHOT_PATH: ${{ inputs.snapshot_path }}
         run: |
-          test -f "$SNAPSHOT_PATH"
-          python -m cyber_lion.enterprise.fleet_runtime_convergence \
-            --snapshot "$SNAPSHOT_PATH" \
-            --repository "DonkeyJJLove/ai_platform" \
-            --expected-master "$EXPECTED_MASTER" \
-            --expected-master-tree "$EXPECTED_MASTER_TREE" \
-            --max-age-seconds 300 | tee /tmp/f005-runtime-convergence-receipt.json
+          $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-convergence-receipt.json"
+          python -m cyber_lion.enterprise.fleet_runtime_convergence `
+            --snapshot "$env:SNAPSHOT_PATH" `
+            --repository "DonkeyJJLove/ai_platform" `
+            --expected-master "$env:EXPECTED_MASTER" `
+            --expected-master-tree "$env:EXPECTED_MASTER_TREE" `
+            --max-age-seconds 300 | Tee-Object -FilePath $receipt
+
       - name: Publish receipt to step summary
         run: |
-          echo '### F005 Runtime Fleet Convergence' >> "$GITHUB_STEP_SUMMARY"
-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/f005-runtime-convergence-receipt.json >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-convergence-receipt.json"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005 Runtime Fleet Convergence'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
+          Get-Content -LiteralPath $receipt | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'
