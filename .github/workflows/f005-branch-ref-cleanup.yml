@@ -137,8 +137,8 @@ jobs:
 
             $headQuery = [System.Uri]::EscapeDataString("DonkeyJJLove:$branch")
             $openPrUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/pulls?state=open&head=$headQuery&per_page=2"
-            $openPrs = @(Invoke-RestMethod -Method Get -Headers $headers -Uri $openPrUri)
-            if ($openPrs.Count -ne 0) { throw "open PR still owns ref: $branch" }
+            $openPrResponse = Invoke-RestMethod -Method Get -Headers $headers -Uri $openPrUri
+            if ($null -ne $openPrResponse -and @($openPrResponse).Count -ne 0) { throw "open PR still owns ref: $branch" }
 
             Invoke-RestMethod -Method Delete -Headers $headers -Uri $refUri
             $deleted += $branch
