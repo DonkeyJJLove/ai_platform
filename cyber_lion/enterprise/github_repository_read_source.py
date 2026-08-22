@@ -243,9 +243,6 @@ class GitHubRESTReadSource:
         if not isinstance(branch, str) or not branch:
             raise GitHubReadSourceError("branch invalid")
 
-        if branch_head == default_head:
-            return AncestryEvidence(branch, "IDENTICAL", 0, 0).validate()
-
         repo = quote(repository, safe="/")
         comparison = quote(f"{default_head}...{branch_head}", safe=".")
         raw = self._request_json(
