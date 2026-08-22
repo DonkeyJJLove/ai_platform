@@ -1,7 +1,10 @@
 from __future__ import annotations
 import copy
 import dataclasses
+from dataclasses import asdict
+from hashlib import sha256
 import unittest
+from cyber_lion.contracts.agent_registry import AgentRegistryProjection, canonical_json
 from cyber_lion.enterprise.conformance import (
     ControlledChangeDryRunReceipt, ConformanceResult, current_partial_conformance,
     evaluate_read_only_provider,
@@ -35,6 +38,35 @@ MANIFEST = {
                                       "self-healing proposal requires external gate before consequential mutation"]},
     "epistemic": {"status": "ENGINEERING_CANDIDATE", "confidence": 0.86},
 }
+
+
+def registry_projection(mission: MissionSpec, agents: tuple[AgentSpec, ...]) -> AgentRegistryProjection:
+    specs = []
+    for spec in sorted(agents, key=lambda item: (item.agent_id, item.version)):
+        raw = asdict(spec)
+        for key, value in list(raw.items()):
+            if isinstance(value, tuple):
+                raw[key] = list(value)
+        specs.append(raw)
+    payload = {
+        "registry_id": "test-registry",
+        "revision": 1,
+        "event_head": "0" * 64,
+        "mission_id": mission.mission_id,
+        "required_capabilities": list(mission.required_capabilities),
+        "candidate_specs": specs,
+    }
+    digest = sha256(canonical_json(payload)).hexdigest()
+    return AgentRegistryProjection(
+        "test-registry",
+        1,
+        "0" * 64,
+        mission.mission_id,
+        mission.required_capabilities,
+        tuple(specs),
+        digest,
+    ).verify_digest()
+
 
 class RCCM1DConformanceTests(unittest.TestCase):
     def snapshot(self, manifest=MANIFEST, commit=COMMIT, capability="invariant.evaluate"):
@@ -86,7 +118,8 @@ class RCCM1DConformanceTests(unittest.TestCase):
         mission = MissionSpec("rccm-1d", "controlled change dry-run", ("code.write",),
                               "external_write", "AMBER", 2, 1.0, True, 3.0)
         agents = {"builder": builder, "verifier": verifier}
-        swarm = SwarmPlanner().plan(mission, list(agents.values()))
+        projection = registry_projection(mission, (builder, verifier))
+        swarm = SwarmPlanner().plan(mission, projection)
         proposal = ActionProposal("proposal:rccm-1d", mission.mission_id, swarm.swarm_id,
                                   "builder", "code.write", "external_write", "git.change",
                                   "glitchlab:dry-run", True, ("evidence:glitchlab",),
