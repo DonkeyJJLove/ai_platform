@@ -42,26 +42,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  runtime-fleet-convergence:
-    name: F005 Runtime Fleet Convergence Evidence
-    runs-on: [self-hosted, lion-runtime]
-    timeout-minutes: 10
+  admission:
+    name: F005 Pre-Runtime Admission and Run Locator
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         shell: pwsh
-    env:
-      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
+    outputs:
+      expected_master: ${{ steps.binding.outputs.expected_master }}
+      expected_master_tree: ${{ steps.binding.outputs.expected_master_tree }}
+      source_instance: ${{ steps.binding.outputs.source_instance }}
+      status_db: ${{ steps.binding.outputs.status_db }}
+      coordination_db: ${{ steps.binding.outputs.coordination_db }}
+      reconciliation_db: ${{ steps.binding.outputs.reconciliation_db }}
     steps:
-      - name: Checkout trigger ref
+      - name: Checkout trigger ref for admission only
         uses: actions/checkout@v6
         with:
           fetch-depth: 2
+          persist-credentials: false
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
-      - name: Resolve and validate execution binding
+      - name: Resolve, validate, consume, and publish run locator
         id: binding
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -75,10 +77,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $requestPath = '.lion/control/f005-runtime-convergence.request.json'
-          $canonicalStatus = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'status.sqlite'
-          $canonicalCoordination = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'coordination.sqlite'
-          $canonicalReconciliation = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation.sqlite'
+          $canonicalRuntimeRoot = 'C:\Users\d2j3\Documents\LION\runtime\f005'
+          $canonicalStatus = Join-Path $canonicalRuntimeRoot 'status.sqlite'
+          $canonicalCoordination = Join-Path $canonicalRuntimeRoot 'coordination.sqlite'
+          $canonicalReconciliation = Join-Path $canonicalRuntimeRoot 'reconciliation.sqlite'
           $canonicalSourceInstance = 'lion-runtime-reconciliation-source-01'
+
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
 
           if ($env:EVENT_NAME -eq 'workflow_dispatch') {
             $expectedMaster = $env:DISPATCH_EXPECTED_MASTER
@@ -140,25 +149,38 @@ jobs:
               throw "sandbox runtime request_id payload binding mismatch: $($request.request_id) != $computedRequestId"
             }
 
-            $headers = @{
-              Authorization = "Bearer $env:GH_TOKEN"
-              Accept = 'application/vnd.github+json'
-              'X-GitHub-Api-Version' = '2022-11-28'
-            }
+            $expectedMaster = $request.expected_master
+            $expectedMasterTree = $request.expected_master_tree
+            $sourceInstance = $canonicalSourceInstance
+            $statusDb = $canonicalStatus
+            $coordinationDb = $canonicalCoordination
+            $reconciliationDb = $canonicalReconciliation
+          }
+          else {
+            throw "unsupported event: $env:EVENT_NAME"
+          }
 
-            git fetch --no-tags origin master
-            if ($LASTEXITCODE -ne 0) {
-              throw 'live master fetch failed'
-            }
-            $liveMaster = (git rev-parse refs/remotes/origin/master).Trim()
-            if ($liveMaster -ne $request.expected_master) {
-              throw "live master drift denied: $liveMaster != $($request.expected_master)"
-            }
-            $liveTree = (git show -s --format=%T $liveMaster).Trim()
-            if ($liveTree -ne $request.expected_master_tree) {
-              throw "live master tree drift denied: $liveTree != $($request.expected_master_tree)"
-            }
+          if ($expectedMaster -notmatch '^[0-9a-f]{40}$') {
+            throw 'expected master must be lowercase git sha'
+          }
+          if ($expectedMasterTree -notmatch '^[0-9a-f]{40}$') {
+            throw 'expected master tree must be lowercase git tree sha'
+          }
 
+          git fetch --no-tags origin master
+          if ($LASTEXITCODE -ne 0) {
+            throw 'live master fetch failed'
+          }
+          $liveMaster = (git rev-parse refs/remotes/origin/master).Trim()
+          if ($liveMaster -ne $expectedMaster) {
+            throw "live master drift denied: $liveMaster != $expectedMaster"
+          }
+          $liveTree = (git show -s --format=%T $liveMaster).Trim()
+          if ($liveTree -ne $expectedMasterTree) {
+            throw "live master tree drift denied: $liveTree != $expectedMasterTree"
+          }
+
+          if ($env:EVENT_NAME -eq 'push') {
             $requestContext = "lion/f005-runtime-request/$($request.request_id)"
             $foundReplay = $false
             $scanExhausted = $true
@@ -195,17 +217,21 @@ jobs:
               -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/statuses/$liveMaster" `
               -Body $consumeBody `
               -ContentType 'application/json'
+          }
 
-            $expectedMaster = $request.expected_master
-            $expectedMasterTree = $request.expected_master_tree
-            $sourceInstance = $canonicalSourceInstance
-            $statusDb = $canonicalStatus
-            $coordinationDb = $canonicalCoordination
-            $reconciliationDb = $canonicalReconciliation
-          }
-          else {
-            throw "unsupported event: $env:EVENT_NAME"
-          }
+          $targetUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          $locatorBody = @{
+            state = 'pending'
+            context = 'lion/f005-runtime-convergence'
+            description = "pre-runtime locator run $env:GITHUB_RUN_ID"
+            target_url = $targetUrl
+          } | ConvertTo-Json -Compress
+          Invoke-RestMethod `
+            -Method Post `
+            -Headers $headers `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/statuses/$liveMaster" `
+            -Body $locatorBody `
+            -ContentType 'application/json'
 
           "expected_master=$expectedMaster" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "expected_master_tree=$expectedMasterTree" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
@@ -214,16 +240,34 @@ jobs:
           "coordination_db=$coordinationDb" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "reconciliation_db=$reconciliationDb" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Checkout exact resolved master
+  runtime-fleet-convergence:
+    name: F005 Runtime Fleet Convergence Evidence
+    needs: admission
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
+      EXPECTED_MASTER: ${{ needs.admission.outputs.expected_master }}
+      EXPECTED_MASTER_TREE: ${{ needs.admission.outputs.expected_master_tree }}
+      SOURCE_INSTANCE: ${{ needs.admission.outputs.source_instance }}
+      STATUS_DB: ${{ needs.admission.outputs.status_db }}
+      COORDINATION_DB: ${{ needs.admission.outputs.coordination_db }}
+      RECONCILIATION_DB: ${{ needs.admission.outputs.reconciliation_db }}
+    steps:
+      - name: Checkout exact admitted master
         uses: actions/checkout@v6
         with:
-          ref: ${{ steps.binding.outputs.expected_master }}
+          ref: ${{ needs.admission.outputs.expected_master }}
           persist-credentials: false
 
-      - name: Bind workflow to exact checked-out master and tree
-        env:
-          EXPECTED_MASTER: ${{ steps.binding.outputs.expected_master }}
-          EXPECTED_MASTER_TREE: ${{ steps.binding.outputs.expected_master_tree }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind runtime job to exact admitted master and tree
         run: |
           $actualSha = (git rev-parse HEAD).Trim()
           if ($actualSha -ne $env:EXPECTED_MASTER) {
@@ -233,29 +277,6 @@ jobs:
           if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
             throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
           }
-
-      - name: Publish deterministic runtime run locator
-        env:
-          GH_TOKEN: ${{ github.token }}
-          STATUS_SHA: ${{ steps.binding.outputs.expected_master }}
-        run: |
-          $targetUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
-          $body = @{
-            state = 'pending'
-            context = 'lion/f005-runtime-convergence'
-            description = "locator-only run $env:GITHUB_RUN_ID"
-            target_url = $targetUrl
-          } | ConvertTo-Json -Compress
-          Invoke-RestMethod `
-            -Method Post `
-            -Headers @{
-              Authorization = "Bearer $env:GH_TOKEN"
-              Accept = 'application/vnd.github+json'
-              'X-GitHub-Api-Version' = '2022-11-28'
-            } `
-            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/statuses/$env:STATUS_SHA" `
-            -Body $body `
-            -ContentType 'application/json'
 
       - name: Compile runtime convergence producer and verifier
         run: |
@@ -271,10 +292,6 @@ jobs:
           python -m unittest cyber_lion.tests.test_fleet_runtime_convergence -v
 
       - name: Require authoritative runtime stores
-        env:
-          STATUS_DB: ${{ steps.binding.outputs.status_db }}
-          COORDINATION_DB: ${{ steps.binding.outputs.coordination_db }}
-          RECONCILIATION_DB: ${{ steps.binding.outputs.reconciliation_db }}
         run: |
           $expected = @{
             status = (Join-Path $env:LION_FLEET_RUNTIME_ROOT 'status.sqlite')
@@ -298,13 +315,6 @@ jobs:
           }
 
       - name: Materialize authoritative runtime convergence snapshot
-        env:
-          EXPECTED_MASTER: ${{ steps.binding.outputs.expected_master }}
-          EXPECTED_MASTER_TREE: ${{ steps.binding.outputs.expected_master_tree }}
-          SOURCE_INSTANCE: ${{ steps.binding.outputs.source_instance }}
-          STATUS_DB: ${{ steps.binding.outputs.status_db }}
-          COORDINATION_DB: ${{ steps.binding.outputs.coordination_db }}
-          RECONCILIATION_DB: ${{ steps.binding.outputs.reconciliation_db }}
         run: |
           $snapshotPath = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'fleet-convergence-snapshot.json'
           python -m cyber_lion.enterprise.fleet_runtime_snapshot_source `
@@ -321,9 +331,6 @@ jobs:
           }
 
       - name: Verify authoritative runtime convergence snapshot
-        env:
-          EXPECTED_MASTER: ${{ steps.binding.outputs.expected_master }}
-          EXPECTED_MASTER_TREE: ${{ steps.binding.outputs.expected_master_tree }}
         run: |
           $receipt = Join-Path $env:RUNNER_TEMP "f005-runtime-convergence-receipt.json"
           $snapshotPath = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'fleet-convergence-snapshot.json'
