@@ -6,7 +6,7 @@ from hashlib import sha256
 import json,sqlite3
 from pathlib import Path
 from cyber_lion.contracts.agent_registry import AgentInstance,AgentRegistryProjection,AgentRegistrySnapshot,AgentSpecKey,canonical_json
-from .models import AgentSpec,MissionSpec
+from .models import AgentSpec,MissionSpec,authority_rank
 _ZERO="0"*64
 class AgentRegistryStateError(RuntimeError):pass
 
@@ -109,9 +109,10 @@ CREATE TRIGGER IF NOT EXISTS event_no_delete BEFORE DELETE ON agent_registry_eve
         return self._tx(work)
     def resolve_for_mission(self,mission):
         mission.validate();m=self.c.execute("SELECT registry_id,revision,event_head FROM agent_registry_meta WHERE singleton=1").fetchone();specs=[]
+        verifier_required=(mission.require_independent_verifier or mission.risk_class=="RED" or authority_rank(mission.authority_ceiling)>=authority_rank("external_write"))
         for r in self.c.execute("SELECT s.spec_json FROM agent_registry_active_spec a JOIN agent_registry_spec s ON s.agent_id=a.agent_id AND s.version=a.version ORDER BY a.agent_id,a.version,a.spec_digest"):
-            s=_spec_from(r[0]);
-            if set(s.capabilities)&set(mission.required_capabilities):specs.append(_spec_dict(s))
+            s=_spec_from(r[0])
+            if set(s.capabilities)&set(mission.required_capabilities) or (verifier_required and s.is_verifier):specs.append(_spec_dict(s))
         p={"registry_id":m[0],"revision":m[1],"event_head":m[2],"mission_id":mission.mission_id,"required_capabilities":list(mission.required_capabilities),"candidate_specs":specs};dg=sha256(canonical_json(p)).hexdigest();return AgentRegistryProjection(m[0],m[1],m[2],mission.mission_id,mission.required_capabilities,tuple(specs),dg).verify_digest()
     def snapshot(self):
         m=self.c.execute("SELECT registry_id,revision,event_head FROM agent_registry_meta WHERE singleton=1").fetchone();keys=tuple(AgentSpecKey(*r) for r in self.c.execute("SELECT agent_id,version,spec_digest FROM agent_registry_active_spec ORDER BY agent_id"));ins=[]
