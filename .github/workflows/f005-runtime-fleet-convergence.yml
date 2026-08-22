@@ -86,9 +86,9 @@ jobs:
         run: |
           $requestPath = '.lion/control/f005-runtime-convergence.request.json'
           $canonicalRuntimeRoot = 'C:\Users\d2j3\Documents\LION\runtime\f005'
-          $canonicalStatus = Join-Path $canonicalRuntimeRoot 'status.sqlite'
-          $canonicalCoordination = Join-Path $canonicalRuntimeRoot 'coordination.sqlite'
-          $canonicalReconciliation = Join-Path $canonicalRuntimeRoot 'reconciliation.sqlite'
+          $canonicalStatus = 'C:\Users\d2j3\Documents\LION\runtime\f005\status.sqlite'
+          $canonicalCoordination = 'C:\Users\d2j3\Documents\LION\runtime\f005\coordination.sqlite'
+          $canonicalReconciliation = 'C:\Users\d2j3\Documents\LION\runtime\f005\reconciliation.sqlite'
           $canonicalSourceInstance = 'lion-runtime-reconciliation-source-01'
 
           $headers = @{
