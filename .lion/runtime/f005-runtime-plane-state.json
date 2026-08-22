@@ -1,0 +1,15 @@
+{
+  "schema_version": "lion.f005-runtime-plane-state/v1",
+  "plane_id": "f005-local-runtime-v1",
+  "state": "QUARANTINED",
+  "effect_authority": "DENY",
+  "legacy_store_state": "UNOBSERVED",
+  "resume_policy": "REATTEST_NEW_EPOCH_ONLY",
+  "last_effect_capable_master": "67fc89e3dfdc2fe5084af9f7620b07c3e582d5e0",
+  "last_effect_capable_master_tree": "b4c3ca6d74f501c8c36d8e9acf4c27b8f7359340",
+  "cutover_control_master": "82b00fb234fc1e9414cbd8b5030309934598f94d",
+  "cutover_control_master_tree": "9eb7eed505838360398a7c8668543d8c2066cb79",
+  "cancelled_run_id": 32586566104,
+  "cancelled_runtime_job_id": 97063737135,
+  "quarantine_digest": "f6ea2c40ad7917f63522401bfe2dc2dda76979d3b28d9378d0f72b0a414dfe9e"
+}
