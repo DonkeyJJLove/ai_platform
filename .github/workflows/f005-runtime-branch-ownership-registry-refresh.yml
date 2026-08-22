@@ -1,0 +1,117 @@
+name: F005 Runtime Branch Ownership Registry Refresh
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA
+        required: true
+        type: string
+      manifest_sha256:
+        description: Exact SHA256 of branch ownership authority manifest bytes
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  branch-ownership-registry-refresh:
+    name: F005 Branch Ownership Registry Refresh
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.expected_master }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Bind checkout to exact master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          $actualSha = (git rev-parse HEAD).Trim()
+          if ($actualSha -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: $actualSha != $env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: $actualTree != $env:EXPECTED_MASTER_TREE"
+          }
+
+      - name: Compile F005-L R2 refresh slice
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/branch_ownership_registry_refresh.py `
+            cyber_lion/enterprise/branch_ownership_registry_refresh.py
+
+      - name: Run F005-L R2 refresh regressions
+        run: |
+          python -m unittest `
+            cyber_lion.tests.test_branch_ownership_registry `
+            cyber_lion.tests.test_branch_ownership_registry_refresh `
+            cyber_lion.tests.test_fleet_repository_observation_source `
+            cyber_lion.tests.test_github_repository_read_source `
+            -v
+
+      - name: Validate exact runtime paths and manifest digest before effect
+        env:
+          MANIFEST_SHA256: ${{ inputs.manifest_sha256 }}
+        run: |
+          $manifest = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-source\branch-ownership-manifest.json'
+          $registry = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-source\branch-ownership-registry.json'
+          foreach ($entry in @(
+            @{ Name='manifest'; Path=$manifest },
+            @{ Name='registry'; Path=$registry }
+          )) {
+            if (-not [System.IO.Path]::IsPathFullyQualified($entry.Path)) {
+              throw "$($entry.Name) path must be absolute"
+            }
+            if (-not (Test-Path -LiteralPath $entry.Path -PathType Leaf)) {
+              throw "$($entry.Name) file missing"
+            }
+          }
+          $actual = (Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $env:MANIFEST_SHA256) {
+            throw "ownership manifest byte digest mismatch"
+          }
+
+      - name: Refresh branch ownership registry exactly once
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          MANIFEST_SHA256: ${{ inputs.manifest_sha256 }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP 'f005-branch-ownership-registry-refresh-receipt.json'
+          python -m cyber_lion.enterprise.branch_ownership_registry_refresh `
+            --expected-master $env:EXPECTED_MASTER `
+            --expected-master-tree $env:EXPECTED_MASTER_TREE `
+            --manifest-sha256 $env:MANIFEST_SHA256 |
+            Tee-Object -FilePath $receipt
+          if ($LASTEXITCODE -ne 0) {
+            throw 'branch ownership registry refresh failed'
+          }
+
+      - name: Publish non-authority refresh receipt
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP 'f005-branch-ownership-registry-refresh-receipt.json'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005 Branch Ownership Registry Refresh'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
+          Get-Content -LiteralPath $receipt | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'
