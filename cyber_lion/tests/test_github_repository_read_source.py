@@ -99,11 +99,15 @@ class GitHubRepositoryReadSourceTests(unittest.TestCase):
                 self.assertEqual(evidence.ahead_by, ahead)
                 self.assertEqual(evidence.behind_by, behind)
 
-    def test_identical_heads_do_not_require_network(self):
-        source, transport = self.source([])
+    def test_identical_mapping_comes_from_compare_api(self):
+        source, transport = self.source([response({
+            "status": "identical",
+            "ahead_by": 0,
+            "behind_by": 0,
+        })])
         evidence = source.compare_to_default(REPO, MASTER, MASTER, "feature")
         self.assertEqual(evidence.ancestry_state, "IDENTICAL")
-        self.assertEqual(transport.calls, [])
+        self.assertEqual(len(transport.calls), 1)
 
     def test_no_common_ancestor_is_explicit_404_only(self):
         source, _ = self.source([
