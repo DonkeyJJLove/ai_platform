@@ -161,23 +161,24 @@ jobs:
 
             $requestContext = "lion/f005-runtime-request/$($request.request_id)"
             $foundReplay = $false
-            $page = 1
-            while ($page -le 20 -and -not $foundReplay) {
+            $scanExhausted = $true
+            for ($page = 1; $page -le 20; $page++) {
               $statusUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/commits/$liveMaster/statuses?per_page=100&page=$page"
               $pageStatuses = @(Invoke-RestMethod -Method Get -Headers $headers -Uri $statusUri)
               if ($pageStatuses | Where-Object { $_.context -eq $requestContext }) {
                 $foundReplay = $true
+                $scanExhausted = $false
                 break
               }
               if ($pageStatuses.Count -lt 100) {
+                $scanExhausted = $false
                 break
               }
-              $page += 1
             }
             if ($foundReplay) {
               throw 'sandbox runtime logical request replay denied'
             }
-            if ($page -gt 20) {
+            if ($scanExhausted) {
               throw 'sandbox runtime replay registry scan bound exceeded'
             }
 
