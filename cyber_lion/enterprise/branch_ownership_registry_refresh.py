@@ -124,7 +124,7 @@ def _verify_baseline_ancestry(github: Any, repository: str, record: BranchOwners
         record.branch_head_sha,
         record.branch,
     )
-    if evidence.ancestry not in {"DEFAULT_ANCESTOR_OF_HEAD", "IDENTICAL"}:
+    if evidence.ancestry_state not in {"DEFAULT_ANCESTOR_OF_HEAD", "IDENTICAL"}:
         raise BranchOwnershipRegistryRefreshError("mission baseline is not ancestral to branch head")
 
 

@@ -11,6 +11,7 @@ from unittest import mock
 
 from cyber_lion.contracts.branch_ownership_registry import BranchOwnershipRecord, BranchOwnershipRegistrySnapshot
 from cyber_lion.contracts.branch_ownership_registry_refresh import BranchOwnershipRefreshManifest
+from cyber_lion.contracts.fleet_repository_observation_source import AncestryEvidence
 from cyber_lion.enterprise.branch_ownership_registry import canonical_registry_bytes, load_registry_snapshot
 from cyber_lion.enterprise.branch_ownership_registry_refresh import (
     BranchOwnershipRegistryRefreshError,
@@ -30,17 +31,12 @@ class Branch:
     head_sha: str
 
 
-@dataclass(frozen=True)
-class Comparison:
-    ancestry: str
-
-
 class FakeGitHub:
-    def __init__(self, branches, *, ancestry="DEFAULT_ANCESTOR_OF_HEAD", after=None):
+    def __init__(self, branches, *, ancestry_state="DEFAULT_ANCESTOR_OF_HEAD", after=None):
         self.branches = tuple(branches)
         self.after = tuple(after) if after is not None else None
         self.enumerations = 0
-        self.ancestry = ancestry
+        self.ancestry_state = ancestry_state
 
     def default_head(self, repository, default_branch):
         self.assert_repo(repository)
@@ -61,7 +57,20 @@ class FakeGitHub:
         self.assert_repo(repository)
         if not base or not head or not branch:
             raise AssertionError("missing comparison binding")
-        return Comparison(self.ancestry)
+        counts = {
+            "IDENTICAL": (0, 0),
+            "DEFAULT_ANCESTOR_OF_HEAD": (1, 0),
+            "HEAD_ANCESTOR_OF_DEFAULT": (0, 1),
+            "DIVERGED": (1, 1),
+            "NO_COMMON_ANCESTOR": (None, None),
+        }
+        ahead_by, behind_by = counts[self.ancestry_state]
+        return AncestryEvidence(
+            branch=branch,
+            ancestry_state=self.ancestry_state,
+            ahead_by=ahead_by,
+            behind_by=behind_by,
+        ).validate()
 
     @staticmethod
     def assert_repo(repository):
@@ -220,19 +229,32 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
         with self.assertRaises(BranchOwnershipRegistryRefreshError):
             self.run_refresh(records, github=github)
 
-    def test_active_terminal_baseline_must_be_ancestral(self):
+    def test_real_ancestry_contract_accepts_only_baseline_ancestor_or_identical(self):
         records = (
             self.record("master", MASTER, state="UNOWNED"),
             self.record("mission/x", "e" * 40),
         )
-        with self.assertRaises(BranchOwnershipRegistryRefreshError):
-            self.run_refresh(
-                records,
-                github=FakeGitHub(
-                    [Branch(r.branch, r.branch_head_sha) for r in records],
-                    ancestry="DIVERGED",
-                ),
-            )
+        live = [Branch(r.branch, r.branch_head_sha) for r in records]
+        for state in ("DEFAULT_ANCESTOR_OF_HEAD", "IDENTICAL"):
+            with self.subTest(state=state):
+                self.run_refresh(records, github=FakeGitHub(live, ancestry_state=state))
+                self.setUp_registry_only()
+        for state in ("DIVERGED", "HEAD_ANCESTOR_OF_DEFAULT", "NO_COMMON_ANCESTOR"):
+            with self.subTest(state=state), self.assertRaises(BranchOwnershipRegistryRefreshError):
+                self.run_refresh(records, github=FakeGitHub(live, ancestry_state=state))
+
+    def setUp_registry_only(self):
+        old_record = self.record("master", MASTER, state="UNOWNED", revision=1)
+        old = BranchOwnershipRegistrySnapshot.build(
+            schema_version="1.0.0",
+            repository=REPO,
+            source_instance_id="lion-runtime-reconciliation-source-01",
+            registry_revision=1,
+            observed_at="2026-08-21T23:57:00+00:00",
+            records=(old_record,),
+        )
+        self.registry_path.write_bytes(canonical_registry_bytes(old))
+        self.old = old
 
     def test_existing_record_contract_rejects_unknown_or_invalid_bindings(self):
         with self.assertRaises(ValueError):
