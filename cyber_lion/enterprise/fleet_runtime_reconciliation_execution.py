@@ -12,9 +12,11 @@ from typing import Mapping
 
 from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.contracts.fleet_runtime_reconciliation_execution import (
+    LEGACY_EXECUTION_RECEIPT_FILENAME,
     REPOSITORY,
     RuntimeReconciliationExecutionConfig,
     RuntimeReconciliationExecutionReceipt,
+    execution_epoch_receipt_filename,
 )
 from cyber_lion.enterprise.fleet_closure_preconditions_provider import RuntimeClosurePreconditionsProvider
 from cyber_lion.enterprise.fleet_recorded_inventory_reconciliation import RecordedInventoryReconciliationRunner
@@ -32,6 +34,8 @@ class RuntimeReconciliationExecutionError(RuntimeError):
 
 
 _MAX_BYTES = 1024 * 1024
+_EPOCH_RECEIPT_PREFIX = "reconciliation-execution-receipt."
+_EPOCH_RECEIPT_SUFFIX = ".json"
 
 
 def _stable_bytes(path: Path, name: str) -> bytes:
@@ -45,6 +49,57 @@ def _stable_bytes(path: Path, name: str) -> bytes:
     if not raw or len(raw) > _MAX_BYTES:
         raise RuntimeReconciliationExecutionError(f"{name} size invalid")
     return raw
+
+
+def _load_execution_receipt(path: Path, name: str) -> RuntimeReconciliationExecutionReceipt:
+    try:
+        raw = _stable_bytes(path, name)
+        value = json.loads(raw.decode("utf-8"))
+        if not isinstance(value, dict):
+            raise ValueError("execution receipt must be object")
+        return RuntimeReconciliationExecutionReceipt(**value).validate()
+    except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        raise RuntimeReconciliationExecutionError(f"{name} invalid") from exc
+
+
+def _receipt_binds_inventory(receipt: RuntimeReconciliationExecutionReceipt, inventory: object) -> bool:
+    return bool(
+        receipt.repository == getattr(inventory, "repository", None)
+        and receipt.inventory_id == getattr(inventory, "inventory_id", None)
+        and receipt.inventory_revision == getattr(inventory, "inventory_revision", None)
+        and receipt.inventory_digest == getattr(inventory, "inventory_digest", None)
+    )
+
+
+def _epoch_receipt_snapshot(runtime_root: Path) -> tuple[tuple[str, bytes], ...]:
+    if not runtime_root.is_absolute() or not runtime_root.is_dir():
+        raise RuntimeReconciliationExecutionError("runtime root unavailable")
+    entries: list[tuple[str, bytes]] = []
+    try:
+        candidates = sorted(runtime_root.glob(f"{_EPOCH_RECEIPT_PREFIX}*{_EPOCH_RECEIPT_SUFFIX}"), key=lambda item: item.name)
+    except OSError as exc:
+        raise RuntimeReconciliationExecutionError("execution receipt set observation failed") from exc
+    for path in candidates:
+        if path.name == LEGACY_EXECUTION_RECEIPT_FILENAME:
+            continue
+        raw = _stable_bytes(path, f"epoch execution receipt {path.name}")
+        try:
+            value = json.loads(raw.decode("utf-8"))
+            if not isinstance(value, dict):
+                raise ValueError("execution receipt must be object")
+            receipt = RuntimeReconciliationExecutionReceipt(**value).validate()
+        except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise RuntimeReconciliationExecutionError("epoch execution receipt invalid") from exc
+        expected_name = execution_epoch_receipt_filename(
+            repository=receipt.repository,
+            inventory_id=receipt.inventory_id,
+            inventory_revision=receipt.inventory_revision,
+            inventory_digest=receipt.inventory_digest,
+        )
+        if path.name != expected_name:
+            raise RuntimeReconciliationExecutionError("epoch execution receipt filename binding mismatch")
+        entries.append((path.name, raw))
+    return tuple(entries)
 
 
 def _ro_state(path: Path, repository: str) -> tuple[dict[str, object], int, int]:
@@ -86,7 +141,7 @@ def _paths(config: RuntimeReconciliationExecutionConfig, physical_paths: Mapping
             "reconciliation": reconciliation,
             "trust": Path(logical.reconciliation_trust_path),
             "inventory": Path(logical.repository_inventory_path),
-            "receipt": reconciliation.with_name("reconciliation-execution-receipt.json"),
+            "receipt": reconciliation.with_name(LEGACY_EXECUTION_RECEIPT_FILENAME),
         }
     required = {"status", "coordination", "reconciliation", "trust", "inventory", "receipt"}
     if set(physical_paths) != required:
@@ -110,11 +165,12 @@ def execute_runtime_reconciliation(
     paths = _paths(config, physical_paths)
     for name in ("status", "coordination", "reconciliation", "trust", "inventory"):
         paths[name] = paths[name].resolve(strict=True)
-    receipt_path = paths["receipt"].resolve(strict=False)
-    if receipt_path == repo_root or repo_root in receipt_path.parents:
+    legacy_receipt_path = paths["receipt"].resolve(strict=False)
+    runtime_root = paths["reconciliation"].parent.resolve(strict=True)
+    if legacy_receipt_path.parent != runtime_root:
+        raise RuntimeReconciliationExecutionError("legacy execution receipt path must be runtime-root sibling")
+    if legacy_receipt_path == repo_root or repo_root in legacy_receipt_path.parents:
         raise RuntimeReconciliationExecutionError("execution receipt must remain outside repository")
-    if receipt_path.exists():
-        raise RuntimeReconciliationExecutionError("immutable execution receipt already exists")
 
     try:
         trust_raw = _stable_bytes(paths["trust"], "reconciliation trust")
@@ -127,6 +183,44 @@ def execute_runtime_reconciliation(
 
     if inventory.default_head_sha != config.current_master:
         raise RuntimeReconciliationExecutionError("inventory master drift denied")
+
+    current_receipt_path = runtime_root / execution_epoch_receipt_filename(
+        repository=inventory.repository,
+        inventory_id=inventory.inventory_id,
+        inventory_revision=inventory.inventory_revision,
+        inventory_digest=inventory.inventory_digest,
+    )
+    if current_receipt_path == repo_root or repo_root in current_receipt_path.parents:
+        raise RuntimeReconciliationExecutionError("execution receipt must remain outside repository")
+
+    legacy_receipt = None
+    legacy_raw = None
+    if legacy_receipt_path.exists():
+        legacy_raw = _stable_bytes(legacy_receipt_path, "legacy runtime execution receipt")
+        try:
+            value = json.loads(legacy_raw.decode("utf-8"))
+            if not isinstance(value, dict):
+                raise ValueError("legacy execution receipt must be object")
+            legacy_receipt = RuntimeReconciliationExecutionReceipt(**value).validate()
+        except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise RuntimeReconciliationExecutionError("legacy runtime execution receipt invalid") from exc
+
+    receipt_set_before = _epoch_receipt_snapshot(runtime_root)
+    current_matches = 0
+    for name, raw in receipt_set_before:
+        value = json.loads(raw.decode("utf-8"))
+        receipt = RuntimeReconciliationExecutionReceipt(**value).validate()
+        if _receipt_binds_inventory(receipt, inventory):
+            current_matches += 1
+    if legacy_receipt is not None and _receipt_binds_inventory(legacy_receipt, inventory):
+        current_matches += 1
+    if current_matches > 1:
+        raise RuntimeReconciliationExecutionError("duplicate current-epoch execution receipts denied")
+    if current_matches == 1:
+        raise RuntimeReconciliationExecutionError("reconciliation execution replay denied")
+    if current_receipt_path.exists():
+        raise RuntimeReconciliationExecutionError("current-epoch execution receipt conflict")
+
     head_before, existing_reports, existing_receipts = _ro_state(paths["reconciliation"], config.repository)
     expected_head = {
         "repository": inventory.repository,
@@ -140,6 +234,13 @@ def execute_runtime_reconciliation(
         raise RuntimeReconciliationExecutionError("recorded inventory binding mismatch")
     if existing_reports or existing_receipts:
         raise RuntimeReconciliationExecutionError("reconciliation execution replay denied")
+
+    if _epoch_receipt_snapshot(runtime_root) != receipt_set_before:
+        raise RuntimeReconciliationExecutionError("execution receipt set changed before effect")
+    if legacy_raw is not None and _stable_bytes(legacy_receipt_path, "legacy runtime execution receipt") != legacy_raw:
+        raise RuntimeReconciliationExecutionError("legacy execution receipt changed before effect")
+    if legacy_raw is None and legacy_receipt_path.exists():
+        raise RuntimeReconciliationExecutionError("legacy execution receipt appeared before effect")
 
     closure_provider = RuntimeClosurePreconditionsProvider(
         current_master=config.current_master,
@@ -191,14 +292,17 @@ def execute_runtime_reconciliation(
         deploy_performed=False,
     )
     payload = json.dumps(asdict(receipt), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8") + b"\n"
-    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    if not current_receipt_path.parent.is_dir():
+        raise RuntimeReconciliationExecutionError("execution receipt parent directory unavailable")
     try:
-        with receipt_path.open("xb") as handle:
+        with current_receipt_path.open("xb") as handle:
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
     except FileExistsError as exc:
         raise RuntimeReconciliationExecutionError("execution receipt race denied") from exc
+    if legacy_raw is not None and _stable_bytes(legacy_receipt_path, "legacy runtime execution receipt") != legacy_raw:
+        raise RuntimeReconciliationExecutionError("legacy execution receipt changed during effect")
     return receipt
 
 

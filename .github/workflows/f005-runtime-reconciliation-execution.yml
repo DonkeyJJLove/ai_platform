@@ -54,17 +54,19 @@ jobs:
         run: |
           python -m compileall -q `
             cyber_lion/contracts/fleet_runtime_reconciliation_execution.py `
-            cyber_lion/enterprise/fleet_runtime_reconciliation_execution.py
+            cyber_lion/enterprise/fleet_runtime_reconciliation_execution.py `
+            cyber_lion/enterprise/fleet_runtime_reconciliation_preflight.py
 
       - name: Run F005-Q regressions
         run: |
           python -m unittest `
             cyber_lion.tests.test_fleet_runtime_reconciliation_execution `
+            cyber_lion.tests.test_fleet_runtime_reconciliation_preflight `
             cyber_lion.tests.test_fleet_recorded_inventory_reconciliation `
             cyber_lion.tests.test_fleet_closure_preconditions_provider `
             -v
 
-      - name: Verify runtime prerequisites and execution receipt absence
+      - name: Verify runtime prerequisites
         run: |
           $root = $env:LION_FLEET_RUNTIME_ROOT
           foreach ($relative in @(
@@ -79,17 +81,18 @@ jobs:
               throw "required runtime source missing: $path"
             }
           }
-          $receipt = Join-Path $root 'reconciliation-execution-receipt.json'
-          if (Test-Path -LiteralPath $receipt) {
-            throw "immutable execution receipt already exists: $receipt"
+          $legacy = Join-Path $root 'reconciliation-execution-receipt.json'
+          if (Test-Path -LiteralPath $legacy -PathType Leaf) {
+            Write-Host 'legacy execution receipt present; executor will validate and classify its inventory epoch'
           }
 
       - name: Execute one recorded-inventory reconciliation
+        id: execute
         env:
           EXPECTED_MASTER: ${{ inputs.expected_master }}
           EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
         run: |
-          python -m cyber_lion.enterprise.fleet_runtime_reconciliation_execution `
+          $receipt = python -m cyber_lion.enterprise.fleet_runtime_reconciliation_execution `
             --repository DonkeyJJLove/ai_platform `
             --expected-master $env:EXPECTED_MASTER `
             --expected-master-tree $env:EXPECTED_MASTER_TREE `
@@ -97,14 +100,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw 'F005-Q runtime reconciliation execution failed'
           }
+          if ([string]::IsNullOrWhiteSpace($receipt)) {
+            throw 'F005-Q runtime reconciliation execution emitted no receipt'
+          }
+          "receipt=$receipt" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Publish non-authoritative execution receipt summary
+        env:
+          RECEIPT_JSON: ${{ steps.execute.outputs.receipt }}
         run: |
-          $receipt = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-execution-receipt.json'
-          if (-not (Test-Path -LiteralPath $receipt -PathType Leaf)) {
-            throw 'execution receipt missing after successful execution'
+          if ([string]::IsNullOrWhiteSpace($env:RECEIPT_JSON)) {
+            throw 'execution receipt output missing after successful execution'
           }
           Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005-Q Runtime Reconciliation Execution'
           Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
-          Get-Content -LiteralPath $receipt | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $env:RECEIPT_JSON
           Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'

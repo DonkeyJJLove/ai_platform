@@ -5,10 +5,13 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 import json
 import re
+from pathlib import PureWindowsPath
 from typing import Any
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
 RUNTIME_SOURCE_INSTANCE_ID = "lion-runtime-reconciliation-source-01"
+EXECUTION_EPOCH_DOMAIN = b"LION/F005-Q-EXECUTION-EPOCH/1\0"
+LEGACY_EXECUTION_RECEIPT_FILENAME = "reconciliation-execution-receipt.json"
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -35,6 +38,82 @@ def _sha256(value: object, name: str) -> str:
     if _SHA256.fullmatch(value) is None:
         raise ValueError(f"{name} must be lowercase sha256")
     return value
+
+
+def execution_epoch_payload(
+    *,
+    repository: str,
+    inventory_id: str,
+    inventory_revision: int,
+    inventory_digest: str,
+) -> dict[str, object]:
+    if repository != REPOSITORY:
+        raise ValueError("repository substitution denied")
+    _text(inventory_id, "inventory_id")
+    if isinstance(inventory_revision, bool) or not isinstance(inventory_revision, int) or inventory_revision < 1:
+        raise ValueError("inventory_revision invalid")
+    _sha256(inventory_digest, "inventory_digest")
+    return {
+        "repository": repository,
+        "inventory_id": inventory_id,
+        "inventory_revision": inventory_revision,
+        "inventory_digest": inventory_digest,
+    }
+
+
+def execution_epoch_key(
+    *,
+    repository: str,
+    inventory_id: str,
+    inventory_revision: int,
+    inventory_digest: str,
+) -> str:
+    payload = execution_epoch_payload(
+        repository=repository,
+        inventory_id=inventory_id,
+        inventory_revision=inventory_revision,
+        inventory_digest=inventory_digest,
+    )
+    return sha256(EXECUTION_EPOCH_DOMAIN + canonical_json(payload)).hexdigest()
+
+
+def execution_epoch_receipt_filename(
+    *,
+    repository: str,
+    inventory_id: str,
+    inventory_revision: int,
+    inventory_digest: str,
+) -> str:
+    return (
+        "reconciliation-execution-receipt."
+        + execution_epoch_key(
+            repository=repository,
+            inventory_id=inventory_id,
+            inventory_revision=inventory_revision,
+            inventory_digest=inventory_digest,
+        )
+        + ".json"
+    )
+
+
+def execution_epoch_receipt_path(
+    runtime_root: str,
+    *,
+    repository: str,
+    inventory_id: str,
+    inventory_revision: int,
+    inventory_digest: str,
+) -> str:
+    root = PureWindowsPath(_text(runtime_root, "runtime_root"))
+    if not root.is_absolute():
+        raise ValueError("runtime_root must be absolute")
+    filename = execution_epoch_receipt_filename(
+        repository=repository,
+        inventory_id=inventory_id,
+        inventory_revision=inventory_revision,
+        inventory_digest=inventory_digest,
+    )
+    return str(root / filename)
 
 
 @dataclass(frozen=True)
@@ -112,6 +191,15 @@ class RuntimeReconciliationExecutionReceipt:
         if self.execution_receipt_digest != expected:
             raise ValueError("execution receipt digest mismatch")
         return self
+
+    def epoch_key(self) -> str:
+        self.validate()
+        return execution_epoch_key(
+            repository=self.repository,
+            inventory_id=self.inventory_id,
+            inventory_revision=self.inventory_revision,
+            inventory_digest=self.inventory_digest,
+        )
 
     @classmethod
     def build(cls, **values: object) -> "RuntimeReconciliationExecutionReceipt":
