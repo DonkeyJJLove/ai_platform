@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.1.0",
+  "target_run_id": 32586566104,
+  "expected_workflow_id": 339498181,
+  "expected_run_number": 7,
+  "expected_head_sha": "64b6b190e0a0156d21d4ef765a2b46ae3ca79c4e",
+  "expected_event": "pull_request",
+  "expected_admission_job": "F005 Pre-Runtime Admission and Run Locator",
+  "expected_runtime_job": "F005 Runtime Fleet Convergence Evidence"
+}
