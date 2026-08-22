@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - .lion/control/f005-runtime-concurrency-inspector.request.json
+      - .lion/control/f005-runtime-concurrency-cancel.request.json
     types:
       - opened
       - synchronize
@@ -13,38 +14,78 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  actions: write
 
 jobs:
-  inspect:
+  inspect-or-cancel:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Enumerate target workflow runs
+      - name: Inspect or cancel exact stale pre-runtime run
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           TARGET_WORKFLOW_ID: '339498181'
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          if ($env:PR_HEAD_REPO -ne $env:GITHUB_REPOSITORY) { throw 'foreign repo denied' }
+          if ($env:PR_BASE_REF -ne 'master') { throw 'base substitution denied' }
           $headers = @{
             Authorization = "Bearer $env:GH_TOKEN"
             Accept = 'application/vnd.github+json'
             'X-GitHub-Api-Version' = '2022-11-28'
           }
-          $uri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/workflows/$env:TARGET_WORKFLOW_ID/runs?per_page=100"
-          $response = Invoke-RestMethod -Method Get -Headers $headers -Uri $uri
-          $rows = @($response.workflow_runs | ForEach-Object {
-            [ordered]@{
-              id = $_.id
-              run_number = $_.run_number
-              event = $_.event
-              status = $_.status
-              conclusion = $_.conclusion
-              head_sha = $_.head_sha
-              head_branch = $_.head_branch
-              created_at = $_.created_at
-              updated_at = $_.updated_at
-              html_url = $_.html_url
-            }
-          })
-          $rows | ConvertTo-Json -Depth 4 -Compress
+          git fetch --no-tags origin $env:PR_BASE_SHA $env:PR_HEAD_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'exact PR fetch failed' }
+          $changed = @(git diff --name-only $env:PR_BASE_SHA $env:PR_HEAD_SHA)
+          if ($changed.Count -ne 1) { throw 'exact one-path diagnostic scope required' }
+
+          $inspectPath = '.lion/control/f005-runtime-concurrency-inspector.request.json'
+          $cancelPath = '.lion/control/f005-runtime-concurrency-cancel.request.json'
+          if ($changed[0] -eq $inspectPath) {
+            if ($env:PR_HEAD_REF -ne 'control/f005-runtime-concurrency-inspector') { throw 'inspector branch substitution denied' }
+            $uri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/workflows/$env:TARGET_WORKFLOW_ID/runs?per_page=100"
+            $response = Invoke-RestMethod -Method Get -Headers $headers -Uri $uri
+            @($response.workflow_runs | ForEach-Object {
+              [ordered]@{ id=$_.id; run_number=$_.run_number; event=$_.event; status=$_.status; conclusion=$_.conclusion; head_sha=$_.head_sha; head_branch=$_.head_branch; created_at=$_.created_at; updated_at=$_.updated_at; html_url=$_.html_url }
+            }) | ConvertTo-Json -Depth 4 -Compress
+            exit 0
+          }
+
+          if ($changed[0] -ne $cancelPath) { throw 'diagnostic path substitution denied' }
+          if ($env:PR_HEAD_REF -ne 'control/f005-runtime-concurrency-cancel') { throw 'cancel branch substitution denied' }
+          $raw = git show "$($env:PR_HEAD_SHA):$cancelPath"
+          if ($LASTEXITCODE -ne 0) { throw 'cancel request missing' }
+          $request = (($raw -join "`n") | ConvertFrom-Json -ErrorAction Stop)
+          $required = @('schema_version','target_run_id','expected_workflow_id','expected_run_number','expected_head_sha','expected_event')
+          $actual = @($request.PSObject.Properties.Name | Sort-Object)
+          if (($actual -join ',') -ne (($required | Sort-Object) -join ',')) { throw 'cancel request schema substitution denied' }
+          if ($request.schema_version -ne '1.0.0') { throw 'cancel schema version denied' }
+          if ([long]$request.target_run_id -ne 32584996160) { throw 'unexpected target run id' }
+          if ([long]$request.expected_workflow_id -ne 339498181) { throw 'unexpected workflow id' }
+          if ([int]$request.expected_run_number -ne 3) { throw 'unexpected run number' }
+          if ($request.expected_head_sha -ne '27d4f848f78a16aabbb95366d3be789bf5a5c8ad') { throw 'unexpected head sha' }
+          if ($request.expected_event -ne 'push') { throw 'unexpected event' }
+
+          $runUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)"
+          $run = Invoke-RestMethod -Method Get -Headers $headers -Uri $runUri
+          if ([long]$run.workflow_id -ne [long]$request.expected_workflow_id -or [int]$run.run_number -ne [int]$request.expected_run_number -or $run.head_sha -ne $request.expected_head_sha -or $run.event -ne $request.expected_event) { throw 'target run identity mismatch' }
+          if ($run.status -ne 'queued') { throw "target run not queued: $($run.status)" }
+
+          $jobsUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)/jobs?per_page=100"
+          $jobs = @( (Invoke-RestMethod -Method Get -Headers $headers -Uri $jobsUri).jobs )
+          if ($jobs.Count -lt 1) { throw 'target run has no observable jobs' }
+          foreach ($job in $jobs) {
+            if ($job.status -ne 'queued') { throw "target job not queued: $($job.id)=$($job.status)" }
+            if ($null -ne $job.started_at) { throw "target job has started_at: $($job.id)=$($job.started_at)" }
+          }
+
+          $cancelUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)/cancel"
+          Invoke-RestMethod -Method Post -Headers $headers -Uri $cancelUri
+          Start-Sleep -Seconds 2
+          $after = Invoke-RestMethod -Method Get -Headers $headers -Uri $runUri
+          [ordered]@{ id=$after.id; status=$after.status; conclusion=$after.conclusion; cancelled_exact_pre_runtime=$true } | ConvertTo-Json -Compress
