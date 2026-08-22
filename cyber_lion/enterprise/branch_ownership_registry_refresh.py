@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 from hashlib import sha256
 import json
 import os
@@ -26,7 +25,7 @@ from cyber_lion.enterprise.branch_ownership_registry import (
     canonical_registry_bytes,
     load_registry_snapshot,
 )
-from cyber_lion.enterprise.github_repository_read_source import GitHubRepositoryReadSource
+from cyber_lion.enterprise.github_repository_read_source import GitHubRESTReadSource
 
 
 class BranchOwnershipRegistryRefreshError(RuntimeError):
@@ -76,7 +75,11 @@ def load_refresh_manifest(raw: bytes) -> BranchOwnershipRefreshManifest:
     if set(value) != required or not isinstance(value.get("records"), list):
         raise BranchOwnershipRegistryRefreshError("ownership refresh manifest schema invalid")
     try:
-        records = tuple(BranchOwnershipRecord(**item).validate() for item in value["records"] if isinstance(item, dict))
+        records = tuple(
+            BranchOwnershipRecord(**item).validate()
+            for item in value["records"]
+            if isinstance(item, dict)
+        )
         if len(records) != len(value["records"]):
             raise BranchOwnershipRegistryRefreshError("ownership refresh record invalid")
         return BranchOwnershipRefreshManifest(
@@ -97,24 +100,31 @@ def load_refresh_manifest(raw: bytes) -> BranchOwnershipRefreshManifest:
 
 
 def _branch_map(github: Any, repository: str) -> dict[str, str]:
-    branches = github.list_branches(repository)
     result: dict[str, str] = {}
-    for branch in branches:
-        name = str(branch.branch)
-        head = str(branch.head_sha)
-        if name in result:
-            raise BranchOwnershipRegistryRefreshError("duplicate live branch denied")
-        result[name] = head
-    return result
+    cursor: str | None = None
+    while True:
+        branches, cursor = github.list_branches_page(repository, cursor)
+        for branch in branches:
+            name = str(branch.branch)
+            head = str(branch.head_sha)
+            if name in result:
+                raise BranchOwnershipRegistryRefreshError("duplicate live branch denied")
+            result[name] = head
+        if cursor is None:
+            return result
 
 
 def _verify_baseline_ancestry(github: Any, repository: str, record: BranchOwnershipRecord) -> None:
     if record.ownership_state not in {"ACTIVE", "TERMINAL"}:
         return
     assert record.baseline_sha is not None
-    comparison = github.compare(repository, record.baseline_sha, record.branch_head_sha)
-    status = getattr(comparison, "status", None)
-    if status not in {"ahead", "identical"}:
+    evidence = github.compare_to_default(
+        repository,
+        record.baseline_sha,
+        record.branch_head_sha,
+        record.branch,
+    )
+    if evidence.ancestry not in {"DEFAULT_ANCESTOR_OF_HEAD", "IDENTICAL"}:
         raise BranchOwnershipRegistryRefreshError("mission baseline is not ancestral to branch head")
 
 
@@ -150,9 +160,9 @@ def refresh_branch_ownership_registry(
     if current.registry_digest != parsed.previous_registry_digest:
         raise BranchOwnershipRegistryRefreshError("previous registry digest mismatch")
 
-    source = github if github is not None else GitHubRepositoryReadSource.from_environment()
-    default = source.get_default_branch(parsed.repository)
-    if default.branch != "master" or default.head_sha != expected_master or default.tree_sha != expected_master_tree:
+    source = github if github is not None else GitHubRESTReadSource.from_environment()
+    live_master, live_tree = source.default_head(parsed.repository, "master")
+    if live_master != expected_master or live_tree != expected_master_tree:
         raise BranchOwnershipRegistryRefreshError("live master binding mismatch")
 
     before = _branch_map(source, parsed.repository)
@@ -178,7 +188,6 @@ def refresh_branch_ownership_registry(
     if _stable_bytes(registry, "current ownership registry") != registry_raw:
         raise BranchOwnershipRegistryRefreshError("current ownership registry changed before effect")
 
-    registry.parent.mkdir(parents=True, exist_ok=True)
     fd, temp_name = tempfile.mkstemp(prefix=f".{registry.name}.", suffix=".tmp", dir=str(registry.parent))
     temp = Path(temp_name)
     try:
@@ -186,9 +195,10 @@ def refresh_branch_ownership_registry(
             handle.write(next_bytes)
             handle.flush()
             os.fsync(handle.fileno())
-        if temp.read_bytes() != next_bytes:
+        temp_bytes = temp.read_bytes()
+        if temp_bytes != next_bytes:
             raise BranchOwnershipRegistryRefreshError("temporary registry bytes mismatch")
-        load_registry_snapshot(temp.read_bytes())
+        load_registry_snapshot(temp_bytes)
         os.replace(temp, registry)
     finally:
         if temp.exists():
