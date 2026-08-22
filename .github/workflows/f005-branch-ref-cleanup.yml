@@ -57,9 +57,6 @@ jobs:
           $actual = @($request.PSObject.Properties.Name | Sort-Object)
           if (($actual -join ',') -ne (($required | Sort-Object) -join ',')) { throw 'cleanup request schema substitution denied' }
           if ($request.schema_version -ne 'lion.f005-branch-ref-cleanup/v1') { throw 'unsupported cleanup request schema' }
-          foreach ($sha in @($request.request_id,$request.expected_master,$request.expected_master_tree,$request.cleanup_build_head)) {
-            if ($sha -notmatch '^[0-9a-f]{40}$' -and $sha -notmatch '^[0-9a-f]{64}$') { throw 'invalid request digest/sha shape' }
-          }
           if ($request.request_id -notmatch '^[0-9a-f]{64}$') { throw 'request_id must be sha256' }
           if ($request.expected_master -notmatch '^[0-9a-f]{40}$' -or $request.expected_master_tree -notmatch '^[0-9a-f]{40}$' -or $request.cleanup_build_head -notmatch '^[0-9a-f]{40}$') { throw 'git bindings must be exact sha1 values' }
 
@@ -117,13 +114,18 @@ jobs:
             'X-GitHub-Api-Version' = '2022-11-28'
           }
 
+          function Get-RefUri([string]$branch) {
+            $segments = @($branch -split '/' | ForEach-Object { [System.Uri]::EscapeDataString($_) })
+            $branchPath = $segments -join '/'
+            return "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/git/ref/heads/$branchPath"
+          }
+
           $deleted = @()
           $alreadyAbsent = @()
           foreach ($entry in $refs.GetEnumerator()) {
             $branch = [string]$entry.Key
             $expectedSha = [string]$entry.Value
-            $encodedRef = [System.Uri]::EscapeDataString("heads/$branch")
-            $refUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/git/ref/$encodedRef"
+            $refUri = Get-RefUri $branch
             try {
               $ref = Invoke-RestMethod -Method Get -Headers $headers -Uri $refUri
             }
@@ -156,8 +158,7 @@ jobs:
           $closeBody = @{ state = 'closed' } | ConvertTo-Json -Compress
           Invoke-RestMethod -Method Patch -Headers $headers -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/pulls/$env:PR_NUMBER" -Body $closeBody -ContentType 'application/json'
 
-          $controlEncoded = [System.Uri]::EscapeDataString("heads/$env:PR_HEAD_REF")
-          $controlUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/git/ref/$controlEncoded"
+          $controlUri = Get-RefUri $env:PR_HEAD_REF
           $controlRef = Invoke-RestMethod -Method Get -Headers $headers -Uri $controlUri
           if ($controlRef.object.sha -ne $env:PR_HEAD_SHA) { throw 'control branch drift before self-delete' }
           Invoke-RestMethod -Method Delete -Headers $headers -Uri $controlUri
