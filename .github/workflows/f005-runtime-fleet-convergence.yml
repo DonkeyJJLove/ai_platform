@@ -30,6 +30,11 @@ on:
 
 permissions:
   contents: read
+  statuses: write
+
+concurrency:
+  group: f005-runtime-convergence-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   runtime-fleet-convergence:
@@ -59,6 +64,28 @@ jobs:
           if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
             throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
           }
+
+      - name: Publish deterministic runtime run locator
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $targetUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          $body = @{
+            state = 'pending'
+            context = 'lion/f005-runtime-convergence'
+            description = "locator-only run $env:GITHUB_RUN_ID"
+            target_url = $targetUrl
+          } | ConvertTo-Json -Compress
+          Invoke-RestMethod `
+            -Method Post `
+            -Headers @{
+              Authorization = "Bearer $env:GH_TOKEN"
+              Accept = 'application/vnd.github+json'
+              'X-GitHub-Api-Version' = '2022-11-28'
+            } `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/statuses/$env:GITHUB_SHA" `
+            -Body $body `
+            -ContentType 'application/json'
 
       - name: Compile runtime convergence producer and verifier
         run: |
