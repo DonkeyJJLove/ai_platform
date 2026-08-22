@@ -5,8 +5,13 @@ on:
     paths:
       - 'cyber_lion/contracts/fleet_repository_observation_source.py'
       - 'cyber_lion/enterprise/fleet_repository_observation_source.py'
+      - 'cyber_lion/enterprise/github_repository_read_source.py'
+      - 'cyber_lion/enterprise/fleet_repository_observation_runtime.py'
       - 'cyber_lion/tests/test_fleet_repository_observation_source.py'
+      - 'cyber_lion/tests/test_github_repository_read_source.py'
+      - 'cyber_lion/tests/test_fleet_repository_observation_runtime.py'
       - '.github/workflows/f005-repository-observation-source-ci.yml'
+      - '.github/workflows/f005-runtime-repository-observation.yml'
   workflow_dispatch:
 
 permissions:
@@ -23,54 +28,59 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Compile F005-K slice
+
+      - name: Compile F005-K and K2 slices
         run: |
           python -m compileall -q \
             cyber_lion/contracts/fleet_repository_observation_source.py \
-            cyber_lion/enterprise/fleet_repository_observation_source.py
-      - name: Run F005-K regressions
+            cyber_lion/enterprise/fleet_repository_observation_source.py \
+            cyber_lion/enterprise/github_repository_read_source.py \
+            cyber_lion/enterprise/fleet_repository_observation_runtime.py
+
+      - name: Run F005-K and K2 regressions
         run: |
-          python -m unittest cyber_lion.tests.test_fleet_repository_observation_source -v
+          python -m unittest \
+            cyber_lion.tests.test_fleet_repository_observation_source \
+            cyber_lion.tests.test_github_repository_read_source \
+            cyber_lion.tests.test_fleet_repository_observation_runtime \
+            -v
+
       - name: Verify no runtime observation materialized in CI
         shell: bash
         run: |
-          target="${LION_FLEET_RUNTIME_ROOT}\\reconciliation-source\\repository-"
-          target+='inventory.json'
-          if test -e "$target"; then
-            echo "FAIL: runtime observation materialized during CI: $target" >&2
+          if find . -name 'repository-inventory.json' -print -quit | grep -q .; then
+            echo 'FAIL: runtime observation materialized during CI' >&2
             exit 1
           fi
-          echo "PASS: runtime observation absent"
-      - name: Verify GitHubReadSource interface present
+          echo 'PASS: runtime observation absent'
+
+      - name: Verify concrete read-only adapter present
         shell: bash
         run: |
-          if ! grep -Fq 'class GitHubReadSource' cyber_lion/enterprise/fleet_repository_observation_source.py; then
-            echo 'FAIL: GitHubReadSource interface missing' >&2
+          adapter='cyber_lion/enterprise/github_repository_read_source.py'
+          grep -Fq 'class GitHubRESTReadSource' "$adapter"
+          grep -Fq 'class UrllibReadOnlyTransport' "$adapter"
+          if grep -Eq 'def (post|put|patch|delete)\(' "$adapter"; then
+            echo 'FAIL: mutation method exposed by GitHub adapter' >&2
             exit 1
           fi
-          echo 'PASS: GitHubReadSource interface present'
-      - name: Verify AuthoritativeOwnershipProvider interface present
+          echo 'PASS: concrete GET-only GitHub adapter present'
+
+      - name: Verify ownership provider composition present
         shell: bash
         run: |
-          if ! grep -Fq 'class AuthoritativeOwnershipProvider' cyber_lion/enterprise/fleet_repository_observation_source.py; then
-            echo 'FAIL: AuthoritativeOwnershipProvider interface missing' >&2
-            exit 1
-          fi
-          echo 'PASS: AuthoritativeOwnershipProvider interface present'
-      - name: Verify CI workflow does not invoke observation materialization
+          runtime='cyber_lion/enterprise/fleet_repository_observation_runtime.py'
+          grep -Fq 'FileBranchOwnershipRegistryProvider' "$runtime"
+          grep -Fq 'GitHubRESTReadSource.from_environment' "$runtime"
+          echo 'PASS: runtime composition uses live GitHub source and file ownership provider'
+
+      - name: Verify CI workflow cannot invoke runtime observation materialization
         shell: bash
         run: |
           workflow='.github/workflows/f005-repository-observation-source-ci.yml'
-          module='python -m cyber_lion.enterprise.'
-          module+='fleet_repository_observation_source'
-          output='repository-'
-          output+='inventory.json'
+          module='python -m cyber_lion.enterprise.fleet_repository_observation_runtime'
           if grep -Fq "$module" "$workflow"; then
-            echo "FAIL: CI workflow invokes observation producer module" >&2
-            exit 1
-          fi
-          if grep -Fq "$output" "$workflow"; then
-            echo "FAIL: CI workflow contains runtime observation output literal" >&2
+            echo 'FAIL: CI workflow invokes runtime observation module' >&2
             exit 1
           fi
           echo 'PASS: CI workflow cannot materialize runtime observation'
