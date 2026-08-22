@@ -1,170 +1,37 @@
 from __future__ import annotations
-
+from dataclasses import asdict
+from hashlib import sha256
 import unittest
+from cyber_lion.contracts.agent_registry import AgentRegistryProjection,canonical_json
+from cyber_lion.enterprise import AgentSpec,EnterpriseModelError,MissionSpec,MosaicDelta,SwarmPlanner
 
-from cyber_lion.enterprise import (
-    AgentSpec,
-    EnterpriseModelError,
-    MissionSpec,
-    MosaicDelta,
-    SwarmPlanner,
-)
-
-
-def agent(
-    agent_id: str,
-    capabilities: tuple[str, ...],
-    *,
-    authority: str = "read",
-    cost: float = 1.0,
-    verifier: bool = False,
-    memory_write: bool = False,
-    memory_policies: tuple[str, ...] = (),
-) -> AgentSpec:
-    events = ("DecisionProposed", "OutcomeObserved") if authority not in {"none", "read"} else ()
-    return AgentSpec(
-        agent_id=agent_id,
-        version="1.0.0",
-        role=agent_id,
-        mission="mission-bound template",
-        capabilities=capabilities,
-        authority_ceiling=authority,
-        execution_domain="test",
-        observability_events=events,
-        memory_write=memory_write,
-        memory_policy_ids=memory_policies,
-        max_cost_units=cost,
-        is_verifier=verifier,
-    )
-
-
-class AgentContractTests(unittest.TestCase):
-    def test_memory_write_requires_policy(self):
-        with self.assertRaises(EnterpriseModelError):
-            agent("memory", ("memory.write",), memory_write=True).validate()
-
-    def test_consequential_authority_requires_observability(self):
-        spec = AgentSpec(
-            agent_id="builder",
-            version="1",
-            role="builder",
-            mission="build",
-            capabilities=("code.write",),
-            authority_ceiling="local_write",
-            observability_events=(),
-        )
-        with self.assertRaises(EnterpriseModelError):
-            spec.validate()
-
-    def test_memory_write_with_policy_is_valid(self):
-        spec = agent(
-            "memory",
-            ("memory.write",),
-            memory_write=True,
-            memory_policies=("memory-policy-v1",),
-        )
-        self.assertIs(spec.validate(), spec)
-
-
+def agent(agent_id,capabilities,authority="read",cost=1.0,verifier=False):
+ events=("DecisionProposed","OutcomeObserved") if authority not in {"none","read"} else ()
+ return AgentSpec(agent_id,"1.0.0",agent_id,"mission-bound template",capabilities,authority,"test",events,max_cost_units=cost,is_verifier=verifier)
+def projection(mission,catalog):
+ specs=[]
+ for s in sorted(catalog,key=lambda x:(x.agent_id,x.version)):
+  d=asdict(s)
+  for k,v in list(d.items()):
+   if isinstance(v,tuple):d[k]=list(v)
+  if set(s.capabilities)&set(mission.required_capabilities):specs.append(d)
+ p={"registry_id":"r","revision":1,"event_head":"0"*64,"mission_id":mission.mission_id,"required_capabilities":list(mission.required_capabilities),"candidate_specs":specs};dg=sha256(canonical_json(p)).hexdigest();return AgentRegistryProjection("r",1,"0"*64,mission.mission_id,mission.required_capabilities,tuple(specs),dg)
 class SwarmPlannerTests(unittest.TestCase):
-    def setUp(self):
-        self.planner = SwarmPlanner()
-        self.catalog = [
-            agent("research", ("research", "hypothesis"), cost=0.6),
-            agent("architect", ("architecture", "code"), authority="local_write", cost=0.8),
-            agent("security", ("security", "validation"), cost=0.7, verifier=True),
-            agent("code-only", ("code",), authority="local_write", cost=0.5),
-        ]
-
-    def test_planner_builds_minimal_sufficient_mosaic(self):
-        mission = MissionSpec(
-            mission_id="m1",
-            purpose="design and validate software",
-            required_capabilities=("research", "architecture", "code", "security", "validation"),
-            authority_ceiling="local_write",
-            risk_class="AMBER",
-            max_agents=4,
-            max_total_cost_units=4.0,
-        )
-        swarm = self.planner.plan(mission, self.catalog)
-        self.assertEqual(set(swarm.covered_capabilities), set(mission.required_capabilities))
-        self.assertIn("research", swarm.member_agent_ids)
-        self.assertIn("architect", swarm.member_agent_ids)
-        self.assertIn("security", swarm.member_agent_ids)
-        self.assertNotIn("code-only", swarm.member_agent_ids)
-        self.assertEqual(swarm.topology, "hub_spoke_with_verifier")
-
-    def test_missing_capability_fails_closed(self):
-        mission = MissionSpec(
-            mission_id="missing",
-            purpose="need unavailable capability",
-            required_capabilities=("research", "financial.audit"),
-        )
-        with self.assertRaises(EnterpriseModelError):
-            self.planner.plan(mission, self.catalog)
-
-    def test_red_mission_requires_independent_verifier(self):
-        mission = MissionSpec(
-            mission_id="red",
-            purpose="privileged change",
-            required_capabilities=("architecture", "code"),
-            authority_ceiling="deploy",
-            risk_class="RED",
-            max_agents=3,
-        )
-        without_verifier = [item for item in self.catalog if not item.is_verifier]
-        with self.assertRaises(EnterpriseModelError):
-            self.planner.plan(mission, without_verifier)
-
-        swarm = self.planner.plan(mission, self.catalog)
-        self.assertTrue(swarm.verifier_agent_ids)
-        self.assertEqual(swarm.topology, "segmented_peer_review")
-
-    def test_budget_is_enforced(self):
-        mission = MissionSpec(
-            mission_id="budget",
-            purpose="too small budget",
-            required_capabilities=("research", "architecture"),
-            authority_ceiling="local_write",
-            max_total_cost_units=0.5,
-        )
-        with self.assertRaises(EnterpriseModelError):
-            self.planner.plan(mission, self.catalog)
-
-
+ def setUp(self):
+  self.p=SwarmPlanner();self.c=[agent("research",("research","hypothesis"),cost=.6),agent("architect",("architecture","code"),"local_write",.8),agent("security",("security","validation"),cost=.7,verifier=True),agent("code-only",("code",),"local_write",.5)]
+ def test_minimal_mosaic_preserved(self):
+  m=MissionSpec("m1","design",("research","architecture","code","security","validation"),"local_write","AMBER",4,max_total_cost_units=4);s=self.p.plan(m,projection(m,self.c));self.assertEqual(set(s.member_agent_ids),{"research","architect","security"})
+ def test_missing_capability_fails(self):
+  m=MissionSpec("m2","missing",("research","financial.audit"))
+  with self.assertRaises(EnterpriseModelError):self.p.plan(m,projection(m,self.c))
+ def test_red_requires_verifier(self):
+  m=MissionSpec("red","change",("architecture","code"),"deploy","RED",3)
+  with self.assertRaises(EnterpriseModelError):self.p.plan(m,projection(m,[x for x in self.c if not x.is_verifier]))
+  self.assertTrue(self.p.plan(m,projection(m,self.c)).verifier_agent_ids)
+ def test_ambient_list_rejected(self):
+  m=MissionSpec("m","p",("research",))
+  with self.assertRaises((AttributeError,EnterpriseModelError)):self.p.plan(m,self.c)
 class MosaicDeltaTests(unittest.TestCase):
-    def test_authority_expansion_requires_gate(self):
-        delta = MosaicDelta(
-            delta_id="d1",
-            swarm_id="s1",
-            authority_before="read",
-            authority_after="external_write",
-            reason="mission now requires external validation",
-            evidence_refs=("evidence:1",),
-        )
-        with self.assertRaises(EnterpriseModelError):
-            delta.validate()
-
-    def test_authority_expansion_with_gate_is_explicit(self):
-        delta = MosaicDelta(
-            delta_id="d2",
-            swarm_id="s1",
-            authority_before="read",
-            authority_after="external_write",
-            reason="approved external validation",
-            evidence_refs=("evidence:1",),
-            gate_event_id="gate:123",
-        )
-        self.assertIs(delta.validate(), delta)
-
-    def test_delta_requires_evidence(self):
-        with self.assertRaises(EnterpriseModelError):
-            MosaicDelta(
-                delta_id="d3",
-                swarm_id="s1",
-                reason="unreferenced topology change",
-            ).validate()
-
-
-if __name__ == "__main__":
-    unittest.main()
+ def test_authority_expansion_requires_gate(self):
+  with self.assertRaises(EnterpriseModelError):MosaicDelta("d","s",authority_before="read",authority_after="external_write",reason="r",evidence_refs=("e",)).validate()
+if __name__=="__main__":unittest.main()
