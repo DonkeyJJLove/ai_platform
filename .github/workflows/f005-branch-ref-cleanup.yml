@@ -104,7 +104,8 @@ jobs:
             'mission/f005-runtime-quarantine-cutover' = '6bedf2a50e4cab6472d50830cb1ea61e9784fe72'
             'mission/f005-runtime-run-locator' = '6e709d25cfe4dd8587734745362b1f1808428067'
             'mission/f005-sandbox-runtime-trigger' = 'b450fae7c4f603039dc7e25c924fc7bb754c622f'
-            'mission/f005-branch-ref-cleanup' = $request.cleanup_build_head
+            'mission/f005-branch-ref-cleanup' = 'dc7cfaf3f874b93f46e159f197accbef816f49c6'
+            'mission/f005-branch-ref-cleanup-r2' = $request.cleanup_build_head
           }
 
           if ($refs.Keys -contains 'master' -or $refs.Keys -contains $env:PR_HEAD_REF) { throw 'protected/current control ref entered cleanup set' }
