@@ -243,8 +243,8 @@ class RuntimeReconciliationPreflightTests(unittest.TestCase):
         self.assertEqual(result.next_step, "REFRESH_F005_J")
 
     def test_missing_inventory_selects_f005_j_refresh(self) -> None:
-        self.inventory_file.unlink()
         state = self.bounded_state()
+        self.inventory_file.unlink()
         state["head"] = None
         result = self.observe_with(state, canonical=None)
         self.assertEqual(result.inventory_state, "MISSING")
