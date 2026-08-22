@@ -1,0 +1,83 @@
+name: F005 Runtime Reconciliation Preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-reconciliation-preflight:
+    name: F005 Runtime Reconciliation Preflight
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.expected_master }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Bind checkout to exact master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          $actualSha = (git rev-parse HEAD).Trim()
+          if ($actualSha -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: $actualSha != $env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: $actualTree != $env:EXPECTED_MASTER_TREE"
+          }
+
+      - name: Compile read-only preflight observer
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/fleet_runtime_reconciliation_preflight.py `
+            cyber_lion/enterprise/fleet_runtime_reconciliation_preflight.py
+
+      - name: Run preflight and reconciliation regressions
+        run: |
+          python -m unittest `
+            cyber_lion.tests.test_fleet_runtime_reconciliation_preflight `
+            cyber_lion.tests.test_fleet_runtime_reconciliation_ingestion `
+            cyber_lion.tests.test_fleet_runtime_snapshot_source `
+            cyber_lion.tests.test_fleet_runtime_reconciliation_execution `
+            -v
+
+      - name: Observe runtime state without mutation
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          $result = python -m cyber_lion.enterprise.fleet_runtime_reconciliation_preflight `
+            --repository DonkeyJJLove/ai_platform `
+            --expected-master $env:EXPECTED_MASTER `
+            --expected-master-tree $env:EXPECTED_MASTER_TREE
+          if ($LASTEXITCODE -ne 0) {
+            throw 'F005-Q runtime preflight observer failed'
+          }
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005-Q Runtime Reconciliation Preflight'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $result
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'
