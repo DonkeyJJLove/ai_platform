@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import asdict
+from hashlib import sha256
 import unittest
 
+from cyber_lion.contracts.agent_registry import AgentRegistryProjection, canonical_json
 from cyber_lion.enterprise import (
     ActionProposal,
     AgentSpec,
@@ -34,6 +37,34 @@ def agent(
     )
 
 
+def registry_projection(mission: MissionSpec, agents: tuple[AgentSpec, ...]) -> AgentRegistryProjection:
+    specs = []
+    for spec in sorted(agents, key=lambda item: (item.agent_id, item.version)):
+        raw = asdict(spec)
+        for key, value in list(raw.items()):
+            if isinstance(value, tuple):
+                raw[key] = list(value)
+        specs.append(raw)
+    payload = {
+        "registry_id": "test-registry",
+        "revision": 1,
+        "event_head": "0" * 64,
+        "mission_id": mission.mission_id,
+        "required_capabilities": list(mission.required_capabilities),
+        "candidate_specs": specs,
+    }
+    digest = sha256(canonical_json(payload)).hexdigest()
+    return AgentRegistryProjection(
+        "test-registry",
+        1,
+        "0" * 64,
+        mission.mission_id,
+        mission.required_capabilities,
+        tuple(specs),
+        digest,
+    ).verify_digest()
+
+
 class ExecutionControlPlaneTests(unittest.TestCase):
     def setUp(self):
         self.plane = ExecutionControlPlane()
@@ -50,7 +81,8 @@ class ExecutionControlPlaneTests(unittest.TestCase):
             require_independent_verifier=True,
             max_total_cost_units=3.0,
         )
-        self.swarm = SwarmPlanner().plan(self.mission, list(self.agents.values()))
+        projection = registry_projection(self.mission, (self.builder, self.verifier))
+        self.swarm = SwarmPlanner().plan(self.mission, projection)
 
     def proposal(self, **changes) -> ActionProposal:
         values = dict(

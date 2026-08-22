@@ -1,9 +1,40 @@
 from __future__ import annotations
 
+from dataclasses import asdict
+from hashlib import sha256
 import unittest
 
+from cyber_lion.contracts.agent_registry import AgentRegistryProjection, canonical_json
 from cyber_lion.enterprise import ActionProposal, AgentSpec, ExecutionControlPlane, MissionSpec, SwarmPlanner
 from cyber_lion.enterprise.event_bridge import execution_event, gate_event, proposal_event
+
+
+def registry_projection(mission: MissionSpec, agents: tuple[AgentSpec, ...]) -> AgentRegistryProjection:
+    specs = []
+    for spec in sorted(agents, key=lambda item: (item.agent_id, item.version)):
+        raw = asdict(spec)
+        for key, value in list(raw.items()):
+            if isinstance(value, tuple):
+                raw[key] = list(value)
+        specs.append(raw)
+    payload = {
+        "registry_id": "test-registry",
+        "revision": 1,
+        "event_head": "0" * 64,
+        "mission_id": mission.mission_id,
+        "required_capabilities": list(mission.required_capabilities),
+        "candidate_specs": specs,
+    }
+    digest = sha256(canonical_json(payload)).hexdigest()
+    return AgentRegistryProjection(
+        "test-registry",
+        1,
+        "0" * 64,
+        mission.mission_id,
+        mission.required_capabilities,
+        tuple(specs),
+        digest,
+    ).verify_digest()
 
 
 class EnterpriseEventBridgeTests(unittest.TestCase):
@@ -34,7 +65,8 @@ class EnterpriseEventBridgeTests(unittest.TestCase):
             max_agents=2,
             require_independent_verifier=True,
         )
-        self.swarm = SwarmPlanner().plan(self.mission, [self.builder, self.verifier])
+        projection = registry_projection(self.mission, (self.builder, self.verifier))
+        self.swarm = SwarmPlanner().plan(self.mission, projection)
         self.proposal = ActionProposal(
             proposal_id="proposal:release-1",
             mission_id="m1",
