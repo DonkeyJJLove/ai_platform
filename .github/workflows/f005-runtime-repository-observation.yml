@@ -1,0 +1,121 @@
+name: F005 Runtime Repository Observation
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_master:
+        description: Exact live master SHA to bind
+        required: true
+        type: string
+      expected_master_tree:
+        description: Exact live master tree SHA to bind
+        required: true
+        type: string
+      inventory_revision:
+        description: Positive repository inventory revision
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-repository-observation:
+    name: F005 Runtime Repository Observation
+    runs-on: [self-hosted, lion-runtime]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Bind workflow to exact checked-out master and tree
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+        run: |
+          if ($env:GITHUB_SHA -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: checkout=$env:GITHUB_SHA expected=$env:EXPECTED_MASTER"
+          }
+          $actualTree = (git show -s --format=%T HEAD).Trim()
+          if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {
+            throw "master tree binding mismatch: checkout=$actualTree expected=$env:EXPECTED_MASTER_TREE"
+          }
+
+      - name: Compile runtime observation slice
+        run: |
+          python -m compileall -q `
+            cyber_lion/contracts/fleet_repository_observation_source.py `
+            cyber_lion/contracts/branch_ownership_registry.py `
+            cyber_lion/enterprise/branch_ownership_registry.py `
+            cyber_lion/enterprise/fleet_repository_observation_source.py `
+            cyber_lion/enterprise/github_repository_read_source.py `
+            cyber_lion/enterprise/fleet_repository_observation_runtime.py
+
+      - name: Run runtime observation regressions
+        run: |
+          python -m unittest `
+            cyber_lion.tests.test_fleet_repository_observation_source `
+            cyber_lion.tests.test_github_repository_read_source `
+            cyber_lion.tests.test_fleet_repository_observation_runtime `
+            -v
+
+      - name: Verify exact runtime inputs and output absence
+        run: |
+          $registry = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-source\branch-ownership-registry.json'
+          $output = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-source\repository-inventory.json'
+          if (-not (Test-Path -LiteralPath $registry -PathType Leaf)) {
+            throw "branch ownership registry missing: $registry"
+          }
+          if (Test-Path -LiteralPath $output) {
+            throw "repository inventory output already exists: $output"
+          }
+          $revision = 0
+          if (-not [int]::TryParse('${{ inputs.inventory_revision }}', [ref]$revision) -or $revision -lt 1) {
+            throw 'inventory_revision must be a positive integer'
+          }
+
+      - name: Materialize immutable repository observation
+        env:
+          EXPECTED_MASTER: ${{ inputs.expected_master }}
+          EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
+          INVENTORY_REVISION: ${{ inputs.inventory_revision }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP 'f005-runtime-repository-observation-receipt.json'
+          python -m cyber_lion.enterprise.fleet_repository_observation_runtime `
+            --repository DonkeyJJLove/ai_platform `
+            --expected-master $env:EXPECTED_MASTER `
+            --expected-master-tree $env:EXPECTED_MASTER_TREE `
+            --inventory-revision $env:INVENTORY_REVISION |
+            Tee-Object -FilePath $receipt
+          if ($LASTEXITCODE -ne 0) {
+            throw 'repository observation materialization failed'
+          }
+
+      - name: Verify immutable output materialized
+        run: |
+          $output = Join-Path $env:LION_FLEET_RUNTIME_ROOT 'reconciliation-source\repository-inventory.json'
+          if (-not (Test-Path -LiteralPath $output -PathType Leaf)) {
+            throw "repository inventory missing after materialization: $output"
+          }
+          $item = Get-Item -LiteralPath $output
+          $hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '### F005 Runtime Repository Observation'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "path: $output"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "size: $($item.Length)"
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "sha256: $hash"
+
+      - name: Publish observation receipt
+        run: |
+          $receipt = Join-Path $env:RUNNER_TEMP 'f005-runtime-repository-observation-receipt.json'
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```json'
+          Get-Content -LiteralPath $receipt | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '```'
