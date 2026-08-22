@@ -1,4 +1,4 @@
-"""Production fail-closed ClosurePreconditionsProvider for F005-O R3.
+"""Production fail-closed ClosurePreconditionsProvider for F005-O R4.
 
 The provider reuses canonical F005-G runtime observation semantics while deriving
 closure preconditions from a post-report-independent pre-report view. Post-report
@@ -16,9 +16,9 @@ from cyber_lion.contracts.fleet_reconciliation import ClosurePreconditions, Repo
 from cyber_lion.contracts.fleet_runtime_snapshot_source import RuntimeSnapshotSourceConfig, canonical_json
 from cyber_lion.enterprise.fleet_runtime_snapshot_source import (
     RuntimeSnapshotSourceError,
+    _observe_runtime_state_with_details,
     _parse_time,
     _read_reconciliation,
-    observe_runtime_state,
 )
 
 
@@ -73,6 +73,11 @@ def _pre_report_source_digest(
     repository: str,
     inventory: RepositoryInventory,
     observed: object,
+    active_unknown_missions: int,
+    status_registry_instance_id: str,
+    status_revision: int,
+    coordinator_id: str,
+    coordination_revision: int,
     reconciliation_disagreements: int,
 ) -> str:
     # Deliberately exclude observed.source_digest and observed.inventory_complete:
@@ -85,6 +90,11 @@ def _pre_report_source_digest(
         "default_head_sha": inventory.default_head_sha,
         "inventory_observed_at": inventory.observed_at,
         "observation_observed_at": observed.observed_at,
+        "status_registry_instance_id": status_registry_instance_id,
+        "status_revision": status_revision,
+        "coordinator_id": coordinator_id,
+        "coordination_revision": coordination_revision,
+        "active_unknown_missions": active_unknown_missions,
         "active_missions": observed.active_missions,
         "unknown_missions": observed.unknown_missions,
         "unresolved_write_leases": observed.unresolved_write_leases,
@@ -102,7 +112,7 @@ def _pre_report_source_digest(
         "event_chain_consistency": observed.event_chain_consistency,
         "generation_fencing_consistency": observed.generation_fencing_consistency,
     }
-    return sha256(b"LION/F005-O-PRE-REPORT/3\0" + canonical_json(fields)).hexdigest()
+    return sha256(b"LION/F005-O-PRE-REPORT/4\0" + canonical_json(fields)).hexdigest()
 
 
 class RuntimeClosurePreconditionsProvider:
@@ -156,7 +166,8 @@ class RuntimeClosurePreconditionsProvider:
 
         try:
             before = _read_reconciliation(self._reconciliation_db_path, repository, self._current_master)
-            observed = observe_runtime_state(config, clock=lambda: inventory_time)
+            details = _observe_runtime_state_with_details(config, clock=lambda: inventory_time)
+            observed = details.observed
             after = _read_reconciliation(self._reconciliation_db_path, repository, self._current_master)
         except RuntimeSnapshotSourceError as exc:
             raise FleetClosurePreconditionsProviderError("authoritative closure evidence unavailable") from exc
@@ -177,8 +188,6 @@ class RuntimeClosurePreconditionsProvider:
         if not before.get("stable") or not after.get("stable"):
             raise FleetClosurePreconditionsProviderError("reconciliation source unstable")
 
-        # Full identity/state fingerprint detects changes that preserve a coarse
-        # completeness bit. It is a race guard only and is never hashed into preconditions.
         if _post_report_fingerprint(before) != _post_report_fingerprint(after):
             raise FleetClosurePreconditionsProviderError("post-report state changed during observation")
 
@@ -194,11 +203,16 @@ class RuntimeClosurePreconditionsProvider:
         if pre_report_disagreements < 0:
             raise FleetClosurePreconditionsProviderError("reconciliation disagreement accounting invalid")
 
-        active_unknown_missions = observed.unknown_missions if observed.active_missions else 0
+        active_unknown_missions = len(details.active_ids.intersection(details.unknown_ids))
         pre_report_digest = _pre_report_source_digest(
             repository=repository,
             inventory=inventory,
             observed=observed,
+            active_unknown_missions=active_unknown_missions,
+            status_registry_instance_id=details.status_registry_instance_id,
+            status_revision=details.status_revision,
+            coordinator_id=details.coordinator_id,
+            coordination_revision=details.coordination_revision,
             reconciliation_disagreements=pre_report_disagreements,
         )
 
@@ -211,6 +225,8 @@ class RuntimeClosurePreconditionsProvider:
             unreconciled_effect_count=observed.unreconciled_effects,
             reconciliation_disagreement_count=pre_report_disagreements,
             source_provenance_refs=(
+                f"fleet-status:{details.status_registry_instance_id}:{details.status_revision}",
+                f"fleet-coordination:{details.coordinator_id}:{details.coordination_revision}",
                 f"repository-inventory:{inventory.inventory_id}:{inventory.inventory_revision}",
                 f"runtime-pre-report:{pre_report_digest}",
             ),
