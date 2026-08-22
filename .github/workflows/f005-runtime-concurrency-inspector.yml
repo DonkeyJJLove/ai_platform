@@ -1,0 +1,50 @@
+name: F005 Runtime Concurrency Inspector
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .lion/control/f005-runtime-concurrency-inspector.request.json
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Enumerate target workflow runs
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_WORKFLOW_ID: '339498181'
+        run: |
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $uri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/workflows/$env:TARGET_WORKFLOW_ID/runs?per_page=100"
+          $response = Invoke-RestMethod -Method Get -Headers $headers -Uri $uri
+          $rows = @($response.workflow_runs | ForEach-Object {
+            [ordered]@{
+              id = $_.id
+              run_number = $_.run_number
+              event = $_.event
+              status = $_.status
+              conclusion = $_.conclusion
+              head_sha = $_.head_sha
+              head_branch = $_.head_branch
+              created_at = $_.created_at
+              updated_at = $_.updated_at
+              html_url = $_.html_url
+            }
+          })
+          $rows | ConvertTo-Json -Depth 4 -Compress
