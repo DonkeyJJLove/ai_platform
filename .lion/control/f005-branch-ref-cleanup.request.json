@@ -1,7 +1,7 @@
 {
   "schema_version": "lion.f005-branch-ref-cleanup/v1",
-  "request_id": "0ad186249ce0778cca5f3e8f1ed24eea35e61346ec828437f25bf73fcdaa082e",
-  "expected_master": "eec799eeec530ba685df856024de69f2863c046f",
-  "expected_master_tree": "37769605c1565d9aad37f3108fee640a5727f70b",
-  "cleanup_build_head": "c12927ce24eef73215bd2f23b57fae017533e0ac"
+  "request_id": "8d774b28d4fa7c4f4d520bb855020dcfc998e4f0a623ef72d600f48c8697446f",
+  "expected_master": "07f5ed508addc73051f4858c2f78b20eec188c73",
+  "expected_master_tree": "798dd20eb26b86a8d98336b30ddff1d4b4ec2197",
+  "cleanup_build_head": "4a01dd0671a11d5e2a86245ac5f86fdfd982a11e"
 }
