@@ -10,12 +10,13 @@ def agent(agent_id,capabilities,authority="read",cost=1.0,verifier=False):
  return AgentSpec(agent_id,"1.0.0",agent_id,"mission-bound template",capabilities,authority,"test",events,max_cost_units=cost,is_verifier=verifier)
 def projection(mission,catalog):
  specs=[]
+ verifier_required=mission.require_independent_verifier or mission.risk_class=="RED" or mission.authority_ceiling in {"external_write","privileged","deploy"}
  for s in sorted(catalog,key=lambda x:(x.agent_id,x.version)):
   d=asdict(s)
   for k,v in list(d.items()):
    if isinstance(v,tuple):d[k]=list(v)
-  if set(s.capabilities)&set(mission.required_capabilities):specs.append(d)
- p={"registry_id":"r","revision":1,"event_head":"0"*64,"mission_id":mission.mission_id,"required_capabilities":list(mission.required_capabilities),"candidate_specs":specs};dg=sha256(canonical_json(p)).hexdigest();return AgentRegistryProjection("r",1,"0"*64,mission.mission_id,mission.required_capabilities,tuple(specs),dg)
+  if set(s.capabilities)&set(mission.required_capabilities) or (verifier_required and s.is_verifier):specs.append(d)
+ p={"registry_id":"r","revision":1,"event_head":"0"*64,"mission_id":mission.mission_id,"required_capabilities":list(mission.required_capabilities),"candidate_specs":specs};dg=sha256(canonical_json(p)).hexdigest();return AgentRegistryProjection("r",1,"0"*64,mission.mission_id,mission.required_capabilities,tuple(specs),dg).verify_digest()
 class SwarmPlannerTests(unittest.TestCase):
  def setUp(self):
   self.p=SwarmPlanner();self.c=[agent("research",("research","hypothesis"),cost=.6),agent("architect",("architecture","code"),"local_write",.8),agent("security",("security","validation"),cost=.7,verifier=True),agent("code-only",("code",),"local_write",.5)]
