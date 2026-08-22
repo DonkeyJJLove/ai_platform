@@ -78,7 +78,8 @@ jobs:
         shell: bash
         run: |
           workflow='.github/workflows/f005-repository-observation-source-ci.yml'
-          module='python -m cyber_lion.enterprise.fleet_repository_observation_runtime'
+          module='python -m cyber_lion.enterprise.'
+          module+='fleet_repository_observation_runtime'
           if grep -Fq "$module" "$workflow"; then
             echo 'FAIL: CI workflow invokes runtime observation module' >&2
             exit 1
