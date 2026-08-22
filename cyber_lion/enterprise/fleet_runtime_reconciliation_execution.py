@@ -6,9 +6,9 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 import json
 import os
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
 import sqlite3
-from typing import Any, Mapping
+from typing import Mapping
 
 from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 from cyber_lion.contracts.fleet_runtime_reconciliation_execution import (
@@ -22,7 +22,6 @@ from cyber_lion.enterprise.fleet_reconciliation import BranchReconciliationClass
 from cyber_lion.enterprise.fleet_runtime_reconciliation_ingestion import (
     RuntimeReconciliationIngestionError,
     _build_inventory,
-    _json_object,
     _load_observation,
     _load_trust,
 )
@@ -48,7 +47,7 @@ def _stable_bytes(path: Path, name: str) -> bytes:
     return raw
 
 
-def _ro_head(path: Path, repository: str) -> dict[str, object]:
+def _ro_state(path: Path, repository: str) -> tuple[dict[str, object], int, int]:
     if not path.is_absolute() or not path.is_file():
         raise RuntimeReconciliationExecutionError("canonical reconciliation store unavailable")
     conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, isolation_level=None)
@@ -62,7 +61,15 @@ def _ro_head(path: Path, repository: str) -> dict[str, object]:
         ).fetchone()
         if row is None:
             raise RuntimeReconciliationExecutionError("recorded repository inventory missing")
-        return dict(row)
+        reports = int(conn.execute(
+            "SELECT COUNT(*) FROM reconciliation_report WHERE repository=? AND inventory_digest=?",
+            (repository, row["inventory_digest"]),
+        ).fetchone()[0])
+        receipts = int(conn.execute(
+            "SELECT COUNT(*) FROM convergence_receipt WHERE repository=? AND inventory_digest=?",
+            (repository, row["inventory_digest"]),
+        ).fetchone()[0])
+        return dict(row), reports, receipts
     finally:
         conn.close()
 
@@ -120,7 +127,7 @@ def execute_runtime_reconciliation(
 
     if inventory.default_head_sha != config.current_master:
         raise RuntimeReconciliationExecutionError("inventory master drift denied")
-    head_before = _ro_head(paths["reconciliation"], config.repository)
+    head_before, existing_reports, existing_receipts = _ro_state(paths["reconciliation"], config.repository)
     expected_head = {
         "repository": inventory.repository,
         "inventory_id": inventory.inventory_id,
@@ -131,6 +138,8 @@ def execute_runtime_reconciliation(
     }
     if head_before != expected_head:
         raise RuntimeReconciliationExecutionError("recorded inventory binding mismatch")
+    if existing_reports or existing_receipts:
+        raise RuntimeReconciliationExecutionError("reconciliation execution replay denied")
 
     closure_provider = RuntimeClosurePreconditionsProvider(
         current_master=config.current_master,
@@ -151,9 +160,14 @@ def execute_runtime_reconciliation(
     finally:
         store.close()
 
-    head_after = _ro_head(paths["reconciliation"], config.repository)
+    head_after, reports_after, receipts_after = _ro_state(paths["reconciliation"], config.repository)
     if head_after != expected_head:
         raise RuntimeReconciliationExecutionError("inventory changed during reconciliation execution")
+    if reports_after != 1:
+        raise RuntimeReconciliationExecutionError("reconciliation report postcondition mismatch")
+    expected_receipts = 1 if run.report.disposition == "CONVERGED" else 0
+    if receipts_after != expected_receipts:
+        raise RuntimeReconciliationExecutionError("convergence receipt postcondition mismatch")
 
     convergence_digest = None if run.convergence_receipt is None else run.convergence_receipt.receipt_digest
     receipt = RuntimeReconciliationExecutionReceipt.build(
