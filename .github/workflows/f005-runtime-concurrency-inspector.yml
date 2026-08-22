@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Inspect or cancel exact stale pre-runtime run
+      - name: Inspect or cancel exact non-effect runtime run
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -67,31 +67,44 @@ jobs:
           $raw = git show "$($env:PR_HEAD_SHA):$cancelPath"
           if ($LASTEXITCODE -ne 0) { throw 'cancel request missing' }
           $request = (($raw -join "`n") | ConvertFrom-Json -ErrorAction Stop)
-          $required = @('schema_version','target_run_id','expected_workflow_id','expected_run_number','expected_head_sha','expected_event')
+          $required = @('schema_version','target_run_id','expected_workflow_id','expected_run_number','expected_head_sha','expected_event','expected_admission_job','expected_runtime_job')
           $actual = @($request.PSObject.Properties.Name | Sort-Object)
           if (($actual -join ',') -ne (($required | Sort-Object) -join ',')) { throw 'cancel request schema substitution denied' }
-          if ($request.schema_version -ne '1.0.0') { throw 'cancel schema version denied' }
-          if ([long]$request.target_run_id -ne 32584996160) { throw 'unexpected target run id' }
-          if ([long]$request.expected_workflow_id -ne 339498181) { throw 'unexpected workflow id' }
-          if ([int]$request.expected_run_number -ne 3) { throw 'unexpected run number' }
-          if ($request.expected_head_sha -ne '27d4f848f78a16aabbb95366d3be789bf5a5c8ad') { throw 'unexpected head sha' }
-          if ($request.expected_event -ne 'push') { throw 'unexpected event' }
+          if ($request.schema_version -ne '1.1.0') { throw 'cancel schema version denied' }
+          if ([long]$request.expected_workflow_id -ne [long]$env:TARGET_WORKFLOW_ID) { throw 'unexpected workflow id' }
+          if ([long]$request.target_run_id -le 0 -or [int]$request.expected_run_number -le 0) { throw 'invalid run identity' }
+          if ($request.expected_head_sha -notmatch '^[0-9a-f]{40}$') { throw 'invalid head sha' }
+          if ($request.expected_event -notin @('push','pull_request','workflow_dispatch')) { throw 'invalid event' }
+          if (-not $request.expected_runtime_job -or -not $request.expected_admission_job) { throw 'job identity missing' }
 
           $runUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)"
           $run = Invoke-RestMethod -Method Get -Headers $headers -Uri $runUri
           if ([long]$run.workflow_id -ne [long]$request.expected_workflow_id -or [int]$run.run_number -ne [int]$request.expected_run_number -or $run.head_sha -ne $request.expected_head_sha -or $run.event -ne $request.expected_event) { throw 'target run identity mismatch' }
-          if ($run.status -ne 'queued' -or $null -ne $run.conclusion) { throw "target run not safely queued: status=$($run.status) conclusion=$($run.conclusion)" }
+          if ($run.status -notin @('queued','in_progress','pending') -or $null -ne $run.conclusion) { throw "target run not cancellable: status=$($run.status) conclusion=$($run.conclusion)" }
 
           $jobsUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)/jobs?per_page=100"
           $jobs = @( (Invoke-RestMethod -Method Get -Headers $headers -Uri $jobsUri).jobs )
           if ($jobs.Count -lt 1) { throw 'target run has no observable jobs' }
+          $runtimeJobs = @($jobs | Where-Object { $_.name -eq $request.expected_runtime_job })
+          if ($runtimeJobs.Count -ne 1) { throw 'exact runtime job not found' }
+          $runtime = $runtimeJobs[0]
+          if ($runtime.status -ne 'queued' -or $null -ne $runtime.conclusion -or @($runtime.steps).Count -ne 0) { throw 'runtime effect job has started or is not safely queued' }
+
+          $admissionJobs = @($jobs | Where-Object { $_.name -eq $request.expected_admission_job })
+          if ($admissionJobs.Count -gt 1) { throw 'ambiguous admission job identity' }
+          if ($admissionJobs.Count -eq 1) {
+            $admission = $admissionJobs[0]
+            if ($admission.status -ne 'completed' -or $admission.conclusion -ne 'success') { throw 'admission job is not completed-success' }
+          }
           foreach ($job in $jobs) {
-            if ($job.status -ne 'queued' -or $null -ne $job.conclusion) { throw "target job not safely queued: $($job.id) status=$($job.status) conclusion=$($job.conclusion)" }
-            if (@($job.steps).Count -ne 0) { throw "target job has observable steps: $($job.id)" }
+            if ($job.id -eq $runtime.id) { continue }
+            if ($admissionJobs.Count -eq 1 -and $job.id -eq $admissionJobs[0].id) { continue }
+            if ($job.status -notin @('completed','queued')) { throw "unexpected active job: $($job.id)=$($job.status)" }
+            if ($job.status -eq 'queued' -and @($job.steps).Count -ne 0) { throw "unexpected queued job with steps: $($job.id)" }
           }
 
           $cancelUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)/cancel"
           Invoke-RestMethod -Method Post -Headers $headers -Uri $cancelUri
           Start-Sleep -Seconds 2
           $after = Invoke-RestMethod -Method Get -Headers $headers -Uri $runUri
-          [ordered]@{ id=$after.id; status=$after.status; conclusion=$after.conclusion; cancelled_exact_pre_runtime=$true } | ConvertTo-Json -Compress
+          [ordered]@{ id=$after.id; status=$after.status; conclusion=$after.conclusion; cancelled_exact_non_effect_runtime=$true } | ConvertTo-Json -Compress
