@@ -25,6 +25,8 @@ jobs:
       LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
@@ -73,6 +75,19 @@ jobs:
           grep -Fq 'FileBranchOwnershipRegistryProvider' "$runtime"
           grep -Fq 'GitHubRESTReadSource.from_environment' "$runtime"
           echo 'PASS: runtime composition uses live GitHub source and file ownership provider'
+
+      - name: Verify runtime checkout does not persist credentials
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/f005-runtime-repository-observation.yml').read_text(encoding='utf-8')
+          expected = "- uses: actions/checkout@v6\n        with:\n          persist-credentials: false"
+          if expected not in workflow:
+              raise SystemExit('FAIL: runtime checkout must set persist-credentials: false')
+          print('PASS: runtime checkout credential persistence disabled')
+          PY
 
       - name: Verify CI workflow cannot invoke runtime observation materialization
         shell: bash
