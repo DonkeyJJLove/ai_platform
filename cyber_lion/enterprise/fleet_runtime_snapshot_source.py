@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -38,6 +39,29 @@ _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 class RuntimeSnapshotSourceError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True)
+class _ObservedRuntimeDetails:
+    observed: ObservedRuntimeState
+    active_ids: frozenset[str]
+    unknown_ids: frozenset[str]
+    status_registry_instance_id: str
+    status_revision: int
+    coordinator_id: str
+    coordination_revision: int
+
+
+def _meta_text(value: object, name: str) -> str:
+    if not isinstance(value, str) or not value.strip() or "\x00" in value:
+        raise RuntimeSnapshotSourceError(f"{name} invalid")
+    return value
+
+
+def _meta_revision(value: object, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise RuntimeSnapshotSourceError(f"{name} invalid")
+    return value
 
 
 def _utc(clock: Callable[[], datetime]) -> str:
@@ -460,13 +484,30 @@ def _repo_fact(
     return exact, values
 
 
-def observe_runtime_state(config: RuntimeSnapshotSourceConfig, *, clock: Callable[[], datetime]) -> ObservedRuntimeState:
+def _observe_runtime_state_with_details(
+    config: RuntimeSnapshotSourceConfig,
+    *,
+    clock: Callable[[], datetime],
+) -> _ObservedRuntimeDetails:
     config.validate()
     status = _read_status(config.status_db_path)
     coordination = _read_coordination(config.coordination_db_path)
     reconciliation = _read_reconciliation(config.reconciliation_db_path, config.repository, config.current_master)
     observed_at = _utc(clock)
     now = _parse_time(observed_at)
+
+    status_meta = status.get("meta")
+    coordination_meta = coordination.get("meta")
+    if not isinstance(status_meta, dict):
+        raise RuntimeSnapshotSourceError("status registry meta invalid")
+    if not isinstance(coordination_meta, dict):
+        raise RuntimeSnapshotSourceError("coordination meta invalid")
+    status_registry_instance_id = _meta_text(
+        status_meta.get("registry_instance_id"), "status registry instance"
+    )
+    status_revision = _meta_revision(status_meta.get("revision"), "status revision")
+    coordinator_id = _meta_text(coordination_meta.get("coordinator_id"), "coordinator id")
+    coordination_revision = _meta_revision(coordination_meta.get("revision"), "coordination revision")
 
     coord_missions = {str(row["mission_id"]): row for row in coordination["missions"]}
     status_missions = {str(row["mission_id"]): row for row in status["missions"]}
@@ -786,7 +827,7 @@ def observe_runtime_state(config: RuntimeSnapshotSourceConfig, *, clock: Callabl
     }
     source_digest = sha256(b"LION/F005-G-SOURCES/2\0" + canonical_json(evidence)).hexdigest()
 
-    return ObservedRuntimeState(
+    observed = ObservedRuntimeState(
         observed_at=observed_at,
         source_digest=source_digest,
         active_missions=len(active_ids),
@@ -807,6 +848,19 @@ def observe_runtime_state(config: RuntimeSnapshotSourceConfig, *, clock: Callabl
         generation_fencing_consistency=generation_fencing_consistency,
         inventory_complete=inventory_complete,
     ).validate()
+    return _ObservedRuntimeDetails(
+        observed=observed,
+        active_ids=frozenset(active_ids),
+        unknown_ids=frozenset(unknown_ids),
+        status_registry_instance_id=status_registry_instance_id,
+        status_revision=status_revision,
+        coordinator_id=coordinator_id,
+        coordination_revision=coordination_revision,
+    )
+
+
+def observe_runtime_state(config: RuntimeSnapshotSourceConfig, *, clock: Callable[[], datetime]) -> ObservedRuntimeState:
+    return _observe_runtime_state_with_details(config, clock=clock).observed
 
 
 def _atomic_write_json(path: str, value: dict[str, Any]) -> None:
