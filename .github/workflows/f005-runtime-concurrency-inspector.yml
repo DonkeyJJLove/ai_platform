@@ -80,14 +80,14 @@ jobs:
           $runUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)"
           $run = Invoke-RestMethod -Method Get -Headers $headers -Uri $runUri
           if ([long]$run.workflow_id -ne [long]$request.expected_workflow_id -or [int]$run.run_number -ne [int]$request.expected_run_number -or $run.head_sha -ne $request.expected_head_sha -or $run.event -ne $request.expected_event) { throw 'target run identity mismatch' }
-          if ($run.status -ne 'queued') { throw "target run not queued: $($run.status)" }
+          if ($run.status -ne 'queued' -or $null -ne $run.conclusion) { throw "target run not safely queued: status=$($run.status) conclusion=$($run.conclusion)" }
 
           $jobsUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)/jobs?per_page=100"
           $jobs = @( (Invoke-RestMethod -Method Get -Headers $headers -Uri $jobsUri).jobs )
           if ($jobs.Count -lt 1) { throw 'target run has no observable jobs' }
           foreach ($job in $jobs) {
-            if ($job.status -ne 'queued') { throw "target job not queued: $($job.id)=$($job.status)" }
-            if ($null -ne $job.started_at) { throw "target job has started_at: $($job.id)=$($job.started_at)" }
+            if ($job.status -ne 'queued' -or $null -ne $job.conclusion) { throw "target job not safely queued: $($job.id) status=$($job.status) conclusion=$($job.conclusion)" }
+            if (@($job.steps).Count -ne 0) { throw "target job has observable steps: $($job.id)" }
           }
 
           $cancelUri = "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$($request.target_run_id)/cancel"
