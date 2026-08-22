@@ -22,14 +22,6 @@ ROOT = r"C:\Users\d2j3\Documents\LION\runtime\f005"
 MASTER = "a" * 40
 TREE = "b" * 40
 BASE = "c" * 40
-OLD_DIGEST = "d" * 64
-
-
-@dataclass(frozen=True)
-class DefaultBranch:
-    branch: str
-    head_sha: str
-    tree_sha: str
 
 
 @dataclass(frozen=True)
@@ -40,30 +32,36 @@ class Branch:
 
 @dataclass(frozen=True)
 class Comparison:
-    status: str
+    ancestry: str
 
 
 class FakeGitHub:
-    def __init__(self, branches, *, comparison="ahead", after=None):
-        self.branches = list(branches)
-        self.after = list(after) if after is not None else None
-        self.calls = 0
-        self.comparison = comparison
+    def __init__(self, branches, *, ancestry="DEFAULT_ANCESTOR_OF_HEAD", after=None):
+        self.branches = tuple(branches)
+        self.after = tuple(after) if after is not None else None
+        self.enumerations = 0
+        self.ancestry = ancestry
 
-    def get_default_branch(self, repository):
+    def default_head(self, repository, default_branch):
         self.assert_repo(repository)
-        return DefaultBranch("master", MASTER, TREE)
+        if default_branch != "master":
+            raise AssertionError(default_branch)
+        return MASTER, TREE
 
-    def list_branches(self, repository):
+    def list_branches_page(self, repository, cursor):
         self.assert_repo(repository)
-        self.calls += 1
-        if self.calls > 1 and self.after is not None:
-            return list(self.after)
-        return list(self.branches)
+        if cursor is not None:
+            raise AssertionError("fake has one page")
+        self.enumerations += 1
+        if self.enumerations > 1 and self.after is not None:
+            return self.after, None
+        return self.branches, None
 
-    def compare(self, repository, base, head):
+    def compare_to_default(self, repository, base, head, branch):
         self.assert_repo(repository)
-        return Comparison(self.comparison)
+        if not base or not head or not branch:
+            raise AssertionError("missing comparison binding")
+        return Comparison(self.ancestry)
 
     @staticmethod
     def assert_repo(repository):
@@ -89,9 +87,12 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
         self.patch_paths.start()
         old_record = self.record("master", MASTER, state="UNOWNED", revision=1)
         old = BranchOwnershipRegistrySnapshot.build(
-            schema_version="1.0.0", repository=REPO,
+            schema_version="1.0.0",
+            repository=REPO,
             source_instance_id="lion-runtime-reconciliation-source-01",
-            registry_revision=1, observed_at="2026-08-21T23:57:00+00:00", records=(old_record,),
+            registry_revision=1,
+            observed_at="2026-08-21T23:57:00+00:00",
+            records=(old_record,),
         )
         self.registry_path.write_bytes(canonical_registry_bytes(old))
         self.old = old
@@ -105,20 +106,31 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
         mission = None if state == "UNOWNED" else f"MISSION-{branch}"
         baseline = None if state == "UNOWNED" else BASE
         return BranchOwnershipRecord(
-            repository=REPO, branch=branch, branch_head_sha=head,
-            ownership_state=state, mission_id=mission, baseline_sha=baseline,
-            superseded_by_branch=None, supersession_provenance_ref=None,
-            source_provenance_ref=f"manifest:{branch}", epistemic_class="ANCHORED",
+            repository=REPO,
+            branch=branch,
+            branch_head_sha=head,
+            ownership_state=state,
+            mission_id=mission,
+            baseline_sha=baseline,
+            superseded_by_branch=None,
+            supersession_provenance_ref=None,
+            source_provenance_ref=f"manifest:{branch}",
+            epistemic_class="ANCHORED",
             record_revision=revision,
         ).validate()
 
     def write_manifest(self, records, **overrides):
         values = dict(
-            schema_version="1.0.0", repository=REPO,
+            schema_version="1.0.0",
+            repository=REPO,
             source_instance_id="lion-runtime-reconciliation-source-01",
-            previous_registry_revision=1, previous_registry_digest=self.old.registry_digest,
-            target_registry_revision=2, expected_master=MASTER, expected_master_tree=TREE,
-            observed_at="2026-08-22T03:30:00+00:00", records=tuple(records),
+            previous_registry_revision=1,
+            previous_registry_digest=self.old.registry_digest,
+            target_registry_revision=2,
+            expected_master=MASTER,
+            expected_master_tree=TREE,
+            observed_at="2026-08-22T03:30:00+00:00",
+            records=tuple(records),
         )
         values.update(overrides)
         manifest = BranchOwnershipRefreshManifest.build(**values)
@@ -131,13 +143,20 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
         live = [Branch(r.branch, r.branch_head_sha) for r in manifest.records]
         github = github or FakeGitHub(live)
         result = refresh_branch_ownership_registry(
-            expected_master=MASTER, expected_master_tree=TREE, manifest_sha256=digest,
-            github=github, manifest_path=self.manifest_path, registry_path=self.registry_path,
+            expected_master=MASTER,
+            expected_master_tree=TREE,
+            manifest_sha256=digest,
+            github=github,
+            manifest_path=self.manifest_path,
+            registry_path=self.registry_path,
         )
         return manifest, result
 
     def test_valid_one_to_two_refresh_is_atomic_and_resolvable(self):
-        records = (self.record("master", MASTER, state="UNOWNED"), self.record("mission/x", "e" * 40))
+        records = (
+            self.record("master", MASTER, state="UNOWNED"),
+            self.record("mission/x", "e" * 40),
+        )
         manifest, result = self.run_refresh(records)
         snapshot = load_registry_snapshot(self.registry_path.read_bytes())
         self.assertEqual(snapshot.registry_revision, 2)
@@ -156,11 +175,16 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
                 self.run_refresh(records, **kwargs)
         with self.assertRaises(ValueError):
             BranchOwnershipRefreshManifest.build(
-                schema_version="1.0.0", repository=REPO,
+                schema_version="1.0.0",
+                repository=REPO,
                 source_instance_id="lion-runtime-reconciliation-source-01",
-                previous_registry_revision=1, previous_registry_digest=self.old.registry_digest,
-                target_registry_revision=3, expected_master=MASTER, expected_master_tree=TREE,
-                observed_at="2026-08-22T03:30:00+00:00", records=records,
+                previous_registry_revision=1,
+                previous_registry_digest=self.old.registry_digest,
+                target_registry_revision=3,
+                expected_master=MASTER,
+                expected_master_tree=TREE,
+                observed_at="2026-08-22T03:30:00+00:00",
+                records=records,
             )
 
     def test_manifest_byte_digest_substitution_denied(self):
@@ -168,13 +192,19 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
         self.write_manifest(records)
         with self.assertRaises(BranchOwnershipRegistryRefreshError):
             refresh_branch_ownership_registry(
-                expected_master=MASTER, expected_master_tree=TREE, manifest_sha256="f" * 64,
+                expected_master=MASTER,
+                expected_master_tree=TREE,
+                manifest_sha256="f" * 64,
                 github=FakeGitHub([Branch("master", MASTER)]),
-                manifest_path=self.manifest_path, registry_path=self.registry_path,
+                manifest_path=self.manifest_path,
+                registry_path=self.registry_path,
             )
 
     def test_branch_set_missing_extra_or_head_drift_denied(self):
-        records = (self.record("master", MASTER, state="UNOWNED"), self.record("mission/x", "e" * 40))
+        records = (
+            self.record("master", MASTER, state="UNOWNED"),
+            self.record("mission/x", "e" * 40),
+        )
         cases = (
             [Branch("master", MASTER)],
             [Branch("master", MASTER), Branch("mission/x", "f" * 40)],
@@ -191,9 +221,18 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
             self.run_refresh(records, github=github)
 
     def test_active_terminal_baseline_must_be_ancestral(self):
-        records = (self.record("master", MASTER, state="UNOWNED"), self.record("mission/x", "e" * 40))
+        records = (
+            self.record("master", MASTER, state="UNOWNED"),
+            self.record("mission/x", "e" * 40),
+        )
         with self.assertRaises(BranchOwnershipRegistryRefreshError):
-            self.run_refresh(records, github=FakeGitHub([Branch(r.branch, r.branch_head_sha) for r in records], comparison="diverged"))
+            self.run_refresh(
+                records,
+                github=FakeGitHub(
+                    [Branch(r.branch, r.branch_head_sha) for r in records],
+                    ancestry="DIVERGED",
+                ),
+            )
 
     def test_existing_record_contract_rejects_unknown_or_invalid_bindings(self):
         with self.assertRaises(ValueError):
@@ -207,9 +246,10 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
 
     def test_current_registry_change_before_effect_denied(self):
         records = (self.record("master", MASTER, state="UNOWNED"),)
-        manifest, digest = self.write_manifest(records)
+        _, digest = self.write_manifest(records)
         real = Path.read_bytes
         calls = {"n": 0}
+
         def changed(path):
             raw = real(path)
             if path == self.registry_path:
@@ -217,12 +257,16 @@ class BranchOwnershipRegistryRefreshTests(unittest.TestCase):
                 if calls["n"] >= 2:
                     return raw + b" "
             return raw
+
         with mock.patch.object(Path, "read_bytes", changed):
             with self.assertRaises(BranchOwnershipRegistryRefreshError):
                 refresh_branch_ownership_registry(
-                    expected_master=MASTER, expected_master_tree=TREE, manifest_sha256=digest,
+                    expected_master=MASTER,
+                    expected_master_tree=TREE,
+                    manifest_sha256=digest,
                     github=FakeGitHub([Branch("master", MASTER)]),
-                    manifest_path=self.manifest_path, registry_path=self.registry_path,
+                    manifest_path=self.manifest_path,
+                    registry_path=self.registry_path,
                 )
 
     def test_runtime_effect_is_single_registry_file(self):
