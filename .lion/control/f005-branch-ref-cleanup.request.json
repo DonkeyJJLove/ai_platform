@@ -1,0 +1,7 @@
+{
+  "schema_version": "lion.f005-branch-ref-cleanup/v1",
+  "request_id": "2c35a4c24fe47e760c2e729c50c93a63ae9b744f9f479a1d4b3a3da8b1c69dcf",
+  "expected_master": "80c17f7ae5d5cdc6d6037822b15d0a3a7f8338e3",
+  "expected_master_tree": "366e390dbe6d3dc0dc753ae72e34af28e1aac048",
+  "cleanup_build_head": "dc7cfaf3f874b93f46e159f197accbef816f49c6"
+}
