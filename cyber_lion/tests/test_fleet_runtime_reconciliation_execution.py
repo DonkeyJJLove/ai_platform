@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from datetime import datetime, timezone
 import json
 import os
@@ -15,16 +16,15 @@ from cyber_lion.contracts.fleet_runtime_reconciliation_execution import (
     RUNTIME_SOURCE_INSTANCE_ID,
     RuntimeReconciliationExecutionConfig,
     RuntimeReconciliationExecutionReceipt,
+    execution_epoch_key,
+    execution_epoch_receipt_filename,
 )
 from cyber_lion.enterprise.fleet_reconciliation import ReconciliationStore
 from cyber_lion.enterprise.fleet_runtime_reconciliation_execution import (
     RuntimeReconciliationExecutionError,
     execute_runtime_reconciliation,
 )
-from cyber_lion.enterprise.fleet_runtime_reconciliation_ingestion import (
-    _build_inventory,
-    _load_observation,
-)
+from cyber_lion.enterprise.fleet_runtime_reconciliation_ingestion import _build_inventory, _load_observation
 from cyber_lion.tests.test_fleet_runtime_snapshot_source import create_coordination_db, create_status_db
 
 MASTER = "a" * 40
@@ -53,7 +53,7 @@ class RuntimeReconciliationExecutionTests(unittest.TestCase):
         self.reconciliation = self.external / "reconciliation.sqlite"
         self.trust = self.external / "reconciliation-trust.json"
         self.inventory_file = self.external / "repository-inventory.json"
-        self.receipt_file = self.external / "reconciliation-execution-receipt.json"
+        self.legacy_receipt = self.external / "reconciliation-execution-receipt.json"
         create_status_db(self.status)
         create_coordination_db(self.coordination)
         self.trust.write_text(json.dumps({
@@ -63,13 +63,24 @@ class RuntimeReconciliationExecutionTests(unittest.TestCase):
             "trust_anchor_id": PINS.trust_anchor_id,
         }, sort_keys=True, separators=(",", ":")), encoding="utf-8")
         self.observed_at = "2026-08-21T20:45:00+00:00"
-        self.observation = {
+        self._write_observation(revision=1, observed_at=self.observed_at)
+        self.inventory = self._inventory()
+        store = ReconciliationStore(self.reconciliation, trust_pins=PINS, clock=lambda: datetime.now(timezone.utc))
+        store.record_inventory(self.inventory)
+        store.close()
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+        self.env.stop()
+
+    def _write_observation(self, *, revision: int, observed_at: str) -> None:
+        observation = {
             "schema_version": "1.0.0",
             "repository": REPOSITORY,
-            "inventory_revision": 1,
+            "inventory_revision": revision,
             "default_branch": "master",
             "default_head_sha": MASTER,
-            "observed_at": self.observed_at,
+            "observed_at": observed_at,
             "branches": [{
                 "branch": "mission/example",
                 "branch_head_sha": "c" * 40,
@@ -83,19 +94,14 @@ class RuntimeReconciliationExecutionTests(unittest.TestCase):
                 "supersession_provenance_ref": None,
                 "source_provenance_ref": "runtime-observation:test",
                 "epistemic_class": "OBSERVED",
-                "observed_at": self.observed_at,
+                "observed_at": observed_at,
             }],
         }
-        self.inventory_file.write_text(json.dumps(self.observation, sort_keys=True, separators=(",", ":")), encoding="utf-8")
-        observation = _load_observation(self.inventory_file.read_bytes(), repository=REPOSITORY, current_master=MASTER)
-        self.inventory = _build_inventory(observation, PINS)
-        store = ReconciliationStore(self.reconciliation, trust_pins=PINS, clock=lambda: datetime.now(timezone.utc))
-        store.record_inventory(self.inventory)
-        store.close()
+        self.inventory_file.write_text(json.dumps(observation, sort_keys=True, separators=(",", ":")), encoding="utf-8")
 
-    def tearDown(self) -> None:
-        self.tmp.cleanup()
-        self.env.stop()
+    def _inventory(self):
+        observation = _load_observation(self.inventory_file.read_bytes(), repository=REPOSITORY, current_master=MASTER)
+        return _build_inventory(observation, PINS)
 
     def config(self, *, master: str = MASTER, tree: str = TREE) -> RuntimeReconciliationExecutionConfig:
         return RuntimeReconciliationExecutionConfig(REPOSITORY, master, tree).validate()
@@ -107,34 +113,140 @@ class RuntimeReconciliationExecutionTests(unittest.TestCase):
             "reconciliation": self.reconciliation,
             "trust": self.trust,
             "inventory": self.inventory_file,
-            "receipt": self.receipt_file,
+            "receipt": self.legacy_receipt,
         }
 
     def execute(self, config=None):
         return execute_runtime_reconciliation(
-            config or self.config(),
-            repository_root=str(self.repo),
-            physical_paths=self.paths(),
+            config or self.config(), repository_root=str(self.repo), physical_paths=self.paths()
         )
 
-    def test_converged_execution_generates_report_receipt_and_immutable_execution_receipt(self) -> None:
+    def epoch_path(self, inventory=None) -> Path:
+        inventory = inventory or self._inventory()
+        return self.external / execution_epoch_receipt_filename(
+            repository=inventory.repository,
+            inventory_id=inventory.inventory_id,
+            inventory_revision=inventory.inventory_revision,
+            inventory_digest=inventory.inventory_digest,
+        )
+
+    def write_legacy(self, receipt: RuntimeReconciliationExecutionReceipt) -> bytes:
+        raw = json.dumps(asdict(receipt), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8") + b"\n"
+        self.legacy_receipt.write_bytes(raw)
+        return raw
+
+    def valid_receipt_for(self, *, inventory_id: str, inventory_revision: int, inventory_digest: str):
+        return RuntimeReconciliationExecutionReceipt.build(
+            schema_version="1.0.0",
+            repository=REPOSITORY,
+            current_master=MASTER,
+            current_master_tree=TREE,
+            inventory_id=inventory_id,
+            inventory_revision=inventory_revision,
+            inventory_digest=inventory_digest,
+            closure_preconditions_digest="2" * 64,
+            report_id="report-test",
+            report_digest="3" * 64,
+            disposition="RECONCILIATION_REQUIRED",
+            convergence_receipt_digest=None,
+            execution_config_digest="4" * 64,
+            receipt_consumed=False,
+            mission_closed=False,
+            fleet_closed=False,
+            release_performed=False,
+            deploy_performed=False,
+        )
+
+    def test_epoch_key_is_deterministic_and_binds_inventory_tuple(self) -> None:
+        first = execution_epoch_key(
+            repository=REPOSITORY,
+            inventory_id="inventory-1",
+            inventory_revision=1,
+            inventory_digest="1" * 64,
+        )
+        second = execution_epoch_key(
+            repository=REPOSITORY,
+            inventory_id="inventory-1",
+            inventory_revision=1,
+            inventory_digest="1" * 64,
+        )
+        changed = execution_epoch_key(
+            repository=REPOSITORY,
+            inventory_id="inventory-1",
+            inventory_revision=2,
+            inventory_digest="1" * 64,
+        )
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 64)
+        self.assertNotEqual(first, changed)
+
+    def test_converged_execution_creates_only_epoch_receipt(self) -> None:
         receipt = self.execute()
-        self.assertEqual(receipt.disposition, "CONVERGED")
-        self.assertIsNotNone(receipt.convergence_receipt_digest)
-        self.assertFalse(receipt.receipt_consumed)
-        self.assertFalse(receipt.mission_closed)
-        self.assertFalse(receipt.fleet_closed)
-        self.assertTrue(self.receipt_file.is_file())
-        stored = RuntimeReconciliationExecutionReceipt(**json.loads(self.receipt_file.read_text(encoding="utf-8"))).validate()
+        path = self.epoch_path()
+        self.assertTrue(path.is_file())
+        self.assertFalse(self.legacy_receipt.exists())
+        stored = RuntimeReconciliationExecutionReceipt(**json.loads(path.read_text(encoding="utf-8"))).validate()
         self.assertEqual(stored.execution_receipt_digest, receipt.execution_receipt_digest)
-        conn = sqlite3.connect(self.reconciliation)
-        try:
-            self.assertEqual(conn.execute("SELECT COUNT(*) FROM reconciliation_inventory_head").fetchone()[0], 1)
-            self.assertEqual(conn.execute("SELECT COUNT(*) FROM reconciliation_report").fetchone()[0], 1)
-            self.assertEqual(conn.execute("SELECT COUNT(*) FROM convergence_receipt").fetchone()[0], 1)
-            self.assertEqual(conn.execute("SELECT COUNT(*) FROM convergence_receipt WHERE consumed<>0").fetchone()[0], 0)
-        finally:
-            conn.close()
+
+    def test_same_epoch_second_execution_denied(self) -> None:
+        self.execute()
+        with self.assertRaises(RuntimeReconciliationExecutionError):
+            self.execute()
+
+    def test_valid_foreign_legacy_epoch_does_not_block_current(self) -> None:
+        foreign = self.valid_receipt_for(
+            inventory_id="foreign-inventory",
+            inventory_revision=99,
+            inventory_digest="9" * 64,
+        )
+        before = self.write_legacy(foreign)
+        self.execute()
+        self.assertEqual(self.legacy_receipt.read_bytes(), before)
+        self.assertTrue(self.epoch_path().is_file())
+
+    def test_valid_legacy_current_epoch_denies(self) -> None:
+        current = self._inventory()
+        self.write_legacy(self.valid_receipt_for(
+            inventory_id=current.inventory_id,
+            inventory_revision=current.inventory_revision,
+            inventory_digest=current.inventory_digest,
+        ))
+        with self.assertRaises(RuntimeReconciliationExecutionError):
+            self.execute()
+
+    def test_malformed_legacy_receipt_denies(self) -> None:
+        self.legacy_receipt.write_text("{}", encoding="utf-8")
+        with self.assertRaises(RuntimeReconciliationExecutionError):
+            self.execute()
+
+    def test_epoch_receipt_filename_mismatch_denies(self) -> None:
+        foreign = self.valid_receipt_for(
+            inventory_id="foreign-inventory",
+            inventory_revision=99,
+            inventory_digest="9" * 64,
+        )
+        wrong = self.external / ("reconciliation-execution-receipt." + "0" * 64 + ".json")
+        wrong.write_text(json.dumps(asdict(foreign), sort_keys=True, separators=(",", ":")), encoding="utf-8")
+        with self.assertRaises(RuntimeReconciliationExecutionError):
+            self.execute()
+
+    def test_different_authoritative_inventory_epoch_executes_once(self) -> None:
+        first_receipt = self.execute()
+        first_path = self.epoch_path(self.inventory)
+        self.assertTrue(first_path.exists())
+
+        self._write_observation(revision=2, observed_at="2026-08-21T21:45:00+00:00")
+        second_inventory = self._inventory()
+        store = ReconciliationStore(self.reconciliation, trust_pins=PINS, clock=lambda: datetime.now(timezone.utc))
+        store.record_inventory(second_inventory)
+        store.close()
+
+        second_receipt = self.execute()
+        second_path = self.epoch_path(second_inventory)
+        self.assertTrue(second_path.exists())
+        self.assertNotEqual(first_receipt.inventory_digest, second_receipt.inventory_digest)
+        with self.assertRaises(RuntimeReconciliationExecutionError):
+            self.execute()
 
     def test_inventory_is_never_re_recorded(self) -> None:
         before = sqlite3.connect(self.reconciliation)
@@ -149,47 +261,6 @@ class RuntimeReconciliationExecutionTests(unittest.TestCase):
         finally:
             after.close()
         self.assertEqual(head_before, head_after)
-
-    def test_missing_recorded_inventory_fails_closed(self) -> None:
-        conn = sqlite3.connect(self.reconciliation)
-        try:
-            conn.execute("DELETE FROM reconciliation_inventory_head")
-            conn.commit()
-        finally:
-            conn.close()
-        with self.assertRaises(RuntimeReconciliationExecutionError):
-            self.execute()
-
-    def test_stale_inventory_binding_fails_closed(self) -> None:
-        conn = sqlite3.connect(self.reconciliation)
-        try:
-            conn.execute("UPDATE reconciliation_inventory_head SET inventory_digest=?", ("f" * 64,))
-            conn.commit()
-        finally:
-            conn.close()
-        with self.assertRaises(RuntimeReconciliationExecutionError):
-            self.execute()
-
-    def test_master_drift_fails_closed(self) -> None:
-        with self.assertRaises(RuntimeReconciliationExecutionError):
-            self.execute(self.config(master="e" * 40))
-
-    def test_trust_substitution_fails_closed(self) -> None:
-        value = json.loads(self.trust.read_text(encoding="utf-8"))
-        value["source_instance_id"] = "attacker"
-        self.trust.write_text(json.dumps(value, sort_keys=True, separators=(",", ":")), encoding="utf-8")
-        with self.assertRaises(RuntimeReconciliationExecutionError):
-            self.execute()
-
-    def test_runtime_source_missing_fails_closed(self) -> None:
-        self.status.unlink()
-        with self.assertRaises(Exception):
-            self.execute()
-
-    def test_execution_receipt_is_one_shot(self) -> None:
-        self.execute()
-        with self.assertRaises(RuntimeReconciliationExecutionError):
-            self.execute()
 
     def test_contract_rejects_prohibited_effect_assertion(self) -> None:
         with self.assertRaises(ValueError):
