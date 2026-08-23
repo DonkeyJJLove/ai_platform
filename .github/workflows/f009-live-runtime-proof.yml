@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -33,6 +34,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          CANDIDATE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          export GITHUB_SHA="$CANDIDATE_SHA"
           WORK_DIR="$RUNNER_TEMP/f009-live-work-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           ARTIFACT_DIR="$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           export WORK_DIR ARTIFACT_DIR
@@ -43,6 +47,7 @@ jobs:
           from pathlib import Path
           from cyber_lion.enterprise.live_runtime_evidence_plane import run_live_runtime_proof
           manifest=run_live_runtime_proof(Path(os.environ['WORK_DIR']),Path(os.environ['ARTIFACT_DIR']))
+          assert manifest['github_sha']==os.environ['GITHUB_SHA']
           assert manifest['positive']['reconciliation']=='MATCHED'
           assert manifest['positive']['effect_digest']==manifest['positive']['independent_effect_digest']
           assert all(manifest['negative_results'].values())
