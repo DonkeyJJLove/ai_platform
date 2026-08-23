@@ -29,7 +29,8 @@ class LiveRuntimeWorkflowContractTests(unittest.TestCase):
         text = self.text()
         self.assertIn('$RUNNER_TEMP/f009-live-work-', text)
         self.assertIn('$RUNNER_TEMP/f009-live-artifacts-', text)
-        self.assertIn('python -m cyber_lion.enterprise.live_runtime_evidence_plane', text)
+        self.assertIn('from cyber_lion.enterprise.live_runtime_evidence_plane import run_live_runtime_proof', text)
+        self.assertIn('run_live_runtime_proof(', text)
         self.assertIn('actions/upload-artifact@v4', text)
         self.assertIn('Cleanup disposable proof plane', text)
 
