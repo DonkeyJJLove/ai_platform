@@ -7,7 +7,8 @@ class EnterpriseGraphContractTests(unittest.TestCase):
  def test_planes_and_causality_are_strict(self):
   with self.assertRaises(EnterpriseGraphError):GraphEdge("e","DATA_PROVENANCE","AUTHORITY_PARENT_OF","a","b").validate()
   with self.assertRaises(EnterpriseGraphError):GraphEdge("e","DATA_PROVENANCE","CAUSED_BY","a","b").validate()
-  self.assertEqual("CAUSED_BY",GraphEdge("e","DATA_PROVENANCE","CAUSED_BY","a","b",causality_evidence_ref="ev").validate().edge_type)
+  with self.assertRaises(EnterpriseGraphError):GraphEdge("e","DATA_PROVENANCE","CAUSED_BY","a","b",(),"ev").validate()
+  self.assertEqual("CAUSED_BY",GraphEdge("e","DATA_PROVENANCE","CAUSED_BY","a","b",("ev",),"ev").validate().edge_type)
  def test_unknown_types_fail_closed(self):
   with self.assertRaises(EnterpriseGraphError):GraphNode("n","UNKNOWN","1",{}).validate()
   with self.assertRaises(EnterpriseGraphError):GraphEdge("e","UNKNOWN","SUPPORTS","a","b").validate()
