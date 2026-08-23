@@ -14,12 +14,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  dispatch:
+  dispatch-or-observe:
     if: >-
       github.event.issue.number == 144 &&
-      startsWith(github.event.comment.body, 'LION-DISPATCH v1')
+      (
+        startsWith(github.event.comment.body, 'LION-DISPATCH v1') ||
+        startsWith(github.event.comment.body, 'LION-OBSERVE v1')
+      )
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout exact control-plane implementation
         uses: actions/checkout@v6
@@ -32,13 +35,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Compile dispatch bridge
+      - name: Compile dispatch and observation bridge
         run: |
           python -m compileall -q \
             cyber_lion/contracts/actions_dispatch_bridge.py \
             cyber_lion/enterprise/actions_dispatch_bridge.py
 
-      - name: Execute bounded dispatch bridge
+      - name: Execute bounded dispatch or observation bridge
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |

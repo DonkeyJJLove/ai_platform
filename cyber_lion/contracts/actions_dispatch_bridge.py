@@ -1,4 +1,4 @@
-"""Contracts for the bounded GitHub Actions dispatch bridge.
+"""Contracts for bounded GitHub Actions dispatch and run observation.
 
 Comments and receipts are evidence only. They never mint LION authority.
 """
@@ -11,6 +11,7 @@ import re
 from typing import Mapping
 
 _HEX40 = re.compile(r"^[0-9a-f]{40}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _TOKEN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 _WORKFLOW = re.compile(r"^[A-Za-z0-9._-]+\.ya?ml$")
 _REF = re.compile(r"^[A-Za-z0-9._/-]{1,128}$")
@@ -146,6 +147,76 @@ class DispatchReceipt:
         if not _HEX40.fullmatch(self.expected_head):
             raise ValueError("receipt head invalid")
         for value in (self.canonical_inputs_digest, self.replay_key, self.bridge_implementation_digest):
-            if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            if not _HEX64.fullmatch(value):
                 raise ValueError("receipt digest invalid")
+        return self
+
+
+@dataclass(frozen=True)
+class ObservationRequest:
+    schema_version: str
+    repository: str
+    issue_number: int
+    comment_id: int
+    actor: str
+    request_id: str
+
+    def validate(self, policy: DispatchPolicy) -> "ObservationRequest":
+        policy.validate()
+        if self.schema_version != "1":
+            raise ValueError("unsupported observation schema")
+        if self.issue_number != policy.control_issue:
+            raise ValueError("wrong control issue")
+        if self.comment_id <= 0:
+            raise ValueError("comment id must be positive")
+        if not _TOKEN.fullmatch(self.request_id) or not _TOKEN.fullmatch(self.actor):
+            raise ValueError("invalid request or actor token")
+        return self
+
+
+@dataclass(frozen=True)
+class RunObservationReceipt:
+    schema_version: str
+    request_id: str
+    observation_comment_id: int
+    actor: str
+    permission: str
+    workflow: str
+    ref: str
+    expected_head: str
+    dispatch_accepted_at: str
+    run_id: int
+    run_attempt: int
+    event: str
+    status: str
+    conclusion: str
+    artifact_id: int
+    artifact_name: str
+    artifact_digest: str
+    artifact_size: int
+    proof_manifest_digest: str
+    positive_reconciliation: str
+    bridge_implementation_digest: str
+    trust_decision: str
+    observation_result: str
+
+    def validate(self) -> "RunObservationReceipt":
+        if self.schema_version != "1.0.0":
+            raise ValueError("unsupported observation receipt schema")
+        if self.trust_decision != "ALLOW" or self.observation_result != "OBSERVED_VERIFIED":
+            raise ValueError("observation receipt is not verified")
+        if not _HEX40.fullmatch(self.expected_head):
+            raise ValueError("observation head invalid")
+        if self.run_id <= 0 or self.run_attempt <= 0 or self.artifact_id <= 0 or self.artifact_size <= 0:
+            raise ValueError("observation identifiers invalid")
+        if self.event != "workflow_dispatch" or self.status != "completed" or self.conclusion != "success":
+            raise ValueError("run is not successful workflow_dispatch")
+        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(self.artifact_digest.removeprefix("sha256:")):
+            raise ValueError("artifact digest invalid")
+        if not _HEX64.fullmatch(self.proof_manifest_digest):
+            raise ValueError("proof manifest digest invalid")
+        if self.positive_reconciliation != "MATCHED":
+            raise ValueError("positive reconciliation is not MATCHED")
+        if not _HEX64.fullmatch(self.bridge_implementation_digest):
+            raise ValueError("bridge implementation digest invalid")
         return self
