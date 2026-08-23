@@ -1,4 +1,4 @@
-"""Contracts for the bounded GitHub Actions dispatch bridge.
+"""Contracts for the bounded GitHub Actions dispatch/observation bridge.
 
 Comments and receipts are evidence only. They never mint LION authority.
 """
@@ -11,6 +11,7 @@ import re
 from typing import Mapping
 
 _HEX40 = re.compile(r"^[0-9a-f]{40}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _TOKEN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 _WORKFLOW = re.compile(r"^[A-Za-z0-9._-]+\.ya?ml$")
 _REF = re.compile(r"^[A-Za-z0-9._/-]{1,128}$")
@@ -143,9 +144,82 @@ class DispatchReceipt:
             raise ValueError("unsupported receipt schema")
         if self.trust_decision != "ALLOW" or self.github_api_result != "ACCEPTED_204":
             raise ValueError("receipt is not an accepted dispatch")
+        if self.control_comment_id <= 0 or not _TOKEN.fullmatch(self.request_id):
+            raise ValueError("receipt request binding invalid")
+        if not _WORKFLOW.fullmatch(self.workflow) or not _REF.fullmatch(self.ref):
+            raise ValueError("receipt workflow/ref invalid")
         if not _HEX40.fullmatch(self.expected_head):
             raise ValueError("receipt head invalid")
         for value in (self.canonical_inputs_digest, self.replay_key, self.bridge_implementation_digest):
-            if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            if not _HEX64.fullmatch(value):
                 raise ValueError("receipt digest invalid")
+        return self
+
+
+@dataclass(frozen=True)
+class ObservationRequest:
+    schema_version: str
+    repository: str
+    issue_number: int
+    comment_id: int
+    actor: str
+    request_id: str
+    require_success: bool
+
+    def validate(self, policy: DispatchPolicy) -> "ObservationRequest":
+        policy.validate()
+        if self.schema_version != "1":
+            raise ValueError("unsupported observation schema")
+        if self.issue_number != policy.control_issue or self.comment_id <= 0:
+            raise ValueError("observation control binding invalid")
+        if not _TOKEN.fullmatch(self.actor) or not _TOKEN.fullmatch(self.request_id):
+            raise ValueError("observation token invalid")
+        return self
+
+
+@dataclass(frozen=True)
+class ObservationReceipt:
+    schema_version: str
+    request_id: str
+    observation_comment_id: int
+    dispatch_comment_id: int
+    actor: str
+    permission: str
+    workflow: str
+    ref: str
+    expected_head: str
+    dispatch_accepted_at: str
+    run_id: int
+    run_event: str
+    run_status: str
+    run_conclusion: str
+    artifact_id: int
+    artifact_name: str
+    artifact_digest: str
+    manifest_digest: str
+    observed_at: str
+    bridge_implementation_digest: str
+    trust_decision: str
+    observation_result: str
+
+    def validate(self) -> "ObservationReceipt":
+        if self.schema_version != "1.0.0":
+            raise ValueError("unsupported observation receipt schema")
+        if self.observation_comment_id <= 0 or self.dispatch_comment_id <= 0 or self.run_id <= 0 or self.artifact_id <= 0:
+            raise ValueError("observation identifiers invalid")
+        if not _TOKEN.fullmatch(self.request_id):
+            raise ValueError("observation request id invalid")
+        if not _WORKFLOW.fullmatch(self.workflow) or not _REF.fullmatch(self.ref):
+            raise ValueError("observation workflow/ref invalid")
+        if not _HEX40.fullmatch(self.expected_head):
+            raise ValueError("observation head invalid")
+        if self.run_event != "workflow_dispatch" or self.run_status != "completed":
+            raise ValueError("target run not terminal workflow_dispatch")
+        if self.trust_decision != "ALLOW" or self.observation_result != "OBSERVED_VERIFIED":
+            raise ValueError("observation not verified")
+        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(self.artifact_digest[7:]):
+            raise ValueError("artifact digest invalid")
+        for value in (self.manifest_digest, self.bridge_implementation_digest):
+            if not _HEX64.fullmatch(value):
+                raise ValueError("observation digest invalid")
         return self
