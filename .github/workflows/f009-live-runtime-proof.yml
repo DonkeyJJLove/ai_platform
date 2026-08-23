@@ -55,6 +55,7 @@ jobs:
           from hashlib import sha256
           import json,os
           from pathlib import Path
+          from cyber_lion.contracts.policy_gate import PolicyRevision
           from cyber_lion.enterprise.authority_grant import AuthorityGrant
           from cyber_lion.enterprise.authority_source import AuthorityLookupKey,canonical_pr_authority_resource
           from cyber_lion.enterprise.authority_verification import authority_grant_signature_payload
@@ -68,6 +69,7 @@ jobs:
               "LION-F009-LIVE-RUNTIME-EVIDENCE-PLANE","f009-live-grant"
           ).validate()
           policy_digest="sha256:"+sha256(b"f009-live-policy-v1").hexdigest()
+          policy=PolicyRevision("f009-live-policy","1",policy_digest,"GREEN").validate()
           grant=AuthorityGrant(
               schema_version="1.1.0",grant_id=key.grant_id,issuer_subject_id="f009-root",
               subject_id="f009-runtime",tenant_id="f009",organization_id="lion",
@@ -83,7 +85,7 @@ jobs:
           (root/"grant-base.json").write_text(json.dumps(asdict(grant),sort_keys=True,separators=(",",":")))
           (root/"signing-payload.bin").write_bytes(authority_grant_signature_payload(grant,"f009.local"))
           (root/"policy.json").write_text(json.dumps(
-              {"binding":"f009-live-policy@1","content_digest":policy_digest},
+              {"binding":policy.binding,"content_digest":policy_digest},
               sort_keys=True,separators=(",",":")
           ))
           PY
