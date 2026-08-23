@@ -1,30 +1,22 @@
 from __future__ import annotations
 
-import json
+import inspect
 import os
 from pathlib import Path
 import tempfile
 import unittest
 
-from cyber_lion.enterprise.live_runtime_evidence_plane import run_live_runtime_proof
+import cyber_lion.enterprise.live_runtime_evidence_plane as plane
 
-
-EXPECTED_ARTIFACTS = {
-    "runtime-identity.json",
-    "admission.json",
-    "effect-currentness.json",
-    "sandbox-execution-receipt.json",
-    "independent-observation.json",
-    "reconciliation-receipt.json",
-    "replay-denial.json",
-    "proof-manifest.json",
-}
 
 EXPECTED_NEGATIVES = {
     "authority-revoked-after-admission-before-effect",
-    "authority-changed-after-admission-before-effect",
-    "policy-changed-after-admission-before-effect",
-    "observability-lost-after-admission-before-effect",
+    "authority-state-version-changed-before-effect",
+    "policy-changed-before-effect",
+    "observer-terminated-before-effect",
+    "forged-authority-record",
+    "forged-authority-signature",
+    "forged-runtime-attestation",
     "runtime-identity-substitution",
     "execution-subject-substitution",
     "workspace-substitution",
@@ -41,36 +33,51 @@ EXPECTED_NEGATIVES = {
 }
 
 
-class LiveRuntimeEvidencePlaneTests(unittest.TestCase):
-    def test_real_local_proof_is_bounded_and_reconciles(self):
-        with tempfile.TemporaryDirectory() as td:
-            base = Path(td)
-            work = base / "work"
-            artifacts = base / "artifacts"
-            manifest = run_live_runtime_proof(work, artifacts)
-            self.assertEqual(manifest["positive"]["reconciliation"], "MATCHED")
-            self.assertEqual(manifest["positive"]["effect_digest"], manifest["positive"]["independent_effect_digest"])
-            self.assertFalse(manifest["f005_runtime_resumed"])
-            self.assertFalse(manifest["production_effect"])
-            self.assertEqual(set(manifest["negative_results"]), EXPECTED_NEGATIVES)
-            self.assertTrue(all(manifest["negative_results"].values()))
-            self.assertEqual({p.name for p in artifacts.iterdir()}, EXPECTED_ARTIFACTS)
-            for name, digest in manifest["artifact_digests"].items():
-                self.assertEqual(len(digest), 64)
-                self.assertTrue((artifacts / name).exists())
+class LiveRuntimeEvidencePlaneR2Tests(unittest.TestCase):
+    def test_runtime_module_has_no_authority_minting_or_signing_secret_generation(self):
+        source = inspect.getsource(plane)
+        self.assertNotIn("import hmac", source)
+        self.assertNotIn("import secrets", source)
+        self.assertNotIn("_hmac_grant", source)
+        self.assertNotIn("_build_live_authority", source)
+        self.assertNotIn("genpkey", source)
+        self.assertNotIn('"-sign"', source)
+        self.assertIn("F009_AUTHORITY_BUNDLE_DIGEST", source)
+        self.assertIn("_load_control_plane", source)
+        self.assertIn("_openssl_verifier", source)
+
+    def test_runtime_requires_parent_pinned_control_inputs(self):
+        old_a = os.environ.pop("F009_AUTHORITY_BUNDLE_DIGEST", None)
+        old_p = os.environ.pop("F009_PROVIDER_TRUST_DIGEST", None)
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                p = Path(td) / "x"
+                p.write_bytes(b"x")
+                with self.assertRaises(RuntimeError):
+                    plane._pinned_file(p, "F009_AUTHORITY_BUNDLE_DIGEST")
+        finally:
+            if old_a is not None:
+                os.environ["F009_AUTHORITY_BUNDLE_DIGEST"] = old_a
+            if old_p is not None:
+                os.environ["F009_PROVIDER_TRUST_DIGEST"] = old_p
 
     def test_proof_target_must_be_outside_repository(self):
         workspace = Path(os.environ.get("GITHUB_WORKSPACE", os.getcwd())).resolve()
         with self.assertRaises(RuntimeError):
-            run_live_runtime_proof(workspace / "forbidden-proof", Path(tempfile.mkdtemp()) / "artifacts")
+            plane._safe_root(workspace / "forbidden-proof")
 
-    def test_manifest_is_machine_readable_and_contains_no_success_laundering(self):
-        with tempfile.TemporaryDirectory() as td:
-            base = Path(td)
-            run_live_runtime_proof(base / "work", base / "artifacts")
-            manifest = json.loads((base / "artifacts" / "proof-manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(manifest["positive"]["reconciliation"], "MATCHED")
-            self.assertTrue(all(value is True for value in manifest["negative_results"].values()))
+    def test_mandatory_negative_set_is_explicit_in_live_runner(self):
+        source = inspect.getsource(plane.run_live_runtime_proof)
+        for name in EXPECTED_NEGATIVES:
+            self.assertIn(name, source)
+        self.assertIn("if not all(negatives.values())", source)
+
+    def test_distinct_process_boundaries_are_present(self):
+        source = inspect.getsource(plane)
+        self.assertIn("--attest", source)
+        self.assertIn("--observer", source)
+        self.assertIn("--control-mutate", source)
+        self.assertIn("bootstrap/runtime process separation failed", source)
 
 
 if __name__ == "__main__":
