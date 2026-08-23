@@ -53,6 +53,24 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+def _validate_signed_query(query: str) -> None:
+    if not query:
+        raise RuntimeError("artifact redirect is missing signed query")
+    try:
+        pairs = urllib.parse.parse_qsl(
+            query,
+            keep_blank_values=True,
+            strict_parsing=True,
+        )
+    except ValueError as exc:
+        raise RuntimeError("artifact redirect signed query is malformed") from exc
+    signatures = [value for key, value in pairs if key == "sig"]
+    if len(signatures) != 1:
+        raise RuntimeError("artifact redirect must contain exactly one sig parameter")
+    if not signatures[0]:
+        raise RuntimeError("artifact redirect sig parameter must be non-empty")
+
+
 def _validate_archive_location(location: str) -> str:
     parsed = urllib.parse.urlparse(location)
     host = (parsed.hostname or "").lower()
@@ -64,8 +82,7 @@ def _validate_archive_location(location: str) -> str:
         raise RuntimeError("artifact redirect host is not an allowlisted GitHub Actions archive host")
     if not parsed.path.startswith("/actions-results/"):
         raise RuntimeError("artifact redirect path is not GitHub Actions results storage")
-    if not parsed.query:
-        raise RuntimeError("artifact redirect is missing signed query")
+    _validate_signed_query(parsed.query)
     return location
 
 
