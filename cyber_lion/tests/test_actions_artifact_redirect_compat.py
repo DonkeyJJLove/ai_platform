@@ -99,6 +99,27 @@ class ArtifactRedirectCompatibilityTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     compat._validate_archive_location(bad)
 
+    def test_signed_query_requires_exactly_one_nonempty_sig(self):
+        valid = (
+            "https://productionresultssa0.blob.core.windows.net/actions-results/x"
+            "?sv=2023-11-03&sig=abc%2Fdef%3D&se=2026-08-23T21%3A00%3A00Z"
+        )
+        self.assertEqual(compat._validate_archive_location(valid), valid)
+        for bad in (
+            "https://productionresultssa0.blob.core.windows.net/actions-results/x?foo=bar",
+            "https://productionresultssa0.blob.core.windows.net/actions-results/x?sig=",
+            "https://productionresultssa0.blob.core.windows.net/actions-results/x?sig=a&sig=b",
+            "https://productionresultssa0.blob.core.windows.net/actions-results/x?foo=bar&sig=",
+        ):
+            with self.subTest(bad=bad):
+                with self.assertRaises(RuntimeError):
+                    compat._validate_archive_location(bad)
+
+    def test_malformed_signed_query_is_denied(self):
+        bad = "https://productionresultssa0.blob.core.windows.net/actions-results/x?sig"
+        with self.assertRaisesRegex(RuntimeError, "malformed"):
+            compat._validate_archive_location(bad)
+
     def test_api_hop_is_authenticated_and_requires_exact_artifact_redirect(self):
         opener = _NoRedirectOpener(location=GOOD, code=302)
         with patch("urllib.request.build_opener", return_value=opener):
