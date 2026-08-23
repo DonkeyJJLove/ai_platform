@@ -1,0 +1,235 @@
+name: F009 Live Runtime Proof
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'cyber_lion/enterprise/live_runtime_evidence_plane.py'
+      - 'cyber_lion/tests/test_live_runtime_evidence_plane.py'
+      - 'cyber_lion/tests/test_live_runtime_evidence_workflow_contract.py'
+      - '.github/workflows/f009-live-runtime-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live-runtime-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Compile F009 proof plane
+        run: python -m compileall -q cyber_lion/enterprise/live_runtime_evidence_plane.py
+
+      - name: Bootstrap immutable authority control inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANDIDATE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          PROOF_PR="${{ github.event.pull_request.number || github.run_number }}"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+
+          CONTROL_DIR="$RUNNER_TEMP/f009-control-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test ! -e "$CONTROL_DIR"
+          mkdir -p "$CONTROL_DIR"
+          export CONTROL_DIR CANDIDATE_SHA PROOF_PR
+
+          openssl genpkey -algorithm ED25519 -out "$CONTROL_DIR/authority-private.pem"
+          openssl pkey -in "$CONTROL_DIR/authority-private.pem" -pubout -out "$CONTROL_DIR/authority-public.pem"
+
+          python - <<'PY'
+          from dataclasses import asdict
+          from datetime import datetime,timedelta,timezone
+          from hashlib import sha256
+          import json,os
+          from pathlib import Path
+          from cyber_lion.contracts.policy_gate import PolicyRevision
+          from cyber_lion.enterprise.authority_grant import AuthorityGrant
+          from cyber_lion.enterprise.authority_source import AuthorityLookupKey,canonical_pr_authority_resource
+          from cyber_lion.enterprise.authority_verification import authority_grant_signature_payload
+
+          root=Path(os.environ["CONTROL_DIR"])
+          now=datetime.now(timezone.utc)
+          key=AuthorityLookupKey(
+              "DonkeyJJLove/ai_platform",int(os.environ["PROOF_PR"]),
+              "c072ee219021051baec7fa667a98f6e73aa08fe2",
+              os.environ["CANDIDATE_SHA"],
+              "LION-F009-LIVE-RUNTIME-EVIDENCE-PLANE","f009-live-grant"
+          ).validate()
+          policy_digest="sha256:"+sha256(b"f009-live-policy-v1").hexdigest()
+          policy=PolicyRevision("f009-live-policy","1",policy_digest,"GREEN").validate()
+          grant=AuthorityGrant(
+              schema_version="1.1.0",grant_id=key.grant_id,issuer_subject_id="f009-root",
+              subject_id="f009-runtime",tenant_id="f009",organization_id="lion",
+              mission_id=key.mission_id,capability_id="f009-live-proof",capability_version="1",
+              actions=("WRITE_FILE",),resource_scope=(canonical_pr_authority_resource(key),),
+              authority_ceiling="local_write",constraints=("disposable-runner-only",),
+              parent_grant_id=None,issued_at=(now-timedelta(minutes=2)).isoformat(),
+              expires_at=(now+timedelta(minutes=20)).isoformat(),epoch=1,
+              policy_digest=policy_digest,
+              observability_contract_digest="sha256:"+sha256(b"f009-observability").hexdigest(),
+              signature="pending",delegation_allowed=False,delegation_depth_budget=0
+          ).validate()
+          (root/"grant-base.json").write_text(json.dumps(asdict(grant),sort_keys=True,separators=(",",":")))
+          (root/"signing-payload.bin").write_bytes(authority_grant_signature_payload(grant,"f009.local"))
+          (root/"policy.json").write_text(json.dumps(
+              {"binding":policy.binding,"content_digest":policy_digest},
+              sort_keys=True,separators=(",",":")
+          ))
+          PY
+
+          openssl pkeyutl -sign -rawin \
+            -inkey "$CONTROL_DIR/authority-private.pem" \
+            -in "$CONTROL_DIR/signing-payload.bin" \
+            -out "$CONTROL_DIR/signature.bin"
+
+          python - <<'PY'
+          from dataclasses import asdict
+          from hashlib import sha256
+          import json,os
+          from pathlib import Path
+          from cyber_lion.enterprise.authority_grant import AuthorityGrant
+          from cyber_lion.enterprise.authority_source import AuthorityLookupKey,canonical_source_lineage_digest
+          from cyber_lion.enterprise.persistent_authority_state import SQLiteAuthorityStateStore
+
+          root=Path(os.environ["CONTROL_DIR"])
+          raw=json.loads((root/"grant-base.json").read_text())
+          for field in ("actions","resource_scope","constraints"):
+              raw[field]=tuple(raw[field])
+          raw["signature"]=(root/"signature.bin").read_bytes().hex()
+          grant=AuthorityGrant(**raw).validate()
+          key=AuthorityLookupKey(
+              "DonkeyJJLove/ai_platform",int(os.environ["PROOF_PR"]),
+              "c072ee219021051baec7fa667a98f6e73aa08fe2",
+              os.environ["CANDIDATE_SHA"],
+              "LION-F009-LIVE-RUNTIME-EVIDENCE-PLANE","f009-live-grant"
+          ).validate()
+          public=(root/"authority-public.pem").read_bytes()
+          bundle={
+              "schema_version":"2.0.0",
+              "bootstrap_pid":os.getpid(),
+              "lookup":list(key.binding()),
+              "grant":asdict(grant),
+              "lineage_digest":canonical_source_lineage_digest((grant,)),
+              "provenance_id":"control-plane:workflow-bootstrap:"+os.environ["GITHUB_RUN_ID"],
+              "public_key_digest":sha256(public).hexdigest(),
+          }
+          (root/"authority-bundle.json").write_text(json.dumps(bundle,sort_keys=True,separators=(",",":")))
+
+          store=SQLiteAuthorityStateStore(str(root/"authority.sqlite"))
+          context=("f009.local","f009","lion","LION-F009-LIVE-RUNTIME-EVIDENCE-PLANE")
+          store.bootstrap_context(context,epoch=1)
+          store.register_root(context,epoch=1,root_grant_id=grant.grant_id,root_grant_digest=grant.digest())
+
+          module=Path("cyber_lion/enterprise/live_runtime_evidence_plane.py").read_bytes()
+          trust={
+              "binding":{
+                  "provider_id":"github-hosted-runner",
+                  "provider_instance_id":"github-run:"+os.environ["GITHUB_RUN_ID"],
+                  "implementation_digest":sha256(module).hexdigest(),
+                  "trust_anchor_id":"github-actions-run",
+                  "trust_anchor_digest":sha256(
+                      (os.environ["GITHUB_RUN_ID"]+"\0"+os.environ["CANDIDATE_SHA"]+"\0"+os.environ.get("RUNNER_NAME","runner")).encode()
+                  ).hexdigest()
+              },
+              "evidence_ref":"github-actions:"+os.environ["GITHUB_RUN_ID"]+":"+os.environ["CANDIDATE_SHA"],
+              "bootstrap_pid":os.getpid()
+          }
+          (root/"provider-trust.json").write_text(json.dumps(trust,sort_keys=True,separators=(",",":")))
+          PY
+
+          rm -f \
+            "$CONTROL_DIR/authority-private.pem" \
+            "$CONTROL_DIR/signing-payload.bin" \
+            "$CONTROL_DIR/signature.bin" \
+            "$CONTROL_DIR/grant-base.json"
+          test ! -e "$CONTROL_DIR/authority-private.pem"
+          test ! -e "$CONTROL_DIR/signing-payload.bin"
+          test ! -e "$CONTROL_DIR/signature.bin"
+
+          chmod 0444 \
+            "$CONTROL_DIR/authority-bundle.json" \
+            "$CONTROL_DIR/authority-public.pem" \
+            "$CONTROL_DIR/provider-trust.json" \
+            "$CONTROL_DIR/policy.json"
+
+          AUTH_DIGEST="$(sha256sum "$CONTROL_DIR/authority-bundle.json" | awk '{print $1}')"
+          PROVIDER_DIGEST="$(sha256sum "$CONTROL_DIR/provider-trust.json" | awk '{print $1}')"
+          {
+            echo "CONTROL_DIR=$CONTROL_DIR"
+            echo "F009_AUTHORITY_BUNDLE_DIGEST=$AUTH_DIGEST"
+            echo "F009_PROVIDER_TRUST_DIGEST=$PROVIDER_DIGEST"
+            echo "F009_PROOF_PR_NUMBER=$PROOF_PR"
+          } >> "$GITHUB_ENV"
+
+      - name: Run F009 live runtime proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANDIDATE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          export GITHUB_SHA="$CANDIDATE_SHA"
+
+          test ! -e "$CONTROL_DIR/authority-private.pem"
+          test -r "$CONTROL_DIR/authority-bundle.json"
+          test -r "$CONTROL_DIR/authority-public.pem"
+
+          WORK_DIR="$RUNNER_TEMP/f009-live-work-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          ARTIFACT_DIR="$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          export WORK_DIR ARTIFACT_DIR
+          test ! -e "$WORK_DIR"
+          test ! -e "$ARTIFACT_DIR"
+
+          python -m cyber_lion.enterprise.live_runtime_evidence_plane \
+            --proof \
+            --work-dir "$WORK_DIR" \
+            --artifact-dir "$ARTIFACT_DIR" \
+            --control-dir "$CONTROL_DIR"
+
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["ARTIFACT_DIR"])
+          manifest=json.loads((root/"proof-manifest.json").read_text())
+          assert manifest["github_sha"]==os.environ["GITHUB_SHA"]
+          assert manifest["positive"]["reconciliation"]=="MATCHED"
+          assert manifest["positive"]["effect_digest"]==manifest["positive"]["independent_effect_digest"]
+          assert all(manifest["negative_results"].values())
+          assert manifest["runtime_can_mint_authority"] is False
+          assert manifest["runtime_has_signing_secret"] is False
+          assert manifest["bootstrap_pid"]!=manifest["runtime_pid"]
+          assert manifest["attester_pid"]!=manifest["runtime_pid"]
+          assert manifest["observer_pid"]!=manifest["runtime_pid"]
+          assert manifest["f005_runtime_resumed"] is False
+          assert manifest["production_effect"] is False
+          PY
+
+      - name: Upload immutable proof evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f009-live-runtime-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/f009-live-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Cleanup disposable proof plane
+        if: always()
+        shell: bash
+        run: |
+          rm -rf \
+            "$RUNNER_TEMP/f009-control-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "$RUNNER_TEMP/f009-live-work-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
