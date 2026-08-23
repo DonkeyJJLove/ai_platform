@@ -39,7 +39,8 @@ jobs:
         run: |
           python -m compileall -q \
             cyber_lion/contracts/actions_dispatch_bridge.py \
-            cyber_lion/enterprise/actions_dispatch_bridge.py
+            cyber_lion/enterprise/actions_dispatch_bridge.py \
+            cyber_lion/enterprise/actions_dispatch_temporal_compat.py
 
       - name: Execute bounded dispatch or observation bridge
         env:
@@ -51,7 +52,7 @@ jobs:
           stderr_file="$RUNNER_TEMP/lion-actions-control.stderr"
 
           set +e
-          python -m cyber_lion.enterprise.actions_dispatch_bridge \
+          python -m cyber_lion.enterprise.actions_dispatch_temporal_compat \
             --event "$GITHUB_EVENT_PATH" \
             --repository "$GITHUB_REPOSITORY" \
             --token-env GITHUB_TOKEN \
