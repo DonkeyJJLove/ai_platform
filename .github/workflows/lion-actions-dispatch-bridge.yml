@@ -1,0 +1,49 @@
+name: LION Actions Dispatch Bridge
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+
+concurrency:
+  group: lion-actions-dispatch-bridge
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: >-
+      github.event.issue.number == 144 &&
+      startsWith(github.event.comment.body, 'LION-DISPATCH v1')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact control-plane implementation
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Compile dispatch bridge
+        run: |
+          python -m compileall -q \
+            cyber_lion/contracts/actions_dispatch_bridge.py \
+            cyber_lion/enterprise/actions_dispatch_bridge.py
+
+      - name: Execute bounded dispatch bridge
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python -m cyber_lion.enterprise.actions_dispatch_bridge \
+            --event "$GITHUB_EVENT_PATH" \
+            --repository "$GITHUB_REPOSITORY" \
+            --token-env GITHUB_TOKEN
