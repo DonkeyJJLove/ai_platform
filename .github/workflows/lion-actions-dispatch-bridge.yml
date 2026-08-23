@@ -44,9 +44,86 @@ jobs:
       - name: Execute bounded dispatch or observation bridge
         env:
           GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          stdout_file="$RUNNER_TEMP/lion-actions-control.stdout"
+          stderr_file="$RUNNER_TEMP/lion-actions-control.stderr"
+
+          set +e
           python -m cyber_lion.enterprise.actions_dispatch_bridge \
             --event "$GITHUB_EVENT_PATH" \
             --repository "$GITHUB_REPOSITORY" \
-            --token-env GITHUB_TOKEN
+            --token-env GITHUB_TOKEN \
+            >"$stdout_file" 2>"$stderr_file"
+          rc=$?
+          set -e
+
+          if [ "$rc" -eq 0 ]; then
+            cat "$stdout_file"
+            exit 0
+          fi
+
+          export LION_CONTROL_RC="$rc"
+          export LION_CONTROL_STDOUT="$stdout_file"
+          export LION_CONTROL_STDERR="$stderr_file"
+
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import urllib.request
+          from pathlib import Path
+
+          event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
+          comment = event.get("comment") or {}
+          body = comment.get("body", "")
+          comment_id = comment.get("id")
+          command = "OBSERVE" if isinstance(body, str) and body.startswith("LION-OBSERVE v1") else "DISPATCH"
+
+          def bounded_diagnostic() -> str:
+              candidates = []
+              for key in ("LION_CONTROL_STDERR", "LION_CONTROL_STDOUT"):
+                  path = Path(os.environ[key])
+                  if path.exists():
+                      text = path.read_text(encoding="utf-8", errors="replace").strip()
+                      if text:
+                          candidates.append(text.splitlines()[-1])
+              value = candidates[0] if candidates else "bridge-exited-without-diagnostic"
+              value = re.sub(r"(?i)(bearer\s+)[A-Za-z0-9._~-]+", r"\1[REDACTED]", value)
+              value = re.sub(r"(?i)(token|secret|password)=\S+", r"\1=[REDACTED]", value)
+              value = " ".join(value.replace("\r", " ").replace("\n", " ").split())
+              return value[:500]
+
+          receipt = "\n".join((
+              "LION-ACTIONS-CONTROL-FAILURE v1",
+              f"command={command}",
+              f"control_comment_id={comment_id}",
+              f"workflow_run_id={os.environ['GITHUB_RUN_ID']}",
+              f"workflow_run_attempt={os.environ['GITHUB_RUN_ATTEMPT']}",
+              f"checked_out_sha={os.environ['GITHUB_SHA']}",
+              f"exit_code={os.environ['LION_CONTROL_RC']}",
+              f"diagnostic={bounded_diagnostic()}",
+              "result=FAILED_CLOSED",
+              "receipt_is_evidence_not_authority=true",
+          ))
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{repository}/issues/144/comments",
+              data=json.dumps({"body": receipt}, separators=(",", ":")).encode("utf-8"),
+              method="POST",
+              headers={
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "Content-Type": "application/json",
+                  "User-Agent": "lion-actions-control-failure-receipt/1",
+              },
+          )
+          with urllib.request.urlopen(request, timeout=20) as response:
+              if response.status != 201:
+                  raise RuntimeError(f"failure receipt rejected: {response.status}")
+          PY
+
+          exit "$rc"
