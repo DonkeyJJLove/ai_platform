@@ -15,9 +15,14 @@ def _iso(v:datetime)->str:return v.astimezone(timezone.utc).isoformat()
 def _parse(v:str)->datetime:return datetime.fromisoformat(v.replace("Z","+00:00")).astimezone(timezone.utc)
 
 class SwarmGovernorLeaseStore:
-    """Correctness-oriented logical singleton. Authority remains external."""
-    def __init__(self,db_path,*,clock):
-        self.clock=clock;self.c=sqlite3.connect(str(db_path),isolation_level=None);self.c.row_factory=sqlite3.Row
+    """Correctness-oriented logical singleton. Authority remains external.
+
+    ``run_fenced`` holds a write transaction on the governor store across the
+    caller's complete status transaction. A successor therefore cannot acquire
+    a new epoch between the final fence check and the canonical status commit.
+    """
+    def __init__(self,db_path,*,clock,timeout:float=5.0):
+        self.clock=clock;self.c=sqlite3.connect(str(db_path),isolation_level=None,timeout=timeout);self.c.row_factory=sqlite3.Row
         self.c.execute("PRAGMA journal_mode=WAL");self.c.execute("PRAGMA synchronous=FULL")
         self.c.executescript("""
 CREATE TABLE IF NOT EXISTS swarm_governor(singleton INTEGER PRIMARY KEY CHECK(singleton=1),instance_id TEXT,epoch INTEGER NOT NULL,fencing_token INTEGER NOT NULL,lease_id TEXT,acquired_at TEXT,expires_at TEXT);
@@ -48,6 +53,18 @@ INSERT OR IGNORE INTO swarm_governor VALUES(1,NULL,0,0,NULL,NULL,NULL);
         return self._tx(work)
     def assert_current(self,lease:GovernorLease)->None:
         lease.validate();self._assert_row(self.c.execute("SELECT * FROM swarm_governor WHERE singleton=1").fetchone(),lease,_utc(self.clock))
+    def run_fenced(self,lease:GovernorLease,fn):
+        """Run ``fn`` while successor acquisition is fenced by BEGIN IMMEDIATE.
+
+        The lease is validated *inside* the held governor transaction. The lock
+        remains held until ``fn`` has returned, so a status store may commit its
+        own transaction without a successor epoch appearing in between.
+        """
+        lease.validate()
+        def work():
+            self._assert_row(self.c.execute("SELECT * FROM swarm_governor WHERE singleton=1").fetchone(),lease,_utc(self.clock))
+            return fn()
+        return self._tx(work)
     @staticmethod
     def _assert_row(r,lease,now):
         if r["instance_id"]!=lease.instance_id or int(r["epoch"])!=lease.epoch or int(r["fencing_token"])!=lease.fencing_token or r["lease_id"]!=lease.lease_id:raise SwarmGovernorStateError("stale governor fenced")
