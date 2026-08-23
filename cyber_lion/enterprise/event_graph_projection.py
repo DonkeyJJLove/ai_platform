@@ -25,8 +25,8 @@ def event_to_graph_records(event:EventEnvelope)->tuple[tuple[GraphNode,...],tupl
     nodes=[entity_node,event_node];edges=[GraphEdge(edge_id=f"edge:{event.event_id}:entity",plane="DATA_PROVENANCE",edge_type="OBSERVED_FROM",source_id=event_node.node_id,target_id=entity_node.node_id,provenance_refs=tuple(event.provenance.upstream)).validate()]
     if event.causation_id:
         cause=GraphNode(node_id=f"event:{event.causation_id}",node_type="ENTITY",version="1",payload={"external_event_ref":event.causation_id},provenance_refs=(event.causation_id,)).validate();nodes.append(cause)
-        # Event causation_id is an explicit causal assertion from the envelope contract.
-        edges.append(GraphEdge(edge_id=f"edge:{event.event_id}:caused-by",plane="DATA_PROVENANCE",edge_type="CAUSED_BY",source_id=event_node.node_id,target_id=cause.node_id,provenance_refs=tuple(event.provenance.upstream),causality_evidence_ref=event.causation_id).validate())
+        causality_refs=tuple(dict.fromkeys(tuple(event.provenance.upstream)+(event.causation_id,)))
+        edges.append(GraphEdge(edge_id=f"edge:{event.event_id}:caused-by",plane="DATA_PROVENANCE",edge_type="CAUSED_BY",source_id=event_node.node_id,target_id=cause.node_id,provenance_refs=causality_refs,causality_evidence_ref=event.causation_id).validate())
     if event.authority.gate_event_id or event.authority.policy_ids:
         authority_key=event.authority.gate_event_id or ":".join(sorted(event.authority.policy_ids))
         auth=GraphNode(node_id=f"authority-ref:{authority_key}",node_type="AUTHORITY_RECORD",version="1",payload={"requested":event.authority.requested,"effective":event.authority.effective,"policy_ids":list(event.authority.policy_ids),"gate_event_id":event.authority.gate_event_id,"authoritative":False,"note":"reference evidence only; resolve through AuthoritySource"},provenance_refs=tuple(event.provenance.upstream)).validate();nodes.append(auth)
