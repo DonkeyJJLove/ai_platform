@@ -1,0 +1,69 @@
+name: F009 Live Runtime Proof
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'cyber_lion/enterprise/live_runtime_evidence_plane.py'
+      - 'cyber_lion/tests/test_live_runtime_evidence_plane.py'
+      - 'cyber_lion/tests/test_live_runtime_evidence_workflow_contract.py'
+      - '.github/workflows/f009-live-runtime-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live-runtime-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Compile F009 proof plane
+        run: python -m compileall -q cyber_lion/enterprise/live_runtime_evidence_plane.py
+      - name: Run F009 live runtime proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK_DIR="$RUNNER_TEMP/f009-live-work-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          ARTIFACT_DIR="$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test ! -e "$WORK_DIR"
+          test ! -e "$ARTIFACT_DIR"
+          python -m cyber_lion.enterprise.live_runtime_evidence_plane \
+            --proof \
+            --work-dir "$WORK_DIR" \
+            --artifact-dir "$ARTIFACT_DIR"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/f"f009-live-artifacts-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}"
+          manifest=json.loads((root/'proof-manifest.json').read_text())
+          assert manifest['positive']['reconciliation']=='MATCHED'
+          assert manifest['positive']['effect_digest']==manifest['positive']['independent_effect_digest']
+          assert all(manifest['negative_results'].values())
+          assert manifest['f005_runtime_resumed'] is False
+          assert manifest['production_effect'] is False
+          PY
+      - name: Upload immutable proof evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f009-live-runtime-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/f009-live-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+      - name: Cleanup disposable proof plane
+        if: always()
+        shell: bash
+        run: |
+          rm -rf \
+            "$RUNNER_TEMP/f009-live-work-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
