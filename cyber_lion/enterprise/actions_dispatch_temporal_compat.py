@@ -2,14 +2,16 @@
 
 Legacy dispatch receipts may timestamp acceptance just after GitHub creates the run, so
 run discovery permits at most a 60-second lookback while preserving exact event/ref/head
-and ambiguity checks. Artifact downloads are also handled as a two-hop trust transition:
-the GitHub API request is authenticated, while the returned signed blob URL is fetched
-without forwarding the GitHub bearer token. This shim does not dispatch on observation
-and does not mint authority.
+and ambiguity checks. Artifact downloads are handled as an explicit two-hop trust
+transition: the GitHub API request is authenticated, while the returned GitHub Actions
+signed blob URL is fetched without forwarding the GitHub bearer token or cookies and
+without following another redirect. This shim does not dispatch on observation and does
+not mint authority.
 """
 from __future__ import annotations
 
 from datetime import timedelta
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -19,7 +21,9 @@ from cyber_lion.enterprise import actions_dispatch_bridge as bridge
 LEGACY_LOOKBACK_SECONDS = 60
 MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
 _REDIRECT_CODES = {301, 302, 303, 307, 308}
-_ALLOWED_ARCHIVE_SUFFIXES = (".blob.core.windows.net",)
+_GITHUB_ACTIONS_ARCHIVE_HOST = re.compile(
+    r"^productionresultssa[0-9]+\.blob\.core\.windows\.net$"
+)
 
 
 def _matching_runs_compat(runs: list[dict], receipt: bridge.DispatchReceipt) -> list[dict]:
@@ -54,8 +58,14 @@ def _validate_archive_location(location: str) -> str:
     host = (parsed.hostname or "").lower()
     if parsed.scheme != "https" or not host or parsed.username or parsed.password:
         raise RuntimeError("artifact redirect target is not safe HTTPS")
-    if not any(host.endswith(suffix) for suffix in _ALLOWED_ARCHIVE_SUFFIXES):
-        raise RuntimeError("artifact redirect host is not allowlisted")
+    if parsed.port not in (None, 443):
+        raise RuntimeError("artifact redirect target uses non-HTTPS port")
+    if _GITHUB_ACTIONS_ARCHIVE_HOST.fullmatch(host) is None:
+        raise RuntimeError("artifact redirect host is not an allowlisted GitHub Actions archive host")
+    if not parsed.path.startswith("/actions-results/"):
+        raise RuntimeError("artifact redirect path is not GitHub Actions results storage")
+    if not parsed.query:
+        raise RuntimeError("artifact redirect is missing signed query")
     return location
 
 
@@ -88,12 +98,17 @@ def _download_signed_archive(location: str) -> bytes:
     request = urllib.request.Request(
         safe_location,
         method="GET",
-        headers={"User-Agent": "lion-actions-artifact-download/1"},
+        headers={"User-Agent": "lion-actions-artifact-download/2"},
     )
+    opener = urllib.request.build_opener(_NoRedirect())
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with opener.open(request, timeout=30) as response:
+            if response.status != 200:
+                raise RuntimeError(f"signed artifact download non-terminal status: {response.status}")
             data = response.read(MAX_ARTIFACT_BYTES + 1)
     except urllib.error.HTTPError as exc:
+        if exc.code in _REDIRECT_CODES:
+            raise RuntimeError("signed artifact download attempted a second redirect") from exc
         raise RuntimeError(f"signed artifact download failed: {exc.code}") from exc
     if not data:
         raise RuntimeError("artifact archive is empty")
