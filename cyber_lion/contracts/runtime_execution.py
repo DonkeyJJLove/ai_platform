@@ -35,6 +35,13 @@ def _positive(value:Any,name:str,*,allow_zero:bool=False)->int:
     if isinstance(value,bool) or not isinstance(value,int) or value<(0 if allow_zero else 1):raise RuntimeExecutionContractError(f"{name} invalid")
     return value
 
+def _command(value:Any)->tuple[str,...]:
+    if type(value) is not tuple or not value:raise RuntimeExecutionContractError("command invalid")
+    for token in value:
+        _text(token,"command token")
+        if "\n" in token or "\r" in token:raise RuntimeExecutionContractError("command token invalid")
+    return value
+
 @dataclass(frozen=True)
 class RuntimeAdmissionSourceTrustBinding:
     source_id:str
@@ -70,6 +77,7 @@ class RuntimeExecutionRequest:
     resource:str
     payload_digest:str
     payload_size:int
+    command:tuple[str,...]=()
     schema_version:str=SCHEMA_VERSION
     def validate(self):
         if self.schema_version!=SCHEMA_VERSION:raise RuntimeExecutionContractError("unsupported execution request schema")
@@ -78,10 +86,15 @@ class RuntimeExecutionRequest:
         _positive(self.generation,"generation")
         if self.action not in _ACTIONS:raise RuntimeExecutionContractError("action invalid")
         _positive(self.payload_size,"payload_size",allow_zero=True)
-        if self.action=="WRITE_FILE" and self.payload_size<1:raise RuntimeExecutionContractError("WRITE_FILE requires non-empty payload")
-        if self.action!="WRITE_FILE" and self.payload_size!=0:raise RuntimeExecutionContractError("non-write payload_size must be zero")
+        if self.action=="WRITE_FILE":
+            if self.payload_size<1 or self.command:raise RuntimeExecutionContractError("WRITE_FILE payload/command invalid")
+        elif self.action=="RUN_TEST":
+            if self.payload_size!=0:raise RuntimeExecutionContractError("RUN_TEST payload_size must be zero")
+            _command(self.command)
+        elif self.payload_size!=0 or self.command:raise RuntimeExecutionContractError("READ_FILE cannot carry payload or command")
         return self
-    def canonical_dict(self):self.validate();return asdict(self)
+    def canonical_dict(self):
+        self.validate();d=asdict(self);d["command"]=list(self.command);return d
     def digest(self):return sha256(b"LION/F009-RUNTIME-EXECUTION-REQUEST/1\0"+canonical_json(self.canonical_dict())).hexdigest()
 
 @dataclass(frozen=True)
