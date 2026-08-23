@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  control:
+  dispatch-or-observe:
     if: >-
       github.event.issue.number == 144 &&
       (
@@ -41,7 +41,7 @@ jobs:
             cyber_lion/contracts/actions_dispatch_bridge.py \
             cyber_lion/enterprise/actions_dispatch_bridge.py
 
-      - name: Execute bounded Actions control bridge
+      - name: Execute bounded dispatch or observation bridge
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
