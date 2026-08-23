@@ -23,6 +23,12 @@ def _digest(v:object,name:str)->str:
     if not _DIGEST.fullmatch(v):raise EnterpriseGraphError(f"{name} must be sha256 hex")
     return v
 
+def _refs(v:object,name:str)->tuple[str,...]:
+    if type(v) is not tuple:raise EnterpriseGraphError(f"{name} must be tuple")
+    for ref in v:_text(ref,name)
+    if len(set(v))!=len(v):raise EnterpriseGraphError(f"{name} must be unique")
+    return v
+
 @dataclass(frozen=True)
 class GraphNode:
     node_id:str;node_type:str;version:str;payload:Mapping[str,Any];provenance_refs:tuple[str,...]=()
@@ -30,7 +36,7 @@ class GraphNode:
         _text(self.node_id,"node_id");_text(self.version,"version")
         if self.node_type not in NODE_TYPES:raise EnterpriseGraphError("unknown node_type")
         if not isinstance(self.payload,Mapping):raise EnterpriseGraphError("payload must be mapping")
-        if type(self.provenance_refs) is not tuple:raise EnterpriseGraphError("provenance_refs must be tuple")
+        _refs(self.provenance_refs,"provenance_refs")
         return self
     def digest(self):return sha256(canonical_json(asdict(self))).hexdigest()
 
@@ -42,8 +48,11 @@ class GraphEdge:
         if self.plane not in PLANES:raise EnterpriseGraphError("unknown plane")
         allowed=DATA_EDGE_TYPES if self.plane=="DATA_PROVENANCE" else AUTHORITY_EDGE_TYPES
         if self.edge_type not in allowed:raise EnterpriseGraphError("edge_type not allowed in plane")
-        if self.edge_type=="CAUSED_BY" and not self.causality_evidence_ref:raise EnterpriseGraphError("CAUSED_BY requires causality evidence")
-        if self.edge_type!="CAUSED_BY" and self.causality_evidence_ref is not None:raise EnterpriseGraphError("causality evidence only valid for CAUSED_BY")
+        _refs(self.provenance_refs,"provenance_refs")
+        if self.edge_type=="CAUSED_BY":
+            if not self.causality_evidence_ref:raise EnterpriseGraphError("CAUSED_BY requires causality evidence")
+            if self.causality_evidence_ref not in self.provenance_refs:raise EnterpriseGraphError("CAUSED_BY evidence must be provenance-bound")
+        elif self.causality_evidence_ref is not None:raise EnterpriseGraphError("causality evidence only valid for CAUSED_BY")
         return self
     def digest(self):return sha256(canonical_json(asdict(self))).hexdigest()
 
