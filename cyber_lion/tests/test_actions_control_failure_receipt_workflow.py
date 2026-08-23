@@ -37,8 +37,10 @@ class ActionsControlFailureReceiptWorkflowTests(unittest.TestCase):
 
     def test_bridge_is_executed_once_before_failure_receipt(self):
         text = WORKFLOW.read_text(encoding='utf-8')
-        needle = 'python -m cyber_lion.enterprise.actions_dispatch_bridge'
-        self.assertEqual(text.count(needle), 1)
+        shim = 'python -m cyber_lion.enterprise.actions_dispatch_temporal_compat'
+        direct = 'python -m cyber_lion.enterprise.actions_dispatch_bridge'
+        self.assertEqual(text.count(shim), 1)
+        self.assertNotIn(direct, text)
         self.assertIn('rc=$?', text)
         self.assertIn('if [ "$rc" -eq 0 ]', text)
 
