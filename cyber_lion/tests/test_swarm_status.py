@@ -3,7 +3,7 @@ import json,tempfile,pathlib,unittest
 from cyber_lion.contracts.swarm_status import StatusReport,compute_status_digest,compute_revision_digest
 from cyber_lion.enterprise.swarm_governor import SwarmGovernorLeaseStore
 from cyber_lion.enterprise.swarm_status import SwarmStatusStore,SwarmStatusStateError
-from cyber_lion.enterprise.swarm_status_projection import validate_status_projection,classify_live_master
+from cyber_lion.enterprise.swarm_status_projection import validate_status_projection,classify_live_master,DEFAULT_MAX_PROJECTION_COMMITS
 
 class Clock:
     def __init__(self):self.v=datetime(2026,1,1,tzinfo=timezone.utc)
@@ -12,6 +12,8 @@ class Clock:
 
 def ctx():return {"observed_master":{"commit":"a"*40,"tree":"b"*40,"observed_at":"2026-01-01T00:00:00+00:00"},"governor":{"logical_role":"SWARM_GOVERNOR","instance_id":"g","state":"ACTIVE","epoch":1,"fencing_token":1,"is_authority_source":False},"architecture":{},"critical_path":[],"formations":[],"missions":[],"drones":[],"role_assignments":[],"dependencies":[],"blockers":[],"channels":[],"pending_messages":[],"epistemic_state":"CURRENT","source_refs":["e"]}
 def report(snapshot,op,event,payload,drone="d1"):return StatusReport(op,snapshot["revision"],snapshot["status_digest"],drone,"m1",event,payload,("e",),"2026-01-01T00:00:00+00:00")
+def status0():
+    status={"schema_version":"1.0.0","system_id":"LION","revision":0,"status_digest":"0"*64,"previous_status_digest":"0"*64,"revision_digest":"0"*64,"previous_revision_digest":"0"*64,**ctx(),"current_actions":[],"history":[],"generated_at":"2026-01-01T00:00:00+00:00"};status["status_digest"]=compute_status_digest(status);status["revision_digest"]=compute_revision_digest(revision=0,status_digest=status["status_digest"],previous_revision_digest="0"*64);return status
 
 class SwarmStatusTests(unittest.TestCase):
     def _stores(self,d):
@@ -26,19 +28,30 @@ class SwarmStatusTests(unittest.TestCase):
             snap=s.snapshot();bad=report(snap,"2","STATUS_REPORT",{},drone="unknown")
             with self.assertRaises(SwarmStatusStateError):s.apply_report(bad,lease=lease)
     def test_external_status_modification_detected_for_full_projection(self):
-        mutations={
-            "history":lambda raw:raw["history"].append({"action_id":"forged","state":"COMPLETED"}),
-            "current_actions":lambda raw:raw["current_actions"].append({"action_id":"forged","state":"STARTED"}),
-            "governor":lambda raw:raw["governor"].__setitem__("instance_id","forged"),
-            "missions":lambda raw:raw["missions"].append({"mission_id":"forged"}),
-            "blockers":lambda raw:raw["blockers"].append({"blocker_id":"forged"}),
-        }
+        mutations={"history":lambda raw:raw["history"].append({"action_id":"forged","state":"COMPLETED"}),"current_actions":lambda raw:raw["current_actions"].append({"action_id":"forged","state":"STARTED"}),"governor":lambda raw:raw["governor"].__setitem__("instance_id","forged"),"missions":lambda raw:raw["missions"].append({"mission_id":"forged"}),"blockers":lambda raw:raw["blockers"].append({"blocker_id":"forged"})}
         for name,mutate in mutations.items():
             with self.subTest(field=name),tempfile.TemporaryDirectory() as d:
                 c,g,lease,s=self._stores(d);p=pathlib.Path(d)/"status.json";s.close();raw=json.loads(p.read_text());before=(raw["revision"],raw["status_digest"],raw["revision_digest"]);mutate(raw);self.assertEqual(before,(raw["revision"],raw["status_digest"],raw["revision_digest"]));p.write_text(json.dumps(raw,sort_keys=True,separators=(",",":"),ensure_ascii=False)+"\n",encoding="utf-8")
                 with self.assertRaises(SwarmStatusStateError):SwarmStatusStore(pathlib.Path(d)/"s.db",p,system_id="LION",clock=c,governor_store=g,known_drones=("d1",),initial_context=ctx())
                 g.close()
-    def test_live_master_staleness(self):
-        status={"schema_version":"1.0.0","system_id":"LION","revision":0,"status_digest":"0"*64,"previous_status_digest":"0"*64,"revision_digest":"0"*64,"previous_revision_digest":"0"*64,**ctx(),"current_actions":[],"history":[],"generated_at":"2026-01-01T00:00:00+00:00"};status["status_digest"]=compute_status_digest(status);status["revision_digest"]=compute_revision_digest(revision=0,status_digest=status["status_digest"],previous_revision_digest="0"*64);self.assertEqual(classify_live_master(status,live_commit="c"*40,live_tree="b"*40),"STALE")
+    def test_exact_live_master_is_current(self):
+        s=status0();self.assertEqual(classify_live_master(s,live_commit="a"*40,live_tree="b"*40),"CURRENT")
+    def test_projection_only_reconcile_descendant_is_current(self):
+        s=status0();c="c"*40
+        chain=({"sha":c,"parent_sha":"a"*40,"paths":["LION/status.json","LION/ops/mission-registry.json"]},)
+        self.assertEqual(classify_live_master(s,live_commit=c,live_tree="d"*40,observed_commit_tree="b"*40,ancestry_verified=True,intervening_commits=chain),"CURRENT")
+    def test_code_change_after_status_is_stale(self):
+        s=status0();c="c"*40
+        chain=({"sha":c,"parent_sha":"a"*40,"paths":["cyber_lion/enterprise/control_plane.py"]},)
+        self.assertEqual(classify_live_master(s,live_commit=c,live_tree="d"*40,observed_commit_tree="b"*40,ancestry_verified=True,intervening_commits=chain),"STALE")
+    def test_descendant_without_exact_ancestry_proof_is_unknown(self):
+        s=status0();self.assertEqual(classify_live_master(s,live_commit="c"*40,live_tree="d"*40),"UNKNOWN")
+    def test_broken_or_unbounded_projection_chain_is_unknown(self):
+        s=status0();broken=({"sha":"c"*40,"parent_sha":"e"*40,"paths":["LION/status.json"]},)
+        self.assertEqual(classify_live_master(s,live_commit="c"*40,live_tree="d"*40,observed_commit_tree="b"*40,ancestry_verified=True,intervening_commits=broken),"UNKNOWN")
+        chain=[];parent="a"*40
+        for i in range(DEFAULT_MAX_PROJECTION_COMMITS+1):
+            sha=f"{i+1:040x}";chain.append({"sha":sha,"parent_sha":parent,"paths":["LION/status.json"]});parent=sha
+        self.assertEqual(classify_live_master(s,live_commit=parent,live_tree="d"*40,observed_commit_tree="b"*40,ancestry_verified=True,intervening_commits=tuple(chain)),"UNKNOWN")
 
 if __name__=="__main__":unittest.main()
