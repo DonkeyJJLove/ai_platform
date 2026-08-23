@@ -1,0 +1,1 @@
+{"epoch":"E001","events":[{"at":"2026-08-23T11:54:00+02:00","event":"FLEET_ACTIVATED","status_revision":3}],"governor":"SG-E001","max_concurrent_writers":8,"schema_version":"1.0.0","worker_count":32}
