@@ -25,10 +25,19 @@ class SwarmStatusTests(unittest.TestCase):
             with self.assertRaises(SwarmStatusStateError):s.apply_report(r,lease=lease)
             snap=s.snapshot();bad=report(snap,"2","STATUS_REPORT",{},drone="unknown")
             with self.assertRaises(SwarmStatusStateError):s.apply_report(bad,lease=lease)
-    def test_external_status_modification_detected(self):
-        with tempfile.TemporaryDirectory() as d:
-            c,g,lease,s=self._stores(d);p=pathlib.Path(d)/"status.json";s.close();raw=json.loads(p.read_text());raw["revision"]=999;p.write_text(json.dumps(raw))
-            with self.assertRaises(SwarmStatusStateError):SwarmStatusStore(pathlib.Path(d)/"s.db",p,system_id="LION",clock=c,governor_store=g,known_drones=("d1",),initial_context=ctx())
+    def test_external_status_modification_detected_for_full_projection(self):
+        mutations={
+            "history":lambda raw:raw["history"].append({"action_id":"forged","state":"COMPLETED"}),
+            "current_actions":lambda raw:raw["current_actions"].append({"action_id":"forged","state":"STARTED"}),
+            "governor":lambda raw:raw["governor"].__setitem__("instance_id","forged"),
+            "missions":lambda raw:raw["missions"].append({"mission_id":"forged"}),
+            "blockers":lambda raw:raw["blockers"].append({"blocker_id":"forged"}),
+        }
+        for name,mutate in mutations.items():
+            with self.subTest(field=name),tempfile.TemporaryDirectory() as d:
+                c,g,lease,s=self._stores(d);p=pathlib.Path(d)/"status.json";s.close();raw=json.loads(p.read_text());before=(raw["revision"],raw["status_digest"],raw["revision_digest"]);mutate(raw);self.assertEqual(before,(raw["revision"],raw["status_digest"],raw["revision_digest"]));p.write_text(json.dumps(raw,sort_keys=True,separators=(",",":"),ensure_ascii=False)+"\n",encoding="utf-8")
+                with self.assertRaises(SwarmStatusStateError):SwarmStatusStore(pathlib.Path(d)/"s.db",p,system_id="LION",clock=c,governor_store=g,known_drones=("d1",),initial_context=ctx())
+                g.close()
     def test_live_master_staleness(self):
         status={"schema_version":"1.0.0","system_id":"LION","revision":0,"status_digest":"0"*64,"previous_status_digest":"0"*64,"revision_digest":"0"*64,"previous_revision_digest":"0"*64,**ctx(),"current_actions":[],"history":[],"generated_at":"2026-01-01T00:00:00+00:00"};status["status_digest"]=compute_status_digest(status);status["revision_digest"]=compute_revision_digest(revision=0,status_digest=status["status_digest"],previous_revision_digest="0"*64);self.assertEqual(classify_live_master(status,live_commit="c"*40,live_tree="b"*40),"STALE")
 
