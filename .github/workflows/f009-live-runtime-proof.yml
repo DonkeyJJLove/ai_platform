@@ -35,22 +35,20 @@ jobs:
           set -euo pipefail
           WORK_DIR="$RUNNER_TEMP/f009-live-work-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           ARTIFACT_DIR="$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          export WORK_DIR ARTIFACT_DIR
           test ! -e "$WORK_DIR"
           test ! -e "$ARTIFACT_DIR"
-          python -m cyber_lion.enterprise.live_runtime_evidence_plane \
-            --proof \
-            --work-dir "$WORK_DIR" \
-            --artifact-dir "$ARTIFACT_DIR"
           python - <<'PY'
           import json, os
           from pathlib import Path
-          root=Path(os.environ['RUNNER_TEMP'])/f"f009-live-artifacts-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}"
-          manifest=json.loads((root/'proof-manifest.json').read_text())
+          from cyber_lion.enterprise.live_runtime_evidence_plane import run_live_runtime_proof
+          manifest=run_live_runtime_proof(Path(os.environ['WORK_DIR']),Path(os.environ['ARTIFACT_DIR']))
           assert manifest['positive']['reconciliation']=='MATCHED'
           assert manifest['positive']['effect_digest']==manifest['positive']['independent_effect_digest']
           assert all(manifest['negative_results'].values())
           assert manifest['f005_runtime_resumed'] is False
           assert manifest['production_effect'] is False
+          print(json.dumps(manifest,sort_keys=True))
           PY
       - name: Upload immutable proof evidence
         if: success()
