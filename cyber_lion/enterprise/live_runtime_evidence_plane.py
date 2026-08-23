@@ -85,6 +85,11 @@ def _read_json(path: Path) -> dict:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise RuntimeError(f"{path.name} must contain an object")
+    # JSON has no tuple type. Restore immutable tuple fields before exact contract
+    # validation instead of weakening the contracts to accept mutable lists.
+    for field in ("authenticated_grant_digests", "observed_events", "side_effect_refs"):
+        if field in value and isinstance(value[field], list):
+            value[field] = tuple(value[field])
     return value
 
 
