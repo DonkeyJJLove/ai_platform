@@ -19,7 +19,7 @@ from cyber_lion.enterprise.code_perception import (
 )
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-P1_BASELINE = "6fcc0bcc845f61780bf226a5f289fc042041b712"
+POST_INTEGRATION_BASE_BRANCH = "master"
 
 
 def fixture_blob(path: str, data: bytes) -> BlobInput:
@@ -352,10 +352,19 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             self.skipTest("not a pull_request workflow")
         expected_head = str(pr.get("head", {}).get("sha", "")).lower()
         expected_base = str(pr.get("base", {}).get("sha", "")).lower()
-        self.assertEqual(expected_base, P1_BASELINE)
+        expected_base_ref = str(pr.get("base", {}).get("ref", ""))
+        self.assertEqual(expected_base_ref, POST_INTEGRATION_BASE_BRANCH)
+        self.assertRegex(expected_base, r"^[0-9a-f]{40}$")
         self.assertRegex(expected_head, r"^[0-9a-f]{40}$")
 
         root = Path(__file__).resolve().parents[2]
+        remote_master = run(
+            ["git", "ls-remote", "origin", f"refs/heads/{POST_INTEGRATION_BASE_BRANCH}"],
+            root,
+        ).split()
+        self.assertGreaterEqual(len(remote_master), 1)
+        self.assertEqual(expected_base, remote_master[0].lower())
+
         checked_tree = run(["git", "rev-parse", "HEAD^{tree}"], root).lower()
         source = SourceIdentity(REPOSITORY, expected_head, checked_tree).validate()
         blobs = blob_inputs_for_ref(root, "HEAD")
