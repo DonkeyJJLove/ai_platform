@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "epoch": "E003",
+  "required": [
+    {
+      "id": "AI-HEAD",
+      "repository": "DonkeyJJLove/ai_platform",
+      "assertion": "candidate descends from eb64623ac0186b54427298d0aee48915d23a8ce0"
+    },
+    {
+      "id": "F009-LIVE",
+      "assertion": "run 32720123429 remains successful and artifact receipt validates"
+    },
+    {
+      "id": "CX-ONE",
+      "repository": "DonkeyJJLove/ai_platform",
+      "workflow": ".github/workflows/checkmarx-one.yml",
+      "assertion": "Checkmarx Scan completes successfully and SARIF upload succeeds"
+    },
+    {
+      "id": "AI-CORE",
+      "repository": "DonkeyJJLove/ai_platform",
+      "workflow": ".github/workflows/cyber-lion-contracts.yml",
+      "assertion": "all Cyber-Lion tests and merge-authority admission pass for code changes"
+    },
+    {
+      "id": "GL-RUFF",
+      "repository": "DonkeyJJLove/glitchlab",
+      "assertion": "ruff check . returns zero without legacy ignore expansion"
+    },
+    {
+      "id": "GL-TEST",
+      "repository": "DonkeyJJLove/glitchlab",
+      "assertion": "repository test and invariant suites pass"
+    },
+    {
+      "id": "CHANNELS",
+      "assertion": "issues 103, 104 and 105 have observed replacements before closure"
+    },
+    {
+      "id": "FINAL",
+      "assertion": "fresh global search returns zero open issues owned by DonkeyJJLove"
+    }
+  ],
+  "prohibit": [
+    "synthetic success",
+    "closing an issue before observed effect",
+    "merging a failing or missing Checkmarx run",
+    "broad write scope",
+    "F005 resume",
+    "release",
+    "deploy"
+  ]
+}
