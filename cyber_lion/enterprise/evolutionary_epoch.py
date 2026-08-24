@@ -268,8 +268,10 @@ class EvolutionaryEpochEngine:
     def register_delta_lineage(self, delta: EvolutionDelta, epoch_id: str) -> None:
         delta.validate()
         prior = self._delta_lineage.get(delta.delta_digest)
-        if prior is not None and prior != epoch_id:
-            raise EvolutionaryEpochError("prior-epoch EvolutionDelta replay denied")
+        if prior is not None:
+            if prior == epoch_id:
+                raise EvolutionaryEpochError("same-epoch EvolutionDelta replay denied")
+            raise EvolutionaryEpochError("cross-epoch EvolutionDelta replay denied")
         self._delta_lineage[delta.delta_digest] = epoch_id
 
     def state_digest(self) -> str:
