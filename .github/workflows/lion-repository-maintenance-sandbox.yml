@@ -17,11 +17,27 @@ jobs:
   cleanup:
     if: >-
       github.event.issue.number == 144 &&
-      github.event.comment.body == 'LION-BRANCH-CLEANUP v1' &&
-      github.event.comment.user.login == github.repository_owner
+      github.event.comment.body == 'LION-BRANCH-CLEANUP v1'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Validate repository-owner control actor
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
+          comment = event.get('comment') or {}
+          repository = event.get('repository') or {}
+          owner = repository.get('owner') or {}
+          actor = comment.get('user') or {}
+          if actor.get('login') != owner.get('login'):
+              raise SystemExit('repository-owner control actor required')
+          PY
+
       - name: Checkout exact master
         uses: actions/checkout@v4
         with:
@@ -35,16 +51,31 @@ jobs:
           python-version: '3.12'
 
       - name: Execute bounded branch cleanup
+        id: execute
         env:
           GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          stdout_file="$RUNNER_TEMP/lion-maintenance.stdout"
+          stderr_file="$RUNNER_TEMP/lion-maintenance.stderr"
+          set +e
           python -m cyber_lion.enterprise.repository_maintenance_cleanup \
-            --execute-cleanup | tee /tmp/lion-maintenance.log
+            --execute-cleanup >"$stdout_file" 2>"$stderr_file"
+          rc=$?
+          set -e
+          cat "$stdout_file"
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -ne 0 ]; then
+            cat "$stderr_file" >&2
+            exit "$rc"
+          fi
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
-          lines = Path('/tmp/lion-maintenance.log').read_text(encoding='utf-8').splitlines()
+          path = Path(os.environ['RUNNER_TEMP']) / 'lion-maintenance.stdout'
+          lines = path.read_text(encoding='utf-8').splitlines()
           marker = 'LION_REPOSITORY_MAINTENANCE_RESULT '
           matches = [line[len(marker):] for line in lines if line.startswith(marker)]
           if len(matches) != 1:
@@ -56,7 +87,54 @@ jobs:
           )
           PY
 
+      - name: Post bounded maintenance failure receipt
+        if: ${{ failure() && steps.execute.outcome == 'failure' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+          import urllib.request
+          stderr = Path(os.environ['RUNNER_TEMP']) / 'lion-maintenance.stderr'
+          text = stderr.read_text(encoding='utf-8', errors='replace').strip() if stderr.exists() else 'no-diagnostic'
+          last = text.splitlines()[-1] if text else 'no-diagnostic'
+          last = re.sub(r'(?i)(bearer\s+)[A-Za-z0-9._~-]+', r'\1[REDACTED]', last)
+          last = re.sub(r'(?i)(token|secret|password)=\S+', r'\1=[REDACTED]', last)
+          last = ' '.join(last.replace('\r', ' ').replace('\n', ' ').split())[:500]
+          body = '\n'.join([
+              'LION-REPOSITORY-MAINTENANCE-CONTROL-FAILURE v1',
+              f"run_id={os.environ['GITHUB_RUN_ID']}",
+              f"run_attempt={os.environ['GITHUB_RUN_ATTEMPT']}",
+              f"diagnostic={last}",
+              'result=FAILED_CLOSED',
+              'authority_effect=false',
+              'master_effect=false',
+          ])
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/issues/144/comments",
+              data=json.dumps({'body': body}, separators=(',', ':')).encode(),
+              method='POST',
+              headers={
+                  'Authorization': f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'lion-repository-maintenance-failure/1',
+              },
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              if response.status != 201:
+                  raise SystemExit(f'failure receipt rejected: {response.status}')
+          PY
+
       - name: Post bounded maintenance observation receipt
+        if: ${{ success() }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -69,7 +147,6 @@ jobs:
           import os
           from pathlib import Path
           import urllib.request
-
           path = Path('lion-repository-maintenance-result.json')
           raw = path.read_bytes()
           result = json.loads(raw)
@@ -110,6 +187,7 @@ jobs:
           PY
 
       - name: Upload maintenance receipt
+        if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
           name: lion-repository-maintenance-result-${{ github.run_id }}-${{ github.run_attempt }}
