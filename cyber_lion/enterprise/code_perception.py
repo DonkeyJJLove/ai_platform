@@ -737,7 +737,7 @@ def build_code_graph(source: SourceIdentity, blobs: Iterable[BlobInput]) -> Code
     for blob in ordered:
         import hashlib
         framed = f"blob {len(blob.data)}\0".encode("ascii") + blob.data
-        if hashlib.sha1(framed).hexdigest() != blob.blob_sha:
+        if hashlib.sha1(framed, usedforsecurity=False).hexdigest() != blob.blob_sha:
             raise CodePerceptionBuildError(f"blob substitution detected: {blob.path}")
         if len(blob.data) != blob.size:
             raise CodePerceptionBuildError(f"blob size mismatch: {blob.path}")

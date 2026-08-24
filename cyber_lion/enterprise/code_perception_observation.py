@@ -13,8 +13,16 @@ from dataclasses import dataclass
 import json
 import re
 from typing import Iterable
+import urllib.error
+import urllib.parse
+import urllib.request
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+
+from cyber_lion.enterprise.actions_dispatch_temporal_compat import (
+    _REDIRECT_CODES,
+    _download_signed_archive,
+    _validate_archive_location,
+)
 
 _PROJECTION_RE = re.compile(
     r"CODE_PERCEPTION_CANDIDATE_PROJECTION\s+"
@@ -28,6 +36,24 @@ _PROJECTION_RE = re.compile(
 
 class CodePerceptionObservationError(RuntimeError):
     pass
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _validated_api_url(url: str) -> str:
+    parsed = urllib.parse.urlsplit(url)
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "api.github.com"
+        or parsed.port not in (None, 443)
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise CodePerceptionObservationError("GitHub API URL boundary denied")
+    return url
 
 
 @dataclass(frozen=True)
@@ -65,8 +91,8 @@ class ProjectionReceipt:
 
 
 def _github_get_json(url: str, token: str) -> dict:
-    req = Request(
-        url,
+    req = urllib.request.Request(
+        _validated_api_url(url),
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
@@ -75,13 +101,18 @@ def _github_get_json(url: str, token: str) -> dict:
         },
         method="GET",
     )
-    with urlopen(req, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.build_opener(_NoRedirect()).open(req, timeout=30) as response:
+            if response.status != 200:
+                raise CodePerceptionObservationError("GitHub API returned non-terminal status")
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        raise CodePerceptionObservationError(f"GitHub API request failed: {exc.code}") from exc
 
 
 def _github_get_text(url: str, token: str) -> str:
-    req = Request(
-        url,
+    req = urllib.request.Request(
+        _validated_api_url(url),
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
@@ -90,8 +121,24 @@ def _github_get_text(url: str, token: str) -> str:
         },
         method="GET",
     )
-    with urlopen(req, timeout=30) as response:
-        return response.read().decode("utf-8", errors="replace")
+    opener = urllib.request.build_opener(_NoRedirect())
+    try:
+        with opener.open(req, timeout=30) as response:
+            code = response.status
+            location = response.headers.get("Location")
+    except urllib.error.HTTPError as exc:
+        if exc.code not in _REDIRECT_CODES:
+            raise CodePerceptionObservationError(f"GitHub logs request failed: {exc.code}") from exc
+        code = exc.code
+        location = exc.headers.get("Location")
+    if code not in _REDIRECT_CODES or not location:
+        raise CodePerceptionObservationError("GitHub logs endpoint did not return a signed redirect")
+    try:
+        safe_location = _validate_archive_location(location)
+        data = _download_signed_archive(safe_location)
+    except RuntimeError as exc:
+        raise CodePerceptionObservationError("GitHub logs redirect boundary denied") from exc
+    return data.decode("utf-8", errors="replace")
 
 
 def _matching_runs(payload: dict, expected: ObservationRequest) -> tuple[dict, ...]:

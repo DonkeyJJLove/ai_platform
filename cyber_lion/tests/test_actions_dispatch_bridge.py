@@ -10,6 +10,7 @@ import zipfile
 
 from cyber_lion.enterprise.actions_dispatch_bridge import (
     DEFAULT_POLICY,
+    GitHubApi,
     OBSERVE_PREFIX,
     OBSERVATION_RECEIPT_PREFIX,
     PREFIX,
@@ -123,6 +124,17 @@ class FakeApi:
 
 
 class DispatchBridgeTests(unittest.TestCase):
+    def test_github_api_origin_is_exact_https_boundary(self):
+        self.assertEqual(GitHubApi(REPO, "token").api_url, "https://api.github.com")
+        for bad in (
+            "http://api.github.com", "file:///tmp/socket",
+            "https://api.github.com@evil.example", "https://evil.example",
+            "https://api.github.com:8443",
+        ):
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(RuntimeError, "canonical HTTPS"):
+                    GitHubApi(REPO, "token", bad)
+
     def test_positive_exact_request_dispatches_once(self):
         api = FakeApi(); receipt = execute(event(envelope()), api)
         self.assertEqual(receipt.expected_head, HEAD); self.assertEqual(receipt.github_api_result, "ACCEPTED_204")

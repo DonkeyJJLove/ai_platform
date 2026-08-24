@@ -7,7 +7,7 @@ from cyber_lion.enterprise.code_perception import BlobInput, CodePerceptionBuild
 
 def blob(path: str, data: bytes) -> BlobInput:
     framed = f"blob {len(data)}\0".encode() + data
-    return BlobInput(path, hashlib.sha1(framed).hexdigest(), len(data), data)
+    return BlobInput(path, hashlib.sha1(framed, usedforsecurity=False).hexdigest(), len(data), data)
 
 
 def call_edges(graph, qname: str):
@@ -23,6 +23,10 @@ def assert_one_resolved_one_unresolved(testcase, graph, qname: str, resolved_tar
 
 
 class CodePerceptionExtractionTests(unittest.TestCase):
+    def test_git_empty_blob_identity_uses_compatibility_sha1(self):
+        object_id = hashlib.sha1(b"blob 0\0", usedforsecurity=False).hexdigest()
+        self.assertEqual(object_id, "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391")
+
     def setUp(self):
         self.source = SourceIdentity("DonkeyJJLove/ai_platform", "1" * 40, "2" * 40).validate()
 
