@@ -159,9 +159,25 @@ def parse_observation_envelope(
 
 class GitHubApi:
     def __init__(self, repository: str, token: str, api_url: str = "https://api.github.com") -> None:
+        parsed = urllib.parse.urlsplit(api_url)
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != "api.github.com"
+            or parsed.port not in (None, 443)
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.path not in ("", "/")
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise RuntimeError("GitHub API origin must be canonical HTTPS api.github.com")
         self.repository = repository
         self.token = token
-        self.api_url = api_url.rstrip("/")
+        self.api_url = "https://api.github.com"
+
+    class _NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -180,7 +196,8 @@ class GitHubApi:
             headers["Content-Type"] = "application/json"
         req = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=20) as response:
+            opener = urllib.request.build_opener(self._NoRedirect())
+            with opener.open(req, timeout=20) as response:
                 raw = response.read()
                 return response.status, json.loads(raw) if raw else None
         except urllib.error.HTTPError as exc:
@@ -295,16 +312,11 @@ class GitHubApi:
         return [v for v in value["artifacts"] if isinstance(v, dict)]
 
     def download_artifact(self, artifact_id: int) -> bytes:
-        path = f"/repos/{self.repository}/actions/artifacts/{artifact_id}/zip"
-        req = urllib.request.Request(self.api_url + path, method="GET", headers=self._headers())
-        try:
-            with urllib.request.urlopen(req, timeout=30) as response:
-                data = response.read()
-        except urllib.error.HTTPError as exc:
-            raise RuntimeError(f"artifact download failed: {exc.code}") from exc
-        if not data:
-            raise RuntimeError("artifact archive is empty")
-        return data
+        from cyber_lion.enterprise.actions_dispatch_temporal_compat import (
+            _download_artifact_compat,
+        )
+
+        return _download_artifact_compat(self, artifact_id)
 
 
 def _ledger_match(comments: list[dict], request: DispatchRequest) -> str | None:

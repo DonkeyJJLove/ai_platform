@@ -161,6 +161,21 @@ class GitHubRepositoryReadSourceTests(unittest.TestCase):
         for name in ("post", "put", "patch", "delete"):
             self.assertFalse(hasattr(transport, name))
 
+    def test_default_transport_denies_noncanonical_urls_before_io(self):
+        transport = UrllibReadOnlyTransport()
+        for bad in (
+            "http://api.github.com/repos/o/r", "file:///tmp/socket",
+            "https://api.github.com@evil.example/repos/o/r",
+            "https://evil.example/repos/o/r", "https://api.github.com:8443/repos/o/r",
+        ):
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(GitHubReadSourceError, "URL denied"):
+                    transport.get(bad, headers={}, timeout=1)
+
+    def test_custom_api_base_requires_injected_transport(self):
+        with self.assertRaisesRegex(GitHubReadSourceError, "canonical API origin"):
+            GitHubRESTReadSource(token="x", api_base="https://api.github.test")
+
 
 if __name__ == "__main__":
     unittest.main()

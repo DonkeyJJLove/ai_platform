@@ -163,7 +163,7 @@
     },
     {
       "id": "P3",
-      "name": "Checkmarx-and-CI-gates",
+      "name": "Bandit-and-CI-gates",
       "depends_on": [
         "P2"
       ]

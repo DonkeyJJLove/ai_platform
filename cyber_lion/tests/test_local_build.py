@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+import tempfile
 
 from cyber_lion.startup_agent import (
     AIDrivenStartupAgent,
@@ -25,6 +27,16 @@ H = ProductHypothesis(
 
 
 class LocalBuildTests(unittest.TestCase):
+    def test_minimal_env_uses_isolated_home_and_temp_inside_execution_root(self):
+        with tempfile.TemporaryDirectory(prefix="local-build-env-test-") as tmp:
+            root = Path(tmp).resolve()
+            env = BoundedLocalBuildRunner._minimal_env(root)
+            for key in ("HOME", "TMPDIR", "TMP", "TEMP"):
+                value = Path(env[key]).resolve()
+                self.assertIn(root, value.parents)
+                self.assertTrue(value.is_dir())
+                self.assertNotEqual(str(value), "/tmp")
+
     def test_generated_prototype_compiles_and_tests(self):
         exp = Experiment(
             "e1", "h1", "prototype", "Can it work?", 0.8, 24, 0.1,

@@ -6,6 +6,7 @@ from cyber_lion.enterprise.code_perception_observation import (
     parse_projection_lines,
     select_exact_run,
     validate_commit_identity,
+    _validated_api_url,
 )
 
 
@@ -25,6 +26,18 @@ EXPECTED = ObservationRequest(
 
 
 class CodePerceptionObservationTests(unittest.TestCase):
+    def test_api_url_boundary_rejects_scheme_host_credentials_and_port(self):
+        good = "https://api.github.com/repos/o/r"
+        self.assertEqual(_validated_api_url(good), good)
+        for bad in (
+            "http://api.github.com/repos/o/r", "file:///tmp/log",
+            "https://api.github.com@evil.example/repos/o/r",
+            "https://evil.example/repos/o/r", "https://api.github.com:8443/repos/o/r",
+        ):
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(CodePerceptionObservationError, "boundary denied"):
+                    _validated_api_url(bad)
+
     def exact_run(self, **overrides):
         item = {
             "id": 123,

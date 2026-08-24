@@ -52,18 +52,25 @@ class BoundedLocalBuildRunner:
                 raise StartupModelError(f"scaffold content must be text: {raw_path}")
 
     @staticmethod
-    def _minimal_env() -> Dict[str, str]:
+    def _minimal_env(root: Path) -> Dict[str, str]:
+        home = root / ".home"
+        temp = root / ".tmp"
+        home.mkdir(mode=0o700, exist_ok=True)
+        temp.mkdir(mode=0o700, exist_ok=True)
         env = {
             "PATH": os.environ.get("PATH", ""),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONDONTWRITEBYTECODE": "1",
+            "HOME": str(home),
+            "TMPDIR": str(temp),
+            "TMP": str(temp),
+            "TEMP": str(temp),
         }
         if os.name == "nt":
-            for key in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP"):
+            env["USERPROFILE"] = str(home)
+            for key in ("SYSTEMROOT", "WINDIR"):
                 if key in os.environ:
                     env[key] = os.environ[key]
-        else:
-            env["HOME"] = "/tmp"
         return env
 
     def run(self, spec: SoftwareBuildSpec, files: Dict[str, str]) -> BuildReceipt:
@@ -128,7 +135,7 @@ class BoundedLocalBuildRunner:
             return subprocess.run(
                 argv,
                 cwd=str(cwd),
-                env=self._minimal_env(),
+                env=self._minimal_env(cwd),
                 capture_output=True,
                 text=True,
                 timeout=self.timeout_seconds,

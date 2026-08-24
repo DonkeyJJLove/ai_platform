@@ -7,8 +7,8 @@ import os
 import socket
 from typing import Any, Mapping, Protocol
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode
-from urllib.request import Request, urlopen
+from urllib.parse import quote, urlencode, urlsplit
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from cyber_lion.contracts.fleet_repository_observation_source import (
     DEFAULT_BRANCH,
@@ -37,10 +37,23 @@ class ReadOnlyHttpTransport(Protocol):
 class UrllibReadOnlyTransport:
     """GET-only transport; it deliberately exposes no mutation verb."""
 
+    class _NoRedirect(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+
     def get(self, url: str, *, headers: Mapping[str, str], timeout: float) -> HttpResponse:
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != "api.github.com"
+            or parsed.port not in (None, 443)
+            or parsed.username is not None
+            or parsed.password is not None
+        ):
+            raise GitHubReadSourceError("GitHub transport URL denied")
         request = Request(url=url, headers=dict(headers), method="GET")
         try:
-            with urlopen(request, timeout=timeout) as response:
+            with build_opener(self._NoRedirect()).open(request, timeout=timeout) as response:
                 return HttpResponse(
                     status=int(response.status),
                     headers={str(k): str(v) for k, v in response.headers.items()},
@@ -113,6 +126,8 @@ class GitHubRESTReadSource:
             raise GitHubReadSourceError("GitHub bearer token missing")
         if not isinstance(api_base, str) or not api_base.startswith("https://"):
             raise GitHubReadSourceError("GitHub API base must be HTTPS")
+        if transport is None and api_base.rstrip("/") != "https://api.github.com":
+            raise GitHubReadSourceError("default GitHub transport requires canonical API origin")
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
             raise GitHubReadSourceError("GitHub timeout invalid")
         self._token = token.strip()
