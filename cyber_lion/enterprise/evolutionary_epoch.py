@@ -107,10 +107,11 @@ class EvolutionaryEpochEngine:
         return tuple(getattr(record, "provenance_refs", ()))
 
     def project_event(self, record: object, envelope: EventEnvelope, projection_id: str) -> RnDEventProjection:
-        record.validate(); envelope.validate()
+        record.validate()
         record_type, record_id, record_digest = self._record_identity(record)
         if envelope.event_type not in _EVENT_MAP[record_type]:
             raise EvolutionaryEpochError("event type incompatible with R&D record")
+        envelope.validate()
         if envelope.event_type in {"ActionAuthorized", "ActionExecuted"}:
             raise EvolutionaryEpochError("R&D event cannot map to effect event")
         if envelope.authority.requested != "none" or envelope.authority.effective != "none":
