@@ -12,10 +12,10 @@
       "assertion": "run 32720123429 remains successful and artifact receipt validates"
     },
     {
-      "id": "CX-ONE",
+      "id": "CODEQL",
       "repository": "DonkeyJJLove/ai_platform",
-      "workflow": ".github/workflows/checkmarx-one.yml",
-      "assertion": "Checkmarx Scan completes successfully and SARIF upload succeeds"
+      "workflow": ".github/workflows/codeql-security.yml",
+      "assertion": "CodeQL Python security-extended analysis completes successfully and uploads results"
     },
     {
       "id": "AI-CORE",
@@ -45,7 +45,7 @@
   "prohibit": [
     "synthetic success",
     "closing an issue before observed effect",
-    "merging a failing or missing Checkmarx run",
+    "merging a failing or missing CodeQL run",
     "broad write scope",
     "F005 resume",
     "release",

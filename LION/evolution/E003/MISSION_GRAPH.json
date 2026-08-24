@@ -45,12 +45,12 @@
       "formations": [
         {
           "id": "S3-F1",
-          "role": "checkmarx-dispatch-and-observation",
+          "role": "codeql-dispatch-and-observation",
           "authority": "CI_ONLY"
         },
         {
           "id": "S3-F2",
-          "role": "SARIF-triage-and-remediation",
+          "role": "codeql-SARIF-triage-and-remediation",
           "write_scope": [
             "bounded paths proven by findings"
           ]

@@ -7,7 +7,7 @@
     "MULTI_REPOSITORY_READ_ONLY_BASELINE",
     "BOUNDED_PARALLEL_BUILD",
     "INDEPENDENT_VERIFICATION",
-    "CHECKMARX_SECURITY_GATE",
+    "CODEQL_SECURITY_GATE",
     "VERIFIED_INTEGRATION",
     "POST_EFFECT_RECONCILIATION"
   ],
@@ -99,7 +99,7 @@
     "no issue closes from planned work or CI scheduling alone",
     "exact base, head, tree and changed-path scope are required for every candidate",
     "builders cannot verify their own candidates",
-    "Checkmarx success is required for ai_platform integration",
+    "CodeQL success is required for ai_platform integration",
     "glitchlab full-tree Ruff zero and tests are required before issue 17 closure",
     "persistent channels close only after an observed replacement exists",
     "F005 remains QUARANTINED",
@@ -109,10 +109,10 @@
     "open_actionable_issues": 0,
     "unclassified_open_issues": 0,
     "open_persistent_issue_channels": 0,
-    "checkmarx": "SUCCESS",
     "e002": "COMPLETED_OBSERVED",
     "e003": "COMPLETED_OBSERVED",
     "all_drones": "RELEASED",
-    "governor": "RELEASED"
+    "governor": "RELEASED",
+    "codeql": "SUCCESS"
   }
 }
