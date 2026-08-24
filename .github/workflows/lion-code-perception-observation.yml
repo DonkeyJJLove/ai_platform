@@ -1,0 +1,92 @@
+name: LION Code Perception Observation
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact integrated master commit to observe
+        required: true
+        type: string
+      expected_tree:
+        description: Exact source tree for expected_head
+        required: true
+        type: string
+      expected_tree_semantic_digest:
+        description: Expected tree-semantic digest
+        required: true
+        type: string
+      expected_files:
+        description: Expected file count
+        required: true
+        type: string
+      expected_symbols:
+        description: Expected symbol count
+        required: true
+        type: string
+      expected_edges:
+        description: Expected edge count
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout observer implementation
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Compile observer
+        run: python -m compileall -q cyber_lion/enterprise/code_perception_observation.py
+
+      - name: Run observer unit tests
+        run: python -m unittest cyber_lion.tests.test_code_perception_observation -v
+
+      - name: Observe exact integrated projection
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          EXPECTED_HEAD: ${{ inputs.expected_head }}
+          EXPECTED_TREE: ${{ inputs.expected_tree }}
+          EXPECTED_TREE_SEMANTIC_DIGEST: ${{ inputs.expected_tree_semantic_digest }}
+          EXPECTED_FILES: ${{ inputs.expected_files }}
+          EXPECTED_SYMBOLS: ${{ inputs.expected_symbols }}
+          EXPECTED_EDGES: ${{ inputs.expected_edges }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from dataclasses import asdict
+          from cyber_lion.enterprise.code_perception_observation import ObservationRequest, observe_exact_projection
+
+          expected = ObservationRequest(
+              repository=os.environ["REPOSITORY"],
+              workflow_name="Cyber-Lion Core",
+              branch="master",
+              head_sha=os.environ["EXPECTED_HEAD"].lower(),
+              tree_sha=os.environ["EXPECTED_TREE"].lower(),
+              tree_semantic_digest=os.environ["EXPECTED_TREE_SEMANTIC_DIGEST"].lower(),
+              file_count=int(os.environ["EXPECTED_FILES"]),
+              symbol_count=int(os.environ["EXPECTED_SYMBOLS"]),
+              edge_count=int(os.environ["EXPECTED_EDGES"]),
+          )
+          receipt = observe_exact_projection(expected, os.environ["GH_TOKEN"])
+          print("LION_CODE_PERCEPTION_OBSERVATION " + json.dumps(asdict(receipt), sort_keys=True, separators=(",", ":")))
+          print(
+              "CODE_PERCEPTION_POST_MERGE_PROJECTION "
+              f"run_id={receipt.run_id} job_id={receipt.job_id} "
+              f"head={receipt.head_sha} tree={receipt.tree_sha} "
+              f"digest={receipt.projection_digest} "
+              f"tree_semantic_digest={receipt.tree_semantic_digest} "
+              f"files={receipt.file_count} symbols={receipt.symbol_count} edges={receipt.edge_count} "
+              f"authority_effect={str(receipt.authority_effect).lower()}"
+          )
+          PY
