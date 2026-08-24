@@ -67,6 +67,8 @@ class EvolutionaryEpochEngine:
         self._memory_children: Dict[str, str] = {}
         self._epoch_transitions: Dict[str, str] = {}
         self._delta_lineage: Dict[str, str] = {}
+        self._verified_promotion_gates: Dict[str, str] = {}
+        self._verified_gate_promotions: Dict[str, str] = {}
 
     @staticmethod
     def _record_identity(record: object) -> tuple[str, str, str]:
@@ -228,16 +230,26 @@ class EvolutionaryEpochEngine:
         self._memory_children[previous_head] = record.memory_digest
         self._memory_commits[record.memory_digest] = (previous_head, computed_new_head, record.revision)
 
-    @staticmethod
-    def verify_promotion_gate(decision: PromotionDecision, gate: GateApplied) -> None:
+    def verify_promotion_gate(self, decision: PromotionDecision, gate: GateApplied) -> None:
         decision.validate(); gate.validate()
         if gate.decision != "ALLOW":
             raise EvolutionaryEpochError("PDP DENY cannot support knowledge promotion")
+        if gate.effective_authority != "none":
+            raise EvolutionaryEpochError("R&D promotion gate authority must remain none")
         if gate.proposal_id != decision.promotion_id:
             raise EvolutionaryEpochError("promotion/gate proposal binding mismatch")
         expected_ref = f"pdp:{gate.decision_digest}"
         if decision.policy_decision_ref != expected_ref:
             raise EvolutionaryEpochError("promotion PDP decision digest mismatch")
+
+        prior_gate = self._verified_promotion_gates.get(decision.promotion_digest)
+        if prior_gate is not None and prior_gate != gate.decision_digest:
+            raise EvolutionaryEpochError("promotion verified gate substitution denied")
+        prior_promotion = self._verified_gate_promotions.get(gate.decision_digest)
+        if prior_promotion is not None and prior_promotion != decision.promotion_digest:
+            raise EvolutionaryEpochError("gate decision rebound to incompatible promotion denied")
+        self._verified_promotion_gates[decision.promotion_digest] = gate.decision_digest
+        self._verified_gate_promotions[gate.decision_digest] = decision.promotion_digest
 
     def transition_epoch(self, current: EpochTransition, next_state: str) -> EpochTransition:
         current.validate()
@@ -270,6 +282,11 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("epoch delta binding mismatch")
         if transition.promotion_digest != promotion.promotion_digest:
             raise EvolutionaryEpochError("epoch promotion binding mismatch")
+        verified_gate_digest = self._verified_promotion_gates.get(promotion.promotion_digest)
+        if verified_gate_digest is None:
+            raise EvolutionaryEpochError("PROMOTION_WITHOUT_VERIFIED_PDP")
+        if promotion.policy_decision_ref != f"pdp:{verified_gate_digest}":
+            raise EvolutionaryEpochError("PDP_PROMOTION_BINDING_MISMATCH")
         if memory_record.memory_digest not in self._memory_commits:
             raise EvolutionaryEpochError("next epoch requires committed R&D memory")
         if "F005" in delta.target_component.upper() or any("F005" in dep.upper() for dep in delta.dependency_ids):
@@ -290,6 +307,7 @@ class EvolutionaryEpochEngine:
             "memory_commits": sorted((key, *value) for key, value in self._memory_commits.items()),
             "epoch_transitions": sorted(self._epoch_transitions.items()),
             "delta_lineage": sorted(self._delta_lineage.items()),
+            "verified_promotion_gates": sorted(self._verified_promotion_gates.items()),
         }
         return sha256(b"LION/E004-EPOCH-ENGINE-STATE/1\0" + canonical_json(payload)).hexdigest()
 

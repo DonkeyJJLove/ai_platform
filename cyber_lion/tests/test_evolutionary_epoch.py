@@ -54,6 +54,27 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
             content_digest=H2,
         ).sealed()
 
+    @staticmethod
+    def _gate(proposal_id="promotion:gate", decision="ALLOW", effective_authority="none",
+              request_id="request:gate", rationale="knowledge promotion only"):
+        return GateApplied(
+            gate_event_id="gate:" + request_id, request_id=request_id, proposal_id=proposal_id,
+            decision=decision, effective_authority=effective_authority,
+            policy_binding="rnd-policy@1:sha256:" + H1,
+            authority_lineage_digest=H1, enterprise_graph_digest=H2, status_digest=H3,
+            observability_state="HEALTHY", lane="GREEN", rationale=rationale,
+        ).sealed()
+
+    @staticmethod
+    def _promotion(gate, promotion_id=None, hypothesis_digest=H1, rationale="supported evidence"):
+        return PromotionDecision(
+            promotion_id=promotion_id or gate.proposal_id,
+            hypothesis_digest=hypothesis_digest, hypothesis_state="SUPPORTED",
+            falsification_digest=H2, falsification_disposition="SUPPORTED", evolution_delta_digest=H3,
+            policy_decision_ref="pdp:" + gate.decision_digest, unresolved_contradictions=0,
+            contrary_evidence_complete=True, decision="PROMOTE_KNOWLEDGE", rationale=rationale,
+        ).sealed()
+
     def test_event_and_graph_projection_are_exact_and_deterministic(self):
         evt = envelope("obs:1", self.obs.observation_digest, "evt:obs:1", "ObservationCreated")
         projection = self.engine.project_event(self.obs, evt, "proj:event:1")
@@ -182,6 +203,49 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
         with self.assertRaises(EvolutionaryEpochError):
             self.engine.verify_promotion_gate(decision, denied)
 
+    def test_promotion_gate_verification_is_state_bound_and_digest_bound(self):
+        gate = self._gate()
+        decision = self._promotion(gate)
+        before = self.engine.state_digest()
+        self.engine.verify_promotion_gate(decision, gate)
+        after = self.engine.state_digest()
+        self.assertNotEqual(before, after)
+        self.engine.verify_promotion_gate(decision, gate)
+        self.assertEqual(after, self.engine.state_digest())
+
+    def test_promotion_gate_negative_matrix(self):
+        gate = self._gate()
+        decision = self._promotion(gate)
+        denied_gate = self._gate(decision="DENY", request_id="request:deny")
+        with self.assertRaisesRegex(EvolutionaryEpochError, "DENY"):
+            EvolutionaryEpochEngine().verify_promotion_gate(
+                replace(decision, policy_decision_ref="pdp:" + denied_gate.decision_digest, promotion_digest="").sealed(),
+                denied_gate,
+            )
+        wrong_proposal_gate = self._gate(proposal_id="promotion:other", request_id="request:other")
+        wrong_proposal_decision = replace(
+            decision, policy_decision_ref="pdp:" + wrong_proposal_gate.decision_digest, promotion_digest=""
+        ).sealed()
+        with self.assertRaisesRegex(EvolutionaryEpochError, "proposal"):
+            EvolutionaryEpochEngine().verify_promotion_gate(wrong_proposal_decision, wrong_proposal_gate)
+        wrong_ref_decision = replace(decision, policy_decision_ref="pdp:" + H4, promotion_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryEpochError, "digest"):
+            EvolutionaryEpochEngine().verify_promotion_gate(wrong_ref_decision, gate)
+        authority_gate = self._gate(effective_authority="write", request_id="request:authority")
+        authority_decision = replace(
+            decision, policy_decision_ref="pdp:" + authority_gate.decision_digest, promotion_digest=""
+        ).sealed()
+        with self.assertRaisesRegex(EvolutionaryEpochError, "authority"):
+            EvolutionaryEpochEngine().verify_promotion_gate(authority_decision, authority_gate)
+
+    def test_gate_decision_cannot_be_rebound_to_incompatible_promotion(self):
+        gate = self._gate(proposal_id="promotion:shared")
+        first = self._promotion(gate, hypothesis_digest=H1, rationale="first")
+        second = self._promotion(gate, hypothesis_digest=H4, rationale="second")
+        self.engine.verify_promotion_gate(first, gate)
+        with self.assertRaisesRegex(EvolutionaryEpochError, "rebound"):
+            self.engine.verify_promotion_gate(second, gate)
+
     def test_promotion_control_record_provenance_and_graph_projection(self):
         decision = PromotionDecision(
             promotion_id="promotion:prov", hypothesis_digest=H1, hypothesis_state="SUPPORTED",
@@ -271,18 +335,79 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
         with self.assertRaisesRegex(EvolutionaryEpochError, "cross-epoch"):
             self.engine.register_delta_lineage(delta, "E005")
 
+    def test_next_epoch_requires_verified_pdp_and_exact_binding(self):
+        gate = self._gate(proposal_id="promotion:ready")
+        promotion = PromotionDecision(
+            promotion_id="promotion:ready", hypothesis_digest=H1, hypothesis_state="SUPPORTED",
+            falsification_digest=H2, falsification_disposition="SUPPORTED", evolution_delta_digest=H3,
+            policy_decision_ref="pdp:" + gate.decision_digest, unresolved_contradictions=0,
+            contrary_evidence_complete=True, decision="PROMOTE_KNOWLEDGE", rationale="ready knowledge",
+        ).sealed()
+        delta = EvolutionDelta(
+            delta_id="delta:ready", target_component="rnd-loop", motivation="bounded knowledge delta",
+            evidence_refs=("evidence:ready",), expected_outcome="candidate only",
+            falsification_conditions=("regression",), candidate_scope=("cyber_lion/contracts/example.py",),
+            dependency_ids=(), risk_class="GREEN",
+        ).sealed()
+        promotion = replace(promotion, evolution_delta_digest=delta.delta_digest, promotion_digest="").sealed()
+        memory = RnDMemoryRecord(
+            memory_id="mem:ready", revision=1, record_kind="PROMOTED_KNOWLEDGE", subject_id="promotion:ready",
+            source_digests=(promotion.promotion_digest,), negative_evidence_refs=(), supersedes_memory_digest=None,
+            epistemic_status="SUPPORTED", committed_event_ref="evt:ready:mem:commit", previous_memory_head="GENESIS",
+        ).sealed()
+        candidate = self.engine.project_event(
+            memory,
+            envelope("mem:ready", memory.memory_digest, "evt:ready:mem:candidate", "MemoryCandidateCreated",
+                     upstream=(promotion.promotion_digest,)),
+            "proj:ready:mem:candidate",
+        )
+        self.engine.bind_memory_candidate(memory, candidate)
+        commit = self.engine.project_event(
+            memory,
+            envelope("mem:ready", memory.memory_digest, "evt:ready:mem:commit", "MemoryCommitted",
+                     upstream=(promotion.promotion_digest,), causation_id="evt:ready:mem:candidate",
+                     policy_ids=["rnd-memory-policy"], extra_payload={"candidate_event_id": "evt:ready:mem:candidate"}),
+            "proj:ready:mem:commit",
+        )
+        head = sha256(
+            b"LION/E004-RND-MEMORY-CHAIN/1\0" + b"GENESIS" + memory.memory_digest.encode("ascii")
+        ).hexdigest()
+        self.engine.bind_memory_commit(memory, "evt:ready:mem:candidate", commit, head)
+        transition = EpochTransition(
+            epoch_id="E004", previous_epoch_id="E003", rnd_engine_state_digest=H1, memory_head=head,
+            promotion_digest=promotion.promotion_digest, evolution_delta_digest=delta.delta_digest,
+            event_projection_digest=H3, graph_projection_digest=H4, state="EPOCH_OPEN",
+        ).sealed()
+        for state in (
+            "OBSERVING", "HYPOTHESIS_SPACE_ACTIVE", "TESTING", "FALSIFICATION_COMPLETE",
+            "KNOWLEDGE_PROMOTION_READY", "KNOWLEDGE_PROMOTED", "MEMORY_COMMITTED",
+            "DELTA_SYNTHESIZED", "NEXT_EPOCH_CANDIDATE_READY",
+        ):
+            transition = self.engine.transition_epoch(transition, state)
+        with self.assertRaisesRegex(EvolutionaryEpochError, "PROMOTION_WITHOUT_VERIFIED_PDP"):
+            self.engine.assert_next_epoch_ready(transition, delta, promotion, memory)
+        self.engine.verify_promotion_gate(promotion, gate)
+        self.engine.assert_next_epoch_ready(transition, delta, promotion, memory)
+
+        fabricated = replace(promotion, policy_decision_ref="pdp:" + H4, promotion_digest="").sealed()
+        fabricated_transition = replace(transition, promotion_digest=fabricated.promotion_digest, transition_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryEpochError, "PROMOTION_WITHOUT_VERIFIED_PDP"):
+            self.engine.assert_next_epoch_ready(fabricated_transition, delta, fabricated, memory)
+
     def test_next_epoch_boundary_remains_non_effectful_and_f005_denied(self):
         delta = EvolutionDelta(
             delta_id="delta:1", target_component="F005-runtime", motivation="bounded knowledge delta",
             evidence_refs=("evidence:1",), expected_outcome="improve model", falsification_conditions=("fails",),
             candidate_scope=("cyber_lion/contracts/example.py",), dependency_ids=(), risk_class="GREEN",
         ).sealed()
+        gate = self._gate(proposal_id="promotion:2", request_id="request:f005")
         promotion = PromotionDecision(
             promotion_id="promotion:2", hypothesis_digest=H1, hypothesis_state="SUPPORTED",
             falsification_digest=H2, falsification_disposition="SUPPORTED", evolution_delta_digest=delta.delta_digest,
-            policy_decision_ref="pdp:" + H3, unresolved_contradictions=0, contrary_evidence_complete=True,
+            policy_decision_ref="pdp:" + gate.decision_digest, unresolved_contradictions=0, contrary_evidence_complete=True,
             decision="PROMOTE_KNOWLEDGE", rationale="knowledge only",
         ).sealed()
+        self.engine.verify_promotion_gate(promotion, gate)
         memory = RnDMemoryRecord(
             memory_id="mem:3", revision=1, record_kind="PROMOTED_KNOWLEDGE", subject_id="promotion:2",
             source_digests=(promotion.promotion_digest,), negative_evidence_refs=(), supersedes_memory_digest=None,
