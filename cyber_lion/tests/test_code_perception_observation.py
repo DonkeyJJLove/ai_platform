@@ -3,6 +3,7 @@ import unittest
 from cyber_lion.enterprise.code_perception_observation import (
     CodePerceptionObservationError,
     ObservationRequest,
+    _projection_cardinality_error,
     parse_projection_lines,
     select_exact_run,
     validate_commit_identity,
@@ -151,6 +152,20 @@ class CodePerceptionObservationTests(unittest.TestCase):
 
     def test_projection_missing_line_is_rejected_by_absence(self):
         self.assertEqual(parse_projection_lines(["no projection here"], EXPECTED), ())
+
+    def test_projection_cardinality_diagnostic_exposes_only_selected_run_and_successful_jobs(self):
+        error = _projection_cardinality_error(32771234567, (97570000001, 97570000002), 0)
+        self.assertEqual(
+            str(error),
+            "expected exactly one exact projection line, found 0; "
+            "selected_run_id=32771234567; successful_job_ids=97570000001,97570000002",
+        )
+
+    def test_projection_cardinality_diagnostic_preserves_ambiguity_failure(self):
+        error = _projection_cardinality_error(32771234567, (), 2)
+        self.assertIn("found 2", str(error))
+        self.assertIn("selected_run_id=32771234567", str(error))
+        self.assertIn("successful_job_ids=none", str(error))
 
 
 if __name__ == "__main__":
