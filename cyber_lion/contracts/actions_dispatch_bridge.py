@@ -15,6 +15,7 @@ _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _TOKEN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 _WORKFLOW = re.compile(r"^[A-Za-z0-9._-]+\.ya?ml$")
 _REF = re.compile(r"^[A-Za-z0-9._/-]{1,128}$")
+_TARGET = re.compile(r"^(architecture|security|runtime)$")
 
 
 def canonical_json(value: object) -> bytes:
@@ -44,6 +45,11 @@ class DispatchPolicy:
             raise ValueError("duplicate workflow allowlist entry")
         if len(set(self.allowed_refs)) != len(self.allowed_refs):
             raise ValueError("duplicate ref allowlist entry")
+        workflows = [workflow for workflow, _ in self.allowed_inputs]
+        if len(set(workflows)) != len(workflows) or any(
+            workflow not in self.allowed_workflows for workflow in workflows
+        ):
+            raise ValueError("invalid workflow input policy")
         return self
 
     def input_keys_for(self, workflow: str) -> tuple[str, ...]:
@@ -146,6 +152,8 @@ class DispatchReceipt:
             raise ValueError("unsupported receipt schema")
         if self.trust_decision != "ALLOW" or self.github_api_result != "ACCEPTED_204":
             raise ValueError("receipt is not an accepted dispatch")
+        if self.control_comment_id <= 0:
+            raise ValueError("receipt control comment invalid")
         if not _HEX40.fullmatch(self.expected_head):
             raise ValueError("receipt head invalid")
         for value in (self.canonical_inputs_digest, self.replay_key, self.bridge_implementation_digest):
@@ -178,6 +186,7 @@ class ObservationRequest:
 
 @dataclass(frozen=True)
 class RunObservationReceipt:
+    """F009-specific observation receipt. Its semantics are intentionally unchanged."""
     schema_version: str
     request_id: str
     observation_comment_id: int
@@ -221,4 +230,74 @@ class RunObservationReceipt:
             raise ValueError("positive reconciliation is not MATCHED")
         if not _HEX64.fullmatch(self.bridge_implementation_digest):
             raise ValueError("bridge implementation digest invalid")
+        return self
+
+
+@dataclass(frozen=True)
+class GroupChannelRunObservationReceipt:
+    """Dedicated evidence-only observation receipt for lion-group-channel.yml."""
+    schema_version: str
+    request_id: str
+    observation_comment_id: int
+    control_comment_id: int
+    actor: str
+    permission: str
+    workflow: str
+    ref: str
+    expected_head: str
+    dispatch_accepted_at: str
+    run_id: int
+    run_attempt: int
+    event: str
+    status: str
+    conclusion: str
+    run_actor: str
+    triggering_actor: str
+    artifact_id: int
+    artifact_name: str
+    artifact_digest: str
+    artifact_size: int
+    message_id: str
+    target: str
+    envelope_digest: str
+    payload_digest: str
+    group_channel_receipt_digest: str
+    emitted_at: str
+    state: str
+    authority_effect: bool
+    repository_effect: bool
+    bridge_implementation_digest: str
+    trust_decision: str
+    observation_result: str
+
+    def validate(self) -> "GroupChannelRunObservationReceipt":
+        if self.schema_version != "1.0.0":
+            raise ValueError("unsupported group observation receipt schema")
+        if self.workflow != "lion-group-channel.yml":
+            raise ValueError("group observation workflow invalid")
+        if not _HEX40.fullmatch(self.expected_head):
+            raise ValueError("group observation head invalid")
+        if not _TOKEN.fullmatch(self.request_id) or not _TOKEN.fullmatch(self.actor):
+            raise ValueError("group observation request identity invalid")
+        if not _TOKEN.fullmatch(self.message_id) or _TARGET.fullmatch(self.target) is None:
+            raise ValueError("group observation routing invalid")
+        if self.observation_comment_id <= 0 or self.control_comment_id <= 0:
+            raise ValueError("group observation comment binding invalid")
+        if self.run_id <= 0 or self.run_attempt <= 0 or self.artifact_id <= 0 or self.artifact_size <= 0:
+            raise ValueError("group observation identifiers invalid")
+        if self.event != "workflow_dispatch" or self.status != "completed" or self.conclusion != "success":
+            raise ValueError("group run is not successful workflow_dispatch")
+        if not self.run_actor or not self.triggering_actor:
+            raise ValueError("group run actor binding incomplete")
+        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(self.artifact_digest.removeprefix("sha256:")):
+            raise ValueError("group artifact digest invalid")
+        for value in (self.envelope_digest, self.payload_digest, self.group_channel_receipt_digest, self.bridge_implementation_digest):
+            if not _HEX64.fullmatch(value):
+                raise ValueError("group observation digest invalid")
+        if self.state != "EMITTED_EVIDENCE_ONLY":
+            raise ValueError("group observation is not evidence-only")
+        if self.authority_effect is not False or self.repository_effect is not False:
+            raise ValueError("group observation cannot report an effect")
+        if self.trust_decision != "ALLOW" or self.observation_result != "OBSERVED_VERIFIED":
+            raise ValueError("group observation is not verified")
         return self
