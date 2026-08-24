@@ -1,6 +1,6 @@
-# Deterministic LION Status Read
+# Deterministyczny odczyt statusu LION
 
-Use this protocol for any drone, thread, dashboard or external auditor that needs current LION operational state.
+Używaj tego protokołu dla każdego drona, wątku, dashboardu lub zewnętrznego audytora, który potrzebuje aktualnego stanu operacyjnego LION.
 
 ```text
 READ LION-DETERMINISTIC-STATUS
@@ -99,6 +99,6 @@ READ LION-DETERMINISTIC-STATUS
 --continue-until=DETERMINISTIC_STATUS_RECONSTRUCTED_OR_EXACT_BLOCKER
 ```
 
-`observed_master` identifies the last code state directly observed by the status projection; it is not required to equal the SHA of the commit that contains `status.json`. This avoids impossible self-reference. A later live master remains CURRENT-compatible only when GitHub proves a bounded, contiguous descendant chain and every intervening commit changes only the exact projection allowlist above. Any code or other repository change makes the status STALE; missing ancestry evidence is UNKNOWN.
+`observed_master` identyfikuje ostatni stan kodu bezpośrednio zaobserwowany przez projekcję statusu; nie musi być równy SHA commita zawierającego `status.json`. Pozwala to uniknąć niemożliwej samoreferencji. Późniejszy live `master` pozostaje zgodny ze stanem `CURRENT` tylko wtedy, gdy GitHub dowodzi ograniczonego, ciągłego łańcucha potomnego, a każdy commit pośredni zmienia wyłącznie dokładny allowlist projekcji wskazany powyżej. Każda zmiana kodu lub innego elementu repozytorium powoduje stan `STALE`; brak dowodu pochodzenia oznacza `UNKNOWN`.
 
-`status_digest` identifies the canonical logical fleet state. `revision_digest` binds that state to the ordered revision chain. This separation is intentional: equivalent logical state reached through different independent report orderings can have the same state digest while preserving a distinct, auditable revision history.
+`status_digest` identyfikuje kanoniczny logiczny stan floty. `revision_digest` wiąże ten stan z uporządkowanym łańcuchem rewizji. Rozdzielenie jest celowe: równoważny stan logiczny osiągnięty przez różne niezależne kolejności raportów może mieć ten sam digest stanu, zachowując jednocześnie odrębną, audytowalną historię rewizji.
