@@ -10,6 +10,7 @@ from hashlib import sha256
 from typing import Dict, Iterable
 
 from cyber_lion.contracts.evolutionary_rnd import (
+    EvidenceObservation,
     EvolutionDelta,
     EvolutionaryRnDContractError,
     ExperimentProposal,
@@ -44,6 +45,8 @@ class EvolutionaryRnDEngine:
 
     def __init__(self) -> None:
         self._identity_payloads: Dict[tuple[str, str], str] = {}
+        self._evidence_by_id: Dict[str, EvidenceObservation] = {}
+        self._evidence_by_digest: Dict[str, str] = {}
         self._hypotheses: Dict[str, Hypothesis] = {}
         self._experiments: Dict[str, ExperimentProposal] = {}
         self._simulations: Dict[str, SimulationPlan] = {}
@@ -72,10 +75,37 @@ class EvolutionaryRnDEngine:
             raise EvolutionaryRnDError("stable identity payload substitution denied")
         self._identity_payloads[key] = digest_value
 
+    def register_evidence(self, observation: EvidenceObservation) -> EvidenceObservation:
+        observation.validate()
+        if not observation.observation_digest:
+            raise EvolutionaryRnDError("evidence must be sealed")
+
+        prior_observation = self._evidence_by_id.get(observation.observation_id)
+        if prior_observation is not None:
+            if prior_observation.observation_digest != observation.observation_digest:
+                raise EvolutionaryRnDError("evidence identity payload substitution denied")
+            return prior_observation
+
+        prior_id = self._evidence_by_digest.get(observation.observation_digest)
+        if prior_id is not None and prior_id != observation.observation_id:
+            raise EvolutionaryRnDError("evidence digest rebound to incompatible identity denied")
+
+        self._bind_identity(observation, observation.observation_digest)
+        self._evidence_by_id[observation.observation_id] = observation
+        self._evidence_by_digest[observation.observation_digest] = observation.observation_id
+        return observation
+
+    def _require_evidence_refs(self, refs: Iterable[str], *, role: str) -> None:
+        for ref in refs:
+            if ref not in self._evidence_by_id:
+                raise EvolutionaryRnDError(f"unknown {role} evidence reference: {ref}")
+
     def register_hypothesis(self, hypothesis: Hypothesis) -> Hypothesis:
         hypothesis.validate()
         if not hypothesis.hypothesis_digest:
             raise EvolutionaryRnDError("hypothesis must be sealed")
+        self._require_evidence_refs(hypothesis.evidence_refs, role="supporting")
+        self._require_evidence_refs(hypothesis.counter_evidence_refs, role="counter")
         self._bind_identity(hypothesis, hypothesis.hypothesis_digest)
         previous = self._hypotheses.get(hypothesis.hypothesis_id)
         if previous is not None:
@@ -109,7 +139,6 @@ class EvolutionaryRnDEngine:
             provenance_refs=current.provenance_refs,
             supersedes_hypothesis_digest=current.supersedes_hypothesis_digest,
         ).sealed()
-        # State transitions are same logical revision but each state payload is unique.
         self._hypotheses[current.hypothesis_id] = transitioned
         self._identity_payloads[(type(current).__name__, current.hypothesis_id)] = transitioned.hypothesis_digest
         return transitioned
@@ -148,7 +177,6 @@ class EvolutionaryRnDEngine:
         if result.result_class == "OBSERVED" and any(
             plan.experiment_digest == result.experiment_digest for plan in self._simulations.values()
         ):
-            # Simulation lineage may produce only SIMULATED unless a separate real experiment result exists.
             raise EvolutionaryRnDError("simulation result cannot be relabeled OBSERVED")
         self._bind_identity(result, result.result_digest)
         if result.result_digest in self._results:
@@ -265,6 +293,10 @@ class EvolutionaryRnDEngine:
 
     def state_digest(self) -> str:
         payload = {
+            "evidence": sorted(
+                (observation_id, observation.observation_digest)
+                for observation_id, observation in self._evidence_by_id.items()
+            ),
             "hypotheses": sorted(h.hypothesis_digest for h in self._hypotheses.values()),
             "experiments": sorted(self._experiments),
             "simulations": sorted(self._simulations),
