@@ -1,14 +1,14 @@
-# Generation and Evolution Protocol
+# Protokół generowania i ewolucji
 
-## 1. Goal
+## 1. Cel
 
-Cyber-Lion must support continuous generation of agents, code, policies, schemas, experiments and swarm topologies without allowing the ecosystem to drift into an untraceable collection of model-generated artifacts.
+Cyber-Lion musi wspierać ciągłe generowanie agentów, kodu, polityk, schematów, eksperymentów i topologii rojów bez dopuszczenia do dryfu ekosystemu w kierunku nieśledzalnego zbioru artefaktów generowanych przez modele.
 
-The core rule is:
+Reguła podstawowa:
 
-> **Generate freely in proposal space; mutate reality only through typed deltas, deterministic gates and observable execution.**
+> **Generuj swobodnie w przestrzeni proposal; zmieniaj rzeczywistość wyłącznie przez typowane delty, deterministyczne gates i obserwowalne execution.**
 
-This protocol applies to:
+Protokół ma zastosowanie do:
 
 ```text
 source code
@@ -28,7 +28,7 @@ execution provider
 
 ## 2. Change Proposal
 
-Every generated or manually proposed enterprise change is wrapped as:
+Każda wygenerowana lub ręcznie zaproponowana zmiana przedsiębiorstwa jest opakowywana jako:
 
 ```text
 ChangeProposal = {
@@ -52,11 +52,11 @@ ChangeProposal = {
 }
 ```
 
-A proposal without evidence may still exist as a hypothesis, but it cannot be represented as evidence-backed implementation knowledge.
+Proposal bez evidence może nadal istnieć jako hipoteza, ale nie może być przedstawiany jako wiedza implementacyjna podparta evidence.
 
 ---
 
-## 3. Universal change pipeline
+## 3. Uniwersalny pipeline zmiany
 
 ```text
 OBSERVE
@@ -92,15 +92,15 @@ MEMORY / SPEC CANDIDATE
 PROMOTE / REJECT / SUPERSEDE
 ```
 
-No step is skipped simply because an LLM generated high-confidence text.
+Żaden etap nie jest pomijany tylko dlatego, że LLM wygenerował tekst o wysokim confidence.
 
 ---
 
-## 4. Delta-first enterprise evolution
+## 4. Ewolucja przedsiębiorstwa delta-first
 
-GlitchLab's Δ-first principle is generalized beyond source code.
+Zasada Δ-first z GlitchLab jest uogólniana poza source code.
 
-The platform should normalize any change into tokens such as:
+Platforma powinna normalizować każdą zmianę do tokenów takich jak:
 
 ```text
 ADD_AGENT
@@ -121,7 +121,7 @@ ADD_REPOSITORY_PROVIDER
 MODIFY_EXECUTION_DOMAIN
 ```
 
-Every token is bound to:
+Każdy token jest związany z:
 
 ```text
 entity
@@ -132,7 +132,7 @@ provenance
 risk class
 ```
 
-Target integration with GlitchLab:
+Docelowa integracja z GlitchLab:
 
 ```text
 EnterpriseDelta
@@ -145,26 +145,26 @@ EnterpriseDelta
 
 ---
 
-## 5. Enterprise invariants
+## 5. Inwarianty przedsiębiorstwa
 
-The existing GlitchLab invariants remain useful, but the enterprise introduces a wider invariant family.
+Istniejące inwarianty GlitchLab pozostają użyteczne, ale przedsiębiorstwo wprowadza szerszą rodzinę inwariantów.
 
-### E1 — Identity continuity
+### E1 — Ciągłość tożsamości
 
-A change must not silently change the identity of an entity.
+Zmiana nie może po cichu zmieniać tożsamości encji.
 
 ```text
 same entity_id
 ⇒ compatible identity semantics
 ```
 
-Renaming/migration requires alias/supersession records.
+Zmiana nazwy/migracja wymaga rekordów alias/supersession.
 
-### E2 — Contract compatibility
+### E2 — Kompatybilność kontraktów
 
-Public capability/event/schema/agent interfaces may not break silently.
+Publiczne interfejsy capability/event/schema/agent nie mogą być łamane po cichu.
 
-Breaking changes require:
+Zmiany breaking wymagają:
 
 ```text
 new version
@@ -173,22 +173,22 @@ consumer impact list
 rollback
 ```
 
-### E3 — Authority non-escalation
+### E3 — Brak eskalacji authority
 
-A generated change may not silently increase effective authority.
+Wygenerowana zmiana nie może po cichu zwiększać effective authority.
 
 ```text
 Authority_after > Authority_before
 ⇒ explicit consequential gate
 ```
 
-### E4 — Provenance completeness
+### E4 — Kompletność provenance
 
-Consequential changes require reconstructable evidence and proposal lineage.
+Consequential changes wymagają rekonstruowalnego evidence i lineage proposal.
 
-### E5 — Observability preservation
+### E5 — Zachowanie obserwowalności
 
-A change must not reduce required causal observability unless authority is degraded accordingly.
+Zmiana nie może zmniejszać wymaganej obserwowalności przy zachowaniu authority bez odpowiedniej degradacji.
 
 ```text
 Observability_after < required
@@ -197,15 +197,15 @@ Observability_after < required
 
 ### E6 — Replayability
 
-The system must be able to reconstruct why a state transition occurred from events/artifacts.
+System musi potrafić zrekonstruować na podstawie events/artifacts, dlaczego nastąpiło przejście stanu.
 
-### E7 — Blast-radius boundedness
+### E7 — Ograniczenie blast radius
 
-Changes must declare and test their failure scope.
+Zmiany muszą deklarować i testować zakres awarii.
 
-### E8 — Epistemic correctness
+### E8 — Poprawność epistemiczna
 
-Claims are tagged as:
+Twierdzenia są oznaczane jako:
 
 ```text
 OBSERVED
@@ -216,23 +216,23 @@ EXPERIMENTAL
 SPECULATIVE
 ```
 
-A `HYPOTHESIS` may not silently become a normative production rule.
+`HYPOTHESIS` nie może po cichu stać się normatywną regułą produkcyjną.
 
-### E9 — Memory separation
+### E9 — Rozdzielenie pamięci
 
-Working context and generated notes do not automatically become committed organizational memory.
+Working context i wygenerowane notatki nie stają się automatycznie committed organizational memory.
 
-### E10 — Polymorphic structural integrity
+### E10 — Integralność strukturalna polimorfizmu
 
-Dynamic changes to topology must preserve mission capability coverage and authority constraints.
+Dynamiczne zmiany topologii muszą zachować pokrycie capabilities misji i ograniczenia authority.
 
 ---
 
-## 6. GlitchLab integration model
+## 6. Model integracji GlitchLab
 
-Long-term, GlitchLab becomes a compiler for enterprise deltas.
+Długoterminowo GlitchLab staje się kompilatorem enterprise deltas.
 
-Input adapters:
+Adaptery wejściowe:
 
 ```text
 source-code adapter
@@ -261,13 +261,13 @@ Output:
 }
 ```
 
-The GlitchLab decision is an input to Cyber-Lion policy. It does not by itself grant production execution rights.
+Decyzja GlitchLab jest wejściem do polityki Cyber-Lion. Sama nie przyznaje praw production execution.
 
 ---
 
-## 7. Generation rules for AI agents
+## 7. Reguły generowania dla agentów AI
 
-An agent generating an artifact MUST receive:
+Agent generujący artefakt **MUSI** otrzymać:
 
 ```text
 mission
@@ -282,9 +282,9 @@ non-goals
 authority ceiling
 ```
 
-It MUST NOT infer missing authority from prose.
+**NIE MOŻE** wywodzić brakującego authority z prose.
 
-Generated output SHOULD contain:
+Wygenerowany output **POWINIEN** zawierać:
 
 ```text
 artifact
@@ -299,16 +299,16 @@ rollback/migration implications
 
 ---
 
-## 8. One loop → one bounded artifact
+## 8. Jedna pętla → jeden ograniczony artefakt
 
-The GlitchLab principle is adopted globally:
+Zasada GlitchLab jest przyjmowana globalnie:
 
 ```text
 one generation loop
 → one primary artifact or one coherent contract change
 ```
 
-Examples:
+Przykłady:
 
 ```text
 one Python module
@@ -320,18 +320,18 @@ one migration adapter
 one research promotion record
 ```
 
-Large changes are decomposed into a sequence of auditable deltas.
+Duże zmiany są dekomponowane do sekwencji audytowalnych delt.
 
-This reduces:
+Zmniejsza to:
 
 - hidden coupling,
-- review complexity,
-- rollback uncertainty,
-- model-context overload.
+- złożoność review,
+- niepewność rollbacku,
+- przeciążenie kontekstu modelu.
 
 ---
 
-## 9. Generated code pipeline
+## 9. Pipeline wygenerowanego kodu
 
 ```text
 SoftwareBuildSpec
@@ -347,11 +347,11 @@ SoftwareBuildSpec
 → gate for external/deploy effects
 ```
 
-Arbitrary model code is never treated as trusted simply because it compiled.
+Dowolny kod modelu nigdy nie jest uznawany za zaufany tylko dlatego, że się skompilował.
 
 ---
 
-## 10. Agent generation pipeline
+## 10. Pipeline generowania agenta
 
 ```text
 MissionSpec
@@ -365,11 +365,11 @@ MissionSpec
 → admit to execution domain
 ```
 
-An agent template cannot include reusable production credentials.
+Agent template nie może zawierać wielokrotnego użytku production credentials.
 
 ---
 
-## 11. Swarm generation pipeline
+## 11. Pipeline generowania roju
 
 ```text
 MissionSpec
@@ -385,13 +385,13 @@ MissionSpec
 → activate swarm
 ```
 
-Every dynamic spawn/reconfiguration emits a MosaicDelta.
+Każdy dynamiczny spawn/reconfiguration emituje `MosaicDelta`.
 
 ---
 
-## 12. Updating rules and thresholds
+## 12. Aktualizacja reguł i progów
 
-Rules themselves evolve. Therefore a distinction is required:
+Same reguły również ewoluują. Dlatego wymagane jest rozróżnienie:
 
 ```text
 runtime data
@@ -400,7 +400,7 @@ calibrated threshold candidate
 normative rule
 ```
 
-Example GlitchLab-style threshold evolution:
+Przykład ewolucji progu w stylu GlitchLab:
 
 ```text
 observed metric history
@@ -412,9 +412,9 @@ observed metric history
 → spec version update
 ```
 
-Automatic adaptation MUST have bounds. A system must not gradually normalize increasingly dangerous behavior by continuously moving thresholds.
+Automatyczna adaptacja **MUSI** mieć granice. System nie może stopniowo normalizować coraz bardziej niebezpiecznego zachowania przez ciągłe przesuwanie progów.
 
-Use:
+Stosuj:
 
 ```text
 freeze-on-drift
@@ -425,9 +425,9 @@ manual or independent-agent review for security-critical thresholds
 
 ---
 
-## 13. Polymorphic repository maintenance
+## 13. Utrzymanie polimorficznego repozytorium
 
-The enterprise is intentionally multi-repository. Cross-repository changes therefore require a `ChangeSet`:
+Przedsiębiorstwo jest celowo multi-repository. Zmiany cross-repository wymagają więc `ChangeSet`:
 
 ```text
 ChangeSet = {
@@ -442,7 +442,7 @@ ChangeSet = {
 }
 ```
 
-Recommended rollout:
+Zalecany rollout:
 
 ```text
 1. contract/schema
@@ -454,13 +454,13 @@ Recommended rollout:
 7. remove deprecated path
 ```
 
-Never modify all repositories simultaneously without intermediate compatibility states.
+Nigdy nie modyfikuj wszystkich repozytoriów jednocześnie bez pośrednich stanów kompatybilności.
 
 ---
 
-## 14. Repository generated artifacts policy
+## 14. Polityka wygenerowanych artefaktów repozytorium
 
-Source repositories SHOULD separate:
+Repozytoria źródłowe **POWINNY** rozdzielać:
 
 ```text
 SOURCE
@@ -471,19 +471,19 @@ RUNTIME STATE
 RESEARCH ARTIFACT
 ```
 
-Rules:
+Reguły:
 
-- virtualenv/IDE/runtime state are not source,
-- generated source must have provenance,
-- large simulation outputs should not silently become canonical input,
-- derived artifacts include source/config/seed refs,
-- secrets are never stored as generated examples with real values.
+- virtualenv/IDE/runtime state nie są source,
+- generated source musi mieć provenance,
+- duże wyniki symulacji nie powinny po cichu stawać się canonical input,
+- artefakty derived zawierają refs source/config/seed,
+- secrets nigdy nie są przechowywane jako wygenerowane przykłady z rzeczywistymi wartościami.
 
 ---
 
-## 15. Security generation rules
+## 15. Reguły generowania związane z bezpieczeństwem
 
-Any generated change involving:
+Każda wygenerowana zmiana dotycząca:
 
 ```text
 authentication
@@ -498,9 +498,9 @@ memory write
 model/tool delegation
 ```
 
-MUST trigger security review/adversarial tests.
+**MUSI** uruchamiać security review/testy adversarialne.
 
-Minimum negative tests include:
+Minimalne testy negatywne obejmują:
 
 ```text
 invalid identity
@@ -518,9 +518,9 @@ malformed provider output
 
 ---
 
-## 16. Observability rules
+## 16. Reguły obserwowalności
 
-Every consequential enterprise mutation must emit enough information to reconstruct:
+Każda consequential enterprise mutation musi emitować wystarczające informacje do rekonstrukcji:
 
 ```text
 source evidence
@@ -534,15 +534,15 @@ result/outcome
 follow-up state
 ```
 
-Observability is part of the permission model, not a passive monitoring feature.
+Obserwowalność jest częścią permission model, a nie pasywną funkcją monitoringu.
 
 ---
 
-## 17. Rollback and supersession
+## 17. Rollback i supersession
 
-Deletion is not the only way to evolve.
+Usunięcie nie jest jedynym sposobem ewolucji.
 
-Artifacts/agents/policies may be:
+Artefakty/agenci/polityki mogą mieć stany:
 
 ```text
 ACTIVE
@@ -552,64 +552,64 @@ REVOKED
 ARCHIVED
 ```
 
-Supersession preserves lineage:
+Supersession zachowuje lineage:
 
 ```text
 v1 → superseded_by → v2
 ```
 
-Rollback must specify whether it restores:
+Rollback musi określać, czy przywraca:
 
-- code,
-- contract,
-- data schema,
-- authority state,
-- agent topology,
-- memory state.
+- kod,
+- kontrakt,
+- schema danych,
+- stan authority,
+- topologię agentów,
+- stan pamięci.
 
 ---
 
-## 18. Autonomous update budget
+## 18. Budżet autonomicznych aktualizacji
 
-Not every change needs human review. Autonomy is lane-based.
+Nie każda zmiana wymaga human review. Autonomia jest podzielona na lane'y.
 
 ### GREEN
 
-Agent may autonomously update:
+Agent może autonomicznie aktualizować:
 
 - read-only indexes,
 - derived documentation,
-- local test fixtures,
+- lokalne test fixtures,
 - non-consequential experiment scaffolds,
-- internal analysis artifacts.
+- wewnętrzne artefakty analityczne.
 
 ### AMBER
 
-Requires deterministic gate and/or independent verifier:
+Wymaga deterministycznego gate i/lub niezależnego verifiera:
 
 - source code change,
 - AgentSpec change,
 - memory candidate promotion,
-- external communication,
+- komunikacja zewnętrzna,
 - dependency update,
 - swarm reconfiguration.
 
 ### RED
 
-Requires high-assurance approval/enforcement:
+Wymaga high-assurance approval/enforcement:
 
 - production deployment,
 - authority expansion,
-- secret access changes,
-- financial commitments,
-- critical infrastructure,
-- irreversible data mutation.
+- zmiany dostępu do secrets,
+- zobowiązania finansowe,
+- infrastruktura krytyczna,
+- nieodwracalne mutacje danych.
 
 ---
 
-## 19. Continuous enterprise regression
+## 19. Ciągła regresja przedsiębiorstwa
 
-A successful change creates a regression family.
+Skuteczna zmiana tworzy rodzinę regresji.
 
 ```text
 finding
@@ -620,4 +620,4 @@ finding
 → continuous retest
 ```
 
-The goal is not to teach the model one answer. The goal is to make the unsafe class structurally unreachable or explicitly gated.
+Celem nie jest nauczenie modelu jednej odpowiedzi. Celem jest uczynienie niebezpiecznej klasy strukturalnie nieosiągalną albo jawnie bramkowaną.
