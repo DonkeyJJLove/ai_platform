@@ -1,38 +1,38 @@
-# CYBER-LION — Repository Inventory
+# CYBER-LION — inwentarz repozytoriów
 
-Status labels used here:
+Etykiety statusu używane w tym dokumencie:
 
-- `EXECUTABLE` — current repository contains a functioning software mechanism relevant to the target role.
-- `MIXED` — executable assets and major specifications coexist.
-- `SPECIFICATION` — current value is primarily formal/documentary/research specification.
-- `RESEARCH` — hypotheses/evidence/experiments rather than operational runtime.
+- `EXECUTABLE` — bieżące repozytorium zawiera działający mechanizm software istotny dla roli docelowej.
+- `MIXED` — współistnieją wykonywalne zasoby i istotne specyfikacje.
+- `SPECIFICATION` — bieżąca wartość ma przede wszystkim charakter formalny/dokumentacyjny/badawczy.
+- `RESEARCH` — repozytorium zawiera hipotezy/evidence/eksperymenty, a nie operacyjny runtime.
 
-The recommended disposition uses `KEEP / REFINE / EXTRACT / GENERALIZE / INTEGRATE / DEPRECATE / EXPERIMENTAL`.
+Zalecana klasyfikacja dalszych działań używa: `KEEP / REFINE / EXTRACT / GENERALIZE / INTEGRATE / DEPRECATE / EXPERIMENTAL`.
 
 ## 1. `DonkeyJJLove/ai_platform`
 
-**Observed state:** primarily architecture/specification. Root currently contains `platform.md`, `LAT_GLX_PROJECT_MOSAIC.MD`, experimental tests/reports and tracked IDE state. The QV9D material already models `INF / SEM / MAND`, semantic bridges and repository mapping, but the current repository is not yet an executable control plane.
+**Zaobserwowany stan:** przede wszystkim architektura/specyfikacja. Root zawiera obecnie `platform.md`, `LAT_GLX_PROJECT_MOSAIC.MD`, eksperymentalne testy/raporty i śledzony stan IDE. Materiał QV9D już modeluje `INF / SEM / MAND`, mosty semantyczne i mapowanie repozytoriów, ale repozytorium nie jest jeszcze wykonywalnym control plane'em.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- QV9D semantic coordinate system.
-- Project mosaic concept and repository-role mapping.
-- Mapping rules from physical paths to semantic coordinates.
-- Experimental comparison of 9D bridges.
+- semantyczny układ współrzędnych QV9D,
+- koncepcja project mosaic i mapowanie ról repozytoriów,
+- reguły mapowania fizycznych ścieżek na współrzędne semantyczne,
+- eksperymentalne porównanie mostów 9D.
 
-**Unique asset:** existing conceptual place for cross-repository topology and governance.
+**Unikalny zasób:** istniejące miejsce koncepcyjne dla topologii cross-repository i governance.
 
-**Debt / gap**
+**Dług / luka**
 
-- static/stale project mosaic rather than discovered registry;
-- no shared entity/event contract implementation;
-- no capability registry runtime;
-- no global graph service;
-- no authority/policy engine;
-- no cross-repo tracing runtime;
-- existing process-upgrade PR should land before or be incorporated into compatibility work.
+- statyczna/nieaktualna project mosaic zamiast discovered registry,
+- brak implementacji wspólnego kontraktu encji/zdarzeń,
+- brak runtime capability registry,
+- brak global graph service,
+- brak authority/policy engine,
+- brak runtime cross-repo tracing,
+- istniejący PR process-upgrade powinien zostać zintegrowany przed pracami kompatybilnościowymi albo włączony do tych prac.
 
-**Cyber-Lion role:** `Control Plane / Contract Authority / Registry / QV9D Mapping`.
+**Rola Cyber-Lion:** `Control Plane / Contract Authority / Registry / QV9D Mapping`.
 
 **Disposition:** `KEEP + REFINE + GENERALIZE + INTEGRATE`.
 
@@ -40,26 +40,26 @@ The recommended disposition uses `KEEP / REFINE / EXTRACT / GENERALIZE / INTEGRA
 
 ## 2. `DonkeyJJLove/chunk-chunk`
 
-**Observed state:** protocol-heavy repository with machine-readable `hmk9d_protocol.yaml`, large HMK-9D specification, prompts and semantic bridge definitions. It models `Δ`, 9D relational state and semantic transitions, but is not yet a general runtime context-routing service.
+**Zaobserwowany stan:** repozytorium silnie zorientowane na protokół, z machine-readable `hmk9d_protocol.yaml`, obszerną specyfikacją HMK-9D, promptami i definicjami mostów semantycznych. Modeluje `Δ`, relacyjny stan 9D i przejścia semantyczne, ale nie jest jeszcze ogólnym runtime service routingu kontekstu.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- HMK-9D contract and axes `[T,S,R,E,I,F,A,P,D]`.
-- `chunk–chunk→` transition model.
-- semantic bridges and transition thresholds;
-- local energy/risk representation;
-- draft microcode/event vocabulary.
+- kontrakt HMK-9D i osie `[T,S,R,E,I,F,A,P,D]`,
+- model przejścia `chunk–chunk→`,
+- mosty semantyczne i progi przejść,
+- lokalna reprezentacja energii/ryzyka,
+- roboczy słownik microcode/event.
 
-**Unique asset:** explicit structural representation of semantic/process trajectories.
+**Unikalny zasób:** jawna strukturalna reprezentacja trajektorii semantycznych/procesowych.
 
-**Debt / gap**
+**Dług / luka**
 
-- distinction between conceptual metric and measured metric requires enforcement;
-- no common Cyber-Lion entity/provenance envelope;
-- no executable compression/router API demonstrated in current root inventory;
-- tracked `.venv` still exists on default branch; process-upgrade PR is pending.
+- rozróżnienie między metryką koncepcyjną i mierzoną wymaga enforcement,
+- brak wspólnej Cyber-Lion entity/provenance envelope,
+- w bieżącym root inventory nie wykazano wykonywalnego compression/router API,
+- śledzone `.venv` nadal istnieje na default branch; PR process-upgrade oczekuje.
 
-**Cyber-Lion role:** `Cognitive Compression & Context Routing contract/provider`.
+**Rola Cyber-Lion:** `Cognitive Compression & Context Routing contract/provider`.
 
 **Disposition:** `KEEP + REFINE + EXPERIMENTAL + INTEGRATE`.
 
@@ -67,55 +67,55 @@ The recommended disposition uses `KEEP / REFINE / EXTRACT / GENERALIZE / INTEGRA
 
 ## 3. `DonkeyJJLove/glitchlab`
 
-**Observed state:** substantial executable Python code plus architecture/specification. Existing modules include graph, AST mapping, mosaic, pipeline, registry, delta, analysis, security, tests and UI. Documentation already describes BUS/EGDB, SAST Bridge, invariants and fail-closed control.
+**Zaobserwowany stan:** znaczna ilość wykonywalnego kodu Python oraz architektury/specyfikacji. Istniejące moduły obejmują grafy, mapowanie AST, mosaic, pipeline, registry, delta, analysis, security, testy i UI. Dokumentacja opisuje już BUS/EGDB, SAST Bridge, inwarianty i fail-closed control.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- AST and graph extraction;
-- Delta-first representation and fingerprints;
-- AST↔Mosaic transformations;
-- invariants and threshold/gating concepts;
-- local callable/filter registry;
-- SAST normalization/prioritization concepts;
-- BUS/EGDB event/telemetry architecture;
-- GUI/HUD and analysis artifacts.
+- ekstrakcja AST i grafów,
+- reprezentacja delta-first i fingerprints,
+- transformacje AST↔Mosaic,
+- inwarianty oraz koncepcje thresholds/gating,
+- lokalne callable/filter registry,
+- koncepcje normalizacji/prioritization SAST,
+- architektura zdarzeń/telemetrii BUS/EGDB,
+- GUI/HUD i artefakty analityczne.
 
-**Unique asset:** strongest current combined `SEM` engine for structural change, anomaly and invariant analysis.
+**Unikalny zasób:** najsilniejszy bieżący połączony silnik `SEM` do analizy zmiany strukturalnej, anomalii i inwariantów.
 
-**Debt / gap**
+**Dług / luka**
 
-- packaging topology is inconsistent: `pyproject.toml` searches `src/glitchlab*`, while current `src/` inventory does not expose that package layout;
-- generated/local state is tracked on default branch (`.env.local`, `*.egg-info`); process-upgrade PR is pending;
-- local registry is not suitable as the global Cyber-Lion capability registry;
-- documented sandbox/fail-closed claims must always be tied to actual execution enforcement.
+- topologia pakowania jest niespójna: `pyproject.toml` wyszukuje `src/glitchlab*`, podczas gdy bieżący inventory `src/` nie ujawnia takiego układu pakietu,
+- generated/local state jest śledzony na default branch (`.env.local`, `*.egg-info`); PR process-upgrade oczekuje,
+- lokalny registry nie nadaje się na globalny capability registry Cyber-Lion,
+- deklaracje dokumentacyjne dotyczące sandbox/fail-closed muszą zawsze być związane z rzeczywistym enforcement wykonania.
 
-**Cyber-Lion role:** `Anomaly / Novelty / Delta / Structural Analysis provider`.
+**Rola Cyber-Lion:** `Anomaly / Novelty / Delta / Structural Analysis provider`.
 
-**Disposition:** `KEEP + REFINE + EXTRACT adapters`; **do not rewrite core**.
+**Disposition:** `KEEP + REFINE + EXTRACT adapters`; **nie przepisywać core**.
 
 ---
 
 ## 4. `DonkeyJJLove/HA2D`
 
-**Observed state:** predominantly cognitive-state/Human–AI specifications: PCE, MCV, SNAP, THOUGHT, MORPH_UNIT, `_neuro_`, HUD, revision viewer and context protocol. No comparable executable runtime was identified during root archaeology.
+**Zaobserwowany stan:** przede wszystkim specyfikacje cognitive-state/Human–AI: PCE, MCV, SNAP, THOUGHT, MORPH_UNIT, `_neuro_`, HUD, revision viewer i context protocol. Podczas archeologii root nie zidentyfikowano porównywalnego wykonywalnego runtime.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- persistent vs temporary context concepts;
-- delta/revision vocabulary;
-- Human–AI HUD specification;
-- cognitive-state and semantic-revision models.
+- koncepcje persistent vs temporary context,
+- słownik delta/revision,
+- specyfikacja Human–AI HUD,
+- modele cognitive-state i semantic-revision.
 
-**Unique asset:** explicit separation of persistent context, working context and human-facing replay concepts.
+**Unikalny zasób:** jawne rozdzielenie persistent context, working context i human-facing replay.
 
-**Debt / gap**
+**Dług / luka**
 
-- many statements are architectural/heuristic rather than implemented mechanisms;
-- memory classes and memory-write policy are not shared contracts yet;
-- `_neuro_` metrics require explicit scope as experimental process descriptors rather than physiological measurements;
-- process-upgrade PR is pending.
+- wiele twierdzeń ma charakter architektoniczny/heurystyczny zamiast implementacyjny,
+- klasy pamięci i polityka memory-write nie są jeszcze wspólnymi kontraktami,
+- metryki `_neuro_` wymagają jawnego zakresu jako eksperymentalne deskryptory procesu, a nie pomiary fizjologiczne,
+- PR process-upgrade oczekuje.
 
-**Cyber-Lion role:** `Cognitive State / Memory Contract / Human–AI Interaction Plane`.
+**Rola Cyber-Lion:** `Cognitive State / Memory Contract / Human–AI Interaction Plane`.
 
 **Disposition:** `KEEP + REFINE + FORMALISE + EXPERIMENTAL`.
 
@@ -123,77 +123,77 @@ The recommended disposition uses `KEEP / REFINE / EXTRACT / GENERALIZE / INTEGRA
 
 ## 5. `DonkeyJJLove/hipotezy_nadawcze_LLM`
 
-**Observed state:** intentionally small research repository containing a README and a falsifiable hypothesis about the text→token channel.
+**Zaobserwowany stan:** celowo małe repozytorium badawcze zawierające README i falsyfikowalną hipotezę dotyczącą kanału text→token.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- hypothesis formulation;
-- explicit falsification conditions;
-- evidence/argument organization;
-- communication/representation research.
+- formułowanie hipotez,
+- jawne warunki falsyfikacji,
+- organizacja evidence/argumentów,
+- badania komunikacji/reprezentacji.
 
-**Unique asset:** epistemic laboratory whose output should be claims/evidence, not authority.
+**Unikalny zasób:** laboratorium epistemiczne, którego output powinien mieć postać claims/evidence, a nie authority.
 
-**Debt / gap**
+**Dług / luka**
 
-- hypothesis probability estimates are not empirical measurements by default;
-- no machine-readable hypothesis/evidence schema;
-- no experiment registry yet;
-- process-upgrade PR is pending.
+- estymaty prawdopodobieństwa hipotez domyślnie nie są pomiarami empirycznymi,
+- brak machine-readable schema hipotez/evidence,
+- brak experiment registry,
+- PR process-upgrade oczekuje.
 
-**Cyber-Lion role:** `Communication Epistemology Lab / Hypothesis source`.
+**Rola Cyber-Lion:** `Communication Epistemology Lab / Hypothesis source`.
 
-**Disposition:** `KEEP + EXPERIMENTAL + FORMALISE`; do not turn into runtime authority.
+**Disposition:** `KEEP + EXPERIMENTAL + FORMALISE`; nie przekształcać w runtime authority.
 
 ---
 
 ## 6. `DonkeyJJLove/mosaic_lab_pro.py`
 
-**Observed state:** one large executable Python application plus README. It implements AST graph extraction, topology, A*, 3D honeycomb visualization and λ-controlled abstraction/supergraph behavior.
+**Zaobserwowany stan:** jedna duża wykonywalna aplikacja Python oraz README. Implementuje ekstrakcję grafu AST, topologię, A*, wizualizację honeycomb 3D i abstraction/supergraph sterowane λ.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- Python AST→graph transformation;
-- structural edge classes;
-- A* path planning within its geometry;
-- λ abstraction and supergraph construction;
-- interactive visualization.
+- transformacja Python AST→graf,
+- klasy krawędzi strukturalnych,
+- planowanie ścieżek A* we własnej geometrii,
+- abstrakcja λ i konstrukcja supergrafu,
+- interaktywna wizualizacja.
 
-**Unique asset:** working prototype for multi-level structural representation.
+**Unikalny zasób:** działający prototyp wielopoziomowej reprezentacji strukturalnej.
 
-**Debt / gap**
+**Dług / luka**
 
-- monolithic program couples analysis and GUI;
-- no stable library/API boundary for cross-repo use;
-- geometric representation must not be treated as semantic truth without an explicit mapping contract.
+- monolityczny program łączy analizę i GUI,
+- brak stabilnej granicy library/API do użycia cross-repo,
+- reprezentacja geometryczna nie może być traktowana jako prawda semantyczna bez jawnego kontraktu mapowania.
 
-**Cyber-Lion role:** `Mosaic Structure / Abstraction Engine`.
+**Rola Cyber-Lion:** `Mosaic Structure / Abstraction Engine`.
 
-**Disposition:** `KEEP + EXTRACT + REFINE`; first extract pure analysis interface, preserve UI compatibility.
+**Disposition:** `KEEP + EXTRACT + REFINE`; najpierw wyodrębnić czysty interfejs analityczny, zachowując kompatybilność UI.
 
 ---
 
 ## 7. `DonkeyJJLove/sbom`
 
-**Observed state:** executable/lab DevSecOps environment plus strong data contract. AID is propagated through SBOM/scan/delta/gate events; repository includes Jenkins/toolbox, Elastic/Splunk alternatives and documentation.
+**Zaobserwowany stan:** wykonywalne/laboratoryjne środowisko DevSecOps z silnym kontraktem danych. AID jest propagowany przez zdarzenia SBOM/scan/delta/gate; repozytorium zawiera Jenkins/toolbox, alternatywy Elastic/Splunk i dokumentację.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- stable Application Identity Descriptor (AID);
-- event envelope with timestamp/event type/AID/payload;
-- SBOM/scan/delta/gate process chain;
-- CI/CD gating;
-- analytics and identity-over-time.
+- stabilny Application Identity Descriptor (AID),
+- event envelope z timestamp/event type/AID/payload,
+- łańcuch procesu SBOM/scan/delta/gate,
+- CI/CD gating,
+- analityka i identity-over-time.
 
-**Unique asset:** strongest existing concrete identity/provenance/event contract in the portfolio.
+**Unikalny zasób:** najsilniejszy istniejący konkretny kontrakt identity/provenance/event w portfolio.
 
-**Debt / gap**
+**Dług / luka**
 
-- AID is application-centric and must not be broken by generalization;
-- broader Entity Identity needs a compatibility wrapper, not replacement;
-- LBOM/Decision-BOM/Agent-BOM/etc. are target concepts, not current complete implementations.
+- AID jest application-centric i nie może zostać złamany przez generalizację,
+- szersza Entity Identity wymaga compatibility wrapper, a nie zastąpienia,
+- LBOM/Decision-BOM/Agent-BOM itd. są koncepcjami targetowymi, a nie bieżącymi kompletnymi implementacjami.
 
-**Cyber-Lion role:** `Provenance / Supply Chain / Identity compatibility anchor`.
+**Rola Cyber-Lion:** `Provenance / Supply Chain / Identity compatibility anchor`.
 
 **Disposition:** `KEEP + GENERALIZE via adapter + INTEGRATE`.
 
@@ -201,89 +201,89 @@ The recommended disposition uses `KEEP / REFINE / EXTRACT / GENERALIZE / INTEGRA
 
 ## 8. `DonkeyJJLove/swarm`
 
-**Observed state:** executable distributed laboratory with drones, UDP/MQTT aggregation, Flask APIs, PostgreSQL, AI service, Kubernetes/Istio, monitoring, NetworkPolicy and RBAC.
+**Zaobserwowany stan:** wykonywalne rozproszone laboratorium z dronami, agregacją UDP/MQTT, Flask APIs, PostgreSQL, AI service, Kubernetes/Istio, monitoringiem, NetworkPolicy i RBAC.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- distributed workers/producers;
-- telemetry collection and transport;
-- API and persistence;
-- model inference service;
-- Kubernetes execution topology;
-- service mesh/monitoring;
-- network and RBAC controls.
+- rozproszeni workerzy/producenci,
+- zbieranie i transport telemetrii,
+- API i persistence,
+- model inference service,
+- topologia wykonawcza Kubernetes,
+- service mesh/monitoring,
+- kontrole sieciowe i RBAC.
 
-**Unique asset:** strongest current `INF` execution-mesh prototype.
+**Unikalny zasób:** najsilniejszy bieżący prototyp execution-mesh `INF`.
 
-**Debt / gap**
+**Dług / luka**
 
-- raw domain JSON crosses services without Cyber-Lion identity/provenance/correlation envelope;
-- no cross-service execution receipt;
-- current aggregator RBAC includes deployment update/patch authority while observed aggregator code only forwards telemetry — this requires least-authority review;
-- no explicit policy/gate between AI prediction and consequential action;
-- duplicate `README.md` / `readme.md` on default branch is repository-state debt.
+- surowy domain JSON przechodzi między usługami bez Cyber-Lion identity/provenance/correlation envelope,
+- brak cross-service execution receipt,
+- bieżący RBAC agregatora obejmuje authority update/patch deploymentów, podczas gdy zaobserwowany kod agregatora jedynie forwarduje telemetrię — wymaga to przeglądu least-authority,
+- brak jawnego policy/gate pomiędzy predykcją AI i consequential action,
+- duplikat `README.md` / `readme.md` na default branch jest długiem stanu repozytorium.
 
-**Cyber-Lion role:** `Agent Execution Mesh / Event Transport / Tool & Sandbox execution target`.
+**Rola Cyber-Lion:** `Agent Execution Mesh / Event Transport / Tool & Sandbox execution target`.
 
-**Disposition:** `KEEP + REFINE + INTEGRATE`; add adapters before changing domain services.
+**Disposition:** `KEEP + REFINE + INTEGRATE`; dodać adaptery przed zmianą usług domenowych.
 
 ---
 
 ## 9. `DonkeyJJLove/SymulacjaKaskadySieciowej`
 
-**Observed state:** packaged executable Python system-dynamics project with deterministic runs, Monte Carlo, Morris, Sobol, configuration, CLI and a reusable `run_model` interface.
+**Zaobserwowany stan:** spakowany wykonywalny projekt system-dynamics w Pythonie z deterministycznymi przebiegami, Monte Carlo, Morris, Sobol, konfiguracją, CLI i wielokrotnego użytku interfejsem `run_model`.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- scenario simulation;
-- deterministic and stochastic execution;
-- parameter validation;
-- Monte Carlo;
-- Morris/Sobol global sensitivity analysis;
-- phase/bifurcation analysis;
-- reproducible seed/config interfaces.
+- symulacja scenariuszy,
+- deterministyczne i stochastyczne execution,
+- walidacja parametrów,
+- Monte Carlo,
+- globalna analiza wrażliwości Morris/Sobol,
+- analiza phase/bifurcation,
+- reprodukowalne interfejsy seed/config.
 
-**Unique asset:** mature reusable simulation capability with explicit model-risk language.
+**Unikalny zasób:** dojrzała capability symulacyjna wielokrotnego użytku z jawnym językiem model-risk.
 
-**Debt / gap**
+**Dług / luka**
 
-- current equations are domain-specific;
-- should be exposed as a generic simulation capability contract without pretending the current model covers all propagation classes;
-- observation graph→perturbation→N futures adapter does not yet exist as a general Cyber-Lion API.
+- bieżące równania są domain-specific,
+- capability powinna zostać wystawiona przez ogólny kontrakt symulacji bez sugerowania, że aktualny model obejmuje wszystkie klasy propagacji,
+- adapter observation graph→perturbation→N futures nie istnieje jeszcze jako ogólne API Cyber-Lion.
 
-**Cyber-Lion role:** `Propagation / Systemic Risk / Counterfactual Simulation provider`.
+**Rola Cyber-Lion:** `Propagation / Systemic Risk / Counterfactual Simulation provider`.
 
-**Disposition:** `KEEP + WRAP + GENERALIZE interface`; preserve domain model intact.
+**Disposition:** `KEEP + WRAP + GENERALIZE interface`; zachować model domenowy bez zmian.
 
 ---
 
 ## 10. `DonkeyJJLove/writeups`
 
-**Observed state:** large, structured living research corpus with local README navigation, AI security architectures, experiments, PDF reports, LOCI, cyber research and epistemic materials.
+**Zaobserwowany stan:** duży, ustrukturyzowany żywy korpus badawczy z lokalną nawigacją README, architekturami AI security, eksperymentami, raportami PDF, LOCI, cyber research i materiałami epistemicznymi.
 
-**Current capabilities**
+**Bieżące capabilities**
 
-- evidence/research corpus;
-- publication layer;
-- architecture specifications;
-- methodological records and negative/falsification material;
-- navigable topic tree.
+- korpus evidence/research,
+- warstwa publikacyjna,
+- specyfikacje architektury,
+- rekordy metodologiczne i materiał negatywny/falsyfikacyjny,
+- nawigowalne drzewo tematów.
 
-**Unique asset:** long-term research/evidence history across the entire ecosystem.
+**Unikalny zasób:** długoterminowa historia badań/evidence całego ekosystemu.
 
-**Debt / gap**
+**Dług / luka**
 
-- documents do not yet share a machine-readable epistemic/provenance manifest;
-- free-form text must never become runtime policy/authority merely because it was retrieved;
-- experiment/result/superseded relationships require explicit indexing before automated ingestion.
+- dokumenty nie mają jeszcze wspólnego machine-readable manifestu epistemic/provenance,
+- free-form text nigdy nie może stać się runtime policy/authority tylko dlatego, że został pobrany,
+- relacje experiment/result/superseded wymagają jawnego indeksowania przed automatycznym ingestem.
 
-**Cyber-Lion role:** `Research Corpus / Evidence & Knowledge Provenance source`.
+**Rola Cyber-Lion:** `Research Corpus / Evidence & Knowledge Provenance source`.
 
-**Disposition:** `KEEP + INDEX + FORMALISE metadata`; do not use free-form corpus as direct authority source.
+**Disposition:** `KEEP + INDEX + FORMALISE metadata`; nie używać free-form corpus jako bezpośredniego authority source.
 
 ---
 
-# Cross-repository maturity conclusion
+# Wniosek dotyczący dojrzałości cross-repository
 
 ```text
 SPECIFICATION-DOMINANT:
@@ -303,4 +303,4 @@ RESEARCH CORPUS / EPISTEMIC:
   writeups
 ```
 
-The target architecture must therefore be **federated through contracts and adapters**. Treating every repository as an already operational service would be an architectural category error.
+Architektura docelowa musi zatem być **federowana przez kontrakty i adaptery**. Traktowanie każdego repozytorium jako już działającej usługi operacyjnej byłoby błędem kategorii architektonicznej.

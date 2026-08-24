@@ -1,80 +1,80 @@
-# Repository Evolution Plan
+# Plan ewolucji repozytoriów
 
-This roadmap assigns every repository a stable **enterprise role** while preserving independent evolution. The goal is federation through contracts, not a monorepo rewrite.
+Ta roadmapa przypisuje każdemu repozytorium stabilną **rolę w przedsiębiorstwie**, zachowując jego niezależną ewolucję. Celem jest federacja przez kontrakty, a nie przepisanie całości do monorepo.
 
 ## 1. `ai_platform` — Enterprise Control Plane / Agent Foundry
 
-### Keep
+### Zachować
 
-- Cyber-Lion identity/event/capability contracts,
+- kontrakty identity/event/capability Cyber-Lion,
 - Startup Evolution Agent,
 - provider plane,
-- authority separation,
-- repository archaeology and enterprise architecture.
+- rozdzielenie authority,
+- archeologię repozytoriów i architekturę przedsiębiorstwa.
 
-### Build next
+### Budować dalej
 
-**Phase A — Agent Foundry**
+**Faza A — Agent Foundry**
 
-- `AgentSpec` / `AgentInstance` schemas,
+- schematy `AgentSpec` / `AgentInstance`,
 - Agent Registry,
 - versioning/supersession,
 - mission → capability resolution,
-- explicit memory/observability/authority requirements.
+- jawne wymagania memory/observability/authority.
 
-**Phase B — Swarm Control Plane**
+**Faza B — Swarm Control Plane**
 
 - `SwarmSpec`, `MosaicCell`, `MosaicDelta`,
-- deterministic swarm planner,
-- spawn/delegate/dissolve contracts,
+- deterministyczny swarm planner,
+- kontrakty spawn/delegate/dissolve,
 - observability quorum,
-- risk-class topology rules.
+- reguły topologii risk-class.
 
-**Phase C — Enterprise Graph**
+**Faza C — Enterprise Graph**
 
-- project entities/capabilities/agents/swarms/evidence/policy/execution as typed graph,
-- adapters to Mosaic Structural Engine,
-- path queries for authority/provenance.
+- encje/capabilities/agenci/roje/evidence/policy/execution jako typowany graf,
+- adaptery do Mosaic Structural Engine,
+- path queries dla authority/provenance.
 
-**Phase D — Policy / Gate Engine**
+**Faza D — Policy / Gate Engine**
 
-- common PDP interface,
-- GateRequested/GateApplied receipts,
-- observability-conditioned authority degradation,
-- enterprise GREEN/AMBER/RED lanes.
+- wspólny interfejs PDP,
+- receipts GateRequested/GateApplied,
+- authority degradation warunkowane obserwowalnością,
+- enterprise lanes GREEN/AMBER/RED.
 
-### Avoid
+### Unikać
 
-- copying provider implementations into `ai_platform`,
-- treating a model provider as agent identity,
-- central runtime with unrestricted credentials.
+- kopiowania implementacji providerów do `ai_platform`,
+- traktowania providera modelu jako tożsamości agenta,
+- centralnego runtime z nieograniczonymi credentials.
 
 ---
 
 ## 2. `glitchlab` — Enterprise Evolution Compiler
 
-### Current assets
+### Bieżące zasoby
 
-- Δ-first engineering,
+- inżynieria Δ-first,
 - AST↔Mosaic `Φ/Ψ`,
 - I1–I4,
-- α/β/ζ living thresholds,
+- living thresholds α/β/ζ,
 - SAST-Bridge,
 - BUS/EGDB/HUD,
-- FixCandidate/self-healing direction.
+- kierunek FixCandidate/self-healing.
 
-### Build next
+### Budować dalej
 
-**Phase A — stabilize current code compiler**
+**Faza A — ustabilizować bieżący code compiler**
 
-- complete package hygiene,
-- prove documented entrypoints,
-- close historical Ruff debt by ratchet,
-- enforce safe generated-code execution via isolated provider.
+- dokończyć higienę pakietu,
+- udowodnić dokumentowane entrypoints,
+- domknąć historyczny Ruff debt przez ratchet,
+- egzekwować bezpieczne execution wygenerowanego kodu przez izolowanego providera.
 
-**Phase B — external delta adapters**
+**Faza B — adaptery zewnętrznych delt**
 
-Add typed adapters for:
+Dodać typowane adaptery dla:
 
 ```text
 AgentSpec
@@ -86,88 +86,88 @@ RepositoryManifest
 MemoryContract
 ```
 
-Output one normalized `EnterpriseDeltaReport`.
+Output: jeden znormalizowany `EnterpriseDeltaReport`.
 
-**Phase C — enterprise invariants**
+**Faza C — enterprise invariants**
 
-Implement E1–E10 from `GENERATION_EVOLUTION_PROTOCOL.md` beside code-level I1–I4.
+Zaimplementować E1–E10 z `GENERATION_EVOLUTION_PROTOCOL.md` obok code-level I1–I4.
 
-**Phase D — Cyber-Lion bridge**
+**Faza D — most Cyber-Lion**
 
-- consume Cyber-Lion change proposal,
-- emit EventEnvelope-compatible analysis events,
-- bind findings to entity/capability/agent/swarm graph,
-- expose ACCEPT/REVIEW/BLOCK with evidence.
+- konsumować Cyber-Lion change proposal,
+- emitować zdarzenia analityczne kompatybilne z EventEnvelope,
+- wiązać findings z grafem entity/capability/agent/swarm,
+- wystawiać ACCEPT/REVIEW/BLOCK z evidence.
 
-### Avoid
+### Unikać
 
-- turning GlitchLab itself into the authority engine,
-- silently auto-fixing consequential changes,
-- expanding one local registry into a global registry by semantic overloading.
+- przekształcania samego GlitchLab w authority engine,
+- cichego auto-fix consequential changes,
+- rozszerzania jednego lokalnego registry do globalnego przez semantic overloading.
 
 ---
 
 ## 3. `chunk-chunk` — Process Semantics / HMK-9D Microcode
 
-### Current assets
+### Bieżące zasoby
 
-- `S,Σ,A,F,g,H,a*` decision abstraction,
-- `chunk–chunk→` transitions,
-- 9D vector `[T,S,R,E,I,F,A,P,D]`,
-- bridges and threshold operators,
-- local/global energy concept,
-- relation to GlitchLab Δ/EGDB.
+- abstrakcja decyzyjna `S,Σ,A,F,g,H,a*`,
+- przejścia `chunk–chunk→`,
+- wektor 9D `[T,S,R,E,I,F,A,P,D]`,
+- mosty i operatory progów,
+- koncepcja energii lokalnej/globalnej,
+- relacja z GlitchLab Δ/EGDB.
 
-### Build next
+### Budować dalej
 
-**Phase A — canonical schema**
+**Faza A — canonical schema**
 
-- separate normative schema from prompt examples,
-- version `ProcessVector9D`, `Bridge`, `Transition`, `MicrocodeProgram`,
-- define units/ranges and UNKNOWN handling.
+- oddzielić normative schema od przykładów promptów,
+- wersjonować `ProcessVector9D`, `Bridge`, `Transition`, `MicrocodeProgram`,
+- zdefiniować units/ranges i obsługę UNKNOWN.
 
-**Phase B — deterministic VM core**
+**Faza B — deterministyczny VM core**
 
-- implement parser/executor for semantic microcode that modifies process state only,
-- no direct tool authority,
-- deterministic event output.
+- zaimplementować parser/executor microcode semantycznego modyfikującego wyłącznie process state,
+- bez direct tool authority,
+- deterministyczny event output.
 
-**Phase C — AgentSpec integration**
+**Faza C — integracja AgentSpec**
 
-- allow an AgentSpec to reference process profile/bridges,
-- emit 9D annotations on Cyber-Lion events,
-- map `THRESHOLD_TRANSITION` to GateRequested candidate, not GateApplied.
+- pozwolić AgentSpec odwoływać się do process profile/bridges,
+- emitować adnotacje 9D na zdarzeniach Cyber-Lion,
+- mapować `THRESHOLD_TRANSITION` na candidate `GateRequested`, nie `GateApplied`.
 
-**Phase D — swarm process geometry**
+**Faza D — geometria procesu roju**
 
-- aggregate local transition vectors into MosaicCell/Swarm diagnostics,
-- coupling and coordination-cost metrics,
-- adaptive chunk granularity.
+- agregować lokalne transition vectors do diagnostyki MosaicCell/Swarm,
+- metryki coupling i coordination-cost,
+- adaptacyjną granularność chunków.
 
-### Avoid
+### Unikać
 
-- presenting `_neuro`/semantic bridge scores as physical measurements,
-- letting bridge operators create authority,
-- putting local virtual environments/runtime state in source.
+- przedstawiania `_neuro`/semantic bridge scores jako pomiarów fizycznych,
+- pozwalania bridge operators tworzyć authority,
+- przechowywania lokalnych virtual environments/runtime state w source.
 
 ---
 
 ## 4. `HA2D` — Context, Memory and Human–AI Adaptation Lab
 
-### Current assets
+### Bieżące zasoby
 
 - PCE persistent context,
 - MCV temporary context,
-- SNAP/THOUGHT/MORPH conceptual transitions,
-- CMM UUID/time/hash records,
-- SMA/_neuro semantic revision heuristics,
-- HUD concepts.
+- konceptualne przejścia SNAP/THOUGHT/MORPH,
+- rekordy CMM UUID/time/hash,
+- heurystyki semantic revision SMA/_neuro,
+- koncepcje HUD.
 
-### Build next
+### Budować dalej
 
-**Phase A — state taxonomy**
+**Faza A — taksonomia stanów**
 
-Formalize:
+Sformalizować:
 
 ```text
 WorkingContext
@@ -176,11 +176,11 @@ CommittedMemory
 SupersededMemory
 ```
 
-with strict separation.
+z rygorystycznym rozdzieleniem.
 
-**Phase B — CMM v2 contract**
+**Faza B — kontrakt CMM v2**
 
-Add:
+Dodać:
 
 ```text
 EntityIdentity
@@ -194,50 +194,50 @@ supersedes
 content hash
 ```
 
-**Phase C — Memory Service adapter**
+**Faza C — adapter Memory Service**
 
-- expose read/write capabilities through Cyber-Lion Capability Registry,
-- MemoryCommitted only after MAND policy,
-- implement replay/integrity tests.
+- wystawić read/write capabilities przez Cyber-Lion Capability Registry,
+- `MemoryCommitted` dopiero po MAND policy,
+- zaimplementować testy replay/integrity.
 
-**Phase D — Human–AI HUD**
+**Faza D — Human–AI HUD**
 
-- display context provenance,
-- show memory candidates vs committed state,
-- expose confidence/uncertainty and authority boundary.
+- wyświetlać context provenance,
+- pokazywać memory candidates vs committed state,
+- eksponować confidence/uncertainty i granicę authority.
 
-### Avoid
+### Unikać
 
-- self-declared semantic coherence as proof of truth,
-- automatic persistent memory from model output,
-- treating `_neuro` as clinical EEG/physiology.
+- self-declared semantic coherence jako dowodu prawdy,
+- automatycznej persistent memory z outputu modelu,
+- traktowania `_neuro` jako klinicznego EEG/fizjologii.
 
 ---
 
 ## 5. `swarm` — Distributed Execution Mesh
 
-### Current assets
+### Bieżące zasoby
 
-- Kubernetes workload topology,
-- UDP/MQTT telemetry,
+- topologia workloadów Kubernetes,
+- telemetria UDP/MQTT,
 - APIs/PostgreSQL,
 - Istio,
 - Prometheus/Grafana/Jaeger,
 - RBAC/NetworkPolicy,
-- AI service example.
+- przykład AI service.
 
-### Build next
+### Budować dalej
 
-**Phase A — lab security/hygiene**
+**Faza A — bezpieczeństwo/higiena labu**
 
-- merge command-injection remediation,
-- canonical README,
-- least-authority review of RBAC,
-- secrets from Kubernetes Secret management rather than examples with static values.
+- zintegrować remediation command-injection,
+- kanoniczny README,
+- przegląd least-authority RBAC,
+- secrets przez Kubernetes Secret management zamiast przykładów ze statycznymi wartościami.
 
-**Phase B — generic workload abstraction**
+**Faza B — generyczna abstrakcja workloadu**
 
-Replace drone-specific orchestration assumptions with reusable roles:
+Zastąpić drone-specific assumptions orkiestracji rolami wielokrotnego użytku:
 
 ```text
 ExecutionNode
@@ -247,57 +247,57 @@ CapabilityBrokerClient
 LocalPEP
 ```
 
-Keep drone simulation as one example workload.
+Zachować symulację drona jako przykładowy workload.
 
-**Phase C — Cyber-Lion runtime adapter**
+**Faza C — runtime adapter Cyber-Lion**
 
-- consume AgentSpec/SwarmSpec,
-- bind agent identity to pod/workload identity,
-- map capability lease → runtime resources,
-- emit action/process/effect receipts.
+- konsumować AgentSpec/SwarmSpec,
+- wiązać tożsamość agenta z pod/workload identity,
+- mapować capability lease → runtime resources,
+- emitować action/process/effect receipts.
 
-**Phase D — observability-conditioned runtime**
+**Faza D — runtime warunkowany obserwowalnością**
 
-- required trace/health checks,
-- DEGRADED/RESTRICTED/FROZEN states,
-- authority reduction on evidence loss,
-- kill/revoke capability.
+- wymagane trace/health checks,
+- stany DEGRADED/RESTRICTED/FROZEN,
+- redukcja authority przy utracie evidence,
+- capability kill/revoke.
 
-### Avoid
+### Unikać
 
-- identity by IP/PID only,
-- inheriting broad Kubernetes permissions from coordinator,
-- calling Kubernetes/Istio configuration itself a complete Agent Control Mesh.
+- identity wyłącznie przez IP/PID,
+- dziedziczenia szerokich uprawnień Kubernetes od koordynatora,
+- nazywania samej konfiguracji Kubernetes/Istio kompletnym Agent Control Mesh.
 
 ---
 
 ## 6. `sbom` — Provenance, Identity and Composition Intelligence
 
-### Current assets
+### Bieżące zasoby
 
 - AID,
-- stable event envelope,
+- stabilny event envelope,
 - `sbom → scan → delta → gate`,
-- Jenkins/Elastic/Splunk lab,
-- supply-chain state/delta logic.
+- lab Jenkins/Elastic/Splunk,
+- logika supply-chain state/delta.
 
-### Build next
+### Budować dalej
 
-**Phase A — preserve SBOM specialization**
+**Faza A — zachować specjalizację SBOM**
 
-- strengthen CycloneDX/signing/attestation path,
-- dependency and license/security metrics,
-- reliable AID propagation.
+- wzmocnić ścieżkę CycloneDX/signing/attestation,
+- dependency i license/security metrics,
+- niezawodna propagacja AID.
 
-**Phase B — Cyber-Lion identity adapter v2**
+**Faza B — Cyber-Lion identity adapter v2**
 
 - dual emit EntityIdentity/EventEnvelope,
-- lossless legacy AID compatibility,
-- explicit GateApplied semantics.
+- bezstratna kompatybilność legacy AID,
+- jawna semantyka GateApplied.
 
-**Phase C — Relation BOM / Decision BOM research**
+**Faza C — badania Relation BOM / Decision BOM**
 
-Prototype composition records for:
+Prototypować rekordy composition dla:
 
 ```text
 agent
@@ -308,37 +308,37 @@ swarm
 execution artifact
 ```
 
-Do not call these standardized SBOM formats unless mapped to an actual standard.
+Nie nazywać ich standaryzowanymi formatami SBOM, jeśli nie są odwzorowane na rzeczywisty standard.
 
-**Phase D — provenance graph provider**
+**Faza D — provider grafu provenance**
 
-- expose composition/delta queries to Enterprise Graph,
-- link build → dependency → scan → gate → execution receipt.
+- wystawić zapytania composition/delta do Enterprise Graph,
+- powiązać build → dependency → scan → gate → execution receipt.
 
-### Avoid
+### Unikać
 
-- turning every telemetry record into full payload storage,
-- conflating AID owner mandate with runtime permission,
-- redefining existing SBOM standards under custom terms.
+- zamieniania każdego rekordu telemetrii w pełny payload storage,
+- mylenia AID owner mandate z runtime permission,
+- redefiniowania istniejących standardów SBOM własną terminologią.
 
 ---
 
 ## 7. `mosaic_lab_pro.py` — Structural Intelligence Engine
 
-### Current assets
+### Bieżące zasoby
 
-- AST graph,
-- S/H geometry,
-- A* pathing,
-- abstraction parameter `λ`,
-- supergraph contraction,
-- stable visualization invariants.
+- graf AST,
+- geometria S/H,
+- pathing A*,
+- parametr abstrakcji `λ`,
+- kontrakcja supergrafu,
+- stabilne inwarianty wizualizacji.
 
-### Build next
+### Budować dalej
 
-**Phase A — split engine from GUI**
+**Faza A — oddzielić engine od GUI**
 
-Extract reusable package:
+Wyodrębnić reusable package:
 
 ```text
 mosaic_core.graph
@@ -348,11 +348,11 @@ mosaic_core.path
 mosaic_core.validation
 ```
 
-Retain GUI as a consumer.
+Zachować GUI jako consumera.
 
-**Phase B — generic graph adapters**
+**Faza B — generyczne adaptery grafów**
 
-Support:
+Obsłużyć:
 
 ```text
 ASTGraph
@@ -364,9 +364,9 @@ AuthorityGraph
 ProvenanceGraph
 ```
 
-**Phase C — multi-scale enterprise projection**
+**Faza C — wieloskalowa projekcja przedsiębiorstwa**
 
-Use `λ` to move from:
+Użyć `λ` do przechodzenia:
 
 ```text
 single action
@@ -377,41 +377,41 @@ single action
 → enterprise
 ```
 
-**Phase D — structural anomaly provider**
+**Faza D — provider anomalii strukturalnych**
 
-- unexpected cross-domain edges,
-- authority path shortcuts,
-- high coupling,
-- topology drift,
+- nieoczekiwane krawędzie cross-domain,
+- skróty ścieżek authority,
+- wysokie coupling,
+- drift topologii,
 - single points of failure.
 
-### Avoid
+### Unikać
 
-- interpreting geometry itself as truth,
-- coupling core algorithms permanently to Tkinter/Matplotlib,
-- using visual similarity as authorization/security decision.
+- interpretowania samej geometrii jako prawdy,
+- trwałego sprzęgania core algorithms z Tkinter/Matplotlib,
+- używania similarity wizualnego jako decyzji authorization/security.
 
 ---
 
 ## 8. `SymulacjaKaskadySieciowej` — Simulation/Falsification Engine
 
-### Current assets
+### Bieżące zasoby
 
 - packaged model interface,
-- deterministic simulation,
+- symulacja deterministyczna,
 - Monte Carlo,
 - Morris,
 - Sobol,
-- bifurcation/phase analysis,
-- explicit distinction between model and forecast.
+- analiza bifurcation/phase,
+- jawne rozróżnienie modelu od prognozy.
 
-### Build next
+### Budować dalej
 
-**Phase A — preserve current Iran model as domain plugin**
+**Faza A — zachować obecny model Iran jako plugin domenowy**
 
-Do not genericize its equations away.
+Nie uogólniać jego równań przez ich usunięcie.
 
-**Phase B — common SimulationProvider protocol**
+**Faza B — wspólny protokół SimulationProvider**
 
 ```text
 ModelDescriptor
@@ -423,40 +423,40 @@ SensitivityResult
 ModelRiskStatement
 ```
 
-**Phase C — enterprise models**
+**Faza C — modele przedsiębiorstwa**
 
-Add separate plugins for:
+Dodać odrębne pluginy dla:
 
 - product/market timing,
-- agent/swarm failure cascades,
-- authority propagation,
-- observability failure,
-- software delivery/risk tradeoff.
+- kaskad awarii agentów/rojów,
+- propagacji authority,
+- awarii obserwowalności,
+- tradeoff software delivery/risk.
 
-**Phase D — Cyber-Lion adapter**
+**Faza D — adapter Cyber-Lion**
 
-SimulationRequested/Completed events with seed/config/model-version provenance.
+Zdarzenia SimulationRequested/Completed z provenance seed/config/model-version.
 
-### Avoid
+### Unikać
 
-- using simulation frequency as empirical incident probability,
-- modifying domain-specific model to fit every future use case,
-- hiding assumptions behind one synthetic score.
+- traktowania częstości z symulacji jako empirycznego prawdopodobieństwa incydentu,
+- modyfikowania modelu domain-specific tak, aby pasował do każdego przyszłego zastosowania,
+- ukrywania assumptions za jednym synthetic score.
 
 ---
 
 ## 9. `hipotezy_nadawcze_LLM` — Epistemic Hypothesis Lab
 
-### Current assets
+### Bieżące zasoby
 
-- narrow falsifiable hypotheses,
-- explicit text→token thesis,
-- falsification conditions,
-- evidence/argument structure.
+- wąskie falsyfikowalne hipotezy,
+- jawna teza text→token,
+- warunki falsyfikacji,
+- struktura evidence/argument.
 
-### Build next
+### Budować dalej
 
-**Phase A — HypothesisSpec schema**
+**Faza A — schema HypothesisSpec**
 
 ```text
 id
@@ -470,44 +470,44 @@ confidence
 status
 ```
 
-**Phase B — experiment registry**
+**Faza B — experiment registry**
 
-- test cases,
-- model/version metadata,
-- result hashes,
-- negative results.
+- przypadki testowe,
+- metadane model/version,
+- hashes wyników,
+- wyniki negatywne.
 
-**Phase C — R&D adapter**
+**Faza C — adapter R&D**
 
-- export to `writeups` ResearchRecord,
-- link rather than duplicate canonical hypothesis.
+- eksport do `writeups` ResearchRecord,
+- linkowanie zamiast duplikowania hipotezy kanonicznej.
 
-### Avoid
+### Unikać
 
-- probability values without explicit status/calibration,
-- model explaining its own hypothesis as validation,
-- promoting analogy into scientific fact.
+- wartości prawdopodobieństwa bez jawnego statusu/kalibracji,
+- traktowania wyjaśnienia własnej hipotezy przez model jako walidacji,
+- promowania analogii do rangi faktu naukowego.
 
 ---
 
 ## 10. `writeups` — R&D / Enterprise Research Memory
 
-### Current assets
+### Bieżące zasoby
 
 - AI Security / SMB/PDB,
-- runtime/reference monitor designs,
+- projekty runtime/reference monitor,
 - multi-agent mesh,
 - LOCI,
-- Human–AI research,
+- badania Human–AI,
 - probabilistic studies,
 - OSINT,
-- publications and reproducibility material.
+- publikacje i materiały reprodukowalności.
 
-### Build next
+### Budować dalej
 
-**Phase A — R&D taxonomy**
+**Faza A — taksonomia R&D**
 
-Add machine-readable/lightweight index for:
+Dodać machine-readable/lightweight index dla:
 
 ```text
 ResearchRecord
@@ -519,17 +519,17 @@ EngineeringCandidate
 Publication
 ```
 
-**Phase B — epistemic metadata**
+**Faza B — metadane epistemiczne**
 
-Tag core outputs with status and supersession links.
+Tagować podstawowe outputy statusem i supersession links.
 
-**Phase C — Cyber-Lion R&D adapter**
+**Faza C — adapter R&D Cyber-Lion**
 
-- ingest metadata into Evidence/Hypothesis registry,
-- preserve document SHA/source links,
-- generate SpecCandidate only through explicit promotion.
+- ingest metadanych do Evidence/Hypothesis registry,
+- zachowanie document SHA/source links,
+- generowanie SpecCandidate wyłącznie przez jawny promotion.
 
-**Phase D — research swarm workflows**
+**Faza D — workflow rojów badawczych**
 
 - source/evidence agent,
 - hypothesis agent,
@@ -537,17 +537,17 @@ Tag core outputs with status and supersession links.
 - simulation agent,
 - methodology/security reviewer.
 
-### Avoid
+### Unikać
 
-- treating all prose as equivalent evidence,
-- losing negative results/superseded hypotheses,
-- letting writeup text configure production directly.
+- traktowania całego prose jako równoważnego evidence,
+- utraty wyników negatywnych/supersedowanych hipotez,
+- pozwalania tekstowi writeup bezpośrednio konfigurować produkcję.
 
 ---
 
-## 11. Cross-repository implementation order
+## 11. Kolejność implementacji cross-repository
 
-### Wave 1 — contracts and state
+### Wave 1 — kontrakty i stan
 
 ```text
 ai_platform AgentSpec/SwarmSpec
@@ -556,7 +556,7 @@ ai_platform AgentSpec/SwarmSpec
 → provider manifests in all repos
 ```
 
-### Wave 2 — structural validation
+### Wave 2 — walidacja strukturalna
 
 ```text
 GlitchLab enterprise-delta adapters
@@ -581,7 +581,7 @@ writeups R&D index
 → research swarm
 ```
 
-### Wave 5 — full closed loop
+### Wave 5 — pełna zamknięta pętla
 
 ```text
 market/world observation
@@ -597,20 +597,20 @@ market/world observation
 
 ---
 
-## 12. Common repository requirements
+## 12. Wspólne wymagania repozytoriów
 
-Every repository should eventually contain:
+Każde repozytorium powinno docelowo zawierać:
 
 ```text
 README.md
 AI_NATIVE_ROADMAP.md
-cyber-lion.manifest.json (or equivalent versioned manifest)
+cyber-lion.manifest.json (lub równoważny wersjonowany manifest)
 PROCESS_GUARD.md
 security / execution scope
 CI regression gate
 ```
 
-Every executable provider should additionally declare:
+Każdy wykonywalny provider powinien dodatkowo deklarować:
 
 ```text
 capabilities

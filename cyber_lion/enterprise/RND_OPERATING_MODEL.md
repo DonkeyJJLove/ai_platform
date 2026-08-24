@@ -1,23 +1,23 @@
-# R&D Operating Model
+# Model operacyjny R&D
 
-## 1. R&D is an enterprise organ, not a document folder
+## 1. R&D jest organem przedsiębiorstwa, a nie katalogiem dokumentów
 
-In Cyber-Lion, `writeups` is the long-term **R&D / evidence corpus** of the AI-Native enterprise. It stores research questions, falsification reports, architecture hypotheses, security studies, OSINT, simulations, experiments and publications.
+W Cyber-Lion `writeups` jest długoterminowym **korpusem R&D / evidence** przedsiębiorstwa AI-Native. Przechowuje pytania badawcze, raporty falsyfikacyjne, hipotezy architektoniczne, badania bezpieczeństwa, OSINT, symulacje, eksperymenty i publikacje.
 
-Its role is not to directly configure production systems. Its role is to create **candidate knowledge** that can be promoted into executable specifications only after explicit validation.
+Jego rolą nie jest bezpośrednie konfigurowanie systemów produkcyjnych. Jego rolą jest tworzenie **candidate knowledge**, która może zostać wypromowana do wykonywalnych specyfikacji dopiero po jawnej walidacji.
 
 ```text
-WORLD / INCIDENT / MARKET / EXPERIMENT
+ŚWIAT / INCYDENT / RYNEK / EKSPERYMENT
                 ↓
-            R&D OBSERVATION
+            OBSERWACJA R&D
                 ↓
-             HYPOTHESIS
+             HIPOTEZA
                 ↓
-       FALSIFICATION / TEST
+       FALSYFIKACJA / TEST
                 ↓
-       REPRODUCIBLE EVIDENCE
+       REPRODUKOWALNE EVIDENCE
                 ↓
-         ENGINEERING RULE
+         REGUŁA INŻYNIERYJNA
                 ↓
           SPEC CANDIDATE
                 ↓
@@ -28,7 +28,7 @@ WORLD / INCIDENT / MARKET / EXPERIMENT
        NORMATIVE RUNTIME SPEC
 ```
 
-Core invariant:
+Inwariant podstawowy:
 
 ```text
 RESEARCH CLAIM != RUNTIME AUTHORITY
@@ -36,9 +36,9 @@ RESEARCH CLAIM != RUNTIME AUTHORITY
 
 ---
 
-## 2. Research object
+## 2. Obiekt badawczy
 
-Every important research result should eventually be representable as:
+Każdy ważny wynik badawczy powinien docelowo dać się reprezentować jako:
 
 ```text
 ResearchRecord = {
@@ -65,13 +65,13 @@ ResearchRecord = {
 }
 ```
 
-`writeups` remains the human-readable corpus; a future machine-readable index will expose these fields to the platform.
+`writeups` pozostaje human-readable corpus; przyszły machine-readable index wystawi te pola platformie.
 
 ---
 
-## 3. Epistemic states
+## 3. Stany epistemiczne
 
-Use a strict ladder:
+Używaj ścisłej drabiny:
 
 ```text
 QUESTION
@@ -84,9 +84,9 @@ QUESTION
 → SUPERSEDED
 ```
 
-This ladder is different from confidence. A highly plausible hypothesis remains a hypothesis until it has the required evidence and validation path.
+Drabina ta jest czymś innym niż confidence. Nawet wysoce prawdopodobna hipoteza pozostaje hipotezą, dopóki nie posiada wymaganego evidence i ścieżki walidacji.
 
-For quantitative material, preserve the existing distinction:
+Dla materiału ilościowego zachowuj istniejące rozróżnienie:
 
 ```text
 OBSERVED
@@ -98,15 +98,15 @@ SPECULATION
 STRESS_PARAMETER
 ```
 
-Monte Carlo convergence reduces sampling noise **inside a model**. It does not automatically promote a calibrated assumption into an observed real-world frequency.
+Konwergencja Monte Carlo zmniejsza sampling noise **wewnątrz modelu**. Nie promuje automatycznie calibrated assumption do statusu zaobserwowanej częstotliwości świata rzeczywistego.
 
 ---
 
-## 4. Research cells
+## 4. Research Cells
 
-R&D work is performed by temporary research mosaics rather than one monolithic research agent.
+Praca R&D jest wykonywana przez tymczasowe mozaiki badawcze, a nie jednego monolitycznego research agenta.
 
-Example:
+Przykład:
 
 ```text
 R&D Cell
@@ -118,11 +118,11 @@ R&D Cell
 └── Human Research Owner
 ```
 
-For lower-risk exploratory work, fewer roles may be combined. For high-impact policy or security research, hypothesis generation and falsification SHOULD be separated across independent agents/providers.
+Dla exploratory work o niższym ryzyku mniej ról może zostać połączonych. Dla high-impact policy albo security research generowanie hipotezy i falsyfikacja **POWINNY** być rozdzielone pomiędzy niezależnych agentów/providerów.
 
 ---
 
-## 5. Research event chain
+## 5. Łańcuch zdarzeń R&D
 
 ```text
 ResearchQuestionCreated
@@ -140,66 +140,66 @@ ResearchQuestionCreated
 → SpecPromoted
 ```
 
-All steps should share correlation/provenance IDs through Cyber-Lion `EventEnvelope`.
+Wszystkie kroki powinny współdzielić correlation/provenance IDs przez Cyber-Lion `EventEnvelope`.
 
 ---
 
-## 6. Promotion classes
+## 6. Klasy promocji
 
-### Class R0 — narrative / exploratory
+### Klasa R0 — narracyjna / exploratory
 
-Examples:
+Przykłady:
 
-- essays,
-- analogies,
-- conceptual sketches,
-- speculative architectures.
+- eseje,
+- analogie,
+- szkice koncepcyjne,
+- spekulatywne architektury.
 
-May inform hypothesis generation. Cannot become runtime control directly.
+Mogą informować generowanie hipotez. Nie mogą bezpośrednio stać się kontrolą runtime.
 
-### Class R1 — formal hypothesis
+### Klasa R1 — formalna hipoteza
 
-Must include:
+Musi zawierać:
 
-- explicit proposition,
+- jawne twierdzenie,
 - falsifiers,
-- alternative explanations,
-- evidence status.
+- alternatywne wyjaśnienia,
+- status evidence.
 
-### Class R2 — reproduced experiment / analysis
+### Klasa R2 — zreprodukowany eksperyment / analiza
 
-Must include:
+Musi zawierać:
 
-- reproducible inputs or clear source references,
-- method,
-- outputs,
-- limitations,
-- negative results where relevant.
+- reprodukowalne wejścia albo czytelne odwołania do źródeł,
+- metodę,
+- outputy,
+- ograniczenia,
+- wyniki negatywne tam, gdzie są istotne.
 
-### Class R3 — engineering candidate
+### Klasa R3 — engineering candidate
 
-A research result is translated into a candidate invariant, policy, schema, algorithm or test.
+Wynik badawczy jest tłumaczony do candidate invariant, policy, schema, algorithm albo test.
 
-Requires:
+Wymaga:
 
-- explicit mapping from evidence → rule,
+- jawnego mapowania evidence → rule,
 - failure modes,
-- rollback,
-- proposed metrics.
+- rollbacku,
+- proponowanych metryk.
 
-### Class R4 — shadow validated
+### Klasa R4 — shadow validated
 
-The candidate runs without authority over real consequences and is compared with existing behavior.
+Candidate działa bez authority nad rzeczywistymi konsekwencjami i jest porównywany z istniejącym zachowaniem.
 
-### Class R5 — normative
+### Klasa R5 — normative
 
-May influence production execution after independent gate/approval and versioned release.
+Może wpływać na production execution po niezależnym gate/approval i wersjonowanym release.
 
 ---
 
-## 7. Security research promotion
+## 7. Promocja badań bezpieczeństwa
 
-Security findings use the strongest promotion path:
+Security findings używają najsilniejszej ścieżki promocji:
 
 ```text
 finding
@@ -215,13 +215,13 @@ finding
 → runtime control
 ```
 
-A single payload or CVE-specific patch is not the final product. The preferred result is a generalized class-level invariant.
+Pojedynczy payload lub patch specyficzny dla CVE nie jest produktem końcowym. Preferowany rezultat to uogólniony inwariant na poziomie klasy problemu.
 
 ---
 
-## 8. Writeups ↔ ai_platform contract
+## 8. Kontrakt writeups ↔ ai_platform
 
-Target future interface:
+Docelowy przyszły interfejs:
 
 ```text
 writeups ResearchRecord
@@ -235,15 +235,15 @@ engineering candidate
 Agent Foundry / Policy / Simulation / GlitchLab
 ```
 
-The adapter must preserve original document path, commit SHA, cited sources and epistemic status.
+Adapter musi zachować oryginalną ścieżkę dokumentu, commit SHA, cytowane źródła i status epistemiczny.
 
 ---
 
-## 9. Hypotheses repository ↔ R&D
+## 9. Repozytorium hipotez ↔ R&D
 
-`hipotezy_nadawcze_LLM` remains a dedicated small laboratory for narrow model/channel hypotheses.
+`hipotezy_nadawcze_LLM` pozostaje dedykowanym małym laboratorium dla wąskich hipotez model/channel.
 
-Its records should be linkable into `writeups` by ID, not copied and silently changed.
+Jego rekordy powinny być linkowalne do `writeups` przez ID, a nie kopiowane i po cichu zmieniane.
 
 Target:
 
@@ -256,11 +256,11 @@ HypothesisSpec
 
 ---
 
-## 10. Simulation role
+## 10. Rola symulacji
 
-Simulation is a falsification amplifier, not evidence replacement.
+Symulacja jest wzmacniaczem falsyfikacji, a nie zamiennikiem evidence.
 
-A simulation request includes:
+Żądanie symulacji zawiera:
 
 ```text
 model_id
@@ -273,7 +273,7 @@ requested metrics
 stress conditions
 ```
 
-Output includes:
+Output zawiera:
 
 ```text
 result
@@ -283,7 +283,7 @@ failure region
 model-risk notes
 ```
 
-The system MUST preserve the distinction:
+System **MUSI** zachować rozróżnienie:
 
 ```text
 SIMULATED
@@ -293,29 +293,29 @@ OBSERVED
 
 ---
 
-## 11. Research memory
+## 11. Pamięć badawcza
 
-Committed R&D memory should store:
+Committed R&D memory powinna przechowywać:
 
 ```text
-what was known
-when it was known
+co było wiadomo
+kiedy było wiadomo
 source/evidence
-which hypotheses were rejected
-which assumptions were used
-which rule version was derived
-what later superseded it
+które hipotezy odrzucono
+jakich assumptions użyto
+która wersja reguły została wyprowadzona
+co później ją supersedowało
 ```
 
-This prevents the organization from repeatedly rediscovering the same problem or silently resurrecting invalidated assumptions.
+Zapobiega to wielokrotnemu odkrywaniu przez organizację tego samego problemu albo cichemu przywracaniu unieważnionych assumptions.
 
 ---
 
-## 12. R&D observability
+## 12. Obserwowalność R&D
 
-Measure more than publication count.
+Mierz więcej niż liczbę publikacji.
 
-Useful metrics:
+Użyteczne metryki:
 
 ```text
 time question → falsifiable hypothesis
@@ -329,27 +329,27 @@ research lineage completeness
 model-risk disclosure completeness
 ```
 
-The objective is learning velocity with epistemic integrity.
+Celem jest learning velocity z integralnością epistemiczną.
 
 ---
 
-## 13. Human role in R&D
+## 13. Rola człowieka w R&D
 
-Humans remain owners of:
+Ludzie pozostają ownerami:
 
-- strategic research questions,
-- interpretation of ambiguous real-world evidence,
-- ethical/legal scope,
+- strategicznych pytań badawczych,
+- interpretacji niejednoznacznego evidence świata rzeczywistego,
+- zakresu etycznego/prawnego,
 - high-impact promotion decisions,
-- deciding whether a useful engineering rule is aligned with enterprise goals.
+- decyzji, czy użyteczna reguła inżynieryjna jest zgodna z celami przedsiębiorstwa.
 
-Agents accelerate collection, formalization, simulation, falsification and synthesis.
+Agenci przyspieszają zbieranie, formalizację, symulację, falsyfikację i syntezę.
 
 ---
 
-## 14. Definition of done for a promoted research result
+## 14. Definition of done dla wypromowanego wyniku badawczego
 
-A research result becomes eligible for normative use only when:
+Wynik badawczy kwalifikuje się do użycia normatywnego tylko wtedy, gdy:
 
 ```text
 1. original evidence is reconstructable

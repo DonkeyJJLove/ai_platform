@@ -1,112 +1,112 @@
-# CYBER-LION — Capability Map
+# CYBER-LION — mapa capabilities
 
-A capability is defined as a reusable ability to solve a class of problems. It is not identical to a repository, service or memorized workflow.
+Capability jest definiowana jako wielokrotnego użytku zdolność do rozwiązywania określonej klasy problemów. Nie jest tożsama z repozytorium, usługą ani zapamiętanym workflow.
 
-## Capability graph
+## Graf capabilities
 
 ```text
-OBSERVE
-  ├─ telemetry ingest ...................... swarm
-  ├─ software-state observation ........... sbom
-  ├─ code/delta observation ............... glitchlab
-  └─ research/evidence retrieval .......... writeups
+OBSERWACJA
+  ├─ ingest telemetrii ..................... swarm
+  ├─ obserwacja stanu software ............. sbom
+  ├─ obserwacja kodu/delty ................. glitchlab
+  └─ retrieval badań/evidence .............. writeups
 
-STRUCTURE
-  ├─ AST / dependency graph ............... glitchlab
-  ├─ multi-level graph / λ abstraction .... mosaic_lab_pro.py
-  └─ QV9D semantic mapping ................ ai_platform + chunk-chunk
+STRUKTURYZACJA
+  ├─ AST / graf zależności ................. glitchlab
+  ├─ graf wielopoziomowy / abstrakcja λ .... mosaic_lab_pro.py
+  └─ mapowanie semantyczne QV9D ............ ai_platform + chunk-chunk
 
-REPRESENT STATE / CONTEXT
-  ├─ HMK-9D Δ / 9D relations .............. chunk-chunk
-  ├─ PCE / MCV / SNAP / revision .......... HA2D
-  └─ identity-over-time .................... sbom/AID
+REPREZENTACJA STANU / KONTEKSTU
+  ├─ HMK-9D Δ / relacje 9D ................. chunk-chunk
+  ├─ PCE / MCV / SNAP / revision ........... HA2D
+  └─ tożsamość w czasie .................... sbom/AID
 
-GENERATE / TEST HYPOTHESES
-  ├─ explicit falsification research ....... hipotezy_nadawcze_LLM
-  ├─ anomaly/model-disagreement analysis ... glitchlab
-  └─ evidence corpus ....................... writeups
+GENEROWANIE / TESTOWANIE HIPOTEZ
+  ├─ jawne badania falsyfikacyjne .......... hipotezy_nadawcze_LLM
+  ├─ analiza anomalii/niezgodności modeli .. glitchlab
+  └─ korpus evidence ....................... writeups
 
-SIMULATE
-  └─ scenarios / MC / Morris / Sobol ....... SymulacjaKaskadySieciowej
+SYMULACJA
+  └─ scenariusze / MC / Morris / Sobol ..... SymulacjaKaskadySieciowej
 
-AUTHORIZE
-  ├─ CI gate evidence ...................... sbom
-  ├─ local invariants / Guard .............. glitchlab
+AUTORYZACJA
+  ├─ evidence bramki CI .................... sbom
+  ├─ lokalne inwarianty / Guard ............ glitchlab
   ├─ Kubernetes RBAC ....................... swarm
-  └─ TARGET shared mandate contracts ....... ai_platform
+  └─ TARGET wspólnych kontraktów mandate ... ai_platform
 
-EXECUTE
-  ├─ distributed service runtime ........... swarm
-  ├─ code-analysis/repair pipelines ........ glitchlab
-  └─ TARGET sandbox/tool workers ........... swarm adapters
+WYKONANIE
+  ├─ rozproszony runtime usług .............. swarm
+  ├─ pipeline'y analizy/naprawy kodu ........ glitchlab
+  └─ TARGET workerów sandbox/tool ........... swarm adapters
 
-OBSERVE OUTCOME / REPLAY
-  ├─ telemetry / traces .................... swarm
-  ├─ EGDB / delta history concepts ......... glitchlab
-  ├─ event-time analytics .................. sbom
-  ├─ revision viewer concept ............... HA2D
-  └─ TARGET cross-repo replay .............. ai_platform contract + adapters
+OBSERWACJA WYNIKU / REPLAY
+  ├─ telemetria / trace'y ................... swarm
+  ├─ EGDB / koncepcje historii delty ........ glitchlab
+  ├─ analityka czasu zdarzeń ................ sbom
+  ├─ koncepcja revision viewer .............. HA2D
+  └─ TARGET cross-repo replay ............... ai_platform contract + adapters
 ```
 
-## Capability ownership model
+## Model ownership capabilities
 
-| Capability | Primary owner | Providers/adapters | Target status |
+| Capability | Główny owner | Providerzy/adaptery | Status docelowy |
 |---|---|---|---|
-| Entity identity | `ai_platform` contract | `sbom` AID adapter | NEW shared contract |
-| Provenance envelope | `ai_platform` contract | `sbom`, `glitchlab`, `writeups` | GENERALIZE |
-| Typed event envelope | `ai_platform` contract | all repos | NEW shared contract |
-| Capability registry | `ai_platform` | provider manifests | NEW |
-| QV9D mapping | `ai_platform` | `chunk-chunk`, local manifests | REFINE |
-| Context compression | `chunk-chunk` | future API adapter | EXPERIMENTAL→FORMALISE |
-| Cognitive state | `HA2D` | memory adapter | SPEC→CONTRACT |
-| Structural graph extraction | `glitchlab` | `mosaic_lab_pro.py` | KEEP |
-| λ abstraction / supergraph | `mosaic_lab_pro.py` | GlitchLab graph adapter | EXTRACT |
-| Delta/anomaly analysis | `glitchlab` | local providers | KEEP |
-| Hypothesis evidence records | `ai_platform` schema | `hipotezy`, `writeups` | NEW metadata contract |
-| Simulation | `SymulacjaKaskadySieciowej` | scenario adapter | WRAP |
-| Policy/gate decision | `ai_platform` contract | local Guard/RBAC/CI gates | NEW common decision model |
-| Distributed execution | `swarm` | tool/sandbox adapters | KEEP + REFINE |
-| Supply-chain evidence | `sbom` | AID/BOM events | KEEP |
-| Research evidence | `writeups` | metadata/index adapter | KEEP + INDEX |
-| Cross-repo observability | `ai_platform` contract | swarm/glitchlab/sbom exporters | NEW |
-| Replay | `ai_platform` contract | event stores + HA2D viewer | NEW |
+| Tożsamość encji | kontrakt `ai_platform` | adapter AID `sbom` | NEW shared contract |
+| Koperta provenance | kontrakt `ai_platform` | `sbom`, `glitchlab`, `writeups` | GENERALIZE |
+| Typowana koperta zdarzenia | kontrakt `ai_platform` | wszystkie repo | NEW shared contract |
+| Capability registry | `ai_platform` | manifesty providerów | NEW |
+| Mapowanie QV9D | `ai_platform` | `chunk-chunk`, lokalne manifesty | REFINE |
+| Kompresja kontekstu | `chunk-chunk` | przyszły adapter API | EXPERIMENTAL→FORMALISE |
+| Stan poznawczy | `HA2D` | adapter pamięci | SPEC→CONTRACT |
+| Ekstrakcja grafu strukturalnego | `glitchlab` | `mosaic_lab_pro.py` | KEEP |
+| Abstrakcja λ / supergraf | `mosaic_lab_pro.py` | adapter grafu GlitchLab | EXTRACT |
+| Analiza delty/anomalii | `glitchlab` | lokalni providerzy | KEEP |
+| Rekordy evidence hipotez | schema `ai_platform` | `hipotezy`, `writeups` | NEW metadata contract |
+| Symulacja | `SymulacjaKaskadySieciowej` | adapter scenariuszy | WRAP |
+| Decyzja policy/gate | kontrakt `ai_platform` | lokalne Guard/RBAC/bramki CI | NEW common decision model |
+| Rozproszone wykonanie | `swarm` | adaptery tool/sandbox | KEEP + REFINE |
+| Evidence supply-chain | `sbom` | zdarzenia AID/BOM | KEEP |
+| Evidence badawcze | `writeups` | adapter metadanych/indeksu | KEEP + INDEX |
+| Obserwowalność cross-repo | kontrakt `ai_platform` | eksportery swarm/glitchlab/sbom | NEW |
+| Replay | kontrakt `ai_platform` | event stores + viewer HA2D | NEW |
 
-## Important non-equivalences
+## Ważne nierównoważności
 
-### Identity is not address
+### Tożsamość nie jest adresem
 
 ```text
 pod IP != service name != workload identity != entity identity != authority
 ```
 
-`swarm` network identity, `sbom` AID, QV9D Latarnia identifiers and HA2D context identities represent different mechanisms. They require correlation, not blind unification.
+Tożsamość sieciowa `swarm`, AID z `sbom`, identyfikatory Latarni QV9D i tożsamości kontekstu HA2D reprezentują różne mechanizmy. Wymagają korelacji, a nie bezwarunkowego ujednolicenia.
 
-### Local registry is not global capability registry
+### Lokalny rejestr nie jest globalnym capability registry
 
-GlitchLab's callable registry is useful inside GlitchLab. It must not become the system-wide registry by namespace expansion. Cyber-Lion needs a separate registry of capability descriptors, versions, contracts and required authority.
+Callable registry GlitchLab jest użyteczny wewnątrz GlitchLab. Nie może stać się rejestrem całego systemu przez samo rozszerzenie namespace. Cyber-Lion potrzebuje osobnego rejestru descriptorów capabilities, wersji, kontraktów i wymaganego authority.
 
-### Graph representation is not semantic truth
+### Reprezentacja grafowa nie jest prawdą semantyczną
 
-GlitchLab and Mosaic Lab can produce structural representations. QV9D can assign semantic coordinates. A graph transformation or λ abstraction is a representation operation; it cannot silently create evidence or authority.
+GlitchLab i Mosaic Lab mogą tworzyć reprezentacje strukturalne. QV9D może przypisywać współrzędne semantyczne. Transformacja grafu lub abstrakcja λ jest operacją reprezentacji; nie może po cichu tworzyć evidence ani authority.
 
-### Gate existence is not gate application
+### Istnienie bramki nie oznacza zastosowania bramki
 
-A policy file, CI rule or RBAC object does not prove that a consequential transition passed through it. Cyber-Lion needs an applied gate event linked to execution identity and receipt.
+Plik polityki, reguła CI lub obiekt RBAC nie dowodzą, że consequential transition rzeczywiście przez nie przeszło. Cyber-Lion wymaga applied gate event powiązanego z tożsamością wykonania i receiptem.
 
-## Dynamic composition rule
+## Reguła dynamicznej kompozycji
 
-A new workflow should be composed from capabilities only after the control plane can answer:
+Nowy workflow powinien być składany z capabilities dopiero wtedy, gdy control plane potrafi odpowiedzieć:
 
 ```text
-What capability is required?
-Which provider implements it?
-Which contract version does it expose?
-What identity is executing it?
-What inputs and provenance does it consume?
-What authority can it request?
-Which gate is required?
-What events and evidence will it emit?
-Can the outcome be replayed?
+Jaka capability jest wymagana?
+Który provider ją implementuje?
+Jaką wersję kontraktu udostępnia?
+Jaka tożsamość ją wykonuje?
+Jakie wejścia i provenance konsumuje?
+O jakie authority może wnioskować?
+Jaka bramka jest wymagana?
+Jakie zdarzenia i evidence zostaną wyemitowane?
+Czy wynik można odtworzyć przez replay?
 ```
 
-If those questions cannot be answered, the capability is discoverable for analysis at most; it is not eligible for consequential execution.
+Jeżeli na te pytania nie da się odpowiedzieć, capability może być co najwyżej wykrywalna do celów analitycznych; nie kwalifikuje się do wykonania powodującego skutki.

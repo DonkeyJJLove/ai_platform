@@ -1,28 +1,28 @@
-# CYBER-LION — Contract Map
+# CYBER-LION — mapa kontraktów
 
-Integration is contracts-first. Existing providers are wrapped before they are rewritten.
+Integracja jest prowadzona w modelu **contracts-first**. Istniejący providerzy są najpierw opakowywani adapterami, a dopiero później — jeśli istnieje uzasadnienie — przepisywani.
 
-## Contract ownership
+## Ownership kontraktów
 
-| Contract | Owner | Compatibility source | Consumers |
+| Kontrakt | Owner | Źródło kompatybilności | Konsumenci |
 |---|---|---|---|
-| Entity Identity Envelope | `ai_platform` | `sbom` AID | all providers |
-| Repository Manifest | `ai_platform` | LAT_GLX/QV9D mapping | control plane |
-| Capability Descriptor | `ai_platform` | local registries/docs | control plane, agents |
-| Event Envelope | `ai_platform` | SBOM event envelope, GlitchLab BUS | all providers |
-| Provenance Envelope | `ai_platform` | AID + evidence metadata | all providers |
+| Entity Identity Envelope | `ai_platform` | AID z `sbom` | wszyscy providerzy |
+| Repository Manifest | `ai_platform` | mapowanie LAT_GLX/QV9D | control plane |
+| Capability Descriptor | `ai_platform` | lokalne rejestry/dokumentacja | control plane, agenci |
+| Event Envelope | `ai_platform` | SBOM event envelope, GlitchLab BUS | wszyscy providerzy |
+| Provenance Envelope | `ai_platform` | AID + metadane evidence | wszyscy providerzy |
 | Hypothesis/Evidence Record | `ai_platform` | hipotezy/writeups | cognition, graph |
-| Gate Request / Gate Applied | `ai_platform` | SBOM gate, GlitchLab Guard, RBAC evidence | control/execution |
-| Execution Contract | `ai_platform` | swarm/tool adapters | execution providers |
-| Execution Receipt | `ai_platform` | new common contract | graph/replay/audit |
-| Memory Mutation | `ai_platform` + HA2D semantics | PCE/MCV concepts | memory providers |
-| Simulation Request/Result | `ai_platform` | `run_model` adapter | simulator/cognition |
-| Structure Graph | `ai_platform` | GlitchLab + Mosaic Lab | graph consumers |
+| Gate Request / Gate Applied | `ai_platform` | SBOM gate, GlitchLab Guard, evidence RBAC | control/execution |
+| Execution Contract | `ai_platform` | adaptery swarm/tool | providerzy wykonawczy |
+| Execution Receipt | `ai_platform` | nowy wspólny kontrakt | graph/replay/audit |
+| Memory Mutation | `ai_platform` + semantyka HA2D | koncepcje PCE/MCV | providerzy pamięci |
+| Simulation Request/Result | `ai_platform` | adapter `run_model` | simulator/cognition |
+| Structure Graph | `ai_platform` | GlitchLab + Mosaic Lab | konsumenci grafu |
 | Replay Query/Record | `ai_platform` | EGDB/event stores/revision viewer | HUD/audit |
 
 ## 1. Entity Identity Envelope
 
-Generalization must preserve existing AID semantics.
+Generalizacja musi zachować istniejącą semantykę AID.
 
 ```json
 {
@@ -40,16 +40,16 @@ Generalization must preserve existing AID semantics.
 }
 ```
 
-Rules:
+Reguły:
 
-- `entity_id` identifies the logical entity, not its network address.
-- `vcs_ref` identifies a source observation, not permanent identity.
-- AID remains valid inside `compat.aid` during migration.
-- an unknown owner/identity can reduce authority; it must not be guessed by an LLM.
+- `entity_id` identyfikuje logiczną encję, a nie jej adres sieciowy.
+- `vcs_ref` identyfikuje obserwację źródła, a nie trwałą tożsamość.
+- AID pozostaje poprawny wewnątrz `compat.aid` w okresie migracji.
+- Nieznany owner/tożsamość może obniżyć authority; LLM nie może ich zgadywać.
 
 ## 2. Repository Manifest
 
-Each repository publishes a machine-readable manifest declaring what it **actually** provides.
+Każde repozytorium publikuje machine-readable manifest deklarujący to, co **rzeczywiście** udostępnia.
 
 ```yaml
 repo:
@@ -76,7 +76,7 @@ epistemic:
   status: FACT|DERIVED|HYPOTHESIS|EXPERIMENTAL
 ```
 
-The manifest is declarative. Discovery must validate it against executable endpoints/tests where possible.
+Manifest ma charakter deklaratywny. Discovery powinno — tam, gdzie to możliwe — walidować go względem wykonywalnych endpointów/testów.
 
 ## 3. Capability Descriptor
 
@@ -96,7 +96,7 @@ observability:
 epistemic_status: FORMALISED
 ```
 
-Capabilities with real-world side effects must declare them. Hidden side effects make the provider ineligible for autonomous composition.
+Capabilities powodujące skutki w świecie rzeczywistym muszą je deklarować. Ukryte side effects dyskwalifikują providera z autonomicznej kompozycji.
 
 ## 4. Provenance Envelope
 
@@ -115,11 +115,11 @@ Minimum:
 }
 ```
 
-Compression must preserve the reference to upstream evidence even if payload is summarized.
+Kompresja musi zachować odwołanie do upstream evidence nawet wtedy, gdy payload zostaje podsumowany.
 
-## 5. Hypothesis / Evidence contract
+## 5. Kontrakt Hypothesis / Evidence
 
-Hypothesis:
+Hipoteza:
 
 ```json
 {
@@ -136,11 +136,11 @@ Hypothesis:
 }
 ```
 
-A hypothesis record is explicitly non-authoritative for execution.
+Rekord hipotezy jest jawnie nieautorytatywny w odniesieniu do execution.
 
-## 6. Gate contract
+## 6. Kontrakt gate
 
-Request:
+Żądanie:
 
 ```json
 {
@@ -157,7 +157,7 @@ Request:
 }
 ```
 
-Applied result:
+Zastosowany wynik:
 
 ```json
 {
@@ -171,11 +171,11 @@ Applied result:
 }
 ```
 
-A policy declaration is not an applied gate event.
+Deklaracja polityki nie jest zastosowanym zdarzeniem gate.
 
 ## 7. Execution Contract
 
-Execution providers consume a deterministic, already validated contract:
+Providerzy wykonawczy konsumują deterministyczny, wcześniej zwalidowany kontrakt:
 
 ```json
 {
@@ -193,7 +193,7 @@ Execution providers consume a deterministic, already validated contract:
 }
 ```
 
-A probabilistic model may propose the values; deterministic code validates schema, authority, gate and constraints before execution.
+Model probabilistyczny może zaproponować wartości; kod deterministyczny przed wykonaniem waliduje schema, authority, gate i constraints.
 
 ## 8. Memory Mutation Contract
 
@@ -210,9 +210,9 @@ A probabilistic model may propose the values; deterministic code validates schem
 }
 ```
 
-Untrusted input may create a candidate; it cannot self-authorize a persistent memory commit.
+Niezaufane wejście może utworzyć candidate; nie może samo autoryzować trwałego memory commit.
 
-## 9. Compatibility policy
+## 9. Polityka kompatybilności
 
 ```text
 CURRENT local contract
@@ -223,4 +223,4 @@ CURRENT local contract
 → legacy deprecation only after evidence
 ```
 
-No provider is required to replace its internal representation merely to participate in Cyber-Lion.
+Żaden provider nie musi zastępować swojej wewnętrznej reprezentacji wyłącznie po to, aby uczestniczyć w Cyber-Lion.

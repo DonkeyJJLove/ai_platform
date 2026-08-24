@@ -1,8 +1,8 @@
-# CYBER-LION — Scientific / Implementation Status Register
+# CYBER-LION — rejestr statusu naukowego i implementacyjnego
 
-Cyber-Lion combines executable software, architecture specifications, engineering heuristics and research hypotheses. These categories must not collapse into one another.
+Cyber-Lion łączy wykonywalne oprogramowanie, specyfikacje architektury, heurystyki inżynieryjne i hipotezy badawcze. Kategorie te nie mogą zlewać się ze sobą.
 
-## Status vocabulary
+## Słownik statusów
 
 ```text
 FACT / OBSERVED
@@ -18,34 +18,34 @@ SUPERSEDED
 UNKNOWN
 ```
 
-## Construct register
+## Rejestr konstruktów
 
-| Construct | Current status | Evidence / implementation boundary |
+| Konstrukt | Bieżący status | Granica evidence / implementacji |
 |---|---|---|
-| INF / SEM / MAND | `SPECIFICATION` | existing QV9D/ai_platform architectural classification |
-| QV9D repository mapping | `SPECIFICATION + EXPERIMENTAL` | existing static mosaic and experimental prompt comparisons; not global runtime registry |
-| HMK-9D 9D state vector | `MODEL + EXPERIMENTAL` | explicit YAML/specification; bridge weights are authored model parameters, not universal empirical constants |
-| `chunk–chunk→` | `MODEL` | explicit transition representation; general runtime router not yet established |
-| GlitchLab Δ / AST analysis | `IMPLEMENTED` | executable Python modules exist |
-| GlitchLab I1–I4 / αβZ | `MIXED: IMPLEMENTED/SPECIFICATION` | some mechanisms/code plus architectural documentation; individual enforcement paths require test-level verification |
-| GlitchLab local registry | `IMPLEMENTED` | callable registry; **not** global capability registry |
-| Mosaic AST→graph / λ abstraction | `IMPLEMENTED PROTOTYPE` | executable monolithic application |
-| AID identity-over-time | `IMPLEMENTED CONTRACT/LAB` | explicit AID contract and SBOM/scan/delta/gate envelope |
-| generalized Cyber-Lion Entity Identity | `TARGET SPECIFICATION` | not yet implemented |
-| Swarm distributed execution | `IMPLEMENTED LAB` | UDP/MQTT/APIs/Kubernetes/Istio/RBAC/monitoring artifacts |
-| Cyber-Lion typed event bus | `TARGET SPECIFICATION` | adapters/runtime not yet implemented |
-| HA2D PCE/MCV/SNAP/MORPH | `SPECIFICATION / EXPERIMENTAL` | predominantly documentary cognitive-state model |
-| `_neuro_` / SMA | `EXPERIMENTAL PROCESS MODEL` | must not be represented as clinical/physiological measurement without empirical instrumentation |
-| H-LLM text→token thesis | `HYPOTHESIS` | explicit falsification criteria exist; probability value is not itself empirical proof |
-| Cascade SD model | `IMPLEMENTED MODEL` | executable package and model interface |
-| Monte Carlo/Morris/Sobol outputs | `MODEL_RESULT` | conditional on model, parameterization and seed; not observed geopolitical facts |
-| writeups corpus | `OBSERVED ARTIFACT CORPUS` | documents exist; claims inside retain their own epistemic status |
-| Security Model Boundary / PDB | `AUTHORED SECURITY MODEL` | research/writeups; should be treated as model/architecture construct unless a specific empirical claim is sourced independently |
-| Cyber-Lion Control Plane | `TARGET SPECIFICATION` | current ai_platform is not yet the runtime described by this term |
+| INF / SEM / MAND | `SPECIFICATION` | istniejąca klasyfikacja architektoniczna QV9D/ai_platform |
+| Mapowanie repozytoriów QV9D | `SPECIFICATION + EXPERIMENTAL` | istniejąca statyczna mosaic i eksperymentalne porównania promptów; nie jest globalnym runtime registry |
+| Wektor stanu HMK-9D 9D | `MODEL + EXPERIMENTAL` | jawny YAML/specyfikacja; wagi mostów są autorskimi parametrami modelu, a nie uniwersalnymi stałymi empirycznymi |
+| `chunk–chunk→` | `MODEL` | jawna reprezentacja przejścia; ogólny runtime router nie został jeszcze ustanowiony |
+| Analiza GlitchLab Δ / AST | `IMPLEMENTED` | istnieją wykonywalne moduły Python |
+| GlitchLab I1–I4 / αβZ | `MIXED: IMPLEMENTED/SPECIFICATION` | część mechanizmów/kodu oraz dokumentacja architektoniczna; poszczególne ścieżki enforcement wymagają weryfikacji na poziomie testów |
+| Lokalny registry GlitchLab | `IMPLEMENTED` | callable registry; **nie** jest globalnym capability registry |
+| Mosaic AST→graph / abstrakcja λ | `IMPLEMENTED PROTOTYPE` | wykonywalna aplikacja monolityczna |
+| AID identity-over-time | `IMPLEMENTED CONTRACT/LAB` | jawny kontrakt AID i envelope SBOM/scan/delta/gate |
+| Uogólniona Cyber-Lion Entity Identity | `TARGET SPECIFICATION` | jeszcze niezaimplementowana |
+| Rozproszone execution Swarm | `IMPLEMENTED LAB` | artefakty UDP/MQTT/APIs/Kubernetes/Istio/RBAC/monitoring |
+| Typowany event bus Cyber-Lion | `TARGET SPECIFICATION` | adaptery/runtime jeszcze niezaimplementowane |
+| HA2D PCE/MCV/SNAP/MORPH | `SPECIFICATION / EXPERIMENTAL` | głównie dokumentacyjny model cognitive-state |
+| `_neuro_` / SMA | `EXPERIMENTAL PROCESS MODEL` | bez empirycznego oprzyrządowania nie może być przedstawiany jako pomiar kliniczny/fizjologiczny |
+| Teza H-LLM text→token | `HYPOTHESIS` | istnieją jawne kryteria falsyfikacji; wartość prawdopodobieństwa sama w sobie nie jest dowodem empirycznym |
+| Model Cascade SD | `IMPLEMENTED MODEL` | wykonywalny pakiet i interfejs modelu |
+| Wyniki Monte Carlo/Morris/Sobol | `MODEL_RESULT` | warunkowe względem modelu, parametryzacji i seed; nie są zaobserwowanymi faktami geopolitycznymi |
+| Korpus writeups | `OBSERVED ARTIFACT CORPUS` | dokumenty istnieją; twierdzenia w ich wnętrzu zachowują własny status epistemiczny |
+| Security Model Boundary / PDB | `AUTHORED SECURITY MODEL` | research/writeups; należy traktować jako konstrukt modelowy/architektoniczny, chyba że konkretne twierdzenie empiryczne ma niezależne źródło |
+| Cyber-Lion Control Plane | `TARGET SPECIFICATION` | bieżący ai_platform nie jest jeszcze runtime opisanym przez ten termin |
 
-## Scientific invariants
+## Inwarianty naukowe
 
-### S1 — Simulation is conditional
+### S1 — Symulacja jest warunkowa
 
 ```text
 large N
@@ -54,7 +54,7 @@ NOT
 ⇒ empirical truth of model
 ```
 
-### S2 — Representation is not reality
+### S2 — Reprezentacja nie jest rzeczywistością
 
 ```text
 graph / QV9D / λ / HMK-9D coordinate
@@ -62,24 +62,24 @@ graph / QV9D / λ / HMK-9D coordinate
 != direct proof of hidden real-world state
 ```
 
-### S3 — Semantic coherence is not evidence
+### S3 — Spójność semantyczna nie jest evidence
 
-A coherent explanation, embedding relationship or generated hypothesis does not self-validate.
+Spójne wyjaśnienie, relacja embeddingowa lub wygenerowana hipoteza nie walidują się same.
 
-### S4 — Research output has zero implicit authority
+### S4 — Output badawczy ma zero implicit authority
 
 ```text
 HYPOTHESIS / MODEL_RESULT / WRITEUP
 cannot directly authorize ACTION
 ```
 
-### S5 — Falsification record is first-class
+### S5 — Rekord falsyfikacji jest obiektem pierwszej klasy
 
-Negative results and superseded models remain linked in provenance rather than being deleted from the epistemic history.
+Wyniki negatywne i supersedowane modele pozostają powiązane przez provenance zamiast znikać z historii epistemicznej.
 
-## Required metadata for future heuristics
+## Wymagane metadane przyszłych heurystyk
 
-Every new Cyber-Lion heuristic should eventually carry:
+Każda nowa heurystyka Cyber-Lion powinna docelowo zawierać:
 
 ```yaml
 heuristic_id:
@@ -94,15 +94,15 @@ falsification_tests: []
 last_reviewed:
 ```
 
-A heuristic can influence ranking/exploration before formalization, but cannot be the sole gate for irreversible high-authority execution unless the relevant policy explicitly permits that risk.
+Heurystyka może wpływać na ranking/eksplorację przed formalizacją, ale nie może być jedyną bramką dla nieodwracalnego high-authority execution, chyba że odpowiednia polityka jawnie dopuszcza takie ryzyko.
 
-## Distillation rule
+## Reguła distillation
 
-When a repeatedly validated property can be expressed deterministically:
+Gdy wielokrotnie zwalidowana własność może zostać wyrażona deterministycznie:
 
 ```text
 heuristic/model interpretation
 → validator / schema / invariant / test / policy
 ```
 
-The deterministic mechanism becomes the enforcement source. The historical heuristic remains linked as provenance rather than remaining a repeated LLM guess.
+Mechanizm deterministyczny staje się źródłem enforcement. Historyczna heurystyka pozostaje powiązana jako provenance, zamiast pozostawać wielokrotnie zgadywaną interpretacją LLM.
