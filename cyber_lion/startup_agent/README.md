@@ -1,8 +1,8 @@
 # Startup Evolution Agent
 
-A bounded agentic control loop for an **AI-Driven startup**.
+Ograniczona agentowa pętla sterowania dla **startupu AI-Driven**.
 
-Its purpose is to turn fresh market evidence into the fastest useful product experiment, translate that experiment into the smallest auditable software build, execute only bounded local work autonomously, observe the result and correct the venture model.
+Jej celem jest przekształcanie świeżego evidence rynkowego w najszybszy użyteczny eksperyment produktowy, tłumaczenie tego eksperymentu na najmniejszy audytowalny build software, autonomiczne wykonywanie wyłącznie ograniczonej pracy lokalnej, obserwacja wyniku i korekta modelu przedsięwzięcia.
 
 ```text
 MarketObservation[]
@@ -21,19 +21,19 @@ MarketObservation[]
 → EvolutionJournal / replay
 ```
 
-## Modules
+## Moduły
 
-- `models.py` — venture state, evidence, hypotheses and experiments.
-- `market_intelligence.py` — provenance, timestamps, deduplication, contradiction visibility and freshness.
-- `engine.py` — evidence updates, hypothesis ranking, stage inference and experiment choice.
-- `build_planner.py` — experiment → minimal software specification → safe in-memory scaffold.
-- `authority.py` — deterministic boundary between planning and external consequence.
-- `local_build.py` — bounded local materialization, compile/test and `BuildReceipt`.
-- `journal.py` — append-only startup state and deterministic replay.
-- `orchestrator.py` — `AIDrivenStartupAgent`, `CyclePlan` and outcome correction.
-- `demo.py` — runnable example.
+- `models.py` — stan przedsięwzięcia, evidence, hipotezy i eksperymenty.
+- `market_intelligence.py` — provenance, timestamps, deduplication, widoczność sprzeczności i freshness.
+- `engine.py` — aktualizacje evidence, ranking hipotez, inferencja stage i wybór eksperymentu.
+- `build_planner.py` — eksperyment → minimalna specyfikacja software → bezpieczny in-memory scaffold.
+- `authority.py` — deterministyczna granica pomiędzy planowaniem i skutkiem zewnętrznym.
+- `local_build.py` — ograniczona lokalna materializacja, compile/test i `BuildReceipt`.
+- `journal.py` — append-only stan startupu i deterministyczny replay.
+- `orchestrator.py` — `AIDrivenStartupAgent`, `CyclePlan` i korekta outcome.
+- `demo.py` — uruchamialny przykład.
 
-## Venture vector
+## Wektor przedsięwzięcia
 
 ```text
 market_pull
@@ -47,54 +47,54 @@ unit_economics
 learning_velocity
 ```
 
-All dimensions are normalized to `[0,1]`. This is an engineering representation/calibration, not a universal empirical law.
+Wszystkie wymiary są normalizowane do `[0,1]`. Jest to reprezentacja/kalibracja inżynieryjna, a nie uniwersalne prawo empiryczne.
 
-The relevant object is not only the current vector but its trajectory:
+Istotny jest nie tylko bieżący wektor, ale jego trajektoria:
 
 ```text
 V(t0) → ΔV → V(t1) → ΔV → V(t2)
 ```
 
-## Current-market evidence
+## Evidence bieżącego rynku
 
-The agent does not treat remembered model knowledge as current market evidence. `MarketObservation` requires source and timezone-aware observation/capture times. `MarketEvidenceBook` prevents duplicate counting and exposes contradictions instead of silently averaging them away.
+Agent nie traktuje zapamiętanej wiedzy modelu jako aktualnego evidence rynkowego. `MarketObservation` wymaga źródła oraz observation/capture times uwzględniających strefę czasową. `MarketEvidenceBook` zapobiega wielokrotnemu liczeniu tego samego evidence i ujawnia sprzeczności zamiast po cichu je uśredniać.
 
-Signals decay with age and can be excluded after the configured market window.
+Signals tracą wagę wraz z wiekiem i mogą być wykluczane po przekroczeniu skonfigurowanego market window.
 
 ```text
 model memory != market observation
 ```
 
-## Product experiments
+## Eksperymenty produktowe
 
-The agent chooses the next experiment from the weakest relevant dimensions and optimizes for information velocity rather than feature volume.
+Agent wybiera kolejny eksperyment na podstawie najsłabszych istotnych wymiarów i optymalizuje pod kątem information velocity, a nie liczby funkcji.
 
-Experiments include:
+Eksperymenty obejmują:
 
-- customer interviews,
+- wywiady z klientami,
 - problem smoke tests,
-- local prototypes,
-- paid pilots,
-- pricing tests,
-- retention tests.
+- lokalne prototypy,
+- płatne pilotaże,
+- testy cenowe,
+- testy retencji.
 
-Each experiment has an expected information gain, time-to-evidence, cost, explicit success metric, stop condition and authority class.
+Każdy eksperyment ma expected information gain, time-to-evidence, koszt, jawną success metric, stop condition i klasę authority.
 
-## Software creation
+## Tworzenie software
 
-`SoftwareBuildPlanner` converts an experiment into a minimal `SoftwareBuildSpec` containing components, interfaces, acceptance tests, security invariants and non-goals.
+`SoftwareBuildPlanner` przekształca eksperyment w minimalny `SoftwareBuildSpec` zawierający komponenty, interfejsy, acceptance tests, security invariants i non-goals.
 
-`SafeTemplateBuilder` renders that spec into an **in-memory file map**. It never writes files itself and rejects unsafe paths.
+`SafeTemplateBuilder` renderuje tę specyfikację do **in-memory file map**. Sam nigdy nie zapisuje plików i odrzuca niebezpieczne ścieżki.
 
-For trusted Cyber-Lion templates, `BoundedLocalBuildRunner` may then materialize the scaffold in a temporary directory and run compile/tests.
+Dla zaufanych szablonów Cyber-Lion `BoundedLocalBuildRunner` może następnie zmaterializować scaffold w katalogu tymczasowym i uruchomić compile/tests.
 
-Important:
+Ważne:
 
-> `BoundedLocalBuildRunner` is **not an OS security sandbox**. It uses path confinement, `shell=False`, timeout and a minimized environment, but it does not claim kernel/network isolation. Arbitrary model-generated code requires a stronger isolated execution provider.
+> `BoundedLocalBuildRunner` **nie jest sandboxem bezpieczeństwa OS**. Używa path confinement, `shell=False`, timeout i zminimalizowanego environment, ale nie deklaruje izolacji kernela/sieci. Dowolny kod wygenerowany przez model wymaga silniejszego izolowanego execution providera.
 
 ## Authority
 
-`analysis` and `local_prototype` can be allowed autonomously. `external_write`, `deploy` and `financial` require an explicit applied gate event.
+`analysis` i `local_prototype` mogą być dozwolone autonomicznie. `external_write`, `deploy` i `financial` wymagają jawnego applied gate event.
 
 ```text
 model proposes
@@ -102,13 +102,13 @@ model proposes
 organization authorizes
 ```
 
-`AIDrivenStartupAgent.build_local(plan)` also refuses to execute plans whose authority decision is not `ALLOW`.
+`AIDrivenStartupAgent.build_local(plan)` również odmawia wykonania planu, którego decyzja authority nie ma wartości `ALLOW`.
 
-## Outcome correction
+## Korekta outcome
 
-A real experiment result enters as `ExperimentOutcome`.
+Rzeczywisty wynik eksperymentu trafia do systemu jako `ExperimentOutcome`.
 
-The correction layer changes only dimensions related to the experiment. A successful prototype does not magically improve market pull, distribution or security. A failed market experiment can lower the relevant market dimensions. A high-quality negative result may still increase `learning_velocity`.
+Warstwa korekty zmienia wyłącznie wymiary powiązane z eksperymentem. Udany prototyp nie poprawia automatycznie market pull, distribution ani security. Nieudany eksperyment rynkowy może obniżyć odpowiednie wymiary rynkowe. Wysokiej jakości wynik negatywny może mimo to zwiększyć `learning_velocity`.
 
 ```text
 failed hypothesis
@@ -118,26 +118,26 @@ failed learning process
 
 ## Replay
 
-`EvolutionJournal` records cycles as append-only JSONL. Replay validates cycle continuity, startup identity and `previous_vector == prior.vector` instead of inventing missing state.
+`EvolutionJournal` zapisuje cykle jako append-only JSONL. Replay waliduje ciągłość cykli, tożsamość startupu i `previous_vector == prior.vector` zamiast wymyślać brakujący stan.
 
-## Run
+## Uruchomienie
 
 ```bash
 python -m cyber_lion.startup_agent.demo
 python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
 ```
 
-## Current boundary
+## Bieżąca granica
 
-The agent can currently:
+Agent potrafi obecnie:
 
-1. ingest typed market observations,
-2. rank competing hypotheses,
-3. select the next experiment,
-4. generate a minimal build spec and scaffold,
-5. locally compile/test trusted scaffolds when authority allows,
-6. ingest experiment outcomes,
-7. correct the multidimensional venture state,
-8. persist/replay the evolution path.
+1. przyjmować typowane obserwacje rynkowe,
+2. rankingować konkurujące hipotezy,
+3. wybierać kolejny eksperyment,
+4. generować minimalny build spec i scaffold,
+5. lokalnie compile/test zaufanych scaffoldów, gdy pozwala authority,
+6. przyjmować outcome eksperymentów,
+7. korygować wielowymiarowy stan przedsięwzięcia,
+8. utrwalać i odtwarzać ścieżkę ewolucji.
 
-It does **not yet** autonomously browse the market, generate arbitrary production code, deploy, spend money or sign commercial commitments. Those capabilities must arrive through explicit providers and Cyber-Lion authority contracts.
+Agent **nie potrafi jeszcze** autonomicznie przeglądać rynku, generować dowolnego kodu produkcyjnego, deployować, wydawać pieniędzy ani podpisywać zobowiązań handlowych. Te capabilities muszą pojawić się przez jawnych providerów i kontrakty authority Cyber-Lion.
