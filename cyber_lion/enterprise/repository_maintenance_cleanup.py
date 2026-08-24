@@ -7,7 +7,9 @@ import json
 import os
 import re
 import sys
+import urllib.error
 import urllib.parse
+import urllib.request
 
 from cyber_lion.contracts.repository_maintenance_sandbox import REPOSITORY, RepositoryMaintenancePolicy, validate_branch_name
 from cyber_lion.enterprise.repository_maintenance_sandbox import (
@@ -22,10 +24,64 @@ from cyber_lion.enterprise.repository_maintenance_sandbox import (
 class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBackend):
     """Preserve slashes inside Git ref names while escaping unsafe characters."""
 
+    _GET_PREFIXES = (
+        f"/repos/{REPOSITORY}/git/ref/heads/",
+        f"/repos/{REPOSITORY}/branches",
+        f"/repos/{REPOSITORY}/compare/",
+        f"/repos/{REPOSITORY}/pulls",
+        f"/repos/{REPOSITORY}/contents/",
+    )
+    _DELETE_PREFIX = f"/repos/{REPOSITORY}/git/refs/heads/"
+
     @staticmethod
     def _branch_path(branch: str) -> str:
         validate_branch_name(branch)
         return urllib.parse.quote(branch, safe="/")
+
+    @classmethod
+    def _validate_api_path(cls, method: str, path: str) -> None:
+        if not isinstance(path, str) or not path.startswith("/") or "\\" in path:
+            raise RepositoryMaintenanceError("unsafe GitHub API path")
+        parsed = urllib.parse.urlsplit(path)
+        if parsed.scheme or parsed.netloc or parsed.fragment:
+            raise RepositoryMaintenanceError("unsafe GitHub API path")
+        decoded_path = urllib.parse.unquote(parsed.path)
+        if "\\" in decoded_path or any(segment == ".." for segment in decoded_path.split("/")):
+            raise RepositoryMaintenanceError("unsafe GitHub API path")
+        if method == "GET":
+            if not any(parsed.path.startswith(prefix) for prefix in cls._GET_PREFIXES):
+                raise RepositoryMaintenanceError("GitHub read route not allowlisted")
+            return
+        if method == "DELETE":
+            if parsed.query or not parsed.path.startswith(cls._DELETE_PREFIX):
+                raise RepositoryMaintenanceError("GitHub delete route not allowlisted")
+            branch = urllib.parse.unquote(parsed.path[len(cls._DELETE_PREFIX):])
+            validate_branch_name(branch)
+            if not (branch.startswith("docs/") or branch.startswith("mission/")):
+                raise RepositoryMaintenanceError("GitHub delete ref outside mission allowlist")
+            return
+        raise RepositoryMaintenanceError("GitHub method not allowlisted")
+
+    def _request(self, method: str, path: str, body: object | None = None, *, allow_404: bool = False) -> tuple[int, object | None]:
+        self._validate_api_path(method, path)
+        data = None
+        if body is not None:
+            data = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        headers = self._headers()
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
+        try:
+            with urllib.request.build_opener(self._NoRedirect()).open(request, timeout=30) as response:
+                raw = response.read()
+                return response.status, json.loads(raw) if raw else None
+        except urllib.error.HTTPError as exc:
+            if allow_404 and exc.code == 404:
+                return 404, None
+            detail = exc.read().decode("utf-8", errors="replace")[:1000]
+            raise RepositoryMaintenanceError(
+                f"GitHub API {method} {path} failed: {exc.code}: {detail}"
+            ) from exc
 
     def branch_sha(self, branch: str) -> str | None:
         encoded = self._branch_path(branch)
