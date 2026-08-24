@@ -1,7 +1,8 @@
 """Read-only observer for exact post-merge Code Perception evidence.
 
-This module queries GitHub Actions with an already-provided token, selects exactly one
-successful push run for an exact workflow/branch/head tuple, and extracts one exact
+This module queries GitHub Actions with an already-provided token, binds observation
+to the canonical Cyber-Lion Core workflow identity, independently binds the expected
+Git tree to the exact observed head commit, and extracts one exact
 CODE_PERCEPTION_CANDIDATE_PROJECTION line from the selected run's job logs.
 
 It never writes repository state and never grants authority.
@@ -33,6 +34,8 @@ class CodePerceptionObservationError(RuntimeError):
 class ObservationRequest:
     repository: str
     workflow_name: str
+    workflow_id: int
+    workflow_path: str
     branch: str
     head_sha: str
     tree_sha: str
@@ -47,6 +50,8 @@ class ProjectionReceipt:
     run_id: int
     job_id: int
     workflow_name: str
+    workflow_id: int
+    workflow_path: str
     event: str
     branch: str
     head_sha: str
@@ -99,6 +104,14 @@ def _matching_runs(payload: dict, expected: ObservationRequest) -> tuple[dict, .
             continue
         if run.get("name") != expected.workflow_name:
             continue
+        try:
+            workflow_id = int(run.get("workflow_id"))
+        except (TypeError, ValueError):
+            continue
+        if workflow_id != expected.workflow_id:
+            continue
+        if run.get("path") != expected.workflow_path:
+            continue
         if run.get("event") != "push":
             continue
         if run.get("head_branch") != expected.branch:
@@ -115,9 +128,28 @@ def select_exact_run(payload: dict, expected: ObservationRequest) -> dict:
     matches = _matching_runs(payload, expected)
     if len(matches) != 1:
         raise CodePerceptionObservationError(
-            f"expected exactly one successful exact push run, found {len(matches)}"
+            f"expected exactly one successful exact canonical push run, found {len(matches)}"
         )
     return matches[0]
+
+
+def validate_commit_identity(payload: dict, expected: ObservationRequest) -> str:
+    """Bind expected head/tree to GitHub's exact commit object, not to log self-report."""
+    if not isinstance(payload, dict):
+        raise CodePerceptionObservationError("commit payload missing")
+    commit_sha = str(payload.get("sha", "")).lower()
+    if commit_sha != expected.head_sha:
+        raise CodePerceptionObservationError("commit head substitution detected")
+    commit = payload.get("commit")
+    if not isinstance(commit, dict):
+        raise CodePerceptionObservationError("commit object missing")
+    tree = commit.get("tree")
+    if not isinstance(tree, dict):
+        raise CodePerceptionObservationError("commit tree object missing")
+    tree_sha = str(tree.get("sha", "")).lower()
+    if tree_sha != expected.tree_sha:
+        raise CodePerceptionObservationError("commit tree substitution detected")
+    return tree_sha
 
 
 def parse_projection_lines(lines: Iterable[str], expected: ObservationRequest) -> tuple[dict, ...]:
@@ -148,6 +180,12 @@ def parse_projection_lines(lines: Iterable[str], expected: ObservationRequest) -
 
 def observe_exact_projection(expected: ObservationRequest, token: str) -> ProjectionReceipt:
     owner, repo = expected.repository.split("/", 1)
+
+    # Git identity is observed independently from workflow logs. A projection line
+    # cannot self-assert the source tree without this exact commit-object binding.
+    commit_url = f"https://api.github.com/repos/{owner}/{repo}/commits/{expected.head_sha}"
+    observed_tree = validate_commit_identity(_github_get_json(commit_url, token), expected)
+
     query = urlencode({
         "event": "push",
         "branch": expected.branch,
@@ -172,6 +210,10 @@ def observe_exact_projection(expected: ObservationRequest, token: str) -> Projec
         logs_url = f"https://api.github.com/repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
         log_text = _github_get_text(logs_url, token)
         for projection in parse_projection_lines(log_text.splitlines(), expected):
+            if projection["tree"] != observed_tree:
+                continue
+            if projection["head"] != str(run.get("head_sha", "")).lower():
+                continue
             receipts.append((job_id, projection))
 
     if len(receipts) != 1:
@@ -184,10 +226,12 @@ def observe_exact_projection(expected: ObservationRequest, token: str) -> Projec
         run_id=run_id,
         job_id=job_id,
         workflow_name=expected.workflow_name,
+        workflow_id=expected.workflow_id,
+        workflow_path=expected.workflow_path,
         event="push",
         branch=expected.branch,
         head_sha=expected.head_sha,
-        tree_sha=expected.tree_sha,
+        tree_sha=observed_tree,
         projection_digest=projection["digest"],
         tree_semantic_digest=projection["tree_semantic_digest"],
         file_count=projection["files"],
