@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0.0",
+  "epoch": "E002",
+  "failures": [
+    {
+      "id": "F009-E2E-INITIAL-EXPECTATION-MISMATCH",
+      "observation": "The initial adversarial end-to-end run failed because a test expectation did not match the implemented fail-closed behavior.",
+      "evidence": [
+        "CI#32644528531:FAILED_TEST_EXPECTATION",
+        "CI#32644577029:SUCCESS",
+        "issue:130#5386436013"
+      ],
+      "resolution": "The expectation was repaired and the complete end-to-end test reran successfully.",
+      "state": "RESOLVED_AFTER_REPAIR"
+    },
+    {
+      "id": "F009-LIVE-RUNTIME-EVIDENCE-PLANE-UNAVAILABLE",
+      "observation": "E002 initially lacked a reachable authorized runtime surface proving effect-time currentness and independent post-effect observation.",
+      "evidence": [
+        "LION/status.json@revision-7",
+        "CI#32720123429",
+        "issue:144#5394352567"
+      ],
+      "resolution": "The Actions dispatch and observation chain executed against the exact expected head; its artifact was independently verified and reconciliation returned MATCHED.",
+      "state": "RESOLVED_OBSERVED"
+    },
+    {
+      "id": "F009-ACTIONS-RUN-TEMPORAL-BINDING-RACE",
+      "observation": "The observer timed out because a workflow run could be created just before the post-dispatch accepted_at timestamp used as its lower temporal bound.",
+      "evidence": [
+        "issue:150",
+        "issue:144#5387672056",
+        "PR#151",
+        "CI#32657845057",
+        "master:7663722eee33ca206b14253af6f977840e6f873e"
+      ],
+      "resolution": "A bounded 60-second legacy compatibility window was independently verified and integrated while exact workflow_dispatch, ref, historical head and ambiguity denial remained mandatory.",
+      "state": "RESOLVED_OBSERVED"
+    },
+    {
+      "id": "F009-ACTIONS-ARTIFACT-DOWNLOAD-401",
+      "observation": "Artifact observation reached the exact run but failed with HTTP 401 when the GitHub bearer token followed the signed archive redirect.",
+      "evidence": [
+        "issue:152",
+        "issue:144#5387713043",
+        "CI#32657916049:ARTIFACT_DOWNLOAD_401",
+        "PR#153",
+        "CI#32664583232",
+        "master:45369ccbf567b373a39d9b43d7b34bab80b5b10a"
+      ],
+      "resolution": "The two-hop download now validates the signed GitHub Actions archive target, forbids token or cookie forwarding and second-hop redirects, bounds size, and retains downstream digest verification.",
+      "state": "RESOLVED_OBSERVED"
+    },
+    {
+      "id": "CHECKMARX-CREDENTIALS-UNAVAILABLE",
+      "observation": "Checkmarx stopped before scanning because CX_CLIENT_ID, CX_CLIENT_SECRET and CX_TENANT were unavailable.",
+      "evidence": [
+        "CI#32720511946",
+        "issue:133#5394396912"
+      ],
+      "resolution": "The user authorized removal of Checkmarx. Bandit 1.9.4 became the explicit blocking PR gate while GitHub CodeQL Default Setup remained supplemental.",
+      "state": "SUPERSEDED_BY_BANDIT_GATE"
+    },
+    {
+      "id": "BANDIT-INITIAL-SEVEN-FINDINGS",
+      "observation": "The first effective Bandit scan reported five B310 findings, one B324 finding and one B108 finding.",
+      "evidence": [
+        "CI#32721680014",
+        "issue:104#5394533917"
+      ],
+      "resolution": "All findings were repaired without nosec; Bandit, Cyber-Lion and F005-K passed for the exact integrated candidate.",
+      "state": "RESOLVED_OBSERVED"
+    },
+    {
+      "id": "E002-STATUS-PROJECTION-STALE",
+      "observation": "Revision 7 still records the former external F009 blocker and observes master 4313ebea1fc320c09ecf80048c808e325148d902, while live master contains consequential descendant changes.",
+      "evidence": [
+        "LION/status.json@revision-7",
+        "master:db153aa6165ebcc455f60f932680354ce083f526"
+      ],
+      "resolution": "A separate projection-only status reconciliation is required after all preceding ai_platform effects are integrated and observed.",
+      "state": "OPEN_BOUNDED"
+    }
+  ],
+  "carry_forward_blockers": [
+    {
+      "id": "F005-QUARANTINED",
+      "state": "OPEN_BOUNDED"
+    },
+    {
+      "id": "LEGACY-ROOT-TESTS-UNKNOWN",
+      "state": "OPEN_BOUNDED"
+    }
+  ]
+}
