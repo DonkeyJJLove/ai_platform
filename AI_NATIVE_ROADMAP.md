@@ -1,77 +1,77 @@
-# ai_platform — AI-Native Enterprise Roadmap
+# ai_platform — mapa rozwoju przedsiębiorstwa AI-Native
 
-`ai_platform` is evolving from a repository of semantic/platform specifications into the **Cyber-Lion Enterprise Control Plane and Agent Foundry**.
+`ai_platform` ewoluuje z repozytorium specyfikacji semantycznych i platformowych w **Cyber-Lion Enterprise Control Plane oraz Agent Foundry**.
 
-The Startup Evolution Agent is the first concrete organizational agent built on the platform. It is not the platform's final identity.
+Startup Evolution Agent jest pierwszym konkretnym agentem organizacyjnym zbudowanym na platformie. Nie stanowi docelowej tożsamości całej platformy.
 
-## Target
+## Cel
 
 ```text
-MISSION
-→ capability requirements
+MISJA
+→ wymagania dotyczące capabilities
 → Agent Foundry
-→ AgentSpec candidates
-→ dynamic MosaicCell / SwarmSpec
-→ policy + authority ceiling
-→ execution provider
-→ observability + receipts
-→ outcome
-→ memory / R&D
-→ next organizational delta
+→ kandydaci AgentSpec
+→ dynamiczna MosaicCell / SwarmSpec
+→ polityka + limit authority
+→ provider wykonawczy
+→ obserwowalność + receipts
+→ wynik
+→ pamięć / R&D
+→ kolejna delta organizacyjna
 ```
 
-## Build sequence
+## Sekwencja budowy
 
 ### 1. Agent Foundry
 
-- AgentSpec / AgentInstance
-- Agent Registry
-- lifecycle and supersession
-- provider/model independence
-- context and memory policy
-- authority and observability requirements
+- AgentSpec / AgentInstance,
+- Agent Registry,
+- lifecycle i supersession,
+- niezależność od providera/modelu,
+- polityka kontekstu i pamięci,
+- wymagania dotyczące authority i obserwowalności.
 
-### 2. Dynamic Swarm Control Plane
+### 2. Dynamiczny Swarm Control Plane
 
-- MissionSpec
-- SwarmSpec
-- MosaicCell
-- MosaicDelta
-- deterministic capability-cover planner
-- spawn/delegation/dissolve contracts
-- risk-class topology rules
+- MissionSpec,
+- SwarmSpec,
+- MosaicCell,
+- MosaicDelta,
+- deterministyczny planner pokrycia capabilities,
+- kontrakty spawn/delegation/dissolve,
+- reguły topologii zależne od klasy ryzyka.
 
 ### 3. Enterprise Graph
 
-Unify projections of:
+Ujednolicenie projekcji:
 
 ```text
-repositories
-entities
-agents
-swarms
+repozytoria
+encje
+agenci
+roje
 capabilities
-policies
+polityki
 authority
 provenance
 evidence
-execution
-artifacts
+wykonanie
+artefakty
 ```
 
-### 4. Evolution Compiler bridge
+### 4. Most Evolution Compiler
 
-Send source/AgentSpec/SwarmSpec/policy/schema changes to GlitchLab for delta analysis and invariant checks.
+Przekazywanie zmian source/AgentSpec/SwarmSpec/policy/schema do GlitchLab w celu analizy delty i sprawdzenia inwariantów.
 
 ### 5. Execution Mesh
 
-Use `swarm` as the basis for distributed workload execution, identity binding, telemetry, runtime restriction and revoke/freeze.
+Wykorzystanie `swarm` jako podstawy rozproszonego wykonywania workloadów, wiązania tożsamości, telemetrii, ograniczeń runtime oraz mechanizmów revoke/freeze.
 
-### 6. R&D promotion
+### 6. Promocja R&D
 
-Connect `writeups`, `hipotezy_nadawcze_LLM` and simulation providers through explicit evidence/hypothesis/spec-candidate contracts.
+Połączenie `writeups`, `hipotezy_nadawcze_LLM` i providerów symulacji przez jawne kontrakty evidence/hypothesis/spec-candidate.
 
-## Normative references
+## Odniesienia normatywne
 
 - [`cyber_lion/enterprise/README.md`](cyber_lion/enterprise/README.md)
 - [`cyber_lion/enterprise/AI_NATIVE_ENTERPRISE.md`](cyber_lion/enterprise/AI_NATIVE_ENTERPRISE.md)
@@ -80,11 +80,11 @@ Connect `writeups`, `hipotezy_nadawcze_LLM` and simulation providers through exp
 - [`cyber_lion/enterprise/RND_OPERATING_MODEL.md`](cyber_lion/enterprise/RND_OPERATING_MODEL.md)
 - [`cyber_lion/enterprise/REPOSITORY_EVOLUTION_PLAN.md`](cyber_lion/enterprise/REPOSITORY_EVOLUTION_PLAN.md)
 
-## Invariants
+## Inwarianty
 
 ```text
 repo != subsystem
-model != agent identity
+model != tożsamość agenta
 registered capability != authority
 semantic state != permission
 working context != committed memory
