@@ -3,6 +3,7 @@ import unittest
 from cyber_lion.enterprise.repository_maintenance_cleanup import (
     SlashSafeGitHubRepositoryMaintenanceBackend,
 )
+from cyber_lion.enterprise.repository_maintenance_sandbox import RepositoryMaintenanceError
 
 
 class SlashSafeRepositoryMaintenanceBackendTests(unittest.TestCase):
@@ -64,6 +65,48 @@ class SlashSafeRepositoryMaintenanceBackendTests(unittest.TestCase):
                 False,
             ),
         )
+
+    def test_canonical_compare_routes_are_allowed(self):
+        backend = self._backend()
+        backend._validate_api_path(
+            "GET",
+            "/repos/DonkeyJJLove/ai_platform/compare/mission/foo...master",
+        )
+        backend._validate_api_path(
+            "GET",
+            "/repos/DonkeyJJLove/ai_platform/compare/docs/foo...master",
+        )
+
+    def test_real_traversal_segments_are_denied(self):
+        backend = self._backend()
+        for path in (
+            "/repos/DonkeyJJLove/ai_platform/../issues",
+            "/repos/DonkeyJJLove/ai_platform/foo/../bar",
+            "/repos/DonkeyJJLove/ai_platform/%2e%2e/issues",
+            "/repos/DonkeyJJLove/ai_platform/foo/%2E%2E/bar",
+        ):
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(RepositoryMaintenanceError, "unsafe GitHub API path"):
+                    backend._validate_api_path("GET", path)
+
+    def test_arbitrary_read_and_delete_routes_are_denied(self):
+        backend = self._backend()
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "read route not allowlisted"):
+            backend._validate_api_path("GET", "/repos/DonkeyJJLove/ai_platform/issues")
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "delete route not allowlisted"):
+            backend._validate_api_path("DELETE", "/repos/DonkeyJJLove/ai_platform/issues/1")
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "outside mission allowlist"):
+            backend._validate_api_path(
+                "DELETE", "/repos/DonkeyJJLove/ai_platform/git/refs/heads/release/prod"
+            )
+
+    def test_noncanonical_origin_remains_denied(self):
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "canonical HTTPS"):
+            SlashSafeGitHubRepositoryMaintenanceBackend(
+                "DonkeyJJLove/ai_platform",
+                "test-token",
+                api_url="https://evil.example",
+            )
 
 
 if __name__ == "__main__":
