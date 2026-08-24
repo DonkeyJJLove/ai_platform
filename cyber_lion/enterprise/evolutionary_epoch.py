@@ -287,8 +287,12 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("PROMOTION_WITHOUT_VERIFIED_PDP")
         if promotion.policy_decision_ref != f"pdp:{verified_gate_digest}":
             raise EvolutionaryEpochError("PDP_PROMOTION_BINDING_MISMATCH")
-        if memory_record.memory_digest not in self._memory_commits:
+        committed_memory = self._memory_commits.get(memory_record.memory_digest)
+        if committed_memory is None:
             raise EvolutionaryEpochError("next epoch requires committed R&D memory")
+        committed_memory_head = committed_memory[1]
+        if transition.memory_head != committed_memory_head:
+            raise EvolutionaryEpochError("NEXT_EPOCH_MEMORY_HEAD_MISMATCH")
         if "F005" in delta.target_component.upper() or any("F005" in dep.upper() for dep in delta.dependency_ids):
             raise EvolutionaryEpochError("F005 activation reference denied")
 
