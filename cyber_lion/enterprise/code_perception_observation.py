@@ -225,6 +225,15 @@ def parse_projection_lines(lines: Iterable[str], expected: ObservationRequest) -
     return tuple(matches)
 
 
+def _projection_cardinality_error(run_id: int, successful_job_ids: tuple[int, ...], count: int) -> CodePerceptionObservationError:
+    """Expose bounded run/job identity without weakening exact projection verification."""
+    job_ids = ",".join(str(value) for value in successful_job_ids) or "none"
+    return CodePerceptionObservationError(
+        "expected exactly one exact projection line, "
+        f"found {count}; selected_run_id={run_id}; successful_job_ids={job_ids}"
+    )
+
+
 def observe_exact_projection(expected: ObservationRequest, token: str) -> ProjectionReceipt:
     owner, repo = expected.repository.split("/", 1)
 
@@ -250,10 +259,12 @@ def observe_exact_projection(expected: ObservationRequest, token: str) -> Projec
         raise CodePerceptionObservationError("selected run has no observable jobs")
 
     receipts = []
+    successful_job_ids = []
     for job in jobs:
         if not isinstance(job, dict) or job.get("conclusion") != "success":
             continue
         job_id = int(job["id"])
+        successful_job_ids.append(job_id)
         logs_url = f"https://api.github.com/repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
         log_text = _github_get_text(logs_url, token)
         for projection in parse_projection_lines(log_text.splitlines(), expected):
@@ -264,9 +275,7 @@ def observe_exact_projection(expected: ObservationRequest, token: str) -> Projec
             receipts.append((job_id, projection))
 
     if len(receipts) != 1:
-        raise CodePerceptionObservationError(
-            f"expected exactly one exact projection line, found {len(receipts)}"
-        )
+        raise _projection_cardinality_error(run_id, tuple(successful_job_ids), len(receipts))
 
     job_id, projection = receipts[0]
     return ProjectionReceipt(
