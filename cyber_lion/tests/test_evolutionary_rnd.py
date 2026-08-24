@@ -2,6 +2,7 @@ import dataclasses
 import unittest
 
 from cyber_lion.contracts.evolutionary_rnd import (
+    EvidenceObservation,
     EvolutionDelta,
     ExperimentProposal,
     ExperimentResult,
@@ -22,9 +23,26 @@ D2 = "b" * 64
 D3 = "c" * 64
 
 
+def evidence(observation_id, source_digest=D1, content_digest=D2):
+    return EvidenceObservation(
+        observation_id=observation_id,
+        observation_kind="TEST",
+        source_ref=f"source:{observation_id}",
+        source_digest=source_digest,
+        observed_at="2026-08-25T00:00:00+02:00",
+        epistemic_class="OBSERVED",
+        provenance_refs=(f"event:{observation_id}",),
+        content_digest=content_digest,
+    ).sealed()
+
+
 class EvolutionaryRnDEngineTests(unittest.TestCase):
     def setUp(self):
         self.engine = EvolutionaryRnDEngine()
+        self.obs = evidence("obs:1")
+        self.counter = evidence("obs:contra", source_digest=D2, content_digest=D3)
+        self.engine.register_evidence(self.obs)
+        self.engine.register_evidence(self.counter)
         self.hyp = Hypothesis(
             hypothesis_id="hyp-1", revision=1, claim="bounded claim",
             evidence_refs=("obs:1",), counter_evidence_refs=("obs:contra",),
@@ -78,6 +96,52 @@ class EvolutionaryRnDEngineTests(unittest.TestCase):
         ).sealed()
         self.engine.register_delta(delta)
         return supported, fals, delta
+
+    def test_registered_evidence_is_required_before_hypothesis(self):
+        eng = EvolutionaryRnDEngine()
+        hyp = dataclasses.replace(self.hyp, hypothesis_id="hyp:unbound", hypothesis_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown supporting evidence"):
+            eng.register_hypothesis(hyp)
+        eng.register_evidence(self.obs)
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown counter evidence"):
+            eng.register_hypothesis(hyp)
+        eng.register_evidence(self.counter)
+        self.assertEqual(eng.register_hypothesis(hyp), hyp)
+
+    def test_fabricated_evidence_and_counter_evidence_are_denied(self):
+        fabricated_support = dataclasses.replace(
+            self.hyp, hypothesis_id="hyp:fabricated:support",
+            evidence_refs=("obs:fabricated",), hypothesis_digest="",
+        ).sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown supporting evidence"):
+            self.engine.register_hypothesis(fabricated_support)
+        fabricated_counter = dataclasses.replace(
+            self.hyp, hypothesis_id="hyp:fabricated:counter",
+            counter_evidence_refs=("obs:fabricated:counter",), hypothesis_digest="",
+        ).sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown counter evidence"):
+            self.engine.register_hypothesis(fabricated_counter)
+
+    def test_evidence_identity_digest_binding_and_replay_policy(self):
+        before = self.engine.state_digest()
+        self.assertEqual(self.engine.register_evidence(self.obs), self.obs)
+        self.assertEqual(before, self.engine.state_digest())
+        changed = dataclasses.replace(self.obs, content_digest=D3, observation_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "evidence identity payload substitution"):
+            self.engine.register_evidence(changed)
+        rebound = dataclasses.replace(self.obs, observation_id="obs:rebound", observation_digest="").sealed()
+        object.__setattr__(rebound, "observation_digest", self.obs.observation_digest)
+        with self.assertRaises(Exception):
+            self.engine.register_evidence(rebound)
+
+    def test_evidence_registration_changes_state_digest_and_has_no_delete_surface(self):
+        eng = EvolutionaryRnDEngine()
+        before = eng.state_digest()
+        eng.register_evidence(self.obs)
+        after = eng.state_digest()
+        self.assertNotEqual(before, after)
+        self.assertEqual(after, eng.state_digest())
+        self.assertNotIn("delete_evidence", {name.lower() for name in dir(eng)})
 
     def test_exact_hypothesis_lifecycle_is_forward_only(self):
         testing = self.admitted_testing()
@@ -140,6 +204,8 @@ class EvolutionaryRnDEngineTests(unittest.TestCase):
         for state, disposition in (("INCONCLUSIVE", "INCONCLUSIVE"), ("FALSIFIED", "FALSIFIED")):
             with self.subTest(state=state):
                 eng = EvolutionaryRnDEngine()
+                eng.register_evidence(self.obs)
+                eng.register_evidence(self.counter)
                 hyp = dataclasses.replace(self.hyp, hypothesis_id=f"h-{state}", state="PROPOSED", hypothesis_digest="").sealed()
                 eng.register_hypothesis(hyp)
                 admitted = eng.transition_hypothesis(hyp, "ADMITTED_FOR_TEST")
