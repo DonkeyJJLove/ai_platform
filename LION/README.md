@@ -1,29 +1,29 @@
-# LION Operational Knowledge Plane
+# LION — operacyjna warstwa wiedzy
 
-`/LION/` is the canonical navigation and coordination surface for evolutionary architecture and swarm operations. It is **not** an execution-authority source.
+`/LION/` jest kanoniczną powierzchnią nawigacji i koordynacji dla ewolucyjnej architektury oraz operacji rojowych. **Nie jest źródłem authority wykonawczego.**
 
-Every thread/drone starts here, then performs live observations before acting.
+Każdy wątek/dron rozpoczyna tutaj, a przed działaniem wykonuje aktualne obserwacje stanu.
 
-## Orientation
+## Orientacja
 
-1. Read `catalog.json` and the protocols.
-2. Read target, implementation and evolution maps.
-3. Read mission, drone, channel and dependency registries.
-4. Re-snapshot live GitHub and the authoritative registries named by the catalog.
-5. Mark stale or conflicted projections before using them.
-6. Read the work channel for the current mission/drone/swarm.
-7. Continue only within separately granted authority.
+1. Przeczytaj `catalog.json` i protokoły.
+2. Przeczytaj mapy targetu, implementacji i ewolucji.
+3. Przeczytaj rejestry misji, dronów, kanałów i zależności.
+4. Ponownie zaobserwuj bieżący stan GitHub oraz autorytatywne rejestry wskazane w katalogu.
+5. Oznacz projekcje nieaktualne lub skonfliktowane przed ich użyciem.
+6. Przeczytaj kanał roboczy dla bieżącej misji/drona/roju.
+7. Kontynuuj wyłącznie w granicach authority przyznanego osobnym mechanizmem.
 
-## Source-of-truth precedence
+## Pierwszeństwo źródeł prawdy
 
-For dynamic repository state, live GitHub observations override cached `/LION/` projections. Agent identity/lifecycle comes from Agent Registry. Branch-to-mission ownership comes from Branch Ownership Registry. Normative architecture comes from the referenced architecture documents. Chat history is context only and is never canonical state.
+Dla dynamicznego stanu repozytorium aktualne obserwacje GitHub mają pierwszeństwo przed zapisanymi projekcjami `/LION/`. Tożsamość i lifecycle agenta pochodzą z Agent Registry. Własność branchy względem misji pochodzi z Branch Ownership Registry. Architektura normatywna pochodzi z dokumentów architektonicznych wskazanych przez katalog. Historia czatu jest wyłącznie kontekstem i nigdy nie stanowi stanu kanonicznego.
 
-## Operational model
+## Model operacyjny
 
 `TARGET -> OBSERVE -> GAP -> MISSION -> DRONE/SWARM -> BUILD -> VERIFY -> INTEGRATE -> OBSERVE -> RECONCILE -> UPDATE PROJECTIONS -> NEXT GAP`
 
-Cross-thread communication uses addressable GitHub Issues and comments registered in `ops/channel-registry.json`. A drone posts structured messages to the target work channel; it never assumes access to another chat session.
+Komunikacja między wątkami korzysta z adresowalnych GitHub Issues i komentarzy zarejestrowanych w `ops/channel-registry.json`. Dron publikuje ustrukturyzowane wiadomości do docelowego kanału roboczego; nigdy nie zakłada dostępu do innej sesji czatu.
 
-## Safety
+## Bezpieczeństwo
 
-Registry/catalog presence does not grant credentials, runtime access, merge authority, release authority or deployment authority. Unknown, stale or conflicted state must be re-observed or fail closed before consequential use.
+Sama obecność wpisu w rejestrze lub katalogu nie przyznaje credentials, dostępu do runtime, authority do merge, release ani deploymentu. Stan nieznany, nieaktualny lub skonfliktowany musi zostać ponownie zaobserwowany albo doprowadzić do fail-closed przed wykonaniem działania powodującego skutki.
