@@ -1,89 +1,89 @@
-# AI-Native Enterprise Architecture
+# Architektura przedsiębiorstwa AI-Native
 
-## 1. Purpose
+## 1. Cel
 
-Cyber-Lion treats the company itself as an evolving software-defined system. Humans, AI agents, repositories, services, policies, research artifacts and runtime resources are all represented as typed entities connected by explicit relations.
+Cyber-Lion traktuje samo przedsiębiorstwo jako ewoluujący system software-defined. Ludzie, agenci AI, repozytoria, usługi, polityki, artefakty badawcze i zasoby runtime są reprezentowane jako typowane encje połączone jawnymi relacjami.
 
-The purpose is not to automate a traditional organization chart. The purpose is to create an organization whose structure can change as quickly as the problem being solved, while retaining identity, provenance, security, observability and rollback.
+Celem nie jest automatyzacja tradycyjnego schematu organizacyjnego. Celem jest stworzenie organizacji, której struktura może zmieniać się równie szybko jak rozwiązywany problem, przy zachowaniu tożsamości, provenance, bezpieczeństwa, obserwowalności i rollbacku.
 
-The operating objective is:
+Cel operacyjny:
 
-> **Maximize safely reachable capability per unit of time and evidence.**
+> **Maksymalizuj bezpiecznie osiągalną capability na jednostkę czasu i evidence.**
 
-This means the enterprise must be able to create, specialize, combine and dissolve agents rapidly, but it must never confuse intelligence with authority or semantic confidence with permission to change reality.
+Oznacza to, że przedsiębiorstwo musi szybko tworzyć, specjalizować, łączyć i rozwiązywać agentów, ale nigdy nie może mylić intelligence z authority ani confidence semantycznego z pozwoleniem na zmianę rzeczywistości.
 
 ---
 
-## 2. Enterprise state model
+## 2. Model stanu przedsiębiorstwa
 
-At time `t` the enterprise is represented as:
+W chwili `t` przedsiębiorstwo jest reprezentowane jako:
 
 ```text
 E(t) = (
-  N,      # entities/nodes
-  R,      # typed relations
+  N,      # encje/węzły
+  R,      # typowane relacje
   C,      # capabilities
-  A,      # agent definitions and active instances
-  W,      # swarm/mosaic structures
-  P,      # policies / authority ceilings
-  M,      # committed memory and context
+  A,      # definicje agentów i aktywne instancje
+  W,      # struktury rojów/mozaik
+  P,      # polityki / limity authority
+  M,      # committed memory i context
   D,      # evidence / research / observations
-  X,      # execution domains and resources
-  O       # observability state
+  X,      # domeny wykonawcze i zasoby
+  O       # stan obserwowalności
 )
 ```
 
-An enterprise change is not a free-form rewrite. It is an explicit delta:
+Zmiana przedsiębiorstwa nie jest free-form rewrite. Jest jawną deltą:
 
 ```text
 ΔE : E(t) → E(t+1)
 ```
 
-Every consequential `ΔE` must answer:
+Każda consequential `ΔE` musi odpowiadać na pytania:
 
 ```text
-WHY?
-FROM WHICH EVIDENCE?
-WHO / WHAT IS CHANGING?
-WHICH CONTRACTS CHANGE?
-WHICH AUTHORITY IS REQUIRED?
-WHICH OBSERVABILITY CAN DEGRADE?
-WHAT IS THE BLAST RADIUS?
-HOW IS IT TESTED?
-HOW IS IT REPLAYED?
-HOW IS IT ROLLED BACK?
+DLACZEGO?
+Z JAKIEGO EVIDENCE?
+KTO / CO SIĘ ZMIENIA?
+KTÓRE KONTRAKTY SIĘ ZMIENIAJĄ?
+JAKIE AUTHORITY JEST WYMAGANE?
+KTÓRA OBSERWOWALNOŚĆ MOŻE ULEC DEGRADACJI?
+JAKI JEST BLAST RADIUS?
+JAK TO JEST TESTOWANE?
+JAK TO JEST ODTWARZANE?
+JAK WYKONUJE SIĘ ROLLBACK?
 ```
 
 ---
 
-## 3. Organizational topology: capability mosaic, not permanent departments
+## 3. Topologia organizacyjna: mozaika capabilities, nie stałe działy
 
-Traditional organization:
+Tradycyjna organizacja:
 
 ```text
-Department
-→ Job title
-→ Static responsibility
-→ Ticket queue
+Dział
+→ Stanowisko
+→ Stała odpowiedzialność
+→ Kolejka ticketów
 ```
 
-Cyber-Lion target:
+Target Cyber-Lion:
 
 ```text
-Mission
-→ required capabilities
-→ evidence/risk context
+Misja
+→ wymagane capabilities
+→ kontekst evidence/ryzyka
 → Agent Foundry
-→ smallest sufficient mosaic
-→ bounded authority
+→ najmniejsza wystarczająca mozaika
+→ ograniczone authority
 → execution
 → outcome
 → dissolve/reconfigure
 ```
 
-A stable team may exist where repeated work justifies it, but it is a cached topology rather than a fundamental organizational primitive.
+Stabilny zespół może istnieć tam, gdzie uzasadnia go powtarzalna praca, ale jest wtedy cache'owaną topologią, a nie fundamentalnym prymitywem organizacyjnym.
 
-The primary organizational unit is the **Mosaic Cell**:
+Podstawową jednostką organizacyjną jest **Mosaic Cell**:
 
 ```text
 MosaicCell = {
@@ -98,28 +98,28 @@ MosaicCell = {
 }
 ```
 
-Multiple cells can combine into a temporary swarm. A swarm can split, merge or dissolve as its state changes.
+Wiele cells może łączyć się w tymczasowy rój. Rój może się dzielić, scalać lub rozwiązywać wraz ze zmianą swojego stanu.
 
 ---
 
-## 4. Enterprise planes
+## 4. Płaszczyzny przedsiębiorstwa
 
 ### 4.1 SEM — Semantic / Intelligence Plane
 
-Responsible for interpreting, structuring, hypothesizing, simulating and proposing.
+Odpowiada za interpretowanie, strukturyzowanie, tworzenie hipotez, symulowanie i proponowanie.
 
-Primary providers:
+Główni providerzy:
 
-- `writeups` — evidence/research corpus,
-- `hipotezy_nadawcze_LLM` — falsifiable hypothesis design,
-- `chunk-chunk` — transition/chunk/bridge language,
-- `HA2D` — semantic/context adaptation experiments,
-- `mosaic_lab_pro.py` — structural/topological representations,
-- `SymulacjaKaskadySieciowej` — simulation and stress testing,
-- `glitchlab` — code/structure analysis and change interpretation,
-- model providers registered through `ai_platform`.
+- `writeups` — korpus evidence/research,
+- `hipotezy_nadawcze_LLM` — projektowanie falsyfikowalnych hipotez,
+- `chunk-chunk` — język transition/chunk/bridge,
+- `HA2D` — eksperymenty adaptacji semantic/context,
+- `mosaic_lab_pro.py` — reprezentacje strukturalne/topologiczne,
+- `SymulacjaKaskadySieciowej` — symulacja i stress testing,
+- `glitchlab` — analiza kodu/struktury i interpretacja zmian,
+- providerzy modeli rejestrowani przez `ai_platform`.
 
-SEM may generate:
+SEM może generować:
 
 ```text
 Observation
@@ -133,60 +133,60 @@ Swarm proposal
 Policy proposal
 ```
 
-SEM does **not** directly authorize consequential execution.
+SEM **nie** autoryzuje bezpośrednio consequential execution.
 
 ### 4.2 MAND — Mandate / Control Plane
 
-Responsible for:
+Odpowiada za:
 
 - identity,
 - provenance,
 - policy,
-- authority ceilings,
+- limity authority,
 - gates,
-- memory promotion,
-- epistemic status,
-- capability registration,
+- promocję pamięci,
+- status epistemiczny,
+- rejestrację capabilities,
 - swarm admission,
-- research-to-runtime promotion.
+- promocję research-to-runtime.
 
-Primary providers:
+Główni providerzy:
 
 - `ai_platform`,
-- `sbom` AID/provenance concepts,
-- HA2D-derived memory contracts after formalization,
+- koncepcje AID/provenance z `sbom`,
+- kontrakty pamięci wyprowadzone z HA2D po formalizacji,
 - Cyber-Lion EventEnvelope / Capability Registry.
 
 ### 4.3 INF — Infrastructure / Effect Plane
 
-Responsible for real execution:
+Odpowiada za rzeczywiste wykonanie:
 
-- process creation,
-- filesystem mutation,
-- code execution,
-- network calls,
+- tworzenie procesów,
+- mutacje filesystemu,
+- wykonanie kodu,
+- wywołania sieciowe,
 - deployment,
 - storage,
-- external messages,
-- paid actions,
-- cyber-physical effects.
+- wiadomości zewnętrzne,
+- działania płatne,
+- skutki cyber-fizyczne.
 
-Primary provider direction:
+Kierunek głównych providerów:
 
-- `swarm` → generic Execution Mesh,
-- bounded local build runtime in `ai_platform`,
-- future isolated execution providers,
-- infrastructure and external SaaS connectors.
+- `swarm` → generyczny Execution Mesh,
+- ograniczony lokalny build runtime w `ai_platform`,
+- przyszli izolowani providerzy wykonawczy,
+- infrastruktura i zewnętrzne konektory SaaS.
 
 ---
 
-## 5. Enterprise organs and their contracts
+## 5. Organy przedsiębiorstwa i ich kontrakty
 
 ### `ai_platform` — Enterprise Control Plane + Agent Foundry
 
-Must become the place where the enterprise describes **what may exist and how it may compose**, not where every domain implementation is copied.
+Ma stać się miejscem, w którym przedsiębiorstwo opisuje **co może istnieć i jak może się komponować**, a nie miejscem kopiowania każdej implementacji domenowej.
 
-Responsibilities:
+Odpowiedzialności:
 
 ```text
 EntityIdentity
@@ -204,9 +204,9 @@ startup/product control loops
 
 ### `glitchlab` — Evolution Compiler
 
-GlitchLab becomes the compiler/validator for changes to the organization and its software.
+GlitchLab staje się kompilatorem/walidatorem zmian organizacji i jej software.
 
-Current strengths already include:
+Obecne mocne strony obejmują już:
 
 ```text
 Δ-first analysis
@@ -218,7 +218,7 @@ FixCandidate flow
 BUS / EGDB / HUD observability
 ```
 
-Target extension:
+Rozszerzenie targetowe:
 
 ```text
 Source code Δ
@@ -230,41 +230,41 @@ Memory-contract Δ
 Repository-manifest Δ
 ```
 
-A Cyber-Lion change should eventually compile into a GlitchLab change report before it can become a consequential enterprise state transition.
+Zmiana Cyber-Lion powinna docelowo kompilować się do raportu zmiany GlitchLab, zanim stanie się consequential enterprise state transition.
 
 ### `chunk-chunk` — Process Semantics / Transition Microcode
 
-HMK-9D becomes an optional semantic control representation for trajectories.
+HMK-9D staje się opcjonalną reprezentacją kontroli semantycznej trajektorii.
 
-Its 9D vector:
+Jego wektor 9D:
 
 ```text
 [T, S, R, E, I, F, A, P, D]
 ```
 
-is interpreted at platform level as **process metadata**, not as authority.
+jest interpretowany na poziomie platformy jako **metadane procesu**, nie jako authority.
 
-Useful mappings:
+Użyteczne mapowania:
 
 ```text
-T → latency / temporal position
-S → semantic coherence
-R → relation/coupling load
-E → computational/cognitive cost proxy
-I → identity clarity
-F → mission/function clarity
-A → abstraction granularity
+T → latency / pozycja czasowa
+S → spójność semantyczna
+R → obciążenie relacjami/sprzężeniem
+E → proxy kosztu obliczeniowego/poznawczego
+I → klarowność tożsamości
+F → klarowność misji/funkcji
+A → granularność abstrakcji
 P → predictive confidence
-D → commitment hardness
+D → twardość commitment
 ```
 
-Bridges become named transition operators. `Próg–Przejście` becomes particularly relevant to gate boundaries.
+Mosty stają się nazwanymi operatorami przejść. `Próg–Przejście` staje się szczególnie istotny na granicach gate.
 
-Target: compile HMK-9D microcode into typed process transitions and event annotations while keeping permission decisions outside the semantic model.
+Target: kompilować microcode HMK-9D do typowanych przejść procesu i adnotacji zdarzeń, pozostawiając decyzje permission poza modelem semantycznym.
 
 ### `HA2D` — Context / Memory / Human–AI Adaptation Lab
 
-HA2D contributes:
+HA2D wnosi:
 
 ```text
 PCE persistent context
@@ -275,7 +275,7 @@ SMA / _neuro state-dynamics heuristics
 HUD / human interaction
 ```
 
-Target distinction:
+Rozróżnienie targetowe:
 
 ```text
 working context
@@ -285,7 +285,7 @@ memory candidate
 committed organizational memory
 ```
 
-A future Cyber-Lion Memory Service should use the useful CMM concepts but add:
+Przyszły Cyber-Lion Memory Service powinien wykorzystywać użyteczne koncepcje CMM, ale dodać:
 
 ```text
 entity identity
@@ -299,13 +299,13 @@ supersession relation
 commit/reject decision
 ```
 
-`_neuro` remains an experimental process-state model; it may affect prioritization or diagnostics but cannot independently create authority.
+`_neuro` pozostaje eksperymentalnym modelem process-state; może wpływać na priorytetyzację lub diagnostykę, ale nie może samodzielnie tworzyć authority.
 
 ### `swarm` — Execution Mesh
 
-Current repo already demonstrates distributed services, telemetry, Kubernetes, Istio, monitoring and RBAC. Target is to generalize from a drone laboratory to a generic agent/workload execution mesh.
+Obecne repo demonstruje już rozproszone usługi, telemetrię, Kubernetes, Istio, monitoring i RBAC. Target polega na uogólnieniu laboratorium dronów do generycznego execution mesh agentów/workloadów.
 
-Target responsibilities:
+Docelowe odpowiedzialności:
 
 ```text
 AgentInstance launch
@@ -320,13 +320,13 @@ process/result receipts
 kill/freeze/revoke
 ```
 
-The execution mesh must consume `AgentSpec/SwarmSpec` and policy decisions from MAND rather than infer permission from deployment configuration.
+Execution mesh musi konsumować `AgentSpec/SwarmSpec` i decyzje policy z MAND zamiast wywodzić permission z konfiguracji deploymentu.
 
 ### `sbom` — Provenance / Identity / Supply-Chain Intelligence
 
-AID is promoted as a compatibility anchor for enterprise entity identity.
+AID jest promowany jako compatibility anchor dla tożsamości encji przedsiębiorstwa.
 
-SBOM concepts generalize to:
+Koncepcje SBOM są uogólniane do:
 
 ```text
 software composition
@@ -337,7 +337,7 @@ policy composition
 swarm composition
 ```
 
-Target extension is a broader **Relation / Decision BOM**:
+Rozszerzeniem targetowym jest szerszy **Relation / Decision BOM**:
 
 ```text
 Entity
@@ -350,11 +350,11 @@ Entity
 → execution receipts
 ```
 
-The SBOM lab remains the supply-chain specialization; shared identity/provenance lives in platform contracts.
+Lab SBOM pozostaje specjalizacją supply-chain; wspólna identity/provenance żyje w kontraktach platformy.
 
 ### `mosaic_lab_pro.py` — Structural Intelligence Engine
 
-The valuable primitive is not the GUI itself but multi-scale graph structure:
+Wartościowym prymitywem nie jest samo GUI, lecz wieloskalowa struktura grafowa:
 
 ```text
 micro nodes
@@ -374,7 +374,7 @@ mosaic_core/
   validation.py
 ```
 
-It should accept not only Python AST but also:
+Silnik powinien akceptować nie tylko Python AST, ale także:
 
 ```text
 repository graph
@@ -385,11 +385,11 @@ authority graph
 provenance graph
 ```
 
-The GUI becomes one consumer of this engine.
+GUI staje się jednym z consumerów tego silnika.
 
 ### `SymulacjaKaskadySieciowej` — Simulation / Falsification Engine
 
-The domain model remains intact. The reusable contribution is its package/interface discipline and methods:
+Model domenowy pozostaje bez zmian. Wielokrotnego użytku wkładem są dyscyplina pakietu/interfejsu i metody:
 
 ```text
 deterministic scenario run
@@ -400,23 +400,23 @@ bifurcation / phase transition
 stress envelope
 ```
 
-Target: define a generic SimulationProvider interface while preserving individual models as domain plugins.
+Target: zdefiniować generyczny interfejs SimulationProvider, zachowując poszczególne modele jako pluginy domenowe.
 
-Cyber-Lion should be able to ask:
+Cyber-Lion powinien móc pytać:
 
 ```text
-What happens to the organization if this policy changes?
-What if one agent class fails?
-What if evidence latency doubles?
-What if authority is over-delegated?
-What if the market moves before software ships?
+Co stanie się z organizacją, jeśli zmieni się ta polityka?
+Co jeśli jedna klasa agentów zawiedzie?
+Co jeśli opóźnienie evidence podwoi się?
+Co jeśli authority zostanie nadmiernie oddelegowane?
+Co jeśli rynek zmieni się przed dostarczeniem software?
 ```
 
 ### `hipotezy_nadawcze_LLM` — Epistemic Hypothesis Lab
 
-This repository remains intentionally small and rigorous.
+Repozytorium pozostaje celowo małe i rygorystyczne.
 
-Target structure per hypothesis:
+Targetowa struktura pojedynczej hipotezy:
 
 ```text
 Hypothesis
@@ -430,13 +430,13 @@ ExperimentSpec
 CurrentStatus
 ```
 
-Its output feeds R&D and simulation. It must never directly become a production policy.
+Jego output zasila R&D i symulację. Nigdy nie może bezpośrednio stać się polityką produkcyjną.
 
 ### `writeups` — R&D / Enterprise Research Memory
 
-`writeups` becomes the formal R&D organ and evidence archive.
+`writeups` staje się formalnym organem R&D i archiwum evidence.
 
-It contains:
+Zawiera:
 
 ```text
 research questions
@@ -449,13 +449,13 @@ publications
 reference designs
 ```
 
-Its promotion path to production is explicitly gated; see `RND_OPERATING_MODEL.md`.
+Ścieżka promocji do produkcji jest jawnie bramkowana; zobacz `RND_OPERATING_MODEL.md`.
 
 ---
 
 ## 6. Agent Foundry
 
-The platform creates agents from explicit specifications rather than ad hoc prompts.
+Platforma tworzy agentów z jawnych specyfikacji zamiast ad hoc promptów.
 
 ```text
 Mission
@@ -479,17 +479,17 @@ validation
 AgentInstance
 ```
 
-An agent may use an LLM, deterministic code, rules, simulation or a hybrid policy. The identity of the agent is independent of the model provider.
+Agent może używać LLM, kodu deterministycznego, reguł, symulacji lub polityki hybrydowej. Tożsamość agenta jest niezależna od providera modelu.
 
-Changing GPT/model/backend does not automatically create a new organizational role; changing mission, authority or contract may.
+Zmiana GPT/model/backend nie tworzy automatycznie nowej roli organizacyjnej; zmiana mission, authority lub contract może ją utworzyć.
 
 ---
 
-## 7. Dynamic swarm formation
+## 7. Dynamiczne formowanie roju
 
-A mission is decomposed into required capabilities. The Swarm Planner selects the smallest sufficient set of agent definitions that covers them within risk and authority constraints.
+Misja jest dekomponowana do wymaganych capabilities. Swarm Planner wybiera najmniejszy wystarczający zbiór definicji agentów, który je pokrywa w granicach ryzyka i authority.
 
-Conceptually:
+Koncepcyjnie:
 
 ```text
 mission capabilities = {research, architecture, code, security, validation}
@@ -503,7 +503,7 @@ D = {code}
 minimal sufficient swarm = {A, B, C}
 ```
 
-The planner should optimize not only number of agents but:
+Planner powinien optymalizować nie tylko liczbę agentów, ale także:
 
 ```text
 coverage
@@ -515,13 +515,13 @@ latency
 reliability
 ```
 
-A swarm is temporary unless repeated mission patterns justify caching its topology.
+Rój jest tymczasowy, chyba że powtarzające się wzorce misji uzasadniają cache'owanie jego topologii.
 
 ---
 
-## 8. Authority topology
+## 8. Topologia authority
 
-Authority is monotonic downward:
+Authority jest monotoniczne w dół:
 
 ```text
 EnterprisePolicy
@@ -531,9 +531,9 @@ EnterprisePolicy
         ⊇ ActionAuthority
 ```
 
-A child may narrow authority. It may not expand it.
+Dziecko może zawęzić authority. Nie może go rozszerzyć.
 
-Dynamic agent creation therefore follows:
+Dynamiczne tworzenie agentów przebiega zatem według:
 
 ```text
 parent authority ceiling
@@ -545,9 +545,9 @@ parent authority ceiling
 
 ---
 
-## 9. Observability-conditioned autonomy
+## 9. Autonomia warunkowana obserwowalnością
 
-Autonomy is a controlled variable:
+Autonomia jest zmienną kontrolowaną:
 
 ```text
 Autonomy ∝
@@ -556,7 +556,7 @@ Autonomy ∝
 (Impact × Uncertainty × BoundaryExposure)
 ```
 
-Operational rule:
+Reguła operacyjna:
 
 ```text
 required observability missing
@@ -564,13 +564,13 @@ required observability missing
 → read-only / pause / freeze / revoke
 ```
 
-For a high-consequence swarm, losing one critical trace relation should not merely create an alert; it should reduce the reachable execution state.
+Dla roju o wysokich konsekwencjach utrata jednej krytycznej relacji trace nie powinna jedynie tworzyć alertu; powinna zmniejszać osiągalny stan wykonawczy.
 
 ---
 
-## 10. Human role
+## 10. Rola człowieka
 
-Humans do not disappear from this enterprise. Their role changes from manually carrying every task to defining/approving:
+Ludzie nie znikają z tego przedsiębiorstwa. Ich rola zmienia się z ręcznego przenoszenia każdego zadania na definiowanie/zatwierdzanie:
 
 ```text
 mission
@@ -583,25 +583,25 @@ capital allocation
 risk appetite
 ```
 
-Human interaction itself is modeled as events and decisions so that it remains observable and reconstructable.
+Sama interakcja człowieka jest modelowana jako zdarzenia i decyzje, tak aby pozostawała obserwowalna i rekonstruowalna.
 
 ---
 
-## 11. Definition of done for AI-Native enterprise evolution
+## 11. Definition of done dla ewolucji przedsiębiorstwa AI-Native
 
-A new capability is not complete when code exists. It is complete when:
+Nowa capability nie jest ukończona w chwili powstania kodu. Jest ukończona, gdy:
 
 ```text
-1. capability has identity and version
-2. AgentSpec can consume it
-3. required authority is explicit
-4. required observations are explicit
-5. execution path is bounded
-6. events/provenance are emitted
-7. GlitchLab can inspect its delta
-8. tests include negative/adversarial cases
-9. rollback/revocation exists
-10. R&D status is linked to evidence
-11. README/registry/roadmap are synchronized
-12. swarm composition rules understand the capability
+1. capability ma identity i version
+2. AgentSpec może ją konsumować
+3. wymagane authority jest jawne
+4. wymagane observations są jawne
+5. execution path jest ograniczony
+6. emitowane są events/provenance
+7. GlitchLab potrafi sprawdzić jej deltę
+8. testy zawierają przypadki negatywne/adversarialne
+9. istnieje rollback/revocation
+10. status R&D jest powiązany z evidence
+11. README/registry/roadmap są zsynchronizowane
+12. reguły kompozycji roju rozumieją capability
 ```
