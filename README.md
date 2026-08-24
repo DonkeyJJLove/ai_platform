@@ -53,7 +53,7 @@ NO OBSERVABILITY LOSS WITHOUT AUTHORITY DEGRADATION
 NO AGENT SPAWN WITHOUT IDENTITY + BUDGET + AUTHORITY CEILING
 NO CROSS-SYSTEM CALL WITHOUT CONTRACT
 NO GLOBAL CLAIM FROM LOCAL OBSERVATION
-NO CONSEQUENTAL EFFECT WITHOUT RECONSTRUCTABLE EVIDENCE
+NO CONSEQUENTIAL EFFECT WITHOUT RECONSTRUCTABLE EVIDENCE
 ```
 
 W praktyce oznacza to, że wzrost zdolności poznawczych agenta nie może automatycznie zwiększać jego uprawnień. Pogorszenie obserwowalności nie może zwiększać zakresu dozwolonych działań.
@@ -146,7 +146,7 @@ heartbeat
 receipt chain
 ```
 
-Authority jest tłumione w dół hierarchii:
+Zakres authority jest ograniczany w dół hierarchii:
 
 ```text
 child <= parent
@@ -156,7 +156,7 @@ mission <= fleet envelope
 
 Zwiększenie liczby dronów nie może zwiększać uprawnień pojedynczego wykonawcy. Flota posiada również wspólny budżet skutków, m.in. dla liczby równoległych writerów, repozytoriów, branchy i modyfikowanych ścieżek.
 
-Role buildera, verifiera, obserwatora i reconciler-a są rozdzielane od źródła authority. Builder nie powinien być jedynym końcowym verifierem własnego efektu.
+Role buildera, verifiera, obserwatora i rekonsyliatora są rozdzielane od źródła authority. Builder nie powinien być jedynym końcowym verifierem własnego efektu.
 
 Rejestry mogą opisywać wiele **logicznych dronów i rojów**. Sama obecność wpisu w rejestrze nie jest dowodem istnienia tej samej liczby niezależnych procesów produkcyjnych, sandboxów lub fizycznych executorów.
 
@@ -231,7 +231,7 @@ STALE PROJECTION
 CHAT CONTEXT
 ```
 
-`LION/status.json`, rejestry i mapy są użytecznymi projekcjami, ale mogą się zestarzeć. Przed consequential action stan repozytorium, CI, branchy i authority powinien zostać ponownie zaobserwowany.
+`LION/status.json`, rejestry i mapy są użytecznymi projekcjami, ale mogą się zestarzeć. Przed działaniem wywołującym skutek stan repozytorium, CI, branchy i authority powinien zostać ponownie zaobserwowany.
 
 ---
 
