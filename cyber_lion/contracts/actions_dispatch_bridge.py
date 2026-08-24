@@ -50,6 +50,9 @@ class DispatchPolicy:
             workflow not in self.allowed_workflows for workflow in workflows
         ):
             raise ValueError("invalid workflow input policy")
+        for _, keys in self.allowed_inputs:
+            if len(set(keys)) != len(keys) or any(not isinstance(key, str) or not key for key in keys):
+                raise ValueError("invalid workflow input key policy")
         return self
 
     def input_keys_for(self, workflow: str) -> tuple[str, ...]:
@@ -222,7 +225,9 @@ class RunObservationReceipt:
             raise ValueError("observation identifiers invalid")
         if self.event != "workflow_dispatch" or self.status != "completed" or self.conclusion != "success":
             raise ValueError("run is not successful workflow_dispatch")
-        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(self.artifact_digest.removeprefix("sha256:")):
+        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(
+            self.artifact_digest.removeprefix("sha256:")
+        ):
             raise ValueError("artifact digest invalid")
         if not _HEX64.fullmatch(self.proof_manifest_digest):
             raise ValueError("proof manifest digest invalid")
@@ -289,9 +294,16 @@ class GroupChannelRunObservationReceipt:
             raise ValueError("group run is not successful workflow_dispatch")
         if not self.run_actor or not self.triggering_actor:
             raise ValueError("group run actor binding incomplete")
-        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(self.artifact_digest.removeprefix("sha256:")):
+        if not self.artifact_digest.startswith("sha256:") or not _HEX64.fullmatch(
+            self.artifact_digest.removeprefix("sha256:")
+        ):
             raise ValueError("group artifact digest invalid")
-        for value in (self.envelope_digest, self.payload_digest, self.group_channel_receipt_digest, self.bridge_implementation_digest):
+        for value in (
+            self.envelope_digest,
+            self.payload_digest,
+            self.group_channel_receipt_digest,
+            self.bridge_implementation_digest,
+        ):
             if not _HEX64.fullmatch(value):
                 raise ValueError("group observation digest invalid")
         if self.state != "EMITTED_EVIDENCE_ONLY":
@@ -300,4 +312,81 @@ class GroupChannelRunObservationReceipt:
             raise ValueError("group observation cannot report an effect")
         if self.trust_decision != "ALLOW" or self.observation_result != "OBSERVED_VERIFIED":
             raise ValueError("group observation is not verified")
+        return self
+
+
+@dataclass(frozen=True)
+class CodePerceptionRunObservationReceipt:
+    """Evidence-only observation of the repository-native code-perception observer."""
+    schema_version: str
+    request_id: str
+    observation_comment_id: int
+    control_comment_id: int
+    actor: str
+    permission: str
+    workflow: str
+    ref: str
+    expected_head: str
+    dispatch_accepted_at: str
+    observer_run_id: int
+    observer_run_attempt: int
+    observer_status: str
+    observer_conclusion: str
+    target_workflow_name: str
+    target_workflow_id: int
+    target_workflow_path: str
+    target_event: str
+    target_branch: str
+    target_head_sha: str
+    target_tree_sha: str
+    target_run_id: int
+    target_job_id: int
+    projection_digest: str
+    tree_semantic_digest: str
+    file_count: int
+    symbol_count: int
+    edge_count: int
+    authority_effect: bool
+    repository_effect: bool
+    bridge_implementation_digest: str
+    trust_decision: str
+    observation_result: str
+
+    def validate(self) -> "CodePerceptionRunObservationReceipt":
+        if self.schema_version != "1.0.0":
+            raise ValueError("unsupported code-perception observation receipt schema")
+        if self.workflow != "lion-code-perception-observation.yml" or self.ref != "master":
+            raise ValueError("code-perception observer workflow binding invalid")
+        if not _HEX40.fullmatch(self.expected_head):
+            raise ValueError("code-perception observer head invalid")
+        if not _TOKEN.fullmatch(self.request_id) or not _TOKEN.fullmatch(self.actor):
+            raise ValueError("code-perception observation identity invalid")
+        if self.observation_comment_id <= 0 or self.control_comment_id <= 0:
+            raise ValueError("code-perception observation comment binding invalid")
+        if self.observer_run_id <= 0 or self.observer_run_attempt <= 0:
+            raise ValueError("code-perception observer run identity invalid")
+        if self.observer_status != "completed" or self.observer_conclusion != "success":
+            raise ValueError("code-perception observer run is not successful")
+        if self.target_workflow_name != "Cyber-Lion Core":
+            raise ValueError("code-perception target workflow name invalid")
+        if self.target_workflow_id != 337046823:
+            raise ValueError("code-perception target workflow id invalid")
+        if self.target_workflow_path != ".github/workflows/cyber-lion-contracts.yml":
+            raise ValueError("code-perception target workflow path invalid")
+        if self.target_event != "push" or self.target_branch != "master":
+            raise ValueError("code-perception target event or branch invalid")
+        if not _HEX40.fullmatch(self.target_head_sha) or not _HEX40.fullmatch(self.target_tree_sha):
+            raise ValueError("code-perception target git identity invalid")
+        if self.target_run_id <= 0 or self.target_job_id <= 0:
+            raise ValueError("code-perception target run identity invalid")
+        if not _HEX64.fullmatch(self.projection_digest) or not _HEX64.fullmatch(self.tree_semantic_digest):
+            raise ValueError("code-perception projection digest invalid")
+        if self.file_count <= 0 or self.symbol_count <= 0 or self.edge_count <= 0:
+            raise ValueError("code-perception projection counts invalid")
+        if self.authority_effect is not False or self.repository_effect is not False:
+            raise ValueError("code-perception observation cannot report an effect")
+        if not _HEX64.fullmatch(self.bridge_implementation_digest):
+            raise ValueError("code-perception bridge implementation digest invalid")
+        if self.trust_decision != "ALLOW" or self.observation_result != "OBSERVED_VERIFIED":
+            raise ValueError("code-perception observation is not verified")
         return self
