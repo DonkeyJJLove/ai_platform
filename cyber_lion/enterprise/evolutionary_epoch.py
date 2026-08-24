@@ -95,6 +95,15 @@ class EvolutionaryEpochEngine:
         """Derive projection provenance only from canonical immutable contract fields."""
         if isinstance(record, RnDMemoryRecord):
             return tuple(record.source_digests) + tuple(record.negative_evidence_refs)
+        if isinstance(record, PromotionDecision):
+            return (
+                record.hypothesis_digest,
+                record.falsification_digest,
+                record.evolution_delta_digest,
+                record.policy_decision_ref,
+            )
+        if isinstance(record, EvolutionDelta):
+            return tuple(record.evidence_refs)
         return tuple(getattr(record, "provenance_refs", ()))
 
     def project_event(self, record: object, envelope: EventEnvelope, projection_id: str) -> RnDEventProjection:
