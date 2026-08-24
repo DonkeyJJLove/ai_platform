@@ -56,7 +56,10 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
             if parsed.query or not parsed.path.startswith(cls._DELETE_PREFIX):
                 raise RepositoryMaintenanceError("GitHub delete route not allowlisted")
             branch = urllib.parse.unquote(parsed.path[len(cls._DELETE_PREFIX):])
-            validate_branch_name(branch)
+            try:
+                validate_branch_name(branch)
+            except RepositoryMaintenanceContractError as exc:
+                raise RepositoryMaintenanceError("GitHub delete ref outside mission allowlist") from exc
             if not (branch.startswith("docs/") or branch.startswith("mission/")):
                 raise RepositoryMaintenanceError("GitHub delete ref outside mission allowlist")
             return
