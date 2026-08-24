@@ -1,8 +1,8 @@
-# CYBER-LION — Event & Data Model
+# CYBER-LION — model zdarzeń i danych
 
-## Core event envelope
+## Podstawowa koperta zdarzenia
 
-Every cross-system event uses a versioned envelope. Domain payloads remain provider-owned.
+Każde zdarzenie cross-system korzysta z wersjonowanej koperty. Payloady domenowe pozostają własnością providerów.
 
 ```json
 {
@@ -21,7 +21,7 @@ Every cross-system event uses a versioned envelope. Domain payloads remain provi
 }
 ```
 
-## Required event families
+## Wymagane rodziny zdarzeń
 
 ```text
 ObservationCreated
@@ -47,15 +47,15 @@ ReplayRequested
 ReplayCompleted
 ```
 
-## Event invariants
+## Inwarianty zdarzeń
 
-### E1 — Identity
+### E1 — Tożsamość
 
 ```text
 cross-system event ⇒ entity.entity_id exists
 ```
 
-### E2 — Causal trace
+### E2 — Ślad przyczynowy
 
 ```text
 DecisionProposed / GateApplied / ActionExecuted
@@ -75,14 +75,14 @@ ActionExecuted with consequential side effect
 ⇒ applied GateApplied event is referenced
 ```
 
-### E5 — Memory
+### E5 — Pamięć
 
 ```text
 MemoryCommitted
 ⇒ policy_id + provenance + source candidate exist
 ```
 
-### E6 — Degraded observability
+### E6 — Zdegradowana obserwowalność
 
 ```text
 required observability becomes incomplete
@@ -90,7 +90,7 @@ AND action authority > safe fallback
 ⇒ AuthorityDegraded event before next consequential action
 ```
 
-## Authority object
+## Obiekt authority
 
 ```json
 {
@@ -104,11 +104,11 @@ AND action authority > safe fallback
 }
 ```
 
-Authority is explicit state. It is not inferred from natural-language intent.
+Authority jest jawnym stanem. Nie jest wywodzone z intencji wyrażonej językiem naturalnym.
 
-## Typed context
+## Typowany kontekst
 
-Context transported to a model or agent is a sequence of typed items rather than an undifferentiated text bag:
+Kontekst przekazywany do modelu lub agenta jest sekwencją typowanych elementów, a nie nieodróżnialnym workiem tekstu:
 
 ```json
 {
@@ -125,13 +125,13 @@ Context transported to a model or agent is a sequence of typed items rather than
 }
 ```
 
-Rule:
+Reguła:
 
 ```text
 same context window != same trust class
 ```
 
-An `AUTHORITY` item must originate from a trusted authority source and cannot be minted by a `DATA` or `INSTRUCTION` item.
+Element `AUTHORITY` musi pochodzić z zaufanego authority source i nie może zostać zmintowany przez element `DATA` lub `INSTRUCTION`.
 
 ## Decision proposal
 
@@ -149,7 +149,7 @@ An `AUTHORITY` item must originate from a trusted authority source and cannot be
 }
 ```
 
-This object is a proposal, not authorization.
+Obiekt ten jest propozycją, a nie autoryzacją.
 
 ## Execution receipt
 
@@ -175,11 +175,11 @@ This object is a proposal, not authorization.
 }
 ```
 
-Receipts are append-only evidence. Corrections supersede a receipt; they do not silently mutate the historical record.
+Receipts są append-only evidence. Korekty supersedują receipt; nie modyfikują po cichu rekordu historycznego.
 
 ## Simulation request/result
 
-Request:
+Żądanie:
 
 ```json
 {
@@ -195,7 +195,7 @@ Request:
 }
 ```
 
-Result:
+Wynik:
 
 ```json
 {
@@ -210,15 +210,15 @@ Result:
 }
 ```
 
-Invariant:
+Inwariant:
 
 ```text
 MODEL_RESULT != OBSERVED_FACT
 ```
 
-## Graph ingestion
+## Ingest grafu
 
-Events update the graph through explicit relations. Example:
+Zdarzenia aktualizują graf przez jawne relacje. Przykład:
 
 ```text
 ObservationCreated --observed_from--> Source
@@ -230,19 +230,19 @@ ActionExecuted --executed_by--> Agent/Tool
 OutcomeObserved --caused_by?--> Execution
 ```
 
-`caused_by` is only used when causality is established under the local evidence rule; otherwise use `correlated_with` or `derived_from`.
+`caused_by` jest używane wyłącznie wtedy, gdy przyczynowość została ustalona zgodnie z lokalną regułą evidence; w przeciwnym razie należy użyć `correlated_with` lub `derived_from`.
 
-## Provider adapters
+## Adaptery providerów
 
-Initial mappings:
+Początkowe mapowania:
 
-- SBOM `@timestamp/event_type/aid/payload` → Cyber-Lion envelope while preserving original event under `payload.compat`.
-- GlitchLab BUS events → event envelope with delta/invariant metadata.
-- Swarm telemetry JSON → `ObservationCreated` with workload/entity/correlation metadata.
-- HMK-9D step event → `DeltaDetected` or context-specific analytical event; bridge vectors remain annotations.
-- Simulator results → `SimulationCompleted` with model provenance.
-- Writeups/hypothesis documents → `EvidenceCandidate`/`Hypothesis` ingestion only after metadata classification.
+- SBOM `@timestamp/event_type/aid/payload` → koperta Cyber-Lion z zachowaniem oryginalnego zdarzenia w `payload.compat`.
+- Zdarzenia BUS GlitchLab → event envelope z metadanymi delty/inwariantów.
+- Telemetria JSON `swarm` → `ObservationCreated` z metadanymi workload/entity/correlation.
+- Zdarzenie kroku HMK-9D → `DeltaDetected` albo analityczne zdarzenie zależne od kontekstu; wektory mostów pozostają adnotacjami.
+- Wyniki symulatora → `SimulationCompleted` z provenance modelu.
+- Dokumenty writeups/hipotez → ingest `EvidenceCandidate`/`Hypothesis` dopiero po klasyfikacji metadanych.
 
-## Versioning
+## Wersjonowanie
 
-Breaking contract changes require a major schema version. Adapters should support at least the current and immediately previous major version during migration.
+Zmiany łamiące kompatybilność kontraktów wymagają głównej wersji schematu. W okresie migracji adaptery powinny obsługiwać co najmniej bieżącą i bezpośrednio poprzednią wersję główną.
