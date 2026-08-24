@@ -88,8 +88,10 @@ class DispatchRequest:
         if canonical_json(inputs).decode("utf-8") != self.canonical_inputs:
             raise ValueError("inputs must be canonical JSON")
         allowed = set(policy.input_keys_for(self.workflow))
-        if any(not isinstance(k, str) or k not in allowed for k in inputs):
-            raise ValueError("unknown workflow input key")
+        if any(not isinstance(k, str) for k in inputs):
+            raise ValueError("workflow input keys must be strings")
+        if set(inputs) != allowed:
+            raise ValueError("workflow input key set mismatch")
         return self
 
     def inputs(self) -> Mapping[str, object]:

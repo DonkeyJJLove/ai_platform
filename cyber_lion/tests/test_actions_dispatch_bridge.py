@@ -159,6 +159,41 @@ class DispatchBridgeTests(unittest.TestCase):
         for request_id in ("x;rm", "$(id)", "x y", "x\nworkflow=evil.yml"):
             with self.assertRaises(ValueError): parse_envelope(envelope(request_id=request_id), repository=REPO, issue_number=144, comment_id=1, actor="DonkeyJJLove")
 
+    def test_group_channel_dispatch_policy_requires_exact_input_set(self):
+        inputs = '{"envelope_b64":"YQ=="}'
+        request = parse_envelope(
+            envelope(workflow="lion-group-channel.yml", inputs=inputs),
+            repository=REPO,
+            issue_number=144,
+            comment_id=1,
+            actor="DonkeyJJLove",
+        )
+        self.assertEqual(request.inputs(), {"envelope_b64": "YQ=="})
+        api = FakeApi()
+        receipt = execute(
+            event(envelope(workflow="lion-group-channel.yml", inputs=inputs)),
+            api,
+        )
+        self.assertEqual(receipt.workflow, "lion-group-channel.yml")
+        self.assertEqual(
+            api.dispatched,
+            [("lion-group-channel.yml", "master", {"envelope_b64": "YQ=="})],
+        )
+        for bad in (
+            "{}",
+            '{"extra":"x"}',
+            '{"envelope_b64":"YQ==","extra":"x"}',
+        ):
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(ValueError, "input key set mismatch"):
+                    parse_envelope(
+                        envelope(workflow="lion-group-channel.yml", inputs=bad),
+                        repository=REPO,
+                        issue_number=144,
+                        comment_id=1,
+                        actor="DonkeyJJLove",
+                    )
+
     def test_stale_and_toctou_head_denied(self):
         with self.assertRaisesRegex(RuntimeError, "stale expected head"): execute(event(envelope()), FakeApi(heads=["1" * 40]))
         api = FakeApi(heads=[HEAD, "2" * 40])
