@@ -280,6 +280,11 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("EvolutionDelta effect assertion denied")
         if transition.evolution_delta_digest != delta.delta_digest:
             raise EvolutionaryEpochError("epoch delta binding mismatch")
+        lineage_epoch = self._delta_lineage.get(delta.delta_digest)
+        if lineage_epoch is None:
+            raise EvolutionaryEpochError("NEXT_EPOCH_DELTA_LINEAGE_MISSING")
+        if lineage_epoch != transition.epoch_id:
+            raise EvolutionaryEpochError("NEXT_EPOCH_DELTA_LINEAGE_EPOCH_MISMATCH")
         if transition.promotion_digest != promotion.promotion_digest:
             raise EvolutionaryEpochError("epoch promotion binding mismatch")
         verified_gate_digest = self._verified_promotion_gates.get(promotion.promotion_digest)

@@ -335,6 +335,36 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
         with self.assertRaisesRegex(EvolutionaryEpochError, "cross-epoch"):
             self.engine.register_delta_lineage(delta, "E005")
 
+    def test_next_epoch_delta_lineage_missing_and_epoch_mismatch_denied(self):
+        gate = self._gate(proposal_id="promotion:lineage")
+        promotion = self._promotion(gate, promotion_id="promotion:lineage")
+        delta = EvolutionDelta(
+            delta_id="delta:lineage", target_component="rnd-loop", motivation="bounded knowledge",
+            evidence_refs=("evidence:lineage",), expected_outcome="candidate only",
+            falsification_conditions=("regression",), candidate_scope=("cyber_lion/contracts/example.py",),
+            dependency_ids=(), risk_class="GREEN",
+        ).sealed()
+        promotion = replace(promotion, evolution_delta_digest=delta.delta_digest, promotion_digest="").sealed()
+        memory = RnDMemoryRecord(
+            memory_id="mem:lineage", revision=1, record_kind="PROMOTED_KNOWLEDGE",
+            subject_id=promotion.promotion_id, source_digests=(promotion.promotion_digest,),
+            negative_evidence_refs=(), supersedes_memory_digest=None, epistemic_status="SUPPORTED",
+            committed_event_ref="evt:lineage:mem:commit", previous_memory_head="GENESIS",
+        ).sealed()
+        transition = EpochTransition(
+            epoch_id="E004", previous_epoch_id="E003", rnd_engine_state_digest=H1,
+            memory_head=H2, promotion_digest=promotion.promotion_digest,
+            evolution_delta_digest=delta.delta_digest, event_projection_digest=H3,
+            graph_projection_digest=H4, state="NEXT_EPOCH_CANDIDATE_READY",
+        ).sealed()
+        with self.assertRaisesRegex(EvolutionaryEpochError, "NEXT_EPOCH_DELTA_LINEAGE_MISSING"):
+            self.engine.assert_next_epoch_ready(transition, delta, promotion, memory)
+
+        mismatch_engine = EvolutionaryEpochEngine()
+        mismatch_engine.register_delta_lineage(delta, "E003")
+        with self.assertRaisesRegex(EvolutionaryEpochError, "NEXT_EPOCH_DELTA_LINEAGE_EPOCH_MISMATCH"):
+            mismatch_engine.assert_next_epoch_ready(transition, delta, promotion, memory)
+
     def test_next_epoch_requires_verified_pdp_and_exact_binding(self):
         gate = self._gate(proposal_id="promotion:ready")
         promotion = PromotionDecision(
@@ -384,6 +414,7 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
             "DELTA_SYNTHESIZED", "NEXT_EPOCH_CANDIDATE_READY",
         ):
             transition = self.engine.transition_epoch(transition, state)
+        self.engine.register_delta_lineage(delta, "E004")
         with self.assertRaisesRegex(EvolutionaryEpochError, "PROMOTION_WITHOUT_VERIFIED_PDP"):
             self.engine.assert_next_epoch_ready(transition, delta, promotion, memory)
         self.engine.verify_promotion_gate(promotion, gate)
