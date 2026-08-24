@@ -1,7 +1,6 @@
 """Deterministic adapter between evolutionary R&D records and existing event/graph/PDP surfaces."""
 from __future__ import annotations
 
-from dataclasses import asdict
 from hashlib import sha256
 from typing import Dict, Iterable
 
@@ -9,21 +8,11 @@ from cyber_lion.contracts.enterprise_graph import GraphEdge, GraphNode
 from cyber_lion.contracts.events import EventEnvelope
 from cyber_lion.contracts.policy_gate import GateApplied
 from cyber_lion.contracts.evolutionary_rnd import (
-    EvolutionDelta,
-    ExperimentResult,
-    FalsificationResult,
-    Hypothesis,
-    PromotionDecision,
-    RnDMemoryRecord,
-    SimulationPlan,
-    EvidenceObservation,
+    EvidenceObservation, EvolutionDelta, ExperimentResult, FalsificationResult,
+    Hypothesis, PromotionDecision, RnDMemoryRecord, SimulationPlan,
 )
 from cyber_lion.contracts.evolutionary_epoch import (
-    EpochTransition,
-    EvolutionaryEpochContractError,
-    RnDEventProjection,
-    RnDGraphProjection,
-    canonical_json,
+    EpochTransition, RnDEventProjection, RnDGraphProjection, canonical_json,
 )
 
 
@@ -40,9 +29,7 @@ _EVENT_MAP = {
     "PromotionDecision": {"DecisionProposed"},
     "RnDMemoryRecord": {"MemoryCandidateCreated", "MemoryCommitted"},
     "EvolutionDelta": {"DeltaDetected"},
-    "Supersession": {"ArtifactSuperseded"},
 }
-
 _NODE_MAP = {
     "EvidenceObservation": "EVIDENCE",
     "Hypothesis": "ARTIFACT",
@@ -52,9 +39,7 @@ _NODE_MAP = {
     "PromotionDecision": "ARTIFACT",
     "RnDMemoryRecord": "ARTIFACT",
     "EvolutionDelta": "ARTIFACT",
-    "Supersession": "ARTIFACT",
 }
-
 _EPOCH_FORWARD = {
     "EPOCH_OPEN": "OBSERVING",
     "OBSERVING": "HYPOTHESIS_SPACE_ACTIVE",
@@ -76,7 +61,7 @@ class EvolutionaryEpochEngine:
 
     def __init__(self) -> None:
         self._event_bindings: Dict[str, tuple[str, str]] = {}
-        self._record_event_types: Dict[tuple[str, str], str] = {}
+        self._record_event_types: Dict[tuple[str, str], set[str]] = {}
         self._memory_candidates: Dict[str, str] = {}
         self._memory_commits: Dict[str, tuple[str, str, int]] = {}
         self._memory_children: Dict[str, str] = {}
@@ -85,33 +70,30 @@ class EvolutionaryEpochEngine:
 
     @staticmethod
     def _record_identity(record: object) -> tuple[str, str, str]:
+        spec = {
+            "EvidenceObservation": ("observation_id", "observation_digest"),
+            "Hypothesis": ("hypothesis_id", "hypothesis_digest"),
+            "SimulationPlan": ("simulation_id", "simulation_digest"),
+            "ExperimentResult": ("result_id", "result_digest"),
+            "FalsificationResult": ("falsification_id", "falsification_digest"),
+            "PromotionDecision": ("promotion_id", "promotion_digest"),
+            "RnDMemoryRecord": ("memory_id", "memory_digest"),
+            "EvolutionDelta": ("delta_id", "delta_digest"),
+        }
         record_type = type(record).__name__
-        id_fields = (
-            ("EvidenceObservation", "observation_id", "observation_digest"),
-            ("Hypothesis", "hypothesis_id", "hypothesis_digest"),
-            ("SimulationPlan", "simulation_id", "simulation_digest"),
-            ("ExperimentResult", "result_id", "result_digest"),
-            ("FalsificationResult", "falsification_id", "falsification_digest"),
-            ("PromotionDecision", "promotion_id", "promotion_digest"),
-            ("RnDMemoryRecord", "memory_id", "memory_digest"),
-            ("EvolutionDelta", "delta_id", "delta_digest"),
-        )
-        for expected, id_attr, digest_attr in id_fields:
-            if record_type == expected:
-                record_id = str(getattr(record, id_attr))
-                record_digest = str(getattr(record, digest_attr))
-                if not record_digest:
-                    raise EvolutionaryEpochError("R&D record must be sealed")
-                return record_type, record_id, record_digest
-        raise EvolutionaryEpochError("unsupported R&D record type")
+        if record_type not in spec:
+            raise EvolutionaryEpochError("unsupported R&D record type")
+        id_attr, digest_attr = spec[record_type]
+        record_id = str(getattr(record, id_attr))
+        record_digest = str(getattr(record, digest_attr))
+        if not record_digest:
+            raise EvolutionaryEpochError("R&D record must be sealed")
+        return record_type, record_id, record_digest
 
     def project_event(self, record: object, envelope: EventEnvelope, projection_id: str) -> RnDEventProjection:
-        if hasattr(record, "validate"):
-            record.validate()
-        envelope.validate()
+        record.validate(); envelope.validate()
         record_type, record_id, record_digest = self._record_identity(record)
-        allowed = _EVENT_MAP.get(record_type, set())
-        if envelope.event_type not in allowed:
+        if envelope.event_type not in _EVENT_MAP[record_type]:
             raise EvolutionaryEpochError("event type incompatible with R&D record")
         if envelope.event_type in {"ActionAuthorized", "ActionExecuted"}:
             raise EvolutionaryEpochError("R&D event cannot map to effect event")
@@ -121,21 +103,26 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("event entity does not bind record identity")
         if envelope.payload.get("record_digest") != record_digest:
             raise EvolutionaryEpochError("event payload digest substitution denied")
-        if not envelope.provenance.upstream:
-            raise EvolutionaryEpochError("R&D event requires upstream provenance")
-        if set(envelope.provenance.upstream) != set(getattr(record, "provenance_refs", tuple())):
+        record_provenance = tuple(getattr(record, "provenance_refs", ()))
+        if not envelope.provenance.upstream or set(envelope.provenance.upstream) != set(record_provenance):
             raise EvolutionaryEpochError("event provenance does not bind R&D record")
         if record_type == "ExperimentResult":
-            if getattr(record, "result_class") != "SIMULATED" or envelope.event_type != "SimulationCompleted":
+            if record.result_class != "SIMULATED" or envelope.event_type != "SimulationCompleted":
                 raise EvolutionaryEpochError("only SIMULATED result maps to SimulationCompleted")
+
         binding = (record_type, record_digest)
         prior = self._event_bindings.get(envelope.event_id)
         if prior is not None and prior != binding:
             raise EvolutionaryEpochError("event replay/substitution denied")
         record_key = (record_type, record_digest)
-        prior_type = self._record_event_types.get(record_key)
-        if prior_type is not None and prior_type != envelope.event_type:
-            raise EvolutionaryEpochError("same record projected under incompatible event type")
+        prior_types = self._record_event_types.setdefault(record_key, set())
+        if prior_types and envelope.event_type not in prior_types:
+            allowed_pair = record_type == "RnDMemoryRecord" and (
+                prior_types | {envelope.event_type}
+            ) <= {"MemoryCandidateCreated", "MemoryCommitted"}
+            if not allowed_pair:
+                raise EvolutionaryEpochError("same record projected under incompatible event type")
+
         projection = RnDEventProjection(
             projection_id=projection_id,
             record_type=record_type,
@@ -149,45 +136,34 @@ class EvolutionaryEpochEngine:
             provenance_refs=tuple(envelope.provenance.upstream),
         ).sealed()
         self._event_bindings[envelope.event_id] = binding
-        self._record_event_types[record_key] = envelope.event_type
+        prior_types.add(envelope.event_type)
         return projection
 
-    def project_graph(
-        self,
-        record: object,
-        event_projection: RnDEventProjection,
-        node: GraphNode,
-        edges: Iterable[GraphEdge],
-        projection_id: str,
-    ) -> RnDGraphProjection:
-        event_projection.validate(); node.validate()
+    def project_graph(self, record: object, event_projection: RnDEventProjection,
+                      node: GraphNode, edges: Iterable[GraphEdge], projection_id: str) -> RnDGraphProjection:
+        record.validate(); event_projection.validate(); node.validate()
         record_type, record_id, record_digest = self._record_identity(record)
-        if event_projection.record_type != record_type or event_projection.record_digest != record_digest:
+        if (event_projection.record_type, event_projection.record_digest) != (record_type, record_digest):
             raise EvolutionaryEpochError("event projection does not bind graph record")
-        expected_node_type = _NODE_MAP[record_type]
-        if node.node_type != expected_node_type or node.node_type == "AUTHORITY_RECORD":
+        if node.node_type != _NODE_MAP[record_type] or node.node_type == "AUTHORITY_RECORD":
             raise EvolutionaryEpochError("R&D record projected to invalid graph node")
         if node.node_id != record_id:
             raise EvolutionaryEpochError("graph node identity mismatch")
-        if node.payload.get("record_digest") != record_digest:
-            raise EvolutionaryEpochError("graph node digest substitution denied")
-        if node.payload.get("event_id") != event_projection.event_id:
-            raise EvolutionaryEpochError("graph node event binding mismatch")
+        if node.payload.get("record_digest") != record_digest or node.payload.get("event_id") != event_projection.event_id:
+            raise EvolutionaryEpochError("graph node record/event binding mismatch")
         if set(node.provenance_refs) != set(event_projection.provenance_refs):
             raise EvolutionaryEpochError("graph provenance binding mismatch")
         edge_list = tuple(edges)
+        allowed_edges = {"DERIVED_FROM", "SUPPORTS", "CONTRADICTS", "OBSERVED_FROM", "SUPERSEDES", "CORRELATED_WITH", "CAUSED_BY"}
         for edge in edge_list:
             edge.validate()
             if edge.plane != "DATA_PROVENANCE":
                 raise EvolutionaryEpochError("R&D projection cannot create authority-plane edge")
-            if edge.edge_type not in {
-                "DERIVED_FROM", "SUPPORTS", "CONTRADICTS", "OBSERVED_FROM", "SUPERSEDES",
-                "CORRELATED_WITH", "CAUSED_BY",
-            }:
+            if edge.edge_type not in allowed_edges:
                 raise EvolutionaryEpochError("unsupported R&D graph edge")
             if edge.source_id != node.node_id and edge.target_id != node.node_id:
                 raise EvolutionaryEpochError("graph edge not connected to projected node")
-        projection = RnDGraphProjection(
+        return RnDGraphProjection(
             projection_id=projection_id,
             record_type=record_type,
             record_id=record_id,
@@ -199,7 +175,6 @@ class EvolutionaryEpochEngine:
             edge_types=tuple(edge.edge_type for edge in edge_list),
             provenance_refs=tuple(node.provenance_refs),
         ).sealed()
-        return projection
 
     def bind_memory_candidate(self, record: RnDMemoryRecord, event_projection: RnDEventProjection) -> None:
         record.validate(); event_projection.validate()
@@ -209,18 +184,11 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("memory candidate digest mismatch")
         self._memory_candidates[event_projection.event_id] = record.memory_digest
 
-    def bind_memory_commit(
-        self,
-        record: RnDMemoryRecord,
-        candidate_event_id: str,
-        commit_projection: RnDEventProjection,
-        computed_new_head: str,
-    ) -> None:
+    def bind_memory_commit(self, record: RnDMemoryRecord, candidate_event_id: str,
+                           commit_projection: RnDEventProjection, computed_new_head: str) -> None:
         record.validate(); commit_projection.validate()
-        if candidate_event_id not in self._memory_candidates:
-            raise EvolutionaryEpochError("MemoryCommitted without candidate denied")
-        if self._memory_candidates[candidate_event_id] != record.memory_digest:
-            raise EvolutionaryEpochError("memory candidate/record mismatch")
+        if self._memory_candidates.get(candidate_event_id) != record.memory_digest:
+            raise EvolutionaryEpochError("MemoryCommitted without matching candidate denied")
         if commit_projection.record_digest != record.memory_digest or commit_projection.event_type != "MemoryCommitted":
             raise EvolutionaryEpochError("memory commit projection mismatch")
         if commit_projection.causation_id != candidate_event_id:
@@ -230,14 +198,14 @@ class EvolutionaryEpochEngine:
         if existing_child is not None and existing_child != record.memory_digest:
             raise EvolutionaryEpochError("MEMORY_FORK")
         expected_head = sha256(
-            b"LION/E004-RND-MEMORY-CHAIN/1\0"
-            + previous_head.encode("ascii")
-            + record.memory_digest.encode("ascii")
+            b"LION/E004-RND-MEMORY-CHAIN/1\0" + previous_head.encode("ascii") + record.memory_digest.encode("ascii")
         ).hexdigest()
         if computed_new_head != expected_head:
             raise EvolutionaryEpochError("memory head mismatch")
         if record.memory_digest in self._memory_commits:
             raise EvolutionaryEpochError("duplicate memory commit denied")
+        if record.revision > 1 and previous_head == "GENESIS":
+            raise EvolutionaryEpochError("skipped memory revision denied")
         self._memory_children[previous_head] = record.memory_digest
         self._memory_commits[record.memory_digest] = (previous_head, computed_new_head, record.revision)
 
@@ -248,15 +216,13 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("PDP DENY cannot support knowledge promotion")
         if gate.proposal_id != decision.promotion_id:
             raise EvolutionaryEpochError("promotion/gate proposal binding mismatch")
-        if decision.decision == "PROMOTE_KNOWLEDGE" and not decision.policy_decision_ref:
-            raise EvolutionaryEpochError("promotion lacks PDP evidence reference")
-        if decision.policy_decision_ref != gate.decision_digest:
+        expected_ref = f"pdp:{gate.decision_digest}"
+        if decision.policy_decision_ref != expected_ref:
             raise EvolutionaryEpochError("promotion PDP decision digest mismatch")
 
     def transition_epoch(self, current: EpochTransition, next_state: str) -> EpochTransition:
         current.validate()
-        expected = _EPOCH_FORWARD.get(current.state)
-        if expected is None or next_state != expected:
+        if _EPOCH_FORWARD.get(current.state) != next_state:
             raise EvolutionaryEpochError("stale, reverse, or skipped epoch transition denied")
         transitioned = EpochTransition(
             epoch_id=current.epoch_id,
@@ -269,19 +235,13 @@ class EvolutionaryEpochEngine:
             graph_projection_digest=current.graph_projection_digest,
             state=next_state,
         ).sealed()
-        prior = self._epoch_transitions.get(transitioned.transition_digest)
-        if prior is not None:
+        if transitioned.transition_digest in self._epoch_transitions:
             raise EvolutionaryEpochError("duplicate epoch transition denied")
         self._epoch_transitions[transitioned.transition_digest] = next_state
         return transitioned
 
-    def assert_next_epoch_ready(
-        self,
-        transition: EpochTransition,
-        delta: EvolutionDelta,
-        promotion: PromotionDecision,
-        memory_record: RnDMemoryRecord,
-    ) -> None:
+    def assert_next_epoch_ready(self, transition: EpochTransition, delta: EvolutionDelta,
+                                promotion: PromotionDecision, memory_record: RnDMemoryRecord) -> None:
         transition.validate(); delta.validate(); promotion.validate(); memory_record.validate()
         if transition.state != "NEXT_EPOCH_CANDIDATE_READY":
             raise EvolutionaryEpochError("epoch not ready")
@@ -314,10 +274,7 @@ class EvolutionaryEpochEngine:
 
 
 def assert_no_effect_surface() -> None:
-    forbidden = {
-        "execute", "deploy", "release", "push", "merge", "delete_ref", "dispatch",
-        "repository_write", "runtime_authority", "activate_agent",
-    }
+    forbidden = {"execute", "deploy", "release", "push", "merge", "delete_ref", "dispatch", "repository_write", "runtime_authority", "activate_agent"}
     public = {name.lower() for name in dir(EvolutionaryEpochEngine) if not name.startswith("_")}
     if public & forbidden:
         raise EvolutionaryEpochError("direct effect surface exposed")
