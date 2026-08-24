@@ -116,12 +116,13 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
             supersedes_memory_digest=None, epistemic_status="OBSERVED",
             committed_event_ref="evt:mem:commit", previous_memory_head="GENESIS",
         ).sealed()
-        candidate_evt = envelope("mem:1", record.memory_digest, "evt:mem:candidate", "MemoryCandidateCreated")
+        upstream = (self.obs.observation_digest,)
+        candidate_evt = envelope("mem:1", record.memory_digest, "evt:mem:candidate", "MemoryCandidateCreated", upstream=upstream)
         candidate = self.engine.project_event(record, candidate_evt, "proj:mem:candidate")
         self.engine.bind_memory_candidate(record, candidate)
         commit_evt = envelope(
             "mem:1", record.memory_digest, "evt:mem:commit", "MemoryCommitted",
-            causation_id="evt:mem:candidate", policy_ids=["rnd-memory-policy"],
+            upstream=upstream, causation_id="evt:mem:candidate", policy_ids=["rnd-memory-policy"],
             extra_payload={"candidate_event_id": "evt:mem:candidate"},
         )
         commit = self.engine.project_event(record, commit_evt, "proj:mem:commit")
@@ -138,19 +139,30 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
             source_digests=(H1,), negative_evidence_refs=("negative:1",), supersedes_memory_digest=None,
             epistemic_status="FALSIFIED", committed_event_ref="evt:mem2:commit", previous_memory_head="GENESIS",
         ).sealed()
+        upstream = (H1, "negative:1")
         candidate = self.engine.project_event(
-            record, envelope("mem:2", record.memory_digest, "evt:mem2:candidate", "MemoryCandidateCreated"), "proj:c2"
+            record, envelope("mem:2", record.memory_digest, "evt:mem2:candidate", "MemoryCandidateCreated", upstream=upstream), "proj:c2"
         )
         self.engine.bind_memory_candidate(record, candidate)
         commit = self.engine.project_event(
             record,
             envelope("mem:2", record.memory_digest, "evt:mem2:commit", "MemoryCommitted",
-                     causation_id="evt:mem2:candidate", policy_ids=["rnd-memory-policy"],
+                     upstream=upstream, causation_id="evt:mem2:candidate", policy_ids=["rnd-memory-policy"],
                      extra_payload={"candidate_event_id": "evt:mem2:candidate"}),
             "proj:m2",
         )
         with self.assertRaises(EvolutionaryEpochError):
             self.engine.bind_memory_commit(record, "evt:mem2:candidate", commit, H4)
+
+    def test_memory_event_omitted_provenance_is_denied(self):
+        record = RnDMemoryRecord(
+            memory_id="mem:prov", revision=1, record_kind="NEGATIVE_RESULT", subject_id="hyp:prov",
+            source_digests=(H1,), negative_evidence_refs=("negative:prov",), supersedes_memory_digest=None,
+            epistemic_status="FALSIFIED", committed_event_ref="evt:prov", previous_memory_head="GENESIS",
+        ).sealed()
+        incomplete = envelope("mem:prov", record.memory_digest, "evt:prov:candidate", "MemoryCandidateCreated", upstream=(H1,))
+        with self.assertRaisesRegex(EvolutionaryEpochError, "provenance"):
+            self.engine.project_event(record, incomplete, "proj:prov")
 
     def test_promotion_requires_exact_allow_gate_evidence(self):
         gate = GateApplied(
