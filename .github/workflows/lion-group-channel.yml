@@ -1,0 +1,64 @@
+name: LION Group Channel Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      envelope_b64:
+        description: Canonical base64 LION group-channel envelope (maximum decoded size 8 KiB)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-group-channel-${{ github.run_id }}-${{ github.run_attempt }}
+  cancel-in-progress: false
+
+jobs:
+  emit-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact master evidence emitter
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.11'
+
+      - name: Validate envelope and emit evidence-only receipt
+        shell: bash
+        env:
+          LION_GROUP_CHANNEL_ENVELOPE_B64: ${{ inputs.envelope_b64 }}
+          LION_GROUP_CHANNEL_ACTUAL_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/master"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          umask 077
+          receipt="$RUNNER_TEMP/lion-group-channel-receipt.json"
+          python -m cyber_lion.enterprise.group_channel > "$receipt"
+          python - "$receipt" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          value = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assert value["state"] == "EMITTED_EVIDENCE_ONLY"
+          assert value["authority_effect"] is False
+          assert value["repository_effect"] is False
+          assert "payload" not in value
+          PY
+
+      - name: Upload evidence-only receipt
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: lion-group-channel-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lion-group-channel-receipt.json
+          if-no-files-found: error
+          retention-days: 7
