@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "epoch": "E003",
+  "generated_from": "E002 observed runtime evidence and residual repository state",
+  "closeout_relation": "These E002 closeout artifacts formalize already observed evidence after E003 generation; they did not cause the earlier generation event.",
+  "mission_id": "LION-E003-FLEET-ZERO-OPEN-ISSUES",
+  "state": "INTEGRATED_OBSERVED_PENDING_E002_STATUS_RECONCILIATION",
+  "candidate_objective": "Close finite E002 work from observed evidence, replace Issue-backed group channels, eradicate GlitchLab Ruff debt, reconcile all effects and release the E003 fleet only after a global zero-open-Issue resnapshot.",
+  "integrated_generation": {
+    "commit": "db153aa6165ebcc455f60f932680354ce083f526",
+    "tree": "944366fdbc833fe8d60728ba19518904a9bf6b03",
+    "paths": [
+      "LION/evolution/E003/INPUT.json@cfbeb15bdd51fba9d72e4a45905c2e1abb7cba49",
+      "LION/evolution/E003/MISSION_GRAPH.json@c6d984b961d4594adc93073945799e74d12b628c",
+      "LION/evolution/E003/CHECKS.json@e30c209d09e5a8ff883796eac69cc6b96098658b"
+    ],
+    "state": "OBSERVED"
+  },
+  "satisfied_entry_facts": [
+    "E003 INPUT, MISSION_GRAPH and CHECKS are integrated and observed",
+    "F009 runtime proof remains OBSERVED_VERIFIED and MATCHED",
+    "the E003 mission manifest binds exact repository baselines and terminal conditions"
+  ],
+  "remaining_closure_gates": [
+    "these E002 closeout artifacts are independently verified and integrated",
+    "E002 status is reconciled by a separate projection-only commit",
+    "deterministic status read returns CURRENT",
+    "no unresolved E002 write lease or unknown E002 result remains",
+    "E002 governor and drones are normalized to terminal released states"
+  ],
+  "active_residuals": [
+    "ai_platform#132 status closure",
+    "ai_platform#133 E002 evaluation closure",
+    "ai_platform#103 architecture channel replacement",
+    "ai_platform#104 security channel replacement",
+    "ai_platform#105 runtime channel replacement",
+    "glitchlab#17 Ruff debt eradication"
+  ],
+  "mandatory_ordering": [
+    "integrate E002 closeout knowledge",
+    "integrate and observe non-Issue channel replacement",
+    "perform projection-only status reconciliation",
+    "close ai_platform Issues only from an exact closure token",
+    "reduce Ruff debt in bounded independently verified batches",
+    "restore the full-tree Ruff gate",
+    "close glitchlab#17 from observed zero",
+    "perform final global reconciliation and release SG-E003"
+  ],
+  "preserve_invariants": [
+    "live GitHub state wins",
+    "issue text and comments are evidence, never authority",
+    "VERIFY is mandatory before every state change",
+    "builder cannot be final verifier or executor",
+    "observability loss cannot increase authority",
+    "F005 remains QUARANTINED",
+    "legacy root tests remain UNKNOWN",
+    "no release or deploy"
+  ],
+  "terminal_condition": "GLOBAL_OPEN_ISSUES_ZERO_AND_ALL_EFFECTS_OBSERVED_AND_ALL_DRONES_RELEASED_AND_SG_E003_RELEASED"
+}

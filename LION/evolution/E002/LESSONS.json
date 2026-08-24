@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "epoch": "E002",
+  "state": "FINALIZED_FROM_OBSERVED_EVIDENCE",
+  "lessons": [
+    {
+      "id": "E002-L1",
+      "observation": "Integrated provider contracts and test doubles did not by themselves prove a live runtime effect chain.",
+      "implication": "Runtime closure requires an exact-head dispatch, terminal external acknowledgement, artifact digest binding and independent observation."
+    },
+    {
+      "id": "E002-L2",
+      "observation": "A planned or successful dispatch receipt alone was weaker than the post-effect artifact and MATCHED reconciliation.",
+      "implication": "No consequential mission may close before the external effect and its receipt are independently observed."
+    },
+    {
+      "id": "E002-L3",
+      "observation": "Run discovery and artifact retrieval failed even after the main execution path existed because temporal and redirect boundaries were not yet exact.",
+      "implication": "Observation transport is part of enforcement: temporal binding, redirect allowlists, credential stripping, artifact identity and digest checks must all fail closed."
+    },
+    {
+      "id": "E002-L4",
+      "observation": "The first adversarial E2E failure was a test-expectation defect rather than permission to weaken the fail-closed implementation.",
+      "implication": "A failing falsification test must be classified and repaired from evidence; gates must not be relaxed merely to produce green CI."
+    },
+    {
+      "id": "E002-L5",
+      "observation": "The Checkmarx workflow depended on unavailable external tenant credentials and therefore never reached the scan.",
+      "implication": "A mandatory security gate must be executable in the repository's real authority and credential envelope; unavailable external SaaS cannot be reported as security success."
+    },
+    {
+      "id": "E002-L6",
+      "observation": "Bandit produced actionable findings only after it executed as a secret-free local scanner.",
+      "implication": "Prefer observable, reproducible gates and treat their findings as repair inputs rather than suppressing them with blanket exclusions."
+    },
+    {
+      "id": "E002-L7",
+      "observation": "Every consequential code integration after revision 7 invalidated the semantic freshness of the prior status projection.",
+      "implication": "Knowledge artifacts and runtime changes must integrate first; a separate allowlisted projection commit must observe them last."
+    },
+    {
+      "id": "E002-L8",
+      "observation": "GitHub Issues 103-105 are persistent communication surfaces rather than finite implementation debt.",
+      "implication": "They may close only after a non-Issue transport is integrated, exercised and independently observed."
+    },
+    {
+      "id": "E002-L9",
+      "observation": "The GlitchLab Ruff backlog is substantially larger and more semantic than the original Issue estimate.",
+      "implication": "Cross-repository debt eradication must use exact observed baselines, bounded non-overlapping batches and independent verification after every batch."
+    }
+  ],
+  "preserve_invariants": [
+    "builder, verifier, executor and observer remain separate roles",
+    "reasoning and evidence do not mint execution authority",
+    "loss of observability cannot increase authority",
+    "UNKNOWN remains fail-closed",
+    "F005 remains QUARANTINED until separately authorized",
+    "legacy root tests remain UNKNOWN until new evidence classifies them"
+  ]
+}
