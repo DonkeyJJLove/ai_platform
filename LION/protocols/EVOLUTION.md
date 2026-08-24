@@ -1,6 +1,6 @@
-# LION Evolution Protocol
+# LION — protokół ewolucji
 
-LION evolves architecture by explicit deltas rather than by accumulating unrelated code.
+LION rozwija architekturę przez jawne delty, a nie przez gromadzenie niepowiązanego kodu.
 
 ```text
 TARGET
@@ -17,22 +17,22 @@ TARGET
 → SELECT NEXT GAP
 ```
 
-## State separation
+## Rozdzielenie stanów
 
-Architectural lifecycle: `TARGET_ONLY | PLANNED | BUILDING | VERIFIED | INTEGRATED | OBSERVED | BLOCKED | QUARANTINED | SUPERSEDED`.
+Lifecycle architektoniczny: `TARGET_ONLY | PLANNED | BUILDING | VERIFIED | INTEGRATED | OBSERVED | BLOCKED | QUARANTINED | SUPERSEDED`.
 
-Epistemic freshness: `CURRENT | STALE | UNKNOWN | CONFLICTED`.
+Świeżość epistemiczna: `CURRENT | STALE | UNKNOWN | CONFLICTED`.
 
-These dimensions are independent. For example, a component may be `INTEGRATED + STALE` until live state is re-observed.
+Wymiary te są niezależne. Przykładowo komponent może pozostawać w stanie `INTEGRATED + STALE`, dopóki bieżący stan nie zostanie ponownie zaobserwowany.
 
-## Mission selection
+## Wybór misji
 
-Prefer the smallest critical-path slice that closes a real target-vs-implementation gap. Keep WIP at one on the critical path unless partitions are explicitly proven independent. Preserve provider specialization and avoid premature migration into `ai_platform`.
+Preferuj najmniejszy fragment ścieżki krytycznej, który domyka rzeczywistą lukę target-vs-implementation. Utrzymuj WIP równy jeden na ścieżce krytycznej, chyba że niezależność partycji została jawnie udowodniona. Zachowuj specjalizację providerów i unikaj przedwczesnej migracji do `ai_platform`.
 
-## Projection update
+## Aktualizacja projekcji
 
-Catalog files are reviewed projections. Dynamic facts must include provenance and freshness binding. Never rewrite normative target documents merely to make implementation appear complete.
+Pliki katalogowe są przeglądanymi projekcjami. Fakty dynamiczne muszą zawierać provenance i binding świeżości. Nigdy nie przepisuj normatywnych dokumentów targetu tylko po to, aby implementacja wyglądała na ukończoną.
 
 ## Authority
 
-Evolution records describe what should or does exist. They do not mint execution, merge, credential, release or deployment authority.
+Rekordy ewolucji opisują, co powinno istnieć lub co istnieje. Nie mintują authority do execution, merge, credentials, release ani deploymentu.
