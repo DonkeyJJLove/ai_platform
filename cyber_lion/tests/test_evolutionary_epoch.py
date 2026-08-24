@@ -195,6 +195,19 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
         with self.assertRaises(EvolutionaryEpochError):
             self.engine.transition_epoch(nxt, "EPOCH_OPEN")
 
+    def test_delta_lineage_same_epoch_and_cross_epoch_replay_denied(self):
+        delta = EvolutionDelta(
+            delta_id="delta:replay", target_component="rnd-loop", motivation="bounded knowledge",
+            evidence_refs=("evidence:1",), expected_outcome="candidate only",
+            falsification_conditions=("regression",), candidate_scope=("cyber_lion/contracts/example.py",),
+            dependency_ids=(), risk_class="GREEN",
+        ).sealed()
+        self.engine.register_delta_lineage(delta, "E004")
+        with self.assertRaisesRegex(EvolutionaryEpochError, "same-epoch"):
+            self.engine.register_delta_lineage(delta, "E004")
+        with self.assertRaisesRegex(EvolutionaryEpochError, "cross-epoch"):
+            self.engine.register_delta_lineage(delta, "E005")
+
     def test_next_epoch_boundary_remains_non_effectful_and_f005_denied(self):
         delta = EvolutionDelta(
             delta_id="delta:1", target_component="F005-runtime", motivation="bounded knowledge delta",
