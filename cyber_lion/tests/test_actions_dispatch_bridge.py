@@ -202,7 +202,9 @@ def make_group_bundle(target="security", request_id="group-1"):
     )
     out = BytesIO()
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("lion-group-channel-receipt.json", receipt_json(group_receipt))
+        info = zipfile.ZipInfo("lion-group-channel-receipt.json")
+        info.external_attr = 0o100600 << 16
+        zf.writestr(info, receipt_json(group_receipt))
     return control, dispatch, group_envelope, group_receipt, out.getvalue()
 
 
@@ -526,18 +528,16 @@ class GroupChannelObservationTests(unittest.TestCase):
                 )
 
     def test_artifact_absence_duplicate_expiry_and_name_fail_closed(self):
-        cases = ([],)
-        for artifacts in cases:
-            api, _, _ = self._api(artifacts=[{"name": "wrong"}])
-            api.artifacts = artifacts
-            with self.assertRaisesRegex(RuntimeError, "missing or ambiguous"):
-                observe(
-                    event(observe_envelope("group-1")),
-                    api,
-                    discovery_timeout=0.01,
-                    terminal_timeout=0.01,
-                    poll_seconds=0.001,
-                )
+        api, _, _ = self._api(artifacts=[{"name": "wrong"}])
+        api.artifacts = []
+        with self.assertRaisesRegex(RuntimeError, "missing or ambiguous"):
+            observe(
+                event(observe_envelope("group-1")),
+                api,
+                discovery_timeout=0.01,
+                terminal_timeout=0.01,
+                poll_seconds=0.001,
+            )
         api, _, _ = self._api()
         api.artifacts = [api.artifacts[0], dict(api.artifacts[0])]
         with self.assertRaisesRegex(RuntimeError, "missing or ambiguous"):
