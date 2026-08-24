@@ -7,7 +7,7 @@
     "MULTI_REPOSITORY_READ_ONLY_BASELINE",
     "BOUNDED_PARALLEL_BUILD",
     "INDEPENDENT_VERIFICATION",
-    "CODEQL_SECURITY_GATE",
+    "BANDIT_SECURITY_GATE",
     "VERIFIED_INTEGRATION",
     "POST_EFFECT_RECONCILIATION"
   ],
@@ -99,7 +99,7 @@
     "no issue closes from planned work or CI scheduling alone",
     "exact base, head, tree and changed-path scope are required for every candidate",
     "builders cannot verify their own candidates",
-    "CodeQL success is required for ai_platform integration",
+    "Bandit success is required for ai_platform integration; GitHub CodeQL Default Setup remains supplemental",
     "glitchlab full-tree Ruff zero and tests are required before issue 17 closure",
     "persistent channels close only after an observed replacement exists",
     "F005 remains QUARANTINED",
@@ -113,6 +113,6 @@
     "e003": "COMPLETED_OBSERVED",
     "all_drones": "RELEASED",
     "governor": "RELEASED",
-    "codeql": "SUCCESS"
+    "bandit": "SUCCESS"
   }
 }

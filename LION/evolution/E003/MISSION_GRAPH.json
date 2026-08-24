@@ -45,12 +45,12 @@
       "formations": [
         {
           "id": "S3-F1",
-          "role": "codeql-dispatch-and-observation",
+          "role": "bandit-dispatch-and-observation",
           "authority": "CI_ONLY"
         },
         {
           "id": "S3-F2",
-          "role": "codeql-SARIF-triage-and-remediation",
+          "role": "bandit-finding-triage-and-remediation",
           "write_scope": [
             "bounded paths proven by findings"
           ]
