@@ -1,6 +1,6 @@
-# CYBER-LION — Migration Map
+# CYBER-LION — mapa migracji
 
-The migration is incremental and compatibility-first.
+Migracja jest przyrostowa i prowadzona w modelu **compatibility-first**.
 
 ```text
 CURRENT
@@ -9,35 +9,35 @@ CURRENT
 → TARGET
 ```
 
-No phase may delete a working legacy path before its replacement has contract tests, observability and rollback evidence.
+Żadna faza nie może usunąć działającej ścieżki legacy, dopóki jej zamiennik nie posiada testów kontraktowych, obserwowalności i evidence rollbacku.
 
-## Phase 0 — Repository archaeology — COMPLETE FOR BASELINE
+## Faza 0 — Archeologia repozytoriów — UKOŃCZONA DLA BASELINE'U
 
-Deliverables in this branch:
+Artefakty dostarczone w tej gałęzi:
 
-- repository inventory;
-- capability map;
-- target architecture;
-- contract map;
-- event/data model;
-- scientific status;
-- migration order.
+- inwentarz repozytoriów,
+- mapa capabilities,
+- architektura docelowa,
+- mapa kontraktów,
+- model zdarzeń/danych,
+- status naukowy,
+- kolejność migracji.
 
-Existing process-upgrade PRs are treated as pending dependencies rather than silently duplicated.
+Istniejące PR-y podnoszące jakość procesu są traktowane jako oczekujące zależności, a nie po cichu duplikowane.
 
-## Phase 1 — Repository hygiene / compatibility baseline
+## Faza 1 — Higiena repozytoriów / baseline kompatybilności
 
-Before federation, merge or supersede current hardening PRs where valid:
+Przed federacją należy zintegrować albo supersedować bieżące PR-y hardeningowe, jeżeli pozostają poprawne:
 
-- `ai_platform` process-upgrade PR: canonical README, source purity;
-- `chunk-chunk` PRs: remove tracked virtualenv; sanitize/redact run IDs;
-- `glitchlab` process-upgrade PR: generated/local state cleanup and CI ratchet;
-- `HA2D` process-upgrade PR: persistent-context guard;
-- `hipotezy_nadawcze_LLM` process-upgrade PR: falsification contract.
+- PR process-upgrade `ai_platform`: kanoniczny README, czystość źródeł;
+- PR-y `chunk-chunk`: usunięcie śledzonego virtualenv; sanityzacja/redakcja run IDs;
+- PR process-upgrade `glitchlab`: cleanup stanu generowanego/lokalnego i CI ratchet;
+- PR process-upgrade `HA2D`: guard trwałego kontekstu;
+- PR process-upgrade `hipotezy_nadawcze_LLM`: kontrakt falsyfikacji.
 
-For other providers, create equivalent source-purity and regression checks only where repository archaeology confirms the need.
+Dla pozostałych providerów należy tworzyć analogiczne kontrole source-purity i regresji tylko tam, gdzie archeologia repozytorium potwierdzi taką potrzebę.
 
-**Exit criteria**
+**Kryteria wyjścia**
 
 ```text
 source tree != local runtime state
@@ -46,14 +46,14 @@ CI/test status known
 no new Cyber-Lion integration built on hidden local artifacts
 ```
 
-## Phase 2 — Shared Entity Identity
+## Faza 2 — Wspólna Entity Identity
 
 Owner: `ai_platform`  
-Compatibility anchor: `sbom/AID`
+Anchor kompatybilności: `sbom/AID`
 
-Add versioned Entity Identity schema and adapter from AID.
+Dodaj wersjonowany schemat Entity Identity oraz adapter z AID.
 
-Do **not** replace AID fields. Prove round-trip compatibility:
+**Nie** zastępuj pól AID. Udowodnij kompatybilność round-trip:
 
 ```text
 AID event
@@ -63,57 +63,57 @@ AID event
 == original AID
 ```
 
-**Tests**
+**Testy**
 
-- schema validation;
-- stable identity vs version/ref distinction;
-- invalid/unknown owner handling;
-- AID round trip;
-- no network address treated as identity.
+- walidacja schematu,
+- rozdzielenie stabilnej tożsamości od version/ref,
+- obsługa invalid/unknown owner,
+- AID round trip,
+- zakaz traktowania adresu sieciowego jako tożsamości.
 
-## Phase 3 — Shared Event Schema
-
-Owner: `ai_platform`.
-
-Implement versioned event envelope and typed event names. Create adapters first for:
-
-1. SBOM events;
-2. GlitchLab delta/BUS events;
-3. Swarm telemetry;
-4. simulator result events.
-
-**Exit criteria**
-
-- shared correlation ID traverses at least two repositories;
-- upstream provenance is preserved;
-- consumer rejects incompatible major schema version.
-
-## Phase 4 — Capability Registry
+## Faza 3 — Wspólny Event Schema
 
 Owner: `ai_platform`.
 
-Build manifest discovery. A provider registers:
+Zaimplementuj wersjonowaną event envelope i typowane nazwy zdarzeń. Najpierw utwórz adaptery dla:
 
-- capability id/version;
-- input/output schemas;
-- side effects;
-- authority requirements;
-- event production;
+1. zdarzeń SBOM,
+2. zdarzeń delta/BUS GlitchLab,
+3. telemetrii Swarm,
+4. zdarzeń wyników symulatora.
+
+**Kryteria wyjścia**
+
+- wspólny correlation ID przechodzi przez co najmniej dwa repozytoria,
+- upstream provenance jest zachowane,
+- consumer odrzuca niekompatybilną główną wersję schematu.
+
+## Faza 4 — Capability Registry
+
+Owner: `ai_platform`.
+
+Zbuduj discovery manifestów. Provider rejestruje:
+
+- capability id/version,
+- schematy input/output,
+- side effects,
+- wymagania authority,
+- emitowane zdarzenia,
 - provider entity/version.
 
-Do not reuse GlitchLab's local filter registry as global state. Add an adapter only if useful.
+Nie używaj lokalnego registry filtrów GlitchLab jako stanu globalnego. Dodaj adapter tylko wtedy, gdy jest użyteczny.
 
-**First provider manifests**
+**Pierwsze manifesty providerów**
 
-- GlitchLab AST/delta/graph analysis;
-- Mosaic Lab structure abstraction;
-- Cascade simulation;
-- SBOM observation/gate evidence;
-- Swarm telemetry/execution.
+- analiza AST/delta/grafu GlitchLab,
+- abstrakcja struktury Mosaic Lab,
+- symulacja kaskadowa,
+- obserwacja SBOM/evidence bramki,
+- telemetria/wykonanie Swarm.
 
-## Phase 5 — QV9D / Mosaic Registry Refresh
+## Faza 5 — Odświeżenie QV9D / Mosaic Registry
 
-Replace the stale static repository list with generated manifests while preserving QV9D annotations.
+Zastąp nieaktualną statyczną listę repozytoriów generowanymi manifestami, zachowując adnotacje QV9D.
 
 ```text
 GitHub/repository manifest
@@ -122,33 +122,33 @@ GitHub/repository manifest
 → validation against actual repository/ref
 ```
 
-QV9D is metadata/coordinate space. It must not create authority.
+QV9D jest przestrzenią metadanych/współrzędnych. Nie może tworzyć authority.
 
-## Phase 6 — Provenance + LBOM / Decision BOM
+## Faza 6 — Provenance + LBOM / Decision BOM
 
-Generalize provenance from supply-chain evidence to decision inputs.
+Uogólnij provenance z evidence supply-chain na wejścia decyzji.
 
-Initial Decision BOM records:
+Początkowe rekordy Decision BOM zawierają:
 
-- model/provider version;
-- context item refs;
-- evidence refs;
-- prompt/instruction refs where available;
-- memory refs;
-- policies;
-- capability/tool versions;
-- gate event;
+- wersję modelu/providera,
+- refs elementów kontekstu,
+- refs evidence,
+- refs promptów/instrukcji tam, gdzie są dostępne,
+- refs pamięci,
+- polityki,
+- wersje capability/tool,
+- gate event,
 - transformation chain.
 
-Start with metadata references/hashes, not wholesale payload duplication.
+Rozpocznij od odwołań/digestów metadanych, a nie od kopiowania pełnych payloadów.
 
-## Phase 7 — Global Graph State
+## Faza 7 — Global Graph State
 
-Owner: `ai_platform` contract/service.
+Owner: kontrakt/usługa `ai_platform`.
 
-Start as an append-derived projection from typed events. Do not make the graph the system of record for provider-local state.
+Na początku graf jest projekcją wyprowadzoną append-only z typowanych zdarzeń. Nie czyń z niego systemu rekordowego dla lokalnego stanu providerów.
 
-Graph must distinguish:
+Graf musi rozróżniać:
 
 ```text
 supports / contradicts
@@ -156,29 +156,29 @@ from
 caused / authorized
 ```
 
-## Phase 8 — Policy / Gate / Authority Engine
+## Faza 8 — Policy / Gate / Authority Engine
 
-Owner: `ai_platform` shared decision interface. Enforcement remains federated.
+Owner: wspólny interfejs decyzyjny `ai_platform`. Enforcement pozostaje federacyjny.
 
-Adapters:
+Adaptery:
 
-- SBOM gate evidence;
-- GlitchLab Guard/invariants;
-- Kubernetes RBAC/workload authorization;
+- evidence bramki SBOM,
+- GlitchLab Guard/invariants,
+- Kubernetes RBAC/workload authorization,
 - human approval.
 
-Required invariant:
+Wymagany inwariant:
 
 ```text
 consequential ActionExecuted
 ⇒ GateApplied reference
 ```
 
-## Phase 9 — Agent Execution Mesh
+## Faza 9 — Agent Execution Mesh
 
-Owner: `swarm` as execution provider.
+Owner: `swarm` jako provider wykonawczy.
 
-Migration path:
+Ścieżka migracji:
 
 ```text
 current domain JSON/API
@@ -189,13 +189,13 @@ current domain JSON/API
 → sandbox/tool-worker extraction
 ```
 
-Review existing RBAC against actual service behavior. Remove authority that has no documented consumer.
+Przejrzyj istniejący RBAC względem rzeczywistego zachowania usług. Usuń authority, które nie ma udokumentowanego consumera.
 
-## Phase 10 — Cognitive State / Memory
+## Faza 10 — Cognitive State / Memory
 
-Owner semantics: `HA2D`; common contract: `ai_platform`.
+Owner semantyki: `HA2D`; wspólny kontrakt: `ai_platform`.
 
-First implement types and policy, then storage.
+Najpierw zaimplementuj typy i politykę, następnie storage.
 
 ```text
 WORKING
@@ -207,42 +207,42 @@ EVIDENCE
 QUARANTINE
 ```
 
-Untrusted input may become `MemoryCandidateCreated`; persistent commit requires policy/gate.
+Niezaufane wejście może zostać `MemoryCandidateCreated`; trwały commit wymaga policy/gate.
 
-## Phase 11 — Hypothesis Engine
+## Faza 11 — Hypothesis Engine
 
-Use machine-readable hypothesis/evidence records. `hipotezy_nadawcze_LLM` becomes one provider of records; it does not become a privileged inference engine.
+Używaj machine-readable rekordów hypothesis/evidence. `hipotezy_nadawcze_LLM` staje się jednym z providerów rekordów; nie staje się uprzywilejowanym silnikiem inferencji.
 
-## Phase 12 — Glitch / Novelty Engine
+## Faza 12 — Glitch / Novelty Engine
 
-Expose GlitchLab analysis through stable capability contracts. Prefer adapters around current graph/delta/invariant modules.
+Udostępnij analizę GlitchLab przez stabilne kontrakty capabilities. Preferuj adaptery wokół istniejących modułów graph/delta/invariant.
 
-`glitch` means incompatibility with the preferred model, not automatically vulnerability/error.
+`glitch` oznacza niezgodność z preferowanym modelem, a nie automatycznie podatność/błąd.
 
-## Phase 13 — Propagation / Risk Simulator
+## Faza 13 — Propagation / Risk Simulator
 
-Wrap existing `run_model` first. Then introduce a generalized simulation provider protocol.
+Najpierw opakuj istniejące `run_model`. Następnie wprowadź uogólniony protokół providera symulacji.
 
-Do not rewrite the current Iran SD model into a universal propagation model. New propagation models become separate provider implementations behind the same simulation contract.
+Nie przepisuj obecnego modelu Iran SD na uniwersalny model propagacji. Nowe modele propagacji stają się osobnymi implementacjami providera za tym samym kontraktem symulacji.
 
-## Phase 14 — Human–AI HUD
+## Faza 14 — Human–AI HUD
 
-Use HA2D HUD/revision concepts to visualize:
+Użyj koncepcji HUD/revision z HA2D do wizualizacji:
 
-- current graph/world model;
-- alternative hypotheses;
-- evidence and unknowns;
-- delta;
-- proposed action;
-- requested/effective authority;
-- blast radius/scenarios;
-- abstraction λ.
+- bieżącego grafu/modelu świata,
+- alternatywnych hipotez,
+- evidence i unknowns,
+- delty,
+- proponowanego działania,
+- requested/effective authority,
+- blast radius/scenariuszy,
+- abstrakcji λ.
 
-HUD display is a projection of state, not the authority source.
+Widok HUD jest projekcją stanu, a nie źródłem authority.
 
-## Phase 15 — Cross-repository observability
+## Faza 15 — Obserwowalność cross-repository
 
-Minimum end-to-end trace:
+Minimalny trace end-to-end:
 
 ```text
 Observation
@@ -253,27 +253,27 @@ Observation
 → OutcomeObserved
 ```
 
-Each transition must share correlation/causation identifiers.
+Każde przejście musi współdzielić identyfikatory correlation/causation.
 
-## Phase 16 — Replay
+## Faza 16 — Replay
 
-A replay record reconstructs:
+Rekord replay rekonstruuje:
 
-- observed inputs;
-- known unknowns;
-- hypotheses;
-- evidence;
-- model/provider versions;
-- policies/gates;
-- authority;
-- execution receipt;
+- zaobserwowane wejścia,
+- znane niewiadome,
+- hipotezy,
+- evidence,
+- wersje modelu/providera,
+- polityki/bramki,
+- authority,
+- execution receipt,
 - outcome.
 
-Replay must tolerate missing data explicitly; it must not fabricate absent state.
+Replay musi jawnie tolerować brakujące dane; nie może fabrykować nieobecnego stanu.
 
-## Phase 17 — Distillation
+## Faza 17 — Distillation
 
-For repeatedly validated behavior:
+Dla wielokrotnie zwalidowanego zachowania:
 
 ```text
 UNDERSTOOD
@@ -281,15 +281,15 @@ UNDERSTOOD
 → FORMALISED
 ```
 
-Record supersession between heuristic and formalized mechanism.
+Zapisuj supersession pomiędzy mechanizmem heurystycznym i sformalizowanym.
 
-## Phase 18 — Deterministic enforcement
+## Faza 18 — Deterministyczny enforcement
 
-All consequential providers consume validated execution contracts rather than free-form model outputs.
+Wszyscy providerzy powodujący skutki konsumują zwalidowane execution contracts zamiast free-form outputów modelu.
 
-## Phase 19 — Adversarial validation
+## Faza 19 — Walidacja adversarialna
 
-Architecture-level tests include:
+Testy na poziomie architektury obejmują:
 
 ```text
 Can DATA become AUTHORITY?
@@ -301,9 +301,9 @@ Can observability disappear without authority degradation?
 Can a probabilistic output reach execution without a deterministic contract?
 ```
 
-## Stacked PR strategy
+## Strategia stacked PR
 
-Recommended PR sequence:
+Zalecana sekwencja PR-ów:
 
 ```text
 PR-00 architecture analysis
@@ -318,7 +318,7 @@ PR-08 gate/authority contract
 ...
 ```
 
-Each PR body must contain:
+Body każdego PR-a musi zawierać:
 
 ```text
 WHY
@@ -331,6 +331,6 @@ TESTS
 ROLLBACK
 ```
 
-## Rollback principle
+## Zasada rollbacku
 
-Until a legacy path is explicitly deprecated, disabling a Cyber-Lion adapter must return the provider to its previous standalone behavior. Cross-repo federation must therefore begin as an additive layer.
+Dopóki ścieżka legacy nie zostanie jawnie zdeprecjonowana, wyłączenie adaptera Cyber-Lion musi przywracać providerowi jego wcześniejsze samodzielne zachowanie. Federacja cross-repo musi zatem rozpoczynać się jako warstwa addytywna.
