@@ -185,6 +185,8 @@ class EvolutionaryRnDEngine:
         delta.validate()
         if not delta.delta_digest:
             raise EvolutionaryRnDError("delta must be sealed")
+        if delta.delta_digest in self._deltas:
+            raise EvolutionaryRnDError("EvolutionDelta replay denied")
         self._bind_identity(delta, delta.delta_digest)
         self._deltas[delta.delta_digest] = delta
         return delta
