@@ -59,6 +59,7 @@ class EvolutionaryEpochMemoryHeadBindingTests(unittest.TestCase):
             decision="PROMOTE_KNOWLEDGE", rationale="supported evidence",
         ).sealed()
         self.engine.verify_promotion_gate(self.promotion, self.gate)
+        self.engine.register_delta_lineage(self.delta, "E004")
 
     def _commit_memory(self, memory_id, previous_head="GENESIS", revision=1):
         record = RnDMemoryRecord(
