@@ -1,493 +1,348 @@
-# CYBER-LION / ai_platform
+# LION / ai_platform
 
-**AI-Driven startup control plane for rapid, evidence-aware software evolution.**
+**Eksperymentalna platforma nadzorowanej autonomii Human–AI do budowy, koordynacji i kontrolowanego wykonywania złożonych procesów przez agentów i roje.**
 
-`ai_platform` is the control-plane repository of **CYBER-LION**: a federated Human–AI / agentic software platform that separates probabilistic intelligence from execution authority.
+`ai_platform` jest repozytorium, w którym rozwijany jest **LION** — control plane i zestaw kontraktów wykonawczych oddzielających probabilistyczne rozumowanie agentów od deterministycznej autoryzacji, wykonania, obserwacji i rekonsyliacji skutków.
 
-The first executable product built on top of the shared Cyber-Lion contracts is the **Startup Evolution Agent** — an agent designed to help an AI-Driven startup identify what the current market is actually rewarding, choose the fastest useful experiment, create the smallest software artifact that can answer that experiment, observe the outcome and evolve again.
+Historyczna nazwa **Cyber-Lion** pozostaje w przestrzeni nazw pakietu `cyber_lion` i w części dokumentacji. Nazwą całego rozwijanego systemu jest obecnie **LION**.
 
-The design principle is simple:
-
-```text
-speed without evidence = drift
-intelligence without authority control = risk
-analysis without execution = no company
-execution without observability = no control
-```
-
-Cyber-Lion therefore uses:
-
-```text
-OBSERVE
-→ STRUCTURE
-→ HYPOTHESISE
-→ FALSIFY
-→ CHOOSE EXPERIMENT
-→ PLAN MINIMAL SOFTWARE
-→ CHECK AUTHORITY
-→ EXECUTE
-→ OBSERVE OUTCOME
-→ APPLY CORRECTION
-→ UPDATE STATE
-→ REPLAY / DISTILL / DETERMINISE
-```
+LION nie jest pojedynczym chatbotem, agentem kodującym ani pętlą wywołań modelu. Jest próbą zbudowania infrastruktury, w której wiele agentów może badać problem, tworzyć hipotezy, dzielić pracę i proponować działania, ale prawo do zmiany rzeczywistości pozostaje oddzielnym, jawnym i kontrolowanym mechanizmem.
 
 ---
 
-## Startup Evolution Agent
+## Po co istnieje LION
 
-The Startup Evolution Agent is not a generic chatbot and not a static startup playbook. It is a **stateful product-evolution control loop**.
+Podstawowy problem jest prosty: model AI może być bardzo dobry w analizie i generowaniu propozycji, ale jego pewność nie jest uprawnieniem do wykonania działania.
 
-Its goal is:
-
-> **Create software for the market that exists now — quickly enough to exploit the opportunity, but with explicit evidence, state, uncertainty, security and authority boundaries.**
-
-The agent treats a startup as a moving system rather than a fixed business plan.
-
-### Nine-dimensional venture state
-
-Each product hypothesis is represented by a normalized vector:
+LION rozdziela więc:
 
 ```text
-V(t) = [
-  market_pull,
-  evidence_strength,
-  technical_feasibility,
-  differentiation,
-  distribution_access,
-  delivery_velocity,
-  security_readiness,
-  unit_economics,
-  learning_velocity
-]
+obserwację
+→ interpretację
+→ hipotezę
+→ plan / proposal
+→ autoryzację
+→ wykonanie
+→ receipt
+→ obserwację skutku
+→ rekonsyliację
+→ kolejną ewolucję
 ```
 
-The agent observes the delta rather than only the snapshot:
+Najważniejsza relacja architektoniczna brzmi:
 
 ```text
-V(t0)
-→ ΔV
-→ V(t1)
+PROBABILISTYCZNA INTELIGENCJA
+!=
+DETERMINISTYCZNA WŁADZA WYKONAWCZA
 ```
 
-A product can therefore improve technically while simultaneously losing market pull, or gain demand while exposing an unacceptable security boundary. Those states are not collapsed into one opaque score.
-
-### Evidence must be fresh
-
-Current-market input enters through `MarketObservation` and `MarketEvidenceBook`. Every observation carries source, source class, observation time, capture time, topic, direction, magnitude, confidence and evidence reference.
-
-The evidence layer:
-
-- deduplicates repeated observations,
-- rejects mutation under the same observation ID,
-- exposes contradictory observations instead of averaging them away,
-- measures freshness and source diversity,
-- converts only validated observations into venture `MarketSignal` objects.
-
-Market signals decay with age. Old evidence cannot silently represent the current market.
-
-**No current-market claim should exist only because an LLM remembers it.**
-
-### Evolution stages
-
-The deterministic control layer maps the venture state into one of five regimes:
-
-```text
-EXPLORE
-→ find and verify a painful problem
-
-DISTILL
-→ sharpen segment, proposition and differentiation
-
-BUILD
-→ prove the smallest end-to-end technical workflow
-
-VALIDATE
-→ prove distribution, willingness-to-pay and repeatable value
-
-SCALE
-→ expand only after evidence and economics support it
-```
-
-The stages are not calendar phases. A startup can move backward when evidence degrades.
-
-### The next move is selected for information velocity
-
-The agent selects experiments from the current bottleneck, including customer interviews, smoke tests, local prototypes, paid pilots, retention tests and pricing tests.
-
-Each experiment exposes:
-
-```text
-expected_information_gain
-time_to_evidence_hours
-cost_units
-authority_class
-success_metric
-stop_condition
-```
-
-A useful heuristic is therefore not "build the biggest feature" but:
-
-```text
-information velocity
-≈ expected_information_gain
-  / (time + cost)
-```
+Model może proponować. System kontroli może autoryzować. Wykonawca może wykonać tylko to, co zostało jawnie dopuszczone. Skutek musi być później obserwowalny i możliwy do przypisania do konkretnej misji, wykonawcy, polityki i decyzji.
 
 ---
 
-## From experiment to software
-
-`SoftwareBuildPlanner` translates the selected experiment into the **smallest auditable software build spec** able to answer the experiment question.
-
-The spec contains:
-
-```text
-product_goal
-target_user
-artifact_kind
-components
-interfaces
-acceptance_tests
-security_invariants
-non_goals
-authority_class
-```
-
-`SafeTemplateBuilder` can then render an in-memory file map for that spec. It deliberately does not touch the filesystem or deploy anything. Unsafe paths such as `../...` are rejected.
-
-This means:
-
-```text
-experiment
-→ build spec
-→ in-memory scaffold
-≠ deployment
-```
-
-A later execution capability may materialize those files only after its own deterministic authority and sandbox checks.
-
----
-
-## Open intelligence, bounded authority
-
-Cyber-Lion keeps the invariant:
+## Główne niezmienniki
 
 ```text
 OPEN INTELLIGENCE != OPEN AUTHORITY
+PROPOSAL != AUTHORIZATION != EFFECT
+NO ACTION WITHOUT IDENTITY
+NO AUTHORITY WITHOUT PROVENANCE
+NO PROBABILISTIC OUTPUT DIRECTLY AS EXECUTION
+NO OBSERVABILITY LOSS WITHOUT AUTHORITY DEGRADATION
+NO AGENT SPAWN WITHOUT IDENTITY + BUDGET + AUTHORITY CEILING
+NO CROSS-SYSTEM CALL WITHOUT CONTRACT
+NO GLOBAL CLAIM FROM LOCAL OBSERVATION
+NO CONSEQUENTAL EFFECT WITHOUT RECONSTRUCTABLE EVIDENCE
 ```
 
-The Startup Evolution Agent may autonomously perform bounded analysis and local prototyping. It does **not** automatically receive permission to publish externally, deploy to production, spend money, accept commercial commitments or mutate privileged infrastructure.
-
-Experiments are assigned an authority class:
-
-```text
-analysis
-local_prototype
-external_write
-deploy
-financial
-```
-
-The deterministic `StartupAuthorityGate` returns:
-
-```text
-ALLOW
-ALLOW_WITH_GATE
-REQUIRE_APPROVAL
-DENY
-```
-
-External, deployment and financial consequences require an explicit applied gate event.
+W praktyce oznacza to, że wzrost zdolności poznawczych agenta nie może automatycznie zwiększać jego uprawnień. Pogorszenie obserwowalności nie może zwiększać zakresu dozwolonych działań.
 
 ---
 
-## End-to-end agent facade
+## Architektura
 
-`AIDrivenStartupAgent` combines the current layers into one auditable cycle:
+LION rozdziela system na trzy główne płaszczyzny:
 
 ```text
-MarketEvidenceBook
-→ competing ProductHypothesis objects
-→ plan()
-→ CyclePlan {
-     VentureState,
-     selected hypothesis,
-     Experiment,
-     SoftwareBuildSpec,
-     scaffold,
-     authority decision,
-     score
-   }
-→ execute under gate
-→ ExperimentOutcome
-→ apply_outcome()
-→ corrected VentureVector
-→ next cycle
+SEM  — percepcja, badania, hipotezy, analiza, planowanie, symulacja
+MAND — tożsamość, provenance, polityka, autoryzacja, pamięć, audyt
+INF  — procesy, pliki, API, sieć, sandboxy, workflow i realne skutki
 ```
 
-A successful experiment does not promote every dimension. A failed experiment can reduce the dimensions it actually tested. A high-quality negative result can still increase `learning_velocity` because the startup learned something real quickly.
+Przejście między nimi ma być jawne:
 
-That distinction is central to the system: **failure of a hypothesis is not failure of the learning process.**
+```text
+ŹRÓDŁA / SYSTEM / REPOZYTORIUM
+            ↓
+        OBSERWACJA
+            ↓
+      SEM — reasoning
+            ↓
+      DecisionProposal
+            ↓
+ MAND — identity / policy / authority
+            ↓
+      typed grant / gate
+            ↓
+   INF — bounded execution
+            ↓
+      ExecutionReceipt
+            ↓
+      OBSERWACJA SKUTKU
+            ↓
+       REKONSYLIACJA
+            ↓
+       NASTĘPNY STAN
+```
+
+Docelowo każdy istotny efekt powinien przechodzić przez deterministyczny punkt egzekwowania polityki — PEP / reference-monitor boundary — zamiast wynikać bezpośrednio z tekstowego polecenia modelu.
+
+Pełny opis kierunku architektonicznego znajduje się w [`cyber_lion/TARGET_ARCHITECTURE.md`](cyber_lion/TARGET_ARCHITECTURE.md).
 
 ---
 
-## Replayable evolution
+## Cykl operacyjny LION
 
-`EvolutionJournal` stores startup cycles as append-only JSONL and can reconstruct the sequence later.
+Warstwa `/LION/` jest powierzchnią nawigacji, koordynacji i projekcji stanu. Nie jest sama w sobie źródłem authority.
 
-Replay validates:
+Podstawowy cykl pracy ma postać:
 
 ```text
-cycle continuity
-startup identity continuity
-previous_vector == prior cycle vector
-explicit timestamps
-explicit delta
+TARGET
+→ OBSERVE
+→ GAP
+→ MISSION
+→ DRONE / SWARM
+→ BUILD
+→ VERIFY
+→ INTEGRATE
+→ OBSERVE
+→ RECONCILE
+→ UPDATE PROJECTIONS
+→ NEXT GAP
 ```
 
-Missing history is not invented.
+Agent lub rój najpierw obserwuje stan źródłowy, następnie otrzymuje ograniczoną misję, buduje kandydata, przechodzi weryfikację, a dopiero potem może dojść do kontrolowanej integracji. Po wykonaniu efekt jest ponownie obserwowany i rekonsyliowany z oczekiwanym stanem.
 
-This provides a primitive answer to:
-
-> What did the startup believe, what evidence did it have, why did it build this, and what changed afterward?
+Punktem wejścia do tej warstwy jest [`LION/README.md`](LION/README.md), a jej katalogiem [`LION/catalog.json`](LION/catalog.json).
 
 ---
 
-## Current architecture
+## Flota, roje i drony
+
+Flota jest zarządzanym podsystemem, a nie pętlą `for` uruchamiającą kolejne modele.
+
+Każdy executor powinien być związany co najmniej z:
 
 ```text
-                  CYBER-LION
-                       │
-              ai_platform control plane
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-      MARKET         REASONING      AUTHORITY
-     EVIDENCE        / STATE         / GATES
-        │              │              │
-        └──────→ AI-Driven Startup ←──┘
-                    Agent
-                      │
-             Product Hypothesis
-                      │
-               Experiment Plan
-                      │
-              SoftwareBuildSpec
-                      │
-               safe scaffold
-                      │
-              deterministic gate
-                      │
-              bounded execution
-                      │
-              ExperimentOutcome
-                      │
-                    ΔV(t)
-                      │
-              Journal / Replay
-                      │
-                 next cycle
+identity
+mission
+repository baseline
+branch / path lease
+authority context
+sandbox binding
+heartbeat
+receipt chain
 ```
 
-The agent is built on shared Cyber-Lion foundations already present in this repository:
+Authority jest tłumione w dół hierarchii:
 
-- `EntityIdentity` — stable cross-system identity,
-- `EventEnvelope` — correlation, provenance, epistemic state and authority,
-- `CapabilityRegistry` — discovery is separate from permission,
-- `SBOM AID adapter` — first lossless provider integration.
+```text
+child <= parent
+executor <= mission
+mission <= fleet envelope
+```
 
-See [`cyber_lion/README.md`](cyber_lion/README.md) for the wider architecture.
+Zwiększenie liczby dronów nie może zwiększać uprawnień pojedynczego wykonawcy. Flota posiada również wspólny budżet skutków, m.in. dla liczby równoległych writerów, repozytoriów, branchy i modyfikowanych ścieżek.
+
+Role buildera, verifiera, obserwatora i reconciler-a są rozdzielane od źródła authority. Builder nie powinien być jedynym końcowym verifierem własnego efektu.
+
+Rejestry mogą opisywać wiele **logicznych dronów i rojów**. Sama obecność wpisu w rejestrze nie jest dowodem istnienia tej samej liczby niezależnych procesów produkcyjnych, sandboxów lub fizycznych executorów.
 
 ---
 
-## Repository layout
+## Co jest obecnie zaimplementowane
+
+Aktualny `master` zawiera znacznie więcej niż pierwotny Startup Evolution Agent. Główne klasy implementacji obejmują dziś:
+
+- typowane kontrakty zdarzeń, provenance i tożsamości;
+- `AgentRegistry` i `BranchOwnershipRegistry`;
+- kontrakty i implementacje authority source, authority grant oraz weryfikacji authority;
+- deterministyczny policy gate / PDP;
+- provisioning executorów i kontrakty sandboxa;
+- koordynację floty, observation sources, snapshoty runtime oraz rekonsyliację;
+- runtime admission, currentness, execution i reconciliation;
+- preconditions oraz mechanizmy zamykania misji i efektów;
+- GitHub Actions jako kontrolowaną powierzchnię wykonawczą dla części misji;
+- most dispatch → workflow run → observation;
+- fail-closed failure receipts i temporal compatibility dla historycznych dispatchy;
+- F009 live-runtime evidence plane z oddzieleniem bootstrapu authority od procesu runtime, przypiętymi wejściami trust oraz niezależnym procesem obserwacyjnym;
+- testy regresyjne, kontraktowe, negatywne i adversarialne pod `cyber_lion/tests/`;
+- operacyjne mapy, rejestry misji, kanałów, dronów i zależności w `/LION/`.
+
+Pakiet `cyber_lion/startup_agent/` nadal istnieje jako wcześniejszy eksperymentalny subsystem. Nie opisuje już jednak zakresu całego `ai_platform`.
+
+---
+
+## Runtime evidence i kontrola skutków
+
+Jednym z obecnych kierunków implementacyjnych jest powiązanie konkretnego działania z authority, polityką, tożsamością runtime i niezależną obserwacją efektu.
+
+Uproszczony przepływ:
+
+```text
+MODEL / AGENT
+    ↓ proposal
+CONTROL PLANE
+    ↓
+POLICY / AUTHORITY
+    ↓ admission
+EXECUTOR / SANDBOX
+    ↓ bounded effect
+OBSERVATION SOURCE
+    ↓
+RECONCILIATION
+    ↓
+RECEIPT / VERIFIED STATE
+```
+
+Kod F009 rozwija ten model przez pre-runtime authority bootstrap, brak możliwości mintowania authority przez sam proces runtime, przypięte trust bindings, single-use semantics i oddzielny observer procesu/skutku.
+
+To nadal nie oznacza, że każdy możliwy efekt w repozytorium posiada już produkcyjny, niepomijalny monitor referencyjny. Taki poziom gwarancji wymaga dowodu dla konkretnej ścieżki wykonawczej.
+
+---
+
+## Źródła prawdy
+
+LION celowo nie traktuje dokumentacji ani historii czatu jako aktualnego runtime state.
+
+Dla dynamicznego stanu obowiązuje zasada:
+
+```text
+LIVE GITHUB / CURRENT CI
+>
+EXACT GIT STATE
+>
+FRESH DERIVED PROJECTION
+>
+STALE PROJECTION
+>
+CHAT CONTEXT
+```
+
+`LION/status.json`, rejestry i mapy są użytecznymi projekcjami, ale mogą się zestarzeć. Przed consequential action stan repozytorium, CI, branchy i authority powinien zostać ponownie zaobserwowany.
+
+---
+
+## Status projektu
+
+**Stan: aktywny rozwój eksperymentalny / executable architecture.**
+
+LION posiada działające kontrakty, implementacje runtime, workflow GitHub Actions oraz szeroki zestaw testów. Repozytorium nie powinno jednak być opisywane jako ukończona, produkcyjna infrastruktura autonomiczna.
+
+W szczególności wynik testu kontraktowego lub CI nie jest automatycznie dowodem:
+
+- produkcyjnej izolacji OS dla każdej ścieżki wykonania;
+- kompletnego production PKI i workload attestation;
+- pełnej distributed revocation;
+- produkcyjnej izolacji credentials;
+- istnienia dużej liczby niezależnych fizycznych executorów;
+- kompletnej end-to-end atestacji zewnętrznego modelu AI i każdego zewnętrznego efektu.
+
+LION rozdziela więc trzy klasy stwierdzeń:
+
+```text
+OBSERVED / REPRODUCED
+IMPLEMENTED / TESTED
+TARGET / NOT YET PROVEN
+```
+
+Nieudowodniony target nie powinien być przedstawiany jako stan bieżący.
+
+---
+
+## Struktura repozytorium
 
 ```text
 ai_platform/
 ├── README.md
+├── AI_NATIVE_ROADMAP.md
 ├── platform.md
-├── LAT_GLX_PROJECT_MOSAIC.MD
+├── LION/
+│   ├── README.md
+│   ├── catalog.json
+│   ├── status.json
+│   ├── architecture/
+│   ├── evolution/
+│   ├── ops/
+│   ├── protocols/
+│   └── schemas/
 ├── cyber_lion/
 │   ├── contracts/
+│   ├── enterprise/
 │   ├── adapters/
-│   ├── registry.py
+│   ├── registry/
 │   ├── startup_agent/
-│   │   ├── __init__.py
-│   │   ├── models.py
-│   │   ├── market_intelligence.py
-│   │   ├── engine.py
-│   │   ├── authority.py
-│   │   ├── build_planner.py
-│   │   ├── journal.py
-│   │   ├── orchestrator.py
-│   │   ├── demo.py
-│   │   └── README.md
 │   └── tests/
+├── examples/
+├── tests/
 └── .github/workflows/
 ```
 
+Najważniejsze dokumenty:
+
+- [`LION/README.md`](LION/README.md) — operacyjny punkt wejścia;
+- [`LION/catalog.json`](LION/catalog.json) — katalog źródeł, map i rejestrów;
+- [`cyber_lion/TARGET_ARCHITECTURE.md`](cyber_lion/TARGET_ARCHITECTURE.md) — architektura docelowa;
+- [`cyber_lion/enterprise/README.md`](cyber_lion/enterprise/README.md) — model federacyjnej organizacji AI-Native;
+- [`AI_NATIVE_ROADMAP.md`](AI_NATIVE_ROADMAP.md) — mapa ewolucji;
+- [`LION/status.json`](LION/status.json) — projekcja stanu, wymagająca porównania z live GitHub przed użyciem operacyjnym.
+
 ---
 
-## Run
-
-No third-party runtime dependency is required for the current MVP.
+## Uruchomienie testów
 
 ```bash
 git clone https://github.com/DonkeyJJLove/ai_platform.git
 cd ai_platform
-python -m cyber_lion.startup_agent.demo
-```
 
-Run tests:
-
-```bash
+python -m compileall cyber_lion
 python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
 ```
 
-The CI workflow additionally compiles the entire `cyber_lion` package and executes the demo.
+Część przepływów integracyjnych jest wykonywana przez GitHub Actions i może wymagać środowiska runnera, kontekstu GitHub, OpenSSL albo innych jawnie wskazanych providerów. Testy lokalne nie zastępują dowodu właściwości konkretnego środowiska produkcyjnego.
 
 ---
 
-## How a real AI model plugs in
+## Status epistemiczny
 
-The current implementation deliberately keeps state transitions and authority deterministic. An LLM or other model should act as a **hypothesis / structure / experiment / software-change proposal provider**, not as final execution authority.
-
-Target flow:
+LION jest jednocześnie systemem inżynieryjnym i programem badawczym. Dlatego należy rozróżniać:
 
 ```text
-fresh market sources
-→ typed observations
-→ model(s)
-→ competing product hypotheses
-→ deterministic evidence/state evaluation
-→ experiment
-→ build spec
-→ generated change proposal
-→ tests / invariants / SAST
-→ authority gate
-→ sandbox execution
-→ measured market/technical outcome
-→ corrected state
+OBSERVED      — zaobserwowany stan lub efekt
+DERIVED       — wynik deterministycznego przekształcenia
+HYPOTHESIS    — twierdzenie oczekujące na falsyfikację
+EXPERIMENTAL  — mechanizm w trakcie walidacji
+TARGET        — architektura docelowa, jeszcze nieudowodniona
 ```
 
-This allows different models to compete on reasoning quality without changing the safety contract.
+Confidence nie jest prawdą. Symulacja nie jest obserwacją świata. Wpis w rejestrze nie jest authority. Output modelu nie jest execution grant.
 
 ---
 
-## Market connector roadmap
+## Kierunek
 
-The ingestion contract now exists. Next connectors should feed `MarketObservation` from explicit sources such as:
+Celem LION nie jest „autonomiczny agent, który może zrobić wszystko”.
 
-- customer interviews and sales calls,
-- CRM / pipeline data,
-- product analytics,
-- support and issue data,
-- public competitor/pricing observations,
-- developer ecosystem signals,
-- vendor/platform changes,
-- regulatory/standards changes,
-- conversion, retention and cost telemetry.
+Celem jest infrastruktura, w której **inteligencja może być rozproszona, adaptacyjna i probabilistyczna, podczas gdy prawo do wpływania na rzeczywistość pozostaje jawne, ograniczone, obserwowalne, weryfikowalne i odwoływalne**.
 
-A connector is not trusted because it is automated. It must preserve provenance and observation time.
-
----
-
-## Software-generation roadmap
-
-The next major integration is with the existing Cyber-Lion mosaic:
+W skrócie:
 
 ```text
-market evidence
-→ Startup Evolution Agent
-→ Capability Registry
-→ GlitchLab / code analysis
-→ generated change proposal
-→ tests / invariants / SAST
-→ policy gate
-→ sandbox execution
-→ artifact / deployment candidate
-→ telemetry
-→ product outcome
-→ next venture-state delta
+MYŚL SZEROKO.
+DZIAŁAJ W WĄSKIM AUTHORITY.
+OBSERWUJ SKUTEK.
+REKONSYLIUJ STAN.
+EWOLUUJ NA PODSTAWIE DOWODÓW.
 ```
-
-The goal is not "AI writes code". The goal is a **closed product-development loop where market evidence, software change and business outcome remain causally connected**.
-
----
-
-## Scientific / epistemic status
-
-The nine-dimensional venture vector, weights, stage thresholds and deterministic outcome-correction magnitudes are currently **engineering models / calibration**, not universal empirical laws.
-
-Treat fields as:
-
-```text
-OBSERVED      — directly measured input
-DERIVED       — deterministic transformation of inputs
-CALIBRATED    — chosen engineering threshold/weight
-HYPOTHESIS    — proposition awaiting evidence
-EXPERIMENTAL  — mechanism still under validation
-```
-
-A high score is not proof of product-market fit. A simulation is not a market observation. A model recommendation is not authority.
-
----
-
-## Core invariants
-
-```text
-NO MARKET CLAIM WITHOUT SOURCE + TIME
-NO GLOBAL CLAIM FROM LOCAL OBSERVATION
-NO HYPOTHESIS PROMOTED WITHOUT EVIDENCE
-NO EXTERNAL EFFECT WITHOUT AUTHORITY
-NO PROBABILISTIC OUTPUT DIRECTLY AS EXECUTION
-NO FORMALISED RULE LEFT AS REPEATED LLM GUESS
-NO PRODUCT ITERATION WITHOUT OBSERVABLE OUTCOME
-NO GENERATED SOFTWARE WITHOUT EXPLICIT ACCEPTANCE TESTS
-NO MISSING HISTORY INVENTED DURING REPLAY
-```
-
----
-
-## Status
-
-**Current:** executable Startup Evolution Agent / early AI-Driven software factory control loop.
-
-Implemented:
-
-- repository archaeology and target architecture,
-- shared identity,
-- typed events, provenance and authority,
-- capability registry,
-- SBOM compatibility adapter,
-- nine-dimensional startup state,
-- freshness-aware market signals,
-- provenance-aware market evidence book,
-- contradiction visibility and deduplication,
-- hypothesis ranking,
-- deterministic stage inference,
-- experiment selection,
-- authority gate,
-- minimal software build specification,
-- safe in-memory software scaffold,
-- persistent evolution journal and replay,
-- end-to-end `AIDrivenStartupAgent`,
-- explicit experiment outcome correction,
-- CI and regression tests.
-
-Next:
-
-- live market-source adapters,
-- multiple competing model providers,
-- GlitchLab software-change adapter,
-- sandbox build/test capability,
-- typed ExperimentOutcome ingestion from external systems,
-- distribution/revenue telemetry,
-- adaptive threshold calibration,
-- adversarial product/security testing,
-- controlled deployment capability.
-
----
-
-**CYBER-LION:** build quickly, observe continuously, falsify aggressively, learn from negative results, and only give authority where the evidence and execution boundary justify it.
