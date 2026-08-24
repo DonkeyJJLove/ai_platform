@@ -1,8 +1,8 @@
-# Agent and Swarm Mosaic Model
+# Model agenta i mozaiki roju
 
-## 1. Single agent as a formal organizational object
+## 1. Pojedynczy agent jako formalny obiekt organizacyjny
 
-An AI agent is not defined by a prompt or model name. In Cyber-Lion an agent is a versioned contract:
+Agent AI nie jest definiowany przez prompt ani nazwę modelu. W Cyber-Lion agent jest wersjonowanym kontraktem:
 
 ```text
 AgentSpec = (
@@ -25,7 +25,7 @@ AgentSpec = (
 )
 ```
 
-A model provider is an implementation detail under the policy function.
+Provider modelu jest szczegółem implementacyjnym podporządkowanym funkcji policy.
 
 ```text
 AgentSpec
@@ -39,9 +39,9 @@ Policy / Gate
 Execution Provider
 ```
 
-## 2. Agent state
+## 2. Stan agenta
 
-A running agent has an explicit state independent from the model's hidden activations:
+Działający agent ma jawny stan niezależny od ukrytych aktywacji modelu:
 
 ```text
 AgentState(t) = {
@@ -73,34 +73,34 @@ DEFINED
 → COMPLETED
 → DISSOLVED
 
-or
+lub
 
 ACTIVE → QUARANTINED → REVOKED
 ```
 
-## 3. HMK-9D process annotation
+## 3. Adnotacja procesu HMK-9D
 
-The HMK-9D vector may annotate an agent transition:
+Wektor HMK-9D może adnotować przejście agenta:
 
 ```text
 r(Δ) = [T,S,R,E,I,F,A,P,D]
 ```
 
-Platform interpretation:
+Interpretacja platformowa:
 
-- `T` — temporal/latency load,
-- `S` — semantic coherence,
-- `R` — coupling/relation load,
-- `E` — resource/cognitive-cost proxy,
-- `I` — identity clarity,
-- `F` — mission/mandate clarity,
-- `A` — abstraction/chunk granularity,
-- `P` — prediction/confidence,
-- `D` — commitment hardness.
+- `T` — obciążenie czasowe/opóźnienie,
+- `S` — spójność semantyczna,
+- `R` — obciążenie sprzężeniem/relacjami,
+- `E` — proxy kosztu zasobowego/poznawczego,
+- `I` — klarowność tożsamości,
+- `F` — klarowność misji/mandatu,
+- `A` — abstrakcja/granularność chunków,
+- `P` — predykcja/confidence,
+- `D` — twardość zobowiązania.
 
-This vector is **descriptive/control metadata**. It is not permission.
+Wektor ten jest **metadanymi opisowymi/kontrolnymi**. Nie jest permission.
 
-Transition rule:
+Reguła przejścia:
 
 ```text
 SemanticTransition(Δ)
@@ -110,39 +110,39 @@ SemanticTransition(Δ)
 → optional effect
 ```
 
-## 4. Bridges as process operators
+## 4. Mosty jako operatory procesu
 
-HMK bridges are interpreted as named transformations available to agent planners.
+Mosty HMK są interpretowane jako nazwane transformacje dostępne dla plannerów agentów.
 
-Examples:
+Przykłady:
 
 ```text
 PLAN_PAUSE
-→ reduce commitment / force explicit plan
+→ zmniejsz commitment / wymuś jawny plan
 
 CORE_PERIPH
-→ reduce scope / isolate mission core
+→ zmniejsz scope / wyizoluj rdzeń misji
 
 VILLAGE_CITY
-→ switch local ↔ system-level view
+→ przełącz widok lokalny ↔ systemowy
 
 EDGE_PATIENCE
-→ change chunk granularity / precision-speed tradeoff
+→ zmień granularność chunków / kompromis precyzja–szybkość
 
 LOCUS_MEDIUM_MANDATE
-→ make identity/channel/authority explicit
+→ uczyń identity/channel/authority jawnymi
 
 THRESHOLD_TRANSITION
-→ prepare a gate/commit boundary
+→ przygotuj granicę gate/commit
 ```
 
-They may alter state representation or planning strategy. They cannot bypass MAND controls.
+Mosty mogą zmieniać reprezentację stanu lub strategię planowania. Nie mogą omijać kontroli MAND.
 
 ---
 
 ## 5. Mosaic Cell
 
-A Mosaic Cell is the smallest multi-agent organizational unit.
+Mosaic Cell jest najmniejszą wieloagentową jednostką organizacyjną.
 
 ```text
 MosaicCell = {
@@ -159,9 +159,9 @@ MosaicCell = {
 }
 ```
 
-A cell is not necessarily permanent. It can exist for one artifact, one incident, one market experiment or one software delta.
+Cell nie musi być trwała. Może istnieć dla jednego artefaktu, jednego incydentu, jednego eksperymentu rynkowego albo jednej delty software.
 
-Examples:
+Przykłady:
 
 ```text
 Research Cell
@@ -181,9 +181,9 @@ Market Cell
   Economics Agent
 ```
 
-## 6. Swarm
+## 6. Rój
 
-A swarm is a time-bounded graph of Mosaic Cells and/or agents formed around a mission.
+Rój jest ograniczonym w czasie grafem Mosaic Cells i/lub agentów utworzonym wokół misji.
 
 ```text
 SwarmSpec = (
@@ -203,11 +203,11 @@ SwarmSpec = (
 )
 ```
 
-The swarm itself has identity and emits events.
+Sam rój posiada tożsamość i emituje zdarzenia.
 
-## 7. Dynamic formation
+## 7. Dynamiczne formowanie
 
-Formation follows capability coverage:
+Formowanie wynika z pokrycia capabilities:
 
 ```text
 MissionSpec
@@ -221,16 +221,16 @@ MissionSpec
 → SwarmSpec
 ```
 
-The default objective is a constrained set-cover problem:
+Domyślnym celem jest ograniczony problem set-cover:
 
 ```text
-minimize:
+minimalizuj:
   number_of_agents
 + coordination_cost
 + authority_exposure
 + expected_latency
 
-subject to:
+przy warunkach:
   capability_coverage = 100%
   authority <= mission ceiling
   observability >= required quorum
@@ -238,44 +238,44 @@ subject to:
   risk-class invariants satisfied
 ```
 
-## 8. Risk classes and required topology
+## 8. Klasy ryzyka i wymagana topologia
 
 ### GREEN
 
-Read-only analysis, reversible transformations, local research.
+Analiza read-only, odwracalne transformacje, lokalne badania.
 
-Allowed:
+Dozwolone:
 
-- small autonomous cells,
-- no mandatory independent verifier if all effects are non-consequential.
+- małe autonomiczne cells,
+- brak obowiązkowego niezależnego verifiera, jeżeli wszystkie efekty są non-consequential.
 
 ### AMBER
 
-Code writes, external calls, persistent memory candidate creation, cross-domain work.
+Zapisy kodu, wywołania zewnętrzne, tworzenie persistent memory candidate, praca cross-domain.
 
-Required:
+Wymagane:
 
-- explicit policy/gate,
-- independent validation capability,
-- complete trace/correlation,
+- jawny policy/gate,
+- niezależna capability walidacji,
+- pełny trace/correlation,
 - rollback.
 
 ### RED
 
-Production deployment, privileged access, financial commitment, critical infrastructure, irreversible external effects.
+Deployment produkcyjny, privileged access, zobowiązanie finansowe, infrastruktura krytyczna, nieodwracalne skutki zewnętrzne.
 
-Required:
+Wymagane:
 
-- independent verifier agent or human approval,
-- deterministic enforcement,
-- full provenance,
-- 100% required-observation coverage,
-- bounded blast radius,
-- revoke/freeze capability.
+- niezależny verifier agent lub human approval,
+- deterministyczny enforcement,
+- pełne provenance,
+- 100% pokrycia wymaganej obserwacji,
+- ograniczony blast radius,
+- capability revoke/freeze.
 
-## 9. Spawn rules
+## 9. Reguły spawn
 
-A swarm may dynamically spawn an agent only if:
+Rój może dynamicznie utworzyć agenta tylko wtedy, gdy:
 
 ```text
 required capability is not sufficiently covered
@@ -293,7 +293,7 @@ AND
 spawn event is emitted
 ```
 
-Prohibited:
+Zakazane:
 
 ```text
 anonymous sub-agent
@@ -303,9 +303,9 @@ implicit external egress
 authority expansion by delegation chain
 ```
 
-## 10. Delegation
+## 10. Delegacja
 
-Delegation is represented explicitly:
+Delegacja jest reprezentowana jawnie:
 
 ```text
 Delegation = {
@@ -320,22 +320,22 @@ Delegation = {
 }
 ```
 
-Monotonic rule:
+Reguła monotoniczna:
 
 ```text
 Authority(delegate)
 ⊆ Authority(delegator)
 ```
 
-No transitive assumption is allowed without an explicit new delegation record.
+Bez jawnego nowego rekordu delegacji nie wolno przyjmować założenia o dziedziczeniu tranzytywnym.
 
-## 11. Topology selection
+## 11. Wybór topologii
 
-Possible topologies:
+Możliwe topologie:
 
-### Linear pipeline
+### Pipeline liniowy
 
-Useful when artifacts have clear transformations.
+Użyteczny, gdy artefakty przechodzą przez wyraźne transformacje.
 
 ```text
 Research → Architect → Builder → Security → Verifier
@@ -343,7 +343,7 @@ Research → Architect → Builder → Security → Verifier
 
 ### Hub-and-spoke
 
-Useful for a coordinator with specialized workers.
+Użyteczny dla koordynatora ze specjalizowanymi workerami.
 
 ```text
             Coordinator
@@ -353,7 +353,7 @@ Useful for a coordinator with specialized workers.
 
 ### Peer-review mesh
 
-Useful when model/provider diversity is important.
+Użyteczny, gdy istotna jest różnorodność modeli/providerów.
 
 ```text
 A ↔ B ↔ C
@@ -361,9 +361,9 @@ A ↔ B ↔ C
   Verifier
 ```
 
-### Mosaic hierarchy
+### Hierarchia mozaikowa
 
-Useful for large missions:
+Użyteczna dla dużych misji:
 
 ```text
 Mission Swarm
@@ -374,11 +374,11 @@ Mission Swarm
 └── R&D Cell
 ```
 
-Topology is chosen from mission structure and risk, not from aesthetic preference.
+Topologia jest wybierana na podstawie struktury misji i ryzyka, a nie preferencji estetycznej.
 
-## 12. Reconfiguration rules
+## 12. Reguły rekonfiguracji
 
-A swarm may reconfigure when:
+Rój może się rekonfigurować, gdy:
 
 ```text
 capability gap detected
@@ -390,7 +390,7 @@ new evidence invalidates plan
 budget threshold crossed
 ```
 
-Reconfiguration produces a `MosaicDelta`:
+Rekonfiguracja tworzy `MosaicDelta`:
 
 ```text
 MosaicDelta = {
@@ -405,13 +405,13 @@ MosaicDelta = {
 }
 ```
 
-A MosaicDelta with authority expansion is consequential and requires a gate.
+`MosaicDelta` rozszerzająca authority jest consequential i wymaga gate.
 
 ## 13. Observability quorum
 
-`observability_quorum` is not just the percentage of agents producing logs. It is coverage of the **required causal chain**.
+`observability_quorum` nie jest wyłącznie procentem agentów emitujących logi. Jest pokryciem **wymaganego łańcucha przyczynowego**.
 
-For consequential execution:
+Dla consequential execution:
 
 ```text
 proposal
@@ -423,25 +423,25 @@ proposal
 → outcome
 ```
 
-must all be reconstructable.
+wszystkie elementy muszą być rekonstruowalne.
 
-If any required link disappears:
+Jeżeli zniknie którekolwiek wymagane ogniwo:
 
 ```text
 observability state ↓
 → effective authority ↓
 ```
 
-## 14. Conflict handling
+## 14. Obsługa konfliktów
 
-Agents can disagree. Disagreement is retained as evidence rather than overwritten.
+Agenci mogą się nie zgadzać. Niezgodność jest zachowywana jako evidence zamiast być nadpisywana.
 
 ```text
 Agent A: hypothesis H, confidence .72
 Agent B: hypothesis ¬H, confidence .64
 ```
 
-becomes:
+staje się:
 
 ```text
 ConflictRecord
@@ -450,11 +450,11 @@ ConflictRecord
 → updated confidence
 ```
 
-Consensus by majority is not a default truth mechanism.
+Konsensus większościowy nie jest domyślnym mechanizmem prawdy.
 
-## 15. Dissolution
+## 15. Rozwiązanie roju
 
-A swarm is dissolved when:
+Rój jest rozwiązywany, gdy:
 
 ```text
 mission completed
@@ -465,11 +465,11 @@ required observability cannot be restored
 capabilities moved to a stable cached cell
 ```
 
-Dissolution emits final state and revokes transient credentials/capabilities.
+Dissolution emituje stan końcowy i unieważnia tymczasowe credentials/capabilities.
 
-## 16. Persistent topology as learned organization
+## 16. Trwała topologia jako wyuczona organizacja
 
-Repeatedly successful swarms may become reusable templates:
+Wielokrotnie skuteczne roje mogą stać się szablonami wielokrotnego użytku:
 
 ```text
 successful SwarmSpec instances
@@ -479,4 +479,4 @@ successful SwarmSpec instances
 → SwarmTemplate vN
 ```
 
-This is how the organization learns its own structure without freezing it permanently.
+W ten sposób organizacja uczy się własnej struktury bez trwałego jej zamrażania.
