@@ -90,6 +90,13 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("R&D record must be sealed")
         return record_type, record_id, record_digest
 
+    @staticmethod
+    def _record_provenance(record: object) -> tuple[str, ...]:
+        """Derive projection provenance only from canonical immutable contract fields."""
+        if isinstance(record, RnDMemoryRecord):
+            return tuple(record.source_digests) + tuple(record.negative_evidence_refs)
+        return tuple(getattr(record, "provenance_refs", ()))
+
     def project_event(self, record: object, envelope: EventEnvelope, projection_id: str) -> RnDEventProjection:
         record.validate(); envelope.validate()
         record_type, record_id, record_digest = self._record_identity(record)
@@ -103,8 +110,10 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("event entity does not bind record identity")
         if envelope.payload.get("record_digest") != record_digest:
             raise EvolutionaryEpochError("event payload digest substitution denied")
-        record_provenance = tuple(getattr(record, "provenance_refs", ()))
-        if not envelope.provenance.upstream or set(envelope.provenance.upstream) != set(record_provenance):
+        record_provenance = self._record_provenance(record)
+        if not record_provenance or not envelope.provenance.upstream:
+            raise EvolutionaryEpochError("R&D event requires canonical upstream provenance")
+        if tuple(envelope.provenance.upstream) != record_provenance:
             raise EvolutionaryEpochError("event provenance does not bind R&D record")
         if record_type == "ExperimentResult":
             if record.result_class != "SIMULATED" or envelope.event_type != "SimulationCompleted":
@@ -151,7 +160,7 @@ class EvolutionaryEpochEngine:
             raise EvolutionaryEpochError("graph node identity mismatch")
         if node.payload.get("record_digest") != record_digest or node.payload.get("event_id") != event_projection.event_id:
             raise EvolutionaryEpochError("graph node record/event binding mismatch")
-        if set(node.provenance_refs) != set(event_projection.provenance_refs):
+        if tuple(node.provenance_refs) != tuple(event_projection.provenance_refs):
             raise EvolutionaryEpochError("graph provenance binding mismatch")
         edge_list = tuple(edges)
         allowed_edges = {"DERIVED_FROM", "SUPPORTS", "CONTRADICTS", "OBSERVED_FROM", "SUPERSEDES", "CORRELATED_WITH", "CAUSED_BY"}
