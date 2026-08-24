@@ -143,6 +143,45 @@ class EvolutionaryRnDEngineTests(unittest.TestCase):
         self.assertEqual(after, eng.state_digest())
         self.assertNotIn("delete_evidence", {name.lower() for name in dir(eng)})
 
+    def test_delta_requires_previously_admitted_observation_ids_only(self):
+        def make_delta(delta_id, refs):
+            return EvolutionDelta(
+                delta_id=delta_id, target_component="rnd-loop", motivation="bounded",
+                evidence_refs=refs, expected_outcome="knowledge only",
+                falsification_conditions=("regression",), candidate_scope=("x.py",),
+                dependency_ids=(), risk_class="GREEN",
+            ).sealed()
+
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown delta evidence"):
+            self.engine.register_delta(make_delta("delta:unknown", ("obs:missing",)))
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown delta evidence"):
+            self.engine.register_delta(make_delta("delta:digest", (self.obs.observation_digest,)))
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown delta evidence"):
+            self.engine.register_delta(make_delta("delta:mixed", ("obs:1", "obs:fabricated")))
+
+        eng = EvolutionaryRnDEngine()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "unknown delta evidence"):
+            eng.register_delta(make_delta("delta:before-evidence", ("obs:1",)))
+
+    def test_delta_evidence_identity_binding_is_fail_closed(self):
+        delta = EvolutionDelta(
+            delta_id="delta:evidence-binding", target_component="rnd-loop", motivation="bounded",
+            evidence_refs=("obs:1",), expected_outcome="knowledge only",
+            falsification_conditions=("regression",), candidate_scope=("x.py",),
+            dependency_ids=(), risk_class="GREEN",
+        ).sealed()
+        self.assertEqual(self.engine.register_delta(delta), delta)
+
+        other = evidence("obs:2", source_digest=D3, content_digest=D1)
+        self.engine.register_evidence(other)
+        changed_refs = dataclasses.replace(delta, evidence_refs=("obs:2",), delta_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "substitution"):
+            self.engine.register_delta(changed_refs)
+
+        changed_observation = dataclasses.replace(self.obs, content_digest=D3, observation_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "evidence identity payload substitution"):
+            self.engine.register_evidence(changed_observation)
+
     def test_exact_hypothesis_lifecycle_is_forward_only(self):
         testing = self.admitted_testing()
         final = self.engine.transition_hypothesis(testing, "FALSIFIED")
@@ -229,7 +268,7 @@ class EvolutionaryRnDEngineTests(unittest.TestCase):
                     provenance_refs=("e",),
                 ).sealed(); eng.register_falsification(fals)
                 delta = EvolutionDelta(
-                    delta_id=f"d-{state}", target_component="x", motivation="safe", evidence_refs=("e",),
+                    delta_id=f"d-{state}", target_component="x", motivation="safe", evidence_refs=("obs:1",),
                     expected_outcome="safe", falsification_conditions=("f",), candidate_scope=("x.py",),
                     dependency_ids=(), risk_class="GREEN",
                 ).sealed(); eng.register_delta(delta)
@@ -256,6 +295,24 @@ class EvolutionaryRnDEngineTests(unittest.TestCase):
             self.engine.promote(promotion)
         assert_no_effect_surface()
         self.assertNotIn("execute", {x.lower() for x in dir(self.engine)})
+
+    def test_promotion_cannot_reference_unregistered_delta(self):
+        supported, fals, _ = self.supported_chain()
+        unregistered = EvolutionDelta(
+            delta_id="delta:unregistered", target_component="rnd-loop", motivation="bounded",
+            evidence_refs=("obs:1",), expected_outcome="knowledge only",
+            falsification_conditions=("regression",), candidate_scope=("x.py",),
+            dependency_ids=(), risk_class="GREEN",
+        ).sealed()
+        decision = PromotionDecision(
+            promotion_id="prom:unregistered", hypothesis_digest=supported.hypothesis_digest,
+            hypothesis_state="SUPPORTED", falsification_digest=fals.falsification_digest,
+            falsification_disposition="SUPPORTED", evolution_delta_digest=unregistered.delta_digest,
+            policy_decision_ref="pdp:gate-1", unresolved_contradictions=0,
+            contrary_evidence_complete=True, decision="PROMOTE_KNOWLEDGE", rationale="bounded",
+        ).sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "promotion dependency missing"):
+            self.engine.promote(decision)
 
     def test_evolution_delta_exact_replay_and_identity_substitution_denied(self):
         delta = EvolutionDelta(
