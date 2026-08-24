@@ -1,0 +1,64 @@
+name: LION Repository Maintenance Sandbox
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: lion-repository-maintenance-sandbox
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: >-
+      github.event.issue.number == 144 &&
+      github.event.comment.body == 'LION-BRANCH-CLEANUP v1' &&
+      github.event.comment.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Execute bounded branch cleanup
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python -m cyber_lion.enterprise.repository_maintenance_sandbox \
+            --execute-cleanup | tee /tmp/lion-maintenance.log
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lines = Path('/tmp/lion-maintenance.log').read_text(encoding='utf-8').splitlines()
+          marker = 'LION_REPOSITORY_MAINTENANCE_RESULT '
+          matches = [line[len(marker):] for line in lines if line.startswith(marker)]
+          if len(matches) != 1:
+              raise SystemExit('expected exactly one maintenance result')
+          value = json.loads(matches[0])
+          Path('lion-repository-maintenance-result.json').write_text(
+              json.dumps(value, sort_keys=True, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Upload maintenance receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-repository-maintenance-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: lion-repository-maintenance-result.json
+          if-no-files-found: error
+          retention-days: 30
