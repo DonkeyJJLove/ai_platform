@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+import tempfile
 
 from cyber_lion.startup_agent import (
+    BoundedLocalBuildRunner,
     MarketSignal,
     ProductHypothesis,
     StartupAuthorityGate,
@@ -44,6 +47,16 @@ def hypothesis(hid="h1", **vector_overrides):
 
 
 class StartupAgentTests(unittest.TestCase):
+    def test_local_build_env_uses_isolated_home_and_temp_inside_execution_root(self):
+        with tempfile.TemporaryDirectory(prefix="local-build-env-test-") as tmp:
+            root = Path(tmp).resolve()
+            env = BoundedLocalBuildRunner._minimal_env(root)
+            for key in ("HOME", "TMPDIR", "TMP", "TEMP"):
+                value = Path(env[key]).resolve()
+                self.assertIn(root, value.parents)
+                self.assertTrue(value.is_dir())
+                self.assertNotEqual(str(value), "/tmp")
+
     def test_vector_rejects_out_of_range(self):
         with self.assertRaises(StartupModelError):
             baseline(market_pull=1.2).validate()
