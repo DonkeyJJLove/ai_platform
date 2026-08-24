@@ -182,6 +182,69 @@ class EvolutionaryEpochIntegrationTests(unittest.TestCase):
         with self.assertRaises(EvolutionaryEpochError):
             self.engine.verify_promotion_gate(decision, denied)
 
+    def test_promotion_control_record_provenance_and_graph_projection(self):
+        decision = PromotionDecision(
+            promotion_id="promotion:prov", hypothesis_digest=H1, hypothesis_state="SUPPORTED",
+            falsification_digest=H2, falsification_disposition="SUPPORTED", evolution_delta_digest=H3,
+            policy_decision_ref="pdp:" + H4, unresolved_contradictions=0, contrary_evidence_complete=True,
+            decision="PROMOTE_KNOWLEDGE", rationale="knowledge only",
+        ).sealed()
+        upstream = (H1, H2, H3, "pdp:" + H4)
+        evt = envelope("promotion:prov", decision.promotion_digest, "evt:promotion:prov", "DecisionProposed", upstream=upstream)
+        projection = self.engine.project_event(decision, evt, "proj:promotion:prov")
+        node = GraphNode(
+            node_id="promotion:prov", node_type="ARTIFACT", version="1",
+            payload={"record_digest": decision.promotion_digest, "event_id": "evt:promotion:prov"},
+            provenance_refs=upstream,
+        )
+        edge = GraphEdge(
+            edge_id="edge:promotion:prov", plane="DATA_PROVENANCE", edge_type="DERIVED_FROM",
+            source_id="promotion:prov", target_id="hypothesis:source", provenance_refs=upstream,
+        )
+        graph = self.engine.project_graph(decision, projection, node, (edge,), "proj:graph:promotion")
+        self.assertEqual(graph.node_type, "ARTIFACT")
+        for bad_upstream in ((H2, H3, "pdp:" + H4), (H1, H2, H3, "pdp:" + H3), (H2, H1, H3, "pdp:" + H4)):
+            with self.subTest(upstream=bad_upstream):
+                bad = envelope("promotion:prov", decision.promotion_digest, "evt:promotion:bad:" + str(len(bad_upstream)), "DecisionProposed", upstream=bad_upstream)
+                with self.assertRaisesRegex(EvolutionaryEpochError, "provenance"):
+                    EvolutionaryEpochEngine().project_event(decision, bad, "proj:promotion:bad")
+        effect_evt = envelope("promotion:prov", decision.promotion_digest, "evt:promotion:effect", "ActionAuthorized", upstream=upstream)
+        with self.assertRaises(EvolutionaryEpochError):
+            EvolutionaryEpochEngine().project_event(decision, effect_evt, "proj:promotion:effect")
+
+    def test_evolution_delta_control_record_provenance_and_graph_projection(self):
+        delta = EvolutionDelta(
+            delta_id="delta:prov", target_component="rnd-loop", motivation="bounded knowledge",
+            evidence_refs=("evidence:1", "evidence:2"), expected_outcome="candidate only",
+            falsification_conditions=("regression",), candidate_scope=("cyber_lion/contracts/example.py",),
+            dependency_ids=("dependency:metadata",), risk_class="GREEN",
+        ).sealed()
+        upstream = delta.evidence_refs
+        evt = envelope("delta:prov", delta.delta_digest, "evt:delta:prov", "DeltaDetected", upstream=upstream)
+        projection = self.engine.project_event(delta, evt, "proj:delta:prov")
+        node = GraphNode(
+            node_id="delta:prov", node_type="ARTIFACT", version="1",
+            payload={"record_digest": delta.delta_digest, "event_id": "evt:delta:prov"},
+            provenance_refs=upstream,
+        )
+        edge = GraphEdge(
+            edge_id="edge:delta:prov", plane="DATA_PROVENANCE", edge_type="DERIVED_FROM",
+            source_id="delta:prov", target_id="evidence:1", provenance_refs=upstream,
+        )
+        graph = self.engine.project_graph(delta, projection, node, (edge,), "proj:graph:delta")
+        self.assertEqual(graph.node_type, "ARTIFACT")
+        for bad_upstream in (("evidence:1",), ("evidence:1", "evidence:2", "injected:extra")):
+            with self.subTest(upstream=bad_upstream):
+                bad = envelope("delta:prov", delta.delta_digest, "evt:delta:bad:" + str(len(bad_upstream)), "DeltaDetected", upstream=bad_upstream)
+                with self.assertRaisesRegex(EvolutionaryEpochError, "provenance"):
+                    EvolutionaryEpochEngine().project_event(delta, bad, "proj:delta:bad")
+        bad_auth = envelope("delta:prov", delta.delta_digest, "evt:delta:auth", "DeltaDetected", upstream=upstream, effective="write")
+        with self.assertRaises(EvolutionaryEpochError):
+            EvolutionaryEpochEngine().project_event(delta, bad_auth, "proj:delta:auth")
+        effect_evt = envelope("delta:prov", delta.delta_digest, "evt:delta:effect", "ActionExecuted", upstream=upstream)
+        with self.assertRaises(EvolutionaryEpochError):
+            EvolutionaryEpochEngine().project_event(delta, effect_evt, "proj:delta:effect")
+
     def test_epoch_transitions_forward_only(self):
         current = EpochTransition(
             epoch_id="E004", previous_epoch_id="E003", rnd_engine_state_digest=H1,
