@@ -95,13 +95,23 @@ class EvolutionaryEpochEngine:
         """Derive projection provenance only from canonical immutable contract fields."""
         if isinstance(record, RnDMemoryRecord):
             return tuple(record.source_digests) + tuple(record.negative_evidence_refs)
+        if isinstance(record, PromotionDecision):
+            return (
+                record.hypothesis_digest,
+                record.falsification_digest,
+                record.evolution_delta_digest,
+                record.policy_decision_ref,
+            )
+        if isinstance(record, EvolutionDelta):
+            return tuple(record.evidence_refs)
         return tuple(getattr(record, "provenance_refs", ()))
 
     def project_event(self, record: object, envelope: EventEnvelope, projection_id: str) -> RnDEventProjection:
-        record.validate(); envelope.validate()
+        record.validate()
         record_type, record_id, record_digest = self._record_identity(record)
         if envelope.event_type not in _EVENT_MAP[record_type]:
             raise EvolutionaryEpochError("event type incompatible with R&D record")
+        envelope.validate()
         if envelope.event_type in {"ActionAuthorized", "ActionExecuted"}:
             raise EvolutionaryEpochError("R&D event cannot map to effect event")
         if envelope.authority.requested != "none" or envelope.authority.effective != "none":
