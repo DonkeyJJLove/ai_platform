@@ -41,9 +41,15 @@ RECEIPT_PREFIX = "LION-DISPATCH-RECEIPT v1"
 OBSERVATION_RECEIPT_PREFIX = "LION-RUN-OBSERVATION-RECEIPT v1"
 DEFAULT_POLICY = DispatchPolicy(
     control_issue=CONTROL_ISSUE,
-    allowed_workflows=("f009-live-runtime-proof.yml",),
+    allowed_workflows=(
+        "f009-live-runtime-proof.yml",
+        "lion-group-channel.yml",
+    ),
     allowed_refs=("master",),
-    allowed_inputs=(("f009-live-runtime-proof.yml", ()),),
+    allowed_inputs=(
+        ("f009-live-runtime-proof.yml", ()),
+        ("lion-group-channel.yml", ("envelope_b64",)),
+    ),
 ).validate()
 
 _FIELD_ORDER = ("workflow", "ref", "expected_head", "request_id", "inputs")
