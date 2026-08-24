@@ -1,21 +1,21 @@
-# CYBER-LION — AI-Native Enterprise Control Plane
+# CYBER-LION — Enterprise Control Plane AI-Native
 
 Status: **EXECUTABLE ARCHITECTURE / ACTIVE EVOLUTION**
 
-Cyber-Lion is a **federated AI-Native enterprise operating system** built from the DonkeyJJLove repository ecosystem. It is not a monolith and does not equate repository boundaries with subsystem or authority boundaries.
+Cyber-Lion jest **federacyjnym systemem operacyjnym przedsiębiorstwa AI-Native** zbudowanym na ekosystemie repozytoriów DonkeyJJLove. Nie jest monolitem i nie utożsamia granic repozytoriów z granicami subsystemów ani authority.
 
-Its purpose is to create and evolve agents, compose them into dynamic Mosaic Cells and swarms, connect research to software and execution, and preserve identity, provenance, observability, security and rollback across every consequential transition.
+Jego celem jest tworzenie i ewolucja agentów, składanie ich w dynamiczne Mosaic Cells i roje, łączenie badań z oprogramowaniem i execution oraz zachowanie tożsamości, provenance, obserwowalności, bezpieczeństwa i rollbacku na każdym consequential transition.
 
-## Core operating model
+## Podstawowy model operacyjny
 
 ```text
-WORLD / MARKET / SYSTEM
+ŚWIAT / RYNEK / SYSTEM
           ↓
-      OBSERVATION
+      OBSERWACJA
           ↓
-    R&D / HYPOTHESIS
+    R&D / HIPOTEZA
           ↓
-        MISSION
+        MISJA
           ↓
       AGENT FOUNDRY
           ↓
@@ -25,20 +25,20 @@ WORLD / MARKET / SYSTEM
           ↓
    proposal / software Δ
           ↓
- GLITCHLAB / INVARIANTS
+ GLITCHLAB / INVARIANTY
           ↓
   POLICY / AUTHORITY GATE
           ↓
      EXECUTION MESH
           ↓
-        EFFECT
+        EFEKT
           ↓
  OBSERVABILITY / OUTCOME
           ↓
  MEMORY / R&D / NEXT Δ
 ```
 
-## Governing invariants
+## Inwarianty nadrzędne
 
 ```text
 OPEN INTELLIGENCE != OPEN AUTHORITY
@@ -57,26 +57,26 @@ NO AGENT SPAWN WITHOUT IDENTITY + BUDGET + AUTHORITY CEILING
 NO ENTERPRISE CHANGE WITHOUT DELTA + TEST + ROLLBACK
 ```
 
-## Implemented foundations
+## Zaimplementowane fundamenty
 
-Current executable Cyber-Lion includes:
+Obecny wykonywalny Cyber-Lion obejmuje:
 
-- `EntityIdentity` and lossless SBOM/AID compatibility,
-- typed `EventEnvelope`, provenance and authority,
+- `EntityIdentity` i bezstratną kompatybilność SBOM/AID,
+- typowane `EventEnvelope`, provenance i authority,
 - `CapabilityRegistry`,
-- provider plane with provenance receipts,
+- provider plane z provenance receipts,
 - Startup Evolution Agent,
-- provenance/time-aware MarketEvidenceBook,
-- SoftwareBuildPlanner and safe template generation,
-- bounded local build runner,
-- EvolutionJournal/replay,
-- startup CLI/JSON import,
+- `MarketEvidenceBook` uwzględniający provenance i czas,
+- `SoftwareBuildPlanner` oraz bezpieczne generowanie szablonów,
+- ograniczony lokalny build runner,
+- `EvolutionJournal`/replay,
+- startup CLI/import JSON,
 - `AgentSpec`, `MissionSpec`, `SwarmSpec`, `MosaicDelta`,
-- deterministic capability-based `SwarmPlanner`.
+- deterministyczny `SwarmPlanner` oparty na capabilities.
 
-## Enterprise architecture
+## Architektura przedsiębiorstwa
 
-The current repository ecosystem is treated as federated organs:
+Bieżący ekosystem repozytoriów jest traktowany jako zestaw federacyjnych organów:
 
 ```text
 ai_platform              → Enterprise Control Plane / Agent Foundry
@@ -91,33 +91,33 @@ hipotezy_nadawcze_LLM    → Epistemic Hypothesis Lab
 writeups                 → R&D / Enterprise Research Memory
 ```
 
-Full synthesis: [`enterprise/README.md`](enterprise/README.md).
+Pełna synteza: [`enterprise/README.md`](enterprise/README.md).
 
-Key documents:
+Kluczowe dokumenty:
 
-1. [`enterprise/AI_NATIVE_ENTERPRISE.md`](enterprise/AI_NATIVE_ENTERPRISE.md) — enterprise state model and repository roles.
-2. [`enterprise/AGENT_SWARM_MODEL.md`](enterprise/AGENT_SWARM_MODEL.md) — single-agent, Mosaic Cell and dynamic swarm contracts.
-3. [`enterprise/GENERATION_EVOLUTION_PROTOCOL.md`](enterprise/GENERATION_EVOLUTION_PROTOCOL.md) — safe generation/update rules for the polymorphic ecosystem.
-4. [`enterprise/RND_OPERATING_MODEL.md`](enterprise/RND_OPERATING_MODEL.md) — R&D evidence and promotion pipeline.
-5. [`enterprise/REPOSITORY_EVOLUTION_PLAN.md`](enterprise/REPOSITORY_EVOLUTION_PLAN.md) — concrete roadmap for every repository.
+1. [`enterprise/AI_NATIVE_ENTERPRISE.md`](enterprise/AI_NATIVE_ENTERPRISE.md) — model stanu przedsiębiorstwa i role repozytoriów.
+2. [`enterprise/AGENT_SWARM_MODEL.md`](enterprise/AGENT_SWARM_MODEL.md) — kontrakty pojedynczego agenta, Mosaic Cell i dynamicznego roju.
+3. [`enterprise/GENERATION_EVOLUTION_PROTOCOL.md`](enterprise/GENERATION_EVOLUTION_PROTOCOL.md) — reguły bezpiecznego generowania/aktualizacji polimorficznego ekosystemu.
+4. [`enterprise/RND_OPERATING_MODEL.md`](enterprise/RND_OPERATING_MODEL.md) — pipeline evidence i promocji R&D.
+5. [`enterprise/REPOSITORY_EVOLUTION_PLAN.md`](enterprise/REPOSITORY_EVOLUTION_PLAN.md) — konkretna roadmapa dla każdego repozytorium.
 
-## Three planes
+## Trzy płaszczyzny
 
 ```text
-SEM  — observation, cognition, representation, simulation, proposals
-MAND — identity, provenance, policy, memory, authority, gates
-INF  — processes, APIs, files, networks, deployment, external effects
+SEM  — obserwacja, cognition, reprezentacja, symulacja, proposals
+MAND — tożsamość, provenance, polityka, pamięć, authority, gates
+INF  — procesy, API, pliki, sieci, deployment, skutki zewnętrzne
 ```
 
-Fundamental relation:
+Relacja fundamentalna:
 
 ```text
 SEM proposal != MAND authorization != INF effect
 ```
 
-## Architecture analysis retained
+## Zachowana analiza architektoniczna
 
-The original archaeology remains relevant and is preserved as evidence for migration decisions:
+Pierwotna archeologia pozostaje istotna i jest zachowana jako evidence dla decyzji migracyjnych:
 
 - [`REPOSITORY_INVENTORY.md`](REPOSITORY_INVENTORY.md)
 - [`CAPABILITY_MAP.md`](CAPABILITY_MAP.md)
@@ -127,28 +127,28 @@ The original archaeology remains relevant and is preserved as evidence for migra
 - [`MIGRATION_MAP.md`](MIGRATION_MAP.md)
 - [`SCIENTIFIC_STATUS.md`](SCIENTIFIC_STATUS.md)
 
-## Migration discipline
+## Dyscyplina migracji
 
 ```text
-archaeology
-→ typed contract
-→ compatibility adapter
-→ provider implementation
-→ consumer integration
-→ negative/adversarial tests
-→ observability proof
-→ deterministic gate
-→ bounded execution
+archeologia
+→ typowany kontrakt
+→ adapter kompatybilności
+→ implementacja providera
+→ integracja consumera
+→ testy negatywne/adversarialne
+→ dowód obserwowalności
+→ deterministyczna bramka
+→ ograniczone wykonanie
 → outcome/replay
 → deprecate legacy only after compatibility proof
 ```
 
-Cyber-Lion should evolve aggressively in **proposal and research space**, while consequential execution remains narrow, reconstructable and revocable.
+Cyber-Lion powinien ewoluować agresywnie w **przestrzeni proposal i research**, podczas gdy consequential execution pozostaje wąskie, rekonstruowalne i odwoływalne.
 
-## Workload identity proof boundary
+## Granica dowodu workload identity
 
-`EntityIdentity` remains descriptive identity; it is not cryptographic attestation. RCCM-1E-I adds an adapter-neutral `WorkloadIdentityProof` whose canonical signed payload is verified through an injected verifier boundary and yields a separate `VerifiedWorkloadIdentity`.
+`EntityIdentity` pozostaje tożsamością opisową; nie jest kryptograficzną atestacją. RCCM-1E-I dodaje neutralny wobec adaptera `WorkloadIdentityProof`, którego kanoniczny podpisany payload jest weryfikowany przez wstrzykniętą granicę verifiera i prowadzi do odrębnego `VerifiedWorkloadIdentity`.
 
-Verification fails closed for invalid signatures, signed-field tampering, invalid validity windows, stale/not-yet-valid proofs, verifier rejection, and verifier exceptions. `VerifiedWorkloadIdentity` deliberately contains no authority or capability grant: **verified identity != authorization**.
+Weryfikacja działa fail-closed dla niepoprawnych podpisów, manipulacji podpisanymi polami, niepoprawnych okien ważności, stale/not-yet-valid proofs, odrzucenia przez verifier oraz wyjątków verifiera. `VerifiedWorkloadIdentity` celowo nie zawiera authority ani capability grant: **verified identity != authorization**.
 
-The standard-library HMAC profile used by unit tests is a deterministic test fixture only. It is not a production workload identity provider, does not implement custom PKI, and does not access or persist real private-key material.
+Profil HMAC ze standard library używany w unit tests jest wyłącznie deterministycznym test fixture. Nie jest produkcyjnym providerem workload identity, nie implementuje własnego PKI i nie uzyskuje dostępu do rzeczywistego private-key material ani go nie utrwala.
