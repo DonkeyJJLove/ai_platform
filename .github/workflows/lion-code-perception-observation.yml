@@ -70,6 +70,8 @@ jobs:
           expected = ObservationRequest(
               repository=os.environ["REPOSITORY"],
               workflow_name="Cyber-Lion Core",
+              workflow_id=337046823,
+              workflow_path=".github/workflows/cyber-lion-contracts.yml",
               branch="master",
               head_sha=os.environ["EXPECTED_HEAD"].lower(),
               tree_sha=os.environ["EXPECTED_TREE"].lower(),
@@ -83,6 +85,7 @@ jobs:
           print(
               "CODE_PERCEPTION_POST_MERGE_PROJECTION "
               f"run_id={receipt.run_id} job_id={receipt.job_id} "
+              f"workflow_id={receipt.workflow_id} workflow_path={receipt.workflow_path} "
               f"head={receipt.head_sha} tree={receipt.tree_sha} "
               f"digest={receipt.projection_digest} "
               f"tree_semantic_digest={receipt.tree_semantic_digest} "
