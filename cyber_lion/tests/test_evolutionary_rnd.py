@@ -191,6 +191,20 @@ class EvolutionaryRnDEngineTests(unittest.TestCase):
         assert_no_effect_surface()
         self.assertNotIn("execute", {x.lower() for x in dir(self.engine)})
 
+    def test_evolution_delta_exact_replay_and_identity_substitution_denied(self):
+        delta = EvolutionDelta(
+            delta_id="delta-replay", target_component="rnd-loop", motivation="bounded",
+            evidence_refs=("obs:1",), expected_outcome="knowledge only",
+            falsification_conditions=("regression",), candidate_scope=("cyber_lion/contracts/x.py",),
+            dependency_ids=(), risk_class="GREEN",
+        ).sealed()
+        self.engine.register_delta(delta)
+        with self.assertRaisesRegex(EvolutionaryRnDError, "replay"):
+            self.engine.register_delta(delta)
+        changed = dataclasses.replace(delta, expected_outcome="different bounded knowledge", delta_digest="").sealed()
+        with self.assertRaisesRegex(EvolutionaryRnDError, "substitution"):
+            self.engine.register_delta(changed)
+
     def test_append_only_memory_detects_rewrite_and_broken_head(self):
         record1 = RnDMemoryRecord(
             memory_id="m1", revision=1, record_kind="NEGATIVE_RESULT", subject_id="h1",
