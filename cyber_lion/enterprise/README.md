@@ -1,21 +1,21 @@
-# Cyber-Lion AI-Native Enterprise OS
+# Cyber-Lion — Enterprise OS AI-Native
 
-This directory formalizes the whole DonkeyJJLove repository ecosystem as **one evolving AI-Native enterprise**, rather than a collection of unrelated repositories or a fixed organization chart.
+Ten katalog formalizuje cały ekosystem repozytoriów DonkeyJJLove jako **jedno ewoluujące przedsiębiorstwo AI-Native**, a nie zbiór niepowiązanych repozytoriów ani stały schemat organizacyjny.
 
-The enterprise is modeled as a **dynamic mosaic of capabilities, agents, evidence, policies, memory and execution domains**.
+Przedsiębiorstwo jest modelowane jako **dynamiczna mozaika capabilities, agentów, evidence, polityk, pamięci i domen wykonawczych**.
 
 ```text
-WORLD / MARKET / SYSTEM SIGNALS
+ŚWIAT / RYNEK / SYGNAŁY SYSTEMOWE
             ↓
         R&D / EVIDENCE
             ↓
-   HYPOTHESES / MODELS / RULES
+   HIPOTEZY / MODELE / REGUŁY
             ↓
         AGENT FOUNDRY
             ↓
-  AGENT SPECIFICATIONS + CAPABILITIES
+  SPECYFIKACJE AGENTÓW + CAPABILITIES
             ↓
-     DYNAMIC MOSAIC / SWARMS
+     DYNAMICZNA MOZAIKA / ROJE
             ↓
      SOFTWARE / ACTION PROPOSALS
             ↓
@@ -23,35 +23,35 @@ WORLD / MARKET / SYSTEM SIGNALS
             ↓
     AUTHORITY / POLICY / EXECUTION
             ↓
-       REAL STATE CHANGE
+       RZECZYWISTA ZMIANA STANU
             ↓
  OBSERVABILITY / OUTCOME / MEMORY
             ↓
-      NEXT ENTERPRISE DELTA
+      KOLEJNA DELTA PRZEDSIĘBIORSTWA
 ```
 
-## Enterprise organs
+## Organy przedsiębiorstwa
 
-The current repositories become federated organs with explicit responsibilities:
+Bieżące repozytoria stają się federacyjnymi organami o jawnych odpowiedzialnościach:
 
-| Repository | Enterprise role |
+| Repozytorium | Rola w przedsiębiorstwie |
 |---|---|
-| `ai_platform` | Enterprise Control Plane, Agent Foundry, contracts, capability and swarm orchestration |
-| `glitchlab` | Software/structure evolution compiler: Δ analysis, AST↔Mosaic, invariants, SAST, repair validation |
-| `chunk-chunk` | Process semantics and HMK-9D transition language; chunking, bridges, thresholds, microcode |
-| `HA2D` | Context, memory and Human–AI adaptation laboratory; candidate memory and semantic revision |
-| `swarm` | Distributed Execution Mesh; workloads, transport, telemetry, orchestration and runtime enforcement |
-| `sbom` | Identity/provenance/supply-chain intelligence; AID, entity state, delta and gate evidence |
-| `mosaic_lab_pro.py` | Structural Intelligence Engine; graphs, abstraction λ, topology and multi-scale visualization |
-| `SymulacjaKaskadySieciowej` | Simulation/Falsification Engine; scenario dynamics, Monte Carlo, Morris/Sobol and stress testing |
-| `hipotezy_nadawcze_LLM` | Epistemic Hypothesis Lab; falsifiable model/channel hypotheses and experimental design |
-| `writeups` | R&D/evidence corpus, research memory, architecture proposals, publications and promotion pipeline |
+| `ai_platform` | Enterprise Control Plane, Agent Foundry, kontrakty, orkiestracja capabilities i rojów |
+| `glitchlab` | Kompilator ewolucji software/struktury: analiza Δ, AST↔Mosaic, inwarianty, SAST, walidacja napraw |
+| `chunk-chunk` | Semantyka procesu i język przejść HMK-9D; chunking, mosty, progi, microcode |
+| `HA2D` | Laboratorium kontekstu, pamięci i adaptacji Human–AI; candidate memory i semantic revision |
+| `swarm` | Distributed Execution Mesh; workloady, transport, telemetria, orkiestracja i runtime enforcement |
+| `sbom` | Intelligence tożsamości/provenance/supply-chain; AID, stan encji, delta i gate evidence |
+| `mosaic_lab_pro.py` | Structural Intelligence Engine; grafy, abstrakcja λ, topologia i wizualizacja wieloskalowa |
+| `SymulacjaKaskadySieciowej` | Simulation/Falsification Engine; dynamika scenariuszy, Monte Carlo, Morris/Sobol i stress testing |
+| `hipotezy_nadawcze_LLM` | Epistemic Hypothesis Lab; falsyfikowalne hipotezy modelu/kanału i projektowanie eksperymentów |
+| `writeups` | Korpus R&D/evidence, pamięć badawcza, propozycje architektury, publikacje i pipeline promocji |
 
-Repository boundaries remain useful for ownership and independent evolution. They are **not authority boundaries and not subsystem identities by themselves**.
+Granice repozytoriów pozostają użyteczne dla ownership i niezależnej ewolucji. **Nie są same w sobie granicami authority ani tożsamościami subsystemów.**
 
-## Core thesis
+## Teza podstawowa
 
-The company is not modeled as departments with permanent job functions. It is modeled as a stateful graph:
+Przedsiębiorstwo nie jest modelowane jako działy o stałych funkcjach zawodowych. Jest modelowane jako graf stanowy:
 
 ```text
 Enterprise(t) =
@@ -67,35 +67,35 @@ Enterprise(t) =
 + Artifacts
 ```
 
-and evolves by explicit deltas:
+i ewoluuje przez jawne delty:
 
 ```text
 Enterprise(t)
 → ChangeProposal
-→ Δ analysis
-→ invariant/gate evaluation
+→ analiza Δ
+→ ocena invariant/gate
 → bounded execution
 → OutcomeObserved
 → Enterprise(t+1)
 ```
 
-## Three planes
+## Trzy płaszczyzny
 
-Cyber-Lion keeps three planes distinct:
+Cyber-Lion utrzymuje trzy rozdzielone płaszczyzny:
 
-### SEM — intelligence and representation
+### SEM — inteligencja i reprezentacja
 
-Research, hypotheses, semantic compression, planning, simulation, code analysis and structural models.
+Badania, hipotezy, kompresja semantyczna, planowanie, symulacja, analiza kodu i modele strukturalne.
 
-### MAND — mandate, policy and memory
+### MAND — mandat, polityka i pamięć
 
-Identity, provenance, authority, policy, gates, context/memory commit, evidence status and promotion rules.
+Tożsamość, provenance, authority, polityka, gates, commit kontekstu/pamięci, status evidence i reguły promocji.
 
-### INF — infrastructure and real effects
+### INF — infrastruktura i rzeczywiste skutki
 
-Processes, APIs, tools, containers, networks, files, deployments, external writes and physical/cyber-physical systems.
+Procesy, API, narzędzia, kontenery, sieci, pliki, deploymenty, zewnętrzne zapisy i systemy fizyczne/cyber-fizyczne.
 
-The critical rule is:
+Reguła krytyczna:
 
 ```text
 SEM proposal
@@ -105,7 +105,7 @@ MAND authorization
 INF effect
 ```
 
-## Normative invariants
+## Inwarianty normatywne
 
 ```text
 OPEN INTELLIGENCE != OPEN AUTHORITY
@@ -121,12 +121,12 @@ NO RESEARCH CLAIM DIRECTLY PROMOTED TO RUNTIME RULE
 NO ENTERPRISE CHANGE WITHOUT DELTA + TEST + ROLLBACK
 ```
 
-## Documents
+## Dokumenty
 
-- [`AI_NATIVE_ENTERPRISE.md`](AI_NATIVE_ENTERPRISE.md) — whole-enterprise architecture and operating model.
-- [`AGENT_SWARM_MODEL.md`](AGENT_SWARM_MODEL.md) — single-agent contract, mosaic cells and dynamic swarm rules.
-- [`GENERATION_EVOLUTION_PROTOCOL.md`](GENERATION_EVOLUTION_PROTOCOL.md) — how agents generate and update the polymorphic repository ecosystem.
-- [`RND_OPERATING_MODEL.md`](RND_OPERATING_MODEL.md) — how `writeups`, hypotheses and simulations become tested platform knowledge.
-- [`REPOSITORY_EVOLUTION_PLAN.md`](REPOSITORY_EVOLUTION_PLAN.md) — concrete target and staged roadmap for every repository.
+- [`AI_NATIVE_ENTERPRISE.md`](AI_NATIVE_ENTERPRISE.md) — architektura całego przedsiębiorstwa i model operacyjny.
+- [`AGENT_SWARM_MODEL.md`](AGENT_SWARM_MODEL.md) — kontrakt pojedynczego agenta, Mosaic Cells i reguły dynamicznego roju.
+- [`GENERATION_EVOLUTION_PROTOCOL.md`](GENERATION_EVOLUTION_PROTOCOL.md) — sposób, w jaki agenci generują i aktualizują polimorficzny ekosystem repozytoriów.
+- [`RND_OPERATING_MODEL.md`](RND_OPERATING_MODEL.md) — sposób, w jaki `writeups`, hipotezy i symulacje stają się przetestowaną wiedzą platformy.
+- [`REPOSITORY_EVOLUTION_PLAN.md`](REPOSITORY_EVOLUTION_PLAN.md) — konkretny target i etapowa roadmapa dla każdego repozytorium.
 
-The executable contracts live in `cyber_lion/enterprise/models.py` and `planner.py`, with regression tests under `cyber_lion/tests/`.
+Wykonywalne kontrakty znajdują się w `cyber_lion/enterprise/models.py` i `planner.py`, a testy regresyjne pod `cyber_lion/tests/`.
