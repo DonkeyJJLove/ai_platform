@@ -2,16 +2,18 @@
 
 Legacy dispatch receipts may timestamp acceptance just after GitHub creates the run, so
 run discovery permits at most a 60-second lookback while preserving exact event/ref/head
-and ambiguity checks. Artifact downloads are handled as an explicit two-hop trust
-transition: the GitHub API request is authenticated, while the returned GitHub Actions
-signed blob URL is fetched without forwarding the GitHub bearer token or cookies and
-without following another redirect. This shim does not dispatch on observation and does
-not mint authority.
+and ambiguity checks. Historical group-channel runs that collide in that bounded window
+are disambiguated only by independently verified canonical artifact/envelope binding.
+Artifact downloads are handled as an explicit two-hop trust transition: the GitHub API
+request is authenticated, while the returned GitHub Actions signed blob URL is fetched
+without forwarding the GitHub bearer token or cookies and without following another
+redirect. This shim does not dispatch on observation and does not mint authority.
 """
 from __future__ import annotations
 
 from datetime import timedelta
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -25,6 +27,7 @@ _GITHUB_ACTIONS_ARCHIVE_HOST = re.compile(
     r"^productionresultssa[0-9]+\.blob\.core\.windows\.net$"
 )
 _ORIGINAL_WAIT_TERMINAL = bridge._wait_terminal
+_ORIGINAL_DISCOVER_RUN = bridge._discover_run
 
 
 def _matching_runs_compat(runs: list[dict], receipt: bridge.DispatchReceipt) -> list[dict]:
@@ -47,6 +50,102 @@ def _matching_runs_compat(runs: list[dict], receipt: bridge.DispatchReceipt) -> 
             matches.append(run)
     matches.sort(key=lambda item: int(item["id"]))
     return matches
+
+
+def _group_envelope_for_discovery(api, receipt: bridge.DispatchReceipt):
+    comments = api.issue_comments(bridge.DEFAULT_POLICY.control_issue)
+    original = bridge._original_dispatch_request(
+        comments,
+        receipt,
+        bridge.DEFAULT_POLICY,
+        api.repository,
+    )
+    inputs = dict(original.inputs())
+    if set(inputs) != {"envelope_b64"} or not isinstance(inputs.get("envelope_b64"), str):
+        raise RuntimeError("group-channel original input set invalid during discovery")
+    accepted = bridge._parse_time(receipt.accepted_at)
+    try:
+        envelope = bridge.decode_envelope(inputs["envelope_b64"], now=accepted)
+    except bridge.GroupChannelContractError as exc:
+        raise RuntimeError("historical group-channel envelope invalid during discovery") from exc
+    if envelope.repository != api.repository or envelope.expected_master_head != receipt.expected_head:
+        raise RuntimeError("historical group-channel envelope binding mismatch during discovery")
+    return envelope
+
+
+def _group_candidate_verifies(api, receipt: bridge.DispatchReceipt, envelope, candidate: dict) -> bool:
+    try:
+        run_id = int(candidate["id"])
+        terminal = api.workflow_run(run_id)
+        if (
+            int(terminal.get("id", 0)) != run_id
+            or terminal.get("event") != "workflow_dispatch"
+            or terminal.get("head_branch") != receipt.ref
+            or str(terminal.get("head_sha", "")).lower() != receipt.expected_head
+            or terminal.get("status") != "completed"
+            or terminal.get("conclusion") != "success"
+        ):
+            return False
+        run_attempt = int(terminal.get("run_attempt", 0))
+        if run_attempt <= 0:
+            return False
+        expected_name = f"lion-group-channel-receipt-{run_id}-{run_attempt}"
+        artifacts = [
+            item for item in api.run_artifacts(run_id)
+            if item.get("name") == expected_name and item.get("expired") is False
+        ]
+        if len(artifacts) != 1:
+            return False
+        artifact = artifacts[0]
+        artifact_id = int(artifact["id"])
+        artifact_size = int(artifact["size_in_bytes"])
+        artifact_digest = str(artifact["digest"])
+        if artifact_id <= 0 or artifact_size <= 0 or not artifact_digest.startswith("sha256:"):
+            return False
+        data = api.download_artifact(artifact_id)
+        if bridge._artifact_digest_bytes(data) != artifact_digest:
+            return False
+        bridge._verify_group_artifact(
+            data,
+            envelope=envelope,
+            run_id=run_id,
+            run_attempt=run_attempt,
+        )
+        return True
+    except (KeyError, TypeError, ValueError, RuntimeError):
+        return False
+
+
+def _discover_run_compat(api, receipt: bridge.DispatchReceipt, *, timeout_seconds: float, poll_seconds: float) -> dict:
+    """Resolve legacy group collisions by receipt content; preserve all other discovery."""
+    if receipt.workflow != "lion-group-channel.yml":
+        return _ORIGINAL_DISCOVER_RUN(
+            api,
+            receipt,
+            timeout_seconds=timeout_seconds,
+            poll_seconds=poll_seconds,
+        )
+
+    envelope = _group_envelope_for_discovery(api, receipt)
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        matches = _matching_runs_compat(api.workflow_runs(receipt.workflow, receipt.ref), receipt)
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            verified = [
+                candidate for candidate in matches
+                if _group_candidate_verifies(api, receipt, envelope, candidate)
+            ]
+            if len(verified) > 1:
+                raise RuntimeError("ambiguous group-channel runs remain after artifact binding")
+            if len(verified) == 1:
+                return verified[0]
+        if time.monotonic() >= deadline:
+            if matches:
+                raise RuntimeError("matching group-channel run could not be uniquely artifact-bound")
+            raise RuntimeError("matching workflow_dispatch run not observed before timeout")
+        time.sleep(poll_seconds)
 
 
 def _wait_terminal_diagnostic(api, run_id: int, *, timeout_seconds: float, poll_seconds: float) -> dict:
@@ -159,6 +258,7 @@ def _download_artifact_compat(api: bridge.GitHubApi, artifact_id: int) -> bytes:
 
 def main(argv: list[str] | None = None) -> int:
     bridge._matching_runs = _matching_runs_compat
+    bridge._discover_run = _discover_run_compat
     bridge._wait_terminal = _wait_terminal_diagnostic
     bridge.GitHubApi.download_artifact = _download_artifact_compat
     return bridge.main(argv)
