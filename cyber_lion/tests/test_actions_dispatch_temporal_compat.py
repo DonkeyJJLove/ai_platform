@@ -5,6 +5,7 @@ from cyber_lion.contracts.actions_dispatch_bridge import DispatchReceipt
 from cyber_lion.enterprise.actions_dispatch_temporal_compat import (
     LEGACY_LOOKBACK_SECONDS,
     _matching_runs_compat,
+    _wait_terminal_diagnostic,
 )
 
 
@@ -34,6 +35,14 @@ def run(created_at: str, *, run_id=10, event="workflow_dispatch", branch="master
     return {"id": run_id, "created_at": created_at, "event": event, "head_branch": branch, "head_sha": head}
 
 
+class _TerminalApi:
+    def __init__(self, value: dict):
+        self.value = value
+
+    def workflow_run(self, run_id: int) -> dict:
+        return dict(self.value)
+
+
 class TemporalCompatibilityTests(unittest.TestCase):
     def test_exact_run_created_just_before_receipt_is_accepted(self):
         matches = _matching_runs_compat([run("2026-08-23T17:24:54Z")], receipt())
@@ -59,6 +68,35 @@ class TemporalCompatibilityTests(unittest.TestCase):
             run("2026-08-23T17:24:56Z", run_id=12),
         ], receipt())
         self.assertEqual([item["id"] for item in matches], [11, 12])
+
+    def test_failed_terminal_run_exposes_exact_non_success_identity(self):
+        api = _TerminalApi({
+            "id": 77,
+            "event": "workflow_dispatch",
+            "head_branch": "master",
+            "head_sha": HEAD,
+            "status": "completed",
+            "conclusion": "failure",
+        })
+        with self.assertRaisesRegex(
+            RuntimeError,
+            r"run_id=77 .*head=" + HEAD + r" .*conclusion=failure",
+        ):
+            _wait_terminal_diagnostic(api, 77, timeout_seconds=0, poll_seconds=0)
+
+    def test_successful_terminal_run_is_semantically_unchanged(self):
+        value = {
+            "id": 78,
+            "event": "workflow_dispatch",
+            "head_branch": "master",
+            "head_sha": HEAD,
+            "status": "completed",
+            "conclusion": "success",
+        }
+        self.assertEqual(
+            _wait_terminal_diagnostic(_TerminalApi(value), 78, timeout_seconds=0, poll_seconds=0),
+            value,
+        )
 
 
 if __name__ == "__main__":

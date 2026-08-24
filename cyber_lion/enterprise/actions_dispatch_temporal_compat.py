@@ -24,6 +24,7 @@ _REDIRECT_CODES = {301, 302, 303, 307, 308}
 _GITHUB_ACTIONS_ARCHIVE_HOST = re.compile(
     r"^productionresultssa[0-9]+\.blob\.core\.windows\.net$"
 )
+_ORIGINAL_WAIT_TERMINAL = bridge._wait_terminal
 
 
 def _matching_runs_compat(runs: list[dict], receipt: bridge.DispatchReceipt) -> list[dict]:
@@ -46,6 +47,24 @@ def _matching_runs_compat(runs: list[dict], receipt: bridge.DispatchReceipt) -> 
             matches.append(run)
     matches.sort(key=lambda item: int(item["id"]))
     return matches
+
+
+def _wait_terminal_diagnostic(api, run_id: int, *, timeout_seconds: float, poll_seconds: float) -> dict:
+    """Preserve terminal semantics while exposing exact non-success run evidence."""
+    terminal = _ORIGINAL_WAIT_TERMINAL(
+        api,
+        run_id,
+        timeout_seconds=timeout_seconds,
+        poll_seconds=poll_seconds,
+    )
+    if terminal.get("status") == "completed" and terminal.get("conclusion") != "success":
+        raise RuntimeError(
+            "workflow run terminal non-success: "
+            f"run_id={run_id} event={terminal.get('event')} "
+            f"branch={terminal.get('head_branch')} head={terminal.get('head_sha')} "
+            f"status={terminal.get('status')} conclusion={terminal.get('conclusion')}"
+        )
+    return terminal
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -140,6 +159,7 @@ def _download_artifact_compat(api: bridge.GitHubApi, artifact_id: int) -> bytes:
 
 def main(argv: list[str] | None = None) -> int:
     bridge._matching_runs = _matching_runs_compat
+    bridge._wait_terminal = _wait_terminal_diagnostic
     bridge.GitHubApi.download_artifact = _download_artifact_compat
     return bridge.main(argv)
 
