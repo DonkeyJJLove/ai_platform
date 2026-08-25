@@ -15,6 +15,7 @@ from cyber_lion.startup_agent import (
     VentureVector,
 )
 from cyber_lion.startup_agent.build_planner import SoftwareBuildSpec
+from cyber_lion.startup_agent.local_persistence import LocalPersistenceGate
 from cyber_lion.startup_agent.models import StartupModelError
 
 
@@ -75,23 +76,52 @@ class JournalTests(unittest.TestCase):
             created_at=datetime(2026, 8, 18, 12 + cycle, tzinfo=timezone.utc),
         )
 
+    @staticmethod
+    def _gate(journal: EvolutionJournal, state: EvolutionState, nonce: str) -> LocalPersistenceGate:
+        payload = journal.encode_record(state)
+        return LocalPersistenceGate.seal(
+            gate_event_id=f"journal-gate-{nonce}",
+            purpose="startup-evolution-journal-append",
+            target=journal.path,
+            payload=payload,
+            nonce=nonce,
+        )
+
     def test_append_and_replay_preserves_state_chain(self):
         with tempfile.TemporaryDirectory() as tmp:
             journal = EvolutionJournal(Path(tmp) / "journal.jsonl")
             v1 = BASE
             v2 = VentureVector(0.7, 0.6, 0.5, 0.6, 0.4, 0.5, 0.7, 0.5, 0.9)
-            journal.append(self._state(0, v1))
-            journal.append(self._state(1, v2, v1))
+            s0 = self._state(0, v1)
+            s1 = self._state(1, v2, v1)
+            journal.append(s0, gate=self._gate(journal, s0, "0"))
+            journal.append(s1, gate=self._gate(journal, s1, "1"))
             states = journal.replay()
             self.assertEqual(len(states), 2)
             self.assertEqual(states[-1].delta()["market_pull"], 0.1)
             self.assertEqual(journal.latest().cycle, 1)
 
+    def test_missing_gate_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            journal = EvolutionJournal(Path(tmp) / "journal.jsonl")
+            with self.assertRaises(TypeError):
+                journal.append(self._state(0, BASE))
+
+    def test_gate_replay_is_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            journal = EvolutionJournal(Path(tmp) / "journal.jsonl")
+            state = self._state(0, BASE)
+            gate = self._gate(journal, state, "replay")
+            journal.append(state, gate=gate)
+            with self.assertRaises(StartupModelError):
+                journal.append(state, gate=gate)
+
     def test_replay_rejects_broken_cycle_sequence(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "journal.jsonl"
             journal = EvolutionJournal(path)
-            journal.append(self._state(0, BASE))
+            state = self._state(0, BASE)
+            journal.append(state, gate=self._gate(journal, state, "broken"))
             data = path.read_text(encoding="utf-8").replace('"cycle": 0', '"cycle": 2')
             path.write_text(data, encoding="utf-8")
             with self.assertRaises(ValueError):
