@@ -28,6 +28,10 @@ from cyber_lion.enterprise.candidate_build_authorization import (
     LiveAdmittedResourceAuthority,
     LiveResourceAuthorityAdmission,
 )
+from cyber_lion.enterprise.persistent_authority_state import (
+    PersistentBuilderEntryIssuanceRecord,
+    SQLiteAuthorityStateStore,
+)
 
 
 class BuilderEntryPermitError(RuntimeError):
@@ -210,6 +214,54 @@ class PersistentBuilderEntryReplayGuard:
         return self._store.consume_replay(self.DOMAIN, replay_digest, consumed_at)
 
 
+class PersistentBuilderEntryIssuanceRecorder:
+    """Capability-reduced durable recorder for exact sealed R17 issuance identity."""
+
+    __slots__ = ("_store",)
+
+    def __init__(self, store: SQLiteAuthorityStateStore) -> None:
+        if type(store) is not SQLiteAuthorityStateStore or not store.ready():
+            raise BuilderEntryPermitError("exact ready persistent authority store required")
+        self._store = store
+
+    def record(self, permit: BuilderEntryPermit) -> PersistentBuilderEntryIssuanceRecord:
+        if type(permit) is not BuilderEntryPermit:
+            raise BuilderEntryPermitError("exact BuilderEntryPermit required for issuance recording")
+        try:
+            permit.validate()
+        except Exception as exc:
+            raise BuilderEntryPermitError("builder entry permit invalid during issuance recording") from exc
+        if not permit.builder_entry_permit_digest or permit.builder_entry_permit_digest != permit.compute_digest():
+            raise BuilderEntryPermitError("builder entry permit must be sealed before issuance recording")
+        record = PersistentBuilderEntryIssuanceRecord(
+            builder_entry_permit_id=permit.builder_entry_permit_id,
+            builder_entry_permit_digest=permit.builder_entry_permit_digest,
+            builder_entry_replay_digest=permit.builder_entry_replay_digest,
+            repository=permit.repository,
+            baseline_master_sha=permit.baseline_master_sha,
+            baseline_master_tree_sha=permit.baseline_master_tree_sha,
+            action=permit.action,
+            candidate_scope=permit.candidate_scope,
+            resource_scope=permit.resource_scope,
+            authority_epoch=permit.authority_epoch,
+            authority_state_version=permit.authority_state_version,
+            root_grant_id=permit.root_grant_id,
+            root_grant_digest=permit.root_grant_digest,
+            current_authority_digest=permit.current_authority_digest,
+            builder_subject_id=permit.builder_subject_id,
+            builder_instance_id=permit.builder_instance_id,
+            builder_capability_class=permit.builder_capability_class,
+            builder_identity_digest=permit.builder_identity_digest,
+            builder_implementation_digest=permit.builder_implementation_digest,
+            builder_attestation_digest=permit.builder_attestation_digest,
+            issued_at=permit.checked_at,
+        ).validate()
+        try:
+            return self._store.record_builder_entry_issuance(record)
+        except Exception as exc:
+            raise BuilderEntryPermitError("durable builder entry issuance recording failed") from exc
+
+
 class TrustedBuilderSubjectSource(ABC):
     source_kind = "untrusted-abstract-source"
 
@@ -374,16 +426,18 @@ class PinnedTrustedBuilderSubjectSource:
 class BuilderEntryPermitEngine:
     """Issue one entry permit; never consume it or start a builder."""
 
-    def __init__(self, *, live_authority: LiveResourceAuthorityAdmission, baseline_source: TrustedRepositoryBaselineSource, f005_state_source: F005StateSource, builder_source: PinnedTrustedBuilderSubjectSource, replay_guard: BuilderEntryReplayGuard):
+    def __init__(self, *, live_authority: LiveResourceAuthorityAdmission, baseline_source: TrustedRepositoryBaselineSource, f005_state_source: F005StateSource, builder_source: PinnedTrustedBuilderSubjectSource, replay_guard: BuilderEntryReplayGuard, issuance_recorder: PersistentBuilderEntryIssuanceRecorder):
         if type(live_authority) is not LiveResourceAuthorityAdmission:
             raise BuilderEntryPermitError("live authority admission required")
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource or type(builder_source.backend) is not PinnedBuilderControlPlaneBackend:
             raise BuilderEntryPermitError("exact pinned trusted builder source required")
+        if type(issuance_recorder) is not PersistentBuilderEntryIssuanceRecorder:
+            raise BuilderEntryPermitError("exact persistent builder entry issuance recorder required")
         builder_source.verify_origin()
-        for obj, method in ((baseline_source, "current"), (f005_state_source, "current"), (replay_guard, "consume")):
+        for obj, method in ((baseline_source, "current"), (f005_state_source, "current"), (replay_guard, "consume"), (issuance_recorder, "record")):
             if not callable(getattr(obj, method, None)):
                 raise BuilderEntryPermitError("builder entry dependency unavailable")
-        self._live, self._baseline, self._f005, self._builders, self._replay = live_authority, baseline_source, f005_state_source, builder_source, replay_guard
+        self._live, self._baseline, self._f005, self._builders, self._replay, self._issuance = live_authority, baseline_source, f005_state_source, builder_source, replay_guard, issuance_recorder
 
     @staticmethod
     def _permit(value: object) -> BuildAuthorizationConsumptionPermit:
@@ -483,7 +537,9 @@ class BuilderEntryPermitEngine:
         checked_at = now.isoformat()
         if self._replay.consume(replay, consumed_at=checked_at) is not True:
             raise BuilderEntryPermitError("builder entry replay denied")
-        return BuilderEntryPermit(schema_version=SCHEMA_VERSION, builder_entry_permit_id=f"bep:{replay}", checked_at=checked_at, builder_entry_replay_digest=replay, **kwargs).sealed()
+        result = BuilderEntryPermit(schema_version=SCHEMA_VERSION, builder_entry_permit_id=f"bep:{replay}", checked_at=checked_at, builder_entry_replay_digest=replay, **kwargs).sealed()
+        self._issuance.record(result)
+        return result
 
     @classmethod
     def assert_no_effect_surface(cls) -> None:
