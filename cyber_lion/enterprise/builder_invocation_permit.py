@@ -25,6 +25,7 @@ from cyber_lion.enterprise.persistent_authority_state import (
     PersistentBuilderEntryIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
+from cyber_lion.enterprise.trusted_control_plane_runtime import build_authority_state_store
 
 
 class BuilderInvocationPermitError(RuntimeError):
@@ -75,13 +76,17 @@ class PersistentBuilderInvocationReplayGuard:
 
 
 class PersistentBuilderEntryIssuanceSource:
-    """Read-only exact durable provenance source for R17 permit identity."""
+    """Read-only durable provenance source pinned to canonical authority-state origin."""
 
     __slots__ = ("_store",)
 
-    def __init__(self, store: SQLiteAuthorityStateStore) -> None:
+    def __init__(self) -> None:
+        try:
+            store = build_authority_state_store()
+        except Exception as exc:
+            raise BuilderInvocationPermitError("canonical persistent authority store unavailable") from exc
         if type(store) is not SQLiteAuthorityStateStore or not store.ready():
-            raise BuilderInvocationPermitError("exact ready persistent authority store required")
+            raise BuilderInvocationPermitError("canonical persistent authority store invalid")
         self._store = store
 
     def resolve(self, builder_entry_permit_id: str) -> PersistentBuilderEntryIssuanceRecord:
@@ -227,20 +232,16 @@ class BuilderInvocationPermitEngine:
         f005_state_source: F005StateSource,
         builder_source: PinnedTrustedBuilderSubjectSource,
         replay_guard: BuilderInvocationReplayGuard,
-        source_issuance: PersistentBuilderEntryIssuanceSource,
     ) -> None:
         if type(live_authority) is not LiveResourceAuthorityAdmission:
             raise BuilderInvocationPermitError("live authority admission required")
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource:
             raise BuilderInvocationPermitError("exact pinned builder source required")
-        if type(source_issuance) is not PersistentBuilderEntryIssuanceSource:
-            raise BuilderInvocationPermitError("exact persistent builder entry issuance source required")
         builder_source.verify_origin()
         for obj, method in (
             (baseline_source, "current"),
             (f005_state_source, "current"),
             (replay_guard, "consume"),
-            (source_issuance, "resolve"),
         ):
             if not callable(getattr(obj, method, None)):
                 raise BuilderInvocationPermitError("builder invocation dependency unavailable")
@@ -249,7 +250,7 @@ class BuilderInvocationPermitEngine:
         self._f005 = f005_state_source
         self._builders = builder_source
         self._replay = replay_guard
-        self._source_issuance = source_issuance
+        self._source_issuance = PersistentBuilderEntryIssuanceSource()
 
     def issue_permit(
         self,
