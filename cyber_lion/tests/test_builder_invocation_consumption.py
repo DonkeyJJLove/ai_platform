@@ -17,6 +17,7 @@ from cyber_lion.enterprise.builder_entry_permit import PinnedTrustedBuilderSubje
 from cyber_lion.enterprise.builder_invocation_consumption import (
     BuilderInvocationConsumptionEngine,
     BuilderInvocationConsumptionError,
+    PersistentBuilderInvocationConsumptionReplayGuard,
     PersistentBuilderInvocationIssuanceSource,
 )
 from cyber_lion.enterprise.candidate_build_authorization import LiveAdmittedResourceAuthority, LiveResourceAuthorityAdmission
@@ -146,12 +147,14 @@ class BuilderInvocationConsumptionTests(unittest.TestCase):
             patch.object(PinnedTrustedBuilderSubjectSource, "resolve_exact", return_value=builder),
             patch.object(PersistentBuilderInvocationIssuanceSource, "__init__", return_value=None),
             patch.object(PersistentBuilderInvocationIssuanceSource, "resolve", return_value=record),
+            patch.object(PersistentBuilderInvocationConsumptionReplayGuard, "__init__", return_value=None),
+            patch.object(PersistentBuilderInvocationConsumptionReplayGuard, "consume", side_effect=replay.consume),
             patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live),
         )
         for item in patches: item.start(); self.addCleanup(item.stop)
         return BuilderInvocationConsumptionEngine(
             live_authority=admission, baseline_source=BaselineSource(base or baseline()),
-            f005_state_source=f005 or F005(), builder_source=source, replay_guard=replay,
+            f005_state_source=f005 or F005(), builder_source=source,
         ), replay
 
     def test_issues_non_effectful_consumption_permit(self):
@@ -195,10 +198,12 @@ class BuilderInvocationConsumptionTests(unittest.TestCase):
             engine.issue_permit(source_permit=permit, admitted_authority=authority(), trusted_now=NOW)
         self.assertEqual(replay.calls, 2)
 
-    def test_caller_selected_provenance_dependencies_are_not_constructor_surface(self):
+    def test_caller_selected_dependencies_are_not_constructor_surface(self):
         sig = inspect.signature(BuilderInvocationConsumptionEngine)
-        for name in ("store", "issuance_source", "origin", "provenance_recorder"):
+        for name in ("store", "issuance_source", "origin", "provenance_recorder", "replay_guard"):
             self.assertNotIn(name, sig.parameters)
+        with self.assertRaises(TypeError):
+            PersistentBuilderInvocationConsumptionReplayGuard(object())
 
     def test_no_effect_surface(self):
         BuilderInvocationConsumptionEngine.assert_no_effect_surface()
