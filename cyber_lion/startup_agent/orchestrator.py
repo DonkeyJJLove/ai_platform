@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Sequence
 from .authority import GateDecision, StartupAuthorityGate
 from .build_planner import SafeTemplateBuilder, SoftwareBuildPlanner, SoftwareBuildSpec
 from .engine import StartupEvolutionAgent
-from .local_build import BoundedLocalBuildRunner, BuildReceipt
+from .local_build import BoundedLocalBuildRunner, BuildReceipt, LocalBuildExecutionGate
 from .market_intelligence import MarketEvidenceBook
 from .models import EvolutionState, Experiment, ProductHypothesis, StartupModelError, VentureVector
 from .providers import (
@@ -120,13 +120,21 @@ class AIDrivenStartupAgent:
         plan = self.plan(hypotheses, previous=previous, gate_event_id=gate_event_id)
         return ProviderCyclePlan(plan, tuple(market_receipts), tuple(hypothesis_receipts))
 
-    def build_local(self, plan: CyclePlan) -> BuildReceipt:
-        """Materialize/test a local-only plan after the authority decision allows it."""
+    def build_local(self, plan: CyclePlan, *, execution_gate_event_id: str) -> BuildReceipt:
+        """Execute a local-only plan only after policy ALLOW plus explicit effect-gate evidence."""
         if plan.authority.decision != "ALLOW":
             raise StartupModelError(
                 f"local build requires autonomous ALLOW decision, got {plan.authority.decision}"
             )
-        return self.local_build_runner.run(plan.build_spec, plan.scaffold)
+        if not isinstance(execution_gate_event_id, str) or not execution_gate_event_id.strip():
+            raise StartupModelError("local build requires explicit execution gate evidence")
+        gate = LocalBuildExecutionGate.seal(
+            gate_event_id=execution_gate_event_id,
+            spec_id=plan.build_spec.spec_id,
+            authority_class=plan.build_spec.authority_class,
+            nonce=f"{plan.state.cycle}:{plan.experiment.experiment_id}",
+        )
+        return self.local_build_runner.run(plan.build_spec, plan.scaffold, gate=gate)
 
     @staticmethod
     def apply_outcome(state: EvolutionState, experiment: Experiment, outcome: ExperimentOutcome) -> EvolutionState:
