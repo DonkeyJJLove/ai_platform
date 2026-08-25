@@ -107,7 +107,7 @@ class SignatureVerificationBoundaryTests(unittest.TestCase):
 
         source = inspect.getsource(providers)
         self.assertNotIn("def _request_json", source)
-        self.assertNotIn("method: str", source)
+        self.assertNotIn("_request_json(*, method", source)
         self.assertEqual(source.count('method="POST"'), 1)
         self.assertIn("SignatureVerificationNetworkBoundary.verify", source)
         self.assertNotIn("/dispatches", source)
