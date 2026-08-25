@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+' flow=FLOW-05
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 AUTHORITY_SOURCE" as n_c19bcf6d872cc7e03b8e0dc393ed2c9b
+component "02 ROOT_GRANT" as n_f17ca8af16cb849ebb9c165137fd5144
+component "03 AUTHORITY_LINEAGE" as n_ae8c191868a267c940b3ad6dd068b84c
+component "04 ATTENUATION" as n_42a8d2f129a1b1ba95ac23f724193420
+component "05 REVOCATION_STATE" as n_23e8619865aaa8f9735e8bd2b8bba816
+component "06 PDP" as n_4fa8b7a150a27e993b7f4da7cea79c98
+component "07 RUNTIME_CURRENTNESS" as n_04d5c83a5de203311d7b135a417264fd
+component "08 PEP" as n_dd674e41d51a2fee0dff73b90baa8c45
+component "09 EFFECT" as n_34557c31fa9ee0dc39fbf9ba589f2cea
+n_c19bcf6d872cc7e03b8e0dc393ed2c9b --> n_f17ca8af16cb849ebb9c165137fd5144 : canonical-flow-order
+n_f17ca8af16cb849ebb9c165137fd5144 --> n_ae8c191868a267c940b3ad6dd068b84c : canonical-flow-order
+n_ae8c191868a267c940b3ad6dd068b84c --> n_42a8d2f129a1b1ba95ac23f724193420 : canonical-flow-order
+n_42a8d2f129a1b1ba95ac23f724193420 --> n_23e8619865aaa8f9735e8bd2b8bba816 : canonical-flow-order
+n_23e8619865aaa8f9735e8bd2b8bba816 --> n_4fa8b7a150a27e993b7f4da7cea79c98 : canonical-flow-order
+n_4fa8b7a150a27e993b7f4da7cea79c98 --> n_04d5c83a5de203311d7b135a417264fd : canonical-flow-order
+n_04d5c83a5de203311d7b135a417264fd --> n_dd674e41d51a2fee0dff73b90baa8c45 : canonical-flow-order
+n_dd674e41d51a2fee0dff73b90baa8c45 --> n_34557c31fa9ee0dc39fbf9ba589f2cea : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

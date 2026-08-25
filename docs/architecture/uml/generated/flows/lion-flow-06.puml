@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+' flow=FLOW-06
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 REPOSITORY_BASELINE" as n_06763ed4b9ff584aafb0e2348918b44d
+component "02 DETACHED_CHANGE" as n_ce86be6de81fdbc5c1da666e90b2156c
+component "03 EXACT_CANDIDATE_TREE" as n_14483bb09c9fc81d20745471bd5aac13
+component "04 VERIFICATION" as n_ced636b476b2f3390165f2a28e11e95f
+component "05 MERGE_AUTHORITY" as n_d8419b01275cde712cf5deaad9d4a8b0
+component "06 EFFECT_TIME_CURRENTNESS" as n_30d7175f673e00056b502de628192338
+component "07 REF_MUTATION" as n_5050333c74c15f60189e68ad1f398a39
+component "08 POST_EFFECT_OBSERVATION" as n_af286cb7dd144285843cdc2942712521
+component "09 CLOSURE" as n_605cf0833998558df8aee8544a8e909c
+n_06763ed4b9ff584aafb0e2348918b44d --> n_ce86be6de81fdbc5c1da666e90b2156c : canonical-flow-order
+n_ce86be6de81fdbc5c1da666e90b2156c --> n_14483bb09c9fc81d20745471bd5aac13 : canonical-flow-order
+n_14483bb09c9fc81d20745471bd5aac13 --> n_ced636b476b2f3390165f2a28e11e95f : canonical-flow-order
+n_ced636b476b2f3390165f2a28e11e95f --> n_d8419b01275cde712cf5deaad9d4a8b0 : canonical-flow-order
+n_d8419b01275cde712cf5deaad9d4a8b0 --> n_30d7175f673e00056b502de628192338 : canonical-flow-order
+n_30d7175f673e00056b502de628192338 --> n_5050333c74c15f60189e68ad1f398a39 : canonical-flow-order
+n_5050333c74c15f60189e68ad1f398a39 --> n_af286cb7dd144285843cdc2942712521 : canonical-flow-order
+n_af286cb7dd144285843cdc2942712521 --> n_605cf0833998558df8aee8544a8e909c : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

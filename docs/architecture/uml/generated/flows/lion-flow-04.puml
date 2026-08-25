@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+' flow=FLOW-04
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 MISSION" as n_8573382a04d7d60f6640cc60e1853f76
+component "02 CAPABILITY_REQUIREMENTS" as n_433161b31c1976ec399fd4faa3c1540d
+component "03 SWARM_PLANNING" as n_49b9d38f73dd06c50a7da357214adb32
+component "04 ROLE_ALLOCATION" as n_bf2c9f225e053d47eac5b2636c8df7c4
+component "05 EXECUTOR_PROVISIONING" as n_d02184c81a493477cc658abb0475b1f6
+component "06 SANDBOX_BINDING" as n_758e7d19f2c12ba51177a3e9ac74b0e2
+component "07 RUNTIME_IDENTITY" as n_321e61fbae12328ff184877ae2a311cb
+component "08 DISPATCH" as n_bc65fb73bffb05906d3e708e5057c851
+component "09 EXECUTION" as n_f091c591abe894e10a000ba9e13d12fe
+component "10 STATUS" as n_2cb43ae7b4cc09b58117c4c61661cb1e
+component "11 RECONCILIATION" as n_aca126043cf8462185c69ab19a16ec6e
+n_8573382a04d7d60f6640cc60e1853f76 --> n_433161b31c1976ec399fd4faa3c1540d : canonical-flow-order
+n_433161b31c1976ec399fd4faa3c1540d --> n_49b9d38f73dd06c50a7da357214adb32 : canonical-flow-order
+n_49b9d38f73dd06c50a7da357214adb32 --> n_bf2c9f225e053d47eac5b2636c8df7c4 : canonical-flow-order
+n_bf2c9f225e053d47eac5b2636c8df7c4 --> n_d02184c81a493477cc658abb0475b1f6 : canonical-flow-order
+n_d02184c81a493477cc658abb0475b1f6 --> n_758e7d19f2c12ba51177a3e9ac74b0e2 : canonical-flow-order
+n_758e7d19f2c12ba51177a3e9ac74b0e2 --> n_321e61fbae12328ff184877ae2a311cb : canonical-flow-order
+n_321e61fbae12328ff184877ae2a311cb --> n_bc65fb73bffb05906d3e708e5057c851 : canonical-flow-order
+n_bc65fb73bffb05906d3e708e5057c851 --> n_f091c591abe894e10a000ba9e13d12fe : canonical-flow-order
+n_f091c591abe894e10a000ba9e13d12fe --> n_2cb43ae7b4cc09b58117c4c61661cb1e : canonical-flow-order
+n_2cb43ae7b4cc09b58117c4c61661cb1e --> n_aca126043cf8462185c69ab19a16ec6e : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

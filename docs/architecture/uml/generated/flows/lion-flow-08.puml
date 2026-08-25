@@ -1,0 +1,21 @@
+@startuml
+left to right direction
+' flow=FLOW-08
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 MARKET_EVIDENCE" as n_2575ebbdf304ff2ab0baf69e8a521a1b
+component "02 PRODUCT_HYPOTHESIS" as n_731b96898397607a6fe86f3da9349a18
+component "03 EXPERIMENT" as n_759920f3e31679d1d8113b327917f938
+component "04 SMALLEST_BUILD" as n_c9a62cb349540dcccfbce85f2298afb4
+component "05 LOCAL_CANDIDATE" as n_a54f7d044362167ac7d292a7b0ca737c
+component "06 OUTCOME" as n_8d757773fc930668f302862b423f311f
+component "07 STARTUP_STATE_UPDATE" as n_0b1690496b9d43b9e3058d0a715c4bf3
+n_2575ebbdf304ff2ab0baf69e8a521a1b --> n_731b96898397607a6fe86f3da9349a18 : canonical-flow-order
+n_731b96898397607a6fe86f3da9349a18 --> n_759920f3e31679d1d8113b327917f938 : canonical-flow-order
+n_759920f3e31679d1d8113b327917f938 --> n_c9a62cb349540dcccfbce85f2298afb4 : canonical-flow-order
+n_c9a62cb349540dcccfbce85f2298afb4 --> n_a54f7d044362167ac7d292a7b0ca737c : canonical-flow-order
+n_a54f7d044362167ac7d292a7b0ca737c --> n_8d757773fc930668f302862b423f311f : canonical-flow-order
+n_8d757773fc930668f302862b423f311f --> n_0b1690496b9d43b9e3058d0a715c4bf3 : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

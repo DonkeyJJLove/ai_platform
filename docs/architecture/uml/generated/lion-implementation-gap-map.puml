@@ -1,0 +1,30 @@
+@startuml
+top to bottom direction
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+package "IMPLEMENTATION GAP MAP" {
+  component "[T] BeanCandidate\\nTARGET_ONLY\\nexact BeanSpec-to-implementation binding | define BeanCandidate" as n_70bf35a1490866d1e1f7aa6d25391b65
+  component "[T] BeanInstance\\nTARGET_ONLY\\nheterogeneous canonical Bean lifecycle | define BeanInstance after candidate contract" as n_85daa690c9b9fbdcbb7923c13cce320c
+  component "[T] BeanSpec\\nTARGET_ONLY\\ndomain-independent evolvable capability unit | define immutable BeanSpec" as n_673ff1d0f1787bbfcda86a44dde35824
+  component "[T] CompositionContract\\nTARGET_ONLY\\ngeneric Bean composition contract | define CompositionContract" as n_fa1ba152dd043f796512904d17ffb406
+  component "[T] CompositionEngine\\nTARGET_ONLY\\ngeneric capability/authority/epistemic-aware composition engine | implement deterministic composition after contract" as n_60a383bb2a8aa8837aaf0d0fa8c7c91a
+  component "[T] Gap\\nTARGET_ONLY\\ncanonical WORLD/SYSTEM/GOAL difference contract | define Gap contract" as n_94d1eba8a0fa9a42c902d9053dca1516
+  component "[?] GlobalCompleteMediation\\nUNKNOWN\\nrepository/runtime reference implementations do not prove system-wide coverage | enumerate consequential effect surfaces" as n_19136c4963d3b9e307a663eaf9db7073
+  component "[T] GoalContract\\nTARGET_ONLY\\ncanonical domain-independent root goal contract | define GoalContract" as n_9feed197de04eff3a3f8eb299bd8acfa
+  component "[T] SystemSnapshot\\nTARGET_ONLY\\ncanonical machine-readable system-state snapshot | define SystemSnapshot" as n_8645886be6b87a17fc390b387b556a13
+  component "[T] WorldSnapshot\\nTARGET_ONLY\\ncanonical world-state snapshot | define source-bound WorldSnapshot" as n_454e1532eecf729ee7f949ae8df90736
+}
+legend
+Status is explicit text; color is never authoritative.
+[I] IMPLEMENTED
+[P] PARTIALLY_IMPLEMENTED
+[C] CONTRACT_ONLY
+[V] VERIFIED_REFERENCE
+[T] TARGET_ONLY
+[?] UNKNOWN
+[Q] QUARANTINED
+[S] SUPERSEDED
+endlegend
+note bottom
+Gap status is evidence classification only; UNKNOWN remains UNKNOWN until evidence-bound transition.
+end note
+@enduml

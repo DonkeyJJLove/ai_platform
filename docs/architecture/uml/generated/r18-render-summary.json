@@ -1,0 +1,82 @@
+{
+  "architecture_model_digest": "8beb49e1a2c0c79a0325920833900f87eb11d4a6bf0b135ef0dc31e202f59ea7",
+  "artifact_count": 11,
+  "artifacts": [
+    {
+      "artifact_id": "lion-flow-01",
+      "manifest_sha256": "4800ae43139b803742e9b3fc166fad597e6da952d1fb7630cc8d307834261fc5",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-01.svg",
+      "svg_sha256": "96176fed75651d75827d966b5bb9d7fa662fa6385daeafed4d69a3f86c6075ba"
+    },
+    {
+      "artifact_id": "lion-flow-02",
+      "manifest_sha256": "ed246b2d48de3b608bd5a0f4bb1254a5ccd7d3cd36775d6b8a9a85900eea0616",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-02.svg",
+      "svg_sha256": "e07dd232a666d92363b9704d01cf164dc08a9d1c71292e6813cb805cadaf0d46"
+    },
+    {
+      "artifact_id": "lion-flow-03",
+      "manifest_sha256": "ba661f0cfde09d1939e8b7c55afdec1456d62ba0e01be3b46734489c7842d90e",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-03.svg",
+      "svg_sha256": "2ad089f4ad886ee24aaeab5d7add0915a8de04ce3460a5d13e729eb33a20d3e2"
+    },
+    {
+      "artifact_id": "lion-flow-04",
+      "manifest_sha256": "07b85deeea392fab5cb3dd01f69a10dd8ee3348d8ddd1c76e0c02f7048f64772",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-04.svg",
+      "svg_sha256": "7b366a8e7000b809ae48c3522a1deb67ae984ad3ca8624eb46f4538bf9e06233"
+    },
+    {
+      "artifact_id": "lion-flow-05",
+      "manifest_sha256": "b5bc6b6c58a233b0fb6dd16e496619f97bd2b1f7db528d5b39e7963aba5ac618",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-05.svg",
+      "svg_sha256": "70d2b48c86e1ac604ee1ea49fe4d1638da8202f923d36295246b8d099895c03c"
+    },
+    {
+      "artifact_id": "lion-flow-06",
+      "manifest_sha256": "a4fe75de4876a634d93f3060e38f0f5fdfa4a60bb5de24fc9fd44b603ff2e124",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-06.svg",
+      "svg_sha256": "7a466d5b4c12ffbcafd64401b89676d8869db5af6f6db5274018ea22e5fff39b"
+    },
+    {
+      "artifact_id": "lion-flow-07",
+      "manifest_sha256": "2f9357f152721372052e67cfbd3cc2755678e1a94ebafd8a71e97c6ba78ce3cd",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-07.svg",
+      "svg_sha256": "f83eaeff1170e874b7f009e5985f3b1ecba5823cc603d5da8f64d00b47abf6d3"
+    },
+    {
+      "artifact_id": "lion-flow-08",
+      "manifest_sha256": "1c302bf4962f65a30a7f15612ef5968f26626ca8ac9e338966198febfa75d1a6",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-08.svg",
+      "svg_sha256": "cf757902becccc7329d5780818d12271638dbb665bf2bbe8443d7fc4f686277d"
+    },
+    {
+      "artifact_id": "lion-flow-09",
+      "manifest_sha256": "a80fcb6c038d5e5fcaf573fd08118721ebb01c95e4449d737dba4ab69d047dd7",
+      "svg_path": "docs/architecture/uml/generated/flows/lion-flow-09.svg",
+      "svg_sha256": "b6f9102b0c6a04b94475d1971d66662f0c489550f3dce4689116637141d14f6b"
+    },
+    {
+      "artifact_id": "lion-full-architecture",
+      "manifest_sha256": "9ecabc76b63561fd4292c0d3f2542a76d0a723c76ae7d58cd467c2aed6b0ab70",
+      "svg_path": "docs/architecture/uml/generated/lion-full-architecture.svg",
+      "svg_sha256": "3cb139e484d6736819a14fe7d000b80edfa7b7a49c8ce1732e3d59b4c51323b6"
+    },
+    {
+      "artifact_id": "lion-implementation-gap-map",
+      "manifest_sha256": "0fba28f8c749fc08c3f951d7347e277632ceba372394b54e22f72c10336a4d45",
+      "svg_path": "docs/architecture/uml/generated/lion-implementation-gap-map.svg",
+      "svg_sha256": "a455ba323ab1caaee0eb0323208fcf31cefee71ce1ad5beab7ade69dde64811d"
+    }
+  ],
+  "authority_effect": "NONE",
+  "canonical_master": "8323f409a97d38c6d9ded764d9a4c4e901f91407",
+  "canonical_tree": "049d3c36c6bd790fd808e52dd18ce3112aaeb707",
+  "mission": "LION-E005-UML-R18-CONTROLLED-CANONICAL-SVG-RENDER",
+  "render_plan_digest": "bceb5d7c075f8ee8a03de43d6048a9084db4f67decfd219356944e5093b91f96",
+  "renderer_sha256": "89948f14c93756c7a3fb7b69078ff37e8489fd79dd430c582b931e2f65358690",
+  "renderer_version": "1.2026.6",
+  "runtime_effect": "NONE",
+  "verdict": "PASS",
+  "visual_projection_digest": "2ae4274b8245a3360f4248bb281372babe0b20f0b0bb426384b188f68e11c677"
+}

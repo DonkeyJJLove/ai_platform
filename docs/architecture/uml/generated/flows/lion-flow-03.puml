@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+' flow=FLOW-03
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 DETACHED_CANDIDATE" as n_aba0d653cf7da55b7a6838b4a11b56cc
+component "02 INDEPENDENT_VERIFICATION" as n_9947b2edf239bbdeb3cb33f2e11fbd6f
+component "03 AUTHORITY_LOOKUP" as n_510e10b2cb1e1edffd0d5ca447b6023b
+component "04 POLICY_GATE" as n_7e149ecc461353d8baa997e6e12ac7d2
+component "05 CURRENTNESS" as n_593cbe76e42e456e400b9e85ab799734
+component "06 EFFECT_ADMISSION" as n_331bc79e71ee85ad416eadae53125ec0
+component "07 EXACT_EFFECT" as n_48de5446762e42220726e22f7c27bf99
+component "08 OBSERVATION" as n_7d29908eb9ec3e13b320490d7dbab49e
+component "09 RECONCILIATION" as n_7231efb44a193956eafa1afc069b714a
+n_aba0d653cf7da55b7a6838b4a11b56cc --> n_9947b2edf239bbdeb3cb33f2e11fbd6f : canonical-flow-order
+n_9947b2edf239bbdeb3cb33f2e11fbd6f --> n_510e10b2cb1e1edffd0d5ca447b6023b : canonical-flow-order
+n_510e10b2cb1e1edffd0d5ca447b6023b --> n_7e149ecc461353d8baa997e6e12ac7d2 : canonical-flow-order
+n_7e149ecc461353d8baa997e6e12ac7d2 --> n_593cbe76e42e456e400b9e85ab799734 : canonical-flow-order
+n_593cbe76e42e456e400b9e85ab799734 --> n_331bc79e71ee85ad416eadae53125ec0 : canonical-flow-order
+n_331bc79e71ee85ad416eadae53125ec0 --> n_48de5446762e42220726e22f7c27bf99 : canonical-flow-order
+n_48de5446762e42220726e22f7c27bf99 --> n_7d29908eb9ec3e13b320490d7dbab49e : canonical-flow-order
+n_7d29908eb9ec3e13b320490d7dbab49e --> n_7231efb44a193956eafa1afc069b714a : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

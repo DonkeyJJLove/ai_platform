@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+' flow=FLOW-01
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 WORLD" as n_ed3f20c503be941541ce45dc41800682
+component "02 OBSERVATION" as n_b6b8d63c164f6b816f82d24f983e6da0
+component "03 EVIDENCE" as n_e28e9409914f9bff32bb3661c13682d9
+component "04 HYPOTHESIS" as n_2c6df1156cf4c5e06dc8fb50c36e5c32
+component "05 EXPERIMENT" as n_d4b1f979e3480465b9e12d432c7ad01a
+component "06 FALSIFICATION" as n_a5f434e441ba4e55300d78e7c4f3c901
+component "07 PROMOTION" as n_126ad0559a049216f0ef5fb6bfb5ba05
+component "08 MEMORY" as n_cd1e049c127e0438fb7cbe844f8d9463
+component "09 EVOLUTION_DELTA" as n_99228cbee5cee7ff8807fcca47d4230b
+n_ed3f20c503be941541ce45dc41800682 --> n_b6b8d63c164f6b816f82d24f983e6da0 : canonical-flow-order
+n_b6b8d63c164f6b816f82d24f983e6da0 --> n_e28e9409914f9bff32bb3661c13682d9 : canonical-flow-order
+n_e28e9409914f9bff32bb3661c13682d9 --> n_2c6df1156cf4c5e06dc8fb50c36e5c32 : canonical-flow-order
+n_2c6df1156cf4c5e06dc8fb50c36e5c32 --> n_d4b1f979e3480465b9e12d432c7ad01a : canonical-flow-order
+n_d4b1f979e3480465b9e12d432c7ad01a --> n_a5f434e441ba4e55300d78e7c4f3c901 : canonical-flow-order
+n_a5f434e441ba4e55300d78e7c4f3c901 --> n_126ad0559a049216f0ef5fb6bfb5ba05 : canonical-flow-order
+n_126ad0559a049216f0ef5fb6bfb5ba05 --> n_cd1e049c127e0438fb7cbe844f8d9463 : canonical-flow-order
+n_cd1e049c127e0438fb7cbe844f8d9463 --> n_99228cbee5cee7ff8807fcca47d4230b : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

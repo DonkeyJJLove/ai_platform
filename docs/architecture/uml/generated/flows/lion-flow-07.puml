@@ -1,0 +1,21 @@
+@startuml
+left to right direction
+' flow=FLOW-07
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 SOURCE_TREE" as n_9d7032a5e2b2a3ef2b58f930f2f92214
+component "02 STATIC_CODE_PERCEPTION" as n_3ee27a5d39e4ebf28b71443924c9fd1c
+component "03 SYMBOL_GRAPH" as n_967746e34b4059ac18dcead00612f5e9
+component "04 ARCHITECTURE_PROJECTION" as n_5317aa3a9cd34c47bc1a69eafc0198c6
+component "05 CANONICAL_DIAGRAM_MODEL" as n_4d3de26e634705de7bb70c3cb8c119b7
+component "06 PUML" as n_f085dec602d6e6b9e0041e7bde944c3b
+component "07 OPTIONAL_RENDERED_ARTIFACT" as n_5275003b9870142c9077e9344b57fea9
+n_9d7032a5e2b2a3ef2b58f930f2f92214 --> n_3ee27a5d39e4ebf28b71443924c9fd1c : canonical-flow-order
+n_3ee27a5d39e4ebf28b71443924c9fd1c --> n_967746e34b4059ac18dcead00612f5e9 : canonical-flow-order
+n_967746e34b4059ac18dcead00612f5e9 --> n_5317aa3a9cd34c47bc1a69eafc0198c6 : canonical-flow-order
+n_5317aa3a9cd34c47bc1a69eafc0198c6 --> n_4d3de26e634705de7bb70c3cb8c119b7 : canonical-flow-order
+n_4d3de26e634705de7bb70c3cb8c119b7 --> n_f085dec602d6e6b9e0041e7bde944c3b : canonical-flow-order
+n_f085dec602d6e6b9e0041e7bde944c3b --> n_5275003b9870142c9077e9344b57fea9 : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

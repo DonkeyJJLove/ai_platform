@@ -1,0 +1,65 @@
+@startuml
+top to bottom direction
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+' architecture_model_digest=8beb49e1a2c0c79a0325920833900f87eb11d4a6bf0b135ef0dc31e202f59ea7
+package "01 WORLD_AND_GOALS" as n_1d8bdc7dcfa03e316c575c63fa8b0bc4 {
+  component "[P] System context and target boundary\\nPARTIALLY_IMPLEMENTED\\ncyber_lion/TARGET_ARCHITECTURE.md" as v_d5b65de151f37f8185976753c272908d
+  component "[T] Target Bean Factory\\nTARGET_ONLY\\ncyber_lion/TARGET_ARCHITECTURE.md#bean-factory" as v_e1d090ed0176ed21154011aec05a07ed
+}
+package "02 EVIDENCE_AND_REASONING" as n_fd5062a896bba43a5f02f1dc03969bb7 {
+  component "[V] Evidence and epistemic R&D\\nVERIFIED_REFERENCE\\ncyber_lion/contracts/evolutionary_rnd.py" as v_a044c01264e026861f7f8360545ff5dc
+  component "[V] Deterministic code perception\\nVERIFIED_REFERENCE\\ncyber_lion/enterprise/code_perception.py" as v_c64378184fb9c4b5967cc81321f4f845
+}
+package "03 EVOLUTION" as n_e54003af96b10eb34be8fdcbd163405d {
+  component "[V] Evolutionary epoch\\nVERIFIED_REFERENCE\\ncyber_lion/enterprise/evolutionary_epoch.py" as v_88fbf0812ae89d0743300eafe7dfe10d
+  component "[I] Startup Evolution Agent\\nIMPLEMENTED\\ncyber_lion/startup_agent/orchestrator.py" as v_e0241b3a8e6ceeab2cb496ed0d7b5f31
+}
+package "04 ORGANIZATION_AND_FLEET" as n_5ef716573332bf1aa96c35cd249bb219 {
+  component "[P] Fleet and swarm organization\\nPARTIALLY_IMPLEMENTED\\ncyber_lion/enterprise/models.py" as v_a262824dbcff3dc8e4ad793c2d17ab95
+}
+package "05 AUTHORITY_AND_GOVERNANCE" as n_f9d02c858c4a6091ba0a09abc9053a08 {
+  component "[V] Constitution and governance\\nVERIFIED_REFERENCE\\ncyber_lion/enterprise/policy_gate.py" as v_4b6c62938a15e8a90815cf748cf6224d
+  component "[V] Authority and effect boundary\\nVERIFIED_REFERENCE\\ncyber_lion/enterprise/policy_gate.py" as v_ee75e5d6d4de3676ce817dd55da75a4c
+}
+package "06 BUILD_AND_IMPLEMENTATION" as n_dad9ff75eba9b27fb30204b7376ffa90 {
+  component "[V] Canonical architecture projection\\nVERIFIED_REFERENCE\\ncyber_lion/architecture_projection/extractor.py" as v_67c0bc5e4b323db372fdf3eae16808ec
+  component "[V] Repository mutation reference path\\nVERIFIED_REFERENCE\\ncyber_lion/enterprise/repository_mutation_pep.py" as v_72f03e5e16048a0590fc9990fd0bdd99
+  component "[V] Governed self-implementation\\nVERIFIED_REFERENCE\\ncyber_lion/contracts/governed_change_proposal.py" as v_a27a7844871f0661c136594587240964
+}
+package "07 TRUSTED_RUNTIME" as n_13e9bcbaf756ab52cae6df48f4f88046 {
+  component "[P] Trusted runtime enforcement\\nPARTIALLY_IMPLEMENTED\\ncyber_lion/enterprise/runtime_enforcement.py" as v_b36cba56090ba220281507198f6de252
+  component "[Q] F005 runtime plane\\nQUARANTINED\\n.lion/runtime/f005-runtime-plane-state.json" as v_bfef4736345ca91494e67933f2f645e1
+}
+package "08 EFFECT" as n_db08c34f904a5fd43702a8dbb55340f2 {
+}
+package "09 OBSERVATION_AND_RECONCILIATION" as n_c55d0b89e3f10a7a9412f96a2c424a37 {
+  component "[V] Observability and reconciliation\\nVERIFIED_REFERENCE\\ncyber_lion/enterprise/runtime_reconciliation.py" as v_906f2cd0b85174a1a4c558f9842c83c7
+}
+package "IMPLEMENTATION GAP OVERLAY" {
+  component "[T] BeanCandidate\\nTARGET_ONLY\\nexact BeanSpec-to-implementation binding | define BeanCandidate" as n_70bf35a1490866d1e1f7aa6d25391b65
+  component "[T] BeanInstance\\nTARGET_ONLY\\nheterogeneous canonical Bean lifecycle | define BeanInstance after candidate contract" as n_85daa690c9b9fbdcbb7923c13cce320c
+  component "[T] BeanSpec\\nTARGET_ONLY\\ndomain-independent evolvable capability unit | define immutable BeanSpec" as n_673ff1d0f1787bbfcda86a44dde35824
+  component "[T] CompositionContract\\nTARGET_ONLY\\ngeneric Bean composition contract | define CompositionContract" as n_fa1ba152dd043f796512904d17ffb406
+  component "[T] CompositionEngine\\nTARGET_ONLY\\ngeneric capability/authority/epistemic-aware composition engine | implement deterministic composition after contract" as n_60a383bb2a8aa8837aaf0d0fa8c7c91a
+  component "[T] Gap\\nTARGET_ONLY\\ncanonical WORLD/SYSTEM/GOAL difference contract | define Gap contract" as n_94d1eba8a0fa9a42c902d9053dca1516
+  component "[?] GlobalCompleteMediation\\nUNKNOWN\\nrepository/runtime reference implementations do not prove system-wide coverage | enumerate consequential effect surfaces" as n_19136c4963d3b9e307a663eaf9db7073
+  component "[T] GoalContract\\nTARGET_ONLY\\ncanonical domain-independent root goal contract | define GoalContract" as n_9feed197de04eff3a3f8eb299bd8acfa
+  component "[T] SystemSnapshot\\nTARGET_ONLY\\ncanonical machine-readable system-state snapshot | define SystemSnapshot" as n_8645886be6b87a17fc390b387b556a13
+  component "[T] WorldSnapshot\\nTARGET_ONLY\\ncanonical world-state snapshot | define source-bound WorldSnapshot" as n_454e1532eecf729ee7f949ae8df90736
+}
+legend
+Status is explicit text; color is never authoritative.
+[I] IMPLEMENTED
+[P] PARTIALLY_IMPLEMENTED
+[C] CONTRACT_ONLY
+[V] VERIFIED_REFERENCE
+[T] TARGET_ONLY
+[?] UNKNOWN
+[Q] QUARANTINED
+[S] SUPERSEDED
+endlegend
+note bottom
+Derived projection only; no runtime proof, authority, or permission is created.
+AS-IS and TARGET are evidence statuses over one canonical model.
+end note
+@enduml

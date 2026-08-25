@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+' flow=FLOW-02
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 EVOLUTION_DELTA" as n_e5b2502e8ca6a546dad1f466e9a3a87b
+component "02 GOVERNED_CHANGE_PROPOSAL" as n_fb65444b23f4cee8d61d48ef2c8ba2f6
+component "03 BUILD_AUTHORIZATION" as n_2dac271df4f75579300df40cd2b840ab
+component "04 BUILDER_ENTRY" as n_b2416ffa6abaf1fd481c4782cc6b0282
+component "05 BUILDER_INVOCATION" as n_2cd8105a9dfe5aa0742aa92c2abf2e82
+component "06 INVOCATION_CONSUMPTION" as n_3c99e69c7edbb6a8c96fc2cd1cfda820
+component "07 START_ADMISSION" as n_6c96c72d18e4710fc8e9a3791654453e
+component "08 PROCESS_LAUNCH" as n_57517c5a8c50acc88b29f4d8998348ea
+component "09 DETACHED_CANDIDATE" as n_f1e2323960b4d7184c310cd110382ce5
+n_e5b2502e8ca6a546dad1f466e9a3a87b --> n_fb65444b23f4cee8d61d48ef2c8ba2f6 : canonical-flow-order
+n_fb65444b23f4cee8d61d48ef2c8ba2f6 --> n_2dac271df4f75579300df40cd2b840ab : canonical-flow-order
+n_2dac271df4f75579300df40cd2b840ab --> n_b2416ffa6abaf1fd481c4782cc6b0282 : canonical-flow-order
+n_b2416ffa6abaf1fd481c4782cc6b0282 --> n_2cd8105a9dfe5aa0742aa92c2abf2e82 : canonical-flow-order
+n_2cd8105a9dfe5aa0742aa92c2abf2e82 --> n_3c99e69c7edbb6a8c96fc2cd1cfda820 : canonical-flow-order
+n_3c99e69c7edbb6a8c96fc2cd1cfda820 --> n_6c96c72d18e4710fc8e9a3791654453e : canonical-flow-order
+n_6c96c72d18e4710fc8e9a3791654453e --> n_57517c5a8c50acc88b29f4d8998348ea : canonical-flow-order
+n_57517c5a8c50acc88b29f4d8998348ea --> n_f1e2323960b4d7184c310cd110382ce5 : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml

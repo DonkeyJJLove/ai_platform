@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+' flow=FLOW-09
+' source_tree=049d3c36c6bd790fd808e52dd18ce3112aaeb707
+component "01 GOAL" as n_d0bcbf9fa0cbd4bf7d8328a4035790aa
+component "02 WORLD_STATE" as n_2a65d5374e664a7aa4ff7fc1d3214ddc
+component "03 SYSTEM_STATE" as n_b28445ddc1c49f9105a559ba64a037c8
+component "04 GAP" as n_22604173e1ad45855a1ef71a496e303a
+component "05 REQUIRED_CAPABILITY" as n_abd8f8771db8f2b8adbac12b6e9b9e8b
+component "06 EXISTING_CAPABILITY_OR_NEW_BEAN" as n_db2fe7af7d236b2f1eb960f33725500e
+component "07 COMPOSITION" as n_54773f8193317fa87127c0017a9f9103
+component "08 MOSAIC" as n_2c109366056c064dba6abd6050bd9b1e
+component "09 GOVERNED_EFFECT" as n_41eba43a18a18e5d279379f8f97e079a
+component "10 RECONCILED_OUTCOME" as n_dd3dca55456e91faf5a4ffacdc828a84
+n_d0bcbf9fa0cbd4bf7d8328a4035790aa --> n_2a65d5374e664a7aa4ff7fc1d3214ddc : canonical-flow-order
+n_2a65d5374e664a7aa4ff7fc1d3214ddc --> n_b28445ddc1c49f9105a559ba64a037c8 : canonical-flow-order
+n_b28445ddc1c49f9105a559ba64a037c8 --> n_22604173e1ad45855a1ef71a496e303a : canonical-flow-order
+n_22604173e1ad45855a1ef71a496e303a --> n_abd8f8771db8f2b8adbac12b6e9b9e8b : canonical-flow-order
+n_abd8f8771db8f2b8adbac12b6e9b9e8b --> n_db2fe7af7d236b2f1eb960f33725500e : canonical-flow-order
+n_db2fe7af7d236b2f1eb960f33725500e --> n_54773f8193317fa87127c0017a9f9103 : canonical-flow-order
+n_54773f8193317fa87127c0017a9f9103 --> n_2c109366056c064dba6abd6050bd9b1e : canonical-flow-order
+n_2c109366056c064dba6abd6050bd9b1e --> n_41eba43a18a18e5d279379f8f97e079a : canonical-flow-order
+n_41eba43a18a18e5d279379f8f97e079a --> n_dd3dca55456e91faf5a4ffacdc828a84 : canonical-flow-order
+note bottom
+Derived code-flow projection; sequence is canonical model structure, not runtime proof.
+end note
+@enduml
