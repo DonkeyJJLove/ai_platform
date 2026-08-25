@@ -24,10 +24,17 @@ class RepositoryMaintenanceWorkflowTests(unittest.TestCase):
         self.assertIn("contents: write", self.workflow)
         self.assertIn("pull-requests: read", self.workflow)
         self.assertIn("issues: write", self.workflow)
-        self.assertIn("LION-REPOSITORY-MAINTENANCE-CONTROL-FAILURE v1", self.workflow)
-        self.assertIn("LION-REPOSITORY-MAINTENANCE-OBSERVATION-RECEIPT v1", self.workflow)
-        self.assertIn("authority_effect=false", self.workflow)
-        self.assertIn("master_effect=false", self.workflow)
+        self.assertEqual(
+            self.workflow.count("python -m cyber_lion.enterprise.repository_maintenance_receipt"),
+            2,
+        )
+        self.assertIn("--kind failure", self.workflow)
+        self.assertIn("--kind observation", self.workflow)
+        self.assertIn("--event \"$GITHUB_EVENT_PATH\"", self.workflow)
+        self.assertIn("--checked-out-sha \"$GITHUB_SHA\"", self.workflow)
+        self.assertNotIn("urllib.request", self.workflow)
+        self.assertNotIn("urlopen", self.workflow)
+        self.assertNotIn("method='POST'", self.workflow)
 
     def test_execution_is_fixed_module_not_arbitrary_shell_input(self):
         self.assertIn(
