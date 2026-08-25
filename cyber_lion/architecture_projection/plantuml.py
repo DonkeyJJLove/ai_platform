@@ -8,7 +8,9 @@ import tempfile
 from .model import CanonicalDiagramModel
 
 _VERSION_RE = re.compile(r"^[0-9]+(?:\.[0-9]+){2,3}$")
-_VERSION_TOKEN_RE = re.compile(r"(?m)^PlantUML version ([0-9]+(?:\.[0-9]+){2,3})\s*$")
+_VERSION_TOKEN_RE = re.compile(
+    r"(?m)^PlantUML version ([0-9]+(?:\.[0-9]+){2,3})(?:\s*/[^\r\n]*)?\s*$"
+)
 _FORBIDDEN_LABEL_FRAGMENTS = ("!include", "!includeurl", "!pragma", "@startuml", "@enduml", "skinparam")
 
 
