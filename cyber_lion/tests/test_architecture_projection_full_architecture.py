@@ -2,7 +2,11 @@ import subprocess
 import unittest
 from pathlib import Path
 
-from cyber_lion.architecture_projection.full_architecture import build_full_architecture_model
+from cyber_lion.architecture_projection.extractor import ArchitectureProjectionExtractor
+from cyber_lion.architecture_projection.full_architecture import (
+    _require_source_symbol,
+    build_full_architecture_model,
+)
 
 
 def observed_tree(repo_root: Path) -> str:
@@ -43,9 +47,21 @@ class FullArchitectureProjectionTests(unittest.TestCase):
             if element.status.status == "TARGET_ONLY":
                 self.assertTrue(element.target_ref)
                 self.assertFalse(element.status.source_digest)
+                self.assertFalse(element.source_path)
+                self.assertFalse(element.symbol)
             else:
                 self.assertTrue(element.source_path)
+                self.assertTrue(element.symbol)
                 self.assertEqual(len(element.status.source_digest), 64)
+
+    def test_nonexistent_source_symbol_fails_closed(self):
+        extractor = ArchitectureProjectionExtractor(source_tree_sha="a" * 40, source_files={})
+        text = "class RealSymbol:\n    pass\n"
+        with self.assertRaisesRegex(ValueError, "source symbol missing"):
+            _require_source_symbol(extractor, path="real.py", symbol="MissingSymbol", text=text)
+        _require_source_symbol(extractor, path="real.py", symbol="RealSymbol", text=text)
+        with self.assertRaisesRegex(ValueError, "source contract missing"):
+            _require_source_symbol(extractor, path="contract.md", symbol="MissingContract", text="KNOWN_CONTRACT\n")
 
     def test_model_remains_derived_non_authoritative(self):
         repo_root = Path(__file__).resolve().parents[2]
