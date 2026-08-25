@@ -77,6 +77,28 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
             return {"pr_bootstrap","authority_lineage","builder_subject","builder_process_runtime_provider"}.issubset(names)
         except Exception:return False
 
+class PinnedBuilderProcessRuntimeProviderSource:
+    """Exact runtime-provider resolver backed by trusted control-plane records."""
+    def __init__(self,store:SQLiteTrustedControlPlaneStore):
+        if type(store) is not SQLiteTrustedControlPlaneStore or store.ready() is not True: raise TrustedControlPlaneProviderError("trusted runtime provider store unavailable")
+        self._store=store
+    def resolve_exact(self,*,provider_id:str,process_profile_digest:str,launch_policy_digest:str):
+        from cyber_lion.contracts.builder_process_launch import BuilderProcessRuntimeProviderDescriptor, PROVIDER_CAPABILITY_CLASS
+        rows=self._store.lookup_builder_process_runtime_provider_exact(provider_id=provider_id,process_profile_digest=process_profile_digest,launch_policy_digest=launch_policy_digest,capability_class=PROVIDER_CAPABILITY_CLASS)
+        if len(rows)!=1: raise TrustedControlPlaneProviderError("runtime provider record missing or ambiguous")
+        record=rows[0]
+        if record.get("record_kind")!="builder-process-runtime-provider": raise TrustedControlPlaneProviderError("runtime provider record kind invalid")
+        payload=record.get("provider")
+        if not isinstance(payload,Mapping): raise TrustedControlPlaneProviderError("runtime provider payload invalid")
+        try: descriptor=BuilderProcessRuntimeProviderDescriptor(**dict(payload)).validate()
+        except Exception as exc: raise TrustedControlPlaneProviderError("runtime provider descriptor invalid") from exc
+        if not descriptor.descriptor_digest or descriptor.descriptor_digest!=descriptor.compute_digest(): raise TrustedControlPlaneProviderError("runtime provider descriptor must be sealed")
+        lookup=record.get("lookup_key")
+        expected={"provider_id":provider_id,"process_profile_digest":process_profile_digest,"launch_policy_digest":launch_policy_digest,"capability_class":PROVIDER_CAPABILITY_CLASS}
+        if not isinstance(lookup,Mapping) or dict(lookup)!=expected: raise TrustedControlPlaneProviderError("runtime provider lookup binding mismatch")
+        if (descriptor.provider_id,descriptor.supported_process_profile_digest,descriptor.supported_launch_policy_digest,descriptor.capability_class)!=(provider_id,process_profile_digest,launch_policy_digest,PROVIDER_CAPABILITY_CLASS): raise TrustedControlPlaneProviderError("runtime provider semantic binding mismatch")
+        return descriptor
+
 class TrustedSignatureVerifierAdapter(TrustedSignatureVerifier):
     def __init__(self,verifier:Callable[[bytes,str,str,str],bool],*,ready:Callable[[],bool]|None=None):
         if not callable(verifier): raise TrustedControlPlaneProviderError("verifier must be callable")
