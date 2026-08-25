@@ -222,7 +222,7 @@ class ArchitectureProjectionExtractor:
                 ("cyber_lion/enterprise/persistent_authority_state.py", "builder_process_launch_receipt", "builder_process_launch_receipt"),
             )),
             "fleet-topology": ("deployment", "FLEET_MEMBERSHIP", (
-                ("cyber_lion/enterprise/swarm_governor.py", "SwarmGovernor", "SwarmGovernor"),
+                ("cyber_lion/enterprise/swarm_governor.py", "SwarmGovernorLeaseStore", "SwarmGovernorLeaseStore"),
                 ("cyber_lion/contracts/swarm_governance.py", "SwarmFormation", "SwarmFormation"),
                 ("cyber_lion/contracts/swarm_governance.py", "RoleAssignment", "RoleAssignment"),
                 ("cyber_lion/contracts/swarm_governance.py", "VERIFIER_ROLE", "VERIFIER"),
@@ -242,7 +242,7 @@ class ArchitectureProjectionExtractor:
             "repository-mutation-boundaries": ("component", "SOURCE_PROVENANCE", (
                 ("cyber_lion/contracts/repository_mutation.py", "DetachedRepositoryCandidate", "DetachedRepositoryCandidate"),
                 ("cyber_lion/enterprise/repository_mutation_pep.py", "RepositoryMutationPEP", "RepositoryMutationPEP"),
-                ("cyber_lion/enterprise/repository_mutation_state.py", "RepositoryMutationState", "RepositoryMutationState"),
+                ("cyber_lion/enterprise/repository_mutation_state.py", "RepositoryAttachJournal", "RepositoryAttachJournal"),
             )),
             "event-and-causality-map": ("component", "EVENT_CAUSALITY", (
                 ("cyber_lion/contracts/events.py", "EventEnvelope", "EventEnvelope"),
@@ -259,7 +259,7 @@ class ArchitectureProjectionExtractor:
             "lion-system-component-map": ("component", "CONTAINS", (
                 ("cyber_lion/contracts/builder_process_launch.py", "contracts", "BuilderProcessLaunchRequest"),
                 ("cyber_lion/enterprise/builder_process_launch.py", "enterprise", "BuilderProcessLaunchBoundary"),
-                ("cyber_lion/enterprise/swarm_governor.py", "fleet", "SwarmGovernor"),
+                ("cyber_lion/enterprise/swarm_governor.py", "fleet", "SwarmGovernorLeaseStore"),
                 ("cyber_lion/startup_agent/orchestrator.py", "startup_agent", "AIDrivenStartupAgent"),
                 ("cyber_lion/enterprise/evolutionary_epoch.py", "evolutionary_epoch", "EvolutionaryEpochEngine"),
             )),
