@@ -11,6 +11,10 @@ from cyber_lion.startup_agent.models import StartupModelError
 
 VALID = {
     "startup_id": "s1",
+    "output_gate_event_id": "test:cli:output-gate",
+    "output_gate_nonce": "output-nonce",
+    "journal_gate_event_id": "test:cli:journal-gate",
+    "journal_gate_nonce": "journal-nonce",
     "hypotheses": [
         {
             "hypothesis_id": "h1",
@@ -93,6 +97,23 @@ class StartupCliTests(unittest.TestCase):
             self.assertTrue(journal_path.exists())
             result = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(result["startup_id"], "s1")
+
+    def test_output_without_gate_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = json.loads(json.dumps(VALID))
+            data.pop("output_gate_event_id")
+            input_path = Path(tmp) / "input.json"
+            output_path = Path(tmp) / "output.json"
+            input_path.write_text(json.dumps(data), encoding="utf-8")
+            self.assertEqual(main([str(input_path), "--output", str(output_path)]), 2)
+            self.assertFalse(output_path.exists())
+
+    def test_journal_without_gate_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = json.loads(json.dumps(VALID))
+            data.pop("journal_gate_event_id")
+            with self.assertRaises(StartupModelError):
+                run_cycle(data, journal_path=str(Path(tmp) / "journal.jsonl"))
 
     def test_build_local_runs_only_with_explicit_effect_gate(self):
         result = run_cycle(BUILD_LOCAL, build_local=True)
