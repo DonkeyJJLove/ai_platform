@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .extractor import ArchitectureProjectionExtractor
 from .flows import ARCHITECTURE_LAYERS, canonical_flows
@@ -33,9 +33,13 @@ class ArchitectureElement:
         if self.status.status == "TARGET_ONLY":
             if not self.target_ref:
                 raise ValueError("TARGET_ONLY element requires target_ref")
+            if self.source_path or self.symbol:
+                raise ValueError("TARGET_ONLY element cannot claim source implementation")
         else:
             if not self.source_path:
                 raise ValueError("implemented/observed architecture element requires source_path")
+            if not self.symbol.strip():
+                raise ValueError("implemented/observed architecture element requires source symbol or contract")
             if not self.status.source_digest:
                 raise ValueError("implemented/observed architecture element requires source digest")
         return self
@@ -104,11 +108,23 @@ def _sha256_text(text: str) -> str:
     return sha256(text.encode("utf-8")).hexdigest()
 
 
+def _require_source_symbol(extractor: ArchitectureProjectionExtractor, *, path: str, symbol: str, text: str) -> None:
+    if not symbol.strip():
+        raise ValueError("architecture source symbol or contract is required")
+    if PurePosixPath(path).suffix == ".py":
+        if symbol not in extractor._symbol_names(text, path):
+            raise ValueError(f"architecture source symbol missing: {path}:{symbol}")
+        return
+    if symbol not in text:
+        raise ValueError(f"architecture source contract missing: {path}:{symbol}")
+
+
 def build_full_architecture_model(*, source_tree_sha: str, source_root: str | Path | None = None) -> FullArchitectureModel:
     extractor = ArchitectureProjectionExtractor(source_tree_sha=source_tree_sha, source_root=source_root)
     elements: list[ArchitectureElement] = []
     for element_id, layer, label, status, path, symbol, evidence_class in _ELEMENT_SPECS:
         text = extractor._source(path)
+        _require_source_symbol(extractor, path=path, symbol=symbol, text=text)
         if path.endswith("f005-runtime-plane-state.json"):
             state = json.loads(text)
             if state.get("state") != "QUARANTINED" or state.get("effect_authority") != "DENY":
