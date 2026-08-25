@@ -61,7 +61,10 @@ class BuilderEntryPermitEngine:
     """Issue one entry permit; never consume it or start a builder."""
     def __init__(self,*,live_authority:LiveResourceAuthorityAdmission,baseline_source:TrustedRepositoryBaselineSource,f005_state_source:F005StateSource,builder_source:TrustedBuilderSubjectSource,replay_guard:BuilderEntryReplayGuard):
         if type(live_authority) is not LiveResourceAuthorityAdmission: raise BuilderEntryPermitError("live authority admission required")
-        for o,m in ((baseline_source,"current"),(f005_state_source,"current"),(builder_source,"resolve_exact"),(replay_guard,"consume")):
+        if not isinstance(builder_source,TrustedBuilderSubjectSource): raise BuilderEntryPermitError("exact trusted builder source boundary required")
+        if getattr(builder_source,"source_kind",None)!="trusted-control-plane": raise BuilderEntryPermitError("untrusted builder source")
+        if type(builder_source).resolve_exact is not TrustedBuilderSubjectSource.resolve_exact: raise BuilderEntryPermitError("trusted builder resolver override denied")
+        for o,m in ((baseline_source,"current"),(f005_state_source,"current"),(replay_guard,"consume")):
             if not callable(getattr(o,m,None)): raise BuilderEntryPermitError("builder entry dependency unavailable")
         self._live=live_authority; self._baseline=baseline_source; self._f005=f005_state_source; self._builders=builder_source; self._replay=replay_guard
 
@@ -86,6 +89,17 @@ class BuilderEntryPermitEngine:
     def _f005_ok(v:Mapping[str,Any])->None:
         if not isinstance(v,Mapping) or v.get("state")!="QUARANTINED" or v.get("effect_authority")!="DENY": raise BuilderEntryPermitError("F005 quarantine invariant failed")
 
+    @staticmethod
+    def _trusted_subject(v:object,*,builder_subject_id:str,builder_instance_id:str,repository:str,candidate_scope:tuple[str,...],resource_scope:tuple[str,...])->TrustedBuilderSubject:
+        if type(v) is not TrustedBuilderSubject: raise BuilderEntryPermitError("trusted builder subject type invalid")
+        try: v.validate()
+        except Exception as e: raise BuilderEntryPermitError("trusted builder subject invalid") from e
+        if not v.subject_digest or v.subject_digest!=v.compute_digest(): raise BuilderEntryPermitError("trusted builder subject must be sealed")
+        expected=(builder_subject_id,builder_instance_id,repository,candidate_scope,resource_scope,BUILDER_CAPABILITY_CLASS,"ADMITTED","trusted-control-plane")
+        actual=(v.builder_subject_id,v.builder_instance_id,v.repository,v.candidate_scope,v.resource_scope,v.capability_class,v.state,v.source_kind)
+        if actual!=expected: raise BuilderEntryPermitError("trusted builder subject request binding mismatch")
+        return v
+
     def issue_permit(self,*,source_permit:BuildAuthorizationConsumptionPermit,admitted_authority:LiveAdmittedResourceAuthority,builder_subject_id:str,builder_instance_id:str,trusted_now:datetime)->BuilderEntryPermit:
         p=self._permit(source_permit); admitted=self._live_receipt(admitted_authority)
         if not isinstance(trusted_now,datetime) or trusted_now.tzinfo is None: raise BuilderEntryPermitError("trusted_now must be timezone-aware")
@@ -107,8 +121,8 @@ class BuilderEntryPermitEngine:
 
         self._f005_ok(self._f005.current())
         subject=self._builders.resolve_exact(builder_subject_id=builder_subject_id,builder_instance_id=builder_instance_id,repository=p.repository,candidate_scope=p.candidate_scope,resource_scope=p.resource_scope)
+        subject=self._trusted_subject(subject,builder_subject_id=builder_subject_id,builder_instance_id=builder_instance_id,repository=p.repository,candidate_scope=p.candidate_scope,resource_scope=p.resource_scope)
         if now < _utc(subject.valid_from,"builder valid_from") or now >= _utc(subject.expires_at,"builder expires_at"): raise BuilderEntryPermitError("builder subject outside validity window")
-        if subject.state!="ADMITTED" or subject.source_kind!="trusted-control-plane" or subject.capability_class!=BUILDER_CAPABILITY_CLASS: raise BuilderEntryPermitError("builder subject not admitted")
 
         current_baseline_digest=current.digest(); current_authority_digest=authority.digest()
         kwargs=dict(source_consumption_permit_id=p.consumption_permit_id,source_consumption_permit_digest=p.consumption_permit_digest,source_consumption_replay_digest=p.consumption_replay_digest,repository=p.repository,baseline_master_sha=p.baseline_master_sha,baseline_master_tree_sha=p.baseline_master_tree_sha,current_baseline_digest=current_baseline_digest,action="BUILD_CANDIDATE",candidate_scope=p.candidate_scope,resource_scope=p.resource_scope,authority_epoch=p.authority_epoch,authority_state_version=p.authority_state_version,root_grant_id=p.root_grant_id,root_grant_digest=p.root_grant_digest,current_authority_digest=current_authority_digest,builder_subject_id=subject.builder_subject_id,builder_instance_id=subject.builder_instance_id,builder_capability_class=subject.capability_class,builder_identity_digest=subject.identity_digest,builder_implementation_digest=subject.implementation_digest,builder_attestation_digest=subject.attestation_digest)
