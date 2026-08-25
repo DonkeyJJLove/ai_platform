@@ -10,6 +10,7 @@ import ipaddress
 import json
 import os
 import re
+import secrets
 from typing import Any, Protocol
 import urllib.error
 import urllib.parse
@@ -38,6 +39,8 @@ _EFFECT_METHODS = frozenset({"execute", "write", "push", "merge", "deploy", "rel
 _SCOPE_DIGEST_DOMAIN = b"LION/E004-BUILDER-SCOPE-LOOKUP/1\0"
 _CLIENT_CONFIG_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-CONFIG/1\0"
 _CLIENT_CREDENTIAL_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-CREDENTIAL/1\0"
+_CLIENT_ANCHOR_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-ANCHOR/1\0"
+_CLIENT_PROCESS_ANCHOR_KEY = secrets.token_bytes(32)
 PINNED_BUILDER_BACKEND_IDENTITY = "lion.trusted-control-plane.http-read/v1"
 PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST = sha256(b"LION/E004-TRUSTED-CONTROL-PLANE-SERVICE-BUILDER-SOURCE/1").hexdigest()
 _PROVIDER_VERSION = "1.0.0"
@@ -119,14 +122,39 @@ def _credential_digest(credential: str) -> str:
     return sha256(_CLIENT_CREDENTIAL_DOMAIN + credential.encode("ascii")).hexdigest()
 
 
-def _client_configuration_digest(*, provider_version: str, endpoint: str, credential_env: str, credential: str) -> str:
+def _observe_process_configuration() -> tuple[str, str, str, str, str]:
+    """Observe and validate process configuration; values are request-local only."""
+    provider_version = _required_env("CYBER_LION_CP_PROVIDER_VERSION", limit=64)
+    if provider_version != _PROVIDER_VERSION:
+        raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
+    endpoint = _required_env("CYBER_LION_CP_ENDPOINT", limit=2048).rstrip("/")
+    parsed = urllib.parse.urlsplit(endpoint)
+    if not parsed.netloc or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise BuilderEntryPermitError("trusted control-plane endpoint invalid")
+    if parsed.scheme != "https":
+        local_mode = os.environ.get("CYBER_LION_CP_ALLOW_LOCAL_HTTP") == "1"
+        if parsed.scheme != "http" or not _is_loopback_host(parsed.hostname) or not local_mode:
+            raise BuilderEntryPermitError("trusted control-plane endpoint must use https")
+    credential_env = _required_env("CYBER_LION_CP_CREDENTIAL_ENV", limit=256)
+    if not _ENV_REF_RE.fullmatch(credential_env):
+        raise BuilderEntryPermitError("trusted control-plane credential reference invalid")
+    credential = _required_env(credential_env, limit=16384)
+    if not credential.isascii():
+        raise BuilderEntryPermitError("trusted control-plane credential invalid")
     payload = {
         "provider_version": provider_version,
         "endpoint": endpoint,
         "credential_env": credential_env,
         "credential_digest": _credential_digest(credential),
     }
-    return sha256(_CLIENT_CONFIG_DOMAIN + _canonical_json(payload)).hexdigest()
+    digest = sha256(_CLIENT_CONFIG_DOMAIN + _canonical_json(payload)).hexdigest()
+    return provider_version, endpoint, credential_env, credential, digest
+
+
+def _anchor_configuration_digest(configuration_digest: str) -> str:
+    if not isinstance(configuration_digest, str) or len(configuration_digest) != 64:
+        raise BuilderEntryPermitError("trusted control-plane configuration digest invalid")
+    return hmac.new(_CLIENT_PROCESS_ANCHOR_KEY, _CLIENT_ANCHOR_DOMAIN + configuration_digest.encode("ascii"), sha256).hexdigest()
 
 
 class TrustedRepositoryBaselineSource(Protocol):
@@ -162,27 +190,18 @@ class TrustedBuilderSubjectSource(ABC):
 
 
 class TrustedControlPlaneBuilderClient:
-    """Pinned authenticated HTTP reader with a sealed immutable configuration snapshot."""
+    """Pinned authenticated HTTP reader anchored to one immutable process-config observation."""
 
-    __slots__ = (
-        "_endpoint",
-        "_credential",
-        "_credential_env",
-        "_provider_version",
-        "_configuration_digest",
-        "_sealed_configuration",
-    )
+    __slots__ = ("_configuration_digest", "_configuration_anchor", "_sealed_configuration")
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         raise TypeError("TrustedControlPlaneBuilderClient is final")
 
     def __setattr__(self, name: str, value: object) -> None:
         if getattr(self, "_sealed_configuration", False) and name in {
-            "_endpoint",
-            "_credential",
-            "_credential_env",
-            "_provider_version",
             "_configuration_digest",
+            "_configuration_anchor",
+            "_sealed_configuration",
         }:
             raise BuilderEntryPermitError("trusted control-plane client configuration is immutable")
         object.__setattr__(self, name, value)
@@ -191,67 +210,49 @@ class TrustedControlPlaneBuilderClient:
         if type(self) is not TrustedControlPlaneBuilderClient:
             raise BuilderEntryPermitError("exact control-plane builder client required")
         object.__setattr__(self, "_sealed_configuration", False)
-        provider_version = _required_env("CYBER_LION_CP_PROVIDER_VERSION", limit=64)
-        if provider_version != _PROVIDER_VERSION:
-            raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
-        endpoint = _required_env("CYBER_LION_CP_ENDPOINT", limit=2048).rstrip("/")
-        parsed = urllib.parse.urlsplit(endpoint)
-        if not parsed.netloc or parsed.username or parsed.password or parsed.query or parsed.fragment:
-            raise BuilderEntryPermitError("trusted control-plane endpoint invalid")
-        if parsed.scheme != "https":
-            local_mode = os.environ.get("CYBER_LION_CP_ALLOW_LOCAL_HTTP") == "1"
-            if parsed.scheme != "http" or not _is_loopback_host(parsed.hostname) or not local_mode:
-                raise BuilderEntryPermitError("trusted control-plane endpoint must use https")
-        credential_env = _required_env("CYBER_LION_CP_CREDENTIAL_ENV", limit=256)
-        if not _ENV_REF_RE.fullmatch(credential_env):
-            raise BuilderEntryPermitError("trusted control-plane credential reference invalid")
-        credential = _required_env(credential_env, limit=16384)
-        if not credential.isascii():
-            raise BuilderEntryPermitError("trusted control-plane credential invalid")
-        digest = _client_configuration_digest(
-            provider_version=provider_version,
-            endpoint=endpoint,
-            credential_env=credential_env,
-            credential=credential,
-        )
-        object.__setattr__(self, "_provider_version", provider_version)
-        object.__setattr__(self, "_endpoint", endpoint)
-        object.__setattr__(self, "_credential_env", credential_env)
-        object.__setattr__(self, "_credential", credential)
+        _provider_version, _endpoint, _credential_env, _credential, digest = _observe_process_configuration()
         object.__setattr__(self, "_configuration_digest", digest)
+        object.__setattr__(self, "_configuration_anchor", _anchor_configuration_digest(digest))
         object.__setattr__(self, "_sealed_configuration", True)
         self.verify_origin()
 
-    def verify_origin(self) -> None:
+    def _validated_process_configuration(self) -> tuple[str, str, str, str]:
         if type(self) is not TrustedControlPlaneBuilderClient:
             raise BuilderEntryPermitError("exact control-plane builder client required")
         if getattr(self, "_sealed_configuration", None) is not True:
             raise BuilderEntryPermitError("trusted control-plane client configuration not sealed")
-        if self._provider_version != _PROVIDER_VERSION:
-            raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
-        if not self._endpoint or not self._credential or not _ENV_REF_RE.fullmatch(self._credential_env):
-            raise BuilderEntryPermitError("trusted control-plane client not ready")
-        expected = _client_configuration_digest(
-            provider_version=self._provider_version,
-            endpoint=self._endpoint,
-            credential_env=self._credential_env,
-            credential=self._credential,
-        )
-        if not isinstance(self._configuration_digest, str) or not hmac.compare_digest(self._configuration_digest, expected):
-            raise BuilderEntryPermitError("trusted control-plane client configuration seal mismatch")
+        digest = getattr(self, "_configuration_digest", None)
+        anchor = getattr(self, "_configuration_anchor", None)
+        if not isinstance(digest, str) or not isinstance(anchor, str):
+            raise BuilderEntryPermitError("trusted control-plane client configuration seal missing")
+        expected_anchor = _anchor_configuration_digest(digest)
+        if not hmac.compare_digest(anchor, expected_anchor):
+            raise BuilderEntryPermitError("trusted control-plane client configuration anchor mismatch")
+        provider_version, endpoint, credential_env, credential, observed_digest = _observe_process_configuration()
+        if not hmac.compare_digest(digest, observed_digest):
+            raise BuilderEntryPermitError("trusted control-plane process configuration drift")
+        return provider_version, endpoint, credential_env, credential
+
+    def verify_origin(self) -> None:
+        self._validated_process_configuration()
 
     def lookup_builder_subject_exact(self, *, binding: Mapping[str, str]) -> tuple[Mapping[str, object], ...]:
-        self.verify_origin()
+        provider_version, endpoint, _credential_env, credential = self._validated_process_configuration()
         expected = frozenset({"repository", "builder_subject_id", "builder_instance_id", "candidate_scope_digest", "resource_scope_digest", "capability_class"})
         if not isinstance(binding, Mapping) or frozenset(binding.keys()) != expected or any(not isinstance(v, str) or not v for v in binding.values()):
             raise BuilderEntryPermitError("builder service lookup binding invalid")
         query = urllib.parse.urlencode([(k, binding[k]) for k in sorted(binding)])
         request = urllib.request.Request(
-            self._endpoint + _BUILDER_PATH + "?" + query,
-            headers={"Authorization": "Bearer " + self._credential, "Accept": "application/json"},
+            endpoint + _BUILDER_PATH + "?" + query,
+            headers={"Authorization": "Bearer " + credential, "Accept": "application/json"},
             method="GET",
         )
-        self.verify_origin()
+        # Validate the immutable comparison anchor and process configuration again
+        # immediately before the only network effect. Re-observation never refreshes
+        # or rewrites the original seal.
+        provider_version_now, endpoint_now, _credential_env_now, credential_now = self._validated_process_configuration()
+        if (provider_version_now, endpoint_now, credential_now) != (provider_version, endpoint, credential):
+            raise BuilderEntryPermitError("trusted control-plane process configuration changed during request construction")
         try:
             with urllib.request.urlopen(request, timeout=5) as response:
                 if getattr(response, "status", None) != 200:
@@ -269,7 +270,7 @@ class TrustedControlPlaneBuilderClient:
             raise BuilderEntryPermitError("trusted control-plane response malformed") from exc
         if not isinstance(payload, Mapping) or frozenset(payload.keys()) != frozenset({"provider_version", "records"}):
             raise BuilderEntryPermitError("trusted control-plane response noncanonical")
-        if payload.get("provider_version") != self._provider_version:
+        if payload.get("provider_version") != provider_version:
             raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
         records = payload.get("records")
         if type(records) is not list or len(records) > 16:
