@@ -1,7 +1,7 @@
 """Fail-closed prepare/commit boundary for the first real builder process-start effect.
 
-No subprocess/fork/exec implementation exists here.  The executable runtime capability is
-resolved by the pinned trusted-provider source; an individual launch caller cannot supply it.
+The executable runtime capability is resolved by the pinned trusted-provider source; an
+individual launch caller cannot supply it.  Preparation may only materialize a held identity.
 """
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -125,7 +125,7 @@ class BuilderProcessLaunchBoundary:
         held=runtime.observe_held(launch_id)
         if type(held) is not BuilderProcessIdentity:raise BuilderProcessLaunchError("independent held observation invalid")
         held.validate()
-        if not held.identity_digest or held.identity_digest!=held.compute_digest() or held.state!=HELD_STATE:raise BuilderProcessLaunchError("prepare did not yield independently observed HELD identity")
+        if not held.identity_digest or held.identity_digest!=held.compute_digest() or held.state!=HELD_STATE or held.launch_id!=launch_id:raise BuilderProcessLaunchError("prepare did not yield independently observed HELD identity")
         if (held.runtime_provider_id,held.runtime_provider_identity_digest,held.runtime_instance_identity,held.process_profile_id,held.process_profile_digest,held.launch_policy_digest,held.builder_subject_id,held.builder_instance_id)!=(descriptor.provider_id,descriptor.provider_identity_digest,descriptor.runtime_instance_identity,request.process_profile_id,request.process_profile_digest,request.launch_policy_digest,request.builder_subject_id,request.builder_instance_id):raise BuilderProcessLaunchError("held process identity binding mismatch")
         held_record=PersistentBuilderProcessHeldMaterialization.from_identity(held,request,descriptor,authority_store_origin=self._origin,prepared_at=prepared_at,observed_at=_utc_text(trusted_now));self._store.record_builder_process_held_materialization(held_record)
         authority_digest,subject,current_descriptor=self._currentness(admission=admission,admitted_authority=admitted_authority,trusted_now=trusted_now,expected_provider=descriptor)
@@ -133,7 +133,11 @@ class BuilderProcessLaunchBoundary:
         started=runtime.commit_start(request,held)
         if type(started) is not BuilderProcessIdentity:raise BuilderProcessLaunchError("runtime provider start identity invalid")
         started.validate()
-        if not started.identity_digest or started.identity_digest!=started.compute_digest() or started.state!=STARTED_STATE or started.launch_id!=held.launch_id:raise BuilderProcessLaunchError("commit_start must preserve launch identity and return sealed STARTED identity")
+        held_binding=(held.launch_id,held.builder_subject_id,held.builder_instance_id,held.process_profile_id,held.process_profile_digest,held.launch_policy_digest,held.runtime_provider_id,held.runtime_provider_identity_digest,held.runtime_instance_identity,held.execution_environment_id,held.process_handle_reference,held.process_identity_token)
+        started_binding=(started.launch_id,started.builder_subject_id,started.builder_instance_id,started.process_profile_id,started.process_profile_digest,started.launch_policy_digest,started.runtime_provider_id,started.runtime_provider_identity_digest,started.runtime_instance_identity,started.execution_environment_id,started.process_handle_reference,started.process_identity_token)
+        if not started.identity_digest or started.identity_digest!=started.compute_digest() or started.state!=STARTED_STATE or started_binding!=held_binding:
+            try:runtime.freeze_or_kill(held.launch_id)
+            finally:raise BuilderProcessLaunchError("commit_start changed pinned process identity; containment requested")
         observed=runtime.observe_launch(started.launch_id)
         if type(observed) is not BuilderProcessIdentity:raise BuilderProcessLaunchError("process start observation invalid")
         observed.validate()
