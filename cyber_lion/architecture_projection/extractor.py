@@ -20,6 +20,30 @@ def _digest_text(text: str) -> str:
     return sha256(text.encode("utf-8")).hexdigest()
 
 
+class _LexicalCallCollector(ast.NodeVisitor):
+    """Collect calls in one lexical function body without descending into nested scopes."""
+
+    def __init__(self) -> None:
+        self.bare_names: list[str] = []
+
+    def visit_Call(self, node: ast.Call):
+        if isinstance(node.func, ast.Name):
+            self.bare_names.append(node.func.id)
+        self.generic_visit(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        return None
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        return None
+
+    def visit_Lambda(self, node: ast.Lambda):
+        return None
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        return None
+
+
 class ArchitectureProjectionExtractor:
     """Static-only canonical projection extractor; analyzed code is never imported or executed."""
 
@@ -109,6 +133,7 @@ class ArchitectureProjectionExtractor:
                 continue
 
             top_level: dict[str, DiagramNode] = {}
+            top_level_functions: dict[str, ast.FunctionDef | ast.AsyncFunctionDef] = {}
             for item in tree.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                     qualified = f"{PurePosixPath(path).as_posix()}::{item.name}"
@@ -121,6 +146,8 @@ class ArchitectureProjectionExtractor:
                     if item.name in top_level and top_level[item.name] != symbol:
                         raise ValueError("ambiguous top-level symbol")
                     top_level[item.name] = symbol
+                    if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        top_level_functions[item.name] = item
                     edges.add(self._edge(module, symbol, "CONTAINS"))
                 elif isinstance(item, ast.Import):
                     for alias in item.names:
@@ -140,19 +167,16 @@ class ArchitectureProjectionExtractor:
                     add_node(target)
                     edges.add(self._edge(module, target, "IMPORTS"))
 
-            # CALLS_STATIC is intentionally narrow: direct bare-name call from a top-level function
-            # to an exact top-level function in the same module. Attribute/dynamic dispatch is not promoted.
-            for item in tree.body:
-                if not isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    continue
-                caller = top_level.get(item.name)
-                if caller is None:
-                    continue
-                for call in ast.walk(item):
-                    if isinstance(call, ast.Call) and isinstance(call.func, ast.Name):
-                        callee = top_level.get(call.func.id)
-                        if callee is not None and callee != caller:
-                            edges.add(self._edge(caller, callee, "CALLS_STATIC"))
+            for name, item in top_level_functions.items():
+                caller = top_level[name]
+                collector = _LexicalCallCollector()
+                for statement in item.body:
+                    collector.visit(statement)
+                for called_name in collector.bare_names:
+                    callee = top_level.get(called_name)
+                    if callee is not None and called_name in top_level_functions and callee != caller:
+                        edges.add(self._edge(caller, callee, "CALLS_STATIC"))
+
         return CanonicalDiagramModel(
             diagram_id, "component", self.source_tree_sha,
             tuple(sorted(nodes.values())), tuple(sorted(edges)),
@@ -199,25 +223,24 @@ class ArchitectureProjectionExtractor:
             )),
             "fleet-topology": ("deployment", "FLEET_MEMBERSHIP", (
                 ("cyber_lion/enterprise/swarm_governor.py", "SwarmGovernor", "SwarmGovernor"),
-                ("cyber_lion/contracts/swarm_governance.py", "Formation", "Formation"),
-                ("cyber_lion/contracts/swarm_governance.py", "Drone", "Drone"),
-                ("cyber_lion/contracts/swarm_governance.py", "Verifier", "Verifier"),
+                ("cyber_lion/contracts/swarm_governance.py", "SwarmFormation", "SwarmFormation"),
+                ("cyber_lion/contracts/swarm_governance.py", "RoleAssignment", "RoleAssignment"),
+                ("cyber_lion/contracts/swarm_governance.py", "VERIFIER_ROLE", "VERIFIER"),
             )),
             "evolutionary-epoch-loop": ("state", "EPOCH_TRANSITION", (
-                ("cyber_lion/enterprise/evolutionary_epoch.py", "observe", "observe"),
-                ("cyber_lion/enterprise/evolutionary_epoch.py", "hypothesize", "hypothesize"),
-                ("cyber_lion/enterprise/evolutionary_epoch.py", "falsify", "falsify"),
-                ("cyber_lion/enterprise/evolutionary_epoch.py", "promote", "promote"),
-                ("cyber_lion/enterprise/evolutionary_epoch.py", "next-epoch", "next_epoch"),
+                ("cyber_lion/enterprise/evolutionary_epoch.py", "EvolutionaryEpochEngine", "EvolutionaryEpochEngine"),
+                ("cyber_lion/enterprise/evolutionary_epoch.py", "EVENT_MAP", "_EVENT_MAP"),
+                ("cyber_lion/enterprise/evolutionary_epoch.py", "EPOCH_FORWARD", "_EPOCH_FORWARD"),
+                ("cyber_lion/enterprise/evolutionary_epoch.py", "NEXT_EPOCH_CANDIDATE_READY", "NEXT_EPOCH_CANDIDATE_READY"),
             )),
             "startup-agent-evolution-loop": ("component", "EPOCH_TRANSITION", (
-                ("cyber_lion/startup_agent/orchestrator.py", "Explore", "Explore"),
-                ("cyber_lion/startup_agent/orchestrator.py", "Experiment", "Experiment"),
-                ("cyber_lion/startup_agent/orchestrator.py", "Build", "Build"),
-                ("cyber_lion/startup_agent/orchestrator.py", "Learn", "Learn"),
+                ("cyber_lion/startup_agent/orchestrator.py", "AIDrivenStartupAgent", "AIDrivenStartupAgent"),
+                ("cyber_lion/startup_agent/orchestrator.py", "plan", "plan"),
+                ("cyber_lion/startup_agent/orchestrator.py", "build_local", "build_local"),
+                ("cyber_lion/startup_agent/orchestrator.py", "apply_outcome", "apply_outcome"),
             )),
             "repository-mutation-boundaries": ("component", "SOURCE_PROVENANCE", (
-                ("cyber_lion/contracts/repository_mutation.py", "CandidateVerification", "CandidateVerification"),
+                ("cyber_lion/contracts/repository_mutation.py", "DetachedRepositoryCandidate", "DetachedRepositoryCandidate"),
                 ("cyber_lion/enterprise/repository_mutation_pep.py", "RepositoryMutationPEP", "RepositoryMutationPEP"),
                 ("cyber_lion/enterprise/repository_mutation_state.py", "RepositoryMutationState", "RepositoryMutationState"),
             )),
@@ -225,20 +248,20 @@ class ArchitectureProjectionExtractor:
                 ("cyber_lion/contracts/events.py", "EventEnvelope", "EventEnvelope"),
                 ("cyber_lion/contracts/events.py", "GateRequested", "GateRequested"),
                 ("cyber_lion/contracts/events.py", "GateApplied", "GateApplied"),
-                ("cyber_lion/contracts/events.py", "ExecutionReceipt", "ExecutionReceipt"),
+                ("cyber_lion/contracts/events.py", "ActionExecuted", "ActionExecuted"),
             )),
             "capability-map": ("component", "CONTAINS", (
-                ("cyber_lion/contracts/capability.py", "READ_ONLY", "READ_ONLY"),
-                ("cyber_lion/contracts/capability.py", "LOCAL_WRITE", "LOCAL_WRITE"),
+                ("cyber_lion/enterprise/conformance.py", "READ_ONLY", "ReadOnlyProviderSnapshot"),
+                ("cyber_lion/enterprise/policy_gate.py", "LOCAL_WRITE", "local_write"),
                 ("cyber_lion/contracts/builder_process_launch.py", "BUILDER_PROCESS_START", "EFFECT_CLASS"),
-                ("cyber_lion/contracts/repository_mutation.py", "REPOSITORY_REF_MUTATION", "REPOSITORY_REF_MUTATION"),
+                ("cyber_lion/contracts/builder_start_admission.py", "REPOSITORY_REF_MUTATION", "repository_ref_mutation"),
             )),
             "lion-system-component-map": ("component", "CONTAINS", (
                 ("cyber_lion/contracts/builder_process_launch.py", "contracts", "BuilderProcessLaunchRequest"),
                 ("cyber_lion/enterprise/builder_process_launch.py", "enterprise", "BuilderProcessLaunchBoundary"),
                 ("cyber_lion/enterprise/swarm_governor.py", "fleet", "SwarmGovernor"),
-                ("cyber_lion/startup_agent/orchestrator.py", "startup_agent", "Orchestrator"),
-                ("cyber_lion/enterprise/evolutionary_epoch.py", "evolutionary_epoch", "Epoch"),
+                ("cyber_lion/startup_agent/orchestrator.py", "startup_agent", "AIDrivenStartupAgent"),
+                ("cyber_lion/enterprise/evolutionary_epoch.py", "evolutionary_epoch", "EvolutionaryEpochEngine"),
             )),
         }
         diagram_type, relation, specs = projection_specs[name]
