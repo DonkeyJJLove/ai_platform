@@ -10,7 +10,6 @@ import ipaddress
 import json
 import os
 import re
-import secrets
 from typing import Any, Protocol
 import urllib.error
 import urllib.parse
@@ -39,8 +38,6 @@ _EFFECT_METHODS = frozenset({"execute", "write", "push", "merge", "deploy", "rel
 _SCOPE_DIGEST_DOMAIN = b"LION/E004-BUILDER-SCOPE-LOOKUP/1\0"
 _CLIENT_CONFIG_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-CONFIG/1\0"
 _CLIENT_CREDENTIAL_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-CREDENTIAL/1\0"
-_CLIENT_ANCHOR_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-ANCHOR/1\0"
-_CLIENT_PROCESS_ANCHOR_KEY = secrets.token_bytes(32)
 PINNED_BUILDER_BACKEND_IDENTITY = "lion.trusted-control-plane.http-read/v1"
 PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST = sha256(b"LION/E004-TRUSTED-CONTROL-PLANE-SERVICE-BUILDER-SOURCE/1").hexdigest()
 _PROVIDER_VERSION = "1.0.0"
@@ -151,10 +148,26 @@ def _observe_process_configuration() -> tuple[str, str, str, str, str]:
     return provider_version, endpoint, credential_env, credential, digest
 
 
-def _anchor_configuration_digest(configuration_digest: str) -> str:
-    if not isinstance(configuration_digest, str) or len(configuration_digest) != 64:
-        raise BuilderEntryPermitError("trusted control-plane configuration digest invalid")
-    return hmac.new(_CLIENT_PROCESS_ANCHOR_KEY, _CLIENT_ANCHOR_DOMAIN + configuration_digest.encode("ascii"), sha256).hexdigest()
+def _make_configuration_anchor_registry():
+    """Return one-way register/verify closures; there is no reseal operation."""
+    registered: dict[int, tuple[object, str]] = {}
+
+    def register_once(client: object, digest: str) -> None:
+        key = id(client)
+        if key in registered:
+            raise BuilderEntryPermitError("trusted control-plane client configuration already registered")
+        registered[key] = (client, digest)
+
+    def verify_registered(client: object, digest: str) -> None:
+        record = registered.get(id(client))
+        if record is None or record[0] is not client or not hmac.compare_digest(record[1], digest):
+            raise BuilderEntryPermitError("trusted control-plane client configuration anchor mismatch")
+
+    return register_once, verify_registered
+
+
+_register_initial_client_configuration, _verify_initial_client_configuration = _make_configuration_anchor_registry()
+del _make_configuration_anchor_registry
 
 
 class TrustedRepositoryBaselineSource(Protocol):
@@ -190,19 +203,15 @@ class TrustedBuilderSubjectSource(ABC):
 
 
 class TrustedControlPlaneBuilderClient:
-    """Pinned authenticated HTTP reader anchored to one immutable process-config observation."""
+    """Pinned authenticated HTTP reader anchored to one process-config observation."""
 
-    __slots__ = ("_configuration_digest", "_configuration_anchor", "_sealed_configuration")
+    __slots__ = ("_configuration_digest", "_sealed_configuration")
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         raise TypeError("TrustedControlPlaneBuilderClient is final")
 
     def __setattr__(self, name: str, value: object) -> None:
-        if getattr(self, "_sealed_configuration", False) and name in {
-            "_configuration_digest",
-            "_configuration_anchor",
-            "_sealed_configuration",
-        }:
+        if getattr(self, "_sealed_configuration", False) and name in {"_configuration_digest", "_sealed_configuration"}:
             raise BuilderEntryPermitError("trusted control-plane client configuration is immutable")
         object.__setattr__(self, name, value)
 
@@ -212,7 +221,7 @@ class TrustedControlPlaneBuilderClient:
         object.__setattr__(self, "_sealed_configuration", False)
         _provider_version, _endpoint, _credential_env, _credential, digest = _observe_process_configuration()
         object.__setattr__(self, "_configuration_digest", digest)
-        object.__setattr__(self, "_configuration_anchor", _anchor_configuration_digest(digest))
+        _register_initial_client_configuration(self, digest)
         object.__setattr__(self, "_sealed_configuration", True)
         self.verify_origin()
 
@@ -222,12 +231,9 @@ class TrustedControlPlaneBuilderClient:
         if getattr(self, "_sealed_configuration", None) is not True:
             raise BuilderEntryPermitError("trusted control-plane client configuration not sealed")
         digest = getattr(self, "_configuration_digest", None)
-        anchor = getattr(self, "_configuration_anchor", None)
-        if not isinstance(digest, str) or not isinstance(anchor, str):
+        if not isinstance(digest, str) or len(digest) != 64:
             raise BuilderEntryPermitError("trusted control-plane client configuration seal missing")
-        expected_anchor = _anchor_configuration_digest(digest)
-        if not hmac.compare_digest(anchor, expected_anchor):
-            raise BuilderEntryPermitError("trusted control-plane client configuration anchor mismatch")
+        _verify_initial_client_configuration(self, digest)
         provider_version, endpoint, credential_env, credential, observed_digest = _observe_process_configuration()
         if not hmac.compare_digest(digest, observed_digest):
             raise BuilderEntryPermitError("trusted control-plane process configuration drift")
@@ -247,9 +253,7 @@ class TrustedControlPlaneBuilderClient:
             headers={"Authorization": "Bearer " + credential, "Accept": "application/json"},
             method="GET",
         )
-        # Validate the immutable comparison anchor and process configuration again
-        # immediately before the only network effect. Re-observation never refreshes
-        # or rewrites the original seal.
+        # Re-observation validates the original seal; it never refreshes it.
         provider_version_now, endpoint_now, _credential_env_now, credential_now = self._validated_process_configuration()
         if (provider_version_now, endpoint_now, credential_now) != (provider_version, endpoint, credential):
             raise BuilderEntryPermitError("trusted control-plane process configuration changed during request construction")
