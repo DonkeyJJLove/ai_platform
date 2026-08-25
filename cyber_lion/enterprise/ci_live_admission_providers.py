@@ -12,10 +12,13 @@ URLs, response payloads, or persistent storage.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from hashlib import sha256
 import base64
 import json
 import os
 import re
+import threading
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -94,78 +97,30 @@ def _json_bytes(payload: Mapping[str, object]) -> bytes:
     ).encode("utf-8")
 
 
-def _request_json(
-    *,
-    path: str,
-    method: str,
-    payload: Mapping[str, object],
-) -> Mapping[str, object]:
-    origin, credential, trusted_base_sha = _runtime_config()
-    if path not in {_BOOTSTRAP_PATH, _AUTHORITY_PATH, _VERIFY_PATH}:
-        raise CILiveAdmissionProviderError("provider endpoint is not allowed")
-    if method not in {"GET", "POST"}:
-        raise CILiveAdmissionProviderError("provider method is not allowed")
+def _read_json_response(response) -> Mapping[str, object]:  # noqa: ANN001
+    content_length = response.headers.get("Content-Length")
+    if content_length is not None:
+        try:
+            declared = int(content_length)
+        except ValueError as exc:
+            raise CILiveAdmissionProviderError(
+                "trusted control-plane response is invalid"
+            ) from exc
+        if declared < 0 or declared > _MAX_RESPONSE_BYTES:
+            raise CILiveAdmissionProviderError(
+                "trusted control-plane response is too large"
+            )
 
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {credential}",
-        "X-Cyber-Lion-Provider-Version": PROVIDER_VERSION,
-        "X-Cyber-Lion-Trusted-Base-SHA": trusted_base_sha,
-    }
-
-    url = origin + path
-    data: bytes | None = None
-    if method == "GET":
-        query = urllib.parse.urlencode(
-            [(key, str(value)) for key, value in payload.items()],
-            doseq=False,
-            safe="",
+    raw = response.read(_MAX_RESPONSE_BYTES + 1)
+    if len(raw) > _MAX_RESPONSE_BYTES:
+        raise CILiveAdmissionProviderError(
+            "trusted control-plane response is too large"
         )
-        url = f"{url}?{query}"
-    else:
-        headers["Content-Type"] = "application/json"
-        data = _json_bytes(payload)
-
-    request = urllib.request.Request(
-        url=url,
-        data=data,
-        headers=headers,
-        method=method,
-    )
-    opener = urllib.request.build_opener(_NoRedirect())
-
-    try:
-        with opener.open(request, timeout=_TIMEOUT_SECONDS) as response:
-            content_length = response.headers.get("Content-Length")
-            if content_length is not None:
-                try:
-                    declared = int(content_length)
-                except ValueError as exc:
-                    raise CILiveAdmissionProviderError(
-                        "trusted control-plane response is invalid"
-                    ) from exc
-                if declared < 0 or declared > _MAX_RESPONSE_BYTES:
-                    raise CILiveAdmissionProviderError(
-                        "trusted control-plane response is too large"
-                    )
-
-            raw = response.read(_MAX_RESPONSE_BYTES + 1)
-            if len(raw) > _MAX_RESPONSE_BYTES:
-                raise CILiveAdmissionProviderError(
-                    "trusted control-plane response is too large"
-                )
-            status = getattr(response, "status", None)
-            if status != 200:
-                raise CILiveAdmissionProviderError(
-                    "trusted control-plane request failed"
-                )
-    except CILiveAdmissionProviderError:
-        raise
-    except Exception as exc:
+    status = getattr(response, "status", None)
+    if status != 200:
         raise CILiveAdmissionProviderError(
             "trusted control-plane request failed"
-        ) from exc
-
+        )
     try:
         decoded = json.loads(raw.decode("utf-8"))
     except Exception as exc:
@@ -177,6 +132,166 @@ def _request_json(
             "trusted control-plane response is invalid"
         )
     return decoded
+
+
+def _get_json(*, path: str, payload: Mapping[str, object]) -> Mapping[str, object]:
+    origin, credential, trusted_base_sha = _runtime_config()
+    if path not in {_BOOTSTRAP_PATH, _AUTHORITY_PATH}:
+        raise CILiveAdmissionProviderError("read provider endpoint is not allowed")
+    query = urllib.parse.urlencode(
+        [(key, str(value)) for key, value in payload.items()], doseq=False, safe=""
+    )
+    request = urllib.request.Request(
+        url=f"{origin}{path}?{query}",
+        data=None,
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {credential}",
+            "X-Cyber-Lion-Provider-Version": PROVIDER_VERSION,
+            "X-Cyber-Lion-Trusted-Base-SHA": trusted_base_sha,
+        },
+        method="GET",
+    )
+    try:
+        with urllib.request.build_opener(_NoRedirect()).open(
+            request, timeout=_TIMEOUT_SECONDS
+        ) as response:
+            return _read_json_response(response)
+    except CILiveAdmissionProviderError:
+        raise
+    except Exception as exc:
+        raise CILiveAdmissionProviderError(
+            "trusted control-plane request failed"
+        ) from exc
+
+
+@dataclass(frozen=True)
+class SignatureVerificationAdmission:
+    request_digest: str
+    origin: str
+    trusted_base_sha: str
+    payload_digest: str
+
+
+@dataclass(frozen=True)
+class SignatureVerificationObservation:
+    request_digest: str
+    response_digest: str
+    verified: bool
+
+
+class SignatureVerificationNetworkBoundary:
+    """Closed-world POST boundary for one signature-verification request.
+
+    The boundary accepts no caller-selected URL/method/provider, rechecks trusted
+    runtime configuration immediately before the POST, memoizes exact request results
+    so replay cannot cause a second network effect, and validates the returned envelope
+    before releasing a boolean result.
+    """
+
+    _lock = threading.RLock()
+    _observed: dict[str, SignatureVerificationObservation] = {}
+
+    @staticmethod
+    def _payload(payload: bytes, signature: str, key_id: str, algorithm: str) -> dict[str, object]:
+        if not isinstance(payload, bytes):
+            raise CILiveAdmissionProviderError("signature payload type is invalid")
+        for value, name, limit in (
+            (signature, "signature", 32768),
+            (key_id, "key id", 1024),
+            (algorithm, "algorithm", 128),
+        ):
+            if not isinstance(value, str) or not value or len(value) > limit or "\x00" in value:
+                raise CILiveAdmissionProviderError(f"{name} is invalid")
+        return {
+            "payload_base64": base64.b64encode(payload).decode("ascii"),
+            "signature": signature,
+            "key_id": key_id,
+            "algorithm": algorithm,
+        }
+
+    @staticmethod
+    def _admit(body: Mapping[str, object]) -> SignatureVerificationAdmission:
+        origin, _credential, trusted_base_sha = _runtime_config()
+        body_bytes = _json_bytes(body)
+        payload_digest = sha256(body_bytes).hexdigest()
+        request_digest = sha256(
+            b"LION/CI-SIGNATURE-VERIFY-NETWORK/1\0"
+            + origin.encode("utf-8")
+            + b"\0"
+            + trusted_base_sha.encode("ascii")
+            + b"\0"
+            + body_bytes
+        ).hexdigest()
+        return SignatureVerificationAdmission(
+            request_digest=request_digest,
+            origin=origin,
+            trusted_base_sha=trusted_base_sha,
+            payload_digest=payload_digest,
+        )
+
+    @classmethod
+    def verify(cls, payload: bytes, signature: str, key_id: str, algorithm: str) -> bool:
+        body = cls._payload(payload, signature, key_id, algorithm)
+        admission = cls._admit(body)
+        with cls._lock:
+            cached = cls._observed.get(admission.request_digest)
+            if cached is not None:
+                return cached.verified
+
+            # Effect-time currentness: authoritative process configuration must still
+            # equal the values that produced admission immediately before network I/O.
+            origin, credential, trusted_base_sha = _runtime_config()
+            if (origin, trusted_base_sha) != (admission.origin, admission.trusted_base_sha):
+                raise CILiveAdmissionProviderError(
+                    "trusted verification configuration changed before effect"
+                )
+
+            body_bytes = _json_bytes(body)
+            if sha256(body_bytes).hexdigest() != admission.payload_digest:
+                raise CILiveAdmissionProviderError("verification payload substitution denied")
+
+            request = urllib.request.Request(
+                url=origin + _VERIFY_PATH,
+                data=body_bytes,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {credential}",
+                    "Content-Type": "application/json",
+                    "X-Cyber-Lion-Provider-Version": PROVIDER_VERSION,
+                    "X-Cyber-Lion-Trusted-Base-SHA": trusted_base_sha,
+                    "X-Cyber-Lion-Request-Digest": admission.request_digest,
+                },
+                method="POST",
+            )
+            try:
+                with urllib.request.build_opener(_NoRedirect()).open(
+                    request, timeout=_TIMEOUT_SECONDS
+                ) as response:
+                    decoded = _read_json_response(response)
+            except CILiveAdmissionProviderError:
+                raise
+            except Exception as exc:
+                raise CILiveAdmissionProviderError(
+                    "trusted signature verification request failed"
+                ) from exc
+
+            if frozenset(decoded.keys()) != _VERIFY_RESPONSE_FIELDS:
+                raise CILiveAdmissionProviderError("trusted response envelope is not canonical")
+            if decoded["provider_version"] != PROVIDER_VERSION:
+                raise CILiveAdmissionProviderError("trusted response provider version mismatch")
+            verified = decoded["verified"]
+            if type(verified) is not bool:
+                raise CILiveAdmissionProviderError("trusted verifier result is invalid")
+
+            response_digest = sha256(_json_bytes(decoded)).hexdigest()
+            observation = SignatureVerificationObservation(
+                request_digest=admission.request_digest,
+                response_digest=response_digest,
+                verified=verified,
+            )
+            cls._observed[admission.request_digest] = observation
+            return observation.verified
 
 
 def _records_response(response: Mapping[str, object]) -> tuple[Mapping[str, object], ...]:
@@ -201,9 +316,8 @@ def bootstrap_lookup_exact(
     merge_method: str,
 ) -> tuple[Mapping[str, object], ...]:
     """Read exact immutable PR bootstrap candidates from the trusted control plane."""
-    response = _request_json(
+    response = _get_json(
         path=_BOOTSTRAP_PATH,
-        method="GET",
         payload={
             "repository": repository,
             "pr_number": pr_number,
@@ -225,9 +339,8 @@ def authority_lookup_exact(
     grant_id: str,
 ) -> tuple[Mapping[str, object], ...]:
     """Read exact immutable authority-lineage candidates from the trusted control plane."""
-    response = _request_json(
+    response = _get_json(
         path=_AUTHORITY_PATH,
-        method="GET",
         payload={
             "repository": repository,
             "pr_number": pr_number,
@@ -246,24 +359,7 @@ def verify_signature(
     key_id: str,
     algorithm: str,
 ) -> bool:
-    """Verify one authority signature through the trusted verifier service."""
-    if not isinstance(payload, bytes):
-        raise CILiveAdmissionProviderError("signature payload type is invalid")
-    response = _request_json(
-        path=_VERIFY_PATH,
-        method="POST",
-        payload={
-            "payload_base64": base64.b64encode(payload).decode("ascii"),
-            "signature": signature,
-            "key_id": key_id,
-            "algorithm": algorithm,
-        },
+    """Verify one authority signature through the fixed trusted verifier boundary."""
+    return SignatureVerificationNetworkBoundary.verify(
+        payload, signature, key_id, algorithm
     )
-    if frozenset(response.keys()) != _VERIFY_RESPONSE_FIELDS:
-        raise CILiveAdmissionProviderError("trusted response envelope is not canonical")
-    if response["provider_version"] != PROVIDER_VERSION:
-        raise CILiveAdmissionProviderError("trusted response provider version mismatch")
-    verified = response["verified"]
-    if type(verified) is not bool:
-        raise CILiveAdmissionProviderError("trusted verifier result is invalid")
-    return verified
