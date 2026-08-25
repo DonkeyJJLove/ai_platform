@@ -10,11 +10,17 @@ Każdy canonical fact posiada `source_path` i `source_digest`. Identyfikator nie
 
 Identyfikatory w modelu muszą spełniać zamkniętą gramatykę `^[A-Za-z][A-Za-z0-9_]{0,127}$`. Węzły canonical wymagają jawnego source provenance, a relacje inne niż `UNKNOWN` wymagają `provenance_ref`. `BuilderProcessCompletionObservation` jest jedynym dopuszczonym w tej fazie `DECLARED_NEXT_FRONTIER` i nie reprezentuje istniejącej authority.
 
-## Projekcje source-derived
+## Projekcje związane z rzeczywistym repozytorium
 
-`lion-system-component-map`, `authority-and-effect-chain-R17-R22`, `builder-lifecycle-state-machine`, `persistent-authority-store-model`, `fleet-topology`, `evolutionary-epoch-loop`, `startup-agent-evolution-loop`, `repository-mutation-boundaries`, `event-and-causality-map`, `capability-map` są budowane z jawnie wskazanych canonical source files i sprawdzanych symboli/stałych. Zmiana relevant canonical source zmienia source digest faktów i digest modelu; zmiana pliku nieużywanego przez daną projekcję nie zmienia jej semantycznej zawartości.
+`lion-system-component-map`, `authority-and-effect-chain-R17-R22`, `builder-lifecycle-state-machine`, `persistent-authority-store-model`, `fleet-topology`, `evolutionary-epoch-loop`, `startup-agent-evolution-loop`, `repository-mutation-boundaries`, `event-and-causality-map`, `capability-map` są budowane z istniejących canonical source files i sprawdzanych symboli lub stałych. Zwykły unit fixture może służyć do edge cases, ale nie jest dowodem poprawności produkcyjnego projection map. Test integracyjny projection plane przechodzi po rzeczywistym checkoutcie repozytorium i wymaga, aby wszystkie dziesięć projekcji rozwiązało swoje realne źródła i tokeny.
 
-Extractor używa AST i odczytu plików tekstowych. Nie importuje ani nie wykonuje analizowanego kodu. `CALLS_STATIC` powstaje tylko dla bezpośrednich wywołań nazw, które można rozwiązać do jawnej lokalnej definicji; attribute/dynamic dispatch nie jest traktowany jako runtime proof.
+`capability-map` nie opiera się na syntetycznym `contracts/capability.py`. Koncept read-only jest związany z `ReadOnlyProviderSnapshot` w `enterprise/conformance.py`; lokalny write ceiling z realnym `local_write` w canonical PDP; `BUILDER_PROCESS_START` z `EFFECT_CLASS` w kontrakcie R22; a granica repository-ref mutation z rzeczywistą polityką `repository_ref_mutation` w `builder_start_admission.py`.
+
+`startup-agent-evolution-loop` nie używa narracyjnych klas `Explore`/`Learn`. Projekcja jest związana z rzeczywistym `AIDrivenStartupAgent` oraz jego realnymi etapami `plan`, `build_local` i `apply_outcome` w `startup_agent/orchestrator.py`.
+
+Zmiana relevant canonical source zmienia source digest faktów i digest modelu; zmiana pliku nieużywanego przez daną projekcję nie zmienia jej semantycznej zawartości.
+
+Extractor używa AST i odczytu plików tekstowych. Nie importuje ani nie wykonuje analizowanego kodu. `CALLS_STATIC` jest celowo wąskie: powstaje wyłącznie dla bezpośredniego bare-name call z top-level funkcji do dokładnej top-level funkcji w tym samym module. Analiza nie schodzi do zagnieżdżonych funkcji, async functions, lambd ani klas, więc ich wywołania nie są błędnie przypisywane callerowi z zewnętrznego scope. Attribute/dynamic dispatch nie jest traktowany jako runtime proof.
 
 ## Renderer PlantUML
 
