@@ -14,16 +14,6 @@ from cyber_lion.enterprise.persistent_authority_state import (
     PersistentAuthorityStateError,
     SQLiteAuthorityStateStore,
 )
-from cyber_lion.enterprise.trusted_control_plane_runtime import (
-    RUNTIME_FACTORY_VERSION,
-    TrustedControlPlaneRuntimeError,
-    build_authority_state_store,
-    build_store,
-    build_verifier,
-    observe_authority_state_store_origin,
-    register_authority_state_store_origin_once,
-    verify_authority_state_store_origin,
-)
 from cyber_lion.enterprise.trusted_control_plane_service import (
     PROVIDER_VERSION,
     TrustedControlPlaneService,
@@ -49,7 +39,7 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
 
     def _env(self, *, repo_root: str, db_path: str, verifier_path: str, verifier_digest: str) -> dict[str, str]:
         return {
-            "LION_CP_RUNTIME_FACTORY_VERSION": RUNTIME_FACTORY_VERSION,
+            "LION_CP_RUNTIME_FACTORY_VERSION": runtime.RUNTIME_FACTORY_VERSION,
             "LION_CP_REPOSITORY_ROOT": repo_root,
             "LION_CP_DATABASE_PATH": db_path,
             "LION_CP_VERIFIER_MODULE_PATH": verifier_path,
@@ -64,10 +54,10 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             db_path = str(Path(external) / "control-plane.sqlite3")
             env = self._env(repo_root=repo, db_path=db_path, verifier_path=verifier_path, verifier_digest=verifier_digest)
             with patch.dict(os.environ, env, clear=True):
-                store = build_store()
-                authority_store = build_authority_state_store()
-                verifier = build_verifier()
-                origin = verify_authority_state_store_origin()
+                store = runtime.build_store()
+                authority_store = runtime.build_authority_state_store()
+                verifier = runtime.build_verifier()
+                origin = runtime.verify_authority_state_store_origin()
                 self.assertTrue(store.ready())
                 self.assertIs(type(authority_store), SQLiteAuthorityStateStore)
                 self.assertTrue(authority_store.ready())
@@ -78,7 +68,7 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
 
     def test_authority_state_factory_accepts_no_caller_path(self) -> None:
         with self.assertRaises(TypeError):
-            build_authority_state_store("/tmp/caller-selected.sqlite")
+            runtime.build_authority_state_store("/tmp/caller-selected.sqlite")
 
     def test_missing_database_path_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -86,23 +76,23 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             env.pop("LION_CP_DATABASE_PATH")
             with patch.dict(os.environ, env, clear=True):
-                with self.assertRaises(TrustedControlPlaneRuntimeError): build_store()
-                with self.assertRaises(TrustedControlPlaneRuntimeError): build_authority_state_store()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError): runtime.build_store()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError): runtime.build_authority_state_store()
 
     def test_repository_local_database_path_is_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
             verifier_path, verifier_digest = self._external_verifier(external)
             env = self._env(repo_root=repo, db_path=str(Path(repo) / "forbidden.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             with patch.dict(os.environ, env, clear=True):
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "outside repository"): build_store()
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "outside repository"): build_authority_state_store()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "outside repository"): runtime.build_store()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "outside repository"): runtime.build_authority_state_store()
 
     def test_repository_local_verifier_material_is_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
             verifier_path, verifier_digest = self._external_verifier(repo)
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             with patch.dict(os.environ, env, clear=True):
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "outside repository"): build_verifier()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "outside repository"): runtime.build_verifier()
 
     def test_missing_or_mismatched_verifier_material_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -110,17 +100,17 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             missing = dict(env); missing.pop("LION_CP_VERIFIER_MODULE_PATH")
             with patch.dict(os.environ, missing, clear=True):
-                with self.assertRaises(TrustedControlPlaneRuntimeError): build_verifier()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError): runtime.build_verifier()
             mismatch = dict(env); mismatch["LION_CP_VERIFIER_BINDING_DIGEST"] = "0" * 64
             with patch.dict(os.environ, mismatch, clear=True):
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "binding mismatch"): build_verifier()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "binding mismatch"): runtime.build_verifier()
 
     def test_verifier_readiness_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
             verifier_path, verifier_digest = self._external_verifier(external, ready=False)
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             with patch.dict(os.environ, env, clear=True):
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "not ready"): build_verifier()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "not ready"): runtime.build_verifier()
 
     def test_factory_version_mismatch_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -128,24 +118,24 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             env["LION_CP_RUNTIME_FACTORY_VERSION"] = "9.9.9"
             with patch.dict(os.environ, env, clear=True):
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "version mismatch"): build_store()
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "version mismatch"): build_authority_state_store()
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "version mismatch"): build_verifier()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "version mismatch"): runtime.build_store()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "version mismatch"): runtime.build_authority_state_store()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "version mismatch"): runtime.build_verifier()
 
     def test_duplicate_origin_registration_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
             verifier_path, verifier_digest = self._external_verifier(external)
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             with patch.dict(os.environ, env, clear=True):
-                build_authority_state_store()
-                with self.assertRaises(TrustedControlPlaneRuntimeError): register_authority_state_store_origin_once()
+                runtime.build_authority_state_store()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError): runtime.register_authority_state_store_origin_once()
 
     def test_origin_digest_substitution_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
             verifier_path, verifier_digest = self._external_verifier(external)
             env = self._env(repo_root=repo, db_path=str(Path(external) / "cp.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             with patch.dict(os.environ, env, clear=True):
-                origin = observe_authority_state_store_origin()
+                origin = runtime.observe_authority_state_store_origin()
                 forged = replace(origin, origin_digest="0" * 64)
                 with self.assertRaises(PersistentAuthorityStateError): forged.validate()
 
@@ -157,10 +147,10 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             env_a = self._env(repo_root=repo, db_path=path_a, verifier_path=verifier_path, verifier_digest=verifier_digest)
             env_b = dict(env_a); env_b["LION_CP_DATABASE_PATH"] = path_b
             with patch.dict(os.environ, env_a, clear=True):
-                build_authority_state_store()
+                runtime.build_authority_state_store()
             with patch.dict(os.environ, env_b, clear=True), patch.object(runtime, "SQLiteAuthorityStateStore", side_effect=AssertionError("alternate store must not open")):
-                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "process authority-store origin drift"):
-                    build_authority_state_store()
+                with self.assertRaisesRegex(runtime.TrustedControlPlaneRuntimeError, "process authority-store origin drift"):
+                    runtime.build_authority_state_store()
             self.assertFalse(Path(path_b).exists())
 
     def test_first_origin_cannot_be_replaced_by_second_valid_origin(self) -> None:
@@ -168,9 +158,9 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             verifier_path, verifier_digest = self._external_verifier(external)
             env_a = self._env(repo_root=repo, db_path=str(Path(external) / "a.sqlite3"), verifier_path=verifier_path, verifier_digest=verifier_digest)
             env_b = dict(env_a); env_b["LION_CP_DATABASE_PATH"] = str(Path(external) / "b.sqlite3")
-            with patch.dict(os.environ, env_a, clear=True): build_authority_state_store()
+            with patch.dict(os.environ, env_a, clear=True): runtime.build_authority_state_store()
             with patch.dict(os.environ, env_b, clear=True):
-                with self.assertRaises(TrustedControlPlaneRuntimeError): register_authority_state_store_origin_once()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError): runtime.register_authority_state_store_origin_once()
 
     def test_origin_drift_does_not_initialize_second_store(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -179,10 +169,10 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             path_b = str(Path(external) / "b.sqlite3")
             env_a = self._env(repo_root=repo, db_path=path_a, verifier_path=verifier_path, verifier_digest=verifier_digest)
             env_b = dict(env_a); env_b["LION_CP_DATABASE_PATH"] = path_b
-            with patch.dict(os.environ, env_a, clear=True): build_authority_state_store()
+            with patch.dict(os.environ, env_a, clear=True): runtime.build_authority_state_store()
             self.assertFalse(Path(path_b).exists())
             with patch.dict(os.environ, env_b, clear=True):
-                with self.assertRaises(TrustedControlPlaneRuntimeError): build_authority_state_store()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError): runtime.build_authority_state_store()
             self.assertFalse(Path(path_b).exists())
 
     def test_build_service_from_environment_uses_zero_arg_factories(self) -> None:
@@ -207,14 +197,14 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
         secret_marker = "DO-NOT-ECHO-SECRET-MARKER"
         with tempfile.TemporaryDirectory() as repo:
             env = {
-                "LION_CP_RUNTIME_FACTORY_VERSION": RUNTIME_FACTORY_VERSION,
+                "LION_CP_RUNTIME_FACTORY_VERSION": runtime.RUNTIME_FACTORY_VERSION,
                 "LION_CP_REPOSITORY_ROOT": repo,
                 "LION_CP_DATABASE_PATH": secret_marker,
             }
             with patch.dict(os.environ, env, clear=True):
-                with self.assertRaises(TrustedControlPlaneRuntimeError) as captured: build_store()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError) as captured: runtime.build_store()
                 self.assertNotIn(secret_marker, str(captured.exception))
-                with self.assertRaises(TrustedControlPlaneRuntimeError) as captured: build_authority_state_store()
+                with self.assertRaises(runtime.TrustedControlPlaneRuntimeError) as captured: runtime.build_authority_state_store()
                 self.assertNotIn(secret_marker, str(captured.exception))
 
 
