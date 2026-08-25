@@ -116,10 +116,15 @@ class CompleteMediationAssessment:
     falsification_evidence_refs:Tuple[str,...]
     observation_evidence_refs:Tuple[str,...]
     def validate(self):
-        _sha(self.inventory_digest,"inventory_digest");_tuple(self.falsification_evidence_refs,"falsification_evidence_refs",True);_tuple(self.observation_evidence_refs,"observation_evidence_refs",True)
+        _sha(self.inventory_digest,"inventory_digest")
+        _tuple(self.falsification_evidence_refs,"falsification_evidence_refs")
+        _tuple(self.observation_evidence_refs,"observation_evidence_refs")
         if type(self.matrix) is not tuple:raise CompleteMediationContractError("matrix must be tuple")
         for e in self.matrix:e.validate()
         if self.global_status not in {"PASS","UNKNOWN"}:raise CompleteMediationContractError("global status must be PASS or UNKNOWN")
-        if self.global_status=="PASS" and (not self.matrix or any(e.status!="MEDIATED" for e in self.matrix)):
-            raise CompleteMediationContractError("PASS requires every matrix entry MEDIATED")
+        if self.global_status=="PASS":
+            if not self.falsification_evidence_refs or not self.observation_evidence_refs:
+                raise CompleteMediationContractError("PASS requires independent falsification and observation evidence")
+            if not self.matrix or any(e.status!="MEDIATED" for e in self.matrix):
+                raise CompleteMediationContractError("PASS requires every matrix entry MEDIATED")
         return self
