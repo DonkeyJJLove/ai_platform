@@ -32,6 +32,7 @@ from cyber_lion.enterprise.persistent_authority_state import (
     PersistentBuilderEntryIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
+from cyber_lion.enterprise.trusted_control_plane_runtime import build_authority_state_store
 
 
 class BuilderEntryPermitError(RuntimeError):
@@ -215,13 +216,17 @@ class PersistentBuilderEntryReplayGuard:
 
 
 class PersistentBuilderEntryIssuanceRecorder:
-    """Capability-reduced durable recorder for exact sealed R17 issuance identity."""
+    """Capability-reduced recorder pinned to the canonical authority-state runtime origin."""
 
     __slots__ = ("_store",)
 
-    def __init__(self, store: SQLiteAuthorityStateStore) -> None:
+    def __init__(self) -> None:
+        try:
+            store = build_authority_state_store()
+        except Exception as exc:
+            raise BuilderEntryPermitError("canonical persistent authority store unavailable") from exc
         if type(store) is not SQLiteAuthorityStateStore or not store.ready():
-            raise BuilderEntryPermitError("exact ready persistent authority store required")
+            raise BuilderEntryPermitError("canonical persistent authority store invalid")
         self._store = store
 
     def record(self, permit: BuilderEntryPermit) -> PersistentBuilderEntryIssuanceRecord:
@@ -426,18 +431,17 @@ class PinnedTrustedBuilderSubjectSource:
 class BuilderEntryPermitEngine:
     """Issue one entry permit; never consume it or start a builder."""
 
-    def __init__(self, *, live_authority: LiveResourceAuthorityAdmission, baseline_source: TrustedRepositoryBaselineSource, f005_state_source: F005StateSource, builder_source: PinnedTrustedBuilderSubjectSource, replay_guard: BuilderEntryReplayGuard, issuance_recorder: PersistentBuilderEntryIssuanceRecorder):
+    def __init__(self, *, live_authority: LiveResourceAuthorityAdmission, baseline_source: TrustedRepositoryBaselineSource, f005_state_source: F005StateSource, builder_source: PinnedTrustedBuilderSubjectSource, replay_guard: BuilderEntryReplayGuard):
         if type(live_authority) is not LiveResourceAuthorityAdmission:
             raise BuilderEntryPermitError("live authority admission required")
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource or type(builder_source.backend) is not PinnedBuilderControlPlaneBackend:
             raise BuilderEntryPermitError("exact pinned trusted builder source required")
-        if type(issuance_recorder) is not PersistentBuilderEntryIssuanceRecorder:
-            raise BuilderEntryPermitError("exact persistent builder entry issuance recorder required")
         builder_source.verify_origin()
-        for obj, method in ((baseline_source, "current"), (f005_state_source, "current"), (replay_guard, "consume"), (issuance_recorder, "record")):
+        for obj, method in ((baseline_source, "current"), (f005_state_source, "current"), (replay_guard, "consume")):
             if not callable(getattr(obj, method, None)):
                 raise BuilderEntryPermitError("builder entry dependency unavailable")
-        self._live, self._baseline, self._f005, self._builders, self._replay, self._issuance = live_authority, baseline_source, f005_state_source, builder_source, replay_guard, issuance_recorder
+        self._live, self._baseline, self._f005, self._builders, self._replay = live_authority, baseline_source, f005_state_source, builder_source, replay_guard
+        self._issuance = PersistentBuilderEntryIssuanceRecorder()
 
     @staticmethod
     def _permit(value: object) -> BuildAuthorizationConsumptionPermit:
