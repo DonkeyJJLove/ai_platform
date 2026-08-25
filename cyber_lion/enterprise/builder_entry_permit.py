@@ -46,6 +46,11 @@ _MAX_RESPONSE = 256 * 1024
 _ENV_REF_RE = re.compile(r"^[A-Z][A-Z0-9_]{0,255}$")
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def _canonical_json(value: object) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
@@ -78,6 +83,14 @@ def _sealed_subject(value: object) -> TrustedBuilderSubject:
     return value
 
 
+def _wire_scope(value: object, *, name: str) -> tuple[str, ...]:
+    if type(value) is not list or not value or any(type(item) is not str or not item for item in value):
+        raise BuilderEntryPermitError(f"{name} wire value invalid")
+    if len(set(value)) != len(value):
+        raise BuilderEntryPermitError(f"{name} wire value invalid")
+    return tuple(value)
+
+
 def _subject_from_record(record: Mapping[str, object], *, expected_lookup: Mapping[str, object]) -> TrustedBuilderSubject:
     if not isinstance(record, Mapping) or frozenset(record.keys()) != frozenset({"record_kind", "lookup_key", "subject"}):
         raise BuilderEntryPermitError("builder subject record is not canonical")
@@ -89,8 +102,11 @@ def _subject_from_record(record: Mapping[str, object], *, expected_lookup: Mappi
     raw = record.get("subject")
     if not isinstance(raw, Mapping) or frozenset(raw.keys()) != frozenset(TrustedBuilderSubject.__dataclass_fields__.keys()):
         raise BuilderEntryPermitError("builder subject payload invalid")
+    decoded = dict(raw)
+    decoded["candidate_scope"] = _wire_scope(decoded.get("candidate_scope"), name="candidate_scope")
+    decoded["resource_scope"] = _wire_scope(decoded.get("resource_scope"), name="resource_scope")
     try:
-        return _sealed_subject(TrustedBuilderSubject(**dict(raw)))
+        return _sealed_subject(TrustedBuilderSubject(**decoded))
     except (TypeError, ValueError) as exc:
         raise BuilderEntryPermitError("builder subject reconstruction failed") from exc
 
@@ -253,12 +269,12 @@ class TrustedControlPlaneBuilderClient:
             headers={"Authorization": "Bearer " + credential, "Accept": "application/json"},
             method="GET",
         )
-        # Re-observation validates the original seal; it never refreshes it.
         provider_version_now, endpoint_now, _credential_env_now, credential_now = self._validated_process_configuration()
         if (provider_version_now, endpoint_now, credential_now) != (provider_version, endpoint, credential):
             raise BuilderEntryPermitError("trusted control-plane process configuration changed during request construction")
+        opener = urllib.request.build_opener(_NoRedirectHandler())
         try:
-            with urllib.request.urlopen(request, timeout=5) as response:
+            with opener.open(request, timeout=5) as response:
                 if getattr(response, "status", None) != 200:
                     raise BuilderEntryPermitError("trusted control-plane service denied request")
                 raw = response.read(_MAX_RESPONSE + 1)

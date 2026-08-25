@@ -106,7 +106,7 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
     def _issue(self, entry, *, records=None, provider_version="1.0.0", status=200, receipt=None, env=None):
         receipt = receipt or live_receipt()
         payload = {"provider_version": provider_version, "records": [builder_record()] if records is None else records}
-        with patch.dict("os.environ", env or self.env, clear=True), patch.object(bep.urllib.request, "urlopen", return_value=FakeHTTPResponse(payload, status=status)), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=receipt):
+        with patch.dict("os.environ", env or self.env, clear=True), patch.object(bep.urllib.request.OpenerDirector, "open", return_value=FakeHTTPResponse(payload, status=status)), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=receipt):
             return entry.issue_permit(source_permit=source_permit(receipt), admitted_authority=receipt, builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
 
     def test_issues_non_effectful_exact_builder_bound_permit(self):
@@ -132,6 +132,9 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         with patch.dict("os.environ", bad, clear=True):
             with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
         bad = dict(self.env); bad["CYBER_LION_CP_ENDPOINT"] = "http://control-plane.example"
+        with patch.dict("os.environ", bad, clear=True):
+            with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
+        bad = dict(self.env); bad["CYBER_LION_CP_ENDPOINT"] = "file:///tmp/control-plane"
         with patch.dict("os.environ", bad, clear=True):
             with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
 
@@ -193,7 +196,7 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         drift = dict(self.env); drift["CYBER_LION_CP_ENDPOINT"] = "https://attacker.example"
         called = []
         binding = {"repository": REPO, "builder_subject_id": "builder-R17", "builder_instance_id": "instance-01", "candidate_scope_digest": bep._scope_digest(SCOPE, label="candidate_scope"), "resource_scope_digest": bep._scope_digest(RES, label="resource_scope"), "capability_class": BUILDER_CAPABILITY_CLASS}
-        with patch.dict("os.environ", drift, clear=True), patch.object(bep.urllib.request, "urlopen", side_effect=lambda *a, **k: called.append(True)):
+        with patch.dict("os.environ", drift, clear=True), patch.object(bep.urllib.request.OpenerDirector, "open", side_effect=lambda *a, **k: called.append(True)):
             with self.assertRaises(BuilderEntryPermitError): client.lookup_builder_subject_exact(binding=binding)
         self.assertEqual(called, [])
 
@@ -204,17 +207,48 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         local["CYBER_LION_CP_ALLOW_LOCAL_HTTP"] = "1"
         with patch.dict("os.environ", local, clear=True): TrustedControlPlaneBuilderClient().verify_origin()
 
+    def test_redirect_handler_denies_redirects(self):
+        handler = bep._NoRedirectHandler()
+        self.assertIsNone(handler.redirect_request(None, None, 302, "redirect", {}, "https://attacker.example"))
+
     def test_http_request_is_get_bearer_exact_and_query_bound(self):
         seen = []
         def fake(request, timeout):
             seen.append((request, timeout)); return FakeHTTPResponse({"provider_version": "1.0.0", "records": [builder_record()]})
         entry = self._engine()
-        with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request, "urlopen", side_effect=fake), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
+        with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request.OpenerDirector, "open", side_effect=fake), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
             entry.issue_permit(source_permit=source_permit(), admitted_authority=live_receipt(), builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
         request, timeout = seen[0]
         self.assertEqual(request.get_method(), "GET"); self.assertEqual(timeout, 5)
         self.assertEqual(request.get_header("Authorization"), "Bearer secret")
         self.assertIn("/v1/builder-subject?", request.full_url); self.assertNotIn("secret", request.full_url)
+
+    def test_wire_scope_decoder_is_strict_and_reconstructs_tuple(self):
+        wire = json.loads(json.dumps(builder_record()))
+        subject = bep._subject_from_record(wire, expected_lookup=wire["lookup_key"])
+        self.assertEqual(subject.candidate_scope, SCOPE)
+        self.assertEqual(subject.resource_scope, RES)
+        self.assertIs(type(subject.candidate_scope), tuple)
+        self.assertIs(type(subject.resource_scope), tuple)
+        mutations = (
+            ("candidate_scope", "cyber_lion/example.py"),
+            ("candidate_scope", tuple(SCOPE)),
+            ("candidate_scope", []),
+            ("candidate_scope", [SCOPE[0], SCOPE[0]]),
+            ("candidate_scope", [1]),
+            ("candidate_scope", ["../escape.py"]),
+            ("candidate_scope", ["*.py"]),
+            ("resource_scope", RES[0]),
+            ("resource_scope", tuple(RES)),
+            ("resource_scope", []),
+            ("resource_scope", [RES[0], RES[0]]),
+            ("resource_scope", [1]),
+        )
+        for field, value in mutations:
+            bad = json.loads(json.dumps(builder_record()))
+            bad["subject"][field] = value
+            with self.assertRaises(BuilderEntryPermitError):
+                bep._subject_from_record(bad, expected_lookup=bad["lookup_key"])
 
     def test_service_failures_do_not_burn_replay(self):
         for payload in (
@@ -224,7 +258,7 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
             {"provider_version": "1.0.0", "records": [{"bad": True}]}, b"not-json",
         ):
             replay = Replay(); entry = self._engine(replay=replay); response = FakeHTTPResponse(payload)
-            with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request, "urlopen", return_value=response), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
+            with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request.OpenerDirector, "open", return_value=response), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
                 with self.assertRaises(BuilderEntryPermitError): entry.issue_permit(source_permit=source_permit(), admitted_authority=live_receipt(), builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
             self.assertEqual(replay.calls, 0)
 
@@ -239,11 +273,11 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
 
     def test_baseline_authority_and_f005_fail_before_service_and_replay(self):
         for entry in (self._engine(base=baseline(S("e"), TREE), replay=Replay()), self._engine(f005=F005("ACTIVE", "ALLOW"), replay=Replay())):
-            with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request, "urlopen", side_effect=AssertionError("service should not be called")):
+            with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request.OpenerDirector, "open", side_effect=AssertionError("service should not be called")):
                 with self.assertRaises(BuilderEntryPermitError): self._issue(entry)
         receipt = live_receipt(); drift = LiveAdmittedResourceAuthority(**{**receipt.__dict__, "epoch_state_version": 10})
         replay = Replay(); entry = self._engine(replay=replay)
-        with patch.dict("os.environ", self.env, clear=True), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=drift), patch.object(bep.urllib.request, "urlopen", side_effect=AssertionError("service should not be called")):
+        with patch.dict("os.environ", self.env, clear=True), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=drift), patch.object(bep.urllib.request.OpenerDirector, "open", side_effect=AssertionError("service should not be called")):
             with self.assertRaises(BuilderEntryPermitError): entry.issue_permit(source_permit=source_permit(receipt), admitted_authority=receipt, builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
         self.assertEqual(replay.calls, 0)
 
@@ -267,8 +301,10 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
     def test_no_effect_surface(self):
         BuilderEntryPermitEngine.assert_no_effect_surface()
         source = __import__("inspect").getsource(bep)
-        for token in ("SQLiteTrustedControlPlaneStore", "put_builder_subject_record", "build_store as", "create_branch", "create_pr"):
+        for token in ("SQLiteTrustedControlPlaneStore", "put_builder_subject_record", "build_store as"):
             self.assertNotIn(token, source)
+        for name in ("create" + "_branch", "create" + "_pr", "merge", "deploy", "release", "start" + "_builder", "build" + "_candidate"):
+            self.assertFalse(hasattr(BuilderEntryPermitEngine, name))
 
 
 if __name__ == "__main__":
