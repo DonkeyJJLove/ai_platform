@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from hashlib import sha256
 from typing import Protocol, Mapping, Any
 
 from cyber_lion.contracts.build_authorization_consumption import (
     BuildAuthorizationConsumptionPermit,
     SCHEMA_VERSION,
-    canonical_json,
+    compute_consumption_replay_digest,
 )
 from cyber_lion.contracts.candidate_build_authorization import (
     BoundedCandidateBuildAuthorization,
@@ -24,7 +23,6 @@ class BuildAuthorizationConsumptionError(RuntimeError):
     pass
 
 
-_REPLAY_DOMAIN = b"LION/E004-CANDIDATE-BUILD-AUTHORIZATION-CONSUMPTION/1\0"
 _EFFECT_METHODS = frozenset({
     "execute", "write", "push", "merge", "deploy", "release", "create_branch",
     "create_pr", "run_test", "build_candidate", "consume_candidate", "issue_grant",
@@ -39,10 +37,6 @@ def _utc(value: str, *, name: str) -> datetime:
     if parsed.tzinfo is None:
         raise BuildAuthorizationConsumptionError(f"{name} must be timezone-aware")
     return parsed.astimezone(timezone.utc)
-
-
-def _digest(payload: object) -> str:
-    return sha256(_REPLAY_DOMAIN + canonical_json(payload)).hexdigest()
 
 
 class TrustedRepositoryBaselineSource(Protocol):
@@ -199,26 +193,33 @@ class BuildAuthorizationConsumptionEngine:
 
         self._check_f005(self._f005.current())
 
-        replay_payload = {
-            "authorization_id": authorization.authorization_id,
-            "authorization_digest": authorization.authorization_digest,
-            "issuance_replay_digest": authorization.issuance_replay_digest,
-            "repository": authorization.repository,
-            "baseline_master_sha": authorization.baseline_master_sha,
-            "baseline_master_tree_sha": authorization.baseline_master_tree_sha,
-            "candidate_scope": list(authorization.candidate_scope),
-            "resource_scope": list(authorization.resource_scope),
-            "action": "BUILD_CANDIDATE",
-            "grant_id": authorization.grant_id,
-            "leaf_grant_digest": authorization.leaf_grant_digest,
-            "authority_lineage_digest": authorization.authority_lineage_digest,
-            "authority_epoch": authorization.authority_epoch,
-            "authority_state_version": authorization.authority_state_version,
-            "root_grant_id": authorization.root_grant_id,
-            "root_grant_digest": authorization.root_grant_digest,
-            "live_admission_digest": authorization.live_admission_digest,
-        }
-        replay_digest = _digest(replay_payload)
+        current_baseline_digest = current_baseline.digest()
+        current_authority_digest = current_authority.digest()
+        replay_digest = compute_consumption_replay_digest(
+            authorization_id=authorization.authorization_id,
+            authorization_digest=authorization.authorization_digest,
+            issuance_replay_digest=authorization.issuance_replay_digest,
+            repository=authorization.repository,
+            baseline_master_sha=authorization.baseline_master_sha,
+            baseline_master_tree_sha=authorization.baseline_master_tree_sha,
+            baseline_observation_digest=authorization.baseline_observation_digest,
+            current_baseline_digest=current_baseline_digest,
+            candidate_scope=authorization.candidate_scope,
+            resource_scope=authorization.resource_scope,
+            action="BUILD_CANDIDATE",
+            grant_id=authorization.grant_id,
+            leaf_grant_digest=authorization.leaf_grant_digest,
+            authority_lineage_digest=authorization.authority_lineage_digest,
+            authority_provenance_id=authorization.authority_provenance_id,
+            authority_epoch=authorization.authority_epoch,
+            authority_state_version=authorization.authority_state_version,
+            root_grant_id=authorization.root_grant_id,
+            root_grant_digest=authorization.root_grant_digest,
+            live_admission_digest=authorization.live_admission_digest,
+            current_authority_digest=current_authority_digest,
+            authorization_valid_from=authorization.valid_from,
+            authorization_expires_at=authorization.expires_at,
+        )
         checked_at = now.isoformat()
         if self._replay.consume(replay_digest, consumed_at=checked_at) is not True:
             raise BuildAuthorizationConsumptionError("authorization consumption replay denied")
@@ -248,8 +249,8 @@ class BuildAuthorizationConsumptionEngine:
             authorization_valid_from=authorization.valid_from,
             authorization_expires_at=authorization.expires_at,
             checked_at=checked_at,
-            current_baseline_digest=current_baseline.digest(),
-            current_authority_digest=current_authority.digest(),
+            current_baseline_digest=current_baseline_digest,
+            current_authority_digest=current_authority_digest,
             consumption_replay_digest=replay_digest,
         ).sealed()
         return permit
