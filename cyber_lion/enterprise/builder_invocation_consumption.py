@@ -14,20 +14,14 @@ from cyber_lion.contracts.builder_invocation_consumption import (
 from cyber_lion.contracts.builder_invocation_permit import BuilderInvocationPermit
 from cyber_lion.contracts.candidate_build_authorization import TrustedRepositoryBaseline
 from cyber_lion.enterprise.builder_entry_permit import PinnedTrustedBuilderSubjectSource
-from cyber_lion.enterprise.candidate_build_authorization import (
-    LiveAdmittedResourceAuthority,
-    LiveResourceAuthorityAdmission,
-)
+from cyber_lion.enterprise.candidate_build_authorization import LiveAdmittedResourceAuthority, LiveResourceAuthorityAdmission
 from cyber_lion.enterprise.persistent_authority_state import (
     PersistentAuthorityStoreOrigin,
     PersistentBuilderEntryIssuanceRecord,
     PersistentBuilderInvocationIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
-from cyber_lion.enterprise.trusted_control_plane_runtime import (
-    build_authority_state_store,
-    verify_authority_state_store_origin,
-)
+from cyber_lion.enterprise.trusted_control_plane_runtime import build_authority_state_store, verify_authority_state_store_origin
 
 
 class BuilderInvocationConsumptionError(RuntimeError):
@@ -50,8 +44,6 @@ class F005StateSource(Protocol):
 
 
 class PersistentBuilderInvocationConsumptionReplayGuard:
-    """Restart-safe R20 replay guard pinned to the canonical process/store origin."""
-
     DOMAIN = "builder-invocation-permit-consumption"
     __slots__ = ("_store", "_origin")
 
@@ -79,8 +71,6 @@ class PersistentBuilderInvocationConsumptionReplayGuard:
 
 
 class PersistentBuilderInvocationIssuanceSource:
-    """Read-only R19 provenance plus exact transitive R17 ancestry on one canonical origin."""
-
     __slots__ = ("_store", "_origin")
 
     def __init__(self) -> None:
@@ -113,42 +103,24 @@ class PersistentBuilderInvocationIssuanceSource:
             raise BuilderInvocationConsumptionError("durable builder invocation issuance unavailable") from exc
         if type(record) is not PersistentBuilderInvocationIssuanceRecord:
             raise BuilderInvocationConsumptionError("durable builder invocation issuance type invalid")
-        try:
-            record.validate()
-        except Exception as exc:
-            raise BuilderInvocationConsumptionError("durable builder invocation issuance invalid") from exc
+        record.validate()
         if (record.authority_store_origin_id, record.authority_store_origin_digest) != (current.origin_id, current.origin_digest):
             raise BuilderInvocationConsumptionError("durable builder invocation issuance origin mismatch")
-
         try:
             ancestor = self._store.resolve_builder_entry_issuance(record.source_builder_entry_permit_id)
         except Exception as exc:
             raise BuilderInvocationConsumptionError("durable builder entry ancestry unavailable") from exc
         if type(ancestor) is not PersistentBuilderEntryIssuanceRecord:
             raise BuilderInvocationConsumptionError("durable builder entry ancestry type invalid")
-        try:
-            ancestor.validate()
-        except Exception as exc:
-            raise BuilderInvocationConsumptionError("durable builder entry ancestry invalid") from exc
-        if (
-            record.source_builder_entry_permit_id,
-            record.source_builder_entry_permit_digest,
-        ) != (
-            ancestor.builder_entry_permit_id,
-            ancestor.builder_entry_permit_digest,
+        ancestor.validate()
+        if (record.source_builder_entry_permit_id, record.source_builder_entry_permit_digest) != (
+            ancestor.builder_entry_permit_id, ancestor.builder_entry_permit_digest
         ):
             raise BuilderInvocationConsumptionError("builder invocation R17 ancestry identity mismatch")
         if (
-            record.authority_store_origin_id,
-            record.authority_store_origin_digest,
-            ancestor.authority_store_origin_id,
-            ancestor.authority_store_origin_digest,
-        ) != (
-            current.origin_id,
-            current.origin_digest,
-            current.origin_id,
-            current.origin_digest,
-        ):
+            record.authority_store_origin_id, record.authority_store_origin_digest,
+            ancestor.authority_store_origin_id, ancestor.authority_store_origin_digest,
+        ) != (current.origin_id, current.origin_digest, current.origin_id, current.origin_digest):
             raise BuilderInvocationConsumptionError("builder invocation R17/R19 ancestry origin mismatch")
         return record
 
@@ -180,12 +152,7 @@ def _sealed_invocation(value: object) -> BuilderInvocationPermit:
         raise BuilderInvocationConsumptionError("builder invocation permit state/action invalid")
     if value.builder_capability_class != BUILDER_CAPABILITY_CLASS:
         raise BuilderInvocationConsumptionError("builder invocation capability invalid")
-    if (
-        value.authority_effect,
-        value.execution_effect,
-        value.repository_ref_effect,
-        value.external_effect,
-    ) != ("NONE", "NONE", "NONE", "NONE"):
+    if (value.authority_effect, value.execution_effect, value.repository_ref_effect, value.external_effect) != ("NONE", "NONE", "NONE", "NONE"):
         raise BuilderInvocationConsumptionError("builder invocation permit carries effects")
     return value
 
@@ -219,66 +186,34 @@ def _sealed_subject(value: object) -> TrustedBuilderSubject:
 
 def _verify_exact_issuance(permit: BuilderInvocationPermit, record: PersistentBuilderInvocationIssuanceRecord) -> None:
     expected = (
-        permit.builder_invocation_permit_id,
-        permit.builder_invocation_permit_digest,
-        permit.builder_invocation_replay_digest,
-        permit.source_builder_entry_permit_id,
-        permit.source_builder_entry_permit_digest,
-        permit.repository,
-        permit.baseline_master_sha,
-        permit.baseline_master_tree_sha,
-        permit.current_baseline_digest,
-        permit.action,
-        permit.candidate_scope,
-        permit.resource_scope,
-        permit.authority_epoch,
-        permit.authority_state_version,
-        permit.root_grant_id,
-        permit.root_grant_digest,
-        permit.current_authority_digest,
-        permit.builder_subject_id,
-        permit.builder_instance_id,
-        permit.builder_capability_class,
-        permit.builder_identity_digest,
-        permit.builder_implementation_digest,
-        permit.builder_attestation_digest,
-        permit.current_builder_subject_digest,
-        permit.checked_at,
+        permit.builder_invocation_permit_id, permit.builder_invocation_permit_digest,
+        permit.builder_invocation_replay_digest, permit.source_builder_entry_permit_id,
+        permit.source_builder_entry_permit_digest, permit.repository, permit.baseline_master_sha,
+        permit.baseline_master_tree_sha, permit.current_baseline_digest, permit.action,
+        permit.candidate_scope, permit.resource_scope, permit.authority_epoch,
+        permit.authority_state_version, permit.root_grant_id, permit.root_grant_digest,
+        permit.current_authority_digest, permit.builder_subject_id, permit.builder_instance_id,
+        permit.builder_capability_class, permit.builder_identity_digest,
+        permit.builder_implementation_digest, permit.builder_attestation_digest,
+        permit.current_builder_subject_digest, permit.checked_at,
     )
     actual = (
-        record.builder_invocation_permit_id,
-        record.builder_invocation_permit_digest,
-        record.builder_invocation_replay_digest,
-        record.source_builder_entry_permit_id,
-        record.source_builder_entry_permit_digest,
-        record.repository,
-        record.baseline_master_sha,
-        record.baseline_master_tree_sha,
-        record.current_baseline_digest,
-        record.action,
-        record.candidate_scope,
-        record.resource_scope,
-        record.authority_epoch,
-        record.authority_state_version,
-        record.root_grant_id,
-        record.root_grant_digest,
-        record.current_authority_digest,
-        record.builder_subject_id,
-        record.builder_instance_id,
-        record.builder_capability_class,
-        record.builder_identity_digest,
-        record.builder_implementation_digest,
-        record.builder_attestation_digest,
-        record.current_builder_subject_digest,
-        record.issued_at,
+        record.builder_invocation_permit_id, record.builder_invocation_permit_digest,
+        record.builder_invocation_replay_digest, record.source_builder_entry_permit_id,
+        record.source_builder_entry_permit_digest, record.repository, record.baseline_master_sha,
+        record.baseline_master_tree_sha, record.current_baseline_digest, record.action,
+        record.candidate_scope, record.resource_scope, record.authority_epoch,
+        record.authority_state_version, record.root_grant_id, record.root_grant_digest,
+        record.current_authority_digest, record.builder_subject_id, record.builder_instance_id,
+        record.builder_capability_class, record.builder_identity_digest,
+        record.builder_implementation_digest, record.builder_attestation_digest,
+        record.current_builder_subject_digest, record.issued_at,
     )
     if actual != expected:
         raise BuilderInvocationConsumptionError("builder invocation durable issuance provenance mismatch")
 
 
 class BuilderInvocationConsumptionEngine:
-    """Consume exact R19 issuance once; never start a builder or produce candidate effects."""
-
     def __init__(
         self,
         *,
@@ -321,10 +256,7 @@ class BuilderInvocationConsumptionEngine:
         current = self._baseline.current(permit.repository)
         if type(current) is not TrustedRepositoryBaseline:
             raise BuilderInvocationConsumptionError("trusted baseline type invalid")
-        try:
-            current.validate()
-        except Exception as exc:
-            raise BuilderInvocationConsumptionError("trusted baseline invalid") from exc
+        current.validate()
         if (current.repository, current.master_sha, current.master_tree_sha) != (
             permit.repository, permit.baseline_master_sha, permit.baseline_master_tree_sha
         ):
@@ -338,10 +270,7 @@ class BuilderInvocationConsumptionEngine:
             raise BuilderInvocationConsumptionError("current authority revalidation failed") from exc
         if type(authority) is not LiveAdmittedResourceAuthority:
             raise BuilderInvocationConsumptionError("revalidated authority type invalid")
-        try:
-            authority.validate()
-        except Exception as exc:
-            raise BuilderInvocationConsumptionError("revalidated authority invalid") from exc
+        authority.validate()
         expected_authority = (
             permit.repository, permit.authority_epoch, permit.authority_state_version,
             permit.root_grant_id, permit.root_grant_digest, permit.current_authority_digest,
@@ -374,8 +303,7 @@ class BuilderInvocationConsumptionEngine:
             subject.builder_subject_id, subject.builder_instance_id, subject.capability_class,
             subject.repository, subject.candidate_scope, subject.resource_scope,
             subject.identity_digest, subject.implementation_digest,
-            subject.attestation_digest, subject.subject_digest,
-            subject.state, subject.source_kind,
+            subject.attestation_digest, subject.subject_digest, subject.state, subject.source_kind,
         )
         if actual_builder != expected_builder:
             raise BuilderInvocationConsumptionError("builder invocation/current builder mismatch")
@@ -414,13 +342,24 @@ class BuilderInvocationConsumptionEngine:
         checked_at = now.isoformat()
         if self._replay.consume(replay, consumed_at=checked_at) is not True:
             raise BuilderInvocationConsumptionError("builder invocation consumption replay denied")
-        return BuilderInvocationConsumptionPermit(
+        sealed = BuilderInvocationConsumptionPermit(
             schema_version=SCHEMA_VERSION,
             invocation_consumption_permit_id=f"bicp:{replay}",
             invocation_consumption_replay_digest=replay,
             checked_at=checked_at,
             **kwargs,
         ).sealed()
+
+        # R21 hardening: exact R20 artifact provenance must be durable before the permit escapes.
+        try:
+            current_origin = verify_authority_state_store_origin()
+            if type(current_origin) is not PersistentAuthorityStoreOrigin:
+                raise BuilderInvocationConsumptionError("canonical origin invalid before R20 issuance record")
+            from cyber_lion.enterprise.builder_start_admission import record_builder_invocation_consumption_issuance
+            record_builder_invocation_consumption_issuance(sealed)
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("durable R20 consumption issuance recording failed") from exc
+        return sealed
 
     @classmethod
     def assert_no_effect_surface(cls) -> None:
