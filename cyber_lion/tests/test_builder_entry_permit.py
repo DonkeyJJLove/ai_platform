@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import importlib
 import io
 import json
+import os
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -10,15 +14,18 @@ from cyber_lion.contracts.builder_entry_permit import BUILDER_CAPABILITY_CLASS, 
 from cyber_lion.contracts.build_authorization_consumption import BuildAuthorizationConsumptionPermit, SCHEMA_VERSION as CVER, compute_consumption_replay_digest
 from cyber_lion.contracts.candidate_build_authorization import TrustedRepositoryBaseline
 import cyber_lion.enterprise.builder_entry_permit as bep
+import cyber_lion.enterprise.trusted_control_plane_runtime as runtime
 from cyber_lion.enterprise.builder_entry_permit import (
     BuilderEntryPermitEngine,
     BuilderEntryPermitError,
+    PersistentBuilderEntryIssuanceRecorder,
     PinnedBuilderControlPlaneBackend,
     PinnedTrustedBuilderSubjectSource,
     TrustedBuilderSubjectSource,
     TrustedControlPlaneBuilderClient,
 )
 from cyber_lion.enterprise.candidate_build_authorization import LiveAdmittedResourceAuthority, LiveResourceAuthorityAdmission
+from cyber_lion.enterprise.persistent_authority_state import SQLiteAuthorityStateStore
 
 D = lambda c: c * 64
 S = lambda c: c * 40
@@ -92,7 +99,25 @@ class FakeHTTPResponse:
 
 class BuilderEntryPermitEngineTests(unittest.TestCase):
     def setUp(self):
-        self.env = {"CYBER_LION_CP_PROVIDER_VERSION": "1.0.0", "CYBER_LION_CP_ENDPOINT": "https://control-plane.example", "CYBER_LION_CP_CREDENTIAL_ENV": "CYBER_LION_CP_TOKEN", "CYBER_LION_CP_TOKEN": "secret"}
+        # Each unit test models a fresh process lifetime for the canonical origin anchor.
+        importlib.reload(runtime)
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        repo_root = Path(self.tmp.name) / "repo"
+        repo_root.mkdir()
+        self.authority_path = str(Path(self.tmp.name) / "control-plane.sqlite")
+        self.env = {
+            "CYBER_LION_CP_PROVIDER_VERSION": "1.0.0",
+            "CYBER_LION_CP_ENDPOINT": "https://control-plane.example",
+            "CYBER_LION_CP_CREDENTIAL_ENV": "CYBER_LION_CP_TOKEN",
+            "CYBER_LION_CP_TOKEN": "secret",
+            "LION_CP_RUNTIME_FACTORY_VERSION": "1.0.0",
+            "LION_CP_REPOSITORY_ROOT": str(repo_root),
+            "LION_CP_DATABASE_PATH": self.authority_path,
+        }
+        self.store = SQLiteAuthorityStateStore(self.authority_path)
+        with patch.dict("os.environ", self.env, clear=True):
+            self.recorder = PersistentBuilderEntryIssuanceRecorder()
 
     def _source(self):
         with patch.dict("os.environ", self.env, clear=True):
@@ -114,6 +139,24 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         self.assertEqual((permit.builder_subject_id, permit.builder_instance_id), ("builder-R17", "instance-01"))
         self.assertEqual((permit.authority_effect, permit.execution_effect, permit.repository_ref_effect, permit.external_effect), ("NONE", "NONE", "NONE", "NONE"))
         permit.validate()
+        record = self.store.resolve_builder_entry_issuance(permit.builder_entry_permit_id)
+        self.assertEqual(record.builder_entry_permit_digest, permit.builder_entry_permit_digest)
+        self.assertEqual(record.builder_entry_replay_digest, permit.builder_entry_replay_digest)
+        self.assertEqual(record.issued_at, permit.checked_at)
+
+    def test_duplicate_conflicting_issuance_record_denied(self):
+        permit = self._issue(self._engine())
+        with self.assertRaises(BuilderEntryPermitError):
+            self.recorder.record(permit)
+
+    def test_caller_supplied_issuance_store_or_recorder_is_denied(self):
+        fake_store = SQLiteAuthorityStateStore(str(Path(self.tmp.name) / "fake.sqlite"))
+        with self.assertRaises(TypeError):
+            PersistentBuilderEntryIssuanceRecorder(fake_store)
+        live = object.__new__(LiveResourceAuthorityAdmission)
+        with patch.dict("os.environ", self.env, clear=True):
+            with self.assertRaises(TypeError):
+                BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(baseline()), f005_state_source=F005(), builder_source=self._source(), replay_guard=Replay(), issuance_recorder=self.recorder)
 
     def test_direct_store_and_runtime_factory_surface_absent(self):
         self.assertFalse(hasattr(bep, "SQLiteTrustedControlPlaneStore"))
