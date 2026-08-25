@@ -1,8 +1,19 @@
+import subprocess
 import unittest
 from pathlib import Path
 from cyber_lion.architecture_projection.extractor import ArchitectureProjectionExtractor, available_projection_names
 
-CANONICAL_TREE = "4388748d063f940c077c4233e535acbc9a3b04a4"
+
+def observed_checkout_tree(repo_root: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "HEAD^{tree}"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=5,
+        shell=False,
+    )
+    return result.stdout.strip()
 
 
 def fixture_sources():
@@ -29,35 +40,35 @@ def fixture_sources():
 
 class ArchitectureProjectionExtractorTests(unittest.TestCase):
     def test_same_input_same_projection_and_order_independent(self):
-        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40, source_files={})
         first = extractor.extract_python({"b.py": "import os\ndef z(): pass\n", "a.py": "class A: pass\n"})
         second = extractor.extract_python({"a.py": "class A: pass\n", "b.py": "import os\ndef z(): pass\n"})
         self.assertEqual(first, second)
         self.assertEqual(first.source_digest(), second.source_digest())
 
     def test_path_punctuation_does_not_collide(self):
-        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40, source_files={})
         model = extractor.extract_python({"a-b.py": "class A: pass\n", "a_b.py": "class A: pass\n"})
         module_nodes = [n for n in model.nodes if n.kind == "module"]
         self.assertEqual(len(module_nodes), 2)
         self.assertEqual(len({n.node_id for n in module_nodes}), 2)
 
     def test_direct_local_calls_static_but_attribute_dispatch_not_promoted(self):
-        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40, source_files={})
         model = extractor.extract_python({"a.py": "def b(): pass\ndef a(x):\n b()\n x.b()\n"})
         static_edges = [e for e in model.edges if e.relation == "CALLS_STATIC"]
         self.assertEqual(len(static_edges), 1)
         self.assertTrue(all(not e.runtime_proof for e in static_edges))
 
     def test_calls_static_does_not_cross_nested_function_scope(self):
-        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40, source_files={})
         model = extractor.extract_python({"a.py": "def target(): pass\ndef outer():\n def nested():\n  target()\n"})
         outer = next(n for n in model.nodes if n.label == "outer")
         target = next(n for n in model.nodes if n.label == "target")
         self.assertFalse(any(e.source == outer.node_id and e.target == target.node_id and e.relation == "CALLS_STATIC" for e in model.edges))
 
     def test_calls_static_does_not_cross_lambda_or_nested_class_scope(self):
-        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha="b" * 40, source_files={})
         text = "def target(): pass\ndef outer():\n f=lambda: target()\n class Inner:\n  def method(self): target()\n"
         model = extractor.extract_python({"a.py": text})
         outer = next(n for n in model.nodes if n.label == "outer")
@@ -85,18 +96,28 @@ class ArchitectureProjectionExtractorTests(unittest.TestCase):
                 if node.fact_class == "CANONICAL_FACT":
                     self.assertEqual(len(node.source_digest), 64)
 
-    def test_all_ten_named_projections_build_from_real_checkout(self):
+    def test_all_ten_named_projections_build_from_exact_real_checkout_tree(self):
         repo_root = Path(__file__).resolve().parents[2]
-        extractor = ArchitectureProjectionExtractor(source_tree_sha=CANONICAL_TREE, source_root=repo_root)
+        canonical_tree = observed_checkout_tree(repo_root)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha=canonical_tree, source_root=repo_root)
+        self.assertEqual(extractor.observed_source_tree_sha, canonical_tree)
         for name in available_projection_names():
             model = extractor.named_projection(name)
             self.assertTrue(model.nodes, name)
+            self.assertEqual(model.source_tree_sha, canonical_tree)
             for node in model.nodes:
                 self.assertTrue(node.source_path, name)
                 if node.fact_class == "CANONICAL_FACT":
                     path = repo_root / node.source_path
                     self.assertTrue(path.is_file(), f"{name}: {node.source_path}")
                     self.assertEqual(len(node.source_digest), 64)
+
+    def test_real_checkout_tree_mismatch_fails_closed(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        actual_tree = observed_checkout_tree(repo_root)
+        mismatched_tree = ("0" * 40) if actual_tree != ("0" * 40) else ("1" * 40)
+        with self.assertRaisesRegex(ValueError, "source tree mismatch"):
+            ArchitectureProjectionExtractor(source_tree_sha=mismatched_tree, source_root=repo_root)
 
     def test_nonexistent_source_and_required_token_fail_closed(self):
         extractor = ArchitectureProjectionExtractor(source_tree_sha="d" * 40, source_files={"real.py": "class Real: pass\n"})
