@@ -2,6 +2,8 @@ from __future__ import annotations
 import ast
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
+import re
+import subprocess
 from .model import CanonicalDiagramModel, DiagramNode, DiagramEdge, canonical_projection_identity
 
 _PROJECTIONS = (
@@ -10,6 +12,7 @@ _PROJECTIONS = (
     "fleet-topology", "evolutionary-epoch-loop", "startup-agent-evolution-loop",
     "repository-mutation-boundaries", "event-and-causality-map", "capability-map",
 )
+_SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 
 def available_projection_names() -> tuple[str, ...]:
@@ -48,12 +51,50 @@ class ArchitectureProjectionExtractor:
     """Static-only canonical projection extractor; analyzed code is never imported or executed."""
 
     def __init__(self, *, source_tree_sha: str, source_root: str | Path | None = None, source_files: dict[str, str] | None = None):
+        if not _SHA40.fullmatch(source_tree_sha):
+            raise ValueError("canonical projection source_tree_sha is invalid")
         self.source_tree_sha = source_tree_sha
         self.source_root = Path(source_root) if source_root is not None else Path.cwd()
+        self._source_files_supplied = source_files is not None
         self.source_files = dict(source_files or {})
+        self.observed_source_tree_sha: str | None = None
+        if not self._source_files_supplied:
+            self._require_clean_checkout()
+            self.observed_source_tree_sha = self._observe_checkout_tree_sha()
+            if self.observed_source_tree_sha != self.source_tree_sha:
+                raise ValueError(
+                    "canonical projection source tree mismatch: "
+                    f"expected {self.source_tree_sha}, observed {self.observed_source_tree_sha}"
+                )
+
+    def _run_git(self, *args: str) -> subprocess.CompletedProcess[str]:
+        try:
+            return subprocess.run(
+                ["git", "-C", str(self.source_root), *args],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                shell=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise ValueError("canonical projection checkout state is unobservable") from exc
+
+    def _require_clean_checkout(self) -> None:
+        status = self._run_git("status", "--porcelain", "--untracked-files=no").stdout
+        if status.strip():
+            raise ValueError("canonical projection checkout is dirty")
+
+    def _observe_checkout_tree_sha(self) -> str:
+        observed = self._run_git("rev-parse", "HEAD^{tree}").stdout.strip()
+        if not _SHA40.fullmatch(observed):
+            raise ValueError("canonical projection checkout tree is invalid")
+        return observed
 
     def _source(self, path: str) -> str:
-        if path in self.source_files:
+        if self._source_files_supplied:
+            if path not in self.source_files:
+                raise ValueError(f"canonical projection source missing from supplied source set: {path}")
             return self.source_files[path]
         candidate = self.source_root / PurePosixPath(path)
         if not candidate.is_file():
