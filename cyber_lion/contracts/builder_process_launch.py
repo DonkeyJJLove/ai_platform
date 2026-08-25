@@ -1,4 +1,4 @@
-"""Immutable contracts for the first real builder process start effect boundary."""
+"""Immutable contracts for the first real builder process-start effect boundary."""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -7,8 +7,9 @@ import json
 import re
 from typing import Any, Mapping
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 PROVIDER_CAPABILITY_CLASS = "BUILDER_PROCESS_START_ONLY"
+PREPARE_CAPABILITY_CLASS = "MATERIALIZE_HELD_PROCESS_ONLY"
 EFFECT_CLASS = "BUILDER_PROCESS_START"
 HELD_STATE = "HELD_NOT_EXECUTING_BUILDER"
 STARTED_STATE = "STARTED_OBSERVED"
@@ -71,7 +72,9 @@ class BuilderProcessRuntimeProviderDescriptor:
     provider_identity_digest: str
     provider_implementation_digest: str
     provider_attestation_digest: str
+    runtime_instance_identity: str
     capability_class: str
+    prepare_capability_class: str
     supported_process_profile_digest: str
     supported_launch_policy_digest: str
     isolation_class: str
@@ -94,13 +97,13 @@ class BuilderProcessRuntimeProviderDescriptor:
     def validate(self) -> "BuilderProcessRuntimeProviderDescriptor":
         if self.schema_version != SCHEMA_VERSION:
             raise BuilderProcessLaunchContractError("provider schema invalid")
-        _id(self.provider_id, "provider_id")
+        _id(self.provider_id, "provider_id"); _id(self.runtime_instance_identity, "runtime_instance_identity")
         for name in ("provider_identity_digest", "provider_implementation_digest", "provider_attestation_digest",
                      "supported_process_profile_digest", "supported_launch_policy_digest"):
             _digest(getattr(self, name), name)
         for name in ("isolation_class", "process_identity_scheme", "observation_scheme", "recovery_scheme"):
             _text(getattr(self, name), name, 512)
-        if self.capability_class != PROVIDER_CAPABILITY_CLASS:
+        if self.capability_class != PROVIDER_CAPABILITY_CLASS or self.prepare_capability_class != PREPARE_CAPABILITY_CLASS:
             raise BuilderProcessLaunchContractError("provider capability invalid")
         if (self.repository_ref_capability, self.authority_minting_capability, self.external_effect_capability) != ("NONE", "NONE", "NONE"):
             raise BuilderProcessLaunchContractError("provider carries prohibited capability")
@@ -125,6 +128,7 @@ class BuilderProcessIdentity:
     launch_policy_digest: str
     runtime_provider_id: str
     runtime_provider_identity_digest: str
+    runtime_instance_identity: str
     execution_environment_id: str
     process_handle_reference: str
     process_identity_token: str
@@ -144,8 +148,9 @@ class BuilderProcessIdentity:
         if self.schema_version != SCHEMA_VERSION:
             raise BuilderProcessLaunchContractError("identity schema invalid")
         for name in ("launch_id", "builder_subject_id", "builder_instance_id", "process_profile_id", "runtime_provider_id",
-                     "execution_environment_id", "process_handle_reference", "process_identity_token", "started_at"):
-            _id(getattr(self, name), name) if name != "started_at" else _text(getattr(self, name), name, 1024)
+                     "runtime_instance_identity", "execution_environment_id", "process_handle_reference", "process_identity_token"):
+            _id(getattr(self, name), name)
+        _text(self.started_at, "started_at", 1024)
         for name in ("process_profile_digest", "launch_policy_digest", "runtime_provider_identity_digest"):
             _digest(getattr(self, name), name)
         if self.process_handle_reference.isdigit():
@@ -164,25 +169,19 @@ class BuilderProcessIdentity:
 
 
 def launch_replay_payload(**kwargs: object) -> dict[str, object]:
-    id_fields = (
-        "source_builder_start_admission_id", "source_builder_start_issuance_record_id", "repository",
-        "root_grant_id", "builder_subject_id", "builder_instance_id", "process_profile_id", "runtime_provider_id",
-    )
-    for name in id_fields:
-        _repo(kwargs[name]) if name == "repository" else _id(kwargs[name], name)
-    for name in (
-        "source_builder_start_admission_digest", "source_builder_start_admission_replay_digest",
-        "source_builder_start_issuance_record_digest", "root_grant_digest", "expected_current_authority_digest",
-        "builder_identity_digest", "builder_implementation_digest", "builder_attestation_digest",
-        "expected_builder_subject_digest", "process_profile_digest", "launch_policy_digest",
-        "runtime_provider_identity_digest", "runtime_provider_implementation_digest", "runtime_provider_attestation_digest",
-    ):
+    for name in ("source_builder_start_admission_id", "source_builder_start_issuance_record_id", "root_grant_id",
+                 "builder_subject_id", "builder_instance_id", "process_profile_id", "runtime_provider_id", "runtime_instance_identity"):
+        _id(kwargs[name], name)
+    _repo(kwargs["repository"])
+    for name in ("source_builder_start_admission_digest", "source_builder_start_admission_replay_digest",
+                 "source_builder_start_issuance_record_digest", "root_grant_digest", "expected_current_authority_digest",
+                 "builder_identity_digest", "builder_implementation_digest", "builder_attestation_digest",
+                 "expected_builder_subject_digest", "process_profile_digest", "launch_policy_digest",
+                 "runtime_provider_identity_digest", "runtime_provider_implementation_digest", "runtime_provider_attestation_digest"):
         _digest(kwargs[name], name)
-    _sha(kwargs["baseline_master_sha"], "baseline_master_sha")
-    _sha(kwargs["baseline_master_tree_sha"], "baseline_master_tree_sha")
+    _sha(kwargs["baseline_master_sha"], "baseline_master_sha"); _sha(kwargs["baseline_master_tree_sha"], "baseline_master_tree_sha")
     for name in ("authority_epoch", "authority_state_version"):
-        value = kwargs[name]
-        minimum = 0 if name == "authority_epoch" else 1
+        value = kwargs[name]; minimum = 0 if name == "authority_epoch" else 1
         if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
             raise BuilderProcessLaunchContractError(f"{name} invalid")
     return dict(kwargs)
@@ -221,6 +220,7 @@ class BuilderProcessLaunchRequest:
     runtime_provider_identity_digest: str
     runtime_provider_implementation_digest: str
     runtime_provider_attestation_digest: str
+    runtime_instance_identity: str
     launch_replay_digest: str
     authority_effect: str = "NONE"
     execution_effect: str = "NONE"
@@ -281,6 +281,7 @@ class BuilderProcessLaunchReceipt:
     runtime_provider_identity_digest: str
     runtime_provider_implementation_digest: str
     runtime_provider_attestation_digest: str
+    runtime_instance_identity: str
     launch_id: str
     execution_environment_id: str
     process_handle_reference: str
@@ -308,7 +309,7 @@ class BuilderProcessLaunchReceipt:
         if self.schema_version != SCHEMA_VERSION:
             raise BuilderProcessLaunchContractError("receipt schema invalid")
         for name in ("launch_receipt_id", "launch_request_id", "source_builder_start_admission_id", "process_profile_id",
-                     "runtime_provider_id", "launch_id", "execution_environment_id", "process_handle_reference", "process_identity_token"):
+                     "runtime_provider_id", "runtime_instance_identity", "launch_id", "execution_environment_id", "process_handle_reference", "process_identity_token"):
             _id(getattr(self, name), name)
         _repo(self.repository); _sha(self.baseline_master_sha, "baseline_master_sha"); _sha(self.baseline_master_tree_sha, "baseline_master_tree_sha")
         for name in ("launch_request_digest", "launch_replay_digest", "source_builder_start_admission_digest", "authority_digest_at_launch",
@@ -321,8 +322,7 @@ class BuilderProcessLaunchReceipt:
         if (self.effect_class, self.effect_state, self.authority_effect, self.execution_effect, self.repository_ref_effect, self.external_effect) != (
             EFFECT_CLASS, STARTED_STATE, "NONE", EFFECT_CLASS, "NONE", "NONE"):
             raise BuilderProcessLaunchContractError("receipt effect semantics invalid")
-        expected_id = f"bplx:{self.launch_replay_digest}"
-        if self.launch_receipt_id != expected_id:
+        if self.launch_receipt_id != f"bplx:{self.launch_replay_digest}":
             raise BuilderProcessLaunchContractError("receipt id mismatch")
         if self.launch_receipt_digest:
             _digest(self.launch_receipt_digest, "launch_receipt_digest")
