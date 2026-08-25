@@ -14,6 +14,7 @@ from cyber_lion.enterprise.trusted_control_plane_providers import (
 REPO = "DonkeyJJLove/ai_platform"
 BASE = "1" * 40
 HEAD = "2" * 40
+D = lambda c: c * 64
 
 
 class TrustedControlPlaneProviderTests(unittest.TestCase):
@@ -43,10 +44,24 @@ class TrustedControlPlaneProviderTests(unittest.TestCase):
                 },
                 "lineage": [],
             }
+            builder = {
+                "record_kind": "builder-subject",
+                "lookup_key": {
+                    "repository": REPO,
+                    "builder_subject_id": "builder-1",
+                    "builder_instance_id": "instance-1",
+                    "candidate_scope_digest": D("a"),
+                    "resource_scope_digest": D("b"),
+                    "capability_class": "DETACHED_CANDIDATE_BUILD_ONLY",
+                },
+                "subject": {"sealed": True},
+            }
             store.put_pr_bootstrap(bootstrap)
             store.put_authority_record(authority)
+            store.put_builder_subject_record(builder)
 
             restarted = SQLiteTrustedControlPlaneStore(path)
+            self.assertTrue(restarted.ready())
             self.assertEqual(
                 restarted.lookup_pr_bootstrap_exact(
                     repository=REPO,
@@ -68,6 +83,10 @@ class TrustedControlPlaneProviderTests(unittest.TestCase):
                 ),
                 (authority,),
             )
+            self.assertEqual(
+                restarted.lookup_builder_subject_exact(**builder["lookup_key"]),
+                (builder,),
+            )
 
     def test_wrong_exact_key_returns_zero_records(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -80,6 +99,17 @@ class TrustedControlPlaneProviderTests(unittest.TestCase):
                     head_sha=HEAD,
                     mission_id="missing",
                     grant_id="missing",
+                ),
+                (),
+            )
+            self.assertEqual(
+                store.lookup_builder_subject_exact(
+                    repository=REPO,
+                    builder_subject_id="missing",
+                    builder_instance_id="missing",
+                    candidate_scope_digest=D("a"),
+                    resource_scope_digest=D("b"),
+                    capability_class="DETACHED_CANDIDATE_BUILD_ONLY",
                 ),
                 (),
             )
@@ -97,8 +127,37 @@ class TrustedControlPlaneProviderTests(unittest.TestCase):
             }
             store.put_authority_record({"lookup_key": lookup, "value": "a"})
             store.put_authority_record({"lookup_key": lookup, "value": "b"})
-            records = store.lookup_authority_exact(**lookup)
-            self.assertEqual(len(records), 2)
+            self.assertEqual(len(store.lookup_authority_exact(**lookup)), 2)
+
+            builder_lookup = {
+                "repository": REPO,
+                "builder_subject_id": "builder-1",
+                "builder_instance_id": "instance-1",
+                "candidate_scope_digest": D("a"),
+                "resource_scope_digest": D("b"),
+                "capability_class": "DETACHED_CANDIDATE_BUILD_ONLY",
+            }
+            store.put_builder_subject_record({"record_kind": "builder-subject", "lookup_key": builder_lookup, "subject": {"value": "a"}})
+            store.put_builder_subject_record({"record_kind": "builder-subject", "lookup_key": builder_lookup, "subject": {"value": "b"}})
+            self.assertEqual(len(store.lookup_builder_subject_exact(**builder_lookup)), 2)
+
+    def test_builder_bootstrap_rejects_noncanonical_record(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = SQLiteTrustedControlPlaneStore(str(Path(directory) / "cp.db"))
+            lookup = {
+                "repository": REPO,
+                "builder_subject_id": "builder-1",
+                "builder_instance_id": "instance-1",
+                "candidate_scope_digest": D("a"),
+                "resource_scope_digest": D("b"),
+                "capability_class": "DETACHED_CANDIDATE_BUILD_ONLY",
+            }
+            with self.assertRaises(TrustedControlPlaneProviderError):
+                store.put_builder_subject_record({"record_kind": "authority", "lookup_key": lookup, "subject": {}})
+            with self.assertRaises(TrustedControlPlaneProviderError):
+                store.put_builder_subject_record({"record_kind": "builder-subject", "lookup_key": {**lookup, "extra": "x"}, "subject": {}})
+            with self.assertRaises(TrustedControlPlaneProviderError):
+                store.put_builder_subject_record({"record_kind": "builder-subject", "lookup_key": lookup, "subject": "bad"})
 
     def test_signature_adapter_is_runtime_bound_and_fail_closed(self) -> None:
         seen = []
