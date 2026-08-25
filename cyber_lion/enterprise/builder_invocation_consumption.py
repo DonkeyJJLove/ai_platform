@@ -48,19 +48,32 @@ class F005StateSource(Protocol):
     def current(self) -> Mapping[str, Any]: ...
 
 
-class InvocationConsumptionReplayGuard(Protocol):
-    def consume(self, replay_digest: str, *, consumed_at: str) -> bool: ...
-
-
 class PersistentBuilderInvocationConsumptionReplayGuard:
-    DOMAIN = "builder-invocation-permit-consumption"
+    """Restart-safe R20 replay guard pinned to the canonical process/store origin."""
 
-    def __init__(self, store: object):
-        if not callable(getattr(store, "consume_replay", None)):
-            raise BuilderInvocationConsumptionError("persistent replay store unavailable")
+    DOMAIN = "builder-invocation-permit-consumption"
+    __slots__ = ("_store", "_origin")
+
+    def __init__(self) -> None:
+        try:
+            store = build_authority_state_store()
+            origin = verify_authority_state_store_origin()
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("canonical persistent replay store unavailable") from exc
+        if type(store) is not SQLiteAuthorityStateStore or not store.ready():
+            raise BuilderInvocationConsumptionError("canonical persistent replay store invalid")
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise BuilderInvocationConsumptionError("canonical replay store origin invalid")
         self._store = store
+        self._origin = origin
 
     def consume(self, replay_digest: str, *, consumed_at: str) -> bool:
+        try:
+            current = verify_authority_state_store_origin()
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("canonical replay store origin unavailable") from exc
+        if current != self._origin:
+            raise BuilderInvocationConsumptionError("canonical replay store origin drift")
         return self._store.consume_replay(self.DOMAIN, replay_digest, consumed_at)
 
 
@@ -99,7 +112,10 @@ class PersistentBuilderInvocationIssuanceSource:
             raise BuilderInvocationConsumptionError("durable builder invocation issuance unavailable") from exc
         if type(record) is not PersistentBuilderInvocationIssuanceRecord:
             raise BuilderInvocationConsumptionError("durable builder invocation issuance type invalid")
-        record.validate()
+        try:
+            record.validate()
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("durable builder invocation issuance invalid") from exc
         if (record.authority_store_origin_id, record.authority_store_origin_digest) != (current.origin_id, current.origin_digest):
             raise BuilderInvocationConsumptionError("durable builder invocation issuance origin mismatch")
         return record
@@ -238,22 +254,21 @@ class BuilderInvocationConsumptionEngine:
         baseline_source: TrustedRepositoryBaselineSource,
         f005_state_source: F005StateSource,
         builder_source: PinnedTrustedBuilderSubjectSource,
-        replay_guard: InvocationConsumptionReplayGuard,
     ) -> None:
         if type(live_authority) is not LiveResourceAuthorityAdmission:
             raise BuilderInvocationConsumptionError("live authority admission required")
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource:
             raise BuilderInvocationConsumptionError("exact pinned builder source required")
         builder_source.verify_origin()
-        for obj, method in ((baseline_source, "current"), (f005_state_source, "current"), (replay_guard, "consume")):
+        for obj, method in ((baseline_source, "current"), (f005_state_source, "current")):
             if not callable(getattr(obj, method, None)):
                 raise BuilderInvocationConsumptionError("builder invocation consumption dependency unavailable")
         self._live = live_authority
         self._baseline = baseline_source
         self._f005 = f005_state_source
         self._builders = builder_source
-        self._replay = replay_guard
         self._source_issuance = PersistentBuilderInvocationIssuanceSource()
+        self._replay = PersistentBuilderInvocationConsumptionReplayGuard()
 
     def issue_permit(
         self,
@@ -274,7 +289,10 @@ class BuilderInvocationConsumptionEngine:
         current = self._baseline.current(permit.repository)
         if type(current) is not TrustedRepositoryBaseline:
             raise BuilderInvocationConsumptionError("trusted baseline type invalid")
-        current.validate()
+        try:
+            current.validate()
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("trusted baseline invalid") from exc
         if (current.repository, current.master_sha, current.master_tree_sha) != (
             permit.repository, permit.baseline_master_sha, permit.baseline_master_tree_sha
         ):
@@ -288,7 +306,10 @@ class BuilderInvocationConsumptionEngine:
             raise BuilderInvocationConsumptionError("current authority revalidation failed") from exc
         if type(authority) is not LiveAdmittedResourceAuthority:
             raise BuilderInvocationConsumptionError("revalidated authority type invalid")
-        authority.validate()
+        try:
+            authority.validate()
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("revalidated authority invalid") from exc
         expected_authority = (
             permit.repository, permit.authority_epoch, permit.authority_state_version,
             permit.root_grant_id, permit.root_grant_digest, permit.current_authority_digest,
