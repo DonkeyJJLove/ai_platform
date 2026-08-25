@@ -7,9 +7,11 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from cyber_lion.enterprise.persistent_authority_state import SQLiteAuthorityStateStore
 from cyber_lion.enterprise.trusted_control_plane_runtime import (
     RUNTIME_FACTORY_VERSION,
     TrustedControlPlaneRuntimeError,
+    build_authority_state_store,
     build_store,
     build_verifier,
 )
@@ -55,11 +57,18 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             )
             with patch.dict(os.environ, env, clear=True):
                 store = build_store()
+                authority_store = build_authority_state_store()
                 verifier = build_verifier()
                 self.assertTrue(store.ready())
+                self.assertIs(type(authority_store), SQLiteAuthorityStateStore)
+                self.assertTrue(authority_store.ready())
                 self.assertTrue(verifier.ready())
                 self.assertTrue(verifier.verify(b"payload", "ok", "key-1", "ed25519"))
                 self.assertFalse(verifier.verify(b"payload", "bad", "key-1", "ed25519"))
+
+    def test_authority_state_factory_accepts_no_caller_path(self) -> None:
+        with self.assertRaises(TypeError):
+            build_authority_state_store("/tmp/caller-selected.sqlite")
 
     def test_missing_database_path_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -74,6 +83,8 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             with patch.dict(os.environ, env, clear=True):
                 with self.assertRaises(TrustedControlPlaneRuntimeError):
                     build_store()
+                with self.assertRaises(TrustedControlPlaneRuntimeError):
+                    build_authority_state_store()
 
     def test_repository_local_database_path_is_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -87,6 +98,8 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             with patch.dict(os.environ, env, clear=True):
                 with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "outside repository"):
                     build_store()
+                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "outside repository"):
+                    build_authority_state_store()
 
     def test_repository_local_verifier_material_is_denied(self) -> None:
         with tempfile.TemporaryDirectory() as repo, tempfile.TemporaryDirectory() as external:
@@ -149,6 +162,8 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
                 with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "version mismatch"):
                     build_store()
                 with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "version mismatch"):
+                    build_authority_state_store()
+                with self.assertRaisesRegex(TrustedControlPlaneRuntimeError, "version mismatch"):
                     build_verifier()
 
     def test_build_service_from_environment_uses_zero_arg_factories(self) -> None:
@@ -195,6 +210,9 @@ class TrustedControlPlaneRuntimeTests(unittest.TestCase):
             with patch.dict(os.environ, env, clear=True):
                 with self.assertRaises(TrustedControlPlaneRuntimeError) as captured:
                     build_store()
+                self.assertNotIn(secret_marker, str(captured.exception))
+                with self.assertRaises(TrustedControlPlaneRuntimeError) as captured:
+                    build_authority_state_store()
                 self.assertNotIn(secret_marker, str(captured.exception))
 
 
