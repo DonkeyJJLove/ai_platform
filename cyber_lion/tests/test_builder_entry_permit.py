@@ -130,6 +130,51 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         bad = dict(self.env); bad["CYBER_LION_CP_ENDPOINT"] = "https://user:pass@example/x?query=1"
         with patch.dict("os.environ", bad, clear=True):
             with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
+        bad = dict(self.env); bad["CYBER_LION_CP_ENDPOINT"] = "http://control-plane.example"
+        with patch.dict("os.environ", bad, clear=True):
+            with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
+
+    def test_client_configuration_is_immutable_after_construction(self):
+        with patch.dict("os.environ", self.env, clear=True):
+            client = TrustedControlPlaneBuilderClient()
+        original = (client._endpoint, client._credential, client._credential_env, client._provider_version, client._configuration_digest)
+        for field, value in (
+            ("_endpoint", "https://attacker.example"),
+            ("_credential", "attacker-secret"),
+            ("_credential_env", "ATTACKER_TOKEN"),
+            ("_provider_version", "9.9.9"),
+            ("_configuration_digest", D("f")),
+        ):
+            with self.assertRaises(BuilderEntryPermitError):
+                setattr(client, field, value)
+        self.assertEqual((client._endpoint, client._credential, client._credential_env, client._provider_version, client._configuration_digest), original)
+        client.verify_origin()
+
+    def test_forced_internal_mutation_fails_before_network_request(self):
+        source = self._source()
+        client = source.backend._client
+        object.__setattr__(client, "_endpoint", "https://attacker.example")
+        called = []
+        with patch.object(bep.urllib.request, "urlopen", side_effect=lambda *a, **k: called.append(True)):
+            with self.assertRaises(BuilderEntryPermitError):
+                client.lookup_builder_subject_exact(binding={
+                    "repository": REPO,
+                    "builder_subject_id": "builder-R17",
+                    "builder_instance_id": "instance-01",
+                    "candidate_scope_digest": bep._scope_digest(SCOPE, label="candidate_scope"),
+                    "resource_scope_digest": bep._scope_digest(RES, label="resource_scope"),
+                    "capability_class": BUILDER_CAPABILITY_CLASS,
+                })
+        self.assertEqual(called, [])
+
+    def test_local_http_requires_explicit_loopback_mode(self):
+        local = dict(self.env)
+        local["CYBER_LION_CP_ENDPOINT"] = "http://127.0.0.1:8080"
+        with patch.dict("os.environ", local, clear=True):
+            with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
+        local["CYBER_LION_CP_ALLOW_LOCAL_HTTP"] = "1"
+        with patch.dict("os.environ", local, clear=True):
+            TrustedControlPlaneBuilderClient().verify_origin()
 
     def test_http_request_is_get_bearer_exact_and_query_bound(self):
         seen = []
