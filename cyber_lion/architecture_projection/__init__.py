@@ -7,6 +7,16 @@ from .flows import ArchitectureFlow, ARCHITECTURE_LAYERS, FLOW_SPECS, canonical_
 from .gap import GapRecord, canonical_target_gaps, classify_historical_projection
 from .layout import LayoutHint, DISPLAY_PLANES, canonical_layout
 from .full_architecture import ArchitectureElement, FullArchitectureModel, build_full_architecture_model
+from .visual_model import (
+    VisualLegendEntry, VisualPlane, VisualNode, VisualFlow, VisualGap,
+    VisualProjectionModel, canonical_legend, status_marker,
+)
+from .full_visual_projection import build_visual_projection
+from .full_plantuml import (
+    serialize_full_architecture_plantuml,
+    serialize_flow_atlas_plantuml,
+    serialize_gap_overlay_plantuml,
+)
 
 __all__ = [
     "CanonicalDiagramModel", "DiagramNode", "DiagramEdge", "DiagramGroup",
@@ -17,5 +27,9 @@ __all__ = [
     "FLOW_SPECS", "canonical_flows", "GapRecord", "canonical_target_gaps",
     "classify_historical_projection", "LayoutHint", "DISPLAY_PLANES",
     "canonical_layout", "ArchitectureElement", "FullArchitectureModel",
-    "build_full_architecture_model",
+    "build_full_architecture_model", "VisualLegendEntry", "VisualPlane",
+    "VisualNode", "VisualFlow", "VisualGap", "VisualProjectionModel",
+    "canonical_legend", "status_marker", "build_visual_projection",
+    "serialize_full_architecture_plantuml", "serialize_flow_atlas_plantuml",
+    "serialize_gap_overlay_plantuml",
 ]
