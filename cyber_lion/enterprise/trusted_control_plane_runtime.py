@@ -15,6 +15,7 @@ import re
 from types import ModuleType
 from typing import Callable, Final
 
+from .persistent_authority_state import SQLiteAuthorityStateStore
 from .trusted_control_plane_providers import (
     SQLiteTrustedControlPlaneStore,
     TrustedControlPlaneProviderError,
@@ -133,7 +134,7 @@ def _load_external_module(path: Path) -> ModuleType:
 
 
 def build_store() -> SQLiteTrustedControlPlaneStore:
-    """Build the persistent store from trusted environment-only configuration."""
+    """Build the persistent control-plane record store from trusted environment-only configuration."""
     _runtime_version()
     path = _database_path()
     try:
@@ -142,6 +143,24 @@ def build_store() -> SQLiteTrustedControlPlaneStore:
         raise TrustedControlPlaneRuntimeError("trusted persistent store unavailable") from exc
     if store.ready() is not True:
         raise TrustedControlPlaneRuntimeError("trusted persistent store is not ready")
+    return store
+
+
+def build_authority_state_store() -> SQLiteAuthorityStateStore:
+    """Build the canonical authority-state store from the same pinned runtime origin.
+
+    This zero-argument factory is the only composition root used by R17/R19 issuance
+    provenance. The database path is observed from trusted process configuration and
+    cannot be supplied by a builder-entry or builder-invocation request.
+    """
+    _runtime_version()
+    path = _database_path()
+    try:
+        store = SQLiteAuthorityStateStore(str(path))
+    except Exception as exc:
+        raise TrustedControlPlaneRuntimeError("trusted authority-state store unavailable") from exc
+    if store.ready() is not True:
+        raise TrustedControlPlaneRuntimeError("trusted authority-state store is not ready")
     return store
 
 
