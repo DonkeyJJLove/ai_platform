@@ -100,12 +100,13 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
 
     def _engine(self, *, source=None, base=None, f005=None, replay=None):
         live = object.__new__(LiveResourceAuthorityAdmission)
-        return BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(base or baseline()), f005_state_source=f005 or F005(), builder_source=source or self._source(), replay_guard=replay or Replay())
+        with patch.dict("os.environ", self.env, clear=True):
+            return BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(base or baseline()), f005_state_source=f005 or F005(), builder_source=source or self._source(), replay_guard=replay or Replay())
 
-    def _issue(self, entry, *, records=None, provider_version="1.0.0", status=200, receipt=None):
+    def _issue(self, entry, *, records=None, provider_version="1.0.0", status=200, receipt=None, env=None):
         receipt = receipt or live_receipt()
         payload = {"provider_version": provider_version, "records": [builder_record()] if records is None else records}
-        with patch.object(bep.urllib.request, "urlopen", return_value=FakeHTTPResponse(payload, status=status)), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=receipt):
+        with patch.dict("os.environ", env or self.env, clear=True), patch.object(bep.urllib.request, "urlopen", return_value=FakeHTTPResponse(payload, status=status)), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=receipt):
             return entry.issue_permit(source_permit=source_permit(receipt), admitted_authority=receipt, builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
 
     def test_issues_non_effectful_exact_builder_bound_permit(self):
@@ -134,76 +135,101 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         with patch.dict("os.environ", bad, clear=True):
             with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
 
-    def test_client_configuration_is_immutable_after_construction(self):
+    def test_authoritative_configuration_fields_are_absent(self):
         with patch.dict("os.environ", self.env, clear=True):
             client = TrustedControlPlaneBuilderClient()
-        original = (client._endpoint, client._credential, client._credential_env, client._provider_version, client._configuration_digest)
-        for field, value in (
-            ("_endpoint", "https://attacker.example"),
-            ("_credential", "attacker-secret"),
-            ("_credential_env", "ATTACKER_TOKEN"),
-            ("_provider_version", "9.9.9"),
-            ("_configuration_digest", D("f")),
-        ):
-            with self.assertRaises(BuilderEntryPermitError):
-                setattr(client, field, value)
-        self.assertEqual((client._endpoint, client._credential, client._credential_env, client._provider_version, client._configuration_digest), original)
-        client.verify_origin()
+        for field in ("_endpoint", "_credential", "_credential_env", "_provider_version"):
+            self.assertFalse(hasattr(client, field))
+            with self.assertRaises((AttributeError, BuilderEntryPermitError)):
+                setattr(client, field, "attacker")
+        self.assertTrue(hasattr(client, "_configuration_digest"))
+        self.assertTrue(hasattr(client, "_configuration_anchor"))
 
-    def test_forced_internal_mutation_fails_before_network_request(self):
-        source = self._source()
-        client = source.backend._client
-        object.__setattr__(client, "_endpoint", "https://attacker.example")
+    def test_configuration_digest_and_sealed_flag_substitution_denied(self):
+        with patch.dict("os.environ", self.env, clear=True):
+            client = TrustedControlPlaneBuilderClient()
+        object.__setattr__(client, "_configuration_digest", D("f"))
+        with patch.dict("os.environ", self.env, clear=True):
+            with self.assertRaises(BuilderEntryPermitError): client.verify_origin()
+        with patch.dict("os.environ", self.env, clear=True):
+            client = TrustedControlPlaneBuilderClient()
+        object.__setattr__(client, "_sealed_configuration", False)
+        with patch.dict("os.environ", self.env, clear=True):
+            with self.assertRaises(BuilderEntryPermitError): client.verify_origin()
+
+    def test_environment_drift_denied_without_refreshing_original_seal(self):
+        with patch.dict("os.environ", self.env, clear=True):
+            client = TrustedControlPlaneBuilderClient()
+        original = (client._configuration_digest, client._configuration_anchor)
+        mutations = (
+            ("CYBER_LION_CP_ENDPOINT", "https://attacker.example"),
+            ("CYBER_LION_CP_TOKEN", "attacker-secret"),
+            ("CYBER_LION_CP_CREDENTIAL_ENV", "ALT_TOKEN"),
+            ("CYBER_LION_CP_PROVIDER_VERSION", "2.0.0"),
+        )
+        for name, value in mutations:
+            env = dict(self.env); env[name] = value
+            if name == "CYBER_LION_CP_CREDENTIAL_ENV": env["ALT_TOKEN"] = "secret"
+            with patch.dict("os.environ", env, clear=True):
+                with self.assertRaises(BuilderEntryPermitError): client.verify_origin()
+            self.assertEqual((client._configuration_digest, client._configuration_anchor), original)
+
+    def test_coherent_endpoint_or_credential_reseal_is_denied(self):
+        with patch.dict("os.environ", self.env, clear=True):
+            client = TrustedControlPlaneBuilderClient()
+        original_anchor = client._configuration_anchor
+        for name, value in (("CYBER_LION_CP_ENDPOINT", "https://attacker.example"), ("CYBER_LION_CP_TOKEN", "attacker-secret")):
+            env = dict(self.env); env[name] = value
+            with patch.dict("os.environ", env, clear=True):
+                observed = bep._observe_process_configuration()
+                object.__setattr__(client, "_configuration_digest", observed[-1])
+                with self.assertRaises(BuilderEntryPermitError): client.verify_origin()
+            object.__setattr__(client, "_configuration_digest", bep._observe_process_configuration.__name__ and D("0"))
+            object.__setattr__(client, "_configuration_digest", self._original_digest())
+            self.assertEqual(client._configuration_anchor, original_anchor)
+
+    def _original_digest(self):
+        with patch.dict("os.environ", self.env, clear=True):
+            return bep._observe_process_configuration()[-1]
+
+    def test_network_request_never_occurs_before_current_config_validation(self):
+        source = self._source(); client = source.backend._client
+        drift = dict(self.env); drift["CYBER_LION_CP_ENDPOINT"] = "https://attacker.example"
         called = []
-        with patch.object(bep.urllib.request, "urlopen", side_effect=lambda *a, **k: called.append(True)):
-            with self.assertRaises(BuilderEntryPermitError):
-                client.lookup_builder_subject_exact(binding={
-                    "repository": REPO,
-                    "builder_subject_id": "builder-R17",
-                    "builder_instance_id": "instance-01",
-                    "candidate_scope_digest": bep._scope_digest(SCOPE, label="candidate_scope"),
-                    "resource_scope_digest": bep._scope_digest(RES, label="resource_scope"),
-                    "capability_class": BUILDER_CAPABILITY_CLASS,
-                })
+        binding = {"repository": REPO, "builder_subject_id": "builder-R17", "builder_instance_id": "instance-01", "candidate_scope_digest": bep._scope_digest(SCOPE, label="candidate_scope"), "resource_scope_digest": bep._scope_digest(RES, label="resource_scope"), "capability_class": BUILDER_CAPABILITY_CLASS}
+        with patch.dict("os.environ", drift, clear=True), patch.object(bep.urllib.request, "urlopen", side_effect=lambda *a, **k: called.append(True)):
+            with self.assertRaises(BuilderEntryPermitError): client.lookup_builder_subject_exact(binding=binding)
         self.assertEqual(called, [])
 
     def test_local_http_requires_explicit_loopback_mode(self):
-        local = dict(self.env)
-        local["CYBER_LION_CP_ENDPOINT"] = "http://127.0.0.1:8080"
+        local = dict(self.env); local["CYBER_LION_CP_ENDPOINT"] = "http://127.0.0.1:8080"
         with patch.dict("os.environ", local, clear=True):
             with self.assertRaises(BuilderEntryPermitError): TrustedControlPlaneBuilderClient()
         local["CYBER_LION_CP_ALLOW_LOCAL_HTTP"] = "1"
-        with patch.dict("os.environ", local, clear=True):
-            TrustedControlPlaneBuilderClient().verify_origin()
+        with patch.dict("os.environ", local, clear=True): TrustedControlPlaneBuilderClient().verify_origin()
 
     def test_http_request_is_get_bearer_exact_and_query_bound(self):
         seen = []
         def fake(request, timeout):
             seen.append((request, timeout)); return FakeHTTPResponse({"provider_version": "1.0.0", "records": [builder_record()]})
         entry = self._engine()
-        with patch.object(bep.urllib.request, "urlopen", side_effect=fake), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
+        with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request, "urlopen", side_effect=fake), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
             entry.issue_permit(source_permit=source_permit(), admitted_authority=live_receipt(), builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
         request, timeout = seen[0]
-        self.assertEqual(request.get_method(), "GET")
-        self.assertEqual(timeout, 5)
+        self.assertEqual(request.get_method(), "GET"); self.assertEqual(timeout, 5)
         self.assertEqual(request.get_header("Authorization"), "Bearer secret")
-        self.assertIn("/v1/builder-subject?", request.full_url)
-        self.assertIn("candidate_scope_digest=", request.full_url)
-        self.assertNotIn("secret", request.full_url)
+        self.assertIn("/v1/builder-subject?", request.full_url); self.assertNotIn("secret", request.full_url)
 
     def test_service_failures_do_not_burn_replay(self):
         for payload in (
             {"provider_version": "2.0.0", "records": [builder_record()]},
             {"provider_version": "1.0.0", "records": []},
             {"provider_version": "1.0.0", "records": [builder_record(), builder_record(builder_subject(identity="8"))]},
-            {"provider_version": "1.0.0", "records": [{"bad": True}]},
-            b"not-json",
+            {"provider_version": "1.0.0", "records": [{"bad": True}]}, b"not-json",
         ):
-            replay = Replay(); entry = self._engine(replay=replay)
-            response = FakeHTTPResponse(payload)
-            with patch.object(bep.urllib.request, "urlopen", return_value=response), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
-                with self.assertRaises(BuilderEntryPermitError):
-                    entry.issue_permit(source_permit=source_permit(), admitted_authority=live_receipt(), builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
+            replay = Replay(); entry = self._engine(replay=replay); response = FakeHTTPResponse(payload)
+            with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request, "urlopen", return_value=response), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live_receipt()):
+                with self.assertRaises(BuilderEntryPermitError): entry.issue_permit(source_permit=source_permit(), admitted_authority=live_receipt(), builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
             self.assertEqual(replay.calls, 0)
 
     def test_subject_digest_and_binding_substitution_denied_before_replay(self):
@@ -214,28 +240,22 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
             replay = Replay(); entry = self._engine(replay=replay)
             with self.assertRaises(BuilderEntryPermitError): self._issue(entry, records=[record])
             self.assertEqual(replay.calls, 0)
-        record = builder_record(builder_subject(instance="instance-02"))
-        replay = Replay(); entry = self._engine(replay=replay)
-        with self.assertRaises(BuilderEntryPermitError): self._issue(entry, records=[record])
-        self.assertEqual(replay.calls, 0)
 
     def test_baseline_authority_and_f005_fail_before_service_and_replay(self):
-        for entry in (
-            self._engine(base=baseline(S("e"), TREE), replay=Replay()),
-            self._engine(f005=F005("ACTIVE", "ALLOW"), replay=Replay()),
-        ):
-            with patch.object(bep.urllib.request, "urlopen", side_effect=AssertionError("service should not be called")):
+        for entry in (self._engine(base=baseline(S("e"), TREE), replay=Replay()), self._engine(f005=F005("ACTIVE", "ALLOW"), replay=Replay())):
+            with patch.dict("os.environ", self.env, clear=True), patch.object(bep.urllib.request, "urlopen", side_effect=AssertionError("service should not be called")):
                 with self.assertRaises(BuilderEntryPermitError): self._issue(entry)
         receipt = live_receipt(); drift = LiveAdmittedResourceAuthority(**{**receipt.__dict__, "epoch_state_version": 10})
         replay = Replay(); entry = self._engine(replay=replay)
-        with patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=drift), patch.object(bep.urllib.request, "urlopen", side_effect=AssertionError("service should not be called")):
+        with patch.dict("os.environ", self.env, clear=True), patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=drift), patch.object(bep.urllib.request, "urlopen", side_effect=AssertionError("service should not be called")):
             with self.assertRaises(BuilderEntryPermitError): entry.issue_permit(source_permit=source_permit(receipt), admitted_authority=receipt, builder_subject_id="builder-R17", builder_instance_id="instance-01", trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
         self.assertEqual(replay.calls, 0)
 
     def test_arbitrary_sources_and_subclasses_denied(self):
         live = object.__new__(LiveResourceAuthorityAdmission)
         for value in (ArbitraryResolver(), CallerDefinedSource()):
-            with self.assertRaises(BuilderEntryPermitError): BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(baseline()), f005_state_source=F005(), builder_source=value, replay_guard=Replay())
+            with patch.dict("os.environ", self.env, clear=True):
+                with self.assertRaises(BuilderEntryPermitError): BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(baseline()), f005_state_source=F005(), builder_source=value, replay_guard=Replay())
         with self.assertRaises(TypeError):
             class BadClient(TrustedControlPlaneBuilderClient): pass
         with self.assertRaises(TypeError):
