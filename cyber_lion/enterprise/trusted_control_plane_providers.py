@@ -1,12 +1,20 @@
 """Concrete persistent providers for the trusted control-plane service."""
 from __future__ import annotations
 from collections.abc import Callable, Mapping
-import json, sqlite3
+from hashlib import sha256
+import inspect
+import json
+import sqlite3
 from pathlib import Path
 from threading import RLock
 from .trusted_control_plane_service import TrustedControlPlaneStore, TrustedSignatureVerifier
 
 class TrustedControlPlaneProviderError(RuntimeError): pass
+
+_RUNTIME_IMPL_DOMAIN=b"LION/E004-BUILDER-RUNTIME-IMPLEMENTATION/1\0"
+_RUNTIME_RESOLVER_DOMAIN=b"LION/E004-BUILDER-RUNTIME-RESOLVER/1\0"
+_PROVIDER_SOURCE_ORIGIN_DOMAIN=b"LION/E004-BUILDER-RUNTIME-SOURCE-ORIGIN/1\0"
+_DATABASE_IDENTITY_DOMAIN=b"LION/E004-TRUSTED-CONTROL-PLANE-DATABASE/1\0"
 
 def _canonical_json(v):
     if not isinstance(v,Mapping): raise TrustedControlPlaneProviderError("provider record must be a mapping")
@@ -16,6 +24,24 @@ def _decode_record(raw):
     except (TypeError,json.JSONDecodeError) as exc: raise TrustedControlPlaneProviderError("persistent provider record is corrupt") from exc
     if not isinstance(v,Mapping): raise TrustedControlPlaneProviderError("persistent provider record is not an object")
     return dict(v)
+def _digest(value,label):
+    if not isinstance(value,str) or len(value)!=64:
+        raise TrustedControlPlaneProviderError(f"{label} invalid")
+    try:int(value,16)
+    except ValueError as exc: raise TrustedControlPlaneProviderError(f"{label} invalid") from exc
+    if value.lower()!=value: raise TrustedControlPlaneProviderError(f"{label} invalid")
+    return value
+
+def compute_runtime_provider_implementation_digest(runtime_or_type):
+    cls=runtime_or_type if isinstance(runtime_or_type,type) else type(runtime_or_type)
+    try: source=inspect.getsource(cls)
+    except (OSError,TypeError) as exc: raise TrustedControlPlaneProviderError("runtime provider implementation is not inspectable") from exc
+    return sha256(_RUNTIME_IMPL_DOMAIN+source.encode("utf-8")).hexdigest()
+
+def _callable_implementation_digest(callback):
+    try: source=inspect.getsource(callback)
+    except (OSError,TypeError) as exc: raise TrustedControlPlaneProviderError("runtime resolver implementation is not inspectable") from exc
+    return sha256(_RUNTIME_RESOLVER_DOMAIN+source.encode("utf-8")).hexdigest()
 
 class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
     BUILDER_LOOKUP_FIELDS=("repository","builder_subject_id","builder_instance_id","candidate_scope_digest","resource_scope_digest","capability_class")
@@ -23,6 +49,9 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
     def __init__(self,database_path):
         if not isinstance(database_path,str) or not database_path.strip(): raise TrustedControlPlaneProviderError("database_path is required")
         self._path=str(Path(database_path));self._lock=RLock();self._initialize()
+    def database_identity(self):
+        path=str(Path(self._path).resolve())
+        return sha256(_DATABASE_IDENTITY_DOMAIN+path.encode("utf-8")).hexdigest()
     def _connect(self):
         c=sqlite3.connect(self._path,timeout=5,isolation_level=None);c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA journal_mode=WAL");return c
     def _initialize(self):
@@ -71,13 +100,47 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
             return {"pr_bootstrap","authority_lineage","builder_subject","builder_process_runtime_provider"}.issubset(names)
         except Exception:return False
 
+class PinnedRuntimeResolver:
+    """Pinned executable resolver identity; arbitrary callables are not a source authority."""
+    __slots__=("_resolver","implementation_identity","attestation_digest")
+    def __init__(self,resolver,*,implementation_identity,attestation_digest):
+        if not callable(resolver): raise TrustedControlPlaneProviderError("runtime resolver unavailable")
+        _digest(implementation_identity,"runtime resolver implementation identity")
+        _digest(attestation_digest,"runtime resolver attestation digest")
+        actual=_callable_implementation_digest(resolver)
+        if actual!=implementation_identity: raise TrustedControlPlaneProviderError("runtime resolver implementation binding mismatch")
+        self._resolver=resolver;self.implementation_identity=implementation_identity;self.attestation_digest=attestation_digest
+    def resolve(self,runtime_instance_identity): return self._resolver(runtime_instance_identity)
+    def verify(self):
+        if _callable_implementation_digest(self._resolver)!=self.implementation_identity: raise TrustedControlPlaneProviderError("runtime resolver implementation drift")
+        _digest(self.attestation_digest,"runtime resolver attestation digest")
+        return True
+
 class PinnedBuilderProcessRuntimeProviderSource:
-    __slots__=("_store","_runtime_resolver")
-    def __init__(self,store,*,runtime_resolver:Callable[[str],object]):
-        if type(store) is not SQLiteTrustedControlPlaneStore or store.ready() is not True or not callable(runtime_resolver): raise TrustedControlPlaneProviderError("trusted runtime provider source unavailable")
-        self._store=store;self._runtime_resolver=runtime_resolver
+    __slots__=("_store","_runtime_resolver","_database_identity","_source_origin_digest","_source_origin_id")
+    def __init__(self,store,*,runtime_resolver):
+        if type(store) is not SQLiteTrustedControlPlaneStore or store.ready() is not True or type(runtime_resolver) is not PinnedRuntimeResolver:
+            raise TrustedControlPlaneProviderError("trusted runtime provider source unavailable")
+        self._store=store;self._runtime_resolver=runtime_resolver;self._database_identity=store.database_identity()
+        self._source_origin_digest=self._compute_origin_digest();self._source_origin_id=f"bprps:{self._source_origin_digest}"
+        self.verify_origin()
+    @property
+    def source_origin_id(self): return self._source_origin_id
+    @property
+    def source_origin_digest(self): return self._source_origin_digest
+    def _compute_origin_digest(self):
+        payload="\n".join((self._store.database_identity(),self._runtime_resolver.implementation_identity,self._runtime_resolver.attestation_digest)).encode("utf-8")
+        return sha256(_PROVIDER_SOURCE_ORIGIN_DOMAIN+payload).hexdigest()
+    def verify_origin(self):
+        if self._store.ready() is not True or self._store.database_identity()!=self._database_identity:
+            raise TrustedControlPlaneProviderError("runtime provider source database origin drift")
+        self._runtime_resolver.verify()
+        if self._compute_origin_digest()!=self._source_origin_digest or self._source_origin_id!=f"bprps:{self._source_origin_digest}":
+            raise TrustedControlPlaneProviderError("runtime provider source origin mismatch")
+        return True
     def resolve_exact(self,*,provider_id,process_profile_digest,launch_policy_digest):
         from cyber_lion.contracts.builder_process_launch import BuilderProcessRuntimeProviderDescriptor,PROVIDER_CAPABILITY_CLASS,PREPARE_CAPABILITY_CLASS
+        self.verify_origin()
         rows=self._store.lookup_builder_process_runtime_provider_exact(provider_id=provider_id,process_profile_digest=process_profile_digest,launch_policy_digest=launch_policy_digest,capability_class=PROVIDER_CAPABILITY_CLASS)
         if len(rows)!=1: raise TrustedControlPlaneProviderError("runtime provider record missing or ambiguous")
         record=rows[0];payload=record.get("provider")
@@ -87,15 +150,21 @@ class PinnedBuilderProcessRuntimeProviderSource:
         expected={"provider_id":provider_id,"process_profile_digest":process_profile_digest,"launch_policy_digest":launch_policy_digest,"capability_class":PROVIDER_CAPABILITY_CLASS}
         if d.descriptor_digest!=d.compute_digest() or dict(record.get("lookup_key",{}))!=expected: raise TrustedControlPlaneProviderError("runtime provider binding invalid")
         if (d.provider_id,d.supported_process_profile_digest,d.supported_launch_policy_digest,d.capability_class,d.prepare_capability_class)!=(provider_id,process_profile_digest,launch_policy_digest,PROVIDER_CAPABILITY_CLASS,PREPARE_CAPABILITY_CLASS): raise TrustedControlPlaneProviderError("runtime provider semantic binding mismatch")
-        return d
+        self.verify_origin();return d
     def resolve_bound_runtime(self,*,provider_id,process_profile_digest,launch_policy_digest):
-        d=self.resolve_exact(provider_id=provider_id,process_profile_digest=process_profile_digest,launch_policy_digest=launch_policy_digest)
-        try:r=self._runtime_resolver(d.runtime_instance_identity)
+        self.verify_origin();d=self.resolve_exact(provider_id=provider_id,process_profile_digest=process_profile_digest,launch_policy_digest=launch_policy_digest)
+        try:r=self._runtime_resolver.resolve(d.runtime_instance_identity)
         except Exception as exc: raise TrustedControlPlaneProviderError("runtime provider instance unavailable") from exc
-        if r is None or getattr(r,"descriptor",None)!=d or getattr(r,"runtime_instance_identity",None)!=d.runtime_instance_identity: raise TrustedControlPlaneProviderError("runtime provider instance binding mismatch")
+        if r is None or getattr(r,"descriptor",None)!=d or getattr(r,"runtime_instance_identity",None)!=d.runtime_instance_identity:
+            raise TrustedControlPlaneProviderError("runtime provider instance binding mismatch")
+        if getattr(r,"provider_identity_digest",None)!=d.provider_identity_digest or getattr(r,"provider_attestation_digest",None)!=d.provider_attestation_digest:
+            raise TrustedControlPlaneProviderError("runtime provider executable identity/attestation mismatch")
+        actual_impl=compute_runtime_provider_implementation_digest(r)
+        if actual_impl!=d.provider_implementation_digest or getattr(r,"provider_implementation_digest",None)!=d.provider_implementation_digest:
+            raise TrustedControlPlaneProviderError("runtime provider executable implementation mismatch")
         for m in ("prepare_launch","observe_held","observe_gate","commit_start","observe_launch","freeze_or_kill"):
             if not callable(getattr(r,m,None)): raise TrustedControlPlaneProviderError("runtime provider executable capability invalid")
-        return r
+        self.verify_origin();return r
 
 class TrustedSignatureVerifierAdapter(TrustedSignatureVerifier):
     def __init__(self,verifier,*,ready=None):
