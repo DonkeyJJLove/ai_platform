@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from hashlib import sha256
+import hmac
+import ipaddress
 import json
 import os
 import re
@@ -34,6 +36,8 @@ class BuilderEntryPermitError(RuntimeError):
 
 _EFFECT_METHODS = frozenset({"execute", "write", "push", "merge", "deploy", "release", "create_branch", "create_pr", "run_test", "build_candidate", "consume_candidate", "start_builder", "issue_grant"})
 _SCOPE_DIGEST_DOMAIN = b"LION/E004-BUILDER-SCOPE-LOOKUP/1\0"
+_CLIENT_CONFIG_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-CONFIG/1\0"
+_CLIENT_CREDENTIAL_DOMAIN = b"LION/E004-TRUSTED-CONTROL-PLANE-BUILDER-CLIENT-CREDENTIAL/1\0"
 PINNED_BUILDER_BACKEND_IDENTITY = "lion.trusted-control-plane.http-read/v1"
 PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST = sha256(b"LION/E004-TRUSTED-CONTROL-PLANE-SERVICE-BUILDER-SOURCE/1").hexdigest()
 _PROVIDER_VERSION = "1.0.0"
@@ -98,6 +102,33 @@ def _required_env(name: str, *, limit: int) -> str:
     return value
 
 
+def _is_loopback_host(hostname: str | None) -> bool:
+    if not hostname:
+        return False
+    if hostname.lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return False
+
+
+def _credential_digest(credential: str) -> str:
+    if not isinstance(credential, str) or not credential or not credential.isascii():
+        raise BuilderEntryPermitError("trusted control-plane credential invalid")
+    return sha256(_CLIENT_CREDENTIAL_DOMAIN + credential.encode("ascii")).hexdigest()
+
+
+def _client_configuration_digest(*, provider_version: str, endpoint: str, credential_env: str, credential: str) -> str:
+    payload = {
+        "provider_version": provider_version,
+        "endpoint": endpoint,
+        "credential_env": credential_env,
+        "credential_digest": _credential_digest(credential),
+    }
+    return sha256(_CLIENT_CONFIG_DOMAIN + _canonical_json(payload)).hexdigest()
+
+
 class TrustedRepositoryBaselineSource(Protocol):
     def current(self, repository: str) -> TrustedRepositoryBaseline: ...
 
@@ -131,36 +162,83 @@ class TrustedBuilderSubjectSource(ABC):
 
 
 class TrustedControlPlaneBuilderClient:
-    """Pinned zero-argument authenticated HTTP reader for builder-subject records."""
+    """Pinned authenticated HTTP reader with a sealed immutable configuration snapshot."""
 
-    __slots__ = ("_endpoint", "_credential")
+    __slots__ = (
+        "_endpoint",
+        "_credential",
+        "_credential_env",
+        "_provider_version",
+        "_configuration_digest",
+        "_sealed_configuration",
+    )
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         raise TypeError("TrustedControlPlaneBuilderClient is final")
 
+    def __setattr__(self, name: str, value: object) -> None:
+        if getattr(self, "_sealed_configuration", False) and name in {
+            "_endpoint",
+            "_credential",
+            "_credential_env",
+            "_provider_version",
+            "_configuration_digest",
+        }:
+            raise BuilderEntryPermitError("trusted control-plane client configuration is immutable")
+        object.__setattr__(self, name, value)
+
     def __init__(self) -> None:
         if type(self) is not TrustedControlPlaneBuilderClient:
             raise BuilderEntryPermitError("exact control-plane builder client required")
-        if _required_env("CYBER_LION_CP_PROVIDER_VERSION", limit=64) != _PROVIDER_VERSION:
+        object.__setattr__(self, "_sealed_configuration", False)
+        provider_version = _required_env("CYBER_LION_CP_PROVIDER_VERSION", limit=64)
+        if provider_version != _PROVIDER_VERSION:
             raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
-        endpoint = _required_env("CYBER_LION_CP_ENDPOINT", limit=2048)
+        endpoint = _required_env("CYBER_LION_CP_ENDPOINT", limit=2048).rstrip("/")
         parsed = urllib.parse.urlsplit(endpoint)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        if not parsed.netloc or parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise BuilderEntryPermitError("trusted control-plane endpoint invalid")
+        if parsed.scheme != "https":
+            local_mode = os.environ.get("CYBER_LION_CP_ALLOW_LOCAL_HTTP") == "1"
+            if parsed.scheme != "http" or not _is_loopback_host(parsed.hostname) or not local_mode:
+                raise BuilderEntryPermitError("trusted control-plane endpoint must use https")
         credential_env = _required_env("CYBER_LION_CP_CREDENTIAL_ENV", limit=256)
         if not _ENV_REF_RE.fullmatch(credential_env):
             raise BuilderEntryPermitError("trusted control-plane credential reference invalid")
         credential = _required_env(credential_env, limit=16384)
         if not credential.isascii():
             raise BuilderEntryPermitError("trusted control-plane credential invalid")
-        self._endpoint = endpoint.rstrip("/")
-        self._credential = credential
+        digest = _client_configuration_digest(
+            provider_version=provider_version,
+            endpoint=endpoint,
+            credential_env=credential_env,
+            credential=credential,
+        )
+        object.__setattr__(self, "_provider_version", provider_version)
+        object.__setattr__(self, "_endpoint", endpoint)
+        object.__setattr__(self, "_credential_env", credential_env)
+        object.__setattr__(self, "_credential", credential)
+        object.__setattr__(self, "_configuration_digest", digest)
+        object.__setattr__(self, "_sealed_configuration", True)
+        self.verify_origin()
 
     def verify_origin(self) -> None:
         if type(self) is not TrustedControlPlaneBuilderClient:
             raise BuilderEntryPermitError("exact control-plane builder client required")
-        if not self._endpoint or not self._credential:
+        if getattr(self, "_sealed_configuration", None) is not True:
+            raise BuilderEntryPermitError("trusted control-plane client configuration not sealed")
+        if self._provider_version != _PROVIDER_VERSION:
+            raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
+        if not self._endpoint or not self._credential or not _ENV_REF_RE.fullmatch(self._credential_env):
             raise BuilderEntryPermitError("trusted control-plane client not ready")
+        expected = _client_configuration_digest(
+            provider_version=self._provider_version,
+            endpoint=self._endpoint,
+            credential_env=self._credential_env,
+            credential=self._credential,
+        )
+        if not isinstance(self._configuration_digest, str) or not hmac.compare_digest(self._configuration_digest, expected):
+            raise BuilderEntryPermitError("trusted control-plane client configuration seal mismatch")
 
     def lookup_builder_subject_exact(self, *, binding: Mapping[str, str]) -> tuple[Mapping[str, object], ...]:
         self.verify_origin()
@@ -173,6 +251,7 @@ class TrustedControlPlaneBuilderClient:
             headers={"Authorization": "Bearer " + self._credential, "Accept": "application/json"},
             method="GET",
         )
+        self.verify_origin()
         try:
             with urllib.request.urlopen(request, timeout=5) as response:
                 if getattr(response, "status", None) != 200:
@@ -190,7 +269,7 @@ class TrustedControlPlaneBuilderClient:
             raise BuilderEntryPermitError("trusted control-plane response malformed") from exc
         if not isinstance(payload, Mapping) or frozenset(payload.keys()) != frozenset({"provider_version", "records"}):
             raise BuilderEntryPermitError("trusted control-plane response noncanonical")
-        if payload.get("provider_version") != _PROVIDER_VERSION:
+        if payload.get("provider_version") != self._provider_version:
             raise BuilderEntryPermitError("trusted control-plane provider version mismatch")
         records = payload.get("records")
         if type(records) is not list or len(records) > 16:
