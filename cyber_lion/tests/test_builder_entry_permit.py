@@ -143,7 +143,7 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
             with self.assertRaises((AttributeError, BuilderEntryPermitError)):
                 setattr(client, field, "attacker")
         self.assertTrue(hasattr(client, "_configuration_digest"))
-        self.assertTrue(hasattr(client, "_configuration_anchor"))
+        self.assertFalse(hasattr(client, "_configuration_anchor"))
 
     def test_configuration_digest_and_sealed_flag_substitution_denied(self):
         with patch.dict("os.environ", self.env, clear=True):
@@ -160,7 +160,7 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
     def test_environment_drift_denied_without_refreshing_original_seal(self):
         with patch.dict("os.environ", self.env, clear=True):
             client = TrustedControlPlaneBuilderClient()
-        original = (client._configuration_digest, client._configuration_anchor)
+        original = client._configuration_digest
         mutations = (
             ("CYBER_LION_CP_ENDPOINT", "https://attacker.example"),
             ("CYBER_LION_CP_TOKEN", "attacker-secret"),
@@ -172,25 +172,21 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
             if name == "CYBER_LION_CP_CREDENTIAL_ENV": env["ALT_TOKEN"] = "secret"
             with patch.dict("os.environ", env, clear=True):
                 with self.assertRaises(BuilderEntryPermitError): client.verify_origin()
-            self.assertEqual((client._configuration_digest, client._configuration_anchor), original)
+            self.assertEqual(client._configuration_digest, original)
 
     def test_coherent_endpoint_or_credential_reseal_is_denied(self):
-        with patch.dict("os.environ", self.env, clear=True):
-            client = TrustedControlPlaneBuilderClient()
-        original_anchor = client._configuration_anchor
         for name, value in (("CYBER_LION_CP_ENDPOINT", "https://attacker.example"), ("CYBER_LION_CP_TOKEN", "attacker-secret")):
+            with patch.dict("os.environ", self.env, clear=True):
+                client = TrustedControlPlaneBuilderClient()
+            original = client._configuration_digest
             env = dict(self.env); env[name] = value
             with patch.dict("os.environ", env, clear=True):
-                observed = bep._observe_process_configuration()
-                object.__setattr__(client, "_configuration_digest", observed[-1])
+                observed_digest = bep._observe_process_configuration()[-1]
+                object.__setattr__(client, "_configuration_digest", observed_digest)
                 with self.assertRaises(BuilderEntryPermitError): client.verify_origin()
-            object.__setattr__(client, "_configuration_digest", bep._observe_process_configuration.__name__ and D("0"))
-            object.__setattr__(client, "_configuration_digest", self._original_digest())
-            self.assertEqual(client._configuration_anchor, original_anchor)
-
-    def _original_digest(self):
-        with patch.dict("os.environ", self.env, clear=True):
-            return bep._observe_process_configuration()[-1]
+                with self.assertRaises(BuilderEntryPermitError): bep._register_initial_client_configuration(client, observed_digest)
+            object.__setattr__(client, "_configuration_digest", original)
+            with patch.dict("os.environ", self.env, clear=True): client.verify_origin()
 
     def test_network_request_never_occurs_before_current_config_validation(self):
         source = self._source(); client = source.backend._client
