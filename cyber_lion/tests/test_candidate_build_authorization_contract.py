@@ -18,9 +18,10 @@ H64 = "b" * 64
 
 def make_authorization(**overrides):
     scope = (P1, P2)
+    issuance_replay_digest = "e" * 64
     values = dict(
         schema_version="1.0.0",
-        authorization_id="cba:" + "1" * 64,
+        authorization_id="cba:" + issuance_replay_digest,
         admission_request_id="gca:req-1",
         admission_request_digest="2" * 64,
         gate_request_id="gate:req-1",
@@ -54,7 +55,7 @@ def make_authorization(**overrides):
         effective_authority_ceiling="local_write",
         valid_from="2026-08-25T00:00:00+00:00",
         expires_at="2026-08-25T01:00:00+00:00",
-        issuance_replay_digest="e" * 64,
+        issuance_replay_digest=issuance_replay_digest,
     )
     values.update(overrides)
     return BoundedCandidateBuildAuthorization(**values)
@@ -66,6 +67,7 @@ class CandidateBuildAuthorizationContractTests(unittest.TestCase):
         second = make_authorization().sealed()
         self.assertEqual(first.authorization_digest, second.authorization_digest)
         self.assertEqual(len(first.authorization_digest), 64)
+        self.assertEqual(first.authorization_id, f"cba:{first.issuance_replay_digest}")
         with self.assertRaises(FrozenInstanceError):
             first.action = "RUN_TEST"
 
@@ -74,6 +76,53 @@ class CandidateBuildAuthorizationContractTests(unittest.TestCase):
         changed = replace(sealed, baseline_master_sha="f" * 40)
         with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "authorization_digest mismatch"):
             changed.validate()
+
+    def test_authorization_id_is_exactly_bound_to_issuance_replay_digest(self):
+        valid = make_authorization().sealed()
+        self.assertEqual(valid.authorization_id, f"cba:{valid.issuance_replay_digest}")
+
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            make_authorization(authorization_id="cba:" + "1" * 64).validate()
+
+        changed_with_original_digest = replace(valid, authorization_id="cba:" + "1" * 64)
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            changed_with_original_digest.validate()
+
+        changed_with_cleared_digest = replace(
+            valid,
+            authorization_id="cba:" + "1" * 64,
+            authorization_digest="",
+        )
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            changed_with_cleared_digest.validate()
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            changed_with_cleared_digest.sealed()
+
+    def test_issuance_replay_digest_substitution_cannot_be_resealed(self):
+        valid = make_authorization().sealed()
+        substituted = replace(valid, issuance_replay_digest="f" * 64)
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            substituted.validate()
+
+        recompute_attempt = replace(
+            valid,
+            issuance_replay_digest="f" * 64,
+            authorization_digest="",
+        )
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            recompute_attempt.sealed()
+
+    def test_authorization_id_from_different_source_lineage_is_denied(self):
+        source_a = make_authorization().sealed()
+        source_b_digest = "f" * 64
+        source_b_id = "cba:" + source_b_digest
+        substituted = replace(
+            source_a,
+            authorization_id=source_b_id,
+            authorization_digest="",
+        )
+        with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "derive exactly"):
+            substituted.sealed()
 
     def test_action_and_authority_are_closed(self):
         with self.assertRaisesRegex(CandidateBuildAuthorizationContractError, "BUILD_CANDIDATE"):
