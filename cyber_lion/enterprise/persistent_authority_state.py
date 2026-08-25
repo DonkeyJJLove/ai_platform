@@ -483,44 +483,103 @@ class SQLiteAuthorityStateStore:
         if len(rows)!=1: raise PersistentAuthorityStateError("authority store origin is missing or ambiguous")
         return PersistentAuthorityStoreOrigin.from_json(rows[0][0])
 
-    def _record_issuance(self, *, table:str, record:object, id_value:str, digest_value:str, replay_value:str, error_label:str):
+    def _require_record_origin(self, record: object, *, error_label: str) -> None:
         record.validate(); origin=self.resolve_authority_store_origin()
-        if (record.authority_store_origin_id,record.authority_store_origin_digest)!=(origin.origin_id,origin.origin_digest): raise PersistentAuthorityStateError(f"{error_label} store origin mismatch")
-        with self._lock,self._connect() as c:
-            try:
-                c.execute("BEGIN IMMEDIATE"); c.execute(f"INSERT INTO {table} VALUES(?,?,?,?,?)",(id_value,digest_value,replay_value,record.canonical_json(),record.issued_at)); c.execute("COMMIT")
-            except sqlite3.IntegrityError as exc:
-                c.execute("ROLLBACK"); raise PersistentAuthorityStateError(f"{error_label} already exists or conflicts") from exc
-        return record
+        if (record.authority_store_origin_id,record.authority_store_origin_digest)!=(origin.origin_id,origin.origin_digest):
+            raise PersistentAuthorityStateError(f"{error_label} store origin mismatch")
 
-    def _resolve_issuance(self, *, table:str, id_column:str, id_value:str, cls:type, error_label:str):
-        _text(id_value,name=id_column,limit=2048); origin=self.resolve_authority_store_origin()
-        with self._connect() as c: rows=c.execute(f"SELECT record_json FROM {table} WHERE {id_column}=?",(id_value,)).fetchall()
-        if len(rows)!=1: raise PersistentAuthorityStateError(f"{error_label} is missing or ambiguous")
-        record=cls.from_json(rows[0][0])
-        if getattr(record,id_column)!=id_value: raise PersistentAuthorityStateError(f"{error_label} lookup binding mismatch")
-        if (record.authority_store_origin_id,record.authority_store_origin_digest)!=(origin.origin_id,origin.origin_digest): raise PersistentAuthorityStateError(f"{error_label} origin mismatch")
-        return record
+    def _require_resolved_origin(self, record: object, *, error_label: str) -> None:
+        origin=self.resolve_authority_store_origin()
+        if (record.authority_store_origin_id,record.authority_store_origin_digest)!=(origin.origin_id,origin.origin_digest):
+            raise PersistentAuthorityStateError(f"{error_label} origin mismatch")
 
     def record_builder_entry_issuance(self,record):
         if type(record) is not PersistentBuilderEntryIssuanceRecord: raise PersistentAuthorityStateError("exact builder entry issuance record required")
-        return self._record_issuance(table="builder_entry_issuance",record=record,id_value=record.builder_entry_permit_id,digest_value=record.builder_entry_permit_digest,replay_value=record.builder_entry_replay_digest,error_label="builder entry issuance")
-    def resolve_builder_entry_issuance(self,builder_entry_permit_id): return self._resolve_issuance(table="builder_entry_issuance",id_column="builder_entry_permit_id",id_value=builder_entry_permit_id,cls=PersistentBuilderEntryIssuanceRecord,error_label="builder entry issuance")
+        self._require_record_origin(record,error_label="builder entry issuance")
+        with self._lock,self._connect() as c:
+            try:
+                c.execute("BEGIN IMMEDIATE")
+                c.execute("INSERT INTO builder_entry_issuance VALUES(?,?,?,?,?)",(record.builder_entry_permit_id,record.builder_entry_permit_digest,record.builder_entry_replay_digest,record.canonical_json(),record.issued_at))
+                c.execute("COMMIT")
+            except sqlite3.IntegrityError as exc:
+                c.execute("ROLLBACK"); raise PersistentAuthorityStateError("builder entry issuance already exists or conflicts") from exc
+        return record
+
+    def resolve_builder_entry_issuance(self,builder_entry_permit_id):
+        _text(builder_entry_permit_id,name="builder_entry_permit_id",limit=2048)
+        with self._connect() as c:
+            rows=c.execute("SELECT record_json FROM builder_entry_issuance WHERE builder_entry_permit_id=?",(builder_entry_permit_id,)).fetchall()
+        if len(rows)!=1: raise PersistentAuthorityStateError("builder entry issuance is missing or ambiguous")
+        record=PersistentBuilderEntryIssuanceRecord.from_json(rows[0][0])
+        if record.builder_entry_permit_id!=builder_entry_permit_id: raise PersistentAuthorityStateError("builder entry issuance lookup binding mismatch")
+        self._require_resolved_origin(record,error_label="builder entry issuance")
+        return record
 
     def record_builder_invocation_issuance(self,record):
         if type(record) is not PersistentBuilderInvocationIssuanceRecord: raise PersistentAuthorityStateError("exact builder invocation issuance record required")
-        return self._record_issuance(table="builder_invocation_issuance",record=record,id_value=record.builder_invocation_permit_id,digest_value=record.builder_invocation_permit_digest,replay_value=record.builder_invocation_replay_digest,error_label="builder invocation issuance")
-    def resolve_builder_invocation_issuance(self,builder_invocation_permit_id): return self._resolve_issuance(table="builder_invocation_issuance",id_column="builder_invocation_permit_id",id_value=builder_invocation_permit_id,cls=PersistentBuilderInvocationIssuanceRecord,error_label="builder invocation issuance")
+        self._require_record_origin(record,error_label="builder invocation issuance")
+        with self._lock,self._connect() as c:
+            try:
+                c.execute("BEGIN IMMEDIATE")
+                c.execute("INSERT INTO builder_invocation_issuance VALUES(?,?,?,?,?)",(record.builder_invocation_permit_id,record.builder_invocation_permit_digest,record.builder_invocation_replay_digest,record.canonical_json(),record.issued_at))
+                c.execute("COMMIT")
+            except sqlite3.IntegrityError as exc:
+                c.execute("ROLLBACK"); raise PersistentAuthorityStateError("builder invocation issuance already exists or conflicts") from exc
+        return record
+
+    def resolve_builder_invocation_issuance(self,builder_invocation_permit_id):
+        _text(builder_invocation_permit_id,name="builder_invocation_permit_id",limit=2048)
+        with self._connect() as c:
+            rows=c.execute("SELECT record_json FROM builder_invocation_issuance WHERE builder_invocation_permit_id=?",(builder_invocation_permit_id,)).fetchall()
+        if len(rows)!=1: raise PersistentAuthorityStateError("builder invocation issuance is missing or ambiguous")
+        record=PersistentBuilderInvocationIssuanceRecord.from_json(rows[0][0])
+        if record.builder_invocation_permit_id!=builder_invocation_permit_id: raise PersistentAuthorityStateError("builder invocation issuance lookup binding mismatch")
+        self._require_resolved_origin(record,error_label="builder invocation issuance")
+        return record
 
     def record_builder_invocation_consumption_issuance(self,record):
         if type(record) is not PersistentBuilderInvocationConsumptionIssuanceRecord: raise PersistentAuthorityStateError("exact builder invocation consumption issuance record required")
-        return self._record_issuance(table="builder_invocation_consumption_issuance",record=record,id_value=record.invocation_consumption_permit_id,digest_value=record.invocation_consumption_permit_digest,replay_value=record.invocation_consumption_replay_digest,error_label="builder invocation consumption issuance")
-    def resolve_builder_invocation_consumption_issuance(self,invocation_consumption_permit_id): return self._resolve_issuance(table="builder_invocation_consumption_issuance",id_column="invocation_consumption_permit_id",id_value=invocation_consumption_permit_id,cls=PersistentBuilderInvocationConsumptionIssuanceRecord,error_label="builder invocation consumption issuance")
+        self._require_record_origin(record,error_label="builder invocation consumption issuance")
+        with self._lock,self._connect() as c:
+            try:
+                c.execute("BEGIN IMMEDIATE")
+                c.execute("INSERT INTO builder_invocation_consumption_issuance VALUES(?,?,?,?,?)",(record.invocation_consumption_permit_id,record.invocation_consumption_permit_digest,record.invocation_consumption_replay_digest,record.canonical_json(),record.issued_at))
+                c.execute("COMMIT")
+            except sqlite3.IntegrityError as exc:
+                c.execute("ROLLBACK"); raise PersistentAuthorityStateError("builder invocation consumption issuance already exists or conflicts") from exc
+        return record
+
+    def resolve_builder_invocation_consumption_issuance(self,invocation_consumption_permit_id):
+        _text(invocation_consumption_permit_id,name="invocation_consumption_permit_id",limit=2048)
+        with self._connect() as c:
+            rows=c.execute("SELECT record_json FROM builder_invocation_consumption_issuance WHERE invocation_consumption_permit_id=?",(invocation_consumption_permit_id,)).fetchall()
+        if len(rows)!=1: raise PersistentAuthorityStateError("builder invocation consumption issuance is missing or ambiguous")
+        record=PersistentBuilderInvocationConsumptionIssuanceRecord.from_json(rows[0][0])
+        if record.invocation_consumption_permit_id!=invocation_consumption_permit_id: raise PersistentAuthorityStateError("builder invocation consumption issuance lookup binding mismatch")
+        self._require_resolved_origin(record,error_label="builder invocation consumption issuance")
+        return record
 
     def record_builder_start_admission_issuance(self,record):
         if type(record) is not PersistentBuilderStartAdmissionIssuanceRecord: raise PersistentAuthorityStateError("exact builder start admission issuance record required")
-        return self._record_issuance(table="builder_start_admission_issuance",record=record,id_value=record.builder_start_admission_id,digest_value=record.builder_start_admission_digest,replay_value=record.builder_start_admission_replay_digest,error_label="builder start admission issuance")
-    def resolve_builder_start_admission_issuance(self,builder_start_admission_id): return self._resolve_issuance(table="builder_start_admission_issuance",id_column="builder_start_admission_id",id_value=builder_start_admission_id,cls=PersistentBuilderStartAdmissionIssuanceRecord,error_label="builder start admission issuance")
+        self._require_record_origin(record,error_label="builder start admission issuance")
+        with self._lock,self._connect() as c:
+            try:
+                c.execute("BEGIN IMMEDIATE")
+                c.execute("INSERT INTO builder_start_admission_issuance VALUES(?,?,?,?,?)",(record.builder_start_admission_id,record.builder_start_admission_digest,record.builder_start_admission_replay_digest,record.canonical_json(),record.issued_at))
+                c.execute("COMMIT")
+            except sqlite3.IntegrityError as exc:
+                c.execute("ROLLBACK"); raise PersistentAuthorityStateError("builder start admission issuance already exists or conflicts") from exc
+        return record
+
+    def resolve_builder_start_admission_issuance(self,builder_start_admission_id):
+        _text(builder_start_admission_id,name="builder_start_admission_id",limit=2048)
+        with self._connect() as c:
+            rows=c.execute("SELECT record_json FROM builder_start_admission_issuance WHERE builder_start_admission_id=?",(builder_start_admission_id,)).fetchall()
+        if len(rows)!=1: raise PersistentAuthorityStateError("builder start admission issuance is missing or ambiguous")
+        record=PersistentBuilderStartAdmissionIssuanceRecord.from_json(rows[0][0])
+        if record.builder_start_admission_id!=builder_start_admission_id: raise PersistentAuthorityStateError("builder start admission issuance lookup binding mismatch")
+        self._require_resolved_origin(record,error_label="builder start admission issuance")
+        return record
 
     def finalize_binding(self, context, *, expected_epoch:int, expected_state_version:int, grant_id:str, expected_root_grant_id:str, expected_root_grant_digest:str, live_admission_digest:str, runtime_evidence_digest:str, binding_nonce:str, finalized_at:str):
         context=self._context(context)
