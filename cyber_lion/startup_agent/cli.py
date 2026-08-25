@@ -107,7 +107,10 @@ def run_cycle(data: dict, *, build_local: bool = False, journal_path: str | None
 
     build_receipt = None
     if build_local:
-        build_receipt = agent.build_local(plan)
+        execution_gate = data.get("local_build_gate_event_id")
+        if not isinstance(execution_gate, str) or not execution_gate.strip():
+            raise StartupModelError("--build-local requires local_build_gate_event_id")
+        build_receipt = agent.build_local(plan, execution_gate_event_id=execution_gate)
 
     if journal_path:
         EvolutionJournal(journal_path).append(plan.state)
@@ -131,7 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--build-local",
         action="store_true",
-        help="Compile/test trusted local-prototype scaffold when authority decision is ALLOW",
+        help="Compile/test trusted local-prototype scaffold only with local_build_gate_event_id",
     )
     return parser
 

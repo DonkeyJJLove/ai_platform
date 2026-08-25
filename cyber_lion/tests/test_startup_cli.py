@@ -49,9 +49,6 @@ VALID = {
     ]
 }
 
-# Explicit BUILD-stage fixture: market/evidence/differentiation are already strong,
-# while technical feasibility and delivery velocity remain the dominant bottleneck.
-# That deterministically selects a local_prototype experiment with autonomous ALLOW.
 BUILD_LOCAL = json.loads(json.dumps(VALID))
 BUILD_LOCAL["hypotheses"][0]["baseline"].update(
     {
@@ -66,6 +63,7 @@ BUILD_LOCAL["hypotheses"][0]["baseline"].update(
         "learning_velocity": 0.82,
     }
 )
+BUILD_LOCAL["local_build_gate_event_id"] = "test:cli:local-build-gate"
 
 
 class StartupCliTests(unittest.TestCase):
@@ -96,17 +94,26 @@ class StartupCliTests(unittest.TestCase):
             result = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(result["startup_id"], "s1")
 
-    def test_build_local_runs_only_when_plan_allows_it(self):
+    def test_build_local_runs_only_with_explicit_effect_gate(self):
         result = run_cycle(BUILD_LOCAL, build_local=True)
         self.assertEqual(result["experiment"]["experiment_type"], "prototype")
         self.assertEqual(result["authority"]["decision"], "ALLOW")
         self.assertIsNotNone(result["build_receipt"])
         self.assertEqual(result["build_receipt"]["status"], "PASS")
+        self.assertTrue(result["build_receipt"]["gate_digest"])
+        self.assertGreaterEqual(len(result["build_receipt"]["observation_digests"]), 2)
+
+    def test_build_local_without_execution_gate_fails_closed(self):
+        missing = json.loads(json.dumps(BUILD_LOCAL))
+        missing.pop("local_build_gate_event_id", None)
+        with self.assertRaises(StartupModelError):
+            run_cycle(missing, build_local=True)
 
     def test_build_local_refuses_approval_required_plan(self):
-        # Default fixture selects an external market experiment. --build-local must not bypass it.
+        external = json.loads(json.dumps(VALID))
+        external["local_build_gate_event_id"] = "test:cli:local-build-gate"
         with self.assertRaises(StartupModelError):
-            run_cycle(VALID, build_local=True)
+            run_cycle(external, build_local=True)
 
     def test_cli_returns_error_code_for_bad_input(self):
         with tempfile.TemporaryDirectory() as tmp:
