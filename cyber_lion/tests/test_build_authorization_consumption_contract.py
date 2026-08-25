@@ -4,18 +4,19 @@ import unittest
 from cyber_lion.contracts.build_authorization_consumption import (
     BuildAuthorizationConsumptionContractError,
     BuildAuthorizationConsumptionPermit,
+    compute_consumption_replay_digest,
 )
 
-D = "a" * 64
 SHA = "b" * 40
 PATH = "cyber_lion/example.py"
+PATH2 = "cyber_lion/extra.py"
 RESOURCE = "repo-path:DonkeyJJLove/ai_platform:cyber_lion/example.py"
+RESOURCE2 = "repo-path:DonkeyJJLove/ai_platform:cyber_lion/extra.py"
 
 
 def make_permit(**changes):
     values = dict(
         schema_version="1.0.0",
-        consumption_permit_id=f"cbcp:{D}",
         authorization_id=f"cba:{'c'*64}",
         authorization_digest="d" * 64,
         issuance_replay_digest="c" * 64,
@@ -40,15 +41,44 @@ def make_permit(**changes):
         checked_at="2026-08-25T01:00:00+00:00",
         current_baseline_digest="4" * 64,
         current_authority_digest="5" * 64,
-        consumption_replay_digest=D,
     )
+    explicit_replay = changes.pop("consumption_replay_digest", None)
+    explicit_id = changes.pop("consumption_permit_id", None)
     values.update(changes)
+    replay = compute_consumption_replay_digest(
+        authorization_id=values["authorization_id"],
+        authorization_digest=values["authorization_digest"],
+        issuance_replay_digest=values["issuance_replay_digest"],
+        repository=values["repository"],
+        baseline_master_sha=values["baseline_master_sha"],
+        baseline_master_tree_sha=values["baseline_master_tree_sha"],
+        baseline_observation_digest=values["baseline_observation_digest"],
+        current_baseline_digest=values["current_baseline_digest"],
+        candidate_scope=values["candidate_scope"],
+        resource_scope=values["resource_scope"],
+        action=values["action"],
+        grant_id=values["grant_id"],
+        leaf_grant_digest=values["leaf_grant_digest"],
+        authority_lineage_digest=values["authority_lineage_digest"],
+        authority_provenance_id=values["authority_provenance_id"],
+        authority_epoch=values["authority_epoch"],
+        authority_state_version=values["authority_state_version"],
+        root_grant_id=values["root_grant_id"],
+        root_grant_digest=values["root_grant_digest"],
+        live_admission_digest=values["live_admission_digest"],
+        current_authority_digest=values["current_authority_digest"],
+        authorization_valid_from=values["authorization_valid_from"],
+        authorization_expires_at=values["authorization_expires_at"],
+    )
+    values["consumption_replay_digest"] = explicit_replay or replay
+    values["consumption_permit_id"] = explicit_id or f"cbcp:{values['consumption_replay_digest']}"
     return BuildAuthorizationConsumptionPermit(**values)
 
 
 class BuildAuthorizationConsumptionPermitContractTests(unittest.TestCase):
     def test_valid_permit_is_sealed_and_deterministic(self):
         permit = make_permit().sealed()
+        self.assertEqual(permit.consumption_replay_digest, permit.compute_consumption_replay_digest())
         self.assertEqual(permit.consumption_permit_digest, permit.compute_digest())
         self.assertEqual(permit, make_permit().sealed())
         self.assertEqual(permit.authority_effect, "NONE")
@@ -64,15 +94,69 @@ class BuildAuthorizationConsumptionPermitContractTests(unittest.TestCase):
         with self.assertRaises(BuildAuthorizationConsumptionContractError):
             forged.sealed()
 
-    def test_digest_substitution_fails(self):
+    def test_consumption_replay_digest_substitution_fails(self):
         permit = make_permit().sealed()
-        forged = replace(permit, authorization_digest="9" * 64)
-        with self.assertRaisesRegex(BuildAuthorizationConsumptionContractError, "permit digest mismatch"):
-            forged.validate()
+        forged = replace(
+            permit,
+            consumption_replay_digest="9" * 64,
+            consumption_permit_id=f"cbcp:{'9'*64}",
+            consumption_permit_digest="",
+        )
+        with self.assertRaisesRegex(BuildAuthorizationConsumptionContractError, "source binding mismatch"):
+            forged.sealed()
+
+    def test_coherent_scope_widening_cannot_be_resealed(self):
+        permit = make_permit().sealed()
+        forged = replace(
+            permit,
+            candidate_scope=(PATH, PATH2),
+            resource_scope=(RESOURCE, RESOURCE2),
+            consumption_permit_digest="",
+        )
+        with self.assertRaisesRegex(BuildAuthorizationConsumptionContractError, "source binding mismatch"):
+            forged.sealed()
+
+    def test_material_source_substitutions_cannot_be_resealed(self):
+        permit = make_permit().sealed()
+        variants = (
+            {"baseline_master_sha": "9" * 40},
+            {"baseline_master_tree_sha": "8" * 40},
+            {"current_baseline_digest": "7" * 64},
+            {"grant_id": "grant-2"},
+            {"leaf_grant_digest": "6" * 64},
+            {"authority_lineage_digest": "7" * 64},
+            {"authority_provenance_id": "trusted-control-plane:other"},
+            {"authority_epoch": 5},
+            {"authority_state_version": 9},
+            {"root_grant_id": "root-2"},
+            {"root_grant_digest": "8" * 64},
+            {"live_admission_digest": "9" * 64},
+            {"current_authority_digest": "0" * 64},
+            {"authorization_digest": "9" * 64},
+            {"issuance_replay_digest": "8" * 64},
+        )
+        for changes in variants:
+            forged = replace(permit, **changes, consumption_permit_digest="")
+            with self.assertRaises(BuildAuthorizationConsumptionContractError):
+                forged.sealed()
+
+    def test_repository_substitution_with_coherent_scope_cannot_be_resealed(self):
+        permit = make_permit().sealed()
+        other_repo = "DonkeyJJLove/other"
+        forged = replace(
+            permit,
+            repository=other_repo,
+            resource_scope=(f"repo-path:{other_repo}:{PATH}",),
+            consumption_permit_digest="",
+        )
+        with self.assertRaisesRegex(BuildAuthorizationConsumptionContractError, "source binding mismatch"):
+            forged.sealed()
 
     def test_action_substitution_fails(self):
+        permit = make_permit().sealed()
+        forged = replace(permit, action="RUN_TEST", consumption_permit_digest="")
         with self.assertRaisesRegex(BuildAuthorizationConsumptionContractError, "BUILD_CANDIDATE"):
-            make_permit(action="RUN_TEST").validate()
+            forged.sealed()
 
     def test_scope_widening_and_traversal_fail(self):
         with self.assertRaises(BuildAuthorizationConsumptionContractError):
@@ -85,8 +169,10 @@ class BuildAuthorizationConsumptionPermitContractTests(unittest.TestCase):
             make_permit(resource_scope=("repo-path:DonkeyJJLove/ai_platform:*",)).validate()
 
     def test_effectful_artifact_fails(self):
+        permit = make_permit()
+        forged = replace(permit, execution_effect="WRITE_FILE")
         with self.assertRaisesRegex(BuildAuthorizationConsumptionContractError, "cannot carry effects"):
-            make_permit(execution_effect="WRITE_FILE").validate()
+            forged.validate()
 
     def test_frozen_contract(self):
         permit = make_permit().sealed()
