@@ -1,9 +1,10 @@
 """Concrete persistent providers for the trusted control-plane service.
 
 These providers are deliberately capability-reduced. The SQLite store exposes exact
-read operations to the service; bootstrap writes are separate trusted-process methods
-and are never selected by HTTP callers. Signature verification is delegated to a
-runtime-bound callable so key custody remains outside repository content.
+read operations to the service and other trusted in-process admission boundaries;
+bootstrap writes are separate trusted-process methods and are never selected by normal
+admission callers. Signature verification is delegated to a runtime-bound callable so
+key custody remains outside repository content.
 """
 from __future__ import annotations
 
@@ -42,9 +43,19 @@ def _decode_record(raw: str) -> Mapping[str, object]:
 class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
     """Restart-safe exact-record store used behind TrustedControlPlaneService.
 
-    `put_*` methods are trusted bootstrap operations. Normal service traffic only reaches
-    the read-only interface inherited from TrustedControlPlaneStore.
+    ``put_*`` methods are trusted bootstrap operations. Runtime admission paths only use
+    the exact read operations. Builder-subject records deliberately share this existing
+    store rather than creating an independent trust database.
     """
+
+    BUILDER_LOOKUP_FIELDS = (
+        "repository",
+        "builder_subject_id",
+        "builder_instance_id",
+        "candidate_scope_digest",
+        "resource_scope_digest",
+        "capability_class",
+    )
 
     def __init__(self, database_path: str) -> None:
         if not isinstance(database_path, str) or not database_path.strip():
@@ -82,16 +93,39 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
                     record_json TEXT NOT NULL,
                     PRIMARY KEY(repository, pr_number, base_sha, head_sha, mission_id, grant_id, record_json)
                 );
+                CREATE TABLE IF NOT EXISTS builder_subject (
+                    repository TEXT NOT NULL,
+                    builder_subject_id TEXT NOT NULL,
+                    builder_instance_id TEXT NOT NULL,
+                    candidate_scope_digest TEXT NOT NULL,
+                    resource_scope_digest TEXT NOT NULL,
+                    capability_class TEXT NOT NULL,
+                    record_json TEXT NOT NULL,
+                    PRIMARY KEY(
+                        repository,
+                        builder_subject_id,
+                        builder_instance_id,
+                        candidate_scope_digest,
+                        resource_scope_digest,
+                        capability_class,
+                        record_json
+                    )
+                );
                 """
             )
 
-    def put_pr_bootstrap(self, record: Mapping[str, object]) -> None:
+    @staticmethod
+    def _lookup(record: Mapping[str, object], fields: tuple[str, ...], label: str) -> Mapping[str, object]:
         lookup = record.get("lookup_key") if isinstance(record, Mapping) else None
         if not isinstance(lookup, Mapping):
-            raise TrustedControlPlaneProviderError("bootstrap record lookup_key is required")
-        fields = ("repository", "pr_number", "base_sha", "head_sha", "merge_method")
+            raise TrustedControlPlaneProviderError(f"{label} record lookup_key is required")
         if frozenset(lookup.keys()) != frozenset(fields):
-            raise TrustedControlPlaneProviderError("bootstrap lookup_key is not canonical")
+            raise TrustedControlPlaneProviderError(f"{label} lookup_key is not canonical")
+        return lookup
+
+    def put_pr_bootstrap(self, record: Mapping[str, object]) -> None:
+        fields = ("repository", "pr_number", "base_sha", "head_sha", "merge_method")
+        lookup = self._lookup(record, fields, "bootstrap")
         raw = _canonical_json(record)
         with self._lock, self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
@@ -102,17 +136,30 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
             connection.execute("COMMIT")
 
     def put_authority_record(self, record: Mapping[str, object]) -> None:
-        lookup = record.get("lookup_key") if isinstance(record, Mapping) else None
-        if not isinstance(lookup, Mapping):
-            raise TrustedControlPlaneProviderError("authority record lookup_key is required")
         fields = ("repository", "pr_number", "base_sha", "head_sha", "mission_id", "grant_id")
-        if frozenset(lookup.keys()) != frozenset(fields):
-            raise TrustedControlPlaneProviderError("authority lookup_key is not canonical")
+        lookup = self._lookup(record, fields, "authority")
         raw = _canonical_json(record)
         with self._lock, self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             connection.execute(
                 "INSERT OR IGNORE INTO authority_lineage VALUES(?,?,?,?,?,?,?)",
+                tuple(lookup[name] for name in fields) + (raw,),
+            )
+            connection.execute("COMMIT")
+
+    def put_builder_subject_record(self, record: Mapping[str, object]) -> None:
+        """Trusted bootstrap write for one exact builder-subject record."""
+        fields = self.BUILDER_LOOKUP_FIELDS
+        lookup = self._lookup(record, fields, "builder subject")
+        if record.get("record_kind") != "builder-subject":
+            raise TrustedControlPlaneProviderError("builder subject record kind is invalid")
+        if not isinstance(record.get("subject"), Mapping):
+            raise TrustedControlPlaneProviderError("builder subject payload is invalid")
+        raw = _canonical_json(record)
+        with self._lock, self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "INSERT OR IGNORE INTO builder_subject VALUES(?,?,?,?,?,?,?)",
                 tuple(lookup[name] for name in fields) + (raw,),
             )
             connection.execute("COMMIT")
@@ -141,13 +188,40 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
             ).fetchall()
         return tuple(_decode_record(row[0]) for row in rows)
 
+    def lookup_builder_subject_exact(
+        self,
+        *,
+        repository: str,
+        builder_subject_id: str,
+        builder_instance_id: str,
+        candidate_scope_digest: str,
+        resource_scope_digest: str,
+        capability_class: str,
+    ) -> tuple[Mapping[str, object], ...]:
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT record_json FROM builder_subject WHERE repository=? "
+                "AND builder_subject_id=? AND builder_instance_id=? "
+                "AND candidate_scope_digest=? AND resource_scope_digest=? "
+                "AND capability_class=? ORDER BY record_json",
+                (
+                    repository,
+                    builder_subject_id,
+                    builder_instance_id,
+                    candidate_scope_digest,
+                    resource_scope_digest,
+                    capability_class,
+                ),
+            ).fetchall()
+        return tuple(_decode_record(row[0]) for row in rows)
+
     def ready(self) -> bool:
         try:
             with self._connect() as connection:
                 names = {row[0] for row in connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table'"
                 )}
-            return {"pr_bootstrap", "authority_lineage"}.issubset(names)
+            return {"pr_bootstrap", "authority_lineage", "builder_subject"}.issubset(names)
         except Exception:
             return False
 
