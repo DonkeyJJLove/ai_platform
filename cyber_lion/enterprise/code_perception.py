@@ -16,7 +16,6 @@ import ast
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-import subprocess
 import symtable
 from typing import Iterable
 
@@ -30,6 +29,10 @@ from cyber_lion.contracts.code_perception import (
     stable_digest,
 )
 from cyber_lion.contracts.enterprise_graph import canonical_json
+from cyber_lion.enterprise.code_perception_git_boundary import (
+    CodePerceptionGitBoundary,
+    GitReadBoundaryError,
+)
 
 GENERATOR_VERSION = "2.0.0"
 _ANON_SCOPE_TYPES = (ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
@@ -83,21 +86,8 @@ class _Parsed:
 
 # --------------------------- Git / source identity ---------------------------
 
-def _git(repo_root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(repo_root), *args],
-            input=input_bytes,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-    except OSError as exc:
-        raise CodePerceptionBuildError("git executable unavailable") from exc
-    if proc.returncode != 0:
-        detail = proc.stderr.decode("utf-8", errors="replace")[:1000]
-        raise CodePerceptionBuildError(f"git {' '.join(args)} failed: {detail}")
-    return proc.stdout
+def _git_boundary() -> CodePerceptionGitBoundary:
+    return CodePerceptionGitBoundary()
 
 
 def git_source_identity(
@@ -108,8 +98,12 @@ def git_source_identity(
     expected_tree: str | None = None,
 ) -> SourceIdentity:
     root = Path(repo_root)
-    commit_sha = _git(root, "rev-parse", f"{commit}^{{commit}}").decode().strip().lower()
-    tree_sha = _git(root, "rev-parse", f"{commit_sha}^{{tree}}").decode().strip().lower()
+    boundary = _git_boundary()
+    try:
+        commit_sha = boundary.resolve_commit(root, repository, commit)
+        tree_sha = boundary.resolve_tree(root, repository, commit_sha)
+    except GitReadBoundaryError as exc:
+        raise CodePerceptionBuildError("read-only git source identity resolution failed") from exc
     source = SourceIdentity(repository, commit_sha, tree_sha).validate()
     if expected_tree is not None and tree_sha != expected_tree.lower():
         raise CodePerceptionBuildError("source tree substitution detected")
@@ -119,7 +113,11 @@ def git_source_identity(
 def git_blob_inputs(repo_root: str | Path, source: SourceIdentity) -> tuple[BlobInput, ...]:
     root = Path(repo_root)
     source.validate()
-    raw = _git(root, "ls-tree", "-r", "-z", "--long", source.source_commit_sha)
+    boundary = _git_boundary()
+    try:
+        raw = boundary.list_tree(root, source.repository, source.source_commit_sha, source.source_tree_sha)
+    except GitReadBoundaryError as exc:
+        raise CodePerceptionBuildError("read-only git tree inventory failed") from exc
     entries: list[tuple[str, str, int]] = []
     seen_paths: set[str] = set()
     for record in raw.split(b"\0"):
@@ -142,10 +140,26 @@ def git_blob_inputs(repo_root: str | Path, source: SourceIdentity) -> tuple[Blob
 
     inputs: list[BlobInput] = []
     for path, blob_sha, size in sorted(entries):
-        data = _git(root, "cat-file", "blob", blob_sha)
+        try:
+            data = boundary.read_blob(
+                root,
+                source.repository,
+                source.source_commit_sha,
+                source.source_tree_sha,
+                blob_sha,
+                size,
+            )
+            actual = boundary.hash_stdin(
+                root,
+                source.repository,
+                source.source_commit_sha,
+                source.source_tree_sha,
+                data,
+            )
+        except GitReadBoundaryError as exc:
+            raise CodePerceptionBuildError(f"read-only git blob observation failed: {path}") from exc
         if len(data) != size:
             raise CodePerceptionBuildError(f"blob size mismatch: {path}")
-        actual = _git(root, "hash-object", "--stdin", input_bytes=data).decode().strip().lower()
         if actual != blob_sha:
             raise CodePerceptionBuildError(f"blob substitution detected: {path}")
         inputs.append(BlobInput(path, blob_sha, size, data))
@@ -495,15 +509,12 @@ def _execution_scope(node: ast.AST, parsed: _Parsed) -> _Scope:
         if parent is None:
             return scope.parent or parsed.module_scope
         cur = parent
-    # Function/class body executes in its own scope. Signature/default/decorator/base
-    # expressions execute in the enclosing scope.
     if cur in getattr(scope.node, "body", ()):
         return scope
     return scope.parent or parsed.module_scope
 
 
 def _module_activation_floor(scope: _Scope, parsed: _Parsed) -> tuple[int, int] | None:
-    """Earliest conservative module-init boundary for an executable named scope."""
     if scope is parsed.module_scope:
         return None
     cur = scope
@@ -518,11 +529,6 @@ def _module_activation_floor(scope: _Scope, parsed: _Parsed) -> tuple[int, int] 
 
 
 def _cross_scope_module_global_writes(parsed: _Parsed) -> frozenset[str]:
-    """Names that another named scope can explicitly write into module globals.
-
-    This is a conservative static-candidate filter, not a proof that unlisted Python
-    reflection or external mutation cannot alter the runtime binding.
-    """
     cached = getattr(parsed, "_cross_scope_global_writes_cache", None)
     if cached is not None:
         return cached
@@ -784,9 +790,6 @@ def projection_digest(graph: CodeGraph) -> str:
 
 def tree_semantic_digest(graph: CodeGraph) -> str:
     graph.validate()
-    # Use the same logical payload as the projection digest so R10 call semantics
-    # (semantic_class/runtime_target_state/call_semantics_version) are tree-bound too;
-    # normalize only commit identity to preserve same-tree alias equivalence.
     payload = dict(graph.logical_payload())
     payload["source"]["source_commit_sha"] = "TREE_BOUND"
     for record in payload["files"]:
@@ -797,7 +800,8 @@ def tree_semantic_digest(graph: CodeGraph) -> str:
 def generator_digest() -> str:
     here = Path(__file__).resolve()
     contract = (here.parents[1] / "contracts" / "code_perception.py").resolve()
-    payload = b"code_perception-generator-v1\0" + contract.read_bytes() + b"\0" + here.read_bytes()
+    boundary = (here.parent / "code_perception_git_boundary.py").resolve()
+    payload = b"code-perception-generator-v2\0" + contract.read_bytes() + b"\0" + boundary.read_bytes() + b"\0" + here.read_bytes()
     return sha256(payload).hexdigest()
 
 
@@ -871,6 +875,7 @@ def graph_schema_document() -> dict:
         "projection_digest_semantics": "includes-source-commit-tree-and-explicit-call-semantics",
         "tree_semantic_digest_semantics": "normalizes-only-source-commit-identity-and-preserves-call-semantics",
         "same_tree_invariant": "same-repository-tree-blobs-generator=>same-tree-semantic-digest",
+        "git_read_boundary": "closed-world-typed-read-only-process-boundary",
     }
 
 
