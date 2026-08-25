@@ -9,13 +9,18 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import re
 from types import ModuleType
 from typing import Callable, Final
 
-from .persistent_authority_state import SQLiteAuthorityStateStore
+from .persistent_authority_state import (
+    PersistentAuthorityStateError,
+    PersistentAuthorityStoreOrigin,
+    SQLiteAuthorityStateStore,
+)
 from .trusted_control_plane_providers import (
     SQLiteTrustedControlPlaneStore,
     TrustedControlPlaneProviderError,
@@ -23,6 +28,7 @@ from .trusted_control_plane_providers import (
 )
 
 RUNTIME_FACTORY_VERSION: Final = "1.0.0"
+AUTHORITY_STORE_ORIGIN_DOMAIN: Final = "LION/E004-CANONICAL-AUTHORITY-STATE-STORE-ORIGIN/1"
 _ENV_NAME_RE: Final = re.compile(r"^[A-Z][A-Z0-9_]{0,127}$")
 _CALLABLE_RE: Final = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
 _SHA256_RE: Final = re.compile(r"^[0-9a-f]{64}$")
@@ -133,6 +139,90 @@ def _load_external_module(path: Path) -> ModuleType:
     return module
 
 
+def _canonical_json(value: object) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def observe_authority_state_store_origin() -> PersistentAuthorityStoreOrigin:
+    """Observe the candidate canonical origin from trusted process configuration."""
+    _runtime_version()
+    repository_root = _repository_root()
+    database_path = _database_path()
+    payload = {
+        "runtime_factory_version": RUNTIME_FACTORY_VERSION,
+        "repository_root": str(repository_root),
+        "canonical_database_path": str(database_path),
+    }
+    digest = hashlib.sha256(
+        AUTHORITY_STORE_ORIGIN_DOMAIN.encode("ascii") + b"\0" + _canonical_json(payload)
+    ).hexdigest()
+    return PersistentAuthorityStoreOrigin(
+        origin_id=f"aso:{digest}",
+        origin_digest=digest,
+        runtime_factory_version=RUNTIME_FACTORY_VERSION,
+        repository_root=str(repository_root),
+        canonical_database_path=str(database_path),
+    ).validate()
+
+
+def _authority_state_store_for_origin(origin: PersistentAuthorityStoreOrigin) -> SQLiteAuthorityStateStore:
+    try:
+        store = SQLiteAuthorityStateStore(origin.canonical_database_path)
+    except Exception as exc:
+        raise TrustedControlPlaneRuntimeError("trusted authority-state store unavailable") from exc
+    if type(store) is not SQLiteAuthorityStateStore or store.ready() is not True:
+        raise TrustedControlPlaneRuntimeError("trusted authority-state store is not ready")
+    return store
+
+
+def register_authority_state_store_origin_once() -> PersistentAuthorityStoreOrigin:
+    """Persist the first canonical authority-store origin; duplicate registration is denied."""
+    origin = observe_authority_state_store_origin()
+    store = _authority_state_store_for_origin(origin)
+    try:
+        return store.register_authority_store_origin(origin)
+    except PersistentAuthorityStateError as exc:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin registration denied") from exc
+
+
+def verify_authority_state_store_origin(
+    expected_origin: PersistentAuthorityStoreOrigin | None = None,
+) -> PersistentAuthorityStoreOrigin:
+    """Reobserve configuration and prove it matches the durable and optional caller-held anchor."""
+    observed = observe_authority_state_store_origin()
+    if expected_origin is not None:
+        if type(expected_origin) is not PersistentAuthorityStoreOrigin:
+            raise TrustedControlPlaneRuntimeError("canonical authority-state expected origin invalid")
+        expected_origin.validate()
+        if observed != expected_origin:
+            raise TrustedControlPlaneRuntimeError("canonical authority-state origin drift")
+    store = _authority_state_store_for_origin(observed)
+    try:
+        anchored = store.resolve_authority_store_origin()
+    except PersistentAuthorityStateError as exc:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin is not registered") from exc
+    if anchored != observed:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin drift")
+    if expected_origin is not None and anchored != expected_origin:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin mismatch")
+    return anchored
+
+
+def _ensure_authority_state_store_origin() -> tuple[PersistentAuthorityStoreOrigin, SQLiteAuthorityStateStore]:
+    observed = observe_authority_state_store_origin()
+    store = _authority_state_store_for_origin(observed)
+    try:
+        anchored = store.resolve_authority_store_origin()
+    except PersistentAuthorityStateError:
+        try:
+            anchored = store.register_authority_store_origin(observed)
+        except PersistentAuthorityStateError as exc:
+            raise TrustedControlPlaneRuntimeError("canonical authority-state origin registration denied") from exc
+    if anchored != observed:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin drift")
+    return anchored, store
+
+
 def build_store() -> SQLiteTrustedControlPlaneStore:
     """Build the persistent control-plane record store from trusted environment-only configuration."""
     _runtime_version()
@@ -147,20 +237,11 @@ def build_store() -> SQLiteTrustedControlPlaneStore:
 
 
 def build_authority_state_store() -> SQLiteAuthorityStateStore:
-    """Build the canonical authority-state store from the same pinned runtime origin.
-
-    This zero-argument factory is the only composition root used by R17/R19 issuance
-    provenance. The database path is observed from trusted process configuration and
-    cannot be supplied by a builder-entry or builder-invocation request.
-    """
-    _runtime_version()
-    path = _database_path()
-    try:
-        store = SQLiteAuthorityStateStore(str(path))
-    except Exception as exc:
-        raise TrustedControlPlaneRuntimeError("trusted authority-state store unavailable") from exc
-    if store.ready() is not True:
-        raise TrustedControlPlaneRuntimeError("trusted authority-state store is not ready")
+    """Build the canonical authority-state store from its durable one-way origin anchor."""
+    origin, store = _ensure_authority_state_store_origin()
+    verified = verify_authority_state_store_origin(origin)
+    if verified != origin:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin verification failed")
     return store
 
 

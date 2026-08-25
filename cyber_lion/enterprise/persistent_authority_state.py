@@ -82,6 +82,46 @@ class PersistentRootAnchor:
 
 
 @dataclass(frozen=True)
+class PersistentAuthorityStoreOrigin:
+    """Durable one-way identity of the canonical authority-state store origin."""
+
+    origin_id: str
+    origin_digest: str
+    runtime_factory_version: str
+    repository_root: str
+    canonical_database_path: str
+
+    def validate(self) -> "PersistentAuthorityStoreOrigin":
+        _text(self.origin_id, name="origin_id", limit=256)
+        _sha256(self.origin_digest, name="origin_digest")
+        _text(self.runtime_factory_version, name="runtime_factory_version", limit=64)
+        _text(self.repository_root, name="repository_root", limit=4096)
+        _text(self.canonical_database_path, name="canonical_database_path", limit=4096)
+        if self.origin_id != f"aso:{self.origin_digest}":
+            raise PersistentAuthorityStateError("authority store origin id binding mismatch")
+        if not Path(self.repository_root).is_absolute() or not Path(self.canonical_database_path).is_absolute():
+            raise PersistentAuthorityStateError("authority store origin path is invalid")
+        return self
+
+    def canonical_json(self) -> str:
+        self.validate()
+        return json.dumps(asdict(self), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+    @classmethod
+    def from_json(cls, value: str) -> "PersistentAuthorityStoreOrigin":
+        try:
+            payload = json.loads(value)
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise PersistentAuthorityStateError("authority store origin record is malformed") from exc
+        if not isinstance(payload, dict) or set(payload) != set(cls.__dataclass_fields__):
+            raise PersistentAuthorityStateError("authority store origin record is noncanonical")
+        try:
+            return cls(**payload).validate()
+        except (TypeError, ValueError) as exc:
+            raise PersistentAuthorityStateError("authority store origin record is invalid") from exc
+
+
+@dataclass(frozen=True)
 class PersistentBuilderEntryIssuanceRecord:
     """Durable exact identity of one successfully sealed BuilderEntryPermit."""
 
@@ -105,20 +145,25 @@ class PersistentBuilderEntryIssuanceRecord:
     builder_identity_digest: str
     builder_implementation_digest: str
     builder_attestation_digest: str
+    authority_store_origin_id: str
+    authority_store_origin_digest: str
     issued_at: str
 
     def validate(self) -> "PersistentBuilderEntryIssuanceRecord":
         for name in (
             "builder_entry_permit_id", "repository", "action", "root_grant_id",
-            "builder_subject_id", "builder_instance_id", "builder_capability_class", "issued_at",
+            "builder_subject_id", "builder_instance_id", "builder_capability_class",
+            "authority_store_origin_id", "issued_at",
         ):
             _text(getattr(self, name), name=name, limit=2048)
         for name in (
             "builder_entry_permit_digest", "builder_entry_replay_digest", "root_grant_digest",
             "current_authority_digest", "builder_identity_digest", "builder_implementation_digest",
-            "builder_attestation_digest",
+            "builder_attestation_digest", "authority_store_origin_digest",
         ):
             _sha256(getattr(self, name), name=name)
+        if self.authority_store_origin_id != f"aso:{self.authority_store_origin_digest}":
+            raise PersistentAuthorityStateError("builder entry issuance store origin binding mismatch")
         _sha40(self.baseline_master_sha, name="baseline_master_sha")
         _sha40(self.baseline_master_tree_sha, name="baseline_master_tree_sha")
         _scope(self.candidate_scope, name="candidate_scope")
@@ -269,6 +314,12 @@ class SQLiteAuthorityStateStore:
                     consumed_at TEXT NOT NULL,
                     PRIMARY KEY(replay_domain, replay_key_digest)
                 );
+                CREATE TABLE IF NOT EXISTS authority_store_origin (
+                    singleton INTEGER NOT NULL PRIMARY KEY CHECK(singleton=1),
+                    origin_id TEXT NOT NULL UNIQUE,
+                    origin_digest TEXT NOT NULL UNIQUE,
+                    record_json TEXT NOT NULL
+                );
                 CREATE TABLE IF NOT EXISTS builder_entry_issuance (
                     builder_entry_permit_id TEXT NOT NULL PRIMARY KEY,
                     builder_entry_permit_digest TEXT NOT NULL UNIQUE,
@@ -405,10 +456,42 @@ class SQLiteAuthorityStateStore:
                 connection.execute("ROLLBACK")
                 return False
 
+    def register_authority_store_origin(self, origin: PersistentAuthorityStoreOrigin) -> PersistentAuthorityStoreOrigin:
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise PersistentAuthorityStateError("exact authority store origin required")
+        origin.validate()
+        canonical = origin.canonical_json()
+        with self._lock, self._connect() as connection:
+            try:
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute(
+                    "INSERT INTO authority_store_origin VALUES(1,?,?,?)",
+                    (origin.origin_id, origin.origin_digest, canonical),
+                )
+                connection.execute("COMMIT")
+            except sqlite3.IntegrityError as exc:
+                connection.execute("ROLLBACK")
+                raise PersistentAuthorityStateError("authority store origin is already registered") from exc
+        return origin
+
+    def resolve_authority_store_origin(self) -> PersistentAuthorityStoreOrigin:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT record_json FROM authority_store_origin WHERE singleton=1"
+            ).fetchall()
+        if len(rows) == 0:
+            raise PersistentAuthorityStateError("authority store origin is missing")
+        if len(rows) != 1:
+            raise PersistentAuthorityStateError("authority store origin is ambiguous")
+        return PersistentAuthorityStoreOrigin.from_json(rows[0][0])
+
     def record_builder_entry_issuance(self, record: PersistentBuilderEntryIssuanceRecord) -> PersistentBuilderEntryIssuanceRecord:
         if type(record) is not PersistentBuilderEntryIssuanceRecord:
             raise PersistentAuthorityStateError("exact builder entry issuance record required")
         record.validate()
+        origin = self.resolve_authority_store_origin()
+        if (record.authority_store_origin_id, record.authority_store_origin_digest) != (origin.origin_id, origin.origin_digest):
+            raise PersistentAuthorityStateError("builder entry issuance store origin mismatch")
         canonical = record.canonical_json()
         with self._lock, self._connect() as connection:
             try:
@@ -431,6 +514,7 @@ class SQLiteAuthorityStateStore:
 
     def resolve_builder_entry_issuance(self, builder_entry_permit_id: str) -> PersistentBuilderEntryIssuanceRecord:
         _text(builder_entry_permit_id, name="builder_entry_permit_id", limit=2048)
+        origin = self.resolve_authority_store_origin()
         with self._connect() as connection:
             rows = connection.execute(
                 "SELECT record_json FROM builder_entry_issuance WHERE builder_entry_permit_id=?",
@@ -443,6 +527,8 @@ class SQLiteAuthorityStateStore:
         record = PersistentBuilderEntryIssuanceRecord.from_json(rows[0][0])
         if record.builder_entry_permit_id != builder_entry_permit_id:
             raise PersistentAuthorityStateError("builder entry issuance lookup binding mismatch")
+        if (record.authority_store_origin_id, record.authority_store_origin_digest) != (origin.origin_id, origin.origin_digest):
+            raise PersistentAuthorityStateError("builder entry issuance origin mismatch")
         return record
 
     def finalize_binding(
@@ -545,7 +631,7 @@ class SQLiteAuthorityStateStore:
         try:
             with self._connect() as connection:
                 names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            return {"authority_epoch_state", "authority_root_anchor", "replay_state", "builder_entry_issuance"}.issubset(names)
+            return {"authority_epoch_state", "authority_root_anchor", "replay_state", "authority_store_origin", "builder_entry_issuance"}.issubset(names)
         except Exception:
             return False
 

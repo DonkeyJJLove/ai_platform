@@ -22,10 +22,14 @@ from cyber_lion.enterprise.candidate_build_authorization import (
     LiveResourceAuthorityAdmission,
 )
 from cyber_lion.enterprise.persistent_authority_state import (
+    PersistentAuthorityStoreOrigin,
     PersistentBuilderEntryIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
-from cyber_lion.enterprise.trusted_control_plane_runtime import build_authority_state_store
+from cyber_lion.enterprise.trusted_control_plane_runtime import (
+    build_authority_state_store,
+    verify_authority_state_store_origin,
+)
 
 
 class BuilderInvocationPermitError(RuntimeError):
@@ -76,20 +80,34 @@ class PersistentBuilderInvocationReplayGuard:
 
 
 class PersistentBuilderEntryIssuanceSource:
-    """Read-only durable provenance source pinned to canonical authority-state origin."""
+    """Read-only durable provenance source pinned to one canonical authority-store origin."""
 
-    __slots__ = ("_store",)
+    __slots__ = ("_store", "_origin")
 
     def __init__(self) -> None:
         try:
             store = build_authority_state_store()
+            origin = verify_authority_state_store_origin()
         except Exception as exc:
             raise BuilderInvocationPermitError("canonical persistent authority store unavailable") from exc
         if type(store) is not SQLiteAuthorityStateStore or not store.ready():
             raise BuilderInvocationPermitError("canonical persistent authority store invalid")
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise BuilderInvocationPermitError("canonical authority store origin invalid")
         self._store = store
+        self._origin = origin
+
+    def _current_origin(self) -> PersistentAuthorityStoreOrigin:
+        try:
+            current = verify_authority_state_store_origin()
+        except Exception as exc:
+            raise BuilderInvocationPermitError("canonical authority store origin unavailable") from exc
+        if current != self._origin:
+            raise BuilderInvocationPermitError("canonical authority store origin drift")
+        return current
 
     def resolve(self, builder_entry_permit_id: str) -> PersistentBuilderEntryIssuanceRecord:
+        current_origin = self._current_origin()
         try:
             record = self._store.resolve_builder_entry_issuance(builder_entry_permit_id)
         except Exception as exc:
@@ -97,9 +115,18 @@ class PersistentBuilderEntryIssuanceSource:
         if type(record) is not PersistentBuilderEntryIssuanceRecord:
             raise BuilderInvocationPermitError("durable builder entry issuance type invalid")
         try:
-            return record.validate()
+            record.validate()
         except Exception as exc:
             raise BuilderInvocationPermitError("durable builder entry issuance invalid") from exc
+        if (
+            record.authority_store_origin_id,
+            record.authority_store_origin_digest,
+        ) != (
+            current_origin.origin_id,
+            current_origin.origin_digest,
+        ):
+            raise BuilderInvocationPermitError("durable builder entry issuance origin mismatch")
+        return record
 
 
 def _utc(value: str, name: str) -> datetime:
