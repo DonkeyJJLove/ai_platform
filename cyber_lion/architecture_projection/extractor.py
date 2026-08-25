@@ -2,6 +2,8 @@ from __future__ import annotations
 import ast
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
+import re
+import subprocess
 from .model import CanonicalDiagramModel, DiagramNode, DiagramEdge, canonical_projection_identity
 
 _PROJECTIONS = (
@@ -10,6 +12,7 @@ _PROJECTIONS = (
     "fleet-topology", "evolutionary-epoch-loop", "startup-agent-evolution-loop",
     "repository-mutation-boundaries", "event-and-causality-map", "capability-map",
 )
+_SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 
 def available_projection_names() -> tuple[str, ...]:
@@ -50,7 +53,33 @@ class ArchitectureProjectionExtractor:
     def __init__(self, *, source_tree_sha: str, source_root: str | Path | None = None, source_files: dict[str, str] | None = None):
         self.source_tree_sha = source_tree_sha
         self.source_root = Path(source_root) if source_root is not None else Path.cwd()
+        self._source_files_supplied = source_files is not None
         self.source_files = dict(source_files or {})
+        self.observed_source_tree_sha: str | None = None
+        if not self._source_files_supplied:
+            self.observed_source_tree_sha = self._observe_checkout_tree_sha()
+            if self.observed_source_tree_sha != self.source_tree_sha:
+                raise ValueError(
+                    "canonical projection source tree mismatch: "
+                    f"expected {self.source_tree_sha}, observed {self.observed_source_tree_sha}"
+                )
+
+    def _observe_checkout_tree_sha(self) -> str:
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(self.source_root), "rev-parse", "HEAD^{tree}"],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                shell=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise ValueError("canonical projection checkout tree is unobservable") from exc
+        observed = result.stdout.strip()
+        if not _SHA40.fullmatch(observed):
+            raise ValueError("canonical projection checkout tree is invalid")
+        return observed
 
     def _source(self, path: str) -> str:
         if path in self.source_files:
