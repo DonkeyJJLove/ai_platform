@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha256
 import json
+
+from .status import IMPLEMENTATION_STATUSES, require_closed_status
 
 
 @dataclass(frozen=True, order=True)
@@ -19,11 +21,32 @@ class GapRecord:
     def validate(self) -> "GapRecord":
         if not self.target_id.strip() or not self.status.strip():
             raise ValueError("gap target_id and status are required")
+        require_closed_status(self.status)
         return self
 
     def digest(self) -> str:
+        self.validate()
         payload = json.dumps(self.__dict__, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return sha256(b"LION/UML/GAP/1\0" + payload).hexdigest()
+
+
+def transition_gap_status(
+    record: GapRecord,
+    *,
+    new_status: str,
+    evidence_class: str = "",
+    evidence_ref: str = "",
+) -> GapRecord:
+    record.validate()
+    require_closed_status(new_status)
+    if record.status == "UNKNOWN" and new_status != "UNKNOWN":
+        if evidence_class not in {"LIVE_CODE", "CURRENT_TEST", "EXACT_GIT_STATE", "MACHINE_EVIDENCE"}:
+            raise ValueError("UNKNOWN gap promotion requires explicit observed evidence class")
+        if not evidence_ref.strip():
+            raise ValueError("UNKNOWN gap promotion requires explicit evidence_ref")
+    if new_status == "TARGET_ONLY" and record.status not in {"TARGET_ONLY", "UNKNOWN"}:
+        raise ValueError("implemented gap cannot be silently demoted to TARGET_ONLY")
+    return replace(record, status=new_status).validate()
 
 
 def classify_historical_projection(*, observed_commit: str, current_commit: str) -> str:
