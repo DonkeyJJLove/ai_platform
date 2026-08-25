@@ -117,5 +117,34 @@ class BuilderInvocationConsumptionTests(unittest.TestCase):
             def resolve_builder_entry_issuance(self, permit_id): return ancestor
         source = object.__new__(PersistentBuilderInvocationIssuanceSource); object.__setattr__(source, "_store", Store()); object.__setattr__(source, "_origin", origin)
         with patch.object(bic, "verify_authority_state_store_origin", return_value=origin): self.assertEqual(source.resolve(permit.builder_invocation_permit_id), r19)
+        bad = replace(ancestor, builder_entry_permit_digest=D("e")).validate()
+        class BadStore(Store):
+            def resolve_builder_entry_issuance(self, permit_id): return bad
+        object.__setattr__(source, "_store", BadStore())
+        with patch.object(bic, "verify_authority_state_store_origin", return_value=origin):
+            with self.assertRaises(BuilderInvocationConsumptionError): source.resolve(permit.builder_invocation_permit_id)
+
+    def test_z_fresh_process_rewritten_r19_without_r17_ancestor_denied_before_replay(self):
+        permit = invocation_permit()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "repo"; root.mkdir()
+            path_a = str(Path(directory) / "a.sqlite"); path_b = str(Path(directory) / "b.sqlite")
+            env_a = {"LION_CP_RUNTIME_FACTORY_VERSION":"1.0.0","LION_CP_REPOSITORY_ROOT":str(root),"LION_CP_DATABASE_PATH":path_a}
+            env_b = dict(env_a); env_b["LION_CP_DATABASE_PATH"] = path_b
+            importlib.reload(runtime)
+            with patch.dict(os.environ, env_a, clear=True):
+                store_a = runtime.build_authority_state_store(); origin_a = runtime.verify_authority_state_store_origin()
+                store_a.record_builder_entry_issuance(entry_issuance_record(permit, origin_digest=origin_a.origin_digest))
+                store_a.record_builder_invocation_issuance(issuance_record(permit, origin_digest=origin_a.origin_digest))
+            with patch.dict(os.environ, env_b, clear=True): origin_b = runtime.observe_authority_state_store_origin()
+            store_b = SQLiteAuthorityStateStore(path_b); store_b.register_authority_store_origin(origin_b)
+            copied_r19 = replace(store_a.resolve_builder_invocation_issuance(permit.builder_invocation_permit_id), authority_store_origin_id=origin_b.origin_id, authority_store_origin_digest=origin_b.origin_digest).validate()
+            store_b.record_builder_invocation_issuance(copied_r19)
+            importlib.reload(runtime); importlib.reload(bic)
+            replay = Replay(); source = object.__new__(PinnedTrustedBuilderSubjectSource); admission = object.__new__(LiveResourceAuthorityAdmission)
+            with patch.dict(os.environ, env_b, clear=True), patch.object(PinnedTrustedBuilderSubjectSource,"verify_origin",return_value=None), patch.object(PinnedTrustedBuilderSubjectSource,"resolve_exact",return_value=subject()), patch.object(LiveResourceAuthorityAdmission,"revalidate",return_value=authority()), patch.object(bic.PersistentBuilderInvocationConsumptionReplayGuard,"consume",side_effect=replay.consume):
+                engine = bic.BuilderInvocationConsumptionEngine(live_authority=admission, baseline_source=BaselineSource(baseline()), f005_state_source=F005(), builder_source=source)
+                with self.assertRaises(bic.BuilderInvocationConsumptionError): engine.issue_permit(source_permit=permit, admitted_authority=authority(), trusted_now=NOW)
+            self.assertEqual(replay.calls, 0)
 
 if __name__ == "__main__": unittest.main()
