@@ -47,6 +47,18 @@ class Replay:
 class Builders(TrustedBuilderSubjectSource):
     def __init__(self,records,kind="trusted-control-plane"): self.records=records; self.source_kind=kind
     def _lookup_exact(self,**kwargs): return self.records
+class ArbitraryResolver:
+    source_kind="trusted-control-plane"
+    def resolve_exact(self,**kwargs): return builder_subject(kwargs.get("builder_instance_id","instance-01"))
+class ResolverOverride(TrustedBuilderSubjectSource):
+    def _lookup_exact(self,**kwargs): return ()
+    def resolve_exact(self,**kwargs): return builder_subject(kwargs.get("builder_instance_id","instance-01"))
+class WrongTypeBuilders(TrustedBuilderSubjectSource):
+    def _lookup_exact(self,**kwargs): return (object(),)
+class UnsealedBuilders(TrustedBuilderSubjectSource):
+    def _lookup_exact(self,**kwargs):
+        s=builder_subject()
+        return (TrustedBuilderSubject(**{**s.__dict__,"subject_digest":""}),)
 
 def engine(*,base=None,f005=None,builders=None,replay=None):
     live=object.__new__(LiveResourceAuthorityAdmission)
@@ -59,6 +71,36 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
             p=e.issue_permit(source_permit=source_permit(lr),admitted_authority=lr,builder_subject_id="builder-R17",builder_instance_id="instance-01",trusted_now=__import__("datetime").datetime.fromisoformat(NOW))
         self.assertEqual(p.builder_subject_id,"builder-R17"); self.assertEqual(p.builder_instance_id,"instance-01"); self.assertEqual(p.builder_capability_class,BUILDER_CAPABILITY_CLASS)
         self.assertEqual((p.authority_effect,p.execution_effect,p.repository_ref_effect,p.external_effect),("NONE","NONE","NONE","NONE")); p.validate()
+
+    def test_arbitrary_resolver_is_denied_at_composition_boundary(self):
+        live=object.__new__(LiveResourceAuthorityAdmission)
+        with self.assertRaises(BuilderEntryPermitError):
+            BuilderEntryPermitEngine(live_authority=live,baseline_source=BaselineSource(baseline()),f005_state_source=F005(),builder_source=ArbitraryResolver(),replay_guard=Replay())
+
+    def test_trusted_source_cannot_override_resolve_exact(self):
+        live=object.__new__(LiveResourceAuthorityAdmission)
+        with self.assertRaises(BuilderEntryPermitError):
+            BuilderEntryPermitEngine(live_authority=live,baseline_source=BaselineSource(baseline()),f005_state_source=F005(),builder_source=ResolverOverride(),replay_guard=Replay())
+
+    def test_wrong_type_and_unsealed_builder_subjects_are_denied(self):
+        lr=live_receipt(); now=__import__("datetime").datetime.fromisoformat(NOW)
+        for builders in (WrongTypeBuilders(),UnsealedBuilders()):
+            replay=Replay(); e,_=engine(builders=builders,replay=replay)
+            with patch.object(LiveResourceAuthorityAdmission,"revalidate",return_value=lr):
+                with self.assertRaises(BuilderEntryPermitError):
+                    e.issue_permit(source_permit=source_permit(lr),admitted_authority=lr,builder_subject_id="builder-R17",builder_instance_id="instance-01",trusted_now=now)
+            self.assertEqual(replay.calls,0)
+
+    def test_tampered_sealed_subject_digests_are_denied_without_replay_burn(self):
+        lr=live_receipt(); now=__import__("datetime").datetime.fromisoformat(NOW)
+        original=builder_subject()
+        for field,value in (("identity_digest",D("8")),("implementation_digest",D("8")),("attestation_digest",D("8"))):
+            tampered=TrustedBuilderSubject(**{**original.__dict__,field:value})
+            replay=Replay(); e,_=engine(builders=Builders((tampered,)),replay=replay)
+            with patch.object(LiveResourceAuthorityAdmission,"revalidate",return_value=lr):
+                with self.assertRaises(BuilderEntryPermitError):
+                    e.issue_permit(source_permit=source_permit(lr),admitted_authority=lr,builder_subject_id="builder-R17",builder_instance_id="instance-01",trusted_now=now)
+            self.assertEqual(replay.calls,0)
 
     def test_duplicate_entry_is_denied(self):
         lr=live_receipt(); replay=Replay(); e,_=engine(replay=replay); src=source_permit(lr); now=__import__("datetime").datetime.fromisoformat(NOW)
@@ -75,7 +117,10 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
     def test_builder_authentication_failures_do_not_burn_replay(self):
         lr=live_receipt(); now=__import__("datetime").datetime.fromisoformat(NOW)
         for builders in (Builders(()),Builders((builder_subject(),builder_subject())),Builders((builder_subject(),),kind="caller-self-asserted")):
-            replay=Replay(); e,_=engine(builders=builders,replay=replay)
+            replay=Replay()
+            try: e,_=engine(builders=builders,replay=replay)
+            except BuilderEntryPermitError:
+                self.assertEqual(replay.calls,0); continue
             with patch.object(LiveResourceAuthorityAdmission,"revalidate",return_value=lr):
                 with self.assertRaises(BuilderEntryPermitError): e.issue_permit(source_permit=source_permit(lr),admitted_authority=lr,builder_subject_id="builder-R17",builder_instance_id="instance-01",trusted_now=now)
             self.assertEqual(replay.calls,0)
