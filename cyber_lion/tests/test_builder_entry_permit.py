@@ -11,14 +11,13 @@ from cyber_lion.contracts.build_authorization_consumption import (
     compute_consumption_replay_digest,
 )
 from cyber_lion.contracts.candidate_build_authorization import TrustedRepositoryBaseline
+import cyber_lion.enterprise.builder_entry_permit as bep
 from cyber_lion.enterprise.builder_entry_permit import (
     BuilderEntryPermitEngine,
     BuilderEntryPermitError,
+    PinnedBuilderControlPlaneBackend,
     PinnedTrustedBuilderSubjectSource,
     TrustedBuilderSubjectSource,
-    PINNED_BUILDER_BACKEND_IDENTITY,
-    PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST,
-    compute_pinned_builder_source_attestation,
 )
 from cyber_lion.enterprise.candidate_build_authorization import (
     LiveAdmittedResourceAuthority,
@@ -115,14 +114,15 @@ def builder_subject(instance="instance-01"):
     ).sealed()
 
 
+def pinned_backend(records):
+    # Test harness simulates the privileged composition-root read boundary.
+    # Production constructors accept no records or caller attestation.
+    with patch.object(bep, "_load_pinned_builder_records", return_value=records):
+        return PinnedBuilderControlPlaneBackend()
+
+
 def pinned_source(records):
-    attestation = compute_pinned_builder_source_attestation(records)
-    return PinnedTrustedBuilderSubjectSource(
-        records,
-        backend_identity=PINNED_BUILDER_BACKEND_IDENTITY,
-        source_implementation_digest=PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST,
-        source_attestation_digest=attestation,
-    )
+    return PinnedTrustedBuilderSubjectSource(backend=pinned_backend(records))
 
 
 class BaselineSource:
@@ -164,11 +164,19 @@ class ArbitraryResolver:
 class CallerDefinedSource(TrustedBuilderSubjectSource):
     source_kind = "trusted-control-plane"
 
-    def __init__(self, records):
-        self.records = records
-
     def _lookup_exact(self, **kwargs):
-        return self.records
+        return (builder_subject(kwargs.get("builder_instance_id", "instance-01")),)
+
+
+class ExactLookingBackend:
+    backend_identity = bep.PINNED_BUILDER_BACKEND_IDENTITY
+    backend_implementation_digest = bep.PINNED_BUILDER_BACKEND_IMPLEMENTATION_DIGEST
+
+    def verify_origin(self):
+        return None
+
+    def resolve_exact(self, **kwargs):
+        return builder_subject(kwargs.get("builder_instance_id", "instance-01"))
 
 
 def engine(*, base=None, f005=None, builders=None, replay=None):
@@ -213,6 +221,25 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         )
         permit.validate()
 
+    def test_caller_cannot_construct_trusted_source_from_own_sealed_subject(self):
+        own = builder_subject()
+        with self.assertRaises(TypeError):
+            PinnedTrustedBuilderSubjectSource(records=(own,))
+        with self.assertRaises(TypeError):
+            PinnedBuilderControlPlaneBackend((own,))
+
+    def test_caller_cannot_self_attest_exact_pinned_source(self):
+        self.assertFalse(hasattr(bep, "compute_pinned_builder_source_attestation"))
+        with self.assertRaises(TypeError):
+            PinnedTrustedBuilderSubjectSource(
+                backend=pinned_backend((builder_subject(),)),
+                source_attestation_digest=D("8"),
+            )
+
+    def test_arbitrary_exact_looking_backend_is_denied(self):
+        with self.assertRaises(BuilderEntryPermitError):
+            PinnedTrustedBuilderSubjectSource(backend=ExactLookingBackend())
+
     def test_arbitrary_resolver_is_denied_at_composition_boundary(self):
         live = object.__new__(LiveResourceAuthorityAdmission)
         with self.assertRaises(BuilderEntryPermitError):
@@ -231,40 +258,51 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
                 live_authority=live,
                 baseline_source=BaselineSource(baseline()),
                 f005_state_source=F005(),
-                builder_source=CallerDefinedSource((builder_subject(),)),
+                builder_source=CallerDefinedSource(),
                 replay_guard=Replay(),
             )
 
-    def test_pinned_source_is_non_subclassable(self):
+    def test_backend_and_source_are_non_subclassable(self):
         with self.assertRaises(TypeError):
-
-            class InvalidPinnedSubclass(PinnedTrustedBuilderSubjectSource):
+            class InvalidBackendSubclass(PinnedBuilderControlPlaneBackend):
+                pass
+        with self.assertRaises(TypeError):
+            class InvalidSourceSubclass(PinnedTrustedBuilderSubjectSource):
                 pass
 
-    def test_source_origin_backend_implementation_and_attestation_are_pinned(self):
-        records = (builder_subject(),)
-        good = compute_pinned_builder_source_attestation(records)
-        for kwargs in (
-            dict(
-                backend_identity="attacker-control-plane",
-                source_implementation_digest=PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST,
-                source_attestation_digest=good,
-            ),
-            dict(
-                backend_identity=PINNED_BUILDER_BACKEND_IDENTITY,
-                source_implementation_digest=D("8"),
-                source_attestation_digest=good,
-            ),
-            dict(
-                backend_identity=PINNED_BUILDER_BACKEND_IDENTITY,
-                source_implementation_digest=PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST,
-                source_attestation_digest=D("8"),
-            ),
+    def test_backend_origin_identity_implementation_and_provenance_are_pinned(self):
+        backend = pinned_backend((builder_subject(),))
+        backend.verify_origin()
+
+        original = backend._provenance_digest
+        object.__setattr__(backend, "_provenance_digest", D("8"))
+        with self.assertRaises(BuilderEntryPermitError):
+            backend.verify_origin()
+        object.__setattr__(backend, "_provenance_digest", original)
+
+        with patch.object(
+            PinnedBuilderControlPlaneBackend,
+            "backend_identity",
+            "attacker-control-plane",
         ):
             with self.assertRaises(BuilderEntryPermitError):
-                PinnedTrustedBuilderSubjectSource(records, **kwargs)
+                backend.verify_origin()
 
-    def test_zero_and_ambiguous_pinned_snapshots_fail_without_replay_burn(self):
+        with patch.object(
+            PinnedBuilderControlPlaneBackend,
+            "backend_implementation_digest",
+            D("9"),
+        ):
+            with self.assertRaises(BuilderEntryPermitError):
+                backend.verify_origin()
+
+    def test_backend_snapshot_substitution_is_detected(self):
+        backend = pinned_backend((builder_subject(),))
+        object.__setattr__(backend, "_records", (builder_subject("instance-02"),))
+        with self.assertRaises(BuilderEntryPermitError):
+            backend.verify_origin()
+
+    def test_zero_and_ambiguous_backend_results_fail_without_replay_burn(self):
         receipt = live_receipt()
         now = __import__("datetime").datetime.fromisoformat(NOW)
         for records in ((), (builder_subject(), builder_subject())):
@@ -283,16 +321,20 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
                     )
             self.assertEqual(replay.calls, 0)
 
-    def test_wrong_type_or_unsealed_snapshot_record_is_rejected_at_origin(self):
-        with self.assertRaises(BuilderEntryPermitError):
-            compute_pinned_builder_source_attestation((object(),))
+    def test_wrong_type_or_unsealed_backend_record_is_rejected_at_origin(self):
+        with patch.object(bep, "_load_pinned_builder_records", return_value=(object(),)):
+            with self.assertRaises(BuilderEntryPermitError):
+                PinnedBuilderControlPlaneBackend()
 
         sealed = builder_subject()
         unsealed = TrustedBuilderSubject(**{**sealed.__dict__, "subject_digest": ""})
-        with self.assertRaises(BuilderEntryPermitError):
-            compute_pinned_builder_source_attestation((unsealed,))
+        with patch.object(
+            bep, "_load_pinned_builder_records", return_value=(unsealed,)
+        ):
+            with self.assertRaises(BuilderEntryPermitError):
+                PinnedBuilderControlPlaneBackend()
 
-    def test_subject_digest_tampering_is_rejected_at_origin(self):
+    def test_subject_digest_tampering_is_rejected_at_backend_origin(self):
         original = builder_subject()
         for field, value in (
             ("identity_digest", D("8")),
@@ -300,20 +342,30 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
             ("attestation_digest", D("8")),
         ):
             tampered = TrustedBuilderSubject(**{**original.__dict__, field: value})
-            with self.assertRaises(BuilderEntryPermitError):
-                compute_pinned_builder_source_attestation((tampered,))
+            with patch.object(
+                bep, "_load_pinned_builder_records", return_value=(tampered,)
+            ):
+                with self.assertRaises(BuilderEntryPermitError):
+                    PinnedBuilderControlPlaneBackend()
 
-    def test_source_attestation_rebinds_exact_record_snapshot(self):
-        original_records = (builder_subject(),)
-        attestation = compute_pinned_builder_source_attestation(original_records)
-        changed_records = (builder_subject("instance-02"),)
-        with self.assertRaises(BuilderEntryPermitError):
-            PinnedTrustedBuilderSubjectSource(
-                changed_records,
-                backend_identity=PINNED_BUILDER_BACKEND_IDENTITY,
-                source_implementation_digest=PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST,
-                source_attestation_digest=attestation,
-            )
+    def test_backend_origin_failure_does_not_consume_replay(self):
+        receipt = live_receipt()
+        replay = Replay()
+        source = pinned_source((builder_subject(),))
+        entry, _ = engine(builders=source, replay=replay)
+        object.__setattr__(source.backend, "_provenance_digest", D("8"))
+        with patch.object(
+            LiveResourceAuthorityAdmission, "revalidate", return_value=receipt
+        ):
+            with self.assertRaises(BuilderEntryPermitError):
+                entry.issue_permit(
+                    source_permit=source_permit(receipt),
+                    admitted_authority=receipt,
+                    builder_subject_id="builder-R17",
+                    builder_instance_id="instance-01",
+                    trusted_now=__import__("datetime").datetime.fromisoformat(NOW),
+                )
+        self.assertEqual(replay.calls, 0)
 
     def test_duplicate_entry_is_denied(self):
         receipt = live_receipt()
@@ -361,7 +413,8 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         receipt = live_receipt()
         replay = Replay()
         entry, _ = engine(
-            builders=pinned_source((builder_subject("instance-01"),)), replay=replay
+            builders=pinned_source((builder_subject("instance-01"),)),
+            replay=replay,
         )
         with patch.object(
             LiveResourceAuthorityAdmission, "revalidate", return_value=receipt
