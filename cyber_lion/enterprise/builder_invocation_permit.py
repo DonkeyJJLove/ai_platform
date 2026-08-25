@@ -21,6 +21,10 @@ from cyber_lion.enterprise.candidate_build_authorization import (
     LiveAdmittedResourceAuthority,
     LiveResourceAuthorityAdmission,
 )
+from cyber_lion.enterprise.persistent_authority_state import (
+    PersistentBuilderEntryIssuanceRecord,
+    SQLiteAuthorityStateStore,
+)
 
 
 class BuilderInvocationPermitError(RuntimeError):
@@ -68,6 +72,29 @@ class PersistentBuilderInvocationReplayGuard:
 
     def consume(self, replay_digest: str, *, consumed_at: str) -> bool:
         return self._store.consume_replay(self.DOMAIN, replay_digest, consumed_at)
+
+
+class PersistentBuilderEntryIssuanceSource:
+    """Read-only exact durable provenance source for R17 permit identity."""
+
+    __slots__ = ("_store",)
+
+    def __init__(self, store: SQLiteAuthorityStateStore) -> None:
+        if type(store) is not SQLiteAuthorityStateStore or not store.ready():
+            raise BuilderInvocationPermitError("exact ready persistent authority store required")
+        self._store = store
+
+    def resolve(self, builder_entry_permit_id: str) -> PersistentBuilderEntryIssuanceRecord:
+        try:
+            record = self._store.resolve_builder_entry_issuance(builder_entry_permit_id)
+        except Exception as exc:
+            raise BuilderInvocationPermitError("durable builder entry issuance unavailable") from exc
+        if type(record) is not PersistentBuilderEntryIssuanceRecord:
+            raise BuilderInvocationPermitError("durable builder entry issuance type invalid")
+        try:
+            return record.validate()
+        except Exception as exc:
+            raise BuilderInvocationPermitError("durable builder entry issuance invalid") from exc
 
 
 def _utc(value: str, name: str) -> datetime:
@@ -138,6 +165,57 @@ def _sealed_subject(value: object) -> TrustedBuilderSubject:
     return value
 
 
+def _verify_exact_issuance(permit: BuilderEntryPermit, record: PersistentBuilderEntryIssuanceRecord) -> None:
+    expected = (
+        permit.builder_entry_permit_id,
+        permit.builder_entry_permit_digest,
+        permit.builder_entry_replay_digest,
+        permit.repository,
+        permit.baseline_master_sha,
+        permit.baseline_master_tree_sha,
+        permit.action,
+        permit.candidate_scope,
+        permit.resource_scope,
+        permit.authority_epoch,
+        permit.authority_state_version,
+        permit.root_grant_id,
+        permit.root_grant_digest,
+        permit.current_authority_digest,
+        permit.builder_subject_id,
+        permit.builder_instance_id,
+        permit.builder_capability_class,
+        permit.builder_identity_digest,
+        permit.builder_implementation_digest,
+        permit.builder_attestation_digest,
+        permit.checked_at,
+    )
+    actual = (
+        record.builder_entry_permit_id,
+        record.builder_entry_permit_digest,
+        record.builder_entry_replay_digest,
+        record.repository,
+        record.baseline_master_sha,
+        record.baseline_master_tree_sha,
+        record.action,
+        record.candidate_scope,
+        record.resource_scope,
+        record.authority_epoch,
+        record.authority_state_version,
+        record.root_grant_id,
+        record.root_grant_digest,
+        record.current_authority_digest,
+        record.builder_subject_id,
+        record.builder_instance_id,
+        record.builder_capability_class,
+        record.builder_identity_digest,
+        record.builder_implementation_digest,
+        record.builder_attestation_digest,
+        record.issued_at,
+    )
+    if actual != expected:
+        raise BuilderInvocationPermitError("builder entry permit durable issuance provenance mismatch")
+
+
 class BuilderInvocationPermitEngine:
     """Issue one invocation permit; never consume it or start a builder."""
 
@@ -149,16 +227,20 @@ class BuilderInvocationPermitEngine:
         f005_state_source: F005StateSource,
         builder_source: PinnedTrustedBuilderSubjectSource,
         replay_guard: BuilderInvocationReplayGuard,
+        source_issuance: PersistentBuilderEntryIssuanceSource,
     ) -> None:
         if type(live_authority) is not LiveResourceAuthorityAdmission:
             raise BuilderInvocationPermitError("live authority admission required")
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource:
             raise BuilderInvocationPermitError("exact pinned builder source required")
+        if type(source_issuance) is not PersistentBuilderEntryIssuanceSource:
+            raise BuilderInvocationPermitError("exact persistent builder entry issuance source required")
         builder_source.verify_origin()
         for obj, method in (
             (baseline_source, "current"),
             (f005_state_source, "current"),
             (replay_guard, "consume"),
+            (source_issuance, "resolve"),
         ):
             if not callable(getattr(obj, method, None)):
                 raise BuilderInvocationPermitError("builder invocation dependency unavailable")
@@ -167,6 +249,7 @@ class BuilderInvocationPermitEngine:
         self._f005 = f005_state_source
         self._builders = builder_source
         self._replay = replay_guard
+        self._source_issuance = source_issuance
 
     def issue_permit(
         self,
@@ -180,6 +263,9 @@ class BuilderInvocationPermitEngine:
         if not isinstance(trusted_now, datetime) or trusted_now.tzinfo is None:
             raise BuilderInvocationPermitError("trusted_now must be timezone-aware")
         now = trusted_now.astimezone(timezone.utc)
+
+        record = self._source_issuance.resolve(permit.builder_entry_permit_id)
+        _verify_exact_issuance(permit, record)
 
         current = self._baseline.current(permit.repository)
         if type(current) is not TrustedRepositoryBaseline:
