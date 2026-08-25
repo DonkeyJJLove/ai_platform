@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime
+import importlib
 import inspect
+import os
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -14,6 +18,7 @@ from cyber_lion.contracts.builder_invocation_permit import (
 )
 from cyber_lion.contracts.candidate_build_authorization import TrustedRepositoryBaseline
 from cyber_lion.enterprise.builder_entry_permit import PinnedTrustedBuilderSubjectSource
+import cyber_lion.enterprise.builder_invocation_consumption as bic
 from cyber_lion.enterprise.builder_invocation_consumption import (
     BuilderInvocationConsumptionEngine,
     BuilderInvocationConsumptionError,
@@ -21,7 +26,13 @@ from cyber_lion.enterprise.builder_invocation_consumption import (
     PersistentBuilderInvocationIssuanceSource,
 )
 from cyber_lion.enterprise.candidate_build_authorization import LiveAdmittedResourceAuthority, LiveResourceAuthorityAdmission
-from cyber_lion.enterprise.persistent_authority_state import PersistentBuilderInvocationIssuanceRecord
+from cyber_lion.enterprise.persistent_authority_state import (
+    PersistentAuthorityStoreOrigin,
+    PersistentBuilderEntryIssuanceRecord,
+    PersistentBuilderInvocationIssuanceRecord,
+    SQLiteAuthorityStateStore,
+)
+import cyber_lion.enterprise.trusted_control_plane_runtime as runtime
 
 D = lambda c: c * 64
 S = lambda c: c * 40
@@ -110,8 +121,9 @@ def invocation_permit():
     ).sealed()
 
 
-def issuance_record(permit=None):
+def issuance_record(permit=None, *, origin_digest=None):
     permit = permit or invocation_permit()
+    origin_digest = origin_digest or D("c")
     return PersistentBuilderInvocationIssuanceRecord(
         builder_invocation_permit_id=permit.builder_invocation_permit_id,
         builder_invocation_permit_digest=permit.builder_invocation_permit_digest,
@@ -131,8 +143,38 @@ def issuance_record(permit=None):
         builder_implementation_digest=permit.builder_implementation_digest,
         builder_attestation_digest=permit.builder_attestation_digest,
         current_builder_subject_digest=permit.current_builder_subject_digest,
-        authority_store_origin_id="aso:" + D("c"), authority_store_origin_digest=D("c"),
+        authority_store_origin_id="aso:" + origin_digest, authority_store_origin_digest=origin_digest,
         issued_at=permit.checked_at,
+    ).validate()
+
+
+def entry_issuance_record(permit=None, *, origin_digest=None):
+    permit = permit or invocation_permit()
+    origin_digest = origin_digest or D("c")
+    return PersistentBuilderEntryIssuanceRecord(
+        builder_entry_permit_id=permit.source_builder_entry_permit_id,
+        builder_entry_permit_digest=permit.source_builder_entry_permit_digest,
+        builder_entry_replay_digest=D("d"),
+        repository=permit.repository,
+        baseline_master_sha=permit.baseline_master_sha,
+        baseline_master_tree_sha=permit.baseline_master_tree_sha,
+        action=permit.action,
+        candidate_scope=permit.candidate_scope,
+        resource_scope=permit.resource_scope,
+        authority_epoch=permit.authority_epoch,
+        authority_state_version=permit.authority_state_version,
+        root_grant_id=permit.root_grant_id,
+        root_grant_digest=permit.root_grant_digest,
+        current_authority_digest=permit.current_authority_digest,
+        builder_subject_id=permit.builder_subject_id,
+        builder_instance_id=permit.builder_instance_id,
+        builder_capability_class=permit.builder_capability_class,
+        builder_identity_digest=permit.builder_identity_digest,
+        builder_implementation_digest=permit.builder_implementation_digest,
+        builder_attestation_digest=permit.builder_attestation_digest,
+        authority_store_origin_id="aso:" + origin_digest,
+        authority_store_origin_digest=origin_digest,
+        issued_at="2026-08-25T10:54:00+00:00",
     ).validate()
 
 
@@ -178,6 +220,43 @@ class BuilderInvocationConsumptionTests(unittest.TestCase):
             engine.issue_permit(source_permit=altered, admitted_authority=authority(), trusted_now=NOW)
         self.assertEqual(replay.calls, 0)
 
+    def test_transitive_r17_ancestry_identity_and_origin_are_required(self):
+        permit = invocation_permit()
+        origin = PersistentAuthorityStoreOrigin(
+            origin_id="aso:" + D("c"), origin_digest=D("c"), runtime_factory_version="1.0.0",
+            repository_root="/repo", canonical_database_path="/control-plane.sqlite",
+        ).validate()
+        r19 = issuance_record(permit)
+        ancestor = entry_issuance_record(permit)
+
+        class Store:
+            def resolve_builder_invocation_issuance(self, permit_id): return r19
+            def resolve_builder_entry_issuance(self, permit_id): return ancestor
+
+        source = object.__new__(PersistentBuilderInvocationIssuanceSource)
+        object.__setattr__(source, "_store", Store())
+        object.__setattr__(source, "_origin", origin)
+        with patch.object(bic, "verify_authority_state_store_origin", return_value=origin):
+            self.assertEqual(source.resolve(permit.builder_invocation_permit_id), r19)
+
+        bad_ancestor = replace(ancestor, builder_entry_permit_digest=D("e")).validate()
+        class BadStore(Store):
+            def resolve_builder_entry_issuance(self, permit_id): return bad_ancestor
+        object.__setattr__(source, "_store", BadStore())
+        with patch.object(bic, "verify_authority_state_store_origin", return_value=origin):
+            with self.assertRaises(BuilderInvocationConsumptionError):
+                source.resolve(permit.builder_invocation_permit_id)
+
+        other_origin_ancestor = replace(
+            ancestor, authority_store_origin_id="aso:" + D("f"), authority_store_origin_digest=D("f")
+        ).validate()
+        class OriginStore(Store):
+            def resolve_builder_entry_issuance(self, permit_id): return other_origin_ancestor
+        object.__setattr__(source, "_store", OriginStore())
+        with patch.object(bic, "verify_authority_state_store_origin", return_value=origin):
+            with self.assertRaises(BuilderInvocationConsumptionError):
+                source.resolve(permit.builder_invocation_permit_id)
+
     def test_currentness_failures_do_not_burn_replay(self):
         stale = TrustedRepositoryBaseline(REPO, S("e"), TREE, "2026-08-25T10:50:00+00:00")
         for kwargs in (
@@ -209,6 +288,59 @@ class BuilderInvocationConsumptionTests(unittest.TestCase):
         BuilderInvocationConsumptionEngine.assert_no_effect_surface()
         for name in ("start_builder", "build_candidate", "execute", "merge", "deploy", "release"):
             self.assertFalse(hasattr(BuilderInvocationConsumptionEngine, name))
+
+    def test_z_fresh_process_rewritten_r19_without_r17_ancestor_denied_before_replay(self):
+        permit = invocation_permit()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "repo"
+            root.mkdir()
+            path_a = str(Path(directory) / "a.sqlite")
+            path_b = str(Path(directory) / "b.sqlite")
+            env_a = {
+                "LION_CP_RUNTIME_FACTORY_VERSION": "1.0.0",
+                "LION_CP_REPOSITORY_ROOT": str(root),
+                "LION_CP_DATABASE_PATH": path_a,
+            }
+            env_b = dict(env_a); env_b["LION_CP_DATABASE_PATH"] = path_b
+
+            importlib.reload(runtime)
+            with patch.dict(os.environ, env_a, clear=True):
+                store_a = runtime.build_authority_state_store()
+                origin_a = runtime.verify_authority_state_store_origin()
+                store_a.record_builder_entry_issuance(entry_issuance_record(permit, origin_digest=origin_a.origin_digest))
+                store_a.record_builder_invocation_issuance(issuance_record(permit, origin_digest=origin_a.origin_digest))
+
+            with patch.dict(os.environ, env_b, clear=True):
+                origin_b = runtime.observe_authority_state_store_origin()
+            store_b = SQLiteAuthorityStateStore(path_b)
+            store_b.register_authority_store_origin(origin_b)
+            copied_r19 = replace(
+                store_a.resolve_builder_invocation_issuance(permit.builder_invocation_permit_id),
+                authority_store_origin_id=origin_b.origin_id,
+                authority_store_origin_digest=origin_b.origin_digest,
+            ).validate()
+            store_b.record_builder_invocation_issuance(copied_r19)
+
+            # Model a genuine fresh process: reset the runtime closure and rebind R20 imports.
+            importlib.reload(runtime)
+            importlib.reload(bic)
+            replay = Replay()
+            source = object.__new__(PinnedTrustedBuilderSubjectSource)
+            admission = object.__new__(LiveResourceAuthorityAdmission)
+            with patch.dict(os.environ, env_b, clear=True), \
+                 patch.object(PinnedTrustedBuilderSubjectSource, "verify_origin", return_value=None), \
+                 patch.object(PinnedTrustedBuilderSubjectSource, "resolve_exact", return_value=subject()), \
+                 patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=authority()), \
+                 patch.object(bic.PersistentBuilderInvocationConsumptionReplayGuard, "consume", side_effect=replay.consume):
+                engine = bic.BuilderInvocationConsumptionEngine(
+                    live_authority=admission,
+                    baseline_source=BaselineSource(baseline()),
+                    f005_state_source=F005(),
+                    builder_source=source,
+                )
+                with self.assertRaises(bic.BuilderInvocationConsumptionError):
+                    engine.issue_permit(source_permit=permit, admitted_authority=authority(), trusted_now=NOW)
+            self.assertEqual(replay.calls, 0)
 
 
 if __name__ == "__main__":
