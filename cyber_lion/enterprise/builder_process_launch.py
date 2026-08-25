@@ -21,7 +21,7 @@ from cyber_lion.contracts.candidate_build_authorization import TrustedRepository
 from cyber_lion.contracts.builder_entry_permit import TrustedBuilderSubject
 from cyber_lion.enterprise.builder_entry_permit import PinnedTrustedBuilderSubjectSource
 from cyber_lion.enterprise.builder_start_admission import resolve_builder_start_admission_issuance
-from cyber_lion.enterprise.candidate_build_authorization import LiveAdmittedResourceAuthority, LiveResourceAuthorityAdmission
+from cyber_lion.enterprise.candidate_build_authorization import LiveResourceAuthorityAdmission
 from cyber_lion.enterprise.persistent_authority_state import (
     DurableReplayGuard, PersistentBuilderProcessLaunchIntent,
     PersistentBuilderProcessHeldMaterialization, PersistentBuilderProcessLaunchReceipt,
@@ -76,7 +76,7 @@ class BuilderProcessLaunchBoundary:
         if type(provider_source) is not PinnedBuilderProcessRuntimeProviderSource: raise BuilderProcessLaunchError("exact pinned runtime provider source required")
         for obj,method in ((baseline_source,"current"),(f005_state_source,"current"),(effect_clock,"now")):
             if not callable(getattr(obj,method,None)): raise BuilderProcessLaunchError("R22 dependency unavailable")
-        builder_source.verify_origin()
+        builder_source.verify_origin(); provider_source.verify_origin()
         self._live=live_authority; self._baseline=baseline_source; self._f005=f005_state_source; self._builders=builder_source; self._providers=provider_source; self._clock=effect_clock
         self._store=build_authority_state_store(); self._origin=verify_authority_state_store_origin()
         if type(self._store) is not SQLiteAuthorityStateStore or self._store.ready() is not True or self._store.resolve_authority_store_origin()!=self._origin: raise BuilderProcessLaunchError("canonical persistence unavailable")
@@ -100,7 +100,7 @@ class BuilderProcessLaunchBoundary:
         profile=dict(repository=admission.repository,action=admission.action,candidate_scope=admission.candidate_scope,resource_scope=admission.resource_scope,builder_subject_id=subject.builder_subject_id,builder_instance_id=subject.builder_instance_id,builder_capability_class=subject.capability_class,builder_identity_digest=subject.identity_digest,builder_implementation_digest=subject.implementation_digest,builder_attestation_digest=subject.attestation_digest,current_builder_subject_digest=subject.subject_digest)
         if compute_process_profile_digest(**profile)!=admission.process_profile_digest or admission.process_profile_id!=f"bpp:{admission.process_profile_digest}": raise BuilderProcessLaunchError("process profile drift")
         if compute_launch_policy_digest()!=admission.launch_policy_digest: raise BuilderProcessLaunchError("launch policy drift")
-        descriptor=self._providers.resolve_exact(provider_id=expected_provider.provider_id,process_profile_digest=admission.process_profile_digest,launch_policy_digest=admission.launch_policy_digest)
+        self._providers.verify_origin(); descriptor=self._providers.resolve_exact(provider_id=expected_provider.provider_id,process_profile_digest=admission.process_profile_digest,launch_policy_digest=admission.launch_policy_digest); self._providers.verify_origin()
         if type(descriptor) is not BuilderProcessRuntimeProviderDescriptor or descriptor!=expected_provider or descriptor.descriptor_digest!=descriptor.compute_digest(): raise BuilderProcessLaunchError("runtime provider currentness mismatch")
         _f005_ok(self._f005.current()); return authority.digest(),subject,descriptor
 
@@ -112,16 +112,41 @@ class BuilderProcessLaunchBoundary:
         kwargs=dict(source_builder_start_admission_id=admission.builder_start_admission_id,source_builder_start_admission_digest=admission.builder_start_admission_digest,source_builder_start_admission_replay_digest=admission.builder_start_admission_replay_digest,source_builder_start_issuance_record_id=f"bsair:{admission.builder_start_admission_id}",source_builder_start_issuance_record_digest=_r21_record_digest(record),repository=admission.repository,baseline_master_sha=admission.baseline_master_sha,baseline_master_tree_sha=admission.baseline_master_tree_sha,authority_epoch=admission.authority_epoch,authority_state_version=admission.authority_state_version,root_grant_id=admission.root_grant_id,root_grant_digest=admission.root_grant_digest,expected_current_authority_digest=authority_digest,builder_subject_id=subject.builder_subject_id,builder_instance_id=subject.builder_instance_id,builder_identity_digest=subject.identity_digest,builder_implementation_digest=subject.implementation_digest,builder_attestation_digest=subject.attestation_digest,expected_builder_subject_digest=subject.subject_digest,process_profile_id=admission.process_profile_id,process_profile_digest=admission.process_profile_digest,launch_policy_digest=admission.launch_policy_digest,runtime_provider_id=descriptor.provider_id,runtime_provider_identity_digest=descriptor.provider_identity_digest,runtime_provider_implementation_digest=descriptor.provider_implementation_digest,runtime_provider_attestation_digest=descriptor.provider_attestation_digest,runtime_instance_identity=descriptor.runtime_instance_identity)
         replay=compute_launch_replay_digest(**kwargs); return BuilderProcessLaunchRequest(launch_request_id=f"bplr:{replay}",launch_replay_digest=replay,**kwargs).sealed()
 
+    def _commit_after_effect_fence(self,*,admission,admitted_authority,descriptor,runtime,request,held,closed,initial_now):
+        effect_now=_utc(self._clock.now())
+        if effect_now<initial_now: raise BuilderProcessLaunchError("effect clock moved backwards")
+        authority_digest,subject,current_descriptor=self._currentness(admission=admission,admitted_authority=admitted_authority,trusted_now=effect_now,expected_provider=descriptor)
+        if current_descriptor!=descriptor: raise BuilderProcessLaunchError("provider drift before commit")
+        precommit=_sealed_gate(runtime.observe_gate(held.launch_id),GATE_CLOSED)
+        if precommit!=closed: raise BuilderProcessLaunchError("execution gate drift before commit")
+        started=runtime.commit_start(request,held,closed)
+        if type(started) is not BuilderProcessIdentity: raise BuilderProcessLaunchError("runtime provider start identity invalid")
+        started.validate()
+        hb=(held.launch_id,held.builder_subject_id,held.builder_instance_id,held.process_profile_id,held.process_profile_digest,held.launch_policy_digest,held.runtime_provider_id,held.runtime_provider_identity_digest,held.runtime_instance_identity,held.execution_environment_id,held.process_handle_reference,held.process_identity_token,held.execution_gate_id)
+        sb=(started.launch_id,started.builder_subject_id,started.builder_instance_id,started.process_profile_id,started.process_profile_digest,started.launch_policy_digest,started.runtime_provider_id,started.runtime_provider_identity_digest,started.runtime_instance_identity,started.execution_environment_id,started.process_handle_reference,started.process_identity_token,started.execution_gate_id)
+        if started.identity_digest!=started.compute_digest() or started.state!=STARTED_STATE or sb!=hb:
+            try: runtime.freeze_or_kill(held.launch_id)
+            finally: raise BuilderProcessLaunchError("commit_start changed pinned process identity")
+        try:
+            observed=runtime.observe_launch(started.launch_id); opened=_sealed_gate(runtime.observe_gate(started.launch_id),GATE_OPENED_ONCE)
+        except Exception as exc:
+            try: runtime.freeze_or_kill(started.launch_id)
+            finally: raise BuilderProcessLaunchError("post-commit process/gate observation failed") from exc
+        if type(observed) is not BuilderProcessIdentity or observed!=started or (opened.execution_gate_id,opened.launch_id,opened.runtime_instance_identity,opened.execution_environment_id,opened.builder_entrypoint_digest)!=(closed.execution_gate_id,started.launch_id,descriptor.runtime_instance_identity,started.execution_environment_id,closed.builder_entrypoint_digest):
+            try: runtime.freeze_or_kill(started.launch_id)
+            finally: raise BuilderProcessLaunchError("process/gate launch continuity unknown")
+        return authority_digest,subject,started,opened
+
     def launch(self,*,request,source_admission,admitted_authority):
         admission=_sealed_r21(source_admission)
         if type(request) is not BuilderProcessLaunchRequest: raise BuilderProcessLaunchError("exact launch request required")
         request.validate()
         if request.launch_request_digest!=request.compute_digest(): raise BuilderProcessLaunchError("sealed launch request required")
         initial_now=_utc(self._clock.now())
-        descriptor=self._providers.resolve_exact(provider_id=request.runtime_provider_id,process_profile_digest=request.process_profile_digest,launch_policy_digest=request.launch_policy_digest)
+        self._providers.verify_origin(); descriptor=self._providers.resolve_exact(provider_id=request.runtime_provider_id,process_profile_digest=request.process_profile_digest,launch_policy_digest=request.launch_policy_digest)
         rebuilt=self.build_request(source_admission=admission,admitted_authority=admitted_authority,runtime_provider_descriptor=descriptor,trusted_now=initial_now)
         if rebuilt!=request: raise BuilderProcessLaunchError("launch request currentness mismatch")
-        runtime=self._providers.resolve_bound_runtime(provider_id=request.runtime_provider_id,process_profile_digest=request.process_profile_digest,launch_policy_digest=request.launch_policy_digest)
+        runtime=self._providers.resolve_bound_runtime(provider_id=request.runtime_provider_id,process_profile_digest=request.process_profile_digest,launch_policy_digest=request.launch_policy_digest); self._providers.verify_origin()
         if getattr(runtime,"descriptor",None)!=descriptor or getattr(runtime,"runtime_instance_identity",None)!=request.runtime_instance_identity: raise BuilderProcessLaunchError("bound runtime provider mismatch")
         prepared_at=_utc_text(initial_now); intent=PersistentBuilderProcessLaunchIntent.from_request(request,authority_store_origin=self._origin,prepared_at=prepared_at); self._store.record_builder_process_launch_intent(intent)
         try: consumed=self._replay.consume(request.launch_replay_digest,consumed_at=prepared_at)
@@ -139,24 +164,7 @@ class BuilderProcessLaunchBoundary:
         actual=(held.runtime_provider_id,held.runtime_provider_identity_digest,held.runtime_instance_identity,held.process_profile_id,held.process_profile_digest,held.launch_policy_digest,held.builder_subject_id,held.builder_instance_id)
         if actual!=expected: raise BuilderProcessLaunchError("held process identity binding mismatch")
         held_record=PersistentBuilderProcessHeldMaterialization.from_identity(held,request,descriptor,closed,authority_store_origin=self._origin,prepared_at=prepared_at,observed_at=closed.observed_at); self._store.record_builder_process_held_materialization(held_record)
-        effect_now=_utc(self._clock.now())
-        if effect_now<initial_now: raise BuilderProcessLaunchError("effect clock moved backwards")
-        authority_digest,subject,current_descriptor=self._currentness(admission=admission,admitted_authority=admitted_authority,trusted_now=effect_now,expected_provider=descriptor)
-        if current_descriptor!=descriptor: raise BuilderProcessLaunchError("provider drift before commit")
-        precommit=_sealed_gate(runtime.observe_gate(launch_id),GATE_CLOSED)
-        if precommit!=closed: raise BuilderProcessLaunchError("execution gate drift before commit")
-        started=runtime.commit_start(request,held,closed)
-        if type(started) is not BuilderProcessIdentity: raise BuilderProcessLaunchError("runtime provider start identity invalid")
-        started.validate()
-        hb=(held.launch_id,held.builder_subject_id,held.builder_instance_id,held.process_profile_id,held.process_profile_digest,held.launch_policy_digest,held.runtime_provider_id,held.runtime_provider_identity_digest,held.runtime_instance_identity,held.execution_environment_id,held.process_handle_reference,held.process_identity_token,held.execution_gate_id)
-        sb=(started.launch_id,started.builder_subject_id,started.builder_instance_id,started.process_profile_id,started.process_profile_digest,started.launch_policy_digest,started.runtime_provider_id,started.runtime_provider_identity_digest,started.runtime_instance_identity,started.execution_environment_id,started.process_handle_reference,started.process_identity_token,started.execution_gate_id)
-        if started.identity_digest!=started.compute_digest() or started.state!=STARTED_STATE or sb!=hb:
-            try: runtime.freeze_or_kill(held.launch_id)
-            finally: raise BuilderProcessLaunchError("commit_start changed pinned process identity")
-        observed=runtime.observe_launch(started.launch_id); opened=_sealed_gate(runtime.observe_gate(started.launch_id),GATE_OPENED_ONCE)
-        if type(observed) is not BuilderProcessIdentity or observed!=started or (opened.execution_gate_id,opened.launch_id,opened.runtime_instance_identity,opened.execution_environment_id,opened.builder_entrypoint_digest)!=(closed.execution_gate_id,started.launch_id,descriptor.runtime_instance_identity,started.execution_environment_id,closed.builder_entrypoint_digest):
-            try: runtime.freeze_or_kill(started.launch_id)
-            finally: raise BuilderProcessLaunchError("process/gate launch continuity unknown")
+        authority_digest,subject,started,opened=self._commit_after_effect_fence(admission=admission,admitted_authority=admitted_authority,descriptor=descriptor,runtime=runtime,request=request,held=held,closed=closed,initial_now=initial_now)
         receipt=BuilderProcessLaunchReceipt(launch_receipt_id=f"bplx:{request.launch_replay_digest}",launch_request_id=request.launch_request_id,launch_request_digest=request.launch_request_digest,launch_replay_digest=request.launch_replay_digest,source_builder_start_admission_id=admission.builder_start_admission_id,source_builder_start_admission_digest=admission.builder_start_admission_digest,repository=admission.repository,baseline_master_sha=admission.baseline_master_sha,baseline_master_tree_sha=admission.baseline_master_tree_sha,authority_digest_at_launch=authority_digest,builder_subject_digest_at_launch=subject.subject_digest,process_profile_id=request.process_profile_id,process_profile_digest=request.process_profile_digest,launch_policy_digest=request.launch_policy_digest,runtime_provider_id=descriptor.provider_id,runtime_provider_identity_digest=descriptor.provider_identity_digest,runtime_provider_implementation_digest=descriptor.provider_implementation_digest,runtime_provider_attestation_digest=descriptor.provider_attestation_digest,runtime_instance_identity=descriptor.runtime_instance_identity,launch_id=started.launch_id,execution_environment_id=started.execution_environment_id,process_handle_reference=started.process_handle_reference,process_identity_token=started.process_identity_token,process_identity_digest=started.identity_digest,execution_gate_id=closed.execution_gate_id,execution_gate_closed_digest=closed.execution_gate_digest,execution_gate_opened_digest=opened.execution_gate_digest,builder_entrypoint_digest=closed.builder_entrypoint_digest,launch_started_at=started.started_at,launch_observed_at=opened.observed_at).sealed()
         durable=PersistentBuilderProcessLaunchReceipt.from_receipt(receipt,authority_store_origin=self._origin)
         try: self._store.record_builder_process_launch_receipt(durable)
@@ -167,7 +175,7 @@ class BuilderProcessLaunchBoundary:
 
     def contain_held_after_restart(self,launch_id):
         held_record=self._store.resolve_builder_process_held_materialization(launch_id); intent=self._store.resolve_builder_process_launch_intent(held_record.launch_request_id)
-        runtime=self._providers.resolve_bound_runtime(provider_id=held_record.provider_id,process_profile_digest=intent.process_profile_digest,launch_policy_digest=intent.launch_policy_digest)
+        self._providers.verify_origin(); runtime=self._providers.resolve_bound_runtime(provider_id=held_record.provider_id,process_profile_digest=intent.process_profile_digest,launch_policy_digest=intent.launch_policy_digest); self._providers.verify_origin()
         observed=runtime.observe_held(launch_id); gate=runtime.observe_gate(launch_id)
         ok=type(observed) is BuilderProcessIdentity and observed.identity_digest==held_record.held_identity_digest and observed.state==HELD_STATE and type(gate) is BuilderExecutionGateEvidence and gate.execution_gate_digest==held_record.execution_gate_digest and gate.gate_state==GATE_CLOSED
         if not ok:
