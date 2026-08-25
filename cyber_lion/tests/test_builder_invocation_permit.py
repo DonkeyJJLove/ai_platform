@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime
+import importlib
 import os
 from pathlib import Path
 import sqlite3
@@ -32,6 +33,7 @@ from cyber_lion.enterprise.persistent_authority_state import (
     PersistentBuilderEntryIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
+import cyber_lion.enterprise.trusted_control_plane_runtime as runtime
 from cyber_lion.enterprise.trusted_control_plane_runtime import (
     build_authority_state_store,
     verify_authority_state_store_origin,
@@ -174,6 +176,8 @@ class Replay:
 
 class BuilderInvocationPermitEngineTests(unittest.TestCase):
     def setUp(self):
+        # Each unit test models a new process; within a test the origin is immutable.
+        importlib.reload(runtime)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         repo_root = Path(self.tmp.name) / "repo"
@@ -271,51 +275,60 @@ class BuilderInvocationPermitEngineTests(unittest.TestCase):
                     source_issuance=fake_source,
                 )
 
-    def _prepare_second_store_with_copied_record(self, permit: BuilderEntryPermit):
+    def _prepare_second_store_with_copied_record(self, permit: BuilderEntryPermit, *, coherent_origin_rewrite: bool = False):
         with patch.dict(os.environ, self.env, clear=True):
             source_store = build_authority_state_store()
             source_record = source_store.resolve_builder_entry_issuance(permit.builder_entry_permit_id)
         env_b = dict(self.env)
         env_b["LION_CP_DATABASE_PATH"] = str(Path(self.tmp.name) / "second-control-plane.sqlite")
         with patch.dict(os.environ, env_b, clear=True):
-            build_authority_state_store()
+            origin_b = runtime.observe_authority_state_store_origin()
+        store_b = SQLiteAuthorityStateStore(env_b["LION_CP_DATABASE_PATH"])
+        store_b.register_authority_store_origin(origin_b)
+        copied = source_record
+        if coherent_origin_rewrite:
+            copied = replace(
+                source_record,
+                authority_store_origin_id=origin_b.origin_id,
+                authority_store_origin_digest=origin_b.origin_digest,
+            ).validate()
+        # Direct SQL simulates copied/corrupted storage without granting it canonical runtime authority.
         with sqlite3.connect(env_b["LION_CP_DATABASE_PATH"]) as connection:
             connection.execute(
                 "INSERT INTO builder_entry_issuance VALUES(?,?,?,?,?)",
                 (
-                    source_record.builder_entry_permit_id,
-                    source_record.builder_entry_permit_digest,
-                    source_record.builder_entry_replay_digest,
-                    source_record.canonical_json(),
-                    source_record.issued_at,
+                    copied.builder_entry_permit_id,
+                    copied.builder_entry_permit_digest,
+                    copied.builder_entry_replay_digest,
+                    copied.canonical_json(),
+                    copied.issued_at,
                 ),
             )
         return env_b
 
     def test_r17_store_a_r19_store_b_denied_before_replay(self):
-        permit = self._seed_issuance()
-        replay = Replay()
-        engine = self._engine(replay=replay, seed=False)
+        permit = self._seed_issuance(); replay = Replay(); engine = self._engine(replay=replay, seed=False)
         env_b = self._prepare_second_store_with_copied_record(permit)
-        with self.assertRaises(BuilderInvocationPermitError):
-            self._issue(engine, permit=permit, env=env_b)
+        with self.assertRaises(BuilderInvocationPermitError): self._issue(engine, permit=permit, env=env_b)
         self.assertEqual(replay.calls, 0)
 
     def test_exact_issuance_record_copied_to_second_store_denied(self):
         permit = self._seed_issuance()
-        with patch.dict(os.environ, self.env, clear=True):
-            source = PersistentBuilderEntryIssuanceSource()
+        with patch.dict(os.environ, self.env, clear=True): source = PersistentBuilderEntryIssuanceSource()
         env_b = self._prepare_second_store_with_copied_record(permit)
         with patch.dict(os.environ, env_b, clear=True):
-            with self.assertRaises(BuilderInvocationPermitError):
-                source.resolve(permit.builder_entry_permit_id)
+            with self.assertRaises(BuilderInvocationPermitError): source.resolve(permit.builder_entry_permit_id)
+
+    def test_copied_record_with_coherently_rewritten_origin_denied(self):
+        permit = self._seed_issuance(); replay = Replay(); engine = self._engine(replay=replay, seed=False)
+        env_b = self._prepare_second_store_with_copied_record(permit, coherent_origin_rewrite=True)
+        with self.assertRaises(BuilderInvocationPermitError): self._issue(engine, permit=permit, env=env_b)
+        self.assertEqual(replay.calls, 0)
 
     def test_origin_failure_does_not_consume_r19_replay(self):
-        permit = self._seed_issuance()
-        replay = Replay(); engine = self._engine(replay=replay, seed=False)
+        permit = self._seed_issuance(); replay = Replay(); engine = self._engine(replay=replay, seed=False)
         env_b = dict(self.env); env_b["LION_CP_DATABASE_PATH"] = str(Path(self.tmp.name) / "drift.sqlite")
-        with self.assertRaises(BuilderInvocationPermitError):
-            self._issue(engine, permit=permit, env=env_b)
+        with self.assertRaises(BuilderInvocationPermitError): self._issue(engine, permit=permit, env=env_b)
         self.assertEqual(replay.calls, 0)
 
     def test_baseline_drift_denied_before_replay_burn(self):
