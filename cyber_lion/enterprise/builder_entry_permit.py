@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
-import re
 from typing import Any, Mapping, Protocol
 
 from cyber_lion.contracts.builder_entry_permit import (
@@ -15,7 +14,9 @@ from cyber_lion.contracts.builder_entry_permit import (
     TrustedBuilderSubject,
     compute_builder_entry_replay_digest,
 )
-from cyber_lion.contracts.build_authorization_consumption import BuildAuthorizationConsumptionPermit
+from cyber_lion.contracts.build_authorization_consumption import (
+    BuildAuthorizationConsumptionPermit,
+)
 from cyber_lion.contracts.candidate_build_authorization import TrustedRepositoryBaseline
 from cyber_lion.enterprise.candidate_build_authorization import (
     LiveAdmittedResourceAuthority,
@@ -45,12 +46,14 @@ _EFFECT_METHODS = frozenset(
     }
 )
 
-_SOURCE_ATTESTATION_DOMAIN = b"LION/E004-PINNED-BUILDER-SOURCE-ATTESTATION/1\0"
+_BACKEND_PROVENANCE_DOMAIN = b"LION/E004-PINNED-BUILDER-BACKEND-PROVENANCE/1\0"
 PINNED_BUILDER_BACKEND_IDENTITY = "lion.control-plane.builder-registry/v1"
-PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST = sha256(
-    b"LION/E004-PINNED-TRUSTED-BUILDER-SOURCE/1"
+PINNED_BUILDER_BACKEND_IMPLEMENTATION_DIGEST = sha256(
+    b"LION/E004-PINNED-BUILDER-CONTROL-PLANE-BACKEND/1"
 ).hexdigest()
-_SHA64 = re.compile(r"^[0-9a-f]{64}$")
+PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST = sha256(
+    b"LION/E004-PINNED-TRUSTED-BUILDER-SOURCE/2"
+).hexdigest()
 
 
 def _canonical_json(value: object) -> bytes:
@@ -81,31 +84,30 @@ def _sealed_subject_digest(subject: object) -> str:
     return subject.subject_digest
 
 
-def compute_pinned_builder_source_attestation(
+def _backend_provenance_digest(
     records: tuple[TrustedBuilderSubject, ...],
-    *,
-    backend_identity: str = PINNED_BUILDER_BACKEND_IDENTITY,
-    source_implementation_digest: str = PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST,
 ) -> str:
-    """Return deterministic provenance binding for a control-plane snapshot.
-
-    This binds origin metadata and exact sealed subjects. Transport authentication
-    and trust bootstrap remain composition-root concerns outside this module.
-    """
     if type(records) is not tuple:
-        raise BuilderEntryPermitError("builder source snapshot must be tuple")
-    if backend_identity != PINNED_BUILDER_BACKEND_IDENTITY:
-        raise BuilderEntryPermitError("builder source backend identity mismatch")
-    if source_implementation_digest != PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST:
-        raise BuilderEntryPermitError("builder source implementation mismatch")
+        raise BuilderEntryPermitError("builder backend snapshot must be tuple")
     digests = tuple(_sealed_subject_digest(record) for record in records)
     payload = {
-        "backend_identity": backend_identity,
-        "source_implementation_digest": source_implementation_digest,
-        "source_kind": "trusted-control-plane",
+        "backend_identity": PINNED_BUILDER_BACKEND_IDENTITY,
+        "backend_implementation_digest": PINNED_BUILDER_BACKEND_IMPLEMENTATION_DIGEST,
         "record_subject_digests": list(digests),
     }
-    return sha256(_SOURCE_ATTESTATION_DOMAIN + _canonical_json(payload)).hexdigest()
+    return sha256(
+        _BACKEND_PROVENANCE_DOMAIN + _canonical_json(payload)
+    ).hexdigest()
+
+
+def _load_pinned_builder_records() -> tuple[TrustedBuilderSubject, ...]:
+    """Read the control-plane-owned snapshot.
+
+    The default fail-closed implementation contains no local record injection
+    surface. Deployment composition must replace this internal read boundary
+    with the trusted control-plane binding before builder entry is enabled.
+    """
+    return ()
 
 
 class TrustedRepositoryBaselineSource(Protocol):
@@ -136,7 +138,7 @@ class PersistentBuilderEntryReplayGuard:
 
 
 class TrustedBuilderSubjectSource(ABC):
-    """Legacy abstract source shape; inheritance is never a trust credential."""
+    """Legacy shape only; inheritance never establishes trust."""
 
     source_kind = "untrusted-abstract-source"
 
@@ -153,70 +155,47 @@ class TrustedBuilderSubjectSource(ABC):
         raise NotImplementedError
 
 
-class PinnedTrustedBuilderSubjectSource:
-    """Exact, non-subclassable source envelope for control-plane snapshots."""
+class PinnedBuilderControlPlaneBackend:
+    """Concrete, read-only source-of-record boundary.
 
-    source_kind = "trusted-control-plane"
+    The constructor accepts no records, identity, implementation digest, or
+    provenance input from its caller. Its snapshot is obtained only through
+    the module-internal control-plane read boundary.
+    """
+
     backend_identity = PINNED_BUILDER_BACKEND_IDENTITY
-    source_implementation_digest = PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST
-    __slots__ = ("_records", "_source_attestation_digest")
+    backend_implementation_digest = PINNED_BUILDER_BACKEND_IMPLEMENTATION_DIGEST
+    __slots__ = ("_records", "_provenance_digest")
 
     def __init_subclass__(cls, **kwargs: object) -> None:
-        raise TypeError("PinnedTrustedBuilderSubjectSource is final")
+        raise TypeError("PinnedBuilderControlPlaneBackend is final")
 
-    def __init__(
-        self,
-        records: tuple[TrustedBuilderSubject, ...],
-        *,
-        backend_identity: str,
-        source_implementation_digest: str,
-        source_attestation_digest: str,
-    ) -> None:
-        if type(self) is not PinnedTrustedBuilderSubjectSource:
-            raise BuilderEntryPermitError("pinned builder source exact type required")
+    def __init__(self) -> None:
+        if type(self) is not PinnedBuilderControlPlaneBackend:
+            raise BuilderEntryPermitError("exact pinned builder backend required")
+        records = _load_pinned_builder_records()
         if type(records) is not tuple:
-            raise BuilderEntryPermitError("builder source snapshot must be tuple")
-        if backend_identity != PINNED_BUILDER_BACKEND_IDENTITY:
-            raise BuilderEntryPermitError("builder source backend identity mismatch")
-        if source_implementation_digest != PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST:
-            raise BuilderEntryPermitError("builder source implementation mismatch")
-        if not isinstance(source_attestation_digest, str) or not _SHA64.fullmatch(
-            source_attestation_digest
-        ):
-            raise BuilderEntryPermitError("builder source attestation invalid")
-        expected_attestation = compute_pinned_builder_source_attestation(
-            records,
-            backend_identity=backend_identity,
-            source_implementation_digest=source_implementation_digest,
-        )
-        if source_attestation_digest != expected_attestation:
-            raise BuilderEntryPermitError("builder source attestation mismatch")
+            raise BuilderEntryPermitError("builder backend snapshot invalid")
         self._records = records
-        self._source_attestation_digest = source_attestation_digest
+        self._provenance_digest = _backend_provenance_digest(records)
 
     @property
-    def source_attestation_digest(self) -> str:
-        return self._source_attestation_digest
+    def provenance_digest(self) -> str:
+        return self._provenance_digest
 
     def verify_origin(self) -> None:
-        if type(self) is not PinnedTrustedBuilderSubjectSource:
-            raise BuilderEntryPermitError("pinned builder source exact type required")
-        if type(self).source_kind != "trusted-control-plane":
-            raise BuilderEntryPermitError("builder source kind mismatch")
+        if type(self) is not PinnedBuilderControlPlaneBackend:
+            raise BuilderEntryPermitError("exact pinned builder backend required")
         if type(self).backend_identity != PINNED_BUILDER_BACKEND_IDENTITY:
-            raise BuilderEntryPermitError("builder source backend identity mismatch")
+            raise BuilderEntryPermitError("builder backend identity mismatch")
         if (
-            type(self).source_implementation_digest
-            != PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST
+            type(self).backend_implementation_digest
+            != PINNED_BUILDER_BACKEND_IMPLEMENTATION_DIGEST
         ):
-            raise BuilderEntryPermitError("builder source implementation mismatch")
-        expected = compute_pinned_builder_source_attestation(
-            self._records,
-            backend_identity=type(self).backend_identity,
-            source_implementation_digest=type(self).source_implementation_digest,
-        )
-        if self._source_attestation_digest != expected:
-            raise BuilderEntryPermitError("builder source attestation mismatch")
+            raise BuilderEntryPermitError("builder backend implementation mismatch")
+        expected = _backend_provenance_digest(self._records)
+        if self._provenance_digest != expected:
+            raise BuilderEntryPermitError("builder backend provenance mismatch")
 
     def resolve_exact(
         self,
@@ -243,6 +222,68 @@ class PinnedTrustedBuilderSubjectSource:
         if len(records) > 1:
             raise BuilderEntryPermitError("trusted builder subject lookup ambiguous")
         subject = records[0]
+        _sealed_subject_digest(subject)
+        return subject
+
+
+class PinnedTrustedBuilderSubjectSource:
+    """Exact adapter over the exact pinned control-plane backend."""
+
+    source_kind = "trusted-control-plane"
+    source_implementation_digest = PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST
+    __slots__ = ("_backend",)
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        raise TypeError("PinnedTrustedBuilderSubjectSource is final")
+
+    def __init__(self, *, backend: PinnedBuilderControlPlaneBackend) -> None:
+        if type(self) is not PinnedTrustedBuilderSubjectSource:
+            raise BuilderEntryPermitError("exact pinned builder source required")
+        if type(backend) is not PinnedBuilderControlPlaneBackend:
+            raise BuilderEntryPermitError("exact pinned builder backend required")
+        backend.verify_origin()
+        self._backend = backend
+
+    @property
+    def backend(self) -> PinnedBuilderControlPlaneBackend:
+        return self._backend
+
+    @property
+    def source_attestation_digest(self) -> str:
+        # Evidence-only projection of backend-owned provenance.
+        return self._backend.provenance_digest
+
+    def verify_origin(self) -> None:
+        if type(self) is not PinnedTrustedBuilderSubjectSource:
+            raise BuilderEntryPermitError("exact pinned builder source required")
+        if type(self).source_kind != "trusted-control-plane":
+            raise BuilderEntryPermitError("builder source kind mismatch")
+        if (
+            type(self).source_implementation_digest
+            != PINNED_BUILDER_SOURCE_IMPLEMENTATION_DIGEST
+        ):
+            raise BuilderEntryPermitError("builder source implementation mismatch")
+        if type(self._backend) is not PinnedBuilderControlPlaneBackend:
+            raise BuilderEntryPermitError("builder source backend type mismatch")
+        self._backend.verify_origin()
+
+    def resolve_exact(
+        self,
+        *,
+        builder_subject_id: str,
+        builder_instance_id: str,
+        repository: str,
+        candidate_scope: tuple[str, ...],
+        resource_scope: tuple[str, ...],
+    ) -> TrustedBuilderSubject:
+        self.verify_origin()
+        subject = self._backend.resolve_exact(
+            builder_subject_id=builder_subject_id,
+            builder_instance_id=builder_instance_id,
+            repository=repository,
+            candidate_scope=candidate_scope,
+            resource_scope=resource_scope,
+        )
         _sealed_subject_digest(subject)
         expected = (
             builder_subject_id,
@@ -285,6 +326,8 @@ class BuilderEntryPermitEngine:
             raise BuilderEntryPermitError("live authority admission required")
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource:
             raise BuilderEntryPermitError("exact pinned trusted builder source required")
+        if type(builder_source.backend) is not PinnedBuilderControlPlaneBackend:
+            raise BuilderEntryPermitError("exact pinned builder backend required")
         builder_source.verify_origin()
         for obj, method in (
             (baseline_source, "current"),
@@ -314,7 +357,10 @@ class BuilderEntryPermitEngine:
             raise BuilderEntryPermitError("consumption permit must be sealed")
         if value.consumption_replay_digest != value.compute_consumption_replay_digest():
             raise BuilderEntryPermitError("source replay binding invalid")
-        if value.state != "CONSUMPTION_PERMIT_ISSUED" or value.action != "BUILD_CANDIDATE":
+        if (
+            value.state != "CONSUMPTION_PERMIT_ISSUED"
+            or value.action != "BUILD_CANDIDATE"
+        ):
             raise BuilderEntryPermitError("source permit state/action invalid")
         return value
 
@@ -376,7 +422,9 @@ class BuilderEntryPermitEngine:
             value.source_kind,
         )
         if actual != expected:
-            raise BuilderEntryPermitError("trusted builder subject request binding mismatch")
+            raise BuilderEntryPermitError(
+                "trusted builder subject request binding mismatch"
+            )
         return value
 
     def issue_permit(
@@ -393,10 +441,14 @@ class BuilderEntryPermitEngine:
         if not isinstance(trusted_now, datetime) or trusted_now.tzinfo is None:
             raise BuilderEntryPermitError("trusted_now must be timezone-aware")
         now = trusted_now.astimezone(timezone.utc)
-        if now < _utc(permit.authorization_valid_from, "authorization valid_from") or now >= _utc(
+        if now < _utc(
+            permit.authorization_valid_from, "authorization valid_from"
+        ) or now >= _utc(
             permit.authorization_expires_at, "authorization expires_at"
         ):
-            raise BuilderEntryPermitError("source authorization outside validity window")
+            raise BuilderEntryPermitError(
+                "source authorization outside validity window"
+            )
 
         current = self._baseline.current(permit.repository)
         if type(current) is not TrustedRepositoryBaseline:
@@ -412,7 +464,9 @@ class BuilderEntryPermitEngine:
         try:
             authority = self._live.revalidate(admitted, now=now)
         except Exception as exc:
-            raise BuilderEntryPermitError("current authority revalidation failed") from exc
+            raise BuilderEntryPermitError(
+                "current authority revalidation failed"
+            ) from exc
         if type(authority) is not LiveAdmittedResourceAuthority:
             raise BuilderEntryPermitError("revalidated authority type invalid")
         authority.validate()
@@ -445,10 +499,19 @@ class BuilderEntryPermitEngine:
             authority.action,
         )
         if actual_authority != expected_authority:
-            raise BuilderEntryPermitError("source permit/current authority mismatch")
+            raise BuilderEntryPermitError(
+                "source permit/current authority mismatch"
+            )
 
         self._f005_ok(self._f005.current())
+
+        # Source origin and backend provenance are revalidated immediately before
+        # subject resolution, and still before any replay state mutation.
         self._builders.verify_origin()
+        if type(self._builders.backend) is not PinnedBuilderControlPlaneBackend:
+            raise BuilderEntryPermitError("pinned builder backend drift")
+        self._builders.backend.verify_origin()
+
         subject = self._builders.resolve_exact(
             builder_subject_id=builder_subject_id,
             builder_instance_id=builder_instance_id,
