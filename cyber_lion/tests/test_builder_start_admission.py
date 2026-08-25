@@ -97,6 +97,25 @@ class BuilderStartAdmissionTests(unittest.TestCase):
                 c.execute("DROP TABLE builder_invocation_consumption_issuance")
             self.assertFalse(store.ready())
 
+    def test_all_issuance_sql_identifiers_are_static_literals(self):
+        source = inspect.getsource(SQLiteAuthorityStateStore)
+        for forbidden in (
+            "INSERT INTO {table}",
+            "FROM {table}",
+            "WHERE {id_column}",
+            "_record_issuance",
+            "_resolve_issuance",
+        ):
+            self.assertNotIn(forbidden, source)
+        for table in (
+            "builder_entry_issuance",
+            "builder_invocation_issuance",
+            "builder_invocation_consumption_issuance",
+            "builder_start_admission_issuance",
+        ):
+            self.assertIn(f"INSERT INTO {table} VALUES(?,?,?,?,?)", source)
+            self.assertIn(f"SELECT record_json FROM {table} WHERE ", source)
+
     def test_r20_r21_origin_and_unique_id_digest_replay_are_enforced(self):
         with tempfile.TemporaryDirectory() as directory:
             path = str(Path(directory) / "authority.sqlite")
