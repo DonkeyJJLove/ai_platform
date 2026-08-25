@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .journal import EvolutionJournal
+from .local_persistence import LocalPersistenceBoundary, LocalPersistenceGate
 from .market_intelligence import MarketObservation
 from .models import ProductHypothesis, StartupModelError, VentureVector
 from .orchestrator import AIDrivenStartupAgent
@@ -92,6 +93,13 @@ def plan_to_dict(plan, *, build_receipt=None, contradictions=None, freshness=Non
     }
 
 
+def _required_gate_text(data: dict, name: str) -> str:
+    value = data.get(name)
+    if not isinstance(value, str) or not value.strip():
+        raise StartupModelError(f"{name} is required for persistent effect")
+    return value
+
+
 def run_cycle(data: dict, *, build_local: bool = False, journal_path: str | None = None) -> dict:
     startup_id = data.get("startup_id")
     if not startup_id:
@@ -113,7 +121,16 @@ def run_cycle(data: dict, *, build_local: bool = False, journal_path: str | None
         build_receipt = agent.build_local(plan, execution_gate_event_id=execution_gate)
 
     if journal_path:
-        EvolutionJournal(journal_path).append(plan.state)
+        journal = EvolutionJournal(journal_path)
+        payload = journal.encode_record(plan.state)
+        gate = LocalPersistenceGate.seal(
+            gate_event_id=_required_gate_text(data, "journal_gate_event_id"),
+            purpose="startup-evolution-journal-append",
+            target=journal_path,
+            payload=payload,
+            nonce=_required_gate_text(data, "journal_gate_nonce"),
+        )
+        journal.append(plan.state, gate=gate)
 
     return plan_to_dict(
         plan,
@@ -129,8 +146,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run one evidence-aware Cyber-Lion Startup Evolution cycle from JSON.",
     )
     parser.add_argument("input", help="JSON file containing startup_id, hypotheses and market observations")
-    parser.add_argument("--output", help="Write result JSON to this path; defaults to stdout")
-    parser.add_argument("--journal", help="Append the resulting venture state to JSONL journal")
+    parser.add_argument("--output", help="Write result JSON to this path; requires output_gate_event_id/output_gate_nonce in input")
+    parser.add_argument("--journal", help="Append venture state to JSONL; requires journal_gate_event_id/journal_gate_nonce in input")
     parser.add_argument(
         "--build-local",
         action="store_true",
@@ -142,16 +159,29 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        result = run_cycle(load_input(args.input), build_local=args.build_local, journal_path=args.journal)
+        data = load_input(args.input)
+        result = run_cycle(data, build_local=args.build_local, journal_path=args.journal)
+        encoded = json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n"
+        if args.output:
+            payload = encoded.encode("utf-8")
+            gate = LocalPersistenceGate.seal(
+                gate_event_id=_required_gate_text(data, "output_gate_event_id"),
+                purpose="startup-cli-output-replace",
+                target=args.output,
+                payload=payload,
+                nonce=_required_gate_text(data, "output_gate_nonce"),
+            )
+            LocalPersistenceBoundary().write_replace(
+                target=args.output,
+                payload=payload,
+                purpose="startup-cli-output-replace",
+                gate=gate,
+            )
+        else:
+            print(encoded, end="")
     except (KeyError, TypeError, ValueError, StartupModelError) as exc:
         print(json.dumps({"status": "ERROR", "error": str(exc)}, ensure_ascii=False))
         return 2
-
-    encoded = json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n"
-    if args.output:
-        Path(args.output).write_text(encoded, encoding="utf-8")
-    else:
-        print(encoded, end="")
     return 0
 
 
