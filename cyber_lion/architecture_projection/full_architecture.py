@@ -85,18 +85,18 @@ class FullArchitectureModel:
 _ELEMENT_SPECS = (
     ("architecture-projection", "ARCHITECTURE_PROJECTION", "Canonical architecture projection", "VERIFIED_REFERENCE", "cyber_lion/architecture_projection/extractor.py", "ArchitectureProjectionExtractor", "LIVE_CODE"),
     ("authority-effect", "AUTHORITY_AND_EFFECT", "Authority and effect boundary", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),
-    ("code-perception", "CODE_PERCEPTION", "Deterministic code perception", "VERIFIED_REFERENCE", "cyber_lion/enterprise/code_perception.py", "CodePerception", "LIVE_CODE"),
+    ("code-perception", "CODE_PERCEPTION", "Deterministic code perception", "VERIFIED_REFERENCE", "cyber_lion/enterprise/code_perception.py", "build_code_graph", "LIVE_CODE"),
     ("constitution-governance", "CONSTITUTION_AND_GOVERNANCE", "Constitution and governance", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),
     ("evidence-epistemic", "EVIDENCE_AND_EPISTEMIC_PLANE", "Evidence and epistemic R&D", "VERIFIED_REFERENCE", "cyber_lion/contracts/evolutionary_rnd.py", "EvidenceObservation", "LIVE_CODE"),
     ("evolutionary-epoch", "EVOLUTIONARY_EPOCH", "Evolutionary epoch", "VERIFIED_REFERENCE", "cyber_lion/enterprise/evolutionary_epoch.py", "EvolutionaryEpochEngine", "LIVE_CODE"),
     ("fleet-swarm", "FLEET_AND_SWARM", "Fleet and swarm organization", "PARTIALLY_IMPLEMENTED", "cyber_lion/enterprise/models.py", "MissionSpec", "LIVE_CODE"),
     ("governed-self-implementation", "GOVERNED_SELF_IMPLEMENTATION", "Governed self-implementation", "VERIFIED_REFERENCE", "cyber_lion/contracts/governed_change_proposal.py", "GovernedChangeProposal", "LIVE_CODE"),
-    ("observability-reconciliation", "OBSERVABILITY_AND_RECONCILIATION", "Observability and reconciliation", "VERIFIED_REFERENCE", "cyber_lion/enterprise/runtime_reconciliation.py", "RuntimeReconciliation", "LIVE_CODE"),
+    ("observability-reconciliation", "OBSERVABILITY_AND_RECONCILIATION", "Observability and reconciliation", "VERIFIED_REFERENCE", "cyber_lion/enterprise/runtime_reconciliation.py", "RuntimeReconciler", "LIVE_CODE"),
     ("quarantined-f005", "QUARANTINED_AND_NONCANONICAL", "F005 runtime plane", "QUARANTINED", ".lion/runtime/f005-runtime-plane-state.json", "f005-local-runtime-v1", "EXACT_GIT_STATE"),
     ("repository-mutation", "REPOSITORY_MUTATION", "Repository mutation reference path", "VERIFIED_REFERENCE", "cyber_lion/enterprise/repository_mutation_pep.py", "RepositoryMutationPEP", "LIVE_CODE"),
     ("startup-evolution", "STARTUP_EVOLUTION", "Startup Evolution Agent", "IMPLEMENTED", "cyber_lion/startup_agent/orchestrator.py", "AIDrivenStartupAgent", "LIVE_CODE"),
-    ("system-context", "SYSTEM_CONTEXT", "System context and target boundary", "PARTIALLY_IMPLEMENTED", "cyber_lion/TARGET_ARCHITECTURE.md", "SYSTEM_CONTEXT", "CANONICAL_DOCUMENTATION"),
-    ("trusted-runtime", "TRUSTED_RUNTIME", "Trusted runtime enforcement", "PARTIALLY_IMPLEMENTED", "cyber_lion/enterprise/runtime_enforcement.py", "RuntimeAdmission", "LIVE_CODE"),
+    ("system-context", "SYSTEM_CONTEXT", "System context and target boundary", "PARTIALLY_IMPLEMENTED", "cyber_lion/TARGET_ARCHITECTURE.md", "SEM proposal", "CANONICAL_DOCUMENTATION"),
+    ("trusted-runtime", "TRUSTED_RUNTIME", "Trusted runtime enforcement", "PARTIALLY_IMPLEMENTED", "cyber_lion/enterprise/runtime_enforcement.py", "RuntimeAdmissionEngine", "LIVE_CODE"),
 )
 
 _TARGET_ELEMENTS = (
