@@ -1,6 +1,11 @@
 import unittest
 
-from cyber_lion.architecture_projection.gap import canonical_target_gaps, classify_historical_projection
+from cyber_lion.architecture_projection.gap import (
+    GapRecord,
+    canonical_target_gaps,
+    classify_historical_projection,
+    transition_gap_status,
+)
 
 
 class ArchitectureProjectionGapTests(unittest.TestCase):
@@ -21,6 +26,28 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
             "SUPERSEDED",
         )
         self.assertEqual(classify_historical_projection(observed_commit="a" * 40, current_commit="a" * 40), "VERIFIED_REFERENCE")
+
+    def test_invalid_gap_status_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "status vocabulary is closed"):
+            GapRecord("BeanSpec", "MAGICALLY_IMPLEMENTED").validate()
+
+    def test_unknown_gap_promotion_requires_explicit_evidence_transition(self):
+        unknown = GapRecord("GlobalCompleteMediation", "UNKNOWN").validate()
+        with self.assertRaisesRegex(ValueError, "explicit observed evidence class"):
+            transition_gap_status(unknown, new_status="VERIFIED_REFERENCE")
+        with self.assertRaisesRegex(ValueError, "explicit evidence_ref"):
+            transition_gap_status(
+                unknown,
+                new_status="VERIFIED_REFERENCE",
+                evidence_class="CURRENT_TEST",
+            )
+        promoted = transition_gap_status(
+            unknown,
+            new_status="VERIFIED_REFERENCE",
+            evidence_class="CURRENT_TEST",
+            evidence_ref="test:complete-mediation-proof",
+        )
+        self.assertEqual(promoted.status, "VERIFIED_REFERENCE")
 
 
 if __name__ == "__main__":
