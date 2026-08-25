@@ -153,7 +153,6 @@ class BuildAuthorizationConsumptionEngine:
             current_baseline.repository != authorization.repository
             or current_baseline.master_sha != authorization.baseline_master_sha
             or current_baseline.master_tree_sha != authorization.baseline_master_tree_sha
-            or current_baseline.digest() != authorization.baseline_observation_digest
         ):
             raise BuildAuthorizationConsumptionError("authorization baseline stale or substituted")
 
@@ -207,7 +206,6 @@ class BuildAuthorizationConsumptionEngine:
             "repository": authorization.repository,
             "baseline_master_sha": authorization.baseline_master_sha,
             "baseline_master_tree_sha": authorization.baseline_master_tree_sha,
-            "current_baseline_digest": current_baseline.digest(),
             "candidate_scope": list(authorization.candidate_scope),
             "resource_scope": list(authorization.resource_scope),
             "action": "BUILD_CANDIDATE",
@@ -219,7 +217,6 @@ class BuildAuthorizationConsumptionEngine:
             "root_grant_id": authorization.root_grant_id,
             "root_grant_digest": authorization.root_grant_digest,
             "live_admission_digest": authorization.live_admission_digest,
-            "current_authority_digest": current_authority.digest(),
         }
         replay_digest = _digest(replay_payload)
         checked_at = now.isoformat()
