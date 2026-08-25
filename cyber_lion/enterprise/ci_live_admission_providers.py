@@ -32,6 +32,8 @@ _MAX_RESPONSE_BYTES: Final = 1024 * 1024
 _MAX_RECORDS: Final = 16
 _TIMEOUT_SECONDS: Final = 10
 _SHA_RE: Final = re.compile(r"^[0-9a-f]{40}$")
+_RUN_ID_RE: Final = re.compile(r"^[1-9][0-9]{0,19}$")
+_ATTEMPT_RE: Final = re.compile(r"^[1-9][0-9]{0,9}$")
 
 _BOOTSTRAP_RESPONSE_FIELDS: Final = frozenset({"provider_version", "records"})
 _VERIFY_RESPONSE_FIELDS: Final = frozenset({"provider_version", "verified"})
@@ -89,6 +91,23 @@ def _runtime_config() -> tuple[str, str, str]:
     credential = _required_env(credential_env, limit=16384)
 
     return canonical_origin, credential, trusted_base_sha
+
+
+def _execution_epoch() -> str | None:
+    """Bind production replay to the externally supplied GitHub Actions run epoch.
+
+    Unit fixtures that are not running in Actions remain unbound and therefore do not
+    share production replay state across calls.
+    """
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    attempt = os.environ.get("GITHUB_RUN_ATTEMPT")
+    if run_id is None and attempt is None:
+        return None
+    if not isinstance(run_id, str) or not _RUN_ID_RE.fullmatch(run_id):
+        raise CILiveAdmissionProviderError("trusted workflow run id is invalid")
+    if not isinstance(attempt, str) or not _ATTEMPT_RE.fullmatch(attempt):
+        raise CILiveAdmissionProviderError("trusted workflow run attempt is invalid")
+    return f"{run_id}:{attempt}"
 
 
 def _json_bytes(payload: Mapping[str, object]) -> bytes:
@@ -171,6 +190,7 @@ class SignatureVerificationAdmission:
     origin: str
     trusted_base_sha: str
     payload_digest: str
+    execution_epoch: str | None
 
 
 @dataclass(frozen=True)
@@ -184,13 +204,13 @@ class SignatureVerificationNetworkBoundary:
     """Closed-world POST boundary for one signature-verification request.
 
     The boundary accepts no caller-selected URL/method/provider, rechecks trusted
-    runtime configuration immediately before the POST, memoizes exact request results
-    so replay cannot cause a second network effect, and validates the returned envelope
-    before releasing a boolean result.
+    runtime configuration immediately before POST, and in production GitHub Actions
+    binds replay to the externally supplied run-id/attempt. Exact repeated requests in
+    one run return the already-observed result without a second network effect.
     """
 
     _lock = threading.RLock()
-    _observed: dict[str, SignatureVerificationObservation] = {}
+    _observed: dict[tuple[str, str], SignatureVerificationObservation] = {}
 
     @staticmethod
     def _payload(payload: bytes, signature: str, key_id: str, algorithm: str) -> dict[str, object]:
@@ -213,6 +233,7 @@ class SignatureVerificationNetworkBoundary:
     @staticmethod
     def _admit(body: Mapping[str, object]) -> SignatureVerificationAdmission:
         origin, _credential, trusted_base_sha = _runtime_config()
+        execution_epoch = _execution_epoch()
         body_bytes = _json_bytes(body)
         payload_digest = sha256(body_bytes).hexdigest()
         request_digest = sha256(
@@ -221,6 +242,8 @@ class SignatureVerificationNetworkBoundary:
             + b"\0"
             + trusted_base_sha.encode("ascii")
             + b"\0"
+            + (execution_epoch or "UNBOUND").encode("ascii")
+            + b"\0"
             + body_bytes
         ).hexdigest()
         return SignatureVerificationAdmission(
@@ -228,23 +251,33 @@ class SignatureVerificationNetworkBoundary:
             origin=origin,
             trusted_base_sha=trusted_base_sha,
             payload_digest=payload_digest,
+            execution_epoch=execution_epoch,
         )
 
     @classmethod
     def verify(cls, payload: bytes, signature: str, key_id: str, algorithm: str) -> bool:
         body = cls._payload(payload, signature, key_id, algorithm)
         admission = cls._admit(body)
+        cache_key = (
+            admission.execution_epoch or "",
+            admission.request_digest,
+        )
         with cls._lock:
-            cached = cls._observed.get(admission.request_digest)
-            if cached is not None:
-                return cached.verified
+            if admission.execution_epoch is not None:
+                cached = cls._observed.get(cache_key)
+                if cached is not None:
+                    return cached.verified
 
             # Effect-time currentness: authoritative process configuration must still
-            # equal the values that produced admission immediately before network I/O.
+            # equal admission immediately before network I/O.
             origin, credential, trusted_base_sha = _runtime_config()
             if (origin, trusted_base_sha) != (admission.origin, admission.trusted_base_sha):
                 raise CILiveAdmissionProviderError(
                     "trusted verification configuration changed before effect"
+                )
+            if _execution_epoch() != admission.execution_epoch:
+                raise CILiveAdmissionProviderError(
+                    "trusted verification execution epoch changed before effect"
                 )
 
             body_bytes = _json_bytes(body)
@@ -284,13 +317,13 @@ class SignatureVerificationNetworkBoundary:
             if type(verified) is not bool:
                 raise CILiveAdmissionProviderError("trusted verifier result is invalid")
 
-            response_digest = sha256(_json_bytes(decoded)).hexdigest()
             observation = SignatureVerificationObservation(
                 request_digest=admission.request_digest,
-                response_digest=response_digest,
+                response_digest=sha256(_json_bytes(decoded)).hexdigest(),
                 verified=verified,
             )
-            cls._observed[admission.request_digest] = observation
+            if admission.execution_epoch is not None:
+                cls._observed[cache_key] = observation
             return observation.verified
 
 
