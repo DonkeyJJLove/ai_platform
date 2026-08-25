@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import asdict
 import io
 import json
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -13,12 +15,14 @@ import cyber_lion.enterprise.builder_entry_permit as bep
 from cyber_lion.enterprise.builder_entry_permit import (
     BuilderEntryPermitEngine,
     BuilderEntryPermitError,
+    PersistentBuilderEntryIssuanceRecorder,
     PinnedBuilderControlPlaneBackend,
     PinnedTrustedBuilderSubjectSource,
     TrustedBuilderSubjectSource,
     TrustedControlPlaneBuilderClient,
 )
 from cyber_lion.enterprise.candidate_build_authorization import LiveAdmittedResourceAuthority, LiveResourceAuthorityAdmission
+from cyber_lion.enterprise.persistent_authority_state import SQLiteAuthorityStateStore
 
 D = lambda c: c * 64
 S = lambda c: c * 40
@@ -93,15 +97,19 @@ class FakeHTTPResponse:
 class BuilderEntryPermitEngineTests(unittest.TestCase):
     def setUp(self):
         self.env = {"CYBER_LION_CP_PROVIDER_VERSION": "1.0.0", "CYBER_LION_CP_ENDPOINT": "https://control-plane.example", "CYBER_LION_CP_CREDENTIAL_ENV": "CYBER_LION_CP_TOKEN", "CYBER_LION_CP_TOKEN": "secret"}
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = SQLiteAuthorityStateStore(os.path.join(self.tmp.name, "authority.sqlite"))
+        self.recorder = PersistentBuilderEntryIssuanceRecorder(self.store)
 
     def _source(self):
         with patch.dict("os.environ", self.env, clear=True):
             return PinnedTrustedBuilderSubjectSource()
 
-    def _engine(self, *, source=None, base=None, f005=None, replay=None):
+    def _engine(self, *, source=None, base=None, f005=None, replay=None, recorder=None):
         live = object.__new__(LiveResourceAuthorityAdmission)
         with patch.dict("os.environ", self.env, clear=True):
-            return BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(base or baseline()), f005_state_source=f005 or F005(), builder_source=source or self._source(), replay_guard=replay or Replay())
+            return BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(base or baseline()), f005_state_source=f005 or F005(), builder_source=source or self._source(), replay_guard=replay or Replay(), issuance_recorder=recorder or self.recorder)
 
     def _issue(self, entry, *, records=None, provider_version="1.0.0", status=200, receipt=None, env=None):
         receipt = receipt or live_receipt()
@@ -114,6 +122,15 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         self.assertEqual((permit.builder_subject_id, permit.builder_instance_id), ("builder-R17", "instance-01"))
         self.assertEqual((permit.authority_effect, permit.execution_effect, permit.repository_ref_effect, permit.external_effect), ("NONE", "NONE", "NONE", "NONE"))
         permit.validate()
+        record = self.store.resolve_builder_entry_issuance(permit.builder_entry_permit_id)
+        self.assertEqual(record.builder_entry_permit_digest, permit.builder_entry_permit_digest)
+        self.assertEqual(record.builder_entry_replay_digest, permit.builder_entry_replay_digest)
+        self.assertEqual(record.issued_at, permit.checked_at)
+
+    def test_duplicate_conflicting_issuance_record_denied(self):
+        permit = self._issue(self._engine())
+        with self.assertRaises(BuilderEntryPermitError):
+            self.recorder.record(permit)
 
     def test_direct_store_and_runtime_factory_surface_absent(self):
         self.assertFalse(hasattr(bep, "SQLiteTrustedControlPlaneStore"))
@@ -285,7 +302,7 @@ class BuilderEntryPermitEngineTests(unittest.TestCase):
         live = object.__new__(LiveResourceAuthorityAdmission)
         for value in (ArbitraryResolver(), CallerDefinedSource()):
             with patch.dict("os.environ", self.env, clear=True):
-                with self.assertRaises(BuilderEntryPermitError): BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(baseline()), f005_state_source=F005(), builder_source=value, replay_guard=Replay())
+                with self.assertRaises(BuilderEntryPermitError): BuilderEntryPermitEngine(live_authority=live, baseline_source=BaselineSource(baseline()), f005_state_source=F005(), builder_source=value, replay_guard=Replay(), issuance_recorder=self.recorder)
         with self.assertRaises(TypeError):
             class BadClient(TrustedControlPlaneBuilderClient): pass
         with self.assertRaises(TypeError):
