@@ -20,6 +20,7 @@ from cyber_lion.enterprise.candidate_build_authorization import (
 )
 from cyber_lion.enterprise.persistent_authority_state import (
     PersistentAuthorityStoreOrigin,
+    PersistentBuilderEntryIssuanceRecord,
     PersistentBuilderInvocationIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
@@ -78,7 +79,7 @@ class PersistentBuilderInvocationConsumptionReplayGuard:
 
 
 class PersistentBuilderInvocationIssuanceSource:
-    """Read-only exact R19 issuance provenance pinned to canonical store origin."""
+    """Read-only R19 provenance plus exact transitive R17 ancestry on one canonical origin."""
 
     __slots__ = ("_store", "_origin")
 
@@ -118,6 +119,37 @@ class PersistentBuilderInvocationIssuanceSource:
             raise BuilderInvocationConsumptionError("durable builder invocation issuance invalid") from exc
         if (record.authority_store_origin_id, record.authority_store_origin_digest) != (current.origin_id, current.origin_digest):
             raise BuilderInvocationConsumptionError("durable builder invocation issuance origin mismatch")
+
+        try:
+            ancestor = self._store.resolve_builder_entry_issuance(record.source_builder_entry_permit_id)
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("durable builder entry ancestry unavailable") from exc
+        if type(ancestor) is not PersistentBuilderEntryIssuanceRecord:
+            raise BuilderInvocationConsumptionError("durable builder entry ancestry type invalid")
+        try:
+            ancestor.validate()
+        except Exception as exc:
+            raise BuilderInvocationConsumptionError("durable builder entry ancestry invalid") from exc
+        if (
+            record.source_builder_entry_permit_id,
+            record.source_builder_entry_permit_digest,
+        ) != (
+            ancestor.builder_entry_permit_id,
+            ancestor.builder_entry_permit_digest,
+        ):
+            raise BuilderInvocationConsumptionError("builder invocation R17 ancestry identity mismatch")
+        if (
+            record.authority_store_origin_id,
+            record.authority_store_origin_digest,
+            ancestor.authority_store_origin_id,
+            ancestor.authority_store_origin_digest,
+        ) != (
+            current.origin_id,
+            current.origin_digest,
+            current.origin_id,
+            current.origin_digest,
+        ):
+            raise BuilderInvocationConsumptionError("builder invocation R17/R19 ancestry origin mismatch")
         return record
 
 
