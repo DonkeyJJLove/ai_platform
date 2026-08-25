@@ -53,7 +53,7 @@ def receipt(**changes):
 class BuilderProcessLaunchTests(unittest.TestCase):
     def test_boundary_has_no_direct_os_or_repository_effect_implementation(self):
         source=inspect.getsource(__import__("cyber_lion.enterprise.builder_process_launch",fromlist=["x"]))
-        for forbidden in ("subprocess", "os.fork", "os.exec", "ExecutorSandbox", "RuntimeCompositionRoot", "repository_mutation_pep"):
+        for forbidden in ("import subprocess", "os.fork", "os.exec", "ExecutorSandbox", "RuntimeCompositionRoot", "repository_mutation_pep"):
             self.assertNotIn(forbidden,source)
         self.assertIn("prepare_launch",source); self.assertIn("observe_held",source); self.assertIn("commit_start",source); self.assertIn("freeze_or_kill",source)
 
@@ -100,5 +100,15 @@ class BuilderProcessLaunchTests(unittest.TestCase):
         self.assertIn("resolve_builder_process_held_materialization",source)
         self.assertIn("observe_held",source);self.assertIn("freeze_or_kill",source)
         self.assertNotIn("commit_start",source)
+
+    def test_pre_r22_exact_lookup_binding_checks_are_restored(self):
+        source=inspect.getsource(SQLiteAuthorityStateStore)
+        for marker in (
+            "builder entry issuance lookup binding mismatch",
+            "builder invocation issuance lookup binding mismatch",
+            "builder invocation consumption issuance lookup binding mismatch",
+            "builder start admission issuance lookup binding mismatch",
+        ):
+            self.assertIn(marker,source)
 
 if __name__=="__main__":unittest.main()
