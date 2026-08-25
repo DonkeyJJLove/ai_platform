@@ -227,6 +227,10 @@ class BoundedCandidateBuildAuthorization:
             "live_admission_digest", "baseline_observation_digest", "issuance_replay_digest",
         ):
             _digest(getattr(self, name), name)
+        if self.authorization_id != f"cba:{self.issuance_replay_digest}":
+            raise CandidateBuildAuthorizationContractError(
+                "authorization_id must derive exactly from issuance_replay_digest"
+            )
         _text(self.policy_binding, "policy_binding", 2048)
         _text(self.authority_provenance_id, "authority_provenance_id", 1024)
         if isinstance(self.authority_epoch, bool) or not isinstance(self.authority_epoch, int) or self.authority_epoch < 0:
