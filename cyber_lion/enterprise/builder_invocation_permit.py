@@ -24,6 +24,7 @@ from cyber_lion.enterprise.candidate_build_authorization import (
 from cyber_lion.enterprise.persistent_authority_state import (
     PersistentAuthorityStoreOrigin,
     PersistentBuilderEntryIssuanceRecord,
+    PersistentBuilderInvocationIssuanceRecord,
     SQLiteAuthorityStateStore,
 )
 from cyber_lion.enterprise.trusted_control_plane_runtime import (
@@ -38,18 +39,8 @@ class BuilderInvocationPermitError(RuntimeError):
 
 _EFFECT_METHODS = frozenset(
     {
-        "execute",
-        "write",
-        "push",
-        "merge",
-        "deploy",
-        "release",
-        "create_branch",
-        "create_pr",
-        "run_test",
-        "build_candidate",
-        "consume_candidate",
-        "start_builder",
+        "execute", "write", "push", "merge", "deploy", "release", "create_branch",
+        "create_pr", "run_test", "build_candidate", "consume_candidate", "start_builder",
         "issue_grant",
     }
 )
@@ -118,15 +109,83 @@ class PersistentBuilderEntryIssuanceSource:
             record.validate()
         except Exception as exc:
             raise BuilderInvocationPermitError("durable builder entry issuance invalid") from exc
-        if (
-            record.authority_store_origin_id,
-            record.authority_store_origin_digest,
-        ) != (
-            current_origin.origin_id,
-            current_origin.origin_digest,
+        if (record.authority_store_origin_id, record.authority_store_origin_digest) != (
+            current_origin.origin_id, current_origin.origin_digest
         ):
             raise BuilderInvocationPermitError("durable builder entry issuance origin mismatch")
         return record
+
+
+class PersistentBuilderInvocationIssuanceRecorder:
+    """Capability-reduced durable recorder for sealed R19 invocation permits."""
+
+    __slots__ = ("_store", "_origin")
+
+    def __init__(self) -> None:
+        try:
+            store = build_authority_state_store()
+            origin = verify_authority_state_store_origin()
+        except Exception as exc:
+            raise BuilderInvocationPermitError("canonical persistent authority store unavailable") from exc
+        if type(store) is not SQLiteAuthorityStateStore or not store.ready():
+            raise BuilderInvocationPermitError("canonical persistent authority store invalid")
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise BuilderInvocationPermitError("canonical authority store origin invalid")
+        self._store = store
+        self._origin = origin
+
+    def _current_origin(self) -> PersistentAuthorityStoreOrigin:
+        try:
+            current = verify_authority_state_store_origin()
+        except Exception as exc:
+            raise BuilderInvocationPermitError("canonical authority store origin unavailable") from exc
+        if current != self._origin:
+            raise BuilderInvocationPermitError("canonical authority store origin drift")
+        return current
+
+    def record(self, permit: BuilderInvocationPermit) -> PersistentBuilderInvocationIssuanceRecord:
+        if type(permit) is not BuilderInvocationPermit:
+            raise BuilderInvocationPermitError("exact BuilderInvocationPermit required for issuance recording")
+        try:
+            permit.validate()
+        except Exception as exc:
+            raise BuilderInvocationPermitError("builder invocation permit invalid during issuance recording") from exc
+        if not permit.builder_invocation_permit_digest or permit.builder_invocation_permit_digest != permit.compute_digest():
+            raise BuilderInvocationPermitError("builder invocation permit must be sealed before issuance recording")
+        origin = self._current_origin()
+        record = PersistentBuilderInvocationIssuanceRecord(
+            builder_invocation_permit_id=permit.builder_invocation_permit_id,
+            builder_invocation_permit_digest=permit.builder_invocation_permit_digest,
+            builder_invocation_replay_digest=permit.builder_invocation_replay_digest,
+            source_builder_entry_permit_id=permit.source_builder_entry_permit_id,
+            source_builder_entry_permit_digest=permit.source_builder_entry_permit_digest,
+            repository=permit.repository,
+            baseline_master_sha=permit.baseline_master_sha,
+            baseline_master_tree_sha=permit.baseline_master_tree_sha,
+            current_baseline_digest=permit.current_baseline_digest,
+            action=permit.action,
+            candidate_scope=permit.candidate_scope,
+            resource_scope=permit.resource_scope,
+            authority_epoch=permit.authority_epoch,
+            authority_state_version=permit.authority_state_version,
+            root_grant_id=permit.root_grant_id,
+            root_grant_digest=permit.root_grant_digest,
+            current_authority_digest=permit.current_authority_digest,
+            builder_subject_id=permit.builder_subject_id,
+            builder_instance_id=permit.builder_instance_id,
+            builder_capability_class=permit.builder_capability_class,
+            builder_identity_digest=permit.builder_identity_digest,
+            builder_implementation_digest=permit.builder_implementation_digest,
+            builder_attestation_digest=permit.builder_attestation_digest,
+            current_builder_subject_digest=permit.current_builder_subject_digest,
+            authority_store_origin_id=origin.origin_id,
+            authority_store_origin_digest=origin.origin_digest,
+            issued_at=permit.checked_at,
+        ).validate()
+        try:
+            return self._store.record_builder_invocation_issuance(record)
+        except Exception as exc:
+            raise BuilderInvocationPermitError("durable builder invocation issuance recording failed") from exc
 
 
 def _utc(value: str, name: str) -> datetime:
@@ -156,12 +215,9 @@ def _sealed_entry_permit(value: object) -> BuilderEntryPermit:
         raise BuilderInvocationPermitError("builder entry permit state invalid")
     if value.action != "BUILD_CANDIDATE" or value.builder_capability_class != BUILDER_CAPABILITY_CLASS:
         raise BuilderInvocationPermitError("builder entry action/capability invalid")
-    if (
-        value.authority_effect,
-        value.execution_effect,
-        value.repository_ref_effect,
-        value.external_effect,
-    ) != ("NONE", "NONE", "NONE", "NONE"):
+    if (value.authority_effect, value.execution_effect, value.repository_ref_effect, value.external_effect) != (
+        "NONE", "NONE", "NONE", "NONE"
+    ):
         raise BuilderInvocationPermitError("builder entry permit carries effects")
     return value
 
@@ -177,11 +233,7 @@ def _live_receipt(value: object) -> LiveAdmittedResourceAuthority:
 
 
 def _f005_ok(value: Mapping[str, Any]) -> None:
-    if (
-        not isinstance(value, Mapping)
-        or value.get("state") != "QUARANTINED"
-        or value.get("effect_authority") != "DENY"
-    ):
+    if not isinstance(value, Mapping) or value.get("state") != "QUARANTINED" or value.get("effect_authority") != "DENY":
         raise BuilderInvocationPermitError("F005 quarantine invariant failed")
 
 
@@ -199,49 +251,21 @@ def _sealed_subject(value: object) -> TrustedBuilderSubject:
 
 def _verify_exact_issuance(permit: BuilderEntryPermit, record: PersistentBuilderEntryIssuanceRecord) -> None:
     expected = (
-        permit.builder_entry_permit_id,
-        permit.builder_entry_permit_digest,
-        permit.builder_entry_replay_digest,
-        permit.repository,
-        permit.baseline_master_sha,
-        permit.baseline_master_tree_sha,
-        permit.action,
-        permit.candidate_scope,
-        permit.resource_scope,
-        permit.authority_epoch,
-        permit.authority_state_version,
-        permit.root_grant_id,
-        permit.root_grant_digest,
-        permit.current_authority_digest,
-        permit.builder_subject_id,
-        permit.builder_instance_id,
-        permit.builder_capability_class,
-        permit.builder_identity_digest,
-        permit.builder_implementation_digest,
-        permit.builder_attestation_digest,
+        permit.builder_entry_permit_id, permit.builder_entry_permit_digest, permit.builder_entry_replay_digest,
+        permit.repository, permit.baseline_master_sha, permit.baseline_master_tree_sha, permit.action,
+        permit.candidate_scope, permit.resource_scope, permit.authority_epoch, permit.authority_state_version,
+        permit.root_grant_id, permit.root_grant_digest, permit.current_authority_digest,
+        permit.builder_subject_id, permit.builder_instance_id, permit.builder_capability_class,
+        permit.builder_identity_digest, permit.builder_implementation_digest, permit.builder_attestation_digest,
         permit.checked_at,
     )
     actual = (
-        record.builder_entry_permit_id,
-        record.builder_entry_permit_digest,
-        record.builder_entry_replay_digest,
-        record.repository,
-        record.baseline_master_sha,
-        record.baseline_master_tree_sha,
-        record.action,
-        record.candidate_scope,
-        record.resource_scope,
-        record.authority_epoch,
-        record.authority_state_version,
-        record.root_grant_id,
-        record.root_grant_digest,
-        record.current_authority_digest,
-        record.builder_subject_id,
-        record.builder_instance_id,
-        record.builder_capability_class,
-        record.builder_identity_digest,
-        record.builder_implementation_digest,
-        record.builder_attestation_digest,
+        record.builder_entry_permit_id, record.builder_entry_permit_digest, record.builder_entry_replay_digest,
+        record.repository, record.baseline_master_sha, record.baseline_master_tree_sha, record.action,
+        record.candidate_scope, record.resource_scope, record.authority_epoch, record.authority_state_version,
+        record.root_grant_id, record.root_grant_digest, record.current_authority_digest,
+        record.builder_subject_id, record.builder_instance_id, record.builder_capability_class,
+        record.builder_identity_digest, record.builder_implementation_digest, record.builder_attestation_digest,
         record.issued_at,
     )
     if actual != expected:
@@ -265,11 +289,7 @@ class BuilderInvocationPermitEngine:
         if type(builder_source) is not PinnedTrustedBuilderSubjectSource:
             raise BuilderInvocationPermitError("exact pinned builder source required")
         builder_source.verify_origin()
-        for obj, method in (
-            (baseline_source, "current"),
-            (f005_state_source, "current"),
-            (replay_guard, "consume"),
-        ):
+        for obj, method in ((baseline_source, "current"), (f005_state_source, "current"), (replay_guard, "consume")):
             if not callable(getattr(obj, method, None)):
                 raise BuilderInvocationPermitError("builder invocation dependency unavailable")
         self._live = live_authority
@@ -278,6 +298,7 @@ class BuilderInvocationPermitEngine:
         self._builders = builder_source
         self._replay = replay_guard
         self._source_issuance = PersistentBuilderEntryIssuanceSource()
+        self._issuance_recorder = PersistentBuilderInvocationIssuanceRecorder()
 
     def issue_permit(
         self,
@@ -302,14 +323,8 @@ class BuilderInvocationPermitEngine:
             current.validate()
         except Exception as exc:
             raise BuilderInvocationPermitError("trusted baseline invalid") from exc
-        if (
-            current.repository,
-            current.master_sha,
-            current.master_tree_sha,
-        ) != (
-            permit.repository,
-            permit.baseline_master_sha,
-            permit.baseline_master_tree_sha,
+        if (current.repository, current.master_sha, current.master_tree_sha) != (
+            permit.repository, permit.baseline_master_sha, permit.baseline_master_tree_sha
         ):
             raise BuilderInvocationPermitError("builder invocation baseline stale")
 
@@ -321,63 +336,37 @@ class BuilderInvocationPermitEngine:
             raise BuilderInvocationPermitError("revalidated authority type invalid")
         authority.validate()
         expected_authority = (
-            permit.repository,
-            permit.authority_epoch,
-            permit.authority_state_version,
-            permit.root_grant_id,
-            permit.root_grant_digest,
-            permit.current_authority_digest,
-            permit.resource_scope,
-            "BUILD_CANDIDATE",
+            permit.repository, permit.authority_epoch, permit.authority_state_version,
+            permit.root_grant_id, permit.root_grant_digest, permit.current_authority_digest,
+            permit.resource_scope, "BUILD_CANDIDATE",
         )
         actual_authority = (
-            authority.repository,
-            authority.epoch,
-            authority.epoch_state_version,
-            authority.root_grant_id,
-            authority.root_grant_digest,
-            authority.digest(),
-            authority.resource_scope,
-            authority.action,
+            authority.repository, authority.epoch, authority.epoch_state_version,
+            authority.root_grant_id, authority.root_grant_digest, authority.digest(),
+            authority.resource_scope, authority.action,
         )
         if actual_authority != expected_authority:
             raise BuilderInvocationPermitError("builder entry/current authority mismatch")
 
         self._builders.verify_origin()
-        subject = _sealed_subject(
-            self._builders.resolve_exact(
-                builder_subject_id=permit.builder_subject_id,
-                builder_instance_id=permit.builder_instance_id,
-                repository=permit.repository,
-                candidate_scope=permit.candidate_scope,
-                resource_scope=permit.resource_scope,
-            )
-        )
+        subject = _sealed_subject(self._builders.resolve_exact(
+            builder_subject_id=permit.builder_subject_id,
+            builder_instance_id=permit.builder_instance_id,
+            repository=permit.repository,
+            candidate_scope=permit.candidate_scope,
+            resource_scope=permit.resource_scope,
+        ))
         expected_builder = (
-            permit.builder_subject_id,
-            permit.builder_instance_id,
-            permit.builder_capability_class,
-            permit.repository,
-            permit.candidate_scope,
-            permit.resource_scope,
-            permit.builder_identity_digest,
-            permit.builder_implementation_digest,
-            permit.builder_attestation_digest,
-            "ADMITTED",
-            "trusted-control-plane",
+            permit.builder_subject_id, permit.builder_instance_id, permit.builder_capability_class,
+            permit.repository, permit.candidate_scope, permit.resource_scope,
+            permit.builder_identity_digest, permit.builder_implementation_digest, permit.builder_attestation_digest,
+            "ADMITTED", "trusted-control-plane",
         )
         actual_builder = (
-            subject.builder_subject_id,
-            subject.builder_instance_id,
-            subject.capability_class,
-            subject.repository,
-            subject.candidate_scope,
-            subject.resource_scope,
-            subject.identity_digest,
-            subject.implementation_digest,
-            subject.attestation_digest,
-            subject.state,
-            subject.source_kind,
+            subject.builder_subject_id, subject.builder_instance_id, subject.capability_class,
+            subject.repository, subject.candidate_scope, subject.resource_scope,
+            subject.identity_digest, subject.implementation_digest, subject.attestation_digest,
+            subject.state, subject.source_kind,
         )
         if actual_builder != expected_builder:
             raise BuilderInvocationPermitError("builder entry/current builder mismatch")
@@ -414,13 +403,15 @@ class BuilderInvocationPermitEngine:
         checked_at = now.isoformat()
         if self._replay.consume(replay, consumed_at=checked_at) is not True:
             raise BuilderInvocationPermitError("builder invocation replay denied")
-        return BuilderInvocationPermit(
+        issued = BuilderInvocationPermit(
             schema_version=SCHEMA_VERSION,
             builder_invocation_permit_id=f"bip:{replay}",
             checked_at=checked_at,
             builder_invocation_replay_digest=replay,
             **kwargs,
         ).sealed()
+        self._issuance_recorder.record(issued)
+        return issued
 
     @classmethod
     def assert_no_effect_surface(cls) -> None:
