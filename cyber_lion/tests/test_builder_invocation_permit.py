@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 import os
+from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -165,37 +166,45 @@ class Replay:
 
 class BuilderInvocationPermitEngineTests(unittest.TestCase):
     def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        repo_root = Path(self.tmp.name) / "repo"
+        repo_root.mkdir()
+        self.authority_path = str(Path(self.tmp.name) / "control-plane.sqlite")
         self.env = {
             "CYBER_LION_CP_PROVIDER_VERSION": "1.0.0",
             "CYBER_LION_CP_ENDPOINT": "https://control-plane.example",
             "CYBER_LION_CP_CREDENTIAL_ENV": "CYBER_LION_CP_TOKEN",
             "CYBER_LION_CP_TOKEN": "secret",
+            "LION_CP_RUNTIME_FACTORY_VERSION": "1.0.0",
+            "LION_CP_REPOSITORY_ROOT": str(repo_root),
+            "LION_CP_DATABASE_PATH": self.authority_path,
         }
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.store_index = 0
 
     def _source(self):
         with patch.dict("os.environ", self.env, clear=True):
             return PinnedTrustedBuilderSubjectSource()
 
-    def _issuance_source(self, permit=None, *, empty=False):
-        self.store_index += 1
-        store = SQLiteAuthorityStateStore(os.path.join(self.tmp.name, f"authority-{self.store_index}.sqlite"))
-        if not empty:
-            store.record_builder_entry_issuance(issuance_record(permit or entry_permit()))
-        return PersistentBuilderEntryIssuanceSource(store)
+    def _canonical_store(self):
+        return SQLiteAuthorityStateStore(self.authority_path)
 
-    def _engine(self, *, base=None, f005=None, replay=None, provenance_permit=None, source_issuance=None):
+    def _seed_issuance(self, permit=None):
+        value = permit or entry_permit()
+        self._canonical_store().record_builder_entry_issuance(issuance_record(value))
+        return value
+
+    def _engine(self, *, base=None, f005=None, replay=None, provenance_permit=None, seed=True):
         live = object.__new__(LiveResourceAuthorityAdmission)
-        return BuilderInvocationPermitEngine(
-            live_authority=live,
-            baseline_source=BaselineSource(base or baseline()),
-            f005_state_source=f005 or F005(),
-            builder_source=self._source(),
-            replay_guard=replay or Replay(),
-            source_issuance=source_issuance or self._issuance_source(provenance_permit or entry_permit()),
-        )
+        if seed:
+            self._seed_issuance(provenance_permit or entry_permit())
+        with patch.dict("os.environ", self.env, clear=True):
+            return BuilderInvocationPermitEngine(
+                live_authority=live,
+                baseline_source=BaselineSource(base or baseline()),
+                f005_state_source=f005 or F005(),
+                builder_source=self._source(),
+                replay_guard=replay or Replay(),
+            )
 
     def _issue(self, engine, *, receipt=None, builder=None, permit=None):
         receipt = receipt or live_receipt()
@@ -240,11 +249,29 @@ class BuilderInvocationPermitEngineTests(unittest.TestCase):
 
     def test_missing_source_issuance_denied_before_replay(self):
         replay = Replay()
-        source = self._issuance_source(empty=True)
-        engine = self._engine(replay=replay, source_issuance=source)
+        engine = self._engine(replay=replay, seed=False)
         with self.assertRaises(BuilderInvocationPermitError):
             self._issue(engine)
         self.assertEqual(replay.calls, 0)
+
+    def test_caller_created_fake_issuance_store_and_source_cannot_be_injected(self):
+        forged = entry_permit()
+        fake_store = SQLiteAuthorityStateStore(str(Path(self.tmp.name) / "fake.sqlite"))
+        fake_store.record_builder_entry_issuance(issuance_record(forged))
+        with self.assertRaises(TypeError):
+            PersistentBuilderEntryIssuanceSource(fake_store)
+        live = object.__new__(LiveResourceAuthorityAdmission)
+        with patch.dict("os.environ", self.env, clear=True):
+            fake_source = PersistentBuilderEntryIssuanceSource()
+            with self.assertRaises(TypeError):
+                BuilderInvocationPermitEngine(
+                    live_authority=live,
+                    baseline_source=BaselineSource(baseline()),
+                    f005_state_source=F005(),
+                    builder_source=self._source(),
+                    replay_guard=Replay(),
+                    source_issuance=fake_source,
+                )
 
     def test_baseline_drift_denied_before_replay_burn(self):
         replay = Replay(); engine = self._engine(base=baseline(sha="0" * 40), replay=replay)
@@ -266,10 +293,11 @@ class BuilderInvocationPermitEngineTests(unittest.TestCase):
         self.assertEqual(replay.calls, 0)
 
     def test_expired_builder_subject_denied_before_replay_burn(self):
-        replay = Replay(); engine = self._engine(replay=replay)
-        expired = subject(expires="2026-08-25T08:24:59+00:00")
+        replay = Replay(); expired = subject(expires="2026-08-25T08:24:59+00:00")
+        permit = entry_permit(builder=expired)
+        engine = self._engine(replay=replay, provenance_permit=permit)
         with self.assertRaises(BuilderInvocationPermitError):
-            self._issue(engine, builder=expired, permit=entry_permit(builder=expired))
+            self._issue(engine, builder=expired, permit=permit)
         self.assertEqual(replay.calls, 0)
 
     def test_F005_drift_denied_before_replay_burn(self):
