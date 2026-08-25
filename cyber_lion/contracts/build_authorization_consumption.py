@@ -1,0 +1,168 @@
+"""Immutable non-effectful permit for single-use candidate-build authorization consumption."""
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from hashlib import sha256
+import json
+import re
+from pathlib import PurePosixPath
+from typing import Any, Tuple
+
+SCHEMA_VERSION = "1.0.0"
+_DOMAIN = b"LION/E004-BUILD-AUTHORIZATION-CONSUMPTION-PERMIT/1\0"
+_SHA40 = re.compile(r"^[0-9a-f]{40}$")
+_SHA64 = re.compile(r"^[0-9a-f]{64}$")
+_SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,511}$")
+_REPOSITORY = re.compile(r"^[^/\s]+/[^/\s]+$")
+
+
+class BuildAuthorizationConsumptionContractError(ValueError):
+    pass
+
+
+def canonical_json(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def _text(value: Any, name: str, limit: int = 4096) -> str:
+    if not isinstance(value, str) or not value.strip() or len(value) > limit or "\x00" in value:
+        raise BuildAuthorizationConsumptionContractError(f"{name} invalid")
+    return value
+
+
+def _id(value: Any, name: str) -> str:
+    value = _text(value, name, 512)
+    if not _SAFE_ID.fullmatch(value):
+        raise BuildAuthorizationConsumptionContractError(f"{name} invalid")
+    return value
+
+
+def _digest(value: Any, name: str) -> str:
+    value = _text(value, name, 64)
+    if not _SHA64.fullmatch(value):
+        raise BuildAuthorizationConsumptionContractError(f"{name} must be sha256 hex")
+    return value
+
+
+def _sha(value: Any, name: str) -> str:
+    value = _text(value, name, 40)
+    if not _SHA40.fullmatch(value):
+        raise BuildAuthorizationConsumptionContractError(f"{name} must be git sha")
+    return value
+
+
+def _repository(value: Any) -> str:
+    value = _text(value, "repository", 512)
+    if not _REPOSITORY.fullmatch(value):
+        raise BuildAuthorizationConsumptionContractError("repository invalid")
+    return value
+
+
+def _paths(values: Any, name: str) -> Tuple[str, ...]:
+    if type(values) is not tuple or not values or len(set(values)) != len(values):
+        raise BuildAuthorizationConsumptionContractError(f"{name} must be unique non-empty tuple")
+    for raw in values:
+        _text(raw, name, 2048)
+        if "\\" in raw or any(c in raw for c in "*?[]"):
+            raise BuildAuthorizationConsumptionContractError(f"{name} unsafe")
+        p = PurePosixPath(raw)
+        if p.is_absolute() or ".." in p.parts or str(p) in {"", "."} or str(p) != raw:
+            raise BuildAuthorizationConsumptionContractError(f"{name} unsafe")
+    return values
+
+
+def canonical_repo_path_resource(repository: str, path: str) -> str:
+    _repository(repository); _paths((path,), "path")
+    return f"repo-path:{repository}:{path}"
+
+
+@dataclass(frozen=True)
+class BuildAuthorizationConsumptionPermit:
+    schema_version: str
+    consumption_permit_id: str
+    authorization_id: str
+    authorization_digest: str
+    issuance_replay_digest: str
+    repository: str
+    baseline_master_sha: str
+    baseline_master_tree_sha: str
+    baseline_observation_digest: str
+    action: str
+    candidate_scope: Tuple[str, ...]
+    resource_scope: Tuple[str, ...]
+    grant_id: str
+    leaf_grant_digest: str
+    authority_lineage_digest: str
+    authority_provenance_id: str
+    authority_epoch: int
+    authority_state_version: int
+    root_grant_id: str
+    root_grant_digest: str
+    live_admission_digest: str
+    authorization_valid_from: str
+    authorization_expires_at: str
+    checked_at: str
+    current_baseline_digest: str
+    current_authority_digest: str
+    consumption_replay_digest: str
+    state: str = "CONSUMPTION_PERMIT_ISSUED"
+    authority_effect: str = "NONE"
+    execution_effect: str = "NONE"
+    repository_ref_effect: str = "NONE"
+    external_effect: str = "NONE"
+    consumption_permit_digest: str = ""
+
+    def canonical_payload(self) -> dict[str, Any]:
+        value = asdict(self)
+        value.pop("consumption_permit_digest")
+        value["candidate_scope"] = list(self.candidate_scope)
+        value["resource_scope"] = list(self.resource_scope)
+        return value
+
+    def compute_digest(self) -> str:
+        return sha256(_DOMAIN + canonical_json(self.canonical_payload())).hexdigest()
+
+    def validate(self) -> "BuildAuthorizationConsumptionPermit":
+        if self.schema_version != SCHEMA_VERSION:
+            raise BuildAuthorizationConsumptionContractError("unsupported schema")
+        for name in ("consumption_permit_id", "authorization_id", "grant_id", "root_grant_id"):
+            _id(getattr(self, name), name)
+        for name in (
+            "authorization_digest", "issuance_replay_digest", "baseline_observation_digest",
+            "leaf_grant_digest", "authority_lineage_digest", "root_grant_digest",
+            "live_admission_digest", "current_baseline_digest", "current_authority_digest",
+            "consumption_replay_digest",
+        ):
+            _digest(getattr(self, name), name)
+        if self.consumption_permit_id != f"cbcp:{self.consumption_replay_digest}":
+            raise BuildAuthorizationConsumptionContractError("permit id must derive from consumption replay digest")
+        _repository(self.repository)
+        _sha(self.baseline_master_sha, "baseline_master_sha")
+        _sha(self.baseline_master_tree_sha, "baseline_master_tree_sha")
+        _paths(self.candidate_scope, "candidate_scope")
+        expected_resources = tuple(canonical_repo_path_resource(self.repository, p) for p in self.candidate_scope)
+        if self.resource_scope != expected_resources:
+            raise BuildAuthorizationConsumptionContractError("resource_scope must exactly project candidate_scope")
+        if self.action != "BUILD_CANDIDATE":
+            raise BuildAuthorizationConsumptionContractError("action must be BUILD_CANDIDATE")
+        if isinstance(self.authority_epoch, bool) or not isinstance(self.authority_epoch, int) or self.authority_epoch < 0:
+            raise BuildAuthorizationConsumptionContractError("authority_epoch invalid")
+        if isinstance(self.authority_state_version, bool) or not isinstance(self.authority_state_version, int) or self.authority_state_version < 1:
+            raise BuildAuthorizationConsumptionContractError("authority_state_version invalid")
+        for name in ("authority_provenance_id", "authorization_valid_from", "authorization_expires_at", "checked_at"):
+            _text(getattr(self, name), name, 1024)
+        if self.state != "CONSUMPTION_PERMIT_ISSUED":
+            raise BuildAuthorizationConsumptionContractError("state invalid")
+        if (self.authority_effect, self.execution_effect, self.repository_ref_effect, self.external_effect) != ("NONE", "NONE", "NONE", "NONE"):
+            raise BuildAuthorizationConsumptionContractError("permit cannot carry effects")
+        if self.consumption_permit_digest:
+            _digest(self.consumption_permit_digest, "consumption_permit_digest")
+            if self.consumption_permit_digest != self.compute_digest():
+                raise BuildAuthorizationConsumptionContractError("permit digest mismatch")
+        return self
+
+    def sealed(self) -> "BuildAuthorizationConsumptionPermit":
+        self.validate()
+        return BuildAuthorizationConsumptionPermit(
+            **{**asdict(self), "consumption_permit_digest": self.compute_digest()}
+        ).validate()
