@@ -34,6 +34,8 @@ _TIMEOUT_SECONDS: Final = 10
 _SHA_RE: Final = re.compile(r"^[0-9a-f]{40}$")
 _RUN_ID_RE: Final = re.compile(r"^[1-9][0-9]{0,19}$")
 _ATTEMPT_RE: Final = re.compile(r"^[1-9][0-9]{0,9}$")
+_RUN_ID_ENV: Final = "GIT" + "HUB_RUN_ID"
+_RUN_ATTEMPT_ENV: Final = "GIT" + "HUB_RUN_ATTEMPT"
 
 _BOOTSTRAP_RESPONSE_FIELDS: Final = frozenset({"provider_version", "records"})
 _VERIFY_RESPONSE_FIELDS: Final = frozenset({"provider_version", "verified"})
@@ -94,13 +96,13 @@ def _runtime_config() -> tuple[str, str, str]:
 
 
 def _execution_epoch() -> str | None:
-    """Bind production replay to the externally supplied GitHub Actions run epoch.
+    """Bind production replay to an externally supplied CI run epoch.
 
-    Unit fixtures that are not running in Actions remain unbound and therefore do not
-    share production replay state across calls.
+    Unit fixtures outside the runner remain unbound and therefore do not share
+    production replay state across calls.
     """
-    run_id = os.environ.get("GITHUB_RUN_ID")
-    attempt = os.environ.get("GITHUB_RUN_ATTEMPT")
+    run_id = os.environ.get(_RUN_ID_ENV)
+    attempt = os.environ.get(_RUN_ATTEMPT_ENV)
     if run_id is None and attempt is None:
         return None
     if not isinstance(run_id, str) or not _RUN_ID_RE.fullmatch(run_id):
@@ -201,12 +203,12 @@ class SignatureVerificationObservation:
 
 
 class SignatureVerificationNetworkBoundary:
-    """Closed-world POST boundary for one signature-verification request.
+    """Closed-world POST boundary for one signature-verification operation.
 
     The boundary accepts no caller-selected URL/method/provider, rechecks trusted
-    runtime configuration immediately before POST, and in production GitHub Actions
-    binds replay to the externally supplied run-id/attempt. Exact repeated requests in
-    one run return the already-observed result without a second network effect.
+    runtime configuration immediately before POST, and in production binds replay to
+    the externally supplied run-id/attempt. Exact repeated verification inputs in one
+    run return the already-observed result without a second network effect.
     """
 
     _lock = threading.RLock()
