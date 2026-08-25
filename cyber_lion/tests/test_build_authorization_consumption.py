@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import unittest
 from unittest.mock import patch
 
+from cyber_lion.contracts.build_authorization_consumption import compute_consumption_replay_digest
 from cyber_lion.contracts.candidate_build_authorization import (
     BoundedCandidateBuildAuthorization,
     TrustedRepositoryBaseline,
@@ -143,7 +144,34 @@ class BuildAuthorizationConsumptionTests(unittest.TestCase):
         engine, admission, _ = make_engine(live, baseline)
         with patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live):
             permit = engine.issue_permit(authorization=auth, admitted_authority=live, trusted_now=NOW)
+        expected_replay = compute_consumption_replay_digest(
+            authorization_id=auth.authorization_id,
+            authorization_digest=auth.authorization_digest,
+            issuance_replay_digest=auth.issuance_replay_digest,
+            repository=auth.repository,
+            baseline_master_sha=auth.baseline_master_sha,
+            baseline_master_tree_sha=auth.baseline_master_tree_sha,
+            baseline_observation_digest=auth.baseline_observation_digest,
+            current_baseline_digest=baseline.digest(),
+            candidate_scope=auth.candidate_scope,
+            resource_scope=auth.resource_scope,
+            action="BUILD_CANDIDATE",
+            grant_id=auth.grant_id,
+            leaf_grant_digest=auth.leaf_grant_digest,
+            authority_lineage_digest=auth.authority_lineage_digest,
+            authority_provenance_id=auth.authority_provenance_id,
+            authority_epoch=auth.authority_epoch,
+            authority_state_version=auth.authority_state_version,
+            root_grant_id=auth.root_grant_id,
+            root_grant_digest=auth.root_grant_digest,
+            live_admission_digest=auth.live_admission_digest,
+            current_authority_digest=live.digest(),
+            authorization_valid_from=auth.valid_from,
+            authorization_expires_at=auth.expires_at,
+        )
         self.assertEqual(permit.authorization_digest, auth.authorization_digest)
+        self.assertEqual(permit.consumption_replay_digest, expected_replay)
+        self.assertEqual(permit.consumption_replay_digest, permit.compute_consumption_replay_digest())
         self.assertEqual(permit.consumption_permit_id, f"cbcp:{permit.consumption_replay_digest}")
         self.assertEqual((permit.authority_effect, permit.execution_effect, permit.repository_ref_effect, permit.external_effect), ("NONE", "NONE", "NONE", "NONE"))
         engine.assert_no_effect_surface()
@@ -159,10 +187,11 @@ class BuildAuthorizationConsumptionTests(unittest.TestCase):
     def test_baseline_sha_and_tree_drift_denied(self):
         live = make_live(); old = make_baseline(); auth = make_authorization(live, old)
         for drift in (make_baseline(master_sha="f" * 40), make_baseline(master_tree_sha="e" * 40)):
-            engine, _, _ = make_engine(live, drift)
+            replay = ReplayGuard(); engine, _, _ = make_engine(live, drift, replay=replay)
             with patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live):
                 with self.assertRaisesRegex(BuildAuthorizationConsumptionError, "baseline stale"):
                     engine.issue_permit(authorization=auth, admitted_authority=live, trusted_now=NOW)
+            self.assertEqual(replay.seen, set())
 
     def test_authority_epoch_state_root_and_lineage_substitution_denied(self):
         base_live = make_live(); baseline = make_baseline(); auth = make_authorization(base_live, baseline)
@@ -172,27 +201,31 @@ class BuildAuthorizationConsumptionTests(unittest.TestCase):
             make_live(provenance_id="trusted-control-plane:other"),
         )
         for current in variants:
-            engine, _, _ = make_engine(base_live, baseline)
+            replay = ReplayGuard(); engine, _, _ = make_engine(base_live, baseline, replay=replay)
             with patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=current):
                 with self.assertRaisesRegex(BuildAuthorizationConsumptionError, "binding mismatch"):
                     engine.issue_permit(authorization=auth, admitted_authority=base_live, trusted_now=NOW)
+            self.assertEqual(replay.seen, set())
 
     def test_revoked_or_expired_revalidation_failure_denied(self):
         live = make_live(); baseline = make_baseline(); auth = make_authorization(live, baseline)
-        engine, _, _ = make_engine(live, baseline)
+        replay = ReplayGuard(); engine, _, _ = make_engine(live, baseline, replay=replay)
         with patch.object(LiveResourceAuthorityAdmission, "revalidate", side_effect=RuntimeError("revoked")):
             with self.assertRaisesRegex(BuildAuthorizationConsumptionError, "revalidation failed"):
                 engine.issue_permit(authorization=auth, admitted_authority=live, trusted_now=NOW)
+        self.assertEqual(replay.seen, set())
         expired = make_authorization(live, baseline, expires_at="2026-08-25T00:59:00+00:00")
         with self.assertRaisesRegex(BuildAuthorizationConsumptionError, "expired"):
             engine.issue_permit(authorization=expired, admitted_authority=live, trusted_now=NOW)
+        self.assertEqual(replay.seen, set())
 
-    def test_f005_dependency_injection_denied(self):
-        live = make_live(); baseline = make_baseline(); auth = make_authorization(live, baseline)
-        engine, _, _ = make_engine(live, baseline, f005={"state": "ACTIVE", "effect_authority": "ALLOW"})
+    def test_f005_dependency_injection_denied_before_replay(self):
+        live = make_live(); baseline = make_baseline(); auth = make_authorization(live, baseline); replay = ReplayGuard()
+        engine, _, _ = make_engine(live, baseline, f005={"state": "ACTIVE", "effect_authority": "ALLOW"}, replay=replay)
         with patch.object(LiveResourceAuthorityAdmission, "revalidate", return_value=live):
             with self.assertRaisesRegex(BuildAuthorizationConsumptionError, "F005 quarantine"):
                 engine.issue_permit(authorization=auth, admitted_authority=live, trusted_now=NOW)
+        self.assertEqual(replay.seen, set())
 
     def test_authorization_substitution_denied_before_replay(self):
         live = make_live(); baseline = make_baseline(); auth = make_authorization(live, baseline)
