@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import importlib
 import io
 import json
 import os
@@ -13,6 +14,7 @@ from cyber_lion.contracts.builder_entry_permit import BUILDER_CAPABILITY_CLASS, 
 from cyber_lion.contracts.build_authorization_consumption import BuildAuthorizationConsumptionPermit, SCHEMA_VERSION as CVER, compute_consumption_replay_digest
 from cyber_lion.contracts.candidate_build_authorization import TrustedRepositoryBaseline
 import cyber_lion.enterprise.builder_entry_permit as bep
+import cyber_lion.enterprise.trusted_control_plane_runtime as runtime
 from cyber_lion.enterprise.builder_entry_permit import (
     BuilderEntryPermitEngine,
     BuilderEntryPermitError,
@@ -97,6 +99,8 @@ class FakeHTTPResponse:
 
 class BuilderEntryPermitEngineTests(unittest.TestCase):
     def setUp(self):
+        # Each unit test models a fresh process lifetime for the canonical origin anchor.
+        importlib.reload(runtime)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         repo_root = Path(self.tmp.name) / "repo"
