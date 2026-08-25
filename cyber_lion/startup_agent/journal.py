@@ -1,7 +1,8 @@
 """Append-only JSONL journal for startup evolution state.
 
 This is a local persistence primitive for reproducible development and replay. It stores
-explicit state snapshots and deltas; it does not infer missing history.
+explicit state snapshots and deltas; it does not infer missing history. Persistent writes
+are mediated by the R9D-2 local persistence boundary.
 """
 from __future__ import annotations
 
@@ -11,16 +12,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List
 
+from .local_persistence import LocalPersistenceBoundary, LocalPersistenceGate
 from .models import EvolutionState, VentureVector
 
 
 class EvolutionJournal:
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, *, persistence: LocalPersistenceBoundary | None = None) -> None:
         self.path = Path(path)
+        self._persistence = persistence or LocalPersistenceBoundary()
 
-    def append(self, state: EvolutionState) -> None:
+    @staticmethod
+    def encode_record(state: EvolutionState) -> bytes:
         state.validate()
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         record = {
             "startup_id": state.startup_id,
             "cycle": state.cycle,
@@ -34,8 +37,11 @@ class EvolutionJournal:
             "blockers": list(state.blockers),
             "created_at": state.created_at.isoformat(),
         }
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        return (json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+
+    def append(self, state: EvolutionState, *, gate: LocalPersistenceGate) -> None:
+        payload = self.encode_record(state)
+        self._persistence.append(target=self.path, payload=payload, purpose="startup-evolution-journal-append", gate=gate)
 
     def read_records(self) -> List[dict]:
         if not self.path.exists():
