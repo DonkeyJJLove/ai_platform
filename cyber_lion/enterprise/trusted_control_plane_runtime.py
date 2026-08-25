@@ -144,7 +144,7 @@ def _canonical_json(value: object) -> bytes:
 
 
 def observe_authority_state_store_origin() -> PersistentAuthorityStoreOrigin:
-    """Observe the candidate canonical origin from trusted process configuration."""
+    """Observe a candidate origin. Observation never refreshes process authority."""
     _runtime_version()
     repository_root = _repository_root()
     database_path = _database_path()
@@ -165,6 +165,44 @@ def observe_authority_state_store_origin() -> PersistentAuthorityStoreOrigin:
     ).validate()
 
 
+def _make_process_origin_anchor():
+    anchored: list[PersistentAuthorityStoreOrigin] = []
+
+    def register_once(origin: PersistentAuthorityStoreOrigin) -> PersistentAuthorityStoreOrigin:
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise TrustedControlPlaneRuntimeError("process authority-store origin type invalid")
+        origin.validate()
+        if anchored:
+            raise TrustedControlPlaneRuntimeError("process authority-store origin already registered")
+        anchored.append(origin)
+        return origin
+
+    def pin_or_verify(origin: PersistentAuthorityStoreOrigin) -> PersistentAuthorityStoreOrigin:
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise TrustedControlPlaneRuntimeError("process authority-store origin type invalid")
+        origin.validate()
+        if not anchored:
+            anchored.append(origin)
+            return origin
+        if anchored[0] != origin:
+            raise TrustedControlPlaneRuntimeError("process authority-store origin drift")
+        return anchored[0]
+
+    def verify(origin: PersistentAuthorityStoreOrigin) -> PersistentAuthorityStoreOrigin:
+        if type(origin) is not PersistentAuthorityStoreOrigin:
+            raise TrustedControlPlaneRuntimeError("process authority-store origin type invalid")
+        origin.validate()
+        if not anchored or anchored[0] != origin:
+            raise TrustedControlPlaneRuntimeError("process authority-store origin mismatch")
+        return anchored[0]
+
+    return register_once, pin_or_verify, verify
+
+
+_register_process_authority_store_origin_once, _pin_or_verify_process_authority_store_origin, _verify_process_authority_store_origin = _make_process_origin_anchor()
+del _make_process_origin_anchor
+
+
 def _authority_state_store_for_origin(origin: PersistentAuthorityStoreOrigin) -> SQLiteAuthorityStateStore:
     try:
         store = SQLiteAuthorityStateStore(origin.canonical_database_path)
@@ -176,51 +214,56 @@ def _authority_state_store_for_origin(origin: PersistentAuthorityStoreOrigin) ->
 
 
 def register_authority_state_store_origin_once() -> PersistentAuthorityStoreOrigin:
-    """Persist the first canonical authority-store origin; duplicate registration is denied."""
-    origin = observe_authority_state_store_origin()
-    store = _authority_state_store_for_origin(origin)
+    """Explicitly register the first process and durable origin exactly once."""
+    observed = observe_authority_state_store_origin()
+    process_origin = _register_process_authority_store_origin_once(observed)
+    store = _authority_state_store_for_origin(process_origin)
     try:
-        return store.register_authority_store_origin(origin)
+        durable = store.register_authority_store_origin(process_origin)
     except PersistentAuthorityStateError as exc:
         raise TrustedControlPlaneRuntimeError("canonical authority-state origin registration denied") from exc
+    if durable != process_origin:
+        raise TrustedControlPlaneRuntimeError("canonical authority-state origin registration mismatch")
+    return process_origin
 
 
 def verify_authority_state_store_origin(
     expected_origin: PersistentAuthorityStoreOrigin | None = None,
 ) -> PersistentAuthorityStoreOrigin:
-    """Reobserve configuration and prove it matches the durable and optional caller-held anchor."""
+    """Reobserve and verify against the immutable process anchor before store access."""
     observed = observe_authority_state_store_origin()
+    process_origin = _pin_or_verify_process_authority_store_origin(observed)
     if expected_origin is not None:
         if type(expected_origin) is not PersistentAuthorityStoreOrigin:
             raise TrustedControlPlaneRuntimeError("canonical authority-state expected origin invalid")
         expected_origin.validate()
-        if observed != expected_origin:
-            raise TrustedControlPlaneRuntimeError("canonical authority-state origin drift")
-    store = _authority_state_store_for_origin(observed)
+        if process_origin != expected_origin:
+            raise TrustedControlPlaneRuntimeError("canonical authority-state origin mismatch")
+    store = _authority_state_store_for_origin(process_origin)
     try:
-        anchored = store.resolve_authority_store_origin()
+        durable = store.resolve_authority_store_origin()
     except PersistentAuthorityStateError as exc:
         raise TrustedControlPlaneRuntimeError("canonical authority-state origin is not registered") from exc
-    if anchored != observed:
+    if durable != process_origin:
         raise TrustedControlPlaneRuntimeError("canonical authority-state origin drift")
-    if expected_origin is not None and anchored != expected_origin:
-        raise TrustedControlPlaneRuntimeError("canonical authority-state origin mismatch")
-    return anchored
+    return durable
 
 
 def _ensure_authority_state_store_origin() -> tuple[PersistentAuthorityStoreOrigin, SQLiteAuthorityStateStore]:
     observed = observe_authority_state_store_origin()
-    store = _authority_state_store_for_origin(observed)
+    process_origin = _pin_or_verify_process_authority_store_origin(observed)
+    store = _authority_state_store_for_origin(process_origin)
     try:
-        anchored = store.resolve_authority_store_origin()
+        durable = store.resolve_authority_store_origin()
     except PersistentAuthorityStateError:
         try:
-            anchored = store.register_authority_store_origin(observed)
+            durable = store.register_authority_store_origin(process_origin)
         except PersistentAuthorityStateError as exc:
             raise TrustedControlPlaneRuntimeError("canonical authority-state origin registration denied") from exc
-    if anchored != observed:
+    if durable != process_origin:
         raise TrustedControlPlaneRuntimeError("canonical authority-state origin drift")
-    return anchored, store
+    _verify_process_authority_store_origin(durable)
+    return process_origin, store
 
 
 def build_store() -> SQLiteTrustedControlPlaneStore:
@@ -237,7 +280,7 @@ def build_store() -> SQLiteTrustedControlPlaneStore:
 
 
 def build_authority_state_store() -> SQLiteAuthorityStateStore:
-    """Build the canonical authority-state store from its durable one-way origin anchor."""
+    """Build the authority-state store only from the process-anchored origin."""
     origin, store = _ensure_authority_state_store_origin()
     verified = verify_authority_state_store_origin(origin)
     if verified != origin:
