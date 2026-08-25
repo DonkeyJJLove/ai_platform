@@ -109,10 +109,10 @@ class BeanContractTests(unittest.TestCase):
         for field in ("grant", "credential", "authority_effect", "execution_effect", "repository_ref_effect", "external_effect"):
             self.assertFalse(hasattr(spec, field))
 
-    def test_self_parent_is_denied(self):
-        spec = self.spec().validate()
+    def test_duplicate_lineage_parent_is_denied(self):
+        parent = "4" * 64
         with self.assertRaises(BeanContractError):
-            replace(spec, lineage_parent_digests=(spec.spec_digest(),)).validate()
+            self.spec(lineage_parent_digests=(parent, parent)).validate()
 
     def test_instance_exact_binding_passes(self):
         spec = self.spec().validate()
