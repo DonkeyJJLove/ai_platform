@@ -280,27 +280,52 @@ class DurableMoonFileWriteFence:
                 raise MoonFileWriteMediationError("durable file-write replay denied") from exc
         return self.get(record.effect_key)
 
-    def _transition(self, effect_key: str, old: str, new: str, assignments: str, values: tuple[object, ...]) -> MoonFileWriteFenceRecord:
+    def mark_attempted(self, effect_key: str, when: str) -> MoonFileWriteFenceRecord:
+        _hex64(effect_key, "effect_key")
         with self._lock, self._connect() as c:
-            cur = c.execute(f"UPDATE moon_file_write_effect SET state='{new}'{assignments} WHERE effect_key=? AND state='{old}'", (*values, effect_key))
+            cur = c.execute(
+                "UPDATE moon_file_write_effect SET state='ATTEMPTED',attempted_at=? "
+                "WHERE effect_key=? AND state='PREPARED' AND attempted_at IS NULL",
+                (when, effect_key),
+            )
             if cur.rowcount != 1:
-                raise MoonFileWriteMediationError(f"effect cannot enter {new}")
+                raise MoonFileWriteMediationError("effect cannot enter ATTEMPTED")
         return self.get(effect_key)
 
-    def mark_attempted(self, effect_key: str, when: str):
-        return self._transition(effect_key, "PREPARED", "ATTEMPTED", ",attempted_at=?", (when,))
-
-    def mark_observed(self, effect_key: str, when: str, digest: str):
+    def mark_observed(self, effect_key: str, when: str, digest: str) -> MoonFileWriteFenceRecord:
+        _hex64(effect_key, "effect_key")
         _hex64(digest, "post_observation_digest")
-        return self._transition(effect_key, "ATTEMPTED", "OBSERVED", ",observed_at=?,post_observation_digest=?", (when, digest))
-
-    def mark_reconciled(self, effect_key: str, when: str, digest: str):
-        _hex64(digest, "reconciliation_digest")
-        return self._transition(effect_key, "OBSERVED", "RECONCILED", ",reconciled_at=?,reconciliation_digest=?", (when, digest))
-
-    def mark_unknown(self, effect_key: str):
         with self._lock, self._connect() as c:
-            cur = c.execute("UPDATE moon_file_write_effect SET state='UNKNOWN' WHERE effect_key=? AND state IN ('PREPARED','ATTEMPTED','OBSERVED')", (effect_key,))
+            cur = c.execute(
+                "UPDATE moon_file_write_effect SET state='OBSERVED',observed_at=?,post_observation_digest=? "
+                "WHERE effect_key=? AND state='ATTEMPTED' AND observed_at IS NULL AND post_observation_digest IS NULL",
+                (when, digest, effect_key),
+            )
+            if cur.rowcount != 1:
+                raise MoonFileWriteMediationError("effect cannot enter OBSERVED")
+        return self.get(effect_key)
+
+    def mark_reconciled(self, effect_key: str, when: str, digest: str) -> MoonFileWriteFenceRecord:
+        _hex64(effect_key, "effect_key")
+        _hex64(digest, "reconciliation_digest")
+        with self._lock, self._connect() as c:
+            cur = c.execute(
+                "UPDATE moon_file_write_effect SET state='RECONCILED',reconciled_at=?,reconciliation_digest=? "
+                "WHERE effect_key=? AND state='OBSERVED' AND reconciled_at IS NULL AND reconciliation_digest IS NULL",
+                (when, digest, effect_key),
+            )
+            if cur.rowcount != 1:
+                raise MoonFileWriteMediationError("effect cannot enter RECONCILED")
+        return self.get(effect_key)
+
+    def mark_unknown(self, effect_key: str) -> MoonFileWriteFenceRecord:
+        _hex64(effect_key, "effect_key")
+        with self._lock, self._connect() as c:
+            cur = c.execute(
+                "UPDATE moon_file_write_effect SET state='UNKNOWN' "
+                "WHERE effect_key=? AND state IN ('PREPARED','ATTEMPTED','OBSERVED')",
+                (effect_key,),
+            )
             if cur.rowcount != 1:
                 raise MoonFileWriteMediationError("effect cannot enter UNKNOWN")
         return self.get(effect_key)
