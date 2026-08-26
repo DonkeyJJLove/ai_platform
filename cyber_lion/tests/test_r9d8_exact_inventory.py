@@ -11,6 +11,8 @@ from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
 REPOSITORY = "DonkeyJJLove/ai_platform"
 BASELINE = "7204b69abe45b028b2bad52b6345711adb832d47"
 BASELINE_TREE = "39d1de9966942e93c41eeadad185fd4d60c4bc3b"
+SELECTED_PATH = "cyber_lion/enterprise/repository_maintenance_sandbox.py"
+SELECTED_OLD_UNCLASSIFIED = f"{SELECTED_PATH}:279:self.backend.delete_exact_branch_ref"
 
 
 def _git(*args: str) -> bytes:
@@ -106,6 +108,20 @@ class R9D8ExactInventoryTests(unittest.TestCase):
             }, sort_keys=True, separators=(",", ":")))
         for ref in inventory.unclassified_refs:
             print("R9D8_UNCLASSIFIED " + ref)
+
+        selected = [
+            surface for surface in inventory.surfaces
+            if surface.effect_class == "repository_ref.delete"
+            and SELECTED_PATH in surface.implementation_refs
+            and surface.mutation_kind.endswith("delete_exact_branch_ref")
+        ]
+        self.assertTrue(selected, "selected repository-ref delete must be a classified production surface")
+        self.assertTrue(all(surface.authority_class == "external_write" for surface in selected))
+        self.assertTrue(all(surface.target_class == "external" for surface in selected))
+        self.assertFalse(
+            any("repository_maintenance_sandbox.py" in ref and "delete_exact_branch_ref" in ref for ref in inventory.unclassified_refs),
+            "selected repository-ref delete must not remain unclassified",
+        )
 
         self.assertEqual(inventory.revision, candidate_revision)
         self.assertEqual(inventory.tree_digest, candidate_tree)
