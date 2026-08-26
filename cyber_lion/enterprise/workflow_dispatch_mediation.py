@@ -3,7 +3,7 @@
 This module contains no authority source. A trusted external composition must supply a
 WorkflowDispatchAdmissionResolver whose admission is already the result of the canonical
 LiveAuthorityAdmission + CanonicalPolicyDecisionPoint chain. Missing trusted composition
-fails closed. Issue comments, actors, GITHUB_TOKEN and CI state are evidence only.
+fails closed. Repository event metadata and CI state are evidence only.
 """
 from __future__ import annotations
 
@@ -106,6 +106,24 @@ class CanonicalWorkflowDispatchAdmission:
         )
         if actual != expected:
             raise WorkflowDispatchMediationError("admission/request binding mismatch")
+
+
+def workflow_dispatch_effect_key(
+    request: DispatchRequest,
+    admission: CanonicalWorkflowDispatchAdmission,
+) -> str:
+    if type(admission) is not CanonicalWorkflowDispatchAdmission:
+        raise WorkflowDispatchMediationError("exact canonical dispatch admission required")
+    admission.validate()
+    _hex64(admission.admission_digest, "admission_digest")
+    admission.binds(request)
+    return _digest(
+        _EFFECT_DOMAIN,
+        {
+            "admission_digest": admission.admission_digest,
+            "request_digest": request.payload_digest(),
+        },
+    )
 
 
 class WorkflowDispatchAdmissionResolver(Protocol):
@@ -359,11 +377,9 @@ class CanonicalWorkflowDispatchMediator:
         if type(admission) is not CanonicalWorkflowDispatchAdmission:
             raise WorkflowDispatchMediationError("exact canonical dispatch admission required")
         admission.validate()
+        _hex64(admission.admission_digest, "admission_digest")
         admission.binds(request)
-        effect_key = _digest(
-            _EFFECT_DOMAIN,
-            {"admission_digest": admission.admission_digest, "request_digest": request_digest},
-        )
+        effect_key = workflow_dispatch_effect_key(request, admission)
         prepared_at = datetime.now(timezone.utc).isoformat()
         self.fence.prepare(
             WorkflowDispatchFenceRecord(
