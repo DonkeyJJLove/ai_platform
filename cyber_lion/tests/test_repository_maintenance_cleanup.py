@@ -43,28 +43,20 @@ class SlashSafeRepositoryMaintenanceBackendTests(unittest.TestCase):
             [("GET", "/repos/DonkeyJJLove/ai_platform/compare/docs/polish-documentation...master")],
         )
 
-    def test_delete_path_preserves_slash_and_is_exact(self):
+    def test_direct_delete_without_exact_admission_is_denied_before_network(self):
         backend = self._backend()
         calls = []
 
         def request(method, path, body=None, *, allow_404=False):
             calls.append((method, path, allow_404))
-            if method == "GET":
-                return 200, {"object": {"sha": "b" * 40}}
-            if method == "DELETE":
-                return 204, None
-            raise AssertionError("unexpected method")
+            raise AssertionError("network must not be reached")
 
         backend._request = request
-        backend.delete_exact_branch_ref("mission/e003-r5-channel-replacement-projection", "b" * 40)
-        self.assertEqual(
-            calls[-1],
-            (
-                "DELETE",
-                "/repos/DonkeyJJLove/ai_platform/git/refs/heads/mission/e003-r5-channel-replacement-projection",
-                False,
-            ),
-        )
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "exact admission required"):
+            backend.delete_exact_branch_ref(
+                "mission/e003-r5-channel-replacement-projection", "b" * 40
+            )
+        self.assertEqual(calls, [])
 
     def test_canonical_compare_routes_are_allowed(self):
         backend = self._backend()

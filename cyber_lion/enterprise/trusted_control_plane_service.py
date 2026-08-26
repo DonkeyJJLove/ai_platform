@@ -19,6 +19,8 @@ PROVIDER_VERSION: Final = "1.0.0"
 _BOOTSTRAP_PATH: Final = "/v1/pr-authority-bootstrap"
 _AUTHORITY_PATH: Final = "/v1/authority-lineage"
 _BUILDER_SUBJECT_PATH: Final = "/v1/builder-subject"
+_MAINTENANCE_POLICY_PATH: Final = "/v1/maintenance-policy"
+_MAINTENANCE_MISSION_PATH: Final = "/v1/maintenance-mission"
 _VERIFY_PATH: Final = "/v1/verify-signature"
 _HEALTH_PATH: Final = "/healthz"
 
@@ -35,6 +37,8 @@ _BUILDER_CAPABILITY: Final = "DETACHED_CANDIDATE_BUILD_ONLY"
 _BOOTSTRAP_QUERY_FIELDS: Final = frozenset({"repository", "pr_number", "base_sha", "head_sha", "merge_method"})
 _AUTHORITY_QUERY_FIELDS: Final = frozenset({"repository", "pr_number", "base_sha", "head_sha", "mission_id", "grant_id"})
 _BUILDER_QUERY_FIELDS: Final = frozenset({"repository", "builder_subject_id", "builder_instance_id", "candidate_scope_digest", "resource_scope_digest", "capability_class"})
+_MAINTENANCE_POLICY_QUERY_FIELDS: Final = frozenset({"repository", "mission_id", "policy_id"})
+_MAINTENANCE_MISSION_QUERY_FIELDS: Final = frozenset({"repository", "mission_id"})
 _VERIFY_BODY_FIELDS: Final = frozenset({"payload_base64", "signature", "key_id", "algorithm"})
 
 
@@ -53,6 +57,14 @@ class TrustedControlPlaneStore(ABC):
 
     @abstractmethod
     def lookup_builder_subject_exact(self, *, repository: str, builder_subject_id: str, builder_instance_id: str, candidate_scope_digest: str, resource_scope_digest: str, capability_class: str) -> tuple[Mapping[str, object], ...]:
+        raise NotImplementedError
+
+    def lookup_maintenance_policy_exact(self, *, repository: str, mission_id: str, policy_id: str) -> tuple[Mapping[str, object], ...]:
+        """Read-only optional capability; implementations must preserve zero/many cardinality."""
+        raise NotImplementedError
+
+    def lookup_maintenance_mission_exact(self, *, repository: str, mission_id: str) -> tuple[Mapping[str, object], ...]:
+        """Read-only optional capability; implementations must preserve zero/many cardinality."""
         raise NotImplementedError
 
     @abstractmethod
@@ -158,6 +170,55 @@ def _canonical_record_tuple(records: object, *, expected_binding: Mapping[str, o
     return tuple(result)
 
 
+def validate_maintenance_policy_record(record: Mapping[str, object], *, expected_binding: Mapping[str, object]) -> Mapping[str, object]:
+    """Strictly decode a trusted maintenance policy record without granting authority."""
+    from cyber_lion.contracts.policy_gate import PolicyRevision
+
+    fields = frozenset({"record_kind", "lookup_key", "revision", "content_digest", "lane", "active", "provenance_ref", "policy_payload"})
+    payload_fields = frozenset({"policy_id", "revision", "content_digest", "lane", "active", "schema_version"})
+    if not isinstance(record, Mapping) or frozenset(record.keys()) != fields or record.get("record_kind") != "maintenance-policy":
+        raise TrustedControlPlaneServiceError("maintenance policy record is invalid")
+    canonical = _canonical_record_tuple((record,), expected_binding=expected_binding)[0]
+    payload = canonical.get("policy_payload")
+    if not isinstance(payload, Mapping) or frozenset(payload.keys()) != payload_fields:
+        raise TrustedControlPlaneServiceError("maintenance policy payload is invalid")
+    try:
+        policy = PolicyRevision(**dict(payload)).validate()
+    except Exception as exc:
+        raise TrustedControlPlaneServiceError("maintenance policy payload is invalid") from exc
+    if policy.policy_id != expected_binding["policy_id"] or canonical["revision"] != policy.revision or canonical["content_digest"] != policy.content_digest or canonical["lane"] != policy.lane or canonical["active"] is not policy.active:
+        raise TrustedControlPlaneServiceError("maintenance policy binding is invalid")
+    _public_text(canonical["provenance_ref"], field_name="maintenance policy provenance")
+    return canonical
+
+
+def validate_maintenance_mission_record(record: Mapping[str, object], *, expected_binding: Mapping[str, object]) -> Mapping[str, object]:
+    """Strictly decode a trusted maintenance mission record without granting authority."""
+    from cyber_lion.enterprise.models import MissionSpec
+
+    fields = frozenset({"record_kind", "lookup_key", "provenance_ref", "mission_payload"})
+    payload_fields = frozenset({"mission_id", "purpose", "required_capabilities", "authority_ceiling", "risk_class", "max_agents", "observability_quorum", "require_independent_verifier", "max_total_cost_units"})
+    if not isinstance(record, Mapping) or frozenset(record.keys()) != fields or record.get("record_kind") != "maintenance-mission":
+        raise TrustedControlPlaneServiceError("maintenance mission record is invalid")
+    canonical = _canonical_record_tuple((record,), expected_binding=expected_binding)[0]
+    payload = canonical.get("mission_payload")
+    if not isinstance(payload, Mapping) or frozenset(payload.keys()) != payload_fields:
+        raise TrustedControlPlaneServiceError("maintenance mission payload is invalid")
+    normalized = dict(payload)
+    caps = normalized.get("required_capabilities")
+    if type(caps) is not list:
+        raise TrustedControlPlaneServiceError("maintenance mission capabilities are invalid")
+    normalized["required_capabilities"] = tuple(caps)
+    try:
+        mission = MissionSpec(**normalized).validate()
+    except Exception as exc:
+        raise TrustedControlPlaneServiceError("maintenance mission payload is invalid") from exc
+    if mission.mission_id != expected_binding["mission_id"]:
+        raise TrustedControlPlaneServiceError("maintenance mission binding is invalid")
+    _public_text(canonical["provenance_ref"], field_name="maintenance mission provenance")
+    return canonical
+
+
 class TrustedControlPlaneService:
     __slots__ = ("_store", "_verifier", "_credential")
 
@@ -229,6 +290,33 @@ class TrustedControlPlaneService:
                     return ServiceResponse(503, {"status": "ERROR", "error": "NOT_READY", "provider_version": PROVIDER_VERSION}).validate()
                 canonical = _canonical_record_tuple(self._store.lookup_builder_subject_exact(**binding), expected_binding=binding)
                 return ServiceResponse(200, {"provider_version": PROVIDER_VERSION, "records": list(canonical)}).validate()
+
+            if parsed.path == _MAINTENANCE_POLICY_PATH:
+                if method != "GET" or body:
+                    raise TrustedControlPlaneServiceError("maintenance policy request is invalid")
+                q = _exact_query(parsed.query, _MAINTENANCE_POLICY_QUERY_FIELDS)
+                binding = {
+                    "repository": _public_text(q["repository"], field_name="repository"),
+                    "mission_id": _public_text(q["mission_id"], field_name="mission_id"),
+                    "policy_id": _public_text(q["policy_id"], field_name="policy_id"),
+                }
+                records = self._store.lookup_maintenance_policy_exact(**binding)
+                canonical = _canonical_record_tuple(records, expected_binding=binding)
+                validated = tuple(validate_maintenance_policy_record(record, expected_binding=binding) for record in canonical)
+                return ServiceResponse(200, {"provider_version": PROVIDER_VERSION, "records": list(validated)}).validate()
+
+            if parsed.path == _MAINTENANCE_MISSION_PATH:
+                if method != "GET" or body:
+                    raise TrustedControlPlaneServiceError("maintenance mission request is invalid")
+                q = _exact_query(parsed.query, _MAINTENANCE_MISSION_QUERY_FIELDS)
+                binding = {
+                    "repository": _public_text(q["repository"], field_name="repository"),
+                    "mission_id": _public_text(q["mission_id"], field_name="mission_id"),
+                }
+                records = self._store.lookup_maintenance_mission_exact(**binding)
+                canonical = _canonical_record_tuple(records, expected_binding=binding)
+                validated = tuple(validate_maintenance_mission_record(record, expected_binding=binding) for record in canonical)
+                return ServiceResponse(200, {"provider_version": PROVIDER_VERSION, "records": list(validated)}).validate()
 
             if parsed.path == _VERIFY_PATH:
                 if method != "POST" or parsed.query:

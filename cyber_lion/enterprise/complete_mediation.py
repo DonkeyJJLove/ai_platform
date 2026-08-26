@@ -17,8 +17,6 @@ from cyber_lion.contracts.complete_mediation import (
 
 class CompleteMediationError(RuntimeError):pass
 
-# Calls with a direct operational side-effect interpretation.  Generic helper names are
-# deliberately excluded; unknown suspicious calls are retained in unclassified_refs.
 _CALL_CLASSES={
     "subprocess.run":"runtime.tool_execution","subprocess.Popen":"runtime.process_launch",
     "os.system":"runtime.tool_execution","os.execv":"runtime.process_launch","os.execve":"runtime.process_launch",
@@ -46,8 +44,15 @@ def _literal(node):
 def _surface(path:str,line:int,call:str,effect_class:str)->ConsequentialEffectSurface:
     ref=f"{path}:{line}:{call}"
     provider=path.replace("/",".")
-    target="external" if effect_class=="external.network" else ("filesystem" if effect_class.startswith("filesystem") else "runtime")
-    authority="external_write" if effect_class=="external.network" else "local_write"
+    if effect_class in {"external.network","repository_ref.delete"}:
+        target="external"
+        authority="external_write"
+    elif effect_class.startswith("filesystem"):
+        target="filesystem"
+        authority="local_write"
+    else:
+        target="runtime"
+        authority="local_write"
     return ConsequentialEffectSurface(
         surface_id="surface:"+sha256(ref.encode()).hexdigest()[:24],effect_class=effect_class,
         implementation_refs=(path,),entrypoints=(ref,),effect_provider=provider,target_class=target,
@@ -62,7 +67,6 @@ class EffectSurfaceScanner:
         for path in sorted(sources):
             source=sources[path]
             if not isinstance(path,str) or not isinstance(source,str):raise CompleteMediationError("source mapping must be text")
-            # Tests and documentation are evidence about code, not production effect surfaces.
             if "/tests/" in f"/{path}" or path.endswith((".md",".rst",".txt")):continue
             scan_items.append((path,sha256(source.encode("utf-8")).hexdigest()))
             if path.endswith(".py"):
@@ -77,6 +81,7 @@ class EffectSurfaceScanner:
                     if name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
                     elif short in {"write_text","write_bytes"}:effect="filesystem.write"
                     elif short in {"urlopen"}:effect="external.network"
+                    elif short=="delete_exact_branch_ref":effect="repository_ref.delete"
                     elif short in {"execute","executemany"} and node.args:
                         sql=_literal(node.args[0])
                         if sql is not None and _MUTATING_SQL.search(sql):effect="persistent_state.write"
@@ -91,11 +96,9 @@ class EffectSurfaceScanner:
                 for i,line in enumerate(source.splitlines(),1):
                     low=line.lower()
                     if "workflow_dispatch:" in low:
-                        # a trigger is not itself an effect
                         continue
                     if re.search(r"\b(gh\s+(api|pr|release|workflow)|git\s+push|curl\b.*\s-x\s*(post|put|patch|delete))",low):
                         surfaces.append(_surface(path,i,line.strip(),"workflow.external_effect"))
-        # Merge identical code locations/classes deterministically; IDs are location-derived.
         uniq={s.surface_id:s for s in surfaces}
         canonical_scan=json.dumps(scan_items,sort_keys=True,separators=(",",":")).encode()
         scan_digest=sha256(b"LION/EFFECT-SURFACE-SCAN/1\0"+canonical_scan).hexdigest()
