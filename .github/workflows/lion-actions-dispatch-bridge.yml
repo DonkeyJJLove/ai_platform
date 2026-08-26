@@ -21,8 +21,12 @@ jobs:
         startsWith(github.event.comment.body, 'LION-DISPATCH v1') ||
         startsWith(github.event.comment.body, 'LION-OBSERVE v1')
       )
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, lion-trust-client]
     timeout-minutes: 10
+    env:
+      LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_PATH: /opt/lion/trusted-runtime/workflow-dispatch-test/runtime_provider.py
+      LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_DIGEST: ef2dc1c79ed368dded5a2725bedb6e97e3c0b76f1d736f037f43fc739ea6a080
+      LION_WORKFLOW_DISPATCH_FENCE_DATABASE_PATH: /var/lib/lion/fence/workflow-dispatch.sqlite
     steps:
       - name: Checkout exact control-plane implementation
         uses: actions/checkout@v6
@@ -34,6 +38,22 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
+
+      - name: Verify trusted MOON execution context
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_NAME" = "lion-moon-r9d8-test"
+          test -r "$LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_PATH"
+          test "$(sha256sum "$LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_PATH" | awk '{print $1}')" = "$LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_DIGEST"
+          case "$LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_PATH" in
+            "$GITHUB_WORKSPACE"|"$GITHUB_WORKSPACE"/*) exit 1 ;;
+          esac
+          case "$LION_WORKFLOW_DISPATCH_FENCE_DATABASE_PATH" in
+            "$GITHUB_WORKSPACE"|"$GITHUB_WORKSPACE"/*) exit 1 ;;
+          esac
+          test -d "$(dirname "$LION_WORKFLOW_DISPATCH_FENCE_DATABASE_PATH")"
+          test -w "$(dirname "$LION_WORKFLOW_DISPATCH_FENCE_DATABASE_PATH")"
 
       - name: Compile dispatch, observation and failure-receipt boundaries
         run: |

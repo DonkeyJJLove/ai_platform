@@ -52,6 +52,30 @@ class ActionsControlFailureReceiptWorkflowTests(unittest.TestCase):
         self.assertIn('if [ "$rc" -eq 0 ]', text)
         self.assertLess(text.index(shim), text.index(failure))
 
+    def test_dispatch_bridge_is_bound_to_trusted_moon_execution_context(self):
+        text = WORKFLOW.read_text(encoding='utf-8')
+        self.assertIn('runs-on: [self-hosted, linux, lion-trust-client]', text)
+        self.assertNotIn('runs-on: ubuntu-24.04', text)
+        self.assertIn('test "$RUNNER_NAME" = "lion-moon-r9d8-test"', text)
+        self.assertIn(
+            'LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_PATH: '
+            '/opt/lion/trusted-runtime/workflow-dispatch-test/runtime_provider.py',
+            text,
+        )
+        self.assertIn(
+            'LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_DIGEST: '
+            'ef2dc1c79ed368dded5a2725bedb6e97e3c0b76f1d736f037f43fc739ea6a080',
+            text,
+        )
+        self.assertIn(
+            'LION_WORKFLOW_DISPATCH_FENCE_DATABASE_PATH: '
+            '/var/lib/lion/fence/workflow-dispatch.sqlite',
+            text,
+        )
+        self.assertIn('sha256sum "$LION_WORKFLOW_DISPATCH_RUNTIME_MODULE_PATH"', text)
+        self.assertIn('test -w "$(dirname "$LION_WORKFLOW_DISPATCH_FENCE_DATABASE_PATH")"', text)
+        self.assertIn('"$GITHUB_WORKSPACE"/*) exit 1 ;;', text)
+
 
 if __name__ == '__main__':
     unittest.main()
