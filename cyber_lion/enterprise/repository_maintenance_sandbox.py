@@ -58,7 +58,13 @@ class ReplayGuard:
 
 
 class GitHubRepositoryMaintenanceBackend:
-    """Narrow GitHub REST backend. It exposes no generic mutation primitive."""
+    """Read-capable GitHub REST backend; repository mutation is denied here.
+
+    The production ref-delete effect is available only through the separately
+    mediated SlashSafeGitHubRepositoryMaintenanceBackend in
+    repository_maintenance_cleanup.  Keeping this base adapter fail-closed makes
+    the historical CLI/helper path incapable of bypassing the effect boundary.
+    """
 
     def __init__(self, repository: str, token: str, api_url: str = "https://api.github.com") -> None:
         if repository != REPOSITORY:
@@ -221,13 +227,9 @@ class GitHubRepositoryMaintenanceBackend:
 
     def delete_exact_branch_ref(self, branch: str, expected_head: str) -> None:
         validate_branch_name(branch)
-        observed = self.branch_sha(branch)
-        if observed != expected_head:
-            raise RepositoryMaintenanceError("branch head changed before delete")
-        encoded = urllib.parse.quote(branch, safe="")
-        status, _ = self._request("DELETE", f"/repos/{self.repository}/git/refs/heads/{encoded}")
-        if status != 204:
-            raise RepositoryMaintenanceError(f"branch deletion not accepted: {status}")
+        if re.fullmatch(r"[0-9a-f]{40}", expected_head) is None:
+            raise RepositoryMaintenanceError("invalid expected branch head")
+        raise RepositoryMaintenanceError("direct repository ref delete denied; mediated boundary required")
 
 
 class RepositoryMaintenanceSandbox:
