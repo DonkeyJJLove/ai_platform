@@ -11,7 +11,10 @@ from cyber_lion.enterprise.repository_maintenance_cleanup import (
     SlashSafeGitHubRepositoryMaintenanceBackend,
     load_repository_delete_authority,
 )
-from cyber_lion.enterprise.repository_maintenance_sandbox import RepositoryMaintenanceError
+from cyber_lion.enterprise.repository_maintenance_sandbox import (
+    GitHubRepositoryMaintenanceBackend,
+    RepositoryMaintenanceError,
+)
 
 
 class R9D8BRepositoryRefDeleteMediationTests(unittest.TestCase):
@@ -65,10 +68,16 @@ class R9D8BRepositoryRefDeleteMediationTests(unittest.TestCase):
                     checked_out_sha="not-a-sha",
                 )
 
-    def test_direct_backend_delete_is_unrepresentable_without_exact_admission(self):
+    def test_direct_mediated_backend_delete_is_unrepresentable_without_exact_admission(self):
         backend = SlashSafeGitHubRepositoryMaintenanceBackend("DonkeyJJLove/ai_platform", "token")
         backend._request = lambda *args, **kwargs: self.fail("network effect reached")
         with self.assertRaisesRegex(RepositoryMaintenanceError, "exact admission required"):
+            backend.delete_exact_branch_ref("mission/example", "b" * 40)
+
+    def test_historical_base_backend_cannot_delete_or_reach_network(self):
+        backend = GitHubRepositoryMaintenanceBackend("DonkeyJJLove/ai_platform", "token")
+        backend._request = lambda *args, **kwargs: self.fail("network effect reached")
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "mediated boundary required"):
             backend.delete_exact_branch_ref("mission/example", "b" * 40)
 
     def test_scanner_classifies_selected_primitive_as_external_repository_ref_delete(self):
