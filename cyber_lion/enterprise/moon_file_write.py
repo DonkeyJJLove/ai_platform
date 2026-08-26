@@ -9,24 +9,26 @@ import argparse
 import base64
 import binascii
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 import uuid
 
 PREFIX = "MOON-FILE-WRITE v1"
 CONTROL_ISSUE = 144
 BASE_DIR = Path("/home/d2j3")
 MAX_CONTENT_BYTES = 4096
+MAX_PERMISSION_RESPONSE_BYTES = 65536
 TRUSTED_PERMISSIONS = {"admin", "maintain", "write"}
 _REQUEST_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 _FILENAME = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
+_REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$")
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _FIELD_ORDER = ("path", "content_b64", "expected_sha256", "request_id")
+_GITHUB_API_HOST = "api.github.com"
 
 
 def _parse_envelope(body: str) -> dict[str, str]:
@@ -69,27 +71,40 @@ def _target_name(path_text: str) -> str:
 
 
 def _github_permission(repository: str, actor: str, token: str) -> str:
-    if not repository or "/" not in repository:
+    if not _REPOSITORY.fullmatch(repository):
         raise RuntimeError("invalid repository")
+    if not actor:
+        raise RuntimeError("invalid actor")
     if not token:
         raise RuntimeError("GitHub token unavailable")
+
     quoted_actor = urllib.parse.quote(actor, safe="")
-    url = f"https://api.github.com/repos/{repository}/collaborators/{quoted_actor}/permission"
-    request = urllib.request.Request(
-        url,
-        method="GET",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "lion-moon-file-write/1",
-        },
-    )
+    path = f"/repos/{repository}/collaborators/{quoted_actor}/permission"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "lion-moon-file-write/1",
+    }
+
+    connection = http.client.HTTPSConnection(_GITHUB_API_HOST, 443, timeout=20)
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            payload = json.loads(response.read())
-    except (urllib.error.URLError, json.JSONDecodeError) as exc:
+        connection.request("GET", path, headers=headers)
+        response = connection.getresponse()
+        if response.status != 200:
+            raise RuntimeError("unable to resolve actor permission")
+        raw = response.read(MAX_PERMISSION_RESPONSE_BYTES + 1)
+        if len(raw) > MAX_PERMISSION_RESPONSE_BYTES:
+            raise RuntimeError("unable to resolve actor permission")
+        try:
+            payload = json.loads(raw)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise RuntimeError("unable to resolve actor permission") from exc
+    except (OSError, http.client.HTTPException) as exc:
         raise RuntimeError("unable to resolve actor permission") from exc
+    finally:
+        connection.close()
+
     permission = payload.get("permission") if isinstance(payload, dict) else None
     if not isinstance(permission, str):
         raise RuntimeError("unable to resolve actor permission")
