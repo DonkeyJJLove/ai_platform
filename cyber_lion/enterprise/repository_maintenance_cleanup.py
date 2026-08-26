@@ -154,7 +154,12 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
         headers = self._headers()
         if data is not None:
             headers["Content-Type"] = "application/json"
-        request = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
+        if method == "GET":
+            request = urllib.request.Request(self.api_url + path, data=data, method="GET", headers=headers)
+        elif method == "DELETE":
+            request = urllib.request.Request(self.api_url + path, data=data, method="DELETE", headers=headers)
+        else:
+            raise RepositoryMaintenanceError("GitHub method not allowlisted")
         try:
             with urllib.request.build_opener(self._NoRedirect()).open(request, timeout=30) as response:
                 raw = response.read()
