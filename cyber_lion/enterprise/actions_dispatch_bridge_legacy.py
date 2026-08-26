@@ -274,25 +274,7 @@ class GitHubApi:
         self._control_ledger.update(comment_id, body)
 
     def dispatch(self, workflow: str, ref: str, inputs: dict[str, object]) -> None:
-        if workflow not in DEFAULT_POLICY.allowed_workflows or ref not in DEFAULT_POLICY.allowed_refs:
-            raise RuntimeError("workflow dispatch target not allowlisted")
-        if workflow not in dict(DEFAULT_POLICY.allowed_inputs):
-            raise RuntimeError("workflow dispatch input policy unavailable")
-        expected_keys = set(dict(DEFAULT_POLICY.allowed_inputs)[workflow])
-        if set(inputs) != expected_keys:
-            raise RuntimeError("workflow dispatch input set mismatch")
-        path = f"/repos/{self.repository}/actions/workflows/{urllib.parse.quote(workflow, safe='')}/dispatches"
-        payload = canonical_json({"ref": ref, "inputs": inputs})
-        headers = self._headers(); headers["Content-Type"] = "application/json"
-        req = urllib.request.Request(self.api_url + path, data=payload, method="POST", headers=headers)
-        try:
-            with urllib.request.build_opener(self._NoRedirect()).open(req, timeout=20) as response:
-                if response.status != 204:
-                    raise RuntimeError(f"workflow dispatch not accepted: {response.status}")
-                response.read()
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")[:1000]
-            raise RuntimeError(f"workflow dispatch failed: {exc.code}: {detail}") from exc
+        raise RuntimeError("direct workflow dispatch disabled; canonical mediator required")
 
     def workflow_runs(self, workflow: str, ref: str) -> list[dict]:
         result = []
