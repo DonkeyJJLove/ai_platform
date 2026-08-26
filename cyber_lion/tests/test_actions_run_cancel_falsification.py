@@ -56,7 +56,11 @@ class ActionsRunCancelFalsificationTests(unittest.TestCase):
         request = self._request()
         admission = self._admission(request)
         forged = CanonicalActionsRunCancelAdmission(
-            **{**admission.payload(), "pdp_decision_digest": "3" * 64, "admission_digest": admission.admission_digest}
+            **{
+                **admission.payload(),
+                "pdp_decision_digest": "3" * 64,
+                "admission_digest": admission.admission_digest,
+            }
         )
         with self.assertRaises(ActionsRunCancelMediationError):
             forged.validate()
@@ -67,16 +71,23 @@ class ActionsRunCancelFalsificationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             fence = DurableActionsRunCancelFence(str(Path(td) / "fence.sqlite"))
             key = actions_run_cancel_effect_key(request, admission)
-            fence.prepare(ActionsRunCancelFenceRecord(
-                key, admission.admission_digest, request.payload_digest(), request.repository,
-                request.run_id, "PREPARED", "2026-08-26T00:00:00+00:00"
-            ))
-            fence.transition(key, "PREPARED", "UNKNOWN")
+            fence.prepare(
+                ActionsRunCancelFenceRecord(
+                    key,
+                    admission.admission_digest,
+                    request.payload_digest(),
+                    request.repository,
+                    request.run_id,
+                    "PREPARED",
+                    "2026-08-26T00:00:00+00:00",
+                )
+            )
+            fence.mark_unknown(key)
             with self.assertRaises(ActionsRunCancelMediationError):
-                fence.transition(
-                    key, "OBSERVED", "RECONCILED",
+                fence.mark_reconciled(
+                    key,
                     reconciled_at="2026-08-26T00:01:00+00:00",
-                    reconciliation_digest="4" * 64,
+                    digest="4" * 64,
                 )
 
     def test_replay_prepare_denied(self):
@@ -86,8 +97,13 @@ class ActionsRunCancelFalsificationTests(unittest.TestCase):
             fence = DurableActionsRunCancelFence(str(Path(td) / "fence.sqlite"))
             key = actions_run_cancel_effect_key(request, admission)
             record = ActionsRunCancelFenceRecord(
-                key, admission.admission_digest, request.payload_digest(), request.repository,
-                request.run_id, "PREPARED", "2026-08-26T00:00:00+00:00"
+                key,
+                admission.admission_digest,
+                request.payload_digest(),
+                request.repository,
+                request.run_id,
+                "PREPARED",
+                "2026-08-26T00:00:00+00:00",
             )
             fence.prepare(record)
             with self.assertRaises(ActionsRunCancelMediationError):
