@@ -16,7 +16,7 @@ jobs:
   write:
     if: >-
       github.event.issue.number == 144 &&
-      startsWith(github.event.comment.body, 'MOON-FILE-WRITE v1')
+      startsWith(github.event.comment.body, 'MOON-FILE-WRITE v2')
     runs-on: [self-hosted, linux, lion-trust-client]
     timeout-minutes: 5
     steps:
@@ -29,7 +29,7 @@ jobs:
           test ! -L /home/d2j3
           command -v python3 >/dev/null
 
-      - name: Fetch exact bounded implementation
+      - name: Fetch exact canonical mediation implementation
         shell: bash
         run: |
           set -euo pipefail
@@ -42,29 +42,37 @@ jobs:
           sha = os.environ["GITHUB_SHA"]
           if len(sha) != 40 or any(c not in "0123456789abcdef" for c in sha.lower()):
               raise SystemExit("invalid GITHUB_SHA")
-          url = (
-              f"https://raw.githubusercontent.com/{repository}/{sha}/"
-              "cyber_lion/enterprise/moon_file_write.py"
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "moon-mediated-runtime"
+          paths = (
+              "cyber_lion/contracts/moon_file_write.py",
+              "cyber_lion/enterprise/moon_file_write_mediation.py",
+              "cyber_lion/enterprise/moon_file_write.py",
           )
-          request = urllib.request.Request(
-              url,
-              headers={"User-Agent": "lion-moon-file-write-bootstrap/1"},
-          )
-          with urllib.request.urlopen(request, timeout=20) as response:
-              data = response.read(65537)
-          if not data or len(data) > 65536:
-              raise SystemExit("bounded implementation fetch size invalid")
-          target = Path(os.environ["RUNNER_TEMP"]) / "moon_file_write.py"
-          target.write_bytes(data)
+          for package in (root / "cyber_lion", root / "cyber_lion/contracts", root / "cyber_lion/enterprise"):
+              package.mkdir(parents=True, exist_ok=True)
+              (package / "__init__.py").write_text("", encoding="utf-8")
+
+          for rel in paths:
+              url = f"https://raw.githubusercontent.com/{repository}/{sha}/{rel}"
+              request = urllib.request.Request(url, headers={"User-Agent": "lion-moon-file-write-bootstrap/2"})
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  data = response.read(131073)
+              if not data or len(data) > 131072:
+                  raise SystemExit(f"bounded implementation fetch size invalid: {rel}")
+              target = root / rel
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
           PY
 
-      - name: Execute bounded file write
+      - name: Execute canonical mediated file write
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PYTHONPATH: ${{ runner.temp }}/moon-mediated-runtime
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$RUNNER_TEMP/moon_file_write.py" \
+          python3 -m cyber_lion.enterprise.moon_file_write \
             --event "$GITHUB_EVENT_PATH" \
             --repository "$GITHUB_REPOSITORY" \
             --token-env GITHUB_TOKEN \
