@@ -21,8 +21,8 @@ _CALL_CLASSES={
     "subprocess.run":"runtime.tool_execution","subprocess.Popen":"runtime.process_launch",
     "os.system":"runtime.tool_execution","os.execv":"runtime.process_launch","os.execve":"runtime.process_launch",
     "Path.write_text":"filesystem.write","Path.write_bytes":"filesystem.write",
-    "unlink":"filesystem.delete","rmdir":"filesystem.delete","remove":"filesystem.delete",
-    "replace":"filesystem.replace","rename":"filesystem.rename",
+    "os.unlink":"filesystem.delete","os.rmdir":"filesystem.delete","os.remove":"filesystem.delete",
+    "os.replace":"filesystem.replace","os.rename":"filesystem.rename",
     "urlopen":"external.network","requests.post":"external.network","requests.put":"external.network",
     "requests.patch":"external.network","requests.delete":"external.network",
 }
@@ -44,7 +44,7 @@ def _literal(node):
 def _surface(path:str,line:int,call:str,effect_class:str)->ConsequentialEffectSurface:
     ref=f"{path}:{line}:{call}"
     provider=path.replace("/",".")
-    if effect_class in {"external.network","repository_ref.delete"}:
+    if effect_class.startswith("external.network") or effect_class in {"repository_ref.delete","workflow.external_effect"}:
         target="external"
         authority="external_write"
     elif effect_class.startswith("filesystem"):
@@ -78,14 +78,42 @@ class EffectSurfaceScanner:
                     name=_call_name(node)
                     short=name.split(".")[-1]
                     effect=None
-                    if name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
+                    # urllib.request.Request is itself the canonical construction site for
+                    # several GitHub write effects. Treat a literal mutating HTTP method as
+                    # consequential even when urlopen()/opener.open() happens elsewhere.
+                    if name == "urllib.request.Request" or name.endswith(".request.Request"):
+                        method = next((_literal(k.value) for k in node.keywords if k.arg == "method"), None)
+                        if method is None and len(node.args) >= 3:
+                            method = _literal(node.args[2])
+                        if isinstance(method, str):
+                            upper = method.upper()
+                            if upper in {"POST", "PUT", "PATCH", "DELETE"}:
+                                effect = f"external.network.{upper.lower()}"
+                        else:
+                            # A Request whose method cannot be statically resolved may still
+                            # become a write. Fail closed instead of silently treating it as GET.
+                            unclassified.append(
+                                f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method"
+                            )
+                    if effect is None and name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
                     elif short in {"write_text","write_bytes"}:effect="filesystem.write"
                     elif short in {"urlopen"}:effect="external.network"
                     elif short=="delete_exact_branch_ref":effect="repository_ref.delete"
                     elif short in {"execute","executemany"} and node.args:
-                        sql=_literal(node.args[0])
-                        if sql is not None and _MUTATING_SQL.search(sql):effect="persistent_state.write"
-                        elif sql is None:unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
+                        receiver = name.rsplit(".",1)[0] if "." in name else ""
+                        dbish = bool(re.search(r"(?:^|\.)(?:c|cur|conn|connection|cursor|db|_conn)$", receiver))
+                        if dbish:
+                            sql=_literal(node.args[0])
+                            if sql is not None and _MUTATING_SQL.search(sql):effect="persistent_state.write"
+                            elif sql is None:unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
+                    elif short in {"unlink","rmdir"}:
+                        receiver=name.rsplit(".",1)[0] if "." in name else ""
+                        if re.search(r"(?:path|file|target|temp|source|destination|artifact|receipt|registry|manifest)$", receiver, re.I):
+                            effect="filesystem.delete"
+                    elif short in {"replace","rename"}:
+                        receiver=name.rsplit(".",1)[0] if "." in name else ""
+                        if re.search(r"(?:path|file|target|temp|source|destination|artifact|receipt|registry|manifest)$", receiver, re.I):
+                            effect="filesystem.replace" if short=="replace" else "filesystem.rename"
                     elif short=="open":
                         mode=_literal(node.args[1]) if len(node.args)>1 else next((_literal(k.value) for k in node.keywords if k.arg=="mode"),None)
                         if mode and any(x in mode for x in "wax+"):effect="filesystem.write"
@@ -93,12 +121,19 @@ class EffectSurfaceScanner:
                         unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}")
                     if effect:surfaces.append(_surface(path,getattr(node,"lineno",0),name,effect))
             elif path.endswith((".yml",".yaml")) and path.startswith(".github/workflows/"):
-                for i,line in enumerate(source.splitlines(),1):
-                    low=line.lower()
+                lines = source.splitlines()
+                for i,line in enumerate(lines,1):
+                    stripped=line.strip()
+                    low=stripped.lower()
                     if "workflow_dispatch:" in low:
                         continue
-                    if re.search(r"\b(gh\s+(api|pr|release|workflow)|git\s+push|curl\b.*\s-x\s*(post|put|patch|delete))",low):
-                        surfaces.append(_surface(path,i,line.strip(),"workflow.external_effect"))
+                    # Shell/GitHub CLI effects.
+                    if "grep -q" not in low and re.search(r"\b(gh\s+(api|pr|release|workflow)|git\s+push|curl\b.*\s-x\s*(post|put|patch|delete))",low):
+                        surfaces.append(_surface(path,i,stripped,"workflow.external_effect"))
+                    # PowerShell REST effects are common in legacy Actions workflows and must
+                    # be part of the same exhaustive inventory.
+                    if re.search(r"\binvoke-restmethod\b.*\s-method\s+(post|put|patch|delete)\b",low):
+                        surfaces.append(_surface(path,i,stripped,"workflow.external_effect"))
         uniq={s.surface_id:s for s in surfaces}
         canonical_scan=json.dumps(scan_items,sort_keys=True,separators=(",",":")).encode()
         scan_digest=sha256(b"LION/EFFECT-SURFACE-SCAN/1\0"+canonical_scan).hexdigest()
