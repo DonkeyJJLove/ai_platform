@@ -29,6 +29,24 @@ class CompleteMediationTests(unittest.TestCase):
         inv=self.scan({"cyber_lion/x.py":"def f(conn):\n    open('x','w').write('a')\n    conn.execute('UPDATE t SET x=1')\n"})
         self.assertEqual({s.effect_class for s in inv.surfaces},{"filesystem.write","persistent_state.write"})
 
+    def test_urllib_request_mutating_method_is_discovered(self):
+        inv=self.scan({"cyber_lion/x.py":"import urllib.request\ndef f():\n urllib.request.Request('https://example.invalid',data=b'{}',method='POST')\n"})
+        self.assertEqual(len(inv.surfaces),1)
+        self.assertEqual(inv.surfaces[0].effect_class,"external.network.post")
+
+    def test_urllib_request_dynamic_method_fails_closed(self):
+        inv=self.scan({"cyber_lion/x.py":"import urllib.request\ndef f(method):\n urllib.request.Request('https://example.invalid',data=b'{}',method=method)\n"})
+        self.assertTrue(any("dynamic-http-method" in ref for ref in inv.unclassified_refs))
+
+    def test_powershell_rest_write_in_workflow_is_discovered(self):
+        inv=self.scan({".github/workflows/x.yml":"name: x\non: workflow_dispatch\npermissions:\n  contents: write\njobs:\n  x:\n    runs-on: ubuntu-latest\n    steps:\n      - run: Invoke-RestMethod -Method Delete -Uri https://api.github.com/x\n"})
+        self.assertTrue(any(s.effect_class=="workflow.external_effect" for s in inv.surfaces))
+
+    def test_non_database_execute_and_string_replace_do_not_inflate_inventory(self):
+        inv=self.scan({"cyber_lion/x.py":"def f(mediator, value):\n mediator.execute('payload')\n return value.replace('a','b')\n"})
+        self.assertFalse(inv.surfaces)
+        self.assertFalse(inv.unclassified_refs)
+
     def test_dynamic_sql_is_unclassified_and_keeps_global_unknown(self):
         inv=self.scan({"cyber_lion/x.py":"def f(conn,sql):\n    conn.execute(sql)\n"})
         self.assertTrue(inv.unclassified_refs)
@@ -48,7 +66,7 @@ class CompleteMediationTests(unittest.TestCase):
         self.assertEqual(out2.global_status,"UNKNOWN")
 
     def test_binding_for_surface_outside_inventory_is_denied(self):
-        a=self.scan({"cyber_lion/a.py":"import subprocess\nsubprocess.run(['a'])\n"});b=self.scan({"cyber_lion/b.py":"import subprocess\nsubprocess.run(['b'])\n"})
+        a=self.scan({"cyber_lion/a.py":"import subprocess\ndef hidden():\n    subprocess.run(['a'])\n"});b=self.scan({"cyber_lion/b.py":"import subprocess\ndef hidden():\n    subprocess.run(['b'])\n"})
         with self.assertRaises(CompleteMediationError):CompleteMediationEngine().assess(inventory=a,bindings=(self.binding(b.surfaces[0]),),falsification_evidence_refs=("f",),observation_evidence_refs=("o",))
 
     def test_test_files_and_documentation_do_not_inflate_runtime_inventory(self):
