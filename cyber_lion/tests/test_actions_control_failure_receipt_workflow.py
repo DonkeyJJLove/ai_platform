@@ -4,6 +4,7 @@ import unittest
 
 WORKFLOW = Path('.github/workflows/lion-actions-dispatch-bridge.yml')
 FAILURE_BOUNDARY = Path('cyber_lion/enterprise/actions_failure_receipt.py')
+ISSUE_EFFECT = Path('cyber_lion/enterprise/issue_comment_write_github_effect.py')
 
 
 class ActionsControlFailureReceiptWorkflowTests(unittest.TestCase):
@@ -16,7 +17,11 @@ class ActionsControlFailureReceiptWorkflowTests(unittest.TestCase):
         self.assertIn('LION-ACTIONS-CONTROL-FAILURE v2', boundary)
         self.assertIn('result=FAILED_CLOSED', boundary)
         self.assertIn('receipt_is_evidence_not_authority=true', boundary)
-        self.assertIn('issues/{CONTROL_ISSUE}/comments', boundary)
+        self.assertIn('IssueCommentWriteRequest', boundary)
+        self.assertNotIn('method="POST"', boundary)
+        effect = ISSUE_EFFECT.read_text(encoding='utf-8')
+        self.assertIn('method="POST"', effect)
+        self.assertIn('/issues/{request.issue_number}/comments', effect)
         self.assertIn('workflow_run_id', boundary)
         self.assertIn('workflow_run_attempt', boundary)
         self.assertIn('checked_out_sha', boundary)
