@@ -18,6 +18,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
+from cyber_lion.contracts.issue_comment_write import IssueCommentWriteRequest
 
 CONTROL_ISSUE = 144
 _ALLOWED_PREFIXES = ("LION-DISPATCH v1", "LION-OBSERVE v1")
@@ -151,69 +152,23 @@ class FailureReceiptObserver:
 
 
 class GitHubFailureReceiptBoundary:
-    """Closed-world external-write boundary for exactly one issue-comment receipt."""
-
-    class _NoRedirect(urllib.request.HTTPRedirectHandler):
-        def redirect_request(self, req, fp, code, msg, headers, newurl):
-            return None
-
-    def __init__(self, *, observer: FailureReceiptObserver | None = None) -> None:
-        self._observer = observer or FailureReceiptObserver()
-        if type(self._observer) is not FailureReceiptObserver:
-            raise FailureReceiptError("exact FailureReceiptObserver required")
-        self._consumed: set[str] = set()
-
-    @staticmethod
-    def _headers(token: str) -> dict[str, str]:
-        if not isinstance(token, str) or not token.strip():
-            raise FailureReceiptError("GitHub token unavailable")
-        return {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "Content-Type": "application/json",
-            "User-Agent": "lion-actions-control-failure-receipt/2",
-        }
-
-    def _open(self, request: urllib.request.Request):
-        return urllib.request.build_opener(self._NoRedirect()).open(request, timeout=20)
-
+    """Semantic failure-receipt boundary; external write is canonical-mediator only."""
+    def __init__(self, *, observer: FailureReceiptObserver | None = None, mediator=None, authority_context: str = "actions-failure-receipt") -> None:
+        self._observer=observer or FailureReceiptObserver()
+        if type(self._observer) is not FailureReceiptObserver: raise FailureReceiptError("exact FailureReceiptObserver required")
+        self._mediator=mediator; self._authority_context=authority_context; self._consumed:set[str]=set()
     def post(self, admission: FailureReceiptAdmission, *, token: str) -> FailureReceiptObservation:
-        if type(admission) is not FailureReceiptAdmission:
-            raise FailureReceiptError("exact FailureReceiptAdmission required")
-        if admission.admission_digest in self._consumed:
-            raise FailureReceiptError("failure-receipt admission replay denied")
+        del token
+        if type(admission) is not FailureReceiptAdmission: raise FailureReceiptError("exact FailureReceiptAdmission required")
+        if admission.admission_digest in self._consumed: raise FailureReceiptError("failure-receipt admission replay denied")
+        if not callable(getattr(self._mediator,"execute",None)): raise FailureReceiptError("canonical issue-comment mediator unavailable")
         self._consumed.add(admission.admission_digest)
-        base = f"https://api.github.com/repos/{admission.repository}"
-        post_url = f"{base}/issues/{CONTROL_ISSUE}/comments"
-        payload = _canonical({"body": admission.receipt_body})
-        post = urllib.request.Request(post_url, data=payload, method="POST", headers=self._headers(token))
-        try:
-            with self._open(post) as response:
-                raw = response.read()
-                if response.status != 201:
-                    raise FailureReceiptError(f"failure receipt rejected: {response.status}")
-                created = json.loads(raw) if raw else None
-        except (urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise FailureReceiptError("failure receipt POST failed") from exc
-        if not isinstance(created, dict) or not isinstance(created.get("id"), int):
-            raise FailureReceiptError("failure receipt creation response malformed")
-        comment_id = int(created["id"])
-        get = urllib.request.Request(f"{base}/issues/comments/{comment_id}", method="GET",
-                                     headers={k: v for k, v in self._headers(token).items() if k != "Content-Type"})
-        try:
-            with self._open(get) as response:
-                raw = response.read()
-                if response.status != 200:
-                    raise FailureReceiptError(f"failure receipt observation rejected: {response.status}")
-                observed_value = json.loads(raw) if raw else None
-        except (urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise FailureReceiptError("failure receipt observation failed") from exc
-        observation = self._observer.verify(observed_value, admission)
-        if observation.comment_id != comment_id or not observation.observed:
-            raise FailureReceiptError("failure receipt read-back mismatch")
-        return observation
-
+        replay=sha256(("failure-receipt:"+admission.admission_digest).encode()).hexdigest()
+        req=IssueCommentWriteRequest(admission.repository,CONTROL_ISSUE,"CREATE_COMMENT","actions.failure-receipt.create",admission.receipt_body,f"failure:{admission.workflow_run_id}:{admission.workflow_run_attempt}",replay,admission.checked_out_sha,authority_context=self._authority_context).sealed()
+        out=self._mediator.execute(req)
+        cid=out.get("comment_id") if isinstance(out,dict) else None
+        if not isinstance(cid,int) or cid<=0 or out.get("fence_state")!="RECONCILED": raise FailureReceiptError("failure receipt did not reconcile")
+        return FailureReceiptObservation(cid,admission.receipt_digest,admission.receipt_digest,True)
 
 def execute_failure_receipt(
     *,
@@ -241,7 +196,10 @@ def execute_failure_receipt(
         exit_code=exit_code,
         diagnostic=_bounded_diagnostic(stderr_path, stdout_path),
     )
-    return (boundary or GitHubFailureReceiptBoundary()).post(admission, token=token)
+    if boundary is None:
+        from cyber_lion.enterprise.issue_comment_write_runtime import EnvironmentIssueCommentMediator
+        boundary = GitHubFailureReceiptBoundary(mediator=EnvironmentIssueCommentMediator(repository, token))
+    return boundary.post(admission, token=token)
 
 
 def main(argv: list[str] | None = None) -> int:
