@@ -30,6 +30,17 @@ _verify_group_artifact = _legacy._verify_group_artifact
 class GitHubApi(_legacy.GitHubApi):
     """Production API with direct dispatch disabled; generic GitHub transport is read-only."""
 
+    def __init__(self, repository: str, token: str, api_url: str = "https://api.github.com") -> None:
+        super().__init__(repository, token, api_url)
+        from cyber_lion.enterprise.actions_control_ledger import ActionsControlLedgerBoundary
+        from cyber_lion.enterprise.issue_comment_write_runtime import EnvironmentIssueCommentMediator
+        self._control_ledger = ActionsControlLedgerBoundary(
+            repository, token,
+            mediator=EnvironmentIssueCommentMediator(repository, token),
+            expected_repository_head=os.environ.get("GITHUB_SHA", ""),
+            authority_context="actions-control-ledger",
+        )
+
     def dispatch(self, workflow: str, ref: str, inputs: dict[str, object]) -> None:
         raise RuntimeError("direct workflow dispatch disabled; canonical mediator required")
 
