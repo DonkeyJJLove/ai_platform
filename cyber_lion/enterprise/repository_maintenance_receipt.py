@@ -18,6 +18,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
+from cyber_lion.contracts.issue_comment_write import IssueCommentWriteRequest
 
 from cyber_lion.contracts.repository_maintenance_sandbox import (
     RepositoryMaintenanceExecutionReceipt,
@@ -398,128 +399,21 @@ class MaintenanceReceiptObserver:
 
 
 class GitHubMaintenanceReceiptBoundary:
-    """One fixed GitHub issue-comment POST with durable replay check and exact read-back."""
-
-    class _NoRedirect(urllib.request.HTTPRedirectHandler):
-        def redirect_request(self, req, fp, code, msg, headers, newurl):
-            return None
-
-    def __init__(self, *, observer: MaintenanceReceiptObserver | None = None) -> None:
-        self._observer = observer or MaintenanceReceiptObserver()
-        if type(self._observer) is not MaintenanceReceiptObserver:
-            raise RepositoryMaintenanceReceiptError(
-                "exact MaintenanceReceiptObserver required"
-            )
-
-    @staticmethod
-    def _headers(token: str, *, json_body: bool) -> dict[str, str]:
-        if not isinstance(token, str) or not token.strip():
-            raise RepositoryMaintenanceReceiptError("GitHub token unavailable")
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "lion-repository-maintenance-receipt/2",
-        }
-        if json_body:
-            headers["Content-Type"] = "application/json"
-        return headers
-
-    def _open(self, request: urllib.request.Request):
-        return urllib.request.build_opener(self._NoRedirect()).open(request, timeout=20)
-
-    def _existing_receipt_keys(self, admission: MaintenanceReceiptAdmission, *, token: str) -> set[str]:
-        base = f"https://api.github.com/repos/{admission.repository}"
-        keys: set[str] = set()
-        for page in range(1, 101):
-            url = f"{base}/issues/{CONTROL_ISSUE}/comments?per_page=100&page={page}"
-            request = urllib.request.Request(
-                url,
-                method="GET",
-                headers=self._headers(token, json_body=False),
-            )
-            try:
-                with self._open(request) as response:
-                    raw = response.read()
-                    if response.status != 200:
-                        raise RepositoryMaintenanceReceiptError(
-                            "maintenance replay ledger read rejected"
-                        )
-                    value = json.loads(raw) if raw else None
-            except (urllib.error.URLError, json.JSONDecodeError) as exc:
-                raise RepositoryMaintenanceReceiptError(
-                    "maintenance replay ledger read failed"
-                ) from exc
-            if not isinstance(value, list):
-                raise RepositoryMaintenanceReceiptError(
-                    "maintenance replay ledger malformed"
-                )
-            for item in value:
-                body = item.get("body") if isinstance(item, dict) else None
-                if isinstance(body, str):
-                    for line in body.splitlines():
-                        if line.startswith("receipt_key="):
-                            keys.add(line.removeprefix("receipt_key="))
-            if len(value) < 100:
-                return keys
-        raise RepositoryMaintenanceReceiptError(
-            "maintenance replay ledger pagination limit exceeded"
-        )
-
+    """Semantic maintenance-receipt boundary; external write is canonical-mediator only."""
+    def __init__(self, *, observer: MaintenanceReceiptObserver | None = None, mediator=None, authority_context: str = "repository-maintenance-receipt") -> None:
+        self._observer=observer or MaintenanceReceiptObserver()
+        if type(self._observer) is not MaintenanceReceiptObserver: raise RepositoryMaintenanceReceiptError("exact MaintenanceReceiptObserver required")
+        self._mediator=mediator; self._authority_context=authority_context
     def post(self, admission: MaintenanceReceiptAdmission, *, token: str) -> MaintenanceReceiptObservation:
-        if type(admission) is not MaintenanceReceiptAdmission:
-            raise RepositoryMaintenanceReceiptError(
-                "exact MaintenanceReceiptAdmission required"
-            )
-        if admission.receipt_key in self._existing_receipt_keys(admission, token=token):
-            raise RepositoryMaintenanceReceiptError("maintenance receipt replay denied")
-        base = f"https://api.github.com/repos/{admission.repository}"
-        url = f"{base}/issues/{CONTROL_ISSUE}/comments"
-        request = urllib.request.Request(
-            url,
-            data=_canonical({"body": admission.receipt_body}),
-            method="POST",
-            headers=self._headers(token, json_body=True),
-        )
-        try:
-            with self._open(request) as response:
-                raw = response.read()
-                if response.status != 201:
-                    raise RepositoryMaintenanceReceiptError(
-                        "maintenance receipt POST rejected"
-                    )
-                created = json.loads(raw) if raw else None
-        except (urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise RepositoryMaintenanceReceiptError("maintenance receipt POST failed") from exc
-        if not isinstance(created, dict) or not isinstance(created.get("id"), int):
-            raise RepositoryMaintenanceReceiptError(
-                "maintenance receipt creation response malformed"
-            )
-        comment_id = int(created["id"])
-        readback = urllib.request.Request(
-            f"{base}/issues/comments/{comment_id}",
-            method="GET",
-            headers=self._headers(token, json_body=False),
-        )
-        try:
-            with self._open(readback) as response:
-                raw = response.read()
-                if response.status != 200:
-                    raise RepositoryMaintenanceReceiptError(
-                        "maintenance receipt observation rejected"
-                    )
-                observed_value = json.loads(raw) if raw else None
-        except (urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise RepositoryMaintenanceReceiptError(
-                "maintenance receipt observation failed"
-            ) from exc
-        observation = self._observer.verify(observed_value, admission)
-        if observation.comment_id != comment_id or not observation.observed:
-            raise RepositoryMaintenanceReceiptError(
-                "maintenance receipt read-back mismatch"
-            )
-        return observation
-
+        del token
+        if type(admission) is not MaintenanceReceiptAdmission: raise RepositoryMaintenanceReceiptError("exact MaintenanceReceiptAdmission required")
+        if not callable(getattr(self._mediator,"execute",None)): raise RepositoryMaintenanceReceiptError("canonical issue-comment mediator unavailable")
+        replay=sha256(("maintenance-receipt:"+admission.receipt_key).encode()).hexdigest()
+        req=IssueCommentWriteRequest(admission.repository,CONTROL_ISSUE,"CREATE_COMMENT","repository-maintenance.receipt.create",admission.receipt_body,f"maintenance:{admission.workflow_run_id}:{admission.workflow_run_attempt}:{admission.kind.lower()}",replay,admission.checked_out_sha,authority_context=self._authority_context).sealed()
+        out=self._mediator.execute(req)
+        cid=out.get("comment_id") if isinstance(out,dict) else None
+        if not isinstance(cid,int) or cid<=0 or out.get("fence_state")!="RECONCILED": raise RepositoryMaintenanceReceiptError("maintenance receipt did not reconcile")
+        return MaintenanceReceiptObservation(cid,admission.receipt_key,admission.receipt_digest,True)
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
@@ -563,7 +457,10 @@ def main(argv: list[str] | None = None) -> int:
                 checked_out_sha=args.checked_out_sha,
                 result_path=Path(args.result),
             )
-        observation = GitHubMaintenanceReceiptBoundary().post(admission, token=token)
+        from cyber_lion.enterprise.issue_comment_write_runtime import EnvironmentIssueCommentMediator
+        observation = GitHubMaintenanceReceiptBoundary(
+            mediator=EnvironmentIssueCommentMediator(args.repository, token)
+        ).post(admission, token=token)
     except (RepositoryMaintenanceReceiptError, ValueError) as exc:
         print(f"LION_REPOSITORY_MAINTENANCE_RECEIPT_FAILED_CLOSED error={exc}")
         return 2
