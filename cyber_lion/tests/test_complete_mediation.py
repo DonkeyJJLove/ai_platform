@@ -66,7 +66,7 @@ class CompleteMediationTests(unittest.TestCase):
         self.assertEqual(out2.global_status,"UNKNOWN")
 
     def test_binding_for_surface_outside_inventory_is_denied(self):
-        a=self.scan({"cyber_lion/a.py":"import subprocess\ndef hidden():\n    subprocess.run(['a'])\n"});b=self.scan({"cyber_lion/b.py":"import subprocess\ndef hidden():\n    subprocess.run(['b'])\n"})
+        a=self.scan({"cyber_lion/a.py":"import subprocess\nsubprocess.run(['a'])\n"});b=self.scan({"cyber_lion/b.py":"import subprocess\nsubprocess.run(['b'])\n"})
         with self.assertRaises(CompleteMediationError):CompleteMediationEngine().assess(inventory=a,bindings=(self.binding(b.surfaces[0]),),falsification_evidence_refs=("f",),observation_evidence_refs=("o",))
 
     def test_test_files_and_documentation_do_not_inflate_runtime_inventory(self):
