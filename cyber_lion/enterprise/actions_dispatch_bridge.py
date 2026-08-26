@@ -205,6 +205,8 @@ class GitHubApi:
         self.repository = repository
         self.token = token
         self.api_url = "https://api.github.com"
+        from cyber_lion.enterprise.actions_control_ledger import ActionsControlLedgerBoundary
+        self._control_ledger = ActionsControlLedgerBoundary(repository, token)
 
     class _NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -214,23 +216,21 @@ class GitHubApi:
         return {"Authorization": f"Bearer {self.token}",
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
-                "User-Agent": "lion-actions-dispatch-bridge/4"}
+                "User-Agent": "lion-actions-dispatch-bridge/5"}
 
     def _request(self, method: str, path: str, body: object | None = None) -> tuple[int, object | None]:
-        if not path.startswith("/") or ".." in path:
+        if method != "GET" or body is not None:
+            raise RuntimeError("generic GitHub transport is read-only")
+        if not path.startswith("/") or ".." in path or "\\" in path:
             raise RuntimeError("unsafe GitHub API path")
-        data = canonical_json(body) if body is not None else None
-        headers = self._headers()
-        if data is not None:
-            headers["Content-Type"] = "application/json"
-        req = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
+        req = urllib.request.Request(self.api_url + path, data=None, method="GET", headers=self._headers())
         try:
             with urllib.request.build_opener(self._NoRedirect()).open(req, timeout=20) as response:
                 raw = response.read()
                 return response.status, json.loads(raw) if raw else None
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:1000]
-            raise RuntimeError(f"GitHub API {method} {path} failed: {exc.code}: {detail}") from exc
+            raise RuntimeError(f"GitHub API GET {path} failed: {exc.code}: {detail}") from exc
 
     def actor_permission(self, actor: str) -> str:
         status, value = self._request("GET", f"/repos/{self.repository}/collaborators/{urllib.parse.quote(actor, safe='')}/permission")
@@ -268,20 +268,31 @@ class GitHubApi:
         raise RuntimeError("replay ledger pagination limit exceeded")
 
     def post_issue_comment(self, issue_number: int, body: str) -> int:
-        status, value = self._request("POST", f"/repos/{self.repository}/issues/{issue_number}/comments", {"body": body})
-        if status != 201 or not isinstance(value, dict) or not isinstance(value.get("id"), int):
-            raise RuntimeError("failed to create durable issue receipt")
-        return value["id"]
+        return self._control_ledger.create(issue_number, body)
 
     def patch_issue_comment(self, comment_id: int, body: str) -> None:
-        status, _ = self._request("PATCH", f"/repos/{self.repository}/issues/comments/{comment_id}", {"body": body})
-        if status != 200:
-            raise RuntimeError("failed to update issue receipt")
+        self._control_ledger.update(comment_id, body)
 
     def dispatch(self, workflow: str, ref: str, inputs: dict[str, object]) -> None:
-        status, _ = self._request("POST", f"/repos/{self.repository}/actions/workflows/{urllib.parse.quote(workflow, safe='')}/dispatches", {"ref": ref, "inputs": inputs})
-        if status != 204:
-            raise RuntimeError(f"workflow dispatch not accepted: {status}")
+        if workflow not in DEFAULT_POLICY.allowed_workflows or ref not in DEFAULT_POLICY.allowed_refs:
+            raise RuntimeError("workflow dispatch target not allowlisted")
+        if workflow not in dict(DEFAULT_POLICY.allowed_inputs):
+            raise RuntimeError("workflow dispatch input policy unavailable")
+        expected_keys = set(dict(DEFAULT_POLICY.allowed_inputs)[workflow])
+        if set(inputs) != expected_keys:
+            raise RuntimeError("workflow dispatch input set mismatch")
+        path = f"/repos/{self.repository}/actions/workflows/{urllib.parse.quote(workflow, safe='')}/dispatches"
+        payload = canonical_json({"ref": ref, "inputs": inputs})
+        headers = self._headers(); headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(self.api_url + path, data=payload, method="POST", headers=headers)
+        try:
+            with urllib.request.build_opener(self._NoRedirect()).open(req, timeout=20) as response:
+                if response.status != 204:
+                    raise RuntimeError(f"workflow dispatch not accepted: {response.status}")
+                response.read()
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:1000]
+            raise RuntimeError(f"workflow dispatch failed: {exc.code}: {detail}") from exc
 
     def workflow_runs(self, workflow: str, ref: str) -> list[dict]:
         result = []
