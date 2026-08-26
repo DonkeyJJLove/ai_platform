@@ -1,0 +1,83 @@
+name: MOON Bounded File Write
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: moon-bounded-file-write
+  cancel-in-progress: false
+
+jobs:
+  write:
+    if: >-
+      github.event.issue.number == 144 &&
+      startsWith(github.event.comment.body, 'MOON-FILE-WRITE v1')
+    runs-on: [self-hosted, linux, lion-trust-client]
+    timeout-minutes: 5
+    steps:
+      - name: Verify MOON execution context
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_NAME" = "lion-moon-r9d8-test"
+          test -d /home/d2j3
+          test ! -L /home/d2j3
+          command -v python3 >/dev/null
+
+      - name: Fetch exact bounded implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import urllib.request
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          sha = os.environ["GITHUB_SHA"]
+          if len(sha) != 40 or any(c not in "0123456789abcdef" for c in sha.lower()):
+              raise SystemExit("invalid GITHUB_SHA")
+          url = (
+              f"https://raw.githubusercontent.com/{repository}/{sha}/"
+              "cyber_lion/enterprise/moon_file_write.py"
+          )
+          request = urllib.request.Request(
+              url,
+              headers={"User-Agent": "lion-moon-file-write-bootstrap/1"},
+          )
+          with urllib.request.urlopen(request, timeout=20) as response:
+              data = response.read(65537)
+          if not data or len(data) > 65536:
+              raise SystemExit("bounded implementation fetch size invalid")
+          target = Path(os.environ["RUNNER_TEMP"]) / "moon_file_write.py"
+          target.write_bytes(data)
+          PY
+
+      - name: Execute bounded file write
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$RUNNER_TEMP/moon_file_write.py" \
+            --event "$GITHUB_EVENT_PATH" \
+            --repository "$GITHUB_REPOSITORY" \
+            --token-env GITHUB_TOKEN \
+            --runner-name "$RUNNER_NAME" | tee "$RUNNER_TEMP/moon-file-write.receipt"
+
+      - name: Publish receipt summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/moon-file-write.receipt" ]; then
+            {
+              echo '```text'
+              cat "$RUNNER_TEMP/moon-file-write.receipt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
