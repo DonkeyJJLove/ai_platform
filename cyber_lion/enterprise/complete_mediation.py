@@ -23,7 +23,7 @@ _CALL_CLASSES={
     "Path.write_text":"filesystem.write","Path.write_bytes":"filesystem.write",
     "os.unlink":"filesystem.delete","os.rmdir":"filesystem.delete","os.remove":"filesystem.delete",
     "os.replace":"filesystem.replace","os.rename":"filesystem.rename",
-    "urlopen":"external.network","requests.post":"external.network","requests.put":"external.network",
+    "requests.post":"external.network","requests.put":"external.network",
     "requests.patch":"external.network","requests.delete":"external.network",
 }
 _SUSPICIOUS_TOKENS=re.compile(r"(?:execute|launch|mutat|update|create|delete|attach|merge|dispatch|write|publish|release|deploy|subprocess|urlopen)",re.I)
@@ -97,7 +97,19 @@ class EffectSurfaceScanner:
                             )
                     if effect is None and name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
                     elif short in {"write_text","write_bytes"}:effect="filesystem.write"
-                    elif short in {"urlopen"}:effect="external.network"
+                    elif short in {"urlopen"}:
+                        # urlopen() is read-only unless the call itself supplies request data.
+                        # Mutating urllib.request.Request(method=POST/PUT/PATCH/DELETE) is
+                        # already classified at its constructor above.  Treating every
+                        # urlopen(Request(method="GET")) as an external write creates a
+                        # false authority surface (e.g. collaborator-permission lookup).
+                        data_node = None
+                        if len(node.args) >= 2:
+                            data_node = node.args[1]
+                        else:
+                            data_node = next((k.value for k in node.keywords if k.arg == "data"), None)
+                        if data_node is not None and not (isinstance(data_node, ast.Constant) and data_node.value is None):
+                            effect="external.network.post"
                     elif short=="delete_exact_branch_ref":effect="repository_ref.delete"
                     elif short in {"execute","executemany"} and node.args:
                         receiver = name.rsplit(".",1)[0] if "." in name else ""
