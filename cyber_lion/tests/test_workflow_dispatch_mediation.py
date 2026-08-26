@@ -83,7 +83,7 @@ class WorkflowDispatchMediationTests(unittest.TestCase):
 
     def test_request_substitution_is_denied_before_effect(self):
         req=request(); mediator,_,effect=self.build(req)
-        mediator.admissions.value=replace(admission(req), expected_head="b"*40).sealed()
+        mediator.admissions.value=replace(admission(req), expected_head="b"*40, admission_digest="").sealed()
         with self.assertRaises(WorkflowDispatchMediationError): mediator.execute(req)
         self.assertEqual(effect.calls, 0)
 
