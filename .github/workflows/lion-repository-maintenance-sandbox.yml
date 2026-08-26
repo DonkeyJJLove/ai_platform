@@ -54,6 +54,11 @@ jobs:
         id: execute
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_SHA: ${{ github.sha }}
         shell: bash
         run: |
           set -uo pipefail
@@ -61,7 +66,8 @@ jobs:
           stderr_file="$RUNNER_TEMP/lion-maintenance.stderr"
           set +e
           python -m cyber_lion.enterprise.repository_maintenance_cleanup \
-            --execute-cleanup >"$stdout_file" 2>"$stderr_file"
+            --execute-cleanup \
+            --expected-master "$GITHUB_SHA" >"$stdout_file" 2>"$stderr_file"
           rc=$?
           set -e
           cat "$stdout_file"
