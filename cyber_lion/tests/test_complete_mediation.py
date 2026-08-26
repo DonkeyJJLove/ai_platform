@@ -86,6 +86,21 @@ class CompleteMediationTests(unittest.TestCase):
         assessment=CompleteMediationEngine().assess(inventory=inv,bindings=(),falsification_evidence_refs=("r9-adversarial-scan",),observation_evidence_refs=("ci-checkout",))
         self.assertEqual(assessment.global_status,"UNKNOWN")
 
+    def test_urlopen_get_request_is_not_external_write(self):
+        source = """import urllib.request
+request = urllib.request.Request('https://api.github.com/repos/o/r/collaborators/a/permission', method='GET')
+urllib.request.urlopen(request, timeout=20)
+"""
+        inv=self.scan({"cyber_lion/probe.py":source})
+        self.assertFalse(any(s.effect_class.startswith("external.network") for s in inv.surfaces))
+
+    def test_urlopen_with_data_is_external_post(self):
+        source = """import urllib.request
+urllib.request.urlopen('https://api.github.com/x', b'payload')
+"""
+        inv=self.scan({"cyber_lion/probe.py":source})
+        self.assertEqual([s.effect_class for s in inv.surfaces],["external.network.post"])
+
     def test_contract_has_no_effect_or_authority_minting_surface(self):
         inv=self.scan({"cyber_lion/x.py":"import subprocess\nsubprocess.run(['x'])\n"})
         for name in ("execute","authorize","grant","attach","deploy","release"):
