@@ -1,0 +1,64 @@
+name: MOON Bounded File Write
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: moon-bounded-file-write
+  cancel-in-progress: false
+
+jobs:
+  write:
+    if: >-
+      github.event.issue.number == 144 &&
+      startsWith(github.event.comment.body, 'MOON-FILE-WRITE v1')
+    runs-on: [self-hosted, linux, lion-trust-client]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact implementation
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Verify MOON execution context
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_NAME" = "lion-moon-r9d8-test"
+          test -d /home/d2j3
+          test ! -L /home/d2j3
+
+      - name: Execute bounded file write
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cyber_lion.enterprise.moon_file_write \
+            --event "$GITHUB_EVENT_PATH" \
+            --repository "$GITHUB_REPOSITORY" \
+            --token-env GITHUB_TOKEN \
+            --runner-name "$RUNNER_NAME" | tee "$RUNNER_TEMP/moon-file-write.receipt"
+
+      - name: Publish receipt summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/moon-file-write.receipt" ]; then
+            {
+              echo '```text'
+              cat "$RUNNER_TEMP/moon-file-write.receipt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
