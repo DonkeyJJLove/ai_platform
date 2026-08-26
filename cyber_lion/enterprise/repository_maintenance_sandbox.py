@@ -111,7 +111,9 @@ class GitHubRepositoryMaintenanceBackend:
         headers = self._headers()
         if data is not None:
             headers["Content-Type"] = "application/json"
-        req = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
+        if method != "GET":
+            raise RepositoryMaintenanceError("generic repository-maintenance transport is read-only")
+        req = urllib.request.Request(self.api_url + path, data=data, method="GET", headers=headers)
         try:
             with urllib.request.build_opener(self._NoRedirect()).open(req, timeout=30) as response:
                 raw = response.read()
