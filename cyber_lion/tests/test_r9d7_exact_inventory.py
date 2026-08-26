@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from hashlib import sha256
+from hashlib import sha1, sha256
 import json
+from pathlib import Path
 import subprocess
 import unittest
 
@@ -27,27 +28,44 @@ def _production_path(path: str) -> bool:
     return path.startswith(".github/workflows/") and path.endswith((".yml", ".yaml"))
 
 
+def _git_blob_sha(data: bytes) -> str:
+    header = f"blob {len(data)}\0".encode("ascii")
+    return sha1(header + data).hexdigest()  # Git object identity compatibility SHA-1.
+
+
 class R9D7ExactInventoryTests(unittest.TestCase):
-    def test_exact_baseline_tree_inventory_is_materialized(self):
-        raw = _git("ls-tree", "-r", "-z", BASELINE_TREE)
-        entries = []
+    def test_exact_current_production_inventory_is_materialized(self):
+        # PR CI uses a depth-1 synthetic merge checkout, so the baseline tree object is
+        # intentionally not assumed to exist locally.  The checked-out index is the
+        # authoritative current candidate tree.  R9D-7 initially changes tests only;
+        # PR exact-scope verification separately proves production bytes equal baseline.
+        raw = _git("ls-files", "-s", "-z")
+        entries: list[tuple[str, str, str]] = []
         for record in raw.split(b"\0"):
             if not record:
                 continue
             meta, path_raw = record.split(b"\t", 1)
-            mode, obj_type, blob_sha = meta.decode("ascii").split(" ")
+            mode, blob_sha, stage = meta.decode("ascii").split(" ")
+            if stage != "0":
+                self.fail("unmerged index entry in exact inventory")
             path = path_raw.decode("utf-8")
-            if obj_type == "blob" and _production_path(path):
+            if _production_path(path):
                 entries.append((path, blob_sha, mode))
+        entries.sort()
         self.assertTrue(entries)
-        self.assertEqual(entries, sorted(entries))
+        self.assertEqual(len(entries), len({path for path, _, _ in entries}))
+
+        candidate_revision = _git("rev-parse", "HEAD").decode("ascii").strip()
+        candidate_tree = _git("write-tree").decode("ascii").strip()
+        self.assertRegex(candidate_revision, r"^[0-9a-f]{40}$")
+        self.assertRegex(candidate_tree, r"^[0-9a-f]{40}$")
 
         sources: dict[str, str] = {}
-        manifest = []
+        manifest: list[dict[str, object]] = []
         for path, blob_sha, mode in entries:
-            blob = _git("cat-file", "blob", blob_sha)
-            text = blob.decode("utf-8")
-            sources[path] = text
+            blob = Path(path).read_bytes()
+            self.assertEqual(_git_blob_sha(blob), blob_sha, path)
+            sources[path] = blob.decode("utf-8")
             manifest.append(
                 {
                     "path": path,
@@ -59,11 +77,13 @@ class R9D7ExactInventoryTests(unittest.TestCase):
             )
 
         manifest_bytes = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        manifest_digest = sha256(b"LION/R9D7/EXACT-PRODUCTION-MANIFEST/1\0" + manifest_bytes).hexdigest()
+        manifest_digest = sha256(
+            b"LION/R9D7/EXACT-PRODUCTION-MANIFEST/1\0" + manifest_bytes
+        ).hexdigest()
         inventory = EffectSurfaceScanner().scan(
             repository=REPOSITORY,
-            revision=BASELINE,
-            tree_digest=BASELINE_TREE,
+            revision=candidate_revision,
+            tree_digest=candidate_tree,
             sources=sources,
         )
 
@@ -72,8 +92,10 @@ class R9D7ExactInventoryTests(unittest.TestCase):
             + json.dumps(
                 {
                     "repository": REPOSITORY,
-                    "revision": BASELINE,
-                    "tree": BASELINE_TREE,
+                    "baseline": BASELINE,
+                    "baseline_tree": BASELINE_TREE,
+                    "candidate_revision": candidate_revision,
+                    "candidate_tree": candidate_tree,
                     "source_count": len(manifest),
                     "manifest_digest": manifest_digest,
                     "scan_digest": inventory.scan_digest,
@@ -85,8 +107,6 @@ class R9D7ExactInventoryTests(unittest.TestCase):
                 separators=(",", ":"),
             )
         )
-        for item in manifest:
-            print("R9D7_SOURCE " + json.dumps(item, sort_keys=True, separators=(",", ":")))
         for surface in inventory.surfaces:
             print(
                 "R9D7_SURFACE "
@@ -109,8 +129,8 @@ class R9D7ExactInventoryTests(unittest.TestCase):
         for ref in inventory.unclassified_refs:
             print("R9D7_UNCLASSIFIED " + ref)
 
-        self.assertEqual(inventory.revision, BASELINE)
-        self.assertEqual(inventory.tree_digest, BASELINE_TREE)
+        self.assertEqual(inventory.revision, candidate_revision)
+        self.assertEqual(inventory.tree_digest, candidate_tree)
         self.assertTrue(inventory.scan_digest)
         self.assertEqual(len(sources), len(manifest))
 
