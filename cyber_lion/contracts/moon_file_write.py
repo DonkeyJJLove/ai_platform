@@ -9,6 +9,7 @@ REPOSITORY = "DonkeyJJLove/ai_platform"
 CONTROL_ISSUE = 144
 RUNNER_NAME = "lion-moon-r9d8-test"
 BASE_DIR = "/home/d2j3"
+FENCE_BASENAME = ".lion-moon-file-write-fence.sqlite3"
 MAX_CONTENT_BYTES = 4096
 _OPERATION_MODES = {"CREATE_ONLY", "REPLACE_EXPECTED_DIGEST"}
 _PREVIOUS_STATES = {"ABSENT", "PRESENT_EXACT"}
@@ -36,7 +37,7 @@ def _validate_target(path: str) -> str:
     if not isinstance(path, str) or not path.startswith(prefix):
         raise MoonFileWriteContractError("target must be direct child of /home/d2j3")
     name = path[len(prefix):]
-    if not name or "/" in name or "\\" in name or name in {".", ".."} or _FILENAME.fullmatch(name) is None:
+    if not name or "/" in name or "\\" in name or name in {".", "..", FENCE_BASENAME} or _FILENAME.fullmatch(name) is None:
         raise MoonFileWriteContractError("target filename invalid")
     return name
 
