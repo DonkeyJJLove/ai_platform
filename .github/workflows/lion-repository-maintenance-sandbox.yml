@@ -17,11 +17,17 @@ jobs:
   cleanup:
     if: >-
       github.event.issue.number == 144 &&
-      github.event.comment.body == 'LION-BRANCH-CLEANUP v1'
-    runs-on: ubuntu-latest
+      startsWith(github.event.comment.body, 'LION-REPOSITORY-REF-DELETE v2')
+    runs-on: [self-hosted, linux, lion-trust-client]
     timeout-minutes: 20
+    env:
+      LION_MAINTENANCE_BUNDLE_URL: ${{ vars.LION_MAINTENANCE_BUNDLE_URL }}
+      LION_MAINTENANCE_BUNDLE_TOKEN: ${{ secrets.LION_MAINTENANCE_BUNDLE_TOKEN }}
+      LION_MAINTENANCE_RUNTIME_MODULE_PATH: ${{ vars.LION_MAINTENANCE_RUNTIME_MODULE_PATH }}
+      LION_MAINTENANCE_RUNTIME_MODULE_DIGEST: ${{ vars.LION_MAINTENANCE_RUNTIME_MODULE_DIGEST }}
+      LION_REPOSITORY_DELETE_FENCE_DATABASE_PATH: ${{ vars.LION_REPOSITORY_DELETE_FENCE_DATABASE_PATH }}
     steps:
-      - name: Validate repository-owner control actor
+      - name: Validate repository-owner request actor
         env:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
@@ -35,7 +41,7 @@ jobs:
           owner = repository.get('owner') or {}
           actor = comment.get('user') or {}
           if actor.get('login') != owner.get('login'):
-              raise SystemExit('repository-owner control actor required')
+              raise SystemExit('repository-owner request actor required')
           PY
 
       - name: Checkout exact master
@@ -50,7 +56,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Execute bounded branch cleanup
+      - name: Observe exact master tree
+        id: gitstate
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+
+      - name: Execute canonical mediated exact branch-ref delete
         id: execute
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -65,9 +78,11 @@ jobs:
           stdout_file="$RUNNER_TEMP/lion-maintenance.stdout"
           stderr_file="$RUNNER_TEMP/lion-maintenance.stderr"
           set +e
-          python -m cyber_lion.enterprise.repository_maintenance_cleanup \
-            --execute-cleanup \
-            --expected-master "$GITHUB_SHA" >"$stdout_file" 2>"$stderr_file"
+          python -m cyber_lion.enterprise.repository_maintenance_mediated_cleanup \
+            --execute-exact-request \
+            --expected-master "$GITHUB_SHA" \
+            --expected-tree "${{ steps.gitstate.outputs.tree }}" \
+            >"$stdout_file" 2>"$stderr_file"
           rc=$?
           set -e
           cat "$stdout_file"
@@ -85,8 +100,10 @@ jobs:
           marker = 'LION_REPOSITORY_MAINTENANCE_RESULT '
           matches = [line[len(marker):] for line in lines if line.startswith(marker)]
           if len(matches) != 1:
-              raise SystemExit('expected exactly one maintenance result')
+              raise SystemExit('expected exactly one mediated maintenance result')
           value = json.loads(matches[0])
+          if value.get('fence_state') != 'RECONCILED':
+              raise SystemExit('mediated maintenance did not reconcile')
           Path('lion-repository-maintenance-result.json').write_text(
               json.dumps(value, sort_keys=True, separators=(',', ':')) + '\n',
               encoding='utf-8',
