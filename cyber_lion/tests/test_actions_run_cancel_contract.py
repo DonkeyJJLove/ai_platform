@@ -1,6 +1,7 @@
 import unittest
 from cyber_lion.contracts.actions_run_cancel import ActionsRunCancelRequest,ActionsRunCancelContractError
 
+# R2K1 CI synchronize marker: test-only, no production semantics.
 class ActionsRunCancelContractTests(unittest.TestCase):
     def test_exact_request(self):
         r=ActionsRunCancelRequest("DonkeyJJLove/ai_platform",123,"LION Actions Dispatch Bridge","issue_comment","a"*40,"QUEUE_RECOVERY_ONLY","r1").validate()
