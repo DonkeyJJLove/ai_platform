@@ -91,14 +91,13 @@ def resolve_live_base_sha(root: Path, base_ref: object) -> str:
     return validated_sha40(fields[0], "pull_request base sha")
 
 
-def fetch_exact_live_branch_tree(root: Path, branch_ref: object, expected_sha: object) -> str:
+def fetch_exact_branch_tree(root: Path, branch_ref: object, expected_sha: object) -> str:
     branch = validated_pr_base_ref(root, branch_ref)
     expected = validated_sha40(expected_sha, "pull_request branch sha")
     exact_ref = f"refs/heads/{branch}"
-    if resolve_live_base_sha(root, branch) != expected:
-        raise AssertionError("pull_request branch head drift")
+    verification_ref = "refs/lion/code-perception-head"
     proc = subprocess.run(
-        ["git", "fetch", "--no-tags", "--depth=1", "origin", exact_ref],
+        ["git", "fetch", "--no-tags", "--depth=1", "origin", f"{exact_ref}:{verification_ref}"],
         cwd=root,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -106,13 +105,10 @@ def fetch_exact_live_branch_tree(root: Path, branch_ref: object, expected_sha: o
     )
     if proc.returncode:
         raise AssertionError("pull_request branch ref unavailable on origin")
-    fetched = validated_sha40(run(["git", "rev-parse", f"{expected}^{{commit}}"], root), "fetched branch sha")
+    fetched = validated_sha40(run(["git", "rev-parse", f"{verification_ref}^{{commit}}"], root), "fetched branch sha")
     if fetched != expected:
-        raise AssertionError("pull_request branch object substitution")
-    tree = validated_sha40(run(["git", "rev-parse", f"{expected}^{{tree}}"], root), "fetched branch tree")
-    if resolve_live_base_sha(root, branch) != expected:
         raise AssertionError("pull_request branch head drift")
-    return tree
+    return validated_sha40(run(["git", "rev-parse", f"{verification_ref}^{{tree}}"], root), "fetched branch tree")
 
 
 def validate_synthetic_merge_topology(
@@ -509,8 +505,11 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
         workflow_merge = validated_sha40(os.environ.get("GITHUB_SHA", ""), "workflow synthetic merge sha")
 
         live_base = resolve_live_base_sha(root, expected_base_ref)
-        live_head = resolve_live_base_sha(root, expected_head_ref)
-        candidate_tree = fetch_exact_live_branch_tree(root, expected_head_ref, expected_head)
+        live_head_before = resolve_live_base_sha(root, expected_head_ref)
+        candidate_tree = fetch_exact_branch_tree(root, expected_head_ref, expected_head)
+        live_head_after = resolve_live_base_sha(root, expected_head_ref)
+        if live_head_before != live_head_after:
+            raise AssertionError("pull_request head changed during observation")
         checked_commit = validated_sha40(run(["git", "rev-parse", "HEAD"], root), "checked commit sha")
         parents = tuple(run(["git", "rev-list", "--parents", "-n", "1", "HEAD"], root).split())
         checked_tree = validated_sha40(run(["git", "rev-parse", "HEAD^{tree}"], root), "checked tree sha")
@@ -519,7 +518,7 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             event_base_sha=expected_base,
             live_base_sha=live_base,
             event_head_sha=expected_head,
-            live_head_sha=live_head,
+            live_head_sha=live_head_after,
             workflow_merge_sha=workflow_merge,
             checked_commit_sha=checked_commit,
             parents=parents,
