@@ -95,7 +95,7 @@ class R9D9DMoonAuxiliaryClosureTests(unittest.TestCase):
     def test_replace_remains_not_live_certified_by_this_phase(self):
         source = Path("cyber_lion/enterprise/moon_file_write.py").read_text(encoding="utf-8")
         self.assertIn('request.operation_mode == "CREATE_ONLY"', source)
-        self.assertIn("REPLACE target drift before commit", source)
+        self.assertIn("REPLACE target identity drift before commit", source)
         # R9D-9D intentionally does not manufacture live evidence for REPLACE_EXPECTED_DIGEST.
         self.assertNotIn("R9D-9D REPLACE LIVE CANARY", source)
 
