@@ -162,14 +162,14 @@ class MemoryCanonicalBackend(CanonicalSlashSafeGitHubRepositoryMaintenanceBacken
             record_revision=1,
         ).validate()
 
-    def _request(self, method, path, body=None, *, allow_404=False):
-        del body, allow_404
-        if method != "DELETE":
-            raise RuntimeError(f"unexpected request {method} {path}")
+    def _delete_exact_branch_ref_http(self, path):
+        expected = f"/repos/{REPOSITORY}/git/refs/heads/{BRANCH}"
+        if path != expected:
+            raise RuntimeError(f"unexpected delete path {path}")
         self.delete_calls += 1
         if not self.fake_204_without_delete:
             self._head = None
-        return 204, None
+        return 204
 
 
 class R9D8UMediatedCleanupTests(unittest.TestCase):
