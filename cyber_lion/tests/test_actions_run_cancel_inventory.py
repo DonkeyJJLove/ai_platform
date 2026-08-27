@@ -11,8 +11,8 @@ class ActionsRunCancelInventoryTests(unittest.TestCase):
         effect_source = inspect.getsource(effect_module)
         runtime_source = inspect.getsource(runtime_module)
         combined = effect_source + "\n" + runtime_source
-        self.assertEqual(combined.count('"/actions/runs/"'), 1)
-        self.assertEqual(combined.count('"/cancel"'), 1)
+        self.assertEqual(combined.count("/actions/runs/"), 1)
+        self.assertEqual(combined.count("/cancel"), 1)
         self.assertEqual(combined.count('method="POST"'), 1)
         self.assertEqual(effect_source.count('method="POST"'), 0)
         self.assertEqual(runtime_source.count('method="POST"'), 1)
@@ -21,13 +21,12 @@ class ActionsRunCancelInventoryTests(unittest.TestCase):
         self.assertNotIn('method="DELETE"', combined)
 
     def test_scanner_keeps_exactly_one_raw_cancel_post_visible(self):
+        runtime_path = "cyber_lion/enterprise/actions_run_cancel_runtime.py"
         sources = {
             "cyber_lion/enterprise/actions_run_cancel_github_effect.py": inspect.getsource(
                 effect_module
             ),
-            "cyber_lion/enterprise/actions_run_cancel_runtime.py": inspect.getsource(
-                runtime_module
-            ),
+            runtime_path: inspect.getsource(runtime_module),
         }
         inventory = EffectSurfaceScanner().scan(
             repository="DonkeyJJLove/ai_platform",
@@ -41,11 +40,11 @@ class ActionsRunCancelInventoryTests(unittest.TestCase):
             if surface.effect_class == "external.network.post"
         ]
         self.assertEqual(len(posts), 1)
-        self.assertEqual(
-            posts[0].implementation_refs,
-            ("cyber_lion/enterprise/actions_run_cancel_runtime.py",),
-        )
-        self.assertIn("/cancel", posts[0].entrypoints[0])
+        self.assertEqual(posts[0].implementation_refs, (runtime_path,))
+        self.assertEqual(posts[0].mutation_kind, "urllib.request.Request")
+        self.assertEqual(posts[0].target_class, "external")
+        self.assertEqual(posts[0].authority_class, "external_write")
+        self.assertEqual(sources[runtime_path].count("/cancel"), 1)
 
     def test_historical_effect_module_has_no_network_transport(self):
         source = inspect.getsource(effect_module)
