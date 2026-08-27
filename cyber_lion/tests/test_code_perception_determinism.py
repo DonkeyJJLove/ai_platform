@@ -44,6 +44,15 @@ def run_bytes(cmd, cwd):
     return proc.stdout
 
 
+def validated_sha40(value: object, label: str) -> str:
+    if type(value) is not str:
+        raise AssertionError(f"{label} invalid")
+    sha = value.lower()
+    if len(sha) != 40 or any(ch not in "0123456789abcdef" for ch in sha):
+        raise AssertionError(f"{label} invalid")
+    return sha
+
+
 def validated_pr_base_ref(root: Path, value: object) -> str:
     if type(value) is not str or not value or value != value.strip() or len(value) > 255:
         raise AssertionError("pull_request base ref invalid")
@@ -79,10 +88,62 @@ def resolve_live_base_sha(root: Path, base_ref: object) -> str:
     fields = rows[0].split()
     if len(fields) != 2 or fields[1] != exact_ref:
         raise AssertionError("pull_request base ref resolution invalid")
-    sha = fields[0].lower()
-    if len(sha) != 40 or any(ch not in "0123456789abcdef" for ch in sha):
-        raise AssertionError("pull_request base sha invalid")
-    return sha
+    return validated_sha40(fields[0], "pull_request base sha")
+
+
+def fetch_exact_live_branch_tree(root: Path, branch_ref: object, expected_sha: object) -> str:
+    branch = validated_pr_base_ref(root, branch_ref)
+    expected = validated_sha40(expected_sha, "pull_request branch sha")
+    exact_ref = f"refs/heads/{branch}"
+    proc = subprocess.run(
+        ["git", "fetch", "--no-tags", "--depth=1", "origin", exact_ref],
+        cwd=root,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode:
+        raise AssertionError("pull_request branch ref unavailable on origin")
+    fetched = validated_sha40(run(["git", "rev-parse", "FETCH_HEAD"], root), "fetched branch sha")
+    if fetched != expected:
+        raise AssertionError("pull_request branch head drift")
+    return validated_sha40(run(["git", "rev-parse", "FETCH_HEAD^{tree}"], root), "fetched branch tree")
+
+
+def validate_synthetic_merge_topology(
+    *,
+    event_base_sha: object,
+    live_base_sha: object,
+    event_head_sha: object,
+    live_head_sha: object,
+    workflow_merge_sha: object,
+    checked_commit_sha: object,
+    parents: tuple[str, ...],
+    checked_tree_sha: object,
+    candidate_tree_sha: object,
+) -> None:
+    event_base = validated_sha40(event_base_sha, "event base sha")
+    live_base = validated_sha40(live_base_sha, "live base sha")
+    event_head = validated_sha40(event_head_sha, "event head sha")
+    live_head = validated_sha40(live_head_sha, "live head sha")
+    workflow_merge = validated_sha40(workflow_merge_sha, "workflow synthetic merge sha")
+    checked_commit = validated_sha40(checked_commit_sha, "checked commit sha")
+    checked_tree = validated_sha40(checked_tree_sha, "checked tree sha")
+    candidate_tree = validated_sha40(candidate_tree_sha, "candidate tree sha")
+
+    if event_base != live_base:
+        raise AssertionError("pull_request base drift")
+    if event_head != live_head:
+        raise AssertionError("pull_request head drift")
+    if workflow_merge != checked_commit:
+        raise AssertionError("workflow synthetic merge substitution")
+    if len(parents) != 3:
+        raise AssertionError("synthetic merge parent cardinality invalid")
+    normalized_parents = tuple(validated_sha40(value, "synthetic merge parent") for value in parents)
+    if normalized_parents != (checked_commit, event_base, event_head):
+        raise AssertionError("synthetic merge parent topology substitution")
+    if checked_tree != candidate_tree:
+        raise AssertionError("synthetic merge tree substitution")
 
 
 def blob_inputs_for_ref(root: Path, ref: str) -> tuple[BlobInput, ...]:
@@ -255,6 +316,50 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             with self.assertRaises(CodePerceptionBuildError):
                 git_source_identity(self.root, REPOSITORY, "0" * 40)
 
+    def test_P0_malformed_and_nonexistent_base_ref_fail_closed(self):
+        for value in (None, "", " refs/heads/main", "refs/heads/main", "-main", "bad ref"):
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                validated_pr_base_ref(self.root, value)
+        run(["git", "remote", "add", "origin", str(self.root)], self.root)
+        with self.assertRaisesRegex(AssertionError, "unavailable on origin"):
+            resolve_live_base_sha(self.root, "definitely-not-a-branch")
+
+    def test_P0_synthetic_merge_identity_substitutions_fail_closed(self):
+        base = "1" * 40
+        head = "2" * 40
+        merge = "3" * 40
+        tree = "4" * 40
+        good = {
+            "event_base_sha": base,
+            "live_base_sha": base,
+            "event_head_sha": head,
+            "live_head_sha": head,
+            "workflow_merge_sha": merge,
+            "checked_commit_sha": merge,
+            "parents": (merge, base, head),
+            "checked_tree_sha": tree,
+            "candidate_tree_sha": tree,
+        }
+        validate_synthetic_merge_topology(**good)
+        substitutions = (
+            ("event-base", {"event_base_sha": "5" * 40}),
+            ("live-base", {"live_base_sha": "5" * 40}),
+            ("event-head", {"event_head_sha": "5" * 40}),
+            ("live-head", {"live_head_sha": "5" * 40}),
+            ("event-synthetic", {"workflow_merge_sha": "5" * 40}),
+            ("checked-synthetic", {"checked_commit_sha": "5" * 40}),
+            ("synthetic-tree", {"checked_tree_sha": "5" * 40}),
+            ("candidate-tree", {"candidate_tree_sha": "5" * 40}),
+            ("parent0", {"parents": (merge, "5" * 40, head)}),
+            ("parent1", {"parents": (merge, base, "5" * 40)}),
+            ("parent-order", {"parents": (merge, head, base)}),
+        )
+        for label, substitution in substitutions:
+            case = dict(good)
+            case.update(substitution)
+            with self.subTest(label=label), self.assertRaises(AssertionError):
+                validate_synthetic_merge_topology(**case)
+
     def test_same_tree_semantic_digest_is_commit_alias_independent(self):
         graph, _ = build_from_git(self.root, REPOSITORY, self.commit, expected_tree=self.tree)
         alias_source = SourceIdentity(REPOSITORY, "f" * 40, self.tree).validate()
@@ -391,23 +496,32 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             self.skipTest("not a pull_request workflow")
 
         root = Path(__file__).resolve().parents[2]
-        expected_head = str(pr.get("head", {}).get("sha", "")).lower()
-        expected_base = str(pr.get("base", {}).get("sha", "")).lower()
+        expected_head = validated_sha40(pr.get("head", {}).get("sha", ""), "event head sha")
+        expected_base = validated_sha40(pr.get("base", {}).get("sha", ""), "event base sha")
         expected_base_ref = validated_pr_base_ref(root, pr.get("base", {}).get("ref"))
-        expected_merge = str(pr.get("merge_commit_sha", "")).lower()
-        self.assertRegex(expected_base, r"^[0-9a-f]{40}$")
-        self.assertRegex(expected_head, r"^[0-9a-f]{40}$")
-        self.assertRegex(expected_merge, r"^[0-9a-f]{40}$")
-        self.assertEqual(expected_base, resolve_live_base_sha(root, expected_base_ref))
+        expected_head_ref = validated_pr_base_ref(root, pr.get("head", {}).get("ref"))
+        event_merge_metadata = validated_sha40(pr.get("merge_commit_sha", ""), "pull_request merge metadata sha")
+        workflow_merge = validated_sha40(os.environ.get("GITHUB_SHA", ""), "workflow synthetic merge sha")
 
-        checked_commit = run(["git", "rev-parse", "HEAD"], root).lower()
-        self.assertEqual(expected_merge, checked_commit)
-        parents = run(["git", "rev-list", "--parents", "-n", "1", "HEAD"], root).split()
-        self.assertEqual(len(parents), 3)
-        self.assertEqual(expected_base, parents[1].lower())
-        self.assertEqual(expected_head, parents[2].lower())
+        live_base = resolve_live_base_sha(root, expected_base_ref)
+        live_head = resolve_live_base_sha(root, expected_head_ref)
+        candidate_tree = fetch_exact_live_branch_tree(root, expected_head_ref, expected_head)
+        checked_commit = validated_sha40(run(["git", "rev-parse", "HEAD"], root), "checked commit sha")
+        parents = tuple(run(["git", "rev-list", "--parents", "-n", "1", "HEAD"], root).split())
+        checked_tree = validated_sha40(run(["git", "rev-parse", "HEAD^{tree}"], root), "checked tree sha")
 
-        checked_tree = run(["git", "rev-parse", "HEAD^{tree}"], root).lower()
+        validate_synthetic_merge_topology(
+            event_base_sha=expected_base,
+            live_base_sha=live_base,
+            event_head_sha=expected_head,
+            live_head_sha=live_head,
+            workflow_merge_sha=workflow_merge,
+            checked_commit_sha=checked_commit,
+            parents=parents,
+            checked_tree_sha=checked_tree,
+            candidate_tree_sha=candidate_tree,
+        )
+
         source = SourceIdentity(REPOSITORY, expected_head, checked_tree).validate()
         blobs = blob_inputs_for_ref(root, "HEAD")
         first = build_code_graph(source, blobs)
@@ -419,7 +533,8 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             "CODE_PERCEPTION_CANDIDATE_PROJECTION "
             f"head={expected_head} tree={checked_tree} digest={first.digest()} "
             f"tree_semantic_digest={tree_semantic_digest(first)} "
-            f"files={len(first.files)} symbols={len(first.symbols)} edges={len(first.edges)}"
+            f"files={len(first.files)} symbols={len(first.symbols)} edges={len(first.edges)} "
+            f"workflow_merge={workflow_merge} event_merge_metadata={event_merge_metadata}"
         )
 
 
