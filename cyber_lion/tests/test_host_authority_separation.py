@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from dataclasses import replace
 from hashlib import sha1, sha256
 import inspect
@@ -226,6 +227,24 @@ class HostAuthoritySeparationTests(unittest.TestCase):
             names=set(inspect.signature(fn).parameters)
             self.assertFalse(names & {"provider","provider_id","provider_instance","verifier","trust_anchor","private_key","secret"})
 
+    def test_git_oid_sha1_is_explicitly_non_security(self):
+        source=Path("cyber_lion/enterprise/host_authority_separation.py").read_text()
+        parsed=ast.parse(source)
+        calls=[node for node in ast.walk(parsed)
+               if isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and node.func.id=="sha1"]
+        self.assertEqual(len(calls),3)
+        for call in calls:
+            keywords={kw.arg:kw.value for kw in call.keywords}
+            self.assertIn("usedforsecurity",keywords)
+            value=keywords["usedforsecurity"]
+            self.assertIsInstance(value,ast.Constant)
+            self.assertIs(value.value,False)
+
+    def test_git_oid_sha1_regression_vectors(self):
+        self.assertEqual(hostsep._git_blob_sha(b""),"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391")
+        self.assertEqual(hostsep._git_blob_sha(b"hello\n"),"ce013625030ba8dba906f756967f9e9ca394464a")
+        self.assertEqual(hostsep._git_blob_sha(b"test\n"),"9daeafb9864cf43055ae93beb0afd6c7d144bfa4")
+
     def test_coherent_fake_world_a_denied_by_real_origin(self):
         self.production_verifier()
         files=(("cyber_lion/enterprise/evil.py","100644",b"OWNED=True\n"),(".github/workflows/evil.yml","100644",b"name: evil\n"))
@@ -322,7 +341,10 @@ class HostAuthoritySeparationTests(unittest.TestCase):
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",
-                     "test_coherent_fake_world_c_resealed_all_internal_digests_denied"):
+                     "test_coherent_fake_world_c_resealed_all_internal_digests_denied",
+                     "test_git_oid_sha1_is_explicitly_non_security",
+                     "test_git_oid_sha1_regression_vectors",
+                     "test_effect_surface_and_exact_terminal_inventory"):
             self.assertFalse(getattr(getattr(type(self),name),"__unittest_skip__",False),name)
 
 
