@@ -2,23 +2,56 @@ import inspect
 import unittest
 
 import cyber_lion.enterprise.actions_run_cancel_github_effect as effect_module
+import cyber_lion.enterprise.actions_run_cancel_runtime as runtime_module
+from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
 
 
 class ActionsRunCancelInventoryTests(unittest.TestCase):
-    def test_single_raw_cancel_endpoint_owner(self):
-        source = inspect.getsource(effect_module)
-        self.assertEqual(source.count('/actions/runs/{request.run_id}/cancel'), 1)
-        self.assertEqual(source.count('method="POST"'), 1)
-        self.assertIn('class ExactActionsRunCancelEffectProvider', source)
-        self.assertNotIn('method="PUT"', source)
-        self.assertNotIn('method="PATCH"', source)
-        self.assertNotIn('method="DELETE"', source)
+    def test_single_raw_cancel_endpoint_owner_is_canonical_runtime(self):
+        effect_source = inspect.getsource(effect_module)
+        runtime_source = inspect.getsource(runtime_module)
+        combined = effect_source + "\n" + runtime_source
+        self.assertEqual(combined.count('"/actions/runs/"'), 1)
+        self.assertEqual(combined.count('"/cancel"'), 1)
+        self.assertEqual(combined.count('method="POST"'), 1)
+        self.assertEqual(effect_source.count('method="POST"'), 0)
+        self.assertEqual(runtime_source.count('method="POST"'), 1)
+        self.assertNotIn('method="PUT"', combined)
+        self.assertNotIn('method="PATCH"', combined)
+        self.assertNotIn('method="DELETE"', combined)
 
-    def test_no_caller_supplied_url_or_method(self):
-        source = inspect.getsource(effect_module.ExactActionsRunCancelEffectProvider.cancel_exact)
-        self.assertNotIn('request.url', source)
-        self.assertNotIn('request.method', source)
-        self.assertIn('API_ORIGIN', inspect.getsource(effect_module.ExactActionsRunCancelEffectProvider))
+    def test_scanner_keeps_exactly_one_raw_cancel_post_visible(self):
+        sources = {
+            "cyber_lion/enterprise/actions_run_cancel_github_effect.py": inspect.getsource(
+                effect_module
+            ),
+            "cyber_lion/enterprise/actions_run_cancel_runtime.py": inspect.getsource(
+                runtime_module
+            ),
+        }
+        inventory = EffectSurfaceScanner().scan(
+            repository="DonkeyJJLove/ai_platform",
+            revision="a" * 40,
+            tree_digest="b" * 40,
+            sources=sources,
+        )
+        posts = [
+            surface
+            for surface in inventory.surfaces
+            if surface.effect_class == "external.network.post"
+        ]
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(
+            posts[0].implementation_refs,
+            ("cyber_lion/enterprise/actions_run_cancel_runtime.py",),
+        )
+        self.assertIn("/cancel", posts[0].entrypoints[0])
+
+    def test_historical_effect_module_has_no_network_transport(self):
+        source = inspect.getsource(effect_module)
+        self.assertNotIn("urllib.request.Request", source)
+        self.assertNotIn("build_opener", source)
+        self.assertIn("direct actions-run-cancel effect provider disabled", source)
 
 
 if __name__ == "__main__":
