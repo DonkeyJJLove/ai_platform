@@ -143,7 +143,7 @@ class _PermissionAdmissionResolver:
     repository: str
     token: str
     expected_actor: str
-    provider_id: str = "github-collaborator-permission-pdp-v1"
+    provider_id: str = "github-collaborator-permission-pdp-v2"
 
     def resolve(self, request: MoonFileWriteRequest) -> CanonicalMoonFileWriteAdmission:
         request.validate()
@@ -153,16 +153,27 @@ class _PermissionAdmissionResolver:
         if permission not in TRUSTED_PERMISSIONS:
             raise MoonFileWriteMediationError("actor permission is not trusted")
         authority_source_digest = hashlib.sha256(
-            b"LION/MOON-GITHUB-PERMISSION-SOURCE/1\0"
+            b"LION/MOON-GITHUB-PERMISSION-SOURCE/2\0"
             + json.dumps(
-                {"repository": self.repository, "actor": self.expected_actor, "permission": permission},
+                {
+                    "repository": self.repository,
+                    "actor": self.expected_actor,
+                    "permission": permission,
+                    "control_issue": request.control_issue,
+                    "source_event_digest": request.source_event_digest,
+                },
                 sort_keys=True, separators=(",", ":"),
             ).encode("utf-8")
         ).hexdigest()
         pdp_decision_digest = hashlib.sha256(
-            b"LION/MOON-FILE-WRITE-PDP/1\0"
+            b"LION/MOON-FILE-WRITE-PDP/2\0"
             + json.dumps(
-                {"authority_source_digest": authority_source_digest, "decision": "ALLOW", "scope": request.target_path},
+                {
+                    "authority_source_digest": authority_source_digest,
+                    "decision": "ALLOW",
+                    "scope": request.target_path,
+                    "operation_mode": request.operation_mode,
+                },
                 sort_keys=True, separators=(",", ":"),
             ).encode("utf-8")
         ).hexdigest()
@@ -181,7 +192,7 @@ class _PermissionAdmissionResolver:
             source_event_digest=request.source_event_digest,
             authority_source_digest=authority_source_digest,
             pdp_decision_digest=pdp_decision_digest,
-            authority_epoch=0,
+            authority_epoch=None,
             provider_id=self.provider_id,
         ).sealed()
         return admission
