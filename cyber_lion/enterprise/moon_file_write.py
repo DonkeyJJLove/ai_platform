@@ -143,7 +143,7 @@ class _PermissionAdmissionResolver:
     repository: str
     token: str
     expected_actor: str
-    provider_id: str = "github-collaborator-permission-pdp-v1"
+    provider_id: str = "github-collaborator-permission-pdp-v2"
 
     def resolve(self, request: MoonFileWriteRequest) -> CanonicalMoonFileWriteAdmission:
         request.validate()
@@ -153,20 +153,31 @@ class _PermissionAdmissionResolver:
         if permission not in TRUSTED_PERMISSIONS:
             raise MoonFileWriteMediationError("actor permission is not trusted")
         authority_source_digest = hashlib.sha256(
-            b"LION/MOON-GITHUB-PERMISSION-SOURCE/1\0"
+            b"LION/MOON-GITHUB-PERMISSION-SOURCE/2\0"
             + json.dumps(
-                {"repository": self.repository, "actor": self.expected_actor, "permission": permission},
+                {
+                    "repository": self.repository,
+                    "actor": self.expected_actor,
+                    "permission": permission,
+                    "control_issue": request.control_issue,
+                    "source_event_digest": request.source_event_digest,
+                },
                 sort_keys=True, separators=(",", ":"),
             ).encode("utf-8")
         ).hexdigest()
         pdp_decision_digest = hashlib.sha256(
-            b"LION/MOON-FILE-WRITE-PDP/1\0"
+            b"LION/MOON-FILE-WRITE-PDP/2\0"
             + json.dumps(
-                {"authority_source_digest": authority_source_digest, "decision": "ALLOW", "scope": request.target_path},
+                {
+                    "authority_source_digest": authority_source_digest,
+                    "decision": "ALLOW",
+                    "scope": request.target_path,
+                    "operation_mode": request.operation_mode,
+                },
                 sort_keys=True, separators=(",", ":"),
             ).encode("utf-8")
         ).hexdigest()
-        admission = CanonicalMoonFileWriteAdmission(
+        return CanonicalMoonFileWriteAdmission(
             request_digest=request.request_digest,
             repository=request.repository,
             control_issue=request.control_issue,
@@ -181,16 +192,15 @@ class _PermissionAdmissionResolver:
             source_event_digest=request.source_event_digest,
             authority_source_digest=authority_source_digest,
             pdp_decision_digest=pdp_decision_digest,
-            authority_epoch=0,
+            authority_epoch=None,
             provider_id=self.provider_id,
         ).sealed()
-        return admission
 
 
 class ExactMoonFileWriteEffectProvider:
     """The only MOON provider allowed to materialize the selected host effect."""
 
-    provider_id = "moon-exact-host-file-write-v1"
+    provider_id = "moon-exact-host-file-write-v2"
 
     def __init__(self, *, content: bytes, fence: DurableMoonFileWriteFence):
         if type(fence) is not DurableMoonFileWriteFence:
@@ -205,24 +215,51 @@ class ExactMoonFileWriteEffectProvider:
         base_stat = os.lstat(BASE_DIR)
         if stat.S_ISLNK(base_stat.st_mode) or not stat.S_ISDIR(base_stat.st_mode):
             raise MoonFileWriteMediationError("bounded base directory unsafe")
-        return os.open(BASE_DIR, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
+        fd = os.open(BASE_DIR, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
+        opened = os.fstat(fd)
+        if (opened.st_dev, opened.st_ino) != (base_stat.st_dev, base_stat.st_ino):
+            os.close(fd)
+            raise MoonFileWriteMediationError("bounded base directory identity drift")
+        return fd
 
     @staticmethod
-    def _hash_existing(dir_fd: int, name: str) -> str:
-        fd = os.open(name, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0), dir_fd=dir_fd)
+    def _hash_open_fd(fd: int) -> tuple[int, str]:
+        os.lseek(fd, 0, os.SEEK_SET)
+        h = hashlib.sha256(); total = 0
+        while True:
+            chunk = os.read(fd, 65536)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > MAX_CONTENT_BYTES:
+                raise MoonFileWriteMediationError("existing target exceeds bounded size")
+            h.update(chunk)
+        return total, h.hexdigest()
+
+    @classmethod
+    def _observe_replace_identity(cls, dir_fd: int, name: str) -> tuple[int, int, str]:
+        nofollow = getattr(os, "O_NOFOLLOW", 0)
+        lst = os.stat(name, dir_fd=dir_fd, follow_symlinks=False)
+        if stat.S_ISLNK(lst.st_mode) or not stat.S_ISREG(lst.st_mode):
+            raise MoonFileWriteMediationError("REPLACE target is not an exact regular file")
+        fd = os.open(name, os.O_RDONLY | nofollow, dir_fd=dir_fd)
         try:
-            h = hashlib.sha256(); total = 0
-            while True:
-                chunk = os.read(fd, 65536)
-                if not chunk:
-                    break
-                total += len(chunk)
-                if total > MAX_CONTENT_BYTES:
-                    raise MoonFileWriteMediationError("existing target exceeds bounded size")
-                h.update(chunk)
-            return h.hexdigest()
+            fst = os.fstat(fd)
+            if not stat.S_ISREG(fst.st_mode) or (fst.st_dev, fst.st_ino) != (lst.st_dev, lst.st_ino):
+                raise MoonFileWriteMediationError("REPLACE target identity changed during observation")
+            _, digest = cls._hash_open_fd(fd)
+            after = os.stat(name, dir_fd=dir_fd, follow_symlinks=False)
+            if stat.S_ISLNK(after.st_mode) or not stat.S_ISREG(after.st_mode) or (after.st_dev, after.st_ino) != (fst.st_dev, fst.st_ino):
+                raise MoonFileWriteMediationError("REPLACE target identity changed during hashing")
+            return int(fst.st_dev), int(fst.st_ino), digest
         finally:
             os.close(fd)
+
+    @classmethod
+    def _require_replace_identity(cls, dir_fd: int, name: str, expected: tuple[int, int, str]) -> None:
+        current = cls._observe_replace_identity(dir_fd, name)
+        if current != expected:
+            raise MoonFileWriteMediationError("REPLACE target identity drift before commit")
 
     def write_exact(self, request: MoonFileWriteRequest, admission: CanonicalMoonFileWriteAdmission) -> None:
         if type(request) is not MoonFileWriteRequest or type(admission) is not CanonicalMoonFileWriteAdmission:
@@ -236,6 +273,7 @@ class ExactMoonFileWriteEffectProvider:
         name = _target_name(request.target_path)
         dir_fd = self._safe_dir_fd()
         temp_name = f".moon-mediated-{uuid.uuid4().hex}.tmp"
+        replace_identity: tuple[int, int, str] | None = None
         try:
             if request.operation_mode == "CREATE_ONLY":
                 try:
@@ -246,10 +284,10 @@ class ExactMoonFileWriteEffectProvider:
                     raise MoonFileWriteMediationError("CREATE_ONLY target exists at effect time")
             else:
                 try:
-                    current = self._hash_existing(dir_fd, name)
+                    replace_identity = self._observe_replace_identity(dir_fd, name)
                 except (FileNotFoundError, OSError) as exc:
                     raise MoonFileWriteMediationError("REPLACE target unavailable at effect time") from exc
-                if current != request.expected_previous_sha256:
+                if replace_identity[2] != request.expected_previous_sha256:
                     raise MoonFileWriteMediationError("REPLACE target changed at effect time")
 
             fd = os.open(temp_name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600, dir_fd=dir_fd)
@@ -271,8 +309,9 @@ class ExactMoonFileWriteEffectProvider:
                     raise MoonFileWriteMediationError("CREATE_ONLY target raced into existence") from exc
                 os.unlink(temp_name, dir_fd=dir_fd)
             else:
-                if self._hash_existing(dir_fd, name) != request.expected_previous_sha256:
-                    raise MoonFileWriteMediationError("REPLACE target drift before commit")
+                if replace_identity is None:
+                    raise MoonFileWriteMediationError("REPLACE identity unavailable")
+                self._require_replace_identity(dir_fd, name, replace_identity)
                 os.replace(temp_name, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
             os.fsync(dir_fd)
         finally:

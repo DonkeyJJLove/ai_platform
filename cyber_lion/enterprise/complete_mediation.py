@@ -45,14 +45,11 @@ def _surface(path:str,line:int,call:str,effect_class:str)->ConsequentialEffectSu
     ref=f"{path}:{line}:{call}"
     provider=path.replace("/",".")
     if effect_class.startswith("external.network") or effect_class in {"repository_ref.delete","workflow.external_effect"}:
-        target="external"
-        authority="external_write"
+        target="external"; authority="external_write"
     elif effect_class.startswith("filesystem"):
-        target="filesystem"
-        authority="local_write"
+        target="filesystem"; authority="local_write"
     else:
-        target="runtime"
-        authority="local_write"
+        target="runtime"; authority="local_write"
     return ConsequentialEffectSurface(
         surface_id="surface:"+sha256(ref.encode()).hexdigest()[:24],effect_class=effect_class,
         implementation_refs=(path,),entrypoints=(ref,),effect_provider=provider,target_class=target,
@@ -75,29 +72,19 @@ class EffectSurfaceScanner:
                     unclassified.append(f"{path}:syntax-error");continue
                 for node in ast.walk(tree):
                     if not isinstance(node,ast.Call):continue
-                    name=_call_name(node)
-                    short=name.split(".")[-1]
-                    effect=None
-                    # urllib.request.Request is itself the canonical construction site for
-                    # several GitHub write effects. Treat a literal mutating HTTP method as
-                    # consequential even when urlopen()/opener.open() happens elsewhere.
+                    name=_call_name(node); short=name.split(".")[-1]; effect=None
                     if name == "urllib.request.Request" or name.endswith(".request.Request"):
                         method = next((_literal(k.value) for k in node.keywords if k.arg == "method"), None)
-                        if method is None and len(node.args) >= 3:
-                            method = _literal(node.args[2])
+                        if method is None and len(node.args) >= 3: method = _literal(node.args[2])
                         if isinstance(method, str):
                             upper = method.upper()
-                            if upper in {"POST", "PUT", "PATCH", "DELETE"}:
-                                effect = f"external.network.{upper.lower()}"
+                            if upper in {"POST", "PUT", "PATCH", "DELETE"}: effect = f"external.network.{upper.lower()}"
                         else:
-                            # A Request whose method cannot be statically resolved may still
-                            # become a write. Fail closed instead of silently treating it as GET.
-                            unclassified.append(
-                                f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method"
-                            )
+                            unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method")
                     if effect is None and name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
                     elif short in {"write_text","write_bytes"}:effect="filesystem.write"
                     elif short in {"urlopen"}:effect="external.network"
+                    elif short=="request" and name.endswith("connection.request"):effect="external.network.authority_observation"
                     elif short=="delete_exact_branch_ref":effect="repository_ref.delete"
                     elif short in {"execute","executemany"} and node.args:
                         receiver = name.rsplit(".",1)[0] if "." in name else ""
@@ -123,17 +110,19 @@ class EffectSurfaceScanner:
             elif path.endswith((".yml",".yaml")) and path.startswith(".github/workflows/"):
                 lines = source.splitlines()
                 for i,line in enumerate(lines,1):
-                    stripped=line.strip()
-                    low=stripped.lower()
-                    if "workflow_dispatch:" in low:
-                        continue
-                    # Shell/GitHub CLI effects.
+                    stripped=line.strip(); low=stripped.lower()
+                    if "workflow_dispatch:" in low: continue
                     if "grep -q" not in low and re.search(r"\b(gh\s+(api|pr|release|workflow)|git\s+push|curl\b.*\s-x\s*(post|put|patch|delete))",low):
                         surfaces.append(_surface(path,i,stripped,"workflow.external_effect"))
-                    # PowerShell REST effects are common in legacy Actions workflows and must
-                    # be part of the same exhaustive inventory.
                     if re.search(r"\binvoke-restmethod\b.*\s-method\s+(post|put|patch|delete)\b",low):
                         surfaces.append(_surface(path,i,stripped,"workflow.external_effect"))
+                    # Embedded bootstrap code is still effectful. Keep it visible instead of
+                    # silently treating runner-temp materialization as orchestration metadata.
+                    if path.endswith("moon-file-write.yml"):
+                        if ".mkdir(" in stripped:
+                            surfaces.append(_surface(path,i,stripped,"filesystem.bootstrap.mkdir"))
+                        if ".write_text(" in stripped or ".write_bytes(" in stripped or "| tee " in low:
+                            surfaces.append(_surface(path,i,stripped,"filesystem.bootstrap.write"))
         uniq={s.surface_id:s for s in surfaces}
         canonical_scan=json.dumps(scan_items,sort_keys=True,separators=(",",":")).encode()
         scan_digest=sha256(b"LION/EFFECT-SURFACE-SCAN/1\0"+canonical_scan).hexdigest()
@@ -143,8 +132,7 @@ class EffectSurfaceScanner:
 class CompleteMediationEngine:
     """Assessment is fail-closed: absence of exact observed binding remains UNKNOWN."""
     def assess(self,*,inventory:EffectSurfaceInventory,bindings:Tuple[MediationBinding,...],falsification_evidence_refs:Tuple[str,...],observation_evidence_refs:Tuple[str,...])->CompleteMediationAssessment:
-        inventory.validate()
-        by_surface={}
+        inventory.validate(); by_surface={}
         for b in bindings:
             b.validate()
             if b.surface_digest in by_surface:raise CompleteMediationError("ambiguous mediation binding")

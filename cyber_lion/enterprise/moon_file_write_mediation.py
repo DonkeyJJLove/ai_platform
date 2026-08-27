@@ -59,7 +59,7 @@ class CanonicalMoonFileWriteAdmission:
     source_event_digest: str
     authority_source_digest: str
     pdp_decision_digest: str
-    authority_epoch: int
+    authority_epoch: int | None
     provider_id: str
     admission_digest: str = ""
 
@@ -77,7 +77,9 @@ class CanonicalMoonFileWriteAdmission:
             raise MoonFileWriteMediationError("admission execution context invalid")
         if not self.actor_login or not self.provider_id:
             raise MoonFileWriteMediationError("admission identity invalid")
-        if not isinstance(self.authority_epoch, int) or isinstance(self.authority_epoch, bool) or self.authority_epoch < 0:
+        if self.authority_epoch is not None and (
+            not isinstance(self.authority_epoch, int) or isinstance(self.authority_epoch, bool) or self.authority_epoch < 0
+        ):
             raise MoonFileWriteMediationError("authority_epoch invalid")
         expected = _digest(b"LION/MOON-FILE-WRITE-ADMISSION/1\0", self.payload())
         if self.admission_digest and self.admission_digest != expected:
@@ -267,7 +269,15 @@ class DurableMoonFileWriteFence:
             raise MoonFileWriteMediationError("fence path must be absolute")
         if any(parent.name == ".git" for parent in path.parents):
             raise MoonFileWriteMediationError("fence path cannot be repository metadata")
-        path.parent.mkdir(parents=True, exist_ok=True)
+        parent = path.parent
+        try:
+            parent_stat = os.lstat(parent)
+        except FileNotFoundError as exc:
+            raise MoonFileWriteMediationError("fence parent must already exist") from exc
+        if stat.S_ISLNK(parent_stat.st_mode) or not stat.S_ISDIR(parent_stat.st_mode):
+            raise MoonFileWriteMediationError("fence parent unsafe")
+        if path.name == ".lion-moon-file-write-fence.sqlite3" and parent.resolve() != Path(BASE_DIR).resolve():
+            raise MoonFileWriteMediationError("production fence parent must be exact bounded base")
         self._path = str(path); self._lock = RLock(); self._initialize()
 
     def _connect(self):
@@ -359,6 +369,7 @@ def moon_file_write_effect_key(request: MoonFileWriteRequest, admission: Canonic
         "expected_previous_state": request.expected_previous_state,
         "expected_previous_sha256": request.expected_previous_sha256,
         "intended_content_sha256": request.intended_content_sha256,
+        "authority_source_digest": admission.authority_source_digest,
         "authority_epoch": admission.authority_epoch,
     })
 
