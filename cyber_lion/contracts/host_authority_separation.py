@@ -85,6 +85,7 @@ class HostAuthorityObservation:
 @dataclass(frozen=True)
 class HostAuthoritySeparationPlan:
     plan_id:str; repository:str; baseline_sha:str; baseline_tree:str; certified_candidate_sha:str; certified_candidate_tree:str
+    certified_synthetic_sha:str; certified_source_manifest_sha256:str; certified_post_schema_digest:str
     runtime_user:str; runner_user:str; deployer_user:str; migrator_user:str; control_plane_group:str; trust_client_group:str
     runtime_code_path:str; live_db_path:str; service_env_path:str; service_unit_path:str
     runtime_code_owner:str; runtime_code_group:str; runtime_code_dir_mode:int; runtime_code_file_mode:int
@@ -94,7 +95,8 @@ class HostAuthoritySeparationPlan:
         _txt(self.plan_id,"plan_id")
         if self.repository!=CANONICAL_REPOSITORY: raise HostAuthorityContractError("repository mismatch")
         _sha40(self.baseline_sha,"baseline_sha"); _sha40(self.certified_candidate_sha,"certified_candidate_sha")
-        _sha40(self.baseline_tree,"baseline_tree"); _sha40(self.certified_candidate_tree,"certified_candidate_tree")
+        _sha40(self.baseline_tree,"baseline_tree"); _sha40(self.certified_candidate_tree,"certified_candidate_tree"); _sha40(self.certified_synthetic_sha,"certified_synthetic_sha")
+        _sha256(self.certified_source_manifest_sha256,"certified_source_manifest_sha256"); _sha256(self.certified_post_schema_digest,"certified_post_schema_digest")
         exact=(self.runtime_user,self.runner_user,self.deployer_user,self.migrator_user,self.control_plane_group,self.trust_client_group,self.runtime_code_path,self.live_db_path,self.service_env_path,self.service_unit_path,self.runtime_code_owner,self.runtime_code_group)
         expected=(RUNTIME_USER,RUNNER_USER,DEPLOYER_USER,MIGRATOR_USER,CONTROL_PLANE_GROUP,TRUST_CLIENT_GROUP,RUNTIME_CODE_PATH,LIVE_DB_PATH,SERVICE_ENV_PATH,SERVICE_UNIT_PATH,"root",CONTROL_PLANE_GROUP)
         if exact!=expected: raise HostAuthorityContractError("canonical host ownership boundary changed")
@@ -151,13 +153,13 @@ class ExternalAuthorityIdentity:
 
 @dataclass(frozen=True)
 class DeploymentRequest:
-    request_id:str; repository:str; baseline_sha:str; baseline_tree:str; candidate_sha:str; candidate_tree:str
+    request_id:str; repository:str; baseline_sha:str; baseline_tree:str; candidate_sha:str; candidate_tree:str; synthetic_sha:str
     source_manifest_sha256:str; current_deployed_manifest_sha256:str; service_unit_sha256:str; separation_plan_digest:str
     requester_principal:str; requested_at:str
     def validate(self):
         _txt(self.request_id,"request_id"); _txt(self.requester_principal,"requester_principal")
         if self.repository!=CANONICAL_REPOSITORY: raise HostAuthorityContractError("repository mismatch")
-        _sha40(self.baseline_sha,"baseline_sha"); _sha40(self.candidate_sha,"candidate_sha")
+        _sha40(self.baseline_sha,"baseline_sha"); _sha40(self.candidate_sha,"candidate_sha"); _sha40(self.synthetic_sha,"synthetic_sha")
         _sha40(self.baseline_tree,"baseline_tree"); _sha40(self.candidate_tree,"candidate_tree")
         for n in ("source_manifest_sha256","current_deployed_manifest_sha256","service_unit_sha256","separation_plan_digest"): _sha256(getattr(self,n),n)
         if self.requester_principal in {DEPLOYER_USER,MIGRATOR_USER,RUNTIME_USER}: raise HostAuthorityContractError("candidate builder/requester cannot be deployer, migrator, or runtime")
@@ -187,13 +189,13 @@ class SnapshotAttestation:
 
 @dataclass(frozen=True)
 class SchemaMigrationRequest:
-    request_id:str; candidate_sha:str; candidate_tree:str; live_database_sha256:str; pre_schema_digest:str
-    schema_sql_sha256:str; separation_plan_digest:str; requester_principal:str; requested_at:str
+    request_id:str; candidate_sha:str; candidate_tree:str; synthetic_sha:str; live_database_sha256:str; pre_schema_digest:str
+    schema_sql_sha256:str; snapshot_sha256:str; expected_post_schema_digest:str; separation_plan_digest:str; requester_principal:str; requested_at:str
     def validate(self):
         _txt(self.request_id,"request_id"); _txt(self.requester_principal,"requester_principal")
-        _sha40(self.candidate_sha,"candidate_sha")
+        _sha40(self.candidate_sha,"candidate_sha"); _sha40(self.synthetic_sha,"synthetic_sha")
         _sha40(self.candidate_tree,"candidate_tree")
-        for n in ("live_database_sha256","pre_schema_digest","schema_sql_sha256","separation_plan_digest"): _sha256(getattr(self,n),n)
+        for n in ("live_database_sha256","pre_schema_digest","schema_sql_sha256","snapshot_sha256","expected_post_schema_digest","separation_plan_digest"): _sha256(getattr(self,n),n)
         if self.requester_principal in {DEPLOYER_USER,MIGRATOR_USER,RUNTIME_USER}: raise HostAuthorityContractError("requester cannot own migration effect")
         _utc(self.requested_at,"requested_at"); return self
     def digest(self): self.validate(); return _digest(b"LION/BOUNDED-SCHEMA-MIGRATION-REQUEST/1\0",asdict(self))
@@ -201,32 +203,35 @@ class SchemaMigrationRequest:
 @dataclass(frozen=True)
 class BrokerPermit:
     permit_id:str; operation_kind:str; request_digest:str; separation_plan_digest:str; fixed_executor_principal:str
-    fixed_destination:str; fixed_payload_digest:str; authority_identity_digest:str; issued_at:str
+    fixed_destination:str; fixed_payload_digest:str; currentness_digest:str; recovery_evidence_digest:str; authority_identity_digest:str; issued_at:str
     def validate(self):
         _txt(self.permit_id,"permit_id"); _txt(self.operation_kind,"operation_kind"); _sha256(self.request_digest,"request_digest"); _sha256(self.separation_plan_digest,"separation_plan_digest")
-        _txt(self.fixed_executor_principal,"fixed_executor_principal"); _txt(self.fixed_destination,"fixed_destination",4096); _sha256(self.fixed_payload_digest,"fixed_payload_digest"); _sha256(self.authority_identity_digest,"authority_identity_digest"); _utc(self.issued_at,"issued_at")
+        _txt(self.fixed_executor_principal,"fixed_executor_principal"); _txt(self.fixed_destination,"fixed_destination",4096)
+        for n in ("fixed_payload_digest","currentness_digest","recovery_evidence_digest","authority_identity_digest"): _sha256(getattr(self,n),n)
+        _utc(self.issued_at,"issued_at")
         if self.operation_kind=="DEPLOY_EXACT_CANDIDATE":
             if self.fixed_executor_principal!=DEPLOYER_USER or self.fixed_destination!=RUNTIME_CODE_PATH: raise HostAuthorityContractError("deployment permit widened")
         elif self.operation_kind=="MIGRATE_EXACT_SCHEMA":
             if self.fixed_executor_principal!=MIGRATOR_USER or self.fixed_destination!=LIVE_DB_PATH: raise HostAuthorityContractError("migration permit widened")
         else: raise HostAuthorityContractError("permit operation invalid")
         return self
+    def digest(self): self.validate(); return _digest(b"LION/BROKER-PERMIT/1\0",asdict(self))
 
 @dataclass(frozen=True)
 class DeploymentReceipt:
-    receipt_id:str; request_digest:str; status:str; pre_manifest_sha256:str; post_manifest_sha256:str; deployed_candidate_sha:str; deployed_candidate_tree:str; observed_at:str
+    receipt_id:str; request_digest:str; permit_digest:str; status:str; pre_manifest_sha256:str; post_manifest_sha256:str; deployed_candidate_sha:str; deployed_candidate_tree:str; observed_at:str
     def validate(self):
-        _txt(self.receipt_id,"receipt_id"); _sha256(self.request_digest,"request_digest")
+        _txt(self.receipt_id,"receipt_id"); _sha256(self.request_digest,"request_digest"); _sha256(self.permit_digest,"permit_digest")
         if self.status not in {"DEPLOYED","ROLLED_BACK"}: raise HostAuthorityContractError("deployment receipt status invalid")
         _sha256(self.pre_manifest_sha256,"pre_manifest_sha256"); _sha256(self.post_manifest_sha256,"post_manifest_sha256")
         _sha40(self.deployed_candidate_sha,"deployed_candidate_sha"); _sha40(self.deployed_candidate_tree,"deployed_candidate_tree"); _utc(self.observed_at,"observed_at"); return self
 
 @dataclass(frozen=True)
 class MigrationReceipt:
-    receipt_id:str; request_digest:str; snapshot_sha256:str; pre_schema_digest:str; post_schema_digest:str
+    receipt_id:str; request_digest:str; permit_digest:str; snapshot_sha256:str; pre_schema_digest:str; post_schema_digest:str
     preserved_pr_bootstrap_rows:int; preserved_authority_lineage_rows:int; status:str; observed_at:str
     def validate(self):
-        _txt(self.receipt_id,"receipt_id"); _sha256(self.request_digest,"request_digest"); _sha256(self.snapshot_sha256,"snapshot_sha256"); _sha256(self.pre_schema_digest,"pre_schema_digest"); _sha256(self.post_schema_digest,"post_schema_digest")
+        _txt(self.receipt_id,"receipt_id"); _sha256(self.request_digest,"request_digest"); _sha256(self.permit_digest,"permit_digest"); _sha256(self.snapshot_sha256,"snapshot_sha256"); _sha256(self.pre_schema_digest,"pre_schema_digest"); _sha256(self.post_schema_digest,"post_schema_digest")
         if self.status not in {"MIGRATED","ROLLED_BACK"}: raise HostAuthorityContractError("migration receipt status invalid")
         if type(self.preserved_pr_bootstrap_rows) is not int or self.preserved_pr_bootstrap_rows<0 or type(self.preserved_authority_lineage_rows) is not int or self.preserved_authority_lineage_rows<0: raise HostAuthorityContractError("preserved row count invalid")
         _utc(self.observed_at,"observed_at"); return self
