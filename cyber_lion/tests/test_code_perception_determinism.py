@@ -53,6 +53,41 @@ def validated_sha40(value: object, label: str) -> str:
     return sha
 
 
+def parse_commit_object_identity(raw: bytes) -> tuple[str, tuple[str, ...]]:
+    if type(raw) is not bytes:
+        raise AssertionError("synthetic merge commit object invalid")
+    separator = raw.find(b"\n\n")
+    if separator < 0:
+        raise AssertionError("synthetic merge commit header invalid")
+    header = raw[:separator]
+    trees = []
+    parents = []
+    for line in header.splitlines():
+        if line.startswith(b"tree "):
+            try:
+                value = line[5:].decode("ascii")
+            except UnicodeDecodeError as exc:
+                raise AssertionError("synthetic merge tree invalid") from exc
+            trees.append(validated_sha40(value, "synthetic merge tree"))
+        elif line.startswith(b"parent "):
+            try:
+                value = line[7:].decode("ascii")
+            except UnicodeDecodeError as exc:
+                raise AssertionError("synthetic merge parent invalid") from exc
+            parents.append(validated_sha40(value, "synthetic merge parent"))
+        elif line.startswith((b"tree", b"parent")):
+            raise AssertionError("synthetic merge commit header invalid")
+    if len(trees) != 1:
+        raise AssertionError("synthetic merge tree cardinality invalid")
+    if len(parents) != 2:
+        raise AssertionError("synthetic merge parent cardinality invalid")
+    return trees[0], tuple(parents)
+
+
+def read_commit_object_identity(root: Path, ref: str) -> tuple[str, tuple[str, ...]]:
+    return parse_commit_object_identity(run_bytes(["git", "cat-file", "-p", ref], root))
+
+
 def validated_pr_base_ref(root: Path, value: object) -> str:
     if type(value) is not str or not value or value != value.strip() or len(value) > 255:
         raise AssertionError("pull_request base ref invalid")
@@ -138,10 +173,10 @@ def validate_synthetic_merge_topology(
         raise AssertionError("pull_request head drift")
     if workflow_merge != checked_commit:
         raise AssertionError("workflow synthetic merge substitution")
-    if len(parents) != 3:
+    if len(parents) != 2:
         raise AssertionError("synthetic merge parent cardinality invalid")
     normalized_parents = tuple(validated_sha40(value, "synthetic merge parent") for value in parents)
-    if normalized_parents != (checked_commit, event_base, event_head):
+    if normalized_parents != (event_base, event_head):
         raise AssertionError("synthetic merge parent topology substitution")
     if checked_tree != candidate_tree:
         raise AssertionError("synthetic merge tree substitution")
@@ -337,7 +372,7 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             "live_head_sha": head,
             "workflow_merge_sha": merge,
             "checked_commit_sha": merge,
-            "parents": (merge, base, head),
+            "parents": (base, head),
             "checked_tree_sha": tree,
             "candidate_tree_sha": tree,
         }
@@ -351,15 +386,45 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             ("checked-synthetic", {"checked_commit_sha": "5" * 40}),
             ("synthetic-tree", {"checked_tree_sha": "5" * 40}),
             ("candidate-tree", {"candidate_tree_sha": "5" * 40}),
-            ("parent0", {"parents": (merge, "5" * 40, head)}),
-            ("parent1", {"parents": (merge, base, "5" * 40)}),
-            ("parent-order", {"parents": (merge, head, base)}),
+            ("parent0", {"parents": ("5" * 40, head)}),
+            ("parent1", {"parents": (base, "5" * 40)}),
+            ("parent-order", {"parents": (head, base)}),
+            ("zero-parents", {"parents": ()}),
+            ("one-parent", {"parents": (base,)}),
+            ("three-parents", {"parents": (base, head, "5" * 40)}),
         )
         for label, substitution in substitutions:
             case = dict(good)
             case.update(substitution)
             with self.subTest(label=label), self.assertRaises(AssertionError):
                 validate_synthetic_merge_topology(**case)
+
+    def test_P0_commit_object_header_cardinality_and_malformed_parent_fail_closed(self):
+        base = "1" * 40
+        head = "2" * 40
+        tree = "4" * 40
+
+        def commit_object(*headers: str) -> bytes:
+            return ("\n".join(headers) + "\n\nmessage\n").encode("ascii")
+
+        exact_tree, exact_parents = parse_commit_object_identity(
+            commit_object(f"tree {tree}", f"parent {base}", f"parent {head}", "author test", "committer test")
+        )
+        self.assertEqual(exact_tree, tree)
+        self.assertEqual(exact_parents, (base, head))
+
+        malformed = (
+            ("tree-missing", commit_object(f"parent {base}", f"parent {head}")),
+            ("tree-duplicate", commit_object(f"tree {tree}", f"tree {tree}", f"parent {base}", f"parent {head}")),
+            ("parent-zero", commit_object(f"tree {tree}")),
+            ("parent-one", commit_object(f"tree {tree}", f"parent {base}")),
+            ("parent-three", commit_object(f"tree {tree}", f"parent {base}", f"parent {head}", f"parent {'5' * 40}")),
+            ("parent-bad-sha", commit_object(f"tree {tree}", "parent not-a-sha", f"parent {head}")),
+            ("parent-bad-header", commit_object(f"tree {tree}", f"parent{base}", f"parent {head}")),
+        )
+        for label, raw in malformed:
+            with self.subTest(label=label), self.assertRaises(AssertionError):
+                parse_commit_object_identity(raw)
 
     def test_same_tree_semantic_digest_is_commit_alias_independent(self):
         graph, _ = build_from_git(self.root, REPOSITORY, self.commit, expected_tree=self.tree)
@@ -511,8 +576,7 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
         if live_head_before != live_head_after:
             raise AssertionError("pull_request head changed during observation")
         checked_commit = validated_sha40(run(["git", "rev-parse", "HEAD"], root), "checked commit sha")
-        parents = tuple(run(["git", "rev-list", "--parents", "-n", "1", "HEAD"], root).split())
-        checked_tree = validated_sha40(run(["git", "rev-parse", "HEAD^{tree}"], root), "checked tree sha")
+        checked_tree, parents = read_commit_object_identity(root, "HEAD")
 
         validate_synthetic_merge_topology(
             event_base_sha=expected_base,
