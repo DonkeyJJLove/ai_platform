@@ -157,7 +157,7 @@ def _mode(mode: Any) -> str:
 def _git_blob_sha(data: bytes) -> str:
     if type(data) is not bytes:
         raise HostAuthoritySeparationError("candidate file bytes required")
-    return sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+    return sha1(f"blob {len(data)}\0".encode() + data, usedforsecurity=False).hexdigest()
 
 
 def _git_tree_sha(entries: tuple[tuple[str, str, str], ...]) -> str:
@@ -193,7 +193,7 @@ def _git_tree_sha(entries: tuple[tuple[str, str, str], ...]) -> str:
             f"{mode} {name}\0".encode() + bytes.fromhex(oid)
             for name, _, mode, oid in rows
         )
-        return sha1(f"tree {len(raw)}\0".encode() + raw).hexdigest()
+        return sha1(f"tree {len(raw)}\0".encode() + raw, usedforsecurity=False).hexdigest()
 
     return emit(root)
 
@@ -413,7 +413,7 @@ def derive_candidate_tree_evidence(
 def _commit_identity(raw: bytes) -> tuple[str, str, tuple[str, ...]]:
     if type(raw) is not bytes or not raw:
         raise HostAuthoritySeparationError("git commit object bytes required")
-    oid = sha1(f"commit {len(raw)}\0".encode() + raw).hexdigest()
+    oid = sha1(f"commit {len(raw)}\0".encode() + raw, usedforsecurity=False).hexdigest()
     header = raw.split(b"\n\n", 1)[0].splitlines()
     trees: list[str] = []
     parents: list[str] = []
