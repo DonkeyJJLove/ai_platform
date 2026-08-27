@@ -62,7 +62,7 @@ class GitHubRepositoryMaintenanceBackend:
 
     The production ref-delete effect is available only through the separately
     mediated SlashSafeGitHubRepositoryMaintenanceBackend in
-    repository_maintenance_cleanup.  Keeping this base adapter fail-closed makes
+    repository_maintenance_cleanup. Keeping this base adapter fail-closed makes
     the historical CLI/helper path incapable of bypassing the effect boundary.
     """
 
@@ -104,14 +104,15 @@ class GitHubRepositoryMaintenanceBackend:
             "User-Agent": "lion-repository-maintenance-sandbox/1",
         }
 
-    def _request(self, method: str, path: str, body: object | None = None, *, allow_404: bool = False) -> tuple[int, object | None]:
+    def _request_get_exact(self, path: str, *, allow_404: bool = False) -> tuple[int, object | None]:
         if not isinstance(path, str) or not path.startswith("/") or ".." in path:
             raise RepositoryMaintenanceError("unsafe GitHub API path")
-        data = canonical_json(body) if body is not None else None
-        headers = self._headers()
-        if data is not None:
-            headers["Content-Type"] = "application/json"
-        req = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
+        req = urllib.request.Request(
+            self.api_url + path,
+            data=None,
+            method="GET",
+            headers=self._headers(),
+        )
         try:
             with urllib.request.build_opener(self._NoRedirect()).open(req, timeout=30) as response:
                 raw = response.read()
@@ -120,7 +121,13 @@ class GitHubRepositoryMaintenanceBackend:
             if allow_404 and exc.code == 404:
                 return 404, None
             detail = exc.read().decode("utf-8", errors="replace")[:1000]
-            raise RepositoryMaintenanceError(f"GitHub API {method} {path} failed: {exc.code}: {detail}") from exc
+            raise RepositoryMaintenanceError(f"GitHub API GET {path} failed: {exc.code}: {detail}") from exc
+
+    def _request(self, method: str, path: str, body: object | None = None, *, allow_404: bool = False) -> tuple[int, object | None]:
+        """Compatibility read surface. Caller-selected consequential methods are unrepresentable."""
+        if method != "GET" or body is not None:
+            raise RepositoryMaintenanceError("historical maintenance transport is GET-only")
+        return self._request_get_exact(path, allow_404=allow_404)
 
     def master_sha(self) -> str:
         status, value = self._request("GET", f"/repos/{self.repository}/git/ref/heads/master")

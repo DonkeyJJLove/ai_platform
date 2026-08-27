@@ -99,7 +99,7 @@ def load_repository_delete_authority(*, event_path: Path, repository: str, workf
 
 
 class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBackend):
-    """Closed GitHub ref-delete boundary; DELETE requires a fresh exact admission."""
+    """Closed GitHub ref-delete boundary; raw DELETE has one fixed internal owner."""
 
     _GET_PREFIXES = (
         f"/repos/{REPOSITORY}/git/ref/heads/",
@@ -148,13 +148,14 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
             return
         raise RepositoryMaintenanceError("GitHub method not allowlisted")
 
-    def _request(self, method: str, path: str, body: object | None = None, *, allow_404: bool = False) -> tuple[int, object | None]:
-        self._validate_api_path(method, path)
-        data = None if body is None else json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-        headers = self._headers()
-        if data is not None:
-            headers["Content-Type"] = "application/json"
-        request = urllib.request.Request(self.api_url + path, data=data, method=method, headers=headers)
+    def _request_get_exact(self, path: str, *, allow_404: bool = False) -> tuple[int, object | None]:
+        self._validate_api_path("GET", path)
+        request = urllib.request.Request(
+            self.api_url + path,
+            data=None,
+            method="GET",
+            headers=self._headers(),
+        )
         try:
             with urllib.request.build_opener(self._NoRedirect()).open(request, timeout=30) as response:
                 raw = response.read()
@@ -163,7 +164,29 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
             if allow_404 and exc.code == 404:
                 return 404, None
             detail = exc.read().decode("utf-8", errors="replace")[:1000]
-            raise RepositoryMaintenanceError(f"GitHub API {method} {path} failed: {exc.code}: {detail}") from exc
+            raise RepositoryMaintenanceError(f"GitHub API GET {path} failed: {exc.code}: {detail}") from exc
+
+    def _request(self, method: str, path: str, body: object | None = None, *, allow_404: bool = False) -> tuple[int, object | None]:
+        """Compatibility read surface; caller-selected consequential methods are denied."""
+        if method != "GET" or body is not None:
+            raise RepositoryMaintenanceError("repository maintenance generic transport is GET-only")
+        return self._request_get_exact(path, allow_404=allow_404)
+
+    def _delete_exact_branch_ref_http(self, path: str) -> int:
+        self._validate_api_path("DELETE", path)
+        request = urllib.request.Request(
+            self.api_url + path,
+            data=None,
+            method="DELETE",
+            headers=self._headers(),
+        )
+        try:
+            with urllib.request.build_opener(self._NoRedirect()).open(request, timeout=30) as response:
+                response.read()
+                return response.status
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:1000]
+            raise RepositoryMaintenanceError(f"GitHub API DELETE {path} failed: {exc.code}: {detail}") from exc
 
     def branch_sha(self, branch: str) -> str | None:
         encoded = self._branch_path(branch)
@@ -208,36 +231,11 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
                 return completed
         raise RepositoryMaintenanceError("durable maintenance replay ledger pagination exceeded")
 
-    def authorize_delete(self, *, operation: RepositoryMaintenanceOperation, policy: RepositoryMaintenancePolicy,
-                         authority: RepositoryDeleteAuthorityEvidence) -> str:
-        operation.validate(); policy.validate(); authority.validate()
-        if operation.repository != self.repository or policy.repository != self.repository:
-            raise RepositoryMaintenanceError("delete admission repository mismatch")
-        if operation.policy_digest != policy.digest():
-            raise RepositoryMaintenanceError("delete admission policy mismatch")
-        if authority.checked_out_sha != operation.protected_master_sha:
-            raise RepositoryMaintenanceError("delete authority/currentness mismatch")
-        if authority.control_comment_id in self._completed_control_comments():
-            raise RepositoryMaintenanceError("durable repository maintenance replay denied")
-        master = self.master_sha()
-        head = self.branch_sha(operation.branch_name)
-        if master != operation.protected_master_sha or head != operation.expected_branch_head:
-            raise RepositoryMaintenanceError("delete admission currentness failed")
-        compare = self.compare_branch_to_master(operation.branch_name)
-        prs = self.open_prs_for_branch(operation.branch_name)
-        ownership = self.ownership_observation(operation.branch_name, master)
-        if not (operation.classification == "A" and compare["status"] in {"ahead", "identical"} and int(compare["behind_by"]) == 0 and not prs and ownership.ownership_state == "UNOWNED"):
-            raise RepositoryMaintenanceError("delete admission eligibility failed")
-        admission_digest = sha256(
-            b"LION/REPOSITORY-REF-DELETE-ADMISSION/1\0" + "\0".join((
-                authority.digest(), operation.operation_digest(), policy.digest(), self.backend_identity_digest,
-                self.repository, operation.branch_name, operation.expected_branch_head, operation.protected_master_sha,
-            )).encode("utf-8")
-        ).hexdigest()
-        if admission_digest in self._consumed_delete_admissions:
-            raise RepositoryMaintenanceError("repository delete admission replay denied")
-        self._pending_delete = (operation.branch_name, operation.expected_branch_head, operation.protected_master_sha, admission_digest, authority.digest())
-        return admission_digest
+    def authorize_delete(self, *args, **kwargs) -> str:
+        del args, kwargs
+        raise RepositoryMaintenanceError(
+            "legacy repository delete admission disabled; canonical mediated boundary required"
+        )
 
     def delete_exact_branch_ref(self, branch: str, expected_head: str) -> None:
         pending = self._pending_delete
@@ -252,7 +250,9 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
         if observed_master != expected_master or observed_head != expected_head:
             raise RepositoryMaintenanceError("delete currentness changed after admission")
         encoded = self._branch_path(branch)
-        status, _ = self._request("DELETE", f"/repos/{self.repository}/git/refs/heads/{encoded}")
+        status = self._delete_exact_branch_ref_http(
+            f"/repos/{self.repository}/git/refs/heads/{encoded}"
+        )
         if status != 204:
             raise RepositoryMaintenanceError(f"branch deletion not accepted: {status}")
         self._consumed_delete_admissions.add(admission_digest)
@@ -260,50 +260,10 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
 
 def run_cleanup(*, token: str, expected_master: str, event_path: Path, repository: str,
                 workflow_run_id: int, workflow_run_attempt: int, checked_out_sha: str) -> dict[str, object]:
-    authority = load_repository_delete_authority(
-        event_path=event_path, repository=repository, workflow_run_id=workflow_run_id,
-        workflow_run_attempt=workflow_run_attempt, checked_out_sha=checked_out_sha,
+    del token, expected_master, event_path, repository, workflow_run_id, workflow_run_attempt, checked_out_sha
+    raise RepositoryMaintenanceError(
+        "legacy execute-cleanup route disabled; use canonical mediated repository maintenance entrypoint"
     )
-    backend = SlashSafeGitHubRepositoryMaintenanceBackend(REPOSITORY, token)
-    master = backend.master_sha()
-    if master != expected_master or master != authority.checked_out_sha:
-        raise RepositoryMaintenanceError("expected master/authority binding failed")
-    policy = RepositoryMaintenancePolicy(
-        schema_version="1.0.0", repository=REPOSITORY,
-        mission_id="E003-BRANCH-ZERO-SANDBOX-AUTONOMIZATION", protected_ref="master",
-        allowed_prefixes=("docs/", "mission/"), max_deletions=100,
-    ).validate()
-    sandbox = RepositoryMaintenanceSandbox(policy=policy, backend=backend)
-    branches = [name for name in backend.list_branches() if name != "master"]
-    observations: list[dict[str, object]] = []
-    receipts: list[dict[str, object]] = []
-    retained: list[dict[str, object]] = []
-    for index, branch in enumerate(branches, start=1):
-        if not (branch.startswith("docs/") or branch.startswith("mission/")):
-            retained.append({"branch": branch, "reason": "OUTSIDE_MISSION_ALLOWLIST"})
-            continue
-        try:
-            operation, observation = _build_operation(sandbox=sandbox, branch=branch, index=index, master_sha=master)
-            observations.append(observation.canonical())
-            backend.authorize_delete(operation=operation, policy=policy, authority=authority)
-            receipt = sandbox.execute_delete(operation)
-            receipts.append(asdict(receipt))
-        except (RepositoryMaintenanceError, RepositoryMaintenanceContractError) as exc:
-            retained.append({"branch": branch, "reason": str(exc)})
-    final_master = backend.master_sha()
-    if final_master != master:
-        raise RepositoryMaintenanceError("master changed during cleanup mission")
-    final_branches = backend.list_branches()
-    return {
-        "schema_version": "1.0.0", "mission_id": policy.mission_id,
-        "authority_digest": authority.digest(), "control_comment_id": authority.control_comment_id,
-        "master_before": master, "master_after": final_master,
-        "initial_non_master_count": len(branches), "deleted_count": len(receipts),
-        "retained_count": len([b for b in final_branches if b != "master"]),
-        "deleted": [r["branch_name"] for r in receipts], "retained": retained,
-        "final_branches": final_branches, "receipts": receipts,
-        "authority_effect": False, "master_effect": False,
-    }
 
 
 def main(argv: list[str] | None = None) -> int:
