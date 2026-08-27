@@ -95,6 +95,8 @@ def fetch_exact_live_branch_tree(root: Path, branch_ref: object, expected_sha: o
     branch = validated_pr_base_ref(root, branch_ref)
     expected = validated_sha40(expected_sha, "pull_request branch sha")
     exact_ref = f"refs/heads/{branch}"
+    if resolve_live_base_sha(root, branch) != expected:
+        raise AssertionError("pull_request branch head drift")
     proc = subprocess.run(
         ["git", "fetch", "--no-tags", "--depth=1", "origin", exact_ref],
         cwd=root,
@@ -104,10 +106,13 @@ def fetch_exact_live_branch_tree(root: Path, branch_ref: object, expected_sha: o
     )
     if proc.returncode:
         raise AssertionError("pull_request branch ref unavailable on origin")
-    fetched = validated_sha40(run(["git", "rev-parse", "FETCH_HEAD"], root), "fetched branch sha")
+    fetched = validated_sha40(run(["git", "rev-parse", f"{expected}^{{commit}}"], root), "fetched branch sha")
     if fetched != expected:
+        raise AssertionError("pull_request branch object substitution")
+    tree = validated_sha40(run(["git", "rev-parse", f"{expected}^{{tree}}"], root), "fetched branch tree")
+    if resolve_live_base_sha(root, branch) != expected:
         raise AssertionError("pull_request branch head drift")
-    return validated_sha40(run(["git", "rev-parse", "FETCH_HEAD^{tree}"], root), "fetched branch tree")
+    return tree
 
 
 def validate_synthetic_merge_topology(
