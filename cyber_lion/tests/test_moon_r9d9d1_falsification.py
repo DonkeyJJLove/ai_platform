@@ -100,7 +100,7 @@ class R9D9D1FalsificationTests(unittest.TestCase):
     def test_T9D42_forged_request_receipt_denied(self): self._receipt_boundary(); self.assertIn("request_digest", self.mediation)
     def test_T9D43_forged_target_receipt_denied(self): self._receipt_boundary(); self.assertIn("target_path", self.mediation)
     def test_T9D44_forged_content_digest_denied(self): self._receipt_boundary(); self.assertIn("expected_sha256", self.mediation)
-    def test_T9D45_forged_observation_digest_denied(self): self._receipt_boundary(); self.assertIn("observation_digest mismatch", self.mediation)
+    def test_T9D45_forged_observation_digest_denied(self): self._receipt_boundary(); self.assertIn("observation digest mismatch", self.mediation)
 
     # T9D46-T9D55: bounded filesystem/path model.
     def test_T9D46_dotdot_traversal_denied(self): self._path_boundary()
