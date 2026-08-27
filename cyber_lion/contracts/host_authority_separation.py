@@ -1,7 +1,8 @@
 """Immutable contracts for host authority separation and bounded deployment/migration.
 
-These contracts describe a root-owned deployment/migration plane. They do not mutate a host,
-carry production authority, select a verifier, or grant merge capability.
+The contracts carry identities and receipts only.  Provenance-sensitive values are derived by
+trusted pure adapters in ``enterprise.host_authority_separation``; callers cannot select an
+execution command, destination, verifier, secret, or authority provider through these records.
 """
 from __future__ import annotations
 from dataclasses import asdict, dataclass
@@ -12,6 +13,8 @@ from typing import Any
 
 _SHA40=re.compile(r"^[0-9a-f]{40}$"); _SHA256=re.compile(r"^[0-9a-f]{64}$")
 CANONICAL_REPOSITORY="DonkeyJJLove/ai_platform"
+CANONICAL_REPOSITORY_PROVIDER="github-rest+git-object/v1"
+CANONICAL_SNAPSHOTTER_IDENTITY="lion-root-sqlite-consistent-snapshot/v1"
 RUNTIME_USER="lion-control-plane"; RUNNER_USER="lion-maintenance-runner"
 DEPLOYER_USER="root"; MIGRATOR_USER="root"
 CONTROL_PLANE_GROUP="lion-control-plane"; TRUST_CLIENT_GROUP="lion-trust-client"
@@ -51,7 +54,6 @@ def _utc(v:Any,n:str):
     return d
 def _canon(v:Any)->bytes: return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
 def _digest(domain:bytes,v:Any)->str: return sha256(domain+_canon(v)).hexdigest()
-
 def _tuple_text(v:Any,n:str,allow_empty:bool=False)->tuple[str,...]:
     if type(v) is not tuple or (not allow_empty and not v): raise HostAuthorityContractError(f"{n} must be tuple")
     for x in v: _txt(x,n)
@@ -84,8 +86,9 @@ class HostAuthorityObservation:
 
 @dataclass(frozen=True)
 class HostAuthoritySeparationPlan:
-    plan_id:str; repository:str; baseline_sha:str; baseline_tree:str; certified_candidate_sha:str; certified_candidate_tree:str
-    certified_synthetic_sha:str; certified_source_manifest_sha256:str; certified_post_schema_digest:str
+    plan_id:str; repository:str; pr_number:int; baseline_ref:str; baseline_sha:str; baseline_tree:str
+    certified_candidate_ref:str; certified_candidate_sha:str; certified_candidate_tree:str; certified_synthetic_sha:str
+    certified_repository_evidence_digest:str; certified_source_manifest_sha256:str; certified_pre_schema_manifest_digest:str; certified_post_schema_digest:str
     runtime_user:str; runner_user:str; deployer_user:str; migrator_user:str; control_plane_group:str; trust_client_group:str
     runtime_code_path:str; live_db_path:str; service_env_path:str; service_unit_path:str
     runtime_code_owner:str; runtime_code_group:str; runtime_code_dir_mode:int; runtime_code_file_mode:int
@@ -94,9 +97,10 @@ class HostAuthoritySeparationPlan:
     def validate(self):
         _txt(self.plan_id,"plan_id")
         if self.repository!=CANONICAL_REPOSITORY: raise HostAuthorityContractError("repository mismatch")
-        _sha40(self.baseline_sha,"baseline_sha"); _sha40(self.certified_candidate_sha,"certified_candidate_sha")
-        _sha40(self.baseline_tree,"baseline_tree"); _sha40(self.certified_candidate_tree,"certified_candidate_tree"); _sha40(self.certified_synthetic_sha,"certified_synthetic_sha")
-        _sha256(self.certified_source_manifest_sha256,"certified_source_manifest_sha256"); _sha256(self.certified_post_schema_digest,"certified_post_schema_digest")
+        if type(self.pr_number) is not int or self.pr_number<1: raise HostAuthorityContractError("pr_number invalid")
+        _txt(self.baseline_ref,"baseline_ref"); _txt(self.certified_candidate_ref,"certified_candidate_ref")
+        for n in ("baseline_sha","baseline_tree","certified_candidate_sha","certified_candidate_tree","certified_synthetic_sha"): _sha40(getattr(self,n),n)
+        for n in ("certified_repository_evidence_digest","certified_source_manifest_sha256","certified_pre_schema_manifest_digest","certified_post_schema_digest"): _sha256(getattr(self,n),n)
         exact=(self.runtime_user,self.runner_user,self.deployer_user,self.migrator_user,self.control_plane_group,self.trust_client_group,self.runtime_code_path,self.live_db_path,self.service_env_path,self.service_unit_path,self.runtime_code_owner,self.runtime_code_group)
         expected=(RUNTIME_USER,RUNNER_USER,DEPLOYER_USER,MIGRATOR_USER,CONTROL_PLANE_GROUP,TRUST_CLIENT_GROUP,RUNTIME_CODE_PATH,LIVE_DB_PATH,SERVICE_ENV_PATH,SERVICE_UNIT_PATH,"root",CONTROL_PLANE_GROUP)
         if exact!=expected: raise HostAuthorityContractError("canonical host ownership boundary changed")
@@ -114,7 +118,7 @@ class HostAuthoritySeparationPlan:
         _utc(self.generated_at,"generated_at"); return self
     def digest(self):
         self.validate(); d=asdict(self); d["trusted_runtime_reads"]=[asdict(x) for x in self.trusted_runtime_reads]
-        return _digest(b"LION/HOST-AUTHORITY-SEPARATION-PLAN/1\0",d)
+        return _digest(b"LION/HOST-AUTHORITY-SEPARATION-PLAN/2\0",d)
 
 @dataclass(frozen=True)
 class HostOperation:
@@ -153,18 +157,20 @@ class ExternalAuthorityIdentity:
 
 @dataclass(frozen=True)
 class DeploymentRequest:
-    request_id:str; repository:str; baseline_sha:str; baseline_tree:str; candidate_sha:str; candidate_tree:str; synthetic_sha:str
+    request_id:str; repository:str; pr_number:int; baseline_ref:str; baseline_sha:str; baseline_tree:str
+    candidate_ref:str; candidate_sha:str; candidate_tree:str; synthetic_sha:str; repository_evidence_digest:str
     source_manifest_sha256:str; current_deployed_manifest_sha256:str; service_unit_sha256:str; separation_plan_digest:str
     requester_principal:str; requested_at:str
     def validate(self):
         _txt(self.request_id,"request_id"); _txt(self.requester_principal,"requester_principal")
         if self.repository!=CANONICAL_REPOSITORY: raise HostAuthorityContractError("repository mismatch")
-        _sha40(self.baseline_sha,"baseline_sha"); _sha40(self.candidate_sha,"candidate_sha"); _sha40(self.synthetic_sha,"synthetic_sha")
-        _sha40(self.baseline_tree,"baseline_tree"); _sha40(self.candidate_tree,"candidate_tree")
-        for n in ("source_manifest_sha256","current_deployed_manifest_sha256","service_unit_sha256","separation_plan_digest"): _sha256(getattr(self,n),n)
+        if type(self.pr_number) is not int or self.pr_number<1: raise HostAuthorityContractError("pr_number invalid")
+        _txt(self.baseline_ref,"baseline_ref"); _txt(self.candidate_ref,"candidate_ref")
+        for n in ("baseline_sha","baseline_tree","candidate_sha","candidate_tree","synthetic_sha"): _sha40(getattr(self,n),n)
+        for n in ("repository_evidence_digest","source_manifest_sha256","current_deployed_manifest_sha256","service_unit_sha256","separation_plan_digest"): _sha256(getattr(self,n),n)
         if self.requester_principal in {DEPLOYER_USER,MIGRATOR_USER,RUNTIME_USER}: raise HostAuthorityContractError("candidate builder/requester cannot be deployer, migrator, or runtime")
         _utc(self.requested_at,"requested_at"); return self
-    def digest(self): self.validate(); return _digest(b"LION/BOUNDED-DEPLOYMENT-REQUEST/1\0",asdict(self))
+    def digest(self): self.validate(); return _digest(b"LION/BOUNDED-DEPLOYMENT-REQUEST/2\0",asdict(self))
 
 @dataclass(frozen=True)
 class SchemaObservation:
@@ -179,26 +185,33 @@ class SchemaObservation:
 
 @dataclass(frozen=True)
 class SnapshotAttestation:
-    snapshot_path:str; source_database_sha256:str; snapshot_sha256:str; integrity_check:str; created_at:str
+    snapshot_path:str; source_database_sha256:str; snapshot_sha256:str; snapshot_size:int
+    snapshotter_identity:str; source_observation_digest:str; provenance_digest:str; integrity_check:str; created_at:str
     def validate(self):
         p=_txt(self.snapshot_path,"snapshot_path",4096)
         if not p.startswith(SNAPSHOT_DIR+"/") or ".." in p.split("/"): raise HostAuthorityContractError("snapshot outside canonical directory")
         _sha256(self.source_database_sha256,"source_database_sha256"); _sha256(self.snapshot_sha256,"snapshot_sha256")
+        if type(self.snapshot_size) is not int or self.snapshot_size<1: raise HostAuthorityContractError("snapshot_size invalid")
+        if self.snapshotter_identity!=CANONICAL_SNAPSHOTTER_IDENTITY: raise HostAuthorityContractError("snapshotter identity substitution denied")
+        _sha256(self.source_observation_digest,"source_observation_digest"); _sha256(self.provenance_digest,"provenance_digest")
         if self.integrity_check!="ok": raise HostAuthorityContractError("snapshot integrity check not ok")
         _utc(self.created_at,"created_at"); return self
 
 @dataclass(frozen=True)
 class SchemaMigrationRequest:
-    request_id:str; candidate_sha:str; candidate_tree:str; synthetic_sha:str; live_database_sha256:str; pre_schema_digest:str
-    schema_sql_sha256:str; snapshot_sha256:str; expected_post_schema_digest:str; separation_plan_digest:str; requester_principal:str; requested_at:str
+    request_id:str; repository:str; pr_number:int; candidate_ref:str; candidate_sha:str; candidate_tree:str; synthetic_sha:str; repository_evidence_digest:str
+    live_database_sha256:str; pre_schema_digest:str; schema_sql_sha256:str; snapshot_sha256:str; expected_post_schema_digest:str
+    separation_plan_digest:str; requester_principal:str; requested_at:str
     def validate(self):
         _txt(self.request_id,"request_id"); _txt(self.requester_principal,"requester_principal")
-        _sha40(self.candidate_sha,"candidate_sha"); _sha40(self.synthetic_sha,"synthetic_sha")
-        _sha40(self.candidate_tree,"candidate_tree")
-        for n in ("live_database_sha256","pre_schema_digest","schema_sql_sha256","snapshot_sha256","expected_post_schema_digest","separation_plan_digest"): _sha256(getattr(self,n),n)
+        if self.repository!=CANONICAL_REPOSITORY: raise HostAuthorityContractError("repository mismatch")
+        if type(self.pr_number) is not int or self.pr_number<1: raise HostAuthorityContractError("pr_number invalid")
+        _txt(self.candidate_ref,"candidate_ref")
+        for n in ("candidate_sha","candidate_tree","synthetic_sha"): _sha40(getattr(self,n),n)
+        for n in ("repository_evidence_digest","live_database_sha256","pre_schema_digest","schema_sql_sha256","snapshot_sha256","expected_post_schema_digest","separation_plan_digest"): _sha256(getattr(self,n),n)
         if self.requester_principal in {DEPLOYER_USER,MIGRATOR_USER,RUNTIME_USER}: raise HostAuthorityContractError("requester cannot own migration effect")
         _utc(self.requested_at,"requested_at"); return self
-    def digest(self): self.validate(); return _digest(b"LION/BOUNDED-SCHEMA-MIGRATION-REQUEST/1\0",asdict(self))
+    def digest(self): self.validate(); return _digest(b"LION/BOUNDED-SCHEMA-MIGRATION-REQUEST/2\0",asdict(self))
 
 @dataclass(frozen=True)
 class BrokerPermit:
@@ -215,7 +228,7 @@ class BrokerPermit:
             if self.fixed_executor_principal!=MIGRATOR_USER or self.fixed_destination!=LIVE_DB_PATH: raise HostAuthorityContractError("migration permit widened")
         else: raise HostAuthorityContractError("permit operation invalid")
         return self
-    def digest(self): self.validate(); return _digest(b"LION/BROKER-PERMIT/1\0",asdict(self))
+    def digest(self): self.validate(); return _digest(b"LION/BROKER-PERMIT/2\0",asdict(self))
 
 @dataclass(frozen=True)
 class DeploymentReceipt:
