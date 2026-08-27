@@ -130,6 +130,24 @@ class MoonFileTargetObservation:
         value.pop("observation_digest")
         return value
 
+    def state_payload(self) -> dict[str, object]:
+        return {
+            "target_path": self.target_path,
+            "exists": self.exists,
+            "regular_file": self.regular_file,
+            "symlink": self.symlink,
+            "size": self.size,
+            "sha256": self.sha256,
+            "device": self.device,
+            "inode": self.inode,
+            "base_device": self.base_device,
+            "base_inode": self.base_inode,
+        }
+
+    def state_digest(self) -> str:
+        self.validate()
+        return _digest(b"LION/MOON-FILE-TARGET-STATE/1\0", self.state_payload())
+
     def validate(self) -> "MoonFileTargetObservation":
         if self.target_path != str(Path(BASE_DIR) / Path(self.target_path).name) or not self.observer_id or not self.observed_at:
             raise MoonFileWriteMediationError("target observation identity invalid")
@@ -410,7 +428,7 @@ class CanonicalMoonFileWriteMediator:
             if type(current_admission) is not CanonicalMoonFileWriteAdmission or current_admission.validate().admission_digest != admission.admission_digest:
                 raise MoonFileWriteMediationError("authority drift")
             current_pre = self.pre_observer.observe(request.target_path); self._require_pre_state(request, current_pre)
-            if current_pre.observation_digest != pre.observation_digest:
+            if current_pre.state_digest() != pre.state_digest():
                 raise MoonFileWriteMediationError("target currentness drift")
             self.fence.mark_attempted(effect_key, _now())
             self.effect.write_exact(request, admission)
