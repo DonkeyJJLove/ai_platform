@@ -53,6 +53,13 @@ def validated_sha40(value: object, label: str) -> str:
     return sha
 
 
+def optional_sha40_metadata(value: object, label: str) -> str:
+    """Render nullable, non-authoritative PR metadata without weakening SHA validation."""
+    if value is None:
+        return "UNAVAILABLE"
+    return validated_sha40(value, label)
+
+
 def parse_commit_object_identity(raw: bytes) -> tuple[str, tuple[str, ...]]:
     if type(raw) is not bytes:
         raise AssertionError("synthetic merge commit object invalid")
@@ -360,6 +367,14 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "unavailable on origin"):
             resolve_live_base_sha(self.root, "definitely-not-a-branch")
 
+    def test_P0_optional_pr_merge_metadata_is_non_authoritative(self):
+        label = "pull_request merge metadata sha"
+        self.assertEqual(optional_sha40_metadata(None, label), "UNAVAILABLE")
+        self.assertEqual(optional_sha40_metadata("a" * 40, label), "a" * 40)
+        for invalid in ("", "not-a-sha", 0, False):
+            with self.subTest(value=invalid), self.assertRaises(AssertionError):
+                optional_sha40_metadata(invalid, label)
+
     def test_P0_synthetic_merge_identity_substitutions_fail_closed(self):
         base = "1" * 40
         head = "2" * 40
@@ -566,7 +581,7 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
         expected_base = validated_sha40(pr.get("base", {}).get("sha", ""), "event base sha")
         expected_base_ref = validated_pr_base_ref(root, pr.get("base", {}).get("ref"))
         expected_head_ref = validated_pr_base_ref(root, pr.get("head", {}).get("ref"))
-        event_merge_metadata = validated_sha40(pr.get("merge_commit_sha", ""), "pull_request merge metadata sha")
+        event_merge_metadata = optional_sha40_metadata(pr.get("merge_commit_sha"), "pull_request merge metadata sha")
         workflow_merge = validated_sha40(os.environ.get("GITHUB_SHA", ""), "workflow synthetic merge sha")
 
         live_base = resolve_live_base_sha(root, expected_base_ref)
