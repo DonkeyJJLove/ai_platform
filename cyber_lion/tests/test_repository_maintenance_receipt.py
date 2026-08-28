@@ -157,6 +157,14 @@ class _Opener:
         return self.responses.pop(0)
 
 
+class _Mediator:
+    def __init__(self, *, mutate=False): self.requests=[]; self.mutate=mutate
+    def execute(self, request):
+        self.requests.append(request)
+        if self.mutate: raise RuntimeError("observer mismatch")
+        return {"comment_id":555,"fence_state":"RECONCILED"}
+
+
 class RepositoryMaintenanceReceiptTests(unittest.TestCase):
     def test_exact_v2_event_is_accepted_and_failure_is_request_bound(self):
         with tempfile.TemporaryDirectory() as td:
@@ -296,28 +304,15 @@ class RepositoryMaintenanceReceiptTests(unittest.TestCase):
             self.assertNotIn("super-secret-value", admission.receipt_body)
             self.assertIn("token=[REDACTED]", admission.receipt_body)
 
-    def test_durable_ledger_denies_same_failure_receipt_before_post(self):
+    def test_replay_identity_is_bound_into_canonical_request(self):
         with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            event_path = _write_event(root)
-            stderr_path = root / "stderr.txt"
-            stderr_path.write_text("boom", encoding="utf-8")
-            admission = MaintenanceReceiptAdmission.failure(
-                event_path=event_path,
-                repository=REPOSITORY,
-                workflow_run_id=123,
-                workflow_run_attempt=1,
-                checked_out_sha=SHA,
-                exit_code=1,
-                stderr_path=stderr_path,
-            )
-            opener = _Opener([_Response(200, [{"body": f"x\nreceipt_key={admission.receipt_key}"}])])
-            with patch("urllib.request.build_opener", return_value=opener), self.assertRaisesRegex(
-                RepositoryMaintenanceReceiptError, "replay denied"
-            ):
-                GitHubMaintenanceReceiptBoundary().post(admission, token="token")
-            self.assertEqual(len(opener.calls), 1)
-            self.assertEqual(opener.calls[0][0].get_method(), "GET")
+            root=Path(td); event_path=_write_event(root); stderr_path=root/"stderr.txt"; stderr_path.write_text("boom",encoding="utf-8")
+            admission=MaintenanceReceiptAdmission.failure(event_path=event_path,repository=REPOSITORY,workflow_run_id=123,workflow_run_attempt=1,checked_out_sha=SHA,exit_code=1,stderr_path=stderr_path)
+            mediator=_Mediator(); boundary=GitHubMaintenanceReceiptBoundary(mediator=mediator)
+            boundary.post(admission,token="ignored")
+            self.assertEqual(len(mediator.requests),1)
+            self.assertEqual(mediator.requests[0].semantic_capability,"repository-maintenance.receipt.create")
+            self.assertEqual(len(mediator.requests[0].replay_key),64)
 
     def test_canonical_reconciled_v2_result_is_accepted(self):
         with tempfile.TemporaryDirectory() as td:
@@ -458,68 +453,30 @@ class RepositoryMaintenanceReceiptTests(unittest.TestCase):
                     result_path=result_path,
                 )
 
-    def test_exact_created_receipt_read_back_is_required(self):
+    def test_missing_canonical_mediator_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            event_path = _write_event(root)
-            stderr_path = root / "stderr.txt"
-            stderr_path.write_text("boom", encoding="utf-8")
-            admission = MaintenanceReceiptAdmission.failure(
-                event_path=event_path,
-                repository=REPOSITORY,
-                workflow_run_id=123,
-                workflow_run_attempt=1,
-                checked_out_sha=SHA,
-                exit_code=2,
-                stderr_path=stderr_path,
-            )
-            created = {"id": 555, "body": admission.receipt_body}
-            altered = {"id": 555, "body": admission.receipt_body + "\nmutated=true"}
-            opener = _Opener([_Response(200, []), _Response(201, created), _Response(200, altered)])
-            with patch("urllib.request.build_opener", return_value=opener), self.assertRaisesRegex(
-                RepositoryMaintenanceReceiptError, "read-back mismatch"
-            ):
-                GitHubMaintenanceReceiptBoundary().post(admission, token="token")
+            root=Path(td); event_path=_write_event(root); stderr_path=root/"stderr.txt"; stderr_path.write_text("boom",encoding="utf-8")
+            admission=MaintenanceReceiptAdmission.failure(event_path=event_path,repository=REPOSITORY,workflow_run_id=123,workflow_run_attempt=1,checked_out_sha=SHA,exit_code=2,stderr_path=stderr_path)
+            with self.assertRaisesRegex(RepositoryMaintenanceReceiptError,"mediator unavailable"):
+                GitHubMaintenanceReceiptBoundary().post(admission,token="ignored")
 
-    def test_failure_receipt_is_posted_and_exactly_read_back(self):
+    def test_failure_receipt_routes_through_canonical_mediator(self):
         with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            event_path = _write_event(root)
-            stderr_path = root / "stderr.txt"
-            stderr_path.write_text("boom", encoding="utf-8")
-            admission = MaintenanceReceiptAdmission.failure(
-                event_path=event_path,
-                repository=REPOSITORY,
-                workflow_run_id=123,
-                workflow_run_attempt=1,
-                checked_out_sha=SHA,
-                exit_code=2,
-                stderr_path=stderr_path,
-            )
-            created = {"id": 555, "body": admission.receipt_body}
-            opener = _Opener([_Response(200, []), _Response(201, created), _Response(200, created)])
-            with patch("urllib.request.build_opener", return_value=opener):
-                observation = GitHubMaintenanceReceiptBoundary().post(admission, token="token")
-            self.assertTrue(observation.observed)
-            self.assertEqual(observation.comment_id, 555)
-            self.assertEqual([call[0].get_method() for call in opener.calls], ["GET", "POST", "GET"])
-            self.assertTrue(opener.calls[1][0].full_url.endswith("/issues/144/comments"))
-            self.assertTrue(opener.calls[2][0].full_url.endswith("/issues/comments/555"))
+            root=Path(td); event_path=_write_event(root); stderr_path=root/"stderr.txt"; stderr_path.write_text("boom",encoding="utf-8")
+            admission=MaintenanceReceiptAdmission.failure(event_path=event_path,repository=REPOSITORY,workflow_run_id=123,workflow_run_attempt=1,checked_out_sha=SHA,exit_code=2,stderr_path=stderr_path)
+            mediator=_Mediator(); observation=GitHubMaintenanceReceiptBoundary(mediator=mediator).post(admission,token="ignored")
+            self.assertTrue(observation.observed); self.assertEqual(observation.comment_id,555)
+            self.assertEqual(mediator.requests[0].semantic_capability,"repository-maintenance.receipt.create")
+            self.assertEqual(mediator.requests[0].expected_repository_head,SHA)
 
-    def test_source_has_no_generic_external_write_surface(self):
+    def test_source_has_no_raw_external_write_surface(self):
         import cyber_lion.enterprise.repository_maintenance_receipt as module
-
-        source = inspect.getsource(module)
-        self.assertEqual(source.count('method="POST"'), 1)
-        self.assertNotIn("/dispatches", source)
-        self.assertNotIn("git/refs", source)
-        self.assertNotIn("method: str", source)
-        self.assertNotIn(
-            "DELETE_BRANCH_REF",
-            source.split("class GitHubMaintenanceReceiptBoundary", 1)[1],
-        )
-        self.assertIn("receipt_key", source)
-        self.assertNotIn('COMMAND = "LION-BRANCH-CLEANUP v1"', source)
+        source=inspect.getsource(module)
+        self.assertNotIn('method="POST"',source)
+        self.assertNotIn('method="PATCH"',source)
+        self.assertNotIn("/dispatches",source)
+        self.assertNotIn("git/refs",source)
+        self.assertIn("IssueCommentWriteRequest",source)
 
 
 if __name__ == "__main__":
