@@ -4,19 +4,30 @@ import unittest
 
 WORKFLOW = Path('.github/workflows/lion-actions-dispatch-bridge.yml')
 FAILURE_BOUNDARY = Path('cyber_lion/enterprise/actions_failure_receipt.py')
+ISSUE_PROVIDER = Path('cyber_lion/enterprise/issue_comment_write_github_effect.py')
+ISSUE_RUNTIME = Path('cyber_lion/enterprise/issue_comment_write_runtime.py')
 
 
 class ActionsControlFailureReceiptWorkflowTests(unittest.TestCase):
     def test_failure_receipt_is_fail_closed_and_bounded(self):
         workflow = WORKFLOW.read_text(encoding='utf-8')
         boundary = FAILURE_BOUNDARY.read_text(encoding='utf-8')
+        provider = ISSUE_PROVIDER.read_text(encoding='utf-8')
+        runtime = ISSUE_RUNTIME.read_text(encoding='utf-8')
         self.assertIn('LION-DISPATCH v1', workflow)
         self.assertIn('LION-OBSERVE v1', workflow)
         self.assertIn('python -m cyber_lion.enterprise.actions_failure_receipt', workflow)
         self.assertIn('LION-ACTIONS-CONTROL-FAILURE v2', boundary)
         self.assertIn('result=FAILED_CLOSED', boundary)
         self.assertIn('receipt_is_evidence_not_authority=true', boundary)
-        self.assertIn('issues/{CONTROL_ISSUE}/comments', boundary)
+        self.assertIn('IssueCommentWriteRequest', boundary)
+        self.assertNotIn('method="POST"', boundary)
+        self.assertNotIn('method="PATCH"', boundary)
+        self.assertNotIn('method="POST"', provider)
+        self.assertNotIn('method="PATCH"', provider)
+        self.assertIn('method="POST"', runtime)
+        self.assertIn('method="PATCH"', runtime)
+        self.assertIn('use canonical issue_comment_write_runtime', provider)
         self.assertIn('workflow_run_id', boundary)
         self.assertIn('workflow_run_attempt', boundary)
         self.assertIn('checked_out_sha', boundary)
