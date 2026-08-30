@@ -1,0 +1,380 @@
+name: R2E1 SPECTRA Baseline Mutation
+
+on:
+  push:
+    branches:
+      - verification/r2e1-ci-standalone-b7b980ae
+    paths:
+      - .github/workflows/r2e1-spectra-mutation.yml
+
+permissions:
+  contents: read
+
+jobs:
+  spectra-mutation:
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_HEAD: b7b980ae87bb18e5c721c029a5efdfd450239311
+      PR_NUMBER: "245"
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: b7b980ae87bb18e5c721c029a5efdfd450239311
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact candidate head
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          test "${ACTUAL_HEAD}" = "${EXPECTED_HEAD}"
+          echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: Execute SPECTRA mutation campaign twice
+        id: mutation
+        continue-on-error: true
+        run: |
+          set +e
+          python - <<'PY'
+          from __future__ import annotations
+
+          from dataclasses import replace
+          import json
+          from pathlib import Path
+
+          from cyber_lion.contracts.repository_expansion import RepositoryExpansionContractError
+          from cyber_lion.tests.test_repository_expansion import _baseline, _edge, _evidence, _fleet, C
+
+          OUT = Path('/tmp/spectra-r2e1-result.json')
+
+          def reject_result(fn):
+              try:
+                  fn()
+              except RepositoryExpansionContractError as exc:
+                  return f"KILLED:REJECT:{type(exc).__name__}:{exc}"
+              except Exception as exc:
+                  return f"ERROR:{type(exc).__name__}:{exc}"
+              return "SURVIVED:ACCEPTED"
+
+          def require(condition, killed, survived):
+              return killed if condition else survived
+
+          def m01():
+              f = _fleet()
+              return reject_result(lambda: replace(f, observations=f.observations[:1]).validate())
+
+          def m02():
+              f = _fleet()
+              return reject_result(lambda: replace(f, observations=(f.observations[0], f.observations[0])).validate())
+
+          def m03():
+              f = _fleet()
+              changed = replace(f.observations[0], branch='main')
+              return reject_result(lambda: replace(f, observations=(changed, f.observations[1])).validate())
+
+          def m04():
+              f = _fleet()
+              changed = replace(f.observations[0], head=C)
+              c = replace(f, observations=(changed, f.observations[1]))
+              try:
+                  c.validate()
+              except RepositoryExpansionContractError as exc:
+                  return f"KILLED:VALID_HEAD_REJECTED:{exc}"
+              digest_changed = f.baseline_digest() != c.baseline_digest()
+              malformed = reject_result(lambda: replace(f.observations[0], head='bad').validate()).startswith('KILLED')
+              return require(
+                  digest_changed and malformed,
+                  'KILLED:DIGEST_CHANGED+MALFORMED_REJECTED',
+                  f'SURVIVED:digest_changed={digest_changed},malformed_rejected={malformed}',
+              )
+
+          def m05():
+              f = _fleet()
+              changed = replace(f.observations[0], tree=C)
+              c = replace(f, observations=(changed, f.observations[1]))
+              try:
+                  c.validate()
+              except RepositoryExpansionContractError as exc:
+                  return f"KILLED:VALID_TREE_REJECTED:{exc}"
+              digest_changed = f.baseline_digest() != c.baseline_digest()
+              malformed = reject_result(lambda: replace(f.observations[0], tree='bad').validate()).startswith('KILLED')
+              return require(
+                  digest_changed and malformed,
+                  'KILLED:DIGEST_CHANGED+MALFORMED_REJECTED',
+                  f'SURVIVED:digest_changed={digest_changed},malformed_rejected={malformed}',
+              )
+
+          def m06():
+              f = _fleet()
+              edge = replace(_edge(), target='DonkeyJJLove/unregistered-repository')
+              ai = replace(f.observations[0], dependencies=('DonkeyJJLove/unregistered-repository',))
+              wr = replace(f.observations[1], dependents=())
+              return reject_result(lambda: replace(f, observations=(ai, wr), edges=(edge,)).validate())
+
+          def m07():
+              f = _fleet()
+              a = replace(f.observations[0], dependencies=())
+              r1 = reject_result(lambda: replace(f, observations=(a, f.observations[1])).validate())
+              w = replace(f.observations[1], dependents=())
+              r2 = reject_result(lambda: replace(f, observations=(f.observations[0], w)).validate())
+              return require(r1.startswith('KILLED') and r2.startswith('KILLED'), 'KILLED:BOTH_PROJECTIONS_REJECTED', f'SURVIVED:{r1}|{r2}')
+
+          def m08():
+              f = _fleet()
+              ev = f.observations[0].evidence[0]
+              ai = replace(f.observations[0], evidence=(ev, ev))
+              return reject_result(lambda: replace(f, observations=(ai, f.observations[1])).validate())
+
+          def m09():
+              r1 = reject_result(lambda: replace(_evidence(), command='').validate())
+              r2 = reject_result(lambda: replace(_evidence(), command=None).validate())
+              return require(r1.startswith('KILLED') and r2.startswith('KILLED'), 'KILLED:EMPTY_AND_NULL_COMMAND_REJECTED', f'SURVIVED:{r1}|{r2}')
+
+          def m10():
+              r1 = reject_result(lambda: replace(_evidence(), exit_code=None).validate())
+              r2 = reject_result(lambda: replace(_evidence(), exit_code=1).validate())
+              r3 = reject_result(lambda: replace(_evidence(), result='FAIL', exit_code=0).validate())
+              return require(all(x.startswith('KILLED') for x in (r1, r2, r3)), 'KILLED:EXIT_CODE_CONFUSION_REJECTED', f'SURVIVED:{r1}|{r2}|{r3}')
+
+          def m11():
+              f = _fleet()
+              wr = replace(f.observations[1], failure_classification='UNKNOWN')
+              c = replace(f, observations=(f.observations[0], wr))
+              try:
+                  d = c.gate0()
+              except Exception as exc:
+                  return f'ERROR:{type(exc).__name__}:{exc}'
+              return require(d.result == 'FAIL', 'KILLED:GATE0_FAIL', f'SURVIVED:GATE0={d.result}')
+
+          def m12():
+              bad_pass = replace(_evidence(), scope='BUILD', result='PASS', exit_code=1)
+              r1 = reject_result(lambda: bad_pass.validate())
+              f = _fleet()
+              ai = replace(f.observations[0], test_result='FAIL')
+              r2 = reject_result(lambda: replace(f, observations=(ai, f.observations[1])).validate())
+              return require(r1.startswith('KILLED') and r2.startswith('KILLED'), 'KILLED:FAIL_TO_PASS_PATHS_REJECTED', f'SURVIVED:{r1}|{r2}')
+
+          def m13():
+              r1 = reject_result(lambda: _baseline('DonkeyJJLove/ai_platform', 'master', failure_classification='NONE', known_preexisting_failures=('f1',)).validate())
+              r2 = reject_result(lambda: _baseline('DonkeyJJLove/ai_platform', 'master', failure_classification='KNOWN_PREEXISTING_FAILURES', known_preexisting_failures=()).validate())
+              return require(r1.startswith('KILLED') and r2.startswith('KILLED'), 'KILLED:CLASSIFICATION_ERASURE_REJECTED', f'SURVIVED:{r1}|{r2}')
+
+          def m14():
+              return m06()
+
+          def m15():
+              f = _fleet()
+              changed = replace(f.observations[1], failure_classification='UNKNOWN')
+              c = replace(f, observations=(f.observations[0], changed))
+              a = f.baseline_digest()
+              b = c.baseline_digest()
+              return require(a != b, 'KILLED:OLD_DIGEST_MISMATCHES_CHANGED_BASELINE', 'SURVIVED:DIGEST_REPLAY_COLLISION')
+
+          def m16():
+              f = _fleet()
+              stale = replace(f.observations[0], head=C)
+              c = replace(f, observations=(stale, f.observations[1]))
+              try:
+                  decision = c.gate0()
+              except RepositoryExpansionContractError as exc:
+                  return f'KILLED:STALE_HEAD_REJECTED:{exc}'
+              return require(decision.result != 'PASS', f'KILLED:GATE0={decision.result}', f'SURVIVED:STALE_HEAD_GATE0={decision.result}')
+
+          def m17():
+              f = _fleet()
+              return reject_result(lambda: replace(f, observations=f.observations[:1]).gate0())
+
+          MUTATIONS = {
+              'M01': m01, 'M02': m02, 'M03': m03, 'M04': m04, 'M05': m05,
+              'M06': m06, 'M07': m07, 'M08': m08, 'M09': m09, 'M10': m10,
+              'M11': m11, 'M12': m12, 'M13': m13, 'M14': m14, 'M15': m15,
+              'M16': m16, 'M17': m17,
+          }
+
+          first = {name: fn() for name, fn in MUTATIONS.items()}
+          second = {name: fn() for name, fn in MUTATIONS.items()}
+          deterministic = first == second
+
+          def cross_mutations():
+              outcomes = []
+              f = _fleet()
+
+              # UNKNOWN + missing repository
+              wr = replace(f.observations[1], failure_classification='UNKNOWN')
+              outcomes.append(reject_result(lambda: replace(f, observations=(wr,)).gate0()))
+
+              # UNKNOWN + dependency mismatch
+              ai = replace(f.observations[0], dependencies=(), failure_classification='UNKNOWN')
+              outcomes.append(reject_result(lambda: replace(f, observations=(ai, f.observations[1])).gate0()))
+
+              # valid PASS evidence + head substitution
+              head = replace(f.observations[0], head=C)
+              try:
+                  d = replace(f, observations=(head, f.observations[1])).gate0()
+                  outcomes.append('SURVIVED:PASS_EVIDENCE+HEAD_SUBSTITUTION' if d.result == 'PASS' else f'KILLED:GATE0={d.result}')
+              except RepositoryExpansionContractError as exc:
+                  outcomes.append(f'KILLED:HEAD_SUBSTITUTION_REJECTED:{exc}')
+
+              # valid PASS evidence + tree substitution
+              tree = replace(f.observations[0], tree=C)
+              try:
+                  d = replace(f, observations=(tree, f.observations[1])).gate0()
+                  outcomes.append('SURVIVED:PASS_EVIDENCE+TREE_SUBSTITUTION' if d.result == 'PASS' else f'KILLED:GATE0={d.result}')
+              except RepositoryExpansionContractError as exc:
+                  outcomes.append(f'KILLED:TREE_SUBSTITUTION_REJECTED:{exc}')
+
+              # valid baseline digest + dependency substitution
+              bad = replace(f.observations[0], dependencies=())
+              outcomes.append(reject_result(lambda: replace(f, observations=(bad, f.observations[1])).gate0()))
+
+              # known preexisting + erasure
+              known = replace(f.observations[1], failure_classification='KNOWN_PREEXISTING_FAILURES', known_preexisting_failures=('legacy',))
+              erased = replace(known, failure_classification='NONE')
+              outcomes.append(reject_result(lambda: replace(f, observations=(f.observations[0], erased)).gate0()))
+
+              # duplicate evidence + fleet escape
+              ev = f.observations[0].evidence[0]
+              ai2 = replace(f.observations[0], dependencies=('DonkeyJJLove/unregistered-repository',), evidence=(ev, ev))
+              edge = replace(_edge(), target='DonkeyJJLove/unregistered-repository')
+              wr2 = replace(f.observations[1], dependents=())
+              outcomes.append(reject_result(lambda: replace(f, observations=(ai2, wr2), edges=(edge,)).gate0()))
+              return outcomes
+
+          cross = cross_mutations()
+          cross_pass = all(x.startswith('KILLED') for x in cross)
+
+          # Semantically equivalent registry/observation ordering must not rebind digest.
+          f = _fleet()
+          reordered = replace(f, registered=tuple(reversed(f.registered)), observations=tuple(reversed(f.observations)))
+          try:
+              reordered.validate()
+              order_independent = f.baseline_digest() == reordered.baseline_digest()
+          except Exception:
+              order_independent = False
+
+          determinism_pass = deterministic and order_independent
+
+          survivors = [name for name, result in first.items() if result.startswith('SURVIVED')]
+          if not cross_pass:
+              survivors.append('CROSS_MUTATION')
+          if not determinism_pass:
+              survivors.append('DETERMINISM')
+
+          result = {
+              'candidate_head': 'b7b980ae87bb18e5c721c029a5efdfd450239311',
+              'mutations': first,
+              'second_run': second,
+              'cross': cross,
+              'cross_pass': cross_pass,
+              'same_input_same_result': deterministic,
+              'order_independent_digest': order_independent,
+              'determinism_pass': determinism_pass,
+              'total_mutations': len(first),
+              'rejected_mutations': len(first) - sum(1 for x in first.values() if x.startswith('SURVIVED')),
+              'surviving_mutations': survivors,
+          }
+          result['mutation_score'] = result['rejected_mutations'] / result['total_mutations']
+          OUT.write_text(json.dumps(result, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          for name in sorted(first):
+              print(f'{name}_RESULT={first[name]}')
+          print('CROSS_MUTATION_RESULT=' + ('PASS' if cross_pass else 'FAIL'))
+          print('CROSS_MUTATION_DETAILS=' + json.dumps(cross, separators=(',', ':')))
+          print('SAME_INPUT_SAME_REJECTION=' + ('PASS' if deterministic else 'FAIL'))
+          print('ORDER_INDEPENDENT_DIGEST=' + ('PASS' if order_independent else 'FAIL'))
+          print('DETERMINISM_RESULT=' + ('PASS' if determinism_pass else 'FAIL'))
+          print(f"TOTAL_MUTATIONS={result['total_mutations']}")
+          print(f"REJECTED_MUTATIONS={result['rejected_mutations']}")
+          print(f"SURVIVING_MUTATIONS={len(survivors)}")
+          print(f"SURVIVING_MUTATION_IDS={','.join(survivors) if survivors else 'NONE'}")
+          print(f"MUTATION_SCORE={result['mutation_score']:.6f}")
+          raise SystemExit(0 if not survivors else 42)
+          PY
+          RC=$?
+          set -e
+          echo "mutation_exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          echo "SPECTRA_MUTATION_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: Verify exact production inventory preserved
+        id: inventory
+        if: always()
+        continue-on-error: true
+        run: |
+          set +e
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import cyber_lion.enterprise.host_authority_separation as hostsep
+          from cyber_lion.contracts.host_authority_separation import CANONICAL_REPOSITORY
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+
+          raw = subprocess.run(['git','ls-files','-z'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+          sources = {}
+          for p in raw.split(b'\0'):
+              if p:
+                  path = p.decode()
+                  if hostsep._production_path(path):
+                      sources[path] = Path(path).read_text()
+          revision = subprocess.run(['git','rev-parse','HEAD'], check=True, capture_output=True, text=True).stdout.strip()
+          tree_digest = subprocess.run(['git','write-tree'], check=True, capture_output=True, text=True).stdout.strip()
+          inv = EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY, revision=revision, tree_digest=tree_digest, sources=sources)
+          counts = (len(sources), len(inv.surfaces), len(inv.unclassified_refs))
+          print(f'SOURCE_COUNT={counts[0]}')
+          print(f'EFFECT_SURFACE_COUNT={counts[1]}')
+          print(f'UNCLASSIFIED_COUNT={counts[2]}')
+          if counts != (241,225,5):
+              raise SystemExit(43)
+          print('INVENTORY_PRESERVED=PASS')
+          PY
+          RC=$?
+          set -e
+          echo "inventory_exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          exit "${RC}"
+
+      - name: SPECTRA terminal gate
+        if: always()
+        env:
+          MUTATION_RC: ${{ steps.mutation.outputs.mutation_exit_code }}
+          INVENTORY_RC: ${{ steps.inventory.outputs.inventory_exit_code }}
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "CI_EXECUTION_ENVIRONMENT=GITHUB_ACTIONS/GITHUB_HOSTED_RUNNER"
+          echo "WORKFLOW_NAME=${GITHUB_WORKFLOW}"
+          echo "WORKFLOW_PATH=.github/workflows/r2e1-spectra-mutation.yml"
+          echo "CI_RUN_ID=${GITHUB_RUN_ID}"
+          echo "CI_JOB_KEY=${GITHUB_JOB}"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          test "${ACTUAL_HEAD}" = "${EXPECTED_HEAD}"
+
+          cat /tmp/spectra-r2e1-result.json || true
+
+          if [ "${INVENTORY_RC}" != "0" ]; then
+            echo "SPECTRA_MUTATION_STATUS=STOP_TARGET_DRIFT"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=RETURN_TO_LION"
+            exit 43
+          fi
+
+          if [ "${MUTATION_RC}" != "0" ]; then
+            echo "SPECTRA_MUTATION_STATUS=COUNTEREXAMPLE_FOUND"
+            echo "INTEGRATION_CANDIDATE_STATUS=FALSIFIED"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=TIGER_R2E1_COUNTEREXAMPLE_PATCH"
+            exit 42
+          fi
+
+          echo "SPECTRA_MUTATION_STATUS=PASS"
+          echo "INTEGRATION_CANDIDATE_STATUS=MUTATION_HARDENED_INTEGRATION_CANDIDATE"
+          echo "MERGED_STATUS=NO"
+          echo "NEXT_EPOCH=LION_R2E1_FINAL_INTEGRATION_GATE"
