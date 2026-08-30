@@ -92,8 +92,8 @@ def _fleet() -> FleetBaseline:
         schema_version="1.0.0",
         baseline_id="R2E1-FLEET-BASELINE",
         registered=(
-            RegisteredRepository("DonkeyJJLove/ai_platform", "master"),
-            RegisteredRepository("DonkeyJJLove/writeups", "master"),
+            RegisteredRepository("DonkeyJJLove/ai_platform", "master", A, B),
+            RegisteredRepository("DonkeyJJLove/writeups", "master", A, B),
         ),
         observations=(
             _baseline(
@@ -189,6 +189,22 @@ class RepositoryBaselineTests(unittest.TestCase):
         self.assertEqual(baseline.evidence_hash(), baseline.evidence_hash())
         self.assertEqual(len(baseline.evidence_hash()), 64)
 
+    def test_evidence_hash_is_order_independent_for_evidence_set(self):
+        first = _evidence(evidence_id="lion:test:1")
+        second = _evidence(
+            evidence_id="lion:test:2",
+            scope="CONTRACT",
+            command="python -m unittest cyber_lion.tests.test_repository_expansion -v",
+            source_ref="github-actions:run:2",
+        )
+        left = _baseline(
+            "DonkeyJJLove/ai_platform",
+            "master",
+            evidence=(first, second),
+        )
+        right = replace(left, evidence=(second, first))
+        self.assertEqual(left.evidence_hash(), right.evidence_hash())
+
 
 class FleetBaselineTests(unittest.TestCase):
     def test_gate0_passes_inventory_with_unknown_health_without_upgrading_it(self):
@@ -243,6 +259,24 @@ class FleetBaselineTests(unittest.TestCase):
         with self.assertRaisesRegex(RepositoryExpansionContractError, "registered default"):
             replace(fleet, observations=(changed, fleet.observations[1])).validate()
 
+    def test_registered_repository_requires_exact_head_and_tree_pins(self):
+        with self.assertRaisesRegex(RepositoryExpansionContractError, "expected_head"):
+            RegisteredRepository("DonkeyJJLove/ai_platform", "master", "bad", B).validate()
+        with self.assertRaisesRegex(RepositoryExpansionContractError, "expected_tree"):
+            RegisteredRepository("DonkeyJJLove/ai_platform", "master", A, "bad").validate()
+
+    def test_head_substitution_is_rejected_by_registry_pin(self):
+        fleet = _fleet()
+        changed = replace(fleet.observations[0], head=C)
+        with self.assertRaisesRegex(RepositoryExpansionContractError, "expected head"):
+            replace(fleet, observations=(changed, fleet.observations[1])).gate0()
+
+    def test_tree_substitution_is_rejected_by_registry_pin(self):
+        fleet = _fleet()
+        changed = replace(fleet.observations[0], tree=C)
+        with self.assertRaisesRegex(RepositoryExpansionContractError, "expected tree"):
+            replace(fleet, observations=(changed, fleet.observations[1])).gate0()
+
     def test_dependency_projection_must_match_graph(self):
         fleet = _fleet()
         changed = replace(fleet.observations[0], dependencies=())
@@ -280,6 +314,15 @@ class FleetBaselineTests(unittest.TestCase):
             observations=(fleet.observations[0], writeups),
         )
         self.assertNotEqual(fleet.baseline_digest(), candidate.baseline_digest())
+
+    def test_baseline_digest_is_order_independent_for_repository_order(self):
+        fleet = _fleet()
+        reordered = replace(
+            fleet,
+            registered=tuple(reversed(fleet.registered)),
+            observations=tuple(reversed(fleet.observations)),
+        )
+        self.assertEqual(fleet.baseline_digest(), reordered.baseline_digest())
 
 
 if __name__ == "__main__":

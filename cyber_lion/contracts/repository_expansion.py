@@ -133,10 +133,14 @@ class VerificationEvidence:
 class RegisteredRepository:
     repository: str
     default_branch: str
+    expected_head: str
+    expected_tree: str
 
     def validate(self) -> "RegisteredRepository":
         _require_repository(self.repository)
         _require_identifier(self.default_branch, "default_branch")
+        _require_sha40(self.expected_head, "expected_head")
+        _require_sha40(self.expected_tree, "expected_tree")
         return self
 
     def canonical_dict(self) -> dict[str, Any]:
@@ -220,7 +224,15 @@ class RepositoryBaseline:
     def canonical_dict(self) -> dict[str, Any]:
         self.validate()
         value = asdict(self)
-        value["evidence"] = [item.canonical_dict() for item in self.evidence]
+        value["known_preexisting_failures"] = sorted(self.known_preexisting_failures)
+        value["dependencies"] = sorted(self.dependencies)
+        value["dependents"] = sorted(self.dependents)
+        value["public_contracts"] = sorted(self.public_contracts)
+        value["security_boundaries"] = sorted(self.security_boundaries)
+        value["evidence"] = [
+            item.canonical_dict()
+            for item in sorted(self.evidence, key=lambda item: item.evidence_id)
+        ]
         return value
 
     def evidence_hash(self) -> str:
@@ -321,10 +333,18 @@ class FleetBaseline:
         if set(reg_ids) != set(obs_ids):
             raise RepositoryExpansionContractError("repository inventory does not exactly cover registry")
 
-        branch_by_repo = {item.repository: item.default_branch for item in registered}
+        pin_by_repo = {
+            item.repository: (item.default_branch, item.expected_head, item.expected_tree)
+            for item in registered
+        }
         for observation in observations:
-            if observation.branch != branch_by_repo[observation.repository]:
+            default_branch, expected_head, expected_tree = pin_by_repo[observation.repository]
+            if observation.branch != default_branch:
                 raise RepositoryExpansionContractError("observed branch differs from registered default")
+            if observation.head != expected_head:
+                raise RepositoryExpansionContractError("observed head differs from registered expected head")
+            if observation.tree != expected_tree:
+                raise RepositoryExpansionContractError("observed tree differs from registered expected tree")
 
         edge_keys: set[tuple[str, str, str]] = set()
         known = set(reg_ids)
@@ -350,12 +370,28 @@ class FleetBaseline:
 
     def canonical_dict(self) -> dict[str, Any]:
         self.validate()
+        registered = sorted(self.registered, key=lambda item: item.repository)
+        observations = sorted(self.observations, key=lambda item: item.repository)
+        edges = sorted(
+            self.edges,
+            key=lambda item: (
+                item.source,
+                item.target,
+                item.relation,
+                item.contract or "",
+                item.version_assumption or "",
+                item.failure_mode,
+                item.security_impact,
+                item.test_coverage,
+                item.evidence,
+            ),
+        )
         return {
             "schema_version": self.schema_version,
             "baseline_id": self.baseline_id,
-            "registered": [item.canonical_dict() for item in self.registered],
-            "observations": [item.canonical_dict() for item in self.observations],
-            "edges": [item.canonical_dict() for item in self.edges],
+            "registered": [item.canonical_dict() for item in registered],
+            "observations": [item.canonical_dict() for item in observations],
+            "edges": [item.canonical_dict() for item in edges],
         }
 
     def baseline_digest(self) -> str:
