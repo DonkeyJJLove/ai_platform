@@ -363,11 +363,15 @@ class FleetBaseline:
 
     def gate0(self) -> Gate0Decision:
         self.validate()
+        failures_classified = all(
+            observation.failure_classification != "UNKNOWN"
+            for observation in self.observations
+        )
         decision = Gate0Decision(
             all_repositories_inventoried=True,
-            current_failures_separated_from_new_failures=True,
+            current_failures_separated_from_new_failures=failures_classified,
             cross_repo_dependency_graph_created=True,
-            result="PASS",
+            result="PASS" if failures_classified else "FAIL",
             baseline_digest=self.baseline_digest(),
         )
         return decision.validate()

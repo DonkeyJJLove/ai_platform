@@ -101,12 +101,14 @@ def _fleet() -> FleetBaseline:
                 "master",
                 dependencies=("DonkeyJJLove/writeups",),
                 test_result="PASS",
+                failure_classification="NONE",
                 evidence=(_evidence(),),
             ),
             _baseline(
                 "DonkeyJJLove/writeups",
                 "master",
                 dependents=("DonkeyJJLove/ai_platform",),
+                failure_classification="NONE",
                 manifest_present=False,
             ),
         ),
@@ -194,8 +196,36 @@ class FleetBaselineTests(unittest.TestCase):
         decision = fleet.gate0()
         self.assertEqual(decision.result, "PASS")
         by_repo = {item.repository: item for item in fleet.observations}
+        self.assertEqual(by_repo["DonkeyJJLove/writeups"].build_result, "UNKNOWN")
         self.assertEqual(by_repo["DonkeyJJLove/writeups"].test_result, "UNKNOWN")
+        self.assertEqual(by_repo["DonkeyJJLove/writeups"].failure_classification, "NONE")
         self.assertFalse(by_repo["DonkeyJJLove/writeups"].manifest_present)
+
+    def test_gate0_fails_when_failure_classification_is_unknown(self):
+        fleet = _fleet()
+        writeups = replace(
+            fleet.observations[1],
+            failure_classification="UNKNOWN",
+        )
+        candidate = replace(
+            fleet,
+            observations=(fleet.observations[0], writeups),
+        )
+        decision = candidate.gate0()
+        self.assertTrue(decision.all_repositories_inventoried)
+        self.assertFalse(decision.current_failures_separated_from_new_failures)
+        self.assertTrue(decision.cross_repo_dependency_graph_created)
+        self.assertEqual(decision.result, "FAIL")
+
+    def test_gate0_allows_unknown_health_when_failures_are_classified(self):
+        fleet = _fleet()
+        writeups = fleet.observations[1]
+        self.assertEqual(writeups.build_result, "UNKNOWN")
+        self.assertEqual(writeups.test_result, "UNKNOWN")
+        self.assertEqual(writeups.failure_classification, "NONE")
+        decision = fleet.gate0()
+        self.assertTrue(decision.current_failures_separated_from_new_failures)
+        self.assertEqual(decision.result, "PASS")
 
     def test_missing_repository_observation_is_rejected(self):
         fleet = _fleet()
@@ -234,10 +264,22 @@ class FleetBaselineTests(unittest.TestCase):
 
     def test_baseline_digest_is_stable_and_gate_bound(self):
         fleet = _fleet()
-        digest = fleet.baseline_digest()
+        value = fleet.baseline_digest()
         decision = fleet.gate0()
-        self.assertEqual(len(digest), 64)
-        self.assertEqual(decision.baseline_digest, digest)
+        self.assertEqual(len(value), 64)
+        self.assertEqual(decision.baseline_digest, value)
+
+    def test_baseline_digest_changes_with_failure_classification(self):
+        fleet = _fleet()
+        writeups = replace(
+            fleet.observations[1],
+            failure_classification="UNKNOWN",
+        )
+        candidate = replace(
+            fleet,
+            observations=(fleet.observations[0], writeups),
+        )
+        self.assertNotEqual(fleet.baseline_digest(), candidate.baseline_digest())
 
 
 if __name__ == "__main__":
