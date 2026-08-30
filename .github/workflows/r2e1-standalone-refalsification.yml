@@ -1,0 +1,205 @@
+name: R2E1 LION Standalone Refalsification
+
+on:
+  push:
+    branches:
+      - verification/r2e1-ci-standalone-2f04bd77
+
+permissions:
+  contents: read
+
+jobs:
+  standalone-refalsification:
+    runs-on: ubuntu-latest
+
+    env:
+      EXPECTED_HEAD: 2f04bd77a1c03d43aa1c52f4f08d6e1f4a47a705
+      PR_NUMBER: "245"
+
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: 2f04bd77a1c03d43aa1c52f4f08d6e1f4a47a705
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact candidate head
+        id: head_binding
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "EVENT_TYPE=${GITHUB_EVENT_NAME}"
+          echo "PR_NUMBER=${PR_NUMBER}"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          if [ "${ACTUAL_HEAD}" != "${EXPECTED_HEAD}" ]; then
+            echo "EXACT_HEAD_BINDING=FAIL"
+            exit 91
+          fi
+          echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: T1 standalone targeted contract
+        id: t1
+        continue-on-error: true
+        run: |
+          set +e
+          echo "T1_COMMAND=python -m unittest cyber_lion.tests.test_repository_expansion -v"
+          python -m unittest cyber_lion.tests.test_repository_expansion -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then
+            echo "result=PASS" >> "${GITHUB_OUTPUT}"
+            echo "T1_RESULT=PASS"
+          else
+            echo "result=FAIL" >> "${GITHUB_OUTPUT}"
+            echo "T1_RESULT=FAIL"
+          fi
+          echo "T1_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: T2 standalone frozen reproducer
+        id: t2
+        continue-on-error: true
+        run: |
+          set +e
+          echo "T2_COMMAND=python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v"
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then
+            echo "result=PASS" >> "${GITHUB_OUTPUT}"
+            echo "T2_RESULT=PASS"
+          else
+            echo "result=FAIL" >> "${GITHUB_OUTPUT}"
+            echo "T2_RESULT=FAIL"
+          fi
+          echo "T2_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: Mandatory negative - UNKNOWN classification fails Gate0
+        id: negative
+        continue-on-error: true
+        run: |
+          set +e
+          python -m unittest cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_gate0_fails_when_failure_classification_is_unknown -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then
+            echo "result=PASS" >> "${GITHUB_OUTPUT}"
+            echo "MANDATORY_NEGATIVE_RESULT=PASS"
+          else
+            echo "result=FAIL" >> "${GITHUB_OUTPUT}"
+            echo "MANDATORY_NEGATIVE_RESULT=FAIL"
+          fi
+          exit "${RC}"
+
+      - name: Mandatory positive - UNKNOWN health with NONE classification passes Gate0
+        id: positive
+        continue-on-error: true
+        run: |
+          set +e
+          python -m unittest cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_gate0_allows_unknown_health_when_failures_are_classified -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then
+            echo "result=PASS" >> "${GITHUB_OUTPUT}"
+            echo "MANDATORY_POSITIVE_RESULT=PASS"
+          else
+            echo "result=FAIL" >> "${GITHUB_OUTPUT}"
+            echo "MANDATORY_POSITIVE_RESULT=FAIL"
+          fi
+          exit "${RC}"
+
+      - name: LION evidence gate
+        if: always()
+        env:
+          T1_OUTCOME: ${{ steps.t1.outcome }}
+          T1_EXIT_CODE: ${{ steps.t1.outputs.exit_code }}
+          T1_RESULT: ${{ steps.t1.outputs.result }}
+          T2_OUTCOME: ${{ steps.t2.outcome }}
+          T2_EXIT_CODE: ${{ steps.t2.outputs.exit_code }}
+          T2_RESULT: ${{ steps.t2.outputs.result }}
+          NEGATIVE_OUTCOME: ${{ steps.negative.outcome }}
+          NEGATIVE_EXIT_CODE: ${{ steps.negative.outputs.exit_code }}
+          NEGATIVE_RESULT: ${{ steps.negative.outputs.result }}
+          POSITIVE_OUTCOME: ${{ steps.positive.outcome }}
+          POSITIVE_EXIT_CODE: ${{ steps.positive.outputs.exit_code }}
+          POSITIVE_RESULT: ${{ steps.positive.outputs.result }}
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+
+          echo "CI_EXECUTION_ENVIRONMENT=GITHUB_ACTIONS/GITHUB_HOSTED_RUNNER"
+          echo "WORKFLOW_NAME=${GITHUB_WORKFLOW}"
+          echo "WORKFLOW_PATH=.github/workflows/r2e1-standalone-refalsification.yml"
+          echo "CI_RUN_ID=${GITHUB_RUN_ID}"
+          echo "CI_JOB_ID=${GITHUB_JOB}"
+          echo "EVENT_TYPE=${GITHUB_EVENT_NAME}"
+          echo "PR_NUMBER=${PR_NUMBER}"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          echo "T1_EXIT_CODE=${T1_EXIT_CODE}"
+          echo "T1_RESULT=${T1_RESULT}"
+          echo "T2_EXIT_CODE=${T2_EXIT_CODE}"
+          echo "T2_RESULT=${T2_RESULT}"
+          echo "MANDATORY_NEGATIVE_EXIT_CODE=${NEGATIVE_EXIT_CODE}"
+          echo "MANDATORY_NEGATIVE_RESULT=${NEGATIVE_RESULT}"
+          echo "MANDATORY_POSITIVE_EXIT_CODE=${POSITIVE_EXIT_CODE}"
+          echo "MANDATORY_POSITIVE_RESULT=${POSITIVE_RESULT}"
+
+          if [ "${ACTUAL_HEAD}" != "${EXPECTED_HEAD}" ]; then
+            echo "EXACT_HEAD_BINDING=FAIL"
+            echo "LION_REFALSIFICATION_STATUS=FAIL"
+            echo "INTEGRATION_CANDIDATE_STATUS=NO"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=STOP_TARGET_DRIFT"
+            exit 91
+          fi
+
+          if [ "${T1_OUTCOME}" != "success" ] || [ "${T1_EXIT_CODE}" != "0" ]; then
+            echo "LION_REFALSIFICATION_STATUS=FAIL"
+            echo "INTEGRATION_CANDIDATE_STATUS=NO"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=RETURN_TO_TIGER"
+            exit 1
+          fi
+
+          if [ "${T2_OUTCOME}" != "success" ] || [ "${T2_EXIT_CODE}" != "0" ]; then
+            echo "LION_REFALSIFICATION_STATUS=FAIL"
+            echo "INTEGRATION_CANDIDATE_STATUS=NO"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=RETURN_TO_TIGER"
+            exit 1
+          fi
+
+          if [ "${NEGATIVE_OUTCOME}" != "success" ] || [ "${NEGATIVE_EXIT_CODE}" != "0" ]; then
+            echo "LION_REFALSIFICATION_STATUS=FAIL"
+            echo "INTEGRATION_CANDIDATE_STATUS=NO"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=RETURN_TO_TIGER"
+            exit 1
+          fi
+
+          if [ "${POSITIVE_OUTCOME}" != "success" ] || [ "${POSITIVE_EXIT_CODE}" != "0" ]; then
+            echo "LION_REFALSIFICATION_STATUS=FAIL"
+            echo "INTEGRATION_CANDIDATE_STATUS=NO"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=RETURN_TO_TIGER"
+            exit 1
+          fi
+
+          echo "EXACT_HEAD_BINDING=PASS"
+          echo "LION_REFALSIFICATION_STATUS=PASS"
+          echo "INTEGRATION_CANDIDATE_STATUS=YES"
+          echo "MERGED_STATUS=NO"
+          echo "NEXT_EPOCH=SPECTRA_MUTATION_R2E1"
