@@ -1,0 +1,228 @@
+name: R2E1 LION Final Integration Gate
+
+on:
+  push:
+    branches:
+      - verification/r2e1-ci-standalone-2f04bd77
+    paths:
+      - .github/workflows/r2e1-final-integration-gate.yml
+
+permissions:
+  contents: read
+
+jobs:
+  final-integration-gate:
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_HEAD: 2f04bd77a1c03d43aa1c52f4f08d6e1f4a47a705
+      PR_NUMBER: "245"
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: 2f04bd77a1c03d43aa1c52f4f08d6e1f4a47a705
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact candidate head
+        id: head
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          if [ "${ACTUAL_HEAD}" != "${EXPECTED_HEAD}" ]; then
+            echo "EXACT_HEAD_BINDING=FAIL"
+            exit 91
+          fi
+          echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: T0 static compile
+        id: t0
+        continue-on-error: true
+        run: |
+          set +e
+          echo "T0_COMMAND=python -m compileall -q cyber_lion"
+          python -m compileall -q cyber_lion
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then echo "result=PASS" >> "${GITHUB_OUTPUT}"; else echo "result=FAIL" >> "${GITHUB_OUTPUT}"; fi
+          echo "T0_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: T1 targeted repository expansion contract
+        id: t1
+        continue-on-error: true
+        run: |
+          set +e
+          echo "T1_COMMAND=python -m unittest cyber_lion.tests.test_repository_expansion -v"
+          python -m unittest cyber_lion.tests.test_repository_expansion -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then echo "result=PASS" >> "${GITHUB_OUTPUT}"; else echo "result=FAIL" >> "${GITHUB_OUTPUT}"; fi
+          echo "T1_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: T2 frozen exact inventory reproducer
+        id: t2
+        continue-on-error: true
+        run: |
+          set +e
+          echo "T2_COMMAND=python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v"
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then echo "result=PASS" >> "${GITHUB_OUTPUT}"; else echo "result=FAIL" >> "${GITHUB_OUTPUT}"; fi
+          echo "T2_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: LION post-SPECTRA focused regressions
+        id: focused
+        continue-on-error: true
+        run: |
+          set +e
+          echo "FOCUSED_COMMAND=python -m unittest cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_head_substitution_is_rejected_by_registry_pin cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_tree_substitution_is_rejected_by_registry_pin cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_baseline_digest_is_order_independent_for_repository_order cyber_lion.tests.test_repository_expansion.RepositoryBaselineTests.test_evidence_hash_is_order_independent_for_evidence_set cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_gate0_fails_when_failure_classification_is_unknown cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_gate0_allows_unknown_health_when_failures_are_classified -v"
+          python -m unittest \
+            cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_head_substitution_is_rejected_by_registry_pin \
+            cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_tree_substitution_is_rejected_by_registry_pin \
+            cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_baseline_digest_is_order_independent_for_repository_order \
+            cyber_lion.tests.test_repository_expansion.RepositoryBaselineTests.test_evidence_hash_is_order_independent_for_evidence_set \
+            cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_gate0_fails_when_failure_classification_is_unknown \
+            cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_gate0_allows_unknown_health_when_failures_are_classified \
+            -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then echo "result=PASS" >> "${GITHUB_OUTPUT}"; else echo "result=FAIL" >> "${GITHUB_OUTPUT}"; fi
+          echo "FOCUSED_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: T3 full Cyber-Lion core
+        id: t3
+        continue-on-error: true
+        run: |
+          set +e
+          echo 'T3_COMMAND=python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v'
+          python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then echo "result=PASS" >> "${GITHUB_OUTPUT}"; else echo "result=FAIL" >> "${GITHUB_OUTPUT}"; fi
+          echo "T3_EXIT_CODE=${RC}"
+          exit "${RC}"
+
+      - name: Exact production inventory refreeze
+        id: inventory
+        continue-on-error: true
+        run: |
+          set +e
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import cyber_lion.enterprise.host_authority_separation as hostsep
+          from cyber_lion.contracts.host_authority_separation import CANONICAL_REPOSITORY
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+
+          raw = subprocess.run(['git','ls-files','-z'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+          sources = {}
+          for p in raw.split(b'\0'):
+              if p:
+                  path = p.decode()
+                  if hostsep._production_path(path):
+                      sources[path] = Path(path).read_text()
+          revision = subprocess.run(['git','rev-parse','HEAD'], check=True, capture_output=True, text=True).stdout.strip()
+          tree_digest = subprocess.run(['git','write-tree'], check=True, capture_output=True, text=True).stdout.strip()
+          inv = EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY, revision=revision, tree_digest=tree_digest, sources=sources)
+          counts = (len(sources), len(inv.surfaces), len(inv.unclassified_refs))
+          print(f'SOURCE_COUNT={counts[0]}')
+          print(f'EFFECT_SURFACE_COUNT={counts[1]}')
+          print(f'UNCLASSIFIED_COUNT={counts[2]}')
+          if counts != (241, 225, 5):
+              print('INVENTORY_REFREEZE=FAIL')
+              raise SystemExit(43)
+          print('INVENTORY_REFREEZE=PASS')
+          PY
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "${GITHUB_OUTPUT}"
+          if [ "${RC}" -eq 0 ]; then echo "result=PASS" >> "${GITHUB_OUTPUT}"; else echo "result=FAIL" >> "${GITHUB_OUTPUT}"; fi
+          exit "${RC}"
+
+      - name: Final independent LION decision
+        if: always()
+        env:
+          T0_OUTCOME: ${{ steps.t0.outcome }}
+          T0_RC: ${{ steps.t0.outputs.exit_code }}
+          T1_OUTCOME: ${{ steps.t1.outcome }}
+          T1_RC: ${{ steps.t1.outputs.exit_code }}
+          T2_OUTCOME: ${{ steps.t2.outcome }}
+          T2_RC: ${{ steps.t2.outputs.exit_code }}
+          FOCUSED_OUTCOME: ${{ steps.focused.outcome }}
+          FOCUSED_RC: ${{ steps.focused.outputs.exit_code }}
+          T3_OUTCOME: ${{ steps.t3.outcome }}
+          T3_RC: ${{ steps.t3.outputs.exit_code }}
+          INVENTORY_OUTCOME: ${{ steps.inventory.outcome }}
+          INVENTORY_RC: ${{ steps.inventory.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "CI_EXECUTION_ENVIRONMENT=GITHUB_ACTIONS/GITHUB_HOSTED_RUNNER"
+          echo "WORKFLOW_NAME=${GITHUB_WORKFLOW}"
+          echo "WORKFLOW_PATH=.github/workflows/r2e1-final-integration-gate.yml"
+          echo "CI_RUN_ID=${GITHUB_RUN_ID}"
+          echo "CI_JOB_KEY=${GITHUB_JOB}"
+          echo "PR_NUMBER=${PR_NUMBER}"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          echo "T0_EXIT_CODE=${T0_RC}"
+          echo "T1_EXIT_CODE=${T1_RC}"
+          echo "T2_EXIT_CODE=${T2_RC}"
+          echo "FOCUSED_EXIT_CODE=${FOCUSED_RC}"
+          echo "T3_EXIT_CODE=${T3_RC}"
+          echo "INVENTORY_EXIT_CODE=${INVENTORY_RC}"
+
+          if [ "${ACTUAL_HEAD}" != "${EXPECTED_HEAD}" ]; then
+            echo "LION_R2E1_FINAL_INTEGRATION_GATE=FAIL"
+            echo "FINAL_INTEGRATION_CANDIDATE_STATUS=NO"
+            echo "MERGED_STATUS=NO"
+            echo "NEXT_EPOCH=STOP_TARGET_DRIFT"
+            exit 91
+          fi
+
+          for pair in \
+            "${T0_OUTCOME}:${T0_RC}" \
+            "${T1_OUTCOME}:${T1_RC}" \
+            "${T2_OUTCOME}:${T2_RC}" \
+            "${FOCUSED_OUTCOME}:${FOCUSED_RC}" \
+            "${T3_OUTCOME}:${T3_RC}" \
+            "${INVENTORY_OUTCOME}:${INVENTORY_RC}"
+          do
+            if [ "${pair}" != "success:0" ]; then
+              echo "LION_R2E1_FINAL_INTEGRATION_GATE=FAIL"
+              echo "FINAL_INTEGRATION_CANDIDATE_STATUS=NO"
+              echo "MERGED_STATUS=NO"
+              echo "NEXT_EPOCH=RETURN_TO_TIGER"
+              exit 1
+            fi
+          done
+
+          echo "EXACT_HEAD_BINDING=PASS"
+          echo "T0_RESULT=PASS"
+          echo "T1_RESULT=PASS"
+          echo "T2_RESULT=PASS"
+          echo "POST_SPECTRA_REGRESSIONS=PASS"
+          echo "T3_RESULT=PASS"
+          echo "INVENTORY_REFREEZE=PASS"
+          echo "LION_R2E1_FINAL_INTEGRATION_GATE=PASS"
+          echo "FINAL_INTEGRATION_CANDIDATE_STATUS=YES"
+          echo "MERGED_STATUS=NO"
+          echo "AUTONOMOUS_PROCESS_STATUS=STOPPED_AT_HUMAN_BOUNDARY"
+          echo "NEXT_HUMAN_INTERVENTION=MERGE_AUTHORIZATION"
