@@ -103,13 +103,13 @@ jobs:
           python -m unittest cyber_lion.tests.test_enterprise_federation -v
           python -m unittest cyber_lion.tests.test_rccm_1d_glitchlab_conformance -v
       - name: R2E4 real 10-repository exact-head manifest semantic sweep
-        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-registry-pin-live-source-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
+        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-manifest-exact-head-semantic-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
         env:
           GITHUB_TOKEN: ${{ github.token }}
           R2E4_LIVE_MANIFEST_SWEEP: "1"
         run: python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_real_ten_repository_exact_head_manifest_semantic_sweep -v
       - name: R2E4 frozen inventory receipt
-        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-registry-pin-live-source-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
+        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-manifest-exact-head-semantic-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
         run: |
           python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
           python - <<'PY'
