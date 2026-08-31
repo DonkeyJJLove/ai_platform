@@ -1,0 +1,543 @@
+name: R2E3 Post-Merge Literal Receipt
+
+on:
+  push:
+    branches:
+      - verification/r2e3-post-merge-receipt-2be0b312
+    paths:
+      - .github/workflows/r2e3-post-merge-receipt.yml
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  r2e3-post-merge-receipt:
+    name: TIGER R2E3 Post-Merge Receipt Materialization R1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      EXPECTED_MASTER_HEAD: 2be0b312407920ac25d812f1c0bb6ecfcb31aa4c
+      EXPECTED_MASTER_TREE: 3c9705f85301e73f268228f3c36f6ae82a641633
+      EXPECTED_MERGE_COMMIT: 2be0b312407920ac25d812f1c0bb6ecfcb31aa4c
+      EXPECTED_MERGE_TREE: 3c9705f85301e73f268228f3c36f6ae82a641633
+      EXPECTED_PARENT_1: 24e788e2a03aecdb5563b6710b89156b182746cf
+      EXPECTED_PARENT_2: 9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58
+      EXPECTED_CANDIDATE_HEAD: 9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58
+      EXPECTED_CANDIDATE_TREE: 3c9705f85301e73f268228f3c36f6ae82a641633
+      EXPECTED_REGISTRY_DIGEST: 78dbb678bbb2189f69d0ba0132869e34af0d2d5033c909a037f4bc6308d5597c
+      PRE_MERGE_SNAPSHOT_DIGEST: 80a8b9ff84e8b224275624c6c6796513578f0fa63664964092fa584a98a11f6e
+      MASTER_CORE_RUN: "33391391678"
+      MASTER_MERGE_AUTHORITY_JOB: "99485611064"
+      MASTER_CORE_JOB: "99485611276"
+
+    steps:
+      - name: Checkout exact immutable post-merge target
+        uses: actions/checkout@v6
+        with:
+          ref: 2be0b312407920ac25d812f1c0bb6ecfcb31aa4c
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Phase 0-3 exact geometry, PR and master CI rebind
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import urllib.request
+          from pathlib import Path
+
+          api = "https://api.github.com"
+          token = os.environ["GITHUB_TOKEN"]
+          headers = {
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "User-Agent": "lion-r2e3-post-merge-receipt",
+          }
+
+          def get(path):
+              req = urllib.request.Request(api + path, headers=headers, method="GET")
+              with urllib.request.urlopen(req, timeout=15) as response:
+                  if response.status != 200:
+                      raise SystemExit(f"GITHUB_READ_STATUS={response.status}:{path}")
+                  return json.loads(response.read().decode("utf-8"))
+
+          def require(actual, expected, label):
+              if actual != expected:
+                  raise SystemExit(f"{label}_DRIFT=expected:{expected}|actual:{actual}")
+
+          head = subprocess.run(
+              ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+          ).stdout.strip()
+          tree = subprocess.run(
+              ["git", "rev-parse", "HEAD^{tree}"], check=True, capture_output=True, text=True
+          ).stdout.strip()
+          require(head, os.environ["EXPECTED_MASTER_HEAD"], "CHECKED_OUT_HEAD")
+          require(tree, os.environ["EXPECTED_MASTER_TREE"], "CHECKED_OUT_TREE")
+
+          master = get("/repos/DonkeyJJLove/ai_platform/branches/master")
+          master_head = master["commit"]["sha"]
+          master_tree = master["commit"]["commit"]["tree"]["sha"]
+          parents = [item["sha"] for item in master["commit"]["parents"]]
+          require(master_head, os.environ["EXPECTED_MASTER_HEAD"], "MASTER_HEAD")
+          require(master_tree, os.environ["EXPECTED_MASTER_TREE"], "MASTER_TREE")
+          require(parents, [os.environ["EXPECTED_PARENT_1"], os.environ["EXPECTED_PARENT_2"]], "MERGE_PARENTS")
+
+          pr = get("/repos/DonkeyJJLove/ai_platform/pulls/247")
+          require(pr["state"], "closed", "PR_STATE")
+          require(pr["merged"], True, "PR_MERGED")
+          require(pr["merge_commit_sha"], os.environ["EXPECTED_MERGE_COMMIT"], "PR_MERGE_COMMIT")
+          require(pr["head"]["sha"], os.environ["EXPECTED_CANDIDATE_HEAD"], "PR_CANDIDATE_HEAD")
+          require(pr["base"]["sha"], os.environ["EXPECTED_PARENT_1"], "PR_BASE_SHA")
+
+          run = get(f"/repos/DonkeyJJLove/ai_platform/actions/runs/{os.environ['MASTER_CORE_RUN']}")
+          require(run["head_sha"], os.environ["EXPECTED_MASTER_HEAD"], "MASTER_CORE_HEAD")
+          require(run["status"], "completed", "MASTER_CORE_STATUS")
+          require(run["conclusion"], "success", "MASTER_CORE_CONCLUSION")
+
+          jobs_payload = get(f"/repos/DonkeyJJLove/ai_platform/actions/runs/{os.environ['MASTER_CORE_RUN']}/jobs?per_page=100")
+          jobs = {str(item["id"]): item for item in jobs_payload["jobs"]}
+          auth = jobs.get(os.environ["MASTER_MERGE_AUTHORITY_JOB"])
+          core = jobs.get(os.environ["MASTER_CORE_JOB"])
+          if auth is None or core is None:
+              raise SystemExit("MASTER_CI_JOB_IDENTITY_MISSING")
+          require(auth["conclusion"], "success", "MASTER_MERGE_AUTHORITY_JOB_CONCLUSION")
+          require(core["conclusion"], "success", "MASTER_CORE_JOB_CONCLUSION")
+          core_steps = {item["name"]: item["conclusion"] for item in core["steps"]}
+          require(core_steps.get("Run Cyber-Lion tests"), "success", "MASTER_CORE_GENERIC_TESTS")
+          require(core_steps.get("R2E3 targeted fleet live pin tests"), "skipped", "OBSERVED_EXISTING_R2E3_TARGETED_STEP")
+          require(core_steps.get("R2E3 real 10-repository read-only GitHub sweep"), "skipped", "OBSERVED_EXISTING_R2E3_LIVE_SWEEP_STEP")
+          require(core_steps.get("R2E3 frozen inventory receipt"), "skipped", "OBSERVED_EXISTING_R2E3_INVENTORY_RECEIPT_STEP")
+
+          measured = {
+              "MASTER_HEAD": master_head,
+              "MASTER_TREE": master_tree,
+              "MERGE_COMMIT": master_head,
+              "MERGE_TREE": master_tree,
+              "MERGE_PARENT_1": parents[0],
+              "MERGE_PARENT_2": parents[1],
+              "PR_STATE": "CLOSED",
+              "PR_MERGED": "TRUE",
+              "CHECKED_OUT_HEAD": head,
+              "CHECKED_OUT_TREE": tree,
+              "MASTER_CORE_RUN": int(os.environ["MASTER_CORE_RUN"]),
+              "MASTER_CORE_JOB": int(os.environ["MASTER_CORE_JOB"]),
+              "MASTER_MERGE_AUTHORITY_JOB": int(os.environ["MASTER_MERGE_AUTHORITY_JOB"]),
+              "MASTER_CORE_GENERIC_TESTS": "PASS",
+              "OBSERVED_EXISTING_R2E3_TARGETED_STEP": "SKIPPED",
+              "OBSERVED_EXISTING_R2E3_LIVE_SWEEP_STEP": "SKIPPED",
+              "OBSERVED_EXISTING_R2E3_INVENTORY_RECEIPT_STEP": "SKIPPED",
+          }
+          Path(os.environ["RUNNER_TEMP"], "r2e3-phase0.json").write_text(
+              json.dumps(measured, sort_keys=True), encoding="utf-8"
+          )
+          print(f"MASTER_HEAD={master_head}")
+          print(f"MASTER_TREE={master_tree}")
+          print(f"MERGE_COMMIT={master_head}")
+          print(f"MERGE_TREE={master_tree}")
+          print(f"MERGE_PARENT_1={parents[0]}")
+          print(f"MERGE_PARENT_2={parents[1]}")
+          print("PR_STATE=CLOSED")
+          print("PR_MERGED=TRUE")
+          print(f"CHECKED_OUT_HEAD={head}")
+          print(f"CHECKED_OUT_TREE={tree}")
+          print("POST_MERGE_GEOMETRY_REFREEZE=PASS")
+          print("EXACT_POST_MERGE_HEAD_BINDING=PASS")
+          print("MASTER_CORE_GENERIC_TESTS=PASS")
+          print("OBSERVED_EXISTING_R2E3_TARGETED_STEP=SKIPPED")
+          print("OBSERVED_EXISTING_R2E3_LIVE_SWEEP_STEP=SKIPPED")
+          print("OBSERVED_EXISTING_R2E3_INVENTORY_RECEIPT_STEP=SKIPPED")
+          print("MATERIALIZATION_REQUIRED=YES")
+          PY
+
+      - name: Phase 4 targeted post-merge tests
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          command = ["python", "-m", "unittest", "cyber_lion.tests.test_fleet_registry_pin_live_source", "-v"]
+          completed = subprocess.run(command, capture_output=True, text=True)
+          print(completed.stdout, end="")
+          print(completed.stderr, end="")
+          combined = completed.stdout + "\n" + completed.stderr
+          counts = re.findall(r"Ran\s+(\d+)\s+tests?\s+in", combined)
+          if len(counts) != 1:
+              raise SystemExit(f"TARGETED_TEST_COUNT_LITERAL_CARDINALITY={len(counts)}")
+          count = int(counts[0])
+          skipped_match = re.search(r"OK\s+\(skipped=(\d+)\)", combined)
+          skipped = int(skipped_match.group(1)) if skipped_match else 0
+          if completed.returncode != 0:
+              raise SystemExit(f"TARGETED_EXIT_CODE={completed.returncode}")
+          if count != 17:
+              raise SystemExit(f"TARGETED_TEST_COUNT_DRIFT={count}")
+          measured = {
+              "TARGETED_EXIT_CODE": completed.returncode,
+              "TARGETED_TEST_COUNT": count,
+              "TARGETED_SKIPPED": skipped,
+              "TARGETED_RESULT": "PASS",
+          }
+          Path(os.environ["RUNNER_TEMP"], "r2e3-targeted.json").write_text(
+              json.dumps(measured, sort_keys=True), encoding="utf-8"
+          )
+          print(f"TARGETED_EXIT_CODE={completed.returncode}")
+          print(f"TARGETED_TEST_COUNT={count}")
+          print(f"TARGETED_SKIPPED={skipped}")
+          print("TARGETED_RESULT=PASS")
+          PY
+
+      - name: Phase 5 fresh post-merge live 10-repository sweep
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          env = dict(os.environ)
+          env["R2E3_LIVE_FLEET_SWEEP"] = "1"
+          command = [
+              "python", "-m", "unittest",
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_real_ten_repository_read_only_github_sweep",
+              "-v",
+          ]
+          completed = subprocess.run(command, capture_output=True, text=True, env=env)
+          print(completed.stdout, end="")
+          print(completed.stderr, end="")
+          if completed.returncode != 0:
+              raise SystemExit(f"LIVE_SWEEP_EXIT_CODE={completed.returncode}")
+
+          expected_single = {
+              "R2E3_LIVE_FLEET_SWEEP",
+              "R2E3_LIVE_MEMBER_COUNT",
+              "R2E3_REGISTRY_DIGEST",
+              "R2E3_SNAPSHOT_DIGEST",
+              "R2E3_WRITEUPS_MANIFEST_PRESENT",
+          }
+          markers = {}
+          members = []
+          for raw in completed.stdout.splitlines():
+              line = raw.strip()
+              if line.startswith("R2E3_MEMBER="):
+                  members.append(line.split("=", 1)[1])
+                  continue
+              if "=" in line:
+                  key, value = line.split("=", 1)
+                  if key in expected_single:
+                      if key in markers:
+                          raise SystemExit(f"LIVE_SWEEP_DUPLICATE_LITERAL={key}")
+                      markers[key] = value
+          if set(markers) != expected_single:
+              raise SystemExit(f"LIVE_SWEEP_LITERAL_SET_MISMATCH={sorted(markers)}")
+          if markers["R2E3_LIVE_FLEET_SWEEP"] != "PASS":
+              raise SystemExit("R2E3_LIVE_FLEET_SWEEP_NOT_PASS")
+          if markers["R2E3_LIVE_MEMBER_COUNT"] != "10":
+              raise SystemExit(f"R2E3_LIVE_MEMBER_COUNT_DRIFT={markers['R2E3_LIVE_MEMBER_COUNT']}")
+          if markers["R2E3_REGISTRY_DIGEST"] != os.environ["EXPECTED_REGISTRY_DIGEST"]:
+              raise SystemExit(f"R2E3_REGISTRY_DIGEST_DRIFT={markers['R2E3_REGISTRY_DIGEST']}")
+          if markers["R2E3_WRITEUPS_MANIFEST_PRESENT"] != "FALSE":
+              raise SystemExit(f"R2E3_WRITEUPS_MANIFEST_PRESENT_DRIFT={markers['R2E3_WRITEUPS_MANIFEST_PRESENT']}")
+          if len(members) != 10:
+              raise SystemExit(f"R2E3_MEMBER_LITERAL_COUNT={len(members)}")
+
+          parsed = []
+          for member in members:
+              parts = member.split("|")
+              if len(parts) != 5:
+                  raise SystemExit(f"R2E3_MEMBER_SHAPE={member}")
+              parsed.append(parts)
+          ai = [item for item in parsed if item[0] == "DonkeyJJLove/ai_platform"]
+          if len(ai) != 1:
+              raise SystemExit(f"AI_PLATFORM_MEMBER_CARDINALITY={len(ai)}")
+          if ai[0][1] != "master":
+              raise SystemExit(f"AI_PLATFORM_DEFAULT_BRANCH_DRIFT={ai[0][1]}")
+          if ai[0][2] != os.environ["EXPECTED_MASTER_HEAD"]:
+              raise SystemExit(f"AI_PLATFORM_LIVE_HEAD_DRIFT={ai[0][2]}")
+          if ai[0][3] != os.environ["EXPECTED_MASTER_TREE"]:
+              raise SystemExit(f"AI_PLATFORM_LIVE_TREE_DRIFT={ai[0][3]}")
+
+          snapshot = markers["R2E3_SNAPSHOT_DIGEST"]
+          if snapshot == os.environ["PRE_MERGE_SNAPSHOT_DIGEST"]:
+              raise SystemExit("PRE_MERGE_SNAPSHOT_REUSE_DETECTED")
+
+          measured = {
+              **markers,
+              "R2E3_MEMBERS": members,
+              "POST_MERGE_SNAPSHOT_DIGEST": snapshot,
+              "PRE_MERGE_SNAPSHOT_DIGEST": os.environ["PRE_MERGE_SNAPSHOT_DIGEST"],
+              "POST_MERGE_LIVE_SOURCE_BINDING": "PASS",
+              "NO_PRE_MERGE_SNAPSHOT_REUSE": "YES",
+          }
+          Path(os.environ["RUNNER_TEMP"], "r2e3-live.json").write_text(
+              json.dumps(measured, sort_keys=True), encoding="utf-8"
+          )
+          print(f"PRE_MERGE_SNAPSHOT_DIGEST={os.environ['PRE_MERGE_SNAPSHOT_DIGEST']}")
+          print(f"POST_MERGE_SNAPSHOT_DIGEST={snapshot}")
+          print("NO_PRE_MERGE_SNAPSHOT_REUSE=YES")
+          print("POST_MERGE_LIVE_SOURCE_BINDING=PASS")
+          PY
+
+      - name: Phase 6 post-merge frozen inventory
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          check = subprocess.run(
+              [
+                  "python", "-m", "unittest",
+                  "cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory",
+                  "-v",
+              ],
+              capture_output=True,
+              text=True,
+          )
+          if check.returncode != 0:
+              print(check.stdout, end="")
+              print(check.stderr, end="")
+              raise SystemExit(f"INVENTORY_TEST_EXIT_CODE={check.returncode}")
+          summary = (check.stdout + "\n" + check.stderr).splitlines()
+          for line in summary[-8:]:
+              print(line)
+
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+          from cyber_lion.enterprise.host_authority_separation import _production_path
+
+          raw = subprocess.run(
+              ["git", "ls-files", "-z"],
+              check=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          ).stdout
+          sources = {}
+          for item in raw.split(b"\0"):
+              if not item:
+                  continue
+              path = item.decode()
+              if _production_path(path):
+                  sources[path] = Path(path).read_text(encoding="utf-8")
+          revision = subprocess.run(
+              ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+          ).stdout.strip()
+          tree = subprocess.run(
+              ["git", "rev-parse", "HEAD^{tree}"], check=True, capture_output=True, text=True
+          ).stdout.strip()
+          if revision != os.environ["EXPECTED_MASTER_HEAD"]:
+              raise SystemExit(f"INVENTORY_REVISION_DRIFT={revision}")
+          if tree != os.environ["EXPECTED_MASTER_TREE"]:
+              raise SystemExit(f"INVENTORY_TREE_DRIFT={tree}")
+          inventory = EffectSurfaceScanner().scan(
+              repository="DonkeyJJLove/ai_platform",
+              revision=revision,
+              tree_digest=tree,
+              sources=sources,
+          )
+          values = (len(sources), len(inventory.surfaces), len(inventory.unclassified_refs))
+          if values != (241, 225, 5):
+              raise SystemExit(f"R2E3_POST_MERGE_INVENTORY_DRIFT={values}")
+          measured = {
+              "SOURCE_COUNT": values[0],
+              "EFFECT_SURFACE_COUNT": values[1],
+              "UNCLASSIFIED_COUNT": values[2],
+              "INVENTORY_REFREEZE": "PASS",
+              "POST_MERGE_INVENTORY_BINDING": "PASS",
+          }
+          Path(os.environ["RUNNER_TEMP"], "r2e3-inventory.json").write_text(
+              json.dumps(measured, sort_keys=True), encoding="utf-8"
+          )
+          print(f"SOURCE_COUNT={values[0]}")
+          print(f"EFFECT_SURFACE_COUNT={values[1]}")
+          print(f"UNCLASSIFIED_COUNT={values[2]}")
+          print("INVENTORY_REFREEZE=PASS")
+          print("POST_MERGE_INVENTORY_BINDING=PASS")
+          PY
+
+      - name: Phase 7 TIGER LION refalsification probe
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import urllib.request
+          from pathlib import Path
+
+          negative_tests = [
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_synthetic_pin_cannot_be_injected_through_canonical_signature",
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_default_branch_substitution_in_registry_is_denied",
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_noncanonical_registry_missing_member_is_denied_before_live_reads",
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_noncanonical_registry_extra_member_is_denied_before_live_reads",
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_head_drift_during_full_sweep_is_denied",
+              "cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_tree_drift_during_full_sweep_is_denied",
+          ]
+          completed = subprocess.run(
+              ["python", "-m", "unittest", *negative_tests, "-v"],
+              capture_output=True,
+              text=True,
+          )
+          print(completed.stdout, end="")
+          print(completed.stderr, end="")
+          if completed.returncode != 0:
+              raise SystemExit(f"REFALSIFICATION_NEGATIVE_SET_EXIT_CODE={completed.returncode}")
+
+          token = os.environ["GITHUB_TOKEN"]
+          headers = {
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "User-Agent": "lion-r2e3-post-merge-refalsification",
+          }
+          def get(path):
+              req = urllib.request.Request("https://api.github.com" + path, headers=headers, method="GET")
+              with urllib.request.urlopen(req, timeout=15) as response:
+                  if response.status != 200:
+                      raise SystemExit(f"FINAL_GITHUB_READ_STATUS={response.status}:{path}")
+                  return json.loads(response.read().decode("utf-8"))
+
+          master = get("/repos/DonkeyJJLove/ai_platform/branches/master")
+          if master["commit"]["sha"] != os.environ["EXPECTED_MASTER_HEAD"]:
+              raise SystemExit(f"FINAL_MASTER_HEAD_DRIFT={master['commit']['sha']}")
+          if master["commit"]["commit"]["tree"]["sha"] != os.environ["EXPECTED_MASTER_TREE"]:
+              raise SystemExit(f"FINAL_MASTER_TREE_DRIFT={master['commit']['commit']['tree']['sha']}")
+          pr = get("/repos/DonkeyJJLove/ai_platform/pulls/247")
+          if pr["state"] != "closed" or pr["merged"] is not True:
+              raise SystemExit(f"FINAL_PR_DRIFT={pr['state']}|{pr['merged']}")
+          if pr["merge_commit_sha"] != os.environ["EXPECTED_MERGE_COMMIT"]:
+              raise SystemExit(f"FINAL_PR_MERGE_COMMIT_DRIFT={pr['merge_commit_sha']}")
+
+          live = json.loads(Path(os.environ["RUNNER_TEMP"], "r2e3-live.json").read_text(encoding="utf-8"))
+          inventory = json.loads(Path(os.environ["RUNNER_TEMP"], "r2e3-inventory.json").read_text(encoding="utf-8"))
+          if live["R2E3_REGISTRY_DIGEST"] != os.environ["EXPECTED_REGISTRY_DIGEST"]:
+              raise SystemExit("FINAL_REGISTRY_DIGEST_SUBSTITUTION")
+          if live["POST_MERGE_SNAPSHOT_DIGEST"] == os.environ["PRE_MERGE_SNAPSHOT_DIGEST"]:
+              raise SystemExit("FINAL_SNAPSHOT_REUSE_COUNTEREXAMPLE")
+          if (inventory["SOURCE_COUNT"], inventory["EFFECT_SURFACE_COUNT"], inventory["UNCLASSIFIED_COUNT"]) != (241, 225, 5):
+              raise SystemExit("FINAL_INVENTORY_COUNTEREXAMPLE")
+
+          measured = {
+              "LION_REFALSIFICATION_PROBE": "PASS",
+              "NO_POST_MERGE_COUNTEREXAMPLE": "PASS",
+              "FINAL_MASTER_HEAD": master["commit"]["sha"],
+              "FINAL_MASTER_TREE": master["commit"]["commit"]["tree"]["sha"],
+          }
+          Path(os.environ["RUNNER_TEMP"], "r2e3-refalsification.json").write_text(
+              json.dumps(measured, sort_keys=True), encoding="utf-8"
+          )
+          print("LION_REFALSIFICATION_PROBE=PASS")
+          print("NO_POST_MERGE_COUNTEREXAMPLE=PASS")
+          PY
+
+      - name: Phase 8 final post-merge literal receipt
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ["RUNNER_TEMP"])
+          phase0 = json.loads((root / "r2e3-phase0.json").read_text(encoding="utf-8"))
+          targeted = json.loads((root / "r2e3-targeted.json").read_text(encoding="utf-8"))
+          live = json.loads((root / "r2e3-live.json").read_text(encoding="utf-8"))
+          inventory = json.loads((root / "r2e3-inventory.json").read_text(encoding="utf-8"))
+          refal = json.loads((root / "r2e3-refalsification.json").read_text(encoding="utf-8"))
+
+          required = [
+              phase0["MASTER_HEAD"] == os.environ["EXPECTED_MASTER_HEAD"],
+              phase0["MASTER_TREE"] == os.environ["EXPECTED_MASTER_TREE"],
+              phase0["CHECKED_OUT_HEAD"] == os.environ["EXPECTED_MASTER_HEAD"],
+              phase0["CHECKED_OUT_TREE"] == os.environ["EXPECTED_MASTER_TREE"],
+              phase0["MASTER_CORE_GENERIC_TESTS"] == "PASS",
+              targeted["TARGETED_EXIT_CODE"] == 0,
+              targeted["TARGETED_TEST_COUNT"] == 17,
+              targeted["TARGETED_RESULT"] == "PASS",
+              live["R2E3_LIVE_FLEET_SWEEP"] == "PASS",
+              live["R2E3_LIVE_MEMBER_COUNT"] == "10",
+              live["R2E3_REGISTRY_DIGEST"] == os.environ["EXPECTED_REGISTRY_DIGEST"],
+              live["R2E3_WRITEUPS_MANIFEST_PRESENT"] == "FALSE",
+              live["POST_MERGE_LIVE_SOURCE_BINDING"] == "PASS",
+              live["POST_MERGE_SNAPSHOT_DIGEST"] != os.environ["PRE_MERGE_SNAPSHOT_DIGEST"],
+              inventory["SOURCE_COUNT"] == 241,
+              inventory["EFFECT_SURFACE_COUNT"] == 225,
+              inventory["UNCLASSIFIED_COUNT"] == 5,
+              inventory["INVENTORY_REFREEZE"] == "PASS",
+              refal["LION_REFALSIFICATION_PROBE"] == "PASS",
+              refal["NO_POST_MERGE_COUNTEREXAMPLE"] == "PASS",
+              refal["FINAL_MASTER_HEAD"] == os.environ["EXPECTED_MASTER_HEAD"],
+              refal["FINAL_MASTER_TREE"] == os.environ["EXPECTED_MASTER_TREE"],
+          ]
+          if not all(required):
+              raise SystemExit("FINAL_RECEIPT_CONJUNCTION_FAILED")
+
+          print(f"MASTER_HEAD={phase0['MASTER_HEAD']}")
+          print(f"MASTER_TREE={phase0['MASTER_TREE']}")
+          print(f"MERGE_COMMIT={phase0['MERGE_COMMIT']}")
+          print(f"MERGE_TREE={phase0['MERGE_TREE']}")
+          print(f"MERGE_PARENT_1={phase0['MERGE_PARENT_1']}")
+          print(f"MERGE_PARENT_2={phase0['MERGE_PARENT_2']}")
+          print(f"PR_STATE={phase0['PR_STATE']}")
+          print(f"PR_MERGED={phase0['PR_MERGED']}")
+          print(f"CHECKED_OUT_HEAD={phase0['CHECKED_OUT_HEAD']}")
+          print(f"CHECKED_OUT_TREE={phase0['CHECKED_OUT_TREE']}")
+          print(f"MASTER_CORE_RUN={phase0['MASTER_CORE_RUN']}")
+          print(f"MASTER_CORE_JOB={phase0['MASTER_CORE_JOB']}")
+          print(f"MASTER_MERGE_AUTHORITY_JOB={phase0['MASTER_MERGE_AUTHORITY_JOB']}")
+          print(f"TARGETED_EXIT_CODE={targeted['TARGETED_EXIT_CODE']}")
+          print(f"TARGETED_TEST_COUNT={targeted['TARGETED_TEST_COUNT']}")
+          print(f"TARGETED_SKIPPED={targeted['TARGETED_SKIPPED']}")
+          print("TARGETED_RESULT=PASS")
+          print("R2E3_LIVE_FLEET_SWEEP=PASS")
+          print(f"R2E3_LIVE_MEMBER_COUNT={live['R2E3_LIVE_MEMBER_COUNT']}")
+          print(f"R2E3_REGISTRY_DIGEST={live['R2E3_REGISTRY_DIGEST']}")
+          print(f"PRE_MERGE_SNAPSHOT_DIGEST={live['PRE_MERGE_SNAPSHOT_DIGEST']}")
+          print(f"POST_MERGE_SNAPSHOT_DIGEST={live['POST_MERGE_SNAPSHOT_DIGEST']}")
+          print(f"R2E3_WRITEUPS_MANIFEST_PRESENT={live['R2E3_WRITEUPS_MANIFEST_PRESENT']}")
+          for member in live["R2E3_MEMBERS"]:
+              print(f"R2E3_MEMBER={member}")
+          print(f"SOURCE_COUNT={inventory['SOURCE_COUNT']}")
+          print(f"EFFECT_SURFACE_COUNT={inventory['EFFECT_SURFACE_COUNT']}")
+          print(f"UNCLASSIFIED_COUNT={inventory['UNCLASSIFIED_COUNT']}")
+          print("INVENTORY_REFREEZE=PASS")
+          print("POST_MERGE_INVENTORY_BINDING=PASS")
+          print("LION_REFALSIFICATION_PROBE=PASS")
+          print("NO_POST_MERGE_COUNTEREXAMPLE=PASS")
+          print("POST_MERGE_VALIDATION=PASS")
+          print("LION_R2E3_FLEET_REGISTRY_PIN=PASS")
+          print("LION_R2E3_LIVE_SOURCE_BINDING=PASS")
+          print("TIGER_R2E3_POST_MERGE_RECEIPT_MATERIALIZATION_R1=PASS")
+          print("FREEZE_LITERAL_COUNTEREXAMPLE=NO")
+          print("FAIL_CLOSED=YES")
+          print("NO_FAKE_PASS=YES")
+          print("NO_VALUE_INFERENCE=YES")
+          print("NO_SILENT_SUBSTITUTION=YES")
+          print("NEXT=LION-EVOLUTION-R2E3-POST-MERGE-EVIDENCE-READBACK-R2")
+          PY
+
+      - name: Fail-closed literal receipt
+        if: failure()
+        run: |
+          echo "POST_MERGE_VALIDATION=FAIL"
+          echo "TIGER_R2E3_POST_MERGE_RECEIPT_MATERIALIZATION_R1=FAIL"
+          echo "FREEZE_LITERAL_COUNTEREXAMPLE=YES"
+          echo "CAPTURE_LITERAL_COUNTEREXAMPLE=YES"
+          echo "STOP=YES"
+          echo "MASTER_MUTATION=NONE"
+          echo "PR_MUTATION=NONE"
+          echo "PRODUCTION_EFFECT=NONE"
+          echo "PRODUCTION_AUTHORITY=NONE"
+          echo "REF_DELETE=NO"
+          echo "BRANCH_DELETE=NO"
+          echo "FORCE_UPDATE=NO"
+          echo "MERGE=NO"
