@@ -319,6 +319,13 @@ _CANONICAL_GITHUB_API = "https://api.github.com"
 _CANONICAL_REGISTRY_PATH = Path(__file__).resolve().parents[1] / "registry" / "repositories.json"
 _FLEET_MANIFEST_PATH = "cyber-lion.repository.json"
 _MANIFEST_MAX_BYTES = 1_048_576
+_GIT_TREE_MODES: dict[str, tuple[str, str]] = {
+    "100644": ("100644", "blob"),
+    "100755": ("100755", "blob"),
+    "120000": ("120000", "blob"),
+    "040000": ("40000", "tree"),
+    "160000": ("160000", "commit"),
+}
 
 
 class GitHubFleetRegistryPinReadSource:
@@ -409,6 +416,96 @@ class GitHubFleetRegistryPinReadSource:
             f"/repos/{repo}/contents/{_FLEET_MANIFEST_PATH}?ref={ref}"
         )
 
+    def _read_root_tree_at_pin(
+        self,
+        pin: RepositoryPinObservation,
+    ) -> tuple[dict[str, str], ...]:
+        try:
+            pin.validate()
+        except Exception as exc:
+            raise GitHubFleetPinSourceError("fleet tree pin invalid") from exc
+
+        repo = quote(pin.repository, safe="/")
+        tree_ref = quote(pin.tree, safe="")
+        response = self._request(f"/repos/{repo}/git/trees/{tree_ref}")
+        if response.status != 200:
+            raise GitHubFleetPinSourceError(
+                f"GitHub tree HTTP status denied: {response.status}"
+            )
+
+        try:
+            value = _object(_json(response.body, "fleet root tree response"), "fleet root tree response")
+        except GitHubReadSourceError as exc:
+            raise GitHubFleetPinSourceError("fleet root tree response invalid") from exc
+
+        response_sha = _sha(value.get("sha"), "fleet root tree sha")
+        if response_sha != pin.tree:
+            raise GitHubFleetPinSourceError("fleet root tree response sha mismatch")
+        if value.get("truncated") is not False:
+            raise GitHubFleetPinSourceError("fleet root tree truncated or incomplete")
+        raw_entries = value.get("tree")
+        if not isinstance(raw_entries, list):
+            raise GitHubFleetPinSourceError("fleet root tree entries must be array")
+
+        paths: set[str] = set()
+        entries: list[dict[str, str]] = []
+        serialized: list[bytes] = []
+        for raw_entry in raw_entries:
+            try:
+                entry = _object(raw_entry, "fleet root tree entry")
+            except GitHubReadSourceError as exc:
+                raise GitHubFleetPinSourceError("fleet root tree entry invalid") from exc
+            path = entry.get("path")
+            if not isinstance(path, str) or not path or "\x00" in path:
+                raise GitHubFleetPinSourceError("fleet root tree path invalid")
+            if path in paths:
+                raise GitHubFleetPinSourceError("duplicate fleet root tree path denied")
+            paths.add(path)
+            mode = entry.get("mode")
+            if not isinstance(mode, str) or mode not in _GIT_TREE_MODES:
+                raise GitHubFleetPinSourceError("fleet root tree mode invalid")
+            raw_mode, expected_type = _GIT_TREE_MODES[mode]
+            entry_type = entry.get("type")
+            if entry_type != expected_type:
+                raise GitHubFleetPinSourceError("fleet root tree type/mode mismatch")
+            object_sha = _sha(entry.get("sha"), "fleet root tree entry sha")
+            try:
+                path_bytes = path.encode("utf-8")
+            except UnicodeEncodeError as exc:
+                raise GitHubFleetPinSourceError("fleet root tree path encoding invalid") from exc
+            serialized.append(
+                raw_mode.encode("ascii")
+                + b" "
+                + path_bytes
+                + b"\0"
+                + bytes.fromhex(object_sha)
+            )
+            entries.append(
+                {
+                    "path": path,
+                    "mode": mode,
+                    "type": entry_type,
+                    "sha": object_sha,
+                }
+            )
+
+        tree_body = b"".join(serialized)
+        reconstructed = sha1(
+            b"tree " + str(len(tree_body)).encode("ascii") + b"\0" + tree_body
+        ).hexdigest()
+        if reconstructed != pin.tree or reconstructed != response_sha:
+            raise GitHubFleetPinSourceError("fleet root tree Git object identity mismatch")
+        return tuple(entries)
+
+    @staticmethod
+    def _manifest_tree_entry(
+        entries: tuple[dict[str, str], ...],
+    ) -> dict[str, str] | None:
+        matches = [entry for entry in entries if entry["path"] == _FLEET_MANIFEST_PATH]
+        if len(matches) > 1:
+            raise GitHubFleetPinSourceError("duplicate fleet manifest tree path denied")
+        return matches[0] if matches else None
+
     def manifest_present(self, repository: str, head: str) -> bool:
         response = self._manifest_response(repository, head)
         if response.status == 200:
@@ -434,6 +531,9 @@ class GitHubFleetRegistryPinReadSource:
         if response.status == 404:
             if pin.manifest_present:
                 raise GitHubFleetPinSourceError("fleet manifest state contradicts pinned presence")
+            tree_entries = self._read_root_tree_at_pin(pin)
+            if self._manifest_tree_entry(tree_entries) is not None:
+                raise GitHubFleetPinSourceError("fleet manifest tree presence contradicts contents absence")
             observation = RepositoryManifestObservation(
                 repository=pin.repository,
                 default_branch=pin.default_branch,
@@ -495,6 +595,16 @@ class GitHubFleetRegistryPinReadSource:
         ).hexdigest()
         if reconstructed != git_blob_sha:
             raise GitHubFleetPinSourceError("fleet manifest Git blob identity mismatch")
+
+        tree_entries = self._read_root_tree_at_pin(pin)
+        manifest_entry = self._manifest_tree_entry(tree_entries)
+        if manifest_entry is None:
+            raise GitHubFleetPinSourceError("fleet manifest missing from pinned root tree")
+        if manifest_entry["type"] != "blob" or manifest_entry["mode"] != "100644":
+            raise GitHubFleetPinSourceError("fleet manifest root tree entry type/mode invalid")
+        if manifest_entry["sha"] != git_blob_sha:
+            raise GitHubFleetPinSourceError("fleet manifest pinned tree blob mismatch")
+
         byte_sha256 = sha256(raw).hexdigest()
         try:
             mapping = _object(_json(raw, "fleet manifest content"), "fleet manifest content")

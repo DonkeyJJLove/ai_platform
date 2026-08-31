@@ -23,6 +23,7 @@ from cyber_lion.enterprise.github_repository_read_source import (
     GitHubFleetPinSourceError,
     GitHubFleetRegistryPinReadSource,
     HttpResponse,
+    UrllibReadOnlyTransport,
     _materialize_live_registry_manifest_observations_with_source,
     _materialize_live_registry_pin_snapshot_with_source,
     materialize_live_registry_manifest_observations,
@@ -34,6 +35,13 @@ from cyber_lion.tests.test_enterprise_federation import GLITCHLAB
 REGISTRY_PATH = Path("cyber_lion/registry/repositories.json")
 R2E4_BASELINE_SNAPSHOT_DIGEST = "6a93f5c2d134306be446976efb10ca23f773b01967489959bc54eb1241de134e"
 MANIFEST_PATH = "cyber-lion.repository.json"
+_GIT_TREE_RAW_MODES = {
+    "100644": "100644",
+    "100755": "100755",
+    "120000": "120000",
+    "040000": "40000",
+    "160000": "160000",
+}
 
 
 def registry_payload() -> bytes:
@@ -57,6 +65,67 @@ def manifest_mapping(repository: str, default_branch: str) -> dict:
 
 def git_blob_sha(raw: bytes) -> str:
     return sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+
+
+def git_tree_sha(entries: tuple[dict, ...] | list[dict]) -> str:
+    body = b""
+    for entry in entries:
+        raw_mode = _GIT_TREE_RAW_MODES[entry["mode"]]
+        body += (
+            raw_mode.encode("ascii")
+            + b" "
+            + entry["path"].encode("utf-8")
+            + b"\0"
+            + bytes.fromhex(entry["sha"])
+        )
+    return sha1(b"tree " + str(len(body)).encode("ascii") + b"\0" + body).hexdigest()
+
+
+def manifest_tree_entry(
+    blob_sha: str,
+    *,
+    path: str = MANIFEST_PATH,
+    mode: str = "100644",
+    entry_type: str = "blob",
+) -> dict:
+    return {"path": path, "mode": mode, "type": entry_type, "sha": blob_sha}
+
+
+def tree_response(
+    entries: tuple[dict, ...] | list[dict],
+    *,
+    status: int = 200,
+    response_sha: str | None = None,
+    truncated: bool = False,
+) -> HttpResponse:
+    if status != 200:
+        return response({"message": "error"}, status=status)
+    return response(
+        {
+            "sha": response_sha if response_sha is not None else git_tree_sha(entries),
+            "tree": list(entries),
+            "truncated": truncated,
+        }
+    )
+
+
+def tree_entries_for_manifest_response(http_response: HttpResponse) -> list[dict]:
+    if http_response.status != 200:
+        return []
+    try:
+        envelope = json.loads(http_response.body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return []
+    if not isinstance(envelope, dict):
+        return []
+    blob_sha = envelope.get("sha")
+    if (
+        not isinstance(blob_sha, str)
+        or len(blob_sha) != 40
+        or any(ch not in "0123456789abcdef" for ch in blob_sha)
+    ):
+        return []
+    return [manifest_tree_entry(blob_sha)]
 
 
 class FakeFleetSource:
@@ -151,6 +220,22 @@ class FakeTransport:
         return self.responses.pop(0)
 
 
+class CountingTransport:
+    def __init__(self) -> None:
+        self.inner = UrllibReadOnlyTransport()
+        self.calls: list[str] = []
+        self.tree_payloads: list[dict] = []
+
+    def get(self, url: str, *, headers, timeout: float) -> HttpResponse:
+        self.calls.append(url)
+        result = self.inner.get(url, headers=headers, timeout=timeout)
+        if "/git/trees/" in url and result.status == 200:
+            value = json.loads(result.body.decode("utf-8"))
+            if isinstance(value, dict):
+                self.tree_payloads.append(value)
+        return result
+
+
 def response(value: object, status: int = 200) -> HttpResponse:
     return HttpResponse(status=status, headers={}, body=json.dumps(value).encode("utf-8"))
 
@@ -193,12 +278,19 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
             source=source or FakeFleetSource(),
         )
 
-    def pin(self, *, manifest_present: bool = True) -> RepositoryPinObservation:
+    def pin(
+        self,
+        *,
+        manifest_present: bool = True,
+        tree: str | None = None,
+    ) -> RepositoryPinObservation:
+        if tree is None:
+            tree = git_tree_sha([]) if not manifest_present else "2" * 40
         return RepositoryPinObservation(
             repository="DonkeyJJLove/glitchlab",
             default_branch="master",
             head="1" * 40,
-            tree="2" * 40,
+            tree=tree,
             manifest_present=manifest_present,
             source_ref="test-pin",
         ).validate()
@@ -208,10 +300,19 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
         http_response: HttpResponse,
         *,
         pin: RepositoryPinObservation | None = None,
+        tree_http_response: HttpResponse | None = None,
     ):
-        transport = FakeTransport([http_response])
+        entries = tree_entries_for_manifest_response(http_response)
+        if pin is None:
+            pin = self.pin(
+                manifest_present=http_response.status == 200,
+                tree=git_tree_sha(entries),
+            )
+        if tree_http_response is None:
+            tree_http_response = tree_response(entries, response_sha=pin.tree)
+        transport = FakeTransport([http_response, tree_http_response])
         source = GitHubFleetRegistryPinReadSource(token="x", transport=transport)
-        result = source._read_manifest_at_pin(pin or self.pin())
+        result = source._read_manifest_at_pin(pin)
         return result, transport
 
     def test_canonical_entrypoint_accepts_registry_payload_only(self):
@@ -404,6 +505,10 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
             transport.calls[0][0],
             f"https://api.github.com/repos/DonkeyJJLove/glitchlab/contents/{MANIFEST_PATH}?ref={'1' * 40}",
         )
+        self.assertEqual(
+            transport.calls[1][0],
+            f"https://api.github.com/repos/DonkeyJJLove/glitchlab/git/trees/{observation.tree}",
+        )
 
     def test_manifest_404_is_false_and_other_failures_are_not_absence(self):
         head = "1" * 40
@@ -585,7 +690,11 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
         "R2E4 live GitHub manifest sweep is CI-only",
     )
     def test_real_ten_repository_exact_head_manifest_semantic_sweep(self):
-        snapshot, records = materialize_live_registry_manifest_observations(registry_payload())
+        transport = CountingTransport()
+        source = GitHubFleetRegistryPinReadSource.from_environment(transport=transport)
+        snapshot, records = _materialize_live_registry_manifest_observations_with_source(
+            registry_payload(), source=source
+        )
         self.assertEqual(snapshot.snapshot_digest(), R2E4_BASELINE_SNAPSHOT_DIGEST)
         self.assertEqual(len(records), 10)
         present = [(observation, manifest) for observation, manifest in records if observation.manifest_state == "PRESENT"]
@@ -603,11 +712,31 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
             self.assertRegex(observation.manifest_semantic_digest or "", r"^[0-9a-f]{64}$")
             self.assertTrue(observation.source_ref.startswith("github-manifest-live-v1:"))
 
+        tree_calls = [url for url in transport.calls if "/git/trees/" in url]
+        contents_calls = [url for url in transport.calls if f"/contents/{MANIFEST_PATH}?ref=" in url]
+        self.assertEqual(len(tree_calls), 10)
+        self.assertEqual(len(contents_calls), 10)
+        self.assertEqual(len(transport.tree_payloads), 10)
+        self.assertTrue(all(payload.get("truncated") is False for payload in transport.tree_payloads))
+        manifest_entries = [
+            entry
+            for payload in transport.tree_payloads
+            for entry in payload.get("tree", [])
+            if isinstance(entry, dict) and entry.get("path") == MANIFEST_PATH
+        ]
+        self.assertEqual(len(manifest_entries), 9)
+        self.assertTrue(all(entry.get("mode") == "100644" for entry in manifest_entries))
+
         print("R2E4_LIVE_MANIFEST_SWEEP=PASS")
         print("R2E4_LIVE_MEMBER_COUNT=10")
         print("R2E4_MANIFEST_PRESENT_COUNT=9")
         print("R2E4_MANIFEST_ABSENT_COUNT=1")
         print("R2E4_WRITEUPS_MANIFEST_STATE=ABSENT")
+        print("ROOT_TREE_GET_COUNT=10")
+        print("CONTENTS_GET_COUNT=10")
+        print("ALL_TREE_RESPONSES_TRUNCATED=false")
+        print("ALL_PRESENT_MANIFEST_TREE_ENTRY_MODES=100644")
+        print("POST_MANIFEST_CURRENTNESS=PASS")
         print(f"R2E4_REGISTRY_DIGEST={snapshot.registry_digest}")
         print(f"R2E4_PIN_SNAPSHOT_DIGEST={snapshot.snapshot_digest()}")
         for observation, _ in records:
