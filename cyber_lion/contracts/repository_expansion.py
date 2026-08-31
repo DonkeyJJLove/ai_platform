@@ -415,6 +415,8 @@ class FleetBaseline:
 
 REGISTRY_SCHEMA_VERSION = "1.0.0"
 REGISTRY_MAX_BYTES = 1_048_576
+_REPOSITORY_MANIFEST_PATH = "cyber-lion.repository.json"
+_MANIFEST_STATES = frozenset({"PRESENT", "ABSENT"})
 _REGISTRY_ROOT_KEYS = frozenset({"schema_version", "generated_from", "repositories"})
 _REGISTRY_MEMBER_KEYS = frozenset({
     "id", "default_branch", "roles", "layers", "maturity", "disposition",
@@ -487,6 +489,53 @@ class RepositoryPinObservation:
     def canonical_dict(self) -> dict[str, Any]:
         self.validate()
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class RepositoryManifestObservation:
+    repository: str
+    default_branch: str
+    head: str
+    tree: str
+    manifest_state: str
+    manifest_path: str
+    git_blob_sha: str | None
+    manifest_byte_sha256: str | None
+    manifest_semantic_digest: str | None
+    source_ref: str
+
+    def validate(self) -> "RepositoryManifestObservation":
+        _require_repository(self.repository)
+        _require_identifier(self.default_branch, "default_branch")
+        _require_sha40(self.head, "head")
+        _require_sha40(self.tree, "tree")
+        if self.manifest_state not in _MANIFEST_STATES:
+            raise RepositoryExpansionContractError("manifest_state invalid")
+        if self.manifest_path != _REPOSITORY_MANIFEST_PATH:
+            raise RepositoryExpansionContractError("manifest_path substitution denied")
+        _registry_text(self.source_ref, "source_ref")
+        if self.manifest_state == "PRESENT":
+            _require_sha40(self.git_blob_sha, "git_blob_sha")
+            _require_sha256(self.manifest_byte_sha256, "manifest_byte_sha256")
+            _require_sha256(self.manifest_semantic_digest, "manifest_semantic_digest")
+        else:
+            if any(value is not None for value in (
+                self.git_blob_sha,
+                self.manifest_byte_sha256,
+                self.manifest_semantic_digest,
+            )):
+                raise RepositoryExpansionContractError("ABSENT manifest cannot carry content identity")
+        return self
+
+    def canonical_dict(self) -> dict[str, Any]:
+        self.validate()
+        return asdict(self)
+
+    def observation_digest(self) -> str:
+        return digest(
+            self.canonical_dict(),
+            b"LION/R2E4/REPOSITORY-MANIFEST-OBSERVATION/1\0",
+        )
 
 
 @dataclass(frozen=True)

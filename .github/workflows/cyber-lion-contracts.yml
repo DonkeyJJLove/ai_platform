@@ -4,7 +4,7 @@ on:
   pull_request:
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md"]
   push:
-    branches: ["master", "cyber-lion/**"]
+    branches: ["master", "cyber-lion/**", "mission/r2e4-fleet-manifest-exact-head-semantic-binding"]
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md"]
 permissions:
   contents: read
@@ -85,6 +85,68 @@ jobs:
           if values != (241, 225, 5):
               raise SystemExit(f'R2E3_INVENTORY_DRIFT={values}')
           print('INVENTORY_REFREEZE=PASS')
+          PY
+      - name: R2E4 implementation static validation
+        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-manifest-exact-head-semantic-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
+        run: |
+          python -m compileall -q cyber_lion
+          python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source -v
+          python -m unittest cyber_lion.tests.test_enterprise_federation -v
+          python -m unittest cyber_lion.tests.test_rccm_1d_glitchlab_conformance -v
+      - name: R2E4 real 10-repository exact-head manifest semantic sweep
+        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-manifest-exact-head-semantic-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          R2E4_LIVE_MANIFEST_SWEEP: "1"
+        run: python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_real_ten_repository_exact_head_manifest_semantic_sweep -v
+      - name: R2E4 frozen inventory receipt
+        if: (github.event_name == 'pull_request' && github.head_ref == 'mission/r2e4-fleet-manifest-exact-head-semantic-binding') || (github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-fleet-manifest-exact-head-semantic-binding')
+        run: |
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+          from cyber_lion.enterprise.host_authority_separation import _production_path
+
+          raw = subprocess.run(
+              ['git', 'ls-files', '-z'],
+              check=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          ).stdout
+          sources = {}
+          for item in raw.split(b'\0'):
+              if not item:
+                  continue
+              path = item.decode()
+              if _production_path(path):
+                  sources[path] = Path(path).read_text()
+          revision = subprocess.run(
+              ['git', 'rev-parse', 'HEAD'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          tree = subprocess.run(
+              ['git', 'write-tree'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          inventory = EffectSurfaceScanner().scan(
+              repository='DonkeyJJLove/ai_platform',
+              revision=revision,
+              tree_digest=tree,
+              sources=sources,
+          )
+          values = (len(sources), len(inventory.surfaces), len(inventory.unclassified_refs))
+          print(f'R2E4_SOURCE_COUNT={values[0]}')
+          print(f'R2E4_EFFECT_SURFACE_COUNT={values[1]}')
+          print(f'R2E4_UNCLASSIFIED_COUNT={values[2]}')
+          if values != (241, 225, 5):
+              raise SystemExit(f'R2E4_INVENTORY_DRIFT={values}')
+          print('R2E4_INVENTORY_REFREEZE=PASS')
           PY
       - name: Run Startup Evolution demo
         run: python -m cyber_lion.startup_agent.demo > /tmp/startup-agent-demo.json
