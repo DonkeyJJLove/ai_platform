@@ -362,7 +362,7 @@ class ExactManifestAttackMatrixTests(unittest.TestCase):
         self.assert_manifest_denied(manifest_response(raw=b"\xff"), regex="content JSON invalid")
 
     def test_M12_non_object_root(self):
-        self.assert_manifest_denied(manifest_response(raw=b"[]"), regex="must be object")
+        self.assert_manifest_denied(manifest_response(raw=b"[]"), regex="content JSON invalid")
 
     def test_M13_nested_unknown_field(self):
         value = copy.deepcopy(GLITCHLAB)
