@@ -411,3 +411,219 @@ class FleetBaseline:
             baseline_digest=self.baseline_digest(),
         )
         return decision.validate()
+
+
+REGISTRY_SCHEMA_VERSION = "1.0.0"
+REGISTRY_MAX_BYTES = 1_048_576
+_REGISTRY_ROOT_KEYS = frozenset({"schema_version", "generated_from", "repositories"})
+_REGISTRY_MEMBER_KEYS = frozenset({
+    "id", "default_branch", "roles", "layers", "maturity", "disposition",
+})
+
+
+def _strict_registry_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise RepositoryExpansionContractError("duplicate registry JSON key")
+        result[key] = value
+    return result
+
+
+def _registry_text(value: object, name: str) -> str:
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or "\x00" in value
+        or len(value) > 512
+    ):
+        raise RepositoryExpansionContractError(f"{name} invalid")
+    return value
+
+
+def _registry_string_list(value: object, name: str) -> tuple[str, ...]:
+    if not isinstance(value, list) or not value:
+        raise RepositoryExpansionContractError(f"{name} must be a non-empty array")
+    items = tuple(_registry_text(item, name) for item in value)
+    if len(items) != len(set(items)):
+        raise RepositoryExpansionContractError(f"{name} contains duplicates")
+    return items
+
+
+@dataclass(frozen=True)
+class RegistryMember:
+    repository: str
+    default_branch: str
+
+    def validate(self) -> "RegistryMember":
+        _require_repository(self.repository)
+        _require_identifier(self.default_branch, "default_branch")
+        return self
+
+    def canonical_dict(self) -> dict[str, str]:
+        self.validate()
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class RepositoryPinObservation:
+    repository: str
+    default_branch: str
+    head: str
+    tree: str
+    manifest_present: bool
+    source_ref: str
+
+    def validate(self) -> "RepositoryPinObservation":
+        _require_repository(self.repository)
+        _require_identifier(self.default_branch, "default_branch")
+        _require_sha40(self.head, "head")
+        _require_sha40(self.tree, "tree")
+        if not isinstance(self.manifest_present, bool):
+            raise RepositoryExpansionContractError("manifest_present must be bool")
+        _registry_text(self.source_ref, "source_ref")
+        return self
+
+    def canonical_dict(self) -> dict[str, Any]:
+        self.validate()
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class FleetRegistryPinSnapshot:
+    schema_version: str
+    registry_digest: str
+    members: tuple[RegistryMember, ...]
+    observations: tuple[RepositoryPinObservation, ...]
+
+    def validate(self) -> "FleetRegistryPinSnapshot":
+        if self.schema_version != SCHEMA_VERSION:
+            raise RepositoryExpansionContractError("pin snapshot schema_version invalid")
+        _require_sha256(self.registry_digest, "registry_digest")
+        if type(self.members) is not tuple or not self.members:
+            raise RepositoryExpansionContractError("registry members required")
+        if type(self.observations) is not tuple:
+            raise RepositoryExpansionContractError("pin observations must be tuple")
+
+        members = tuple(item.validate() for item in self.members)
+        observations = tuple(item.validate() for item in self.observations)
+        member_ids = [item.repository for item in members]
+        observation_ids = [item.repository for item in observations]
+        if len(member_ids) != len(set(member_ids)):
+            raise RepositoryExpansionContractError("duplicate registry member")
+        if len(observation_ids) != len(set(observation_ids)):
+            raise RepositoryExpansionContractError("duplicate pin observation")
+        if set(member_ids) != set(observation_ids):
+            raise RepositoryExpansionContractError("pin observations do not exactly cover registry")
+
+        branch_by_repository = {
+            member.repository: member.default_branch for member in members
+        }
+        for observation in observations:
+            if observation.default_branch != branch_by_repository[observation.repository]:
+                raise RepositoryExpansionContractError("pin observation default branch substitution")
+        return self
+
+    def canonical_dict(self) -> dict[str, Any]:
+        self.validate()
+        return {
+            "schema_version": self.schema_version,
+            "registry_digest": self.registry_digest,
+            "members": [
+                item.canonical_dict()
+                for item in sorted(self.members, key=lambda item: item.repository)
+            ],
+            "observations": [
+                item.canonical_dict()
+                for item in sorted(self.observations, key=lambda item: item.repository)
+            ],
+        }
+
+    def snapshot_digest(self) -> str:
+        return digest(
+            self.canonical_dict(),
+            b"LION/FLEET-REGISTRY-PIN-SNAPSHOT/1\0",
+        )
+
+    def registered_repositories(self) -> tuple[RegisteredRepository, ...]:
+        self.validate()
+        by_repository = {item.repository: item for item in self.observations}
+        return tuple(
+            RegisteredRepository(
+                repository=member.repository,
+                default_branch=member.default_branch,
+                expected_head=by_repository[member.repository].head,
+                expected_tree=by_repository[member.repository].tree,
+            ).validate()
+            for member in sorted(self.members, key=lambda item: item.repository)
+        )
+
+
+def _parse_registry_payload(payload: bytes) -> tuple[dict[str, Any], tuple[RegistryMember, ...]]:
+    if type(payload) is not bytes or not payload or len(payload) > REGISTRY_MAX_BYTES:
+        raise RepositoryExpansionContractError("registry payload size/type invalid")
+    try:
+        value = json.loads(
+            payload.decode("utf-8"),
+            object_pairs_hook=_strict_registry_object,
+        )
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RepositoryExpansionContractError("registry JSON invalid") from exc
+    if not isinstance(value, dict) or set(value) != _REGISTRY_ROOT_KEYS:
+        raise RepositoryExpansionContractError("registry root shape invalid")
+    if value.get("schema_version") != REGISTRY_SCHEMA_VERSION:
+        raise RepositoryExpansionContractError("registry schema_version invalid")
+    generated_from = _registry_text(value.get("generated_from"), "generated_from")
+    repositories = value.get("repositories")
+    if not isinstance(repositories, list) or not repositories:
+        raise RepositoryExpansionContractError("registry repositories required")
+
+    members: list[RegistryMember] = []
+    canonical_repositories: list[dict[str, Any]] = []
+    for item in repositories:
+        if not isinstance(item, dict) or set(item) != _REGISTRY_MEMBER_KEYS:
+            raise RepositoryExpansionContractError("registry member shape invalid")
+        repository = _require_repository(item.get("id"), "registry repository")
+        default_branch = _require_identifier(item.get("default_branch"), "default_branch")
+        roles = _registry_string_list(item.get("roles"), "roles")
+        layers = _registry_string_list(item.get("layers"), "layers")
+        maturity = _registry_text(item.get("maturity"), "maturity")
+        disposition = _registry_string_list(item.get("disposition"), "disposition")
+        members.append(RegistryMember(repository, default_branch).validate())
+        canonical_repositories.append({
+            "id": repository,
+            "default_branch": default_branch,
+            "roles": sorted(roles),
+            "layers": sorted(layers),
+            "maturity": maturity,
+            "disposition": sorted(disposition),
+        })
+
+    ids = [item.repository for item in members]
+    if len(ids) != len(set(ids)):
+        raise RepositoryExpansionContractError("duplicate repository in registry")
+    canonical_value = {
+        "schema_version": REGISTRY_SCHEMA_VERSION,
+        "generated_from": generated_from,
+        "repositories": sorted(canonical_repositories, key=lambda item: item["id"]),
+    }
+    return canonical_value, tuple(sorted(members, key=lambda item: item.repository))
+
+
+def registry_semantic_digest(payload: bytes) -> str:
+    value, _ = _parse_registry_payload(payload)
+    return digest(value, b"LION/FLEET-REGISTRY/1\0")
+
+
+def materialize_registry_pin_snapshot(
+    registry_payload: bytes,
+    observations: tuple[RepositoryPinObservation, ...],
+) -> FleetRegistryPinSnapshot:
+    value, members = _parse_registry_payload(registry_payload)
+    snapshot = FleetRegistryPinSnapshot(
+        schema_version=SCHEMA_VERSION,
+        registry_digest=digest(value, b"LION/FLEET-REGISTRY/1\0"),
+        members=members,
+        observations=observations,
+    )
+    return snapshot.validate()
