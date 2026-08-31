@@ -24,7 +24,6 @@ from cyber_lion.tests.test_enterprise_federation import GLITCHLAB
 from cyber_lion.tests.test_fleet_registry_pin_live_source import (
     FakeFleetSource,
     FakeTransport,
-    MANIFEST_PATH,
     git_blob_sha,
     manifest_mapping,
     manifest_response,
@@ -400,15 +399,24 @@ class ExactManifestAttackMatrixTests(unittest.TestCase):
         self.assert_manifest_denied(manifest_response(value), regex="typed validation failed")
 
     def test_M20_semantic_reseal_after_mutation(self):
-        value = manifest_mapping("DonkeyJJLove/glitchlab", "master")
-        value["repository"]["id"] = "DonkeyJJLove/other"
-        raw = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        sealed = manifest_response(
-            raw=raw,
-            blob_sha=git_blob_sha(raw),
-            size=len(raw),
-        )
-        self.assert_manifest_denied(sealed, regex="repository identity mismatch")
+        mutations = {
+            "repository_id": lambda value: value["repository"].__setitem__("id", "DonkeyJJLove/other"),
+            "default_branch": lambda value: value["repository"].__setitem__("default_branch", "main"),
+            "schema_version": lambda value: value.__setitem__("schema_version", "2.0.0"),
+            "capability_type": lambda value: value.__setitem__("capabilities", ["delta.normalize", 7]),
+            "authority_shape": lambda value: value["authority"].__setitem__("runtime_credentials", "attacker"),
+            "health_injection": lambda value: value.__setitem__("health", {"status": "green"}),
+            "dependency_injection": lambda value: value.__setitem__("dependencies", ["DonkeyJJLove/other"]),
+            "manifest_bytes": lambda value: value["cyber_lion"].__setitem__("tile_id", "mutated.tile"),
+        }
+        for mutation_name, mutate in mutations.items():
+            with self.subTest(mutation=mutation_name):
+                value = manifest_mapping("DonkeyJJLove/glitchlab", "master")
+                mutate(value)
+                raw = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                sealed = manifest_response(raw=raw, blob_sha=git_blob_sha(raw), size=len(raw))
+                with self.assertRaises(GitHubFleetPinSourceError):
+                    self.read_manifest(sealed)
 
     def test_matrix_identity_is_exact_and_complete(self):
         self.assertEqual(len(F_ATTACKS), 20)
