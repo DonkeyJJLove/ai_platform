@@ -6,7 +6,7 @@ from hashlib import sha256
 import json
 from pathlib import PureWindowsPath
 import re
-from typing import Any, Mapping, Tuple
+from typing import Any, Mapping, Protocol, Tuple
 
 from cyber_lion.contracts.fleet_runtime_paths import resolve_fleet_runtime_paths
 
@@ -176,3 +176,13 @@ class ObservationReceipt:
 
 def observation_digest(payload: Mapping[str, Any]) -> str:
     return sha256(canonical_json(payload)).hexdigest()
+
+
+class FleetRegistryPinLiveReadSource(Protocol):
+    """Read-only source used by the R2E3 fleet registry pin live path."""
+
+    def read_default_head(self, repository: str, default_branch: str) -> tuple[str, str]:
+        ...
+
+    def manifest_present(self, repository: str, head: str) -> bool:
+        ...

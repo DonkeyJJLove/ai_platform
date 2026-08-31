@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 import json
 import os
+from pathlib import Path
 import socket
 from typing import Any, Mapping, Protocol
 from urllib.error import HTTPError, URLError
@@ -14,7 +16,15 @@ from cyber_lion.contracts.fleet_repository_observation_source import (
     DEFAULT_BRANCH,
     REPOSITORY,
     AncestryEvidence,
+    FleetRegistryPinLiveReadSource,
     LiveBranch,
+)
+from cyber_lion.contracts.repository_expansion import (
+    FleetRegistryPinSnapshot,
+    RepositoryPinObservation,
+    _parse_registry_payload,
+    materialize_registry_pin_snapshot,
+    registry_semantic_digest,
 )
 
 
@@ -285,3 +295,219 @@ class GitHubRESTReadSource:
         else:
             raise GitHubReadSourceError("unknown GitHub ancestry status denied")
         return evidence.validate()
+
+
+class GitHubFleetPinSourceError(GitHubReadSourceError):
+    pass
+
+
+_CANONICAL_GITHUB_API = "https://api.github.com"
+_CANONICAL_REGISTRY_PATH = Path(__file__).resolve().parents[1] / "registry" / "repositories.json"
+_FLEET_MANIFEST_PATH = "cyber-lion.repository.json"
+
+
+class GitHubFleetRegistryPinReadSource:
+    """GET-only GitHub source for R2E3 fleet registry pin provenance."""
+
+    TOKEN_ENV = "GITHUB_TOKEN"
+
+    def __init__(
+        self,
+        *,
+        token: str,
+        transport: ReadOnlyHttpTransport | None = None,
+        timeout: float = 10.0,
+    ) -> None:
+        if not isinstance(token, str) or not token.strip():
+            raise GitHubFleetPinSourceError("GitHub bearer token missing")
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
+            raise GitHubFleetPinSourceError("GitHub timeout invalid")
+        self._token = token.strip()
+        self._transport = transport or UrllibReadOnlyTransport()
+        self._timeout = float(timeout)
+
+    @classmethod
+    def from_environment(
+        cls,
+        *,
+        transport: ReadOnlyHttpTransport | None = None,
+        timeout: float = 10.0,
+        environ: Mapping[str, str] | None = None,
+    ) -> "GitHubFleetRegistryPinReadSource":
+        source = os.environ if environ is None else environ
+        token = source.get(cls.TOKEN_ENV)
+        if token is None or not token.strip():
+            raise GitHubFleetPinSourceError(f"{cls.TOKEN_ENV} missing")
+        return cls(token=token, transport=transport, timeout=timeout)
+
+    def _headers(self) -> dict[str, str]:
+        return {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {self._token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "lion-r2e3-fleet-pin-read-source/1.0",
+        }
+
+    def _request(self, path: str) -> HttpResponse:
+        if not isinstance(path, str) or not path.startswith("/") or "\x00" in path:
+            raise GitHubFleetPinSourceError("GitHub request path invalid")
+        url = _CANONICAL_GITHUB_API + path
+        try:
+            response = self._transport.get(url, headers=self._headers(), timeout=self._timeout)
+        except GitHubReadSourceError:
+            raise
+        except Exception as exc:
+            raise GitHubFleetPinSourceError("GitHub transport failure") from exc
+        if type(response) is not HttpResponse:
+            raise GitHubFleetPinSourceError("GitHub transport response invalid")
+        return response
+
+    def _request_object(self, path: str, name: str) -> dict[str, Any]:
+        response = self._request(path)
+        if response.status in {403, 429}:
+            raise GitHubFleetPinSourceError("GitHub rate-limit or access denial")
+        if response.status < 200 or response.status >= 300:
+            raise GitHubFleetPinSourceError(f"GitHub HTTP status denied: {response.status}")
+        return _object(_json(response.body, name), name)
+
+    def read_default_head(self, repository: str, default_branch: str) -> tuple[str, str]:
+        repo = quote(repository, safe="/")
+        branch = quote(default_branch, safe="")
+        branch_value = self._request_object(
+            f"/repos/{repo}/branches/{branch}",
+            "fleet branch response",
+        )
+        commit = _object(branch_value.get("commit"), "fleet branch commit")
+        head = _sha(commit.get("sha"), "fleet default head")
+        commit_value = self._request_object(
+            f"/repos/{repo}/git/commits/{head}",
+            "fleet commit response",
+        )
+        tree = _object(commit_value.get("tree"), "fleet commit tree")
+        return head, _sha(tree.get("sha"), "fleet default tree")
+
+    def manifest_present(self, repository: str, head: str) -> bool:
+        _sha(head, "fleet manifest head")
+        repo = quote(repository, safe="/")
+        ref = quote(head, safe="")
+        response = self._request(
+            f"/repos/{repo}/contents/{_FLEET_MANIFEST_PATH}?ref={ref}"
+        )
+        if response.status == 200:
+            return True
+        if response.status == 404:
+            return False
+        if response.status in {403, 429}:
+            raise GitHubFleetPinSourceError("GitHub manifest access or rate-limit denial")
+        raise GitHubFleetPinSourceError(
+            f"GitHub manifest HTTP status denied: {response.status}"
+        )
+
+
+def _fleet_pin_source_ref(
+    repository: str,
+    default_branch: str,
+    head: str,
+    tree: str,
+    manifest_present: bool,
+) -> str:
+    payload = json.dumps(
+        {
+            "repository": repository,
+            "default_branch": default_branch,
+            "head": head,
+            "tree": tree,
+            "manifest_present": manifest_present,
+            "manifest_path": _FLEET_MANIFEST_PATH,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return "github-live-v1:" + sha256(
+        b"LION/R2E3/FLEET-PIN-LIVE-SOURCE/1\0" + payload
+    ).hexdigest()
+
+
+def _require_canonical_registry_payload(registry_payload: bytes) -> None:
+    try:
+        canonical_payload = _CANONICAL_REGISTRY_PATH.read_bytes()
+    except OSError as exc:
+        raise GitHubFleetPinSourceError("canonical fleet registry unavailable") from exc
+    try:
+        supplied = registry_semantic_digest(registry_payload)
+        canonical = registry_semantic_digest(canonical_payload)
+    except Exception as exc:
+        raise GitHubFleetPinSourceError("fleet registry validation failed") from exc
+    if supplied != canonical:
+        raise GitHubFleetPinSourceError("fleet registry substitution denied")
+
+
+def _materialize_live_registry_pin_snapshot_with_source(
+    registry_payload: bytes,
+    *,
+    source: FleetRegistryPinLiveReadSource,
+) -> FleetRegistryPinSnapshot:
+    _require_canonical_registry_payload(registry_payload)
+    try:
+        _, members = _parse_registry_payload(registry_payload)
+    except Exception as exc:
+        raise GitHubFleetPinSourceError("fleet registry parse failed") from exc
+
+    first_pass: dict[str, tuple[str, str]] = {}
+    observations: list[RepositoryPinObservation] = []
+    for member in members:
+        observed = source.read_default_head(member.repository, member.default_branch)
+        if type(observed) is not tuple or len(observed) != 2:
+            raise GitHubFleetPinSourceError("fleet head source returned invalid type")
+        head = _sha(observed[0], "fleet observed head")
+        tree = _sha(observed[1], "fleet observed tree")
+        manifest_present = source.manifest_present(member.repository, head)
+        if type(manifest_present) is not bool:
+            raise GitHubFleetPinSourceError("fleet manifest observation must be bool")
+        first_pass[member.repository] = (head, tree)
+        observations.append(
+            RepositoryPinObservation(
+                repository=member.repository,
+                default_branch=member.default_branch,
+                head=head,
+                tree=tree,
+                manifest_present=manifest_present,
+                source_ref=_fleet_pin_source_ref(
+                    member.repository,
+                    member.default_branch,
+                    head,
+                    tree,
+                    manifest_present,
+                ),
+            ).validate()
+        )
+
+    for member in members:
+        observed = source.read_default_head(member.repository, member.default_branch)
+        if type(observed) is not tuple or len(observed) != 2:
+            raise GitHubFleetPinSourceError("fleet currentness source returned invalid type")
+        current = (
+            _sha(observed[0], "fleet reobserved head"),
+            _sha(observed[1], "fleet reobserved tree"),
+        )
+        if current != first_pass[member.repository]:
+            raise GitHubFleetPinSourceError(
+                f"fleet sweep drift denied: {member.repository}"
+            )
+
+    try:
+        return materialize_registry_pin_snapshot(registry_payload, tuple(observations))
+    except Exception as exc:
+        raise GitHubFleetPinSourceError("fleet live pin snapshot materialization failed") from exc
+
+
+def materialize_live_registry_pin_snapshot(
+    registry_payload: bytes,
+) -> FleetRegistryPinSnapshot:
+    """Canonical R2E3 entrypoint: registry bytes are the only caller-controlled input."""
+    source = GitHubFleetRegistryPinReadSource.from_environment()
+    return _materialize_live_registry_pin_snapshot_with_source(
+        registry_payload,
+        source=source,
+    )

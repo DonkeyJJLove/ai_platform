@@ -28,6 +28,64 @@ jobs:
         run: python -m compileall -q cyber_lion
       - name: Run Cyber-Lion tests
         run: python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
+      - name: R2E3 targeted fleet live pin tests
+        if: github.event_name == 'pull_request' && github.head_ref == 'mission/r2e3-fleet-registry-pin-live-source-binding'
+        run: python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source -v
+      - name: R2E3 real 10-repository read-only GitHub sweep
+        if: github.event_name == 'pull_request' && github.head_ref == 'mission/r2e3-fleet-registry-pin-live-source-binding'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          R2E3_LIVE_FLEET_SWEEP: "1"
+        run: python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_real_ten_repository_read_only_github_sweep -v
+      - name: R2E3 frozen inventory receipt
+        if: github.event_name == 'pull_request' && github.head_ref == 'mission/r2e3-fleet-registry-pin-live-source-binding'
+        run: |
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+          from cyber_lion.enterprise.host_authority_separation import _production_path
+
+          raw = subprocess.run(
+              ['git', 'ls-files', '-z'],
+              check=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          ).stdout
+          sources = {}
+          for item in raw.split(b'\0'):
+              if not item:
+                  continue
+              path = item.decode()
+              if _production_path(path):
+                  sources[path] = Path(path).read_text()
+          revision = subprocess.run(
+              ['git', 'rev-parse', 'HEAD'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          tree = subprocess.run(
+              ['git', 'write-tree'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          inventory = EffectSurfaceScanner().scan(
+              repository='DonkeyJJLove/ai_platform',
+              revision=revision,
+              tree_digest=tree,
+              sources=sources,
+          )
+          values = (len(sources), len(inventory.surfaces), len(inventory.unclassified_refs))
+          print(f'SOURCE_COUNT={values[0]}')
+          print(f'EFFECT_SURFACE_COUNT={values[1]}')
+          print(f'UNCLASSIFIED_COUNT={values[2]}')
+          if values != (241, 225, 5):
+              raise SystemExit(f'R2E3_INVENTORY_DRIFT={values}')
+          print('INVENTORY_REFREEZE=PASS')
+          PY
       - name: Run Startup Evolution demo
         run: python -m cyber_lion.startup_agent.demo > /tmp/startup-agent-demo.json
 
