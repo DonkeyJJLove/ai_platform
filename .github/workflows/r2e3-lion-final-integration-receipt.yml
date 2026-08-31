@@ -1,0 +1,254 @@
+name: R2E3 LION Final Integration Receipt
+
+on:
+  push:
+    branches:
+      - verification/r2e3-lion-final-gate-9ea145df
+
+permissions:
+  contents: read
+
+jobs:
+  lion-final-integration-receipt:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact immutable candidate
+        uses: actions/checkout@v6
+        with:
+          ref: 9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Exact candidate binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          echo "CHECKED_OUT_HEAD=$head"
+          echo "CHECKED_OUT_TREE=$tree"
+          test "$head" = "9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58"
+          test "$tree" = "3c9705f85301e73f268228f3c36f6ae82a641633"
+          echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: T0 compile
+        shell: bash
+        run: |
+          set +e
+          python -m compileall -q cyber_lion
+          rc=$?
+          set -e
+          echo "T0_EXIT_CODE=$rc"
+          test "$rc" -eq 0
+          echo "T0_RESULT=PASS"
+          echo "T0_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+
+      - name: T1 R2E3 targeted
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="$(mktemp)"
+          set +e
+          python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source -v 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          count="$(sed -n 's/^Ran \([0-9][0-9]*\) tests.*/\1/p' "$log" | tail -n 1)"
+          echo "T1_EXIT_CODE=$rc"
+          echo "T1_TEST_COUNT=$count"
+          test "$rc" -eq 0
+          test "$count" = "17"
+          echo "T1_RESULT=PASS"
+          echo "T1_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          echo "T1_TEST_COUNT=$count" >> "$GITHUB_ENV"
+
+      - name: T2 R2E1 R2E2 contract regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="$(mktemp)"
+          set +e
+          python -m unittest cyber_lion.tests.test_repository_expansion cyber_lion.tests.test_fleet_registry_pin_materialization -v 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          count="$(sed -n 's/^Ran \([0-9][0-9]*\) tests.*/\1/p' "$log" | tail -n 1)"
+          echo "T2_EXIT_CODE=$rc"
+          echo "T2_TEST_COUNT=$count"
+          test "$rc" -eq 0
+          test -n "$count"
+          echo "T2_RESULT=PASS"
+          echo "T2_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          echo "T2_TEST_COUNT=$count" >> "$GITHUB_ENV"
+
+      - name: T3 full core
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="$(mktemp)"
+          set +e
+          python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          count="$(sed -n 's/^Ran \([0-9][0-9]*\) tests.*/\1/p' "$log" | tail -n 1)"
+          skipped="$(sed -n 's/^OK (skipped=\([0-9][0-9]*\)).*/\1/p' "$log" | tail -n 1)"
+          if [ -z "$skipped" ]; then skipped=0; fi
+          echo "T3_EXIT_CODE=$rc"
+          echo "T3_TEST_COUNT=$count"
+          echo "T3_SKIPPED=$skipped"
+          test "$rc" -eq 0
+          test "$count" = "1900"
+          echo "T3_RESULT=PASS"
+          echo "T3_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          echo "T3_TEST_COUNT=$count" >> "$GITHUB_ENV"
+          echo "T3_SKIPPED=$skipped" >> "$GITHUB_ENV"
+
+      - name: T4 independent live 10 repository sweep
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          R2E3_LIVE_FLEET_SWEEP: '1'
+        run: |
+          set -euo pipefail
+          log="$(mktemp)"
+          set +e
+          python -m unittest cyber_lion.tests.test_fleet_registry_pin_live_source.FleetRegistryPinLiveSourceTests.test_real_ten_repository_read_only_github_sweep -v 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          echo "T4_EXIT_CODE=$rc"
+          test "$rc" -eq 0
+          grep -Fx 'R2E3_LIVE_FLEET_SWEEP=PASS' "$log"
+          grep -Fx 'R2E3_LIVE_MEMBER_COUNT=10' "$log"
+          grep -Fx 'R2E3_WRITEUPS_MANIFEST_PRESENT=FALSE' "$log"
+          grep -Fx 'R2E3_REGISTRY_DIGEST=78dbb678bbb2189f69d0ba0132869e34af0d2d5033c909a037f4bc6308d5597c' "$log"
+          grep -Fx 'R2E3_SNAPSHOT_DIGEST=80a8b9ff84e8b224275624c6c6796513578f0fa63664964092fa584a98a11f6e' "$log"
+          echo "LIVE_MEMBER_COUNT=10"
+          echo "WRITEUPS_MANIFEST_PRESENT=FALSE"
+          echo "T4_RESULT=PASS"
+          echo "T4_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+          echo "LIVE_MEMBER_COUNT=10" >> "$GITHUB_ENV"
+          echo "WRITEUPS_MANIFEST_PRESENT=FALSE" >> "$GITHUB_ENV"
+
+      - name: T5 frozen inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+          from cyber_lion.enterprise.host_authority_separation import _production_path
+
+          raw = subprocess.run(
+              ['git', 'ls-files', '-z'],
+              check=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          ).stdout
+          sources = {}
+          for item in raw.split(b'\0'):
+              if not item:
+                  continue
+              path = item.decode()
+              if _production_path(path):
+                  sources[path] = Path(path).read_text()
+          revision = subprocess.run(
+              ['git', 'rev-parse', 'HEAD'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          tree = subprocess.run(
+              ['git', 'write-tree'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          inventory = EffectSurfaceScanner().scan(
+              repository='DonkeyJJLove/ai_platform',
+              revision=revision,
+              tree_digest=tree,
+              sources=sources,
+          )
+          values = (len(sources), len(inventory.surfaces), len(inventory.unclassified_refs))
+          print(f'SOURCE_COUNT={values[0]}')
+          print(f'EFFECT_SURFACE_COUNT={values[1]}')
+          print(f'UNCLASSIFIED_COUNT={values[2]}')
+          if values != (241, 225, 5):
+              raise SystemExit(f'R2E3_INVENTORY_DRIFT={values}')
+          print('INVENTORY_REFREEZE=PASS')
+          PY
+          echo 'SOURCE_COUNT=241' >> "$GITHUB_ENV"
+          echo 'EFFECT_SURFACE_COUNT=225' >> "$GITHUB_ENV"
+          echo 'UNCLASSIFIED_COUNT=5' >> "$GITHUB_ENV"
+          echo 'T5_RESULT=PASS'
+
+      - name: LION refalsification probe
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          R2E3_LIVE_FLEET_SWEEP: '1'
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            cyber_lion.tests.test_fleet_registry_pin_live_source \
+            cyber_lion.tests.test_r2q_f005_write_bypass_guards.R2QF005WriteBypassGuards.test_effect_capable_f005_workflows_are_not_reachable_from_current_tree \
+            -v
+          echo 'LION_REFALSIFICATION_PROBE=PASS'
+          echo 'NO_COUNTEREXAMPLE_FOUND=PASS'
+
+      - name: Final literal receipt
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$T0_EXIT_CODE" = '0'
+          test "$T1_EXIT_CODE" = '0'
+          test "$T1_TEST_COUNT" = '17'
+          test "$T2_EXIT_CODE" = '0'
+          test -n "$T2_TEST_COUNT"
+          test "$T3_EXIT_CODE" = '0'
+          test "$T3_TEST_COUNT" = '1900'
+          test "$T4_EXIT_CODE" = '0'
+          test "$LIVE_MEMBER_COUNT" = '10'
+          test "$WRITEUPS_MANIFEST_PRESENT" = 'FALSE'
+          test "$SOURCE_COUNT" = '241'
+          test "$EFFECT_SURFACE_COUNT" = '225'
+          test "$UNCLASSIFIED_COUNT" = '5'
+          echo 'R2E3_FINAL_INTEGRATION_RECEIPT=PASS'
+          echo 'T0_RESULT=PASS'
+          echo "T1_EXIT_CODE=$T1_EXIT_CODE"
+          echo 'T1_RESULT=PASS'
+          echo "T2_EXIT_CODE=$T2_EXIT_CODE"
+          echo "T2_TEST_COUNT=$T2_TEST_COUNT"
+          echo 'T2_RESULT=PASS'
+          echo "T3_EXIT_CODE=$T3_EXIT_CODE"
+          echo "T3_TEST_COUNT=$T3_TEST_COUNT"
+          echo "T3_SKIPPED=$T3_SKIPPED"
+          echo 'T3_RESULT=PASS'
+          echo "T4_EXIT_CODE=$T4_EXIT_CODE"
+          echo "LIVE_MEMBER_COUNT=$LIVE_MEMBER_COUNT"
+          echo "WRITEUPS_MANIFEST_PRESENT=$WRITEUPS_MANIFEST_PRESENT"
+          echo 'T4_RESULT=PASS'
+          echo "SOURCE_COUNT=$SOURCE_COUNT"
+          echo "EFFECT_SURFACE_COUNT=$EFFECT_SURFACE_COUNT"
+          echo "UNCLASSIFIED_COUNT=$UNCLASSIFIED_COUNT"
+          echo 'INVENTORY_REFREEZE=PASS'
+          echo 'T5_RESULT=PASS'
+          echo 'LION_REFALSIFICATION_PROBE=PASS'
+          echo 'NO_COUNTEREXAMPLE_FOUND=PASS'
+          echo 'TIGER_R2E3_FINAL_INTEGRATION_REPAIR_R1=PASS'
+
+      - name: Fail-closed receipt
+        if: failure()
+        shell: bash
+        run: |
+          echo 'R2E3_FINAL_INTEGRATION_RECEIPT=FAIL'
+          echo 'FREEZE_LITERAL_COUNTEREXAMPLE=YES'
+          echo 'NO_FAKE_PASS=ENFORCED'
+          echo 'TIGER_R2E3_FINAL_INTEGRATION_REPAIR_R1=FAIL'
+          exit 1
