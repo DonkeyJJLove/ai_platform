@@ -347,6 +347,7 @@ class GitHubFleetRegistryPinReadSource:
         self._token = token.strip()
         self._transport = transport or UrllibReadOnlyTransport()
         self._timeout = float(timeout)
+        self._manifest_response_handoff: dict[tuple[str, str], HttpResponse] = {}
 
     @classmethod
     def from_environment(
@@ -507,10 +508,14 @@ class GitHubFleetRegistryPinReadSource:
         return matches[0] if matches else None
 
     def manifest_present(self, repository: str, head: str) -> bool:
+        handoff_key = (repository, head)
+        self._manifest_response_handoff.pop(handoff_key, None)
         response = self._manifest_response(repository, head)
         if response.status == 200:
+            self._manifest_response_handoff[handoff_key] = response
             return True
         if response.status == 404:
+            self._manifest_response_handoff[handoff_key] = response
             return False
         if response.status in {403, 429}:
             raise GitHubFleetPinSourceError("GitHub manifest access or rate-limit denial")
@@ -527,7 +532,10 @@ class GitHubFleetRegistryPinReadSource:
         except Exception as exc:
             raise GitHubFleetPinSourceError("fleet manifest pin invalid") from exc
 
-        response = self._manifest_response(pin.repository, pin.head)
+        handoff_key = (pin.repository, pin.head)
+        response = self._manifest_response_handoff.pop(handoff_key, None)
+        if response is None:
+            response = self._manifest_response(pin.repository, pin.head)
         if response.status == 404:
             if pin.manifest_present:
                 raise GitHubFleetPinSourceError("fleet manifest state contradicts pinned presence")
