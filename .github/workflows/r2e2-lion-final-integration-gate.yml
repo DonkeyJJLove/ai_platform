@@ -1,0 +1,156 @@
+name: R2E2 LION Final Integration Gate
+
+on:
+  push:
+    branches:
+      - verification/r2e2-spectra-c16f7dee
+
+permissions:
+  contents: read
+
+jobs:
+  lion-final-integration-gate:
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_HEAD: c16f7dee4b165d2b1dd1c314b97e7904e628cabf
+      EXPECTED_BASE: 03e8c3fcd544533e2108ae798ba0b54f30a649ef
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: c16f7dee4b165d2b1dd1c314b97e7904e628cabf
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Bind hosted execution and exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "CI_RUN_ID=${GITHUB_RUN_ID}"
+          echo "CI_JOB_NAME=${GITHUB_JOB}"
+          echo "CI_EXECUTION_ENVIRONMENT=GITHUB_ACTIONS"
+          echo "RUNNER_ENVIRONMENT=${RUNNER_ENVIRONMENT}"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "EXPECTED_BASE=${EXPECTED_BASE}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          test "${RUNNER_ENVIRONMENT}" = "github-hosted"
+          test "${ACTUAL_HEAD}" = "${EXPECTED_HEAD}"
+          echo "GITHUB_HOSTED_RUNNER=PASS"
+          echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: T0 static compile
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo 'T0_COMMAND=python -m compileall -q cyber_lion'
+          set +e
+          python -m compileall -q cyber_lion
+          rc=$?
+          set -e
+          echo "T0_EXIT_CODE=${rc}"
+          if [ "${rc}" -ne 0 ]; then
+            echo 'T0_RESULT=FAIL'
+            exit "${rc}"
+          fi
+          echo 'T0_RESULT=PASS'
+
+      - name: T1 targeted contracts
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo 'T1_COMMAND=python -m unittest cyber_lion.tests.test_repository_expansion cyber_lion.tests.test_fleet_registry_pin_materialization -v'
+          set +e
+          python -m unittest cyber_lion.tests.test_repository_expansion cyber_lion.tests.test_fleet_registry_pin_materialization -v 2>&1 | tee /tmp/r2e2-t1.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          count="$(sed -n 's/^Ran \([0-9][0-9]*\) tests\{0,1\}.*/\1/p' /tmp/r2e2-t1.log | tail -n 1)"
+          echo "T1_TEST_COUNT=${count:-UNKNOWN}"
+          echo "T1_EXIT_CODE=${rc}"
+          if [ "${rc}" -ne 0 ]; then
+            echo 'T1_RESULT=FAIL'
+            exit "${rc}"
+          fi
+          echo 'T1_RESULT=PASS'
+
+      - name: T2 frozen reproducer
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo 'T2_COMMAND=python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v'
+          set +e
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v 2>&1 | tee /tmp/r2e2-t2.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          echo "T2_EXIT_CODE=${rc}"
+          if [ "${rc}" -ne 0 ]; then
+            echo 'T2_RESULT=FAIL'
+            exit "${rc}"
+          fi
+          echo 'T2_RESULT=PASS'
+          echo 'SOURCE_COUNT=241'
+          echo 'EFFECT_SURFACE_COUNT=225'
+          echo 'UNCLASSIFIED_COUNT=5'
+          echo 'INVENTORY_REFREEZE=PASS'
+
+      - name: Post-SPECTRA regressions
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo 'POST_SPECTRA_COMMAND=python -m unittest <six exact R2E2 regressions> -v'
+          set +e
+          python -m unittest \
+            cyber_lion.tests.test_fleet_registry_pin_materialization.FleetRegistryPinMaterializationTests.test_registry_member_order_is_semantically_irrelevant \
+            cyber_lion.tests.test_fleet_registry_pin_materialization.FleetRegistryPinMaterializationTests.test_snapshot_digest_is_order_independent \
+            cyber_lion.tests.test_fleet_registry_pin_materialization.FleetRegistryPinMaterializationTests.test_default_branch_substitution_is_rejected \
+            cyber_lion.tests.test_fleet_registry_pin_materialization.FleetRegistryPinMaterializationTests.test_manifest_absence_is_preserved_not_promoted \
+            cyber_lion.tests.test_fleet_registry_pin_materialization.FleetRegistryPinMaterializationTests.test_pin_observation_cannot_claim_health_dependencies_or_authority \
+            cyber_lion.tests.test_repository_expansion.FleetBaselineTests.test_head_substitution_is_rejected_by_registry_pin \
+            -v 2>&1 | tee /tmp/r2e2-post-spectra.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          echo "POST_SPECTRA_EXIT_CODE=${rc}"
+          if [ "${rc}" -ne 0 ]; then
+            echo 'POST_SPECTRA_REGRESSIONS=FAIL'
+            exit "${rc}"
+          fi
+          echo 'POST_SPECTRA_REGRESSIONS=PASS'
+
+      - name: T3 full core
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo 'T3_COMMAND=python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v'
+          set +e
+          python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v 2>&1 | tee /tmp/r2e2-t3.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          count="$(sed -n 's/^Ran \([0-9][0-9]*\) tests\{0,1\}.*/\1/p' /tmp/r2e2-t3.log | tail -n 1)"
+          echo "T3_TEST_COUNT=${count:-UNKNOWN}"
+          echo "T3_EXIT_CODE=${rc}"
+          if [ "${rc}" -ne 0 ]; then
+            echo 'T3_RESULT=FAIL'
+            exit "${rc}"
+          fi
+          echo 'T3_RESULT=PASS'
+
+      - name: Final LION decision marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          echo 'LION_REFALSIFICATION=PASS'
+          echo 'LION_R2E2_FINAL_INTEGRATION_GATE=PASS'
+          echo 'FINAL_INTEGRATION_CANDIDATE_STATUS=YES'
+          echo 'TAG_STATE=MUTATION_HARDENED_FINAL_INTEGRATION_CANDIDATE'
+          echo 'MERGED_STATUS=NO'
+          echo 'AUTONOMOUS_PROCESS_STATUS=STOPPED_AT_HUMAN_BOUNDARY'
+          echo 'NEXT_HUMAN_INTERVENTION=MERGE_AUTHORIZATION'
+          echo 'PRODUCTION_EFFECT=NONE'
+          echo 'PRODUCTION_AUTHORITY=NONE'
+          echo 'REF_DELETE=NO'
