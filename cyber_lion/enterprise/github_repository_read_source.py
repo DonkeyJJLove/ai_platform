@@ -496,7 +496,10 @@ class GitHubFleetRegistryPinReadSource:
         if reconstructed != git_blob_sha:
             raise GitHubFleetPinSourceError("fleet manifest Git blob identity mismatch")
         byte_sha256 = sha256(raw).hexdigest()
-        mapping = _object(_json(raw, "fleet manifest content"), "fleet manifest content")
+        try:
+            mapping = _object(_json(raw, "fleet manifest content"), "fleet manifest content")
+        except GitHubReadSourceError as exc:
+            raise GitHubFleetPinSourceError("fleet manifest content JSON invalid") from exc
         try:
             manifest = RepositoryManifest.from_mapping(mapping)
         except EnterpriseModelError as exc:
