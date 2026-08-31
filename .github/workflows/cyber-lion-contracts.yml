@@ -13,6 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Emit literal checkout identity evidence
+        shell: bash
+        run: |
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          if [ "$ACTUAL_HEAD" != "$GITHUB_SHA" ]; then
+            printf 'CHECKED_OUT_HEAD_MISMATCH actual=%s expected=%s\n' "$ACTUAL_HEAD" "$GITHUB_SHA" >&2
+            exit 1
+          fi
+          printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
       - uses: actions/setup-python@v6
         with: {python-version: "3.11"}
       - name: Parse JSON schemas
@@ -156,9 +165,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Emit literal merge authority identity evidence
+        shell: bash
+        run: |
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          if [ "$ACTUAL_HEAD" != "$GITHUB_SHA" ]; then
+            printf 'CHECKED_OUT_HEAD_MISMATCH actual=%s expected=%s\n' "$ACTUAL_HEAD" "$GITHUB_SHA" >&2
+            exit 1
+          fi
+          printf '%s\n' 'JOB_NAME=Cyber-Lion Merge Authority Admission'
+          printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
       - uses: actions/setup-python@v6
         with: {python-version: "3.11"}
       - name: Compile merge admission boundary
         run: python -m compileall -q cyber_lion/enterprise/merge_admission.py
       - name: Verify fail-closed merge authority admission
         run: python -m unittest cyber_lion.tests.test_merge_admission -v
+      - name: Emit merge admission terminal evidence
+        shell: bash
+        run: |
+          printf '%s\n' 'MERGE_ADMISSION_TERMINAL=OK'
+          printf '%s\n' 'NO_MERGE_AUTHORIZATION_INFERRED=YES'
