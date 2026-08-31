@@ -492,7 +492,8 @@ class GitHubFleetRegistryPinReadSource:
 
         tree_body = b"".join(serialized)
         reconstructed = sha1(
-            b"tree " + str(len(tree_body)).encode("ascii") + b"\0" + tree_body
+            b"tree " + str(len(tree_body)).encode("ascii") + b"\0" + tree_body,
+            usedforsecurity=False,
         ).hexdigest()
         if reconstructed != pin.tree or reconstructed != response_sha:
             raise GitHubFleetPinSourceError("fleet root tree Git object identity mismatch")
@@ -597,9 +598,9 @@ class GitHubFleetRegistryPinReadSource:
             raise GitHubFleetPinSourceError("fleet manifest base64 invalid") from exc
         if len(raw) != size or len(raw) > _MANIFEST_MAX_BYTES:
             raise GitHubFleetPinSourceError("fleet manifest decoded size mismatch")
-
         reconstructed = sha1(
-            b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw
+            b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw,
+            usedforsecurity=False,
         ).hexdigest()
         if reconstructed != git_blob_sha:
             raise GitHubFleetPinSourceError("fleet manifest Git blob identity mismatch")
