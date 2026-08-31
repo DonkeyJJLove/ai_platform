@@ -33,7 +33,7 @@ jobs:
           echo "CHECKED_OUT_HEAD=$HEAD"
           echo "CHECKED_OUT_TREE=$TREE"
           test "$HEAD" = "9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58"
-          test "$TREE" = "3c9705d2e64efae36619fee6f6db9cf0c55eb71c"
+          test "$TREE" = "3c9705f85301e73f268228f3c36f6ae82a641633"
           echo "EXACT_HEAD_BINDING=PASS"
 
       - name: Compile candidate
