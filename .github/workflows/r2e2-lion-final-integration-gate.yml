@@ -14,6 +14,8 @@ jobs:
     env:
       EXPECTED_HEAD: c16f7dee4b165d2b1dd1c314b97e7904e628cabf
       EXPECTED_BASE: 03e8c3fcd544533e2108ae798ba0b54f30a649ef
+      EXPECTED_REGISTRY_DIGEST: 78dbb678d9cb85833a0df010f634586311af1b35ad3395e4ef7bfd8a3a30e9ee
+      EXPECTED_SNAPSHOT_DIGEST: 14e4286ad1fc8bfeb608ce99f0f955b278d2e99c4ef44d37253a23837a6e0d49
     steps:
       - name: Checkout exact candidate head
         uses: actions/checkout@v6
@@ -43,6 +45,65 @@ jobs:
           test "${ACTUAL_HEAD}" = "${EXPECTED_HEAD}"
           echo "GITHUB_HOSTED_RUNNER=PASS"
           echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: Bind corrected evidence receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import os
+
+          from cyber_lion.contracts.repository_expansion import (
+              RepositoryPinObservation,
+              materialize_registry_pin_snapshot,
+          )
+
+          registry = Path('cyber_lion/registry/repositories.json').read_bytes()
+          pins = (
+              ('DonkeyJJLove/ai_platform','master','03e8c3fcd544533e2108ae798ba0b54f30a649ef','d20a3a95564418d778a8bc5bd3ba1d1cebe81495',True),
+              ('DonkeyJJLove/chunk-chunk','master','b8657037e94787a103c99f1fbb3058341821ffd7','3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9',True),
+              ('DonkeyJJLove/glitchlab','master','329d670e53f3e4606f60eeb2f446eb34df3bb05d','653f7593e4c6f0478c2f85b48d3091d0faed7892',True),
+              ('DonkeyJJLove/HA2D','master','13ac2c760aa0c4f528addaacc782239c00e3890e','bc6c8a067074fead00b57d6c9f8f852f1fa74977',True),
+              ('DonkeyJJLove/hipotezy_nadawcze_LLM','main','569acad16f0ca8eb0c4e4522586914b57f5bf475','0c1f6d690a2bdae34f0ecd6c9afbb04933af220c',True),
+              ('DonkeyJJLove/mosaic_lab_pro.py','main','0ad23c8a9fb9f942e41ade83ecafa8f393e5d481','ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1',True),
+              ('DonkeyJJLove/sbom','main','86b92e9f7c3361d69e2322193441f4626f8205e7','8d7cc0e5b5025899d0889c4a5c17ac230681c4fb',True),
+              ('DonkeyJJLove/swarm','master','6aee0442d4b8a861989503ca55aac0c45f065afb','86830750c688e9e65d3eafc7232e89f20267c705',True),
+              ('DonkeyJJLove/SymulacjaKaskadySieciowej','main','2fa3b9f8285387d8f14e116901a671c4fcb75174','9c3fc13abab6ac22631615ac4ac72085bd84ded9',True),
+              ('DonkeyJJLove/writeups','master','005d12c4588259e069bce2ad67979b20d6a7874a','975004de618efdbdad6e49f08b105fc4e943cff2',False),
+          )
+          observations = tuple(
+              RepositoryPinObservation(
+                  repository=repo,
+                  default_branch=branch,
+                  head=head,
+                  tree=tree,
+                  manifest_present=manifest,
+                  source_ref=f'github-read:{repo}:{branch}:{head}:{tree}',
+              ).validate()
+              for repo, branch, head, tree, manifest in pins
+          )
+          snapshot = materialize_registry_pin_snapshot(registry, observations)
+          observed_registry = snapshot.registry_digest
+          observed_snapshot = snapshot.snapshot_digest()
+          expected_registry = os.environ['EXPECTED_REGISTRY_DIGEST']
+          expected_snapshot = os.environ['EXPECTED_SNAPSHOT_DIGEST']
+          print('EXPECTED_REGISTRY_DIGEST=' + expected_registry)
+          print('OBSERVED_REGISTRY_DIGEST=' + observed_registry)
+          print('EXPECTED_SNAPSHOT_DIGEST=' + expected_snapshot)
+          print('OBSERVED_SNAPSHOT_DIGEST=' + observed_snapshot)
+          print('WRITEUPS_MANIFEST_PRESENT=' + str(next(x for x in snapshot.observations if x.repository == 'DonkeyJJLove/writeups').manifest_present).upper())
+          if observed_registry != expected_registry:
+              print('REGISTRY_DIGEST_BINDING=FAIL')
+              raise SystemExit(81)
+          print('REGISTRY_DIGEST_BINDING=PASS')
+          if observed_snapshot != expected_snapshot:
+              print('SNAPSHOT_DIGEST_BINDING=FAIL')
+              raise SystemExit(82)
+          print('SNAPSHOT_DIGEST_BINDING=PASS')
+          print('STARTING_EVIDENCE_DIGEST_BINDING=PASS')
+          print('EVIDENCE_RECEIPT_CORRECTION=PASS')
+          PY
 
       - name: T0 static compile
         shell: bash
@@ -144,6 +205,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          echo 'STARTING_EVIDENCE_DIGEST_BINDING=PASS'
           echo 'LION_REFALSIFICATION=PASS'
           echo 'LION_R2E2_FINAL_INTEGRATION_GATE=PASS'
           echo 'FINAL_INTEGRATION_CANDIDATE_STATUS=YES'
