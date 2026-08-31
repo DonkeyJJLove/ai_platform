@@ -1,0 +1,1 @@
+Control-only trigger. No candidate/master/PR mutation.
