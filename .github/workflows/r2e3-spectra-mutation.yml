@@ -39,6 +39,26 @@ jobs:
       - name: Compile candidate
         run: python -m compileall -q cyber_lion
 
+      - name: R2E3 SPECTRA harness import binding self-check
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from cyber_lion.contracts.repository_expansion import (
+              FleetRegistryPinSnapshot,
+              RegistryMember,
+              RepositoryPinObservation,
+              materialize_registry_pin_snapshot,
+              registry_semantic_digest,
+          )
+          from cyber_lion.enterprise.github_repository_read_source import (
+              GitHubFleetPinSourceError,
+              GitHubFleetRegistryPinReadSource,
+              materialize_live_registry_pin_snapshot,
+          )
+          print("R2E3_SPECTRA_HARNESS_IMPORT_BINDING=PASS")
+          PY
+
       - name: Run R2E3 adversarial mutation harness
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -49,26 +69,33 @@ jobs:
           import copy
           import inspect
           import json
-          import os
           from dataclasses import fields
           from pathlib import Path
 
           from cyber_lion.contracts.repository_expansion import (
               FleetRegistryPinSnapshot,
+              RegistryMember,
               RepositoryPinObservation,
               materialize_registry_pin_snapshot,
-              parse_registry_payload,
               registry_semantic_digest,
           )
           from cyber_lion.enterprise.github_repository_read_source import (
-              GitHubFleetRegistryPinLiveSource,
-              GitHubReadError,
-              build_fleet_registry_pin_live_source_from_environment,
+              GitHubFleetPinSourceError,
+              GitHubFleetRegistryPinReadSource,
+              GitHubReadSourceError,
+              HttpResponse,
+              UrllibReadOnlyTransport,
+              _materialize_live_registry_pin_snapshot_with_source,
+              materialize_live_registry_pin_snapshot,
           )
 
           REGISTRY_PATH = Path('cyber_lion/registry/repositories.json')
-          canonical = REGISTRY_PATH.read_text(encoding='utf-8')
-          registry = json.loads(canonical)
+          canonical = REGISTRY_PATH.read_bytes()
+          registry = json.loads(canonical.decode('utf-8'))
+          members = tuple(
+              RegistryMember(item['id'], item['default_branch']).validate()
+              for item in registry['repositories']
+          )
           mutations = []
 
           def killed(mid, description):
@@ -79,153 +106,329 @@ jobs:
               print(f'{mid}=SURVIVED')
               mutations.append((mid, False, description))
 
-          def expect_raises(mid, fn, description):
+          def expect_raises(mid, fn, description, exc_type=Exception):
               try:
                   fn()
-              except Exception:
+              except exc_type:
                   killed(mid, description)
+              except Exception as exc:
+                  print(f'{mid}=HARNESS_ERROR:{type(exc).__name__}:{exc}')
+                  raise
               else:
                   survived(mid, description)
 
-          # Public canonical entrypoint must accept only registry_payload; callers cannot inject pins.
-          sig = inspect.signature(GitHubFleetRegistryPinLiveSource.snapshot)
-          params = tuple(sig.parameters)
-          assert params in (('self', 'registry_payload'), ('registry_payload',)), params
+          class FakeTransport:
+              def __init__(self, responses):
+                  self.responses = list(responses)
+                  self.calls = []
+
+              def get(self, url, *, headers, timeout):
+                  self.calls.append((url, dict(headers), timeout))
+                  if not self.responses:
+                      raise AssertionError('unexpected HTTP call')
+                  return self.responses.pop(0)
+
+          def response(value, status=200):
+              return HttpResponse(
+                  status=status,
+                  headers={},
+                  body=json.dumps(value).encode('utf-8'),
+              )
+
+          member_pairs = tuple((m.repository, m.default_branch) for m in members)
+
+          class FakeFleetSource:
+              def __init__(self, drift_repository=None, drift_kind=None):
+                  self.index = {
+                      repository: index
+                      for index, (repository, _) in enumerate(member_pairs, start=1)
+                  }
+                  self.head_reads = {}
+                  self.drift_repository = drift_repository
+                  self.drift_kind = drift_kind
+
+              def expected(self, repository):
+                  index = self.index[repository]
+                  return f'{index:040x}', f'{index + 100:040x}'
+
+              def read_default_head(self, repository, default_branch):
+                  expected_branch = dict(member_pairs)[repository]
+                  if default_branch != expected_branch:
+                      raise AssertionError('default branch substitution reached source')
+                  count = self.head_reads.get(repository, 0) + 1
+                  self.head_reads[repository] = count
+                  head, tree = self.expected(repository)
+                  if repository == self.drift_repository and count == 2:
+                      if self.drift_kind == 'head':
+                          head = 'f' * 40
+                      elif self.drift_kind == 'tree':
+                          tree = 'e' * 40
+                  return head, tree
+
+              def manifest_present(self, repository, head):
+                  expected_head, _ = self.expected(repository)
+                  if head != expected_head:
+                      raise AssertionError('manifest read not bound to first-pass head')
+                  return repository != 'DonkeyJJLove/writeups'
+
+          # M01-M04: canonical public entrypoint accepts registry bytes only.
+          signature = inspect.signature(materialize_live_registry_pin_snapshot)
+          params = tuple(signature.parameters)
+          assert params == ('registry_payload',), params
+          forbidden_signature = {
+              'repository', 'default_branch', 'head', 'tree', 'manifest_present',
+              'source_ref', 'observations', 'api_origin', 'api_base', 'url',
+          }
+          assert forbidden_signature.isdisjoint(signature.parameters)
           killed('M01', 'caller synthetic head injection unrepresentable')
           killed('M02', 'caller synthetic tree injection unrepresentable')
           killed('M03', 'caller manifest_present injection unrepresentable')
           killed('M04', 'caller source_ref injection unrepresentable')
 
-          # Registry substitution/missing/extra/default branch changes must fail before live reads.
+          # M05-M08: any noncanonical registry mutation fails before live observation.
           def altered_registry(mutator):
               payload = copy.deepcopy(registry)
               mutator(payload)
-              return json.dumps(payload, sort_keys=True, separators=(',', ':'))
+              return json.dumps(
+                  payload,
+                  sort_keys=True,
+                  separators=(',', ':'),
+              ).encode('utf-8')
 
-          source = build_fleet_registry_pin_live_source_from_environment()
+          expect_raises(
+              'M05',
+              lambda: materialize_live_registry_pin_snapshot(altered_registry(
+                  lambda p: p['repositories'][0].__setitem__('id', 'Other/example')
+              )),
+              'non-registry repository substitution',
+              GitHubFleetPinSourceError,
+          )
+          expect_raises(
+              'M06',
+              lambda: materialize_live_registry_pin_snapshot(altered_registry(
+                  lambda p: p['repositories'][0].__setitem__('default_branch', 'definitely-not-canonical')
+              )),
+              'default branch substitution',
+              GitHubFleetPinSourceError,
+          )
+          expect_raises(
+              'M07',
+              lambda: materialize_live_registry_pin_snapshot(altered_registry(
+                  lambda p: p['repositories'].pop()
+              )),
+              'missing registry member',
+              GitHubFleetPinSourceError,
+          )
+          expect_raises(
+              'M08',
+              lambda: materialize_live_registry_pin_snapshot(altered_registry(
+                  lambda p: p['repositories'].append({
+                      **p['repositories'][0],
+                      'id': 'Other/example',
+                  })
+              )),
+              'extra registry member',
+              GitHubFleetPinSourceError,
+          )
 
-          expect_raises('M05', lambda: source.snapshot(altered_registry(
-              lambda p: p['repositories'].__setitem__(0, {**p['repositories'][0], 'repository':'Other/example'})
-          )), 'non-registry repository substitution')
-          expect_raises('M06', lambda: source.snapshot(altered_registry(
-              lambda p: p['repositories'][0].__setitem__('default_branch', 'definitely-not-canonical')
-          )), 'default branch substitution')
-          expect_raises('M07', lambda: source.snapshot(altered_registry(
-              lambda p: p['repositories'].pop()
-          )), 'missing registry member')
-          expect_raises('M08', lambda: source.snapshot(altered_registry(
-              lambda p: p['repositories'].append({'repository':'Other/example','default_branch':'main'})
-          )), 'extra registry member')
-
-          # Structural transport invariants: canonical fixed HTTPS GitHub API, GET-only, redirect-denying.
-          src_text = Path('cyber_lion/enterprise/github_repository_read_source.py').read_text(encoding='utf-8')
-          if 'HTTPRedirectHandler' in src_text and 'redirect' in src_text.lower():
-              killed('M09', 'redirect acceptance blocked by redirect-denying transport')
+          # M09: redirect following is structurally disabled.
+          handler = UrllibReadOnlyTransport._NoRedirect()
+          if handler.redirect_request(None, None, 302, 'Found', {}, 'https://api.github.com/x') is None:
+              killed('M09', 'HTTP redirect acceptance denied')
           else:
-              survived('M09', 'redirect denial marker absent')
+              survived('M09', 'redirect handler returned a follow request')
 
-          init_sig = inspect.signature(GitHubFleetRegistryPinLiveSource)
-          if 'api_origin' not in init_sig.parameters and 'api_base' not in init_sig.parameters:
-              killed('M10', 'api origin substitution unrepresentable')
+          # M10: caller cannot select API origin.
+          init_signature = inspect.signature(GitHubFleetRegistryPinReadSource)
+          if 'api_origin' not in init_signature.parameters and 'api_base' not in init_signature.parameters:
+              killed('M10', 'API origin substitution unrepresentable')
           else:
-              survived('M10', 'api origin appears caller-selectable')
+              survived('M10', 'API origin parameter exposed')
 
-          canonical_origin_markers = ('https://api.github.com', 'api.github.com')
-          if any(m in src_text for m in canonical_origin_markers):
-              killed('M11', 'noncanonical scheme/host/userinfo/port denied by fixed origin boundary')
+          # M11: concrete transport rejects noncanonical scheme/host/userinfo/port before network I/O.
+          transport = UrllibReadOnlyTransport()
+          bad_urls = (
+              'http://api.github.com/x',
+              'https://evil.example/x',
+              'https://user@api.github.com/x',
+              'https://api.github.com:444/x',
+          )
+          denied = 0
+          for url in bad_urls:
+              try:
+                  transport.get(url, headers={}, timeout=1)
+              except GitHubReadSourceError:
+                  denied += 1
+          if denied == len(bad_urls):
+              killed('M11', 'noncanonical URL scheme/host/userinfo/port denied')
           else:
-              survived('M11', 'canonical origin marker absent')
+              survived('M11', f'noncanonical URL denial incomplete: {denied}/{len(bad_urls)}')
 
-          public_methods = {name for name, value in inspect.getmembers(GitHubFleetRegistryPinLiveSource, inspect.isfunction) if not name.startswith('_')}
-          if not ({'post','put','patch','delete'} & public_methods):
+          # M12: concrete fleet source exposes no mutation verb.
+          public_methods = {
+              name
+              for name, value in inspect.getmembers(
+                  GitHubFleetRegistryPinReadSource,
+                  inspect.isfunction,
+              )
+              if not name.startswith('_')
+          }
+          if not ({'post', 'put', 'patch', 'delete'} & public_methods):
               killed('M12', 'non-GET transport method unrepresentable')
           else:
               survived('M12', 'mutating public method exposed')
 
-          # Manifest failures: only 404 may mean absence; other status errors must fail closed.
-          tests_text = Path('cyber_lion/tests/test_fleet_registry_pin_live_source.py').read_text(encoding='utf-8')
-          if '403' in tests_text and '404' in tests_text:
-              killed('M13', 'manifest 403 is not absence')
-          else:
-              survived('M13', '403 negative coverage absent')
-          if '500' in tests_text and '404' in tests_text:
-              killed('M14', 'manifest 500 is not absence')
-          else:
-              survived('M14', '500 negative coverage absent')
+          head = '1' * 40
 
-          if 'manifest' in src_text.lower() and 'head' in src_text.lower():
+          # M13-M14: only 404 may mean manifest absence.
+          expect_raises(
+              'M13',
+              lambda: GitHubFleetRegistryPinReadSource(
+                  token='x',
+                  transport=FakeTransport([response({'message': 'Forbidden'}, status=403)]),
+              ).manifest_present('DonkeyJJLove/example', head),
+              'manifest 403 is not absence',
+              GitHubFleetPinSourceError,
+          )
+          expect_raises(
+              'M14',
+              lambda: GitHubFleetRegistryPinReadSource(
+                  token='x',
+                  transport=FakeTransport([response({'message': 'Server Error'}, status=500)]),
+              ).manifest_present('DonkeyJJLove/example', head),
+              'manifest 500 is not absence',
+              GitHubFleetPinSourceError,
+          )
+
+          # M15: manifest request is bound to the exact immutable observed head.
+          manifest_transport = FakeTransport([response({'name': 'cyber-lion.repository.json'})])
+          manifest_source = GitHubFleetRegistryPinReadSource(token='x', transport=manifest_transport)
+          assert manifest_source.manifest_present('DonkeyJJLove/example', head) is True
+          manifest_url = manifest_transport.calls[0][0]
+          expected_manifest_url = (
+              'https://api.github.com/repos/DonkeyJJLove/example/contents/'
+              f'cyber-lion.repository.json?ref={head}'
+          )
+          if manifest_url == expected_manifest_url:
               killed('M15', 'manifest read bound to immutable observed head')
           else:
-              survived('M15', 'manifest/head binding marker absent')
+              survived('M15', f'manifest URL not exact-head-bound: {manifest_url}')
 
-          if 'git/commits' in src_text or '/commits/' in src_text:
-              killed('M16', 'tree is derived from exact head commit')
+          # M16: tree comes from the git commit object of the exact branch head.
+          tree = '2' * 40
+          commit_transport = FakeTransport([
+              response({'commit': {'sha': head}}),
+              response({'tree': {'sha': tree}}),
+          ])
+          commit_source = GitHubFleetRegistryPinReadSource(token='x', transport=commit_transport)
+          observed = commit_source.read_default_head('DonkeyJJLove/example', 'main')
+          assert observed == (head, tree)
+          commit_url = commit_transport.calls[1][0]
+          if commit_url == f'https://api.github.com/repos/DonkeyJJLove/example/git/commits/{head}':
+              killed('M16', 'tree derived from exact head commit')
           else:
-              survived('M16', 'exact head commit tree read marker absent')
+              survived('M16', f'tree lookup not bound to exact head: {commit_url}')
 
-          # Explicit race tests in targeted contract.
-          if 'test_head_drift_during_full_sweep_is_denied' in tests_text:
-              killed('M17', 'fleet head drift between sweeps denied')
-          else:
-              survived('M17', 'head drift test absent')
-          if 'test_tree_drift_during_full_sweep_is_denied' in tests_text:
-              killed('M18', 'fleet tree drift between sweeps denied')
-          else:
-              survived('M18', 'tree drift test absent')
+          # M17-M18: second full-fleet sweep rejects head or tree drift.
+          expect_raises(
+              'M17',
+              lambda: _materialize_live_registry_pin_snapshot_with_source(
+                  canonical,
+                  source=FakeFleetSource(
+                      drift_repository=member_pairs[0][0],
+                      drift_kind='head',
+                  ),
+              ),
+              'fleet head drift between sweeps denied',
+              GitHubFleetPinSourceError,
+          )
+          expect_raises(
+              'M18',
+              lambda: _materialize_live_registry_pin_snapshot_with_source(
+                  canonical,
+                  source=FakeFleetSource(
+                      drift_repository=member_pairs[1][0],
+                      drift_kind='tree',
+                  ),
+              ),
+              'fleet tree drift between sweeps denied',
+              GitHubFleetPinSourceError,
+          )
 
-          forbidden_output = {'health','dependencies','dependents','authority','gate0','result','credentials','token'}
-          snapshot_fields = {f.name for f in fields(FleetRegistryPinSnapshot)}
-          if not (snapshot_fields & forbidden_output):
+          # M19: output contracts cannot promote health/dependency/authority state.
+          forbidden_output = {
+              'health', 'build_result', 'test_result', 'failure_classification',
+              'dependencies', 'dependents', 'authority', 'gate0', 'result',
+              'credentials', 'token',
+          }
+          snapshot_fields = {field.name for field in fields(FleetRegistryPinSnapshot)}
+          observation_fields = {field.name for field in fields(RepositoryPinObservation)}
+          if forbidden_output.isdisjoint(snapshot_fields | observation_fields):
               killed('M19', 'output cannot promote health/dependencies/authority')
           else:
-              survived('M19', f'forbidden output fields present: {snapshot_fields & forbidden_output}')
+              survived('M19', f'forbidden output fields present: {forbidden_output & (snapshot_fields | observation_fields)}')
 
-          # Token must not be a snapshot/observation field or source repr-visible semantic output.
-          observation_fields = {f.name for f in fields(RepositoryPinObservation)}
-          if 'token' not in observation_fields and 'credentials' not in observation_fields and 'token' not in snapshot_fields:
-              killed('M20', 'credential/token output not representable in contracts')
+          # M20: token/credential output is not representable and source repr does not reveal token.
+          secret = 'spectra-control-secret-token'
+          source_repr = repr(GitHubFleetRegistryPinReadSource(
+              token=secret,
+              transport=FakeTransport([]),
+          ))
+          if (
+              'token' not in observation_fields
+              and 'credentials' not in observation_fields
+              and 'token' not in snapshot_fields
+              and secret not in source_repr
+          ):
+              killed('M20', 'token or credential exposure not representable')
           else:
-              survived('M20', 'credential-like field exposed')
+              survived('M20', 'credential/token exposure surface detected')
 
-          # Positive controls.
-          members = parse_registry_payload(canonical)
-          branches = {m.default_branch for m in members}
+          # Positive controls: exact 10-member mixed-branch registry and frozen semantic digest.
+          branches = {member.default_branch for member in members}
           assert len(members) == 10
           assert branches == {'main', 'master'}
           print('MIXED_MASTER_MAIN_REGISTRY=PASS')
-          print(f'R2E2_REGISTRY_SEMANTIC_DIGEST={registry_semantic_digest(members)}')
-          assert registry_semantic_digest(members) == '78dbb678bbb2189f69d0ba0132869e34af0d2d5033c909a037f4bc6308d5597c'
+          registry_digest = registry_semantic_digest(canonical)
+          print(f'R2E2_REGISTRY_SEMANTIC_DIGEST={registry_digest}')
+          assert registry_digest == '78dbb678bbb2189f69d0ba0132869e34af0d2d5033c909a037f4bc6308d5597c'
           print('R2E2_REGISTRY_SEMANTIC_DIGEST_PRESERVED=PASS')
 
-          # Existing deterministic materializer control using stable synthetic evidence.
+          # Existing R2E2 deterministic materializer remains order-independent.
           observations = tuple(
               RepositoryPinObservation(
-                  repository=m.repository,
-                  default_branch=m.default_branch,
-                  head=(format(i + 1, '040x'))[-40:],
-                  tree=(format(i + 101, '040x'))[-40:],
-                  manifest_present=(m.repository != 'DonkeyJJLove/writeups'),
-                  source_ref=f'control:{m.repository}:{m.default_branch}:{i}',
+                  repository=member.repository,
+                  default_branch=member.default_branch,
+                  head=(format(index + 1, '040x'))[-40:],
+                  tree=(format(index + 101, '040x'))[-40:],
+                  manifest_present=(member.repository != 'DonkeyJJLove/writeups'),
+                  source_ref=f'control:{member.repository}:{member.default_branch}:{index}',
               )
-              for i, m in enumerate(members)
+              for index, member in enumerate(members)
           )
           s1 = materialize_registry_pin_snapshot(canonical, observations)
           s2 = materialize_registry_pin_snapshot(canonical, tuple(reversed(observations)))
-          assert s1.snapshot_digest == s2.snapshot_digest
+          assert s1.snapshot_digest() == s2.snapshot_digest()
           print('R2E2_SNAPSHOT_DETERMINISM_PRESERVED=PASS')
 
-          # Live positive control: two independent full sweeps must agree when remote heads remain stable.
-          live1 = source.snapshot(canonical)
-          live2 = source.snapshot(canonical)
-          assert live1.snapshot_digest == live2.snapshot_digest
-          assert live1.registry_digest == '78dbb678bbb2189f69d0ba0132869e34af0d2d5033c909a037f4bc6308d5597c'
-          assert len(live1.repositories) == 10
-          writeups = [r for r in live1.repositories if r.repository == 'DonkeyJJLove/writeups']
-          assert len(writeups) == 1 and writeups[0].manifest_present is False
+          # Two independent live sweeps must agree while remote default heads remain stable.
+          live1 = materialize_live_registry_pin_snapshot(canonical)
+          live2 = materialize_live_registry_pin_snapshot(canonical)
+          assert live1.snapshot_digest() == live2.snapshot_digest()
+          assert live1.registry_digest == registry_digest
+          assert len(live1.members) == 10
+          assert len(live1.observations) == 10
+          writeups = [
+              observation
+              for observation in live1.observations
+              if observation.repository == 'DonkeyJJLove/writeups'
+          ]
+          assert len(writeups) == 1
+          assert writeups[0].manifest_present is False
           print('SAME_INPUT_SAME_LIVE_SNAPSHOT=PASS')
           print('WRITEUPS_MANIFEST_ABSENCE_PRESERVED=PASS')
           print(f'LIVE_REGISTRY_DIGEST={live1.registry_digest}')
-          print(f'LIVE_SNAPSHOT_DIGEST={live1.snapshot_digest}')
+          print(f'LIVE_SNAPSHOT_DIGEST={live1.snapshot_digest()}')
 
           total = len(mutations)
           rejected = sum(1 for _, ok, _ in mutations if ok)
@@ -255,7 +458,12 @@ jobs:
           from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
           from cyber_lion.enterprise.host_authority_separation import _production_path
 
-          raw = subprocess.run(['git','ls-files','-z'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+          raw = subprocess.run(
+              ['git', 'ls-files', '-z'],
+              check=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          ).stdout
           sources = {}
           for item in raw.split(b'\0'):
               if not item:
@@ -263,14 +471,33 @@ jobs:
               path = item.decode()
               if _production_path(path):
                   sources[path] = Path(path).read_text()
-          revision = subprocess.run(['git','rev-parse','HEAD'], check=True, capture_output=True, text=True).stdout.strip()
-          tree = subprocess.run(['git','write-tree'], check=True, capture_output=True, text=True).stdout.strip()
-          inventory = EffectSurfaceScanner().scan(repository='DonkeyJJLove/ai_platform', revision=revision, tree_digest=tree, sources=sources)
-          values = (len(sources), len(inventory.surfaces), len(inventory.unclassified_refs))
+          revision = subprocess.run(
+              ['git', 'rev-parse', 'HEAD'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          tree = subprocess.run(
+              ['git', 'write-tree'],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          inventory = EffectSurfaceScanner().scan(
+              repository='DonkeyJJLove/ai_platform',
+              revision=revision,
+              tree_digest=tree,
+              sources=sources,
+          )
+          values = (
+              len(sources),
+              len(inventory.surfaces),
+              len(inventory.unclassified_refs),
+          )
           print(f'SOURCE_COUNT={values[0]}')
           print(f'EFFECT_SURFACE_COUNT={values[1]}')
           print(f'UNCLASSIFIED_COUNT={values[2]}')
-          if values != (241,225,5):
+          if values != (241, 225, 5):
               raise SystemExit(f'R2E3_INVENTORY_DRIFT={values}')
           print('INVENTORY_REFREEZE=PASS')
           PY
