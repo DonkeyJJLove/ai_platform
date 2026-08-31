@@ -1,0 +1,194 @@
+name: R2E2 Post-Merge Literal Receipt
+
+on:
+  push:
+    branches:
+      - verification/r2e2-post-merge-receipt-24e788e2
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  materialize-receipt:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact merge
+        uses: actions/checkout@v6
+        with:
+          ref: 24e788e2a03aecdb5563b6710b89156b182746cf
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Bind exact merge identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_HEAD='24e788e2a03aecdb5563b6710b89156b182746cf'
+          EXPECTED_TREE='79e781e722bb8d9f08be674b4e6816c31cf4169c'
+          EXPECTED_PARENT_1='03e8c3fcd544533e2108ae798ba0b54f30a649ef'
+          EXPECTED_PARENT_2='c16f7dee4b165d2b1dd1c314b97e7904e628cabf'
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          ACTUAL_TREE="$(git rev-parse HEAD^{tree})"
+          mapfile -t PARENTS < <(git show -s --format='%P' HEAD | tr ' ' '\n')
+          test "$ACTUAL_HEAD" = "$EXPECTED_HEAD"
+          test "$ACTUAL_TREE" = "$EXPECTED_TREE"
+          test "${#PARENTS[@]}" -eq 2
+          test "${PARENTS[0]}" = "$EXPECTED_PARENT_1"
+          test "${PARENTS[1]}" = "$EXPECTED_PARENT_2"
+          echo "CHECKED_OUT_HEAD=$ACTUAL_HEAD"
+          echo "MERGE_TREE=$ACTUAL_TREE"
+          echo "PARENT_1=${PARENTS[0]}"
+          echo "PARENT_2=${PARENTS[1]}"
+          echo 'MERGE_COMMIT_OBJECT_BINDING=PASS'
+          echo 'CANDIDATE_TREE_PRESERVATION=PASS'
+
+      - name: Bind live master PR and Bandit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          repo = 'DonkeyJJLove/ai_platform'
+          expected_merge = '24e788e2a03aecdb5563b6710b89156b182746cf'
+          expected_tree = '79e781e722bb8d9f08be674b4e6816c31cf4169c'
+          token = os.environ['GH_TOKEN']
+
+          def get(path):
+              req = urllib.request.Request(
+                  f'https://api.github.com/repos/{repo}/{path}',
+                  headers={
+                      'Accept': 'application/vnd.github+json',
+                      'Authorization': f'Bearer {token}',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'User-Agent': 'lion-r2e2-post-merge-receipt',
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=20) as response:
+                  return json.load(response)
+
+          branch = get('branches/master')
+          if branch['commit']['sha'] != expected_merge:
+              raise SystemExit('MASTER_HEAD_BINDING=FAIL')
+          if branch['commit']['commit']['tree']['sha'] != expected_tree:
+              raise SystemExit('MASTER_TREE_BINDING=FAIL')
+
+          pr = get('pulls/246')
+          if pr['state'] != 'closed' or pr.get('merged_at') is None:
+              raise SystemExit('PR_MERGE_BINDING=FAIL')
+          if pr.get('merge_commit_sha') != expected_merge:
+              raise SystemExit('PR_MERGE_SHA_BINDING=FAIL')
+
+          bandit = get('actions/runs/33369935763')
+          if bandit['head_sha'] != expected_merge:
+              raise SystemExit('BANDIT_HEAD_BINDING=FAIL')
+          if bandit['status'] != 'completed' or bandit['conclusion'] != 'success':
+              raise SystemExit('BANDIT_CONCLUSION_BINDING=FAIL')
+
+          print(f"MASTER_HEAD={branch['commit']['sha']}")
+          print(f"MASTER_TREE={branch['commit']['commit']['tree']['sha']}")
+          print('PR_STATE=CLOSED')
+          print('PR_MERGED=TRUE')
+          print('MERGE_BINDING=PASS')
+          print('BANDIT_RUN_ID=33369935763')
+          print(f"BANDIT_HEAD={bandit['head_sha']}")
+          print('BANDIT_SECURITY_SCAN=PASS')
+          PY
+
+      - name: T0 static
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q cyber_lion
+          echo 'T0_EXIT_CODE=0'
+          echo 'T0_RESULT=PASS'
+
+      - name: Full core and literal receipt
+        shell: bash
+        run: |
+          set -uo pipefail
+          python -m unittest discover -s cyber_lion/tests -p 'test_*.py' -v 2>&1 | tee /tmp/r2e2-full-core.log
+          TEST_EXIT=${PIPESTATUS[0]}
+          echo "FULL_TEST_EXIT_CODE=$TEST_EXIT"
+          test "$TEST_EXIT" -eq 0
+
+          COUNT="$(sed -nE 's/^Ran ([0-9]+) tests in .*$/\1/p' /tmp/r2e2-full-core.log | tail -n1)"
+          test -n "$COUNT"
+          test "$COUNT" = '1883'
+
+          OK_LINE="$(grep -E '^OK( \(.*\))?$' /tmp/r2e2-full-core.log | tail -n1)"
+          test -n "$OK_LINE"
+
+          SKIPPED="$(printf '%s\n' "$OK_LINE" | sed -nE 's/^OK \(skipped=([0-9]+)\)$/\1/p')"
+          if [ -z "$SKIPPED" ]; then SKIPPED=0; fi
+          test "$SKIPPED" = '1'
+
+          echo "FULL_TEST_COUNT=$COUNT"
+          echo "FULL_TEST_SKIPPED=$SKIPPED"
+          echo 'FULL_SUITE_OK=PASS'
+
+          INVENTORY_LINE="$(grep '^R9D8_EXACT_INVENTORY ' /tmp/r2e2-full-core.log | tail -n1)"
+          test -n "$INVENTORY_LINE"
+          export INVENTORY_JSON="${INVENTORY_LINE#R9D8_EXACT_INVENTORY }"
+          python - <<'PY'
+          import json
+          import os
+
+          value = json.loads(os.environ['INVENTORY_JSON'])
+          expected = {
+              'candidate_revision': '24e788e2a03aecdb5563b6710b89156b182746cf',
+              'candidate_tree': '79e781e722bb8d9f08be674b4e6816c31cf4169c',
+              'source_count': 241,
+              'surface_count': 225,
+              'unclassified_count': 5,
+          }
+          for key, wanted in expected.items():
+              if value.get(key) != wanted:
+                  raise SystemExit(f'{key.upper()}_BINDING=FAIL')
+          print(f"SOURCE_COUNT={value['source_count']}")
+          print(f"EFFECT_SURFACE_COUNT={value['surface_count']}")
+          print(f"UNCLASSIFIED_COUNT={value['unclassified_count']}")
+          print(f"INVENTORY_DIGEST={value['inventory_digest']}")
+          print(f"SCAN_DIGEST={value['scan_digest']}")
+          print('INVENTORY_REFREEZE=PASS')
+          PY
+
+      - name: Frozen inventory reproducer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          echo 'FROZEN_INVENTORY_TEST_EXIT_CODE=0'
+          echo 'FROZEN_INVENTORY_TEST=PASS'
+
+      - name: Emit terminal receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'R2E2_POST_MERGE_RECEIPT=PASS'
+          echo 'MERGE_SHA=24e788e2a03aecdb5563b6710b89156b182746cf'
+          echo 'MERGE_TREE=79e781e722bb8d9f08be674b4e6816c31cf4169c'
+          echo 'FULL_TEST_COUNT=1883'
+          echo 'FULL_TEST_EXIT_CODE=0'
+          echo 'FULL_TEST_SKIPPED=1'
+          echo 'FULL_SUITE_OK=PASS'
+          echo 'SOURCE_COUNT=241'
+          echo 'EFFECT_SURFACE_COUNT=225'
+          echo 'UNCLASSIFIED_COUNT=5'
+          echo 'INVENTORY_REFREEZE=PASS'
+          echo 'CYBER_LION_CORE=PASS'
+          echo 'BANDIT_SECURITY_SCAN=PASS'
+          echo 'MERGE_BINDING=PASS'
+          echo 'CANDIDATE_TREE_PRESERVATION=PASS'
+          echo 'NEXT=LION-EVOLUTION-R2E2-POST-MERGE-EVIDENCE-READBACK-R2'
