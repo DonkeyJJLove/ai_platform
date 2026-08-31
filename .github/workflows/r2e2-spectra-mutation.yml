@@ -1,0 +1,258 @@
+name: R2E2 SPECTRA Registry Pin Mutation
+
+on:
+  push:
+    branches:
+      - verification/r2e2-spectra-c16f7dee
+
+permissions:
+  contents: read
+
+jobs:
+  spectra-mutation:
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_HEAD: c16f7dee4b165d2b1dd1c314b97e7904e628cabf
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: c16f7dee4b165d2b1dd1c314b97e7904e628cabf
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Bind exact candidate
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          echo "EXPECTED_HEAD=${EXPECTED_HEAD}"
+          echo "CHECKED_OUT_HEAD=${ACTUAL_HEAD}"
+          test "${ACTUAL_HEAD}" = "${EXPECTED_HEAD}"
+          echo "EXACT_HEAD_BINDING=PASS"
+
+      - name: SPECTRA mutation campaign
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          from dataclasses import fields, replace
+          from pathlib import Path
+          import json
+
+          from cyber_lion.contracts.repository_expansion import (
+              FleetRegistryPinSnapshot,
+              RepositoryExpansionContractError,
+              RepositoryPinObservation,
+              materialize_registry_pin_snapshot,
+              registry_semantic_digest,
+          )
+
+          REGISTRY = Path('cyber_lion/registry/repositories.json').read_bytes()
+          PINS = (
+              ('DonkeyJJLove/ai_platform','master','03e8c3fcd544533e2108ae798ba0b54f30a649ef','d20a3a95564418d778a8bc5bd3ba1d1cebe81495',True),
+              ('DonkeyJJLove/chunk-chunk','master','b8657037e94787a103c99f1fbb3058341821ffd7','3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9',True),
+              ('DonkeyJJLove/glitchlab','master','329d670e53f3e4606f60eeb2f446eb34df3bb05d','653f7593e4c6f0478c2f85b48d3091d0faed7892',True),
+              ('DonkeyJJLove/HA2D','master','13ac2c760aa0c4f528addaacc782239c00e3890e','bc6c8a067074fead00b57d6c9f8f852f1fa74977',True),
+              ('DonkeyJJLove/hipotezy_nadawcze_LLM','main','569acad16f0ca8eb0c4e4522586914b57f5bf475','0c1f6d690a2bdae34f0ecd6c9afbb04933af220c',True),
+              ('DonkeyJJLove/mosaic_lab_pro.py','main','0ad23c8a9fb9f942e41ade83ecafa8f393e5d481','ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1',True),
+              ('DonkeyJJLove/sbom','main','86b92e9f7c3361d69e2322193441f4626f8205e7','8d7cc0e5b5025899d0889c4a5c17ac230681c4fb',True),
+              ('DonkeyJJLove/swarm','master','6aee0442d4b8a861989503ca55aac0c45f065afb','86830750c688e9e65d3eafc7232e89f20267c705',True),
+              ('DonkeyJJLove/SymulacjaKaskadySieciowej','main','2fa3b9f8285387d8f14e116901a671c4fcb75174','9c3fc13abab6ac22631615ac4ac72085bd84ded9',True),
+              ('DonkeyJJLove/writeups','master','005d12c4588259e069bce2ad67979b20d6a7874a','975004de618efdbdad6e49f08b105fc4e943cff2',False),
+          )
+
+          def observations():
+              return tuple(
+                  RepositoryPinObservation(
+                      repository=repo,
+                      default_branch=branch,
+                      head=head,
+                      tree=tree,
+                      manifest_present=manifest,
+                      source_ref=f'github-read:{repo}:{branch}:{head}:{tree}',
+                  ).validate()
+                  for repo, branch, head, tree, manifest in PINS
+              )
+
+          def reject(call):
+              try:
+                  call()
+              except RepositoryExpansionContractError:
+                  return True
+              return False
+
+          base_obs = observations()
+          base = materialize_registry_pin_snapshot(REGISTRY, base_obs)
+          results = {}
+
+          results['M01_MISSING_OBSERVATION'] = reject(
+              lambda: materialize_registry_pin_snapshot(REGISTRY, base_obs[:-1])
+          )
+          extra = RepositoryPinObservation('DonkeyJJLove/not-registered','main','a'*40,'b'*40,False,'github-read:extra')
+          results['M02_EXTRA_OBSERVATION'] = reject(
+              lambda: materialize_registry_pin_snapshot(REGISTRY, base_obs + (extra,))
+          )
+          results['M03_DUPLICATE_OBSERVATION'] = reject(
+              lambda: materialize_registry_pin_snapshot(REGISTRY, base_obs + (base_obs[0],))
+          )
+          branch_obs = (replace(base_obs[0], default_branch='main'),) + base_obs[1:]
+          results['M04_BRANCH_SUBSTITUTION'] = reject(
+              lambda: materialize_registry_pin_snapshot(REGISTRY, branch_obs)
+          )
+          results['M05_MALFORMED_HEAD'] = reject(
+              lambda: replace(base_obs[0], head='A'*40).validate()
+          )
+          results['M06_MALFORMED_TREE'] = reject(
+              lambda: replace(base_obs[0], tree='0'*39).validate()
+          )
+
+          head_obs = (replace(base_obs[0], head='f'*40),) + base_obs[1:]
+          head_mut = materialize_registry_pin_snapshot(REGISTRY, head_obs)
+          base_proj = {x.repository:x for x in base.registered_repositories()}
+          head_proj = {x.repository:x for x in head_mut.registered_repositories()}
+          results['M07_HEAD_SUBSTITUTION_BINDING'] = (
+              head_mut.snapshot_digest() != base.snapshot_digest()
+              and head_proj['DonkeyJJLove/ai_platform'].expected_head == 'f'*40
+              and base_proj['DonkeyJJLove/ai_platform'].expected_head != 'f'*40
+          )
+
+          tree_obs = (replace(base_obs[0], tree='e'*40),) + base_obs[1:]
+          tree_mut = materialize_registry_pin_snapshot(REGISTRY, tree_obs)
+          results['M08_TREE_SUBSTITUTION_BINDING'] = (
+              tree_mut.snapshot_digest() != base.snapshot_digest()
+              and {x.repository:x for x in tree_mut.registered_repositories()}['DonkeyJJLove/ai_platform'].expected_tree == 'e'*40
+          )
+
+          manifest_obs = tuple(
+              replace(x, manifest_present=True) if x.repository == 'DonkeyJJLove/writeups' else x
+              for x in base_obs
+          )
+          results['M09_MANIFEST_PROMOTION_CHANGES_BINDING'] = (
+              materialize_registry_pin_snapshot(REGISTRY, manifest_obs).snapshot_digest() != base.snapshot_digest()
+              and not next(x for x in base.observations if x.repository == 'DonkeyJJLove/writeups').manifest_present
+          )
+
+          source_obs = (replace(base_obs[0], source_ref='github-read:substituted'),) + base_obs[1:]
+          results['M10_SOURCE_REF_SUBSTITUTION_CHANGES_BINDING'] = (
+              materialize_registry_pin_snapshot(REGISTRY, source_obs).snapshot_digest() != base.snapshot_digest()
+          )
+
+          raw = json.loads(REGISTRY.decode('utf-8'))
+          duplicate = json.loads(REGISTRY.decode('utf-8'))
+          duplicate['repositories'].append(dict(duplicate['repositories'][0]))
+          results['M11_DUPLICATE_REGISTRY_MEMBER'] = reject(
+              lambda: registry_semantic_digest(json.dumps(duplicate).encode())
+          )
+          results['M12_DUPLICATE_JSON_KEY'] = reject(
+              lambda: registry_semantic_digest(b'{"schema_version":"1.0.0","schema_version":"1.0.0","generated_from":"x","repositories":[]}')
+          )
+          extra_root = json.loads(REGISTRY.decode('utf-8'))
+          extra_root['unexpected'] = True
+          results['M13_EXTRA_REGISTRY_ROOT_FIELD'] = reject(
+              lambda: registry_semantic_digest(json.dumps(extra_root).encode())
+          )
+          extra_member = json.loads(REGISTRY.decode('utf-8'))
+          extra_member['repositories'][0]['unexpected'] = True
+          results['M14_EXTRA_REGISTRY_MEMBER_FIELD'] = reject(
+              lambda: registry_semantic_digest(json.dumps(extra_member).encode())
+          )
+
+          reordered = json.loads(REGISTRY.decode('utf-8'))
+          reordered['repositories'] = list(reversed(reordered['repositories']))
+          reordered_bytes = json.dumps(reordered, separators=(',',':')).encode()
+          reordered_snapshot = materialize_registry_pin_snapshot(reordered_bytes, tuple(reversed(base_obs)))
+          results['M15_REGISTRY_AND_OBSERVATION_REORDER'] = (
+              registry_semantic_digest(reordered_bytes) == registry_semantic_digest(REGISTRY)
+              and reordered_snapshot.snapshot_digest() == base.snapshot_digest()
+          )
+
+          list_reordered = json.loads(REGISTRY.decode('utf-8'))
+          for member in list_reordered['repositories']:
+              member['roles'] = list(reversed(member['roles']))
+              member['layers'] = list(reversed(member['layers']))
+              member['disposition'] = list(reversed(member['disposition']))
+          list_reordered_bytes = json.dumps(list_reordered, separators=(',',':')).encode()
+          results['M16_SET_LIKE_MEMBER_LIST_REORDER'] = (
+              registry_semantic_digest(list_reordered_bytes) == registry_semantic_digest(REGISTRY)
+              and materialize_registry_pin_snapshot(list_reordered_bytes, base_obs).snapshot_digest() == base.snapshot_digest()
+          )
+
+          missing_registry = json.loads(REGISTRY.decode('utf-8'))
+          missing_registry['repositories'] = missing_registry['repositories'][:-1]
+          results['M17_REGISTRY_MEMBERSHIP_MISMATCH'] = reject(
+              lambda: materialize_registry_pin_snapshot(json.dumps(missing_registry).encode(), base_obs)
+          )
+
+          field_names = {f.name for f in fields(RepositoryPinObservation)}
+          forbidden = {'build_result','test_result','failure_classification','dependencies','dependents','authority','gate0','result','pass'}
+          results['M18_NO_HEALTH_AUTHORITY_PROMOTION_SURFACE'] = forbidden.isdisjoint(field_names)
+
+          projected = base.registered_repositories()
+          projected_by_repo = {x.repository:x for x in projected}
+          results['M19_REGISTERED_PROJECTION_EXACT'] = all(
+              projected_by_repo[o.repository].default_branch == o.default_branch
+              and projected_by_repo[o.repository].expected_head == o.head
+              and projected_by_repo[o.repository].expected_tree == o.tree
+              for o in base_obs
+          )
+
+          stale = materialize_registry_pin_snapshot(REGISTRY, head_obs)
+          results['M20_STALE_PIN_REPLAY_NOT_SAME_SNAPSHOT'] = (
+              stale.snapshot_digest() != base.snapshot_digest()
+              and stale.registry_digest == base.registry_digest
+          )
+
+          pairwise = {}
+          pairwise['MISSING_PLUS_BRANCH'] = reject(
+              lambda: materialize_registry_pin_snapshot(REGISTRY, branch_obs[:-1])
+          )
+          pairwise['DUPLICATE_PLUS_EXTRA'] = reject(
+              lambda: materialize_registry_pin_snapshot(REGISTRY, base_obs + (base_obs[0], extra))
+          )
+          pairwise['PIN_PLUS_MANIFEST'] = materialize_registry_pin_snapshot(
+              REGISTRY,
+              (replace(base_obs[0], head='f'*40),) + manifest_obs[1:],
+          ).snapshot_digest() != base.snapshot_digest()
+          pairwise['DOUBLE_REORDER'] = materialize_registry_pin_snapshot(
+              reordered_bytes,
+              tuple(reversed(base_obs)),
+          ).snapshot_digest() == base.snapshot_digest()
+
+          determinism = True
+          for _ in range(2):
+              again = materialize_registry_pin_snapshot(REGISTRY, base_obs)
+              determinism = determinism and again.snapshot_digest() == base.snapshot_digest()
+              determinism = determinism and again.canonical_dict() == base.canonical_dict()
+
+          for name, killed in results.items():
+              print(f'{name}={"KILLED" if killed else "SURVIVED"}')
+          print('CROSS_MUTATION_RESULT=' + ('PASS' if all(pairwise.values()) else 'FAIL'))
+          print('DETERMINISM_RESULT=' + ('PASS' if determinism else 'FAIL'))
+          print('TOTAL_MUTATIONS=' + str(len(results)))
+          killed_count = sum(1 for value in results.values() if value)
+          survivors = len(results) - killed_count
+          print('REJECTED_MUTATIONS=' + str(killed_count))
+          print('SURVIVING_MUTATIONS=' + str(survivors))
+          print(f'MUTATION_SCORE={killed_count/len(results):.6f}')
+          print('WRITEUPS_MANIFEST_PRESENT=' + str(next(x for x in base.observations if x.repository == 'DonkeyJJLove/writeups').manifest_present).upper())
+          print('REGISTRY_DIGEST=' + base.registry_digest)
+          print('SNAPSHOT_DIGEST=' + base.snapshot_digest())
+          if survivors or not all(pairwise.values()) or not determinism:
+              print('SPECTRA_MUTATION_STATUS=COUNTEREXAMPLE_FOUND')
+              raise SystemExit(1)
+          print('SPECTRA_MUTATION_STATUS=PASS')
+          PY
+
+      - name: Frozen production inventory
+        run: |
+          set -euo pipefail
+          python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+          echo "SOURCE_COUNT_EXPECTED=241"
+          echo "EFFECT_SURFACE_COUNT_EXPECTED=225"
+          echo "UNCLASSIFIED_COUNT_EXPECTED=5"
+          echo "INVENTORY_REFREEZE=PASS"
