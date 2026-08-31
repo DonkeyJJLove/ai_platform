@@ -16,12 +16,180 @@ jobs:
       - name: Emit literal checkout identity evidence
         shell: bash
         run: |
+          set -euo pipefail
+
+          require_sha40() {
+            local value="$1"
+            local label="$2"
+            if [[ ! "$value" =~ ^[0-9a-f]{40}$ ]]; then
+              printf '%s_INVALID=%s\n' "$label" "$value" >&2
+              exit 1
+            fi
+          }
+
+          resolve_live_sha() {
+            local branch="$1"
+            local label="$2"
+            local exact_ref="refs/heads/$branch"
+            local output
+            if ! output="$(git ls-remote --exit-code origin "$exact_ref")"; then
+              printf '%s_UNAVAILABLE=%s\n' "$label" "$exact_ref" >&2
+              exit 1
+            fi
+            if [ -z "$output" ] || [[ "$output" == *$'\n'* ]]; then
+              printf '%s_CARDINALITY_INVALID=%s\n' "$label" "$exact_ref" >&2
+              exit 1
+            fi
+            local sha resolved_ref extra
+            read -r sha resolved_ref extra <<< "$output"
+            if [ -n "${extra:-}" ] || [ "$resolved_ref" != "$exact_ref" ]; then
+              printf '%s_RESOLUTION_INVALID=%s\n' "$label" "$output" >&2
+              exit 1
+            fi
+            require_sha40 "$sha" "$label"
+            printf '%s\n' "$sha"
+          }
+
+          require_sha40 "$GITHUB_SHA" "GITHUB_SHA"
           ACTUAL_HEAD="$(git rev-parse HEAD)"
+          require_sha40 "$ACTUAL_HEAD" "CHECKED_OUT_HEAD"
           if [ "$ACTUAL_HEAD" != "$GITHUB_SHA" ]; then
             printf 'CHECKED_OUT_HEAD_MISMATCH actual=%s expected=%s\n' "$ACTUAL_HEAD" "$GITHUB_SHA" >&2
             exit 1
           fi
-          printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
+
+          if [ "${GITHUB_EVENT_NAME:-}" != "pull_request" ]; then
+            printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
+          else
+            mapfile -t EVENT_VALUES < <(python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          def sha40(value, label):
+              if type(value) is not str:
+                  raise SystemExit(f"{label} invalid")
+              if value != value.lower() or len(value) != 40 or any(ch not in "0123456789abcdef" for ch in value):
+                  raise SystemExit(f"{label} invalid")
+              return value
+
+          def branch(value, label):
+              if (
+                  type(value) is not str
+                  or not value
+                  or value != value.strip()
+                  or len(value) > 255
+                  or value.startswith(("-", "refs/"))
+              ):
+                  raise SystemExit(f"{label} invalid")
+              return value
+
+          event_path = os.environ.get("GITHUB_EVENT_PATH")
+          if type(event_path) is not str or not event_path:
+              raise SystemExit("GitHub event path unavailable")
+          try:
+              event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+          except (OSError, ValueError) as exc:
+              raise SystemExit("GitHub event payload invalid") from exc
+          pr = event.get("pull_request")
+          if type(pr) is not dict:
+              raise SystemExit("pull_request payload unavailable")
+          head = pr.get("head")
+          base = pr.get("base")
+          if type(head) is not dict or type(base) is not dict:
+              raise SystemExit("pull_request endpoint identity invalid")
+          print(sha40(head.get("sha"), "event head sha"))
+          print(sha40(base.get("sha"), "event base sha"))
+          print(branch(head.get("ref"), "event head ref"))
+          print(branch(base.get("ref"), "event base ref"))
+          PY
+            )
+            if [ "${#EVENT_VALUES[@]}" -ne 4 ]; then
+              printf 'PR_EVENT_IDENTITY_CARDINALITY_INVALID=%s\n' "${#EVENT_VALUES[@]}" >&2
+              exit 1
+            fi
+
+            EVENT_HEAD_SHA="${EVENT_VALUES[0]}"
+            EVENT_BASE_SHA="${EVENT_VALUES[1]}"
+            EVENT_HEAD_REF="${EVENT_VALUES[2]}"
+            EVENT_BASE_REF="${EVENT_VALUES[3]}"
+            require_sha40 "$EVENT_HEAD_SHA" "EVENT_HEAD_SHA"
+            require_sha40 "$EVENT_BASE_SHA" "EVENT_BASE_SHA"
+            if ! git check-ref-format --branch "$EVENT_HEAD_REF" >/dev/null 2>&1; then
+              printf 'EVENT_HEAD_REF_INVALID=%s\n' "$EVENT_HEAD_REF" >&2
+              exit 1
+            fi
+            if ! git check-ref-format --branch "$EVENT_BASE_REF" >/dev/null 2>&1; then
+              printf 'EVENT_BASE_REF_INVALID=%s\n' "$EVENT_BASE_REF" >&2
+              exit 1
+            fi
+
+            LIVE_BASE_SHA="$(resolve_live_sha "$EVENT_BASE_REF" "LIVE_BASE_SHA")"
+            LIVE_HEAD_SHA="$(resolve_live_sha "$EVENT_HEAD_REF" "LIVE_HEAD_SHA")"
+            if [ "$EVENT_BASE_SHA" != "$LIVE_BASE_SHA" ]; then
+              printf 'PR_BASE_DRIFT event=%s live=%s\n' "$EVENT_BASE_SHA" "$LIVE_BASE_SHA" >&2
+              exit 1
+            fi
+            if [ "$EVENT_HEAD_SHA" != "$LIVE_HEAD_SHA" ]; then
+              printf 'PR_HEAD_DRIFT event=%s live=%s\n' "$EVENT_HEAD_SHA" "$LIVE_HEAD_SHA" >&2
+              exit 1
+            fi
+
+            VERIFICATION_REF="refs/lion/r2e4-evidence-head"
+            git fetch --no-tags --depth=1 origin "refs/heads/${EVENT_HEAD_REF}:${VERIFICATION_REF}" >/dev/null 2>&1
+            CANDIDATE_HEAD="$(git rev-parse "${VERIFICATION_REF}^{commit}")"
+            require_sha40 "$CANDIDATE_HEAD" "CANDIDATE_HEAD"
+            if [ "$CANDIDATE_HEAD" != "$EVENT_HEAD_SHA" ]; then
+              printf 'PR_CANDIDATE_HEAD_MISMATCH event=%s fetched=%s\n' "$EVENT_HEAD_SHA" "$CANDIDATE_HEAD" >&2
+              exit 1
+            fi
+            PR_CANDIDATE_TREE="$(git rev-parse "${VERIFICATION_REF}^{tree}")"
+            require_sha40 "$PR_CANDIDATE_TREE" "PR_CANDIDATE_TREE"
+
+            PR_EXECUTION_CARRIER="$GITHUB_SHA"
+            PR_CHECKED_OUT_HEAD="$ACTUAL_HEAD"
+            PARENT_FIELD_COUNT="$(git rev-list --parents -n 1 HEAD | awk '{print NF}')"
+            if [ "$PARENT_FIELD_COUNT" != "3" ]; then
+              printf 'PR_EXECUTION_PARENT_CARDINALITY_INVALID=%s\n' "$PARENT_FIELD_COUNT" >&2
+              exit 1
+            fi
+            PR_EXECUTION_PARENT_1="$(git rev-parse 'HEAD^1')"
+            PR_EXECUTION_PARENT_2="$(git rev-parse 'HEAD^2')"
+            PR_EXECUTION_TREE="$(git rev-parse 'HEAD^{tree}')"
+            require_sha40 "$PR_EXECUTION_CARRIER" "PR_EXECUTION_CARRIER"
+            require_sha40 "$PR_CHECKED_OUT_HEAD" "PR_CHECKED_OUT_HEAD"
+            require_sha40 "$PR_EXECUTION_PARENT_1" "PR_EXECUTION_PARENT_1"
+            require_sha40 "$PR_EXECUTION_PARENT_2" "PR_EXECUTION_PARENT_2"
+            require_sha40 "$PR_EXECUTION_TREE" "PR_EXECUTION_TREE"
+
+            if [ "$PR_EXECUTION_CARRIER" != "$PR_CHECKED_OUT_HEAD" ]; then
+              printf 'PR_EXECUTION_CARRIER_MISMATCH carrier=%s checkout=%s\n' "$PR_EXECUTION_CARRIER" "$PR_CHECKED_OUT_HEAD" >&2
+              exit 1
+            fi
+            if [ "$PR_EXECUTION_PARENT_1" != "$EVENT_BASE_SHA" ]; then
+              printf 'PR_EXECUTION_PARENT_1_MISMATCH actual=%s expected=%s\n' "$PR_EXECUTION_PARENT_1" "$EVENT_BASE_SHA" >&2
+              exit 1
+            fi
+            if [ "$PR_EXECUTION_PARENT_2" != "$EVENT_HEAD_SHA" ]; then
+              printf 'PR_EXECUTION_PARENT_2_MISMATCH actual=%s expected=%s\n' "$PR_EXECUTION_PARENT_2" "$EVENT_HEAD_SHA" >&2
+              exit 1
+            fi
+            if [ "$PR_EXECUTION_TREE" != "$PR_CANDIDATE_TREE" ]; then
+              printf 'PR_EXECUTION_TREE_MISMATCH execution=%s candidate=%s\n' "$PR_EXECUTION_TREE" "$PR_CANDIDATE_TREE" >&2
+              exit 1
+            fi
+
+            printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
+            printf 'PR_CANDIDATE_IDENTITY=%s\n' "$EVENT_HEAD_SHA"
+            printf 'PR_BASE_IDENTITY=%s\n' "$EVENT_BASE_SHA"
+            printf 'PR_EXECUTION_CARRIER=%s\n' "$PR_EXECUTION_CARRIER"
+            printf 'PR_CHECKED_OUT_HEAD=%s\n' "$PR_CHECKED_OUT_HEAD"
+            printf 'PR_EXECUTION_PARENT_1=%s\n' "$PR_EXECUTION_PARENT_1"
+            printf 'PR_EXECUTION_PARENT_2=%s\n' "$PR_EXECUTION_PARENT_2"
+            printf 'PR_CANDIDATE_TREE=%s\n' "$PR_CANDIDATE_TREE"
+            printf 'PR_EXECUTION_TREE=%s\n' "$PR_EXECUTION_TREE"
+            printf '%s\n' 'DUAL_CARRIER_BINDING=PASS'
+          fi
       - uses: actions/setup-python@v6
         with: {python-version: "3.11"}
       - name: Parse JSON schemas
