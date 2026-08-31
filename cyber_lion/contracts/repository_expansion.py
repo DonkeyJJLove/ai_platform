@@ -573,27 +573,41 @@ def _parse_registry_payload(payload: bytes) -> tuple[dict[str, Any], tuple[Regis
         raise RepositoryExpansionContractError("registry root shape invalid")
     if value.get("schema_version") != REGISTRY_SCHEMA_VERSION:
         raise RepositoryExpansionContractError("registry schema_version invalid")
-    _registry_text(value.get("generated_from"), "generated_from")
+    generated_from = _registry_text(value.get("generated_from"), "generated_from")
     repositories = value.get("repositories")
     if not isinstance(repositories, list) or not repositories:
         raise RepositoryExpansionContractError("registry repositories required")
 
     members: list[RegistryMember] = []
+    canonical_repositories: list[dict[str, Any]] = []
     for item in repositories:
         if not isinstance(item, dict) or set(item) != _REGISTRY_MEMBER_KEYS:
             raise RepositoryExpansionContractError("registry member shape invalid")
         repository = _require_repository(item.get("id"), "registry repository")
         default_branch = _require_identifier(item.get("default_branch"), "default_branch")
-        _registry_string_list(item.get("roles"), "roles")
-        _registry_string_list(item.get("layers"), "layers")
-        _registry_text(item.get("maturity"), "maturity")
-        _registry_string_list(item.get("disposition"), "disposition")
+        roles = _registry_string_list(item.get("roles"), "roles")
+        layers = _registry_string_list(item.get("layers"), "layers")
+        maturity = _registry_text(item.get("maturity"), "maturity")
+        disposition = _registry_string_list(item.get("disposition"), "disposition")
         members.append(RegistryMember(repository, default_branch).validate())
+        canonical_repositories.append({
+            "id": repository,
+            "default_branch": default_branch,
+            "roles": sorted(roles),
+            "layers": sorted(layers),
+            "maturity": maturity,
+            "disposition": sorted(disposition),
+        })
 
     ids = [item.repository for item in members]
     if len(ids) != len(set(ids)):
         raise RepositoryExpansionContractError("duplicate repository in registry")
-    return value, tuple(sorted(members, key=lambda item: item.repository))
+    canonical_value = {
+        "schema_version": REGISTRY_SCHEMA_VERSION,
+        "generated_from": generated_from,
+        "repositories": sorted(canonical_repositories, key=lambda item: item["id"]),
+    }
+    return canonical_value, tuple(sorted(members, key=lambda item: item.repository))
 
 
 def registry_semantic_digest(payload: bytes) -> str:
