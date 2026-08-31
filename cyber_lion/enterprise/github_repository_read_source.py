@@ -403,7 +403,7 @@ class GitHubFleetRegistryPinReadSource:
         commit = _object(branch_value.get("commit"), "fleet branch commit")
         head = _sha(commit.get("sha"), "fleet default head")
         commit_value = self._request_object(
-            f"/repos/{repo}/git/commits/{head}"),
+            f"/repos/{repo}/git/commits/{head}",
             "fleet commit response",
         )
         tree = _object(commit_value.get("tree"), "fleet commit tree")
