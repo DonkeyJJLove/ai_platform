@@ -1,0 +1,22 @@
+[Unit]
+Description=Cyber-Lion LAB-DEBIAN Trusted Control Plane
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cyber-lion
+Group=cyber-lion
+WorkingDirectory=/opt/cyber-lion-control-plane
+EnvironmentFile=/etc/cyber-lion-control-plane/runtime.env
+ExecStart=/opt/cyber-lion-control-plane/.venv/bin/python -m cyber_lion.enterprise.merge_authority_control_plane
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/cyber-lion-control-plane
+
+[Install]
+WantedBy=multi-user.target
