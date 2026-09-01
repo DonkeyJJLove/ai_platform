@@ -148,14 +148,74 @@ jobs:
 
             PR_EXECUTION_CARRIER="$GITHUB_SHA"
             PR_CHECKED_OUT_HEAD="$ACTUAL_HEAD"
-            PARENT_FIELD_COUNT="$(git rev-list --parents -n 1 HEAD | awk '{print NF}')"
-            if [ "$PARENT_FIELD_COUNT" != "3" ]; then
-              printf 'PR_EXECUTION_PARENT_CARDINALITY_INVALID=%s\n' "$PARENT_FIELD_COUNT" >&2
+            mapfile -t COMMIT_IDENTITY < <(python3 - <<'PY'
+          import subprocess
+
+          proc = subprocess.run(
+              ["git", "cat-file", "-p", "HEAD"],
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+              check=False,
+          )
+
+          if proc.returncode:
+              raise SystemExit("synthetic merge commit object unavailable")
+
+          raw = proc.stdout
+          separator = raw.find(b"\n\n")
+
+          if separator < 0:
+              raise SystemExit("synthetic merge commit header invalid")
+
+          header = raw[:separator]
+
+          trees = []
+          parents = []
+
+          for line in header.splitlines():
+              if line.startswith(b"tree "):
+                  trees.append(line[5:])
+              elif line.startswith(b"parent "):
+                  parents.append(line[7:])
+              elif line.startswith((b"tree", b"parent")):
+                  raise SystemExit("synthetic merge commit header invalid")
+
+          if len(trees) != 1:
+              raise SystemExit("synthetic merge tree cardinality invalid")
+
+          if len(parents) != 2:
+              raise SystemExit("synthetic merge parent cardinality invalid")
+
+          values = (trees[0], parents[0], parents[1])
+          decoded = []
+
+          for value in values:
+              try:
+                  sha = value.decode("ascii")
+              except UnicodeDecodeError as exc:
+                  raise SystemExit("synthetic merge SHA invalid") from exc
+
+              if (
+                  len(sha) != 40
+                  or sha != sha.lower()
+                  or any(ch not in "0123456789abcdef" for ch in sha)
+              ):
+                  raise SystemExit("synthetic merge SHA invalid")
+
+              decoded.append(sha)
+
+          for value in decoded:
+              print(value)
+          PY
+            )
+            if [ "${#COMMIT_IDENTITY[@]}" -ne 3 ]; then
+              printf 'PR_EXECUTION_COMMIT_IDENTITY_CARDINALITY_INVALID=%s\n' "${#COMMIT_IDENTITY[@]}" >&2
               exit 1
             fi
-            PR_EXECUTION_PARENT_1="$(git rev-parse 'HEAD^1')"
-            PR_EXECUTION_PARENT_2="$(git rev-parse 'HEAD^2')"
-            PR_EXECUTION_TREE="$(git rev-parse 'HEAD^{tree}')"
+
+            PR_EXECUTION_TREE="${COMMIT_IDENTITY[0]}"
+            PR_EXECUTION_PARENT_1="${COMMIT_IDENTITY[1]}"
+            PR_EXECUTION_PARENT_2="${COMMIT_IDENTITY[2]}"
             require_sha40 "$PR_EXECUTION_CARRIER" "PR_EXECUTION_CARRIER"
             require_sha40 "$PR_CHECKED_OUT_HEAD" "PR_CHECKED_OUT_HEAD"
             require_sha40 "$PR_EXECUTION_PARENT_1" "PR_EXECUTION_PARENT_1"
