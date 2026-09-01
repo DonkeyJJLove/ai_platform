@@ -323,13 +323,13 @@ jobs:
               if _production_path(path):
                   sources[path] = Path(path).read_text()
           revision = subprocess.run(
-              ['git','rev-parse','HEAD'],
+              ['git', 'rev-parse', 'HEAD'],
               check=True,
               capture_output=True,
               text=True,
           ).stdout.strip()
           tree = subprocess.run(
-              ['git','write-tree'],
+              ['git', 'write-tree'],
               check=True,
               capture_output=True,
               text=True,
@@ -372,7 +372,7 @@ jobs:
           from cyber_lion.enterprise.host_authority_separation import _production_path
 
           raw = subprocess.run(
-              ['git','ls-files','-z'],
+              ['git', 'ls-files', '-z'],
               check=True,
               stdout=subprocess.PIPE,
               stderr=subprocess.PIPE,
@@ -385,13 +385,13 @@ jobs:
               if _production_path(path):
                   sources[path] = Path(path).read_text()
           revision = subprocess.run(
-              ['git','rev-parse','HEAD'],
+              ['git', 'rev-parse', 'HEAD'],
               check=True,
               capture_output=True,
               text=True,
           ).stdout.strip()
           tree = subprocess.run(
-              ['git','write-tree'],
+              ['git', 'write-tree'],
               check=True,
               capture_output=True,
               text=True,
