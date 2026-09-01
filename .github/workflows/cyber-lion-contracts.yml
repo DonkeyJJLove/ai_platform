@@ -264,7 +264,7 @@ jobs:
       - name: Compile Cyber-Lion package
         run: python -m compileall -q cyber_lion
       - name: R2E4 authority observability test carrier preflight
-        if: github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-merge-authority-observability'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/mission/r2e4-merge-authority-observability' || github.ref == 'refs/heads/mission/r2e4-merge-authority-observability-clean')
         run: |
           python -m unittest cyber_lion.tests.test_merge_authority_observation -v
           python -m unittest cyber_lion.tests.test_merge_authority_consumption -v
