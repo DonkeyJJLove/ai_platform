@@ -4,7 +4,7 @@ on:
   pull_request:
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"]
   push:
-    branches: ["master", "cyber-lion/**", "mission/r2e4-fleet-manifest-exact-head-semantic-binding"]
+    branches: ["master", "cyber-lion/**", "mission/r2e4-fleet-manifest-exact-head-semantic-binding", "mission/r2e4-merge-authority-observability"]
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"]
 permissions:
   contents: read
@@ -263,6 +263,31 @@ jobs:
           PY
       - name: Compile Cyber-Lion package
         run: python -m compileall -q cyber_lion
+      - name: R2E4 authority observability test carrier preflight
+        if: github.event_name == 'push' && github.ref == 'refs/heads/mission/r2e4-merge-authority-observability'
+        run: |
+          python -m unittest cyber_lion.tests.test_merge_authority_observation -v
+          python -m unittest cyber_lion.tests.test_merge_authority_consumption -v
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+          from cyber_lion.enterprise.host_authority_separation import _production_path
+          raw=subprocess.run(['git','ls-files','-z'],check=True,stdout=subprocess.PIPE).stdout
+          sources={}
+          for item in raw.split(b'\0'):
+              if not item:
+                  continue
+              path=item.decode()
+              if _production_path(path):
+                  sources[path]=Path(path).read_text()
+          revision=subprocess.run(['git','rev-parse','HEAD'],check=True,capture_output=True,text=True).stdout.strip()
+          tree=subprocess.run(['git','write-tree'],check=True,capture_output=True,text=True).stdout.strip()
+          inventory=EffectSurfaceScanner().scan(repository='DonkeyJJLove/ai_platform',revision=revision,tree_digest=tree,sources=sources)
+          print(f'AUTH_OBS_SOURCE_COUNT={len(sources)}')
+          print(f'AUTH_OBS_EFFECT_SURFACE_COUNT={len(inventory.surfaces)}')
+          print(f'AUTH_OBS_UNCLASSIFIED_COUNT={len(inventory.unclassified_refs)}')
+          PY
       - name: Run Cyber-Lion tests
         run: python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
       - name: R2E3 targeted fleet live pin tests
@@ -414,3 +439,35 @@ jobs:
         run: |
           printf '%s\n' 'MERGE_ADMISSION_TERMINAL=OK'
           printf '%s\n' 'NO_MERGE_AUTHORIZATION_INFERRED=YES'
+
+  merge-authority-observation:
+    name: Cyber-Lion Merge Authority Observation
+    if: github.event_name == 'pull_request' && vars.CYBER_LION_AUTHORITY_OBSERVATION_ENABLED == '1'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CYBER_LION_REPOSITORY: ${{ github.repository }}
+      CYBER_LION_PR_NUMBER: ${{ github.event.pull_request.number }}
+      CYBER_LION_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      CYBER_LION_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CYBER_LION_MERGE_METHOD: ${{ vars.CYBER_LION_MERGE_METHOD }}
+      CYBER_LION_OBSERVATION_ID: gha:${{ github.run_id }}:${{ github.run_attempt }}
+      CYBER_LION_BOOTSTRAP_PROVIDER: ${{ vars.CYBER_LION_BOOTSTRAP_PROVIDER }}
+      CYBER_LION_AUTHORITY_PROVIDER: ${{ vars.CYBER_LION_AUTHORITY_PROVIDER }}
+      CYBER_LION_VERIFIER_PROVIDER: ${{ vars.CYBER_LION_VERIFIER_PROVIDER }}
+      CYBER_LION_CLOCK_PROVIDER: ${{ vars.CYBER_LION_CLOCK_PROVIDER }}
+      CYBER_LION_CONSUMPTION_READ_PROVIDER: ${{ vars.CYBER_LION_CONSUMPTION_READ_PROVIDER }}
+      CYBER_LION_PROVIDER_VERSION: ${{ vars.CYBER_LION_PROVIDER_VERSION }}
+      CYBER_LION_TRUSTED_BASE_SHA: ${{ vars.CYBER_LION_TRUSTED_BASE_SHA }}
+      CYBER_LION_CONTROL_PLANE_ORIGIN: ${{ vars.CYBER_LION_CONTROL_PLANE_ORIGIN }}
+      CYBER_LION_CONTROL_PLANE_CREDENTIAL_ENV: CYBER_LION_CONTROL_PLANE_TOKEN
+      CYBER_LION_CONTROL_PLANE_TOKEN: ${{ secrets.CYBER_LION_CONTROL_PLANE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.11"}
+      - name: Compile merge authority observer
+        run: python -m compileall -q cyber_lion/enterprise/merge_authority_observation.py cyber_lion/enterprise/merge_authority_observation_entrypoint.py cyber_lion/enterprise/merge_authority_consumption.py
+      - name: Run evidence-only merge authority observation
+        run: python -m cyber_lion.enterprise.merge_authority_observation_entrypoint

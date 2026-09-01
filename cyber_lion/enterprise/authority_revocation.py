@@ -37,6 +37,7 @@ from .authority_verification import (
 
 _GRANT_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 _LINEAGE_DOMAIN_PREFIX = b"CYBER-LION/AUTHORITY-LINEAGE/1.0.0\x00"
+_EPOCH_OBSERVATION_DOMAIN_PREFIX = b"CYBER-LION/AUTHORITY-EPOCH-OBSERVATION/1.0.0\x00"
 
 
 class AuthorityRevocationError(AuthorityGrantError):
@@ -146,6 +147,60 @@ class EpochAdmittedAuthorityLineage:
     organization_id: str
     mission_id: str
     epoch: int
+
+
+@dataclass(frozen=True)
+class AuthorityEpochObservationSnapshot:
+    """Immutable public read-only projection of the canonical epoch/revocation state."""
+
+    trust_domain: str
+    tenant_id: str
+    organization_id: str
+    mission_id: str
+    epoch: int
+    revoked_grant_ids: tuple[str, ...]
+    state_digest: str
+
+    def validate(self) -> "AuthorityEpochObservationSnapshot":
+        if type(self) is not AuthorityEpochObservationSnapshot:
+            raise AuthorityRevocationError("epoch observation snapshot has invalid type")
+        for field_name in ("trust_domain", "tenant_id", "organization_id", "mission_id"):
+            _bounded_text(getattr(self, field_name), field_name=field_name)
+        _valid_epoch(self.epoch)
+        if type(self.revoked_grant_ids) is not tuple:
+            raise AuthorityRevocationError("snapshot revoked_grant_ids must be immutable tuple")
+        for grant_id in self.revoked_grant_ids:
+            _bounded_text(grant_id, field_name="revoked_grant_id")
+        if len(set(self.revoked_grant_ids)) != len(self.revoked_grant_ids):
+            raise AuthorityRevocationError("snapshot revoked_grant_ids must be unique")
+        if not isinstance(self.state_digest, str) or not _GRANT_DIGEST_RE.fullmatch(self.state_digest):
+            raise AuthorityRevocationError("state_digest must be canonical sha256 hex")
+        if self.state_digest != _authority_epoch_observation_digest(
+            trust_domain=self.trust_domain,
+            tenant_id=self.tenant_id,
+            organization_id=self.organization_id,
+            mission_id=self.mission_id,
+            epoch=self.epoch,
+            revoked_grant_ids=self.revoked_grant_ids,
+        ):
+            raise AuthorityRevocationError("state_digest does not bind exact epoch snapshot")
+        return self
+
+
+def _authority_epoch_observation_digest(
+    *, trust_domain: str, tenant_id: str, organization_id: str, mission_id: str,
+    epoch: int, revoked_grant_ids: tuple[str, ...],
+) -> str:
+    values = (
+        trust_domain,
+        tenant_id,
+        organization_id,
+        mission_id,
+        str(epoch),
+        *revoked_grant_ids,
+    )
+    payload = b"\x00".join(value.encode("utf-8") for value in values)
+    return hashlib.sha256(_EPOCH_OBSERVATION_DOMAIN_PREFIX + payload).hexdigest()
 
 
 def validate_epoch_transition(
@@ -403,6 +458,37 @@ def advance_canonical_authority_epoch_state(
 ) -> AuthorityEpochState:
     """Monotonically advance the canonical process-local state for its context."""
     return _CANONICAL_AUTHORITY_EPOCH_REGISTRY.advance(candidate)
+
+
+def observe_canonical_authority_epoch_state(
+    context: AuthorityVerificationContext,
+) -> AuthorityEpochObservationSnapshot:
+    """Return one immutable public snapshot of the canonical epoch/revocation owner."""
+    if type(context) is not AuthorityVerificationContext:
+        raise AuthorityRevocationError("context must be exact AuthorityVerificationContext")
+    context.validate()
+    trusted_context = _trusted_context(context)
+    owner = _CANONICAL_AUTHORITY_EPOCH_REGISTRY.resolve(trusted_context)
+    state = owner.current()
+    if state.authority_context() != trusted_context:
+        raise AuthorityRevocationError("epoch observation context mismatch")
+    snapshot = AuthorityEpochObservationSnapshot(
+        trust_domain=state.trust_domain,
+        tenant_id=state.tenant_id,
+        organization_id=state.organization_id,
+        mission_id=state.mission_id,
+        epoch=state.epoch,
+        revoked_grant_ids=state.revoked_grant_ids,
+        state_digest=_authority_epoch_observation_digest(
+            trust_domain=state.trust_domain,
+            tenant_id=state.tenant_id,
+            organization_id=state.organization_id,
+            mission_id=state.mission_id,
+            epoch=state.epoch,
+            revoked_grant_ids=state.revoked_grant_ids,
+        ),
+    )
+    return snapshot.validate()
 
 
 def register_canonical_authority_lineage_root_anchor(
