@@ -4,7 +4,7 @@ on:
   pull_request:
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"]
   push:
-    branches: ["master", "cyber-lion/**", "mission/r2e4-fleet-manifest-exact-head-semantic-binding", "mission/r2e4-merge-authority-observability"]
+    branches: ["master", "cyber-lion/**", "mission/r2e4-fleet-manifest-exact-head-semantic-binding", "mission/r2e4-merge-authority-observability", "mission/r2e4-merge-authority-observability-clean"]
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"]
 permissions:
   contents: read
