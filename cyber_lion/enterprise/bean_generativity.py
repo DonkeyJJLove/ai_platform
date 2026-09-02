@@ -699,6 +699,9 @@ class BeanGenerativityProtocol:
                 program.digest(),
                 composition.digest(),
             ),
+            acceptance_evidence_refs=(),
+            verifier_identity_digests=(),
+            verification_evidence_refs=(),
         ).validate()
         mosaic = advance_mosaic(
             mosaic,
