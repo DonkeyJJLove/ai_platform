@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from cyber_lion.startup_agent.cli import main, run_cycle
 from cyber_lion.startup_agent.models import StartupModelError
@@ -116,7 +118,9 @@ class StartupCliTests(unittest.TestCase):
                 run_cycle(data, journal_path=str(Path(tmp) / "journal.jsonl"))
 
     def test_build_local_runs_only_with_explicit_effect_gate(self):
-        result = run_cycle(BUILD_LOCAL, build_local=True)
+        fixed_now = datetime(2026, 8, 18, 10, 10, tzinfo=timezone.utc)
+        with patch("cyber_lion.startup_agent.models.utc_now", return_value=fixed_now):
+            result = run_cycle(BUILD_LOCAL, build_local=True)
         self.assertEqual(result["experiment"]["experiment_type"], "prototype")
         self.assertEqual(result["authority"]["decision"], "ALLOW")
         self.assertIsNotNone(result["build_receipt"])
