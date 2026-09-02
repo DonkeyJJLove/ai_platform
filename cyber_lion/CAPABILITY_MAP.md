@@ -38,6 +38,7 @@ AUTORYZACJA
 WYKONANIE
   ├─ rozproszony runtime usług .............. swarm
   ├─ pipeline'y analizy/naprawy kodu ........ glitchlab
+  ├─ aggregate effect budget ................ ai_platform / FleetEffectBudgetStore [VERIFIED candidate]
   └─ TARGET workerów sandbox/tool ........... swarm adapters
 
 OBSERWACJA WYNIKU / REPLAY
@@ -65,6 +66,7 @@ OBSERWACJA WYNIKU / REPLAY
 | Rekordy evidence hipotez | schema `ai_platform` | `hipotezy`, `writeups` | NEW metadata contract |
 | Symulacja | `SymulacjaKaskadySieciowej` | adapter scenariuszy | WRAP |
 | Decyzja policy/gate | kontrakt `ai_platform` | lokalne Guard/RBAC/bramki CI | NEW common decision model |
+| Aggregate effect budget | `ai_platform` | `FleetEffectBudgetStore`, `RepositoryMutationPEP` | VERIFIED candidate; restrictive only |
 | Rozproszone wykonanie | `swarm` | adaptery tool/sandbox | KEEP + REFINE |
 | Evidence supply-chain | `sbom` | zdarzenia AID/BOM | KEEP |
 | Evidence badawcze | `writeups` | adapter metadanych/indeksu | KEEP + INDEX |
@@ -92,6 +94,22 @@ GlitchLab i Mosaic Lab mogą tworzyć reprezentacje strukturalne. QV9D może prz
 ### Istnienie bramki nie oznacza zastosowania bramki
 
 Plik polityki, reguła CI lub obiekt RBAC nie dowodzą, że consequential transition rzeczywiście przez nie przeszło. Cyber-Lion wymaga applied gate event powiązanego z tożsamością wykonania i receiptem.
+
+### Budżet efektów nie jest authority
+
+Zweryfikowany candidate `FLEET_AGGREGATE_EFFECT_BUDGET_ENFORCEMENT` jest dodatkowym ograniczeniem admission, a nie źródłem uprawnienia. Literalne evidence jest związane z `PR#249`, dedicated run `33615802655` i full Core run `33615802648`.
+
+```text
+CAN_RESTRICT_AUTHORITY=YES
+CAN_CREATE_AUTHORITY=NO
+CAN_EXPAND_AUTHORITY=NO
+CAN_SUBSTITUTE_AUTHORITY=NO
+
+valid authority + no budget => DENY
+budget + no authority => DENY
+```
+
+Zweryfikowana capability obejmuje atomową rezerwację oraz limity `max_concurrent_writers`, `max_active_repository_effects`, `max_active_branch_effects` i `max_active_path_effects`. Nie dowodzi distributed consensus, globalnej multi-host linearizability journala, monetary/token budget ani production deployment. `RepositoryMutationPEP` pozostaje `SINGLE_RUNTIME_ATTACH_ONLY`; stan tej capability jest `VERIFIED` candidate, nie `INTEGRATED` ani `OBSERVED`.
 
 ## Reguła dynamicznej kompozycji
 
