@@ -30,17 +30,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - name: Exact branch identity
+      - name: Exact successor identity and digests
         shell: bash
         run: |
           set -euo pipefail
+          BASE='8bf8934a0cf2809b58b460c01976cf82ae0692e7'
           ACTUAL="$(git rev-parse HEAD)"
           TREE="$(git rev-parse HEAD^{tree})"
-          printf 'FLEET_EFFECT_BUDGET_CHECKOUT=%s\n' "$ACTUAL"
-          printf 'FLEET_EFFECT_BUDGET_TREE=%s\n' "$TREE"
+          git merge-base --is-ancestor "$BASE" "$ACTUAL"
+          CONTRACT_DIGEST="$(sha256sum cyber_lion/contracts/fleet_effect_budget.py | awk '{print $1}')"
+          IMPLEMENTATION_DIGEST="$(sha256sum cyber_lion/enterprise/fleet_effect_budget.py | awk '{print $1}')"
+          mapfile -t CHANGED < <(git diff --name-only "$BASE".."$ACTUAL" | sort)
+          if [ "${#CHANGED[@]}" -eq 0 ]; then
+            echo 'CHANGED_FILES_EMPTY=YES' >&2
+            exit 1
+          fi
+          CHANGED_JOINED="$(IFS=,; echo "${CHANGED[*]}")"
+          printf 'CONTRACT_DIGEST=%s\n' "$CONTRACT_DIGEST"
+          printf 'IMPLEMENTATION_DIGEST=%s\n' "$IMPLEMENTATION_DIGEST"
+          printf 'CHANGED_FILES=%s\n' "$CHANGED_JOINED"
+          printf 'SUCCESSOR_HEAD=%s\n' "$ACTUAL"
+          printf 'SUCCESSOR_TREE=%s\n' "$TREE"
       - name: Compile Cyber-Lion
         run: python -m compileall -q cyber_lion
       - name: Fleet effect budget contract tests
