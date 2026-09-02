@@ -1,0 +1,49 @@
+{
+  "schema_version": "lion.truth-projection/v1.3-a0-candidate",
+  "baseline": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "branch": "master",
+    "head": "2be0b312407920ac25d812f1c0bb6ecfcb31aa4c",
+    "tree": "3c9705f85301e73f268228f3c36f6ae82a641633",
+    "currentness": "CURRENT"
+  },
+  "records": [
+    {"id":"GoalContract","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"WorldSnapshot","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"SystemSnapshot","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"Gap","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"BeanSpec","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"BeanInstance","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"BeanCandidate","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean_candidate.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"CapabilityNeed","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/capability_need.py","cyber_lion/enterprise/capability_need.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"CompositionContract","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean_composition.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"CompositionEngine","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/enterprise/bean_composition.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"MosaicCell","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/mosaic.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"HeterogeneousMosaicPlanner","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/enterprise/mosaic.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"BeanBuilderChainBinding","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean_builder_bridge.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"AiPlatformEngineeringPlatform","plane":"AS_IS","status":"INTEGRATED_ENGINEERING_PLATFORM","evidence_refs":["cyber_lion/registry/repositories.json","cyber-lion.repository.json"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
+
+    {"id":"R2E4EvidenceBinding","plane":"CANDIDATE","status":"VERIFIED_CANDIDATE","evidence_refs":["PR#248","workflow:33569257335:success","workflow:33569257326:success","workflow:33569257393:success"],"integrated":false,"pr":248,"head":"8bf8934a0cf2809b58b460c01976cf82ae0692e7","tree":"eee3ea5f4f0a116e0f5409b6885a4fb0a5f691d1","base_head":"2be0b312407920ac25d812f1c0bb6ecfcb31aa4c"},
+    {"id":"FleetAggregateEffectBudget","plane":"CANDIDATE","status":"VERIFIED_CANDIDATE_STACKED","evidence_refs":["PR#249","workflow:33619772272:success","workflow:33619772256:success"],"integrated":false,"pr":249,"head":"46174de77634ce2b6d62bd6709f8ff3470d51951","tree":"a2c2ca9594dd30174e0892f48464678da27e1bf2","base_head":"8bf8934a0cf2809b58b460c01976cf82ae0692e7"},
+
+    {"id":"AutonomyBlueprint","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"MaterializerRegistry","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"ActionSpec","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"LAIR","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"LCMS","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"LocalConsole","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"LocalOpenWeightModelRuntime","plane":"TARGET","status":"TARGET_NOT_DEPLOYED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"HybridModelRouter","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+    {"id":"CyberPhysicalRuntime","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
+
+    {"id":"GlobalCompleteMediation","plane":"UNKNOWN","status":"UNKNOWN","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null}
+  ],
+  "historical_projections": [
+    {
+      "path": "LION/architecture/implementation-map.json",
+      "observed_head": "c67ed65c9c26bc2a59b39786c5c410cd8490cbc7",
+      "observed_tree": "96dfdfb4cc26c094895b010aacc11a3b685d62fc",
+      "currentness": "STALE"
+    }
+  ]
+}
