@@ -11,6 +11,7 @@ on:
       - "cyber_lion/tests/test_fleet_effect_budget_contract.py"
       - "cyber_lion/tests/test_fleet_effect_budget.py"
       - "cyber_lion/tests/test_repository_mutation_pep.py"
+      - "cyber_lion/tests/test_startup_cli.py"
       - ".github/workflows/fleet-effect-budget-r1.yml"
   pull_request:
     paths:
@@ -20,6 +21,7 @@ on:
       - "cyber_lion/tests/test_fleet_effect_budget_contract.py"
       - "cyber_lion/tests/test_fleet_effect_budget.py"
       - "cyber_lion/tests/test_repository_mutation_pep.py"
+      - "cyber_lion/tests/test_startup_cli.py"
       - ".github/workflows/fleet-effect-budget-r1.yml"
 
 permissions:
@@ -59,6 +61,11 @@ jobs:
           printf 'SUCCESSOR_TREE=%s\n' "$TREE"
       - name: Compile Cyber-Lion
         run: python -m compileall -q cyber_lion
+      - name: Startup CLI deterministic freshness regression
+        run: |
+          set -euo pipefail
+          python -m unittest cyber_lion.tests.test_startup_cli -v
+          echo 'TARGETED_STARTUP_CLI=PASS'
       - name: Fleet effect budget contract tests
         run: |
           set -euo pipefail
