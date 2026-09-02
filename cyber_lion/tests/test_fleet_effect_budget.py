@@ -14,6 +14,7 @@ NOW = datetime(2026, 9, 2, 8, 0, tzinfo=timezone.utc)
 POLICY = "a" * 64
 IDENTITY = "b" * 64
 IMPLEMENTATION = "c" * 64
+CANDIDATE = "d" * 64
 
 
 class Clock:
@@ -38,9 +39,9 @@ def env(**kw):
 def req(i: int, *, repository="DonkeyJJLove/ai_platform", branch="mission/budget-r1", path=None, generation=1):
     path = path or f"cyber_lion/{i}.py"
     return FleetEffectReservationRequest(
-        reservation_id=f"res-{i}", effect_id=f"eff-{i}", mission_id=f"mission-{i}",
-        executor_id=f"executor-{i}", runtime_id=f"runtime-{i}", repository=repository,
-        branch=branch, changed_paths=(path,), authority_effect_key=f"{i + 1:064x}",
+        reservation_id=f"res-{i}", effect_id=f"eff-{i}", candidate_digest=f"{i + 100:064x}",
+        mission_id=f"mission-{i}", executor_id=f"executor-{i}", runtime_id=f"runtime-{i}",
+        repository=repository, branch=branch, changed_paths=(path,), authority_effect_key=f"{i + 1:064x}",
         authority_epoch=4, envelope_generation=generation, requested_at=NOW.isoformat(),
         expires_at=(NOW + timedelta(minutes=10)).isoformat(),
     ).validate()
@@ -114,17 +115,33 @@ class FleetEffectBudgetTests(unittest.TestCase):
         short = replace(req(1), expires_at=(NOW + timedelta(seconds=1)).isoformat())
         self.store.reserve_exact(short)
         self.clock.value = NOW + timedelta(seconds=2)
-        r2 = replace(req(2), requested_at=self.clock.value.isoformat(), expires_at=(self.clock.value + timedelta(minutes=1)).isoformat())
+        r2 = replace(
+            req(2), requested_at=self.clock.value.isoformat(),
+            expires_at=(self.clock.value + timedelta(minutes=1)).isoformat(),
+        )
         self.store.reserve_exact(r2)
         self.assertEqual(self.store.get("res-1").state, "EXPIRED")
 
     def test_validate_for_effect_rejects_wrong_runtime_and_scope(self):
-        reserved = self.store.reserve_exact(req(1))
+        request = req(1)
+        reserved = self.store.reserve_exact(request)
         with self.assertRaises(FleetEffectBudgetError):
             self.store.validate_for_effect(
-                reserved, effect_id="eff-1", mission_id="mission-1", runtime_id="runtime-attacker",
-                repository="DonkeyJJLove/ai_platform", branch="mission/budget-r1",
-                changed_paths=("cyber_lion/1.py",), authority_effect_key=f"{2:064x}", authority_epoch=4,
+                reserved, effect_id=request.effect_id, candidate_digest=request.candidate_digest,
+                mission_id=request.mission_id, executor_id=request.executor_id,
+                runtime_id="runtime-attacker", repository=request.repository, branch=request.branch,
+                authority_effect_key=request.authority_effect_key, authority_epoch=request.authority_epoch,
+            )
+
+    def test_validate_for_effect_rejects_wrong_candidate(self):
+        request = req(1)
+        reserved = self.store.reserve_exact(request)
+        with self.assertRaises(FleetEffectBudgetError):
+            self.store.validate_for_effect(
+                reserved, effect_id=request.effect_id, candidate_digest="f" * 64,
+                mission_id=request.mission_id, executor_id=request.executor_id,
+                runtime_id=request.runtime_id, repository=request.repository, branch=request.branch,
+                authority_effect_key=request.authority_effect_key, authority_epoch=request.authority_epoch,
             )
 
     def test_concurrency_never_overcommits_and_hits_exact_limit(self):
@@ -136,12 +153,16 @@ class FleetEffectBudgetTests(unittest.TestCase):
             barrier.wait()
             try:
                 self.store.reserve_exact(req(i + 10))
-                with lock: ok.append(i)
+                with lock:
+                    ok.append(i)
             except FleetEffectBudgetError:
-                with lock: denied.append(i)
+                with lock:
+                    denied.append(i)
         threads = [threading.Thread(target=worker, args=(i,)) for i in range(8)]
-        for t in threads: t.start()
-        for t in threads: t.join()
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
         self.assertEqual(len(ok), 2)
         self.assertEqual(len(denied), 6)
         self.assertEqual(self.store.snapshot().active_writers, 2)
