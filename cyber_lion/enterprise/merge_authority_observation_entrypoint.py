@@ -15,6 +15,7 @@ from .merge_authority_observation import (
     observe_trusted_merge_authority,
     provider_identity,
 )
+from .merge_authority_runtime_providers import bind_epoch_state_from_bootstrap_records
 
 
 _REQUIRED_PROVIDER_SELECTORS = (
@@ -38,18 +39,30 @@ def _identity(env: Mapping[str, str], role: str, selector: str):
     version = _required(env, "CYBER_LION_PROVIDER_VERSION", limit=64)
     trusted_base_sha = _required(env, "CYBER_LION_TRUSTED_BASE_SHA", limit=40)
     origin = _required(env, "CYBER_LION_CONTROL_PLANE_ORIGIN", limit=2048)
+    public_configuration = {
+        "selector": selector,
+        "implementation": spec,
+        "origin": origin,
+        "trusted_base_sha": trusted_base_sha,
+        "provider_version": version,
+    }
+    implementation_identity = spec
+    if role == "BOOTSTRAP":
+        implementation_identity = (
+            spec
+            + "+epoch-bind:cyber_lion.enterprise.merge_authority_runtime_providers:"
+            + "bind_epoch_state_from_bootstrap_records"
+        )
+        public_configuration["epoch_binding"] = (
+            "cyber_lion.enterprise.merge_authority_runtime_providers:"
+            "bind_epoch_state_from_bootstrap_records"
+        )
     return provider_identity(
         role=role,
         provider_version=version,
-        implementation_identity=spec,
+        implementation_identity=implementation_identity,
         trusted_base_sha=trusted_base_sha,
-        public_configuration={
-            "selector": selector,
-            "implementation": spec,
-            "origin": origin,
-            "trusted_base_sha": trusted_base_sha,
-            "provider_version": version,
-        },
+        public_configuration=public_configuration,
         source_kind="trusted-runtime",
     )
 
@@ -69,10 +82,17 @@ def execute(*, env: Mapping[str, str]) -> int:
         role: _identity(env, role, selector)
         for role, selector in _REQUIRED_PROVIDER_SELECTORS
     }
+    raw_bootstrap_provider = providers["BOOTSTRAP"]
+
+    def bootstrap_with_persistent_epoch(**kwargs):
+        return bind_epoch_state_from_bootstrap_records(
+            raw_bootstrap_provider(**kwargs)
+        )
+
     observation = observe_trusted_merge_authority(
         pr_state=pr_state,
         observation_id=observation_id,
-        bootstrap_lookup_exact=providers["BOOTSTRAP"],
+        bootstrap_lookup_exact=bootstrap_with_persistent_epoch,
         authority_lookup_exact=providers["AUTHORITY"],
         verifier=providers["VERIFIER"],
         clock_provider=providers["CLOCK"],
