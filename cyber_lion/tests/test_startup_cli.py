@@ -67,6 +67,7 @@ BUILD_LOCAL["hypotheses"][0]["baseline"].update(
         "learning_velocity": 0.82,
     }
 )
+BUILD_LOCAL["observations"] = []
 BUILD_LOCAL["local_build_gate_event_id"] = "test:cli:local-build-gate"
 
 
