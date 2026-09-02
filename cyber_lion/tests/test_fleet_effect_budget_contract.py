@@ -16,7 +16,8 @@ T0 = "2026-09-02T08:00:00+00:00"
 T1 = "2026-09-02T09:00:00+00:00"
 POLICY = "a" * 64
 AUTH = "b" * 64
-ENV_DIGEST = "c" * 64
+CANDIDATE = "c" * 64
+ENV_DIGEST = "d" * 64
 
 
 def envelope() -> FleetEffectEnvelope:
@@ -25,7 +26,7 @@ def envelope() -> FleetEffectEnvelope:
 
 def request() -> FleetEffectReservationRequest:
     return FleetEffectReservationRequest(
-        "res-1", "eff-1", "mission-1", "executor-1", "runtime-1",
+        "res-1", "eff-1", CANDIDATE, "mission-1", "executor-1", "runtime-1",
         "DonkeyJJLove/ai_platform", "mission/budget-r1", ("cyber_lion/a.py",),
         AUTH, 4, 1, T0, T1,
     ).validate()
@@ -40,11 +41,12 @@ class FleetEffectBudgetContractTests(unittest.TestCase):
         with self.assertRaises(FleetEffectBudgetContractError):
             replace(envelope(), max_concurrent_writers=0).validate()
 
-    def test_request_binds_scope_generation_and_authority_effect_key(self):
+    def test_request_binds_scope_generation_candidate_and_authority_effect_key(self):
         value = request()
         self.assertEqual(value.repository, "DonkeyJJLove/ai_platform")
         self.assertEqual(value.branch, "mission/budget-r1")
         self.assertEqual(value.envelope_generation, 1)
+        self.assertEqual(value.candidate_digest, CANDIDATE)
         self.assertEqual(value.authority_effect_key, AUTH)
         self.assertEqual(value.changed_paths, ("cyber_lion/a.py",))
 
@@ -52,13 +54,17 @@ class FleetEffectBudgetContractTests(unittest.TestCase):
         with self.assertRaises(FleetEffectBudgetContractError):
             replace(request(), changed_paths=("../escape",)).validate()
 
+    def test_request_rejects_bad_candidate_digest(self):
+        with self.assertRaises(FleetEffectBudgetContractError):
+            replace(request(), candidate_digest="not-a-digest").validate()
+
     def test_request_rejects_bad_authority_key(self):
         with self.assertRaises(FleetEffectBudgetContractError):
             replace(request(), authority_effect_key="not-a-digest").validate()
 
     def test_terminal_reservation_requires_finalized_at(self):
         r = FleetEffectReservation(
-            "res-1", request().digest(), "eff-1", "mission-1", "executor-1", "runtime-1",
+            "res-1", request().digest(), "eff-1", CANDIDATE, "mission-1", "executor-1", "runtime-1",
             "DonkeyJJLove/ai_platform", "mission/budget-r1", ("cyber_lion/a.py",), AUTH, 4,
             "env-1", 1, ENV_DIGEST, "FINALIZED", T0, T1, None,
         )
