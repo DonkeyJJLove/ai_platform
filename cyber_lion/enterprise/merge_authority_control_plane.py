@@ -50,7 +50,7 @@ class LABMergeAuthorityControlPlane(TrustedControlPlaneService):
         base: TrustedControlPlaneService,
         consumption_store,
         clock_source_id: str,
-        authority_database_path: str,
+        authority_database_path: str | None = None,
     ) -> None:
         super().__init__(
             store=base._store,
@@ -61,14 +61,17 @@ class LABMergeAuthorityControlPlane(TrustedControlPlaneService):
         self._clock_source_id = _public_text(
             clock_source_id, field_name="clock source id"
         )
-        path = _public_text(
-            authority_database_path,
-            field_name="authority database path",
-            limit=4096,
-        )
-        if not path.startswith("/") or "\x00" in path:
-            raise TrustedControlPlaneServiceError("authority database path invalid")
-        self._authority_database_path = path
+        if authority_database_path is None:
+            self._authority_database_path = ""
+        else:
+            path = _public_text(
+                authority_database_path,
+                field_name="authority database path",
+                limit=4096,
+            )
+            if not path.startswith("/") or "\x00" in path:
+                raise TrustedControlPlaneServiceError("authority database path invalid")
+            self._authority_database_path = path
 
     def _authorized_runtime(self, authorization: object) -> bool:
         if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
@@ -94,6 +97,8 @@ class LABMergeAuthorityControlPlane(TrustedControlPlaneService):
         return {k: v[0] for k, v in decoded.items()}
 
     def _epoch_snapshot(self, raw_query: str) -> ServiceResponse:
+        if not self._authority_database_path:
+            raise TrustedControlPlaneServiceError("authority database unavailable")
         q = self._query(raw_query, _EPOCH_FIELDS)
         context = tuple(
             _public_text(q[name], field_name=name)
