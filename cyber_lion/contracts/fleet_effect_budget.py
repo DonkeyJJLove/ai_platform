@@ -1,7 +1,7 @@
 """Fail-closed fleet aggregate effect budget contracts.
 
-Budget state can only restrict already-authenticated authority.  It never creates,
-expands, delegates, or substitutes authority.  Reservations are exact-scope,
+Budget state can only restrict already-authenticated authority. It never creates,
+expands, delegates, or substitutes authority. Reservations are exact-scope,
 generation-bound, single-use coordination records for consequential effects.
 """
 from __future__ import annotations
@@ -130,6 +130,7 @@ class FleetEffectEnvelope:
 class FleetEffectReservationRequest:
     reservation_id: str
     effect_id: str
+    candidate_digest: str
     mission_id: str
     executor_id: str
     runtime_id: str
@@ -148,6 +149,7 @@ class FleetEffectReservationRequest:
             raise FleetEffectBudgetContractError("unsupported reservation request schema")
         for name in ("reservation_id", "effect_id", "mission_id", "executor_id", "runtime_id", "repository"):
             _text(getattr(self, name), name)
+        _digest(self.candidate_digest, "candidate_digest")
         _branch(self.branch)
         _paths(self.changed_paths)
         _digest(self.authority_effect_key, "authority_effect_key")
@@ -174,6 +176,7 @@ class FleetEffectReservation:
     reservation_id: str
     request_digest: str
     effect_id: str
+    candidate_digest: str
     mission_id: str
     executor_id: str
     runtime_id: str
@@ -196,7 +199,7 @@ class FleetEffectReservation:
             raise FleetEffectBudgetContractError("unsupported reservation schema")
         for name in ("reservation_id", "effect_id", "mission_id", "executor_id", "runtime_id", "repository", "envelope_id"):
             _text(getattr(self, name), name)
-        for name in ("request_digest", "authority_effect_key", "envelope_digest"):
+        for name in ("request_digest", "candidate_digest", "authority_effect_key", "envelope_digest"):
             _digest(getattr(self, name), name)
         _branch(self.branch)
         _paths(self.changed_paths)
@@ -251,15 +254,20 @@ class FleetEffectBudgetSnapshot:
         for row in self.active_repository_effects:
             if type(row) is not tuple or len(row) != 2:
                 raise FleetEffectBudgetContractError("repository aggregate invalid")
-            _text(row[0], "repository"); _nonnegative(row[1], "repository_count")
+            _text(row[0], "repository")
+            _nonnegative(row[1], "repository_count")
         for row in self.active_branch_effects:
             if type(row) is not tuple or len(row) != 3:
                 raise FleetEffectBudgetContractError("branch aggregate invalid")
-            _text(row[0], "repository"); _branch(row[1]); _nonnegative(row[2], "branch_count")
+            _text(row[0], "repository")
+            _branch(row[1])
+            _nonnegative(row[2], "branch_count")
         for row in self.active_path_effects:
             if type(row) is not tuple or len(row) != 3:
                 raise FleetEffectBudgetContractError("path aggregate invalid")
-            _text(row[0], "repository"); _text(row[1], "path"); _nonnegative(row[2], "path_count")
+            _text(row[0], "repository")
+            _text(row[1], "path")
+            _nonnegative(row[2], "path_count")
         return self
 
     def digest(self) -> str:
