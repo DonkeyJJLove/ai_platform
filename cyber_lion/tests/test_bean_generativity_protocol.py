@@ -4,13 +4,13 @@ import inspect
 import json
 import unittest
 
-from cyber_lion.enterprise.bean_generativity import (
+from cyber_lion.tests.experiments.bean_generativity import (
     BeanGenerativityProtocol,
     GenerativityExample,
     GenerativityProblem,
 )
 from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
-import cyber_lion.enterprise.bean_generativity as generativity
+import cyber_lion.tests.experiments.bean_generativity as generativity
 
 
 REPO = "DonkeyJJLove/ai_platform"
