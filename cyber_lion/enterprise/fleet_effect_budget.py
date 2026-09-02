@@ -1,7 +1,7 @@
 """Authoritative single-store fleet aggregate effect budget provider.
 
-This provider is a coordination restriction only.  It consumes no AuthorityGrant and
-cannot mint authority.  A caller must first prove authority independently, then present
+This provider is a coordination restriction only. It consumes no AuthorityGrant and
+cannot mint authority. A caller must first prove authority independently, then present
 the derived authority_effect_key in an exact reservation request.
 """
 from __future__ import annotations
@@ -15,7 +15,6 @@ from threading import RLock
 from typing import Callable
 
 from cyber_lion.contracts.fleet_effect_budget import (
-    FleetEffectBudgetContractError,
     FleetEffectBudgetSnapshot,
     FleetEffectEnvelope,
     FleetEffectReservation,
@@ -81,6 +80,13 @@ class FleetEffectBudgetStore:
             raise FleetEffectBudgetError("trusted clock returned invalid time")
         return value.astimezone(timezone.utc)
 
+    @staticmethod
+    def _parse(value: str) -> datetime:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            raise FleetEffectBudgetError("stored timestamp must be timezone-aware")
+        return parsed.astimezone(timezone.utc)
+
     def _initialize(self) -> None:
         with closing(self._connect()) as conn:
             conn.executescript(
@@ -97,6 +103,7 @@ class FleetEffectBudgetStore:
                     reservation_id TEXT PRIMARY KEY,
                     request_digest TEXT NOT NULL UNIQUE,
                     effect_id TEXT NOT NULL UNIQUE,
+                    candidate_digest TEXT NOT NULL,
                     mission_id TEXT NOT NULL,
                     executor_id TEXT NOT NULL,
                     runtime_id TEXT NOT NULL,
@@ -133,13 +140,15 @@ class FleetEffectBudgetStore:
         )
         with self._lock, closing(self._connect()) as conn:
             conn.execute("BEGIN IMMEDIATE")
-            row = conn.execute("SELECT envelope_id,fleet_id,generation,envelope_digest,policy_digest FROM fleet_effect_budget_meta WHERE singleton=1").fetchone()
+            row = conn.execute(
+                "SELECT envelope_id,fleet_id,generation,envelope_digest,policy_digest "
+                "FROM fleet_effect_budget_meta WHERE singleton=1"
+            ).fetchone()
             if row is None:
                 conn.execute("INSERT INTO fleet_effect_budget_meta VALUES(1,?,?,?,?,?)", expected)
                 conn.execute("COMMIT")
                 return
-            actual = tuple(row)
-            if actual != expected:
+            if tuple(row) != expected:
                 conn.execute("ROLLBACK")
                 raise FleetEffectBudgetError("fleet effect envelope substitution/generation drift denied")
             conn.execute("COMMIT")
@@ -151,18 +160,26 @@ class FleetEffectBudgetStore:
         except (TypeError, ValueError) as exc:
             raise FleetEffectBudgetError("stored reservation path evidence corrupt") from exc
         return FleetEffectReservation(
-            reservation_id=row["reservation_id"], request_digest=row["request_digest"], effect_id=row["effect_id"],
-            mission_id=row["mission_id"], executor_id=row["executor_id"], runtime_id=row["runtime_id"],
-            repository=row["repository"], branch=row["branch"], changed_paths=paths,
-            authority_effect_key=row["authority_effect_key"], authority_epoch=row["authority_epoch"],
-            envelope_id=row["envelope_id"], envelope_generation=row["envelope_generation"],
-            envelope_digest=row["envelope_digest"], state=row["state"], reserved_at=row["reserved_at"],
-            expires_at=row["expires_at"], finalized_at=row["finalized_at"],
+            reservation_id=row["reservation_id"],
+            request_digest=row["request_digest"],
+            effect_id=row["effect_id"],
+            candidate_digest=row["candidate_digest"],
+            mission_id=row["mission_id"],
+            executor_id=row["executor_id"],
+            runtime_id=row["runtime_id"],
+            repository=row["repository"],
+            branch=row["branch"],
+            changed_paths=paths,
+            authority_effect_key=row["authority_effect_key"],
+            authority_epoch=row["authority_epoch"],
+            envelope_id=row["envelope_id"],
+            envelope_generation=row["envelope_generation"],
+            envelope_digest=row["envelope_digest"],
+            state=row["state"],
+            reserved_at=row["reserved_at"],
+            expires_at=row["expires_at"],
+            finalized_at=row["finalized_at"],
         ).validate()
-
-    @staticmethod
-    def _active_where(now_iso: str) -> tuple[str, tuple[str, str]]:
-        return "state='RESERVED' AND expires_at>?", (now_iso,)
 
     def _expire_locked(self, conn: sqlite3.Connection, now_iso: str) -> None:
         conn.execute(
@@ -179,41 +196,47 @@ class FleetEffectBudgetStore:
         now_iso = now.isoformat()
         if request.envelope_generation != self._envelope.generation:
             raise FleetEffectBudgetError("stale envelope generation denied")
-        if now < datetime.fromisoformat(self._envelope.valid_from.replace("Z", "+00:00")).astimezone(timezone.utc):
+        if now < self._parse(self._envelope.valid_from):
             raise FleetEffectBudgetError("fleet effect envelope is not yet current")
-        if now >= datetime.fromisoformat(self._envelope.expires_at.replace("Z", "+00:00")).astimezone(timezone.utc):
+        if now >= self._parse(self._envelope.expires_at):
             raise FleetEffectBudgetError("fleet effect envelope expired")
-        requested = datetime.fromisoformat(request.requested_at.replace("Z", "+00:00")).astimezone(timezone.utc)
-        expires = datetime.fromisoformat(request.expires_at.replace("Z", "+00:00")).astimezone(timezone.utc)
+        requested = self._parse(request.requested_at)
+        expires = self._parse(request.expires_at)
         if requested != now:
             raise FleetEffectBudgetError("reservation request must bind exact trusted current time")
-        if expires > datetime.fromisoformat(self._envelope.expires_at.replace("Z", "+00:00")).astimezone(timezone.utc):
+        if expires > self._parse(self._envelope.expires_at):
             raise FleetEffectBudgetError("reservation cannot outlive envelope")
 
         with self._lock, closing(self._connect()) as conn:
             try:
                 conn.execute("BEGIN IMMEDIATE")
                 self._expire_locked(conn, now_iso)
-                meta = conn.execute("SELECT envelope_id,generation,envelope_digest FROM fleet_effect_budget_meta WHERE singleton=1").fetchone()
+                meta = conn.execute(
+                    "SELECT envelope_id,generation,envelope_digest FROM fleet_effect_budget_meta WHERE singleton=1"
+                ).fetchone()
                 expected_meta = (self._envelope.envelope_id, self._envelope.generation, self._envelope.digest())
                 if meta is None or tuple(meta) != expected_meta:
                     raise FleetEffectBudgetError("authoritative budget meta ambiguous or stale")
 
                 if conn.execute(
-                    "SELECT 1 FROM fleet_effect_reservation WHERE reservation_id=? OR request_digest=? OR effect_id=? OR authority_effect_key=?",
+                    "SELECT 1 FROM fleet_effect_reservation "
+                    "WHERE reservation_id=? OR request_digest=? OR effect_id=? OR authority_effect_key=?",
                     (request.reservation_id, request.digest(), request.effect_id, request.authority_effect_key),
                 ).fetchone() is not None:
                     raise FleetEffectBudgetError("reservation/effect/authority replay denied")
 
                 active_writers = conn.execute(
-                    "SELECT COUNT(*) FROM fleet_effect_reservation WHERE state='RESERVED' AND expires_at>?", (now_iso,)
+                    "SELECT COUNT(*) FROM fleet_effect_reservation WHERE state='RESERVED' AND expires_at>?",
+                    (now_iso,),
                 ).fetchone()[0]
                 repo_count = conn.execute(
-                    "SELECT COUNT(*) FROM fleet_effect_reservation WHERE state='RESERVED' AND expires_at>? AND repository=?",
+                    "SELECT COUNT(*) FROM fleet_effect_reservation "
+                    "WHERE state='RESERVED' AND expires_at>? AND repository=?",
                     (now_iso, request.repository),
                 ).fetchone()[0]
                 branch_count = conn.execute(
-                    "SELECT COUNT(*) FROM fleet_effect_reservation WHERE state='RESERVED' AND expires_at>? AND repository=? AND branch=?",
+                    "SELECT COUNT(*) FROM fleet_effect_reservation "
+                    "WHERE state='RESERVED' AND expires_at>? AND repository=? AND branch=?",
                     (now_iso, request.repository, request.branch),
                 ).fetchone()[0]
                 if active_writers >= self._envelope.max_concurrent_writers:
@@ -223,35 +246,52 @@ class FleetEffectBudgetStore:
                 if branch_count >= self._envelope.max_active_branch_effects:
                     raise FleetEffectBudgetError("branch effect budget exhausted")
 
+                active_path_rows = conn.execute(
+                    "SELECT changed_paths_json FROM fleet_effect_reservation "
+                    "WHERE state='RESERVED' AND expires_at>? AND repository=?",
+                    (now_iso, request.repository),
+                ).fetchall()
+                parsed_active_paths: list[tuple[str, ...]] = []
+                for row in active_path_rows:
+                    try:
+                        parsed_active_paths.append(tuple(json.loads(row[0])))
+                    except (TypeError, ValueError) as exc:
+                        raise FleetEffectBudgetError("active path reservation evidence corrupt") from exc
                 for path in request.changed_paths:
-                    path_count = 0
-                    for row in conn.execute(
-                        "SELECT changed_paths_json FROM fleet_effect_reservation WHERE state='RESERVED' AND expires_at>? AND repository=?",
-                        (now_iso, request.repository),
-                    ):
-                        try:
-                            existing = tuple(json.loads(row[0]))
-                        except (TypeError, ValueError) as exc:
-                            raise FleetEffectBudgetError("active path reservation evidence corrupt") from exc
-                        if path in existing:
-                            path_count += 1
+                    path_count = sum(path in existing for existing in parsed_active_paths)
                     if path_count >= self._envelope.max_active_path_effects:
                         raise FleetEffectBudgetError(f"path effect budget exhausted: {path}")
 
                 conn.execute(
                     """INSERT INTO fleet_effect_reservation(
-                    reservation_id,request_digest,effect_id,mission_id,executor_id,runtime_id,repository,branch,
-                    changed_paths_json,authority_effect_key,authority_epoch,envelope_id,envelope_generation,envelope_digest,
-                    state,reserved_at,expires_at,finalized_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'RESERVED',?,?,NULL)""",
+                    reservation_id,request_digest,effect_id,candidate_digest,mission_id,executor_id,runtime_id,
+                    repository,branch,changed_paths_json,authority_effect_key,authority_epoch,envelope_id,
+                    envelope_generation,envelope_digest,state,reserved_at,expires_at,finalized_at)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'RESERVED',?,?,NULL)""",
                     (
-                        request.reservation_id, request.digest(), request.effect_id, request.mission_id, request.executor_id,
-                        request.runtime_id, request.repository, request.branch,
-                        json.dumps(list(request.changed_paths), separators=(",", ":")), request.authority_effect_key,
-                        request.authority_epoch, self._envelope.envelope_id, self._envelope.generation,
-                        self._envelope.digest(), now_iso, request.expires_at,
+                        request.reservation_id,
+                        request.digest(),
+                        request.effect_id,
+                        request.candidate_digest,
+                        request.mission_id,
+                        request.executor_id,
+                        request.runtime_id,
+                        request.repository,
+                        request.branch,
+                        json.dumps(list(request.changed_paths), separators=(",", ":")),
+                        request.authority_effect_key,
+                        request.authority_epoch,
+                        self._envelope.envelope_id,
+                        self._envelope.generation,
+                        self._envelope.digest(),
+                        now_iso,
+                        request.expires_at,
                     ),
                 )
-                row = conn.execute("SELECT * FROM fleet_effect_reservation WHERE reservation_id=?", (request.reservation_id,)).fetchone()
+                row = conn.execute(
+                    "SELECT * FROM fleet_effect_reservation WHERE reservation_id=?",
+                    (request.reservation_id,),
+                ).fetchone()
                 conn.execute("COMMIT")
             except Exception:
                 if conn.in_transaction:
@@ -268,7 +308,9 @@ class FleetEffectBudgetStore:
         with self._lock, closing(self._connect()) as conn:
             conn.execute("BEGIN IMMEDIATE")
             self._expire_locked(conn, now_iso)
-            row = conn.execute("SELECT * FROM fleet_effect_reservation WHERE reservation_id=?", (reservation_id,)).fetchone()
+            row = conn.execute(
+                "SELECT * FROM fleet_effect_reservation WHERE reservation_id=?", (reservation_id,)
+            ).fetchone()
             conn.execute("COMMIT")
         if row is None:
             raise FleetEffectBudgetError("reservation unavailable")
@@ -279,11 +321,12 @@ class FleetEffectBudgetStore:
         reservation: FleetEffectReservation,
         *,
         effect_id: str,
+        candidate_digest: str,
         mission_id: str,
+        executor_id: str,
         runtime_id: str,
         repository: str,
         branch: str,
-        changed_paths: tuple[str, ...],
         authority_effect_key: str,
         authority_epoch: int,
     ) -> FleetEffectReservation:
@@ -294,14 +337,34 @@ class FleetEffectBudgetStore:
         if current.digest() != reservation.digest():
             raise FleetEffectBudgetError("reservation changed since admission")
         expected = (
-            effect_id, mission_id, runtime_id, repository, branch, changed_paths,
-            authority_effect_key, authority_epoch, self._envelope.envelope_id,
-            self._envelope.generation, self._envelope.digest(), "RESERVED",
+            effect_id,
+            candidate_digest,
+            mission_id,
+            executor_id,
+            runtime_id,
+            repository,
+            branch,
+            authority_effect_key,
+            authority_epoch,
+            self._envelope.envelope_id,
+            self._envelope.generation,
+            self._envelope.digest(),
+            "RESERVED",
         )
         actual = (
-            current.effect_id, current.mission_id, current.runtime_id, current.repository, current.branch,
-            current.changed_paths, current.authority_effect_key, current.authority_epoch,
-            current.envelope_id, current.envelope_generation, current.envelope_digest, current.state,
+            current.effect_id,
+            current.candidate_digest,
+            current.mission_id,
+            current.executor_id,
+            current.runtime_id,
+            current.repository,
+            current.branch,
+            current.authority_effect_key,
+            current.authority_epoch,
+            current.envelope_id,
+            current.envelope_generation,
+            current.envelope_digest,
+            current.state,
         )
         if actual != expected:
             raise FleetEffectBudgetError("reservation does not bind exact effect/runtime/authority scope")
@@ -315,14 +378,19 @@ class FleetEffectBudgetStore:
             conn.execute("BEGIN IMMEDIATE")
             self._expire_locked(conn, now_iso)
             cur = conn.execute(
-                "UPDATE fleet_effect_reservation SET state=?, finalized_at=? WHERE reservation_id=? AND state='RESERVED' AND expires_at>?",
+                "UPDATE fleet_effect_reservation SET state=?, finalized_at=? "
+                "WHERE reservation_id=? AND state='RESERVED' AND expires_at>?",
                 (state, now_iso, reservation_id, now_iso),
             )
             if cur.rowcount != 1:
                 conn.execute("ROLLBACK")
                 raise FleetEffectBudgetError("reservation cannot transition from current state")
-            row = conn.execute("SELECT * FROM fleet_effect_reservation WHERE reservation_id=?", (reservation_id,)).fetchone()
+            row = conn.execute(
+                "SELECT * FROM fleet_effect_reservation WHERE reservation_id=?", (reservation_id,)
+            ).fetchone()
             conn.execute("COMMIT")
+        if row is None:
+            raise FleetEffectBudgetError("terminal reservation disappeared")
         return self._reservation(row)
 
     def release(self, reservation_id: str) -> FleetEffectReservation:
@@ -338,7 +406,8 @@ class FleetEffectBudgetStore:
             self._expire_locked(conn, now_iso)
             rows = conn.execute(
                 "SELECT reservation_id,repository,branch,changed_paths_json FROM fleet_effect_reservation "
-                "WHERE state='RESERVED' AND expires_at>? ORDER BY reservation_id", (now_iso,)
+                "WHERE state='RESERVED' AND expires_at>? ORDER BY reservation_id",
+                (now_iso,),
             ).fetchall()
             conn.execute("COMMIT")
         repos: dict[str, int] = {}
