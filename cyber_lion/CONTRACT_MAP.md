@@ -19,6 +19,7 @@ Integracja jest prowadzona w modelu **contracts-first**. Istniejący providerzy 
 | Simulation Request/Result | `ai_platform` | adapter `run_model` | simulator/cognition |
 | Structure Graph | `ai_platform` | GlitchLab + Mosaic Lab | konsumenci grafu |
 | Replay Query/Record | `ai_platform` | EGDB/event stores/revision viewer | HUD/audit |
+| Fleet Aggregate Effect Budget | `ai_platform` | `FleetEffectBudgetStore` + `RepositoryMutationPEP` | consequential repository execution |
 
 ## 1. Entity Identity Envelope
 
@@ -212,7 +213,67 @@ Model probabilistyczny może zaproponować wartości; kod deterministyczny przed
 
 Niezaufane wejście może utworzyć candidate; nie może samo autoryzować trwałego memory commit.
 
-## 9. Polityka kompatybilności
+## 9. Fleet Aggregate Effect Budget — VERIFIED candidate
+
+Zweryfikowany candidate `FLEET_AGGREGATE_EFFECT_BUDGET_ENFORCEMENT` dodaje restrykcyjną warstwę admission dla sumy lokalnie poprawnych efektów. Evidence dla claimu jest związane z:
+
+```text
+PR=249
+VERIFIED_HEAD=b352d1c3d472e2b8d247b7194d2d62864611906b
+VERIFIED_TREE=ee402be211f1b85ca0018ecccc0c972de56b0cb9
+CONTRACT_DIGEST=c361104b330367212b3779f39898cc63b4ab9966219849eca84973a52fa163d2
+IMPLEMENTATION_DIGEST=83c359c27e94c0adf288b2e24e78a08860dc3e9ef112cdf4ad88aeda03e27465
+DEDICATED_RUN=33615802655
+CORE_RUN=33615802648
+```
+
+Kontrakt składa się z czterech immutable struktur:
+
+```text
+FleetEffectEnvelope
+FleetEffectReservationRequest
+FleetEffectReservation
+FleetEffectBudgetSnapshot
+```
+
+Reference implementation `FleetEffectBudgetStore` zapewnia atomową rezerwację, exact scope binding, generation binding, candidate binding, authority-effect-key binding, durable uniqueness, expiry, release/finalization i replay denial dla czterech zweryfikowanych wymiarów:
+
+```text
+max_concurrent_writers
+max_active_repository_effects
+max_active_branch_effects
+max_active_path_effects
+```
+
+Integracja `RepositoryMutationPEP` wykonuje budget reservation **po** live authority revalidation i exact authority binding, ale **przed** lokalnym `journal.prepare()`. Reservation jest ponownie walidowana przed effect boundary.
+
+Semantyka authority jest zamknięta i restrykcyjna:
+
+```text
+CAN_RESTRICT_AUTHORITY=YES
+CAN_CREATE_AUTHORITY=NO
+CAN_EXPAND_AUTHORITY=NO
+CAN_SUBSTITUTE_AUTHORITY=NO
+
+valid authority + no budget => DENY
+budget + no authority => DENY
+```
+
+Ten claim nie oznacza i nie implikuje:
+
+```text
+DISTRIBUTED_CONSENSUS=NO_CLAIM
+GLOBAL_MULTI_HOST_REPOSITORY_JOURNAL_LINEARIZABILITY=NO_CLAIM
+MONETARY_BUDGET=NO_CLAIM
+TOKEN_BUDGET=NO_CLAIM
+PRODUCTION_DEPLOYMENT=NO_CLAIM
+INTEGRATED=NO
+OBSERVED=NO
+```
+
+`RepositoryMutationPEP` zachowuje klasyfikację `SINGLE_RUNTIME_ATTACH_ONLY`. Zweryfikowany fleet budget ogranicza admission efektu; nie zmienia lokalnego journala w globalnie linearizowalny multi-host effect store.
+
+## 10. Polityka kompatybilności
 
 ```text
 CURRENT local contract

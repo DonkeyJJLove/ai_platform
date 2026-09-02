@@ -1,0 +1,808 @@
+{
+  "contract_id": "SPECTRA-R2E4-MERGE-AUTHORITY-FALSIFICATION-CONTRACT-V2",
+  "version": 2,
+  "effective_mode": "PROSPECTIVE_ONLY",
+  "artifact_class": "EVIDENCE_CONTRACT",
+  "repository": "DonkeyJJLove/ai_platform",
+  "pr": 248,
+  "epoch": "R2E4",
+  "source_head": "c4a51028e24eb1573682ce2b2011bbf69803ab88",
+  "source_tree": "2ac1da29a81f8ccf95dbd627a4853fd5525cb80a",
+  "source_ci_run": 33501227250,
+  "source_core_job": 99834789678,
+  "serialization_provenance": {
+    "generation_class": "GENERATED_OPERATIONAL_SUCCESSOR",
+    "generation": 1,
+    "historical_literal_r3_recovered": false,
+    "historical_attempted_byte_count": 39831,
+    "historical_attempted_content_sha256": "b61af781a02bea2850b36d4c85e1fec54c8f2bd8126db34a89641f1e658fbf43",
+    "rejected_dangling_blob": "a45485ef5cff75dd9e7636e48c6650f28b6b31ef",
+    "failed_successor_blobs": [
+      {
+        "blob": "f58b13ba745b53557f35d1e8605c12a657edaa00",
+        "reason": "CANONICAL_F_ID_ORDER_MISMATCH",
+        "reuse_as_final_blob": false,
+        "semantic_carrier_read_only": true
+      }
+    ]
+  },
+  "historical_f01_f40_rewritten": false,
+  "historical_f01_f40_results_preserved": true,
+  "automatic_i01_i40_to_f01_f40_mapping": false,
+  "falsification_evaluation_performed": false,
+  "authority_effect": false,
+  "merge_authorization_inferred": false,
+  "scope_policy": {
+    "authority": "HUMAN_GOVERNANCE",
+    "decision": "AUTHORIZE_CLOSED_TEST_ANCHORED_SUPPLEMENTAL_UNIVERSE_AND_JSON_SEMANTIC_KEY",
+    "raw_matrix_cardinality": 40,
+    "matrix_unique_semantic_cardinality": 38,
+    "semantic_deduplication": true,
+    "source_tests_discarded": false,
+    "supplemental_fill": true,
+    "selected_supplemental_count": 2,
+    "final_unique_cardinality": 40,
+    "positional_i_to_f_mapping": false
+  },
+  "matrix_duplicate_groups": [
+    {
+      "semantic": "BOOTSTRAP_UNKNOWN_FIELD_MUST_BE_REJECTED",
+      "related_i_tests": [
+        "I04",
+        "I38"
+      ]
+    },
+    {
+      "semantic": "SIGNATURE_VERIFICATION_NEGATIVE_RESULT_MUST_FAIL_CLOSED",
+      "related_i_tests": [
+        "I11",
+        "I13"
+      ]
+    }
+  ],
+  "selected_supplemental_invariants": [
+    {
+      "canonical_semantic_key_sha256": "141a9461f04ab199e17e7231dbf94596fa28f4fe3fc0f0fd4bca47b0f91f6eea",
+      "source_test": "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_callback_read_capability_exposes_no_consume_method"
+    },
+    {
+      "canonical_semantic_key_sha256": "b5c7c4d3e981ed355847176d9c6b0f6dfc7e3c2354c34c125dbdb1f98c338968",
+      "source_test": "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_exact_key_binds_all_replay_dimensions"
+    }
+  ],
+  "unselected_supplemental_invariants": [
+    "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_read_and_write_capabilities_are_distinct_types",
+    "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_read_observes_available_without_write",
+    "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_read_observes_consumed_without_mutation",
+    "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_unknown_state_remains_unknown",
+    "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_provider_failure_is_unavailable_not_available",
+    "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_malformed_provider_state_fails_closed",
+    "cyber_lion/tests/test_merge_authority_observation.py::ObservationContractStaticTests.test_real_negative_matrix_cardinality_is_exactly_40",
+    "cyber_lion/tests/test_merge_authority_observation.py::ObservationContractStaticTests.test_observer_does_not_import_private_epoch_registry",
+    "cyber_lion/tests/test_merge_authority_observation.py::ObservationContractStaticTests.test_unavailable_is_not_no",
+    "cyber_lion/tests/test_merge_authority_observation.py::ObservationContractStaticTests.test_observation_digest_changes_on_public_semantic_change"
+  ],
+  "conditions": [
+    {
+      "id": "F01",
+      "semantic_domain": "CONSUMED_STATE_VISIBILITY",
+      "claim": "A durable CONSUMED state is observed literally as consumed=YES.",
+      "falsifier": "A CONSUMED provider state is observed as NO or UNAVAILABLE.",
+      "required_evidence": "Literal consumption state and observation consumed field.",
+      "fail_closed_condition": "Missing or contradictory consumption evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i26_real_mutation"
+      ],
+      "related_i_tests": [
+        "I26"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "a9360440e879b523ba6c56ee64e16ad6f197e79afb42f739debd6093db8a9987"
+    },
+    {
+      "id": "F02",
+      "semantic_domain": "NOT_BEFORE_WINDOW",
+      "claim": "A grant issued after the trusted observation time is classified as not yet valid.",
+      "falsifier": "A future-issued grant is not classified as not_yet_valid.",
+      "required_evidence": "Grant issued_at and trusted clock observation evaluated by the grant-window function.",
+      "fail_closed_condition": "Missing trusted-time or grant-window evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::_grant_window",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i20_real_mutation"
+      ],
+      "related_i_tests": [
+        "I20"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "04b59f62cc51a688ff2ebe63b800bd8c82d10c78af81d97414767a2a72a9373e"
+    },
+    {
+      "id": "F03",
+      "semantic_domain": "EXPIRY_WINDOW",
+      "claim": "A grant whose expiry precedes the trusted observation time is classified as expired.",
+      "falsifier": "An already expired grant is not classified as expired.",
+      "required_evidence": "Grant expires_at and trusted clock observation evaluated by the grant-window function.",
+      "fail_closed_condition": "Missing trusted-time or expiry evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::_grant_window",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i21_real_mutation"
+      ],
+      "related_i_tests": [
+        "I21"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "44d6826c3e533db6ee68af3f02b74a67c4dfc3c510f302f7bd5c1b3691d9dd97"
+    },
+    {
+      "id": "F04",
+      "semantic_domain": "SIGNATURE_VERIFICATION_RESULT",
+      "claim": "A negative signature-verifier result causes authority authentication to fail closed.",
+      "falsifier": "Authority authentication succeeds when the verifier returns false.",
+      "required_evidence": "Authentication result for a grant under a verifier that returns false.",
+      "fail_closed_condition": "Verifier ambiguity, unavailable verification, or false verification cannot be promoted to valid authority.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_verification.py::authenticate_authority_grant",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i11_real_mutation",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i13_real_mutation"
+      ],
+      "related_i_tests": [
+        "I11",
+        "I13"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "bd3e569cc35f9b98558ce9e6dcde4c423393f0e6d9f5686e9f7b15264c32c2ee"
+    },
+    {
+      "id": "F05",
+      "semantic_domain": "LEAF_REVOCATION_CURRENTNESS",
+      "claim": "A revoked leaf is observed as revoked=YES and authority_current=NO.",
+      "falsifier": "A revoked leaf remains authority_current=YES or revoked is not observed as YES.",
+      "required_evidence": "Observation fields revoked and authority_current for a fixture with the leaf grant revoked.",
+      "fail_closed_condition": "Unavailable or contradictory revocation/currentness evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i19_real_mutation"
+      ],
+      "related_i_tests": [
+        "I19"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "fc9070d319d157e61345f66bac5f8462f6f00c5a320bd70e36391e3a822f45e9"
+    },
+    {
+      "id": "F06",
+      "semantic_domain": "SIGNATURE_VERIFIER_AVAILABILITY",
+      "claim": "A signature-verifier exception causes authority authentication to fail closed.",
+      "falsifier": "Authority authentication succeeds or is treated as valid when the verifier raises an exception.",
+      "required_evidence": "Authentication result under a verifier that raises a runtime exception.",
+      "fail_closed_condition": "Verifier failure or unavailable verification fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_verification.py::authenticate_authority_grant",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i12_real_mutation"
+      ],
+      "related_i_tests": [
+        "I12"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "c29dcfdb3102cbe664bc16038cbd946d9dec759b07db4b73ed9b83641ba117ea"
+    },
+    {
+      "id": "F07",
+      "semantic_domain": "BOOTSTRAP_CARDINALITY_MULTIPLE",
+      "claim": "A successful bootstrap lookup returning multiple records preserves the literal cardinality greater than one.",
+      "falsifier": "A multiple-record bootstrap lookup is collapsed to one, zero, or unavailable.",
+      "required_evidence": "Literal bootstrap tuple length and observation bootstrap_record_cardinality.",
+      "fail_closed_condition": "Missing raw cardinality evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i03_real_mutation"
+      ],
+      "related_i_tests": [
+        "I03"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "baa6be152ca790f5d1c585998ac88462a5626b6d5f568206efb976e9291d8cc7"
+    },
+    {
+      "id": "F08",
+      "semantic_domain": "BOOTSTRAP_CARDINALITY_ZERO",
+      "claim": "A successful bootstrap lookup returning zero records preserves literal cardinality 0 and provider availability YES.",
+      "falsifier": "A zero-record bootstrap lookup is rewritten as unavailable, nonzero, or provider failure.",
+      "required_evidence": "Literal bootstrap lookup result and observation bootstrap_record_cardinality/provider_available fields.",
+      "fail_closed_condition": "Missing or ambiguous cardinality evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i02_real_mutation"
+      ],
+      "related_i_tests": [
+        "I02"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "750b886e174608953791852f69f5686046c3d5a5d52ad78606e15171da9e1e29"
+    },
+    {
+      "id": "F09",
+      "semantic_domain": "ACTION_EXACT_BINDING",
+      "claim": "Authority action binding is NO when the leaf does not contain merge_pull_request.",
+      "falsifier": "A leaf containing only a different action is observed as action_exact=YES.",
+      "required_evidence": "Leaf actions, merge intent action, and observation action_exact.",
+      "fail_closed_condition": "Missing or ambiguous action binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i22_real_mutation"
+      ],
+      "related_i_tests": [
+        "I22"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "2deb232beaa996c0146d1981e405dcc72218b5ae159db0bf6aa960878945b300"
+    },
+    {
+      "id": "F10",
+      "semantic_domain": "ISSUER_KEY_BINDING",
+      "claim": "Authority authentication rejects issuer-key bindings whose issuer subject does not match the grant issuer.",
+      "falsifier": "A key binding for a different issuer authenticates the grant.",
+      "required_evidence": "Grant issuer_subject_id, issuer key binding identity, and authentication outcome.",
+      "fail_closed_condition": "Missing or mismatched issuer-key identity fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_verification.py::authenticate_authority_grant",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i14_real_mutation"
+      ],
+      "related_i_tests": [
+        "I14"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "ba4b9418d117bcf059c28fe381555643d68eda89c346d03f8fb04144dd246f44"
+    },
+    {
+      "id": "F11",
+      "semantic_domain": "AUTHORITY_GRANT_BINDING",
+      "claim": "Authority lookup identity changes when grant_id changes.",
+      "falsifier": "Changing grant_id leaves the authority lookup binding unchanged.",
+      "required_evidence": "AuthorityLookupKey bindings before and after grant_id mutation.",
+      "fail_closed_condition": "Unavailable or non-distinguishing grant binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_source.py::AuthorityLookupKey.binding",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i10_real_mutation"
+      ],
+      "related_i_tests": [
+        "I10"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "99d02b1cfe2ce425680e8a4b5f2f48b8472f6788d3065dc53f782794146ae54b"
+    },
+    {
+      "id": "F12",
+      "semantic_domain": "AUTHORITY_MISSION_BINDING",
+      "claim": "Authority lookup identity changes when mission_id changes.",
+      "falsifier": "Changing mission_id leaves the authority lookup binding unchanged.",
+      "required_evidence": "AuthorityLookupKey bindings before and after mission_id mutation.",
+      "fail_closed_condition": "Unavailable or non-distinguishing authority lookup binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_source.py::AuthorityLookupKey.binding",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i09_real_mutation"
+      ],
+      "related_i_tests": [
+        "I09"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "08835ec495a74d5c1143fe782d1bc4a0d76e6960296367589b0128691c504405"
+    },
+    {
+      "id": "F13",
+      "semantic_domain": "MERGE_METHOD_EXACT_BINDING",
+      "claim": "Authority merge-method binding is NO when the grant constraint specifies a different merge method.",
+      "falsifier": "A mismatched merge-method constraint is observed as merge_method_exact=YES.",
+      "required_evidence": "Canonical merge-method constraint and observation merge_method_exact.",
+      "fail_closed_condition": "Missing or ambiguous merge-method evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_admission.py::canonical_merge_method_constraint",
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i24_real_mutation"
+      ],
+      "related_i_tests": [
+        "I24"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "3a18561fabf2139e3f59d20f2072d6a24295cbda18ec567ccb46c741bbd6c5ac"
+    },
+    {
+      "id": "F14",
+      "semantic_domain": "RESOURCE_EXACT_BINDING",
+      "claim": "Authority observation rejects a leaf whose resource scope does not bind the exact trusted merge resource.",
+      "falsifier": "A resource scope for a different repository is accepted for the trusted merge intent.",
+      "required_evidence": "Canonical merge resource, leaf resource_scope, and observation/authentication outcome.",
+      "fail_closed_condition": "Missing or mismatched resource evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_admission.py::canonical_merge_resource",
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i23_real_mutation"
+      ],
+      "related_i_tests": [
+        "I23"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "2c75deb7264ee47c41806c8e168ab913cc2992b401c4ab6536a413507be2371c"
+    },
+    {
+      "id": "F15",
+      "semantic_domain": "BOOTSTRAP_WIRE_SHAPE",
+      "claim": "Bootstrap decoding rejects records containing unknown fields.",
+      "falsifier": "A bootstrap record with any undeclared field is accepted.",
+      "required_evidence": "Strict decoder result for a bootstrap wire record containing one additional field.",
+      "fail_closed_condition": "Decoder ambiguity or permissive unknown-field handling fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/pr_authority_bootstrap.py::decode_pr_authority_bootstrap_record",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i04_real_mutation",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i38_real_mutation"
+      ],
+      "related_i_tests": [
+        "I04",
+        "I38"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "cd612e171ceb23ec8e540af8f799484d903cf5b11f7eb11790c60c0450092377"
+    },
+    {
+      "id": "F16",
+      "semantic_domain": "BOOTSTRAP_BASE_SHA_BINDING",
+      "claim": "Bootstrap evidence binds exactly to the trusted base SHA.",
+      "falsifier": "A bootstrap record with a different base SHA is accepted.",
+      "required_evidence": "Trusted base SHA, bootstrap lookup_key.base_sha, and exact binding comparison.",
+      "fail_closed_condition": "Missing or mismatched base-SHA binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i07_real_mutation"
+      ],
+      "related_i_tests": [
+        "I07"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "5143c255d0ec3ac464afb38910169f8a2e2c2e960353e56b925859a464f9f20b"
+    },
+    {
+      "id": "F17",
+      "semantic_domain": "BOOTSTRAP_HEAD_SHA_BINDING",
+      "claim": "Bootstrap evidence binds exactly to the trusted head SHA.",
+      "falsifier": "A bootstrap record with a different head SHA is accepted.",
+      "required_evidence": "Trusted head SHA, bootstrap lookup_key.head_sha, and exact binding comparison.",
+      "fail_closed_condition": "Missing or mismatched head-SHA binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i08_real_mutation"
+      ],
+      "related_i_tests": [
+        "I08"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "43aa928385dab2c6680a467cd4a7a0d532306441bb0dae0e8acdd4fc9f787555"
+    },
+    {
+      "id": "F18",
+      "semantic_domain": "BOOTSTRAP_PR_BINDING",
+      "claim": "Bootstrap evidence binds exactly to the trusted pull-request number.",
+      "falsifier": "A bootstrap record for a different pull-request number is accepted.",
+      "required_evidence": "Trusted PR number, bootstrap lookup_key.pr_number, and exact binding comparison.",
+      "fail_closed_condition": "Missing or mismatched PR-number binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i06_real_mutation"
+      ],
+      "related_i_tests": [
+        "I06"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "e3b1aecbff0e7013f82f71c1aeb4f8f9ee393f383d8a7df907df531839d2dbc7"
+    },
+    {
+      "id": "F19",
+      "semantic_domain": "BOOTSTRAP_REPOSITORY_BINDING",
+      "claim": "Bootstrap evidence binds exactly to the trusted repository identity.",
+      "falsifier": "A bootstrap record for a different repository is accepted for the trusted PR state.",
+      "required_evidence": "Trusted PR repository, bootstrap lookup_key.repository, and exact binding comparison.",
+      "fail_closed_condition": "Missing or mismatched repository binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i05_real_mutation"
+      ],
+      "related_i_tests": [
+        "I05"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "a387167b12a34c266d96be72300d57075d964c5dcdc737907f06ccb36f549d48"
+    },
+    {
+      "id": "F20",
+      "semantic_domain": "BOOTSTRAP_PROVIDER_AVAILABILITY",
+      "claim": "Bootstrap provider failure is represented as provider_available=NO with bootstrap cardinality unavailable.",
+      "falsifier": "A bootstrap provider exception is represented as an ordinary zero-cardinality response or as provider_available=YES.",
+      "required_evidence": "Observation of a bootstrap provider exception and the resulting provider_available and bootstrap_record_cardinality fields.",
+      "fail_closed_condition": "Any inability to distinguish provider failure from an empty successful response falsifies the invariant.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i01_real_mutation"
+      ],
+      "related_i_tests": [
+        "I01"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "bca66708e42c832d55775b79d5c4ca417fb4adc4162e9deebcae23ee485c18a8"
+    },
+    {
+      "id": "F21",
+      "semantic_domain": "CONSUMPTION_CAPABILITY_SURFACE",
+      "claim": "Callback consumption read capability exposes no consume_exact or reserve_exact method.",
+      "falsifier": "Callback consumption read capability exposes consume_exact or reserve_exact.",
+      "required_evidence": "Literal callback read-capability interface and method availability.",
+      "fail_closed_condition": "Any mutation method exposed by the callback read capability fails closed.",
+      "source_anchors": [
+        "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_callback_read_capability_exposes_no_consume_method"
+      ],
+      "related_i_tests": [],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "SUPPLEMENTAL_SOURCE_INVARIANT",
+      "canonical_semantic_key_sha256": "141a9461f04ab199e17e7231dbf94596fa28f4fe3fc0f0fd4bca47b0f91f6eea"
+    },
+    {
+      "id": "F22",
+      "semantic_domain": "EPOCH_OBSERVATION_MATCH",
+      "claim": "Canonical epoch observation for the grant context exposes the same epoch as the grant fixture.",
+      "falsifier": "Observed canonical epoch differs from the grant epoch without being detected.",
+      "required_evidence": "Grant epoch and canonical AuthorityEpochObservationSnapshot.epoch.",
+      "fail_closed_condition": "Unavailable or mismatched epoch evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_revocation.py::observe_canonical_authority_epoch_state",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i15_real_mutation"
+      ],
+      "related_i_tests": [
+        "I15"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "93a7442d6102e6b59ce4427d1be63df9255e1d5e3c394073c3215da19b1dd3ac"
+    },
+    {
+      "id": "F23",
+      "semantic_domain": "INTERMEDIATE_REVOCATION_VISIBILITY",
+      "claim": "Canonical epoch observation preserves a revoked intermediate grant identifier.",
+      "falsifier": "A revoked intermediate grant identifier disappears from the public epoch snapshot.",
+      "required_evidence": "Registered revoked_grant_ids containing intermediate and observed snapshot.",
+      "fail_closed_condition": "Missing revocation-state evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_revocation.py::observe_canonical_authority_epoch_state",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i18_real_mutation"
+      ],
+      "related_i_tests": [
+        "I18"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "79adb36878fa2fe6aa3c0195e5232c0c41498d3783f7f6791b0416d951419953"
+    },
+    {
+      "id": "F24",
+      "semantic_domain": "ROOT_REVOCATION_VISIBILITY",
+      "claim": "Canonical epoch observation preserves a revoked root grant identifier.",
+      "falsifier": "A revoked root grant identifier disappears from the public epoch snapshot.",
+      "required_evidence": "Registered revoked_grant_ids containing root and observed snapshot.",
+      "fail_closed_condition": "Missing revocation-state evidence fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_revocation.py::observe_canonical_authority_epoch_state",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i17_real_mutation"
+      ],
+      "related_i_tests": [
+        "I17"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "a558746175a03e4f210856ed3c8b206a1cbb2e12bb2faaacd9fe84a06b02856e"
+    },
+    {
+      "id": "F25",
+      "semantic_domain": "EPOCH_REGISTERED_STATE",
+      "claim": "Canonical epoch observation returns the explicitly registered current epoch for its authority context.",
+      "falsifier": "Observation returns an epoch different from the registered canonical state.",
+      "required_evidence": "Registered AuthorityEpochState and subsequent public observation snapshot.",
+      "fail_closed_condition": "Unavailable or context-ambiguous epoch state fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/authority_revocation.py::observe_canonical_authority_epoch_state",
+        "cyber_lion/enterprise/authority_revocation.py::register_canonical_authority_epoch_state",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i16_real_mutation"
+      ],
+      "related_i_tests": [
+        "I16"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "9f854ebc9573c2a938cce878d19d14943d766329f9305ab31628e7b343fbf65e"
+    },
+    {
+      "id": "F26",
+      "semantic_domain": "READ_CONCURRENCY_NON_CONSUMING",
+      "claim": "Concurrent read observations of AVAILABLE state remain AVAILABLE and do not consume authority.",
+      "falsifier": "Concurrent read observations mutate state or return a consumed/non-available result.",
+      "required_evidence": "Two concurrent observe_consumption_exact calls against one read capability.",
+      "fail_closed_condition": "Any write effect or ambiguous concurrent state fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_consumption.py::CallbackConsumptionReadCapability.observe_consumption_exact",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i27_real_mutation"
+      ],
+      "related_i_tests": [
+        "I27"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "fd9943a135c9fe7ec6df2034ff98265cac0c03fd5c3145be75be69a898bcc209"
+    },
+    {
+      "id": "F27",
+      "semantic_domain": "CONSUMPTION_REPLAY_BINDING",
+      "claim": "Consumption key binding changes when any replay dimension represented by the key changes.",
+      "falsifier": "Changing merge_method leaves the consumption key binding unchanged.",
+      "required_evidence": "Consumption-key bindings before and after one replay-dimension mutation.",
+      "fail_closed_condition": "A replay dimension that does not participate in binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/tests/test_merge_authority_consumption.py::MergeAuthorityConsumptionContractTests.test_exact_key_binds_all_replay_dimensions"
+      ],
+      "related_i_tests": [],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "SUPPLEMENTAL_SOURCE_INVARIANT",
+      "canonical_semantic_key_sha256": "b5c7c4d3e981ed355847176d9c6b0f6dfc7e3c2354c34c125dbdb1f98c338968"
+    },
+    {
+      "id": "F28",
+      "semantic_domain": "CONSUMPTION_PROVIDER_UNAVAILABLE",
+      "claim": "Consumption provider failure is represented as consumed=UNAVAILABLE.",
+      "falsifier": "A consumption provider exception is rewritten as consumed=NO or YES.",
+      "required_evidence": "Consumption provider exception and observation consumed field.",
+      "fail_closed_condition": "Provider failure cannot be silently substituted with an available/unconsumed state.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i25_real_mutation"
+      ],
+      "related_i_tests": [
+        "I25"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "e10f3a2e714810a869040dc60f2d17aac16989fe4071635ac16c8b11bc569b05"
+    },
+    {
+      "id": "F29",
+      "semantic_domain": "ENTRYPOINT_PROVIDER_SELECTION_BOUNDARY",
+      "claim": "Merge-authority observation entrypoint selects authority providers from explicit CYBER_LION provider selectors and not from GITHUB_EVENT_PATH.",
+      "falsifier": "The entrypoint depends on GITHUB_EVENT_PATH for authority-provider selection or lacks the authority provider selector.",
+      "required_evidence": "Literal source of merge_authority_observation_entrypoint.py.",
+      "fail_closed_condition": "Unclear or event-payload-selected provider composition fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation_entrypoint.py::_REQUIRED_PROVIDER_SELECTORS",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i32_real_mutation"
+      ],
+      "related_i_tests": [
+        "I32"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "e462ab3d76f50cf7b03c2d1452ce4fb639bff05036d5e9350fec0a6d813b0723"
+    },
+    {
+      "id": "F30",
+      "semantic_domain": "OBSERVER_NO_RESERVE_OR_CONSUME_CALLS",
+      "claim": "Merge-authority observation implementation contains no consume_exact or reserve_exact call.",
+      "falsifier": "Observer implementation invokes consume_exact or reserve_exact.",
+      "required_evidence": "Literal source text of merge_authority_observation.py.",
+      "fail_closed_condition": "Any consumption mutation call in the observer fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i34_real_mutation"
+      ],
+      "related_i_tests": [
+        "I34"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "374e479f2ccd5970f3f85d522f49043cf92632a01bed12891d55bddb0bc21738"
+    },
+    {
+      "id": "F31",
+      "semantic_domain": "OBSERVATION_DIGEST_SEMANTIC_BINDING",
+      "claim": "Observation digest changes when a public semantic field such as observation_id changes.",
+      "falsifier": "A public semantic change leaves expected observation digest unchanged.",
+      "required_evidence": "Original observation digest and expected_digest after a public semantic mutation.",
+      "fail_closed_condition": "Missing or non-binding observation digest fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::TrustedMergeAuthorityObservation.expected_digest",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i40_real_mutation"
+      ],
+      "related_i_tests": [
+        "I40"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "49b7c9139f010ced2c472e29a396cd7ed49453b5ec143c9de86bea7b14445ffe"
+    },
+    {
+      "id": "F32",
+      "semantic_domain": "PROVIDER_IDENTITY_SECRET_EXCLUSION",
+      "claim": "Provider identity validation rejects secret-bearing identity content.",
+      "falsifier": "Provider identity containing a secret-bearing term is accepted.",
+      "required_evidence": "ProviderIdentityEvidence validation outcome for secret-bearing implementation identity.",
+      "fail_closed_condition": "Secret-bearing provider identity or ambiguous validation fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::ProviderIdentityEvidence.validate",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i37_real_mutation"
+      ],
+      "related_i_tests": [
+        "I37"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "4b8fda67297f2126ac7971037fb8c7278c1af1b2a3da504ec2a5f244a29c57b7"
+    },
+    {
+      "id": "F33",
+      "semantic_domain": "PROVIDER_CONFIGURATION_BINDING",
+      "claim": "Provider public-configuration digest changes when provider implementation/configuration changes.",
+      "falsifier": "Different provider identities/configurations produce the same public configuration digest.",
+      "required_evidence": "Provider identity construction for two different implementation identities/configurations.",
+      "fail_closed_condition": "Missing or non-distinguishing provider configuration binding fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::provider_identity",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i31_real_mutation"
+      ],
+      "related_i_tests": [
+        "I31"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "43f709e2a5c7a196624cd2404570946a12a4fba3be36fa5696859262870bc06e"
+    },
+    {
+      "id": "F34",
+      "semantic_domain": "REPEATED_OBSERVATION_NON_CONSUMING",
+      "claim": "Repeated trusted authority observations do not consume available authority.",
+      "falsifier": "A prior observation causes a later equivalent observation to report consumed=YES.",
+      "required_evidence": "Two independent observations over AVAILABLE consumption state.",
+      "fail_closed_condition": "Observation-induced consumption or ambiguous state fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i28_real_mutation"
+      ],
+      "related_i_tests": [
+        "I28"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "06b8117207bd2d89b088d718d5262a392faccd3d9fc4786e1f8e0e96ff6a297b"
+    },
+    {
+      "id": "F35",
+      "semantic_domain": "ZERO_VS_UNAVAILABLE_DISTINCTION",
+      "claim": "Successful zero-cardinality bootstrap evidence remains distinct from bootstrap-provider unavailability.",
+      "falsifier": "Zero records and provider failure produce indistinguishable cardinality/availability observations.",
+      "required_evidence": "Paired zero-result and exception observations with their cardinality and provider_available fields.",
+      "fail_closed_condition": "Loss of zero-versus-unavailable distinction fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i39_real_mutation"
+      ],
+      "related_i_tests": [
+        "I39"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "0e20f1f4c4e3848e05cd3f3de3c504a9790d3c30ce2ab79f620b6718d4af6c48"
+    },
+    {
+      "id": "F36",
+      "semantic_domain": "TRUSTED_CLOCK_ORDERING",
+      "claim": "Trusted clock observations preserve literal temporal ordering and may move backward as data rather than being silently normalized.",
+      "falsifier": "A later-observed earlier timestamp is rewritten to preserve monotonicity without evidence.",
+      "required_evidence": "Two canonical TrustedAuthorityClockObservation timestamps and their parsed datetime ordering.",
+      "fail_closed_condition": "Missing literal clock values or hidden normalization fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::TrustedAuthorityClockObservation.datetime_utc",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i30_real_mutation"
+      ],
+      "related_i_tests": [
+        "I30"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "2367c97e13563b17c0a873ccad06e4a9003b915d83a99c12c4bf707dfc88984e"
+    },
+    {
+      "id": "F37",
+      "semantic_domain": "TRUSTED_CLOCK_AVAILABILITY",
+      "claim": "Trusted clock provider failure raises a merge-authority observation error.",
+      "falsifier": "Clock-provider failure is silently converted into a usable timestamp or successful observation.",
+      "required_evidence": "Exception from the trusted clock provider and _clock_observation outcome.",
+      "fail_closed_condition": "Unavailable trusted clock fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::_clock_observation",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i29_real_mutation"
+      ],
+      "related_i_tests": [
+        "I29"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "26fea17d8ea0fd38159bd7401adc598c185ef61bd0f536fff9b30d844600512b"
+    },
+    {
+      "id": "F38",
+      "semantic_domain": "OBSERVATION_NOT_DECISION",
+      "claim": "Trusted merge-authority observation carries evidence fields but no decision attribute.",
+      "falsifier": "The observation object exposes a decision field or is treated as an admission decision.",
+      "required_evidence": "Public TrustedMergeAuthorityObservation shape and baseline observation.",
+      "fail_closed_condition": "Conflation of observation with decision fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::TrustedMergeAuthorityObservation",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i35_real_mutation"
+      ],
+      "related_i_tests": [
+        "I35"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "f995136261d8f7b605e0510ab291edd6cbd174bc6c5f93c030edbfa41793281b"
+    },
+    {
+      "id": "F39",
+      "semantic_domain": "CI_SUCCESS_NOT_AUTHORITY_EVIDENCE",
+      "claim": "Trusted merge-authority observation contains no workflow_success or job_success authority fields.",
+      "falsifier": "Workflow or job success is embedded in the authority observation as positive authority evidence.",
+      "required_evidence": "Public observation object shape.",
+      "fail_closed_condition": "Any CI-success-as-authority field fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::TrustedMergeAuthorityObservation",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i36_real_mutation"
+      ],
+      "related_i_tests": [
+        "I36"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "02a8b2b8a2acfd69ca57adcd2705682494cb154376ebf5dbf9beac361a0f93de"
+    },
+    {
+      "id": "F40",
+      "semantic_domain": "OBSERVER_SIGNATURE_READ_ONLY",
+      "claim": "observe_trusted_merge_authority exposes no consumption_write parameter.",
+      "falsifier": "The observer function signature exposes a consumption write capability.",
+      "required_evidence": "Literal callable signature of observe_trusted_merge_authority.",
+      "fail_closed_condition": "Any observer-accessible consumption write parameter fails closed.",
+      "source_anchors": [
+        "cyber_lion/enterprise/merge_authority_observation.py::observe_trusted_merge_authority",
+        "cyber_lion/tests/test_merge_authority_observation.py::MergeAuthorityObservationMatrixTests.test_i33_real_mutation"
+      ],
+      "related_i_tests": [
+        "I33"
+      ],
+      "relation_type": "DIRECT_IMPLEMENTATION_TEST",
+      "origin_class": "MATRIX_DERIVED",
+      "canonical_semantic_key_sha256": "6416456a2380f340781a3e090e8780011cd7f9682f8efcc95dc3d65f7bbe3fd8"
+    }
+  ]
+}
