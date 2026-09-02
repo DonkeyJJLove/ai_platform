@@ -8,14 +8,21 @@ import re
 import urllib.parse
 import urllib.request
 
+from .authority_revocation import (
+    AuthorityEpochState,
+    observe_canonical_authority_epoch_state,
+    register_canonical_authority_epoch_state,
+)
 from .ci_live_admission_providers import (
     CILiveAdmissionProviderError,
     PROVIDER_VERSION,
     _NoRedirect,
 )
+from .pr_authority_bootstrap import decode_pr_authority_bootstrap_record
 
 _CLOCK_PATH = "/v1/trusted-clock"
 _CONSUMPTION_PATH = "/v1/merge-authority-consumption"
+_EPOCH_PATH = "/v1/authority-epoch-snapshot"
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -145,3 +152,104 @@ def observe_consumption_exact(
         "state_version": decoded["state_version"],
         "provenance_id": decoded["provenance_id"],
     }
+
+
+def bind_epoch_state_from_bootstrap_records(
+    records: tuple[Mapping[str, object], ...],
+) -> tuple[Mapping[str, object], ...]:
+    """Bind the CI process-local epoch reader to an independent persistent LAB snapshot.
+
+    Cardinality remains the bootstrap provider's evidence. A zero/many bootstrap result is
+    returned unchanged so the observer can report it literally. Only an exact bootstrap
+    record is allowed to select the independently read authority context.
+    """
+    if type(records) is not tuple:
+        raise CILiveAdmissionProviderError("bootstrap result must be immutable tuple")
+    if len(records) != 1:
+        return records
+    try:
+        bootstrap = decode_pr_authority_bootstrap_record(records[0])
+        context = bootstrap.to_live_admission_bootstrap().verification_context()
+    except Exception as exc:
+        raise CILiveAdmissionProviderError("bootstrap context is invalid") from exc
+
+    decoded = _get(
+        _EPOCH_PATH,
+        [
+            ("trust_domain", context.trust_domain),
+            ("tenant_id", context.tenant_id),
+            ("organization_id", context.organization_id),
+            ("mission_id", context.mission_id),
+        ],
+    )
+    expected_fields = {
+        "provider_version",
+        "trust_domain",
+        "tenant_id",
+        "organization_id",
+        "mission_id",
+        "epoch",
+        "revoked_grant_ids",
+        "state_version",
+    }
+    if set(decoded) != expected_fields:
+        raise CILiveAdmissionProviderError("authority epoch response is not canonical")
+    if (
+        decoded["trust_domain"],
+        decoded["tenant_id"],
+        decoded["organization_id"],
+        decoded["mission_id"],
+    ) != (
+        context.trust_domain,
+        context.tenant_id,
+        context.organization_id,
+        context.mission_id,
+    ):
+        raise CILiveAdmissionProviderError("authority epoch context mismatch")
+    epoch = decoded["epoch"]
+    state_version = decoded["state_version"]
+    revoked = decoded["revoked_grant_ids"]
+    if (
+        type(epoch) is not int
+        or epoch < 0
+        or type(state_version) is not int
+        or state_version < 1
+        or type(revoked) is not list
+        or len(set(revoked)) != len(revoked)
+        or any(not isinstance(value, str) or not value for value in revoked)
+    ):
+        raise CILiveAdmissionProviderError("authority epoch response is invalid")
+    state = AuthorityEpochState(
+        context.trust_domain,
+        context.tenant_id,
+        context.organization_id,
+        context.mission_id,
+        epoch,
+        tuple(revoked),
+    ).validate()
+    try:
+        register_canonical_authority_epoch_state(state)
+    except Exception:
+        try:
+            existing = observe_canonical_authority_epoch_state(context)
+        except Exception as exc:
+            raise CILiveAdmissionProviderError(
+                "authority epoch registration failed"
+            ) from exc
+        if (
+            existing.trust_domain,
+            existing.tenant_id,
+            existing.organization_id,
+            existing.mission_id,
+            existing.epoch,
+            existing.revoked_grant_ids,
+        ) != (
+            state.trust_domain,
+            state.tenant_id,
+            state.organization_id,
+            state.mission_id,
+            state.epoch,
+            state.revoked_grant_ids,
+        ):
+            raise CILiveAdmissionProviderError("authority epoch state drift")
+    return records
