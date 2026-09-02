@@ -3,6 +3,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 import inspect,tempfile,unittest
 from unittest.mock import patch
+from cyber_lion.contracts.fleet_effect_budget import FleetEffectEnvelope,FleetEffectReservation
 from cyber_lion.contracts.repository_mutation import *
 from cyber_lion.enterprise.authority_grant import AuthorityGrant
 from cyber_lion.enterprise.live_authority_admission import LiveAdmittedAuthority,LiveAuthorityAdmission,LiveAuthorityAdmissionError
@@ -15,6 +16,8 @@ EFFECT=TrustedDependencyPin("cas","5"*64,"6"*64,"7"*64).validate()
 OBS=TrustedDependencyPin("observer","8"*64,"9"*64,"a"*64).validate()
 CLOCK=TrustedDependencyPin("clock","b"*64,"c"*64,"d"*64).validate()
 RUNTIME=TrustedDependencyPin("runtime-1","e"*64,"f"*64,"1"*64).validate()
+BUDGET_PIN=TrustedDependencyPin("budget","2"*64,"3"*64,"4"*64).validate()
+BUDGET_ENV=FleetEffectEnvelope("env","fleet",1,"5"*64,10,10,10,10,"2026-08-20T00:00:00+00:00","2026-08-22T00:00:00+00:00").validate()
 
 class Source(CandidateVerificationSource):
     source_id="source"; source_identity_digest="3"*64; source_implementation_digest="4"*64
@@ -51,6 +54,33 @@ class FakeCAS:
     supports_exact_old_sha_cas=True
     dependency_id="attacker"; identity_digest="0"*64; implementation_digest="0"*64
     def compare_and_swap_fast_forward(self,**kw): raise AssertionError
+class Budget:
+    dependency_id="budget"; identity_digest="2"*64; implementation_digest="3"*64
+    envelope=BUDGET_ENV
+    def __init__(self,*,fail_reserve=False): self.records={}; self.fail_reserve=fail_reserve; self.reserve_calls=0; self.validate_calls=0
+    def reserve_exact(self,request):
+        self.reserve_calls+=1
+        if self.fail_reserve: raise RuntimeError("budget unavailable")
+        if request.reservation_id in self.records: raise RuntimeError("replay")
+        r=FleetEffectReservation(request.reservation_id,request.digest(),request.effect_id,request.candidate_digest,
+          request.mission_id,request.executor_id,request.runtime_id,request.repository,request.branch,request.changed_paths,
+          request.authority_effect_key,request.authority_epoch,self.envelope.envelope_id,self.envelope.generation,
+          self.envelope.digest(),"RESERVED",request.requested_at,request.expires_at).validate()
+        self.records[r.reservation_id]=r; return r
+    def get(self,reservation_id):
+        if reservation_id not in self.records: raise RuntimeError("missing budget")
+        return self.records[reservation_id]
+    def validate_for_effect(self,reservation,**kw):
+        self.validate_calls+=1; current=self.get(reservation.reservation_id)
+        if current.digest()!=reservation.digest() or current.state!="RESERVED": raise RuntimeError("stale budget")
+        expected=(kw["effect_id"],kw["candidate_digest"],kw["mission_id"],kw["executor_id"],kw["runtime_id"],kw["repository"],kw["branch"],kw["authority_effect_key"],kw["authority_epoch"])
+        actual=(current.effect_id,current.candidate_digest,current.mission_id,current.executor_id,current.runtime_id,current.repository,current.branch,current.authority_effect_key,current.authority_epoch)
+        if actual!=expected: raise RuntimeError("budget mismatch")
+        return current
+    def release(self,reservation_id):
+        r=self.get(reservation_id); r=replace(r,state="RELEASED",finalized_at=VALID.isoformat()); self.records[reservation_id]=r; return r
+    def finalize(self,reservation_id):
+        r=self.get(reservation_id); r=replace(r,state="FINALIZED",finalized_at=VALID.isoformat()); self.records[reservation_id]=r; return r
 
 def candidate():
     return DetachedRepositoryCandidate(REPO,BRANCH,HEAD,HEAD,COMMIT,TREE,("a","b"),"builder","p").validate()
@@ -70,31 +100,45 @@ class Tests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.pp=patch.object(state_module,"CANONICAL_REPOSITORY_ATTACH_JOURNAL_PATH",self.tmp.name+"/j.db"); self.pp.start()
         self.c=candidate(); self.v=verified(self.c); self.i=intent(self.c,self.v); self.g=make_grant(self.i); self.a=admitted(self.g)
-        self.live=object.__new__(LiveAuthorityAdmission); self.b=Backend(); self.e=Effect(self.b); self.o=Observer(self.b); self.clock=Clock([VALID,VALID,VALID])
+        self.live=object.__new__(LiveAuthorityAdmission); self.b=Backend(); self.e=Effect(self.b); self.o=Observer(self.b); self.clock=Clock([VALID,VALID,VALID]); self.budget=Budget()
     def tearDown(self): self.pp.stop(); self.tmp.cleanup()
-    def pep(self,*,clock=None,effect=None,observer=None,runtime=RUNTIME,source=None):
+    def pep(self,*,clock=None,effect=None,observer=None,runtime=RUNTIME,source=None,budget=None,budget_pin=BUDGET_PIN):
         return RepositoryMutationPEP(live_admission=self.live,verification_source=source or Source((self.v,)),verifier_pin=VER,
           effect_port=effect or self.e,effect_pin=EFFECT,observer=observer or self.o,observer_pin=OBS,
-          clock=clock or self.clock,clock_pin=CLOCK,runtime_scope_pin=runtime)
+          clock=clock or self.clock,clock_pin=CLOCK,runtime_scope_pin=runtime,budget_provider=budget or self.budget,budget_pin=budget_pin)
     def admit_ok(self,p):
         with patch.object(LiveAuthorityAdmission,"revalidate",return_value=self.a):
             return p.admit(intent=self.i,candidate=self.c,admitted=self.a,authority_leaf=self.g,admission_id="adm",effect_id="eff")
     def test_operation_caller_cannot_supply_time_or_dependencies(self):
         for method in (RepositoryMutationPEP.admit,RepositoryMutationPEP.execute):
             ps=inspect.signature(method).parameters
-            for forbidden in ("now","prepared_at","attempted_at","finalized_at","clock","verification_source","provider","journal"):
+            for forbidden in ("now","prepared_at","attempted_at","finalized_at","clock","verification_source","provider","journal","budget_provider"):
                 self.assertNotIn(forbidden,ps)
     def test_self_declared_cas_denied(self):
         with self.assertRaises(RepositoryMutationPEPError): self.pep(effect=FakeCAS())
+    def test_unpinned_budget_provider_denied_at_composition(self):
+        wrong=TrustedDependencyPin("other","2"*64,"3"*64,"4"*64).validate()
+        with self.assertRaises(RepositoryMutationPEPError): self.pep(budget_pin=wrong)
     def test_journal_classified_single_runtime(self):
         p=self.pep(); self.assertEqual(p.journal_scope_class,"SINGLE_RUNTIME_ATTACH_ONLY")
         self.assertEqual(p.runtime_scope_constraint,f"runtime_scope:{RUNTIME.digest()}")
+        self.assertEqual(p.fleet_effect_envelope_digest,BUDGET_ENV.digest())
     def test_runtime_scope_constraint_required(self):
         bad=replace(self.g,constraints=tuple(x for x in self.g.constraints if not x.startswith("runtime_scope:")))
         bad_a=admitted(bad); p=self.pep()
         with patch.object(LiveAuthorityAdmission,"revalidate",return_value=bad_a):
             d=p.admit(intent=self.i,candidate=self.c,admitted=bad_a,authority_leaf=bad,admission_id="adm",effect_id="eff")
-        self.assertEqual(d.decision,"DENY")
+        self.assertEqual(d.decision,"DENY"); self.assertEqual(self.budget.reserve_calls,0)
+    def test_valid_authority_without_budget_is_denied(self):
+        p=self.pep(budget=Budget(fail_reserve=True))
+        with patch.object(LiveAuthorityAdmission,"revalidate",return_value=self.a):
+            d=p.admit(intent=self.i,candidate=self.c,admitted=self.a,authority_leaf=self.g,admission_id="adm",effect_id="eff")
+        self.assertEqual(d.decision,"DENY"); self.assertEqual(self.e.calls,0)
+    def test_fresh_budget_without_authority_is_denied(self):
+        p=self.pep()
+        with patch.object(LiveAuthorityAdmission,"revalidate",side_effect=LiveAuthorityAdmissionError("no authority")):
+            d=p.admit(intent=self.i,candidate=self.c,admitted=self.a,authority_leaf=self.g,admission_id="adm",effect_id="eff")
+        self.assertEqual(d.decision,"DENY"); self.assertEqual(self.budget.reserve_calls,0)
     def test_trusted_clock_used_at_admit_not_yet_valid_denied(self):
         p=self.pep(clock=Clock([EARLY]))
         def rv(_self,a,*,now):
@@ -103,6 +147,10 @@ class Tests(unittest.TestCase):
         with patch.object(LiveAuthorityAdmission,"revalidate",new=rv):
             d=p.admit(intent=self.i,candidate=self.c,admitted=self.a,authority_leaf=self.g,admission_id="adm",effect_id="eff")
         self.assertEqual(d.decision,"DENY")
+    def test_budget_reserved_before_allow(self):
+        p=self.pep(); d=self.admit_ok(p); self.assertEqual(d.decision,"ALLOW"); self.assertEqual(self.budget.reserve_calls,1)
+        rid=p._budget_reservation_id(effect_id="eff",candidate_digest=d.candidate_digest,authority_effect_key=d.authority_effect_key)
+        self.assertEqual(self.budget.get(rid).state,"RESERVED")
     def test_expired_grant_cannot_be_reanimated(self):
         clock=Clock([VALID,EXPIRED]); p=self.pep(clock=clock); d=self.admit_ok(p)
         def rv(_self,a,*,now):
@@ -125,11 +173,13 @@ class Tests(unittest.TestCase):
         with self.assertRaises(RepositoryMutationPEPError):
             p2.execute(admission=d,intent=self.i,admitted=self.a,authority_leaf=self.g)
         self.assertEqual(self.e.calls,0)
-    def test_success_requires_post_effect_observation(self):
+    def test_success_requires_post_effect_observation_and_finalizes_budget(self):
         p=self.pep(); d=self.admit_ok(p)
         with patch.object(LiveAuthorityAdmission,"revalidate",return_value=self.a):
             r=p.execute(admission=d,intent=self.i,admitted=self.a,authority_leaf=self.g)
         self.assertIsNotNone(r); self.assertEqual(p._journal.get("eff").status,"APPLIED")
+        rid=p._budget_reservation_id(effect_id="eff",candidate_digest=d.candidate_digest,authority_effect_key=d.authority_effect_key)
+        self.assertEqual(self.budget.get(rid).state,"FINALIZED")
     def test_failed_no_effect_requires_observation(self):
         b=Backend(); e=Effect(b,status="FAILED_NO_EFFECT",apply=False); o=Observer(b,fail_on={3}); p=self.pep(effect=e,observer=o); d=self.admit_ok(p)
         with patch.object(LiveAuthorityAdmission,"revalidate",return_value=self.a):
