@@ -20,7 +20,7 @@ def exact_inventory():
 class GlobalMediationInventoryClosureTests(unittest.TestCase):
     def test_exact_inventory_has_zero_unclassified_refs(self):
         sources,inv=exact_inventory()
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(254,241,0))
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(255,241,0))
     def test_control_effects_are_explicit_surfaces(self):
         paths=('cyber_lion/enterprise/repository_maintenance_mediated_cleanup.py','cyber_lion/enterprise/repository_mutation_pep.py')
         inv=EffectSurfaceScanner().scan(repository='DonkeyJJLove/ai_platform',revision='1'*40,tree_digest='2'*40,sources={p:(ROOT/p).read_text() for p in paths})

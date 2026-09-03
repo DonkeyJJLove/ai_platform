@@ -1,3 +1,4 @@
+from .current_truth import CurrentTruthProjection, TruthImplementationRecord, TruthSourceSpec, build_current_truth_projection, canonical_truth_source_specs
 """Derived, non-authoritative architecture projection plane for LION."""
 from .model import CanonicalDiagramModel, DiagramNode, DiagramEdge, DiagramGroup, DiagramProjectionManifest
 from .extractor import ArchitectureProjectionExtractor, available_projection_names
