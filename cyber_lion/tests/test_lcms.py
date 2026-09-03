@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import re
 import sys
@@ -124,7 +125,16 @@ class TestLLIONLCMS(unittest.TestCase):
     def test_compiler_is_non_effectful(self):
         t=Path(lcms.__file__).read_text().lower()
         for x in ("subprocess","os.system","urllib","http.client","socket","requests","effect_provider","transport_provider","credential_env","private_key","signing_key","merge_pull_request"): self.assertNotIn(x,t)
-        self.assertNotRegex(t, r"\b(open|unlink|replace|write_text|write_bytes)\s*\(")
+        tree = ast.parse(Path(lcms.__file__).read_text())
+        calls = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    calls.add(node.func.id)
+                elif isinstance(node.func, ast.Attribute):
+                    calls.add(node.func.attr)
+        for name in ("open", "unlink", "replace", "write_text", "write_bytes", "system", "run", "Popen", "urlopen", "request"):
+            self.assertNotIn(name, calls)
 
     def test_c0_contradictions_and_support_preserved(self):
         r={x["id"]:x for x in MATRIX["contradictions"]}
