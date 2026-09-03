@@ -162,6 +162,9 @@ class C2ProcessObservation:
     netns_child: str
     seccomp_mode: int
     no_new_privs: int
+    landlock_abi: int
+    landlock_restricted: bool
+    target_tmp_clean_after: bool
     target_pid_closed: bool
     elapsed_ms: int
     sandbox_attestation_digest: str
@@ -180,6 +183,8 @@ class C2ReconciliationRecord:
     independent_netns: bool
     seccomp_filter_active: bool
     no_new_privs: bool
+    landlock_restricted: bool
+    target_tmp_clean_after: bool
     child_process_closure: bool
     exit_success: bool
     replay_state: str
@@ -193,6 +198,8 @@ class C2ReconciliationRecord:
             self.independent_netns,
             self.seccomp_filter_active,
             self.no_new_privs,
+            self.landlock_restricted,
+            self.target_tmp_clean_after,
             self.child_process_closure,
             self.exit_success,
             self.replay_state == "CONSUMED",
@@ -394,6 +401,7 @@ class ReadonlyProcessAdapter:
             raise ReadonlyProcessError("sandbox attestation unavailable") from exc
         snapshot_after = _workspace_snapshot(workspace_root)
         head_after, tree_after = _git_head_tree(workspace_root)
+        target_tmp_clean = target_tmp.is_dir() and not any(target_tmp.iterdir())
         target_closed = not Path(f"/proc/{proc.pid}").exists()
         observation = C2ProcessObservation(
             gate_digest=gate.gate_digest,
@@ -407,6 +415,9 @@ class ReadonlyProcessAdapter:
             netns_child=str(attestation.get("netns", "")),
             seccomp_mode=int(attestation.get("seccomp", -1)),
             no_new_privs=int(attestation.get("no_new_privs", -1)),
+            landlock_abi=int(attestation.get("landlock_abi", -1)),
+            landlock_restricted=attestation.get("landlock_restricted") is True,
+            target_tmp_clean_after=target_tmp_clean,
             target_pid_closed=target_closed,
             elapsed_ms=elapsed_ms,
             sandbox_attestation_digest=_digest(attestation),
@@ -424,6 +435,9 @@ class ReadonlyProcessAdapter:
                 and parent_netns != observation.netns_child
                 and observation.seccomp_mode == 2
                 and observation.no_new_privs == 1
+                and observation.landlock_abi >= 3
+                and observation.landlock_restricted
+                and observation.target_tmp_clean_after
                 and target_closed
             ) else "FAIL",
             gate_digest=gate.gate_digest,
@@ -433,6 +447,8 @@ class ReadonlyProcessAdapter:
             independent_netns=parent_netns != observation.netns_child,
             seccomp_filter_active=observation.seccomp_mode == 2,
             no_new_privs=observation.no_new_privs == 1,
+            landlock_restricted=observation.landlock_abi >= 3 and observation.landlock_restricted,
+            target_tmp_clean_after=observation.target_tmp_clean_after,
             child_process_closure=target_closed,
             exit_success=proc.returncode == 0,
             replay_state="CONSUMED",
