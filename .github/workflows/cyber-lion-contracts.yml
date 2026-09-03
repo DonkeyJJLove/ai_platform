@@ -406,7 +406,7 @@ jobs:
           print(f'R2E4_SOURCE_COUNT={values[0]}')
           print(f'R2E4_EFFECT_SURFACE_COUNT={values[1]}')
           print(f'R2E4_UNCLASSIFIED_COUNT={values[2]}')
-          if values != (253, 239, 6):
+          if values != (254, 239, 6):
               raise SystemExit(f'R2E4_INVENTORY_DRIFT={values}')
           print('R2E4_INVENTORY_REFREEZE=PASS')
           PY

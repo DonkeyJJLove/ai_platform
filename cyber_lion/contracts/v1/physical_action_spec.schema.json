@@ -1,0 +1,32 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"lion://schemas/physical-action-spec/v1.3-candidate",
+  "title":"LION PhysicalActionSpec v1.3 Candidate — simulation only",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema_version","action_id","intent_ref","object_id","operation","source_pose","translation_m","requested_speed_m_s","requested_force_n","requested_energy_j","calibration","authority","safety","expected_simulation_effects","forbidden_physical_effects"],
+  "properties":{
+    "schema_version":{"const":"lion.physical-action-spec/v1.3-candidate"},
+    "action_id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.:-]{0,255}$"},
+    "intent_ref":{"type":"string","minLength":1},
+    "object_id":{"type":"string","minLength":1},
+    "operation":{"const":"pose.translate"},
+    "source_pose":{"$ref":"#/$defs/pose"},
+    "translation_m":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"number"}},
+    "requested_speed_m_s":{"type":"number","minimum":0},
+    "requested_force_n":{"type":"number","minimum":0},
+    "requested_energy_j":{"type":"number","minimum":0},
+    "calibration":{"$ref":"#/$defs/calibration"},
+    "authority":{"$ref":"#/$defs/authority"},
+    "safety":{"$ref":"#/$defs/safety"},
+    "expected_simulation_effects":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
+    "forbidden_physical_effects":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}}
+  },
+  "$defs":{
+    "pose":{"type":"object","additionalProperties":false,"required":["frame_id","linear_unit","angular_unit","x","y","z","roll","pitch","yaw"],"properties":{"frame_id":{"type":"string","minLength":1},"linear_unit":{"const":"m"},"angular_unit":{"const":"rad"},"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"},"roll":{"type":"number"},"pitch":{"type":"number"},"yaw":{"type":"number"}}},
+    "calibration":{"type":"object","additionalProperties":false,"required":["calibration_id","calibration_digest","frame_id","linear_unit","angular_unit","revision"],"properties":{"calibration_id":{"type":"string","minLength":1},"calibration_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},"frame_id":{"type":"string","minLength":1},"linear_unit":{"const":"m"},"angular_unit":{"const":"rad"},"revision":{"type":"integer","minimum":1}}},
+    "authority":{"type":"object","additionalProperties":false,"required":["domain","capability","mode","target_scope","spatial_frame","not_before_ms","not_after_ms","max_displacement_m","max_speed_m_s","max_force_n","max_energy_j","hardware_effect_capability"],"properties":{"domain":{"const":"physical.simulation"},"capability":{"const":"simulate_pose_transition"},"mode":{"const":"SIMULATION_ONLY"},"target_scope":{"type":"string","minLength":1},"spatial_frame":{"type":"string","minLength":1},"not_before_ms":{"type":"integer","minimum":0},"not_after_ms":{"type":"integer","minimum":1},"max_displacement_m":{"type":"number","minimum":0},"max_speed_m_s":{"type":"number","minimum":0},"max_force_n":{"type":"number","minimum":0},"max_energy_j":{"type":"number","minimum":0},"hardware_effect_capability":{"const":"NONE"}}},
+    "safety":{"type":"object","additionalProperties":false,"required":["emergency_stop_available","protected_zone_clear","safety_controller_state","sensors_current","heartbeat_current","calibration_current"],"properties":{"emergency_stop_available":{"const":true},"protected_zone_clear":{"const":true},"safety_controller_state":{"const":"READY"},"sensors_current":{"const":true},"heartbeat_current":{"const":true},"calibration_current":{"const":true}}}
+  },
+  "x-lion-e0":{"authority":"NONE/SIMULATION_ONLY","hardware_effect":"NONE","robotics_runtime":"NONE","simulation_success_is_hardware_safety_proof":false}
+}
