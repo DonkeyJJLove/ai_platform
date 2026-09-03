@@ -29,6 +29,15 @@ C2_SANDBOX_PROFILE = "linux-user-netns-landlock-seccomp/v1"
 C2_DIGEST_DOMAIN = b"LION/C2-READONLY-PROCESS-EXEC/1\0"
 
 
+def _system_tmp_root() -> Path:
+    return (Path(os.sep) / "tmp").resolve()
+
+
+def _require_isolated_sandbox_root(sandbox_root: Path) -> None:
+    if sandbox_root.parent != _system_tmp_root():
+        raise ReadonlyProcessError("sandbox root must be a direct child of the system temporary root")
+
+
 def _canonical(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("ascii")
 
@@ -321,6 +330,7 @@ class ReadonlyProcessAdapter:
     def execute(self, *, compiled: CompiledAction, gate: C2ExecutionGate, workspace_root: Path, sandbox_root: Path) -> C2ExecutionResult:
         workspace_root = workspace_root.resolve()
         sandbox_root = sandbox_root.resolve()
+        _require_isolated_sandbox_root(sandbox_root)
         ir, snapshot_before = self._revalidate(compiled, gate, workspace_root)
         if not self.replay_guard.consume(gate.gate_digest):
             raise ReadonlyProcessError("C2 execution replay denied")
@@ -598,7 +608,8 @@ def _sandbox_helper(payload_text: str) -> int:
     sandbox_root = Path(payload["sandbox_root"]).resolve()
     target_tmp = Path(payload["target_tmp"]).resolve()
     workspace = Path(payload["workspace_root"]).resolve()
-    if target_tmp.parent != sandbox_root or not str(sandbox_root).startswith("/tmp/"):
+    _require_isolated_sandbox_root(sandbox_root)
+    if target_tmp.parent != sandbox_root:
         raise ReadonlyProcessError("isolated target tmp binding invalid")
     if not workspace.is_dir() or not target_tmp.is_dir():
         raise ReadonlyProcessError("sandbox paths unavailable")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from hashlib import sha256
 import inspect
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -139,10 +140,20 @@ class ReadonlyProcessExecTests(unittest.TestCase):
         self.assertTrue(guard.consume("a" * 64))
         self.assertFalse(guard.consume("a" * 64))
 
+    def test_sandbox_root_must_be_direct_child_of_system_tmp(self):
+        module = __import__("cyber_lion.readonly_process_exec", fromlist=["x"])
+        system_tmp = (Path(os.sep) / "tmp").resolve()
+        module._require_isolated_sandbox_root(system_tmp / "lion-c2-valid")
+        with self.assertRaisesRegex(ReadonlyProcessError, "direct child"):
+            module._require_isolated_sandbox_root((Path(os.sep) / "var" / "tmp" / "lion-c2-invalid").resolve())
+        with self.assertRaisesRegex(ReadonlyProcessError, "direct child"):
+            module._require_isolated_sandbox_root(system_tmp / "nested" / "lion-c2-invalid")
+
     def test_no_direct_command_surface_is_exported(self):
         module_source = inspect.getsource(__import__("cyber_lion.readonly_process_exec", fromlist=["x"]))
         self.assertNotIn('if __name__ == "__main__"', module_source)
         self.assertNotIn('"--sandbox-helper"', module_source)
+        self.assertNotIn('startswith("/tmp/")', module_source)
 
     def test_effect_inventory_is_explicit_and_classified(self):
         path = "cyber_lion/readonly_process_exec.py"
