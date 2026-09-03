@@ -418,27 +418,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
       - name: Emit literal merge authority identity evidence
         shell: bash
         run: |
+          set -euo pipefail
           ACTUAL_HEAD="$(git rev-parse HEAD)"
+          ACTUAL_TREE="$(git rev-parse 'HEAD^{tree}')"
+          ACTUAL_PARENT="$(git rev-parse 'HEAD^')"
           if [ "$ACTUAL_HEAD" != "$GITHUB_SHA" ]; then
             printf 'CHECKED_OUT_HEAD_MISMATCH actual=%s expected=%s\n' "$ACTUAL_HEAD" "$GITHUB_SHA" >&2
             exit 1
           fi
+          for value in "$ACTUAL_HEAD" "$ACTUAL_TREE" "$ACTUAL_PARENT"; do
+            [[ "$value" =~ ^[0-9a-f]{40}$ ]]
+          done
           printf '%s\n' 'JOB_NAME=Cyber-Lion Merge Authority Admission'
           printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
+          printf 'SUCCESSOR_TREE=%s\n' "$ACTUAL_TREE"
+          printf 'SUCCESSOR_PARENT=%s\n' "$ACTUAL_PARENT"
+          {
+            printf 'R6_ACTUAL_HEAD=%s\n' "$ACTUAL_HEAD"
+            printf 'R6_ACTUAL_TREE=%s\n' "$ACTUAL_TREE"
+            printf 'R6_ACTUAL_PARENT=%s\n' "$ACTUAL_PARENT"
+            printf 'R6_EXPECTED_TREE=%s\n' "$ACTUAL_TREE"
+            printf 'R6_EXPECTED_PARENT=%s\n' "$ACTUAL_PARENT"
+          } >> "$GITHUB_ENV"
       - uses: actions/setup-python@v6
         with: {python-version: "3.11"}
       - name: Compile merge admission boundary
-        run: python -m compileall -q cyber_lion/enterprise/merge_admission.py
+        run: python -m compileall -q cyber_lion/enterprise/merge_admission.py cyber_lion/enterprise/merge_admission_terminal_evidence.py
       - name: Verify fail-closed merge authority admission
-        run: python -m unittest cyber_lion.tests.test_merge_admission -v
-      - name: Emit merge admission terminal evidence
-        shell: bash
         run: |
-          printf '%s\n' 'MERGE_ADMISSION_TERMINAL=OK'
-          printf '%s\n' 'NO_MERGE_AUTHORIZATION_INFERRED=YES'
+          python -m unittest cyber_lion.tests.test_merge_admission -v
+          python -m unittest cyber_lion.tests.test_merge_admission_terminal_evidence -v
+      - name: Emit merge admission terminal evidence
+        run: python -m cyber_lion.enterprise.merge_admission_terminal_evidence
 
   merge-authority-observation:
     name: Cyber-Lion Merge Authority Observation
