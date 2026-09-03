@@ -9,10 +9,12 @@ The effect path is deliberately narrow:
 canonical LCMS ActionSpec
 → exact one-shot C2 gate
 → effect-time workspace/executable/argv currentness
-→ private user+mount+network namespace
-→ read-only chroot root + read-only exact workspace
-→ isolated writable tmpfs only
-→ no-new-privileges + seccomp network/process-creation denial
+→ private user+network namespace
+→ no-new-privileges
+→ Landlock ABI-bound filesystem allowlist
+→ exact workspace + /usr + /etc read-only
+→ one exact isolated /tmp subtree writable
+→ seccomp network/process-creation denial
 → exact executable, shell=false
 → independent parent observation
 → exact reconciliation

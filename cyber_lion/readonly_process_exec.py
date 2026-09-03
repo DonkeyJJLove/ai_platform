@@ -25,7 +25,7 @@ class ReadonlyProcessError(RuntimeError):
 
 
 C2_AUTHORITY_CLASS = "READ_ONLY/TEST_ONLY"
-C2_SANDBOX_PROFILE = "linux-user-mount-netns-chroot-seccomp/v1"
+C2_SANDBOX_PROFILE = "linux-user-netns-landlock-seccomp/v1"
 C2_DIGEST_DOMAIN = b"LION/C2-READONLY-PROCESS-EXEC/1\0"
 
 
@@ -322,8 +322,11 @@ class ReadonlyProcessAdapter:
         sandbox_root.mkdir(parents=True, exist_ok=True)
         parent_netns = os.readlink("/proc/self/ns/net")
         att_r, att_w = os.pipe()
+        target_tmp = sandbox_root / "target-tmp"
+        target_tmp.mkdir(mode=0o700, exist_ok=False)
         helper_payload = {
             "sandbox_root": str(sandbox_root),
+            "target_tmp": str(target_tmp),
             "workspace_root": str(workspace_root),
             "executable": ir["executable"]["path"],
             "arguments": ir["arguments"],
@@ -437,38 +440,104 @@ class ReadonlyProcessAdapter:
         return C2ExecutionResult(stdout, stderr, observation, reconciliation)
 
 
-# Linux sandbox helper. It runs only inside unshare-created user/mount/network namespaces.
-_MS_RDONLY = 1
-_MS_NOSUID = 2
-_MS_NODEV = 4
-_MS_NOEXEC = 8
-_MS_REMOUNT = 32
-_MS_BIND = 4096
-_MS_REC = 16384
-_MS_PRIVATE = 1 << 18
+# Linux sandbox helper. It runs inside an unshare-created user/network namespace.
 _PR_SET_NO_NEW_PRIVS = 38
 _PR_GET_SECCOMP = 21
 _PR_GET_NO_NEW_PRIVS = 39
 _SCMP_ACT_ALLOW = 0x7FFF0000
 _SCMP_ACT_ERRNO_EPERM = 0x00050000 | 1
 
+_SYS_LANDLOCK_CREATE_RULESET = 444
+_SYS_LANDLOCK_ADD_RULE = 445
+_SYS_LANDLOCK_RESTRICT_SELF = 446
+_LANDLOCK_CREATE_RULESET_VERSION = 1
+_LANDLOCK_RULE_PATH_BENEATH = 1
+_LL_EXECUTE = 1 << 0
+_LL_WRITE_FILE = 1 << 1
+_LL_READ_FILE = 1 << 2
+_LL_READ_DIR = 1 << 3
+_LL_REMOVE_DIR = 1 << 4
+_LL_REMOVE_FILE = 1 << 5
+_LL_MAKE_CHAR = 1 << 6
+_LL_MAKE_DIR = 1 << 7
+_LL_MAKE_REG = 1 << 8
+_LL_MAKE_SOCK = 1 << 9
+_LL_MAKE_FIFO = 1 << 10
+_LL_MAKE_BLOCK = 1 << 11
+_LL_MAKE_SYM = 1 << 12
+_LL_REFER = 1 << 13
+_LL_TRUNCATE = 1 << 14
+_LL_ABI1 = (_LL_EXECUTE | _LL_WRITE_FILE | _LL_READ_FILE | _LL_READ_DIR | _LL_REMOVE_DIR |
+            _LL_REMOVE_FILE | _LL_MAKE_CHAR | _LL_MAKE_DIR | _LL_MAKE_REG | _LL_MAKE_SOCK |
+            _LL_MAKE_FIFO | _LL_MAKE_BLOCK | _LL_MAKE_SYM)
+_LL_ABI2 = _LL_ABI1 | _LL_REFER
+_LL_ABI3 = _LL_ABI2 | _LL_TRUNCATE
+_LL_READ_EXEC = _LL_EXECUTE | _LL_READ_FILE | _LL_READ_DIR
+_LL_READ = _LL_READ_FILE | _LL_READ_DIR
 
-def _libc_mount(source: str | None, target: str, fstype: str | None, flags: int, data: str | None) -> None:
+
+class _LandlockRulesetAttr(ctypes.Structure):
+    _fields_ = [("handled_access_fs", ctypes.c_uint64)]
+
+
+class _LandlockPathBeneathAttr(ctypes.Structure):
+    _fields_ = [("allowed_access", ctypes.c_uint64), ("parent_fd", ctypes.c_int32)]
+
+
+def _landlock_abi() -> int:
     libc = ctypes.CDLL(None, use_errno=True)
-    fn = libc.mount
-    fn.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_ulong, ctypes.c_char_p]
-    fn.restype = ctypes.c_int
-    def b(value: str | None):
-        return None if value is None else value.encode()
-    if fn(b(source), b(target), b(fstype), flags, b(data)) != 0:
+    rc = libc.syscall(_SYS_LANDLOCK_CREATE_RULESET, 0, 0, _LANDLOCK_CREATE_RULESET_VERSION)
+    if rc < 0:
         err = ctypes.get_errno()
-        raise OSError(err, os.strerror(err), target)
+        raise OSError(err, os.strerror(err), "landlock_create_ruleset(VERSION)")
+    return int(rc)
 
 
-def _bind_ro(source: str, target: Path) -> None:
-    target.mkdir(parents=True, exist_ok=True)
-    _libc_mount(source, str(target), None, _MS_BIND | _MS_REC, None)
-    _libc_mount(None, str(target), None, _MS_BIND | _MS_REMOUNT | _MS_RDONLY, None)
+def _landlock_handled(abi: int) -> int:
+    if abi >= 3:
+        return _LL_ABI3
+    if abi == 2:
+        return _LL_ABI2
+    if abi == 1:
+        return _LL_ABI1
+    raise ReadonlyProcessError(f"unsupported Landlock ABI {abi}")
+
+
+def _landlock_add_rule(ruleset_fd: int, path: Path, allowed: int) -> None:
+    flags = os.O_PATH | os.O_CLOEXEC
+    fd = os.open(path, flags)
+    try:
+        attr = _LandlockPathBeneathAttr(allowed_access=allowed, parent_fd=fd)
+        libc = ctypes.CDLL(None, use_errno=True)
+        rc = libc.syscall(_SYS_LANDLOCK_ADD_RULE, ruleset_fd, _LANDLOCK_RULE_PATH_BENEATH, ctypes.byref(attr), 0)
+        if rc != 0:
+            err = ctypes.get_errno()
+            raise OSError(err, os.strerror(err), str(path))
+    finally:
+        os.close(fd)
+
+
+def _install_landlock(*, workspace: Path, target_tmp: Path) -> int:
+    abi = _landlock_abi()
+    handled = _landlock_handled(abi)
+    attr = _LandlockRulesetAttr(handled_access_fs=handled)
+    libc = ctypes.CDLL(None, use_errno=True)
+    fd = libc.syscall(_SYS_LANDLOCK_CREATE_RULESET, ctypes.byref(attr), ctypes.sizeof(attr), 0)
+    if fd < 0:
+        err = ctypes.get_errno()
+        raise OSError(err, os.strerror(err), "landlock_create_ruleset")
+    try:
+        _landlock_add_rule(fd, Path("/usr"), _LL_READ_EXEC)
+        _landlock_add_rule(fd, Path("/etc"), _LL_READ)
+        _landlock_add_rule(fd, workspace, _LL_READ)
+        _landlock_add_rule(fd, target_tmp, handled)
+        rc = libc.syscall(_SYS_LANDLOCK_RESTRICT_SELF, fd, 0)
+        if rc != 0:
+            err = ctypes.get_errno()
+            raise OSError(err, os.strerror(err), "landlock_restrict_self")
+    finally:
+        os.close(fd)
+    return abi
 
 
 def _install_seccomp() -> None:
@@ -507,26 +576,15 @@ def _install_seccomp() -> None:
 
 def _sandbox_helper(payload_text: str) -> int:
     payload = json.loads(payload_text)
-    root = Path(payload["sandbox_root"]).resolve()
+    sandbox_root = Path(payload["sandbox_root"]).resolve()
+    target_tmp = Path(payload["target_tmp"]).resolve()
     workspace = Path(payload["workspace_root"]).resolve()
-    root.mkdir(parents=True, exist_ok=True)
-    _libc_mount(None, "/", None, _MS_REC | _MS_PRIVATE, None)
-    _libc_mount("tmpfs", str(root), "tmpfs", _MS_NOSUID | _MS_NODEV, "mode=0755,size=64m")
-    for name in ("usr", "etc", "workspace", "tmp"):
-        (root / name).mkdir(parents=True, exist_ok=True)
-    for link, target in (("bin", "usr/bin"), ("sbin", "usr/sbin"), ("lib", "usr/lib"), ("lib64", "usr/lib64")):
-        p = root / link
-        if not p.exists():
-            p.symlink_to(target)
-    _bind_ro("/usr", root / "usr")
-    _bind_ro("/etc", root / "etc")
-    _bind_ro(str(workspace), root / "workspace")
-    _libc_mount("tmpfs", str(root / "tmp"), "tmpfs", _MS_NOSUID | _MS_NODEV | _MS_NOEXEC, "mode=0700,size=32m")
-    # Freeze the chroot root itself; /tmp remains a separate writable submount.
-    _libc_mount(None, str(root), None, _MS_REMOUNT | _MS_RDONLY | _MS_NOSUID | _MS_NODEV, None)
+    if target_tmp.parent != sandbox_root or not str(sandbox_root).startswith("/tmp/"):
+        raise ReadonlyProcessError("isolated target tmp binding invalid")
+    if not workspace.is_dir() or not target_tmp.is_dir():
+        raise ReadonlyProcessError("sandbox paths unavailable")
+    os.chdir(workspace)
     netns_identity = os.readlink("/proc/self/ns/net")
-    os.chroot(root)
-    os.chdir("/workspace")
     memory = int(payload["memory_limit_bytes"])
     timeout_ms = int(payload["timeout_ms"])
     resource.setrlimit(resource.RLIMIT_AS, (memory, memory))
@@ -538,17 +596,20 @@ def _sandbox_helper(payload_text: str) -> int:
     if libc.prctl(_PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0:
         err = ctypes.get_errno()
         raise OSError(err, os.strerror(err), "prctl(NO_NEW_PRIVS)")
+    landlock_abi = _install_landlock(workspace=workspace, target_tmp=target_tmp)
     _install_seccomp()
     seccomp_mode = int(libc.prctl(_PR_GET_SECCOMP, 0, 0, 0, 0))
     no_new_privs = int(libc.prctl(_PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0))
     attestation = {
         "profile": C2_SANDBOX_PROFILE,
+        "landlock_abi": landlock_abi,
+        "landlock_restricted": True,
         "netns": netns_identity,
         "seccomp": seccomp_mode,
         "no_new_privs": no_new_privs,
-        "procfs_exposed": False,
-        "workspace": "/workspace",
-        "tmp": "/tmp",
+        "procfs_allowed": False,
+        "workspace": str(workspace),
+        "target_tmp": str(target_tmp),
     }
     fd = int(payload["attestation_fd"])
     os.write(fd, _canonical(attestation))
@@ -558,8 +619,10 @@ def _sandbox_helper(payload_text: str) -> int:
         "PYTHONIOENCODING": "utf-8",
         "LC_ALL": "C.UTF-8",
         "LANG": "C.UTF-8",
-        "HOME": "/tmp",
-        "TMPDIR": "/tmp",
+        "HOME": str(target_tmp),
+        "TMPDIR": str(target_tmp),
+        "TMP": str(target_tmp),
+        "TEMP": str(target_tmp),
     }
     for key, value in payload["environment"].items():
         if key in {"PATH", "LD_PRELOAD", "LD_LIBRARY_PATH", "PYTHONPATH"}:

@@ -23,7 +23,7 @@ def main() -> int:
     _expect_denied("WORKSPACE_WRITE", lambda: Path("/workspace/c2-forbidden-write").write_text("x"))
     _expect_denied("NETWORK_SOCKET", lambda: socket.socket(socket.AF_INET, socket.SOCK_STREAM))
     _expect_denied("PROCESS_FORK", os.fork)
-    tmp = Path("/tmp/c2-allowed-temp")
+    tmp = Path(os.environ["TMPDIR"]) / "c2-allowed-temp"
     tmp.write_text("ephemeral")
     print("ISOLATED_TMP_WRITE=PASS")
     tmp.unlink()
