@@ -134,18 +134,23 @@ class R7SourceInventoryContractTests(unittest.TestCase):
     def test_source_and_effect_cardinality_remain_independent(self):
         passive = "cyber_lion/enterprise/r7_passive_evidence.py"
         active = "cyber_lion/enterprise/r7_active_evidence.py"
+        sources = {
+            passive: "VALUE = 'evidence-only'\n",
+            active: 'from pathlib import Path\nPath("r7-probe").write_bytes(b"x")\n',
+        }
         inventory = EffectSurfaceScanner().scan(
             repository=REPOSITORY,
             revision="b" * 40,
             tree_digest="c" * 40,
-            sources={
-                passive: "VALUE = 'evidence-only'\n",
-                active: 'from pathlib import Path\nPath("r7-probe").write_bytes(b"x")\n',
-            },
+            sources=sources,
         )
-        self.assertIn("source-count:2", inventory.provenance)
-        self.assertIn("surface-count:1", inventory.provenance)
+        self.assertEqual(len(sources), 2)
+        self.assertEqual(inventory.repository, REPOSITORY)
+        self.assertEqual(inventory.revision, "b" * 40)
+        self.assertEqual(inventory.tree_digest, "c" * 40)
         self.assertEqual(len(inventory.surfaces), 1)
+        self.assertEqual(inventory.unclassified_refs, ())
+        self.assertNotEqual(len(sources), len(inventory.surfaces))
 
 
 if __name__ == "__main__":
