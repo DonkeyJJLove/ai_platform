@@ -189,6 +189,34 @@ def validate_synthetic_merge_topology(
         raise AssertionError("synthetic merge tree substitution")
 
 
+def validate_exact_head_topology(
+    *,
+    event_base_sha: object,
+    live_base_sha: object,
+    event_head_sha: object,
+    live_head_sha: object,
+    checked_commit_sha: object,
+    checked_tree_sha: object,
+    candidate_tree_sha: object,
+) -> None:
+    event_base = validated_sha40(event_base_sha, "event base sha")
+    live_base = validated_sha40(live_base_sha, "live base sha")
+    event_head = validated_sha40(event_head_sha, "event head sha")
+    live_head = validated_sha40(live_head_sha, "live head sha")
+    checked_commit = validated_sha40(checked_commit_sha, "checked candidate sha")
+    checked_tree = validated_sha40(checked_tree_sha, "checked candidate tree")
+    candidate_tree = validated_sha40(candidate_tree_sha, "candidate tree sha")
+
+    if event_base != live_base:
+        raise AssertionError("pull_request base drift")
+    if event_head != live_head:
+        raise AssertionError("pull_request head drift")
+    if checked_commit != event_head:
+        raise AssertionError("exact-head checkout substitution")
+    if checked_tree != candidate_tree:
+        raise AssertionError("exact-head tree substitution")
+
+
 def blob_inputs_for_ref(root: Path, ref: str) -> tuple[BlobInput, ...]:
     raw = run_bytes(["git", "ls-tree", "-r", "-z", "--long", ref], root)
     result = []
@@ -414,6 +442,35 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             with self.subTest(label=label), self.assertRaises(AssertionError):
                 validate_synthetic_merge_topology(**case)
 
+    def test_P0_exact_head_identity_substitutions_fail_closed(self):
+        base = "1" * 40
+        head = "2" * 40
+        tree = "4" * 40
+        good = {
+            "event_base_sha": base,
+            "live_base_sha": base,
+            "event_head_sha": head,
+            "live_head_sha": head,
+            "checked_commit_sha": head,
+            "checked_tree_sha": tree,
+            "candidate_tree_sha": tree,
+        }
+        validate_exact_head_topology(**good)
+        substitutions = (
+            ("event-base", {"event_base_sha": "5" * 40}),
+            ("live-base", {"live_base_sha": "5" * 40}),
+            ("event-head", {"event_head_sha": "5" * 40}),
+            ("live-head", {"live_head_sha": "5" * 40}),
+            ("checked-head", {"checked_commit_sha": "5" * 40}),
+            ("checked-tree", {"checked_tree_sha": "5" * 40}),
+            ("candidate-tree", {"candidate_tree_sha": "5" * 40}),
+        )
+        for label, substitution in substitutions:
+            case = dict(good)
+            case.update(substitution)
+            with self.subTest(label=label), self.assertRaises(AssertionError):
+                validate_exact_head_topology(**case)
+
     def test_P0_commit_object_header_cardinality_and_malformed_parent_fail_closed(self):
         base = "1" * 40
         head = "2" * 40
@@ -591,19 +648,37 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
         if live_head_before != live_head_after:
             raise AssertionError("pull_request head changed during observation")
         checked_commit = validated_sha40(run(["git", "rev-parse", "HEAD"], root), "checked commit sha")
-        checked_tree, parents = read_commit_object_identity(root, "HEAD")
-
-        validate_synthetic_merge_topology(
-            event_base_sha=expected_base,
-            live_base_sha=live_base,
-            event_head_sha=expected_head,
-            live_head_sha=live_head_after,
-            workflow_merge_sha=workflow_merge,
-            checked_commit_sha=checked_commit,
-            parents=parents,
-            checked_tree_sha=checked_tree,
-            candidate_tree_sha=candidate_tree,
-        )
+        if checked_commit == expected_head:
+            carrier = "EXACT_PR_HEAD"
+            checked_tree = validated_sha40(
+                run(["git", "rev-parse", "HEAD^{tree}"], root),
+                "checked candidate tree",
+            )
+            validate_exact_head_topology(
+                event_base_sha=expected_base,
+                live_base_sha=live_base,
+                event_head_sha=expected_head,
+                live_head_sha=live_head_after,
+                checked_commit_sha=checked_commit,
+                checked_tree_sha=checked_tree,
+                candidate_tree_sha=candidate_tree,
+            )
+        elif checked_commit == workflow_merge:
+            carrier = "PR_SYNTHETIC_MERGE"
+            checked_tree, parents = read_commit_object_identity(root, "HEAD")
+            validate_synthetic_merge_topology(
+                event_base_sha=expected_base,
+                live_base_sha=live_base,
+                event_head_sha=expected_head,
+                live_head_sha=live_head_after,
+                workflow_merge_sha=workflow_merge,
+                checked_commit_sha=checked_commit,
+                parents=parents,
+                checked_tree_sha=checked_tree,
+                candidate_tree_sha=candidate_tree,
+            )
+        else:
+            raise AssertionError("pull_request checkout carrier substitution")
 
         source = SourceIdentity(REPOSITORY, expected_head, checked_tree).validate()
         blobs = blob_inputs_for_ref(root, "HEAD")
@@ -617,7 +692,7 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
             f"head={expected_head} tree={checked_tree} digest={first.digest()} "
             f"tree_semantic_digest={tree_semantic_digest(first)} "
             f"files={len(first.files)} symbols={len(first.symbols)} edges={len(first.edges)} "
-            f"workflow_merge={workflow_merge} event_merge_metadata={event_merge_metadata}"
+            f"carrier={carrier} workflow_merge={workflow_merge} event_merge_metadata={event_merge_metadata}"
         )
 
 
