@@ -447,6 +447,8 @@ _MS_BIND = 4096
 _MS_REC = 16384
 _MS_PRIVATE = 1 << 18
 _PR_SET_NO_NEW_PRIVS = 38
+_PR_GET_SECCOMP = 21
+_PR_GET_NO_NEW_PRIVS = 39
 _SCMP_ACT_ALLOW = 0x7FFF0000
 _SCMP_ACT_ERRNO_EPERM = 0x00050000 | 1
 
@@ -478,6 +480,7 @@ def _install_seccomp() -> None:
     lib.seccomp_load.argtypes = [ctypes.c_void_p]
     lib.seccomp_load.restype = ctypes.c_int
     lib.seccomp_release.argtypes = [ctypes.c_void_p]
+    lib.seccomp_rule_add.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_int, ctypes.c_uint]
     lib.seccomp_rule_add.restype = ctypes.c_int
     ctx = lib.seccomp_init(_SCMP_ACT_ALLOW)
     if not ctx:
@@ -502,13 +505,6 @@ def _install_seccomp() -> None:
         lib.seccomp_release(ctx)
 
 
-def _status_field(name: str) -> int:
-    for line in Path("/proc/self/status").read_text().splitlines():
-        if line.startswith(name + ":"):
-            return int(line.split(":", 1)[1].strip().split()[0])
-    return -1
-
-
 def _sandbox_helper(payload_text: str) -> int:
     payload = json.loads(payload_text)
     root = Path(payload["sandbox_root"]).resolve()
@@ -516,7 +512,7 @@ def _sandbox_helper(payload_text: str) -> int:
     root.mkdir(parents=True, exist_ok=True)
     _libc_mount(None, "/", None, _MS_REC | _MS_PRIVATE, None)
     _libc_mount("tmpfs", str(root), "tmpfs", _MS_NOSUID | _MS_NODEV, "mode=0755,size=64m")
-    for name in ("usr", "etc", "workspace", "tmp", "proc"):
+    for name in ("usr", "etc", "workspace", "tmp"):
         (root / name).mkdir(parents=True, exist_ok=True)
     for link, target in (("bin", "usr/bin"), ("sbin", "usr/sbin"), ("lib", "usr/lib"), ("lib64", "usr/lib64")):
         p = root / link
@@ -526,9 +522,9 @@ def _sandbox_helper(payload_text: str) -> int:
     _bind_ro("/etc", root / "etc")
     _bind_ro(str(workspace), root / "workspace")
     _libc_mount("tmpfs", str(root / "tmp"), "tmpfs", _MS_NOSUID | _MS_NODEV | _MS_NOEXEC, "mode=0700,size=32m")
-    _libc_mount("proc", str(root / "proc"), "proc", _MS_NOSUID | _MS_NODEV | _MS_NOEXEC, None)
     # Freeze the chroot root itself; /tmp remains a separate writable submount.
     _libc_mount(None, str(root), None, _MS_REMOUNT | _MS_RDONLY | _MS_NOSUID | _MS_NODEV, None)
+    netns_identity = os.readlink("/proc/self/ns/net")
     os.chroot(root)
     os.chdir("/workspace")
     memory = int(payload["memory_limit_bytes"])
@@ -543,11 +539,14 @@ def _sandbox_helper(payload_text: str) -> int:
         err = ctypes.get_errno()
         raise OSError(err, os.strerror(err), "prctl(NO_NEW_PRIVS)")
     _install_seccomp()
+    seccomp_mode = int(libc.prctl(_PR_GET_SECCOMP, 0, 0, 0, 0))
+    no_new_privs = int(libc.prctl(_PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0))
     attestation = {
         "profile": C2_SANDBOX_PROFILE,
-        "netns": os.readlink("/proc/self/ns/net"),
-        "seccomp": _status_field("Seccomp"),
-        "no_new_privs": _status_field("NoNewPrivs"),
+        "netns": netns_identity,
+        "seccomp": seccomp_mode,
+        "no_new_privs": no_new_privs,
+        "procfs_exposed": False,
         "workspace": "/workspace",
         "tmp": "/tmp",
     }
