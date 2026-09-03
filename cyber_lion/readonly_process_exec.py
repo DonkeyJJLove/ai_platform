@@ -315,11 +315,11 @@ class ReadonlyProcessAdapter:
         workspace_root = workspace_root.resolve()
         sandbox_root = sandbox_root.resolve()
         ir, snapshot_before = self._revalidate(compiled, gate, workspace_root)
+        if not self.replay_guard.consume(gate.gate_digest):
+            raise ReadonlyProcessError("C2 execution replay denied")
         if sandbox_root.exists() and any(sandbox_root.iterdir()):
             raise ReadonlyProcessError("sandbox root must start empty")
         sandbox_root.mkdir(parents=True, exist_ok=True)
-        if not self.replay_guard.consume(gate.gate_digest):
-            raise ReadonlyProcessError("C2 execution replay denied")
         parent_netns = os.readlink("/proc/self/ns/net")
         att_r, att_w = os.pipe()
         helper_payload = {
