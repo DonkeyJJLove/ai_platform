@@ -1,0 +1,73 @@
+name: LION R2E4 R6 Terminal Evidence
+
+on:
+  push:
+    branches:
+      - "cyber-lion/r2e4-terminal-evidence-r6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  merge-authority-r6:
+    name: Cyber-Lion Merge Authority Admission R6
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Bind exact successor identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          ACTUAL_TREE="$(git rev-parse 'HEAD^{tree}')"
+          ACTUAL_PARENT="$(git rev-parse 'HEAD^')"
+          test "$ACTUAL_HEAD" = "$GITHUB_SHA"
+          for value in "$ACTUAL_HEAD" "$ACTUAL_TREE" "$ACTUAL_PARENT"; do
+            [[ "$value" =~ ^[0-9a-f]{40}$ ]]
+          done
+          printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
+          printf 'SUCCESSOR_TREE=%s\n' "$ACTUAL_TREE"
+          printf 'SUCCESSOR_PARENT=%s\n' "$ACTUAL_PARENT"
+          {
+            printf 'R6_ACTUAL_HEAD=%s\n' "$ACTUAL_HEAD"
+            printf 'R6_ACTUAL_TREE=%s\n' "$ACTUAL_TREE"
+            printf 'R6_ACTUAL_PARENT=%s\n' "$ACTUAL_PARENT"
+            printf 'R6_EXPECTED_TREE=%s\n' "$ACTUAL_TREE"
+            printf 'R6_EXPECTED_PARENT=%s\n' "$ACTUAL_PARENT"
+          } >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Compile R6 producer
+        run: python -m compileall -q cyber_lion/enterprise/merge_admission_terminal_evidence.py
+      - name: Verify R6 negative evidence contract
+        run: python -m unittest cyber_lion.tests.test_merge_admission_terminal_evidence -v
+      - name: Produce result-bound terminal evidence
+        run: python -m cyber_lion.enterprise.merge_admission_terminal_evidence
+
+  core-regression-r6:
+    name: Cyber-Lion Core R6 Regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Bind exact successor identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTUAL_HEAD="$(git rev-parse HEAD)"
+          test "$ACTUAL_HEAD" = "$GITHUB_SHA"
+          printf 'CHECKED_OUT_HEAD=%s\n' "$ACTUAL_HEAD"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Compile Cyber-Lion package
+        run: python -m compileall -q cyber_lion
+      - name: Run full Cyber-Lion regression
+        run: python -m unittest discover -s cyber_lion/tests -p "test_*.py" -v
+      - name: Reproduce R2E4 exact terminal inventory contract
+        run: python -m unittest cyber_lion.tests.test_host_authority_separation.HostAuthoritySeparationTests.test_effect_surface_and_exact_terminal_inventory -v
+      - name: Emit core regression terminal
+        run: printf '%s\n' 'CORE_REGRESSION=PASS'
