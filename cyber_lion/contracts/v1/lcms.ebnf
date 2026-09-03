@@ -1,0 +1,77 @@
+(* LION Command Modeling Syntax — C1 candidate grammar.
+   Grammar version: lion.lcms/v1.0-candidate
+   Semantic target: lion.action-spec/v1.3-candidate
+
+   C1 intentionally has no pipeline grammar, shell grammar, transport grammar,
+   provider selection, credentials, execution, or authority minting surface.
+*)
+
+document = header, LF, assignment, { LF, assignment }, [ LF ] ;
+
+header = "LCMS/1.0" ;
+
+assignment =
+      "schema_version", "=", json_string
+    | "action_id", "=", json_string
+    | "kind", "=", json_string
+    | "intent_ref", "=", json_string
+    | "mission_ref", "=", json_string
+    | "autonomy_ref", "=", json_string
+    | "bean_ref", "=", json_string
+
+    | "target.host", "=", json_string
+    | "target.environment", "=", json_string
+    | "target.runtime", "=", json_string
+
+    | "authority_request.domain", "=", json_string
+    | "authority_request.capability", "=", json_string
+    | "authority_request.grant_ref", "=", ( json_string | "null" )
+
+    | "boundary.shell", "=", json_boolean
+    | "boundary.network", "=", json_string
+    | "boundary.filesystem_read", "=", json_string_array
+    | "boundary.filesystem_write", "=", json_string_array
+    | "boundary.process_children", "=", json_string_array
+    | "boundary.timeout_ms", "=", json_integer
+    | "boundary.max_processes", "=", json_integer
+    | "boundary.memory_limit_bytes", "=", json_integer
+
+    | "preconditions", "=", json_string_array
+    | "expected_effects", "=", json_string_array
+    | "forbidden_effects", "=", json_string_array
+
+    | "observation.observer_class", "=", json_string
+    | "observation.required_events", "=", json_string_array
+
+    | "reconciliation.mode", "=", json_string
+    | "reconciliation.receipt", "=", json_string
+
+    | "executable.path", "=", json_string
+    | "executable.digest", "=", json_string
+    | "arguments", "=", json_string_array
+
+    | "workspace.repository", "=", json_string
+    | "workspace.commit", "=", json_string
+    | "workspace.tree", "=", json_string
+    | "workspace.path", "=", json_string
+
+    | "environment.inherit", "=", json_boolean
+    | "environment.allow", "=", json_string_object
+
+    | "io.stdin", "=", json_string
+    | "io.stdout", "=", json_string
+    | "io.stderr", "=", json_string
+    | "io.tty", "=", json_boolean
+    ;
+
+(* json_* denotes one RFC 8259 JSON value of the named native type.
+   Duplicate object keys are forbidden. Numeric units are forbidden.
+   Field order is semantically irrelevant. Field duplication is forbidden.
+   C1 source is ASCII-only and NFC, LF-only. *)
+
+json_string = JSON_STRING ;
+json_boolean = "true" | "false" ;
+json_integer = JSON_INTEGER ;
+json_string_array = JSON_ARRAY_OF_STRINGS ;
+json_string_object = JSON_OBJECT_STRING_TO_STRING ;
+LF = ? U+000A ? ;
