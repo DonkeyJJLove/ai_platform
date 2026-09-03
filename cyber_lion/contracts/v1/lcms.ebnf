@@ -1,0 +1,65 @@
+(* LION Command Modeling Syntax -- C1-LCMS R1 candidate.
+   Accepted document class in R1: ACTION only.
+   PLAN, NODE and EDGE are reserved and MUST fail closed until a typed
+   CommandPlan IR exists. LCMS is never an execution format. *)
+
+document             = action ;
+
+action               = "ACTION", identifier, "{", action_field*, "}" ;
+
+action_field         = schema_version_field
+                     | kind_field
+                     | intent_ref_field
+                     | mission_ref_field
+                     | autonomy_ref_field
+                     | bean_ref_field
+                     | target_block
+                     | executable_block
+                     | arguments_field
+                     | workspace_block
+                     | environment_block
+                     | io_block
+                     | authority_request_block
+                     | boundary_block
+                     | preconditions_field
+                     | expected_effects_field
+                     | forbidden_effects_field
+                     | observation_block
+                     | reconciliation_block ;
+
+schema_version_field  = "schema_version", "=", string, ";" ;
+kind_field            = "kind", "=", string, ";" ;
+intent_ref_field      = "intent_ref", "=", string, ";" ;
+mission_ref_field     = "mission_ref", "=", string, ";" ;
+autonomy_ref_field    = "autonomy_ref", "=", string, ";" ;
+bean_ref_field        = "bean_ref", "=", string, ";" ;
+arguments_field       = "arguments", "=", array, ";" ;
+preconditions_field   = "preconditions", "=", array, ";" ;
+expected_effects_field= "expected_effects", "=", array, ";" ;
+forbidden_effects_field= "forbidden_effects", "=", array, ";" ;
+
+target_block          = "target", "{", assignment*, "}" ;
+executable_block      = "executable", "{", assignment*, "}" ;
+workspace_block       = "workspace", "{", assignment*, "}" ;
+environment_block     = "environment", "{", assignment*, "}" ;
+io_block              = "io", "{", assignment*, "}" ;
+authority_request_block= "authority_request", "{", assignment*, "}" ;
+boundary_block        = "boundary", "{", assignment*, "}" ;
+observation_block     = "observation", "{", assignment*, "}" ;
+reconciliation_block  = "reconciliation", "{", assignment*, "}" ;
+
+assignment            = identifier, "=", value, ";" ;
+value                 = string | integer | boolean | null | array | map ;
+array                 = "[", [ value, { ",", value } ], "]" ;
+map                   = "{", [ string, ":", value,
+                               { ",", string, ":", value } ], "}" ;
+boolean               = "true" | "false" ;
+null                  = "null" ;
+integer               = digit, { digit } ;
+identifier            = letter, { letter | digit | "-" | "_" | "." | ":" } ;
+string                = JSON_STRING_WITH_ASCII_RESULT ;
+letter                = "A".."Z" | "a".."z" | "_" ;
+digit                 = "0".."9" ;
+
+(* Reserved document vocabulary -- deliberately not in `document` in R1. *)
+reserved_document     = "PLAN" | "NODE" | "EDGE" ;
