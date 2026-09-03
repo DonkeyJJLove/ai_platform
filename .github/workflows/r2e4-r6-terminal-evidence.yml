@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "cyber-lion/r2e4-terminal-evidence-r6"
+      - "cyber-lion/r2e4-source-count-repair-r7"
   workflow_dispatch:
 
 permissions:
