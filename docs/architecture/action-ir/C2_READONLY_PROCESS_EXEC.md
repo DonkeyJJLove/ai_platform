@@ -98,3 +98,10 @@ The full Core result above is a regression run on the clean exact C1 parent work
 ## Publication boundary
 
 No Git add, commit, ref update, push, branch publication, pull request creation, merge, attach or master mutation is authorized by this C2 execution grant. Publication requires a separate human authorization.
+
+
+## Publication CI portability boundary
+
+The C2 runtime remains deliberately pinned to the exact LAB-DEBIAN execution substrate. Generic GitHub-hosted CI is not allowed to reinterpret those pins as portable executable or workspace identities. Three tests that require the physical LAB substrate therefore execute only when the exact workspace, executable digests and currentness probes are available; otherwise they skip with the stable marker `C2_LIVE_LAB_SUBSTRATE_UNAVAILABLE`.
+
+This is a test/evidence projection rule, not runtime widening. Structural admission, fail-closed substitution, shell/network/write denial, effect-time currentness ordering, observer separation and reconciliation logic continue to execute on generic CI. On LAB-DEBIAN the live tests must not skip and must continue to produce the real process/observer/reconciliation evidence recorded above. The runtime adapter, exact recipe catalog, executable pins, network namespace boundary and authority surface are unchanged.

@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 from dataclasses import replace
 import json
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -85,6 +86,24 @@ def compiled(lines: list[str] | None = None):
     return lcms.compile_lcms(source(lines))
 
 
+def live_lab_substrate_reason() -> str | None:
+    if os.environ.get("LION_C2_TEST_FORCE_NO_LAB_SUBSTRATE") == "1":
+        return "FORCED_TEST_PROJECTION"
+    try:
+        c2._verify_static_host_binding()
+        if c2._probe_git("HEAD") != c2.EXPECTED_HEAD:
+            return "HEAD_DRIFT"
+        if c2._probe_git("HEAD^{tree}") != c2.EXPECTED_TREE:
+            return "TREE_DRIFT"
+    except (OSError, ValueError, c2.C2AdmissionError) as exc:
+        return type(exc).__name__
+    return None
+
+
+LIVE_LAB_SUBSTRATE_REASON = live_lab_substrate_reason()
+LIVE_LAB_SKIP = "C2_LIVE_LAB_SUBSTRATE_UNAVAILABLE" + (f":{LIVE_LAB_SUBSTRATE_REASON}" if LIVE_LAB_SUBSTRATE_REASON else "")
+
+
 class C2ReadOnlyProcessExecTests(unittest.TestCase):
     def c2_denied(self, lines: list[str], code: str) -> None:
         action = compiled(lines)
@@ -103,6 +122,7 @@ class C2ReadOnlyProcessExecTests(unittest.TestCase):
         receipt = reconcile(prepared, execution, observation)
         return action, prepared, execution, observation, receipt
 
+    @unittest.skipIf(LIVE_LAB_SUBSTRATE_REASON is not None, LIVE_LAB_SKIP)
     def test_positive_head_and_tree_exact_reconciliation(self):
         for args, expected in [
             (["rev-parse", "HEAD"], c2.EXPECTED_HEAD),
@@ -159,20 +179,23 @@ class C2ReadOnlyProcessExecTests(unittest.TestCase):
         self.c2_denied(replace_line(BASE, "executable.digest=", 'executable.digest="sha256:' + "0" * 64 + '"'), "EXECUTABLE_SUBSTITUTION")
         self.c2_denied(replace_line(BASE, "workspace.commit=", 'workspace.commit="' + "0" * 40 + '"'), "WORKSPACE_SUBSTITUTION")
         self.c2_denied(replace_line(BASE, "workspace.tree=", 'workspace.tree="' + "0" * 40 + '"'), "WORKSPACE_SUBSTITUTION")
-        action = compiled()
         with mock.patch.object(Path, "read_text", return_value='[remote "origin"]\nurl=https://example.invalid/x\n'):
             with self.assertRaises(c2.C2AdmissionError) as ctx:
-                c2.prepare(action)
+                c2._assert_no_remote()
         self.assertEqual(ctx.exception.code, "NETWORK_ROUTE_PRESENT")
 
     def test_effect_time_currentness_is_rechecked_before_target_spawn(self):
-        prepared = c2.prepare(compiled())
-        observer = IndependentProcessObserver(EXEC_ROOT)
-        with mock.patch.object(c2, "_probe_git", return_value="0" * 40), mock.patch.object(c2.subprocess, "Popen") as popen:
+        with mock.patch.object(c2, "_verify_static_host_binding", return_value=None):
+            prepared = c2.prepare(compiled())
+        observer = mock.Mock()
+        observer.start_pid_observation = mock.Mock()
+        observer.finish = mock.Mock()
+        with mock.patch.object(c2, "_verify_static_host_binding", return_value=None), mock.patch.object(c2, "_probe_git", return_value="0" * 40), mock.patch.object(c2.subprocess, "Popen") as popen:
             with self.assertRaises(c2.C2AdmissionError) as ctx:
                 c2.execute(prepared, observer)
         self.assertEqual(ctx.exception.code, "HEAD_DRIFT")
         popen.assert_not_called()
+        observer.start_pid_observation.assert_not_called()
 
     def test_resource_io_observer_and_environment_widening_are_denied(self):
         self.c2_denied(replace_line(BASE, "boundary.max_processes=", "boundary.max_processes=2"), "PROCESS_COUNT")
@@ -185,6 +208,7 @@ class C2ReadOnlyProcessExecTests(unittest.TestCase):
         widened_env = replace_line(BASE, "environment.allow=", 'environment.allow={"LC_ALL":"C","GIT_CONFIG_NOSYSTEM":"1","GIT_CONFIG_GLOBAL":"/dev/null","GIT_TERMINAL_PROMPT":"0","HOME":"/nonexistent","PATH":"/usr/bin"}')
         self.c2_denied(widened_env, "ENVIRONMENT")
 
+    @unittest.skipIf(LIVE_LAB_SUBSTRATE_REASON is not None, LIVE_LAB_SKIP)
     def test_exit_zero_is_not_sufficient_for_success(self):
         _, prepared, execution, observation, receipt = self.run_recipe(["rev-parse", "HEAD"])
         self.assertEqual(receipt.status, "MATCH")
@@ -220,6 +244,7 @@ class C2ReadOnlyProcessExecTests(unittest.TestCase):
             self.assertNotIn("Popen", calls)
             self.assertNotIn("run", calls)
 
+    @unittest.skipIf(LIVE_LAB_SUBSTRATE_REASON is not None, LIVE_LAB_SKIP)
     def test_sandbox_and_executable_identities_are_exact(self):
         self.assertEqual(c2._sha256_file(c2.TARGET_EXECUTABLE), c2.TARGET_EXECUTABLE_SHA256)
         self.assertEqual(c2._sha256_file(c2.SANDBOX_WRAPPER), c2.SANDBOX_WRAPPER_SHA256)
