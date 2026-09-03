@@ -97,7 +97,6 @@ def _schema_fingerprint(path: Path) -> dict[str, Any]:
             }
             if row["type"] == "table":
                 table_name = str(row["name"])
-                pragma = f"PRAGMA table_xinfo({_quoted_identifier(table_name)})"
                 item["columns"] = [
                     {
                         "cid": int(column[0]),
@@ -108,7 +107,10 @@ def _schema_fingerprint(path: Path) -> dict[str, Any]:
                         "pk": int(column[5]),
                         "hidden": int(column[6]),
                     }
-                    for column in conn.execute(pragma).fetchall()
+                    for column in conn.execute(
+                        'SELECT cid,name,type,"notnull",dflt_value,pk,hidden FROM pragma_table_xinfo(?) ORDER BY cid',
+                        (table_name,),
+                    ).fetchall()
                 ]
             objects.append(item)
         payload = {"objects": objects}

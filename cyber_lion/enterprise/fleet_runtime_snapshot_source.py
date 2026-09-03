@@ -107,18 +107,21 @@ def _require_tables(conn: sqlite3.Connection, names: Iterable[str]) -> None:
 
 
 def _require_columns(conn: sqlite3.Connection, table: str, names: Iterable[str]) -> None:
-    actual = {str(row[1]) for row in conn.execute(f"PRAGMA table_info({table})")}
+    actual = {str(row[1]) for row in conn.execute(
+        'SELECT cid,name,type,"notnull",dflt_value,pk FROM pragma_table_info(?) ORDER BY cid',
+        (table,),
+    )}
     missing = sorted(set(names) - actual)
     if missing:
         raise RuntimeSnapshotSourceError(f"runtime source schema incomplete: {table}:" + ",".join(missing))
 
 
-def _rows(conn: sqlite3.Connection, sql: str, args: tuple[object, ...] = ()) -> list[dict[str, Any]]:
-    return [dict(row) for row in conn.execute(sql, args).fetchall()]
+def _rows_result(cursor: sqlite3.Cursor) -> list[dict[str, Any]]:
+    return [dict(row) for row in cursor.fetchall()]
 
 
-def _one(conn: sqlite3.Connection, sql: str, args: tuple[object, ...] = ()) -> dict[str, Any] | None:
-    row = conn.execute(sql, args).fetchone()
+def _one_result(cursor: sqlite3.Cursor) -> dict[str, Any] | None:
+    row = cursor.fetchone()
     return None if row is None else dict(row)
 
 
@@ -275,21 +278,21 @@ def _read_status(path: str) -> dict[str, Any]:
         }.items():
             _require_columns(conn, table, columns)
 
-        before = _one(conn, "SELECT registry_instance_id,revision,event_head,receipt_head FROM fleet_meta WHERE singleton=1")
+        before = _one_result(conn.execute("SELECT registry_instance_id,revision,event_head,receipt_head FROM fleet_meta WHERE singleton=1"))
         if before is None:
             raise RuntimeSnapshotSourceError("status registry meta missing")
-        identities = _rows(conn, "SELECT * FROM fleet_identity ORDER BY mission_id")
-        missions = _rows(conn, "SELECT * FROM fleet_mission ORDER BY mission_id")
-        runtimes = _rows(conn, "SELECT * FROM fleet_runtime ORDER BY mission_id")
-        heartbeats = _rows(conn, "SELECT * FROM fleet_heartbeat ORDER BY mission_id")
-        projections = _rows(conn, "SELECT * FROM fleet_projection ORDER BY mission_id,kind")
-        verifications = _rows(conn, "SELECT * FROM fleet_verification ORDER BY mission_id")
-        leases = _rows(conn, "SELECT * FROM fleet_lease ORDER BY lease_id")
-        events = _rows(conn, "SELECT * FROM fleet_event ORDER BY seq")
-        receipts = _rows(conn, "SELECT * FROM fleet_receipt ORDER BY seq")
-        decisions = _rows(conn, "SELECT * FROM fleet_source_decision ORDER BY seq")
+        identities = _rows_result(conn.execute("SELECT * FROM fleet_identity ORDER BY mission_id"))
+        missions = _rows_result(conn.execute("SELECT * FROM fleet_mission ORDER BY mission_id"))
+        runtimes = _rows_result(conn.execute("SELECT * FROM fleet_runtime ORDER BY mission_id"))
+        heartbeats = _rows_result(conn.execute("SELECT * FROM fleet_heartbeat ORDER BY mission_id"))
+        projections = _rows_result(conn.execute("SELECT * FROM fleet_projection ORDER BY mission_id,kind"))
+        verifications = _rows_result(conn.execute("SELECT * FROM fleet_verification ORDER BY mission_id"))
+        leases = _rows_result(conn.execute("SELECT * FROM fleet_lease ORDER BY lease_id"))
+        events = _rows_result(conn.execute("SELECT * FROM fleet_event ORDER BY seq"))
+        receipts = _rows_result(conn.execute("SELECT * FROM fleet_receipt ORDER BY seq"))
+        decisions = _rows_result(conn.execute("SELECT * FROM fleet_source_decision ORDER BY seq"))
         _validate_critical_decisions(decisions)
-        after = _one(conn, "SELECT registry_instance_id,revision,event_head,receipt_head FROM fleet_meta WHERE singleton=1")
+        after = _one_result(conn.execute("SELECT registry_instance_id,revision,event_head,receipt_head FROM fleet_meta WHERE singleton=1"))
         stable = before == after
         event_chain = _verify_chain(events, str(before["event_head"]), _status_event_digest)
         receipt_chain = _verify_chain(receipts, str(before["receipt_head"]), _status_receipt_digest)
@@ -334,13 +337,13 @@ def _read_coordination(path: str) -> dict[str, Any]:
         }.items():
             _require_columns(conn, table, columns)
 
-        before = _one(conn, "SELECT coordinator_id,revision,event_head FROM fleet_coordination_meta WHERE singleton=1")
+        before = _one_result(conn.execute("SELECT coordinator_id,revision,event_head FROM fleet_coordination_meta WHERE singleton=1"))
         if before is None:
             raise RuntimeSnapshotSourceError("coordination meta missing")
-        missions = _rows(conn, "SELECT * FROM fleet_coordination_mission ORDER BY mission_id")
-        leases = _rows(conn, "SELECT * FROM fleet_coordination_active_lease ORDER BY repository,lease_kind,resource")
-        events = _rows(conn, "SELECT * FROM fleet_coordination_event ORDER BY seq")
-        after = _one(conn, "SELECT coordinator_id,revision,event_head FROM fleet_coordination_meta WHERE singleton=1")
+        missions = _rows_result(conn.execute("SELECT * FROM fleet_coordination_mission ORDER BY mission_id"))
+        leases = _rows_result(conn.execute("SELECT * FROM fleet_coordination_active_lease ORDER BY repository,lease_kind,resource"))
+        events = _rows_result(conn.execute("SELECT * FROM fleet_coordination_event ORDER BY seq"))
+        after = _one_result(conn.execute("SELECT coordinator_id,revision,event_head FROM fleet_coordination_meta WHERE singleton=1"))
         stable = before == after
         event_chain = _verify_chain(events, str(before["event_head"]), _coord_event_digest, id_field="event_id")
         return {
@@ -376,22 +379,20 @@ def _read_reconciliation(path: str, repository: str, current_master: str) -> dic
         }.items():
             _require_columns(conn, table, columns)
 
-        before = _one(conn, "SELECT * FROM reconciliation_inventory_head WHERE repository=?", (repository,))
+        before = _one_result(conn.execute("SELECT * FROM reconciliation_inventory_head WHERE repository=?", (repository,)))
         if before is None:
             raise RuntimeSnapshotSourceError("repository reconciliation inventory missing")
-        report = _one(
-            conn,
+        report = _one_result(conn.execute(
             "SELECT * FROM reconciliation_report WHERE repository=? AND inventory_digest=? ORDER BY rowid DESC LIMIT 1",
             (repository, before["inventory_digest"]),
-        )
+        ))
         receipt = None
         if report is not None:
-            receipt = _one(
-                conn,
+            receipt = _one_result(conn.execute(
                 "SELECT * FROM convergence_receipt WHERE repository=? AND report_digest=? ORDER BY rowid DESC LIMIT 1",
                 (repository, report["report_digest"]),
-            )
-        after = _one(conn, "SELECT * FROM reconciliation_inventory_head WHERE repository=?", (repository,))
+            ))
+        after = _one_result(conn.execute("SELECT * FROM reconciliation_inventory_head WHERE repository=?", (repository,)))
         stable = before == after
         exact_head = before.get("default_head_sha") == current_master
 

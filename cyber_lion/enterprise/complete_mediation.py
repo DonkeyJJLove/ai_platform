@@ -44,7 +44,7 @@ def _literal(node):
 def _surface(path:str,line:int,call:str,effect_class:str)->ConsequentialEffectSurface:
     ref=f"{path}:{line}:{call}"
     provider=path.replace("/",".")
-    if effect_class.startswith("external.network") or effect_class in {"repository_ref.delete","workflow.external_effect"}:
+    if effect_class.startswith("external.network") or effect_class.startswith("repository_ref.") or effect_class in {"workflow.external_effect"}:
         target="external"; authority="external_write"
     elif effect_class.startswith("filesystem"):
         target="filesystem"; authority="local_write"
@@ -86,6 +86,8 @@ class EffectSurfaceScanner:
                     elif short in {"urlopen"}:effect="external.network"
                     elif short=="request" and name.endswith("connection.request"):effect="external.network.authority_observation"
                     elif short=="delete_exact_branch_ref":effect="repository_ref.delete"
+                    elif short=="authorize_canonical_delete":effect="repository_ref.delete.authorization"
+                    elif short=="release" and "budget_provider" in name.lower():effect="fleet_budget.release"
                     elif short in {"execute","executemany"} and node.args:
                         receiver = name.rsplit(".",1)[0] if "." in name else ""
                         dbish = bool(re.search(r"(?:^|\.)(?:c|cur|conn|connection|cursor|db|_conn)$", receiver))
