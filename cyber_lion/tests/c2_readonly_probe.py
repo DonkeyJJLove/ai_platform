@@ -20,7 +20,8 @@ def _expect_denied(label, fn):
 def main() -> int:
     print("READ_OS_RELEASE=" + str(Path("/etc/os-release").is_file()).upper())
     print("UNAME_SYSNAME=" + os.uname().sysname)
-    _expect_denied("WORKSPACE_WRITE", lambda: Path("/workspace/c2-forbidden-write").write_text("x"))
+    workspace = Path.cwd()
+    _expect_denied("WORKSPACE_WRITE", lambda: (workspace / "c2-forbidden-write").write_text("x"))
     _expect_denied("NETWORK_SOCKET", lambda: socket.socket(socket.AF_INET, socket.SOCK_STREAM))
     _expect_denied("PROCESS_FORK", os.fork)
     tmp = Path(os.environ["TMPDIR"]) / "c2-allowed-temp"

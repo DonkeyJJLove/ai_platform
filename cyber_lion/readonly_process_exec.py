@@ -398,7 +398,10 @@ class ReadonlyProcessAdapter:
         try:
             attestation = json.loads(attestation_raw.decode("ascii"))
         except Exception as exc:
-            raise ReadonlyProcessError("sandbox attestation unavailable") from exc
+            bounded_stderr = stderr.decode("utf-8", errors="replace")[-2000:]
+            raise ReadonlyProcessError(
+                f"sandbox attestation unavailable; returncode={proc.returncode}; stderr_tail={bounded_stderr!r}"
+            ) from exc
         snapshot_after = _workspace_snapshot(workspace_root)
         head_after, tree_after = _git_head_tree(workspace_root)
         target_tmp_clean = target_tmp.is_dir() and not any(target_tmp.iterdir())
