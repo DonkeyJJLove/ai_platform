@@ -106,7 +106,7 @@ class FleetEffectBudgetClaimMaterializationTests(unittest.TestCase):
 
         self.assertEqual(payload["observed_from"]["commit"], "c67ed65c9c26bc2a59b39786c5c410cd8490cbc7")
         self.assertEqual(payload["observed_from"]["tree"], "96dfdfb4cc26c094895b010aacc11a3b685d62fc")
-        self.assertEqual(payload["freshness"]["state"], "CURRENT_AT_BASELINE")
+        self.assertEqual(payload["freshness"]["state"], "STALE")
 
     def test_repository_mutation_pep_remains_single_runtime_attach_only(self):
         text = (ROOT / "cyber_lion" / "enterprise" / "repository_mutation_pep.py").read_text(encoding="utf-8")

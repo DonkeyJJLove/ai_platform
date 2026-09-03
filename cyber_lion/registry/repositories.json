@@ -1,8 +1,8 @@
 {
   "schema_version":"1.0.0",
-  "generated_from":"repository-archaeology-2026-08-18",
+  "generated_from":"truth-reconciliation-2026-09-03@22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd",
   "repositories":[
-    {"id":"DonkeyJJLove/ai_platform","default_branch":"master","roles":["control_plane","contracts","qv9d_mapping"],"layers":["SEM","MAND"],"maturity":"SPECIFICATION","disposition":["KEEP","REFINE","GENERALIZE","INTEGRATE"]},
+    {"id":"DonkeyJJLove/ai_platform","default_branch":"master","roles":["control_plane","contracts","qv9d_mapping"],"layers":["SEM","MAND"],"maturity":"INTEGRATED_ENGINEERING_PLATFORM","disposition":["KEEP","REFINE","GENERALIZE","INTEGRATE"]},
     {"id":"DonkeyJJLove/chunk-chunk","default_branch":"master","roles":["context_compression","context_routing","hmk9d"],"layers":["SEM"],"maturity":"SPECIFICATION","disposition":["KEEP","REFINE","EXPERIMENTAL","INTEGRATE"]},
     {"id":"DonkeyJJLove/glitchlab","default_branch":"master","roles":["delta_analysis","anomaly_analysis","structure_graph","invariants"],"layers":["SEM","MAND"],"maturity":"MIXED","disposition":["KEEP","REFINE","EXTRACT","INTEGRATE"]},
     {"id":"DonkeyJJLove/HA2D","default_branch":"master","roles":["cognitive_state","memory_semantics","human_ai_hud"],"layers":["SEM","MAND"],"maturity":"SPECIFICATION","disposition":["KEEP","REFINE","EXPERIMENTAL"]},
