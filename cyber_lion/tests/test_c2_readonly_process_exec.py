@@ -190,10 +190,29 @@ class C2ReadOnlyProcessExecTests(unittest.TestCase):
         observer = mock.Mock()
         observer.start_pid_observation = mock.Mock()
         observer.finish = mock.Mock()
-        with mock.patch.object(c2, "_verify_static_host_binding", return_value=None), mock.patch.object(c2, "_probe_git", return_value="0" * 40), mock.patch.object(c2.subprocess, "Popen") as popen:
+        with mock.patch.object(c2, "_verify_static_host_binding", return_value=None), mock.patch.object(c2, "_sha256_file", return_value=c2.TARGET_EXECUTABLE_SHA256), mock.patch.object(c2, "_probe_git", return_value="0" * 40), mock.patch.object(c2.subprocess, "Popen") as popen:
             with self.assertRaises(c2.C2AdmissionError) as ctx:
                 c2.execute(prepared, observer)
         self.assertEqual(ctx.exception.code, "HEAD_DRIFT")
+        popen.assert_not_called()
+        observer.start_pid_observation.assert_not_called()
+
+    def test_effect_time_executable_drift_is_denied_before_git_probe_and_target_spawn(self):
+        with mock.patch.object(c2, "_verify_static_host_binding", return_value=None):
+            prepared = c2.prepare(compiled())
+        observer = mock.Mock()
+        observer.start_pid_observation = mock.Mock()
+        observer.finish = mock.Mock()
+        with (
+            mock.patch.object(c2, "_verify_static_host_binding", return_value=None),
+            mock.patch.object(c2, "_sha256_file", return_value="0" * 64),
+            mock.patch.object(c2, "_probe_git") as probe_git,
+            mock.patch.object(c2.subprocess, "Popen") as popen,
+        ):
+            with self.assertRaises(c2.C2AdmissionError) as ctx:
+                c2.execute(prepared, observer)
+        self.assertEqual(ctx.exception.code, "EXECUTABLE_DRIFT")
+        probe_git.assert_not_called()
         popen.assert_not_called()
         observer.start_pid_observation.assert_not_called()
 
