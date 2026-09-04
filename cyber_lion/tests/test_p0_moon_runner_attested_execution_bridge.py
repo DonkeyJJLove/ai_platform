@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 import subprocess
@@ -28,6 +27,7 @@ import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
 EXPECTED_SCAN = "d345e96fb1c7c8c4c1ee9bea5672b64d51f290ce7129c860dbf97a5a7907cae2"
+WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
 
 
 def inventory():
@@ -81,8 +81,9 @@ class RunnerAttestedExecutionBridgeTests(unittest.TestCase):
         self.assertFalse(self.spec.arbitrary_path)
         self.assertFalse(self.spec.arbitrary_module)
 
-    def test_workflow_is_dispatch_only_with_exact_enum_and_read_permission(self):
-        text = (self.root / WORKFLOW_PATH).read_text(encoding="utf-8")
+    def test_workflow_source_is_unattached_dispatch_only_exact_enum(self):
+        self.assertFalse((self.root / WORKFLOW_PATH).exists())
+        text = (self.root / WORKFLOW_SOURCE).read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", text)
         self.assertNotIn("issue_comment:", text)
         self.assertNotIn("repository_dispatch:", text)
