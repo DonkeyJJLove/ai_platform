@@ -4,7 +4,7 @@ from typing import Tuple
 from cyber_lion.contracts.complete_mediation import EffectSurfaceInventory
 from tools.p0_effect_taxonomy_contract import EffectTaxonomyReconciliationReport
 from cyber_lion.contracts.production_mediation import MediationClosureRecord
-from tools.p0_global_mediation_contract import GlobalMediationClosureCarrier,GlobalMediationSurfaceStatus
+from tools.p0_global_mediation_contract import GlobalMediationClosureCarrier,GlobalMediationSurfaceStatus,mediation_closure_record_digest
 
 class GlobalMediationClosureError(RuntimeError):pass
 
@@ -26,8 +26,8 @@ class GlobalMediationClosureCarrierBuilder:
             record=records.get(sd)
             if sd in explicit_unknown_surface_digests:
                 if record is not None and record.status!="UNKNOWN":raise GlobalMediationClosureError("explicit UNKNOWN surface cannot be promoted")
-                statuses.append(GlobalMediationSurfaceStatus(sd,"UNKNOWN",record.digest() if record else "",record.evidence_refs if record else ()).validate())
+                statuses.append(GlobalMediationSurfaceStatus(sd,"UNKNOWN",mediation_closure_record_digest(record) if record else "",record.evidence_refs if record else ()).validate())
             elif record is None:statuses.append(GlobalMediationSurfaceStatus(sd,"UNKNOWN","",()).validate())
-            else:statuses.append(GlobalMediationSurfaceStatus(sd,record.status,record.digest(),record.evidence_refs).validate())
+            else:statuses.append(GlobalMediationSurfaceStatus(sd,record.status,mediation_closure_record_digest(record),record.evidence_refs).validate())
         complete=bool(statuses) and all(x.status=="MEDIATED" for x in statuses) and not explicit_unknown_surface_digests and bool(evidence_refs)
         return GlobalMediationClosureCarrier(inventory.repository,inventory.revision,inventory.tree_digest,inv_digest,inventory.scan_digest,taxonomy_report.digest(),len(inventory.surfaces),len(inventory.unclassified_refs),tuple(statuses),tuple(sorted(explicit_unknown_surface_digests)),tuple(evidence_refs),"PASS" if complete else "UNKNOWN").validate()
