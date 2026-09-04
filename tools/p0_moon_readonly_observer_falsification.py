@@ -1,9 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from hashlib import sha256
-import json,os,sqlite3,stat
-from typing import Callable,Tuple
-from urllib.parse import quote
+import json,os,stat
+from typing import Tuple
 
 from cyber_lion.contracts.complete_mediation import EffectSurfaceInventory
 from tools.p0_moon_readonly_observer_falsification_contract import (
@@ -11,6 +10,7 @@ from tools.p0_moon_readonly_observer_falsification_contract import (
     MoonFenceReadback,MoonFutureAttackPlan,MoonObserverRuntimeCandidatePlan,MoonReadOnlyObserverSpec,
 )
 from tools.p0_moon_seven_binding import DIRECT_OBSERVER_BLOCKED,FENCE,PERMISSION
+from tools.p0_readonly_sqlite_boundary import open_readonly_sqlite
 
 EXPECTED_SCAN_DIGEST="d345e96fb1c7c8c4c1ee9bea5672b64d51f290ce7129c860dbf97a5a7907cae2"
 FENCE_PATH="/home/d2j3/.lion-moon-file-write-fence.sqlite3"
@@ -28,19 +28,11 @@ def _canon(value):return json.dumps(value,sort_keys=True,separators=(",",":"),en
 def _d(domain,value):return sha256(domain+b"\0"+_canon(value)).hexdigest()
 
 class MoonFenceReadOnlyObserverCandidate:
-    def __init__(self,*,connect_factory:Callable=sqlite3.connect,stat_factory:Callable=os.lstat):
-        self._connect_factory=connect_factory;self._stat_factory=stat_factory
+    def __init__(self,*,stat_factory=os.lstat):self._stat_factory=stat_factory
     @staticmethod
     def spec(parent_revision:str)->MoonReadOnlyObserverSpec:
         return MoonReadOnlyObserverSpec(parent_revision,FENCE_PATH,OBSERVER_ID,True,True,True,True,True,True,False,False,False,False,False,"CANDIDATE_UNATTACHED").validate()
-    def _connect_readonly(self):
-        uri="file:"+quote(FENCE_PATH,safe="/")+"?mode=ro"
-        c=self._connect_factory(uri,uri=True,timeout=5,isolation_level=None,check_same_thread=False)
-        c.execute("PRAGMA query_only=ON")
-        row=c.execute("PRAGMA query_only").fetchone()
-        if row is None or int(row[0])!=1:
-            c.close();raise MoonObserverRuntimeError("query_only enforcement failed")
-        return c
+    def _connect_readonly(self):return open_readonly_sqlite(FENCE_PATH)
     @staticmethod
     def _inspect_connection(c,database_path:str,database_device:int,database_inode:int)->MoonFenceReadback:
         query_only=int(c.execute("PRAGMA query_only").fetchone()[0])==1
