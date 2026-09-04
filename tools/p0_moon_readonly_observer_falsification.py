@@ -76,10 +76,8 @@ class MoonFenceReadOnlyObserverCandidate:
         if not readback.journal_mode_exact:raise MoonObserverRuntimeError("journal_mode mismatch")
         if not readback.synchronous_value_exact:raise MoonObserverRuntimeError("synchronous readback mismatch")
         return readback
-    @staticmethod
-    def seal_live_receipt(*,revision:str,tree:str,readback:MoonFenceReadback,observed_at:str,live_observation:bool)->MoonFenceObservationReceipt:
-        if not live_observation:raise MoonObserverRuntimeError("live observation receipt cannot be fabricated")
-        readback.validate()
+    def observe_live(self,*,revision:str,tree:str,observed_at:str)->MoonFenceObservationReceipt:
+        readback=self.inspect()
         return MoonFenceObservationReceipt(revision,tree,readback.database_path,f"{readback.database_device}:{readback.database_inode}",True,readback.schema_digest,readback.pragma_digest,OBSERVER_ID,observed_at,readback.digest()).sealed()
 
 class MoonBoundedFalsificationRuntimeCandidate:
