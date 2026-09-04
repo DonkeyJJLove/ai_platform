@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import sha256
 import os
 from pathlib import Path
 import subprocess
@@ -26,7 +27,7 @@ from tools.p0_moon_runner_attested_bridge_contract import (
 import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-EXPECTED_SCAN = "d345e96fb1c7c8c4c1ee9bea5672b64d51f290ce7129c860dbf97a5a7907cae2"
+EXPECTED_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
 
 
@@ -81,9 +82,15 @@ class RunnerAttestedExecutionBridgeTests(unittest.TestCase):
         self.assertFalse(self.spec.arbitrary_path)
         self.assertFalse(self.spec.arbitrary_module)
 
-    def test_workflow_source_is_unattached_dispatch_only_exact_enum(self):
-        self.assertFalse((self.root / WORKFLOW_PATH).exists())
-        text = (self.root / WORKFLOW_SOURCE).read_text(encoding="utf-8")
+    def test_attached_workflow_is_exact_dispatch_only_enum(self):
+        workflow = self.root / WORKFLOW_PATH
+        source = self.root / WORKFLOW_SOURCE
+        self.assertTrue(workflow.is_file())
+        workflow_bytes = workflow.read_bytes()
+        source_bytes = source.read_bytes()
+        self.assertEqual(workflow_bytes, source_bytes)
+        self.assertEqual(sha256(workflow_bytes).hexdigest(), "518b0ac3015e4d499595fce752cb9fa15d838237ee292921d3774bf58acb616f")
+        text = workflow_bytes.decode("utf-8")
         self.assertIn("workflow_dispatch:", text)
         self.assertNotIn("issue_comment:", text)
         self.assertNotIn("repository_dispatch:", text)

@@ -37,7 +37,7 @@ from tools.p0_moon_same_connection_denial_carrier import (
     MoonObservationExecutionCarrierCandidate,
 )
 
-EXPECTED_SCAN_DIGEST = "d345e96fb1c7c8c4c1ee9bea5672b64d51f290ce7129c860dbf97a5a7907cae2"
+EXPECTED_SCAN_DIGEST = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 RUNNER_METADATA_PATH = Path("/opt/lion/github-runner/.runner")
 RUNNER_WORKER_PATH = Path("/opt/lion/github-runner/bin/Runner.Worker")
 _ALLOWED_GIT_REV_PARSE = {"HEAD", "HEAD^{tree}"}

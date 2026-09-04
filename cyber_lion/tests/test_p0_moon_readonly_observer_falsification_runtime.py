@@ -13,7 +13,7 @@ from tools.p0_moon_readonly_observer_falsification import (
 )
 
 REPO="DonkeyJJLove/ai_platform"
-EXPECTED_SCAN="d345e96fb1c7c8c4c1ee9bea5672b64d51f290ce7129c860dbf97a5a7907cae2"
+EXPECTED_SCAN="2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 CREATE_BLOCKED="478e559a2f8762b471ec9d69eca2bf03ed2744ab0e4f34593ab5060ae95cad9d"
 PRAGMA_BLOCKED="e631906532cb4c60aa69736270432263cb1d5346afde33cbb01fecec6c793de0"
 SCHEMA="CREATE TABLE moon_file_write_effect(effect_key TEXT PRIMARY KEY,admission_digest TEXT UNIQUE NOT NULL,request_digest TEXT UNIQUE NOT NULL,repository TEXT NOT NULL,target_path TEXT NOT NULL,state TEXT NOT NULL,prepared_at TEXT NOT NULL,attempted_at TEXT,observed_at TEXT,reconciled_at TEXT,pre_observation_digest TEXT,post_observation_digest TEXT,reconciliation_digest TEXT)"
