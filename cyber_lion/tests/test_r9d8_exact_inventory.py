@@ -7,6 +7,7 @@ import subprocess
 import unittest
 
 from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+from tools.p0_effect_taxonomy import EffectTaxonomyReconciler
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
 BASELINE = "7204b69abe45b028b2bad52b6345711adb832d47"
@@ -74,12 +75,26 @@ class R9D8ExactInventoryTests(unittest.TestCase):
 
         manifest_bytes = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
         manifest_digest = sha256(b"LION/R9D8/EXACT-PRODUCTION-MANIFEST/1\0" + manifest_bytes).hexdigest()
-        inventory = EffectSurfaceScanner().scan(
+        raw_inventory = EffectSurfaceScanner().scan(
             repository=REPOSITORY,
             revision=candidate_revision,
             tree_digest=candidate_tree,
             sources=sources,
         )
+        inventory, taxonomy_report, taxonomy_resolutions = EffectTaxonomyReconciler().reconcile(
+            raw_inventory=raw_inventory, sources=sources
+        )
+        print("R9D8_RAW_INVENTORY " + json.dumps({
+            "inventory_digest": raw_inventory.digest(),
+            "surface_count": len(raw_inventory.surfaces),
+            "unclassified_count": len(raw_inventory.unclassified_refs),
+        }, sort_keys=True, separators=(",", ":")))
+        print("R9D8_TAXONOMY_RECONCILIATION " + json.dumps({
+            "report_digest": taxonomy_report.digest(),
+            "status": taxonomy_report.status,
+            "resolution_count": len(taxonomy_resolutions),
+            "unresolved_count": len(taxonomy_report.unresolved_refs),
+        }, sort_keys=True, separators=(",", ":")))
 
         print("R9D8_EXACT_INVENTORY " + json.dumps({
             "repository": REPOSITORY,
@@ -126,6 +141,9 @@ class R9D8ExactInventoryTests(unittest.TestCase):
         self.assertEqual(inventory.revision, candidate_revision)
         self.assertEqual(inventory.tree_digest, candidate_tree)
         self.assertTrue(inventory.scan_digest)
+        self.assertEqual(inventory.unclassified_refs, ())
+        self.assertEqual(taxonomy_report.status, "PASS")
+        self.assertEqual(len(taxonomy_resolutions), 6)
         self.assertEqual(len(sources), len(manifest))
 
 
