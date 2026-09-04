@@ -4,8 +4,10 @@ from dataclasses import asdict,dataclass
 from hashlib import sha256
 import json,re
 from typing import Tuple
+from cyber_lion.contracts.production_mediation import MediationClosureRecord
 _SHA64=re.compile(r"^[0-9a-f]{64}$")
 _STATUSES=frozenset({"MEDIATED","UNMEDIATED","PARTIAL","UNKNOWN"})
+MEDIATION_CLOSURE_RECORD_DIGEST_DOMAIN=b"LION/GLOBAL-MEDIATION-CLOSURE-RECORD/1"
 class GlobalMediationClosureContractError(ValueError):pass
 
 def _text(v,n):
@@ -24,6 +26,11 @@ def _tuple(v,n,required=False):
 def _digest(domain,obj):
     raw=json.dumps(asdict(obj),sort_keys=True,separators=(",",":"),ensure_ascii=False,default=list).encode()
     return sha256(domain+b"\0"+raw).hexdigest()
+
+def mediation_closure_record_digest(record:MediationClosureRecord)->str:
+    if type(record) is not MediationClosureRecord:raise GlobalMediationClosureContractError("exact mediation closure record required")
+    record.validate()
+    return _digest(MEDIATION_CLOSURE_RECORD_DIGEST_DOMAIN,record)
 
 @dataclass(frozen=True)
 class GlobalMediationSurfaceStatus:
