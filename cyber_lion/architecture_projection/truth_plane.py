@@ -20,6 +20,19 @@ CARRIER_PATHS = frozenset({
     "LION/architecture/canonical-state-v1-3-candidate.json",
     "cyber_lion/registry/repositories.json",
 })
+CANDIDATE_PROJECTION_ONLY_PATHS = CARRIER_PATHS
+DEFAULT_MAX_CANDIDATE_PROJECTION_COMMITS = 16
+_CANDIDATE_CURRENTNESS_EVIDENCE_KEYS = frozenset({
+    "pr",
+    "candidate_head",
+    "candidate_tree",
+    "base_head",
+    "current_head",
+    "current_tree",
+    "ancestry_verified",
+    "intervening_commits",
+})
+_CANDIDATE_ANCESTRY_COMMIT_KEYS = frozenset({"sha", "parent_sha", "paths"})
 _ALLOWED_MODE_TYPES = frozenset({
     ("100644", "blob"),
     ("100755", "blob"),
@@ -143,6 +156,92 @@ def derive_subject_currentness(declared_subject_digest: str, observed_subject_di
     return "CURRENT" if declared == observed else "STALE"
 
 
+def classify_candidate_base_currentness(
+    *,
+    pr: int,
+    candidate_head: str,
+    candidate_tree: str,
+    base_head: str,
+    current_head: str,
+    current_tree: str,
+    evidence: Mapping[str, Any] | None = None,
+    max_projection_commits: int = DEFAULT_MAX_CANDIDATE_PROJECTION_COMMITS,
+) -> str:
+    """Classify a candidate base against live master without self-reference.
+
+    Exact base/live equality is CURRENT-compatible. A descendant live master is
+    CURRENT-compatible only when external evidence binds the exact candidate
+    identity and supplies a verified contiguous parent chain whose every commit
+    changes only the closed truth-carrier path set. Proven material drift is
+    STALE; incomplete ancestry is UNKNOWN; identity substitution is DENY.
+    """
+    if not isinstance(pr, int) or isinstance(pr, bool) or pr <= 0:
+        return "DENY"
+    for value, label in (
+        (candidate_head, "candidate_head"),
+        (candidate_tree, "candidate_tree"),
+        (base_head, "base_head"),
+        (current_head, "current_head"),
+        (current_tree, "current_tree"),
+    ):
+        try:
+            _sha40(value, label)
+        except TruthProjectionError:
+            return "DENY"
+    if base_head == current_head:
+        return "CURRENT_COMPATIBLE"
+    if evidence is None or not isinstance(evidence, Mapping):
+        return "UNKNOWN"
+    if set(evidence) != set(_CANDIDATE_CURRENTNESS_EVIDENCE_KEYS):
+        return "UNKNOWN"
+    identity = {
+        "pr": pr,
+        "candidate_head": candidate_head,
+        "candidate_tree": candidate_tree,
+        "base_head": base_head,
+        "current_head": current_head,
+        "current_tree": current_tree,
+    }
+    if any(evidence[key] != expected for key, expected in identity.items()):
+        return "DENY"
+    if evidence["ancestry_verified"] is not True:
+        return "UNKNOWN"
+    if not isinstance(max_projection_commits, int) or isinstance(max_projection_commits, bool) or max_projection_commits < 1:
+        return "UNKNOWN"
+    chain = evidence["intervening_commits"]
+    if not isinstance(chain, (list, tuple)) or not chain or len(chain) > max_projection_commits:
+        return "UNKNOWN"
+    expected_parent = base_head
+    for item in chain:
+        if not isinstance(item, Mapping) or set(item) != set(_CANDIDATE_ANCESTRY_COMMIT_KEYS):
+            return "UNKNOWN"
+        sha = item["sha"]
+        parent = item["parent_sha"]
+        paths = item["paths"]
+        try:
+            _sha40(sha, "candidate ancestry sha")
+            _sha40(parent, "candidate ancestry parent_sha")
+        except TruthProjectionError:
+            return "UNKNOWN"
+        if parent != expected_parent:
+            return "UNKNOWN"
+        if not isinstance(paths, (list, tuple)) or not paths:
+            return "UNKNOWN"
+        normalized = tuple(paths)
+        if any(not isinstance(path, str) for path in normalized) or len(set(normalized)) != len(normalized):
+            return "UNKNOWN"
+        try:
+            normalized = tuple(_canonical_subject_path(path) for path in normalized)
+        except TruthProjectionError:
+            return "UNKNOWN"
+        if any(path not in CANDIDATE_PROJECTION_ONLY_PATHS for path in normalized):
+            return "STALE"
+        expected_parent = sha
+    if expected_parent != current_head:
+        return "UNKNOWN"
+    return "CURRENT_COMPATIBLE"
+
+
 def _exact_keys(value: Mapping[str, Any], expected: set[str] | frozenset[str], label: str) -> None:
     actual = set(value)
     if actual != set(expected):
@@ -175,6 +274,7 @@ def validate_truth_projection(
     current_head: str,
     current_tree: str,
     current_subject_digest: str,
+    candidate_currentness_evidence: Mapping[int, Mapping[str, Any]] | None = None,
 ) -> Mapping[str, Any]:
     """Validate an exact AS-IS/CANDIDATE/TARGET truth projection.
 
@@ -192,6 +292,12 @@ def validate_truth_projection(
     _sha40(current_head, "current_head")
     _sha40(current_tree, "current_tree")
     observed_subject_digest = _sha256(current_subject_digest, "current_subject_digest")
+    if candidate_currentness_evidence is None:
+        candidate_currentness_evidence = {}
+    if not isinstance(candidate_currentness_evidence, Mapping):
+        raise TruthProjectionError("candidate currentness evidence must be a mapping")
+    if any(not isinstance(key, int) or isinstance(key, bool) or key <= 0 for key in candidate_currentness_evidence):
+        raise TruthProjectionError("candidate currentness evidence keys must be PR numbers")
 
     baseline = payload["baseline"]
     if not isinstance(baseline, Mapping):
@@ -218,6 +324,8 @@ def validate_truth_projection(
     if not isinstance(records, list) or not records:
         raise TruthProjectionError("records must be a non-empty array")
     seen: set[str] = set()
+    candidate_records: list[Mapping[str, Any]] = []
+    current_master_candidate_present = False
     for index, record in enumerate(records):
         label = f"records[{index}]"
         if not isinstance(record, Mapping):
@@ -251,17 +359,33 @@ def validate_truth_projection(
                 raise TruthProjectionError(f"candidate silently promoted to integrated: {record_id}")
             if not isinstance(record["pr"], int) or isinstance(record["pr"], bool) or record["pr"] <= 0:
                 raise TruthProjectionError(f"candidate requires exact PR number: {record_id}")
-            _sha40(record["head"], f"{label}.head")
-            _sha40(record["tree"], f"{label}.tree")
+            candidate_head = _sha40(record["head"], f"{label}.head")
+            candidate_tree = _sha40(record["tree"], f"{label}.tree")
             base_head = _sha40(record["base_head"], f"{label}.base_head")
             if status not in CANDIDATE_STATUSES:
                 raise TruthProjectionError(f"candidate currentness status is not canonical: {record_id}")
-            if status == "CURRENT_MASTER_BASE_CANDIDATE" and base_head != current_head:
-                raise TruthProjectionError(f"current master-base candidate is stale: {record_id}")
+            if status == "CURRENT_MASTER_BASE_CANDIDATE":
+                classification = classify_candidate_base_currentness(
+                    pr=record["pr"],
+                    candidate_head=candidate_head,
+                    candidate_tree=candidate_tree,
+                    base_head=base_head,
+                    current_head=current_head,
+                    current_tree=current_tree,
+                    evidence=candidate_currentness_evidence.get(record["pr"]),
+                )
+                if classification == "STALE":
+                    raise TruthProjectionError(f"current master-base candidate is stale: {record_id}")
+                if classification == "UNKNOWN":
+                    raise TruthProjectionError(f"candidate base currentness is unproven: {record_id}")
+                if classification == "DENY":
+                    raise TruthProjectionError(f"candidate currentness evidence identity mismatch: {record_id}")
+                current_master_candidate_present = True
             if status in {"CURRENT_STACKED_CANDIDATE", "STALE_BASE_CANDIDATE"} and base_head == current_head:
                 raise TruthProjectionError(f"candidate base currentness contradiction: {record_id}")
             if not evidence_refs:
                 raise TruthProjectionError(f"candidate lacks exact evidence: {record_id}")
+            candidate_records.append(record)
         elif plane == "TARGET":
             if record["integrated"]:
                 raise TruthProjectionError(f"TARGET cannot be integrated: {record_id}")
@@ -274,6 +398,16 @@ def validate_truth_projection(
                 raise TruthProjectionError(f"UNKNOWN cannot be integrated by declaration: {record_id}")
             if any(record[field] is not None for field in ("pr", "head", "tree", "base_head")):
                 raise TruthProjectionError(f"UNKNOWN cannot carry candidate Git identity: {record_id}")
+
+    if current_master_candidate_present:
+        for record in candidate_records:
+            if record["status"] != "CURRENT_STACKED_CANDIDATE":
+                continue
+            parents = [item for item in candidate_records if item["head"] == record["base_head"]]
+            if len(parents) != 1:
+                raise TruthProjectionError(f"stacked candidate parent identity is ambiguous or missing: {record['id']}")
+            if parents[0]["status"] not in {"CURRENT_MASTER_BASE_CANDIDATE", "CURRENT_STACKED_CANDIDATE"}:
+                raise TruthProjectionError(f"stacked candidate parent is not current-compatible: {record['id']}")
 
     history = payload["historical_projections"]
     if not isinstance(history, list):
