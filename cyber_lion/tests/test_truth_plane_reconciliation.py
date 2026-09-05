@@ -15,7 +15,8 @@ from cyber_lion.architecture_projection.truth_plane import (
 STATE_PATH = Path("LION/architecture/canonical-state-v1-3-candidate.json")
 IMPLEMENTATION_MAP_PATH = Path("LION/architecture/implementation-map.json")
 REGISTRY_PATH = Path("cyber_lion/registry/repositories.json")
-FIXTURE_MASTER_HEAD = "9082a974e8105dd7e47afc889583b1fc67535b59"
+FIXTURE_MASTER_HEAD = "9a90d463a4131b5e73a37bfb4a28194ecfa892dc"
+PRE_EPHEMERAL_MASTER_HEAD = "9082a974e8105dd7e47afc889583b1fc67535b59"
 FIXTURE_MASTER_TREE = "1414a21efce8f35892134060cd0d77f2d4d08e9b"
 OLD_MASTER_HEAD = "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
 C0_HEAD = "f8d8e44191d5c84ecca9feec1a8602f574948619"
@@ -135,7 +136,9 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             self.assertEqual(record["head"], head, f"STALE_CANDIDATE_HEAD:{record_id}")
             self.assertEqual(record["tree"], tree, f"STALE_CANDIDATE_TREE:{record_id}")
 
-        self.assertEqual(records["ActionSpec"]["base_head"], master, "STALE_CANDIDATE_BASE:ActionSpec")
+        self.assertEqual(records["ActionSpec"]["base_head"], PRE_EPHEMERAL_MASTER_HEAD, "ACTION_SPEC_GENEALOGY_DRIFT")
+        self.assertNotEqual(records["ActionSpec"]["base_head"], master, "ACTION_SPEC_SHOULD_BE_STALE_AFTER_MASTER_HISTORY_ADVANCE")
+        self.assertEqual(records["ActionSpec"]["status"], "STALE_BASE_CANDIDATE")
         self.assertEqual(records["LCMS"]["base_head"], records["ActionSpec"]["head"], "STALE_CANDIDATE_BASE:LCMS")
         self.assertEqual(
             records["ReadonlyProcessAdapter"]["base_head"],
@@ -194,7 +197,8 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
     def test_current_master_candidate_cannot_carry_stale_base(self):
         state = self.state()
         candidate = next(item for item in state["records"] if item["id"] == "ActionSpec")
-        candidate["base_head"] = OLD_MASTER_HEAD
+        candidate["status"] = "CURRENT_MASTER_BASE_CANDIDATE"
+        self.assertEqual(candidate["base_head"], PRE_EPHEMERAL_MASTER_HEAD)
         with self.assertRaisesRegex(TruthProjectionError, "current master-base candidate is stale"):
             self.validate(state)
 
@@ -252,13 +256,13 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             self.assertIsNone(record["pr"])
             self.assertIsNone(record["head"])
             self.assertIsNone(record["tree"])
-            self.assertIn(f"master:{FIXTURE_MASTER_HEAD}", record["evidence_refs"])
+            self.assertIn(f"master:{PRE_EPHEMERAL_MASTER_HEAD}", record["evidence_refs"])
 
     def test_candidate_frontier_and_stale_candidates_are_explicit(self):
         records = {item["id"]: item for item in self.validate()["records"]}
         expected = {
             "B0GenerativityProtocol": (251, "85e77ac077f89ce892c1254d01f88a0889034b2f", "e36f84e2fd1be653718dff1a33bbed7e420d41fa", "STALE_BASE_CANDIDATE", OLD_MASTER_HEAD),
-            "ActionSpec": (256, "f8d8e44191d5c84ecca9feec1a8602f574948619", "b303b628e18dd1b31bb19c923cd0f18e2f050ae9", "CURRENT_MASTER_BASE_CANDIDATE", FIXTURE_MASTER_HEAD),
+            "ActionSpec": (256, "f8d8e44191d5c84ecca9feec1a8602f574948619", "b303b628e18dd1b31bb19c923cd0f18e2f050ae9", "STALE_BASE_CANDIDATE", PRE_EPHEMERAL_MASTER_HEAD),
             "LCMS": (257, "0f75af9212a814177e08a5c206d1a8504b0937d5", "e722488cda090e62a379584c12f7cee8daa43de1", "CURRENT_STACKED_CANDIDATE", C0_HEAD),
             "ReadonlyProcessAdapter": (258, "86dc7ac367ad2cd83e873e0ae3508f42a72eaac5", "4ab9157f89edc69f35cc0169bf8926c71af21313", "CURRENT_STACKED_CANDIDATE", C1_HEAD),
             "HybridModelRouter": (253, "61b963e8664d6832f8bfe22bd31327ff63618a07", "656a777f096d6ddacc8b923e39658d1ff72ef376", "STALE_BASE_CANDIDATE", OLD_MASTER_HEAD),
