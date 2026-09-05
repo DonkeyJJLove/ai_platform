@@ -3,44 +3,401 @@
   "baseline": {
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
-    "head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd",
-    "tree": "ac8474a13d46e568787b2fc5bd77955e8b0febda",
+    "head": "9a90d463a4131b5e73a37bfb4a28194ecfa892dc",
+    "tree": "1414a21efce8f35892134060cd0d77f2d4d08e9b",
     "currentness": "CURRENT"
   },
   "records": [
-    {"id":"GoalContract","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"WorldSnapshot","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"SystemSnapshot","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"Gap","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/evolutionary_state.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"BeanSpec","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"BeanInstance","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"BeanCandidate","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean_candidate.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"CapabilityNeed","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/capability_need.py","cyber_lion/enterprise/capability_need.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"CompositionContract","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean_composition.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"CompositionEngine","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/enterprise/bean_composition.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"MosaicCell","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/mosaic.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"HeterogeneousMosaicPlanner","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/enterprise/mosaic.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"BeanBuilderChainBinding","plane":"AS_IS","status":"INTEGRATED_VERIFIED_PRIMITIVE","evidence_refs":["cyber_lion/contracts/bean_builder_bridge.py"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"AiPlatformEngineeringPlatform","plane":"AS_IS","status":"INTEGRATED_ENGINEERING_PLATFORM","evidence_refs":["cyber_lion/registry/repositories.json","cyber-lion.repository.json","master:22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"R2E4EvidenceBinding","plane":"AS_IS","status":"INTEGRATED_POST_MERGE_OBSERVED","evidence_refs":["LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json","PR#248","master:22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd","workflow:33685994007:success"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"FleetAggregateEffectBudget","plane":"AS_IS","status":"INTEGRATED_POST_MERGE_OBSERVED","evidence_refs":["cyber_lion/contracts/fleet_effect_budget.py","cyber_lion/enterprise/fleet_effect_budget.py","PR#249","master:22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"],"integrated":true,"pr":null,"head":null,"tree":null,"base_head":null},
-
-    {"id":"B0GenerativityProtocol","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#251"],"integrated":false,"pr":251,"head":"85e77ac077f89ce892c1254d01f88a0889034b2f","tree":"e36f84e2fd1be653718dff1a33bbed7e420d41fa","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-    {"id":"ActionSpec","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#252","cyber_lion/contracts/v1/action_spec.schema.json@d31a6385793909909b62d2d6bf7825713dbe3dab"],"integrated":false,"pr":252,"head":"d31a6385793909909b62d2d6bf7825713dbe3dab","tree":"e1977c7f1375cfc458c06afa91d469c612a7bc0d","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-    {"id":"LCMS","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#253","cyber_lion/lcms.py@61b963e8664d6832f8bfe22bd31327ff63618a07"],"integrated":false,"pr":253,"head":"61b963e8664d6832f8bfe22bd31327ff63618a07","tree":"656a777f096d6ddacc8b923e39658d1ff72ef376","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-    {"id":"ReadonlyProcessAdapter","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#253","cyber_lion/readonly_process_exec.py@61b963e8664d6832f8bfe22bd31327ff63618a07"],"integrated":false,"pr":253,"head":"61b963e8664d6832f8bfe22bd31327ff63618a07","tree":"656a777f096d6ddacc8b923e39658d1ff72ef376","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-    {"id":"HybridModelRouter","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#253","cyber_lion/hybrid_router.py@61b963e8664d6832f8bfe22bd31327ff63618a07"],"integrated":false,"pr":253,"head":"61b963e8664d6832f8bfe22bd31327ff63618a07","tree":"656a777f096d6ddacc8b923e39658d1ff72ef376","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-    {"id":"PhysicalActionSpec","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#253","cyber_lion/physical_action_simulation.py@61b963e8664d6832f8bfe22bd31327ff63618a07"],"integrated":false,"pr":253,"head":"61b963e8664d6832f8bfe22bd31327ff63618a07","tree":"656a777f096d6ddacc8b923e39658d1ff72ef376","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-    {"id":"P0EntryCandidate","plane":"CANDIDATE","status":"IN_PROGRESS_CANDIDATE","evidence_refs":["PR#253","workflow:33752513201:success","workflow:33752513260:success"],"integrated":false,"pr":253,"head":"61b963e8664d6832f8bfe22bd31327ff63618a07","tree":"656a777f096d6ddacc8b923e39658d1ff72ef376","base_head":"22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"},
-
-    {"id":"AutonomyBlueprint","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"MaterializerRegistry","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"LAIR","plane":"TARGET","status":"TARGET_NOT_INTEGRATED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"LocalConsole","plane":"TARGET","status":"TARGET_NOT_INTEGRATED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"LocalOpenWeightModelRuntime","plane":"TARGET","status":"TARGET_NOT_DEPLOYED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
-    {"id":"CyberPhysicalRuntime","plane":"TARGET","status":"TARGET_NOT_IMPLEMENTED","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null},
-
-    {"id":"GlobalCompleteMediation","plane":"UNKNOWN","status":"UNKNOWN","evidence_refs":[],"integrated":false,"pr":null,"head":null,"tree":null,"base_head":null}
+    {
+      "id": "GoalContract",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "WorldSnapshot",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "SystemSnapshot",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "Gap",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "BeanSpec",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/bean.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "BeanInstance",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/bean.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "BeanCandidate",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/bean_candidate.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "CapabilityNeed",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/capability_need.py",
+        "cyber_lion/enterprise/capability_need.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "CompositionContract",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/bean_composition.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "CompositionEngine",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/enterprise/bean_composition.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "MosaicCell",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/mosaic.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "HeterogeneousMosaicPlanner",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/enterprise/mosaic.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "BeanBuilderChainBinding",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/bean_builder_bridge.py"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "AiPlatformEngineeringPlatform",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_ENGINEERING_PLATFORM",
+      "evidence_refs": [
+        "cyber_lion/registry/repositories.json",
+        "cyber-lion.repository.json",
+        "master:9082a974e8105dd7e47afc889583b1fc67535b59"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "R2E4EvidenceBinding",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_POST_MERGE_OBSERVED",
+      "evidence_refs": [
+        "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json",
+        "PR#248",
+        "master:9082a974e8105dd7e47afc889583b1fc67535b59",
+        "workflow:33685994007:success"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "FleetAggregateEffectBudget",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_POST_MERGE_OBSERVED",
+      "evidence_refs": [
+        "cyber_lion/contracts/fleet_effect_budget.py",
+        "cyber_lion/enterprise/fleet_effect_budget.py",
+        "PR#249",
+        "master:9082a974e8105dd7e47afc889583b1fc67535b59"
+      ],
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "B0GenerativityProtocol",
+      "plane": "CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
+      "evidence_refs": [
+        "PR#251"
+      ],
+      "integrated": false,
+      "pr": 251,
+      "head": "85e77ac077f89ce892c1254d01f88a0889034b2f",
+      "tree": "e36f84e2fd1be653718dff1a33bbed7e420d41fa",
+      "base_head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
+    },
+    {
+      "id": "ActionSpec",
+      "plane": "CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
+      "evidence_refs": [
+        "PR#256",
+        "cyber_lion/contracts/v1/action_spec.schema.json@f8d8e44191d5c84ecca9feec1a8602f574948619"
+      ],
+      "integrated": false,
+      "pr": 256,
+      "head": "f8d8e44191d5c84ecca9feec1a8602f574948619",
+      "tree": "b303b628e18dd1b31bb19c923cd0f18e2f050ae9",
+      "base_head": "9082a974e8105dd7e47afc889583b1fc67535b59"
+    },
+    {
+      "id": "LCMS",
+      "plane": "CANDIDATE",
+      "status": "CURRENT_STACKED_CANDIDATE",
+      "evidence_refs": [
+        "PR#257",
+        "tools/lcms.py@0f75af9212a814177e08a5c206d1a8504b0937d5"
+      ],
+      "integrated": false,
+      "pr": 257,
+      "head": "0f75af9212a814177e08a5c206d1a8504b0937d5",
+      "tree": "e722488cda090e62a379584c12f7cee8daa43de1",
+      "base_head": "f8d8e44191d5c84ecca9feec1a8602f574948619"
+    },
+    {
+      "id": "ReadonlyProcessAdapter",
+      "plane": "CANDIDATE",
+      "status": "CURRENT_STACKED_CANDIDATE",
+      "evidence_refs": [
+        "PR#258",
+        "tools/readonly_process_exec.py@86dc7ac367ad2cd83e873e0ae3508f42a72eaac5"
+      ],
+      "integrated": false,
+      "pr": 258,
+      "head": "86dc7ac367ad2cd83e873e0ae3508f42a72eaac5",
+      "tree": "4ab9157f89edc69f35cc0169bf8926c71af21313",
+      "base_head": "0f75af9212a814177e08a5c206d1a8504b0937d5"
+    },
+    {
+      "id": "HybridModelRouter",
+      "plane": "CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
+      "evidence_refs": [
+        "PR#253",
+        "cyber_lion/hybrid_router.py@61b963e8664d6832f8bfe22bd31327ff63618a07"
+      ],
+      "integrated": false,
+      "pr": 253,
+      "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
+      "tree": "656a777f096d6ddacc8b923e39658d1ff72ef376",
+      "base_head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
+    },
+    {
+      "id": "PhysicalActionSpec",
+      "plane": "CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
+      "evidence_refs": [
+        "PR#253",
+        "cyber_lion/physical_action_simulation.py@61b963e8664d6832f8bfe22bd31327ff63618a07"
+      ],
+      "integrated": false,
+      "pr": 253,
+      "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
+      "tree": "656a777f096d6ddacc8b923e39658d1ff72ef376",
+      "base_head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
+    },
+    {
+      "id": "P0EntryCandidate",
+      "plane": "CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
+      "evidence_refs": [
+        "PR#253"
+      ],
+      "integrated": false,
+      "pr": 253,
+      "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
+      "tree": "656a777f096d6ddacc8b923e39658d1ff72ef376",
+      "base_head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
+    },
+    {
+      "id": "AutonomyBlueprint",
+      "plane": "TARGET",
+      "status": "TARGET_NOT_IMPLEMENTED",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "MaterializerRegistry",
+      "plane": "TARGET",
+      "status": "TARGET_NOT_IMPLEMENTED",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "LAIR",
+      "plane": "TARGET",
+      "status": "TARGET_NOT_INTEGRATED",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "LocalConsole",
+      "plane": "TARGET",
+      "status": "TARGET_NOT_INTEGRATED",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "LocalOpenWeightModelRuntime",
+      "plane": "TARGET",
+      "status": "TARGET_NOT_DEPLOYED",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "CyberPhysicalRuntime",
+      "plane": "TARGET",
+      "status": "TARGET_NOT_IMPLEMENTED",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    },
+    {
+      "id": "GlobalCompleteMediation",
+      "plane": "UNKNOWN",
+      "status": "UNKNOWN",
+      "evidence_refs": [],
+      "integrated": false,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
+    }
   ],
   "historical_projections": [
     {

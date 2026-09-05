@@ -7,6 +7,7 @@ from .gap import classify_projection_currentness
 
 SCHEMA_VERSION = "lion.truth-projection/v1.3-a0-candidate"
 PLANES = frozenset({"AS_IS", "CANDIDATE", "TARGET", "UNKNOWN"})
+CANDIDATE_STATUSES = frozenset({"CURRENT_MASTER_BASE_CANDIDATE", "CURRENT_STACKED_CANDIDATE", "STALE_BASE_CANDIDATE"})
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _RECORD_KEYS = frozenset({
     "id",
@@ -101,7 +102,7 @@ def validate_truth_projection(
         plane = record["plane"]
         if plane not in PLANES:
             raise TruthProjectionError(f"unknown truth plane: {plane}")
-        _text(record["status"], f"{label}.status")
+        status = _text(record["status"], f"{label}.status")
         evidence_refs = record["evidence_refs"]
         if not isinstance(evidence_refs, list) or any(not isinstance(item, str) or not item.strip() for item in evidence_refs):
             raise TruthProjectionError(f"{label}.evidence_refs must be strings")
@@ -124,7 +125,13 @@ def validate_truth_projection(
                 raise TruthProjectionError(f"candidate requires exact PR number: {record_id}")
             _sha40(record["head"], f"{label}.head")
             _sha40(record["tree"], f"{label}.tree")
-            _sha40(record["base_head"], f"{label}.base_head")
+            base_head = _sha40(record["base_head"], f"{label}.base_head")
+            if status not in CANDIDATE_STATUSES:
+                raise TruthProjectionError(f"candidate currentness status is not canonical: {record_id}")
+            if status == "CURRENT_MASTER_BASE_CANDIDATE" and base_head != current_head:
+                raise TruthProjectionError(f"current master-base candidate is stale: {record_id}")
+            if status in {"CURRENT_STACKED_CANDIDATE", "STALE_BASE_CANDIDATE"} and base_head == current_head:
+                raise TruthProjectionError(f"candidate base currentness contradiction: {record_id}")
             if not evidence_refs:
                 raise TruthProjectionError(f"candidate lacks exact evidence: {record_id}")
         elif plane == "TARGET":
