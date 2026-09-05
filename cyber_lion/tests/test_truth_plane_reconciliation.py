@@ -13,6 +13,7 @@ from cyber_lion.architecture_projection.truth_plane import (
     SUBJECT_DIGEST_DOMAIN,
     SubjectEntry,
     TruthProjectionError,
+    classify_candidate_base_currentness,
     derive_subject_currentness,
     subject_digest,
     validate_truth_projection,
@@ -120,6 +121,42 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         self.assertEqual(len(tree), 40, f"LIVE_TREE_INVALID:{branch}")
         return head, tree
 
+    def _resolve_live_pr(self, pr_number):
+        self.assertIsInstance(pr_number, int, "LIVE_PR_NUMBER_INVALID")
+        self.assertGreater(pr_number, 0, "LIVE_PR_NUMBER_INVALID")
+        exact_ref = f"refs/pull/{pr_number}/head"
+        proc = subprocess.run(
+            ["git", "ls-remote", "--exit-code", "origin", exact_ref],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"LIVE_PR_REF_UNAVAILABLE:{pr_number}")
+        lines = [line for line in proc.stdout.splitlines() if line.strip()]
+        self.assertEqual(len(lines), 1, f"LIVE_PR_REF_CARDINALITY_INVALID:{pr_number}")
+        head, resolved_ref = lines[0].split()
+        self.assertEqual(resolved_ref, exact_ref, f"LIVE_PR_REF_RESOLUTION_INVALID:{pr_number}")
+        fetched = subprocess.run(
+            ["git", "fetch", "--no-tags", "--depth=1", "origin", exact_ref],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(fetched.returncode, 0, f"LIVE_PR_REF_FETCH_FAILED:{pr_number}:{fetched.stderr.strip()}")
+        fetched_head = subprocess.run(
+            ["git", "rev-parse", "FETCH_HEAD^{commit}"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        tree = subprocess.run(
+            ["git", "rev-parse", "FETCH_HEAD^{tree}"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        self.assertEqual(fetched_head, head, f"LIVE_PR_REF_FETCH_DRIFT:{pr_number}")
+        return head, tree
+
     def live_identity(self):
         head = os.environ.get("LION_LIVE_MASTER_HEAD")
         tree = os.environ.get("LION_LIVE_MASTER_TREE")
@@ -167,23 +204,12 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             self.skipTest("LIVE_CURRENTNESS_EVIDENCE_UNAVAILABLE")
         master, _ = self.live_identity()
         records = {item["id"]: item for item in self.state()["records"]}
-        bindings = {
-            "B0GenerativityProtocol": "mission/b0-bean-generativity-protocol-r1",
-            "ActionSpec": "mission/c0-action-ir-schema-freeze-r3",
-            "LCMS": "mission/c1-lcms-canonicalization-r1",
-            "ReadonlyProcessAdapter": "mission/c2-readonly-process-exec-r1",
-            "HybridModelRouter": "mission/p0-entry-candidate-r1",
-            "PhysicalActionSpec": "mission/p0-entry-candidate-r1",
-            "P0EntryCandidate": "mission/p0-entry-candidate-r1",
-        }
-        resolved = {}
-        for record_id, branch in bindings.items():
-            if branch not in resolved:
-                resolved[branch] = self._resolve_live_branch(branch)
-            head, tree = resolved[branch]
-            record = records[record_id]
-            self.assertEqual(record["head"], head, f"STALE_CANDIDATE_HEAD:{record_id}")
-            self.assertEqual(record["tree"], tree, f"STALE_CANDIDATE_TREE:{record_id}")
+        for record in records.values():
+            if record["plane"] != "CANDIDATE":
+                continue
+            head, tree = self._resolve_live_pr(record["pr"])
+            self.assertEqual(record["head"], head, f"STALE_CANDIDATE_HEAD:{record['id']}")
+            self.assertEqual(record["tree"], tree, f"STALE_CANDIDATE_TREE:{record['id']}")
 
         self.assertEqual(records["ActionSpec"]["base_head"], PRE_EPHEMERAL_MASTER_HEAD, "ACTION_SPEC_GENEALOGY_DRIFT")
         self.assertNotEqual(records["ActionSpec"]["base_head"], master, "ACTION_SPEC_SHOULD_BE_STALE_AFTER_MASTER_HISTORY_ADVANCE")
@@ -248,7 +274,7 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         candidate = next(item for item in state["records"] if item["id"] == "ActionSpec")
         candidate["status"] = "CURRENT_MASTER_BASE_CANDIDATE"
         self.assertEqual(candidate["base_head"], PRE_EPHEMERAL_MASTER_HEAD)
-        with self.assertRaisesRegex(TruthProjectionError, "current master-base candidate is stale"):
+        with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness is unproven"):
             self.validate(state)
 
     def test_stale_candidate_cannot_hide_current_master_base(self):
@@ -270,6 +296,217 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         state["historical_projections"][0]["currentness"] = "CURRENT"
         with self.assertRaisesRegex(TruthProjectionError, "historical currentness contradiction"):
             self.validate(state)
+
+    def _selected_c0_state(self, *, base_head):
+        state = self.state()
+        action = next(item for item in state["records"] if item["id"] == "ActionSpec")
+        action.update({
+            "status": "CURRENT_MASTER_BASE_CANDIDATE",
+            "pr": 279,
+            "head": "3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6",
+            "tree": "d1b15db9a399fa6e6bbeae760827f02ce8158d61",
+            "base_head": base_head,
+            "evidence_refs": [
+                "PR#279",
+                "cyber_lion/contracts/v1/action_spec.schema.json@3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6",
+            ],
+        })
+        next(item for item in state["records"] if item["id"] == "LCMS")["status"] = "STALE_BASE_CANDIDATE"
+        next(item for item in state["records"] if item["id"] == "ReadonlyProcessAdapter")["status"] = "STALE_BASE_CANDIDATE"
+        return state, action
+
+    def _candidate_evidence(self, action, *, current_head, current_tree, chain, verified=True, **overrides):
+        value = {
+            "pr": action["pr"],
+            "candidate_head": action["head"],
+            "candidate_tree": action["tree"],
+            "base_head": action["base_head"],
+            "current_head": current_head,
+            "current_tree": current_tree,
+            "ancestry_verified": verified,
+            "intervening_commits": chain,
+        }
+        value.update(overrides)
+        return value
+
+    def _validate_selected_c0(self, state, action, *, current_head, current_tree=FIXTURE_MASTER_TREE, evidence=None):
+        kwargs = {} if evidence is None else {"candidate_currentness_evidence": {action["pr"]: evidence}}
+        return validate_truth_projection(
+            state,
+            current_head=current_head,
+            current_tree=current_tree,
+            current_subject_digest=state["baseline"]["subject_digest"],
+            **kwargs,
+        )
+
+    def test_f01_exact_base_equals_live_master_is_current(self):
+        state, action = self._selected_c0_state(base_head=FIXTURE_MASTER_HEAD)
+        self._validate_selected_c0(state, action, current_head=FIXTURE_MASTER_HEAD)
+
+    def test_f02_one_carrier_only_descendant_is_current(self):
+        base = "1" * 40
+        current = "2" * 40
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=current, current_tree=FIXTURE_MASTER_TREE, chain=[{
+            "sha": current, "parent_sha": base, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]
+        }])
+        self._validate_selected_c0(state, action, current_head=current, evidence=evidence)
+
+    def test_f03_multiple_contiguous_carrier_only_descendants_are_current(self):
+        base, mid, current = "1" * 40, "2" * 40, "3" * 40
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=current, current_tree=FIXTURE_MASTER_TREE, chain=[
+            {"sha": mid, "parent_sha": base, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]},
+            {"sha": current, "parent_sha": mid, "paths": ["cyber_lion/registry/repositories.json"]},
+        ])
+        self._validate_selected_c0(state, action, current_head=current, evidence=evidence)
+
+    def test_f04_canonical_state_only_descendant_is_current(self):
+        self.test_f02_one_carrier_only_descendant_is_current()
+
+    def test_f05_registry_only_descendant_is_current(self):
+        base, current = "4" * 40, "5" * 40
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=current, current_tree=FIXTURE_MASTER_TREE, chain=[{
+            "sha": current, "parent_sha": base, "paths": ["cyber_lion/registry/repositories.json"]
+        }])
+        self._validate_selected_c0(state, action, current_head=current, evidence=evidence)
+
+    def _assert_nonprojection_descendant_is_stale(self, path):
+        base, current = "6" * 40, "7" * 40
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=current, current_tree=FIXTURE_MASTER_TREE, chain=[{
+            "sha": current, "parent_sha": base, "paths": [path]
+        }])
+        with self.assertRaisesRegex(TruthProjectionError, "current master-base candidate is stale"):
+            self._validate_selected_c0(state, action, current_head=current, evidence=evidence)
+
+    def test_f06_truth_test_descendant_is_stale(self):
+        self._assert_nonprojection_descendant_is_stale("cyber_lion/tests/test_truth_plane_reconciliation.py")
+
+    def test_f07_truth_plane_descendant_is_stale(self):
+        self._assert_nonprojection_descendant_is_stale("cyber_lion/architecture_projection/truth_plane.py")
+
+    def test_f08_c0_source_descendant_is_stale(self):
+        self._assert_nonprojection_descendant_is_stale("cyber_lion/contracts/v1/action_spec.schema.json")
+
+    def test_f09_arbitrary_production_source_descendant_is_stale(self):
+        self._assert_nonprojection_descendant_is_stale("cyber_lion/enterprise/control_plane.py")
+
+    def test_f10_workflow_descendant_is_stale(self):
+        self._assert_nonprojection_descendant_is_stale(".github/workflows/cyber-lion-core.yml")
+
+    def _assert_unproven(self, chain, *, verified=True, max_commits=None):
+        base, current = "8" * 40, "9" * 40
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=current, current_tree=FIXTURE_MASTER_TREE, chain=chain, verified=verified)
+        kwargs = {}
+        if max_commits is not None:
+            result = classify_candidate_base_currentness(
+                pr=action["pr"], candidate_head=action["head"], candidate_tree=action["tree"],
+                base_head=base, current_head=current, current_tree=FIXTURE_MASTER_TREE,
+                evidence=evidence, max_projection_commits=max_commits,
+            )
+            self.assertEqual(result, "UNKNOWN")
+            return
+        with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness is unproven"):
+            self._validate_selected_c0(state, action, current_head=current, evidence=evidence)
+
+    def test_f11_broken_parent_chain_is_unknown(self):
+        self._assert_unproven([{"sha": "9" * 40, "parent_sha": "a" * 40, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]}])
+
+    def test_f12_missing_ancestry_proof_is_unknown(self):
+        self._assert_unproven([{"sha": "9" * 40, "parent_sha": "8" * 40, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]}], verified=False)
+
+    def test_f13_omitted_intervening_commit_is_unknown(self):
+        self._assert_unproven([{"sha": "9" * 40, "parent_sha": "a" * 40, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]}])
+
+    def test_f14_reordered_ancestry_is_unknown(self):
+        self._assert_unproven([
+            {"sha": "a" * 40, "parent_sha": "b" * 40, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]},
+            {"sha": "9" * 40, "parent_sha": "8" * 40, "paths": ["cyber_lion/registry/repositories.json"]},
+        ])
+
+    def test_f15_more_than_16_projection_commits_is_unknown(self):
+        base = "8" * 40
+        chain = []
+        parent = base
+        for index in range(17):
+            sha = f"{index + 1:040x}"
+            chain.append({"sha": sha, "parent_sha": parent, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]})
+            parent = sha
+        action_head = "3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6"
+        result = classify_candidate_base_currentness(
+            pr=279, candidate_head=action_head, candidate_tree="d1b15db9a399fa6e6bbeae760827f02ce8158d61",
+            base_head=base, current_head=parent, current_tree=FIXTURE_MASTER_TREE,
+            evidence={
+                "pr": 279, "candidate_head": action_head, "candidate_tree": "d1b15db9a399fa6e6bbeae760827f02ce8158d61",
+                "base_head": base, "current_head": parent, "current_tree": FIXTURE_MASTER_TREE,
+                "ancestry_verified": True, "intervening_commits": chain,
+            },
+        )
+        self.assertEqual(result, "UNKNOWN")
+
+    def _assert_identity_substitution_denied(self, key, replacement):
+        base, current = "b" * 40, "c" * 40
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=current, current_tree=FIXTURE_MASTER_TREE, chain=[{
+            "sha": current, "parent_sha": base, "paths": ["LION/architecture/canonical-state-v1-3-candidate.json"]
+        }])
+        evidence[key] = replacement
+        with self.assertRaisesRegex(TruthProjectionError, "candidate currentness evidence identity mismatch"):
+            self._validate_selected_c0(state, action, current_head=current, evidence=evidence)
+
+    def test_f16_candidate_base_substitution_is_denied(self):
+        self._assert_identity_substitution_denied("base_head", "d" * 40)
+
+    def test_f17_candidate_head_substitution_is_denied(self):
+        self._assert_identity_substitution_denied("candidate_head", "d" * 40)
+
+    def test_f18_candidate_tree_substitution_is_denied(self):
+        self._assert_identity_substitution_denied("candidate_tree", "d" * 40)
+
+    def test_f19_pr_identity_substitution_is_denied(self):
+        self._assert_identity_substitution_denied("pr", 256)
+
+    def test_f20_serialized_current_without_proof_is_denied(self):
+        state, action = self._selected_c0_state(base_head="e" * 40)
+        with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness is unproven"):
+            self._validate_selected_c0(state, action, current_head="f" * 40)
+
+    def test_f21_stale_c1_cannot_become_current_by_selected_c0_relabel(self):
+        state, action = self._selected_c0_state(base_head=FIXTURE_MASTER_HEAD)
+        c1 = next(item for item in state["records"] if item["id"] == "LCMS")
+        c1["status"] = "CURRENT_STACKED_CANDIDATE"
+        with self.assertRaisesRegex(TruthProjectionError, "stacked candidate parent identity is ambiguous or missing"):
+            self._validate_selected_c0(state, action, current_head=FIXTURE_MASTER_HEAD)
+
+    def test_f22_stale_c2_cannot_become_current_through_stale_c1(self):
+        state, action = self._selected_c0_state(base_head=FIXTURE_MASTER_HEAD)
+        c1 = next(item for item in state["records"] if item["id"] == "LCMS")
+        c1["status"] = "STALE_BASE_CANDIDATE"
+        c2 = next(item for item in state["records"] if item["id"] == "ReadonlyProcessAdapter")
+        c2["status"] = "CURRENT_STACKED_CANDIDATE"
+        with self.assertRaisesRegex(TruthProjectionError, "stacked candidate parent is not current-compatible"):
+            self._validate_selected_c0(state, action, current_head=FIXTURE_MASTER_HEAD)
+
+    def test_r16_carrier_only_sync_keeps_selected_c0_current_without_rewriting_genealogy(self):
+        base = "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e"
+        sync = "62312e4e93acc7145c031006d330f21476539f28"
+        state, action = self._selected_c0_state(base_head=base)
+        evidence = self._candidate_evidence(action, current_head=sync, current_tree="a31e8d072e1c725c6b8efabe43c5cd8131b13c11", chain=[{
+            "sha": sync, "parent_sha": base, "paths": [
+                "LION/architecture/canonical-state-v1-3-candidate.json",
+                "cyber_lion/registry/repositories.json",
+            ]
+        }])
+        self._validate_selected_c0(
+            state, action, current_head=sync, current_tree="a31e8d072e1c725c6b8efabe43c5cd8131b13c11", evidence=evidence
+        )
+        self.assertEqual(action["base_head"], base)
+        records = {item["id"]: item for item in state["records"]}
+        self.assertEqual(records["LCMS"]["status"], "STALE_BASE_CANDIDATE")
+        self.assertEqual(records["ReadonlyProcessAdapter"]["status"], "STALE_BASE_CANDIDATE")
 
     def test_legacy_implementation_map_is_literal_stale(self):
         legacy = json.loads(IMPLEMENTATION_MAP_PATH.read_text(encoding="utf-8"))
