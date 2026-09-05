@@ -1,0 +1,88 @@
+{
+  "as_is": {
+    "contract": "cyber_lion/contracts/v1/action_proposal.schema.json",
+    "payload_digest_binding": true,
+    "requested_authority": [
+      "none",
+      "read",
+      "local_write",
+      "external_write",
+      "financial",
+      "deploy",
+      "privileged"
+    ],
+    "runtime_support_claim": "ONLY_EXISTING_LIVE_CONTRACTS",
+    "schema_id": "cyberlion://schemas/action-proposal/v1",
+    "target_type": "string"
+  },
+  "baseline": {
+    "sha": "9082a974e8105dd7e47afc889583b1fc67535b59",
+    "tree": "1414a21efce8f35892134060cd0d77f2d4d08e9b"
+  },
+  "candidate_schema": "cyber_lion/contracts/v1/action_spec.schema.json",
+  "contradictions": [
+    {
+      "candidate_fact": "ActionSpec.authority_request uses domain/capability/grant_ref and defines no canonical mapping to financial.",
+      "id": "C0-FINANCIAL-AUTHORITY-VOCABULARY",
+      "live_fact": "ActionProposal.requested_authority contains financial.",
+      "resolution": "NO_SILENT_MAPPING",
+      "status": "PRESERVED"
+    },
+    {
+      "candidate_fact": "This C0 branch introduces ActionSpec only as a candidate schema.",
+      "id": "C0-V1_2-ACTIONSPEC-ABSENT",
+      "live_fact": "Baseline tree has ActionProposal and execution/PEP/receipt contracts but no canonical action_spec.schema.json or Action IR schema.",
+      "resolution": "NEW_CANDIDATE_NOT_SUPERSESSION",
+      "status": "PRESERVED"
+    },
+    {
+      "candidate_fact": "ActionSpec.target is a structured host/environment/runtime object.",
+      "id": "C0-TARGET-SHAPE",
+      "live_fact": "ActionProposal.target is a nonempty string.",
+      "resolution": "NO_IMPLICIT_RUNTIME_COERCION",
+      "status": "PRESERVED"
+    }
+  ],
+  "invariants": {
+    "no_attach": true,
+    "no_authority_minting": true,
+    "no_master_merge": true,
+    "no_process_execution": true,
+    "no_transport_implementation": true,
+    "target_only_does_not_imply_runtime_support": true
+  },
+  "roadmap_step": "C0-ACTION-IR",
+  "schema_version": "lion.action-spec-support/v1.0",
+  "target_only": {
+    "authority_effect": "NONE",
+    "fields": [
+      "kind",
+      "target",
+      "authority_request",
+      "boundary",
+      "preconditions",
+      "expected_effects",
+      "forbidden_effects",
+      "observation",
+      "reconciliation",
+      "executable",
+      "arguments",
+      "workspace",
+      "environment",
+      "io"
+    ],
+    "kind_vocabulary": [
+      "process.exec",
+      "filesystem.read",
+      "filesystem.write",
+      "repository.observe",
+      "repository.prepare_candidate",
+      "repository.attach_exact",
+      "test.execute",
+      "artifact.generate",
+      "robot.task"
+    ],
+    "runtime_support": "NONE_FROM_ACTIONSPEC_SCHEMA",
+    "transport_support": "NONE"
+  }
+}
