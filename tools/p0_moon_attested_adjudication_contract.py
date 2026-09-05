@@ -120,15 +120,28 @@ class AttestedVerifierIdentity:
         if self.run_id_numeric<=0 or self.job_id_numeric<=0 or (self.runner_name,self.runner_agent_id)!=("lion-moon-r9d8-test",24):raise AttestedAdjudicationContractError("verifier identity invalid")
         return self
     def digest(self):self.validate();return _digest(VERIFIER_DOMAIN,self)
+SEMANTIC_CONTINUITY_DOMAIN=b"LION/MOON-SOURCE-SEMANTIC-CONTINUITY/1"
+
+@dataclass(frozen=True)
+class SourceSemanticContinuityProof:
+    source_path:str;source_blob_sha:str;target_blob_sha:str;source_revision:str;target_revision:str;preserved_assertions:Tuple[str,...];strengthened_assertions:Tuple[str,...];evidence_refs:Tuple[str,...]
+    def validate(self):
+        _text(self.source_path,"source_path");_sha40(self.source_blob_sha,"source_blob_sha");_sha40(self.target_blob_sha,"target_blob_sha");_sha40(self.source_revision,"source_revision");_sha40(self.target_revision,"target_revision")
+        _tuple(self.preserved_assertions,"preserved_assertions",True);_tuple(self.strengthened_assertions,"strengthened_assertions",True);_tuple(self.evidence_refs,"evidence_refs",True)
+        if self.source_blob_sha==self.target_blob_sha:raise AttestedAdjudicationContractError("semantic continuity proof requires changed blob")
+        return self
+    def digest(self):self.validate();return _digest(SEMANTIC_CONTINUITY_DOMAIN,self)
+
 @dataclass(frozen=True)
 class RevisionRebindProof:
-    source_revision:str;source_tree:str;source_inventory_digest:str;target_revision:str;target_tree:str;target_inventory_digest:str;scan_digest:str;unchanged_source_blobs:Tuple[str,...];evidence_refs:Tuple[str,...]
+    source_revision:str;source_tree:str;source_inventory_digest:str;target_revision:str;target_tree:str;target_inventory_digest:str;scan_digest:str;unchanged_source_blobs:Tuple[str,...];changed_source_proof_digests:Tuple[str,...];evidence_refs:Tuple[str,...]
     def validate(self):
         for n in ("source_revision","source_tree","target_revision","target_tree"):_sha40(getattr(self,n),n)
         for n in ("source_inventory_digest","target_inventory_digest","scan_digest"):_sha64(getattr(self,n),n)
-        _tuple(self.unchanged_source_blobs,"unchanged_source_blobs",True);_tuple(self.evidence_refs,"evidence_refs",True)
+        _tuple(self.unchanged_source_blobs,"unchanged_source_blobs",True);_tuple(self.changed_source_proof_digests,"changed_source_proof_digests",True);_tuple(self.evidence_refs,"evidence_refs",True)
         for x in self.unchanged_source_blobs:
             p,s=x.rsplit("@",1);_text(p,"source_path");_sha40(s,"source_blob")
+        for x in self.changed_source_proof_digests:_sha64(x,"changed_source_proof_digest")
         return self
     def digest(self):self.validate();return _digest(REBINDS_DOMAIN,self)
 @dataclass(frozen=True)

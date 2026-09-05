@@ -1,9 +1,12 @@
 from dataclasses import replace
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from cyber_lion.contracts.complete_mediation import MediationBinding
-from cyber_lion.enterprise.complete_mediation import CompleteMediationEngine,CompleteMediationError,EffectSurfaceScanner
+from cyber_lion.enterprise.complete_mediation import (
+    CompleteMediationEngine,CompleteMediationError,EffectSurfaceScanner,EffectSurfaceTraversalError,_canonical_order,
+)
 
 class CompleteMediationTests(unittest.TestCase):
     def scan(self,sources):
@@ -20,6 +23,36 @@ class CompleteMediationTests(unittest.TestCase):
         self.assertEqual(a.digest(),b.digest())
         c=self.scan({"cyber_lion/x.py":"from pathlib import Path\nPath('x').write_text('b')\n"})
         self.assertNotEqual(a.scan_digest,c.scan_digest)
+
+
+    def test_effect_surface_traversal_error_is_complete_mediation_error(self):
+        self.assertTrue(issubclass(EffectSurfaceTraversalError,CompleteMediationError))
+
+    def test_critical_ast_traversal_exception_fails_closed(self):
+        with patch("cyber_lion.enterprise.complete_mediation.ast.walk",side_effect=RuntimeError("synthetic traversal failure")):
+            with self.assertRaisesRegex(EffectSurfaceTraversalError,"ast-visitor"):
+                self.scan({"cyber_lion/x.py":"import subprocess\nsubprocess.run(['x'])\n"})
+
+    def test_safe_dynamic_target_remains_synthetic(self):
+        inv=self.scan({"cyber_lion/x.py":"import urllib.request\ndef f(method):\n urllib.request.Request('https://example.invalid',data=b'{}',method=method)\n"})
+        self.assertFalse(inv.surfaces)
+        self.assertTrue(any("dynamic-http-method" in ref for ref in inv.unclassified_refs))
+
+    def test_dynamic_target_dump_failure_fails_closed(self):
+        with patch("cyber_lion.enterprise.complete_mediation.ast.dump",side_effect=RuntimeError("synthetic dump failure")):
+            with self.assertRaisesRegex(EffectSurfaceTraversalError,"dynamic-http-method:dump"):
+                self.scan({"cyber_lion/x.py":"import urllib.request\ndef f(method):\n urllib.request.Request('https://example.invalid',data=b'{}',method=method)\n"})
+
+    def test_boundary_call_introspection_failure_fails_closed(self):
+        with patch("cyber_lion.enterprise.complete_mediation._call_name",side_effect=RuntimeError("synthetic call failure")):
+            with self.assertRaisesRegex(EffectSurfaceTraversalError,"call-introspection"):
+                self.scan({"cyber_lion/x.py":"import subprocess\nsubprocess.run(['x'])\n"})
+
+    def test_canonical_ordering_failure_fails_closed(self):
+        class BadOrder:
+            def __lt__(self,other):raise RuntimeError("synthetic comparator failure")
+        with self.assertRaisesRegex(EffectSurfaceTraversalError,"entrypoint:ordering"):
+            _canonical_order((BadOrder(),BadOrder()),"entrypoint")
 
     def test_hidden_effect_entrypoint_is_detected(self):
         inv=self.scan({"cyber_lion/hidden.py":"import subprocess\ndef hidden():\n    subprocess.run(['tool'])\n"})
