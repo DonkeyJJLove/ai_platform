@@ -15,6 +15,7 @@ from tools.p0_moon_same_connection_denial_contract import (
     MoonObservationExecutionCarrierSpec,MoonObservationReceipt,MoonSameConnectionCandidatePlan,
 )
 from tools.p0_moon_seven_binding import FENCE,PERMISSION
+from tools.p0_moon_attack_registry import live_attacks
 from tools.p0_readonly_sqlite_boundary import open_readonly_sqlite
 
 EXPECTED_SCAN_DIGEST="2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
@@ -55,14 +56,14 @@ def _baseline_request(*,actor=CANONICAL_ACTOR,repository=REPOSITORY,control_issu
     ).sealed()
 
 def _attack_plans():
-    fence=tuple(sorted(FENCE));permission=(PERMISSION,)
-    return (
-        MoonDenialAttackPlan("WRONG_EXPECTED_STATE",fence,"MoonFileWriteRequest.validate","REPLACE_EXPECTED_DIGEST requires exact pre-state","expected_previous_state=ABSENT",True,True,True,True,False,"CANDIDATE_UNEXECUTED").validate(),
-        MoonDenialAttackPlan("REPLAYED_EFFECT_KEY",fence,"DurableMoonFileWriteFence.prepare","durable file-write replay denied",f"effect_key={EFFECT_KEY}",True,True,True,True,False,"CANDIDATE_UNEXECUTED").validate(),
-        MoonDenialAttackPlan("REPOSITORY_SUBSTITUTION",permission,"MoonFileWriteRequest.validate","fixed execution context mismatch","repository=DonkeyJJLove/ai_platform-substituted",True,True,True,True,False,"CANDIDATE_UNEXECUTED").validate(),
-        MoonDenialAttackPlan("ACTOR_SUBSTITUTION",permission,"_PermissionAdmissionResolver.resolve","authority subject substitution",f"actor_login={SUBSTITUTED_ACTOR};expected_actor={CANONICAL_ACTOR}",True,True,True,True,False,"CANDIDATE_UNEXECUTED").validate(),
-        MoonDenialAttackPlan("CONTROL_ISSUE_SUBSTITUTION",permission,"MoonFileWriteRequest.validate","fixed execution context mismatch","control_issue=145",True,True,True,True,False,"CANDIDATE_UNEXECUTED").validate(),
-    )
+    variants={
+        "WRONG_EXPECTED_STATE":"expected_previous_state=ABSENT",
+        "REPLAYED_EFFECT_KEY":f"effect_key={EFFECT_KEY}",
+        "REPOSITORY_SUBSTITUTION":"repository=DonkeyJJLove/ai_platform-substituted",
+        "ACTOR_SUBSTITUTION":f"actor_login={SUBSTITUTED_ACTOR};expected_actor={CANONICAL_ACTOR}",
+        "CONTROL_ISSUE_SUBSTITUTION":"control_issue=145",
+    }
+    return tuple(MoonDenialAttackPlan(a.attack_id,tuple(sorted(a.surface_digests)),a.pep,a.expected_denial,variants[a.attack_id],True,True,True,True,False,"CANDIDATE_UNEXECUTED").validate() for a in live_attacks())
 
 def _exercise_nonhost_denial(attack_id:str):
     if attack_id=="WRONG_EXPECTED_STATE":

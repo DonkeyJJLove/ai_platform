@@ -10,6 +10,7 @@ from tools.p0_moon_readonly_observer_falsification_contract import (
     MoonFenceReadback,MoonFutureAttackPlan,MoonObserverRuntimeCandidatePlan,MoonReadOnlyObserverSpec,
 )
 from tools.p0_moon_seven_binding import DIRECT_OBSERVER_BLOCKED,FENCE,PERMISSION
+from tools.p0_moon_attack_registry import live_attacks
 from tools.p0_readonly_sqlite_boundary import open_readonly_sqlite
 
 EXPECTED_SCAN_DIGEST="2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
@@ -76,14 +77,8 @@ class MoonBoundedFalsificationRuntimeCandidate:
     def __init__(self,parent_revision:str):self.parent_revision=parent_revision
     @staticmethod
     def _rows():
-        fence=tuple(sorted(FENCE));permission=(PERMISSION,)
-        return {
-            "WRONG_EXPECTED_STATE":(fence,"MoonFileWriteRequest.validate","REPLACE_EXPECTED_DIGEST requires exact pre-state"),
-            "REPLAYED_EFFECT_KEY":(fence,"DurableMoonFileWriteFence.prepare","durable file-write replay denied"),
-            "REPOSITORY_SUBSTITUTION":(permission,"MoonFileWriteRequest.validate","fixed execution context mismatch"),
-            "ACTOR_SUBSTITUTION":(permission,"MoonFileWriteRequest.validate","actor_login invalid"),
-            "CONTROL_ISSUE_SUBSTITUTION":(permission,"MoonFileWriteRequest.validate","fixed execution context mismatch"),
-        }
+        return {a.attack_id:(tuple(sorted(a.surface_digests)),a.pep,a.expected_denial) for a in live_attacks()}
+
     def plan(self,attack_id:str,*,target_path:str=TARGET_PATH,fence_path:str=FENCE_PATH,command=None)->MoonFutureAttackPlan:
         if attack_id not in ATTACK_IDS:raise MoonObserverRuntimeError("unknown attack id")
         if target_path!=TARGET_PATH or fence_path!=FENCE_PATH:raise MoonObserverRuntimeError("arbitrary path denied")
