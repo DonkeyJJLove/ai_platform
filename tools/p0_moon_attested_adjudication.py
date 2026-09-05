@@ -34,10 +34,10 @@ SOURCE_BLOBS={
     "tools/p0_moon_runner_attested_execution_bridge.py":SOURCE_BRIDGE_BLOB,
 }
 SOURCE_SEMANTIC_ANCHORS={
-    ("cyber_lion/enterprise/moon_file_write.py","function","_github_permission"):"7fecc22da5c6e1259881fc4485c47a9db4669cad0226982b5f0ad3fb10dcda3c",
-    ("cyber_lion/enterprise/moon_file_write.py","class","ExactMoonFileWriteEffectProvider"):"4605fdf947ec63240537749b9850212070152c0b37ce484b6aa0e975483f7233",
-    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","DurableMoonFileWriteFence"):"5fd878e6cff86e3b5ee22ba641cbd14dac1142512f59626458245509a42d8cc1",
-    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","MoonFileWriteObserver"):"c1388ff4ecdfc46ae52c4550f9eb751c8f3768b9b90b2785c0f7a134c9b3f913",
+    ("cyber_lion/enterprise/moon_file_write.py","function","_github_permission"):"a5b3c38ea1be59b35dbdab6ba09a898d0cc803f04b09eb055d20f0a96cbe1a31",
+    ("cyber_lion/enterprise/moon_file_write.py","class","ExactMoonFileWriteEffectProvider"):"479a4f7d199bf95581ba4fc67a99d2019c7d377589120cc0d55fb8daa1dcc502",
+    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","DurableMoonFileWriteFence"):"193019a30ab776df81a7be2069d8e2a210212111ce2e0a0f179068488943b642",
+    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","MoonFileWriteObserver"):"9899f2d0fee3e710e3a169157d0c243e6ce3ec1e33531a563edcb126954066f5",
 }
 CREATE_TABLE_SURFACE="478e559a2f8762b471ec9d69eca2bf03ed2744ab0e4f34593ab5060ae95cad9d"
 PRAGMA_SURFACE="e631906532cb4c60aa69736270432263cb1d5346afde33cbb01fecec6c793de0"
@@ -64,6 +64,44 @@ def _job(operation:str)->GitHubJobEvidence:
     o=_outer(operation);return GitHubJobEvidence(_NUMERIC_JOBS[operation],int(o.run_id),"execute-operation","completed","success","lion-moon-r9d8-test",24).validate()
 
 class AttestedAdjudicationError(RuntimeError):pass
+
+_AST_V2_DOMAIN=b"LION/MOON-SOURCE-SEMANTIC-AST/2\0"
+_AST_V2_NODES=frozenset("Add And AnnAssign Assign Attribute AugAssign BinOp BitOr BoolOp Break Call ClassDef Compare Constant Dict Eq ExceptHandler Expr FormattedValue FunctionDef GeneratorExp Gt If IfExp Is IsNot JoinedStr Load LtE Name Not NotEq Or Pass Raise Return Slice Starred Store Subscript Try Tuple UnaryOp While With arg arguments comprehension keyword withitem".split())
+_AST_V2_FIELDS=frozenset("annotation arg args attr bases body cause comparators context_expr conversion ctx decorator_list defaults elt elts exc finalbody format_spec func generators handlers id ifs is_async items iter keys keywords kind kw_defaults kwarg kwonlyargs left lower name op operand ops optional_vars orelse posonlyargs returns right simple slice step target targets test type type_comment upper value values vararg".split())
+
+def _empty_ast_schema_extension(value)->bool:
+    return value is None or value==[] or value==()
+
+def _canonical_ast_scalar(value):
+    if value is None:return {"type":"none"}
+    if value is Ellipsis:return {"type":"ellipsis"}
+    if type(value) is bool:return {"type":"bool","value":value}
+    if type(value) is int:return {"type":"int","value":str(value)}
+    if type(value) is str:return {"type":"str","value":value}
+    if type(value) is bytes:return {"type":"bytes","value":value.hex()}
+    raise AttestedAdjudicationError(f"unsupported AST scalar: {type(value).__name__}")
+
+def _canonical_ast_value(value):
+    if isinstance(value,ast.AST):return _canonical_ast_node(value)
+    if isinstance(value,list):return {"type":"list","items":[_canonical_ast_value(x) for x in value]}
+    if isinstance(value,tuple):return {"type":"tuple","items":[_canonical_ast_value(x) for x in value]}
+    return _canonical_ast_scalar(value)
+
+def _canonical_ast_node(node:ast.AST):
+    node_type=type(node).__name__
+    if node_type not in _AST_V2_NODES:raise AttestedAdjudicationError(f"unsupported AST node: {node_type}")
+    runtime_fields=getattr(node,"_fields",None)
+    if type(runtime_fields) is not tuple:raise AttestedAdjudicationError(f"AST schema fields unavailable: {node_type}")
+    fields={}
+    for field in runtime_fields:
+        try:value=getattr(node,field)
+        except AttributeError as exc:raise AttestedAdjudicationError(f"AST schema field missing: {node_type}:{field}") from exc
+        if field not in _AST_V2_FIELDS:
+            if _empty_ast_schema_extension(value):continue
+            raise AttestedAdjudicationError(f"unknown non-empty AST field: {node_type}:{field}")
+        fields[field]=_canonical_ast_value(value)
+    return {"node":node_type,"fields":fields}
+
 class RunnerAttestedReceiptAdjudicator:
     def adjudicate(self,*,outer:RunnerAttestedOperationReceipt,run:GitHubRunEvidence,job:GitHubJobEvidence,source_bridge_blob_sha:str=SOURCE_BRIDGE_BLOB)->RunnerAttestedAdjudicationRecord:
         outer.validate();run.validate();job.validate()
@@ -85,13 +123,18 @@ def _git_blob(root:Path,path:str)->str:
     return subprocess.run(["git","hash-object",path],cwd=root,text=True,stdout=subprocess.PIPE,check=True).stdout.strip()
 def _node(source:str,kind,name:str):
     tree=ast.parse(source)
-    cls=ast.ClassDef if kind=="class" else ast.FunctionDef
-    for node in ast.walk(tree):
-        if isinstance(node,cls) and node.name==name:return node
-    raise AttestedAdjudicationError(f"semantic continuity node absent: {kind}:{name}")
+    if kind=="class":cls=ast.ClassDef
+    elif kind=="function":cls=ast.FunctionDef
+    else:raise AttestedAdjudicationError(f"semantic continuity node kind unsupported: {kind}")
+    matches=[node for node in tree.body if isinstance(node,cls) and node.name==name]
+    if not matches:raise AttestedAdjudicationError(f"semantic continuity node absent: {kind}:{name}")
+    if len(matches)!=1:raise AttestedAdjudicationError(f"semantic continuity node ambiguous: {kind}:{name}")
+    return matches[0]
 def _ast_digest(source:str,kind:str,name:str)->str:
-    payload=ast.dump(_node(source,kind,name),include_attributes=False).encode("utf-8")
-    return sha256(b"LION/MOON-SOURCE-SEMANTIC-AST/1\0"+payload).hexdigest()
+    canonical=_canonical_ast_node(_node(source,kind,name))
+    try:payload=json.dumps(canonical,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode("utf-8")
+    except (TypeError,ValueError,UnicodeError) as exc:raise AttestedAdjudicationError("semantic continuity canonical serialization failed") from exc
+    return sha256(_AST_V2_DOMAIN+payload).hexdigest()
 def _require_semantic_anchor(source:str,path:str,kind:str,name:str)->None:
     expected=SOURCE_SEMANTIC_ANCHORS[(path,kind,name)]
     if _ast_digest(source,kind,name)!=expected:

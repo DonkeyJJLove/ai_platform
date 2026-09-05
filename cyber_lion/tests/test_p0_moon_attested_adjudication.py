@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
-import subprocess,unittest
+import ast,subprocess,unittest
 
 from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
 from tools.p0_effect_taxonomy import EffectTaxonomyReconciler
@@ -9,8 +9,9 @@ from tools.p0_moon_attack_registry import ATTACKS,FENCE_SURFACES,PERMISSION_SURF
 from tools.p0_moon_runner_attested_bridge_contract import RunnerAttestedOperationReceipt
 from tools.p0_moon_attested_adjudication_contract import ADJUDICATION_DOMAIN,POLICY_DOMAIN,AttestedAdjudicationContractError,GitHubJobEvidence
 from tools.p0_moon_attested_adjudication import (
-    EXPECTED_SCAN_DIGEST,SOURCE_BRIDGE_BLOB,SOURCE_REVISION,SOURCE_TREE,SOURCE_SEMANTIC_ANCHORS,
-    RunnerAttestedReceiptAdjudicator,_job,_outer,_run,adjudicate_live_receipts,materialize_attested_adjudication,source_semantic_continuity_proofs,
+    EXPECTED_SCAN_DIGEST,SOURCE_BRIDGE_BLOB,SOURCE_REVISION,SOURCE_TREE,SOURCE_SEMANTIC_ANCHORS,AttestedAdjudicationError,
+    RunnerAttestedReceiptAdjudicator,_ast_digest,_canonical_ast_node,_job,_outer,_require_semantic_anchor,_run,
+    adjudicate_live_receipts,materialize_attested_adjudication,source_semantic_continuity_proofs,
 )
 from tools.p0_moon_same_connection_denial_carrier import _attack_plans
 from tools.p0_moon_readonly_observer_falsification import MoonBoundedFalsificationRuntimeCandidate
@@ -87,12 +88,32 @@ class MoonAttestedAdjudicationTests(unittest.TestCase):
 
     def test_semantic_continuity_is_shallow_checkout_safe_and_anchor_bound(self):
         source=(Path(__file__).resolve().parents[2]/"tools/p0_moon_attested_adjudication.py").read_text(encoding="utf-8")
-        self.assertNotIn('git","show',source)
+        self.assertNotIn('git","show',source);self.assertNotIn("ast.dump(",source);self.assertIn("LION/MOON-SOURCE-SEMANTIC-AST/2",source)
         self.assertEqual(len(SOURCE_SEMANTIC_ANCHORS),4)
         self.assertEqual(
             SOURCE_SEMANTIC_ANCHORS[("cyber_lion/enterprise/moon_file_write.py","function","_github_permission")],
-            "7fecc22da5c6e1259881fc4485c47a9db4669cad0226982b5f0ad3fb10dcda3c",
+            "a5b3c38ea1be59b35dbdab6ba09a898d0cc803f04b09eb055d20f0a96cbe1a31",
         )
+
+    def test_semantic_anchor_v2_normalizes_location_and_empty_schema_extensions(self):
+        plain="def stable():\n    return 1\n";shifted="\n\n# location shift\n\ndef stable():\n    return 1\n";changed="def stable():\n    return 2\n"
+        self.assertEqual(_ast_digest(plain,"function","stable"),_ast_digest(shifted,"function","stable"))
+        self.assertNotEqual(_ast_digest(plain,"function","stable"),_ast_digest(changed,"function","stable"))
+        node=ast.parse(plain).body[0];baseline=_canonical_ast_node(node);node._fields=tuple(node._fields)+("future_empty",);node.future_empty=[]
+        self.assertEqual(_canonical_ast_node(node),baseline)
+        node.future_empty=[ast.Constant(value=2)]
+        with self.assertRaisesRegex(AttestedAdjudicationError,"unknown non-empty AST field"):_canonical_ast_node(node)
+
+    def test_semantic_anchor_v2_fails_closed_on_ambiguity_and_real_mutation(self):
+        duplicate="def stable():\n    return 1\n\ndef stable():\n    return 1\n"
+        with self.assertRaisesRegex(AttestedAdjudicationError,"ambiguous"):_ast_digest(duplicate,"function","stable")
+        root=Path(__file__).resolve().parents[2]
+        for (path,kind,name),expected in SOURCE_SEMANTIC_ANCHORS.items():
+            self.assertEqual(_ast_digest((root/path).read_text(encoding="utf-8"),kind,name),expected)
+        provider="cyber_lion/enterprise/moon_file_write.py";source=(root/provider).read_text(encoding="utf-8")
+        mutated=source.replace('connection.request("GET", path, headers=headers)','connection.request("POST", path, headers=headers)',1)
+        self.assertNotEqual(mutated,source)
+        with self.assertRaisesRegex(AttestedAdjudicationError,"semantic continuity anchor drift"):_require_semantic_anchor(mutated,provider,"function","_github_permission")
 
     def test_revision_rebind_is_explicit_and_changed_source_blobs_have_semantic_continuity(self):
         root,inv,_=current_inventory();art=materialize_attested_adjudication(inventory=inv,repo_root=root);proofs=source_semantic_continuity_proofs(inventory=inv,repo_root=root)
