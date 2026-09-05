@@ -52,34 +52,69 @@ def _surface(path:str,line:int,call:str,effect_class:str)->ConsequentialEffectSu
         target="runtime"; authority="local_write"
     return ConsequentialEffectSurface(
         surface_id="surface:"+sha256(ref.encode()).hexdigest()[:24],effect_class=effect_class,
-        implementation_refs=(path,),entrypoints=(ref,),effect_provider=provider,target_class=target,
+        implementation_refs=(path,),entrypoints=_canonical_order((ref,),"entrypoint"),effect_provider=provider,target_class=target,
         mutation_kind=call,authority_class=authority,currentness_requirement="exact-pre-effect-currentness",
         pep_required=True,observer_required=True,reconciliation_required=True,evidence_refs=(ref,),epistemic_state="OBSERVED",
     ).validate()
+
+class EffectSurfaceTraversalError(CompleteMediationError):pass
+
+def _raise_traversal(boundary:str,exc:BaseException):
+    raise EffectSurfaceTraversalError(f"effect surface traversal failed: {boundary}") from exc
+
+def _safe_walk(node:ast.AST,boundary:str):
+    try:return tuple(ast.walk(node))
+    except (KeyboardInterrupt,SystemExit):raise
+    except BaseException as exc:_raise_traversal(boundary,exc)
+
+def _safe_dump(node:ast.AST,boundary:str)->str:
+    try:return ast.dump(node,include_attributes=False)
+    except (KeyboardInterrupt,SystemExit):raise
+    except BaseException as exc:_raise_traversal(boundary,exc)
+
+def _safe_call_name(node:ast.Call,boundary:str)->str:
+    try:return _call_name(node)
+    except (KeyboardInterrupt,SystemExit):raise
+    except BaseException as exc:_raise_traversal(boundary,exc)
+
+def _validate_dynamic_target(node:ast.AST|None,boundary:str)->None:
+    if node is None:return
+    _safe_walk(node,boundary+":walk")
+    _safe_dump(node,boundary+":dump")
+
+def _canonical_order(values,boundary:str):
+    try:return tuple(sorted(values))
+    except (KeyboardInterrupt,SystemExit):raise
+    except BaseException as exc:_raise_traversal(boundary+":ordering",exc)
 
 class EffectSurfaceScanner:
     def scan(self,*,repository:str,revision:str,tree_digest:str,sources:Mapping[str,str])->EffectSurfaceInventory:
         if not isinstance(sources,Mapping) or not sources:raise CompleteMediationError("exact source mapping required")
         surfaces=[];unclassified=[];scan_items=[]
-        for path in sorted(sources):
+        paths=tuple(sources.keys())
+        if any(type(path) is not str for path in paths):raise CompleteMediationError("source mapping must use exact text paths")
+        for path in _canonical_order(paths,"source-path-group"):
             source=sources[path]
-            if not isinstance(path,str) or not isinstance(source,str):raise CompleteMediationError("source mapping must be text")
+            if not isinstance(source,str):raise CompleteMediationError("source mapping must be text")
             if "/tests/" in f"/{path}" or path.endswith((".md",".rst",".txt")):continue
             scan_items.append((path,sha256(source.encode("utf-8")).hexdigest()))
             if path.endswith(".py"):
                 try:tree=ast.parse(source,filename=path)
                 except SyntaxError:
                     unclassified.append(f"{path}:syntax-error");continue
-                for node in ast.walk(tree):
+                for node in _safe_walk(tree,f"{path}:ast-visitor"):
                     if not isinstance(node,ast.Call):continue
-                    name=_call_name(node); short=name.split(".")[-1]; effect=None
+                    name=_safe_call_name(node,f"{path}:{getattr(node,'lineno',0)}:call-introspection"); short=name.split(".")[-1]; effect=None
                     if name == "urllib.request.Request" or name.endswith(".request.Request"):
-                        method = next((_literal(k.value) for k in node.keywords if k.arg == "method"), None)
-                        if method is None and len(node.args) >= 3: method = _literal(node.args[2])
+                        method_node = next((k.value for k in node.keywords if k.arg == "method"), None)
+                        method = _literal(method_node) if method_node is not None else None
+                        if method_node is None and len(node.args) >= 3:
+                            method_node=node.args[2];method=_literal(method_node)
                         if isinstance(method, str):
                             upper = method.upper()
                             if upper in {"POST", "PUT", "PATCH", "DELETE"}: effect = f"external.network.{upper.lower()}"
                         else:
+                            _validate_dynamic_target(method_node,f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method")
                             unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method")
                     if effect is None and name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
                     elif short in {"write_text","write_bytes"}:effect="filesystem.write"
@@ -90,9 +125,11 @@ class EffectSurfaceScanner:
                         receiver = name.rsplit(".",1)[0] if "." in name else ""
                         dbish = bool(re.search(r"(?:^|\.)(?:c|cur|conn|connection|cursor|db|_conn)$", receiver))
                         if dbish:
-                            sql=_literal(node.args[0])
+                            sql_node=node.args[0];sql=_literal(sql_node)
                             if sql is not None and _MUTATING_SQL.search(sql):effect="persistent_state.write"
-                            elif sql is None:unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
+                            elif sql is None:
+                                _validate_dynamic_target(sql_node,f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
+                                unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
                     elif short in {"unlink","rmdir"}:
                         receiver=name.rsplit(".",1)[0] if "." in name else ""
                         if re.search(r"(?:path|file|target|temp|source|destination|artifact|receipt|registry|manifest)$", receiver, re.I):
@@ -124,10 +161,12 @@ class EffectSurfaceScanner:
                         if ".write_text(" in stripped or ".write_bytes(" in stripped or "| tee " in low:
                             surfaces.append(_surface(path,i,stripped,"filesystem.bootstrap.write"))
         uniq={s.surface_id:s for s in surfaces}
+        surface_ids=_canonical_order(tuple(uniq),"surface-group")
+        unclassified_refs=_canonical_order(tuple(set(unclassified)),"unclassified-group")
         canonical_scan=json.dumps(scan_items,sort_keys=True,separators=(",",":")).encode()
         scan_digest=sha256(b"LION/EFFECT-SURFACE-SCAN/1\0"+canonical_scan).hexdigest()
-        return EffectSurfaceInventory(repository,revision,tree_digest,scan_digest,tuple(uniq[k] for k in sorted(uniq)),tuple(sorted(set(unclassified))),
-            (f"source-count:{len(scan_items)}",f"surface-count:{len(uniq)}",f"unclassified-count:{len(set(unclassified))}")).validate()
+        return EffectSurfaceInventory(repository,revision,tree_digest,scan_digest,tuple(uniq[k] for k in surface_ids),unclassified_refs,
+            (f"source-count:{len(scan_items)}",f"surface-count:{len(uniq)}",f"unclassified-count:{len(unclassified_refs)}")).validate()
 
 class CompleteMediationEngine:
     """Assessment is fail-closed: absence of exact observed binding remains UNKNOWN."""

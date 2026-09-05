@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass,replace
 from hashlib import sha256
-import json,subprocess
+import ast,json,subprocess
 from pathlib import Path
 from typing import Mapping,Tuple
 
@@ -16,13 +16,13 @@ from tools.p0_moon_seven_binding_contract import MoonEvidenceComponent,MoonSurfa
 from tools.p0_moon_attested_adjudication_contract import (
     AttestedAdjudicationContractError,AttestedAdjudicationPlan,AttestedVerifierIdentity,CanonicalAttackDefinition,
     CanonicalAttackPepIdentity,GitHubJobEvidence,GitHubRunEvidence,MediationAttackRequirement,MediationAttackRequirementPolicy,
-    ObservationReconciliationRule,RevisionRebindProof,RunnerAttestedAdjudicationRecord,
+    ObservationReconciliationRule,RevisionRebindProof,RunnerAttestedAdjudicationRecord,SourceSemanticContinuityProof,
 )
 
 SOURCE_REVISION="830f8c2e5561655dc35118c97f4574acc3bf0816"
 SOURCE_TREE="5189c1a582400de829f08c4103fdfafa993ba2e6"
 SOURCE_INVENTORY="a87e0f9ccb4fb81bbbc168900a8db8984f554a74a0b3f8c2a637d75e85fcb9df"
-EXPECTED_SCAN_DIGEST="2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
+EXPECTED_SCAN_DIGEST="0c590bbd11768d26ed5c1da7cf7c023dcec5e1be9e1316a1b3cb8c05a389408d"
 SOURCE_BRIDGE_BLOB="a5ec373145f01ae2713fa620baa9799819cb813a"
 WORKFLOW_PATH=".github/workflows/lion-moon-runner-attested-execution-bridge.yml"
 WORKFLOW_REF="DonkeyJJLove/ai_platform/.github/workflows/lion-moon-runner-attested-execution-bridge.yml@refs/heads/mission/p0-moon-runner-attested-execution-bridge-attach-r1"
@@ -32,6 +32,12 @@ SOURCE_BLOBS={
     "cyber_lion/enterprise/moon_file_write_mediation.py":"2d4e704cf6143893141cdaae1d0810e50d874522",
     "cyber_lion/enterprise/mediation_falsification.py":"3b972df80ecacbd8198d060a860cf4063d62e2e3",
     "tools/p0_moon_runner_attested_execution_bridge.py":SOURCE_BRIDGE_BLOB,
+}
+SOURCE_SEMANTIC_ANCHORS={
+    ("cyber_lion/enterprise/moon_file_write.py","function","_github_permission"):"a5b3c38ea1be59b35dbdab6ba09a898d0cc803f04b09eb055d20f0a96cbe1a31",
+    ("cyber_lion/enterprise/moon_file_write.py","class","ExactMoonFileWriteEffectProvider"):"479a4f7d199bf95581ba4fc67a99d2019c7d377589120cc0d55fb8daa1dcc502",
+    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","DurableMoonFileWriteFence"):"193019a30ab776df81a7be2069d8e2a210212111ce2e0a0f179068488943b642",
+    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","MoonFileWriteObserver"):"9899f2d0fee3e710e3a169157d0c243e6ce3ec1e33531a563edcb126954066f5",
 }
 CREATE_TABLE_SURFACE="478e559a2f8762b471ec9d69eca2bf03ed2744ab0e4f34593ab5060ae95cad9d"
 PRAGMA_SURFACE="e631906532cb4c60aa69736270432263cb1d5346afde33cbb01fecec6c793de0"
@@ -58,6 +64,44 @@ def _job(operation:str)->GitHubJobEvidence:
     o=_outer(operation);return GitHubJobEvidence(_NUMERIC_JOBS[operation],int(o.run_id),"execute-operation","completed","success","lion-moon-r9d8-test",24).validate()
 
 class AttestedAdjudicationError(RuntimeError):pass
+
+_AST_V2_DOMAIN=b"LION/MOON-SOURCE-SEMANTIC-AST/2\0"
+_AST_V2_NODES=frozenset("Add And AnnAssign Assign Attribute AugAssign BinOp BitOr BoolOp Break Call ClassDef Compare Constant Dict Eq ExceptHandler Expr FormattedValue FunctionDef GeneratorExp Gt If IfExp Is IsNot JoinedStr Load LtE Name Not NotEq Or Pass Raise Return Slice Starred Store Subscript Try Tuple UnaryOp While With arg arguments comprehension keyword withitem".split())
+_AST_V2_FIELDS=frozenset("annotation arg args attr bases body cause comparators context_expr conversion ctx decorator_list defaults elt elts exc finalbody format_spec func generators handlers id ifs is_async items iter keys keywords kind kw_defaults kwarg kwonlyargs left lower name op operand ops optional_vars orelse posonlyargs returns right simple slice step target targets test type type_comment upper value values vararg".split())
+
+def _empty_ast_schema_extension(value)->bool:
+    return value is None or value==[] or value==()
+
+def _canonical_ast_scalar(value):
+    if value is None:return {"type":"none"}
+    if value is Ellipsis:return {"type":"ellipsis"}
+    if type(value) is bool:return {"type":"bool","value":value}
+    if type(value) is int:return {"type":"int","value":str(value)}
+    if type(value) is str:return {"type":"str","value":value}
+    if type(value) is bytes:return {"type":"bytes","value":value.hex()}
+    raise AttestedAdjudicationError(f"unsupported AST scalar: {type(value).__name__}")
+
+def _canonical_ast_value(value):
+    if isinstance(value,ast.AST):return _canonical_ast_node(value)
+    if isinstance(value,list):return {"type":"list","items":[_canonical_ast_value(x) for x in value]}
+    if isinstance(value,tuple):return {"type":"tuple","items":[_canonical_ast_value(x) for x in value]}
+    return _canonical_ast_scalar(value)
+
+def _canonical_ast_node(node:ast.AST):
+    node_type=type(node).__name__
+    if node_type not in _AST_V2_NODES:raise AttestedAdjudicationError(f"unsupported AST node: {node_type}")
+    runtime_fields=getattr(node,"_fields",None)
+    if type(runtime_fields) is not tuple:raise AttestedAdjudicationError(f"AST schema fields unavailable: {node_type}")
+    fields={}
+    for field in runtime_fields:
+        try:value=getattr(node,field)
+        except AttributeError as exc:raise AttestedAdjudicationError(f"AST schema field missing: {node_type}:{field}") from exc
+        if field not in _AST_V2_FIELDS:
+            if _empty_ast_schema_extension(value):continue
+            raise AttestedAdjudicationError(f"unknown non-empty AST field: {node_type}:{field}")
+        fields[field]=_canonical_ast_value(value)
+    return {"node":node_type,"fields":fields}
+
 class RunnerAttestedReceiptAdjudicator:
     def adjudicate(self,*,outer:RunnerAttestedOperationReceipt,run:GitHubRunEvidence,job:GitHubJobEvidence,source_bridge_blob_sha:str=SOURCE_BRIDGE_BLOB)->RunnerAttestedAdjudicationRecord:
         outer.validate();run.validate();job.validate()
@@ -77,15 +121,63 @@ def adjudicate_live_receipts()->Mapping[str,RunnerAttestedAdjudicationRecord]:
 
 def _git_blob(root:Path,path:str)->str:
     return subprocess.run(["git","hash-object",path],cwd=root,text=True,stdout=subprocess.PIPE,check=True).stdout.strip()
+def _node(source:str,kind,name:str):
+    tree=ast.parse(source)
+    if kind=="class":cls=ast.ClassDef
+    elif kind=="function":cls=ast.FunctionDef
+    else:raise AttestedAdjudicationError(f"semantic continuity node kind unsupported: {kind}")
+    matches=[node for node in tree.body if isinstance(node,cls) and node.name==name]
+    if not matches:raise AttestedAdjudicationError(f"semantic continuity node absent: {kind}:{name}")
+    if len(matches)!=1:raise AttestedAdjudicationError(f"semantic continuity node ambiguous: {kind}:{name}")
+    return matches[0]
+def _ast_digest(source:str,kind:str,name:str)->str:
+    canonical=_canonical_ast_node(_node(source,kind,name))
+    try:payload=json.dumps(canonical,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode("utf-8")
+    except (TypeError,ValueError,UnicodeError) as exc:raise AttestedAdjudicationError("semantic continuity canonical serialization failed") from exc
+    return sha256(_AST_V2_DOMAIN+payload).hexdigest()
+def _require_semantic_anchor(source:str,path:str,kind:str,name:str)->None:
+    expected=SOURCE_SEMANTIC_ANCHORS[(path,kind,name)]
+    if _ast_digest(source,kind,name)!=expected:
+        raise AttestedAdjudicationError(f"semantic continuity anchor drift: {path}:{kind}:{name}")
+def source_semantic_continuity_proofs(*,inventory:EffectSurfaceInventory,repo_root:Path)->Tuple[SourceSemanticContinuityProof,...]:
+    inventory.validate();out=[]
+    provider="cyber_lion/enterprise/moon_file_write.py";mediation="cyber_lion/enterprise/moon_file_write_mediation.py"
+    new_provider=(repo_root/provider).read_text();old_pb=SOURCE_BLOBS[provider];new_pb=_git_blob(repo_root,provider)
+    if new_pb==old_pb:raise AttestedAdjudicationError("provider semantic change proof expected changed blob")
+    _require_semantic_anchor(new_provider,provider,"function","_github_permission")
+    _require_semantic_anchor(new_provider,provider,"class","ExactMoonFileWriteEffectProvider")
+    if 'TRUSTED_PERMISSIONS = {"admin", "maintain", "write"}' not in new_provider or 'raise MoonFileWriteMediationError("actor permission is not trusted")' not in new_provider:raise AttestedAdjudicationError("trusted permission semantics changed")
+    if new_provider.splitlines()[119].strip()!='connection.request("GET", path, headers=headers)' or 'os.replace(' not in new_provider.splitlines()[314]:raise AttestedAdjudicationError("provider effect entrypoint line identity drift")
+    resolver=new_provider[new_provider.index('    def resolve(self, request: MoonFileWriteRequest)'):new_provider.index('\n\n\nclass ExactMoonFileWriteEffectProvider')];i_subject=resolver.index('authority subject substitution');i_obs=resolver.index('_github_permission(');i_decision=resolver.index('_require_trusted_permission(permission)');i_source=resolver.index('authority_source_digest =')
+    if not i_subject<i_obs<i_decision<i_source:raise AttestedAdjudicationError("permission refactor control flow drift")
+    out.append(SourceSemanticContinuityProof(provider,old_pb,new_pb,SOURCE_REVISION,inventory.revision,("_github_permission AST unchanged","ExactMoonFileWriteEffectProvider AST unchanged","trusted permission set unchanged","connection.request remains line 120","os.replace remains line 315","repository/actor substitution remains before authority observation"),("pure _require_trusted_permission boundary introduced after authority observation",),(f"source-live:{provider}@{old_pb}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(provider,'function','_github_permission')]}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(provider,'class','ExactMoonFileWriteEffectProvider')]}",f"source-current:{provider}@{new_pb}","no-effect-provider-change")).validate())
+    new_med=(repo_root/mediation).read_text();old_mb=SOURCE_BLOBS[mediation];new_mb=_git_blob(repo_root,mediation)
+    if new_mb==old_mb:raise AttestedAdjudicationError("mediation semantic change proof expected changed blob")
+    for cls in ("DurableMoonFileWriteFence","MoonFileWriteObserver"):
+        _require_semantic_anchor(new_med,mediation,"class",cls)
+    lines=new_med.splitlines()
+    if 'c.execute("INSERT INTO moon_file_write_effect' not in lines[305] or 'self.fence.prepare(' not in lines[434] or 'self.fence.mark_attempted(' not in lines[443] or 'self.effect.write_exact(' not in lines[444]:raise AttestedAdjudicationError("mediation effect entrypoint line identity drift")
+    execute=new_med[new_med.index('    def execute(self, request: MoonFileWriteRequest)'):new_med.index('\n\ndef _require_current_admission')];i_pre=execute.index('pre_fence_admission = self.admissions.resolve(request)');i_precheck=execute.index('_require_current_admission(admission, pre_fence_admission)');i_prepare=execute.index('self.fence.prepare(');i_post=execute.index('current_admission = self.admissions.resolve(request)');i_postcheck=execute.index('_require_current_admission(admission, current_admission)');i_attempt=execute.index('self.fence.mark_attempted(');i_effect=execute.index('self.effect.write_exact(')
+    if not i_pre<i_precheck<i_prepare<i_post<i_postcheck<i_attempt<i_effect:raise AttestedAdjudicationError("authority currentness strengthened order drift")
+    helper=new_med[new_med.index('def _require_current_admission('):]
+    if 'current.admission_digest != baseline.admission_digest' not in helper or 'raise MoonFileWriteMediationError("authority drift")' not in helper:raise AttestedAdjudicationError("pure currentness comparator semantics drift")
+    out.append(SourceSemanticContinuityProof(mediation,old_mb,new_mb,SOURCE_REVISION,inventory.revision,("DurableMoonFileWriteFence AST unchanged","MoonFileWriteObserver AST unchanged","fence INSERT remains line 306","fence.prepare call remains line 435","mark_attempted remains line 444","effect.write_exact remains line 445","post-prepare authority revalidation preserved"),("pre-fence authority revalidation added before durable state","pure admission-digest currentness comparator introduced"),(f"source-live:{mediation}@{old_mb}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(mediation,'class','DurableMoonFileWriteFence')]}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(mediation,'class','MoonFileWriteObserver')]}",f"source-current:{mediation}@{new_mb}","post-prepare-toctou-defence-preserved")).validate())
+    return tuple(out)
 def revision_rebind_proof(*,inventory:EffectSurfaceInventory,repo_root:Path)->RevisionRebindProof:
     inventory.validate()
     if inventory.scan_digest!=EXPECTED_SCAN_DIGEST:raise AttestedAdjudicationError("scan digest drift")
-    unchanged=[]
+    changed={"cyber_lion/enterprise/moon_file_write.py","cyber_lion/enterprise/moon_file_write_mediation.py"};unchanged=[]
     for path,expected in SOURCE_BLOBS.items():
         got=_git_blob(repo_root,path)
-        if got!=expected:raise AttestedAdjudicationError(f"source blob drift: {path}")
+        if path in changed:
+            if got==expected:raise AttestedAdjudicationError(f"expected explicit changed source blob: {path}")
+            continue
+        if got!=expected:raise AttestedAdjudicationError(f"unexpected source blob drift: {path}")
         unchanged.append(f"{path}@{got}")
-    return RevisionRebindProof(SOURCE_REVISION,SOURCE_TREE,SOURCE_INVENTORY,inventory.revision,inventory.tree_digest,inventory.digest(),inventory.scan_digest,tuple(sorted(unchanged)),("source-live-revision:830f8c2e5561655dc35118c97f4574acc3bf0816","target-candidate-revision:"+inventory.revision)).validate()
+    proofs=source_semantic_continuity_proofs(inventory=inventory,repo_root=repo_root)
+    if {x.source_path for x in proofs}!=changed:raise AttestedAdjudicationError("changed source semantic proof set drift")
+    refs=("source-live-revision:"+SOURCE_REVISION,"target-candidate-revision:"+inventory.revision)+tuple(f"semantic-continuity:{x.digest()}" for x in proofs)
+    return RevisionRebindProof(SOURCE_REVISION,SOURCE_TREE,SOURCE_INVENTORY,inventory.revision,inventory.tree_digest,inventory.digest(),inventory.scan_digest,tuple(sorted(unchanged)),tuple(sorted(x.digest() for x in proofs)),refs).validate()
 
 def _pep_source(pep:str):
     if pep=="MoonFileWriteRequest.validate":return "cyber_lion/contracts/moon_file_write.py"
