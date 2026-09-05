@@ -9,7 +9,7 @@ from tools.p0_moon_attack_registry import ATTACKS,FENCE_SURFACES,PERMISSION_SURF
 from tools.p0_moon_runner_attested_bridge_contract import RunnerAttestedOperationReceipt
 from tools.p0_moon_attested_adjudication_contract import ADJUDICATION_DOMAIN,POLICY_DOMAIN,AttestedAdjudicationContractError,GitHubJobEvidence
 from tools.p0_moon_attested_adjudication import (
-    EXPECTED_SCAN_DIGEST,SOURCE_BRIDGE_BLOB,SOURCE_REVISION,SOURCE_TREE,
+    EXPECTED_SCAN_DIGEST,SOURCE_BRIDGE_BLOB,SOURCE_REVISION,SOURCE_TREE,SOURCE_SEMANTIC_ANCHORS,
     RunnerAttestedReceiptAdjudicator,_job,_outer,_run,adjudicate_live_receipts,materialize_attested_adjudication,source_semantic_continuity_proofs,
 )
 from tools.p0_moon_same_connection_denial_carrier import _attack_plans
@@ -84,6 +84,15 @@ class MoonAttestedAdjudicationTests(unittest.TestCase):
         self.assertEqual(mediated,0);self.assertEqual(partial,7)
         permission=next(r for r in art.policy.requirements if r.surface_digest==PERMISSION_SURFACE)
         self.assertIn("UNTRUSTED_PERMISSION",permission.attack_ids);self.assertIn("STALE_AUTHORITY_SOURCE",permission.attack_ids)
+
+    def test_semantic_continuity_is_shallow_checkout_safe_and_anchor_bound(self):
+        source=(Path(__file__).resolve().parents[2]/"tools/p0_moon_attested_adjudication.py").read_text(encoding="utf-8")
+        self.assertNotIn('git","show',source)
+        self.assertEqual(len(SOURCE_SEMANTIC_ANCHORS),4)
+        self.assertEqual(
+            SOURCE_SEMANTIC_ANCHORS[("cyber_lion/enterprise/moon_file_write.py","function","_github_permission")],
+            "7fecc22da5c6e1259881fc4485c47a9db4669cad0226982b5f0ad3fb10dcda3c",
+        )
 
     def test_revision_rebind_is_explicit_and_changed_source_blobs_have_semantic_continuity(self):
         root,inv,_=current_inventory();art=materialize_attested_adjudication(inventory=inv,repo_root=root);proofs=source_semantic_continuity_proofs(inventory=inv,repo_root=root)
