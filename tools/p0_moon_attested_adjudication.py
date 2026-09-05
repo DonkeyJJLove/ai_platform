@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass,replace
 from hashlib import sha256
-import json,subprocess
+import ast,json,subprocess
 from pathlib import Path
 from typing import Mapping,Tuple
 
@@ -16,13 +16,13 @@ from tools.p0_moon_seven_binding_contract import MoonEvidenceComponent,MoonSurfa
 from tools.p0_moon_attested_adjudication_contract import (
     AttestedAdjudicationContractError,AttestedAdjudicationPlan,AttestedVerifierIdentity,CanonicalAttackDefinition,
     CanonicalAttackPepIdentity,GitHubJobEvidence,GitHubRunEvidence,MediationAttackRequirement,MediationAttackRequirementPolicy,
-    ObservationReconciliationRule,RevisionRebindProof,RunnerAttestedAdjudicationRecord,
+    ObservationReconciliationRule,RevisionRebindProof,RunnerAttestedAdjudicationRecord,SourceSemanticContinuityProof,
 )
 
 SOURCE_REVISION="830f8c2e5561655dc35118c97f4574acc3bf0816"
 SOURCE_TREE="5189c1a582400de829f08c4103fdfafa993ba2e6"
 SOURCE_INVENTORY="a87e0f9ccb4fb81bbbc168900a8db8984f554a74a0b3f8c2a637d75e85fcb9df"
-EXPECTED_SCAN_DIGEST="2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
+EXPECTED_SCAN_DIGEST="e6d76014f1d0b3c2bf420fb95f7dc9d72fc695b29579f2c27df8eeb6fb5a1932"
 SOURCE_BRIDGE_BLOB="a5ec373145f01ae2713fa620baa9799819cb813a"
 WORKFLOW_PATH=".github/workflows/lion-moon-runner-attested-execution-bridge.yml"
 WORKFLOW_REF="DonkeyJJLove/ai_platform/.github/workflows/lion-moon-runner-attested-execution-bridge.yml@refs/heads/mission/p0-moon-runner-attested-execution-bridge-attach-r1"
@@ -77,15 +77,55 @@ def adjudicate_live_receipts()->Mapping[str,RunnerAttestedAdjudicationRecord]:
 
 def _git_blob(root:Path,path:str)->str:
     return subprocess.run(["git","hash-object",path],cwd=root,text=True,stdout=subprocess.PIPE,check=True).stdout.strip()
+def _source_at(root:Path,revision:str,path:str)->str:
+    return subprocess.run(["git","show",f"{revision}:{path}"],cwd=root,text=True,stdout=subprocess.PIPE,check=True).stdout
+def _node(source:str,kind,name:str):
+    tree=ast.parse(source)
+    cls=ast.ClassDef if kind=="class" else ast.FunctionDef
+    for node in ast.walk(tree):
+        if isinstance(node,cls) and node.name==name:return node
+    raise AttestedAdjudicationError(f"semantic continuity node absent: {kind}:{name}")
+def _ast_equal(old:str,new:str,kind:str,name:str)->bool:
+    return ast.dump(_node(old,kind,name),include_attributes=False)==ast.dump(_node(new,kind,name),include_attributes=False)
+def source_semantic_continuity_proofs(*,inventory:EffectSurfaceInventory,repo_root:Path)->Tuple[SourceSemanticContinuityProof,...]:
+    inventory.validate();out=[]
+    provider="cyber_lion/enterprise/moon_file_write.py";mediation="cyber_lion/enterprise/moon_file_write_mediation.py"
+    old_provider=_source_at(repo_root,SOURCE_REVISION,provider);new_provider=(repo_root/provider).read_text();old_pb=SOURCE_BLOBS[provider];new_pb=_git_blob(repo_root,provider)
+    if new_pb==old_pb:raise AttestedAdjudicationError("provider semantic change proof expected changed blob")
+    if not _ast_equal(old_provider,new_provider,"function","_github_permission"):raise AttestedAdjudicationError("github authority observation provider changed")
+    if not _ast_equal(old_provider,new_provider,"class","ExactMoonFileWriteEffectProvider"):raise AttestedAdjudicationError("host file effect provider changed")
+    if 'TRUSTED_PERMISSIONS = {"admin", "maintain", "write"}' not in new_provider or 'raise MoonFileWriteMediationError("actor permission is not trusted")' not in new_provider:raise AttestedAdjudicationError("trusted permission semantics changed")
+    if new_provider.splitlines()[119].strip()!='connection.request("GET", path, headers=headers)' or 'os.replace(' not in new_provider.splitlines()[314]:raise AttestedAdjudicationError("provider effect entrypoint line identity drift")
+    resolver=new_provider[new_provider.index('    def resolve(self, request: MoonFileWriteRequest)'):new_provider.index('\n\n\nclass ExactMoonFileWriteEffectProvider')];i_subject=resolver.index('authority subject substitution');i_obs=resolver.index('_github_permission(');i_decision=resolver.index('_require_trusted_permission(permission)');i_source=resolver.index('authority_source_digest =')
+    if not i_subject<i_obs<i_decision<i_source:raise AttestedAdjudicationError("permission refactor control flow drift")
+    out.append(SourceSemanticContinuityProof(provider,old_pb,new_pb,SOURCE_REVISION,inventory.revision,("_github_permission AST unchanged","ExactMoonFileWriteEffectProvider AST unchanged","trusted permission set unchanged","connection.request remains line 120","os.replace remains line 315","repository/actor substitution remains before authority observation"),("pure _require_trusted_permission boundary introduced after authority observation",),(f"source-live:{provider}@{old_pb}",f"source-current:{provider}@{new_pb}","no-effect-provider-change")).validate())
+    old_med=_source_at(repo_root,SOURCE_REVISION,mediation);new_med=(repo_root/mediation).read_text();old_mb=SOURCE_BLOBS[mediation];new_mb=_git_blob(repo_root,mediation)
+    if new_mb==old_mb:raise AttestedAdjudicationError("mediation semantic change proof expected changed blob")
+    for cls in ("DurableMoonFileWriteFence","MoonFileWriteObserver"):
+        if not _ast_equal(old_med,new_med,"class",cls):raise AttestedAdjudicationError(f"{cls} changed during currentness refactor")
+    lines=new_med.splitlines()
+    if 'c.execute("INSERT INTO moon_file_write_effect' not in lines[305] or 'self.fence.prepare(' not in lines[434] or 'self.fence.mark_attempted(' not in lines[443] or 'self.effect.write_exact(' not in lines[444]:raise AttestedAdjudicationError("mediation effect entrypoint line identity drift")
+    execute=new_med[new_med.index('    def execute(self, request: MoonFileWriteRequest)'):new_med.index('\n\ndef _require_current_admission')];i_pre=execute.index('pre_fence_admission = self.admissions.resolve(request)');i_precheck=execute.index('_require_current_admission(admission, pre_fence_admission)');i_prepare=execute.index('self.fence.prepare(');i_post=execute.index('current_admission = self.admissions.resolve(request)');i_postcheck=execute.index('_require_current_admission(admission, current_admission)');i_attempt=execute.index('self.fence.mark_attempted(');i_effect=execute.index('self.effect.write_exact(')
+    if not i_pre<i_precheck<i_prepare<i_post<i_postcheck<i_attempt<i_effect:raise AttestedAdjudicationError("authority currentness strengthened order drift")
+    helper=new_med[new_med.index('def _require_current_admission('):]
+    if 'current.admission_digest != baseline.admission_digest' not in helper or 'raise MoonFileWriteMediationError("authority drift")' not in helper:raise AttestedAdjudicationError("pure currentness comparator semantics drift")
+    out.append(SourceSemanticContinuityProof(mediation,old_mb,new_mb,SOURCE_REVISION,inventory.revision,("DurableMoonFileWriteFence AST unchanged","MoonFileWriteObserver AST unchanged","fence INSERT remains line 306","fence.prepare call remains line 435","mark_attempted remains line 444","effect.write_exact remains line 445","post-prepare authority revalidation preserved"),("pre-fence authority revalidation added before durable state","pure admission-digest currentness comparator introduced"),(f"source-live:{mediation}@{old_mb}",f"source-current:{mediation}@{new_mb}","post-prepare-toctou-defence-preserved")).validate())
+    return tuple(out)
 def revision_rebind_proof(*,inventory:EffectSurfaceInventory,repo_root:Path)->RevisionRebindProof:
     inventory.validate()
     if inventory.scan_digest!=EXPECTED_SCAN_DIGEST:raise AttestedAdjudicationError("scan digest drift")
-    unchanged=[]
+    changed={"cyber_lion/enterprise/moon_file_write.py","cyber_lion/enterprise/moon_file_write_mediation.py"};unchanged=[]
     for path,expected in SOURCE_BLOBS.items():
         got=_git_blob(repo_root,path)
-        if got!=expected:raise AttestedAdjudicationError(f"source blob drift: {path}")
+        if path in changed:
+            if got==expected:raise AttestedAdjudicationError(f"expected explicit changed source blob: {path}")
+            continue
+        if got!=expected:raise AttestedAdjudicationError(f"unexpected source blob drift: {path}")
         unchanged.append(f"{path}@{got}")
-    return RevisionRebindProof(SOURCE_REVISION,SOURCE_TREE,SOURCE_INVENTORY,inventory.revision,inventory.tree_digest,inventory.digest(),inventory.scan_digest,tuple(sorted(unchanged)),("source-live-revision:830f8c2e5561655dc35118c97f4574acc3bf0816","target-candidate-revision:"+inventory.revision)).validate()
+    proofs=source_semantic_continuity_proofs(inventory=inventory,repo_root=repo_root)
+    if {x.source_path for x in proofs}!=changed:raise AttestedAdjudicationError("changed source semantic proof set drift")
+    refs=("source-live-revision:"+SOURCE_REVISION,"target-candidate-revision:"+inventory.revision)+tuple(f"semantic-continuity:{x.digest()}" for x in proofs)
+    return RevisionRebindProof(SOURCE_REVISION,SOURCE_TREE,SOURCE_INVENTORY,inventory.revision,inventory.tree_digest,inventory.digest(),inventory.scan_digest,tuple(sorted(unchanged)),tuple(sorted(x.digest() for x in proofs)),refs).validate()
 
 def _pep_source(pep:str):
     if pep=="MoonFileWriteRequest.validate":return "cyber_lion/contracts/moon_file_write.py"

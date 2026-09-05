@@ -10,7 +10,7 @@ from tools.p0_moon_runner_attested_bridge_contract import RunnerAttestedOperatio
 from tools.p0_moon_attested_adjudication_contract import ADJUDICATION_DOMAIN,POLICY_DOMAIN,AttestedAdjudicationContractError,GitHubJobEvidence
 from tools.p0_moon_attested_adjudication import (
     EXPECTED_SCAN_DIGEST,SOURCE_BRIDGE_BLOB,SOURCE_REVISION,SOURCE_TREE,
-    RunnerAttestedReceiptAdjudicator,_job,_outer,_run,adjudicate_live_receipts,materialize_attested_adjudication,
+    RunnerAttestedReceiptAdjudicator,_job,_outer,_run,adjudicate_live_receipts,materialize_attested_adjudication,source_semantic_continuity_proofs,
 )
 from tools.p0_moon_same_connection_denial_carrier import _attack_plans
 from tools.p0_moon_readonly_observer_falsification import MoonBoundedFalsificationRuntimeCandidate
@@ -85,8 +85,9 @@ class MoonAttestedAdjudicationTests(unittest.TestCase):
         permission=next(r for r in art.policy.requirements if r.surface_digest==PERMISSION_SURFACE)
         self.assertIn("UNTRUSTED_PERMISSION",permission.attack_ids);self.assertIn("STALE_AUTHORITY_SOURCE",permission.attack_ids)
 
-    def test_revision_rebind_is_explicit_and_source_blobs_are_unchanged(self):
-        root,inv,_=current_inventory();art=materialize_attested_adjudication(inventory=inv,repo_root=root)
+    def test_revision_rebind_is_explicit_and_changed_source_blobs_have_semantic_continuity(self):
+        root,inv,_=current_inventory();art=materialize_attested_adjudication(inventory=inv,repo_root=root);proofs=source_semantic_continuity_proofs(inventory=inv,repo_root=root)
         self.assertEqual(art.rebind.source_revision,SOURCE_REVISION);self.assertEqual(art.rebind.source_tree,SOURCE_TREE);self.assertEqual(art.rebind.target_revision,inv.revision);self.assertEqual(art.rebind.target_inventory_digest,inv.digest());self.assertEqual(art.rebind.scan_digest,EXPECTED_SCAN_DIGEST)
+        self.assertEqual(len(art.rebind.unchanged_source_blobs),3);self.assertEqual(len(art.rebind.changed_source_proof_digests),2);self.assertEqual({p.source_path for p in proofs},{"cyber_lion/enterprise/moon_file_write.py","cyber_lion/enterprise/moon_file_write_mediation.py"});self.assertEqual(set(art.rebind.changed_source_proof_digests),{p.digest() for p in proofs})
 
 if __name__=="__main__":unittest.main()

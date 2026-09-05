@@ -150,8 +150,8 @@ class _PermissionAdmissionResolver:
         if request.repository != self.repository or request.actor_login != self.expected_actor:
             raise MoonFileWriteMediationError("authority subject substitution")
         permission = _github_permission(self.repository, self.expected_actor, self.token)
-        if permission not in TRUSTED_PERMISSIONS:
-            raise MoonFileWriteMediationError("actor permission is not trusted")
+        _require_trusted_permission(permission)
+        # Trust decision is pure and intentionally separated from authority observation.
         authority_source_digest = hashlib.sha256(
             b"LION/MOON-GITHUB-PERMISSION-SOURCE/2\0"
             + json.dumps(
@@ -399,3 +399,9 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+def _require_trusted_permission(permission: str) -> str:
+    """Pure trust decision over an already-observed GitHub permission value."""
+    if not isinstance(permission, str) or permission not in TRUSTED_PERMISSIONS:
+        raise MoonFileWriteMediationError("actor permission is not trusted")
+    return permission
