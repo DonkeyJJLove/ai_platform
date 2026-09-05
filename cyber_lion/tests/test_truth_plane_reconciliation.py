@@ -141,7 +141,10 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
     def test_live_master_truth_projection_is_current(self):
         head, tree = self.live_identity()
-        checkout_digest = self.checkout_subject_digest()
+        observed_head, observed_tree = self._resolve_live_branch("master")
+        self.assertEqual(observed_head, head, "LIVE_MASTER_HEAD_DRIFT")
+        self.assertEqual(observed_tree, tree, "LIVE_MASTER_TREE_DRIFT")
+        checkout_digest = self.checkout_subject_digest("FETCH_HEAD")
         state = validate_truth_projection(
             self.state(),
             current_head=head,
