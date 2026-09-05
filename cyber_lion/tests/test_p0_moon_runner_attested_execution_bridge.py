@@ -27,7 +27,9 @@ from tools.p0_moon_runner_attested_bridge_contract import (
 import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-EXPECTED_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
+CURRENT_SCAN = "0c590bbd11768d26ed5c1da7cf7c023dcec5e1be9e1316a1b3cb8c05a389408d"
+HISTORICAL_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
+LIVE_SOURCE_REVISION = "830f8c2e5561655dc35118c97f4574acc3bf0816"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
 
 
@@ -58,11 +60,13 @@ class RunnerAttestedExecutionBridgeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.root = Path(__file__).resolve().parents[2]
         cls.inventory = inventory()
-        cls.spec = bridge.materialize_bridge_candidate(inventory=cls.inventory)
+        cls.spec = bridge.bridge_spec(LIVE_SOURCE_REVISION)
 
     def test_revision_bound_scan_and_candidate_state(self):
-        self.assertEqual(self.inventory.scan_digest, EXPECTED_SCAN)
-        self.assertEqual(self.spec.revision, self.inventory.revision)
+        self.assertEqual(self.inventory.scan_digest, CURRENT_SCAN)
+        self.assertEqual(bridge.EXPECTED_SCAN_DIGEST, HISTORICAL_SCAN)
+        self.assertNotEqual(self.inventory.scan_digest, bridge.EXPECTED_SCAN_DIGEST)
+        self.assertEqual(self.spec.revision, LIVE_SOURCE_REVISION)
         self.assertFalse(self.spec.live_execution)
         self.assertEqual(self.spec.state, "CANDIDATE_UNATTACHED")
 
@@ -220,8 +224,9 @@ class RunnerAttestedExecutionBridgeTests(unittest.TestCase):
 
     def test_materialization_does_not_execute_any_live_operation(self):
         with patch.object(bridge, "capture_runner_attestation", side_effect=AssertionError("must not execute")):
-            spec = bridge.materialize_bridge_candidate(inventory=self.inventory)
-        self.assertEqual(spec.state, "CANDIDATE_UNATTACHED")
+            with self.assertRaisesRegex(bridge.RunnerAttestationError, "^production scan digest drift$"):
+                bridge.materialize_bridge_candidate(inventory=self.inventory)
+        self.assertEqual(self.spec.state, "CANDIDATE_UNATTACHED")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from typing import Tuple
 
 _SHA64=re.compile(r"^[0-9a-f]{64}$")
 _CLASSES=frozenset({"PRE_EFFECT_GUARD","SURFACE_EFFECT_ITSELF","POST_OBSERVATION_DECISION","DOWNSTREAM_CURRENTNESS_GUARD"})
-_RELATIONS=frozenset({"BEFORE_SURFACE_EFFECT","AT_SURFACE_EFFECT","AFTER_SURFACE_EFFECT","AFTER_SOURCE_EFFECT_AND_STATE_WRITE_BEFORE_DOWNSTREAM_EFFECT"})
+_RELATIONS=frozenset({"BEFORE_SURFACE_EFFECT","AT_SURFACE_EFFECT","AFTER_SURFACE_EFFECT","AFTER_SOURCE_EFFECT_AND_STATE_WRITE_BEFORE_DOWNSTREAM_EFFECT","AFTER_SOURCE_EFFECT_BEFORE_STATE_WRITE_AND_DOWNSTREAM_EFFECT"})
 _EVIDENCE_CLASSES=frozenset({"BYPASS_DENIAL","ADMISSION_DECISION_NEGATIVE_EVIDENCE","DOWNSTREAM_CURRENTNESS_NEGATIVE_EVIDENCE"})
 _EVIDENCE_STATES=frozenset({"CANONICAL_DENIAL_PRESENT","CONTROL_FLOW_OBSERVED_EVIDENCE_REQUIRED"})
 MAPPING_DOMAIN=b"LION/MOON-ATTACK-EFFECT-BOUNDARY-MAPPING/2"
@@ -47,7 +47,7 @@ class EffectBoundaryAttackMapping:
         if self.classification=="POST_OBSERVATION_DECISION":
             if self.effect_boundary_relation!="AFTER_SURFACE_EFFECT" or self.required_evidence_class!="ADMISSION_DECISION_NEGATIVE_EVIDENCE":raise MoonAttackPolicyV2ContractError("post-observation mapping invalid")
         if self.classification=="DOWNSTREAM_CURRENTNESS_GUARD":
-            if self.effect_boundary_relation!="AFTER_SOURCE_EFFECT_AND_STATE_WRITE_BEFORE_DOWNSTREAM_EFFECT" or not self.target_surface_digest or self.required_evidence_class!="DOWNSTREAM_CURRENTNESS_NEGATIVE_EVIDENCE":raise MoonAttackPolicyV2ContractError("downstream mapping invalid")
+            if self.effect_boundary_relation not in {"AFTER_SOURCE_EFFECT_AND_STATE_WRITE_BEFORE_DOWNSTREAM_EFFECT","AFTER_SOURCE_EFFECT_BEFORE_STATE_WRITE_AND_DOWNSTREAM_EFFECT"} or not self.target_surface_digest or self.required_evidence_class!="DOWNSTREAM_CURRENTNESS_NEGATIVE_EVIDENCE":raise MoonAttackPolicyV2ContractError("downstream mapping invalid")
         return self
     def digest(self):self.validate();return _digest(MAPPING_DOMAIN,self)
 
