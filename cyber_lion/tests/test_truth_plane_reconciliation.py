@@ -8,7 +8,13 @@ from pathlib import Path
 import unittest
 
 from cyber_lion.architecture_projection.truth_plane import (
+    CARRIER_PATHS,
+    CURRENTNESS_MODE,
+    SUBJECT_DIGEST_DOMAIN,
+    SubjectEntry,
     TruthProjectionError,
+    derive_subject_currentness,
+    subject_digest,
     validate_truth_projection,
 )
 
@@ -27,11 +33,39 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
     def state(self):
         return json.loads(STATE_PATH.read_text(encoding="utf-8"))
 
-    def validate(self, payload=None, *, head=FIXTURE_MASTER_HEAD, tree=FIXTURE_MASTER_TREE):
+    def _entries_for_tree(self, treeish="HEAD"):
+        proc = subprocess.run(
+            ["git", "ls-tree", "-r", "-z", treeish],
+            check=True,
+            capture_output=True,
+        )
+        entries = []
+        for raw in proc.stdout.split(b"\0"):
+            if not raw:
+                continue
+            meta, path = raw.split(b"\t", 1)
+            mode, object_type, object_sha = meta.decode("ascii").split()
+            entries.append(SubjectEntry(path.decode("utf-8"), mode, object_type, object_sha))
+        return tuple(entries)
+
+    def checkout_subject_digest(self, treeish="HEAD"):
+        return subject_digest(self._entries_for_tree(treeish))
+
+    def validate(
+        self,
+        payload=None,
+        *,
+        head=FIXTURE_MASTER_HEAD,
+        tree=FIXTURE_MASTER_TREE,
+        current_subject_digest=None,
+    ):
+        value = self.state() if payload is None else payload
+        observed = current_subject_digest or value["baseline"]["subject_digest"]
         return validate_truth_projection(
-            self.state() if payload is None else payload,
+            value,
             current_head=head,
             current_tree=tree,
+            current_subject_digest=observed,
         )
 
     def _live_gate_enabled(self):
@@ -97,21 +131,33 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
     def test_fixture_projection_is_structurally_valid(self):
         state = self.validate()
-        self.assertEqual(state["baseline"]["head"], FIXTURE_MASTER_HEAD)
-        self.assertEqual(state["baseline"]["tree"], FIXTURE_MASTER_TREE)
-        self.assertEqual(state["baseline"]["currentness"], "CURRENT")
+        baseline = state["baseline"]
+        self.assertEqual(baseline["subject_digest_domain"], SUBJECT_DIGEST_DOMAIN)
+        self.assertEqual(baseline["currentness_mode"], CURRENTNESS_MODE)
+        self.assertEqual(len(baseline["subject_digest"]), 64)
+        self.assertNotIn("head", baseline)
+        self.assertNotIn("tree", baseline)
+        self.assertNotIn("currentness", baseline)
 
     def test_live_master_truth_projection_is_current(self):
         head, tree = self.live_identity()
-        state = validate_truth_projection(self.state(), current_head=head, current_tree=tree)
-        self.assertEqual(state["baseline"]["head"], head)
-        self.assertEqual(state["baseline"]["tree"], tree)
-        self.assertEqual(state["baseline"]["currentness"], "CURRENT")
+        checkout_digest = self.checkout_subject_digest()
+        state = validate_truth_projection(
+            self.state(),
+            current_head=head,
+            current_tree=tree,
+            current_subject_digest=checkout_digest,
+        )
+        self.assertEqual(state["baseline"]["subject_digest"], checkout_digest)
+        self.assertEqual(
+            derive_subject_currentness(state["baseline"]["subject_digest"], checkout_digest),
+            "CURRENT",
+        )
 
     def test_live_registry_generated_from_is_current(self):
-        head, _ = self.live_identity()
         registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-        self.assertIn(head, registry["generated_from"])
+        declared = self.state()["baseline"]["subject_digest"]
+        self.assertEqual(registry["generated_from"], f"truth-subject-v1@{declared}")
 
     def test_live_candidate_frontier_is_exact(self):
         if not self._live_gate_enabled():
@@ -161,13 +207,13 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             ("UNKNOWN", "UNKNOWN", False),
         )
 
-    def test_head_drift_is_rejected_if_current_is_declared(self):
-        with self.assertRaisesRegex(TruthProjectionError, "baseline currentness contradiction"):
-            self.validate(head="f" * 40)
+    def test_wrong_subject_digest_fails_closed(self):
+        with self.assertRaisesRegex(TruthProjectionError, "baseline subject digest contradiction"):
+            self.validate(current_subject_digest="f" * 64)
 
-    def test_tree_drift_is_rejected_if_current_is_declared(self):
-        with self.assertRaisesRegex(TruthProjectionError, "baseline currentness contradiction"):
-            self.validate(tree="e" * 40)
+    def test_malformed_subject_digest_fails_closed(self):
+        with self.assertRaisesRegex(TruthProjectionError, "exact lowercase SHA-256"):
+            self.validate(current_subject_digest="not-a-digest")
 
     def test_duplicate_component_across_planes_fails_closed(self):
         state = self.state()
@@ -245,7 +291,7 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         })
         self.assertEqual(by_id["DonkeyJJLove/ai_platform"]["default_branch"], "master")
         self.assertEqual(by_id["DonkeyJJLove/ai_platform"]["maturity"], "INTEGRATED_ENGINEERING_PLATFORM")
-        self.assertIn(FIXTURE_MASTER_HEAD, registry["generated_from"])
+        self.assertEqual(registry["generated_from"], f"truth-subject-v1@{self.state()['baseline']['subject_digest']}")
 
     def test_r2e4_and_budget_are_as_is_on_current_master_projection(self):
         records = {item["id"]: item for item in self.validate()["records"]}
@@ -278,6 +324,58 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             self.assertEqual(record["tree"], tree)
             self.assertEqual(record["status"], status)
             self.assertEqual(record["base_head"], base_head)
+
+    def test_subject_digest_is_order_independent_and_carrier_only_change_is_invisible(self):
+        entries = self._entries_for_tree()
+        baseline = subject_digest(entries)
+        self.assertEqual(subject_digest(tuple(reversed(entries))), baseline)
+        changed = tuple(
+            SubjectEntry(e.path, e.mode, e.object_type, "f" * 40) if e.path in CARRIER_PATHS else e
+            for e in entries
+        )
+        self.assertEqual(subject_digest(changed), baseline)
+
+    def test_noncarrier_blob_mutation_degrades_subject_currentness(self):
+        entries = list(self._entries_for_tree())
+        idx = next(i for i, e in enumerate(entries) if e.path not in CARRIER_PATHS and e.mode == "100644")
+        e = entries[idx]
+        entries[idx] = SubjectEntry(e.path, e.mode, e.object_type, "f" * 40)
+        declared = subject_digest(self._entries_for_tree())
+        mutated = subject_digest(entries)
+        self.assertNotEqual(mutated, declared)
+        self.assertEqual(derive_subject_currentness(declared, mutated), "STALE")
+
+    def test_included_entry_mode_mutation_degrades_subject_currentness(self):
+        entries = list(self._entries_for_tree())
+        idx = next(i for i, e in enumerate(entries) if e.path not in CARRIER_PATHS and e.mode == "100644")
+        e = entries[idx]
+        entries[idx] = SubjectEntry(e.path, "100755", e.object_type, e.object_sha)
+        declared = subject_digest(self._entries_for_tree())
+        self.assertEqual(derive_subject_currentness(declared, subject_digest(entries)), "STALE")
+
+    def test_included_entry_addition_and_deletion_degrade_subject_currentness(self):
+        entries = list(self._entries_for_tree())
+        declared = subject_digest(entries)
+        added = entries + [SubjectEntry("synthetic/r9-negative.txt", "100644", "blob", "a" * 40)]
+        self.assertEqual(derive_subject_currentness(declared, subject_digest(added)), "STALE")
+        drop = next(i for i, e in enumerate(entries) if e.path not in CARRIER_PATHS)
+        deleted = entries[:drop] + entries[drop + 1:]
+        self.assertEqual(derive_subject_currentness(declared, subject_digest(deleted)), "STALE")
+
+    def test_serialized_current_cannot_self_promote_projection(self):
+        state = self.state()
+        state["baseline"]["currentness"] = "CURRENT"
+        with self.assertRaisesRegex(TruthProjectionError, "baseline keys are not canonical"):
+            self.validate(state)
+
+    def test_subject_entry_validation_is_fail_closed(self):
+        entries = list(self._entries_for_tree())
+        with self.assertRaisesRegex(TruthProjectionError, "unsupported Git leaf mode/type"):
+            subject_digest(entries + [SubjectEntry("synthetic/bad", "100600", "blob", "a" * 40)])
+        with self.assertRaisesRegex(TruthProjectionError, "subject path is not canonical"):
+            subject_digest(entries + [SubjectEntry("../escape", "100644", "blob", "a" * 40)])
+        with self.assertRaisesRegex(TruthProjectionError, "duplicate subject path"):
+            subject_digest(entries + [entries[0]])
 
     def test_global_complete_mediation_remains_unknown(self):
         record = next(item for item in self.validate()["records"] if item["id"] == "GlobalCompleteMediation")
