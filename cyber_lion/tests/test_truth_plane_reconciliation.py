@@ -260,7 +260,7 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
     def test_stacked_candidate_cannot_claim_master_base(self):
         state = self.state()
-        candidate = next(item for item in state()["records"] if item["id"] == "LCMS")
+        candidate = next(item for item in state["records"] if item["id"] == "LCMS")
         candidate["base_head"] = FIXTURE_MASTER_HEAD
         with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness contradiction"):
             self.validate(state)
