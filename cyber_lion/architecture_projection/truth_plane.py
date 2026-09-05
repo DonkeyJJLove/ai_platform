@@ -1,14 +1,31 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from hashlib import sha256
+import json
 import re
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 from .gap import classify_projection_currentness
 
-SCHEMA_VERSION = "lion.truth-projection/v1.3-a0-candidate"
+SCHEMA_VERSION = "lion.truth-projection/v1.4-a0-candidate"
 PLANES = frozenset({"AS_IS", "CANDIDATE", "TARGET", "UNKNOWN"})
 CANDIDATE_STATUSES = frozenset({"CURRENT_MASTER_BASE_CANDIDATE", "CURRENT_STACKED_CANDIDATE", "STALE_BASE_CANDIDATE"})
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+SUBJECT_DIGEST_DOMAIN = "LION/TRUTH-SUBJECT/1"
+SUBJECT_DIGEST_PREFIX = b"LION/TRUTH-SUBJECT/1\0"
+CURRENTNESS_MODE = "DERIVED_SUBJECT_DIGEST"
+CARRIER_PATHS = frozenset({
+    "LION/architecture/canonical-state-v1-3-candidate.json",
+    "cyber_lion/registry/repositories.json",
+})
+_ALLOWED_MODE_TYPES = frozenset({
+    ("100644", "blob"),
+    ("100755", "blob"),
+    ("120000", "blob"),
+    ("160000", "commit"),
+})
 _RECORD_KEYS = frozenset({
     "id",
     "plane",
@@ -24,6 +41,106 @@ _RECORD_KEYS = frozenset({
 
 class TruthProjectionError(ValueError):
     pass
+
+
+@dataclass(frozen=True, order=True)
+class SubjectEntry:
+    path: str
+    mode: str
+    object_type: str
+    object_sha: str
+
+    def validate(self) -> "SubjectEntry":
+        _canonical_subject_path(self.path)
+        if (self.mode, self.object_type) not in _ALLOWED_MODE_TYPES:
+            raise TruthProjectionError(f"unsupported Git leaf mode/type: {self.mode} {self.object_type}")
+        if not _SHA40.fullmatch(self.object_sha):
+            raise TruthProjectionError("Git leaf object SHA must be exact lowercase SHA-1")
+        return self
+
+
+def _canonical_subject_path(path: str) -> str:
+    if not isinstance(path, str) or not path or "\x00" in path or "\\" in path or path.startswith("/"):
+        raise TruthProjectionError("subject path is not canonical")
+    parts = path.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise TruthProjectionError("subject path is not canonical")
+    path.encode("utf-8", "strict")
+    return path
+
+
+def _carrier_paths(carrier_paths: Iterable[str]) -> frozenset[str]:
+    paths = frozenset(_canonical_subject_path(path) for path in carrier_paths)
+    if not paths:
+        raise TruthProjectionError("carrier path set cannot be empty")
+    return paths
+
+
+def canonical_subject_entries(
+    entries: Iterable[SubjectEntry],
+    *,
+    carrier_paths: Iterable[str] = CARRIER_PATHS,
+) -> tuple[SubjectEntry, ...]:
+    carriers = _carrier_paths(carrier_paths)
+    by_path: dict[str, SubjectEntry] = {}
+    for raw in entries:
+        if not isinstance(raw, SubjectEntry):
+            raise TruthProjectionError("subject entry must be SubjectEntry")
+        entry = raw.validate()
+        if entry.path in by_path:
+            raise TruthProjectionError(f"duplicate subject path: {entry.path}")
+        by_path[entry.path] = entry
+    missing = sorted(carriers - set(by_path), key=lambda item: item.encode("utf-8"))
+    if missing:
+        raise TruthProjectionError(f"truth carrier missing from Git tree: {missing[0]}")
+    for carrier in carriers:
+        entry = by_path[carrier]
+        if entry.mode != "100644" or entry.object_type != "blob":
+            raise TruthProjectionError(f"truth carrier must be regular non-executable blob: {carrier}")
+    return tuple(
+        sorted(
+            (entry for path, entry in by_path.items() if path not in carriers),
+            key=lambda entry: entry.path.encode("utf-8"),
+        )
+    )
+
+
+def canonical_subject_payload(
+    entries: Iterable[SubjectEntry],
+    *,
+    carrier_paths: Iterable[str] = CARRIER_PATHS,
+) -> bytes:
+    value = [
+        {
+            "path": entry.path,
+            "mode": entry.mode,
+            "git_object_type": entry.object_type,
+            "git_object_sha": entry.object_sha,
+        }
+        for entry in canonical_subject_entries(entries, carrier_paths=carrier_paths)
+    ]
+    return json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+
+
+def subject_digest(
+    entries: Iterable[SubjectEntry],
+    *,
+    carrier_paths: Iterable[str] = CARRIER_PATHS,
+) -> str:
+    return sha256(
+        SUBJECT_DIGEST_PREFIX + canonical_subject_payload(entries, carrier_paths=carrier_paths)
+    ).hexdigest()
+
+
+def derive_subject_currentness(declared_subject_digest: str, observed_subject_digest: str) -> str:
+    declared = _sha256(declared_subject_digest, "declared_subject_digest")
+    observed = _sha256(observed_subject_digest, "observed_subject_digest")
+    return "CURRENT" if declared == observed else "STALE"
 
 
 def _exact_keys(value: Mapping[str, Any], expected: set[str] | frozenset[str], label: str) -> None:
@@ -46,17 +163,25 @@ def _text(value: Any, label: str) -> str:
     return value
 
 
+def _sha256(value: Any, label: str) -> str:
+    if not isinstance(value, str) or not _SHA256.fullmatch(value):
+        raise TruthProjectionError(f"{label} must be exact lowercase SHA-256")
+    return value
+
+
 def validate_truth_projection(
     payload: Mapping[str, Any],
     *,
     current_head: str,
     current_tree: str,
+    current_subject_digest: str,
 ) -> Mapping[str, Any]:
     """Validate an exact AS-IS/CANDIDATE/TARGET truth projection.
 
     The projection is descriptive only. It grants no authority and cannot promote
-    a candidate into AS-IS. CURRENT is valid only for the exact supplied Git head
-    and tree. Historical projections self-degrade to STALE on material drift.
+    a candidate into AS-IS. Baseline currentness is derived from a non-self-referential
+    semantic subject digest. Exact Git head/tree remain external revision evidence.
+    Historical projections still self-degrade to STALE on material drift.
     """
     if not isinstance(payload, Mapping):
         raise TruthProjectionError("truth projection must be an object")
@@ -66,24 +191,27 @@ def validate_truth_projection(
 
     _sha40(current_head, "current_head")
     _sha40(current_tree, "current_tree")
+    observed_subject_digest = _sha256(current_subject_digest, "current_subject_digest")
 
     baseline = payload["baseline"]
     if not isinstance(baseline, Mapping):
         raise TruthProjectionError("baseline must be an object")
-    _exact_keys(baseline, {"repository", "branch", "head", "tree", "currentness"}, "baseline")
+    _exact_keys(
+        baseline,
+        {"repository", "branch", "subject_digest_domain", "subject_digest", "currentness_mode"},
+        "baseline",
+    )
     _text(baseline["repository"], "baseline.repository")
     _text(baseline["branch"], "baseline.branch")
-    baseline_head = _sha40(baseline["head"], "baseline.head")
-    baseline_tree = _sha40(baseline["tree"], "baseline.tree")
-    expected_currentness = classify_projection_currentness(
-        observed_commit=baseline_head,
-        observed_tree=baseline_tree,
-        current_commit=current_head,
-        current_tree=current_tree,
-    )
-    if baseline["currentness"] != expected_currentness:
+    if baseline["subject_digest_domain"] != SUBJECT_DIGEST_DOMAIN:
+        raise TruthProjectionError("baseline subject_digest_domain mismatch")
+    if baseline["currentness_mode"] != CURRENTNESS_MODE:
+        raise TruthProjectionError("baseline currentness_mode mismatch")
+    declared_subject_digest = _sha256(baseline["subject_digest"], "baseline.subject_digest")
+    if derive_subject_currentness(declared_subject_digest, observed_subject_digest) != "CURRENT":
         raise TruthProjectionError(
-            f"baseline currentness contradiction: declared={baseline['currentness']} expected={expected_currentness}"
+            "baseline subject digest contradiction: "
+            f"declared={declared_subject_digest} observed={observed_subject_digest} expected=STALE"
         )
 
     records = payload["records"]

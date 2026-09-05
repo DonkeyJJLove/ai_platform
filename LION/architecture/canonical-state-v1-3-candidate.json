@@ -1,11 +1,11 @@
 {
-  "schema_version": "lion.truth-projection/v1.3-a0-candidate",
+  "schema_version": "lion.truth-projection/v1.4-a0-candidate",
   "baseline": {
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
-    "head": "9a90d463a4131b5e73a37bfb4a28194ecfa892dc",
-    "tree": "1414a21efce8f35892134060cd0d77f2d4d08e9b",
-    "currentness": "CURRENT"
+    "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
+    "subject_digest": "8a4960323d9b83ea1b6985d4fd43f8053c77cdb007d7d4cc13e76878ae65d54a",
+    "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
     {
