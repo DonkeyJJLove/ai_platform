@@ -15,9 +15,9 @@ from cyber_lion.architecture_projection.truth_plane import (
 STATE_PATH = Path("LION/architecture/canonical-state-v1-3-candidate.json")
 IMPLEMENTATION_MAP_PATH = Path("LION/architecture/implementation-map.json")
 REGISTRY_PATH = Path("cyber_lion/registry/repositories.json")
-FIXTURE_MASTER_HEAD = "9a90d463a4131b5e73a37bfb4a28194ecfa892dc"
+FIXTURE_MASTER_HEAD = "221b9e60c0ceda2d6a16c59d4e9982c3ac06df39"
 PRE_EPHEMERAL_MASTER_HEAD = "9082a974e8105dd7e47afc889583b1fc67535b59"
-FIXTURE_MASTER_TREE = "1414a21efce8f35892134060cd0d77f2d4d08e9b"
+FIXTURE_MASTER_TREE = "9de6d847347cdf69482c21b331cce693d38b9950"
 OLD_MASTER_HEAD = "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
 C0_HEAD = "f8d8e44191d5c84ecca9feec1a8602f574948619"
 C1_HEAD = "0f75af9212a814177e08a5c206d1a8504b0937d5"
