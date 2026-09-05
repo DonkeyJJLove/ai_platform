@@ -3,7 +3,7 @@
   "baseline": {
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
-    "head": "9082a974e8105dd7e47afc889583b1fc67535b59",
+    "head": "9a90d463a4131b5e73a37bfb4a28194ecfa892dc",
     "tree": "1414a21efce8f35892134060cd0d77f2d4d08e9b",
     "currentness": "CURRENT"
   },
@@ -241,7 +241,7 @@
     {
       "id": "ActionSpec",
       "plane": "CANDIDATE",
-      "status": "CURRENT_MASTER_BASE_CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
       "evidence_refs": [
         "PR#256",
         "cyber_lion/contracts/v1/action_spec.schema.json@f8d8e44191d5c84ecca9feec1a8602f574948619"

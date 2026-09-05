@@ -431,13 +431,13 @@ class CanonicalMoonFileWriteMediator:
         if type(admission) is not CanonicalMoonFileWriteAdmission:
             raise MoonFileWriteMediationError("exact admission required")
         admission.validate(); admission.binds(request); _hex64(admission.admission_digest, "admission_digest")
-        effect_key = moon_file_write_effect_key(request, admission)
+        pre_fence_admission = self.admissions.resolve(request); _require_current_admission(admission, pre_fence_admission); effect_key = moon_file_write_effect_key(request, admission)
         self.fence.prepare(MoonFileWriteFenceRecord(effect_key, admission.admission_digest, request.request_digest,
             request.repository, request.target_path, "PREPARED", _now(), pre_observation_digest=pre.observation_digest))
         try:
             current_admission = self.admissions.resolve(request)
-            if type(current_admission) is not CanonicalMoonFileWriteAdmission or current_admission.validate().admission_digest != admission.admission_digest:
-                raise MoonFileWriteMediationError("authority drift")
+            _require_current_admission(admission, current_admission)
+            # Post-prepare revalidation remains mandatory for TOCTOU defence.
             current_pre = self.pre_observer.observe(request.target_path); self._require_pre_state(request, current_pre)
             if current_pre.state_digest() != pre.state_digest():
                 raise MoonFileWriteMediationError("target currentness drift")
@@ -466,3 +466,12 @@ class CanonicalMoonFileWriteMediator:
             except Exception:
                 pass
             raise
+
+def _require_current_admission(baseline: CanonicalMoonFileWriteAdmission, current: CanonicalMoonFileWriteAdmission) -> CanonicalMoonFileWriteAdmission:
+    """Pure equality/currentness decision over already-materialized admissions."""
+    if type(baseline) is not CanonicalMoonFileWriteAdmission or type(current) is not CanonicalMoonFileWriteAdmission:
+        raise MoonFileWriteMediationError("authority drift")
+    baseline.validate(); current.validate()
+    if current.admission_digest != baseline.admission_digest:
+        raise MoonFileWriteMediationError("authority drift")
+    return current

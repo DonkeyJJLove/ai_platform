@@ -7,12 +7,13 @@ from cyber_lion.contracts.mediation_falsification import MediationBindingCandida
 from cyber_lion.enterprise.mediation_falsification import MediationBindingRegistry,SurfaceBindingResolver
 from cyber_lion.enterprise.production_mediation import MediationChainReconstructor,ProductionEffectInventory
 from tools.p0_surface_closure_campaign import RECEIPT_IMPLIED_MOON_SURFACES,certified_runtime_evidence
+from tools.p0_moon_attack_registry import ATTACKS
 from tools.p0_moon_seven_binding_contract import (
     MoonBindingOutcome,MoonEvidenceComponent,MoonFalsificationCarrierSpec,
     MoonSafeAttackSpec,MoonSevenBindingPlan,MoonSurfaceEvidenceBundle,
 )
 
-EXPECTED_SCAN_DIGEST="2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
+EXPECTED_SCAN_DIGEST="0c590bbd11768d26ed5c1da7cf7c023dcec5e1be9e1316a1b3cb8c05a389408d"
 SEVEN=tuple(sorted(RECEIPT_IMPLIED_MOON_SURFACES))
 PERMISSION="dbff98ee0801784d8616fc32d67dfbb2ea19fbfcc1cfbda829cf904953f5631b"
 FENCE=set(SEVEN)-{PERMISSION}
@@ -204,22 +205,8 @@ def _build_components(inventory,surface):
     return comps,bundle
 
 def _attacks():
-    fence=tuple(sorted(FENCE));perm=(PERMISSION,);refs=("moon-seven-carrier:candidate-unattached",)+LIVE_REFS
-    rows=[
-        ("STALE_EFFECT_KEY",fence,"fence","DurableMoonFileWriteFence.get","effect unknown","STRUCTURAL_ONLY"),
-        ("WRONG_EXPECTED_STATE",fence,"fence","CanonicalMoonFileWriteMediator.execute","REPLACE pre-state mismatch","SAFE_LIVE_DENIAL"),
-        ("REPLAYED_EFFECT_KEY",fence,"fence","CanonicalMoonFileWriteMediator.execute","durable file-write replay denied","SAFE_LIVE_DENIAL"),
-        ("CROSS_EPOCH_BINDING",fence,"binding","MediationBindingRegistry.register","cross-epoch binding replay","STRUCTURAL_ONLY"),
-        ("SURFACE_SUBSTITUTION",fence,"binding","SurfaceBindingResolver.resolve","surface substitution","STRUCTURAL_ONLY"),
-        ("PROVIDER_SUBSTITUTION",fence,"binding","SurfaceBindingResolver.resolve","provider substitution","STRUCTURAL_ONLY"),
-        ("ENTRYPOINT_SUBSTITUTION",fence,"binding","SurfaceBindingResolver.resolve","entrypoint substitution","STRUCTURAL_ONLY"),
-        ("REPOSITORY_SUBSTITUTION",perm,"permission","moon_file_write._execute","repository substitution denied","SAFE_LIVE_DENIAL"),
-        ("ACTOR_SUBSTITUTION",perm,"permission","_PermissionAdmissionResolver.resolve","authority subject substitution","SAFE_LIVE_DENIAL"),
-        ("UNTRUSTED_PERMISSION",perm,"permission","_PermissionAdmissionResolver.resolve","actor permission is not trusted","BLOCKED_LIVE"),
-        ("STALE_AUTHORITY_SOURCE",perm,"permission","CanonicalMoonFileWriteMediator.execute","authority drift","BLOCKED_LIVE"),
-        ("CONTROL_ISSUE_SUBSTITUTION",perm,"permission","moon_file_write._execute","wrong control issue","SAFE_LIVE_DENIAL"),
-    ]
-    return tuple(MoonSafeAttackSpec(a,s,f,e,d,c,False,refs).validate() for a,s,f,e,d,c in rows)
+    refs=("moon-seven-carrier:candidate-unattached",)+LIVE_REFS
+    return tuple(MoonSafeAttackSpec(a.attack_id,tuple(sorted(a.surface_digests)),a.family,a.legacy_entrypoint,a.expected_denial,a.execution_class,False,refs).validate() for a in ATTACKS.values())
 
 def materialize_seven(*,inventory:EffectSurfaceInventory)->MoonSevenArtifacts:
     inventory.validate()
