@@ -1,0 +1,387 @@
+{
+  "$defs": {
+    "uniqueStrings": {
+      "items": {
+        "maxLength": 4096,
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "$id": "lion://schemas/action-spec/v1.3-candidate",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "process.exec"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "executable",
+          "arguments",
+          "workspace",
+          "environment",
+          "io"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "action_id": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,255}$",
+      "type": "string"
+    },
+    "arguments": {
+      "items": {
+        "maxLength": 4096,
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "authority_request": {
+      "additionalProperties": false,
+      "properties": {
+        "capability": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "domain": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "grant_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "domain",
+        "capability",
+        "grant_ref"
+      ],
+      "type": "object"
+    },
+    "autonomy_ref": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "bean_ref": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "boundary": {
+      "additionalProperties": false,
+      "properties": {
+        "filesystem_read": {
+          "$ref": "#/$defs/uniqueStrings"
+        },
+        "filesystem_write": {
+          "$ref": "#/$defs/uniqueStrings"
+        },
+        "max_processes": {
+          "maximum": 128,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "memory_limit_bytes": {
+          "minimum": 1048576,
+          "type": "integer"
+        },
+        "network": {
+          "enum": [
+            "DENY",
+            "READ_ONLY_PINNED",
+            "ALLOW_EXACT"
+          ]
+        },
+        "process_children": {
+          "$ref": "#/$defs/uniqueStrings"
+        },
+        "shell": {
+          "const": false
+        },
+        "timeout_ms": {
+          "maximum": 3600000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shell",
+        "network",
+        "filesystem_read",
+        "filesystem_write",
+        "process_children",
+        "timeout_ms",
+        "max_processes",
+        "memory_limit_bytes"
+      ],
+      "type": "object"
+    },
+    "environment": {
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "additionalProperties": {
+            "maxLength": 4096,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "inherit": {
+          "const": false
+        }
+      },
+      "required": [
+        "inherit",
+        "allow"
+      ],
+      "type": "object"
+    },
+    "executable": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^/",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "expected_effects": {
+      "$ref": "#/$defs/uniqueStrings"
+    },
+    "forbidden_effects": {
+      "$ref": "#/$defs/uniqueStrings"
+    },
+    "intent_ref": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "io": {
+      "additionalProperties": false,
+      "properties": {
+        "stderr": {
+          "enum": [
+            "CAPTURE",
+            "DISCARD"
+          ]
+        },
+        "stdin": {
+          "const": "NONE"
+        },
+        "stdout": {
+          "enum": [
+            "CAPTURE",
+            "DISCARD"
+          ]
+        },
+        "tty": {
+          "const": false
+        }
+      },
+      "required": [
+        "stdin",
+        "stdout",
+        "stderr",
+        "tty"
+      ],
+      "type": "object"
+    },
+    "kind": {
+      "enum": [
+        "process.exec",
+        "filesystem.read",
+        "filesystem.write",
+        "repository.observe",
+        "repository.prepare_candidate",
+        "repository.attach_exact",
+        "test.execute",
+        "artifact.generate",
+        "robot.task"
+      ]
+    },
+    "mission_ref": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "observation": {
+      "additionalProperties": false,
+      "properties": {
+        "observer_class": {
+          "enum": [
+            "independent",
+            "deterministic_independent"
+          ]
+        },
+        "required_events": {
+          "$ref": "#/$defs/uniqueStrings"
+        }
+      },
+      "required": [
+        "observer_class",
+        "required_events"
+      ],
+      "type": "object"
+    },
+    "preconditions": {
+      "$ref": "#/$defs/uniqueStrings"
+    },
+    "reconciliation": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "EXACT",
+            "PHYSICAL_POSTCONDITION"
+          ]
+        },
+        "receipt": {
+          "const": "REQUIRED"
+        }
+      },
+      "required": [
+        "mode",
+        "receipt"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "lion.action-spec/v1.3-candidate"
+    },
+    "target": {
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "host": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "runtime": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "environment",
+        "runtime"
+      ],
+      "type": "object"
+    },
+    "workspace": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^/",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        },
+        "tree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "commit",
+        "tree",
+        "path"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "action_id",
+    "kind",
+    "intent_ref",
+    "mission_ref",
+    "autonomy_ref",
+    "bean_ref",
+    "target",
+    "authority_request",
+    "boundary",
+    "preconditions",
+    "expected_effects",
+    "forbidden_effects",
+    "observation",
+    "reconciliation"
+  ],
+  "title": "LION ActionSpec v1.3 Candidate",
+  "type": "object",
+  "x-lion-c0": {
+    "authority_effect": "NONE",
+    "baseline_sha": "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e",
+    "baseline_tree": "76c3575dd1dc005f790f80a1c205123a1dad82fb",
+    "existing_action_proposal_schema": "cyberlion://schemas/action-proposal/v1",
+    "payload_binding": "ActionProposal.payload_digest",
+    "roadmap_step": "C0-ACTION-IR",
+    "runtime_execution": "NONE",
+    "status": "CANDIDATE_SCHEMA_FREEZE",
+    "supersedes": "NONE_UNTIL_INTEGRATED",
+    "transport_implementation": "NONE"
+  },
+  "x-lion-support-classification": {
+    "AS_IS": [
+      "ActionProposal.schema_version",
+      "ActionProposal.proposal_id",
+      "ActionProposal.mission_id",
+      "ActionProposal.swarm_id",
+      "ActionProposal.proposer_agent_id",
+      "ActionProposal.capability",
+      "ActionProposal.requested_authority",
+      "ActionProposal.action_class",
+      "ActionProposal.target",
+      "ActionProposal.consequential",
+      "ActionProposal.evidence_refs",
+      "ActionProposal.required_observability",
+      "ActionProposal.verifier_agent_id",
+      "ActionProposal.payload_digest"
+    ],
+    "TARGET_ONLY": [
+      "ActionSpec.kind",
+      "ActionSpec.target",
+      "ActionSpec.authority_request",
+      "ActionSpec.boundary",
+      "ActionSpec.preconditions",
+      "ActionSpec.expected_effects",
+      "ActionSpec.forbidden_effects",
+      "ActionSpec.observation",
+      "ActionSpec.reconciliation",
+      "ActionSpec.executable",
+      "ActionSpec.arguments",
+      "ActionSpec.workspace",
+      "ActionSpec.environment",
+      "ActionSpec.io"
+    ]
+  }
+}
