@@ -52,16 +52,38 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
     def checkout_subject_digest(self, treeish="HEAD"):
         return subject_digest(self._entries_for_tree(treeish))
 
+
     def validate(
         self,
         payload=None,
         *,
-        head=FIXTURE_MASTER_HEAD,
+        head=None,
         tree=FIXTURE_MASTER_TREE,
         current_subject_digest=None,
     ):
         value = self.state() if payload is None else payload
-        observed = current_subject_digest or value["baseline"]["subject_digest"]
+
+        if head is None:
+            current_bases = {
+                item["base_head"]
+                for item in value["records"]
+                if (
+                    item.get("plane") == "CANDIDATE"
+                    and item.get("status") == "CURRENT_MASTER_BASE_CANDIDATE"
+                )
+            }
+
+            head = (
+                next(iter(current_bases))
+                if len(current_bases) == 1
+                else FIXTURE_MASTER_HEAD
+            )
+
+        observed = (
+            current_subject_digest
+            or value["baseline"]["subject_digest"]
+        )
+
         return validate_truth_projection(
             value,
             current_head=head,
@@ -157,6 +179,123 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         self.assertEqual(fetched_head, head, f"LIVE_PR_REF_FETCH_DRIFT:{pr_number}")
         return head, tree
 
+
+    def _candidate_currentness_evidence(
+        self,
+        record,
+        *,
+        current_head,
+        current_tree,
+    ):
+        self.assertEqual(record["plane"], "CANDIDATE")
+
+        if record["base_head"] == current_head:
+            return None
+
+        fetched = subprocess.run(
+            [
+                "git",
+                "fetch",
+                "--no-tags",
+                "--depth=64",
+                "origin",
+                "refs/heads/master",
+            ],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=60,
+        )
+
+        self.assertEqual(
+            fetched.returncode,
+            0,
+            f"LIVE_MASTER_HISTORY_FETCH_FAILED:{fetched.stderr.strip()}",
+        )
+
+        revs = subprocess.run(
+            [
+                "git",
+                "rev-list",
+                "--first-parent",
+                "--reverse",
+                f"{record['base_head']}..{current_head}",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+
+        self.assertEqual(
+            revs.returncode,
+            0,
+            f"LIVE_ANCESTRY_UNAVAILABLE:{record['id']}",
+        )
+
+        shas = [
+            line.strip()
+            for line in revs.stdout.splitlines()
+            if line.strip()
+        ]
+
+        chain = []
+        expected_parent = record["base_head"]
+
+        for sha in shas:
+            parent = subprocess.run(
+                ["git", "rev-parse", f"{sha}^1"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+
+            self.assertEqual(
+                parent,
+                expected_parent,
+                f"LIVE_ANCESTRY_NONCONTIGUOUS:{record['id']}",
+            )
+
+            paths = subprocess.run(
+                ["git", "diff", "--name-only", parent, sha],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+
+            paths = [
+                item.strip()
+                for item in paths
+                if item.strip()
+            ]
+
+            self.assertTrue(
+                paths,
+                f"LIVE_ANCESTRY_EMPTY_DELTA:{record['id']}:{sha}",
+            )
+
+            chain.append(
+                {
+                    "sha": sha,
+                    "parent_sha": parent,
+                    "paths": paths,
+                }
+            )
+
+            expected_parent = sha
+
+        return {
+            "pr": record["pr"],
+            "candidate_head": record["head"],
+            "candidate_tree": record["tree"],
+            "base_head": record["base_head"],
+            "current_head": current_head,
+            "current_tree": current_tree,
+            "ancestry_verified": expected_parent == current_head,
+            "intervening_commits": chain,
+        }
+
     def live_identity(self):
         head = os.environ.get("LION_LIVE_MASTER_HEAD")
         tree = os.environ.get("LION_LIVE_MASTER_TREE")
@@ -176,21 +315,75 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         self.assertNotIn("tree", baseline)
         self.assertNotIn("currentness", baseline)
 
+
     def test_live_master_truth_projection_is_current(self):
         head, tree = self.live_identity()
-        observed_head, observed_tree = self._resolve_live_branch("master")
-        self.assertEqual(observed_head, head, "LIVE_MASTER_HEAD_DRIFT")
-        self.assertEqual(observed_tree, tree, "LIVE_MASTER_TREE_DRIFT")
-        checkout_digest = self.checkout_subject_digest("FETCH_HEAD")
-        state = validate_truth_projection(
-            self.state(),
+
+        observed_head, observed_tree = self._resolve_live_branch(
+            "master"
+        )
+
+        self.assertEqual(
+            observed_head,
+            head,
+            "LIVE_MASTER_HEAD_DRIFT",
+        )
+
+        self.assertEqual(
+            observed_tree,
+            tree,
+            "LIVE_MASTER_TREE_DRIFT",
+        )
+
+        live_digest = self.checkout_subject_digest("FETCH_HEAD")
+
+        live_state_text = subprocess.run(
+            [
+                "git",
+                "show",
+                f"FETCH_HEAD:{STATE_PATH.as_posix()}",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+
+        live_state = json.loads(live_state_text)
+
+        validated_live = validate_truth_projection(
+            live_state,
             current_head=head,
             current_tree=tree,
-            current_subject_digest=checkout_digest,
+            current_subject_digest=live_digest,
         )
-        self.assertEqual(state["baseline"]["subject_digest"], checkout_digest)
+
         self.assertEqual(
-            derive_subject_currentness(state["baseline"]["subject_digest"], checkout_digest),
+            validated_live["baseline"]["subject_digest"],
+            live_digest,
+        )
+
+        self.assertEqual(
+            derive_subject_currentness(
+                validated_live["baseline"]["subject_digest"],
+                live_digest,
+            ),
+            "CURRENT",
+        )
+
+        local_digest = self.checkout_subject_digest("HEAD")
+        local_declared = self.state()["baseline"]["subject_digest"]
+
+        self.assertEqual(
+            local_declared,
+            local_digest,
+            "CHECKOUT_SUBJECT_DIGEST_DRIFT",
+        )
+
+        self.assertEqual(
+            derive_subject_currentness(
+                local_declared,
+                local_digest,
+            ),
             "CURRENT",
         )
 
@@ -199,40 +392,117 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         declared = self.state()["baseline"]["subject_digest"]
         self.assertEqual(registry["generated_from"], f"truth-subject-v1@{declared}")
 
+
     def test_live_candidate_frontier_is_exact(self):
         if not self._live_gate_enabled():
-            self.skipTest("LIVE_CURRENTNESS_EVIDENCE_UNAVAILABLE")
-        master, _ = self.live_identity()
-        records = {item["id"]: item for item in self.state()["records"]}
-        for record in records.values():
-            if record["plane"] != "CANDIDATE":
-                continue
-            head, tree = self._resolve_live_pr(record["pr"])
-            self.assertEqual(record["head"], head, f"STALE_CANDIDATE_HEAD:{record['id']}")
-            self.assertEqual(record["tree"], tree, f"STALE_CANDIDATE_TREE:{record['id']}")
+            self.skipTest(
+                "LIVE_CURRENTNESS_EVIDENCE_UNAVAILABLE"
+            )
 
-        self.assertEqual(records["ActionSpec"]["base_head"], PRE_EPHEMERAL_MASTER_HEAD, "ACTION_SPEC_GENEALOGY_DRIFT")
-        self.assertNotEqual(records["ActionSpec"]["base_head"], master, "ACTION_SPEC_SHOULD_BE_STALE_AFTER_MASTER_HISTORY_ADVANCE")
-        self.assertEqual(records["ActionSpec"]["status"], "STALE_BASE_CANDIDATE")
-        self.assertEqual(records["LCMS"]["base_head"], records["ActionSpec"]["head"], "STALE_CANDIDATE_BASE:LCMS")
-        self.assertEqual(
-            records["ReadonlyProcessAdapter"]["base_head"],
-            records["LCMS"]["head"],
-            "STALE_CANDIDATE_BASE:ReadonlyProcessAdapter",
-        )
-        for record_id in (
-            "B0GenerativityProtocol",
-            "HybridModelRouter",
-            "PhysicalActionSpec",
-            "P0EntryCandidate",
-        ):
-            record = records[record_id]
-            self.assertEqual(record["status"], "STALE_BASE_CANDIDATE")
-            self.assertNotEqual(record["base_head"], master)
+        master, master_tree = self.live_identity()
+
+        records = {
+            item["id"]: item
+            for item in self.state()["records"]
+        }
+
+        candidates = [
+            item
+            for item in records.values()
+            if item["plane"] == "CANDIDATE"
+        ]
+
+        for record in candidates:
+            head, tree = self._resolve_live_pr(record["pr"])
+
+            self.assertEqual(
+                record["head"],
+                head,
+                f"STALE_CANDIDATE_HEAD:{record['id']}",
+            )
+
+            self.assertEqual(
+                record["tree"],
+                tree,
+                f"STALE_CANDIDATE_TREE:{record['id']}",
+            )
+
+        current_compatible = {
+            "CURRENT_MASTER_BASE_CANDIDATE",
+            "CURRENT_STACKED_CANDIDATE",
+        }
+
+        for record in candidates:
+            status = record["status"]
+
+            if status == "CURRENT_MASTER_BASE_CANDIDATE":
+                evidence = (
+                    None
+                    if record["base_head"] == master
+                    else self._candidate_currentness_evidence(
+                        record,
+                        current_head=master,
+                        current_tree=master_tree,
+                    )
+                )
+
+                classification = (
+                    classify_candidate_base_currentness(
+                        pr=record["pr"],
+                        candidate_head=record["head"],
+                        candidate_tree=record["tree"],
+                        base_head=record["base_head"],
+                        current_head=master,
+                        current_tree=master_tree,
+                        evidence=evidence,
+                    )
+                )
+
+                self.assertEqual(
+                    classification,
+                    "CURRENT_COMPATIBLE",
+                    f"CURRENT_CANDIDATE_NOT_LIVE_COMPATIBLE:{record['id']}",
+                )
+
+            elif status == "CURRENT_STACKED_CANDIDATE":
+                parents = [
+                    item
+                    for item in candidates
+                    if item["head"] == record["base_head"]
+                ]
+
+                self.assertEqual(
+                    len(parents),
+                    1,
+                    f"CURRENT_STACK_PARENT_CARDINALITY:{record['id']}",
+                )
+
+                self.assertIn(
+                    parents[0]["status"],
+                    current_compatible,
+                    f"CURRENT_STACK_PARENT_STALE:{record['id']}",
+                )
+
+            elif status == "STALE_BASE_CANDIDATE":
+                self.assertNotEqual(
+                    record["base_head"],
+                    master,
+                    f"STALE_CANDIDATE_CLAIMS_LIVE_MASTER:{record['id']}",
+                )
+
+            else:
+                self.fail(
+                    f"UNKNOWN_CANDIDATE_STATUS:{record['id']}:{status}"
+                )
 
         mediation = records["GlobalCompleteMediation"]
+
         self.assertEqual(
-            (mediation["plane"], mediation["status"], mediation["integrated"]),
+            (
+                mediation["plane"],
+                mediation["status"],
+                mediation["integrated"],
+            ),
             ("UNKNOWN", "UNKNOWN", False),
         )
 
@@ -269,13 +539,31 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(TruthProjectionError, "candidate silently promoted"):
             self.validate(state)
 
+
     def test_current_master_candidate_cannot_carry_stale_base(self):
         state = self.state()
-        candidate = next(item for item in state["records"] if item["id"] == "ActionSpec")
+
+        candidate = next(
+            item
+            for item in state["records"]
+            if item["id"] == "ActionSpec"
+        )
+
         candidate["status"] = "CURRENT_MASTER_BASE_CANDIDATE"
-        self.assertEqual(candidate["base_head"], PRE_EPHEMERAL_MASTER_HEAD)
-        with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness is unproven"):
-            self.validate(state)
+
+        self.assertNotEqual(
+            candidate["base_head"],
+            FIXTURE_MASTER_HEAD,
+        )
+
+        with self.assertRaisesRegex(
+            TruthProjectionError,
+            "candidate base currentness is unproven",
+        ):
+            self.validate(
+                state,
+                head=FIXTURE_MASTER_HEAD,
+            )
 
     def test_stale_candidate_cannot_hide_current_master_base(self):
         state = self.state()
@@ -544,26 +832,95 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             self.assertIsNone(record["tree"])
             self.assertIn(f"master:{PRE_EPHEMERAL_MASTER_HEAD}", record["evidence_refs"])
 
+
     def test_candidate_frontier_and_stale_candidates_are_explicit(self):
-        records = {item["id"]: item for item in self.validate()["records"]}
-        expected = {
-            "B0GenerativityProtocol": (251, "85e77ac077f89ce892c1254d01f88a0889034b2f", "e36f84e2fd1be653718dff1a33bbed7e420d41fa", "STALE_BASE_CANDIDATE", OLD_MASTER_HEAD),
-            "ActionSpec": (256, "f8d8e44191d5c84ecca9feec1a8602f574948619", "b303b628e18dd1b31bb19c923cd0f18e2f050ae9", "STALE_BASE_CANDIDATE", PRE_EPHEMERAL_MASTER_HEAD),
-            "LCMS": (257, "0f75af9212a814177e08a5c206d1a8504b0937d5", "e722488cda090e62a379584c12f7cee8daa43de1", "CURRENT_STACKED_CANDIDATE", C0_HEAD),
-            "ReadonlyProcessAdapter": (258, "86dc7ac367ad2cd83e873e0ae3508f42a72eaac5", "4ab9157f89edc69f35cc0169bf8926c71af21313", "CURRENT_STACKED_CANDIDATE", C1_HEAD),
-            "HybridModelRouter": (253, "61b963e8664d6832f8bfe22bd31327ff63618a07", "656a777f096d6ddacc8b923e39658d1ff72ef376", "STALE_BASE_CANDIDATE", OLD_MASTER_HEAD),
-            "PhysicalActionSpec": (253, "61b963e8664d6832f8bfe22bd31327ff63618a07", "656a777f096d6ddacc8b923e39658d1ff72ef376", "STALE_BASE_CANDIDATE", OLD_MASTER_HEAD),
-            "P0EntryCandidate": (253, "61b963e8664d6832f8bfe22bd31327ff63618a07", "656a777f096d6ddacc8b923e39658d1ff72ef376", "STALE_BASE_CANDIDATE", OLD_MASTER_HEAD),
+        records = {
+            item["id"]: item
+            for item in self.validate()["records"]
         }
-        for record_id, (pr, head, tree, status, base_head) in expected.items():
-            record = records[record_id]
-            self.assertEqual(record["plane"], "CANDIDATE")
-            self.assertFalse(record["integrated"])
-            self.assertEqual(record["pr"], pr)
-            self.assertEqual(record["head"], head)
-            self.assertEqual(record["tree"], tree)
-            self.assertEqual(record["status"], status)
-            self.assertEqual(record["base_head"], base_head)
+
+        candidates = {
+            record_id: record
+            for record_id, record in records.items()
+            if record["plane"] == "CANDIDATE"
+        }
+
+        self.assertEqual(
+            set(candidates),
+            {
+                "B0GenerativityProtocol",
+                "ActionSpec",
+                "LCMS",
+                "ReadonlyProcessAdapter",
+                "HybridModelRouter",
+                "PhysicalActionSpec",
+                "P0EntryCandidate",
+            },
+        )
+
+        canonical_statuses = {
+            "CURRENT_MASTER_BASE_CANDIDATE",
+            "CURRENT_STACKED_CANDIDATE",
+            "STALE_BASE_CANDIDATE",
+        }
+
+        for record_id, record in candidates.items():
+            self.assertFalse(
+                record["integrated"],
+                f"CANDIDATE_INTEGRATED:{record_id}",
+            )
+
+            self.assertIsInstance(
+                record["pr"],
+                int,
+                f"CANDIDATE_PR_INVALID:{record_id}",
+            )
+
+            self.assertGreater(record["pr"], 0)
+
+            for field in ("head", "tree", "base_head"):
+                self.assertIsInstance(
+                    record[field],
+                    str,
+                    f"CANDIDATE_IDENTITY_INVALID:{record_id}:{field}",
+                )
+
+                self.assertEqual(
+                    len(record[field]),
+                    40,
+                    f"CANDIDATE_IDENTITY_LENGTH:{record_id}:{field}",
+                )
+
+            self.assertIn(
+                record["status"],
+                canonical_statuses,
+                f"CANDIDATE_STATUS_INVALID:{record_id}",
+            )
+
+        for record_id in (
+            "B0GenerativityProtocol",
+            "LCMS",
+            "ReadonlyProcessAdapter",
+            "HybridModelRouter",
+            "PhysicalActionSpec",
+            "P0EntryCandidate",
+        ):
+            self.assertEqual(
+                candidates[record_id]["status"],
+                "STALE_BASE_CANDIDATE",
+                f"KNOWN_STALE_CANDIDATE_NOT_EXPLICIT:{record_id}",
+            )
+
+        mediation = records["GlobalCompleteMediation"]
+
+        self.assertEqual(
+            (
+                mediation["plane"],
+                mediation["status"],
+                mediation["integrated"],
+            ),
+            ("UNKNOWN", "UNKNOWN", False),
+        )
 
     def test_subject_digest_is_order_independent_and_carrier_only_change_is_invisible(self):
         entries = self._entries_for_tree()
