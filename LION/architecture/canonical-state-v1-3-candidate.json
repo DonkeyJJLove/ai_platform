@@ -241,16 +241,16 @@
     {
       "id": "ActionSpec",
       "plane": "CANDIDATE",
-      "status": "STALE_BASE_CANDIDATE",
+      "status": "CURRENT_MASTER_BASE_CANDIDATE",
       "evidence_refs": [
-        "PR#256",
-        "cyber_lion/contracts/v1/action_spec.schema.json@f8d8e44191d5c84ecca9feec1a8602f574948619"
+        "PR#286",
+        "cyber_lion/contracts/v1/action_spec.schema.json@7176409f8d43c0b04eac57aaada98ad201c2d556"
       ],
       "integrated": false,
-      "pr": 256,
-      "head": "f8d8e44191d5c84ecca9feec1a8602f574948619",
-      "tree": "b303b628e18dd1b31bb19c923cd0f18e2f050ae9",
-      "base_head": "9082a974e8105dd7e47afc889583b1fc67535b59"
+      "pr": 286,
+      "head": "7176409f8d43c0b04eac57aaada98ad201c2d556",
+      "tree": "ce644dd231d49c0f69bbb51e8bb472acba0c0e05",
+      "base_head": "db51d0eb8784cb3b9a45a180aa421b35bc86d9c3"
     },
     {
       "id": "LCMS",
