@@ -34,6 +34,22 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
     def state(self):
         return json.loads(STATE_PATH.read_text(encoding="utf-8"))
 
+    def _isolated_currentness_fixture_state(self):
+        state = self.state()
+
+        for record in state["records"]:
+            if (
+                record.get("plane") == "CANDIDATE"
+                and record.get("status")
+                in {
+                    "CURRENT_MASTER_BASE_CANDIDATE",
+                    "CURRENT_STACKED_CANDIDATE",
+                }
+            ):
+                record["status"] = "STALE_BASE_CANDIDATE"
+
+        return state
+
     def _entries_for_tree(self, treeish="HEAD"):
         proc = subprocess.run(
             ["git", "ls-tree", "-r", "-z", treeish],
@@ -566,18 +582,18 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             )
 
     def test_stale_candidate_cannot_hide_current_master_base(self):
-        state = self.state()
+        state = self._isolated_currentness_fixture_state()
         candidate = next(item for item in state["records"] if item["id"] == "B0GenerativityProtocol")
         candidate["base_head"] = FIXTURE_MASTER_HEAD
         with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness contradiction"):
-            self.validate(state)
+            self.validate(state, head=FIXTURE_MASTER_HEAD)
 
     def test_stacked_candidate_cannot_claim_master_base(self):
-        state = self.state()
+        state = self._isolated_currentness_fixture_state()
         candidate = next(item for item in state["records"] if item["id"] == "LCMS")
         candidate["base_head"] = FIXTURE_MASTER_HEAD
         with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness contradiction"):
-            self.validate(state)
+            self.validate(state, head=FIXTURE_MASTER_HEAD)
 
     def test_historical_projection_cannot_claim_current_after_material_drift(self):
         state = self.state()
