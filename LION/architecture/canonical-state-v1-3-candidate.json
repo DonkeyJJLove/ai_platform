@@ -4,7 +4,7 @@
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
     "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
-    "subject_digest": "bb1d0ee37b82d7de1b28cf21a6abcf7830cf46b82dcb33c265ecd304965a3cf7",
+    "subject_digest": "6e687625be92f52d1726f40f2d7d90bc156f0b44e113c012ff2b447646f77283",
     "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
@@ -255,7 +255,7 @@
     {
       "id": "LCMS",
       "plane": "CANDIDATE",
-      "status": "CURRENT_STACKED_CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
       "evidence_refs": [
         "PR#257",
         "tools/lcms.py@0f75af9212a814177e08a5c206d1a8504b0937d5"
@@ -269,7 +269,7 @@
     {
       "id": "ReadonlyProcessAdapter",
       "plane": "CANDIDATE",
-      "status": "CURRENT_STACKED_CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
       "evidence_refs": [
         "PR#258",
         "tools/readonly_process_exec.py@86dc7ac367ad2cd83e873e0ae3508f42a72eaac5"
