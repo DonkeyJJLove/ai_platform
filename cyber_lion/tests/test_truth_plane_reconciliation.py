@@ -1005,6 +1005,30 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         with self.assertRaisesRegex(TruthProjectionError, "duplicate subject path"):
             subject_digest(entries + [entries[0]])
 
+    def test_lair_truth_is_target_or_post_merge_integrated(self):
+        record = next(item for item in self.validate()["records"] if item["id"] == "LAIR")
+        if record["plane"] == "TARGET":
+            self.assertEqual(record["status"], "TARGET_NOT_INTEGRATED")
+            self.assertFalse(record["integrated"])
+            self.assertEqual(record["evidence_refs"], [])
+            for field in ("pr", "head", "tree", "base_head"):
+                self.assertIsNone(record[field])
+            return
+
+        self.assertEqual(record["plane"], "AS_IS")
+        self.assertEqual(record["status"], "INTEGRATED_VERIFIED_PRIMITIVE")
+        self.assertTrue(record["integrated"])
+        for field in ("pr", "head", "tree", "base_head"):
+            self.assertIsNone(record[field])
+        self.assertIn("cyber_lion/contracts/action_ir.py", record["evidence_refs"])
+        self.assertIn("cyber_lion/contracts/v1/action_spec.schema.json", record["evidence_refs"])
+        pr_refs = [ref for ref in record["evidence_refs"] if ref.startswith("PR#")]
+        self.assertEqual(len(pr_refs), 1)
+        self.assertRegex(pr_refs[0], r"^PR#[1-9][0-9]*$")
+        master_refs = [ref for ref in record["evidence_refs"] if ref.startswith("master:")]
+        self.assertEqual(len(master_refs), 1)
+        self.assertRegex(master_refs[0], r"^master:[0-9a-f]{40}$")
+
     def test_global_complete_mediation_remains_unknown(self):
         record = next(item for item in self.validate()["records"] if item["id"] == "GlobalCompleteMediation")
         self.assertEqual(record["plane"], "UNKNOWN")
