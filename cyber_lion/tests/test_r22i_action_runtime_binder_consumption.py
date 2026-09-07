@@ -119,15 +119,6 @@ def source_trust() -> PDPSourceTrustBinding:
     return PDPSourceTrustBinding("pdp", "pdp:1", Z, "pdp-anchor", Z).validate()
 
 
-def currentness() -> RuntimeBindingCurrentness:
-    return RuntimeBindingCurrentness(
-        source_trust(),
-        NOW,
-        NOW - timedelta(minutes=1),
-        NOW + timedelta(minutes=10),
-    ).validate()
-
-
 def provisioning(*, drone_id: str = "drone:r22i", mission_id: str = "mission:r22i"):
     trust = ProviderTrustBinding("provider", "provider:1", Z, "provider-anchor", Z).validate()
     request = ExecutorProvisioningRequest(
@@ -185,6 +176,17 @@ def provisioning(*, drone_id: str = "drone:r22i", mission_id: str = "mission:r22
         NOW.isoformat(),
     ).validate_for(request, trust)
     return request, trust, provisioned
+
+
+def currentness(pe: ProvisionedExecutor | None = None) -> RuntimeBindingCurrentness:
+    pe = pe or provisioning()[2]
+    return RuntimeBindingCurrentness(
+        source_trust(),
+        pe.digest(),
+        NOW,
+        NOW - timedelta(minutes=1),
+        NOW + timedelta(minutes=10),
+    ).validate()
 
 
 def authority() -> LiveAdmittedAuthority:
@@ -246,8 +248,8 @@ def admit(eng=None, *, p=None, c=None, result=None, cur=None, prov=None, auth=No
     p = p or proposal()
     c = c or context()
     result = result or pdp_result()
-    cur = cur or currentness()
     req, trust, pe = prov or provisioning()
+    cur = cur or currentness(pe)
     eng = eng or engine_for(p, c, result, cur, pe)
     return eng.admit_bound_action(
         proposal=p,
@@ -267,8 +269,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         result = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         effect, identity, evidence = bind_allowed_action_to_runtime_inputs(p, c, result, cur, pe)
         eng = engine_for(p, c, result, cur, pe)
         out = admit(eng, p=p, c=c, result=result, cur=cur, prov=(req, trust, pe))
@@ -281,8 +283,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         allow = pdp_result()
         p = proposal()
         c = context()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         eng = engine_for(p, c, allow, cur, pe)
         with self.assertRaises(RuntimeEnforcementError):
             admit(eng, p=p, c=c, result=pdp_result(decision="DENY"), cur=cur, prov=(req, trust, pe))
@@ -291,8 +293,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         result = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         eng = engine_for(p, c, result, cur, pe)
         stale = replace(cur, expires_at=NOW)
         with self.assertRaises(RuntimeEnforcementError):
@@ -302,8 +304,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         result = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         eng = engine_for(p, c, result, cur, pe)
         shifted = replace(cur, trusted_now=NOW + timedelta(seconds=1))
         with self.assertRaises(RuntimeEnforcementError):
@@ -322,8 +324,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
     def test_action_resource_payload_authority_and_context_substitutions_are_denied(self):
         p = proposal()
         result = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         eng = engine_for(p, context(), result, cur, pe)
         mutations = (
             replace(context(), action_class="WRITE_FILE"),
@@ -340,8 +342,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         result = pdp_result()
-        cur = currentness()
         good = provisioning()
+        cur = currentness(good[2])
         eng = engine_for(p, c, result, cur, good[2])
         with self.assertRaises(RuntimeEnforcementError):
             admit(eng, p=p, c=c, result=result, cur=cur, prov=provisioning(mission_id="mission:other"))
@@ -352,8 +354,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         result = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         effect, identity, evidence = bind_allowed_action_to_runtime_inputs(p, c, result, cur, pe)
         eng = engine_for(p, c, result, cur, pe)
         bad_identity = replace(identity, runtime_instance_id="runtime:other")
@@ -370,8 +372,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         canonical = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         eng = engine_for(p, c, canonical, cur, pe)
         forged = pdp_result(replay_key=F)
         with self.assertRaises(RuntimeEnforcementError):
@@ -381,8 +383,8 @@ class R22IActionRuntimeBinderConsumptionTests(unittest.TestCase):
         p = proposal()
         c = context()
         result = pdp_result()
-        cur = currentness()
         req, trust, pe = provisioning()
+        cur = currentness(pe)
         eng = engine_for(p, c, result, cur, pe)
         admit(eng, p=p, c=c, result=result, cur=cur, prov=(req, trust, pe))
         with self.assertRaises(RuntimeEnforcementError):
