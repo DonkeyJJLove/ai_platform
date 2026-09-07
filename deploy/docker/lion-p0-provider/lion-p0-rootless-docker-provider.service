@@ -20,7 +20,9 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 PrivateDevices=yes
 ProtectSystem=strict
-ProtectHome=yes
+# Keep home trees hidden while exposing only the rootless Docker socket.
+ProtectHome=tmpfs
+BindReadOnlyPaths=/run/user/1000/docker.sock
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
