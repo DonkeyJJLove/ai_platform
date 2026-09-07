@@ -1,0 +1,104 @@
+name: LION R22C Full Symbol Census
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact PR candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Verify exact checked-out candidate
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse HEAD^{tree})"
+          if [ "$actual_head" != "$EXPECTED_HEAD" ]; then
+            printf 'CANDIDATE_HEAD_MISMATCH actual=%s expected=%s\n' "$actual_head" "$EXPECTED_HEAD" >&2
+            exit 1
+          fi
+          echo "head=$actual_head" >> "$GITHUB_OUTPUT"
+          echo "tree=$actual_tree" >> "$GITHUB_OUTPUT"
+
+      - name: Run census unit falsifiers
+        run: python -m unittest cyber_lion.tests.test_architecture_projection_full_symbol_census -v
+
+      - name: Materialize exact committed Python path set
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files -z -- '*.py' > "$RUNNER_TEMP/lion-python-files.zlist"
+          test -s "$RUNNER_TEMP/lion-python-files.zlist"
+
+      - name: Generate full symbol census
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cyber_lion.architecture_projection.full_symbol_census \
+            --source-root . \
+            --paths-zlist "$RUNNER_TEMP/lion-python-files.zlist" \
+            --source-head "${{ steps.gitstate.outputs.head }}" \
+            --source-tree "${{ steps.gitstate.outputs.tree }}" \
+            > "$RUNNER_TEMP/LION_FULL_SYMBOL_CENSUS_v1_4.json"
+
+      - name: Validate census exact binding and zero parse failures
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ steps.gitstate.outputs.head }}
+          EXPECTED_TREE: ${{ steps.gitstate.outputs.tree }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path(os.environ['RUNNER_TEMP']) / 'LION_FULL_SYMBOL_CENSUS_v1_4.json'
+          value = json.loads(path.read_text(encoding='utf-8'))
+          if value.get('success') is not True:
+              raise SystemExit('FULL_SYMBOL_CENSUS_NOT_SUCCESS')
+          source = value.get('source') or {}
+          if source.get('head') != os.environ['EXPECTED_HEAD']:
+              raise SystemExit('FULL_SYMBOL_CENSUS_HEAD_MISMATCH')
+          if source.get('tree') != os.environ['EXPECTED_TREE']:
+              raise SystemExit('FULL_SYMBOL_CENSUS_TREE_MISMATCH')
+          counts = value.get('counts') or {}
+          if counts.get('parse_failures') != 0:
+              raise SystemExit('FULL_SYMBOL_CENSUS_PARSE_FAILURES')
+          if counts.get('committed_python_files') != counts.get('parsed_python_files'):
+              raise SystemExit('FULL_SYMBOL_CENSUS_FILE_COVERAGE_MISMATCH')
+          print('FULL_SYMBOL_CENSUS=PASS')
+          print('PYTHON_FILES=' + str(counts.get('committed_python_files')))
+          print('SYMBOLS=' + str(counts.get('symbols')))
+          print('PUBLIC_SYMBOLS=' + str(counts.get('public_symbols')))
+          print('PRIVATE_MATERIAL_SYMBOLS=' + str(counts.get('private_material_symbols')))
+          print('CENSUS_DIGEST=' + str(value.get('census_digest')))
+          PY
+
+      - name: Upload exact census evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-r22c-full-symbol-census-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/LION_FULL_SYMBOL_CENSUS_v1_4.json
+          if-no-files-found: error
+          retention-days: 30
