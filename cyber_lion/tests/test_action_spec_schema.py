@@ -178,6 +178,12 @@ class ActionSpecCanonicalContractTests(unittest.TestCase):
         self.assertEqual(contradiction["status"], "PRESERVED")
         self.assertEqual(contradiction["resolution"], "EXPLICIT_CONTRACT_INTEGRATION_NO_RUNTIME_SUPERSESSION")
 
+    def test_actionproposal_schema_runtime_schema_version_divergence_is_preserved(self):
+        contradiction = {row["id"]: row for row in self.matrix["contradictions"]}["C0-ACTIONPROPOSAL-SCHEMA-RUNTIME-SCHEMA-VERSION"]
+        self.assertEqual(contradiction["status"], "PRESERVED")
+        self.assertEqual(contradiction["resolution"], "NO_WIRE_SCHEMA_CONFORMANCE_CLAIM")
+        self.assertIn("schema_version", self.action_proposal["required"])
+
     def test_target_shape_contradiction_is_preserved(self):
         contradiction = {row["id"]: row for row in self.matrix["contradictions"]}["C0-TARGET-SHAPE"]
         self.assertEqual(contradiction["status"], "PRESERVED")

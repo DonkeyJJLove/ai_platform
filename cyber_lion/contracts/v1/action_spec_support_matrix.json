@@ -40,6 +40,13 @@
       "live_fact": "ActionProposal.target is a nonempty string.",
       "resolution": "NO_IMPLICIT_RUNTIME_COERCION",
       "status": "PRESERVED"
+    },
+    {
+      "candidate_fact": "The explicit LAIR binder targets the exact live cyber_lion.enterprise.control_plane.ActionProposal runtime dataclass and does not serialize a wire envelope.",
+      "id": "C0-ACTIONPROPOSAL-SCHEMA-RUNTIME-SCHEMA-VERSION",
+      "live_fact": "cyber_lion/contracts/v1/action_proposal.schema.json requires schema_version=1.0.0, while cyber_lion.enterprise.control_plane.ActionProposal has no schema_version field; both shapes were introduced together in commit 15409591e96aba31ca49017b31c2d4c2a555d0d9.",
+      "resolution": "NO_WIRE_SCHEMA_CONFORMANCE_CLAIM",
+      "status": "PRESERVED"
     }
   ],
   "invariants": {
