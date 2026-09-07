@@ -28,7 +28,10 @@ ProtectKernelModules=yes
 ProtectControlGroups=yes
 ProtectClock=yes
 ProtectHostname=yes
-RestrictAddressFamilies=AF_UNIX
+# AF_INET/AF_INET6 are required only for the provider-side pinned base-image
+# registry pull/build path. P0 drone containers still execute on an internal
+# Docker network with no published host ports or direct Internet path.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 RestrictNamespaces=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
