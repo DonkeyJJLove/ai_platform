@@ -11,12 +11,14 @@ from hashlib import sha256
 from threading import Lock
 from typing import Protocol
 
+from cyber_lion.contracts.action_proposal_context import ExplicitActionProposalContext
+from cyber_lion.contracts.action_runtime_binding import RuntimeBindingCurrentness,bind_allowed_action_to_runtime_inputs
 from cyber_lion.contracts.executor_provisioning import ExecutorProvisioningRequest,ProviderTrustBinding,ProvisionedExecutor
 from cyber_lion.contracts.policy_gate import GateApplied,PDPDecisionReceipt
 from cyber_lion.contracts.runtime_enforcement import CanonicalPDPDecisionEvidence,PDPSourceTrustBinding,RequestedRuntimeEffect,RuntimeAdmission,RuntimeIdentityBinding,canonical_json
 from .control_plane import ActionProposal
 from .live_authority_admission import LiveAdmittedAuthority,LiveAuthorityAdmission
-from .policy_gate import authority_contains
+from .policy_gate import PDPResult,authority_contains
 
 class RuntimeEnforcementError(RuntimeError):pass
 
@@ -90,6 +92,26 @@ class RuntimeAdmissionEngine:
         actual=(runtime_identity.workload_identity,runtime_identity.execution_subject,runtime_identity.runtime_instance_id,runtime_identity.sandbox_id,runtime_identity.workspace_id,runtime_identity.runtime_attestation_digest,runtime_identity.provisioned_executor_digest)
         if actual!=expected:raise RuntimeEnforcementError("runtime/workload/execution-subject substitution denied")
         return pd
+
+    def admit_bound_action(self,*,proposal:ActionProposal,context:ExplicitActionProposalContext,pdp_result:PDPResult,currentness:RuntimeBindingCurrentness,admitted_authority:LiveAdmittedAuthority,provisioned_executor:ProvisionedExecutor,provisioning_request:ExecutorProvisioningRequest,provider_trust:ProviderTrustBinding,trusted_now:datetime)->RuntimeAdmission:
+        """Consume the inert Action→Runtime binder before the canonical admission boundary.
+
+        This method does not execute an effect or mint authority. The three binder outputs
+        are treated as exact admission inputs, and the binder-produced PDP evidence must be
+        byte-semantically identical to the independently configured canonical PDP source.
+        """
+        if type(pdp_result) is not PDPResult:raise RuntimeEnforcementError("exact PDPResult required")
+        if type(currentness) is not RuntimeBindingCurrentness:raise RuntimeEnforcementError("exact RuntimeBindingCurrentness required")
+        if trusted_now.tzinfo is None:raise RuntimeEnforcementError("trusted_now must be timezone-aware")
+        try:currentness.validate()
+        except Exception as exc:raise RuntimeEnforcementError("runtime binding currentness invalid") from exc
+        if currentness.pdp_source_trust!=self._source_trust:raise RuntimeEnforcementError("runtime binder PDP source trust substitution denied")
+        if currentness.trusted_now.astimezone(timezone.utc)!=trusted_now.astimezone(timezone.utc):raise RuntimeEnforcementError("runtime binder/admission trusted time mismatch")
+        try:effect,runtime_identity,bound_pdp=bind_allowed_action_to_runtime_inputs(proposal,context,pdp_result,currentness,provisioned_executor)
+        except Exception as exc:raise RuntimeEnforcementError("action runtime binding denied") from exc
+        canonical=self._canonical_pdp(pdp_result.applied,pdp_result.receipt,trusted_now)
+        if bound_pdp!=canonical:raise RuntimeEnforcementError("runtime binder PDP evidence does not match canonical source")
+        return self.admit(gate=pdp_result.applied,pdp_receipt=pdp_result.receipt,admitted_authority=admitted_authority,proposal=proposal,effect=effect,runtime_identity=runtime_identity,provisioned_executor=provisioned_executor,provisioning_request=provisioning_request,provider_trust=provider_trust,trusted_now=trusted_now)
 
     def admit(self,*,gate:GateApplied,pdp_receipt:PDPDecisionReceipt,admitted_authority:LiveAdmittedAuthority,proposal:ActionProposal,effect:RequestedRuntimeEffect,runtime_identity:RuntimeIdentityBinding,provisioned_executor:ProvisionedExecutor,provisioning_request:ExecutorProvisioningRequest,provider_trust:ProviderTrustBinding,trusted_now:datetime)->RuntimeAdmission:
         if type(gate) is not GateApplied or type(pdp_receipt) is not PDPDecisionReceipt:raise RuntimeEnforcementError("exact canonical PDP evidence required")
