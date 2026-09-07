@@ -240,17 +240,19 @@
     },
     {
       "id": "ActionSpec",
-      "plane": "CANDIDATE",
-      "status": "STALE_BASE_CANDIDATE",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
       "evidence_refs": [
+        "cyber_lion/contracts/v1/action_spec.schema.json",
+        "cyber_lion/contracts/v1/action_spec_support_matrix.json",
         "PR#286",
-        "cyber_lion/contracts/v1/action_spec.schema.json@7176409f8d43c0b04eac57aaada98ad201c2d556"
+        "master:1f0b6ff80f8cf2d38fae64373ae4ef7ba19da669"
       ],
-      "integrated": false,
-      "pr": 286,
-      "head": "7176409f8d43c0b04eac57aaada98ad201c2d556",
-      "tree": "ce644dd231d49c0f69bbb51e8bb472acba0c0e05",
-      "base_head": "db51d0eb8784cb3b9a45a180aa421b35bc86d9c3"
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
     },
     {
       "id": "LCMS",
