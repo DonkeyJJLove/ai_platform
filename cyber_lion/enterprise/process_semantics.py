@@ -17,6 +17,10 @@ from cyber_lion.contracts.process_ir import (
     ProcessContextSnapshot,
     ProcessIRContractError,
 )
+from cyber_lion.enterprise.process_outcome_evidence import (
+    CanonicalDownstreamEvidence,
+    ProcessOutcomeEvidenceError,
+)
 
 DECISIONS = frozenset({"SELECTED", "BLOCKED", "HANDOFF_REQUIRED", "COMPLETE", "UNKNOWN"})
 
@@ -234,7 +238,14 @@ def _required_currentness_basis_digests(transition: dict, context: ProcessContex
     return {bases[requirement].basis_digest for requirement in transition["currentness_requirements"] if requirement in bases and bases[requirement].state == "CURRENT"}
 
 
-def apply_transition_outcome(process_ir: CanonicalProcessIR, context: ProcessContextSnapshot, decision_record: TransitionDecisionRecord, outcome: ProcessTransitionOutcome) -> ProcessContextSnapshot:
+def apply_transition_outcome(
+    process_ir: CanonicalProcessIR,
+    context: ProcessContextSnapshot,
+    decision_record: TransitionDecisionRecord,
+    outcome: ProcessTransitionOutcome,
+    *,
+    downstream_evidence: CanonicalDownstreamEvidence | None = None,
+) -> ProcessContextSnapshot:
     """Apply one evidence-bound selected outcome; this function performs no effect."""
     process_ir.validate(); context.validate_for(process_ir)
     try:
@@ -284,6 +295,20 @@ def apply_transition_outcome(process_ir: CanonicalProcessIR, context: ProcessCon
         valid_currentness = _required_currentness_basis_digests(transition, context)
         if outcome.currentness_basis_ref not in valid_currentness:
             raise ProcessSemanticError("ACTION_REQUIRED PASS currentness basis does not bind selected context")
+        if downstream_evidence is None:
+            raise ProcessSemanticError("ACTION_REQUIRED PASS requires independently materialized canonical downstream evidence")
+        try:
+            downstream_evidence.validate_for(
+                outcome=outcome,
+                process_id=model["process_id"],
+                process_ir_digest=process_ir.process_digest,
+                transition_id=transition["transition_id"],
+                mission_ref=model["mission_ref"],
+            )
+        except ProcessOutcomeEvidenceError as exc:
+            raise ProcessSemanticError(f"canonical downstream evidence invalid: {exc}") from exc
+    elif downstream_evidence is not None:
+        raise ProcessSemanticError("canonical downstream evidence is only valid for ACTION_REQUIRED PASS")
     next_state = outcome.next_state
     next_control = "ACTIVE"
     if expected_next in NEXT_DIRECTIVES:
