@@ -347,10 +347,15 @@
     },
     {
       "id": "LAIR",
-      "plane": "TARGET",
-      "status": "TARGET_NOT_INTEGRATED",
-      "evidence_refs": [],
-      "integrated": false,
+      "plane": "AS_IS",
+      "status": "INTEGRATED_VERIFIED_PRIMITIVE",
+      "evidence_refs": [
+        "cyber_lion/contracts/action_ir.py",
+        "cyber_lion/contracts/v1/action_spec.schema.json",
+        "PR#290",
+        "master:1d89ace520969c412c916eca20991178bf0d16b1"
+      ],
+      "integrated": true,
       "pr": null,
       "head": null,
       "tree": null,
