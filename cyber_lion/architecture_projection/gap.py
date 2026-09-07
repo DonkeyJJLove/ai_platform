@@ -202,7 +202,7 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
             "ActionSpec",
             "cyber_lion/contracts/action_proposal_pdp_handoff.py",
             missing_runtime="general reusable canonical PDP ALLOW-to-runtime object materializer/binder for RequestedRuntimeEffect, RuntimeIdentityBinding and CanonicalPDPDecisionEvidence",
-            next_minimal_gap="materialize and bind exact runtime effect, identity and PDP evidence before existing RuntimeAdmissionEngine.admit(...) ",
+            next_minimal_gap="materialize and bind exact runtime effect, identity and PDP evidence before existing RuntimeAdmissionEngine.admit(...)",
         ),
         _observed("LAIR", "cyber_lion/contracts/action_ir.py"),
         _target(
