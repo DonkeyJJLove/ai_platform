@@ -26,10 +26,21 @@ class ProcessReferenceCorpusTests(unittest.TestCase):
                 ctx=ProcessContextSnapshot(process_ir_digest=ir.process_digest,process_state=model["initial_state"],satisfied_dependencies=tuple(transition["dependencies"]),satisfied_guards=tuple(transition["guards"]),satisfied_evidence_requirements=tuple(transition["evidence_requirements"]),currentness_bases=currentness,verified_authority_context_refs=tuple(transition["authority_requirements"]),observed_at="2026-09-08T00:00:00+02:00").validate_for(ir)
                 selected=TransitionSelector(ir).bind_selected(ctx)
                 action=transition["transition_class"]=="ACTION_REQUIRED"
-                outcome=ProcessTransitionOutcome(process_id=model["process_id"],process_ir_digest=ir.process_digest,transition_id=transition["transition_id"],transition_decision_digest=selected.transition_decision_digest,attempt_number=1,outcome="PASS",next_state="DONE",action_ref="action:reference" if action else "",proposal_digest="a"*64 if action else "",admission_ref="admission:reference" if action else "",effect_ref="effect:reference" if action else "",observation_ref="observation:reference" if action else "",reconciliation_ref="reconciliation:reference" if action else "",currentness_basis_ref=currentness[0].basis_digest if action else "").sealed()
-                updated=apply_transition_outcome(ir,ctx,selected,outcome)
-                self.assertEqual(updated.process_state,"DONE")
-                self.assertEqual(TransitionSelector(ir).select(updated).decision,"COMPLETE")
+                if action:
+                    # Generic reference scenarios prove that an ACTION_REQUIRED
+                    # transition reaches the downstream boundary without fabricating
+                    # Action/PDP/runtime/effect evidence.  A full canonical PASS chain
+                    # is tested in test_process_semantics.
+                    outcome=ProcessTransitionOutcome(process_id=model["process_id"],process_ir_digest=ir.process_digest,transition_id=transition["transition_id"],transition_decision_digest=selected.transition_decision_digest,attempt_number=1,outcome="AUTHORITY_BOUNDARY",next_state=ctx.process_state).sealed()
+                    updated=apply_transition_outcome(ir,ctx,selected,outcome)
+                    self.assertEqual(updated.process_state,ctx.process_state)
+                    self.assertEqual(updated.process_control,"HANDOFF_REQUIRED")
+                    self.assertEqual(TransitionSelector(ir).select(updated).decision,"HANDOFF_REQUIRED")
+                else:
+                    outcome=ProcessTransitionOutcome(process_id=model["process_id"],process_ir_digest=ir.process_digest,transition_id=transition["transition_id"],transition_decision_digest=selected.transition_decision_digest,attempt_number=1,outcome="PASS",next_state="DONE").sealed()
+                    updated=apply_transition_outcome(ir,ctx,selected,outcome)
+                    self.assertEqual(updated.process_state,"DONE")
+                    self.assertEqual(TransitionSelector(ir).select(updated).decision,"COMPLETE")
 
 
 if __name__=="__main__": unittest.main()
