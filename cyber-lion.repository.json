@@ -9,7 +9,7 @@
   },
   "cyber_lion": {
     "tile_id": "control-plane.cyber-lion",
-    "roles": ["EnterpriseControlPlane", "AgentFoundry", "SwarmPlanner", "FederationRegistry", "AuthorityPolicyEngine"],
+    "roles": ["EnterpriseControlPlane", "AgentFoundry", "SwarmPlanner", "FederationRegistry", "AuthorityPolicyEngine", "ProcessContractIntegration"],
     "layers": ["INF", "SEM", "MAND"],
     "disposition": ["KEEP", "REFINE", "INTEGRATE"]
   },
@@ -19,6 +19,9 @@
     "swarm.plan",
     "mosaic.delta",
     "repository.discover",
+    "process.contract",
+    "process.transition.select",
+    "process.action_intent",
     "action.propose",
     "gate.evaluate",
     "execution.receipt",
@@ -29,18 +32,22 @@
     "required_gates": ["cyber-lion.mand.policy", "independent.verifier"]
   },
   "observability": {
-    "logs": ["mission.lifecycle", "swarm.lifecycle", "gate.decision", "execution.receipt", "authority.degradation"],
+    "logs": ["mission.lifecycle", "process.transition", "swarm.lifecycle", "gate.decision", "execution.receipt", "authority.degradation"],
     "metrics": ["swarm.count", "gate.allow", "gate.deny", "observability.coverage", "authority.expansion.count"],
-    "traces": ["evidence→mission→swarm→proposal→gate→execution→receipt→outcome"]
+    "traces": ["evidence→process→action-intent→proposal→gate→runtime-admission→effect→observation→reconciliation→process-state"]
   },
   "security": {
     "trust_boundaries": [
       "repository registration != credentials",
       "AgentSpec != runtime identity",
+      "ProcessContract != authority",
+      "ProcessTransition != action execution",
+      "ActionIntentCandidate != ActionSpec",
       "GateDecision != external side effect",
       "model proposal != authority",
       "authority expansion requires independent deterministic gate",
-      "consequential execution requires causal gate binding and observable receipt"
+      "consequential execution requires causal gate binding and observable receipt",
+      "receipt != observation != reconciliation"
     ]
   },
   "epistemic": {
