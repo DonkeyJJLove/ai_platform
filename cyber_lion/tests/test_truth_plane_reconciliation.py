@@ -550,7 +550,7 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
     def test_candidate_cannot_be_silently_promoted_to_as_is(self):
         state = self.state()
-        candidate = next(item for item in state["records"] if item["id"] == "ActionSpec")
+        candidate = next(item for item in state["records"] if item["id"] == "LCMS")
         candidate["integrated"] = True
         with self.assertRaisesRegex(TruthProjectionError, "candidate silently promoted"):
             self.validate(state)
@@ -564,8 +564,16 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             for item in state["records"]
             if item["id"] == "ActionSpec"
         )
-
-        candidate["status"] = "CURRENT_MASTER_BASE_CANDIDATE"
+        candidate.update({
+            "plane": "CANDIDATE",
+            "status": "CURRENT_MASTER_BASE_CANDIDATE",
+            "evidence_refs": ["PR#279"],
+            "integrated": False,
+            "pr": 279,
+            "head": "3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6",
+            "tree": "d1b15db9a399fa6e6bbeae760827f02ce8158d61",
+            "base_head": "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e",
+        })
 
         self.assertNotEqual(
             candidate["base_head"],
@@ -605,7 +613,9 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         state = self.state()
         action = next(item for item in state["records"] if item["id"] == "ActionSpec")
         action.update({
+            "plane": "CANDIDATE",
             "status": "CURRENT_MASTER_BASE_CANDIDATE",
+            "integrated": False,
             "pr": 279,
             "head": "3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6",
             "tree": "d1b15db9a399fa6e6bbeae760827f02ce8158d61",
@@ -861,17 +871,17 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
             if record["plane"] == "CANDIDATE"
         }
 
-        self.assertEqual(
+        persistent_candidates = {
+            "B0GenerativityProtocol",
+            "LCMS",
+            "ReadonlyProcessAdapter",
+            "HybridModelRouter",
+            "PhysicalActionSpec",
+            "P0EntryCandidate",
+        }
+        self.assertIn(
             set(candidates),
-            {
-                "B0GenerativityProtocol",
-                "ActionSpec",
-                "LCMS",
-                "ReadonlyProcessAdapter",
-                "HybridModelRouter",
-                "PhysicalActionSpec",
-                "P0EntryCandidate",
-            },
+            (persistent_candidates, persistent_candidates | {"ActionSpec"}),
         )
 
         canonical_statuses = {
@@ -881,60 +891,49 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         }
 
         for record_id, record in candidates.items():
-            self.assertFalse(
-                record["integrated"],
-                f"CANDIDATE_INTEGRATED:{record_id}",
-            )
-
-            self.assertIsInstance(
-                record["pr"],
-                int,
-                f"CANDIDATE_PR_INVALID:{record_id}",
-            )
-
+            self.assertFalse(record["integrated"], f"CANDIDATE_INTEGRATED:{record_id}")
+            self.assertIsInstance(record["pr"], int, f"CANDIDATE_PR_INVALID:{record_id}")
             self.assertGreater(record["pr"], 0)
-
             for field in ("head", "tree", "base_head"):
-                self.assertIsInstance(
-                    record[field],
-                    str,
-                    f"CANDIDATE_IDENTITY_INVALID:{record_id}:{field}",
-                )
+                self.assertIsInstance(record[field], str, f"CANDIDATE_IDENTITY_INVALID:{record_id}:{field}")
+                self.assertEqual(len(record[field]), 40, f"CANDIDATE_IDENTITY_LENGTH:{record_id}:{field}")
+            self.assertIn(record["status"], canonical_statuses, f"CANDIDATE_STATUS_INVALID:{record_id}")
 
-                self.assertEqual(
-                    len(record[field]),
-                    40,
-                    f"CANDIDATE_IDENTITY_LENGTH:{record_id}:{field}",
-                )
-
-            self.assertIn(
-                record["status"],
-                canonical_statuses,
-                f"CANDIDATE_STATUS_INVALID:{record_id}",
-            )
-
-        for record_id in (
-            "B0GenerativityProtocol",
-            "LCMS",
-            "ReadonlyProcessAdapter",
-            "HybridModelRouter",
-            "PhysicalActionSpec",
-            "P0EntryCandidate",
-        ):
+        for record_id in persistent_candidates:
             self.assertEqual(
                 candidates[record_id]["status"],
                 "STALE_BASE_CANDIDATE",
                 f"KNOWN_STALE_CANDIDATE_NOT_EXPLICIT:{record_id}",
             )
 
-        mediation = records["GlobalCompleteMediation"]
+        action = records["ActionSpec"]
+        if action["plane"] == "CANDIDATE":
+            self.assertEqual(set(candidates), persistent_candidates | {"ActionSpec"})
+            self.assertEqual(action["status"], "STALE_BASE_CANDIDATE")
+            self.assertFalse(action["integrated"])
+            self.assertEqual(action["pr"], 286)
+            self.assertEqual(action["head"], "7176409f8d43c0b04eac57aaada98ad201c2d556")
+            self.assertEqual(action["tree"], "ce644dd231d49c0f69bbb51e8bb472acba0c0e05")
+            self.assertEqual(action["base_head"], "db51d0eb8784cb3b9a45a180aa421b35bc86d9c3")
+        else:
+            self.assertEqual(set(candidates), persistent_candidates)
+            self.assertEqual(action["plane"], "AS_IS")
+            self.assertEqual(action["status"], "INTEGRATED_VERIFIED_PRIMITIVE")
+            self.assertTrue(action["integrated"])
+            self.assertIsNone(action["pr"])
+            self.assertIsNone(action["head"])
+            self.assertIsNone(action["tree"])
+            self.assertIsNone(action["base_head"])
+            self.assertIn("cyber_lion/contracts/v1/action_spec.schema.json", action["evidence_refs"])
+            self.assertIn("cyber_lion/contracts/v1/action_spec_support_matrix.json", action["evidence_refs"])
+            self.assertIn("PR#286", action["evidence_refs"])
+            master_refs = [ref for ref in action["evidence_refs"] if ref.startswith("master:")]
+            self.assertEqual(len(master_refs), 1)
+            self.assertRegex(master_refs[0], r"^master:[0-9a-f]{40}$")
 
+        mediation = records["GlobalCompleteMediation"]
         self.assertEqual(
-            (
-                mediation["plane"],
-                mediation["status"],
-                mediation["integrated"],
-            ),
+            (mediation["plane"], mediation["status"], mediation["integrated"]),
             ("UNKNOWN", "UNKNOWN", False),
         )
 

@@ -38,10 +38,15 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
             self.assertEqual(by_id[integrated].evidence_class, "LIVE_CODE")
             self.assertTrue(by_id[integrated].evidence_ref)
 
+        action = by_id["ActionSpec"]
+        self.assertEqual(action.status, "CONTRACT_ONLY")
+        self.assertEqual(action.evidence_class, "EXACT_GIT_STATE")
+        self.assertEqual(action.evidence_ref, "cyber_lion/contracts/v1/action_spec.schema.json")
+        self.assertEqual(action.missing_runtime, "canonical LION Action IR implementation")
+
         for target in (
             "AutonomyBlueprint",
             "MaterializerRegistry",
-            "ActionSpec",
             "LAIR",
             "LCMS",
             "LocalConsole",
