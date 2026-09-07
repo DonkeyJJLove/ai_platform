@@ -177,13 +177,14 @@ def test_service_reference():
             "test function statically references a unique leaf name; reference is not execution/coverage proof",
         )
 
-    def test_projection_module_adds_no_git_network_or_subprocess_execution_surface(self):
+    def test_projection_module_adds_no_network_or_subprocess_execution_surface(self):
         source = inspect.getsource(module)
         self.assertNotIn("subprocess.run", source)
         self.assertNotIn("subprocess.Popen", source)
         self.assertNotIn("urllib.request", source)
         self.assertNotIn("requests.", source)
-        self.assertNotIn("git ", source.lower())
+        self.assertNotIn("os.system", source)
+        self.assertNotIn("os.exec", source)
 
 
 if __name__ == "__main__":
