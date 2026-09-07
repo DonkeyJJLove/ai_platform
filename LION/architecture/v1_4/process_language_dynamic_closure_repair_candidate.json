@@ -14,13 +14,15 @@
   "repair_candidate": {
     "transition_decision_binding": "IMPLEMENTED_PENDING_EXACT_HEAD_CI",
     "action_required_consequentiality": "DERIVED_FROM_TRANSITION_CLASS_PENDING_EXACT_HEAD_CI",
+    "action_required_downstream_evidence": "EXACT_CANONICAL_ACTION_PDP_RUNTIME_OBSERVATION_RECONCILIATION_CHAIN_PENDING_EXACT_HEAD_CI",
+    "self_attested_downstream_refs": "DENIED_PENDING_EXACT_HEAD_CI",
     "currentness_basis": "EVIDENCE_BOUND_PENDING_EXACT_HEAD_CI",
     "retry_attempt_accounting": "IMPLEMENTED_PENDING_EXACT_HEAD_CI",
     "non_idempotent_replay": "ATTEMPT_BOUND_RECONCILE_FIRST_PENDING_EXACT_HEAD_CI",
     "directive_semantics": "TYPED_PROCESS_CONTROL_PENDING_EXACT_HEAD_CI",
     "outcome_vocabulary": "CANONICALIZED_PENDING_EXACT_HEAD_CI",
     "negative_corpus": "N01_N25_EXECUTABLE_PENDING_EXACT_HEAD_CI",
-    "reference_dynamic_coverage": "12_OF_12_LOCAL_SMOKE_PASS"
+    "reference_dynamic_coverage": "12_OF_12_BOUNDARY_AWARE_PENDING_EXACT_HEAD_CI"
   },
   "boundaries": {
     "authority_effect": "NONE",
