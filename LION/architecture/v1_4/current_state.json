@@ -1,83 +1,142 @@
 {
+  "schema": "lion.documentation.current-state.v1",
+  "architecture_epoch": "1.4",
+  "process_epoch": "R22H",
+  "repository": "DonkeyJJLove/ai_platform",
+  "baseline_branch": "master",
+  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+  "baseline_tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
+  "projection_scope": "DEFAULT_BRANCH_BASELINE_PLUS_EXPLICIT_R22H_CANDIDATE_EVIDENCE",
+  "projection_state": "EVIDENCE_BOUND_NONPROMOTING_RECONCILIATION",
+  "currentness_rule": "Default-branch truth is bound to the exact master HEAD/TREE above. Candidate evidence is explicitly labeled as a pre-documentation observation and never self-promotes to default truth, deployment, authority or effect.",
+  "currentness_basis": {
+    "generator_kind": "MANUAL_EVIDENCE_RECONCILIATION",
+    "generator_version": "R22H/1",
+    "candidate_source_observation_head": "84ef1e5fddbea3a327ff856965ba2b62da77a471",
+    "candidate_source_observation_tree": "96f0640250cad4fd6f7ba456aec0be67c6218f95",
+    "candidate_pr": 297,
+    "candidate_observation_semantics": "PRE_DOCUMENTATION_NONAUTHORITATIVE"
+  },
+  "source_and_effect_truth": {
+    "production_selector": "cyber_lion Python excluding cyber_lion/tests plus .github/workflows/*.yml and *.yaml",
+    "base_source_count": 256,
+    "candidate_source_count": 260,
+    "added_production_sources": [
+      ".github/workflows/lion-r22c-full-symbol-census.yml",
+      "cyber_lion/architecture_projection/full_symbol_census.py",
+      "cyber_lion/contracts/action_runtime_binding.py",
+      "cyber_lion/contracts/model_plane_adapter.py"
+    ],
+    "removed_production_sources": [],
+    "surface_count": 236,
+    "raw_unclassified_count": 6,
+    "reconciled_unclassified_count": 0,
+    "scan_digest": "a45c1fc2be1846d4db49dc3c348f59e576f062358741b6c68da3836adb923d14",
+    "raw_inventory_digest": "3250314de465e0a3afab21632c188cea9a326b73e7fdd875be588bb83f83803f",
+    "reconciled_inventory_digest": "aa4f8fec84103aa6ec17932557499226ee29fd776a95e8af1b15f71ffb8d217b",
+    "taxonomy_reconciliation_digest": "f633c227c7088dbff5ee9a4699bbdfe4390b1e100581271bdadb9871e4403c7a",
+    "classification": "SOURCE_SET_IDENTITY_DRIFT_WITH_STABLE_EFFECT_SURFACE"
+  },
   "action_plane": {
-    "active_frontier": "General reusable canonical PDP ALLOW result -> exact RequestedRuntimeEffect + RuntimeIdentityBinding + CanonicalPDPDecisionEvidence materialization/binding before existing RuntimeAdmissionEngine.admit(...).",
-    "bounded_live_evidence": "F009 live_runtime_evidence_plane constructs exact runtime objects and demonstrates a bounded create-only file effect with separate observation/reconciliation.",
     "integrated": [
       "ActionIntent/ActionSpec/CanonicalActionIR",
       "static projection",
       "ExplicitActionProposalContext",
       "ActionProposal",
       "canonical PDP handoff",
+      "inert reusable Action runtime binder",
       "RuntimeAdmissionEngine",
       "RuntimeExecutionEngine",
       "effect-time currentness",
       "RuntimeReconciler"
     ],
-    "non_claim": "The bounded F009 proof is not a general materializer and does not expand authority."
+    "runtime_binder": {
+      "path": "cyber_lion/contracts/action_runtime_binding.py",
+      "status": "CANDIDATE_IMPLEMENTED_AND_TESTED",
+      "outputs": ["RequestedRuntimeEffect","RuntimeIdentityBinding","CanonicalPDPDecisionEvidence"],
+      "requires": ["exact ActionProposal/context","canonical PDP ALLOW","trusted currentness","exact ProvisionedExecutor"],
+      "runtime_effect": "NONE",
+      "authority_effect": "NONE"
+    },
+    "bounded_live_evidence": "F009 remains bounded create-only runtime evidence and is not reinterpreted as general authority.",
+    "active_frontier": "Integrate/consume the inert binder only through the existing governed RuntimeAdmissionEngine/currentness/effect chain under separate authority. No runtime deployment is authorized by R22H."
   },
-  "architecture_epoch": "1.4",
-  "baseline_branch": "master",
-  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
-  "baseline_tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
-  "currentness_basis": {
-    "generator_kind": "MANUAL_EVIDENCE_RECONCILIATION",
-    "generator_version": "R22C/1",
-    "source_set_digest": "78e19ae81158880824ec9217d852a37910f93cab6e7a0eebdcb4d1f8c887030d",
-    "source_set_digest_domain": "LION/TRUTH-SUBJECT/1"
+  "model_plane": {
+    "contract_path": "cyber_lion/contracts/model_plane_adapter.py",
+    "compatibility_target": "ASTRA",
+    "contract_status": "CANDIDATE_INTEGRATED_PROVIDER_INDEPENDENT",
+    "astra_runtime": "NOT_OBSERVED",
+    "local_model_runtime": "NOT_OBSERVED",
+    "runtime_effect": "NONE",
+    "authority_effect": "NONE",
+    "non_claim": "Compatibility is not deployment, provider selection, endpoint configuration, secret materialization or runtime authority."
   },
-  "currentness_rule": "This projection describes the exact default-branch baseline and source-set digest recorded here. Any HEAD, TREE or source-set drift makes it STALE; candidate-branch changes do not self-promote it to current default truth.",
   "factory": {
-    "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS in its bounded scope.",
-    "integrated": [
-      "BeanSpec",
-      "BeanInstance/BeanCandidate family",
-      "CapabilityNeed",
-      "CompositionContract/CompositionEngine",
-      "Mosaic",
-      "BeanBuilderChainBinding"
-    ],
-    "not_proven": [
-      "general Factory generativity",
-      "activated child autonomy",
-      "Factory-of-Factories"
-    ]
+    "integrated": ["BeanSpec","BeanInstance/BeanCandidate family","CapabilityNeed","CompositionContract/CompositionEngine","Mosaic","BeanBuilderChainBinding"],
+    "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS inside its closed grammar.",
+    "general_generativity": "FALSIFIED_OUTSIDE_B0_GRAMMAR",
+    "general_generativity_evidence": "R22F float-list out-of-grammar family is rejected with GenerativityProtocolError.",
+    "child_autonomy": "NOT_PROVEN",
+    "factory_of_factories": "NOT_PROVEN",
+    "human_authority_boundary": "REAL_CHILD_ACTIVATION"
+  },
+  "full_symbol_census": {
+    "candidate_source_observation_head": "84ef1e5fddbea3a327ff856965ba2b62da77a471",
+    "committed_python_files": 501,
+    "parsed_python_files": 501,
+    "parse_failures": 0,
+    "symbols": 8586,
+    "public": 4554,
+    "private_material": 4032,
+    "classes": 812,
+    "functions": 2772,
+    "methods": 4877,
+    "protocols": 171,
+    "enums": 27,
+    "exceptions": 150,
+    "docstring_covered": 1640,
+    "docstring_eligible": 8324,
+    "docstring_coverage_percent": 19.701,
+    "census_digest": "5cf15297a5f9f18377671a9fda5d97810a05d8c6ec33e07b62856f76c9a355c2",
+    "final_exact_head_recheck_required_after_carriers": true
+  },
+  "federation": {
+    "member_count": 10,
+    "live_vector": "LION/architecture/v1_4/federation_current_vector.json",
+    "material_drift_members": ["DonkeyJJLove/ai_platform","DonkeyJJLove/writeups"],
+    "manifest_absence": ["DonkeyJJLove/writeups"],
+    "open_pr_counts_nonzero": {"DonkeyJJLove/ai_platform":4,"DonkeyJJLove/swarm":1},
+    "authority_effect": "NONE"
   },
   "global_complete_mediation": "UNKNOWN",
   "historical_currentness_defect": {
     "path": "LION/status.json",
-    "policy": "Do not treat as live v1.4 current-state evidence. Preserve it as legacy history until consumer analysis proves a formal migration or explicit supersession is safe.",
-    "state": "STALE_SELF_DECLARED_CURRENT"
+    "state": "STALE_SELF_DECLARED_CURRENT",
+    "policy": "Do not treat as live v1.4 current-state evidence. Preserve as legacy history until consumer analysis proves formal migration or explicit supersession safe."
   },
   "hosts": {
-    "docker_active": [
-      "LION-AUTH-LAB"
-    ],
-    "github_runner_observed": [
-      "LION-AUTH-LAB"
-    ],
+    "docker_active": ["LION-AUTH-LAB"],
+    "github_runner_observed": ["LION-AUTH-LAB"],
     "lion_authority_signer_principal": "NOT_OBSERVED",
     "local_model_runtime": "NOT_OBSERVED",
-    "logical_hosts": [
-      "LION-AUTH-LAB",
-      "MOON",
-      "LAB-UBUNTU",
-      "LAB-DEBIAN"
-    ],
+    "logical_hosts": ["LION-AUTH-LAB","MOON","LAB-UBUNTU","LAB-DEBIAN"],
     "observed_kernel": "6.6.87.2-microsoft-standard-WSL2",
     "physical_failure_domain_independence": "NOT_PROVEN"
   },
-  "preproduction": "NO",
-  "process_epoch": "R22C",
   "production_claim": "NONE",
-  "projection_scope": "DEFAULT_BRANCH_STATE_AT_R22C_BASELINE",
-  "projection_state": "EVIDENCE_BOUND_POST_MERGE_BASELINE",
+  "preproduction": "NO",
   "rag": {
-    "logical_records_read": 131,
-    "logical_records_total": 131,
     "profile": "LION-RAG32/1",
-    "release_read": "lion-rag32-v1.4-r2-documentation-candidate",
-    "validation_errors": 0
+    "target_candidate": "lion-rag32-v1.4-r2-r22e-source-truth-reconciliation-candidate",
+    "publication": "NO"
   },
-  "repository": "DonkeyJJLove/ai_platform",
-  "schema": "lion.documentation.current-state.v1"
+  "human_authority_boundaries": [
+    "R22E-HAB-BRANCH-MAINTENANCE-001",
+    "REAL_CHILD_ACTIVATION",
+    "MARK_READY",
+    "MERGE",
+    "RAG_PUBLICATION",
+    "RUNTIME_DEPLOYMENT",
+    "PRODUCTION_DEPLOYMENT"
+  ]
 }
