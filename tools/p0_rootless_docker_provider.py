@@ -308,6 +308,36 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
             raise Deny("capsule JSON invalid") from exc
         if _canonical(obj) + b"\n" != capsule:
             raise Deny("capsule bytes are not canonical")
+        if not isinstance(obj, dict):
+            raise Deny("capsule must be object")
+        _require_exact_keys(
+            obj,
+            {
+                "schema_version", "mission_id", "fleet_id", "drone_id", "role",
+                "generation", "work_unit_id", "issued_at", "expires_at", "operation",
+                "input_payload", "input_digest", "policy_digest", "capsule_digest",
+            },
+            "capsule",
+        )
+        if obj.get("schema_version") != SCHEMA:
+            raise Deny("capsule schema mismatch")
+        _sha(obj.get("input_digest"), SHA256, "capsule.input_digest")
+        _sha(obj.get("policy_digest"), SHA256, "capsule.policy_digest")
+        supplied_capsule_digest = _sha(obj.get("capsule_digest"), SHA256, "capsule.capsule_digest")
+        if not isinstance(obj.get("input_payload"), dict):
+            raise Deny("capsule input_payload invalid")
+        calculated_input_digest = hashlib.sha256(
+            b"LION/MISSION-INPUT/P0\0" + _canonical(obj["input_payload"])
+        ).hexdigest()
+        if calculated_input_digest != obj["input_digest"]:
+            raise Deny("capsule input digest mismatch")
+        unsigned_capsule = dict(obj)
+        unsigned_capsule.pop("capsule_digest")
+        calculated_capsule_digest = hashlib.sha256(
+            b"LION/MISSION-CAPSULE/P0\0" + _canonical(unsigned_capsule)
+        ).hexdigest()
+        if calculated_capsule_digest != supplied_capsule_digest:
+            raise Deny("capsule digest mismatch")
         for key, expected in (
             ("mission_id", req["mission_id"]),
             ("fleet_id", req["fleet_id"]),
