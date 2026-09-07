@@ -36,6 +36,12 @@ def reference_process(name: str) -> CanonicalProcessIR:
     evidence = ["evidence:baseline"] if action else ["evidence:input"]
     currentness = ["currentness:exact"] if action else ["currentness:observed"]
     authority = ["authority-context:required"] if action else []
+    outcome_map = {"PASS": "DONE", "FAIL": "STOP", "UNKNOWN": "HANDOFF", "DRIFT": "HANDOFF"}
+    if action:
+        # The positive reference corpus proves the Process->Action boundary but does
+        # not fabricate downstream runtime evidence.  Full ACTION_REQUIRED+PASS is
+        # covered separately with the existing canonical Action/runtime chain.
+        outcome_map["AUTHORITY_BOUNDARY"] = "HANDOFF"
     model = {
         "schema_version": "1.0.0",
         "process_id": "reference:" + name,
@@ -57,7 +63,7 @@ def reference_process(name: str) -> CanonicalProcessIR:
             "authority_requirements": authority,
             "operator": operator,
             "expected_postconditions": ["scenario-bounded"],
-            "outcome_map": {"PASS": "DONE", "FAIL": "STOP", "UNKNOWN": "HANDOFF", "DRIFT": "HANDOFF"},
+            "outcome_map": outcome_map,
             "retry_policy": {"max_attempts": 0, "on_exhausted": "HANDOFF"},
             "replay_policy": "DENY",
             "idempotency_class": "PURE" if not action else "IDEMPOTENT",
