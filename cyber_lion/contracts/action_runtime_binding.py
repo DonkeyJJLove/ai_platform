@@ -32,6 +32,17 @@ def _aware(value: datetime, name: str) -> datetime:
     return value.astimezone(timezone.utc)
 
 
+def _digest(value: str, name: str) -> str:
+    if (
+        type(value) is not str
+        or len(value) != 64
+        or value != value.lower()
+        or any(ch not in "0123456789abcdef" for ch in value)
+    ):
+        raise ActionRuntimeBindingError(f"{name} must be exact lowercase sha256")
+    return value
+
+
 def _pdp_receipt_digest(result: PDPResult) -> str:
     result.receipt.validate()
     return sha256(
@@ -41,9 +52,10 @@ def _pdp_receipt_digest(result: PDPResult) -> str:
 
 @dataclass(frozen=True)
 class RuntimeBindingCurrentness:
-    """Trusted time/source envelope used only to seal PDP evidence for admission."""
+    """Trusted time/source envelope used only to seal exact admission inputs."""
 
     pdp_source_trust: PDPSourceTrustBinding
+    provisioned_executor_digest: str
     trusted_now: datetime
     issued_at: datetime
     expires_at: datetime
@@ -52,6 +64,7 @@ class RuntimeBindingCurrentness:
         if type(self.pdp_source_trust) is not PDPSourceTrustBinding:
             raise ActionRuntimeBindingError("exact PDPSourceTrustBinding required")
         self.pdp_source_trust.validate()
+        _digest(self.provisioned_executor_digest, "provisioned_executor_digest")
         now = _aware(self.trusted_now, "trusted_now")
         issued = _aware(self.issued_at, "issued_at")
         expires = _aware(self.expires_at, "expires_at")
@@ -123,6 +136,8 @@ def bind_allowed_action_to_runtime_inputs(
     _validate_proposal_context(proposal, context)
     currentness.validate()
     trusted_provisioning.validate()
+    if trusted_provisioning.digest() != currentness.provisioned_executor_digest:
+        raise ActionRuntimeBindingError("trusted ProvisionedExecutor/currentness substitution denied")
     pdp_result.requested.validate()
     pdp_result.applied.validate()
     pdp_result.receipt.validate()
