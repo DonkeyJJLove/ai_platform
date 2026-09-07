@@ -1,40 +1,28 @@
-# LION — operacyjna warstwa wiedzy
+# LION — project documentation entry point
 
-`/LION/` jest kanoniczną powierzchnią nawigacji i koordynacji dla ewolucyjnej architektury oraz operacji rojowych. **Nie jest źródłem authority wykonawczego.**
+LION is an evidence-bound, authority-separated architecture for governing AI-assisted evolution from observation and proposals through authorization, runtime admission, bounded effects, independent observation and reconciliation. Documentation, code presence and CI success do not themselves confer authority or prove deployment.
 
-Każdy wątek/dron rozpoczyna tutaj, a przed działaniem wykonuje aktualne obserwacje stanu.
+## Current v1.4 documentation
 
-## Orientacja
+For the current architecture documentation candidate, start at [`architecture/v1_4/README.md`](architecture/v1_4/README.md). Its current-state projection is bound to exact Git identities and becomes stale on baseline drift. The source-derived architecture model remains owned by `cyber_lion/architecture_projection/full_architecture.py`; the v1.4 catalogs are projections and indexes, not a second executable truth source.
 
-1. Przeczytaj `catalog.json` i protokoły.
-2. Przeczytaj mapy targetu, implementacji i ewolucji.
-3. Przeczytaj rejestry misji, dronów, kanałów i zależności.
-4. Ponownie zaobserwuj bieżący stan GitHub oraz autorytatywne rejestry wskazane w katalogu.
-5. Oznacz projekcje nieaktualne lub skonfliktowane przed ich użyciem.
-6. Rozwiąż kanał roboczy przez `ops/channel-registry.json`.
-7. Kontynuuj wyłącznie w granicach authority przyznanego osobnym mechanizmem.
+`status.json` is retained as an E003-era historical projection. Its self-declared `CURRENT` label is not valid evidence for the R20/R19P live repository state; do not use it as the v1.4 currentness source.
 
-## Pierwszeństwo źródeł prawdy
+## Architecture boundaries
 
-Dla dynamicznego stanu repozytorium aktualne obserwacje GitHub mają pierwszeństwo przed zapisanymi projekcjami `/LION/`. Tożsamość i lifecycle agenta pochodzą z Agent Registry. Własność branchy względem misji pochodzi z Branch Ownership Registry. Architektura normatywna pochodzi z dokumentów architektonicznych wskazanych przez katalog. Historia czatu jest wyłącznie kontekstem i nigdy nie stanowi stanu kanonicznego.
+The live Action plane includes Action IR/proposal, canonical PDP handoff, runtime admission, runtime execution, effect-time currentness and runtime reconciliation. F009 demonstrates a bounded end-to-end live evidence path. The remaining general frontier is a reusable canonical materializer/binder from PDP ALLOW + exact proposal/current authority/provisioning to the runtime effect, identity and PDP-evidence objects consumed by the existing admission engine.
 
-## Model operacyjny
+Bean, capability-need, composition, Mosaic and builder-chain primitives are implemented, with bounded B0 candidate evidence. This is not proof of general Factory generativity, activated recursive child autonomy or Factory-of-Factories.
 
-`TARGET -> OBSERVE -> GAP -> MISSION -> DRONE/SWARM -> BUILD -> VERIFY -> INTEGRATE -> OBSERVE -> RECONCILE -> UPDATE PROJECTIONS -> NEXT GAP`
+## Navigation and lineage
 
-Kanały nie są jednolitym transportem. Ich aktualny sposób dostarczenia jest zarejestrowany w `ops/channel-registry.json`.
+- `architecture/v1_4/current_state.json` — exact-baseline current-state projection.
+- `architecture/v1_4/federation_current_vector.json` — exact live federation identities.
+- `architecture/v1_4/material_object_catalog.json` — architecture-material object census; exhaustive all-symbol census is explicitly unproven.
+- `architecture/v1_4/capability_catalog.json` and `contract_catalog.json` — capability/contract state.
+- `architecture/v1_4/event_state_catalog.json` — canonical flows/state semantics.
+- `architecture/v1_4/semantic_owners.json` — semantic-owner routing.
+- `architecture/v1_4/documentation_gap_register.json` — stale, contradictory and intentionally unresolved formal gaps.
+- `architecture/v1_4/history_and_supersession.md` — v1.3/v14c2/R20 lineage and falsification boundaries.
 
-Dla `group:architecture`, `group:security` i `group:runtime` kanoniczny transport maszynowy został zastąpiony governowanym `lion-group-channel.yml`. Wiadomość jest canonical evidence-only envelope związanym z dokładnym `master`; dispatch przechodzi przez Issue #144 jako control-plane ledger, a dostarczenie jest uznawane dopiero po niezależnej obserwacji dokładnego workflow runu i zweryfikowaniu artefaktu `lion-group-channel-receipt.json`.
-
-Trzy kanały grupowe mają zweryfikowany zestaw replacement evidence:
-- architecture — `issue:144#5400846744`, run `32728703476`, artifact `9520519173`;
-- security — `issue:144#5400863876`, run `32764016518`, artifact `9533745245`;
-- runtime — `issue:144#5401202742`, run `32773694624`, artifact `9537129173`.
-
-Każdy z tych receiptów ma `state=EMITTED_EVIDENCE_ONLY`, `authority_effect=false`, `repository_effect=false` i `observation_result=OBSERVED_VERIFIED`. Historyczne Issues #103, #104 i #105 pozostają powierzchniami historycznymi/koordynacyjnymi do czasu osobnej, obserwowalnej decyzji o ich zamknięciu; same nie są authority.
-
-## Bezpieczeństwo
-
-Sama obecność wpisu w rejestrze, katalogu, Issue, workflow runie ani receipt nie przyznaje credentials, dostępu do runtime, authority do merge, release ani deploymentu. Stan nieznany, nieaktualny, niejednoznaczny lub skonfliktowany musi zostać ponownie zaobserwowany albo doprowadzić do fail-closed przed wykonaniem działania powodującego skutki.
-
-Dla kanałów grupowych obowiązuje dodatkowo: exact-head binding, replay denial, terminal workflow success, unikalny artefakt, SHA-256 archive verification, canonical receipt binding i niezależny observation receipt. `UNKNOWN` lub ambiguity => `DENY`.
+Historical documentation remains historical evidence and must not be rewritten to resemble current state.

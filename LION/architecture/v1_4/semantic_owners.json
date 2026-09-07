@@ -1,0 +1,30 @@
+{
+  "schema": "lion.documentation.semantic-owner-map.v1",
+  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "process_epoch": "R20Q",
+  "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
+  "owners": [
+    {"concept":"project_identity","primary":"README.md","secondary":["LION/README.md","cyber_lion/README.md"]},
+    {"concept":"architecture","primary":"cyber_lion/architecture_projection/full_architecture.py","secondary":["LION/architecture/v1_4/README.md","cyber_lion/TARGET_ARCHITECTURE.md"]},
+    {"concept":"federation","primary":"LION/architecture/v1_4/federation_current_vector.json","secondary":["cyber_lion/registry/repositories.json"]},
+    {"concept":"repository_roles","primary":"cyber_lion/registry/repositories.json","secondary":["cyber_lion/REPOSITORY_INVENTORY.md","peer cyber-lion.repository.json manifests"]},
+    {"concept":"capabilities","primary":"cyber_lion/CAPABILITY_MAP.md","secondary":["LION/architecture/v1_4/capability_catalog.json"]},
+    {"concept":"contracts","primary":"cyber_lion/CONTRACT_MAP.md","secondary":["LION/architecture/v1_4/contract_catalog.json"]},
+    {"concept":"BeanFactory","primary":"cyber_lion/TARGET_ARCHITECTURE.md#bean-factory","secondary":["cyber_lion/contracts/bean.py","cyber_lion/contracts/capability_need.py","cyber_lion/contracts/bean_composition.py","cyber_lion/enterprise/bean_composition.py","cyber_lion/contracts/mosaic.py"]},
+    {"concept":"autonomy","primary":"cyber_lion/enterprise/GENERATION_EVOLUTION_PROTOCOL.md","secondary":["cyber_lion/TARGET_ARCHITECTURE.md","LION/architecture/v1_4/current_state.json"]},
+    {"concept":"action_model","primary":"cyber_lion/contracts/action_ir.py","secondary":["docs/architecture/action-ir/R19P_ACTIONPROPOSAL_CANONICAL_PDP_HANDOFF.md","LION/architecture/v1_4/current_state.json"]},
+    {"concept":"authority","primary":"cyber_lion/enterprise/authority_source.py","secondary":["cyber_lion/enterprise/authority_grant.py","cyber_lion/enterprise/live_authority_admission.py","cyber_lion/enterprise/README.md"]},
+    {"concept":"runtime","primary":"cyber_lion/enterprise/runtime_enforcement.py","secondary":["cyber_lion/enterprise/runtime_execution.py","cyber_lion/enterprise/live_runtime_evidence_plane.py"]},
+    {"concept":"effects","primary":"cyber_lion/enterprise/effect_provider.py","secondary":["cyber_lion/contracts/effect.py","cyber_lion/enterprise/runtime_currentness.py"]},
+    {"concept":"reconciliation","primary":"cyber_lion/enterprise/runtime_reconciliation.py","secondary":["cyber_lion/contracts/runtime_reconciliation.py","cyber_lion/enterprise/fleet_reconciliation.py"]},
+    {"concept":"hosts","primary":"docs/HOSTS_AND_LABS.md","secondary":["cyber_lion/enterprise/host_authority_separation.py"]},
+    {"concept":"failure_domains","primary":"docs/HOSTS_AND_LABS.md","secondary":["cyber_lion/enterprise/host_authority_separation.py","LION/architecture/v1_4/current_state.json"]},
+    {"concept":"models","primary":"LION/architecture/v1_4/current_state.json","secondary":["cyber_lion/enterprise/models.py","cyber_lion/TARGET_ARCHITECTURE.md"]},
+    {"concept":"cyber_physical","primary":"cyber_lion/TARGET_ARCHITECTURE.md","secondary":["LION/architecture/v1_4/current_state.json"]},
+    {"concept":"currentness","primary":"LION/architecture/v1_4/current_state.json","secondary":["cyber_lion/enterprise/runtime_currentness.py","LION/status.json"]},
+    {"concept":"roadmap","primary":"AI_NATIVE_ROADMAP.md","secondary":["LION/architecture/v1_4/README.md"]},
+    {"concept":"history","primary":"LION/architecture/v1_4/history_and_supersession.md","secondary":["LION/status.json","cyber_lion/REPOSITORY_INVENTORY.md"]},
+    {"concept":"RAG","primary":"LION-RAG32 package carriers","secondary":["LION/architecture/v1_4/history_and_supersession.md"]}
+  ],
+  "historical_note": {"concept":"LION/status.json","lifecycle":"HISTORICAL_STALE_CURRENTNESS_CLAIM","policy":"It is not the v1.4 currentness owner."}
+}

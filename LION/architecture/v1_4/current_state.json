@@ -1,0 +1,76 @@
+{
+  "action_plane": {
+    "active_frontier": "General reusable canonical PDP ALLOW result -> exact RequestedRuntimeEffect + RuntimeIdentityBinding + CanonicalPDPDecisionEvidence materialization/binding before existing RuntimeAdmissionEngine.admit(...).",
+    "bounded_live_evidence": "F009 live_runtime_evidence_plane constructs exact runtime objects and demonstrates a bounded create-only file effect with separate observation/reconciliation.",
+    "integrated": [
+      "ActionIntent/ActionSpec/CanonicalActionIR",
+      "static projection",
+      "ExplicitActionProposalContext",
+      "ActionProposal",
+      "canonical PDP handoff",
+      "RuntimeAdmissionEngine",
+      "RuntimeExecutionEngine",
+      "effect-time currentness",
+      "RuntimeReconciler"
+    ],
+    "non_claim": "The bounded F009 proof is not a general materializer and does not expand authority."
+  },
+  "architecture_epoch": "1.4",
+  "baseline_branch": "master",
+  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "baseline_tree": "9725bebf8d9766c58096cfc34af06ffcb8aa32f1",
+  "currentness_rule": "This candidate is current only for the exact Git identities recorded here; baseline drift makes it STALE.",
+  "factory": {
+    "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS in its bounded scope.",
+    "integrated": [
+      "BeanSpec",
+      "BeanInstance/BeanCandidate family",
+      "CapabilityNeed",
+      "CompositionContract/CompositionEngine",
+      "Mosaic",
+      "BeanBuilderChainBinding"
+    ],
+    "not_proven": [
+      "general Factory generativity",
+      "activated child autonomy",
+      "Factory-of-Factories"
+    ]
+  },
+  "global_complete_mediation": "UNKNOWN",
+  "historical_currentness_defect": {
+    "path": "LION/status.json",
+    "policy": "Do not treat as live current-state evidence; use this exact-baseline projection. R20 does not mutate the executable/consumer-sensitive legacy status contract without a separate safety proof.",
+    "state": "STALE_SELF_DECLARED_CURRENT"
+  },
+  "hosts": {
+    "docker_active": [
+      "LION-AUTH-LAB"
+    ],
+    "github_runner_observed": [
+      "LION-AUTH-LAB"
+    ],
+    "lion_authority_signer_principal": "NOT_OBSERVED",
+    "local_model_runtime": "NOT_OBSERVED",
+    "logical_hosts": [
+      "LION-AUTH-LAB",
+      "MOON",
+      "LAB-UBUNTU",
+      "LAB-DEBIAN"
+    ],
+    "observed_kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "physical_failure_domain_independence": "NOT_PROVEN"
+  },
+  "preproduction": "NO",
+  "process_epoch": "R20",
+  "production_claim": "NONE",
+  "projection_state": "EVIDENCE_BOUND_CANDIDATE",
+  "rag": {
+    "logical_records_read": 123,
+    "logical_records_total": 123,
+    "profile": "LION-RAG32/1",
+    "release_read": "lion-rag32-v1.4-r1",
+    "validation_errors": 0
+  },
+  "repository": "DonkeyJJLove/ai_platform",
+  "schema": "lion.documentation.current-state.v1"
+}
