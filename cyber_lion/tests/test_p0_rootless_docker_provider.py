@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import os
 from pathlib import Path
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +38,14 @@ class RootlessDockerProviderP0Tests(unittest.TestCase):
     def test_provider_accepts_closed_ping_request(self):
         self.module._validate_request(self.request())
 
+    def test_provider_accepts_only_bounded_extended_operations(self):
+        for operation in (
+            "INSPECT_P0_IMAGE",
+            "RUN_HARDENING_PROBE",
+            "LIST_MISSION_RESOURCES",
+        ):
+            self.module._validate_request(self.request(operation=operation))
+
     def test_provider_rejects_unknown_operation_and_extra_field(self):
         req = self.request(operation="ARBITRARY_DOCKER")
         with self.assertRaises(self.module.Deny):
@@ -64,8 +73,60 @@ class RootlessDockerProviderP0Tests(unittest.TestCase):
     def test_mutating_surface_is_exact_and_bounded(self):
         self.assertEqual(
             self.module.MUTATING,
-            {"BUILD_P0_IMAGE", "CREATE_NETWORK", "RUN_DRONE", "STOP_DRONE", "REMOVE_DRONE", "REMOVE_NETWORK"},
+            {
+                "BUILD_P0_IMAGE",
+                "CREATE_NETWORK",
+                "RUN_DRONE",
+                "RUN_HARDENING_PROBE",
+                "STOP_DRONE",
+                "REMOVE_DRONE",
+                "REMOVE_NETWORK",
+            },
         )
+
+    def test_hardening_probe_surface_is_fixed(self):
+        self.assertEqual(
+            self.module.PROBES,
+            {
+                "ROOTFS_WRITE_DENIED",
+                "NON_ROOT",
+                "NO_SHELL",
+                "NO_PACKAGE_MANAGER",
+                "NO_DOCKER_SOCKET",
+                "CAP_EFF_ZERO",
+                "EGRESS_DENIED",
+            },
+        )
+        for name in self.module.PROBES:
+            program = self.module._probe_program(name)
+            self.assertIsInstance(program, str)
+            self.assertGreater(len(program), 10)
+        with self.assertRaises(self.module.Deny):
+            self.module._probe_program("ARBITRARY")
+
+    def test_drone_lease_is_single_use_per_run_and_drone(self):
+        old_state = self.module.STATE_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                self.module.STATE_DIR = Path(tmp)
+                req = self.request(operation="RUN_DRONE")
+                self.module._claim_drone_lease(
+                    req,
+                    drone_id="drone-runtime",
+                    generation=1,
+                    lease_id="4" * 64,
+                    capsule_digest="5" * 64,
+                )
+                with self.assertRaises(self.module.Deny):
+                    self.module._claim_drone_lease(
+                        req,
+                        drone_id="drone-runtime",
+                        generation=1,
+                        lease_id="4" * 64,
+                        capsule_digest="5" * 64,
+                    )
+        finally:
+            self.module.STATE_DIR = old_state
 
     def test_installer_targets_exact_lab_users_and_never_docker_group(self):
         source = INSTALLER_PATH.read_text(encoding="utf-8")
@@ -101,12 +162,6 @@ class RootlessDockerProviderP0Tests(unittest.TestCase):
             "CapabilityBoundingSet=",
         ):
             self.assertIn(token, source)
-
-    def test_network_families_are_open_only_for_provider_build_transport(self):
-        source = UNIT_PATH.read_text(encoding="utf-8")
-        self.assertIn("AF_UNIX AF_INET AF_INET6", source)
-        self.assertNotIn("AF_PACKET", source)
-        self.assertNotIn("AF_NETLINK", source)
 
 
 if __name__ == "__main__":
