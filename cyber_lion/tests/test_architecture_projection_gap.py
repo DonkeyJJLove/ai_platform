@@ -42,8 +42,16 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
         self.assertEqual(action.status, "PARTIALLY_IMPLEMENTED")
         self.assertEqual(action.evidence_class, "LIVE_CODE")
         self.assertEqual(action.evidence_ref, "cyber_lion/contracts/action_proposal_pdp_handoff.py")
-        self.assertEqual(action.missing_runtime, "canonical PDP result-to-RequestedRuntimeEffect/runtime identity binding and RuntimeAdmissionEngine admission")
-        self.assertEqual(action.next_minimal_gap, "bind canonical PDP ALLOW result to exact RequestedRuntimeEffect and runtime identity before RuntimeAdmissionEngine")
+        self.assertEqual(
+            action.missing_runtime,
+            "general reusable canonical PDP ALLOW-to-runtime object materializer/binder for RequestedRuntimeEffect, RuntimeIdentityBinding and CanonicalPDPDecisionEvidence",
+        )
+        self.assertEqual(
+            action.next_minimal_gap,
+            "materialize and bind exact runtime effect, identity and PDP evidence before existing RuntimeAdmissionEngine.admit(...)",
+        )
+        self.assertNotIn("RuntimeAdmissionEngine admission", action.missing_runtime)
+        self.assertIn("existing RuntimeAdmissionEngine.admit", action.next_minimal_gap)
 
         lair = by_id["LAIR"]
         self.assertEqual(lair.status, "VERIFIED_REFERENCE")
