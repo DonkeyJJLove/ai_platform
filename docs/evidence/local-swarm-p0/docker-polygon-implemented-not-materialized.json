@@ -1,0 +1,167 @@
+{
+  "schema_version": "1.0.0",
+  "project": "LION_EVOLUSION",
+  "architecture_epoch": "1.4",
+  "experiment_epoch": "LOCAL_SWARM_P0",
+  "mission": "THE-BEAN-FACTORY-LION-EVOLUTION-LOCAL-SWARM-P0-DOCKER-POLYGON-AUTONOMOUS-MATERIALIZATION-v1",
+  "classification": "IMPLEMENTED_NOT_MATERIALIZED",
+  "trust_class": "TEST_ONLY",
+  "production_authority": "NONE",
+  "source": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "branch": "master",
+    "head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+    "tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
+    "currentness_reacquired_after_implementation": true,
+    "master_protected_observation": false
+  },
+  "candidate": {
+    "branch": "experiment/local-swarm-p0-docker-polygon",
+    "implementation_head_before_evidence": "080557e0ea9239320c82c29ef5238763bfeb3e06",
+    "pull_request": 299,
+    "merged": false
+  },
+  "host": {
+    "host_id": "host_f78ddce3275144e4",
+    "hostname": "LION-AUTH-LAB",
+    "runtime_class": "WSL2",
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "arch": "x86_64",
+    "physical_control_domain": "WINDOWS-MOON"
+  },
+  "docker_live_observation": {
+    "client_version": "26.1.5+dfsg1",
+    "system_daemon_service": "ACTIVE",
+    "system_socket": "/var/run/docker.sock",
+    "system_socket_owner": "root:docker",
+    "system_socket_mode": "0660",
+    "sentinelx_principal": "sentinelx",
+    "sentinelx_system_socket_access": "DENIED",
+    "github_runner_principal": "lion-maintenance-runner",
+    "github_runner_system_socket_access": "DENIED",
+    "rootless_principal": "lion-container-runtime-lab",
+    "rootless_socket": "/run/user/1000/docker.sock",
+    "rootless_runtime_classification": "SUPPORTED_ACTIVE",
+    "current_effect_principal_rootless_socket_access": "DENIED",
+    "docker_server_version_from_current_effect_principal": "UNKNOWN"
+  },
+  "blockers": [
+    {
+      "id": "NO_AUTHORIZED_DOCKER_EFFECT_PROVIDER",
+      "state": "BLOCKING_LIVE_MATERIALIZATION",
+      "detail": "Docker exists and a TEST_ONLY rootless runtime is active, but neither current SentinelX nor the self-hosted runner principal has an authority-preserving provider path to either Docker socket."
+    }
+  ],
+  "security_boundary_preserved": {
+    "docker_socket_chmod": false,
+    "docker_socket_chown": false,
+    "docker_group_membership_changed": false,
+    "sudoers_changed": false,
+    "sentinelx_policy_changed": false,
+    "docker_daemon_reconfigured": false,
+    "privileged_container_used": false,
+    "docker_socket_mounted_into_workload": false,
+    "host_network_reconfigured": false
+  },
+  "implementation": {
+    "plane": "TEST_ONLY_TOOLS",
+    "files": [
+      "tools/p0_docker_fleet_contract.py",
+      "tools/p0_docker_drone_runtime.py",
+      "tools/p0_docker_fleet_materializer.py",
+      "cyber_lion/tests/test_docker_fleet_polygon.py",
+      "deploy/docker/lion-drone-p0/Dockerfile",
+      "docs/architecture/local-swarm-p0-docker-polygon.md"
+    ],
+    "production_effect_surface_inventory_modified": false,
+    "placement_falsification": {
+      "initial_state": "FAILED_GLOBAL_CORE",
+      "cause": "TEST_ONLY Python sources were initially placed under cyber_lion and therefore entered canonical production source inventory",
+      "observed_source_count": 259,
+      "expected_source_count": 256,
+      "observed_scan_digest": "cd1a7ed008dd4f9e517dd2e17d9e46c42af437c864ddda725e47e5dc2e1409cd",
+      "expected_scan_digest": "3c1810087e8da8e9a5646de8aaef075361e4a0f35060a891336900d9df51dc48",
+      "resolution": "Moved P0 implementation to established tools/p0_* experiment plane without changing canonical production-path semantics or refreezing historical evidence"
+    }
+  },
+  "drone_profile": {
+    "language": "Python 3.11",
+    "platform": "linux/amd64",
+    "base_image_reference": "dhi.io/python@sha256:ee6f2172d994d5197755698750a815f842fe7f7df67cadfa0d32f47076a3523e",
+    "base_image_identity_type": "PINNED_INDEX_DIGEST",
+    "final_image_digest": "UNKNOWN_NOT_BUILT",
+    "final_image_size_bytes": "UNKNOWN_NOT_BUILT",
+    "uid_gid": "65532:65532",
+    "rootfs": "READ_ONLY_REQUIRED",
+    "capabilities": "DROP_ALL_REQUIRED",
+    "no_new_privileges": true,
+    "pids_limit": 64,
+    "memory_limit_bytes": 134217728,
+    "cpu_limit_millis": 200,
+    "tmpfs_limit_bytes": 16777216,
+    "runtime_shell": "ABSENT_BY_IMAGE_PROFILE_NOT_LIVE_OBSERVED",
+    "runtime_package_manager": "ABSENT_BY_IMAGE_PROFILE_NOT_LIVE_OBSERVED",
+    "persistent_state": false,
+    "internet_egress": "DENY_REQUIRED_NOT_LIVE_OBSERVED",
+    "docker_socket": "FORBIDDEN"
+  },
+  "fleet": {
+    "fleet_id": "lion-local-swarm-p0",
+    "planned_size": 5,
+    "roles": ["architecture", "security", "runtime", "provenance", "falsifier"],
+    "workload_class": "DETERMINISTIC_READ_ONLY_D0",
+    "local_model": false,
+    "saas_inference": false,
+    "live_containers_materialized": 0,
+    "distributed_live_work_executed": false
+  },
+  "validation": {
+    "targeted_wsl": {
+      "candidate_head": "75660e3c75257e898fed1cd157a27cf233caf480",
+      "compileall": "PASS",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0
+    },
+    "full_wsl_regression": {
+      "candidate_head": "75660e3c75257e898fed1cd157a27cf233caf480",
+      "tests": 2264,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5,
+      "status": "PASS"
+    },
+    "bandit_after_initial_fix": "PASS",
+    "live_docker_negative_tests": "NOT_EXECUTED_BLOCKED_BY_AUTHORITY_PROVIDER"
+  },
+  "observation_and_reconciliation": {
+    "static_observation_parser_test": "PASS",
+    "static_matched_reconciliation_test": "PASS",
+    "static_image_substitution_falsification": "PASS",
+    "live_docker_observation": "NOT_EXECUTED",
+    "live_reconciliation": "UNKNOWN_NOT_EXECUTED"
+  },
+  "cleanup": {
+    "docker_resources_created": false,
+    "docker_cleanup_required": false,
+    "temporary_static_validation_clones_removed": true,
+    "running_polygon_after_completion": false
+  },
+  "next_required_capability": {
+    "id": "ROOTLESS_DOCKER_EFFECT_PROVIDER_P0",
+    "target_chain": "FleetPlan -> authority/admission -> bounded rootless Docker provider -> /run/user/1000/docker.sock -> exact mission-owned effects -> independent observation -> reconciliation",
+    "must_not_grant_socket_to": ["drone", "generic SentinelX principal", "generic self-hosted runner workload"]
+  },
+  "non_claims": [
+    "FULL_SUCCESS",
+    "DOCKER_SWARM_P0_MATERIALIZED",
+    "PRODUCTION_READY",
+    "PRODUCTION_FLEET",
+    "PHYSICALLY_DISTRIBUTED",
+    "FAILURE_DOMAIN_INDEPENDENT",
+    "KUBERNETES_READY",
+    "LOCAL_MODEL_READY",
+    "AUTONOMOUS_PRODUCTION_AUTHORITY",
+    "COMPLETE_MEDIATION_GLOBALLY_PROVEN"
+  ]
+}
