@@ -200,7 +200,13 @@ with open(path, "w", encoding="utf-8") as handle:
     json.dump(req, handle, sort_keys=True, separators=(",", ":"))
 PY
 
-runuser -u "$RUNNER_USER" -- \
+chown root:"$PROVIDER_GROUP" "$PING_REQUEST"
+chmod 0640 "$PING_REQUEST"
+
+runuser \
+  -u "$RUNNER_USER" \
+  -g "$RUNNER_USER" \
+  -G "$PROVIDER_GROUP" -- \
   /usr/bin/python3 "$REPO_ROOT/tools/p0_rootless_docker_provider_client.py" \
   --request "$PING_REQUEST" \
   --socket /run/lion-docker-p0/provider.sock
