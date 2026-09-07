@@ -42,8 +42,8 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
         self.assertEqual(action.status, "PARTIALLY_IMPLEMENTED")
         self.assertEqual(action.evidence_class, "LIVE_CODE")
         self.assertEqual(action.evidence_ref, "cyber_lion/contracts/action_proposal_projection.py")
-        self.assertEqual(action.missing_runtime, "explicit context-bound ActionProposal binding and canonical PDP admission")
-        self.assertEqual(action.next_minimal_gap, "define explicit proposal-context binding after static effect projection")
+        self.assertEqual(action.missing_runtime, "explicit ActionProposal-to-canonical-PDP handoff and downstream authority/runtime binding")
+        self.assertEqual(action.next_minimal_gap, "bind context-complete ActionProposal to existing canonical PDP admission")
 
         lair = by_id["LAIR"]
         self.assertEqual(lair.status, "VERIFIED_REFERENCE")
