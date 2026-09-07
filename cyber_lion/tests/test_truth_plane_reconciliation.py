@@ -366,11 +366,27 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
         live_state = json.loads(live_state_text)
 
+        live_candidate_evidence = {}
+        for record in live_state["records"]:
+            if (
+                record.get("plane") == "CANDIDATE"
+                and record.get("status") == "CURRENT_MASTER_BASE_CANDIDATE"
+                and record.get("base_head") != head
+            ):
+                live_candidate_evidence[record["pr"]] = (
+                    self._candidate_currentness_evidence(
+                        record,
+                        current_head=head,
+                        current_tree=tree,
+                    )
+                )
+
         validated_live = validate_truth_projection(
             live_state,
             current_head=head,
             current_tree=tree,
             current_subject_digest=live_digest,
+            candidate_currentness_evidence=live_candidate_evidence,
         )
 
         self.assertEqual(
