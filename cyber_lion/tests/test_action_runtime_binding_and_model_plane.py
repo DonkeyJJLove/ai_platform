@@ -176,9 +176,11 @@ def provisioned() -> ProvisionedExecutor:
     ).validate_for(request, trust)
 
 
-def currentness() -> RuntimeBindingCurrentness:
+def currentness(pe: ProvisionedExecutor | None = None) -> RuntimeBindingCurrentness:
+    pe = pe or provisioned()
     return RuntimeBindingCurrentness(
         PDPSourceTrustBinding("pdp", "pdp:1", Z, "pdp-anchor", Z).validate(),
+        pe.digest(),
         NOW,
         NOW - timedelta(minutes=1),
         NOW + timedelta(minutes=10),
@@ -187,8 +189,9 @@ def currentness() -> RuntimeBindingCurrentness:
 
 class ActionRuntimeBindingTests(unittest.TestCase):
     def test_allow_materializes_only_exact_inert_runtime_inputs(self):
+        pe = provisioned()
         effect, identity, evidence = bind_allowed_action_to_runtime_inputs(
-            proposal(), explicit_context(), pdp_result(), currentness(), provisioned()
+            proposal(), explicit_context(), pdp_result(), currentness(pe), pe
         )
         effect.validate()
         identity.validate()
@@ -198,23 +201,35 @@ class ActionRuntimeBindingTests(unittest.TestCase):
         self.assertEqual(evidence.proposal_id, effect.proposal_id)
 
     def test_deny_cannot_be_materialized(self):
+        pe = provisioned()
         with self.assertRaises(ActionRuntimeBindingError):
             bind_allowed_action_to_runtime_inputs(
-                proposal(), explicit_context(), pdp_result(decision="DENY"), currentness(), provisioned()
+                proposal(), explicit_context(), pdp_result(decision="DENY"), currentness(pe), pe
             )
 
     def test_context_substitution_is_denied(self):
+        pe = provisioned()
         bad = replace(explicit_context(), target="workspace/other.txt")
         with self.assertRaises(ActionRuntimeBindingError):
             bind_allowed_action_to_runtime_inputs(
-                proposal(), bad, pdp_result(), currentness(), provisioned()
+                proposal(), bad, pdp_result(), currentness(pe), pe
             )
 
     def test_stale_currentness_is_denied(self):
-        stale = replace(currentness(), expires_at=NOW)
+        pe = provisioned()
+        stale = replace(currentness(pe), expires_at=NOW)
         with self.assertRaises(ActionRuntimeBindingError):
             bind_allowed_action_to_runtime_inputs(
-                proposal(), explicit_context(), pdp_result(), stale, provisioned()
+                proposal(), explicit_context(), pdp_result(), stale, pe
+            )
+
+    def test_provisioned_executor_substitution_is_denied(self):
+        trusted = provisioned()
+        substituted = replace(trusted, runtime_instance_id="runtime:other")
+        substituted.validate()
+        with self.assertRaises(ActionRuntimeBindingError):
+            bind_allowed_action_to_runtime_inputs(
+                proposal(), explicit_context(), pdp_result(), currentness(trusted), substituted
             )
 
     def test_binder_exposes_no_effect_surface(self):
