@@ -17,9 +17,15 @@
   },
   "architecture_epoch": "1.4",
   "baseline_branch": "master",
-  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
-  "baseline_tree": "9725bebf8d9766c58096cfc34af06ffcb8aa32f1",
-  "currentness_rule": "This candidate is current only for the exact Git identities recorded here; baseline drift makes it STALE.",
+  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+  "baseline_tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
+  "currentness_basis": {
+    "generator_kind": "MANUAL_EVIDENCE_RECONCILIATION",
+    "generator_version": "R22C/1",
+    "source_set_digest": "78e19ae81158880824ec9217d852a37910f93cab6e7a0eebdcb4d1f8c887030d",
+    "source_set_digest_domain": "LION/TRUTH-SUBJECT/1"
+  },
+  "currentness_rule": "This projection describes the exact default-branch baseline and source-set digest recorded here. Any HEAD, TREE or source-set drift makes it STALE; candidate-branch changes do not self-promote it to current default truth.",
   "factory": {
     "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS in its bounded scope.",
     "integrated": [
@@ -39,7 +45,7 @@
   "global_complete_mediation": "UNKNOWN",
   "historical_currentness_defect": {
     "path": "LION/status.json",
-    "policy": "Do not treat as live current-state evidence; use this exact-baseline projection. R20 does not mutate the executable/consumer-sensitive legacy status contract without a separate safety proof.",
+    "policy": "Do not treat as live v1.4 current-state evidence. Preserve it as legacy history until consumer analysis proves a formal migration or explicit supersession is safe.",
     "state": "STALE_SELF_DECLARED_CURRENT"
   },
   "hosts": {
@@ -61,14 +67,15 @@
     "physical_failure_domain_independence": "NOT_PROVEN"
   },
   "preproduction": "NO",
-  "process_epoch": "R20",
+  "process_epoch": "R22C",
   "production_claim": "NONE",
-  "projection_state": "EVIDENCE_BOUND_CANDIDATE",
+  "projection_scope": "DEFAULT_BRANCH_STATE_AT_R22C_BASELINE",
+  "projection_state": "EVIDENCE_BOUND_POST_MERGE_BASELINE",
   "rag": {
-    "logical_records_read": 123,
-    "logical_records_total": 123,
+    "logical_records_read": 131,
+    "logical_records_total": 131,
     "profile": "LION-RAG32/1",
-    "release_read": "lion-rag32-v1.4-r1",
+    "release_read": "lion-rag32-v1.4-r2-documentation-candidate",
     "validation_errors": 0
   },
   "repository": "DonkeyJJLove/ai_platform",
