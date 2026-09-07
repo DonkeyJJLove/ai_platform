@@ -97,10 +97,16 @@ class RootlessDockerProviderP0Tests(unittest.TestCase):
             "ProtectSystem=strict",
             "ProtectHome=tmpfs",
             "BindReadOnlyPaths=/run/user/1000/docker.sock",
-            "RestrictAddressFamilies=AF_UNIX",
+            "RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6",
             "CapabilityBoundingSet=",
         ):
             self.assertIn(token, source)
+
+    def test_network_families_are_open_only_for_provider_build_transport(self):
+        source = UNIT_PATH.read_text(encoding="utf-8")
+        self.assertIn("AF_UNIX AF_INET AF_INET6", source)
+        self.assertNotIn("AF_PACKET", source)
+        self.assertNotIn("AF_NETLINK", source)
 
 
 if __name__ == "__main__":
