@@ -1,5 +1,5 @@
 {
-  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
   "canonical_flows": {
     "FLOW-01": ["WORLD","OBSERVATION","EVIDENCE","HYPOTHESIS","EXPERIMENT","FALSIFICATION","PROMOTION","MEMORY","EVOLUTION_DELTA"],
     "FLOW-02": ["EVOLUTION_DELTA","GOVERNED_CHANGE_PROPOSAL","BUILD_AUTHORIZATION","BUILDER_ENTRY","BUILDER_INVOCATION","INVOCATION_CONSUMPTION","START_ADMISSION","PROCESS_LAUNCH","DETACHED_CANDIDATE"],
@@ -21,5 +21,12 @@
     "observed": "not reconciled closure",
     "quarantined": "effect authority DENY",
     "target_only": "no implementation claim"
+  },
+  "r22h_reconciliation": {
+    "canonical_flow_change": "NONE",
+    "action_runtime_binding": "The new inert Action runtime binder is a material contract boundary between canonical PDP ALLOW evidence and the already represented effect-admission path. flows.py did not change, so documentation does not invent a new canonical state token.",
+    "model_plane": "The ASTRA-compatible model-plane adapter is a non-effectful contract. ASTRA runtime remains NOT_OBSERVED, so no runtime event/state is promoted.",
+    "factory": "B0 bounded generativity evidence and the out-of-grammar general-generativity falsifier change evidence classification, not the canonical event-state vocabulary.",
+    "authority_effect": "NONE"
   }
 }
