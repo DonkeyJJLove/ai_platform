@@ -1,0 +1,97 @@
+{
+  "as_is": {
+    "contract": "cyber_lion/contracts/v1/action_proposal.schema.json",
+    "payload_digest_binding": true,
+    "requested_authority": [
+      "none",
+      "read",
+      "local_write",
+      "external_write",
+      "financial",
+      "deploy",
+      "privileged"
+    ],
+    "runtime_support_claim": "ONLY_EXISTING_LIVE_CONTRACTS",
+    "schema_id": "cyberlion://schemas/action-proposal/v1",
+    "target_type": "string"
+  },
+  "baseline": {
+    "sha": "cf95092b2fe4be0a254d5e278a339553a99aa34d",
+    "tree": "22e5b6ba07f190c23cf886fef94ab7508adba7a9"
+  },
+  "contradictions": [
+    {
+      "candidate_fact": "Canonical ActionSpec.authority_request uses domain/capability/grant_ref and defines no canonical mapping to financial.",
+      "id": "C0-FINANCIAL-AUTHORITY-VOCABULARY",
+      "live_fact": "ActionProposal.requested_authority contains financial.",
+      "resolution": "NO_SILENT_MAPPING",
+      "status": "PRESERVED"
+    },
+    {
+      "candidate_fact": "ActionSpec is integrated as a canonical schema contract only; no executor, transport, authority issuer, or runtime coercion is introduced.",
+      "id": "C0-V1_2-ACTIONSPEC-ABSENT",
+      "live_fact": "Baseline tree has ActionProposal and execution/PEP/receipt contracts but no canonical action_spec.schema.json or Action IR schema.",
+      "resolution": "EXPLICIT_CONTRACT_INTEGRATION_NO_RUNTIME_SUPERSESSION",
+      "status": "PRESERVED"
+    },
+    {
+      "candidate_fact": "Canonical ActionSpec.target is a structured host/environment/runtime object, but runtime interpretation remains unsupported by this schema integration.",
+      "id": "C0-TARGET-SHAPE",
+      "live_fact": "ActionProposal.target is a nonempty string.",
+      "resolution": "NO_IMPLICIT_RUNTIME_COERCION",
+      "status": "PRESERVED"
+    }
+  ],
+  "invariants": {
+    "no_attach": true,
+    "no_authority_minting": true,
+    "no_master_merge": true,
+    "no_process_execution": true,
+    "no_transport_implementation": true,
+    "target_only_does_not_imply_runtime_support": true
+  },
+  "roadmap_step": "C0-ACTION-IR",
+  "schema_version": "lion.action-spec-support/v1.0",
+  "target_only": {
+    "authority_effect": "NONE",
+    "fields": [
+      "kind",
+      "target",
+      "authority_request",
+      "boundary",
+      "preconditions",
+      "expected_effects",
+      "forbidden_effects",
+      "observation",
+      "reconciliation",
+      "executable",
+      "arguments",
+      "workspace",
+      "environment",
+      "io"
+    ],
+    "kind_vocabulary": [
+      "process.exec",
+      "filesystem.read",
+      "filesystem.write",
+      "repository.observe",
+      "repository.prepare_candidate",
+      "repository.attach_exact",
+      "test.execute",
+      "artifact.generate",
+      "robot.task"
+    ],
+    "runtime_support": "NONE_FROM_ACTIONSPEC_SCHEMA",
+    "transport_support": "NONE"
+  },
+  "canonical_schema": "cyber_lion/contracts/v1/action_spec.schema.json",
+  "contract": {
+    "status": "CONTRACT_ONLY",
+    "schema_id": "cyberlion://schemas/action-spec/v1",
+    "schema_version": "1.0.0",
+    "runtime_support": "NONE_FROM_ACTIONSPEC_SCHEMA",
+    "transport_support": "NONE",
+    "authority_effect": "NONE",
+    "action_proposal_runtime_envelope_preserved": true
+  }
+}

@@ -4,7 +4,7 @@
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
     "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
-    "subject_digest": "6ce215005c2067775f53ab5363849d07539eeb5460c3c08221d132ad07b93865",
+    "subject_digest": "ad8450158a2efab6bdd746d6c8c0d5ef77a2ab7bb8314b81b7bcea8fb28ced39",
     "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
@@ -241,7 +241,7 @@
     {
       "id": "ActionSpec",
       "plane": "CANDIDATE",
-      "status": "CURRENT_MASTER_BASE_CANDIDATE",
+      "status": "STALE_BASE_CANDIDATE",
       "evidence_refs": [
         "PR#286",
         "cyber_lion/contracts/v1/action_spec.schema.json@7176409f8d43c0b04eac57aaada98ad201c2d556"

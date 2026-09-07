@@ -120,6 +120,23 @@ def _observed(target_id: str, evidence_ref: str) -> GapRecord:
     ).validate()
 
 
+def _contract(
+    target_id: str,
+    evidence_ref: str,
+    *,
+    missing_runtime: str,
+    next_minimal_gap: str,
+) -> GapRecord:
+    return GapRecord(
+        target_id=target_id,
+        status="CONTRACT_ONLY",
+        missing_runtime=missing_runtime,
+        next_minimal_gap=next_minimal_gap,
+        evidence_class="EXACT_GIT_STATE",
+        evidence_ref=evidence_ref,
+    ).validate()
+
+
 def _target(
     target_id: str,
     *,
@@ -164,10 +181,11 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
             missing_contract="canonical materializer registry",
             next_minimal_gap="define domain-independent MaterializerRegistry",
         ),
-        _target(
+        _contract(
             "ActionSpec",
-            missing_contract="canonical typed action specification beneath ActionProposal",
-            next_minimal_gap="define canonical Action IR",
+            "cyber_lion/contracts/v1/action_spec.schema.json",
+            missing_runtime="canonical LION Action IR implementation",
+            next_minimal_gap="implement and validate canonical Action IR",
         ),
         _target(
             "LAIR",
