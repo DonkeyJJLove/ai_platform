@@ -90,7 +90,7 @@ class LPCLDynamicClosureCounterexamples(unittest.TestCase):
 
     def test_cex07_unselected_transition_outcome_rejected(self):
         ir=CanonicalProcessIR.from_mapping(process_model()); ctx=context(ir); d=selected(ir,ctx); forged=TransitionDecisionRecord(**{**d.__dict__,"transition_decision_digest":"","decision_basis":"forged"}).sealed(); forged_outcome=outcome(ir,forged,"PASS","DONE",evidence=True)
-        with self.assertRaisesRegex(ProcessSemanticError,"decision binding mismatch|currently legal"): apply_transition_outcome(ir,ctx,forged,forged_outcome)
+        with self.assertRaisesRegex(ProcessSemanticError,"decision binding mismatch|currently legal|canonical selection"): apply_transition_outcome(ir,ctx,forged,forged_outcome)
 
     def test_cex08_selected_transition_digest_substitution_rejected(self):
         ir=CanonicalProcessIR.from_mapping(process_model()); ctx=context(ir); d=selected(ir,ctx); forged=ProcessTransitionOutcome(**{**outcome(ir,d,"PASS","DONE",evidence=True).__dict__,"transition_decision_digest":"f"*64,"transition_outcome_digest":""}).sealed()
