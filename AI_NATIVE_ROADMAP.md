@@ -29,7 +29,7 @@ The truth-plane frontier is procedural rather than architectural: finish all non
 
 R22H reacquires all ten registry members rather than reusing manually remembered default branches. The federation vector records exact default HEAD/TREE, manifest presence, open-PR counts and material drift. Future epochs must repeat this live read before claiming currentness. A dynamic `CURRENT` label without reproducible identity evidence degrades to stale/unknown.
 
-The documentation homeostasis loop also regenerates exact production-source/effect truth and full-symbol census evidence. R22H pre-documentation census parsed 501/501 committed Python files with zero failures and measured 19.701% docstring coverage; the final carrier-bound HEAD requires its own exact census run.
+The documentation homeostasis loop also regenerates exact production-source/effect truth and full-symbol census evidence. The R22H pre-documentation census parsed 501/501 committed Python files with zero failures, 8586 symbols, 6756 public symbols and 1049 private-material symbols. Native docstring coverage was 4.736530% for public symbols and 1.906578% for private-material symbols. The exact census digest was `06eec13de9e9a768c35ee1889a22fd943b533b83469237baf3790e751a29f913`; the final carrier-bound HEAD requires its own exact census run.
 
 ## Physical and operational boundary
 
