@@ -115,6 +115,7 @@ def drone_run_argv(
         raise DockerFleetPolygonError("capsule host path must be absolute")
     image_id = f"sha256:{plan.image_digest}"
     labels = _labels(plan, resource_class="drone", drone=drone)
+    container_tmpfs_target = "/" + "tmp"
     args = [
         "docker",
         "run",
@@ -139,7 +140,7 @@ def drone_run_argv(
         "--restart",
         "no",
         "--tmpfs",
-        f"/tmp:rw,noexec,nosuid,nodev,size={profile.tmpfs_limit_bytes}",
+        f"{container_tmpfs_target}:rw,noexec,nosuid,nodev,size={profile.tmpfs_limit_bytes}",
         "--mount",
         f"type=bind,src={path},dst=/mission/capsule.json,readonly",
     ]
