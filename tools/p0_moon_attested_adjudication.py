@@ -22,7 +22,7 @@ from tools.p0_moon_attested_adjudication_contract import (
 SOURCE_REVISION="830f8c2e5561655dc35118c97f4574acc3bf0816"
 SOURCE_TREE="5189c1a582400de829f08c4103fdfafa993ba2e6"
 SOURCE_INVENTORY="a87e0f9ccb4fb81bbbc168900a8db8984f554a74a0b3f8c2a637d75e85fcb9df"
-EXPECTED_SCAN_DIGEST="8e467cfc06dfad6853ce361175e63a880092d3bff0f4f712b3fdfc6b761067bb"
+EXPECTED_SCAN_DIGEST="df1e1c22c4198680cdba9a8b0d257364b71488eeb6b05b1b1d10c7e8454733a9"
 SOURCE_BRIDGE_BLOB="a5ec373145f01ae2713fa620baa9799819cb813a"
 WORKFLOW_PATH=".github/workflows/lion-moon-runner-attested-execution-bridge.yml"
 WORKFLOW_REF="DonkeyJJLove/ai_platform/.github/workflows/lion-moon-runner-attested-execution-bridge.yml@refs/heads/mission/p0-moon-runner-attested-execution-bridge-attach-r1"
@@ -232,7 +232,7 @@ def _adjudicated_bundle(*,inventory,surface,base_artifacts,record:RunnerAttested
     for c in new:bytype.setdefault(c.component_type,[]).append(c)
     base=base_artifacts.bundles[sd]
     obs=tuple(x.digest() for x in bytype["observer_identity"])
-    b=MoonSurfaceEvidenceBundle(sd,bytype["effect_contract"][0].digest(),bytype["authority_source"][0].digest(),bytype["currentness_source"][0].digest(),bytype["pep_identity"][0].digest(),bytype["execution_boundary"][0].digest(),obs,bytype["reconciliation_boundary"][0].digest(),bytype["replay_guard"][0].digest(),bytype["bounded_scope"][0].digest(),bytype["verifier_identity"][0].digest(),(),tuple(dict.fromkeys(base.evidence_refs+record.evidence_refs+(f"observation-rule:{rule.digest()}",)))).validate()
+    b=MoonSurfaceEvidenceBundle(sd,bytype["effect_contract"][0].digest(),bytype["pep_identity"][0].digest(),bytype["authority_source"][0].digest(),bytype["currentness_source"][0].digest(),bytype["execution_boundary"][0].digest(),obs,bytype["reconciliation_boundary"][0].digest(),bytype["replay_guard"][0].digest(),bytype["bounded_scope"][0].digest(),bytype["verifier_identity"][0].digest(),(),tuple(dict.fromkeys(base.evidence_refs+record.evidence_refs+(f"observation-rule:{rule.digest()}",)))).validate()
     return tuple(new),b,rule
 
 def adjudicated_bindings_and_chains(*,inventory:EffectSurfaceInventory,records:Mapping[str,RunnerAttestedAdjudicationRecord]):
