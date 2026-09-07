@@ -357,7 +357,9 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
                 raise Deny("capsule path collision")
         else:
             cap_path.write_bytes(capsule)
-            os.chmod(cap_path, 0o400)
+            # Host traversal is already restricted by STATE_DIR=0700. The bind-mounted
+            # file itself must be readable by the non-root container uid 65532.
+            os.chmod(cap_path, 0o444)
 
         extra = {
             "lion.drone_id": drone_id,
