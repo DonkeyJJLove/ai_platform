@@ -232,7 +232,7 @@ def _adjudicated_bundle(*,inventory,surface,base_artifacts,record:RunnerAttested
     for c in new:bytype.setdefault(c.component_type,[]).append(c)
     base=base_artifacts.bundles[sd]
     obs=tuple(x.digest() for x in bytype["observer_identity"])
-    b=MoonSurfaceEvidenceBundle(sd,bytype["effect_contract"][0].digest(),bytype["pep_identity"][0].digest(),bytype["authority_source"][0].digest(),bytype["currentness_source"][0].digest(),bytype["execution_boundary"][0].digest(),obs,bytype["reconciliation_boundary"][0].digest(),bytype["replay_guard"][0].digest(),bytype["bounded_scope"][0].digest(),bytype["verifier_identity"][0].digest(),(),tuple(dict.fromkeys(base.evidence_refs+record.evidence_refs+(f"observation-rule:{rule.digest()}",)))).validate()
+    b=MoonSurfaceEvidenceBundle(sd,bytype["effect_contract"][0].digest(),bytype["authority_source"][0].digest(),bytype["currentness_source"][0].digest(),bytype["pep_identity"][0].digest(),bytype["execution_boundary"][0].digest(),obs,bytype["reconciliation_boundary"][0].digest(),bytype["replay_guard"][0].digest(),bytype["bounded_scope"][0].digest(),bytype["verifier_identity"][0].digest(),(),tuple(dict.fromkeys(base.evidence_refs+record.evidence_refs+(f"observation-rule:{rule.digest()}",)))).validate()
     return tuple(new),b,rule
 
 def adjudicated_bindings_and_chains(*,inventory:EffectSurfaceInventory,records:Mapping[str,RunnerAttestedAdjudicationRecord]):
