@@ -200,9 +200,9 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         ),
         _partial(
             "ActionSpec",
-            "cyber_lion/contracts/action_proposal_projection.py",
-            missing_runtime="explicit ActionProposal-to-canonical-PDP handoff and downstream authority/runtime binding",
-            next_minimal_gap="bind context-complete ActionProposal to existing canonical PDP admission",
+            "cyber_lion/contracts/action_proposal_pdp_handoff.py",
+            missing_runtime="canonical PDP result-to-RequestedRuntimeEffect/runtime identity binding and RuntimeAdmissionEngine admission",
+            next_minimal_gap="bind canonical PDP ALLOW result to exact RequestedRuntimeEffect and runtime identity before RuntimeAdmissionEngine",
         ),
         _observed("LAIR", "cyber_lion/contracts/action_ir.py"),
         _target(
