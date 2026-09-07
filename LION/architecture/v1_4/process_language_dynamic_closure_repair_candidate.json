@@ -1,0 +1,33 @@
+{
+  "schema_version": "lion.process-language-dynamic-closure-repair-candidate/v1",
+  "status": "CANDIDATE_REPAIR_PENDING_EXACT_HEAD_CI",
+  "parent_candidate": {
+    "head": "410802aea8c19ff4c49b87d2ab768345b3366d0b",
+    "tree": "491b4ec434d2e79878ba5ed9ebf29721f50f0f1f"
+  },
+  "historical_falsification": {
+    "F8": "CONFIRMED_ON_PARENT",
+    "F11": "CONFIRMED_ON_PARENT",
+    "F20": "CONFIRMED_ON_PARENT",
+    "counterexamples": ["CEX_01", "CEX_02", "CEX_03", "CEX_04", "CEX_05", "CEX_06", "CEX_07"]
+  },
+  "repair_candidate": {
+    "transition_decision_binding": "IMPLEMENTED_PENDING_EXACT_HEAD_CI",
+    "action_required_consequentiality": "DERIVED_FROM_TRANSITION_CLASS_PENDING_EXACT_HEAD_CI",
+    "currentness_basis": "EVIDENCE_BOUND_PENDING_EXACT_HEAD_CI",
+    "retry_attempt_accounting": "IMPLEMENTED_PENDING_EXACT_HEAD_CI",
+    "non_idempotent_replay": "ATTEMPT_BOUND_RECONCILE_FIRST_PENDING_EXACT_HEAD_CI",
+    "directive_semantics": "TYPED_PROCESS_CONTROL_PENDING_EXACT_HEAD_CI",
+    "outcome_vocabulary": "CANONICALIZED_PENDING_EXACT_HEAD_CI",
+    "negative_corpus": "N01_N25_EXECUTABLE_PENDING_EXACT_HEAD_CI",
+    "reference_dynamic_coverage": "12_OF_12_LOCAL_SMOKE_PASS"
+  },
+  "boundaries": {
+    "authority_effect": "NONE",
+    "runtime_effect": "NONE",
+    "merge_authority": "NONE",
+    "new_top_level_layer": false,
+    "evolutionary_epoch_engine_replaced": false
+  },
+  "lineage_rule": "Parent counterexamples remain historical evidence and may only be marked superseded after exact-head CI and independent semantic verification."
+}
