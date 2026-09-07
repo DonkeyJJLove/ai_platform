@@ -5,6 +5,13 @@
 
 This file supersedes the older description of `ai_platform` as primarily a specification repository without an executable control plane. That statement is no longer accurate for the exact baseline above. Current source contains contract, policy/PDP, authority, provisioning, runtime-admission, runtime-execution, effect-currentness, mediation, observation/reconciliation, fleet/swarm, architecture-projection, code-perception and startup-evolution surfaces. Code presence still does **not** imply deployment, production authority or complete mediation.
 
+## Historical inventory preservation
+
+The complete pre-R20 inventory is preserved byte-for-byte in Git at base commit `5d5a02b37fdfff4bcbf62f455d37ce4b86080f59`:
+`https://github.com/DonkeyJJLove/ai_platform/blob/5d5a02b37fdfff4bcbf62f455d37ce4b86080f59/cyber_lion/REPOSITORY_INVENTORY.md`.
+
+That predecessor remains the historical record of the earlier ten-repository classification, its then-observed capabilities and its then-open debts. R20 does not reinterpret those historical observations as if they had been current at the v1.4 baseline. The current exact federation identities and roles are machine-owned by `LION/architecture/v1_4/federation_current_vector.json` and peer `cyber-lion.repository.json` manifests where present.
+
 ## Current material surfaces
 
 `cyber_lion/contracts/` owns source-level contracts for action IR, policy gates, authority/effects, runtime enforcement/execution/currentness/reconciliation, executor provisioning, complete/production mediation, fleet runtime trust/effect budget, Bean/Composition/Mosaic and related state. `cyber_lion/enterprise/` contains the corresponding governed implementation surfaces, including `CanonicalPolicyDecisionPoint`, `RuntimeAdmissionEngine`, `RuntimeExecutionEngine`, currentness mediation, `RuntimeReconciler`, fleet/swarm governance and production-mediation code.
