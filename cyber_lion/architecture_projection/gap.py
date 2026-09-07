@@ -184,14 +184,10 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         _contract(
             "ActionSpec",
             "cyber_lion/contracts/v1/action_spec.schema.json",
-            missing_runtime="canonical LION Action IR implementation",
-            next_minimal_gap="implement and validate canonical Action IR",
+            missing_runtime="canonical LAIR-to-ActionProposal static effect projection",
+            next_minimal_gap="define static effect projection after canonical LAIR",
         ),
-        _target(
-            "LAIR",
-            missing_contract="canonical LION Action IR implementation",
-            next_minimal_gap="implement and validate canonical Action IR",
-        ),
+        _observed("LAIR", "cyber_lion/contracts/action_ir.py"),
         _target(
             "LCMS",
             missing_contract="auditable command modeling syntax and parser",

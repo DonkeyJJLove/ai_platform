@@ -42,12 +42,16 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
         self.assertEqual(action.status, "CONTRACT_ONLY")
         self.assertEqual(action.evidence_class, "EXACT_GIT_STATE")
         self.assertEqual(action.evidence_ref, "cyber_lion/contracts/v1/action_spec.schema.json")
-        self.assertEqual(action.missing_runtime, "canonical LION Action IR implementation")
+        self.assertEqual(action.missing_runtime, "canonical LAIR-to-ActionProposal static effect projection")
+
+        lair = by_id["LAIR"]
+        self.assertEqual(lair.status, "VERIFIED_REFERENCE")
+        self.assertEqual(lair.evidence_class, "LIVE_CODE")
+        self.assertEqual(lair.evidence_ref, "cyber_lion/contracts/action_ir.py")
 
         for target in (
             "AutonomyBlueprint",
             "MaterializerRegistry",
-            "LAIR",
             "LCMS",
             "LocalConsole",
         ):
