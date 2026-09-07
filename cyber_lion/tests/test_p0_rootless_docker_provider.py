@@ -53,6 +53,14 @@ class RootlessDockerProviderP0Tests(unittest.TestCase):
         self.assertNotIn("unix:///var/run/docker.sock", source)
         self.assertNotIn('"/var/run/docker.sock"', source)
 
+    def test_docker_client_state_stays_inside_private_provider_state(self):
+        source = PROVIDER_PATH.read_text(encoding="utf-8")
+        self.assertNotIn('"HOME": "/nonexistent"', source)
+        self.assertIn('client_home = STATE_DIR / "client-home"', source)
+        self.assertIn('"DOCKER_CONFIG": str(docker_config)', source)
+        self.assertIn('"XDG_CACHE_HOME": str(xdg_cache)', source)
+        self.assertIn('"XDG_CONFIG_HOME": str(xdg_config)', source)
+
     def test_mutating_surface_is_exact_and_bounded(self):
         self.assertEqual(
             self.module.MUTATING,
@@ -87,6 +95,8 @@ class RootlessDockerProviderP0Tests(unittest.TestCase):
             "NoNewPrivileges=yes",
             "PrivateDevices=yes",
             "ProtectSystem=strict",
+            "ProtectHome=tmpfs",
+            "BindReadOnlyPaths=/run/user/1000/docker.sock",
             "RestrictAddressFamilies=AF_UNIX",
             "CapabilityBoundingSet=",
         ):
