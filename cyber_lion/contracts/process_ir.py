@@ -6,7 +6,7 @@ provider, or executes an effect.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from hashlib import sha256
 import json
 import re
@@ -15,6 +15,9 @@ from typing import Any, Mapping
 SCHEMA_ID = "cyberlion://schemas/process-ir/v1"
 SCHEMA_VERSION = "1.0.0"
 DIGEST_DOMAIN = b"LION/PROCESS-IR/1\0"
+CONTEXT_DIGEST_DOMAIN = b"LION/PROCESS-CONTEXT/1\0"
+CURRENTNESS_BASIS_DOMAIN = b"LION/PROCESS-CURRENTNESS-BASIS/1\0"
+ATTEMPT_RECORD_DOMAIN = b"LION/PROCESS-ATTEMPT/1\0"
 
 TRANSITION_CLASSES = frozenset({"INTERNAL", "ACTION_REQUIRED"})
 OPERATORS = frozenset({
@@ -32,6 +35,13 @@ NEXT_DIRECTIVES = frozenset({"CONTINUE", "DEFER", "HANDOFF", "STOP", "COMPLETE"}
 REPLAY_POLICIES = frozenset({"DENY", "IDEMPOTENT", "RECONCILE_FIRST"})
 IDEMPOTENCY_CLASSES = frozenset({"PURE", "IDEMPOTENT", "NON_IDEMPOTENT"})
 SCHEDULING_STRATEGIES = frozenset({"DECLARED_ORDER", "EXPLICIT_PRIORITY"})
+CURRENTNESS_STATES = frozenset({"CURRENT", "STALE", "NOT_REVALIDATED", "UNKNOWN"})
+CURRENTNESS_DRIFT_RULES = frozenset({
+    "IDENTITY_CHANGED", "EVIDENCE_EXPIRED", "SUBJECT_CHANGED", "UNKNOWN_DRIFT",
+})
+PROCESS_CONTROL_STATES = frozenset({
+    "ACTIVE", "DEFERRED", "HANDOFF_REQUIRED", "TERMINATED", "COMPLETE",
+})
 
 _ID = re.compile(r"^[A-Za-z][A-Za-z0-9_.:/-]{0,255}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -166,7 +176,11 @@ def _retry_policy(value: Any) -> dict[str, Any]:
 
 
 def _resource_claims(value: Any) -> dict[str, Any]:
-    value = _exact_object(value, {"read_scopes", "write_scopes", "authority_budgets", "currentness_subjects", "replay_domain", "reconciliation_group"}, "resource_claims")
+    value = _exact_object(
+        value,
+        {"read_scopes", "write_scopes", "authority_budgets", "currentness_subjects", "replay_domain", "reconciliation_group"},
+        "resource_claims",
+    )
     for key in ("read_scopes", "write_scopes", "authority_budgets", "currentness_subjects"):
         _unique_strings(value[key], f"resource_claims.{key}")
     _text(value["replay_domain"], "resource_claims.replay_domain", allow_empty=True)
@@ -208,7 +222,9 @@ def _transition(value: Any, *, state_set: set[str], dependency_set: set[str]) ->
         raise ProcessIRContractError("transition.replay_policy invalid")
     if value["idempotency_class"] not in IDEMPOTENCY_CLASSES:
         raise ProcessIRContractError("transition.idempotency_class invalid")
-    _resource_claims(value["resource_claims"])
+    claims = _resource_claims(value["resource_claims"])
+    if not set(currentness) <= set(claims["currentness_subjects"]):
+        raise ProcessIRContractError("currentness requirements must bind declared currentness subjects")
     if value["transition_class"] == "ACTION_REQUIRED":
         if operator != "EMIT_ACTION_INTENT":
             raise ProcessIRContractError("ACTION_REQUIRED transition must use EMIT_ACTION_INTENT")
@@ -345,6 +361,89 @@ class CanonicalProcessIR:
 
 
 @dataclass(frozen=True)
+class CurrentnessBasis:
+    requirement_id: str
+    subject: str
+    observed_identity: str
+    evidence_ref: str
+    observed_at: str
+    state: str
+    drift_rule: str
+    basis_digest: str = ""
+
+    def canonical_payload(self) -> dict[str, object]:
+        value = asdict(self)
+        value.pop("basis_digest")
+        return value
+
+    def compute_digest(self) -> str:
+        raw = json.dumps(self.canonical_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        return sha256(CURRENTNESS_BASIS_DOMAIN + raw).hexdigest()
+
+    def sealed(self) -> "CurrentnessBasis":
+        value = asdict(self)
+        value["basis_digest"] = self.compute_digest()
+        return CurrentnessBasis(**value).validate()
+
+    def validate(self) -> "CurrentnessBasis":
+        _id(self.requirement_id, "currentness.requirement_id")
+        _text(self.subject, "currentness.subject")
+        _text(self.observed_identity, "currentness.observed_identity")
+        _text(self.evidence_ref, "currentness.evidence_ref")
+        _text(self.observed_at, "currentness.observed_at")
+        if self.state not in CURRENTNESS_STATES:
+            raise ProcessIRContractError("currentness.state invalid")
+        if self.drift_rule not in CURRENTNESS_DRIFT_RULES:
+            raise ProcessIRContractError("currentness.drift_rule invalid")
+        if self.basis_digest:
+            if _SHA256.fullmatch(self.basis_digest) is None:
+                raise ProcessIRContractError("currentness.basis_digest invalid")
+            if self.basis_digest != self.compute_digest():
+                raise ProcessIRContractError("currentness.basis_digest mismatch")
+        return self
+
+
+@dataclass(frozen=True)
+class AttemptRecord:
+    transition_id: str
+    attempt_number: int
+    outcome: str
+    effect_ref: str = ""
+    observation_ref: str = ""
+    reconciliation_ref: str = ""
+    attempt_digest: str = ""
+
+    def canonical_payload(self) -> dict[str, object]:
+        value = asdict(self)
+        value.pop("attempt_digest")
+        return value
+
+    def compute_digest(self) -> str:
+        raw = json.dumps(self.canonical_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        return sha256(ATTEMPT_RECORD_DOMAIN + raw).hexdigest()
+
+    def sealed(self) -> "AttemptRecord":
+        value = asdict(self)
+        value["attempt_digest"] = self.compute_digest()
+        return AttemptRecord(**value).validate()
+
+    def validate(self) -> "AttemptRecord":
+        _id(self.transition_id, "attempt.transition_id")
+        if type(self.attempt_number) is not int or isinstance(self.attempt_number, bool) or self.attempt_number < 1:
+            raise ProcessIRContractError("attempt.attempt_number invalid")
+        if self.outcome not in OUTCOME_LABELS:
+            raise ProcessIRContractError("attempt.outcome invalid")
+        for name in ("effect_ref", "observation_ref", "reconciliation_ref"):
+            _text(getattr(self, name), f"attempt.{name}", allow_empty=True)
+        if self.attempt_digest:
+            if _SHA256.fullmatch(self.attempt_digest) is None:
+                raise ProcessIRContractError("attempt.attempt_digest invalid")
+            if self.attempt_digest != self.compute_digest():
+                raise ProcessIRContractError("attempt.attempt_digest mismatch")
+        return self
+
+
+@dataclass(frozen=True)
 class ProcessContextSnapshot:
     """Non-authoritative evaluation input for process transition selection."""
     process_ir_digest: str
@@ -354,11 +453,14 @@ class ProcessContextSnapshot:
     satisfied_guards: tuple[str, ...] = ()
     satisfied_evidence_requirements: tuple[str, ...] = ()
     satisfied_currentness_requirements: tuple[str, ...] = ()
+    currentness_bases: tuple[CurrentnessBasis, ...] = ()
     verified_authority_context_refs: tuple[str, ...] = ()
     action_result_refs: tuple[str, ...] = ()
     observation_refs: tuple[str, ...] = ()
     reconciliation_refs: tuple[str, ...] = ()
     attempt_counts: tuple[tuple[str, int], ...] = ()
+    attempt_records: tuple[AttemptRecord, ...] = ()
+    process_control: str = "ACTIVE"
     observed_at: str = ""
 
     def validate_for(self, process_ir: CanonicalProcessIR) -> "ProcessContextSnapshot":
@@ -368,19 +470,55 @@ class ProcessContextSnapshot:
         model = process_ir.as_dict()
         if self.process_state not in set(model["states"]):
             raise ProcessIRContractError("process context state is undefined")
+        if self.process_control not in PROCESS_CONTROL_STATES:
+            raise ProcessIRContractError("process context control state invalid")
         transition_ids = {item["transition_id"] for item in model["transitions"]}
         if not set(self.completed_transitions) <= transition_ids:
             raise ProcessIRContractError("process context references unknown completed transition")
         dependency_ids = {item["dependency_id"] for item in model["dependencies"]}
         if not set(self.satisfied_dependencies) <= dependency_ids:
             raise ProcessIRContractError("process context references unknown dependency")
+        all_currentness_subjects = {subject for transition in model["transitions"] for subject in transition["resource_claims"]["currentness_subjects"]}
+        seen_basis_ids: set[str] = set()
+        for basis in self.currentness_bases:
+            basis.validate()
+            if basis.requirement_id in seen_basis_ids:
+                raise ProcessIRContractError("duplicate currentness requirement basis")
+            seen_basis_ids.add(basis.requirement_id)
+            if basis.subject not in all_currentness_subjects:
+                raise ProcessIRContractError("currentness basis subject is outside Process IR")
+        if len(self.satisfied_currentness_requirements) != len(set(self.satisfied_currentness_requirements)):
+            raise ProcessIRContractError("currentness compatibility labels must be unique")
         seen_attempts: set[str] = set()
+        counts: dict[str, int] = {}
         for tid, count in self.attempt_counts:
             if tid not in transition_ids or tid in seen_attempts:
                 raise ProcessIRContractError("attempt_counts reference invalid transition")
             if type(count) is not int or isinstance(count, bool) or count < 0:
                 raise ProcessIRContractError("attempt count invalid")
             seen_attempts.add(tid)
+            counts[tid] = count
+        record_keys: set[tuple[str, int]] = set()
+        record_max: dict[str, int] = {}
+        for record in self.attempt_records:
+            record.validate()
+            if record.transition_id not in transition_ids:
+                raise ProcessIRContractError("attempt record references invalid transition")
+            key = (record.transition_id, record.attempt_number)
+            if key in record_keys:
+                raise ProcessIRContractError("duplicate attempt record")
+            record_keys.add(key)
+            record_max[record.transition_id] = max(record_max.get(record.transition_id, 0), record.attempt_number)
+        if record_max != {tid: count for tid, count in counts.items() if count > 0}:
+            raise ProcessIRContractError("attempt_counts do not match attempt record lineage")
         if not self.observed_at:
             raise ProcessIRContractError("process context requires observed_at")
         return self
+
+    def canonical_payload(self, process_ir: CanonicalProcessIR) -> dict[str, object]:
+        self.validate_for(process_ir)
+        return asdict(self)
+
+    def context_digest(self, process_ir: CanonicalProcessIR) -> str:
+        raw = json.dumps(self.canonical_payload(process_ir), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        return sha256(CONTEXT_DIGEST_DOMAIN + raw).hexdigest()
