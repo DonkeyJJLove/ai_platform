@@ -85,6 +85,8 @@ class R22FTruthSourceRegressions(unittest.TestCase):
     def test_same_tree_different_commit_preserves_subject_digest(self):
         root = self._init_repo()
         self._write(root, "subject.txt", "material\n")
+        for index, carrier in enumerate(sorted(CARRIER_PATHS), start=1):
+            self._write(root, carrier, f"carrier-{index}\n")
         first = self._commit(root, "first")
         first_tree = self._git(root, "rev-parse", f"{first}^{{tree}}")
         first_digest = subject_digest(self._entries(root, first))
