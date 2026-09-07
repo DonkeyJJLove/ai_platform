@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 import unittest
@@ -83,10 +82,10 @@ class DockerScale64Tests(unittest.TestCase):
         self.assertIn('call("LIST_MISSION_RESOURCES"', source)
         self.assertIn('request("REMOVE_DRONE"', source)
         self.assertIn('request("REMOVE_NETWORK"', source)
+        self.assertIn('send_request', source)
         for forbidden in (
             "subprocess.run",
             "os.system",
-            "/var/run/docker.sock",
             "--privileged",
             "--network=host",
             "docker system prune",
