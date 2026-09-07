@@ -137,6 +137,23 @@ def _contract(
     ).validate()
 
 
+def _partial(
+    target_id: str,
+    evidence_ref: str,
+    *,
+    missing_runtime: str,
+    next_minimal_gap: str,
+) -> GapRecord:
+    return GapRecord(
+        target_id=target_id,
+        status="PARTIALLY_IMPLEMENTED",
+        missing_runtime=missing_runtime,
+        next_minimal_gap=next_minimal_gap,
+        evidence_class="LIVE_CODE",
+        evidence_ref=evidence_ref,
+    ).validate()
+
+
 def _target(
     target_id: str,
     *,
@@ -181,11 +198,11 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
             missing_contract="canonical materializer registry",
             next_minimal_gap="define domain-independent MaterializerRegistry",
         ),
-        _contract(
+        _partial(
             "ActionSpec",
-            "cyber_lion/contracts/v1/action_spec.schema.json",
-            missing_runtime="canonical LAIR-to-ActionProposal static effect projection",
-            next_minimal_gap="define static effect projection after canonical LAIR",
+            "cyber_lion/contracts/action_proposal_projection.py",
+            missing_runtime="explicit context-bound ActionProposal binding and canonical PDP admission",
+            next_minimal_gap="define explicit proposal-context binding after static effect projection",
         ),
         _observed("LAIR", "cyber_lion/contracts/action_ir.py"),
         _target(
