@@ -213,6 +213,9 @@ def authority() -> LiveAdmittedAuthority:
 
 
 class FakeAdmission(LiveAuthorityAdmission):
+    def __init__(self):
+        pass
+
     def revalidate(self, admitted, *, now):
         return admitted
 
