@@ -1,0 +1,36 @@
+{
+  "schema_version": "lion.process-language-ownership-candidate/v1",
+  "base": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+    "tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5"
+  },
+  "status": "CANDIDATE_NOT_INTEGRATED",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "new_top_level_layer_required": false,
+  "placement": ["EVOLUTIONARY_EPOCH", "GOVERNED_SELF_IMPLEMENTATION"],
+  "ownership": {
+    "generic_process_semantics_reference": {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "role": "FORMAL_SEMANTIC_REFERENCE_NOT_RUNTIME_AUTHORITY",
+      "evidence": ["cyber-lion.repository.json", "PROCESS_GUARD.md", "README.MD"]
+    },
+    "lion_process_contract_integration": {
+      "repository": "DonkeyJJLove/ai_platform",
+      "role": "CANONICAL_LION_PROCESS_CONTRACT_INTEGRATION",
+      "paths": ["cyber_lion/contracts/process_ir.py", "cyber_lion/contracts/process_action.py", "cyber_lion/enterprise/process_semantics.py", "cyber_lion/process_language/"]
+    },
+    "research_history": {
+      "repository": "DonkeyJJLove/writeups",
+      "role": "RESEARCH_HISTORY_AND_PROCESS_GOVERNANCE_CORPUS"
+    }
+  },
+  "boundaries": {
+    "process_to_action": "ActionIntentCandidate only; no grant/PDP/runtime/effect semantics",
+    "authority": "external context requirement only; no authority minting",
+    "runtime": "existing RuntimeAdmissionEngine remains canonical",
+    "effect": "existing EffectProvider remains canonical",
+    "reconciliation": "accepted ProcessTransitionOutcome may advance ProcessState"
+  }
+}

@@ -1,0 +1,57 @@
+(* LION Process Contract Language v1.
+   The surface language is data and never executes directly. *)
+
+document       = header, newline,
+                 process, newline,
+                 mission, newline,
+                 goal, newline,
+                 scope, newline,
+                 initial, newline,
+                 states, newline,
+                 dependencies, newline,
+                 transitions, newline,
+                 scheduling, newline,
+                 termination, newline,
+                 lineage, newline,
+                 "END", newline ;
+
+header         = "LPCL 1.0" ;
+process        = "PROCESS ", json-string ;
+mission        = "MISSION ", json-value ;
+goal           = "GOAL ", json-value ;
+scope          = "SCOPE ", json-object ;
+initial        = "INITIAL ", json-string ;
+states         = "STATES ", json-array ;
+dependencies   = "DEPENDENCIES ", json-array ;
+transitions    = "TRANSITIONS ", json-array ;
+scheduling     = "SCHEDULING ", json-object ;
+termination    = "TERMINATION ", json-object ;
+lineage        = "LINEAGE ", json-object ;
+
+(* json-* uses strict RFC8259 JSON. Duplicate object keys are forbidden.
+   CanonicalProcessIR performs the normative semantic validation after parse.
+
+   TransitionSpec semantic fields are:
+   transition_id, transition_class, source_states, trigger, dependencies,
+   guards, evidence_requirements, currentness_requirements,
+   authority_requirements, operator, expected_postconditions, outcome_map,
+   retry_policy, replay_policy, idempotency_class, resource_claims.
+
+   ACTION_REQUIRED transitions may only EMIT_ACTION_INTENT. LPCL has no raw
+   shell, PDP decision, RuntimeAdmission, grant-minting or EffectProvider
+   operator. *)
+
+json-value     = json-object | json-array | json-string | json-number
+               | "true" | "false" | "null" ;
+json-object    = "{", [ json-member, { ",", json-member } ], "}" ;
+json-member    = json-string, ":", json-value ;
+json-array     = "[", [ json-value, { ",", json-value } ], "]" ;
+json-string    = '"', { json-char }, '"' ;
+json-number    = [ "-" ], integer, [ fraction ], [ exponent ] ;
+integer        = "0" | nonzero, { digit } ;
+fraction       = ".", digit, { digit } ;
+exponent       = ("e" | "E"), [ "+" | "-" ], digit, { digit } ;
+json-char      = ? any RFC8259 JSON string character, with valid escapes ? ;
+nonzero        = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+digit          = "0" | nonzero ;
+newline        = "\n" ;
