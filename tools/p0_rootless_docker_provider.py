@@ -75,9 +75,21 @@ def _sha(value: Any, regex: re.Pattern[str], label: str) -> str:
 def _docker(argv: list[str], *, timeout: int = 60) -> str:
     if not argv or argv[0] != "docker":
         raise Deny("internal docker argv invalid")
+
+    client_home = STATE_DIR / "client-home"
+    docker_config = client_home / ".docker"
+    xdg_cache = STATE_DIR / "xdg-cache"
+    xdg_config = STATE_DIR / "xdg-config"
+    for path in (client_home, docker_config, xdg_cache, xdg_config):
+        path.mkdir(parents=True, exist_ok=True)
+        os.chmod(path, 0o700)
+
     env = {
         "PATH": "/usr/bin:/bin",
-        "HOME": "/nonexistent",
+        "HOME": str(client_home),
+        "DOCKER_CONFIG": str(docker_config),
+        "XDG_CACHE_HOME": str(xdg_cache),
+        "XDG_CONFIG_HOME": str(xdg_config),
         "LANG": "C.UTF-8",
         "LC_ALL": "C.UTF-8",
         "DOCKER_HOST": DOCKER_HOST,
@@ -357,9 +369,7 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
                 raise Deny("capsule path collision")
         else:
             cap_path.write_bytes(capsule)
-            # Host traversal is already restricted by STATE_DIR=0700. The bind-mounted
-            # file itself must be readable by the non-root container uid 65532.
-            os.chmod(cap_path, 0o444)
+        os.chmod(cap_path, 0o444)
 
         extra = {
             "lion.drone_id": drone_id,
