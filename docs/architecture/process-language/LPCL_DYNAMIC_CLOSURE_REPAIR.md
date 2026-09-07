@@ -51,11 +51,31 @@ Supported basis states are `CURRENT`, `STALE`, `NOT_REVALIDATED` and `UNKNOWN`. 
 
 For `NON_IDEMPOTENT + RECONCILE_FIRST`, a retry is legal only when the exact immediately preceding attempt record carries reconciliation evidence. An unrelated process-level reconciliation reference does not satisfy this check.
 
-## Action-required consequentiality
+## Action-required consequentiality and downstream evidence
 
-Consequentiality is no longer caller-controlled. `ProcessTransitionOutcome` does not carry a `consequential` boolean. The canonical `TransitionSpec.transition_class` determines whether downstream evidence is required. For `ACTION_REQUIRED + PASS`, the process closure requires action, proposal, runtime-admission, effect, independent-observation, reconciliation and currentness-basis references.
+Consequentiality is no longer caller-controlled. `ProcessTransitionOutcome` does not carry a `consequential` boolean. The canonical `TransitionSpec.transition_class` determines whether downstream evidence is required.
 
-This does not make LPCL an Action, PDP, RuntimeAdmission or effect plane. These fields are evidence references consumed at the Process boundary; LPCL still cannot mint authority or execute the referenced effects.
+For `ACTION_REQUIRED + PASS`, **non-empty strings are not evidence**. The outcome carrier must be accompanied by an independently materialized `CanonicalDownstreamEvidence` whose members are existing canonical contracts and whose cross-bindings are revalidated before ProcessState can advance:
+
+```text
+ActionIntentCandidate
+→ CanonicalActionIR
+→ ExplicitActionProposalContext
+→ ActionProposal
+→ CanonicalPDPDecisionEvidence
+→ RuntimeIdentityBinding
+→ RequestedRuntimeEffect
+→ RuntimeAdmission
+→ EffectTimeCurrentnessEvidence
+→ RuntimeExecutionReceipt
+→ RuntimeEffectObservation
+→ RuntimeReconciliationReceipt(MATCHED)
+→ ProcessTransitionOutcome
+```
+
+The verifier requires the Action IR to bind the selected `ActionIntentCandidate`, the proposal to be reproduced by the existing LAIR→ActionProposal binder, the PDP evidence to bind the exact admission, the requested effect and runtime identity to bind that admission, the runtime receipt to report an observed successful effect, the independent observation to match the receipt, and the reconciliation receipt to be anomaly-free `MATCHED`. The outcome's action/proposal/admission/effect/observation/reconciliation references must equal the corresponding canonical digests. A self-consistent set of arbitrary references without this separate typed chain is denied.
+
+This does not make LPCL an Action, PDP, RuntimeAdmission or effect plane. `CanonicalDownstreamEvidence` performs no admission, execution, observation, reconciliation or authority decision; it only validates already materialized canonical objects at the Process feedback boundary.
 
 ## Directive semantics
 
@@ -91,9 +111,11 @@ The executable regression suite asserts equality.
 
 `cyber_lion/tests/test_lpcl_dynamic_closure.py` preserves and re-tests the closure counterexamples, including decision/context/digest substitution and retry-attempt lineage.
 
+`cyber_lion/tests/test_process_semantics.py` now contains both sides of the B8 boundary: a complete-looking self-attested reference set is denied, while an exact cross-bound existing Action/PDP/runtime/currentness/execution/observation/reconciliation chain may close `ACTION_REQUIRED + PASS`. Substituting the observation reference is denied.
+
 `cyber_lion/process_language/negative_corpus.json` maps N01-N25 to concrete test names in `cyber_lion/tests/test_lpcl_negative_corpus.py`. The negative corpus is therefore an executable invariant set rather than documentation-only policy.
 
-`cyber_lion/tests/test_process_reference_corpus.py` now exercises dynamic selection and closure for all 12 reference scenarios rather than only parser round-trips.
+`cyber_lion/tests/test_process_reference_corpus.py` exercises all 12 reference scenarios. Internal transitions may close locally when their evidence is satisfied. Generic `ACTION_REQUIRED` reference scenarios stop at the explicit `AUTHORITY_BOUNDARY → HANDOFF_REQUIRED` boundary rather than fabricating downstream runtime success; full downstream PASS is proved only by the dedicated canonical-chain test.
 
 ## Invariants preserved
 
@@ -108,6 +130,7 @@ RuntimeAdmission != Effect
 Effect != Observation
 Observation != Reconciliation
 CALLER_ASSERTED_OUTCOME != VERIFIED_PROCESS_OUTCOME
+SELF_ATTESTED_DOWNSTREAM_REFS != CANONICAL_DOWNSTREAM_EVIDENCE
 ```
 
 LPCL remains in the existing `EVOLUTIONARY_EPOCH` architecture layer with `GOVERNED_SELF_IMPLEMENTATION` as a cross-concern. No sixteenth top-level architecture layer is introduced and `EvolutionaryEpochEngine` remains a specialized canonical state machine.
