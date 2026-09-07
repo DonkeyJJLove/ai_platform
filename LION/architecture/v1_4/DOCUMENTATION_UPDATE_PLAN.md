@@ -23,7 +23,7 @@ Documentation and verification do not mutate the default branch, host, runtime, 
 
 ## Source and census truth
 
-The production selector includes Python under `cyber_lion/` except `cyber_lion/tests/**`, plus `.github/workflows/*.yml` and `*.yaml`. R22H candidate evidence observes 260 production sources versus 256 on master and no removals. The exact pre-documentation full symbol census parsed 501/501 committed Python files with zero parse failures and 8586 symbols. Its docstring coverage is 19.701%, not a synthetic 100% claim. A final census must be reacquired on the exact carrier-final candidate HEAD.
+The production selector includes Python under `cyber_lion/` except `cyber_lion/tests/**`, plus `.github/workflows/*.yml` and `*.yaml`. R22H candidate evidence observes 260 production sources versus 256 on master and no removals. The exact pre-documentation full symbol census parsed 501/501 committed Python files with zero parse failures and 8586 symbols. Its native docstring metrics are 4.736530% for public symbols and 1.906578% for private-material symbols; no synthetic 100% or unsupported aggregate coverage claim is permitted. The exact census digest is `06eec13de9e9a768c35ee1889a22fd943b533b83469237baf3790e751a29f913`. A final census must be reacquired on the exact carrier-final candidate HEAD.
 
 ## Human authority boundaries
 
