@@ -39,10 +39,11 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
             self.assertTrue(by_id[integrated].evidence_ref)
 
         action = by_id["ActionSpec"]
-        self.assertEqual(action.status, "CONTRACT_ONLY")
-        self.assertEqual(action.evidence_class, "EXACT_GIT_STATE")
-        self.assertEqual(action.evidence_ref, "cyber_lion/contracts/v1/action_spec.schema.json")
-        self.assertEqual(action.missing_runtime, "canonical LAIR-to-ActionProposal static effect projection")
+        self.assertEqual(action.status, "PARTIALLY_IMPLEMENTED")
+        self.assertEqual(action.evidence_class, "LIVE_CODE")
+        self.assertEqual(action.evidence_ref, "cyber_lion/contracts/action_proposal_projection.py")
+        self.assertEqual(action.missing_runtime, "explicit context-bound ActionProposal binding and canonical PDP admission")
+        self.assertEqual(action.next_minimal_gap, "define explicit proposal-context binding after static effect projection")
 
         lair = by_id["LAIR"]
         self.assertEqual(lair.status, "VERIFIED_REFERENCE")
