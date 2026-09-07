@@ -34,7 +34,24 @@ SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 SAFE_DOCKER_NAME = re.compile(r"^[a-z0-9][a-z0-9_.-]{0,127}$")
 ROLES = {"architecture", "security", "runtime", "provenance", "falsifier"}
-MUTATING = {"BUILD_P0_IMAGE", "CREATE_NETWORK", "RUN_DRONE", "STOP_DRONE", "REMOVE_DRONE", "REMOVE_NETWORK"}
+PROBES = {
+    "ROOTFS_WRITE_DENIED",
+    "NON_ROOT",
+    "NO_SHELL",
+    "NO_PACKAGE_MANAGER",
+    "NO_DOCKER_SOCKET",
+    "CAP_EFF_ZERO",
+    "EGRESS_DENIED",
+}
+MUTATING = {
+    "BUILD_P0_IMAGE",
+    "CREATE_NETWORK",
+    "RUN_DRONE",
+    "RUN_HARDENING_PROBE",
+    "STOP_DRONE",
+    "REMOVE_DRONE",
+    "REMOVE_NETWORK",
+}
 
 
 class Deny(RuntimeError):
@@ -154,8 +171,19 @@ def _validate_request(req: dict[str, Any]) -> None:
         raise Deny("schema mismatch")
     _sha(req["request_id"], SHA256, "request_id")
     if req["operation"] not in {
-        "PING", "BUILD_P0_IMAGE", "CREATE_NETWORK", "RUN_DRONE", "WAIT_DRONE",
-        "INSPECT_DRONE", "LOGS_DRONE", "STOP_DRONE", "REMOVE_DRONE", "REMOVE_NETWORK",
+        "PING",
+        "BUILD_P0_IMAGE",
+        "INSPECT_P0_IMAGE",
+        "CREATE_NETWORK",
+        "RUN_DRONE",
+        "RUN_HARDENING_PROBE",
+        "WAIT_DRONE",
+        "INSPECT_DRONE",
+        "LOGS_DRONE",
+        "STOP_DRONE",
+        "REMOVE_DRONE",
+        "REMOVE_NETWORK",
+        "LIST_MISSION_RESOURCES",
     }:
         raise Deny("operation not allowlisted")
     for key in ("mission_id", "fleet_id", "run_id"):
@@ -197,6 +225,12 @@ def _db() -> sqlite3.Connection:
         "request_id TEXT PRIMARY KEY, request_digest TEXT NOT NULL, "
         "operation TEXT NOT NULL, state TEXT NOT NULL)"
     )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS drone_leases("
+        "run_id TEXT NOT NULL, drone_id TEXT NOT NULL, generation INTEGER NOT NULL, "
+        "lease_id TEXT NOT NULL, capsule_digest TEXT NOT NULL, state TEXT NOT NULL, "
+        "PRIMARY KEY(run_id, drone_id), UNIQUE(run_id, lease_id))"
+    )
     return conn
 
 
@@ -212,6 +246,18 @@ def _fence(req: dict[str, Any]) -> None:
             )
         except sqlite3.IntegrityError as exc:
             raise Deny("replayed mutating request") from exc
+
+
+def _claim_drone_lease(req: dict[str, Any], *, drone_id: str, generation: int, lease_id: str, capsule_digest: str) -> None:
+    with _db() as conn:
+        try:
+            conn.execute(
+                "INSERT INTO drone_leases(run_id, drone_id, generation, lease_id, capsule_digest, state) "
+                "VALUES(?,?,?,?,?,?)",
+                (req["run_id"], drone_id, generation, lease_id, capsule_digest, "CONSUMED"),
+            )
+        except sqlite3.IntegrityError as exc:
+            raise Deny("drone lease already consumed") from exc
 
 
 def _assert_labels(kind: str, name: str, req: dict[str, Any]) -> None:
@@ -252,6 +298,58 @@ def _image_tag(req: dict[str, Any]) -> str:
     return f"lion-p0:{req['plan_digest'][:16]}"
 
 
+def _probe_program(name: str) -> str:
+    programs = {
+        "ROOTFS_WRITE_DENIED": (
+            "import json,sys\n"
+            "try:\n"
+            "    f=open('/lion-p0-rootfs-probe','wb'); f.write(b'x'); f.close()\n"
+            "except OSError as e:\n"
+            "    print(json.dumps({'denied':True,'errno':e.errno},sort_keys=True)); sys.exit(0)\n"
+            "print(json.dumps({'denied':False},sort_keys=True)); sys.exit(41)\n"
+        ),
+        "NON_ROOT": (
+            "import json,os,sys\n"
+            "u=os.geteuid(); print(json.dumps({'uid':u},sort_keys=True)); sys.exit(0 if u != 0 else 41)\n"
+        ),
+        "NO_SHELL": (
+            "import json,os,sys\n"
+            "p=['/bin/sh','/bin/bash','/usr/bin/sh','/usr/bin/bash']; x=[v for v in p if os.path.exists(v)]\n"
+            "print(json.dumps({'present':x},sort_keys=True)); sys.exit(0 if not x else 41)\n"
+        ),
+        "NO_PACKAGE_MANAGER": (
+            "import json,shutil,sys\n"
+            "n=['apt','apt-get','apk','dpkg','yum','dnf','microdnf','rpm','pip','pip3']; x={v:shutil.which(v) for v in n if shutil.which(v)}\n"
+            "print(json.dumps({'present':x},sort_keys=True)); sys.exit(0 if not x else 41)\n"
+        ),
+        "NO_DOCKER_SOCKET": (
+            "import json,os,sys\n"
+            "p=['/var/run/docker.sock','/run/docker.sock']; x=[v for v in p if os.path.exists(v)]\n"
+            "print(json.dumps({'present':x},sort_keys=True)); sys.exit(0 if not x else 41)\n"
+        ),
+        "CAP_EFF_ZERO": (
+            "import json,sys\n"
+            "c=None\n"
+            "for line in open('/proc/self/status',encoding='utf-8'):\n"
+            "    if line.startswith('CapEff:'):\n"
+            "        c=int(line.split()[1],16); break\n"
+            "print(json.dumps({'cap_eff':c},sort_keys=True)); sys.exit(0 if c == 0 else 41)\n"
+        ),
+        "EGRESS_DENIED": (
+            "import json,socket,sys\n"
+            "s=socket.socket(socket.AF_INET,socket.SOCK_STREAM); s.settimeout(2.0)\n"
+            "try:\n"
+            "    s.connect(('1.1.1.1',443))\n"
+            "except OSError as e:\n"
+            "    print(json.dumps({'denied':True,'error':type(e).__name__},sort_keys=True)); sys.exit(0)\n"
+            "print(json.dumps({'denied':False},sort_keys=True)); s.close(); sys.exit(41)\n"
+        ),
+    }
+    if name not in programs:
+        raise Deny("unknown hardening probe")
+    return programs[name]
+
+
 def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
     op = req["operation"]
     p = req["payload"]
@@ -275,6 +373,27 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
             raise Deny("built image identity invalid")
         return {"status": "OK", "image_tag": tag, "image_digest": image_id[7:]}
 
+    if op == "INSPECT_P0_IMAGE":
+        _require_exact_keys(p, {"image_digest"}, "payload")
+        image_digest = _sha(p["image_digest"], SHA256, "image_digest")
+        raw = _docker(["docker", "image", "inspect", f"sha256:{image_digest}"])
+        try:
+            obj = json.loads(raw)[0]
+            config = obj.get("Config") or {}
+            size = int(obj.get("Size") or 0)
+        except (ValueError, TypeError, KeyError, IndexError) as exc:
+            raise Deny("image inspection malformed") from exc
+        if size < 1:
+            raise Deny("image size unavailable")
+        return {
+            "status": "OK",
+            "image_digest": image_digest,
+            "size_bytes": size,
+            "user": str(config.get("User") or ""),
+            "entrypoint": list(config.get("Entrypoint") or []),
+            "labels": dict(config.get("Labels") or {}),
+        }
+
     if op == "CREATE_NETWORK":
         _require_exact_keys(p, {"network_name"}, "payload")
         name = _docker_name(p["network_name"], "network_name")
@@ -283,6 +402,40 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
         argv = ["docker", "network", "create", "--internal"] + _labels(req, "fleet-network") + [name]
         network_id = _docker(argv).strip()
         return {"status": "OK", "network_name": name, "network_id": network_id}
+
+    if op == "RUN_HARDENING_PROBE":
+        _require_exact_keys(p, {"probe", "network_name", "image_digest"}, "payload")
+        probe = p["probe"]
+        if not isinstance(probe, str) or probe not in PROBES:
+            raise Deny("probe invalid")
+        network = _docker_name(p["network_name"], "network_name")
+        image_digest = _sha(p["image_digest"], SHA256, "image_digest")
+        if not network.startswith("lion-p0-") or not network.endswith("-internal"):
+            raise Deny("probe network outside P0 namespace")
+        _assert_labels("network", network, req)
+        safe_run = re.sub(r"[^a-z0-9_.-]", "-", req["run_id"].lower())[:48]
+        name = _docker_name(f"lion-p0-{safe_run}-probe-{probe.lower().replace('_', '-')}", "probe_name")
+        extra = {"lion.probe": probe}
+        argv = [
+            "docker", "run", "--rm", "--name", name,
+            "--network", network,
+            "--read-only",
+            "--user", "65532:65532",
+            "--cap-drop", "ALL",
+            "--security-opt", "no-new-privileges",
+            "--pids-limit", "64",
+            "--memory", "134217728",
+            "--cpus", "0.20",
+            "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16777216",
+        ]
+        argv += _labels(req, "hardening-probe", extra=extra)
+        argv += ["--entrypoint", "python3", f"sha256:{image_digest}", "-c", _probe_program(probe)]
+        output = _docker(argv, timeout=30).strip()
+        try:
+            result = json.loads(output)
+        except json.JSONDecodeError as exc:
+            raise Deny("hardening probe output malformed") from exc
+        return {"status": "OK", "probe": probe, "result": result}
 
     if op == "RUN_DRONE":
         _require_exact_keys(
@@ -308,6 +461,7 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
         capsule_digest = _sha(p["capsule_digest"], SHA256, "capsule_digest")
         if not name.startswith("lion-p0-") or not network.startswith("lion-p0-") or not network.endswith("-internal"):
             raise Deny("resource name outside P0 namespace")
+        _assert_labels("network", network, req)
         try:
             capsule = base64.b64decode(p["capsule_b64"], validate=True)
         except Exception as exc:
@@ -360,6 +514,14 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
         ):
             if obj.get(key) != expected:
                 raise Deny(f"capsule binding mismatch: {key}")
+
+        _claim_drone_lease(
+            req,
+            drone_id=drone_id,
+            generation=generation,
+            lease_id=lease_id,
+            capsule_digest=capsule_digest,
+        )
 
         cap_dir = STATE_DIR / "capsules" / req["run_id"]
         cap_dir.mkdir(parents=True, exist_ok=True)
@@ -426,6 +588,19 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
         _assert_labels("network", name, req)
         _docker(["docker", "network", "rm", name])
         return {"status": "OK", "network_name": name}
+
+    if op == "LIST_MISSION_RESOURCES":
+        _require_exact_keys(p, set(), "payload")
+        filters = [
+            "--filter", f"label=lion.project={PROJECT}",
+            "--filter", f"label=lion.mission_id={req['mission_id']}",
+            "--filter", f"label=lion.run_id={req['run_id']}",
+        ]
+        containers_raw = _docker(["docker", "ps", "-a", *filters, "--format", "{{.ID}} {{.Names}}"])
+        networks_raw = _docker(["docker", "network", "ls", *filters, "--format", "{{.ID}} {{.Name}}"])
+        containers = [line for line in containers_raw.splitlines() if line.strip()]
+        networks = [line for line in networks_raw.splitlines() if line.strip()]
+        return {"status": "OK", "containers": containers, "networks": networks}
 
     raise Deny("unreachable operation")
 
