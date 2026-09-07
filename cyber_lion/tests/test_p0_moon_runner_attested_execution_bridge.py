@@ -27,7 +27,7 @@ from tools.p0_moon_runner_attested_bridge_contract import (
 import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-CURRENT_SCAN = "3c1810087e8da8e9a5646de8aaef075361e4a0f35060a891336900d9df51dc48"
+CURRENT_SCAN = "11a80e24a5713d222e59abadc9d8ff618808a3a6930b26b06c39d1df48466fba"
 HISTORICAL_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 LIVE_SOURCE_REVISION = "830f8c2e5561655dc35118c97f4574acc3bf0816"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
@@ -121,7 +121,7 @@ class RunnerAttestedExecutionBridgeTests(unittest.TestCase):
             bridge._git_value(self.root, "--exec-path")
 
     def test_wrong_os_user_uid_host_and_machine_are_denied(self):
-        valid = dict(uid=UID, user=OS_USER, hostname=HOST, machine_id=MACHINE)
+        valid = {"uid": UID, "user": OS_USER, "hostname": HOST, "machine_id": MACHINE}
         for key, wrong in (
             ("uid", 0),
             ("user", "root"),
