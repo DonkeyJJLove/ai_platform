@@ -170,7 +170,8 @@ EOF
 chmod 0644 "$RUNNER_DROPIN_DIR/10-lion-docker-p0.conf"
 
 systemctl daemon-reload
-systemctl enable --now "$PROVIDER_UNIT"
+systemctl enable "$PROVIDER_UNIT"
+systemctl restart "$PROVIDER_UNIT"
 
 if [[ "$(systemctl is-active "$PROVIDER_UNIT")" != "active" ]]; then
   systemctl status "$PROVIDER_UNIT" --no-pager >&2 || true
