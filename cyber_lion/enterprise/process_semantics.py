@@ -1,11 +1,22 @@
-"""Fail-closed, non-effectful selector for canonical LION Process IR transitions."""
+"""Fail-closed, non-effectful selector and dynamic closure for canonical LION Process IR."""
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from typing import Iterable
 
-from cyber_lion.contracts.process_action import ProcessTransitionOutcome
-from cyber_lion.contracts.process_ir import CanonicalProcessIR, ProcessContextSnapshot, ProcessIRContractError
+from cyber_lion.contracts.process_action import (
+    ProcessActionContractError,
+    ProcessTransitionOutcome,
+    TransitionDecisionRecord,
+)
+from cyber_lion.contracts.process_ir import (
+    AttemptRecord,
+    CanonicalProcessIR,
+    CurrentnessBasis,
+    NEXT_DIRECTIVES,
+    ProcessContextSnapshot,
+    ProcessIRContractError,
+)
 
 DECISIONS = frozenset({"SELECTED", "BLOCKED", "HANDOFF_REQUIRED", "COMPLETE", "UNKNOWN"})
 
@@ -34,8 +45,13 @@ def _attempt_map(context: ProcessContextSnapshot) -> dict[str, int]:
     return dict(context.attempt_counts)
 
 
+def _current_basis_map(context: ProcessContextSnapshot) -> dict[str, CurrentnessBasis]:
+    return {basis.requirement_id: basis for basis in context.currentness_bases}
+
+
 class TransitionSelector:
     """Selects the next legal transition. It cannot execute or grant authority."""
+
     def __init__(self, process_ir: CanonicalProcessIR) -> None:
         self._ir = process_ir.validate()
         self._model = self._ir.as_dict()
@@ -54,15 +70,50 @@ class TransitionSelector:
     def _missing(required: Iterable[str], satisfied: Iterable[str]) -> set[str]:
         return set(required) - set(satisfied)
 
+    @staticmethod
+    def _currentness_satisfied(transition: dict, context: ProcessContextSnapshot) -> bool:
+        bases = _current_basis_map(context)
+        allowed_subjects = set(transition["resource_claims"]["currentness_subjects"])
+        for requirement in transition["currentness_requirements"]:
+            basis = bases.get(requirement)
+            if basis is None:
+                return False
+            basis.validate()
+            if basis.state != "CURRENT" or basis.subject != requirement or basis.subject not in allowed_subjects or not basis.evidence_ref or not basis.observed_identity or not basis.observed_at or not basis.basis_digest:
+                return False
+        return True
+
+    @staticmethod
+    def _retry_reconciled(transition: dict, context: ProcessContextSnapshot) -> bool:
+        count = _attempt_map(context).get(transition["transition_id"], 0)
+        if count == 0:
+            return True
+        if transition["idempotency_class"] != "NON_IDEMPOTENT":
+            return True
+        if transition["replay_policy"] != "RECONCILE_FIRST":
+            return False
+        prior = [record for record in context.attempt_records if record.transition_id == transition["transition_id"] and record.attempt_number == count]
+        return len(prior) == 1 and bool(prior[0].reconciliation_ref)
+
     def select(self, context: ProcessContextSnapshot) -> TransitionDecision:
         try:
             context.validate_for(self._ir)
         except ProcessIRContractError as exc:
             raise ProcessSemanticError(str(exc)) from exc
+        if context.process_control == "COMPLETE":
+            return TransitionDecision("COMPLETE", reason="process control is complete").validate()
+        if context.process_control == "HANDOFF_REQUIRED":
+            return TransitionDecision("HANDOFF_REQUIRED", reason="process control requires handoff").validate()
+        if context.process_control == "DEFERRED":
+            return TransitionDecision("BLOCKED", reason="process control is deferred").validate()
+        if context.process_control == "TERMINATED":
+            return TransitionDecision("BLOCKED", reason="process control is terminated").validate()
         if context.process_state in set(self._model["termination_policy"]["terminal_states"]):
             return TransitionDecision("COMPLETE", reason="terminal process state").validate()
+
         attempts = _attempt_map(context)
         blocked_by_dependency = False
+        blocked_by_retry = False
         unknown = False
         handoff = False
         for transition in self._ordered():
@@ -78,28 +129,51 @@ class TransitionSelector:
             if self._missing(transition["evidence_requirements"], context.satisfied_evidence_requirements):
                 unknown = True
                 continue
-            if self._missing(transition["currentness_requirements"], context.satisfied_currentness_requirements):
+            if not self._currentness_satisfied(transition, context):
                 unknown = True
                 continue
             if self._missing(transition["authority_requirements"], context.verified_authority_context_refs):
                 handoff = True
                 continue
+            # max_attempts means additional attempts after the initial attempt.
             if attempts.get(tid, 0) > transition["retry_policy"]["max_attempts"]:
-                blocked_by_dependency = True
+                blocked_by_retry = True
+                continue
+            if not self._retry_reconciled(transition, context):
+                blocked_by_retry = True
                 continue
             return TransitionDecision("SELECTED", transition_id=tid, reason="first legal unfinished transition").validate()
+
         if handoff:
             return TransitionDecision("HANDOFF_REQUIRED", reason="authority context is not independently verified").validate()
         if unknown:
             return TransitionDecision("UNKNOWN", reason="evidence/currentness/guard requirements are unresolved").validate()
-        if blocked_by_dependency:
-            return TransitionDecision("BLOCKED", reason="dependency or retry boundary blocks remaining transition").validate()
+        if blocked_by_dependency or blocked_by_retry:
+            return TransitionDecision("BLOCKED", reason="dependency, retry or reconciliation boundary blocks remaining transition").validate()
         if self._model["termination_policy"]["allow_no_legal_transition"]:
             return TransitionDecision("COMPLETE", reason="no legal unfinished transition remains").validate()
         return TransitionDecision("BLOCKED", reason="no legal transition and implicit completion is forbidden").validate()
 
+    def bind_selected(self, context: ProcessContextSnapshot) -> TransitionDecisionRecord:
+        decision = self.select(context)
+        if decision.decision != "SELECTED":
+            raise ProcessSemanticError(f"cannot bind non-selected transition decision: {decision.decision}")
+        transition = self._transitions[decision.transition_id]
+        return TransitionDecisionRecord(
+            process_id=self._model["process_id"],
+            process_ir_digest=self._ir.process_digest,
+            process_context_digest=context.context_digest(self._ir),
+            transition_id=decision.transition_id,
+            transition_class=transition["transition_class"],
+            decision="SELECTED",
+            decision_basis=decision.reason,
+            selected_at=context.observed_at,
+        ).sealed()
+
     def select_parallel(self, context: ProcessContextSnapshot) -> tuple[str, ...]:
         context.validate_for(self._ir)
+        if context.process_control != "ACTIVE":
+            return ()
         policy = self._model["scheduling_policy"]
         max_wip = policy["max_wip"]
         if max_wip <= 1:
@@ -116,11 +190,13 @@ class TransitionSelector:
                 continue
             if set(transition["evidence_requirements"]) - set(context.satisfied_evidence_requirements):
                 continue
-            if set(transition["currentness_requirements"]) - set(context.satisfied_currentness_requirements):
+            if not self._currentness_satisfied(transition, context):
                 continue
             if set(transition["authority_requirements"]) - set(context.verified_authority_context_refs):
                 continue
             if attempts.get(tid, 0) > transition["retry_policy"]["max_attempts"]:
+                continue
+            if not self._retry_reconciled(transition, context):
                 continue
             legal.append(tid)
         allowed_groups = [set(group) for group in policy["parallel_safe_groups"]]
@@ -154,30 +230,85 @@ class TransitionSelector:
         return True
 
 
-def apply_transition_outcome(process_ir: CanonicalProcessIR, context: ProcessContextSnapshot, outcome: ProcessTransitionOutcome) -> ProcessContextSnapshot:
-    """Apply one already-evidenced downstream outcome; this function performs no effect."""
-    process_ir.validate(); context.validate_for(process_ir); outcome.validate()
+def _required_currentness_basis_digests(transition: dict, context: ProcessContextSnapshot) -> set[str]:
+    bases = _current_basis_map(context)
+    return {bases[requirement].basis_digest for requirement in transition["currentness_requirements"] if requirement in bases and bases[requirement].state == "CURRENT"}
+
+
+def apply_transition_outcome(process_ir: CanonicalProcessIR, context: ProcessContextSnapshot, decision_record: TransitionDecisionRecord, outcome: ProcessTransitionOutcome) -> ProcessContextSnapshot:
+    """Apply one evidence-bound selected outcome; this function performs no effect."""
+    process_ir.validate(); context.validate_for(process_ir)
+    try:
+        decision_record.validate(); outcome.validate()
+    except ProcessActionContractError as exc:
+        raise ProcessSemanticError(str(exc)) from exc
+    model = process_ir.as_dict()
+    if decision_record.process_id != model["process_id"]:
+        raise ProcessSemanticError("decision process identity mismatch")
+    if decision_record.process_ir_digest != process_ir.process_digest:
+        raise ProcessSemanticError("decision Process IR binding mismatch")
+    if decision_record.process_context_digest != context.context_digest(process_ir):
+        raise ProcessSemanticError("decision ProcessContext binding mismatch")
+    current_decision = TransitionSelector(process_ir).select(context)
+    if current_decision.decision != "SELECTED" or current_decision.transition_id != decision_record.transition_id:
+        raise ProcessSemanticError("outcome lacks a currently legal selected transition")
+    transition = next((item for item in model["transitions"] if item["transition_id"] == decision_record.transition_id), None)
+    if transition is None:
+        raise ProcessSemanticError("decision transition is undefined")
+    if decision_record.transition_class != transition["transition_class"]:
+        raise ProcessSemanticError("decision transition class mismatch")
+    if decision_record.transition_decision_digest != outcome.transition_decision_digest:
+        raise ProcessSemanticError("outcome transition decision binding mismatch")
     if outcome.process_ir_digest != process_ir.process_digest:
         raise ProcessSemanticError("outcome Process IR binding mismatch")
-    if outcome.process_id != process_ir.as_dict()["process_id"]:
+    if outcome.process_id != model["process_id"]:
         raise ProcessSemanticError("outcome process identity mismatch")
-    transition = next((item for item in process_ir.as_dict()["transitions"] if item["transition_id"] == outcome.transition_id), None)
-    if transition is None:
-        raise ProcessSemanticError("outcome transition is undefined")
+    if outcome.transition_id != transition["transition_id"]:
+        raise ProcessSemanticError("outcome transition identity mismatch")
     if context.process_state not in transition["source_states"]:
         raise ProcessSemanticError("outcome source-state substitution denied")
+    attempts = _attempt_map(context)
+    expected_attempt = attempts.get(transition["transition_id"], 0) + 1
+    if outcome.attempt_number != expected_attempt:
+        raise ProcessSemanticError("outcome attempt number is not the next legal attempt")
     expected_next = transition["outcome_map"].get(outcome.outcome)
     if expected_next is None:
         raise ProcessSemanticError("outcome label is not declared by transition")
-    if expected_next in {"CONTINUE", "DEFER", "HANDOFF", "STOP", "COMPLETE"}:
-        if outcome.next_state not in process_ir.as_dict()["states"]:
-            raise ProcessSemanticError("directive outcome requires explicit valid next process state")
-    elif outcome.next_state != expected_next:
+    if transition["transition_class"] == "ACTION_REQUIRED" and outcome.outcome == "PASS":
+        required = (outcome.action_ref, outcome.proposal_digest, outcome.admission_ref, outcome.effect_ref, outcome.observation_ref, outcome.reconciliation_ref, outcome.currentness_basis_ref)
+        if any(not item for item in required):
+            raise ProcessSemanticError("ACTION_REQUIRED PASS requires action, proposal, admission, effect, observation, reconciliation and currentness evidence")
+        valid_currentness = _required_currentness_basis_digests(transition, context)
+        if outcome.currentness_basis_ref not in valid_currentness:
+            raise ProcessSemanticError("ACTION_REQUIRED PASS currentness basis does not bind selected context")
+    next_state = outcome.next_state
+    next_control = "ACTIVE"
+    if expected_next in NEXT_DIRECTIVES:
+        if next_state != context.process_state:
+            raise ProcessSemanticError("directive outcome cannot substitute arbitrary process state")
+        next_control = {"CONTINUE":"ACTIVE","DEFER":"DEFERRED","HANDOFF":"HANDOFF_REQUIRED","STOP":"TERMINATED","COMPLETE":"COMPLETE"}[expected_next]
+    elif next_state != expected_next:
         raise ProcessSemanticError("outcome next-state substitution denied")
+    attempt_record = AttemptRecord(
+        transition_id=transition["transition_id"], attempt_number=expected_attempt,
+        outcome=outcome.outcome, effect_ref=outcome.effect_ref,
+        observation_ref=outcome.observation_ref, reconciliation_ref=outcome.reconciliation_ref,
+    ).sealed()
     completed = context.completed_transitions
     if outcome.outcome == "PASS" and outcome.transition_id not in completed:
         completed = completed + (outcome.transition_id,)
     action_refs = context.action_result_refs + ((outcome.action_ref,) if outcome.action_ref else ())
     obs_refs = context.observation_refs + ((outcome.observation_ref,) if outcome.observation_ref else ())
     rec_refs = context.reconciliation_refs + ((outcome.reconciliation_ref,) if outcome.reconciliation_ref else ())
-    return replace(context, process_state=outcome.next_state, completed_transitions=completed, action_result_refs=tuple(dict.fromkeys(action_refs)), observation_refs=tuple(dict.fromkeys(obs_refs)), reconciliation_refs=tuple(dict.fromkeys(rec_refs))).validate_for(process_ir)
+    new_counts = dict(attempts); new_counts[outcome.transition_id] = expected_attempt
+    return replace(
+        context,
+        process_state=next_state,
+        process_control=next_control,
+        completed_transitions=completed,
+        action_result_refs=tuple(dict.fromkeys(action_refs)),
+        observation_refs=tuple(dict.fromkeys(obs_refs)),
+        reconciliation_refs=tuple(dict.fromkeys(rec_refs)),
+        attempt_counts=tuple(sorted(new_counts.items())),
+        attempt_records=context.attempt_records + (attempt_record,),
+    ).validate_for(process_ir)
