@@ -1,0 +1,18 @@
+{
+  "architecture_epoch": "1.4",
+  "currentness_rule": "Each entry is current only for its exact head/tree; any default-branch drift invalidates that entry.",
+  "process_epoch": "R20",
+  "repositories": [
+    {"branch":"master","head":"5d5a02b37fdfff4bcbf62f455d37ce4b86080f59","repository":"DonkeyJJLove/ai_platform","role":"canonical architecture/control-plane owner","tree":"9725bebf8d9766c58096cfc34af06ffcb8aa32f1"},
+    {"branch":"master","head":"b8657037e94787a103c99f1fbb3058341821ffd7","repository":"DonkeyJJLove/chunk-chunk","role":"computation / chunk analysis","tree":"3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9"},
+    {"branch":"master","head":"329d670e53f3e4606f60eeb2f446eb34df3bb05d","repository":"DonkeyJJLove/glitchlab","role":"experimentation / glitch research","tree":"653f7593e4c6f0478c2f85b48d3091d0faed7892"},
+    {"branch":"master","head":"13ac2c760aa0c4f528addaacc782239c00e3890e","repository":"DonkeyJJLove/HA2D","role":"simulation","tree":"bc6c8a067074fead00b57d6c9f8f852f1fa74977"},
+    {"branch":"main","head":"569acad16f0ca8eb0c4e4522586914b57f5bf475","repository":"DonkeyJJLove/hipotezy_nadawcze_LLM","role":"model-analysis research","tree":"0c1f6d690a2bdae34f0ecd6c9afbb04933af220c"},
+    {"branch":"main","head":"0ad23c8a9fb9f942e41ade83ecafa8f393e5d481","repository":"DonkeyJJLove/mosaic_lab_pro.py","role":"computation / visualization","tree":"ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1"},
+    {"branch":"main","head":"86b92e9f7c3361d69e2322193441f4626f8205e7","repository":"DonkeyJJLove/sbom","role":"security tooling / SBOM evidence","tree":"8d7cc0e5b5025899d0889c4a5c17ac230681c4fb"},
+    {"branch":"master","head":"6aee0442d4b8a861989503ca55aac0c45f065afb","repository":"DonkeyJJLove/swarm","role":"fleet/swarm experimentation; advertised capabilities remain claims until integrated evidence","tree":"86830750c688e9e65d3eafc7232e89f20267c705"},
+    {"branch":"main","head":"2fa3b9f8285387d8f14e116901a671c4fcb75174","repository":"DonkeyJJLove/SymulacjaKaskadySieciowej","role":"simulation / cascading-network research","tree":"9c3fc13abab6ac22631615ac4ac72085bd84ded9"},
+    {"branch":"master","head":"cb7e304512566f16ed11f1a659799ec79fa5f5f6","repository":"DonkeyJJLove/writeups","role":"research/evidence corpus; R18 autonomy package commit was reverted and is historical","tree":"2b82b8875f976b836af04db412483ce278e1ef95"}
+  ],
+  "schema": "lion.federation.current-vector.v1"
+}

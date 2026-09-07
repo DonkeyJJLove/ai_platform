@@ -1,0 +1,39 @@
+{
+  "authority_effect": "NONE",
+  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "baseline_tree": "9725bebf8d9766c58096cfc34af06ffcb8aa32f1",
+  "create": [
+    "LION/architecture/v1_4/README.md",
+    "LION/architecture/v1_4/current_state.json",
+    "LION/architecture/v1_4/federation_current_vector.json",
+    "LION/architecture/v1_4/material_object_catalog.json",
+    "LION/architecture/v1_4/capability_catalog.json",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_4/event_state_catalog.json",
+    "LION/architecture/v1_4/semantic_owners.json",
+    "LION/architecture/v1_4/documentation_gap_register.json",
+    "LION/architecture/v1_4/documentation_mutation_manifest.json",
+    "LION/architecture/v1_4/DOCUMENTATION_UPDATE_PLAN.md",
+    "LION/architecture/v1_4/history_and_supersession.md"
+  ],
+  "explicit_no_change": [
+    "LION/status.json",
+    "LION/catalog.json",
+    "cyber_lion/architecture_projection/gap.py",
+    "cyber_lion/contracts/v1/action_spec.schema.json",
+    "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+    "all runtime/authority/effect source code"
+  ],
+  "host_effect": "NONE",
+  "other_repositories": "NO_MUTATION_REQUIRED_FROM_EVIDENCE_AVAILABLE; existing cyber-lion.repository.json remains local owner.",
+  "process": "R20",
+  "production_effect": "NONE",
+  "runtime_semantic_effect": "NONE",
+  "schema": "lion.documentation.mutation-manifest.v1",
+  "update": ["LION/README.md","cyber_lion/REPOSITORY_INVENTORY.md","AI_NATIVE_ROADMAP.md"],
+  "writeups_candidate": {
+    "base_head": "cb7e304512566f16ed11f1a659799ec79fa5f5f6",
+    "base_tree": "2b82b8875f976b836af04db412483ce278e1ef95",
+    "create": ["LION_ARCHITECTURE_ROLE_v1_4.md"]
+  }
+}

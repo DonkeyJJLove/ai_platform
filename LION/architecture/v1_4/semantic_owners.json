@@ -1,0 +1,18 @@
+{
+  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "owners": [
+    {"concept":"global v1.4 documentation navigation/current state","primary":"LION/architecture/v1_4/README.md","secondary":["README.md","LION/README.md"]},
+    {"concept":"source-derived canonical architecture model","primary":"cyber_lion/architecture_projection/full_architecture.py","secondary":["LION/architecture/v1_4/material_object_catalog.json"]},
+    {"concept":"canonical architecture flows","primary":"cyber_lion/architecture_projection/flows.py","secondary":["LION/architecture/v1_4/event_state_catalog.json"]},
+    {"concept":"target architecture","primary":"cyber_lion/TARGET_ARCHITECTURE.md","secondary":["AI_NATIVE_ROADMAP.md"]},
+    {"concept":"capability map","primary":"cyber_lion/CAPABILITY_MAP.md","secondary":["LION/architecture/v1_4/capability_catalog.json"]},
+    {"concept":"contract map","primary":"cyber_lion/CONTRACT_MAP.md","secondary":["LION/architecture/v1_4/contract_catalog.json"]},
+    {"concept":"event/data model","primary":"cyber_lion/EVENT_DATA_MODEL.md","secondary":["LION/architecture/v1_4/event_state_catalog.json"]},
+    {"concept":"enterprise runtime boundary","primary":"cyber_lion/enterprise/README.md","secondary":["LION/architecture/v1_4/README.md"]},
+    {"concept":"federation exact baseline","primary":"LION/architecture/v1_4/federation_current_vector.json","secondary":["peer cyber-lion.repository.json manifests"]},
+    {"concept":"historical E003 status","lifecycle":"HISTORICAL_STALE_CURRENTNESS_CLAIM","primary":"LION/status.json","secondary":["LION/architecture/v1_4/history_and_supersession.md"]},
+    {"concept":"evolution roadmap","primary":"AI_NATIVE_ROADMAP.md","secondary":["LION/architecture/v1_4/README.md"]},
+    {"concept":"RAG lineage","primary":"LION-RAG32 package carriers","secondary":["LION/architecture/v1_4/history_and_supersession.md"]}
+  ],
+  "schema": "lion.documentation.semantic-owner-map.v1"
+}

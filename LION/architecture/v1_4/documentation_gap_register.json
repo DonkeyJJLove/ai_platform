@@ -1,0 +1,12 @@
+{
+  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "gaps": [
+    {"classification":"STALE","description":"Self-declared CURRENT projects E003-M128 from 2026-08-24 while live master is R19P-era.","id":"DOC-CURRENTNESS-001","path":"LION/status.json","r20_action":"Supersede for v1.4 documentation through exact-baseline current_state.json; do not mutate consumer-sensitive legacy contract without proof.","remaining":true},
+    {"classification":"STALE","description":"Describes ai_platform as primarily non-executable/specification despite live control-plane/runtime code.","id":"DOC-INVENTORY-001","path":"cyber_lion/REPOSITORY_INVENTORY.md","r20_action":"Update human-readable inventory.","remaining":false},
+    {"classification":"AMBIGUOUS","description":"Action gap wording can be read as RuntimeAdmissionEngine missing although engine exists.","id":"DOC-GAP-001","path":"cyber_lion/architecture_projection/gap.py","r20_action":"Do not mutate executable projection in docs-only run; human docs clarify generalized materializer gap.","remaining":true},
+    {"classification":"STALE","description":"Embedded x-lion baseline/support metadata is older than current live implementation.","id":"DOC-ACTIONSPEC-001","path":"cyber_lion/contracts/v1/action_spec.schema.json","r20_action":"Do not mutate schema/consumer-sensitive metadata without semantic non-effect proof.","remaining":true},
+    {"classification":"CONTRADICTORY","description":"Wire schema requires schema_version while runtime ActionProposal dataclass lacks it.","id":"DOC-ACTIONPROPOSAL-001","path":"cyber_lion/contracts/v1/action_spec_support_matrix.json","r20_action":"Preserve NO_WIRE_SCHEMA_CONFORMANCE_CLAIM.","remaining":true},
+    {"classification":"UNKNOWN","description":"Exhaustive all-symbol AST census cannot be independently proven from current connector-only snapshot.","id":"DOC-CENSUS-001","path":"repository-wide","r20_action":"Publish explicit architecture-material catalog; all_symbol_census=UNPROVEN.","remaining":true}
+  ],
+  "schema": "lion.documentation.gap-register.v1"
+}
