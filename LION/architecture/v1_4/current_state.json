@@ -1,21 +1,21 @@
 {
   "schema": "lion.documentation.current-state.v1",
   "architecture_epoch": "1.4",
-  "process_epoch": "R22H",
+  "process_epoch": "R22I",
   "repository": "DonkeyJJLove/ai_platform",
   "baseline_branch": "master",
   "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
   "baseline_tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
-  "projection_scope": "DEFAULT_BRANCH_BASELINE_PLUS_EXPLICIT_R22H_CANDIDATE_EVIDENCE",
+  "projection_scope": "DEFAULT_BRANCH_BASELINE_PLUS_EXPLICIT_R22I_CANDIDATE_EVIDENCE",
   "projection_state": "EVIDENCE_BOUND_NONPROMOTING_RECONCILIATION",
-  "currentness_rule": "Default-branch truth is bound to the exact master HEAD/TREE above. Candidate evidence is explicitly labeled as a pre-documentation observation and never self-promotes to default truth, deployment, authority or effect.",
+  "currentness_rule": "Default-branch truth is bound to the exact master HEAD/TREE above. R22I candidate evidence is explicitly labeled as a pre-carrier observation and never self-promotes to default truth, deployment, authority or effect.",
   "currentness_basis": {
     "generator_kind": "MANUAL_EVIDENCE_RECONCILIATION",
-    "generator_version": "R22H/1",
-    "candidate_source_observation_head": "84ef1e5fddbea3a327ff856965ba2b62da77a471",
-    "candidate_source_observation_tree": "96f0640250cad4fd6f7ba456aec0be67c6218f95",
-    "candidate_pr": 297,
-    "candidate_observation_semantics": "PRE_DOCUMENTATION_NONAUTHORITATIVE"
+    "generator_version": "R22I/1",
+    "candidate_source_observation_head": "b4045878be064586a61efa0f3ec8be5103a5a08c",
+    "candidate_source_observation_tree": "66c2a15840b7b6a33e0442f853d82be50adf7b25",
+    "candidate_pr": 300,
+    "candidate_observation_semantics": "PRE_CARRIER_NONAUTHORITATIVE"
   },
   "source_and_effect_truth": {
     "production_selector": "cyber_lion Python excluding cyber_lion/tests plus .github/workflows/*.yml and *.yaml",
@@ -31,11 +31,11 @@
     "surface_count": 236,
     "raw_unclassified_count": 6,
     "reconciled_unclassified_count": 0,
-    "scan_digest": "a45c1fc2be1846d4db49dc3c348f59e576f062358741b6c68da3836adb923d14",
-    "raw_inventory_digest": "3250314de465e0a3afab21632c188cea9a326b73e7fdd875be588bb83f83803f",
-    "reconciled_inventory_digest": "aa4f8fec84103aa6ec17932557499226ee29fd776a95e8af1b15f71ffb8d217b",
-    "taxonomy_reconciliation_digest": "f633c227c7088dbff5ee9a4699bbdfe4390b1e100581271bdadb9871e4403c7a",
-    "classification": "SOURCE_SET_IDENTITY_DRIFT_WITH_STABLE_EFFECT_SURFACE"
+    "scan_digest": "c643ab174bec81dc86fde535be72230c88cfc557a2ca5596f9362db259d02724",
+    "raw_inventory_digest": "9949599af90ac2d4ee0d750d186b4360c8d94727950d3c0955a32b643823c4c8",
+    "reconciled_inventory_digest": "148acf8f7f37adcb6dfb9da5fcb26d616f931133b1de55d5c883211cc045b91e",
+    "taxonomy_reconciliation_digest": "2ca6deecbb2d1913b9c03bbd2ab75d3c9bd42b721d8aa8a6151c0d684c179de7",
+    "classification": "STABLE_SOURCE_CARDINALITY_AND_EFFECT_SURFACE_WITH_R22I_PRODUCTION_BYTE_DRIFT"
   },
   "action_plane": {
     "integrated": [
@@ -45,6 +45,7 @@
       "ActionProposal",
       "canonical PDP handoff",
       "inert reusable Action runtime binder",
+      "governed binder consumption by RuntimeAdmissionEngine",
       "RuntimeAdmissionEngine",
       "RuntimeExecutionEngine",
       "effect-time currentness",
@@ -52,14 +53,15 @@
     ],
     "runtime_binder": {
       "path": "cyber_lion/contracts/action_runtime_binding.py",
-      "status": "CANDIDATE_IMPLEMENTED_AND_TESTED",
-      "outputs": ["RequestedRuntimeEffect","RuntimeIdentityBinding","CanonicalPDPDecisionEvidence"],
-      "requires": ["exact ActionProposal/context","canonical PDP ALLOW","trusted currentness","exact ProvisionedExecutor"],
+      "status": "R22I_CANDIDATE_INTEGRATED_AND_GOVERNED_CONSUMPTION_TESTED",
+      "outputs": ["RequestedRuntimeEffect", "RuntimeIdentityBinding", "CanonicalPDPDecisionEvidence"],
+      "requires": ["exact ActionProposal/context", "canonical PDP ALLOW", "trusted currentness", "exact ProvisionedExecutor", "provisioned_executor_digest binding"],
+      "consumer": "RuntimeAdmissionEngine.admit_bound_action -> existing RuntimeAdmissionEngine.admit",
       "runtime_effect": "NONE",
       "authority_effect": "NONE"
     },
     "bounded_live_evidence": "F009 remains bounded create-only runtime evidence and is not reinterpreted as general authority.",
-    "active_frontier": "Integrate/consume the inert binder only through the existing governed RuntimeAdmissionEngine/currentness/effect chain under separate authority. No runtime deployment is authorized by R22H."
+    "active_frontier": "R22I Action binder consumption is materialized in the existing governed RuntimeAdmissionEngine without an alternate effect path. Remaining R22I work is procedural truth-carrier closure and final exact-head verification; runtime deployment remains outside this lane."
   },
   "model_plane": {
     "contract_path": "cyber_lion/contracts/model_plane_adapter.py",
@@ -72,7 +74,7 @@
     "non_claim": "Compatibility is not deployment, provider selection, endpoint configuration, secret materialization or runtime authority."
   },
   "factory": {
-    "integrated": ["BeanSpec","BeanInstance/BeanCandidate family","CapabilityNeed","CompositionContract/CompositionEngine","Mosaic","BeanBuilderChainBinding"],
+    "integrated": ["BeanSpec", "BeanInstance/BeanCandidate family", "CapabilityNeed", "CompositionContract/CompositionEngine", "Mosaic", "BeanBuilderChainBinding"],
     "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS inside its closed grammar.",
     "general_generativity": "FALSIFIED_OUTSIDE_B0_GRAMMAR",
     "general_generativity_evidence": "R22F float-list out-of-grammar family is rejected with GenerativityProtocolError.",
@@ -81,35 +83,25 @@
     "human_authority_boundary": "REAL_CHILD_ACTIVATION"
   },
   "full_symbol_census": {
-    "candidate_source_observation_head": "84ef1e5fddbea3a327ff856965ba2b62da77a471",
-    "candidate_source_observation_tree": "96f0640250cad4fd6f7ba456aec0be67c6218f95",
-    "committed_python_files": 501,
-    "parsed_python_files": 501,
+    "candidate_source_observation_head": "b4045878be064586a61efa0f3ec8be5103a5a08c",
+    "candidate_source_observation_tree": "66c2a15840b7b6a33e0442f853d82be50adf7b25",
+    "observation_class": "R22I_PRE_DOCUMENTATION",
+    "committed_python_files": 502,
+    "parsed_python_files": 502,
     "parse_failures": 0,
-    "symbols": 8586,
-    "public": 6756,
-    "private_material": 1049,
-    "classes": 1457,
-    "functions": 1922,
-    "methods": 5207,
-    "protocols": 85,
-    "enums": 7,
-    "exceptions": 198,
-    "documented_public_symbols": 320,
-    "documented_private_material_symbols": 20,
-    "docstring_coverage": {"public_percentage":4.73653,"private_material_percentage":1.906578},
-    "census_digest": "06eec13de9e9a768c35ee1889a22fd943b533b83469237baf3790e751a29f913",
-    "effect_surfaces_in_python_census_scope": 234,
-    "unclassified_effect_refs_in_python_census_scope": 9,
-    "scope_note": "Census Python effect counts include tools and are not the production-selector effect inventory; production truth remains 236 surfaces and 6 raw unclassified references.",
+    "symbols": 8617,
+    "public": 6784,
+    "private_material": 1052,
+    "census_digest": "118d23e2508b0dfcab84f2cef95381d7f4cbf68b272323013174bae82d8a1835",
+    "scope_note": "This is the exact R22I b404 pre-documentation census. Documentation and carrier commits change Git identity, so the final carrier-bound HEAD requires its own exact census run.",
     "final_exact_head_recheck_required_after_carriers": true
   },
   "federation": {
     "member_count": 10,
     "live_vector": "LION/architecture/v1_4/federation_current_vector.json",
-    "material_drift_members": ["DonkeyJJLove/ai_platform","DonkeyJJLove/writeups"],
+    "basis": "R22H_LIVE_SWEEP_CARRIED_FORWARD_WITHOUT_R22I_FEDERATION_PROMOTION",
+    "material_drift_members": ["DonkeyJJLove/ai_platform", "DonkeyJJLove/writeups"],
     "manifest_absence": ["DonkeyJJLove/writeups"],
-    "open_pr_counts_nonzero": {"DonkeyJJLove/ai_platform":4,"DonkeyJJLove/swarm":1},
     "authority_effect": "NONE"
   },
   "global_complete_mediation": "UNKNOWN",
@@ -123,7 +115,7 @@
     "github_runner_observed": ["LION-AUTH-LAB"],
     "lion_authority_signer_principal": "NOT_OBSERVED",
     "local_model_runtime": "NOT_OBSERVED",
-    "logical_hosts": ["LION-AUTH-LAB","MOON","LAB-UBUNTU","LAB-DEBIAN"],
+    "logical_hosts": ["LION-AUTH-LAB", "MOON", "LAB-UBUNTU", "LAB-DEBIAN"],
     "observed_kernel": "6.6.87.2-microsoft-standard-WSL2",
     "physical_failure_domain_independence": "NOT_PROVEN"
   },
