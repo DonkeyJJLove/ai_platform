@@ -22,7 +22,7 @@ from tools.p0_moon_attested_adjudication_contract import (
 SOURCE_REVISION="830f8c2e5561655dc35118c97f4574acc3bf0816"
 SOURCE_TREE="5189c1a582400de829f08c4103fdfafa993ba2e6"
 SOURCE_INVENTORY="a87e0f9ccb4fb81bbbc168900a8db8984f554a74a0b3f8c2a637d75e85fcb9df"
-EXPECTED_SCAN_DIGEST="c643ab174bec81dc86fde535be72230c88cfc557a2ca5596f9362db259d02724"
+EXPECTED_SCAN_DIGEST="29cc58638fcac156590e296b893f5aa11fb8791770ba277c77fe8adc1eb8cec4"
 SOURCE_BRIDGE_BLOB="a5ec373145f01ae2713fa620baa9799819cb813a"
 WORKFLOW_PATH=".github/workflows/lion-moon-runner-attested-execution-bridge.yml"
 WORKFLOW_REF="DonkeyJJLove/ai_platform/.github/workflows/lion-moon-runner-attested-execution-bridge.yml@refs/heads/mission/p0-moon-runner-attested-execution-bridge-attach-r1"
@@ -45,7 +45,6 @@ OBSERVATION_MAP={"OBSERVE_SCHEMA":CREATE_TABLE_SURFACE,"OBSERVE_SAME_CONNECTION_
 POLICY_VERSION="MOON-MEDIATION-ATTACK-POLICY/1"
 EPOCH_PREFIX="P0-MOON-ATTESTED-ADJ-R1@"
 
-# Literal outer receipts reacquired from GitHub Actions job logs.  The inner receipt payloads are intentionally absent.
 _OUTER={
 "OBSERVE_SCHEMA":dict(attestation_digest="999fb8a6a441b159668142b4a500ec1541ab176fa75426cd1a4f40950ea5f43d",run_id="33927134326",job_id="execute-operation",workflow_ref=WORKFLOW_REF,revision=SOURCE_REVISION,tree=SOURCE_TREE,runner_name="lion-moon-r9d8-test",runner_agent_id=24,os_user="lion-maintenance-runner",uid=993,hostname="LION-AUTH-LAB",machine_id="e69aa593257d47b8885d1bd87710b196",operation="OBSERVE_SCHEMA",result="OBSERVED",result_digest="2065f97c69a0564a41df5c0f8fb9d1f11af88e31e98faed477c1bfda6d8574e7",observed_at="2026-09-04T22:50:12.192946+00:00",receipt_digest="1791c38dae3572f8d8ed0b54aa86a996b75f892c6079efb75fd8b9354bf043e2"),
 "OBSERVE_SAME_CONNECTION_PRAGMA":dict(attestation_digest="bb76fe7a8db7e15792ec681e12b1dbea304d0bbcb25995aa7ee7feef47a91246",run_id="33927211665",job_id="execute-operation",workflow_ref=WORKFLOW_REF,revision=SOURCE_REVISION,tree=SOURCE_TREE,runner_name="lion-moon-r9d8-test",runner_agent_id=24,os_user="lion-maintenance-runner",uid=993,hostname="LION-AUTH-LAB",machine_id="e69aa593257d47b8885d1bd87710b196",operation="OBSERVE_SAME_CONNECTION_PRAGMA",result="OBSERVED",result_digest="7a7a831aaeef74e58923a1dfecd7afd39a49febd68bc31b1faf86151ee45a684",observed_at="2026-09-04T22:51:19.627789+00:00",receipt_digest="0d63f270fb15e0ee3b530a0ca3a6dbfbb915cebc3fae061bdc0167a3d545368e"),
@@ -105,7 +104,6 @@ def _canonical_ast_node(node:ast.AST):
 class RunnerAttestedReceiptAdjudicator:
     def adjudicate(self,*,outer:RunnerAttestedOperationReceipt,run:GitHubRunEvidence,job:GitHubJobEvidence,source_bridge_blob_sha:str=SOURCE_BRIDGE_BLOB)->RunnerAttestedAdjudicationRecord:
         outer.validate();run.validate();job.validate()
-        # Explicit digest recomputation, not trust in the printed digest.
         resealed=RunnerAttestedOperationReceipt(**outer.payload()).sealed()
         if resealed.receipt_digest!=outer.receipt_digest:raise AttestedAdjudicationError("outer receipt digest mismatch")
         if int(outer.run_id)!=run.run_id_numeric or job.run_id_numeric!=run.run_id_numeric:raise AttestedAdjudicationError("run binding mismatch")

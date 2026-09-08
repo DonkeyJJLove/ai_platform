@@ -4,7 +4,7 @@
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
     "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
-    "subject_digest": "0058148c2d4a31cfe90270194fdc74fcaee4b1ef64b8945c6027e9f4b994798c",
+    "subject_digest": "92842c6afc92dc521145bf9e46eccc83d57cd7fa7a10a704c008e7be6e5cf2ae",
     "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
@@ -12,7 +12,9 @@
       "id": "GoalContract",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -23,7 +25,9 @@
       "id": "WorldSnapshot",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -34,7 +38,9 @@
       "id": "SystemSnapshot",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -45,7 +51,9 @@
       "id": "Gap",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/evolutionary_state.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -56,7 +64,9 @@
       "id": "BeanSpec",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/bean.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/bean.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -67,7 +77,9 @@
       "id": "BeanInstance",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/bean.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/bean.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -78,7 +90,9 @@
       "id": "BeanCandidate",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/bean_candidate.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/bean_candidate.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -89,7 +103,10 @@
       "id": "CapabilityNeed",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/capability_need.py", "cyber_lion/enterprise/capability_need.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/capability_need.py",
+        "cyber_lion/enterprise/capability_need.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -100,7 +117,9 @@
       "id": "CompositionContract",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/bean_composition.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/bean_composition.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -111,7 +130,9 @@
       "id": "CompositionEngine",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/enterprise/bean_composition.py"],
+      "evidence_refs": [
+        "cyber_lion/enterprise/bean_composition.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -122,7 +143,9 @@
       "id": "MosaicCell",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/mosaic.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/mosaic.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -133,7 +156,9 @@
       "id": "HeterogeneousMosaicPlanner",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/enterprise/mosaic.py"],
+      "evidence_refs": [
+        "cyber_lion/enterprise/mosaic.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -144,7 +169,9 @@
       "id": "BeanBuilderChainBinding",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/bean_builder_bridge.py"],
+      "evidence_refs": [
+        "cyber_lion/contracts/bean_builder_bridge.py"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -155,7 +182,11 @@
       "id": "AiPlatformEngineeringPlatform",
       "plane": "AS_IS",
       "status": "INTEGRATED_ENGINEERING_PLATFORM",
-      "evidence_refs": ["cyber_lion/registry/repositories.json", "cyber-lion.repository.json", "master:9082a974e8105dd7e47afc889583b1fc67535b59"],
+      "evidence_refs": [
+        "cyber_lion/registry/repositories.json",
+        "cyber-lion.repository.json",
+        "master:9082a974e8105dd7e47afc889583b1fc67535b59"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -166,7 +197,12 @@
       "id": "R2E4EvidenceBinding",
       "plane": "AS_IS",
       "status": "INTEGRATED_POST_MERGE_OBSERVED",
-      "evidence_refs": ["LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json", "PR#248", "master:9082a974e8105dd7e47afc889583b1fc67535b59", "workflow:33685994007:success"],
+      "evidence_refs": [
+        "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json",
+        "PR#248",
+        "master:9082a974e8105dd7e47afc889583b1fc67535b59",
+        "workflow:33685994007:success"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -177,7 +213,12 @@
       "id": "FleetAggregateEffectBudget",
       "plane": "AS_IS",
       "status": "INTEGRATED_POST_MERGE_OBSERVED",
-      "evidence_refs": ["cyber_lion/contracts/fleet_effect_budget.py", "cyber_lion/enterprise/fleet_effect_budget.py", "PR#249", "master:9082a974e8105dd7e47afc889583b1fc67535b59"],
+      "evidence_refs": [
+        "cyber_lion/contracts/fleet_effect_budget.py",
+        "cyber_lion/enterprise/fleet_effect_budget.py",
+        "PR#249",
+        "master:9082a974e8105dd7e47afc889583b1fc67535b59"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -188,7 +229,9 @@
       "id": "B0GenerativityProtocol",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": ["PR#251"],
+      "evidence_refs": [
+        "PR#251"
+      ],
       "integrated": false,
       "pr": 251,
       "head": "85e77ac077f89ce892c1254d01f88a0889034b2f",
@@ -199,7 +242,12 @@
       "id": "ActionSpec",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/v1/action_spec.schema.json", "cyber_lion/contracts/v1/action_spec_support_matrix.json", "PR#286", "master:1f0b6ff80f8cf2d38fae64373ae4ef7ba19da669"],
+      "evidence_refs": [
+        "cyber_lion/contracts/v1/action_spec.schema.json",
+        "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+        "PR#286",
+        "master:1f0b6ff80f8cf2d38fae64373ae4ef7ba19da669"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -210,7 +258,10 @@
       "id": "LCMS",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": ["PR#257", "tools/lcms.py@0f75af9212a814177e08a5c206d1a8504b0937d5"],
+      "evidence_refs": [
+        "PR#257",
+        "tools/lcms.py@0f75af9212a814177e08a5c206d1a8504b0937d5"
+      ],
       "integrated": false,
       "pr": 257,
       "head": "0f75af9212a814177e08a5c206d1a8504b0937d5",
@@ -221,7 +272,10 @@
       "id": "ReadonlyProcessAdapter",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": ["PR#258", "tools/readonly_process_exec.py@86dc7ac367ad2cd83e873e0ae3508f42a72eaac5"],
+      "evidence_refs": [
+        "PR#258",
+        "tools/readonly_process_exec.py@86dc7ac367ad2cd83e873e0ae3508f42a72eaac5"
+      ],
       "integrated": false,
       "pr": 258,
       "head": "86dc7ac367ad2cd83e873e0ae3508f42a72eaac5",
@@ -232,7 +286,10 @@
       "id": "HybridModelRouter",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": ["PR#253", "cyber_lion/hybrid_router.py@61b963e8664d6832f8bfe22bd31327ff63618a07"],
+      "evidence_refs": [
+        "PR#253",
+        "cyber_lion/hybrid_router.py@61b963e8664d6832f8bfe22bd31327ff63618a07"
+      ],
       "integrated": false,
       "pr": 253,
       "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
@@ -243,7 +300,10 @@
       "id": "PhysicalActionSpec",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": ["PR#253", "cyber_lion/physical_action_simulation.py@61b963e8664d6832f8bfe22bd31327ff63618a07"],
+      "evidence_refs": [
+        "PR#253",
+        "cyber_lion/physical_action_simulation.py@61b963e8664d6832f8bfe22bd31327ff63618a07"
+      ],
       "integrated": false,
       "pr": 253,
       "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
@@ -254,7 +314,9 @@
       "id": "P0EntryCandidate",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": ["PR#253"],
+      "evidence_refs": [
+        "PR#253"
+      ],
       "integrated": false,
       "pr": 253,
       "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
@@ -287,7 +349,12 @@
       "id": "LAIR",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": ["cyber_lion/contracts/action_ir.py", "cyber_lion/contracts/v1/action_spec.schema.json", "PR#290", "master:1d89ace520969c412c916eca20991178bf0d16b1"],
+      "evidence_refs": [
+        "cyber_lion/contracts/action_ir.py",
+        "cyber_lion/contracts/v1/action_spec.schema.json",
+        "PR#290",
+        "master:1d89ace520969c412c916eca20991178bf0d16b1"
+      ],
       "integrated": true,
       "pr": null,
       "head": null,
