@@ -37,6 +37,8 @@ IDENTITY_FILE = INSTALL_ROOT / "scale64-source-identity.json"
 
 STATE_ROOT = Path("/var/lib/lion-effect-admission")
 LOCK_FILE = STATE_ROOT / "scale64.lock"
+WORKSPACE_ROOT = INSTALL_ROOT / "workspaces"
+RUNNER_EXEC_CLIENT = "/usr/local/libexec/lion-runner-exec-client.py"
 
 PROVIDER_INSTALL = (
     "deploy/docker/lion-p0-provider/install.sh"
@@ -224,30 +226,23 @@ def run(
     return proc
 
 
-def runner_prefix() -> list[str]:
-    runner_group = pwd.getpwnam(
-        RUNNER_USER
-    ).pw_gid
-
-    import grp
-
-    provider_gid = grp.getgrnam(
-        PROVIDER_GROUP
-    ).gr_gid
-
-    return [
-        "/usr/sbin/runuser",
-        "-u",
-        RUNNER_USER,
-        "-g",
-        grp.getgrgid(
-            runner_group
-        ).gr_name,
-        "-G",
-        PROVIDER_GROUP,
-        "--",
-    ]
-
+def runner_exec_call(operation: str, *, repo: Path | None = None, head: str | None = None, tree: str | None = None, provider_operation: str | None = None, run_request_id: str | None = None, timeout: int = 900) -> dict[str, Any]:
+    argv=["/usr/bin/python3",RUNNER_EXEC_CLIENT]
+    if operation=="IDENTITY": argv += ["identity"]
+    elif operation in {"STATIC_UNITTEST","STATIC_PYCOMPILE"}:
+        if repo is None or head is None or tree is None: raise Deny("runner-exec-static-args")
+        argv += ["static-unittest" if operation=="STATIC_UNITTEST" else "static-pycompile","--repo-path",str(repo),"--source-head",head,"--source-tree",tree]
+    elif operation=="PROVIDER_CALL":
+        if provider_operation not in {"PING","LIST_FLEET_RESOURCES"} or head is None or tree is None: raise Deny("runner-exec-provider-args")
+        argv += ["provider-call","--provider-operation",provider_operation,"--source-head",head,"--source-tree",tree]
+    elif operation=="SCALE64_RUN":
+        if head is None or tree is None or run_request_id is None: raise Deny("runner-exec-scale64-args")
+        argv += ["scale64-run","--source-head",head,"--source-tree",tree,"--run-request-id",run_request_id]
+    else: raise Deny("runner-exec-operation-denied")
+    proc=run(argv,capture=True,timeout=timeout)
+    value=json.loads(proc.stdout.decode("utf-8"))
+    if not isinstance(value,dict) or value.get("ok") is not True or not isinstance(value.get("result"),dict): raise Deny("runner-exec-failed")
+    return value["result"]
 
 def runner_env(
     repo: Path,
@@ -311,147 +306,29 @@ def remote_head() -> str:
     )
 
 
-def checkout_exact(
-    head: str,
-    tree: str,
-) -> Path:
-
-    workspace = Path(
-        tempfile.mkdtemp(
-            prefix="lion-admission-source-"
-        )
-    )
-    runner = pwd.getpwnam(RUNNER_USER)
-    os.chown(workspace, runner.pw_uid, runner.pw_gid)
-    os.chmod(workspace, 0o750)
-
-    repo = workspace / "repo"
-
+def checkout_exact(head: str, tree: str) -> Path:
+    WORKSPACE_ROOT.mkdir(parents=True,exist_ok=True)
+    os.chown(WORKSPACE_ROOT,0,0); os.chmod(WORKSPACE_ROOT,0o755)
+    workspace=Path(tempfile.mkdtemp(prefix="lion-admission-source-",dir=str(WORKSPACE_ROOT)))
+    runner=pwd.getpwnam(RUNNER_USER); os.chown(workspace,runner.pw_uid,runner.pw_gid); os.chmod(workspace,0o750)
+    repo=workspace/"repo"
     try:
-        run(
-            [
-                "/usr/bin/git",
-                "init",
-                str(repo),
-            ],
-            timeout=30,
-        )
-
-        run(
-            [
-                "/usr/bin/git",
-                "-C",
-                str(repo),
-                "remote",
-                "add",
-                "origin",
-                REPO_URL,
-            ],
-            timeout=30,
-        )
-
-        observed = remote_head()
-
-        if observed != head:
-            raise Deny(
-                "LIVE_SOURCE_HEAD_DRIFT:"
-                + observed
-            )
-
-        run(
-            [
-                "/usr/bin/git",
-                "-C",
-                str(repo),
-                "fetch",
-                "--no-tags",
-                "--depth=1",
-                "origin",
-                f"refs/heads/{BRANCH}",
-            ],
-            timeout=180,
-        )
-
-        run(
-            [
-                "/usr/bin/git",
-                "-C",
-                str(repo),
-                "checkout",
-                "--detach",
-                "FETCH_HEAD",
-            ],
-            timeout=60,
-        )
-
-        actual_head = run(
-            [
-                "/usr/bin/git",
-                "-C",
-                str(repo),
-                "rev-parse",
-                "HEAD",
-            ],
-            capture=True,
-        ).stdout.decode().strip()
-
-        actual_tree = run(
-            [
-                "/usr/bin/git",
-                "-C",
-                str(repo),
-                "rev-parse",
-                "HEAD^{tree}",
-            ],
-            capture=True,
-        ).stdout.decode().strip()
-
-        if actual_head != head:
-            raise Deny(
-                "checkout-head-mismatch"
-            )
-
-        if actual_tree != tree:
-            raise Deny(
-                "checkout-tree-mismatch"
-            )
-
+        run(["/usr/bin/git","init",str(repo)],timeout=30)
+        run(["/usr/bin/git","-C",str(repo),"remote","add","origin",REPO_URL],timeout=30)
+        observed=remote_head()
+        if observed!=head: raise Deny("LIVE_SOURCE_HEAD_DRIFT:"+observed)
+        run(["/usr/bin/git","-C",str(repo),"fetch","--no-tags","--depth=1","origin",f"refs/heads/{BRANCH}"],timeout=180)
+        run(["/usr/bin/git","-C",str(repo),"checkout","--detach","FETCH_HEAD"],timeout=60)
+        actual_head=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD"],capture=True).stdout.decode().strip()
+        actual_tree=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD^{tree}"],capture=True).stdout.decode().strip()
+        if actual_head!=head or actual_tree!=tree: raise Deny("checkout-identity-mismatch")
         return repo
-
     except Exception:
-        shutil.rmtree(
-            workspace,
-            ignore_errors=True,
-        )
-        raise
-
+        shutil.rmtree(workspace,ignore_errors=True); raise
 
 def _provider_call(operation: str, head: str, tree: str) -> dict[str, Any]:
-    if operation not in {"PING", "LIST_FLEET_RESOURCES"}:
-        raise Deny("provider-operation-not-precheck-safe")
-    import secrets
-    request = {"schema_version":"1.0.0","request_id":hashlib.sha256(secrets.token_bytes(32)).hexdigest(),"operation":operation,"mission_id":"lion-local-swarm-scale64","fleet_id":"lion-local-swarm-scale64","run_id":"scale64-precheck","source_head":head,"source_tree":tree,"plan_digest":hashlib.sha256(b"lion-scale64-precheck").hexdigest(),"payload":{}}
-    code = """import os, socket, sys
-r = os.environ["LION_PRECHECK_REQUEST"].encode() + b"\\n"
-s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-s.connect("/run/lion-docker-p0/provider.sock")
-s.sendall(r)
-s.shutdown(socket.SHUT_WR)
-b = bytearray()
-while True:
-    p = s.recv(8192)
-    if not p:
-        break
-    b.extend(p)
-sys.stdout.write(bytes(b).decode())
-"""
-    env_req=json.dumps(request,sort_keys=True,separators=(",",":"))
-    proc=run(runner_prefix()+["/usr/bin/env",f"LION_PRECHECK_REQUEST={env_req}","/usr/bin/python3","-c",code],capture=True,timeout=60)
-    value=json.loads(proc.stdout.decode("utf-8"))
-    if not isinstance(value,dict) or value.get("ok") is not True: raise Deny("provider-precheck-failed")
-    result=value.get("result")
-    if not isinstance(result,dict): raise Deny("provider-precheck-result-malformed")
-    return result
+    if operation not in {"PING","LIST_FLEET_RESOURCES"}: raise Deny("provider-operation-not-precheck-safe")
+    return runner_exec_call("PROVIDER_CALL",provider_operation=operation,head=head,tree=tree,timeout=60)
 
 def precheck_scale64(head: str, tree: str) -> dict[str, Any]:
     live=remote_head()
@@ -472,50 +349,11 @@ def precheck_scale64(head: str, tree: str) -> dict[str, Any]:
     clean=provider_current and container_count==0 and network_count==0
     return {"source_head":head,"source_tree":tree,"provider_source_head":provider_head,"provider_source_tree":provider_tree,"provider_current":provider_current,"docker_server_version":docker_version,"containers":containers,"networks":networks,"container_count":container_count,"network_count":network_count,"stale_resources":None if not provider_current else not clean,"clean_for_new_run":clean}
 
-def static_gate(
-    repo: Path,
-) -> None:
-
-    prefix = runner_prefix()
-    env = runner_env(repo)
-
-    run(
-        prefix
-        + [
-            "/usr/bin/env",
-            f"PYTHONPATH={repo}",
-            "PYTHONDONTWRITEBYTECODE=1",
-            "/usr/bin/python3",
-            "-m",
-            "unittest",
-            "cyber_lion.tests."
-            "test_p0_docker_scale64",
-            "cyber_lion.tests."
-            "test_p0_rootless_docker_provider",
-            "cyber_lion.tests."
-            "test_docker_fleet_polygon",
-        ],
-        cwd=repo,
-        timeout=300,
-    )
-
-    run(
-        prefix
-        + [
-            "/usr/bin/env",
-            f"PYTHONPATH={repo}",
-            "PYTHONDONTWRITEBYTECODE=1",
-            "/usr/bin/python3",
-            "-m",
-            "py_compile",
-            "tools/p0_docker_scale64_soak.py",
-            "tools/p0_docker_drone_runtime.py",
-            "tools/p0_rootless_docker_provider.py",
-        ],
-        cwd=repo,
-        timeout=60,
-    )
-
+def static_gate(repo: Path) -> None:
+    head=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD"],capture=True).stdout.decode().strip()
+    tree=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD^{tree}"],capture=True).stdout.decode().strip()
+    runner_exec_call("STATIC_UNITTEST",repo=repo,head=head,tree=tree,timeout=300)
+    runner_exec_call("STATIC_PYCOMPILE",repo=repo,head=head,tree=tree,timeout=90)
 
 def refresh_provider(
     repo: Path,
@@ -791,47 +629,18 @@ def run_scale64(
         },
     )
 
-    prefix = runner_prefix()
-
     try:
-        with log_path.open(
-            "wb",
-            buffering=0,
-        ) as log:
-
-            proc = subprocess.run(
-                prefix
-                + [
-                    "/usr/bin/env",
-                    f"PYTHONPATH={FIXED_REPO}",
-                    "PYTHONDONTWRITEBYTECODE=1",
-                    "/usr/bin/python3",
-                    "tools/p0_docker_scale64_soak.py",
-                    "--source-head",
-                    head,
-                    "--source-tree",
-                    tree,
-                    "--duration-seconds",
-                    "180",
-                    "--poll-seconds",
-                    "15",
-                    "--evidence-out",
-                    str(evidence_path),
-                ],
-                cwd=str(
-                    FIXED_REPO
-                ),
-                stdin=subprocess.DEVNULL,
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                shell=False,
-                check=False,
-                timeout=900,
-            )
-
-        tail = log_tail(
-            log_path
-        )
+        rr=runner_exec_call("SCALE64_RUN",head=head,tree=tree,run_request_id=request_id,timeout=900)
+        rc=rr.get("returncode")
+        log_text=rr.get("log")
+        evidence_obj=rr.get("evidence")
+        if not isinstance(rc,int) or not isinstance(log_text,str): raise Deny("runner-exec-scale64-result-malformed")
+        log_path.write_text(log_text,encoding="utf-8")
+        if evidence_obj is not None:
+            if not isinstance(evidence_obj,dict): raise Deny("runner-exec-evidence-malformed")
+            atomic_json(evidence_path,evidence_obj)
+        proc=subprocess.CompletedProcess(args=[RUNNER_EXEC_CLIENT],returncode=rc)
+        tail=log_tail(log_path)
 
         if proc.returncode != 0:
             atomic_json(
