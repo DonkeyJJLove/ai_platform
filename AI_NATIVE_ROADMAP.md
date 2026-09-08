@@ -1,4 +1,4 @@
-# LION AI-native roadmap — v1.4 R22H reconciled
+# LION AI-native roadmap — v1.4 R22I reconciled
 
 This roadmap separates integrated foundations, bounded evidence, falsified generality, active architecture frontiers and human-authority boundaries. It is a planning semantic owner, not proof of deployment, production state or authority. Default-branch identity and candidate evidence are kept explicitly separate by the v1.4 documentation plane.
 
@@ -6,15 +6,17 @@ This roadmap separates integrated foundations, bounded evidence, falsified gener
 
 The repository contains source-backed architecture projection and code perception, Action IR/proposal, canonical PDP handoff, authority and policy-gate primitives, runtime admission, runtime execution, effect-time currentness, runtime reconciliation, executor provisioning contracts, complete/production mediation surfaces, fleet/swarm governance surfaces, Bean/CapabilityNeed/Composition/Mosaic primitives and builder-chain binding. F009 remains bounded live end-to-end evidence for one create-only file effect with independent observation/reconciliation.
 
-R22F additionally delivered the previously missing **reusable inert Action runtime binder**. `cyber_lion/contracts/action_runtime_binding.py` binds an exact `ActionProposal` and explicit context, canonical PDP `ALLOW`, trusted currentness and exact `ProvisionedExecutor` to `RequestedRuntimeEffect`, `RuntimeIdentityBinding` and `CanonicalPDPDecisionEvidence`. It cannot convert `DENY`, stale state or substituted identities into runtime inputs. The binder itself has runtime effect `NONE` and authority effect `NONE`.
+R22F delivered the reusable inert Action runtime binder. R22I closes the next Action-plane frontier: the exact outputs of `bind_allowed_action_to_runtime_inputs` are now consumed by the existing governed `RuntimeAdmissionEngine` through `admit_bound_action`, which verifies canonical PDP evidence and delegates the exact binder-produced effect and runtime identity to the existing `admit` path. No alternate executor, provider, authority source, generic effect entrypoint or deployment path was added.
 
-R22F also introduced `cyber_lion/contracts/model_plane_adapter.py`, a provider-independent model-plane contract. ASTRA is a compatibility target only; ASTRA/local model runtime remains `NOT_OBSERVED`.
+R22I falsification also strengthened trusted currentness with `provisioned_executor_digest`. This binds the exact `ProvisionedExecutor` and denies coherent alternate provisioning tuples rather than relying on incidental field inconsistency. The R22I regression matrix covers exact allow consumption, DENY, stale currentness, action/resource/payload/authority/mission/provisioning/runtime-identity/PDP-receipt substitution and replay. The binder and its governed-consumption layer do not mint authority and do not themselves execute effects.
+
+`cyber_lion/contracts/model_plane_adapter.py` remains a provider-independent model-plane contract. ASTRA is a compatibility target only; ASTRA/local model runtime remains `NOT_OBSERVED`.
 
 ## ACTIVE_FRONTIER
 
-The prior general Action-plane frontier — materialization of exact runtime admission inputs from canonical PDP ALLOW — is no longer missing at the candidate implementation level. The next Action dependency is governed consumption/integration of that inert binder through the already existing `RuntimeAdmissionEngine` and effect-time currentness chain **without** adding an alternate effect path, authority minting path or provider-selected runtime path. Runtime deployment is a separate human-authority boundary and is not part of R22H.
+The Action-plane binder-consumption dependency is no longer an architectural frontier at the R22I candidate level. The remaining R22I frontier is procedural truth closure: verify all noncarrier changes, freeze the noncarrier tree, compute the subject digest excluding exactly the two truth carriers, update those carriers last, and prove final candidate/synthetic-merge tree equality plus exact-head CI.
 
-The truth-plane frontier is procedural rather than architectural: finish all noncarrier reconciliation, freeze the noncarrier tree, compute the subject digest excluding exactly the two truth carriers, write those carriers last, then prove the final candidate/synthetic-merge tree and exact-head CI invariants.
+Runtime deployment, provider selection, real child activation, mark-ready and merge remain separate human-authority boundaries. R22I does not authorize any of them.
 
 ## PARTIAL / falsified / carried-forward tracks
 
@@ -25,11 +27,17 @@ The truth-plane frontier is procedural rather than architectural: finish all non
 - **Preproduction:** entry remains blocked until isolation, rollback/recovery, currentness, mediation and physical-domain requirements are evidenced.
 - **Cyber-physical:** schemas/design are not hardware capability; physical execution remains a future governed surface.
 
+## R22I source/effect and census evidence
+
+On exact pre-documentation candidate `b4045878be064586a61efa0f3ec8be5103a5a08c`, production source count remains 260 and effect surface count remains 236. Six raw unclassified references remain visible and taxonomy reconciliation resolves all six without hiding them. The production scan digest is `c643ab174bec81dc86fde535be72230c88cfc557a2ca5596f9362db259d02724`; stable counts do not erase the R22I production-byte drift that changed this digest.
+
+The exact b404 Full Symbol Census is PASS: 502 committed Python files, 502 parsed files, zero parse failures, 8617 symbols, 6784 public symbols and 1052 private-material symbols, with census digest `118d23e2508b0dfcab84f2cef95381d7f4cbf68b272323013174bae82d8a1835`. This is pre-documentation evidence only. Documentation and carrier commits change Git identity, so the final carrier-bound HEAD requires a new exact census run.
+
 ## Federation / documentation homeostasis
 
-R22H reacquires all ten registry members rather than reusing manually remembered default branches. The federation vector records exact default HEAD/TREE, manifest presence, open-PR counts and material drift. Future epochs must repeat this live read before claiming currentness. A dynamic `CURRENT` label without reproducible identity evidence degrades to stale/unknown.
+The last explicit ten-repository live federation sweep remains the R22H evidence vector. R22I does not silently promote that historical sweep into a new federation observation. Future epochs must reacquire live repository identity before claiming federation currentness.
 
-The documentation homeostasis loop also regenerates exact production-source/effect truth and full-symbol census evidence. The R22H pre-documentation census parsed 501/501 committed Python files with zero failures, 8586 symbols, 6756 public symbols and 1049 private-material symbols. Native docstring coverage was 4.736530% for public symbols and 1.906578% for private-material symbols. The exact census digest was `06eec13de9e9a768c35ee1889a22fd943b533b83469237baf3790e751a29f913`; the final carrier-bound HEAD requires its own exact census run.
+The documentation homeostasis loop regenerates source/effect truth and census evidence without turning documentation into authority. Dynamic `CURRENT` labels without reproducible identity evidence degrade to stale/unknown.
 
 ## Physical and operational boundary
 
