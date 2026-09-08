@@ -184,6 +184,7 @@ def _validate_request(req: dict[str, Any]) -> None:
         "REMOVE_DRONE",
         "REMOVE_NETWORK",
         "LIST_MISSION_RESOURCES",
+        "LIST_FLEET_RESOURCES",
     }:
         raise Deny("operation not allowlisted")
     for key in ("mission_id", "fleet_id", "run_id"):
@@ -598,6 +599,19 @@ def _dispatch(req: dict[str, Any]) -> dict[str, Any]:
         ]
         containers_raw = _docker(["docker", "ps", "-a", *filters, "--format", "{{.ID}} {{.Names}}"])
         networks_raw = _docker(["docker", "network", "ls", *filters, "--format", "{{.ID}} {{.Name}}"])
+        containers = [line for line in containers_raw.splitlines() if line.strip()]
+        networks = [line for line in networks_raw.splitlines() if line.strip()]
+        return {"status": "OK", "containers": containers, "networks": networks}
+
+    if op == "LIST_FLEET_RESOURCES":
+        _require_exact_keys(p, set(), "payload")
+        filters = [
+            "--filter", f"label=lion.project={PROJECT}",
+            "--filter", f"label=lion.mission_id={req['mission_id']}",
+            "--filter", f"label=lion.fleet_id={req['fleet_id']}",
+        ]
+        containers_raw = _docker(["docker", "ps", "-a", *filters, "--format", "{{.ID}} {{.Names}}"] )
+        networks_raw = _docker(["docker", "network", "ls", *filters, "--format", "{{.ID}} {{.Name}}"] )
         containers = [line for line in containers_raw.splitlines() if line.strip()]
         networks = [line for line in networks_raw.splitlines() if line.strip()]
         return {"status": "OK", "containers": containers, "networks": networks}
