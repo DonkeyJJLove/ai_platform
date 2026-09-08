@@ -68,6 +68,8 @@ def repo_path(v:Any)->Path:
     if p.name!='repo' or not p.is_dir(): raise Deny('repo-path-shape')
     return p
 def verify_repo(p:Path,head:str,tree:str)->None:
+    if p.stat().st_uid != os.geteuid(): raise Deny('repo-owner-mismatch')
+    if p.parent.stat().st_uid != os.geteuid(): raise Deny('workspace-owner-mismatch')
     a=subprocess.check_output(['/usr/bin/git','-C',str(p),'rev-parse','HEAD'],text=True).strip()
     b=subprocess.check_output(['/usr/bin/git','-C',str(p),'rev-parse','HEAD^{tree}'],text=True).strip()
     if a!=head or b!=tree: raise Deny('repo-identity-mismatch')

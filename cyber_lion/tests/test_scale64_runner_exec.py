@@ -19,4 +19,11 @@ class RunnerExecTests(unittest.TestCase):
   s=self.t('deploy/docker/lion-scale64-control/install.sh'); self.assertIn('lion-runner-exec.socket',s); self.assertIn('SENTINELX_RESTART_REQUIRED=YES',s); self.assertNotIn('systemctl restart sentinelx-cloud-core',s)
  def test_runner_returns_source_evidence_hash_and_cleans_state(self):
   s=self.t('tools/lion_runner_exec_provider.py'); self.assertIn('source_evidence_sha256',s); self.assertIn('shutil.rmtree(run_dir,ignore_errors=True)',s)
+
+ def test_exact_workspace_handoff_is_bounded(self):
+  s=self.t('tools/lion_effect_admission_broker.py'); self.assertIn('def handoff_exact_workspace_to_runner',s); self.assertIn('resolved.parent != root',s); self.assertIn('workspace.name.startswith("lion-admission-source-")',s); self.assertIn('followlinks=False',s); self.assertIn('os.lchown',s); self.assertIn('handoff_exact_workspace_to_runner(workspace)',s); self.assertNotIn('safe.directory=*',s); self.assertNotIn('chmod(workspace,0o777)',s)
+ def test_runner_rejects_wrong_repo_owner(self):
+  s=self.t('tools/lion_runner_exec_provider.py'); self.assertIn("p.stat().st_uid != os.geteuid()",s); self.assertIn("repo-owner-mismatch",s); self.assertIn("p.parent.stat().st_uid != os.geteuid()",s); self.assertIn("workspace-owner-mismatch",s)
+ def test_broker_runner_failure_diagnostics_are_bounded(self):
+  s=self.t('tools/lion_effect_admission_broker.py'); self.assertIn('stdout_tail = proc.stdout.decode',s); self.assertIn('stderr_tail = proc.stderr.decode',s); self.assertIn(')[-4096:]',s); self.assertIn(':stdout_tail=',s); self.assertIn(':stderr_tail=',s)
 if __name__=='__main__': unittest.main()

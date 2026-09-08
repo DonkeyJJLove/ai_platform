@@ -47,4 +47,7 @@ class T(unittest.TestCase):
    with self.assertRaises(RuntimeError): c.require_ready(r)
  def test_controller_command_failure_captures_bounded_stdout_and_stderr(self):
   s=self.text('tools/lion_scale64_controller.py'); self.assertIn('stdout_tail=',s); self.assertIn('stderr_tail=',s); self.assertIn('ERROR_TAIL = 4096',s); self.assertIn("write('readiness.json'",s); self.assertIn("write('readiness-after-prepare.json'",s)
+
+ def test_r12_workspace_handoff_and_runner_diagnostics(self):
+  b=self.text('tools/lion_effect_admission_broker.py'); r=self.text('tools/lion_runner_exec_provider.py'); self.assertIn('handoff_exact_workspace_to_runner(workspace)',b); self.assertIn('followlinks=False',b); self.assertIn('os.lchown',b); self.assertIn('stdout_tail = proc.stdout.decode',b); self.assertIn('stderr_tail = proc.stderr.decode',b); self.assertIn("repo-owner-mismatch",r); self.assertNotIn('safe.directory=*',b)
 if __name__=='__main__': unittest.main()

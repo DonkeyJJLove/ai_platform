@@ -204,23 +204,28 @@ def run(
     )
 
     if proc.returncode != 0:
-        detail = ""
+        stdout_tail = ""
+        stderr_tail = ""
 
         if capture:
-            detail = (
-                proc.stderr.decode(
-                    "utf-8",
-                    "replace",
-                )[-2000:]
-            )
+            stdout_tail = proc.stdout.decode(
+                "utf-8",
+                "replace",
+            )[-4096:]
+            stderr_tail = proc.stderr.decode(
+                "utf-8",
+                "replace",
+            )[-4096:]
 
         raise Deny(
             "command-failed:"
             + os.path.basename(argv[0])
             + ":rc="
             + str(proc.returncode)
-            + ":"
-            + detail
+            + ":stdout_tail="
+            + repr(stdout_tail)
+            + ":stderr_tail="
+            + repr(stderr_tail)
         )
 
     return proc
@@ -306,6 +311,46 @@ def remote_head() -> str:
     )
 
 
+def handoff_exact_workspace_to_runner(workspace: Path) -> None:
+    root = WORKSPACE_ROOT.resolve()
+    resolved = workspace.resolve()
+    if resolved.parent != root:
+        raise Deny("workspace-handoff-outside-root")
+    if not workspace.name.startswith("lion-admission-source-"):
+        raise Deny("workspace-handoff-shape")
+
+    runner = pwd.getpwnam(RUNNER_USER)
+    uid = runner.pw_uid
+    gid = runner.pw_gid
+
+    for current, directories, files in os.walk(
+        workspace,
+        topdown=True,
+        followlinks=False,
+    ):
+        current_path = Path(current)
+        if current_path.is_symlink():
+            os.lchown(current_path, uid, gid)
+        else:
+            os.chown(current_path, uid, gid)
+
+        for name in directories:
+            path = current_path / name
+            if path.is_symlink():
+                os.lchown(path, uid, gid)
+            else:
+                os.chown(path, uid, gid)
+
+        for name in files:
+            path = current_path / name
+            if path.is_symlink():
+                os.lchown(path, uid, gid)
+            else:
+                os.chown(path, uid, gid)
+
+    os.chown(workspace, uid, gid)
+
+
 def checkout_exact(head: str, tree: str) -> Path:
     WORKSPACE_ROOT.mkdir(parents=True,exist_ok=True)
     os.chown(WORKSPACE_ROOT,0,0); os.chmod(WORKSPACE_ROOT,0o755)
@@ -322,6 +367,7 @@ def checkout_exact(head: str, tree: str) -> Path:
         actual_head=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD"],capture=True).stdout.decode().strip()
         actual_tree=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD^{tree}"],capture=True).stdout.decode().strip()
         if actual_head!=head or actual_tree!=tree: raise Deny("checkout-identity-mismatch")
+        handoff_exact_workspace_to_runner(workspace)
         return repo
     except Exception:
         shutil.rmtree(workspace,ignore_errors=True); raise
