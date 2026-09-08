@@ -6,11 +6,13 @@ HEAD="$1"; TREE="$2"; [[ "$(id -u)" = 0 && "$(hostname)" = "$TARGET_HOST" && "$(
 [[ "$HEAD" =~ ^[0-9a-f]{40}$ && "$TREE" =~ ^[0-9a-f]{40}$ ]] || exit 1
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT; git init -q "$TMP/repo"; git -C "$TMP/repo" remote add origin "$REPO_URL"; LIVE=$(git ls-remote --exit-code "$REPO_URL" "refs/heads/$BRANCH" | awk '{print $1}'); [[ "$LIVE" = "$HEAD" ]] || exit 1
 git -C "$TMP/repo" fetch -q --no-tags --depth=1 origin "refs/heads/$BRANCH"; [[ "$(git -C "$TMP/repo" rev-parse FETCH_HEAD)" = "$HEAD" ]]; [[ "$(git -C "$TMP/repo" rev-parse 'FETCH_HEAD^{tree}')" = "$TREE" ]]; git -C "$TMP/repo" checkout -q --detach FETCH_HEAD; R="$TMP/repo"
-python3 -m py_compile "$R/tools/lion_effect_admission_broker.py" "$R/tools/lion_effect_admission_client.py" "$R/tools/lion_broker_update_provider.py" "$R/tools/lion_broker_update_client.py" "$R/tools/lion_scale64_controller.py"
-RESTART_RUNNER=0 bash "$R/deploy/docker/lion-p0-provider/install.sh" "$R" "$HEAD" "$TREE"
+python3 -m py_compile "$R/tools/lion_effect_admission_broker.py" "$R/tools/lion_effect_admission_broker_entry.py" "$R/tools/lion_nnp_runner_exec.py" "$R/tools/lion_nnp_runuser_compat.py" "$R/tools/lion_effect_admission_client.py" "$R/tools/lion_broker_update_provider.py" "$R/tools/lion_broker_update_client.py" "$R/tools/lion_scale64_controller.py"
+RESTART_RUNNER=0 bash "$R/deploy/docker/lion-p0-provider/install_nnp.sh" "$R" "$HEAD" "$TREE"
 install -d -o root -g root -m 0755 /opt/lion/scale64-control/canonical; install -d -o sentinelx -g sentinelx -m 0700 /var/lib/lion-scale64-control; install -d -o sentinelx -g sentinelx -m 0750 /opt/lion/scale64-control-state
-install -o root -g root -m 0444 "$R/tools/lion_effect_admission_broker.py" /opt/lion/scale64-control/canonical/lion-effect-admission-broker.py
-install -o root -g root -m 0555 "$R/tools/lion_effect_admission_broker.py" /usr/local/libexec/lion-effect-admission-broker.py
+install -o root -g root -m 0444 "$R/tools/lion_effect_admission_broker_entry.py" /opt/lion/scale64-control/canonical/lion-effect-admission-broker.py
+install -o root -g root -m 0555 "$R/tools/lion_effect_admission_broker.py" /usr/local/libexec/lion-effect-admission-broker-impl.py
+install -o root -g root -m 0555 "$R/tools/lion_nnp_runner_exec.py" /usr/local/libexec/lion-nnp-runner-exec.py
+install -o root -g root -m 0555 "$R/tools/lion_effect_admission_broker_entry.py" /usr/local/libexec/lion-effect-admission-broker.py
 install -o root -g root -m 0555 "$R/tools/lion_effect_admission_client.py" /usr/local/bin/lion-effect-admission
 install -o root -g root -m 0555 "$R/tools/lion_broker_update_provider.py" /usr/local/libexec/lion-broker-update-provider.py
 install -o root -g root -m 0555 "$R/tools/lion_broker_update_client.py" /usr/local/bin/lion-broker-update
