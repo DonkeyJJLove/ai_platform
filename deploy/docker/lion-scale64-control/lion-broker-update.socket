@@ -1,0 +1,14 @@
+[Unit]
+Description=LION bounded broker update admission socket
+
+[Socket]
+ListenStream=/run/lion-broker-update.sock
+SocketUser=root
+SocketGroup=sentinelx
+SocketMode=0660
+Accept=yes
+RemoveOnStop=yes
+MaxConnections=2
+
+[Install]
+WantedBy=sockets.target

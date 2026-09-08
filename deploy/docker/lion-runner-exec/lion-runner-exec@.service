@@ -1,0 +1,30 @@
+[Unit]
+Description=LION bounded runner execution connection
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lion-maintenance-runner
+Group=lion-maintenance-runner
+SupplementaryGroups=lion-docker-p0
+ExecStart=/usr/bin/python3 /usr/local/libexec/lion-runner-exec-provider.py
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=no
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_UNIX
+TasksMax=256
+MemoryMax=2G
+TimeoutStartSec=0
+TimeoutStopSec=90
+KillMode=mixed

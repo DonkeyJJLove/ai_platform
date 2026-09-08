@@ -1,0 +1,79 @@
+{
+  "authority_class": "TEST_ONLY_NON_MERGE_NON_PRODUCTION",
+  "classification": "FULL_SUCCESS",
+  "cleanup_verified": true,
+  "counterexample_lineage": [
+    {
+      "class": "TRUTH_SUBJECT_CURRENTNESS_DRIFT",
+      "core_job": 102071173710,
+      "core_run": 34229314477,
+      "id": "P0_COUNTEREXAMPLE",
+      "preserved": true,
+      "status": "FAIL"
+    },
+    {
+      "class": "IDENTITY_HANDOFF_SEQUENCE_BUG",
+      "id": "HOST_CE1",
+      "result": "REPAIRED_AND_PRESENT_IN_EXACT_P0_FINAL_BLOB"
+    },
+    {
+      "class": "IDENTITY_HANDOFF_SEQUENCE_BUG",
+      "id": "HOST_CE1B",
+      "result": "REPAIRED_AND_PRESENT_IN_EXACT_P0_FINAL_BLOB"
+    },
+    {
+      "class": "EXPECTED_FAIL_CLOSED_AUTHORITY_BEHAVIOR",
+      "id": "HOST_CE2",
+      "result": "CALLER_UID_DENIED"
+    },
+    {
+      "class": "POST_HANDOFF_FILESYSTEM_TRAVERSAL_DENIAL",
+      "id": "HOST_CE3",
+      "result": "REPAIRED_AND_PRESENT_IN_EXACT_P0_FINAL_BLOB"
+    }
+  ],
+  "evidence_relay_match": true,
+  "evidence_sha256": "98897bc19ee99ffcef1ca03abff20b39dfa392a88166c32345bc0fc39f973096",
+  "failures": 0,
+  "final_running": 64,
+  "full_fleet_barrier": "PASS",
+  "host_id": "host_f78ddce3275144e4",
+  "hostname": "LION-AUTH-LAB",
+  "image_digest": "sha256:f7785bfe106c0b63d8475dc7565867051a3cec2b070343b1988c8b70e03fdad0",
+  "image_size_bytes": 93149162,
+  "logical_drones": 64,
+  "materialized_containers": 64,
+  "non_claims": [
+    "CANONICAL_R21_CURRENTNESS",
+    "MERGE_AUTHORIZATION",
+    "PRODUCTION_AUTHORIZATION",
+    "P0_CORE_GREEN",
+    "R21_P0_INTEGRATION_COMPLETE"
+  ],
+  "plan_digest": "110e5639f109d1f67ca0fd916f2127ec9dfe0c9b7680aa66d6a4f8a408729725",
+  "post_run_clean": true,
+  "post_run_resource_counts": {
+    "containers": 0,
+    "networks": 0
+  },
+  "receipt_class": "HISTORICAL_EXACT_TEST_ONLY_RUNTIME_PROBE",
+  "reconciliation": "MATCHED",
+  "relay_evidence_sha256": "98897bc19ee99ffcef1ca03abff20b39dfa392a88166c32345bc0fc39f973096",
+  "repository": "DonkeyJJLove/ai_platform",
+  "restarts": 0,
+  "result_digest": "7aa21ce970e3bc355e7997b47f85fdfd032253a888024295eefc3147fc946e26",
+  "run_id": "scale64-20260908T183826Z-abc3e361",
+  "run_request_id": "ea62b24d82f11bad3cc043f3193fa624e53e17d97686cfed542ce70e03dd46c6",
+  "schema_version": "lion.empirical-runtime-receipt/v1",
+  "soak": {
+    "observed_seconds": 167.759,
+    "requested_seconds": 180,
+    "snapshots": 12
+  },
+  "source_branch": "experiment/local-swarm-p0-docker-polygon",
+  "source_head": "8f6612fcc45e2068451701377b3ec6c0ea56a830",
+  "source_tree": "dafc63487ea883ab01141b5e6386edbb0fab3464",
+  "trust_class": "TEST_ONLY",
+  "work_results": 64,
+  "zero_residual_runtime": "PASS"
+}

@@ -1,0 +1,5 @@
+# LION Scale64 exact SentinelX service-action admission.
+# No wildcard commands, no shell, no general sudo authority.
+Host_Alias LION_HOST = LION-AUTH-LAB
+Cmnd_Alias LION_CTL = /usr/bin/systemctl restart sentinelx-cloud-core, /usr/bin/systemctl status sentinelx-cloud-core, /usr/bin/systemctl is-active sentinelx-cloud-core, /usr/bin/systemctl is-enabled sentinelx-cloud-core, /usr/bin/systemctl start lion-scale64-control.service, /usr/bin/systemctl status lion-scale64-control.service, /usr/bin/systemctl is-active lion-scale64-control.service, /usr/bin/systemctl is-enabled lion-scale64-control.service
+sentinelx LION_HOST = (root) NOPASSWD: LION_CTL

@@ -258,7 +258,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
 
     def test_coherent_fake_world_b_denied_by_real_origin(self):
         pre=self.pre(); before=self.before(pre); self.production_verifier()
-        rows=(("table","pr_bootstrap","pr_bootstrap","CREATE TABLE pr_bootstrap(evil TEXT)"),)
+        rows=(("table","x","x","CREATE TABLE x(y TEXT)"),)
         entries=((rows[0][0],rows[0][1],rows[0][2],hostsep._normalize_sql(rows[0][3])),)
         md=hostsep._schema_manifest_digest(entries); payload=hostsep._pre_schema_payload_digest(H5,entries); obj=hostsep._pre_schema_object_digest(H5,md)
         sr=fixture_receipt(hostsep.SCHEMA_MANIFEST_PROVIDER,"attacker:schema","evil-schema",originver.ORIGIN_PRE_SCHEMA,LIVE_DB_PATH,obj,payload)
@@ -337,7 +337,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         revision=subprocess.run(["git","rev-parse","HEAD"],check=True,capture_output=True,text=True).stdout.strip()
         tree_digest=subprocess.run(["git","write-tree"],check=True,capture_output=True,text=True).stdout.strip()
         inv=EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY,revision=revision,tree_digest=tree_digest,sources=sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(256,236,6))
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(264,236,6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

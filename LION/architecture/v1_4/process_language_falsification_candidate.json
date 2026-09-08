@@ -1,0 +1,28 @@
+{
+  "schema_version": "lion.process-language-falsification-candidate/v1",
+  "status": "CANDIDATE_NOT_INTEGRATED",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "falsifiers": [
+    {"id":"F1","claim":"Process Language requires raw shell","required":"FALSE"},
+    {"id":"F2","claim":"Process Language can mint authority","required":"FALSE"},
+    {"id":"F3","claim":"Process Language creates a second PDP","required":"FALSE"},
+    {"id":"F4","claim":"Process Language creates a second runtime admission engine","required":"FALSE"},
+    {"id":"F5","claim":"Process Language executes EffectProvider directly","required":"FALSE"},
+    {"id":"F6","claim":"ProcessContract duplicates concrete ActionSpec boundaries","required":"FALSE"},
+    {"id":"F7","claim":"Receipt alone can close consequential process transition","required":"FALSE"},
+    {"id":"F8","claim":"CURRENT can exist without currentness basis","required":"FALSE"},
+    {"id":"F9","claim":"CONTINUE can bypass an unresolved required dependency","required":"FALSE"},
+    {"id":"F10","claim":"CONTINUE can expand scope","required":"FALSE"},
+    {"id":"F11","claim":"Non-idempotent partial effect can retry without reconciliation","required":"FALSE"},
+    {"id":"F12","claim":"One STATUS value collapses epistemic/currentness/authority/effect","required":"FALSE"},
+    {"id":"F13","claim":"Historical RUN can execute without normalization","required":"FALSE"},
+    {"id":"F14","claim":"Generic ProcessIR cannot represent required reference families","required":"FALSE"},
+    {"id":"F15","claim":"Domain-specific exceptions dominate the grammar","required":"FALSE"},
+    {"id":"F16","claim":"Process semantics ownership remains conflicting","required":"FALSE"},
+    {"id":"F17","claim":"New implementation replaces EvolutionaryEpoch rather than coexisting/generalizing","required":"FALSE"},
+    {"id":"F18","claim":"Architecture layer cardinality is patched without formal migration","required":"FALSE"},
+    {"id":"F19","claim":"ActionIntent boundary is ambiguous","required":"FALSE"},
+    {"id":"F20","claim":"Process state advances on model assertion instead of evidence-bound outcome","required":"FALSE"}
+  ]
+}

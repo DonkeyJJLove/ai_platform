@@ -1,0 +1,44 @@
+[Unit]
+Description=LION P0 Rootless Docker Effect Provider
+Documentation=https://github.com/DonkeyJJLove/ai_platform
+After=network.target
+ConditionPathExists=/run/user/1000
+
+[Service]
+Type=simple
+User=lion-container-runtime-lab
+Group=lion-container-runtime-lab
+SupplementaryGroups=lion-docker-p0
+EnvironmentFile=/etc/lion/docker-p0-provider.env
+ExecStart=/usr/bin/python3 /opt/lion/docker-p0-provider/provider.py
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=10s
+UMask=0077
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+# Keep home trees hidden while exposing only the rootless Docker socket.
+ProtectHome=tmpfs
+BindReadOnlyPaths=/run/user/1000/docker.sock
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+# AF_INET/AF_INET6 are required only for the provider-side pinned base-image
+# registry pull/build path. P0 drone containers still execute on an internal
+# Docker network with no published host ports or direct Internet path.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ReadOnlyPaths=/opt/lion/docker-p0-provider
+ReadWritePaths=/var/lib/lion/docker-p0-provider /run/lion-docker-p0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,40 @@
+[Unit]
+Description=LION privileged bounded effect admission instance
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+User=root
+Group=root
+
+ExecStart=/usr/bin/python3 /usr/local/libexec/lion-effect-admission-broker.py
+
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+
+UMask=0077
+
+NoNewPrivileges=yes
+
+PrivateTmp=yes
+PrivateDevices=yes
+
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+
+LockPersonality=yes
+RestrictRealtime=yes
+
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+TasksMax=256
+MemoryMax=2G
+
+TimeoutStartSec=0
+TimeoutStopSec=90
+KillMode=mixed

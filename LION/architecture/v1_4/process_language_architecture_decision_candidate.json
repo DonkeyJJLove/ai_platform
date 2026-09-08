@@ -1,0 +1,28 @@
+{
+  "schema_version": "lion.process-language-architecture-decision-candidate/v1",
+  "status": "CANDIDATE_NOT_INTEGRATED",
+  "language_needed": true,
+  "language_name": "LPCL",
+  "new_top_level_layer_required": false,
+  "placement": {
+    "primary_layer": "EVOLUTIONARY_EPOCH",
+    "cross_concern": "GOVERNED_SELF_IMPLEMENTATION"
+  },
+  "responsibility": "Represent, normalize, validate and select legal autonomous process transitions without becoming an authority, Action, PDP, runtime-admission or effect plane.",
+  "owners": {
+    "generic_semantic_reference": "DonkeyJJLove/chunk-chunk",
+    "canonical_lion_integration": "DonkeyJJLove/ai_platform",
+    "research_history": "DonkeyJJLove/writeups"
+  },
+  "boundaries": {
+    "mission": "MissionSpec declares mission purpose/capability/organization constraints; ProcessIR declares lifecycle transitions.",
+    "epoch": "EvolutionaryEpochEngine remains a specialized domain state machine and is not replaced by LPCL.",
+    "action": "ACTION_REQUIRED transitions emit ActionIntentCandidate only.",
+    "authority": "ProcessIR may declare authority requirements but cannot validate/mint downstream grants.",
+    "runtime": "Existing RuntimeAdmissionEngine remains canonical.",
+    "effect": "Existing effect providers remain canonical.",
+    "reconciliation": "Evidence-bound ProcessTransitionOutcome may justify the next ProcessState."
+  },
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE"
+}
