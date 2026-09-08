@@ -4,7 +4,7 @@ This directory preserves history while allowing evidence-bound v1.4 reconciliati
 
 ## Superseded currentness
 
-`LION/status.json` remains a historical E003-era projection whose `CURRENT` label is stale relative to live `master`. R22I does not silently rewrite that consumer-sensitive state file. For v1.4 documentation currentness, use `current_state.json` and its explicit default/candidate evidence semantics.
+`LION/status.json` remains a historical E003-era projection whose `CURRENT` label is stale relative to live `master`. R23 does not silently rewrite that consumer-sensitive state file. For v1.4 documentation currentness, use `current_state.json` and its explicit default/candidate evidence semantics.
 
 ## R22C–R22H source/truth lineage
 
@@ -45,3 +45,13 @@ All R22I production, test and documentation mutations are noncarrier work. Only 
 ## Human authority boundaries
 
 R22I preserves `R22E-HAB-BRANCH-MAINTENANCE-001`, real child activation, mark-ready, merge, RAG publication, runtime deployment and production deployment as boundaries outside this autonomous repository-documentation/truth-reconciliation lane.
+
+## R23 — frontier consolidation and process-plane reconciliation
+
+R23 reconstructed the live candidate graph from master `67a4f8243aa6805e47035e572bd458f73fd0b358` and consolidated the R21 LPCL/Process lineage, R21/P0 TEST_ONLY materialization lineage and the R22C→R22H→R22I governed Action→Runtime lineage into one short-lived integration train. The merge conflict set was currentness/truth-carrier material rather than contradictory implementation semantics. Recomputing the combined production set yielded 268 production sources, 236 effect surfaces, six raw unclassified references, zero unresolved taxonomy references and scan digest `5f6561edcd368c2acce5f0e216bc9e21324da2913035e92ef175b7aca5b773a2`; neither predecessor scan digest was reused as current truth.
+
+The exact pre-documentation candidate `5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745` / `5dd5dc653c24bdd810faeb61f901328ad246e3a7` passes 2410 repository tests. LPCL/Canonical Process IR is integrated as a non-effectful layer: it can select process transitions and emit non-authoritative ActionIntentCandidate values, but cannot mint authority, evaluate the PDP, construct RuntimeAdmission, select an EffectProvider or execute an effect. R22I binder consumption remains the governed Action→Runtime path and does not become a second execution plane.
+
+During R23 currentness transport, a transient `tools/.r23-placeholder` commit was accidentally created. The mutation was detected immediately, removed before freeze and excluded from the final exact tree. The process therefore records it as an operational counterexample rather than laundering it away; exact tree equality with the locally validated candidate prevented the transient artifact from entering the frozen state.
+
+R23 truth closure follows the same carrier-last invariant: after all noncarrier source/test/documentation reconciliation is verified, compute `LION/TRUTH-SUBJECT/1` excluding exactly `LION/architecture/canonical-state-v1-3-candidate.json` and `cyber_lion/registry/repositories.json`; update only those carriers as the final repository-file commits, then perform read-only exact-head verification. Runtime/merge/production authority remain separate.
