@@ -16,5 +16,9 @@ class T(unittest.TestCase):
  def test_service(self):
   s=self.text('deploy/docker/lion-scale64-control/lion-scale64-control.service'); self.assertIn('User=sentinelx',s); self.assertNotIn('User=root',s); self.assertIn('NoNewPrivileges=yes',s)
  def test_installer(self):
-  s=self.text('deploy/docker/lion-scale64-control/install.sh'); self.assertIn('actions: [status, start, is-active, is-enabled]',s); self.assertNotIn('actions: [status, start, stop',s); self.assertIn('/opt/sentinelx-cloud-core/.venv/bin/python',s); self.assertNotIn('systemctl restart sentinelx-cloud-core',s)
+  s=self.text('deploy/docker/lion-scale64-control/install.sh'); self.assertIn('actions: [status, start, is-active, is-enabled]',s); self.assertNotIn('actions: [status, start, stop',s); self.assertIn('/opt/sentinelx-cloud-core/.venv/bin/python',s); self.assertNotIn('systemctl restart sentinelx-cloud-core',s); self.assertIn('/usr/sbin/visudo -cf',s); self.assertIn('/etc/sudoers.d/lion-scale64-control',s)
+ def test_exact_service_sudoers(self):
+  s=self.text('deploy/docker/lion-scale64-control/lion-scale64-control.sudoers'); self.assertIn('sentinelx LION_HOST = (root) NOPASSWD: LION_CTL',s); self.assertIn('/usr/bin/systemctl restart sentinelx-cloud-core',s); self.assertIn('/usr/bin/systemctl start lion-scale64-control.service',s); self.assertNotIn('/usr/bin/systemctl stop lion-scale64-control.service',s); self.assertNotIn('/usr/bin/systemctl restart lion-scale64-control.service',s); self.assertNotIn('*',s); self.assertNotIn(' NOPASSWD: ALL',s)
+ def test_evidence_relay_hash_is_fail_closed(self):
+  s=self.text('tools/lion_effect_admission_broker.py'); self.assertIn('relay_evidence_sha256=rr.get("source_evidence_sha256")',s); self.assertIn('require_hex64(relay_evidence_sha256,"relay_evidence_sha256")',s); self.assertIn('EVIDENCE_RELAY_HASH_MISMATCH',s); self.assertIn('broker_evidence_sha256 != relay_evidence_sha256',s); self.assertIn('"relay_evidence_sha256": relay_evidence_sha256',s); self.assertIn('"evidence_relay_match": True',s)
 if __name__=='__main__': unittest.main()

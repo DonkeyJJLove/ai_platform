@@ -634,11 +634,16 @@ def run_scale64(
         rc=rr.get("returncode")
         log_text=rr.get("log")
         evidence_obj=rr.get("evidence")
+        relay_evidence_sha256=rr.get("source_evidence_sha256")
         if not isinstance(rc,int) or not isinstance(log_text,str): raise Deny("runner-exec-scale64-result-malformed")
         log_path.write_text(log_text,encoding="utf-8")
         if evidence_obj is not None:
             if not isinstance(evidence_obj,dict): raise Deny("runner-exec-evidence-malformed")
+            require_hex64(relay_evidence_sha256,"relay_evidence_sha256")
             atomic_json(evidence_path,evidence_obj)
+            broker_evidence_sha256=sha256_file(evidence_path)
+            if broker_evidence_sha256 != relay_evidence_sha256:
+                raise Deny("EVIDENCE_RELAY_HASH_MISMATCH")
         proc=subprocess.CompletedProcess(args=[RUNNER_EXEC_CLIENT],returncode=rc)
         tail=log_tail(log_path)
 
@@ -986,11 +991,9 @@ def run_scale64(
             "evidence_path": str(
                 evidence_path
             ),
-            "evidence_sha256": (
-                sha256_file(
-                    evidence_path
-                )
-            ),
+            "evidence_sha256": broker_evidence_sha256,
+            "relay_evidence_sha256": relay_evidence_sha256,
+            "evidence_relay_match": True,
         }
 
         atomic_json(

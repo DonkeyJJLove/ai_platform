@@ -5,7 +5,7 @@ RUNNER_USER=lion-maintenance-runner; RUNTIME_USER=lion-container-runtime-lab; PR
 [[ $# -eq 2 ]] || { echo "usage: sudo bash install.sh <expected-head> <expected-tree>" >&2; exit 2; }
 HEAD="$1"; TREE="$2"; [[ "$(id -u)" = 0 && "$(hostname)" = "$TARGET_HOST" && "$(uname -m)" = x86_64 ]] || exit 1; grep -qi microsoft /proc/sys/kernel/osrelease || exit 1
 [[ "$HEAD" =~ ^[0-9a-f]{40}$ && "$TREE" =~ ^[0-9a-f]{40}$ ]] || exit 1
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT; git init -q "$TMP/repo"; git -C "$TMP/repo" remote add origin "$REPO_URL"; LIVE=$(git ls-remote --exit-code "$REPO_URL" "refs/heads/$BRANCH" | awk '{print $1}'); [[ "$LIVE" = "$HEAD" ]] || exit 1
+TMP=$(mktemp -d); SUDOERS_TMP=; trap 'rm -rf "$TMP"; [[ -z "${SUDOERS_TMP:-}" ]] || rm -f "$SUDOERS_TMP"' EXIT; git init -q "$TMP/repo"; git -C "$TMP/repo" remote add origin "$REPO_URL"; LIVE=$(git ls-remote --exit-code "$REPO_URL" "refs/heads/$BRANCH" | awk '{print $1}'); [[ "$LIVE" = "$HEAD" ]] || exit 1
 git -C "$TMP/repo" fetch -q --no-tags --depth=1 origin "refs/heads/$BRANCH"; [[ "$(git -C "$TMP/repo" rev-parse FETCH_HEAD)" = "$HEAD" ]]; [[ "$(git -C "$TMP/repo" rev-parse 'FETCH_HEAD^{tree}')" = "$TREE" ]]; git -C "$TMP/repo" checkout -q --detach FETCH_HEAD; R="$TMP/repo"
 python3 -m py_compile "$R/tools/lion_effect_admission_broker.py" "$R/tools/lion_runner_exec_provider.py" "$R/tools/lion_runner_exec_client.py" "$R/tools/lion_effect_admission_client.py" "$R/tools/lion_broker_update_provider.py" "$R/tools/lion_broker_update_client.py" "$R/tools/lion_scale64_controller.py"
 id "$RUNNER_USER" >/dev/null; id "$RUNTIME_USER" >/dev/null; getent group "$PROVIDER_GROUP" >/dev/null || groupadd --system "$PROVIDER_GROUP"
@@ -31,6 +31,16 @@ install -o root -g root -m 0555 "$R/tools/lion_broker_update_provider.py" /usr/l
 install -o root -g root -m 0555 "$R/tools/lion_broker_update_client.py" /usr/local/bin/lion-broker-update
 install -o root -g root -m 0555 "$R/tools/lion_scale64_controller.py" /usr/local/libexec/lion-scale64-controller.py
 for f in lion-effect-admission.socket 'lion-effect-admission@.service' lion-broker-update.socket 'lion-broker-update@.service' lion-scale64-control.service; do install -o root -g root -m 0644 "$R/deploy/docker/lion-scale64-control/$f" "/etc/systemd/system/$f"; done
+SUDOERS_SOURCE="$R/deploy/docker/lion-scale64-control/lion-scale64-control.sudoers"
+[[ -f "$SUDOERS_SOURCE" ]] || { echo "ERROR: canonical Scale64 sudoers source missing" >&2; exit 1; }
+SUDOERS_TMP="$(mktemp /etc/sudoers.d/lion-scale64-control.tmp.XXXXXX)"
+install -o root -g root -m 0440 "$SUDOERS_SOURCE" "$SUDOERS_TMP"
+/usr/sbin/visudo -cf "$SUDOERS_TMP" >/dev/null
+mv -f "$SUDOERS_TMP" /etc/sudoers.d/lion-scale64-control
+SUDOERS_TMP=
+chown root:root /etc/sudoers.d/lion-scale64-control
+chmod 0440 /etc/sudoers.d/lion-scale64-control
+/usr/sbin/visudo -cf /etc/sudoers.d/lion-scale64-control >/dev/null
 python3 - /etc/sentinelx/config.yaml <<'PY'
 from pathlib import Path
 import sys
@@ -49,4 +59,4 @@ from pathlib import Path
 yaml.safe_load(Path('/etc/sentinelx/config.yaml').read_text())
 PY
 systemctl daemon-reload; systemctl enable --now lion-effect-admission.socket lion-broker-update.socket
-echo LION_SCALE64_CONTROL_PLANE_INSTALLED=PASS; echo SOURCE_HEAD="$HEAD"; echo SOURCE_TREE="$TREE"; echo RUNNER_EXEC_IDENTITY_PASS=true; echo PROVIDER_ACTIVE=true; echo CONTROL_SERVICE_PRESENT=true; echo SENTINELX_RESTART_REQUIRED=YES
+echo LION_SCALE64_CONTROL_PLANE_INSTALLED=PASS; echo SOURCE_HEAD="$HEAD"; echo SOURCE_TREE="$TREE"; echo RUNNER_EXEC_IDENTITY_PASS=true; echo PROVIDER_ACTIVE=true; echo CONTROL_SERVICE_PRESENT=true; echo SENTINELX_RESTART_REQUIRED=YES; echo SUDOERS_INSTALLED=true; echo SUDOERS_VALID=true

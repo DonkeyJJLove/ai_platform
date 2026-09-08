@@ -17,4 +17,6 @@ class RunnerExecTests(unittest.TestCase):
   s=self.t('deploy/docker/lion-p0-provider/install.sh'); self.assertNotIn('runuser ',s); self.assertNotIn('os.setuid',s); self.assertIn('lion-runner-exec-client.py provider-call',s)
  def test_top_installer_no_sentinel_restart(self):
   s=self.t('deploy/docker/lion-scale64-control/install.sh'); self.assertIn('lion-runner-exec.socket',s); self.assertIn('SENTINELX_RESTART_REQUIRED=YES',s); self.assertNotIn('systemctl restart sentinelx-cloud-core',s)
+ def test_runner_returns_source_evidence_hash_and_cleans_state(self):
+  s=self.t('tools/lion_runner_exec_provider.py'); self.assertIn('source_evidence_sha256',s); self.assertIn('shutil.rmtree(run_dir,ignore_errors=True)',s)
 if __name__=='__main__': unittest.main()
