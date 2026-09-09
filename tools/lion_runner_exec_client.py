@@ -18,16 +18,39 @@ p=argparse.ArgumentParser(); sub=p.add_subparsers(dest='cmd',required=True); sub
 for n in ('static-unittest','static-pycompile'):
     q=sub.add_parser(n); q.add_argument('--repo-path',required=True); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True)
 q=sub.add_parser('provider-call'); q.add_argument('--provider-operation',choices=['PING','LIST_FLEET_RESOURCES'],required=True); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True)
-q=sub.add_parser('scale64-run'); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True); q.add_argument('--run-request-id',required=True)
-a=p.parse_args(); req={'schema_version':'1.0.0','request_id':rid()}
-if a.cmd=='identity': req['operation']='IDENTITY'
-elif a.cmd in ('static-unittest','static-pycompile'):
-    if not HEX40.fullmatch(a.source_head) or not HEX40.fullmatch(a.source_tree): raise SystemExit('invalid source identity')
-    req.update(operation='STATIC_UNITTEST' if a.cmd=='static-unittest' else 'STATIC_PYCOMPILE',repo_path=a.repo_path,source_head=a.source_head,source_tree=a.source_tree)
-elif a.cmd=='provider-call':
-    if not HEX40.fullmatch(a.source_head) or not HEX40.fullmatch(a.source_tree): raise SystemExit('invalid source identity')
-    req.update(operation='PROVIDER_CALL',provider_operation=a.provider_operation,source_head=a.source_head,source_tree=a.source_tree)
-else:
-    if not HEX40.fullmatch(a.source_head) or not HEX40.fullmatch(a.source_tree) or not HEX64.fullmatch(a.run_request_id): raise SystemExit('invalid scale64 identity')
-    req.update(operation='SCALE64_RUN',source_head=a.source_head,source_tree=a.source_tree,run_request_id=a.run_request_id)
-raise SystemExit(call(req))
+q=sub.add_parser('pod-provider-call'); q.add_argument('--provider-operation',choices=['PRECHECK_POD_RUNTIMIË	Ô‘TT‘WÓĞĞSÒÎÉË	ÓPUT’PSV‘WÕ’ÕÔÑÉË	Ô‘PQÔÑÑU’QSÑIË	ÔÕÔÕ’ÕÔÑÉ×K™\]Z\™YUYJNÈK˜YØ\™İ[Y[
+	ËK\Ûİ\˜ÙKZXY	Ë™\]Z\™YUYJNÈK˜YØ\™İ[Y[
+	ËK\Ûİ\˜ÙK]™YIË™\]Z\™YUYJNÈK˜YØ\™İ[Y[
+	ËK\[‹ZY	Ë™\]Z\™YUYJBœO\İX‹˜YÜ\œÙ\Š	ÜØØ[M\[‰ÊNÈK˜YØ\™İ[Y[
+	ËK\Ûİ\˜ÙKZXY	Ë™\]Z\™YUYJNÈK˜YØ\™İ[Y[
+	ËK\Ûİ\˜ÙK]™YIË™\]Z\™YUYJNÈK˜YØ\™İ[Y[
+	ËK\[‹\™\]Y\İZY	Ë™\]Z\™YUYJB˜O\œ\œÙWØ\™ÜÊ
+NÈ™\O^ÉÜØÚ[XWİ™\œÚ[Û‰Î‰ÌKŒŒ	Ë	Ü™\]Y\İÚY	ÎœšY
+
+_BšYˆK˜ÛYOIÚY[]IÎˆ™\VÉÛÜ\˜][Û‰×OIÒQS•UIÂ™[YˆK˜ÛY[ˆ
+	Üİ]XË][š]\İ	Ë	Üİ]XË\XÛÛ\[IÊN‚ˆYˆ›İV™[X]Ú
+KœÛİ\˜ÙWÚXY
+HÜˆ›İV™[X]Ú
+KœÛİ\˜ÙWİ™YJNˆ˜Z\ÙHŞ\İ[Q^]
+	Ú[˜[YÛİ\˜ÙHY[]IÊBˆ™\K\]JÜ\˜][ÛIÔÕUP×ÕS’UTÕ	ÈYˆK˜ÛYOIÜİ]XË][š]\İ	È[ÙH	ÔÕUP×ÔPÓÓTSIË™\×Ü]XKœ™\×Ü]Ûİ\˜ÙWÚXYXKœÛİ\˜ÙWÚXYÛİ\˜ÙWİ™YOXKœÛİ\˜ÙWİ™YJB™[YˆK˜ÛYOIÜ›İšY\‹XØ[	Î‚ˆYˆ›İV™[X]Ú
+KœÛİ\˜ÙWÚXY
+HÜˆ›İV™[X]Ú
+KœÛİ\˜ÙWİ™YJNˆ˜Z\ÙHŞ\İ[Q^]
+	Ú[˜[YÛİ\˜ÙHY[]IÊBˆ™\K\]JÜ\˜][ÛIÔ“Õ’QT—ĞĞS	Ë›İšY\—ÛÜ\˜][ÛXKœ›İšY\—ÛÜ\˜][Û‹Ûİ\˜ÙWÚXYXKœÛİ\˜ÙWÚXYÛİ\˜ÙWİ™YOXKœÛİ\˜ÙWİ™YJB™[YˆK˜ÛYOIÜÙ\›İšY\‹XØ[	Î‚ˆYˆ›İV™[X]Ú
+KœÛİ\˜ÙWÚXY
+HÜˆ›İV™[X]Ú
+KœÛİ\˜ÙWİ™YJNˆ˜Z\ÙHŞ\İ[Q^]
+	Ú[˜[YÛİ\˜ÙHY[]IÊBˆYˆ›İ™K™[X]Ú
+‰ÖĞKV˜K^ŒNWVĞKV˜K^ŒNK—Î‹W^ÌLßIËKœ[—ÚY
+Nˆ˜Z\ÙHŞ\İ[Q^]
+	Ú[˜[Y[ˆY	ÊBˆ™\K\]JÜ\˜][ÛIÔÑÔ“Õ’QT—ĞĞS	Ë›İšY\—ÛÜ\˜][ÛXKœ›İšY\—ÛÜ\˜][Û‹Ûİ\˜ÙWÚXYXKœÛİ\˜ÙWÚXYÛİ\˜ÙWİ™YOXKœÛİ\˜ÙWİ™YK[—ÚYXKœ[—ÚY
+B™[ÙN‚ˆYˆ›İV™[X]Ú
+KœÛİ\˜ÙWÚXY
+HÜˆ›İV™[X]Ú
+KœÛİ\˜ÙWİ™YJHÜˆ›İV™[X]Ú
+Kœ[—Ü™\]Y\İÚY
+Nˆ˜Z\ÙHŞ\İ[Q^]
+	Ú[˜[YØØ[MY[]IÊBˆ™\K\]JÜ\˜][ÛIÔĞĞSMÔ•S‰ËÛİ\˜ÙWÚXYXKœÛİ\˜ÙWÚXYÛİ\˜ÙWİ™YOXKœÛİ\˜ÙWİ™YK[—Ü™\]Y\İÚYXKœ[—Ü™\]Y\İÚY
+Bœ˜Z\ÙHŞ\İ[Q^]
+Ø[
+™\JJB
