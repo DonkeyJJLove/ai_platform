@@ -56,6 +56,12 @@ class VktK3sProviderTests(unittest.TestCase):
         self.assertIn("install -d -o root -g root -m 0755 /run/lion-k3s-vkt-r3", installer)
 
 
+    def test_kubectl_is_bound_to_fixed_k3s_data_dir(self):
+        text = (ROOT / "tools" / "lion_k3s_pod_provider.py").read_text(encoding="utf-8")
+        self.assertEqual(str(provider.K3S_DATA_DIR), "/var/lib/lion-effect-admission/vkt-r3-k3s/data")
+        self.assertIn('"K3S_DATA_DIR": str(K3S_DATA_DIR)', text)
+
+
 
 if __name__ == "__main__":
     unittest.main()

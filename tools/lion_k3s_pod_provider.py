@@ -28,6 +28,7 @@ K3S_BIN = Path("/opt/lion/k3s/k3s")
 K3S_VERSION = "v1.36.4+k3s1"
 K3S_SHA256 = "835873f37245fc615f547a2fe2af9402a347875f13fa64a1f136de644955ea3f"
 KUBECONFIG = Path("/var/lib/lion-effect-admission/vkt-r3-k3s/kubeconfig.yaml")
+K3S_DATA_DIR = Path("/var/lib/lion-effect-admission/vkt-r3-k3s/data")
 STATE_ROOT = Path("/var/lib/lion/k3s-vkt-r3")
 RECEIPT_ROOT = STATE_ROOT / "receipts"
 FIXED_REPO = Path("/opt/lion/k3s-vkt-r3/repo")
@@ -120,7 +121,7 @@ def run(argv: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[s
         shell=False,
         timeout=timeout,
         check=False,
-        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"},
+        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "K3S_DATA_DIR": str(K3S_DATA_DIR)},
     )
     if proc.returncode != 0:
         raise Deny(f"command-failed:{os.path.basename(argv[0])}:rc={proc.returncode}:{(proc.stderr or proc.stdout)[-2000:]}")
