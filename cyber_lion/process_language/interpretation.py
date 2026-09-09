@@ -12,6 +12,7 @@ from cyber_lion.process_language.canonical_run import (
     CanonicalRunCompilation,
     CanonicalRunError,
     compile_canonical_run,
+    parse_canonical_run,
 )
 from cyber_lion.process_language.fleet_mission import FleetMissionIR
 from cyber_lion.process_language.legacy_run import LegacyRunAdapter, LegacyRunResult
@@ -23,6 +24,8 @@ SURFACE_CLASSES = frozenset({
     "LEGACY_RUN_DATA",
     "UNREPRESENTABLE",
 })
+_REQUIRED_V11_PROFILE = frozenset({"TERMINATION", "LINEAGE"})
+_NON_EFFECT_CONTROLS = ("AUTHORITY_EFFECT", "RUNTIME_EFFECT", "EXECUTION_EFFECT", "EFFECT_PROVIDER_EFFECT")
 
 
 class ProcessSourceInterpretationError(ValueError):
@@ -61,6 +64,30 @@ def _looks_like_versioned_run(text: str) -> bool:
     return "RUN=" in text and "LPCL_VERSION=" in text
 
 
+def _one(values: tuple[str, ...] | None, name: str) -> str:
+    if values is None or len(values) != 1 or not values[0]:
+        raise ProcessSourceInterpretationError(f"{name} must contain exactly one non-empty value")
+    return values[0]
+
+
+def _validate_v11_profile(text: str) -> None:
+    try:
+        ast = parse_canonical_run(text)
+    except CanonicalRunError as exc:
+        raise ProcessSourceInterpretationError(str(exc)) from exc
+    missing = sorted(_REQUIRED_V11_PROFILE - set(ast.globals))
+    if missing:
+        raise ProcessSourceInterpretationError(f"missing required v1.1 profile fields: {missing}")
+    termination = _one(ast.globals.get("TERMINATION"), "TERMINATION")
+    if termination != "COMPLETE_ON_DONE":
+        raise ProcessSourceInterpretationError("TERMINATION must be COMPLETE_ON_DONE")
+    if not tuple(item for item in ast.globals.get("LINEAGE", ()) if item):
+        raise ProcessSourceInterpretationError("LINEAGE must not be empty")
+    for key in _NON_EFFECT_CONTROLS:
+        if key in ast.globals and _one(ast.globals.get(key), key) != "NONE":
+            raise ProcessSourceInterpretationError(f"{key} must be NONE")
+
+
 def interpret_process_source(text: str) -> ProcessSourceInterpretation:
     if type(text) is not str:
         raise ProcessSourceInterpretationError("process source must be text")
@@ -79,6 +106,7 @@ def interpret_process_source(text: str) -> ProcessSourceInterpretation:
         ).validate()
 
     if _looks_like_versioned_run(text):
+        _validate_v11_profile(text)
         try:
             compiled: CanonicalRunCompilation = compile_canonical_run(text)
         except CanonicalRunError as exc:
