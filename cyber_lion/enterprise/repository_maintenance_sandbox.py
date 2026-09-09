@@ -15,6 +15,7 @@ import urllib.request
 from cyber_lion.contracts.branch_ownership_registry import BranchOwnershipRecord
 from cyber_lion.contracts.repository_maintenance_sandbox import (
     REPOSITORY,
+    MAINTENANCE_BRANCH_ALLOWLIST,
     RepositoryMaintenanceContractError,
     RepositoryMaintenanceExecutionReceipt,
     RepositoryMaintenanceOperation,
@@ -27,6 +28,79 @@ from cyber_lion.contracts.repository_maintenance_sandbox import (
 
 class RepositoryMaintenanceError(RuntimeError):
     pass
+
+
+CLOSURE_MANIFEST_PATH = "LION/maintenance/branch-closure-manifest-v1.json"
+CLOSURE_SCHEMA_VERSION = "lion.branch-closure-manifest/v1"
+CLOSURE_RESEARCH_BASE_SHA = "c50465888d55257ff676712bc7de8431a843ad63"
+CLOSURE_RESEARCH_BASE_TREE = "ea4f7bd2c11cbc84d7283ae0b3b4bfc006bca5a6"
+CLOSURE_RESEARCH_MANIFEST_SHA256 = "ccfad8dbd1cc5adee8058dedeea578fe9c8f8178466b910a4c3a389dd2b92b79"
+CLOSURE_ARCHIVE_BUNDLE_SHA256 = "2c77fb2da36cfda82e97b9a5852172ffae783a1e299821d25dc678b7c2d7dd5e"
+CLOSURE_RESEARCH_CLASSES = frozenset({"A", "B", "C", "G", "H", "I"})
+CLOSURE_DISPOSITIONS = frozenset({
+    "ALREADY_INTEGRATED", "ARCHIVE_ONLY", "CONTENT_IDENTICAL", "OBSOLETE_ARCHITECTURE",
+    "SEMANTICALLY_IN_MASTER", "SUPERSEDED_BY_MASTER", "TEST_OR_NEGATIVE_CONTROL",
+})
+
+
+def _closure_evidence_from_manifest(value: object, *, branch: str, expected_head: str, master_sha: str, master_parents: tuple[str, ...]) -> str | None:
+    if not isinstance(value, dict):
+        raise RepositoryMaintenanceError("closure manifest must be object")
+    exact = {
+        "schema_version": CLOSURE_SCHEMA_VERSION,
+        "repository": REPOSITORY,
+        "research_base_sha": CLOSURE_RESEARCH_BASE_SHA,
+        "research_base_tree": CLOSURE_RESEARCH_BASE_TREE,
+        "research_manifest_sha256": CLOSURE_RESEARCH_MANIFEST_SHA256,
+        "archive_bundle_sha256": CLOSURE_ARCHIVE_BUNDLE_SHA256,
+    }
+    for key, expected in exact.items():
+        if value.get(key) != expected:
+            raise RepositoryMaintenanceError(f"closure manifest binding drift: {key}")
+    entries = value.get("entries")
+    count = value.get("count")
+    if not isinstance(entries, list) or isinstance(count, bool) or not isinstance(count, int) or count != len(entries):
+        raise RepositoryMaintenanceError("closure manifest count invalid")
+    names: list[str] = []
+    for item in entries:
+        if not isinstance(item, dict):
+            raise RepositoryMaintenanceError("closure manifest entry invalid")
+        b = item.get("branch")
+        h = item.get("expected_head")
+        validate_branch_name(b)
+        if not isinstance(h, str) or re.fullmatch(r"[0-9a-f]{40}", h) is None:
+            raise RepositoryMaintenanceError("closure manifest head invalid")
+        if item.get("research_class") not in CLOSURE_RESEARCH_CLASSES:
+            raise RepositoryMaintenanceError("closure manifest research class invalid")
+        if item.get("cleanup_class") not in {"A", "B"}:
+            raise RepositoryMaintenanceError("closure manifest cleanup class invalid")
+        if item.get("disposition") not in CLOSURE_DISPOSITIONS:
+            raise RepositoryMaintenanceError("closure manifest disposition invalid")
+        if item.get("archive_proven") is not True or item.get("archive_bundle_sha256") != CLOSURE_ARCHIVE_BUNDLE_SHA256:
+            raise RepositoryMaintenanceError("closure manifest archive proof invalid")
+        names.append(b)
+    if len(names) != len(set(names)) or names != sorted(names):
+        raise RepositoryMaintenanceError("closure manifest branches must be unique and sorted")
+    if CLOSURE_RESEARCH_BASE_SHA not in set(master_parents):
+        raise RepositoryMaintenanceError("closure manifest is stale for current master")
+    matches = [item for item in entries if item.get("branch") == branch]
+    if not matches:
+        return None
+    if len(matches) != 1:
+        raise RepositoryMaintenanceError("closure manifest target cardinality invalid")
+    item = matches[0]
+    if item.get("expected_head") != expected_head or item.get("cleanup_class") != "B":
+        return None
+    payload = {
+        "schema_version": CLOSURE_SCHEMA_VERSION,
+        "repository": REPOSITORY,
+        "research_base_sha": CLOSURE_RESEARCH_BASE_SHA,
+        "research_manifest_sha256": CLOSURE_RESEARCH_MANIFEST_SHA256,
+        "archive_bundle_sha256": CLOSURE_ARCHIVE_BUNDLE_SHA256,
+        "current_master": master_sha,
+        "entry": item,
+    }
+    return evidence_digest(payload, "CLOSURE")
 
 
 @dataclass(frozen=True)
@@ -204,6 +278,34 @@ class GitHubRepositoryMaintenanceBackend:
         except Exception as exc:
             raise RepositoryMaintenanceError(f"invalid JSON projection {path}") from exc
 
+    def master_parents(self, master_sha: str) -> tuple[str, ...]:
+        if not isinstance(master_sha, str) or re.fullmatch(r"[0-9a-f]{40}", master_sha) is None:
+            raise RepositoryMaintenanceError("invalid master for parent observation")
+        status, value = self._request("GET", f"/repos/{self.repository}/git/commits/{master_sha}")
+        if status != 200 or not isinstance(value, dict):
+            raise RepositoryMaintenanceError("master parent observation unavailable")
+        parents = value.get("parents")
+        if not isinstance(parents, list):
+            raise RepositoryMaintenanceError("master parent observation invalid")
+        result: list[str] = []
+        for parent in parents:
+            sha = parent.get("sha") if isinstance(parent, dict) else None
+            if not isinstance(sha, str) or re.fullmatch(r"[0-9a-f]{40}", sha) is None:
+                raise RepositoryMaintenanceError("master parent SHA invalid")
+            result.append(sha)
+        return tuple(result)
+
+    def closure_evidence(self, branch: str, expected_head: str, master_sha: str) -> str | None:
+        validate_branch_name(branch)
+        value = self._content_json(CLOSURE_MANIFEST_PATH, master_sha)
+        return _closure_evidence_from_manifest(
+            value,
+            branch=branch,
+            expected_head=expected_head,
+            master_sha=master_sha,
+            master_parents=self.master_parents(master_sha),
+        )
+
     @staticmethod
     def _contains_active_branch(value: object, branch: str) -> bool:
         active_states = {"PLANNED", "ACCEPTED", "STARTED", "IN_PROGRESS", "BLOCKED", "VERIFYING", "ACTIVE", "ASSIGNED", "BUILDING", "READY", "OPEN"}
@@ -239,6 +341,53 @@ class GitHubRepositoryMaintenanceBackend:
         raise RepositoryMaintenanceError("direct repository ref delete denied; mediated boundary required")
 
 
+def _observe_delete_classification(*, backend: object, branch: str, master_sha: str) -> tuple[str, dict[str, object], list[dict], BranchOwnershipRecord, BranchObservation, str | None]:
+    head = backend.branch_sha(branch)
+    if head is None:
+        raise RepositoryMaintenanceError("branch disappeared during classification")
+    compare = backend.compare_branch_to_master(branch)
+    prs = backend.open_prs_for_branch(branch)
+    ownership = backend.ownership_observation(branch, master_sha)
+    eligible_a = compare["status"] in {"ahead", "identical"} and int(compare["behind_by"]) == 0 and not prs and ownership.ownership_state == "UNOWNED"
+    closure_digest = None
+    classification = "A" if eligible_a else "F"
+    if not eligible_a and compare["status"] == "diverged" and not prs and ownership.ownership_state == "UNOWNED":
+        resolver = getattr(backend, "closure_evidence", None)
+        if callable(resolver):
+            closure_digest = resolver(branch, head, master_sha)
+        if closure_digest is not None:
+            classification = "B"
+    obs = BranchObservation(
+        branch=branch,
+        head_sha=head,
+        compare_status=str(compare["status"]),
+        ahead_by=int(compare["ahead_by"]),
+        behind_by=int(compare["behind_by"]),
+        open_pr_count=len(prs),
+        ownership_state=ownership.ownership_state,
+        ownership_source=ownership.source_provenance_ref,
+        classification=classification,
+    )
+    return head, compare, prs, ownership, obs, closure_digest
+
+
+def _classification_payload(*, classification: str, branch: str, head: str, master: str, ancestry: str, pr: str, ownership: str, closure: str | None) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "classification": classification,
+        "branch": branch,
+        "head": head,
+        "master": master,
+        "ancestry": ancestry,
+        "pr": pr,
+        "ownership": ownership,
+    }
+    if classification == "B":
+        if closure is None:
+            raise RepositoryMaintenanceError("class B requires closure evidence")
+        payload["closure"] = closure
+    return payload
+
+
 class RepositoryMaintenanceSandbox:
     def __init__(self, *, policy: RepositoryMaintenancePolicy, backend: GitHubRepositoryMaintenanceBackend, replay_guard: ReplayGuard | None = None) -> None:
         self.policy = policy.validate()
@@ -267,9 +416,11 @@ class RepositoryMaintenanceSandbox:
             return self._receipt(operation, before_master=before_master, after_master=before_master, before_head=operation.expected_branch_head, exists_after=False, outcome="ALREADY_ABSENT", events=(f"github:branch:{operation.branch_name}:absent",))
         if before_head != operation.expected_branch_head:
             raise RepositoryMaintenanceError("stale branch head denied")
-        compare = self.backend.compare_branch_to_master(operation.branch_name)
-        prs = self.backend.open_prs_for_branch(operation.branch_name)
-        ownership = self.backend.ownership_observation(operation.branch_name, before_master)
+        observed_head, compare, prs, ownership, observation, closure_digest = _observe_delete_classification(
+            backend=self.backend, branch=operation.branch_name, master_sha=before_master
+        )
+        if observed_head != before_head:
+            raise RepositoryMaintenanceError("branch changed during classification")
         ancestry_evidence = {"branch": operation.branch_name, "head": before_head, "master": before_master, "status": compare["status"], "ahead_by": compare["ahead_by"], "behind_by": compare["behind_by"]}
         pr_evidence = {"branch": operation.branch_name, "open_pr_ids": sorted(int(item["number"]) for item in prs if isinstance(item.get("number"), int) and not isinstance(item.get("number"), bool))}
         ownership_evidence = ownership.canonical_dict()
@@ -279,10 +430,18 @@ class RepositoryMaintenanceSandbox:
             raise RepositoryMaintenanceError("PR evidence substitution denied")
         if evidence_digest(ownership_evidence, "OWNERSHIP") != operation.ownership_evidence_digest:
             raise RepositoryMaintenanceError("ownership evidence substitution denied")
-        eligible_a = operation.classification == "A" and compare["status"] in {"ahead", "identical"} and int(compare["behind_by"]) == 0 and not prs and ownership.ownership_state == "UNOWNED"
-        if not eligible_a:
+        if observation.classification != operation.classification or operation.classification not in {"A", "B"}:
             raise RepositoryMaintenanceError("branch no longer deletion eligible")
-        classification_payload = {"classification": "A", "branch": operation.branch_name, "head": before_head, "master": before_master, "ancestry": operation.ancestry_evidence_digest, "pr": operation.pr_state_evidence_digest, "ownership": operation.ownership_evidence_digest}
+        classification_payload = _classification_payload(
+            classification=operation.classification,
+            branch=operation.branch_name,
+            head=before_head,
+            master=before_master,
+            ancestry=operation.ancestry_evidence_digest,
+            pr=operation.pr_state_evidence_digest,
+            ownership=operation.ownership_evidence_digest,
+            closure=closure_digest,
+        )
         if evidence_digest(classification_payload, "CLASSIFICATION") != operation.classification_digest:
             raise RepositoryMaintenanceError("classification evidence substitution denied")
         self.backend.delete_exact_branch_ref(operation.branch_name, before_head)
@@ -297,24 +456,28 @@ class RepositoryMaintenanceSandbox:
 
 
 def _build_operation(*, sandbox: RepositoryMaintenanceSandbox, branch: str, index: int, master_sha: str) -> tuple[RepositoryMaintenanceOperation, BranchObservation]:
-    head = sandbox.backend.branch_sha(branch)
-    if head is None:
-        raise RepositoryMaintenanceError("branch disappeared during classification")
-    compare = sandbox.backend.compare_branch_to_master(branch)
-    prs = sandbox.backend.open_prs_for_branch(branch)
-    ownership = sandbox.backend.ownership_observation(branch, master_sha)
+    head, compare, prs, ownership, obs, closure_digest = _observe_delete_classification(
+        backend=sandbox.backend, branch=branch, master_sha=master_sha
+    )
+    if obs.classification not in {"A", "B"}:
+        raise RepositoryMaintenanceError("branch requires retention or additional evidence: " + json.dumps(obs.canonical(), sort_keys=True))
     ancestry = {"branch": branch, "head": head, "master": master_sha, "status": compare["status"], "ahead_by": compare["ahead_by"], "behind_by": compare["behind_by"]}
     pr_state = {"branch": branch, "open_pr_ids": sorted(int(item["number"]) for item in prs if isinstance(item.get("number"), int) and not isinstance(item.get("number"), bool))}
     ownership_state = ownership.canonical_dict()
-    classification = "A" if compare["status"] in {"ahead", "identical"} and int(compare["behind_by"]) == 0 and not prs and ownership.ownership_state == "UNOWNED" else "F"
-    obs = BranchObservation(branch=branch, head_sha=head, compare_status=str(compare["status"]), ahead_by=int(compare["ahead_by"]), behind_by=int(compare["behind_by"]), open_pr_count=len(prs), ownership_state=ownership.ownership_state, ownership_source=ownership.source_provenance_ref, classification=classification)
-    if classification != "A":
-        raise RepositoryMaintenanceError("branch requires retention or additional evidence: " + json.dumps(obs.canonical(), sort_keys=True))
     a_digest = evidence_digest(ancestry, "ANCESTRY")
     p_digest = evidence_digest(pr_state, "PR")
     o_digest = evidence_digest(ownership_state, "OWNERSHIP")
-    class_payload = {"classification": "A", "branch": branch, "head": head, "master": master_sha, "ancestry": a_digest, "pr": p_digest, "ownership": o_digest}
-    op = RepositoryMaintenanceOperation(schema_version="1.0.0", repository=REPOSITORY, mission_id=sandbox.policy.mission_id, drone_id=f"F48-{index:03d}", operation_id=f"delete-{index:03d}-{sha256(branch.encode()).hexdigest()[:12]}", dispatch_id="E003-BRANCH-ZERO-SANDBOX-01", fencing_token=1, generation=1, protected_master_sha=master_sha, branch_name=branch, expected_branch_head=head, ancestry_evidence_digest=a_digest, pr_state_evidence_digest=p_digest, ownership_evidence_digest=o_digest, classification_digest=evidence_digest(class_payload, "CLASSIFICATION"), classification="A", requested_effect="DELETE_EXACT_REF", policy_digest=sandbox.policy.digest()).validate()
+    class_payload = _classification_payload(
+        classification=obs.classification,
+        branch=branch,
+        head=head,
+        master=master_sha,
+        ancestry=a_digest,
+        pr=p_digest,
+        ownership=o_digest,
+        closure=closure_digest,
+    )
+    op = RepositoryMaintenanceOperation(schema_version="1.0.0", repository=REPOSITORY, mission_id=sandbox.policy.mission_id, drone_id=f"F48-{index:03d}", operation_id=f"delete-{index:03d}-{sha256(branch.encode()).hexdigest()[:12]}", dispatch_id="E003-BRANCH-ZERO-SANDBOX-01", fencing_token=1, generation=1, protected_master_sha=master_sha, branch_name=branch, expected_branch_head=head, ancestry_evidence_digest=a_digest, pr_state_evidence_digest=p_digest, ownership_evidence_digest=o_digest, classification_digest=evidence_digest(class_payload, "CLASSIFICATION"), classification=obs.classification, requested_effect="DELETE_EXACT_REF", policy_digest=sandbox.policy.digest()).validate()
     return op, obs
 
 
@@ -323,15 +486,17 @@ def run_cleanup(*, token: str, expected_master: str | None = None) -> dict[str, 
     master = backend.master_sha()
     if expected_master is not None and master != expected_master:
         raise RepositoryMaintenanceError("expected master binding failed")
-    policy = RepositoryMaintenancePolicy(schema_version="1.0.0", repository=REPOSITORY, mission_id="E003-BRANCH-ZERO-SANDBOX-AUTONOMIZATION", protected_ref="master", allowed_prefixes=("docs/", "mission/"), max_deletions=100).validate()
+    policy = RepositoryMaintenancePolicy(schema_version="1.0.0", repository=REPOSITORY, mission_id="E003-BRANCH-ZERO-SANDBOX-AUTONOMIZATION", protected_ref="master", allowed_prefixes=MAINTENANCE_BRANCH_ALLOWLIST, max_deletions=100).validate()
     sandbox = RepositoryMaintenanceSandbox(policy=policy, backend=backend)
     branches = [name for name in backend.list_branches() if name != "master"]
     observations: list[dict[str, object]] = []
     receipts: list[dict[str, object]] = []
     retained: list[dict[str, object]] = []
     for index, branch in enumerate(branches, start=1):
-        if not (branch.startswith("docs/") or branch.startswith("mission/")):
-            retained.append({"branch": branch, "reason": "OUTSIDE_MISSION_ALLOWLIST"})
+        try:
+            validate_branch_name(branch)
+        except RepositoryMaintenanceContractError:
+            retained.append({"branch": branch, "reason": "OUTSIDE_MAINTENANCE_ALLOWLIST"})
             continue
         try:
             operation, observation = _build_operation(sandbox=sandbox, branch=branch, index=index, master_sha=master)

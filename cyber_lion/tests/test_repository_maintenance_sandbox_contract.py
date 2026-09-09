@@ -1,6 +1,7 @@
 import unittest
 
 from cyber_lion.contracts.repository_maintenance_sandbox import (
+    MAINTENANCE_BRANCH_ALLOWLIST,
     RepositoryMaintenanceContractError,
     RepositoryMaintenanceExecutionReceipt,
     RepositoryMaintenanceOperation,
@@ -16,7 +17,7 @@ class RepositoryMaintenanceContractTests(unittest.TestCase):
             repository="DonkeyJJLove/ai_platform",
             mission_id="E003-BRANCH-ZERO-SANDBOX-AUTONOMIZATION",
             protected_ref="master",
-            allowed_prefixes=("docs/", "mission/"),
+            allowed_prefixes=MAINTENANCE_BRANCH_ALLOWLIST,
             max_deletions=45,
         ).validate()
 
@@ -58,6 +59,14 @@ class RepositoryMaintenanceContractTests(unittest.TestCase):
             with self.subTest(branch=branch):
                 with self.assertRaises(RepositoryMaintenanceContractError):
                     self._operation(branch=branch).validate()
+
+    def test_observed_cleanup_families_and_exact_special_names_are_allowed(self):
+        for branch in (
+            "cyber-lion/x", "docs/x", "experiment/x", "integration/x", "mission/x", "reconcile/x", "verification/x",
+            "tmp-r3-upload-staging", "__invalid_never_create",
+        ):
+            with self.subTest(branch=branch):
+                self.assertEqual(self._operation(branch=branch).validate().branch_name, branch)
 
     def test_non_delete_classification_denied(self):
         with self.assertRaises(RepositoryMaintenanceContractError):

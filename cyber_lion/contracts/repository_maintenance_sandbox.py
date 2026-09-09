@@ -21,7 +21,12 @@ OUTCOMES = frozenset({"SUCCEEDED", "DENIED", "ABORTED", "ALREADY_ABSENT"})
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _OP_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
-_BRANCH = re.compile(r"^(?:docs|mission)/[A-Za-z0-9._/-]{1,220}$")
+MAINTENANCE_BRANCH_PREFIXES = (
+    "cyber-lion/", "docs/", "experiment/", "integration/", "mission/", "reconcile/", "verification/",
+)
+MAINTENANCE_EXACT_BRANCHES = ("__invalid_never_create", "tmp-r3-upload-staging")
+MAINTENANCE_BRANCH_ALLOWLIST = MAINTENANCE_BRANCH_PREFIXES + MAINTENANCE_EXACT_BRANCHES
+_BRANCH = re.compile(r"^(?:cyber-lion|docs|experiment|integration|mission|reconcile|verification)/[A-Za-z0-9._/-]{1,220}$")
 
 
 class RepositoryMaintenanceContractError(ValueError):
@@ -54,7 +59,7 @@ def _sha256(value: object, name: str) -> str:
 
 
 def validate_branch_name(branch: str) -> str:
-    if not isinstance(branch, str) or _BRANCH.fullmatch(branch) is None:
+    if not isinstance(branch, str) or (branch not in MAINTENANCE_EXACT_BRANCHES and _BRANCH.fullmatch(branch) is None):
         raise RepositoryMaintenanceContractError("branch outside cleanup allowlist")
     if branch in {"master", "main"} or branch.startswith("refs/"):
         raise RepositoryMaintenanceContractError("protected or non-canonical branch denied")
@@ -142,7 +147,7 @@ class RepositoryMaintenancePolicy:
             raise RepositoryMaintenanceContractError("mission_id invalid")
         if self.protected_ref != "master":
             raise RepositoryMaintenanceContractError("protected ref must be master")
-        if self.allowed_prefixes != ("docs/", "mission/"):
+        if self.allowed_prefixes != MAINTENANCE_BRANCH_ALLOWLIST:
             raise RepositoryMaintenanceContractError("branch allowlist substitution denied")
         if isinstance(self.max_deletions, bool) or not isinstance(self.max_deletions, int) or not (1 <= self.max_deletions <= 100):
             raise RepositoryMaintenanceContractError("max_deletions invalid")
