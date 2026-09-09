@@ -1,91 +1,80 @@
-# LPCL v1 — LION Process Contract Language candidate
+# LPCL v1 — LION Process Contract Language
 
 ```text
-STATUS=CANDIDATE_NOT_INTEGRATED
+STATUS=V1_0_INTEGRATED_NON_EFFECTFUL_PLUS_V1_1_SURFACE_CANDIDATE
 AUTHORITY_EFFECT=NONE
 RUNTIME_EFFECT=NONE
-RESEARCH_BASE=67a4f8243aa6805e47035e572bd458f73fd0b358
-RESEARCH_BASE_TREE=4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5
+V1_1_MERGE_STATE=NOT_MERGED
 ```
 
-LPCL makes the process *above* the existing LION Action plane explicit. It is a
-non-effectful process-contract language and canonical IR, not a second policy,
-authority, runtime-admission or execution plane.
+LPCL makes process orchestration above the existing LION Action plane explicit. `CanonicalProcessIR` remains the normative deterministic process contract. The v1.1 candidate adds a canonical human/model authoring surface and a separate non-authoritative fleet-mission routing contract; it does not create a second policy, authority, runtime-admission or execution plane.
 
 ## Architecture decision
 
-No new top-level architecture layer is required for v1. LPCL is a first-class
-contract family spanning the existing `EVOLUTIONARY_EPOCH` and
-`GOVERNED_SELF_IMPLEMENTATION` concerns.
-
-The federation roles remain split:
-
-- `DonkeyJJLove/chunk-chunk` is the formal/research semantic reference for
-  process-state, process-transition, transition microcode and trajectory
-  diagnostics. This role grants no runtime authority.
-- `DonkeyJJLove/ai_platform` owns the canonical LION integration contract:
-  `ProcessContract`/`CanonicalProcessIR`, fail-closed validation, transition
-  selection, the Process→Action boundary and the reconciliation feedback
-  boundary.
-- `DonkeyJJLove/writeups` remains research/history evidence.
-
-This avoids turning both repositories into silent owners of the same executable
-contract.
-
-## Boundary
+The v1.1 candidate makes LPCL an explicit **process-orchestration plane** in the architecture projection without changing the ownership of the existing Action, PDP, RuntimeAdmission or effect planes. This is a semantic/documentation placement and a typed contract path, not a new authority source.
 
 ```text
-Goal / Mission / World State
+Intent / Goal / World State
         ↓
-ProcessContract
+LPCL canonical authoring surface
         ↓
-LPCL surface
+CanonicalRunAST
         ↓
 CanonicalProcessIR
         ↓
-Process semantic validator
+FleetMissionIR
         ↓
-TransitionSelector
+bounded role routing
+        ↓
+TransitionSelector / process semantics
         ↓
 Legal next transition
-        ├── internal process transition
-        └── ActionIntentCandidate
-                    ↓
-             EXISTING ACTION PLANE
-                    ↓
-       ActionSpec / CanonicalActionIR
-                    ↓
-              ActionProposal
-                    ↓
-               canonical PDP
-                    ↓
-            RuntimeAdmission
-                    ↓
-               effect provider
-                    ↓
-                  Effect
-                    ↓
-        independent observation
-                    ↓
-          runtime reconciliation
-                    ↓
-        ProcessTransitionOutcome
-                    ↓
-              ProcessState
+        ├── INTERNAL
+        └── ACTION_REQUIRED
+                 ↓
+          ActionIntentCandidate
+                 ↓
+          EXISTING ACTION PLANE
+                 ↓
+      ActionSpec / CanonicalActionIR
+                 ↓
+           ActionProposal
+                 ↓
+            canonical PDP
+                 ↓
+         RuntimeAdmission
+                 ↓
+            effect provider
+                 ↓
+               Effect
+                 ↓
+     independent observation
+                 ↓
+       runtime reconciliation
+                 ↓
+     ProcessTransitionOutcome
+                 ↓
+           ProcessState
 ```
 
-The process layer does not encode executable paths, argv, shell semantics,
-network policy, filesystem allowlists, PDP decisions, runtime admission objects
-or effect-provider selection.
+The process/fleet layer does not encode executable paths, argv, shell semantics, network policy, filesystem allowlists, PDP decisions, runtime-admission objects, credentials, grants or effect-provider selection.
 
-## Core semantic invariant
+## Core invariant
 
-A process transition is a guarded transition contract. It binds source state,
-trigger, dependencies, guards, evidence requirements, currentness requirements,
-authority *requirements*, a typed non-effectful process operator, expected
-postconditions, outcome mapping and retry/replay/idempotency policy.
+```text
+LPCL_SURFACE
+!= LPCL_AST
+!= CANONICAL_PROCESS_IR
+!= FLEET_MISSION_IR
+!= ACTION_INTENT
+!= AUTHORITY_DECISION
+!= RUNTIME_ADMISSION
+!= EFFECT
+!= OBSERVED_EFFECT
+!= RECONCILED_CLOSURE
+```
 
-State dimensions are not implicitly coercible:
+A process transition binds source state, trigger, dependencies, guards, evidence requirements, currentness requirements, authority requirements, a typed non-effectful operator, postconditions, outcomes and retry/replay/idempotency semantics.
 
 ```text
 PASS != CURRENT
@@ -96,7 +85,58 @@ PASS != OBSERVED
 PASS != RECONCILED
 ```
 
-`UNKNOWN` remains a first-class result.
+`UNKNOWN` remains first class.
+
+## Two explicitly versioned surfaces
+
+### LPCL 1.0
+
+The existing strict surface remains supported:
+
+```text
+LPCL 1.0
+PROCESS <RFC8259 JSON>
+MISSION <RFC8259 JSON>
+...
+END
+```
+
+It parses directly to `CanonicalProcessIR` and remains useful as a strict machine-oriented compatibility surface.
+
+### LPCL 1.1 candidate
+
+The candidate human/model authoring surface uses the historical LION key/value form:
+
+```text
+RUN=
+<process-id>
+
+PROCESS_LANGUAGE=
+LPCL
+
+LPCL_VERSION=
+1.1
+
+MISSION_CLASS=
+HYBRID_FLEET_MISSION
+
+PHASE_0=
+...
+```
+
+The parser produces `CanonicalRunAST`; compilation produces the existing `CanonicalProcessIR` plus `FleetMissionIR`. Domain-specific blocks such as `PURPOSE`, `ACTIONS`, `VERIFY`, `DENY` or `RECORD` are annotations. Typed transition semantics must be expressed with canonical phase controls and cannot be overridden by prose.
+
+## Fleet mission semantics
+
+Every canonical v1.1 executable process declares exactly one of:
+
+```text
+LOGICAL_FLEET_MISSION
+LOCAL_FLEET_MISSION
+HYBRID_FLEET_MISSION
+```
+
+Fleet mission means execution topology and bounded role routing, not authority. Logical roles may be virtual or sequentially realized by one model runtime while preserving role identity and evidence lineage. `ACTION_REQUIRED` phases must route to a LOCAL role and may only emit `ActionIntentCandidate` through the existing Process→Action boundary.
 
 ## CONTINUE
 
@@ -117,43 +157,35 @@ first legal unfinished transition
 under the declared SchedulingPolicy
 ```
 
-An authority-context reference can make a transition eligible for handoff to the
-Action plane, but it is not proof of a valid downstream grant. The Action/PDP/
-RuntimeAdmission chain revalidates consequential authority independently.
-
-## Canonical representation
-
-```text
-LPCL text
-!=
-ProcessAST
-!=
-CanonicalProcessIR
-```
-
-v1 uses strict LPCL statements carrying RFC8259 JSON values. The parser converts
-them into the canonical Process IR. Duplicate statements, duplicate JSON keys,
-unknown fields and noncanonical ProcessIR semantics fail closed.
-
-The ProcessIR digest uses its own `LION/PROCESS-IR/1` domain and never reuses the
-Action IR digest domain.
+An authority-context reference can make a transition eligible for handoff to the Action plane, but is not proof of a valid downstream grant.
 
 ## Historical RUN
 
-Historical `RUN` material remains evidence. `LegacyRunAdapter` only extracts a
-candidate semantic representation. Procedural `MODE=...THEN...` or numbered
-PHASE semantics are classified `AMBIGUOUS` until dependencies are reconstructed.
-The adapter has no execution path.
+The legacy rule is refined, not reversed:
+
+```text
+UNVERSIONED_HISTORICAL_RUN=DATA_ONLY
+UNPARSED_RUN=DATA_ONLY
+INVALID_CANONICAL_RUN=DATA_ONLY
+VALID_VERSIONED_LPCL_1_1_RUN=PROCESS_CANDIDATE
+PROCESS_CANDIDATE!=AUTHORITY
+PROCESS_CANDIDATE!=RUNTIME_ADMISSION
+PROCESS_CANDIDATE!=EFFECT
+```
+
+`LegacyRunAdapter` remains read-only and never turns ambiguous historical material into execution or authority. The new v1.1 surface is explicitly versioned and must pass canonical compilation.
 
 ## Existing domain state machines
 
-LPCL does not replace `EvolutionaryEpochEngine`, MissionSpec, SwarmSpec, builder
-lifecycle or runtime admission. Domain state machines may later consume generic
-ProcessIR semantics where equivalence is demonstrated; otherwise they remain
-specialized state machines.
+LPCL does not silently replace `EvolutionaryEpochEngine`, MissionSpec, SwarmSpec, builder lifecycle or runtime admission. Existing domain state machines remain specialized unless equivalence with generic ProcessIR/FleetMissionIR semantics is separately demonstrated.
+
+## Normative candidate references
+
+- `docs/architecture/process-language/LPCL_LANGUAGE_CONSTITUTION.md`
+- `docs/architecture/process-language/LPCL_CROSS_THREAD_GENERATION_STANDARD.md`
+- `docs/architecture/process-language/LPCL_FLEET_MISSION_MODEL.md`
+- `cyber_lion/process_language/lpcl_run_1_1.ebnf`
 
 ## Non-goals
 
-LPCL cannot mint authority, evaluate a PDP, construct RuntimeAdmission, select an
-EffectProvider, execute raw shell, merge/deploy directly, self-certify effects or
-treat a receipt as reconciled closure.
+LPCL cannot mint authority, evaluate a PDP, construct RuntimeAdmission, select an EffectProvider, execute raw shell, merge/deploy directly, self-certify effects or treat a receipt as reconciled closure. The v1.1 candidate cannot authorize its own merge or promote itself to AS-IS before independent repository reconciliation.
