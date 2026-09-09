@@ -92,7 +92,7 @@ class PermissionPolicyTopologyReadinessReportV2:
     def validate(self):
         for n in ("inventory_digest","taxonomy_digest","predecessor_policy_digest","policy_v2_digest","global_carrier_digest"):_sha(getattr(self,n),n)
         _tuple(self.mapping_digests,"mapping_digests",True);_tuple(self.security_requirement_digests,"security_requirement_digests",True);_tuple(self.closure_record_digests,"closure_record_digests",True);_tuple(self.unresolved_security_requirement_keys,"unresolved_security_requirement_keys",True);_tuple(self.next_evidence_plan,"next_evidence_plan",True);_tuple(self.evidence_refs,"evidence_refs",True)
-        if self.seven_mediated_count!=7 or self.unknown_outside_seven_count!=229:raise MoonAttackPolicyV2ContractError("unexpected v2 closure counts")
+        if self.seven_mediated_count!=7 or self.unknown_outside_seven_count!=232:raise MoonAttackPolicyV2ContractError("unexpected v2 closure counts")
         if self.unresolved_security_requirement_keys!=("STALE_AUTHORITY_SOURCE","UNTRUSTED_PERMISSION"):raise MoonAttackPolicyV2ContractError("security requirements must remain explicit")
         if self.global_status!="UNKNOWN":raise MoonAttackPolicyV2ContractError("global status must remain UNKNOWN")
         return self

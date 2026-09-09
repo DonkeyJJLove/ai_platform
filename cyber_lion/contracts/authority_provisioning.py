@@ -4,8 +4,11 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from hashlib import sha256
 import json,re
+from cyber_lion.contracts.repository_maintenance_sandbox import validate_branch_name
 
 MERGE_ACTION="merge_pull_request"
+REPOSITORY_REF_DELETE_ACTION="delete_exact_branch_ref"
+REPOSITORY_REF_DELETE_CAPABILITY="repository_ref.delete"
 MERGE_METHODS=frozenset({"merge","squash","rebase"})
 _SHA=re.compile(r"^[0-9a-f]{40}$"); _HEX=re.compile(r"^[0-9a-f]{64}$")
 
@@ -124,3 +127,48 @@ class AuthorityProvisioningReceipt:
         return self
     def sealed(self):
         d=asdict(self); d["receipt_digest"]=_digest(b"LION/AUTHORITY-PROVISIONING-RECEIPT/1\0",{k:v for k,v in d.items() if k!="receipt_digest"}); return AuthorityProvisioningReceipt(**d).validate()
+
+@dataclass(frozen=True)
+class RepositoryRefAuthorityProvisioningRequest:
+    request_id:str; repository:str; branch:str; expected_head:str; protected_master_sha:str; mission_id:str; action:str; capability_id:str; policy_digest:str; requester_subject_id:str; effect_executor_subject_id:str; requested_at:str
+    def validate(self):
+        for n in ("request_id","repository","mission_id","requester_subject_id","effect_executor_subject_id"): _txt(getattr(self,n),n)
+        try: validate_branch_name(self.branch)
+        except Exception as e: raise AuthorityProvisioningContractError("branch invalid") from e
+        _sha(self.expected_head,"expected_head"); _sha(self.protected_master_sha,"protected_master_sha")
+        if self.action!=REPOSITORY_REF_DELETE_ACTION or self.capability_id!=REPOSITORY_REF_DELETE_CAPABILITY: raise AuthorityProvisioningContractError("repository-ref delete request invalid")
+        if not self.policy_digest.startswith("sha256:") or not _HEX.fullmatch(self.policy_digest[7:]): raise AuthorityProvisioningContractError("policy_digest invalid")
+        if self.requester_subject_id==self.effect_executor_subject_id: raise AuthorityProvisioningContractError("requester/executor separation required")
+        _time(self.requested_at,"requested_at"); return self
+    def digest(self): self.validate(); return _digest(b"LION/REPOSITORY-REF-AUTHORITY-PROVISIONING-REQUEST/1\0",asdict(self))
+
+@dataclass(frozen=True)
+class RepositoryRefAuthorityProvisioningTransaction:
+    transaction_id:str; request:RepositoryRefAuthorityProvisioningRequest; epoch_bootstrap:AuthorityEpochBootstrap; root_bootstrap:AuthorityRootBootstrap; issuer_bindings:tuple[AuthorityIssuerBinding,...]; lineage_digest:str; leaf_grant_id:str; provenance_id:str
+    def validate(self):
+        _txt(self.transaction_id,"transaction_id"); _txt(self.leaf_grant_id,"leaf_grant_id"); _txt(self.provenance_id,"provenance_id"); _hex(self.lineage_digest,"lineage_digest")
+        if type(self.request) is not RepositoryRefAuthorityProvisioningRequest or type(self.epoch_bootstrap) is not AuthorityEpochBootstrap or type(self.root_bootstrap) is not AuthorityRootBootstrap: raise AuthorityProvisioningContractError("repository-ref transaction type invalid")
+        self.request.validate(); self.epoch_bootstrap.validate(); self.root_bootstrap.validate()
+        if type(self.issuer_bindings) is not tuple or not self.issuer_bindings: raise AuthorityProvisioningContractError("issuer_bindings invalid")
+        for b in self.issuer_bindings:
+            if type(b) is not AuthorityIssuerBinding: raise AuthorityProvisioningContractError("issuer binding type invalid")
+            b.validate()
+        if self.root_bootstrap.epoch_bootstrap_digest!=self.epoch_bootstrap.digest() or self.request.mission_id!=self.epoch_bootstrap.mission_id: raise AuthorityProvisioningContractError("authority context mismatch")
+        return self
+    def digest(self): self.validate(); return _digest(b"LION/REPOSITORY-REF-AUTHORITY-PROVISIONING-TRANSACTION/1\0",asdict(self))
+
+@dataclass(frozen=True)
+class RepositoryRefAuthorityProvisioningReceipt:
+    receipt_id:str; transaction_digest:str; request_id:str; repository:str; branch:str; expected_head:str; protected_master_sha:str; mission_id:str; grant_id:str; root_grant_id:str; root_grant_digest:str; epoch:int; administrator_subject_id:str; provenance_id:str; database_identity:str; provisioned_at:str; receipt_digest:str=""
+    def validate(self):
+        for n in ("receipt_id","transaction_digest","request_id","repository","mission_id","grant_id","root_grant_id","administrator_subject_id","provenance_id","database_identity","provisioned_at"): _txt(getattr(self,n),n,1024)
+        _hex(self.transaction_digest,"transaction_digest"); _hex(self.root_grant_digest,"root_grant_digest"); _hex(self.database_identity,"database_identity")
+        try: validate_branch_name(self.branch)
+        except Exception as e: raise AuthorityProvisioningContractError("branch invalid") from e
+        _sha(self.expected_head,"expected_head"); _sha(self.protected_master_sha,"protected_master_sha")
+        if type(self.epoch) is not int or self.epoch<0: raise AuthorityProvisioningContractError("epoch invalid")
+        _time(self.provisioned_at,"provisioned_at")
+        if self.receipt_digest and self.receipt_digest!=_digest(b"LION/REPOSITORY-REF-AUTHORITY-PROVISIONING-RECEIPT/1\0",{k:v for k,v in asdict(self).items() if k!="receipt_digest"}): raise AuthorityProvisioningContractError("receipt digest mismatch")
+        return self
+    def sealed(self):
+        d=asdict(self); d["receipt_digest"]=_digest(b"LION/REPOSITORY-REF-AUTHORITY-PROVISIONING-RECEIPT/1\0",{k:v for k,v in d.items() if k!="receipt_digest"}); return RepositoryRefAuthorityProvisioningReceipt(**d).validate()

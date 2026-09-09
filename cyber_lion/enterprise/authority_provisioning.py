@@ -7,9 +7,9 @@ import json,sqlite3
 from pathlib import Path
 from threading import RLock
 from typing import Callable
-from cyber_lion.contracts.authority_provisioning import AuthorityEpochBootstrap,AuthorityIssuerBinding,AuthorityProvisioningDecision,AuthorityProvisioningReceipt,AuthorityRootBootstrap,MergeMethodPolicy,PRAuthorityProvisioningTransaction
+from cyber_lion.contracts.authority_provisioning import AuthorityEpochBootstrap,AuthorityIssuerBinding,AuthorityProvisioningDecision,AuthorityProvisioningReceipt,AuthorityRootBootstrap,MergeMethodPolicy,PRAuthorityProvisioningTransaction,RepositoryRefAuthorityProvisioningTransaction,RepositoryRefAuthorityProvisioningReceipt
 from cyber_lion.enterprise.authority_grant import AuthorityGrant,validate_attenuation
-from cyber_lion.enterprise.authority_source import AuthorityLineageRecord,AuthorityLookupKey,canonical_pr_authority_resource,canonical_source_lineage_digest
+from cyber_lion.enterprise.authority_source import AuthorityLineageRecord,AuthorityLookupKey,RepositoryRefAuthorityLookupKey,RepositoryRefAuthorityLineageRecord,canonical_pr_authority_resource,canonical_repository_ref_authority_resource,canonical_source_lineage_digest
 from cyber_lion.enterprise.authority_verification import AuthorityVerificationContext,IssuerKeyBinding,authenticate_authority_grant
 from cyber_lion.enterprise.pr_authority_bootstrap import PRAuthorityBootstrapLookupKey,PRAuthorityBootstrapRecord,canonical_pr_bootstrap_digest
 Verifier=Callable[[bytes,str,str,str],bool]
@@ -21,6 +21,7 @@ def authority_provisioning_schema_sql():
 CREATE TABLE IF NOT EXISTS authority_root_anchor(trust_domain TEXT NOT NULL,tenant_id TEXT NOT NULL,organization_id TEXT NOT NULL,mission_id TEXT NOT NULL,epoch INTEGER NOT NULL,root_grant_id TEXT NOT NULL,root_grant_digest TEXT NOT NULL,PRIMARY KEY(trust_domain,tenant_id,organization_id,mission_id,epoch));
 CREATE TABLE IF NOT EXISTS pr_bootstrap(repository TEXT NOT NULL,pr_number INTEGER NOT NULL,base_sha TEXT NOT NULL,head_sha TEXT NOT NULL,merge_method TEXT NOT NULL,record_json TEXT NOT NULL,PRIMARY KEY(repository,pr_number,base_sha,head_sha,merge_method,record_json));
 CREATE TABLE IF NOT EXISTS authority_lineage(repository TEXT NOT NULL,pr_number INTEGER NOT NULL,base_sha TEXT NOT NULL,head_sha TEXT NOT NULL,mission_id TEXT NOT NULL,grant_id TEXT NOT NULL,record_json TEXT NOT NULL,PRIMARY KEY(repository,pr_number,base_sha,head_sha,mission_id,grant_id,record_json));
+CREATE TABLE IF NOT EXISTS repository_ref_authority_lineage(repository TEXT NOT NULL,branch TEXT NOT NULL,expected_head TEXT NOT NULL,protected_master_sha TEXT NOT NULL,mission_id TEXT NOT NULL,grant_id TEXT NOT NULL,record_json TEXT NOT NULL,PRIMARY KEY(repository,branch,expected_head,protected_master_sha,mission_id,grant_id,record_json));
 CREATE TABLE IF NOT EXISTS authority_provisioning_receipt(transaction_digest TEXT NOT NULL PRIMARY KEY,receipt_digest TEXT NOT NULL UNIQUE,operation_kind TEXT NOT NULL,record_json TEXT NOT NULL,provisioned_at TEXT NOT NULL);
 CREATE TRIGGER IF NOT EXISTS authority_provisioning_receipt_no_update BEFORE UPDATE ON authority_provisioning_receipt BEGIN SELECT RAISE(ABORT,'authority provisioning receipt append-only'); END;
 CREATE TRIGGER IF NOT EXISTS authority_provisioning_receipt_no_delete BEFORE DELETE ON authority_provisioning_receipt BEGIN SELECT RAISE(ABORT,'authority provisioning receipt append-only'); END;"""
@@ -65,7 +66,7 @@ class SQLiteAuthorityProvisioningStore:
  def database_identity(self): return self._dbid
  def _connect(self): return sqlite3.connect(self._path,timeout=5,isolation_level=None)
  def schema_ready(self):
-  needed={"authority_epoch_state","authority_root_anchor","pr_bootstrap","authority_lineage","authority_provisioning_receipt"}; triggers={"authority_provisioning_receipt_no_update","authority_provisioning_receipt_no_delete"}
+  needed={"authority_epoch_state","authority_root_anchor","pr_bootstrap","authority_lineage","repository_ref_authority_lineage","authority_provisioning_receipt"}; triggers={"authority_provisioning_receipt_no_update","authority_provisioning_receipt_no_delete"}
   try:
    with self._connect() as c:
     tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}; tr={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall()}
@@ -136,6 +137,46 @@ class SQLiteAuthorityProvisioningStore:
     if bool(br)!=bool(lr): raise AuthorityProvisioningError("partial authority state denied")
     if br or lr or c.execute("SELECT receipt_digest FROM authority_provisioning_receipt WHERE transaction_digest=?",(receipt.transaction_digest,)).fetchone() is not None: raise AuthorityProvisioningError("provisioning replay denied")
     c.execute("INSERT INTO pr_bootstrap(repository,pr_number,base_sha,head_sha,merge_method,record_json) VALUES(?,?,?,?,?,?)",(req.repository,req.pr_number,req.base_sha,req.head_sha,req.merge_method,_canon(_wire_bootstrap(bootstrap)))); c.execute("INSERT INTO authority_lineage(repository,pr_number,base_sha,head_sha,mission_id,grant_id,record_json) VALUES(?,?,?,?,?,?,?)",(req.repository,req.pr_number,req.base_sha,req.head_sha,req.mission_id,leaf.grant_id,_canon(_wire_lineage(lrec)))); c.execute("INSERT INTO authority_provisioning_receipt(transaction_digest,receipt_digest,operation_kind,record_json,provisioned_at) VALUES(?,?,?,?,?)",(receipt.transaction_digest,receipt.receipt_digest,receipt.operation_kind,_canon(asdict(receipt)),receipt.provisioned_at)); c.execute("COMMIT")
+   except Exception:
+    try: c.execute("ROLLBACK")
+    except sqlite3.Error: pass
+    raise
+  return receipt
+ def provision_repository_ref_authority(self,*,transaction,decision,lineage,administrator_verifier,authority_verifier,provisioned_at):
+  if not self.schema_ready(): raise AuthorityProvisioningError("authority provisioning schema not ready")
+  if type(transaction) is not RepositoryRefAuthorityProvisioningTransaction or type(decision) is not AuthorityProvisioningDecision or type(lineage) is not tuple or not lineage: raise AuthorityProvisioningError("repository-ref provisioning types invalid")
+  transaction.validate(); decision.validate(); when=_utc(provisioned_at)
+  for g in lineage:
+   if type(g) is not AuthorityGrant: raise AuthorityProvisioningError("lineage type invalid")
+   g.validate()
+  req=transaction.request; epoch=transaction.epoch_bootstrap; root=transaction.root_bootstrap; leaf=lineage[-1]; root_grant=lineage[0]
+  if decision.decision!="ALLOW" or decision.transaction_digest!=transaction.digest(): raise AuthorityProvisioningError("provisioning decision denied or unbound")
+  if not (_utc(req.requested_at)<=_utc(decision.decided_at)<=when): raise AuthorityProvisioningError("repository-ref provisioning chronology invalid")
+  admin=self._admin(epoch,transaction.issuer_bindings,administrator_verifier,(root,"root bootstrap"),(decision,"provisioning decision")); issuers={g.issuer_subject_id for g in lineage}
+  if req.requester_subject_id in issuers or admin.subject_id in issuers or req.requester_subject_id==admin.subject_id or req.effect_executor_subject_id in issuers or req.effect_executor_subject_id==admin.subject_id: raise AuthorityProvisioningError("authority role separation denied")
+  if root.root_grant_id!=root_grant.grant_id or root.root_grant_digest!=root_grant.digest() or root.epoch_bootstrap_digest!=epoch.digest(): raise AuthorityProvisioningError("root evidence mismatch")
+  if root_grant.parent_grant_id is not None or root_grant.issuer_subject_id==root_grant.subject_id or leaf.issuer_subject_id==leaf.subject_id: raise AuthorityProvisioningError("self-minted/self-signed authority denied")
+  prev=root_grant
+  for child in lineage[1:]: validate_attenuation(prev,child); prev=child
+  if transaction.lineage_digest!=canonical_source_lineage_digest(lineage) or transaction.leaf_grant_id!=leaf.grant_id: raise AuthorityProvisioningError("lineage binding mismatch")
+  keys=_issuer_keys(transaction.issuer_bindings,epoch.trust_domain,lineage); ctx=AuthorityVerificationContext(epoch.trust_domain,epoch.tenant_id,epoch.organization_id,epoch.mission_id).validate()
+  for g in lineage:
+   authenticate_authority_grant(g,keys,authority_verifier,context=ctx)
+   if g.epoch!=epoch.epoch or not (_utc(g.issued_at)<=when<_utc(g.expires_at)): raise AuthorityProvisioningError("lineage not current")
+  key=RepositoryRefAuthorityLookupKey(req.repository,req.branch,req.expected_head,req.protected_master_sha,req.mission_id,leaf.grant_id).validate(); resource=canonical_repository_ref_authority_resource(key)
+  if leaf.actions!=("delete_exact_branch_ref",) or leaf.capability_id!="repository_ref.delete" or leaf.resource_scope!=(resource,) or leaf.authority_ceiling!="external_write" or leaf.policy_digest!=req.policy_digest: raise AuthorityProvisioningError("leaf exact repository-ref binding denied")
+  if (leaf.tenant_id,leaf.organization_id,leaf.mission_id)!=(epoch.tenant_id,epoch.organization_id,epoch.mission_id): raise AuthorityProvisioningError("leaf context mismatch")
+  record=RepositoryRefAuthorityLineageRecord(key,lineage,canonical_source_lineage_digest(lineage),transaction.provenance_id,_SOURCE).validate(); receipt=RepositoryRefAuthorityProvisioningReceipt(f"repository-ref-authority:{transaction.digest()}",transaction.digest(),req.request_id,req.repository,req.branch,req.expected_head,req.protected_master_sha,req.mission_id,leaf.grant_id,root.root_grant_id,root.root_grant_digest,epoch.epoch,admin.subject_id,transaction.provenance_id,self._dbid,provisioned_at).sealed(); context=(epoch.trust_domain,epoch.tenant_id,epoch.organization_id,epoch.mission_id)
+  with self._lock,self._connect() as c:
+   try:
+    c.execute("BEGIN IMMEDIATE"); er=c.execute("SELECT epoch,revoked_json FROM authority_epoch_state WHERE trust_domain=? AND tenant_id=? AND organization_id=? AND mission_id=?",context).fetchone(); rr=c.execute("SELECT root_grant_id,root_grant_digest FROM authority_root_anchor WHERE trust_domain=? AND tenant_id=? AND organization_id=? AND mission_id=? AND epoch=?",(*context,epoch.epoch)).fetchone()
+    if er is None or int(er[0])!=epoch.epoch or tuple(sorted(json.loads(er[1])))!=tuple(sorted(epoch.revoked_grant_ids)): raise AuthorityProvisioningError("current epoch/revocation mismatch")
+    if rr is None or tuple(rr)!=(root.root_grant_id,root.root_grant_digest): raise AuthorityProvisioningError("current root anchor mismatch")
+    if any(g.grant_id in set(json.loads(er[1])) for g in lineage): raise AuthorityProvisioningError("revoked authority denied")
+    rows=c.execute("SELECT record_json FROM repository_ref_authority_lineage WHERE repository=? AND branch=? AND expected_head=? AND protected_master_sha=? AND mission_id=? AND grant_id=?",(req.repository,req.branch,req.expected_head,req.protected_master_sha,req.mission_id,leaf.grant_id)).fetchall()
+    if rows or c.execute("SELECT receipt_digest FROM authority_provisioning_receipt WHERE transaction_digest=?",(receipt.transaction_digest,)).fetchone() is not None: raise AuthorityProvisioningError("provisioning replay denied")
+    c.execute("INSERT INTO repository_ref_authority_lineage(repository,branch,expected_head,protected_master_sha,mission_id,grant_id,record_json) VALUES(?,?,?,?,?,?,?)",(req.repository,req.branch,req.expected_head,req.protected_master_sha,req.mission_id,leaf.grant_id,_canon(_wire_lineage(record))))
+    c.execute("INSERT INTO authority_provisioning_receipt(transaction_digest,receipt_digest,operation_kind,record_json,provisioned_at) VALUES(?,?,?,?,?)",(receipt.transaction_digest,receipt.receipt_digest,"REPOSITORY_REF_AUTHORITY_PROVISIONING",_canon(asdict(receipt)),receipt.provisioned_at)); c.execute("COMMIT")
    except Exception:
     try: c.execute("ROLLBACK")
     except sqlite3.Error: pass

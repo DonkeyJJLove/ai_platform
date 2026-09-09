@@ -123,7 +123,7 @@ def schema_sql_digest() -> str:
     return sha256(authority_provisioning_schema_sql().encode()).hexdigest()
 
 
-CANONICAL_SCHEMA_SQL_SHA256 = "7e9f8873a4b5fb943f183d9546d1a9f08ed9ede19d73e55400dab7f6612a976b"
+CANONICAL_SCHEMA_SQL_SHA256 = "2ef0468e815da560c32393073f7d14dcbf2219eb50ead2b18f8beae8fe43136b"
 if schema_sql_digest() != CANONICAL_SCHEMA_SQL_SHA256:
     raise RuntimeError("canonical authority provisioning SQL digest drift")
 
@@ -891,7 +891,7 @@ def _canonical_provisioning_schema_entries() -> tuple[tuple[str, str, str, str],
                 _normalize_sql(match.group(0)[:-1]),
             )
         )
-    if len(rows) != 7:
+    if len(rows) != 8:
         raise HostAuthoritySeparationError("canonical schema object extraction mismatch")
     return tuple(rows)
 
@@ -1071,7 +1071,7 @@ def derive_snapshot_provenance(
 
 def _validate_add_only_schema_sql(sql: str) -> None:
     low = sql.lower()
-    if low.count("create table if not exists ") != 5 or low.count("create trigger if not exists ") != 2:
+    if low.count("create table if not exists ") != 6 or low.count("create trigger if not exists ") != 2:
         raise HostAuthoritySeparationError("canonical add-only object count mismatch")
     if re.search(
         r"\bdrop\b|\balter\b|\binsert\s+into\b|\bupdate\s+\w+\s+set\b|\bdelete\s+from\b|\breplace\s+into\b|\bvacuum\b|\battach\b|\bdetach\b",

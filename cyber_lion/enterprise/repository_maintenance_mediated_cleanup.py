@@ -27,7 +27,10 @@ from cyber_lion.contracts.repository_maintenance_sandbox import (
     canonical_json,
     validate_branch_name,
 )
-from cyber_lion.enterprise.authority_source import AuthorityLookupKey
+from cyber_lion.enterprise.authority_source import (
+    RepositoryRefAuthorityLookupKey,
+    canonical_repository_ref_authority_resource,
+)
 from cyber_lion.enterprise.control_plane import ActionProposal
 from cyber_lion.enterprise.live_authority_admission import LiveAuthorityAdmission
 from cyber_lion.enterprise.maintenance_bundle import (
@@ -164,7 +167,7 @@ def load_request_evidence(*, event_path: Path, repository: str) -> RepositoryMai
 class RepositoryMaintenanceTrustedDependencies:
     context_resolver: object
     authority_admission: LiveAuthorityAdmission
-    authority_key: AuthorityLookupKey
+    authority_key: RepositoryRefAuthorityLookupKey
     provider_id: str
 
     def validate(self, *, bundle: MaintenanceBundle, require_canonical_resolver: bool = False) -> "RepositoryMaintenanceTrustedDependencies":
@@ -175,8 +178,8 @@ class RepositoryMaintenanceTrustedDependencies:
             raise MediatedRepositoryMaintenanceError("maintenance context resolver unavailable")
         if type(self.authority_admission) is not LiveAuthorityAdmission:
             raise MediatedRepositoryMaintenanceError("exact LiveAuthorityAdmission required")
-        if type(self.authority_key) is not AuthorityLookupKey:
-            raise MediatedRepositoryMaintenanceError("exact AuthorityLookupKey required")
+        if type(self.authority_key) is not RepositoryRefAuthorityLookupKey:
+            raise MediatedRepositoryMaintenanceError("exact RepositoryRefAuthorityLookupKey required")
         self.authority_key.validate()
         _hex64(self.provider_id, "provider_id")
         if self.authority_key.repository != bundle.binding.repository or self.authority_key.mission_id != bundle.binding.mission_id:
@@ -398,9 +401,9 @@ class RepositoryMaintenanceAdmissionRuntime:
         return proposer_id, verifier_id, observed, required
 
     @staticmethod
-    def _authority_snapshot(admission: LiveAuthorityAdmission, key: AuthorityLookupKey, now: datetime):
+    def _authority_snapshot(admission: LiveAuthorityAdmission, key: RepositoryRefAuthorityLookupKey, now: datetime):
         try:
-            record, state, root = admission._snapshot(key)
+            record, state, root = admission._snapshot_repository_ref(key)
             admission._authenticate_record(record, state, root, now=now)
         except Exception as exc:
             raise MediatedRepositoryMaintenanceError("live authority final currentness unavailable") from exc
@@ -427,6 +430,14 @@ class RepositoryMaintenanceAdmissionRuntime:
         deps = self.dependencies.validate(bundle=bundle)
         if operation.branch_name != request.branch or operation.expected_branch_head != request.expected_branch_head:
             raise MediatedRepositoryMaintenanceError("request/operation branch binding mismatch")
+        if (
+            deps.authority_key.repository != operation.repository
+            or deps.authority_key.branch != operation.branch_name
+            or deps.authority_key.expected_head != operation.expected_branch_head
+            or deps.authority_key.protected_master_sha != operation.protected_master_sha
+            or deps.authority_key.mission_id != operation.mission_id
+        ):
+            raise MediatedRepositoryMaintenanceError("authority key does not bind exact repository-ref operation")
         if operation.mission_id != bundle.binding.mission_id:
             raise MediatedRepositoryMaintenanceError("operation mission does not bind trusted bundle")
         current_bundle = self.bundle_source.resolve_exact(
@@ -498,8 +509,14 @@ class RepositoryMaintenanceAdmissionRuntime:
         if record.lineage_digest != pdp_result.applied.authority_lineage_digest:
             raise MediatedRepositoryMaintenanceError("PDP/live authority lineage mismatch")
         leaf = record.lineage[-1]
-        if leaf.capability_id != bundle.binding.capability or leaf.policy_digest != trusted_policy.content_digest:
-            raise MediatedRepositoryMaintenanceError("live authority leaf does not bind capability/policy")
+        expected_authority_resource = canonical_repository_ref_authority_resource(deps.authority_key)
+        if (
+            leaf.capability_id != bundle.binding.capability
+            or leaf.policy_digest != trusted_policy.content_digest
+            or leaf.actions != ("delete_exact_branch_ref",)
+            or leaf.resource_scope != (expected_authority_resource,)
+        ):
+            raise MediatedRepositoryMaintenanceError("live authority leaf does not bind exact repository-ref capability/policy/resource")
         policy_fence_digest = sha256(trusted_policy.binding.encode("utf-8")).hexdigest()
         admission = CanonicalRepositoryDeleteAdmission(
             repository=REPOSITORY,
