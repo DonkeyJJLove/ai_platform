@@ -192,7 +192,7 @@ def manifest() -> dict:
                         "terminationGracePeriodSeconds": 5,
                         "containers": [{
                             "name": "drone", "image": "python:3.12-alpine", "imagePullPolicy": "IfNotPresent",
-                            "command": ["sh", "-c", "export DRONE_ID=${HOSTNAME##*-}; exec python /opt/vkt/drone.py"],
+                            "command": ["/bin/sh", "-c", "export DRONE_ID=${HOSTNAME##*-}; exec python /opt/vkt/drone.py"],
                             "env": [
                                 {"name": "FLEET", "value": fleet},
                                 {"name": "POD_NAME", "valueFrom": {"fieldRef": {"fieldPath": "metadata.name"}}},
