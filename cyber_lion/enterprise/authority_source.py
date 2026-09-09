@@ -16,6 +16,7 @@ import hashlib
 import re
 from typing import Final
 
+from cyber_lion.contracts.repository_maintenance_sandbox import validate_branch_name
 from .authority_grant import AuthorityGrant
 
 _SHA_RE: Final = re.compile(r"^[0-9a-f]{40}$")
@@ -82,6 +83,52 @@ class AuthorityLookupKey:
             self.mission_id,
             self.grant_id,
         )
+
+
+@dataclass(frozen=True)
+class RepositoryRefAuthorityLookupKey:
+    """Exact immutable lookup identity for one repository branch-ref effect."""
+
+    repository: str
+    branch: str
+    expected_head: str
+    protected_master_sha: str
+    mission_id: str
+    grant_id: str
+
+    def validate(self) -> "RepositoryRefAuthorityLookupKey":
+        _text(self.repository, field_name="repository")
+        try:
+            validate_branch_name(self.branch)
+        except Exception as exc:
+            raise AuthoritySourceError("branch is invalid") from exc
+        _sha(self.expected_head, field_name="expected_head")
+        _sha(self.protected_master_sha, field_name="protected_master_sha")
+        _text(self.mission_id, field_name="mission_id")
+        _text(self.grant_id, field_name="grant_id")
+        return self
+
+    def binding(self) -> tuple[str, str, str, str, str, str]:
+        self.validate()
+        return (
+            self.repository,
+            self.branch,
+            self.expected_head,
+            self.protected_master_sha,
+            self.mission_id,
+            self.grant_id,
+        )
+
+
+def canonical_repository_ref_authority_resource(key: RepositoryRefAuthorityLookupKey) -> str:
+    """Canonical exact resource for one branch-ref mutation under one protected master."""
+    if type(key) is not RepositoryRefAuthorityLookupKey:
+        raise AuthoritySourceError("key must be exact RepositoryRefAuthorityLookupKey")
+    key.validate()
+    return (
+        f"github:repo:{key.repository}:ref:heads/{key.branch}:"
+        f"head:{key.expected_head}:protected-master:{key.protected_master_sha}"
+    )
 
 
 def canonical_pr_authority_resource(key: AuthorityLookupKey) -> str:
@@ -163,6 +210,55 @@ class AuthorityLineageRecord:
         return self
 
 
+@dataclass(frozen=True)
+class RepositoryRefAuthorityLineageRecord:
+    """Immutable trusted-source record for one exact repository-ref authority lineage."""
+
+    lookup_key: RepositoryRefAuthorityLookupKey
+    lineage: tuple[AuthorityGrant, ...]
+    lineage_digest: str
+    provenance_id: str
+    source_kind: str = _TRUSTED_SOURCE_KIND
+
+    def validate(self) -> "RepositoryRefAuthorityLineageRecord":
+        if type(self.lookup_key) is not RepositoryRefAuthorityLookupKey:
+            raise AuthoritySourceError("lookup_key must be exact RepositoryRefAuthorityLookupKey")
+        self.lookup_key.validate()
+        if type(self.lineage) is not tuple or not self.lineage:
+            raise AuthoritySourceError("lineage must be a non-empty immutable tuple")
+        if self.source_kind != _TRUSTED_SOURCE_KIND:
+            raise AuthoritySourceError("authority source must be trusted-control-plane")
+        if not isinstance(self.provenance_id, str) or not _PROVENANCE_RE.fullmatch(self.provenance_id):
+            raise AuthoritySourceError("provenance_id is invalid")
+        if not isinstance(self.lineage_digest, str) or not _DIGEST_RE.fullmatch(self.lineage_digest):
+            raise AuthoritySourceError("lineage_digest must be canonical sha256 hex")
+
+        previous: AuthorityGrant | None = None
+        for grant in self.lineage:
+            if type(grant) is not AuthorityGrant:
+                raise AuthoritySourceError("lineage entries must be exact AuthorityGrant")
+            grant.validate()
+            if grant.mission_id != self.lookup_key.mission_id:
+                raise AuthoritySourceError("lineage mission_id does not match lookup key")
+            if previous is None:
+                if grant.parent_grant_id is not None:
+                    raise AuthoritySourceError("lineage root must not declare a parent grant")
+            elif grant.parent_grant_id != previous.grant_id:
+                raise AuthoritySourceError("lineage parent chain is not contiguous")
+            previous = grant
+
+        leaf = self.lineage[-1]
+        if leaf.grant_id != self.lookup_key.grant_id:
+            raise AuthoritySourceError("lineage leaf does not match lookup grant_id")
+        expected_resource = canonical_repository_ref_authority_resource(self.lookup_key)
+        if leaf.resource_scope != (expected_resource,):
+            raise AuthoritySourceError("lineage leaf does not bind exact repository-ref resource")
+        expected_digest = canonical_source_lineage_digest(self.lineage)
+        if self.lineage_digest != expected_digest:
+            raise AuthoritySourceError("lineage_digest does not match immutable lineage")
+        return self
+
+
 class AuthoritySource(ABC):
     """Backend-independent fail-closed canonical authority source.
 
@@ -193,4 +289,31 @@ class AuthoritySource(ABC):
         record.validate()
         if record.lookup_key.binding() != key.binding():
             raise AuthoritySourceError("authority source record does not match exact lookup key")
+        return record
+
+
+    def _lookup_repository_ref_exact(
+        self, key: RepositoryRefAuthorityLookupKey
+    ) -> tuple[RepositoryRefAuthorityLineageRecord, ...]:
+        raise AuthoritySourceError("repository-ref authority lookup unsupported")
+
+    def resolve_repository_ref_exact(
+        self, key: RepositoryRefAuthorityLookupKey
+    ) -> RepositoryRefAuthorityLineageRecord:
+        if type(key) is not RepositoryRefAuthorityLookupKey:
+            raise AuthoritySourceError("key must be exact RepositoryRefAuthorityLookupKey")
+        key.validate()
+        candidates = self._lookup_repository_ref_exact(key)
+        if type(candidates) is not tuple:
+            raise AuthoritySourceError("authority source candidates must be an immutable tuple")
+        if len(candidates) == 0:
+            raise AuthoritySourceError("repository-ref authority lineage not found")
+        if len(candidates) > 1:
+            raise AuthoritySourceError("repository-ref authority lineage lookup is ambiguous")
+        record = candidates[0]
+        if type(record) is not RepositoryRefAuthorityLineageRecord:
+            raise AuthoritySourceError("repository-ref authority source record has invalid type")
+        record.validate()
+        if record.lookup_key.binding() != key.binding():
+            raise AuthoritySourceError("authority source record does not match exact repository-ref lookup key")
         return record

@@ -132,6 +132,16 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
                     record_json TEXT NOT NULL,
                     PRIMARY KEY(repository,pr_number,base_sha,head_sha,mission_id,grant_id,record_json)
                 );
+                CREATE TABLE IF NOT EXISTS repository_ref_authority_lineage(
+                    repository TEXT NOT NULL,
+                    branch TEXT NOT NULL,
+                    expected_head TEXT NOT NULL,
+                    protected_master_sha TEXT NOT NULL,
+                    mission_id TEXT NOT NULL,
+                    grant_id TEXT NOT NULL,
+                    record_json TEXT NOT NULL,
+                    PRIMARY KEY(repository,branch,expected_head,protected_master_sha,mission_id,grant_id,record_json)
+                );
                 CREATE TABLE IF NOT EXISTS builder_subject(
                     repository TEXT NOT NULL,
                     builder_subject_id TEXT NOT NULL,
@@ -191,6 +201,19 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
         with self._lock, self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             connection.execute("INSERT OR IGNORE INTO authority_lineage VALUES(?,?,?,?,?,?,?)", tuple(lookup[name] for name in fields) + (raw,))
+            connection.execute("COMMIT")
+
+    def put_repository_ref_authority_record(self, record: Mapping[str, object]) -> None:
+        """Administrative provisioning primitive for exact repository-ref authority."""
+        fields = ("repository", "branch", "expected_head", "protected_master_sha", "mission_id", "grant_id")
+        lookup = self._lookup(record, fields, "repository-ref authority")
+        raw = _canonical_json(record)
+        with self._lock, self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "INSERT OR IGNORE INTO repository_ref_authority_lineage VALUES(?,?,?,?,?,?,?)",
+                tuple(lookup[name] for name in fields) + (raw,),
+            )
             connection.execute("COMMIT")
 
     def put_builder_subject_record(self, record: Mapping[str, object]) -> None:
@@ -267,6 +290,14 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
             ).fetchall()
         return tuple(_decode_record(row[0]) for row in rows)
 
+    def lookup_repository_ref_authority_exact(self, *, repository: str, branch: str, expected_head: str, protected_master_sha: str, mission_id: str, grant_id: str) -> tuple[Mapping[str, object], ...]:
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT record_json FROM repository_ref_authority_lineage WHERE repository=? AND branch=? AND expected_head=? AND protected_master_sha=? AND mission_id=? AND grant_id=? ORDER BY record_json",
+                (repository, branch, expected_head, protected_master_sha, mission_id, grant_id),
+            ).fetchall()
+        return tuple(_decode_record(row[0]) for row in rows)
+
     def lookup_builder_subject_exact(self, *, repository: str, builder_subject_id: str, builder_instance_id: str, candidate_scope_digest: str, resource_scope_digest: str, capability_class: str) -> tuple[Mapping[str, object], ...]:
         with self._lock, self._connect() as connection:
             rows = connection.execute(
@@ -306,6 +337,7 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
             return {
                 "pr_bootstrap",
                 "authority_lineage",
+                "repository_ref_authority_lineage",
                 "builder_subject",
                 "builder_process_runtime_provider",
                 "maintenance_policy",

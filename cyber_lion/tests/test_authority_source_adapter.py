@@ -210,7 +210,7 @@ class AuthoritySourceAdapterTests(unittest.TestCase):
             for name, value in AuthoritySourceTransport.__dict__.items()
             if not name.startswith("_") and callable(value)
         }
-        self.assertEqual(declared_public_callables, {"lookup_exact"})
+        self.assertEqual(declared_public_callables, {"lookup_exact", "lookup_repository_ref_exact"})
 
     def test_adapter_has_no_secret_material_configuration_surface(self):
         self.assertEqual(TrustedControlPlaneAuthoritySource.__slots__, ("_transport",))

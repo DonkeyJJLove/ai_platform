@@ -12,7 +12,7 @@ from cyber_lion.contracts.enterprise_graph import EnterpriseGraphProjection, can
 from cyber_lion.contracts.policy_gate import PolicyRevision
 from cyber_lion.contracts.swarm_status import compute_revision_digest, compute_status_digest
 from cyber_lion.enterprise.authority_grant import AuthorityGrant
-from cyber_lion.enterprise.authority_source import AuthorityLineageRecord, AuthorityLookupKey, AuthoritySource, canonical_pr_authority_resource, canonical_source_lineage_digest
+from cyber_lion.enterprise.authority_source import RepositoryRefAuthorityLineageRecord, RepositoryRefAuthorityLookupKey, AuthoritySource, canonical_repository_ref_authority_resource, canonical_source_lineage_digest
 from cyber_lion.enterprise.authority_verification import AuthorityVerificationContext, IssuerKeyBinding
 from cyber_lion.enterprise.live_authority_admission import LiveAuthorityAdmission
 from cyber_lion.enterprise.maintenance_bundle import CAPABILITY_REPOSITORY_REF_DELETE, MaintenanceBinding, SQLiteMaintenanceBundleRepository
@@ -86,6 +86,9 @@ class Source(AuthoritySource):
         self.record = record
 
     def _lookup_exact(self, key):
+        return ()
+
+    def _lookup_repository_ref_exact(self, key):
         return (self.record,) if key.binding() == self.record.lookup_key.binding() else ()
 
 
@@ -284,7 +287,7 @@ class R9D8UMediatedCleanupTests(unittest.TestCase):
             graph_projection=self.graph,
             lion_status=self.lion_status,
         )
-        self.key = AuthorityLookupKey(REPOSITORY, 216, "a" * 40, "b" * 40, MISSION, "grant:r9d8u").validate()
+        self.key = RepositoryRefAuthorityLookupKey(REPOSITORY, BRANCH, HEAD, MASTER, MISSION, "grant:r9d8u").validate()
         grant = AuthorityGrant(
             schema_version="1.1.0",
             grant_id=self.key.grant_id,
@@ -296,7 +299,7 @@ class R9D8UMediatedCleanupTests(unittest.TestCase):
             capability_id=CAPABILITY_REPOSITORY_REF_DELETE,
             capability_version="1",
             actions=("delete_exact_branch_ref",),
-            resource_scope=(canonical_pr_authority_resource(self.key),),
+            resource_scope=(canonical_repository_ref_authority_resource(self.key),),
             authority_ceiling="external_write",
             constraints=(),
             parent_grant_id=None,
@@ -307,7 +310,7 @@ class R9D8UMediatedCleanupTests(unittest.TestCase):
             observability_contract_digest="sha256:" + Z,
             signature="sig",
         ).validate()
-        record = AuthorityLineageRecord(
+        record = RepositoryRefAuthorityLineageRecord(
             self.key,
             (grant,),
             canonical_source_lineage_digest((grant,)),
@@ -378,6 +381,17 @@ class R9D8UMediatedCleanupTests(unittest.TestCase):
         self.assertIsNone(backend.branch_sha(BRANCH))
         self.assertEqual(backend.delete_calls, 1)
         self.assertEqual(result["effect"], CAPABILITY_REPOSITORY_REF_DELETE)
+
+    def test_legacy_pr_bound_authority_key_is_rejected_by_repository_ref_mediator(self):
+        from cyber_lion.enterprise.authority_source import AuthorityLookupKey
+        legacy = AuthorityLookupKey(REPOSITORY, 216, "a" * 40, "b" * 40, MISSION, "legacy-grant").validate()
+        with self.assertRaisesRegex(MediatedRepositoryMaintenanceError, "RepositoryRefAuthorityLookupKey"):
+            RepositoryMaintenanceTrustedDependencies(
+                context_resolver=Resolver(self.resolved),
+                authority_admission=self.live,
+                authority_key=legacy,
+                provider_id="c" * 64,
+            ).validate(bundle=self.bundle)
 
     def test_legacy_issue_comment_authority_path_is_disabled(self):
         _, backend, _, _, _ = self.setup_runtime()

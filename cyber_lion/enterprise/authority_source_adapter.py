@@ -14,6 +14,8 @@ from .authority_grant import AuthorityGrant
 from .authority_source import (
     AuthorityLineageRecord,
     AuthorityLookupKey,
+    RepositoryRefAuthorityLineageRecord,
+    RepositoryRefAuthorityLookupKey,
     AuthoritySource,
     AuthoritySourceError,
 )
@@ -23,6 +25,9 @@ _RECORD_FIELDS: Final = frozenset(
 )
 _KEY_FIELDS: Final = frozenset(
     {"repository", "pr_number", "base_sha", "head_sha", "mission_id", "grant_id"}
+)
+_REPOSITORY_REF_KEY_FIELDS: Final = frozenset(
+    {"repository", "branch", "expected_head", "protected_master_sha", "mission_id", "grant_id"}
 )
 _GRANT_FIELDS: Final = frozenset(
     {
@@ -70,6 +75,19 @@ class AuthoritySourceTransport(ABC):
         """Return raw records for exactly one lookup key as an immutable tuple."""
         raise NotImplementedError
 
+    def lookup_repository_ref_exact(
+        self,
+        *,
+        repository: str,
+        branch: str,
+        expected_head: str,
+        protected_master_sha: str,
+        mission_id: str,
+        grant_id: str,
+    ) -> tuple[Mapping[str, object], ...]:
+        """Return raw records for one exact branch-ref authority lookup."""
+        raise NotImplementedError
+
 
 def _exact_mapping(
     value: object, *, fields: frozenset[str], field_name: str
@@ -98,6 +116,23 @@ def _decode_key(value: object) -> AuthorityLookupKey:
         if isinstance(exc, AuthoritySourceError):
             raise
         raise AuthoritySourceError("lookup_key wire record is invalid") from exc
+
+
+def _decode_repository_ref_key(value: object) -> RepositoryRefAuthorityLookupKey:
+    raw = _exact_mapping(value, fields=_REPOSITORY_REF_KEY_FIELDS, field_name="lookup_key")
+    try:
+        return RepositoryRefAuthorityLookupKey(
+            repository=raw["repository"],
+            branch=raw["branch"],
+            expected_head=raw["expected_head"],
+            protected_master_sha=raw["protected_master_sha"],
+            mission_id=raw["mission_id"],
+            grant_id=raw["grant_id"],
+        ).validate()
+    except (KeyError, TypeError, AuthoritySourceError) as exc:
+        if isinstance(exc, AuthoritySourceError):
+            raise
+        raise AuthoritySourceError("repository-ref lookup_key wire record is invalid") from exc
 
 
 def _wire_tuple(value: object, *, field_name: str) -> tuple[str, ...]:
@@ -136,6 +171,21 @@ def _decode_record(value: object) -> AuthorityLineageRecord:
     return record.validate()
 
 
+def _decode_repository_ref_record(value: object) -> RepositoryRefAuthorityLineageRecord:
+    raw = _exact_mapping(value, fields=_RECORD_FIELDS, field_name="authority record")
+    lineage_raw = raw["lineage"]
+    if type(lineage_raw) not in {list, tuple} or not lineage_raw:
+        raise AuthoritySourceError("authority record lineage must be a non-empty list or tuple")
+    lineage = tuple(_decode_grant(item) for item in lineage_raw)
+    return RepositoryRefAuthorityLineageRecord(
+        lookup_key=_decode_repository_ref_key(raw["lookup_key"]),
+        lineage=lineage,
+        lineage_digest=raw["lineage_digest"],
+        provenance_id=raw["provenance_id"],
+        source_kind=raw["source_kind"],
+    ).validate()
+
+
 class TrustedControlPlaneAuthoritySource(AuthoritySource):
     """Fail-closed read-only adapter for a trusted external authority control plane."""
 
@@ -170,4 +220,28 @@ class TrustedControlPlaneAuthoritySource(AuthoritySource):
         for record in records:
             if record.lookup_key.binding() != key.binding():
                 raise AuthoritySourceError("authority transport returned a different exact lookup key")
+        return records
+    def _lookup_repository_ref_exact(
+        self, key: RepositoryRefAuthorityLookupKey
+    ) -> tuple[RepositoryRefAuthorityLineageRecord, ...]:
+        if type(key) is not RepositoryRefAuthorityLookupKey:
+            raise AuthoritySourceError("key must be exact RepositoryRefAuthorityLookupKey")
+        key.validate()
+        try:
+            raw_records = self._transport.lookup_repository_ref_exact(
+                repository=key.repository,
+                branch=key.branch,
+                expected_head=key.expected_head,
+                protected_master_sha=key.protected_master_sha,
+                mission_id=key.mission_id,
+                grant_id=key.grant_id,
+            )
+        except Exception as exc:
+            raise AuthoritySourceError("repository-ref authority source unavailable") from exc
+        if type(raw_records) is not tuple:
+            raise AuthoritySourceError("authority transport result must be an immutable tuple")
+        records = tuple(_decode_repository_ref_record(raw) for raw in raw_records)
+        for record in records:
+            if record.lookup_key.binding() != key.binding():
+                raise AuthoritySourceError("authority transport returned a different exact repository-ref lookup key")
         return records
