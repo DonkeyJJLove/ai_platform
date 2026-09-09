@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "project": "LION_EVOLUSION",
+  "mission_id": "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2",
+  "authority_class": "BOUNDED_PRIVILEGED_ADMISSION",
+  "host": "LION-AUTH-LAB",
+  "namespace": "vkt-r3",
+  "allowed_operations": [
+    "PRECHECK_POD_RUNTIME",
+    "PREPARE_LOCAL_K8S",
+    "MATERIALIZE_VKT_PODS",
+    "READ_POD_EVIDENCE",
+    "STOP_VKT_PODS"
+  ],
+  "fleet_cardinality": {"TIGER": 128, "SPECTRA": 128, "LION": 128},
+  "max_drone_pods": 384,
+  "allowed_images": ["python:3.12-alpine"],
+  "forbidden": [
+    "arbitrary_yaml",
+    "arbitrary_kubectl",
+    "arbitrary_namespace",
+    "arbitrary_image",
+    "privileged_drone",
+    "hostPID",
+    "hostIPC",
+    "hostNetwork",
+    "hostPath",
+    "docker_socket",
+    "containerd_socket",
+    "vendor_network"
+  ],
+  "vendor_requests": 0
+}
