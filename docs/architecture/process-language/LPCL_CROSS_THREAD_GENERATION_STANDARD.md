@@ -43,9 +43,13 @@ PRIMARY_GOAL
 SCOPE_DOMAINS
 SCOPE_RESOURCES
 WIDENING_ALLOWED=FALSE
+TERMINATION=COMPLETE_ON_DONE
+LINEAGE
 ```
 
-Every process must also make its material authority posture explicit in the human artifact. Recommended declarations are:
+`interpret_process_source` is the conformance gate. A source that looks explicitly versioned as v1.1 but lacks a required profile control fails closed rather than falling back to legacy interpretation.
+
+Every process should also make its material authority posture explicit in the human artifact. Recommended declarations are:
 
 ```text
 PRODUCTION_AUTHORITY=NONE_UNLESS_EXACTLY_PROVEN
@@ -54,7 +58,7 @@ DELETE_AUTHORITY=NONE_UNLESS_EXACTLY_PROVEN
 RUNTIME_AUTHORITY=NONE_UNLESS_EXACTLY_PROVEN
 ```
 
-These declarations are requirements/constraints, never grants.
+These declarations are requirements/constraints, never grants. If the optional controls `AUTHORITY_EFFECT`, `RUNTIME_EFFECT`, `EXECUTION_EFFECT` or `EFFECT_PROVIDER_EFFECT` are present, their only conformant value is `NONE`.
 
 ## Fleet classification
 
@@ -165,7 +169,20 @@ MODIFY
 UPDATE
 ```
 
-Annotations are intentionally not sufficient to create typed transition semantics. If a required ProcessIR meaning matters, the corresponding canonical phase control must be present.
+Annotations are intentionally not sufficient to create typed transition semantics. If a required ProcessIR meaning matters, the corresponding canonical phase control must be present. In particular, placing `RAW_SHELL` or `EMIT_ACTION_INTENT` inside an `ACTIONS` annotation does not create a typed operator.
+
+## Unified interpretation
+
+All process-language consumers that need to classify arbitrary LPCL/RUN source should use the common interpretation boundary:
+
+```text
+interpret_process_source(source)
+  ├── LPCL 1.0 strict JSON → CanonicalProcessIR compatibility candidate
+  ├── LPCL 1.1 RUN/PHASE → CanonicalProcessIR + FleetMissionIR
+  └── historical unversioned RUN → LegacyRun data only
+```
+
+No interpretation result carries authority, runtime admission or execution effect.
 
 ## Continuation rule
 
@@ -196,6 +213,7 @@ SAME_AUTHORITY_SEPARATION
 SAME_CURRENTNESS_MODEL
 SAME_FAIL_CLOSED_MODEL
 SAME_TERMINATION_AND_LINEAGE_MODEL
+SAME_UNIFIED_INTERPRETATION_BOUNDARY
 ```
 
 A thread that emits YAML, free-form prose or raw JSON as the primary v1.1 human LPCL artifact is non-conformant unless the caller explicitly requests a machine serialization.
