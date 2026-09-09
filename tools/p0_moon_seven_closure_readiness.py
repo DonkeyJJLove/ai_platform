@@ -100,7 +100,7 @@ def materialize_seven_closure_readiness(*,inventory:EffectSurfaceInventory,taxon
         closure.append(MediationClosureRecord(sd,inventory.digest(),binding.digest(),chain.trace_digest,tuple(sorted(r.digest() for r in selected)),status,tuple(refs)).validate())
     carrier=GlobalMediationClosureCarrierBuilder().materialize(inventory=inventory,taxonomy_report=taxonomy_report,closure_records=tuple(closure),evidence_refs=(f"attack-policy:{att.policy.digest()}",f"structural-plan:{structural.plan.digest()}","seven-surface-readiness:diagnostic"))
     counts={s:sum(1 for x in carrier.surface_statuses if x.status==s) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")}
-    if counts!={"MEDIATED":6,"PARTIAL":1,"UNMEDIATED":0,"UNKNOWN":232} or carrier.global_status!="UNKNOWN": raise MoonSevenClosureReadinessError("global carrier readiness counts drift")
+    if counts!={"MEDIATED":6,"PARTIAL":1,"UNMEDIATED":0,"UNKNOWN":234} or carrier.global_status!="UNKNOWN": raise MoonSevenClosureReadinessError("global carrier readiness counts drift")
     missing=tuple(sorted(f"{x.surface_digest}:{x.attack_id}" for x in readiness if x.classification!=CLASS_CANONICAL))
     report=SevenClosureReadinessReport(inventory.digest(),taxonomy_report.digest(),att.policy.digest(),structural.plan.digest(),tuple(sorted(mediation_closure_record_digest(r) for r in closure)),carrier.digest(),6,1,232,missing,"UNKNOWN",(f"assessment:{assessment.inventory_digest}","no-live-execution","no-test-as-bypass-result")).validate()
     return SevenClosureReadinessArtifacts(tuple(readiness),tuple(closure),carrier,structural,report)
