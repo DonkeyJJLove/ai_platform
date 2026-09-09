@@ -2,6 +2,7 @@
 
 **Origin process:** R20  
 **Completion/reconciliation process:** R23  
+**LPCL interpretation evolution:** `architecture/lpcl-canonical-interpretation-r1` candidate, not merged  
 **Evidence baseline:** master `67a4f8243aa6805e47035e572bd458f73fd0b358` / tree `4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5`; R23 pre-documentation candidate `5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745` / tree `5dd5dc653c24bdd810faeb61f901328ad246e3a7`  
 **Authority effect of this documentation:** `NONE`
 
@@ -15,9 +16,61 @@ The consolidated R23 candidate contains the R21 LPCL/Canonical Process IR layer,
 
 Bean/Composition/Mosaic primitives and bounded B0 candidate protocols exist. They do not prove unrestricted Factory generativity, activated recursive autonomy or Factory-of-Factories.
 
+## LPCL process-orchestration projection — v1.1 candidate
+
+The LPCL interpretation candidate does **not** add a sixteenth top-level architecture layer. It makes process orchestration an explicit cross-layer projection over the existing 15-layer architecture. The source projection is `cyber_lion/architecture_projection/process_orchestration.py` and binds existing layers as follows:
+
+```text
+INTENT / GOAL
+→ LPCL canonical RUN/PHASE surface              [EVOLUTIONARY_EPOCH]
+→ CanonicalRunAST                              [EVOLUTIONARY_EPOCH]
+→ CanonicalProcessIR                           [EVOLUTIONARY_EPOCH]
+→ FleetMissionIR                               [FLEET_AND_SWARM]
+→ bounded role routing                         [FLEET_AND_SWARM]
+→ ActionIntentCandidate when ACTION_REQUIRED   [GOVERNED_SELF_IMPLEMENTATION]
+→ existing authority decision                  [AUTHORITY_AND_EFFECT]
+→ existing RuntimeAdmission                    [TRUSTED_RUNTIME]
+→ existing effect boundary                     [AUTHORITY_AND_EFFECT]
+→ independent observation                      [OBSERVABILITY_AND_RECONCILIATION]
+→ reconciliation                               [OBSERVABILITY_AND_RECONCILIATION]
+```
+
+This is a candidate projection until its implementation, tests, documentation, currentness carriers and final exact head are independently reconciled. It must not be read as an AS-IS promotion merely because the candidate files exist.
+
+The candidate defines three execution-topology classes:
+
+```text
+LOGICAL_FLEET_MISSION
+LOCAL_FLEET_MISSION
+HYBRID_FLEET_MISSION
+```
+
+`FleetMissionIR` is non-authoritative. It binds roles and transition routing but contains no grants, credentials, PDP result, RuntimeAdmission or raw effect provider. A LOGICAL role may be virtual and sequentially materialized by one model runtime while retaining logical identity and evidence lineage. A material `ACTION_REQUIRED` transition must route to a LOCAL role and still crosses the existing Process→Action→PDP→RuntimeAdmission boundary.
+
+The candidate also establishes one authoring convention for future LION threads: explicitly versioned LPCL 1.1 processes use the key/value `RUN=/PHASE_N=` surface and compile into canonical machine semantics. Historical unversioned RUN material remains data. Strict JSON LPCL 1.0 remains an explicitly versioned compatibility/machine surface rather than the default human authoring form.
+
+Normative candidate documents:
+
+- `docs/architecture/process-language/LPCL_LANGUAGE_CONSTITUTION.md`
+- `docs/architecture/process-language/LPCL_CROSS_THREAD_GENERATION_STANDARD.md`
+- `docs/architecture/process-language/LPCL_FLEET_MISSION_MODEL.md`
+- `docs/architecture/process-language/LPCL_MIGRATION.md`
+
 ## Evidence and authority boundaries
 
 Documentation is not authority. A PDP ALLOW is not runtime admission; admission is not an effect; an execution receipt is not independent observation; observation is not reconciled closure. Code presence is not deployment evidence. Four logical WSL2 hosts were observed during R20, but physical failure-domain independence was not proven. No local model service was observed during that host revalidation. R20Q revalidates Git/documentation state; it does not silently promote those host observations to a newer runtime observation.
+
+The LPCL v1.1 candidate preserves the same boundary:
+
+```text
+PROCESS_CANDIDATE != AUTHORITY
+FLEET_MISSION != AUTHORITY
+ACTION_INTENT != AUTHORITY_DECISION
+AUTHORITY_DECISION != RUNTIME_ADMISSION
+RUNTIME_ADMISSION != EFFECT
+REPORTED_EFFECT != OBSERVED_EFFECT
+OBSERVED_EFFECT != RECONCILED_CLOSURE
+```
 
 ## Navigation
 
