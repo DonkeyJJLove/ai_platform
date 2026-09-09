@@ -11,6 +11,7 @@ from cyber_lion.contracts.repository_maintenance_sandbox import (
 from cyber_lion.enterprise.repository_maintenance_sandbox import (
     CLOSURE_ARCHIVE_BUNDLE_SHA256,
     CLOSURE_RESEARCH_BASE_SHA,
+    CLOSURE_POLICY_ANCHOR_SHA,
     CLOSURE_RESEARCH_BASE_TREE,
     CLOSURE_RESEARCH_MANIFEST_SHA256,
     CLOSURE_SCHEMA_VERSION,
@@ -243,7 +244,7 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
     def test_closure_manifest_exact_binding_produces_evidence_digest(self):
         dg = _closure_evidence_from_manifest(
             self.closure_manifest(), branch="mission/x", expected_head=HEAD, master_sha="f"*40,
-            master_parents=(CLOSURE_RESEARCH_BASE_SHA, "e"*40),
+            master_parents=(CLOSURE_POLICY_ANCHOR_SHA, "e"*40),
         )
         self.assertIsInstance(dg, str)
         self.assertEqual(len(dg), 64)
@@ -251,7 +252,7 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
     def test_closure_manifest_head_substitution_is_not_eligible(self):
         dg = _closure_evidence_from_manifest(
             self.closure_manifest(), branch="mission/x", expected_head="c"*40, master_sha="f"*40,
-            master_parents=(CLOSURE_RESEARCH_BASE_SHA, "e"*40),
+            master_parents=(CLOSURE_POLICY_ANCHOR_SHA, "e"*40),
         )
         self.assertIsNone(dg)
 
@@ -262,11 +263,19 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
                 master_parents=("e"*40,),
             )
 
+
+    def test_closure_manifest_old_research_base_without_policy_anchor_is_stale(self):
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "stale"):
+            _closure_evidence_from_manifest(
+                self.closure_manifest(), branch="mission/x", expected_head=HEAD, master_sha="f"*40,
+                master_parents=(CLOSURE_RESEARCH_BASE_SHA,),
+            )
+
     def test_closure_manifest_archive_substitution_is_denied(self):
         with self.assertRaisesRegex(RepositoryMaintenanceError, "archive"):
             _closure_evidence_from_manifest(
                 self.closure_manifest(archive_sha="0"*64), branch="mission/x", expected_head=HEAD, master_sha="f"*40,
-                master_parents=(CLOSURE_RESEARCH_BASE_SHA,),
+                master_parents=(CLOSURE_POLICY_ANCHOR_SHA,),
             )
 
     def test_replay_denied(self):

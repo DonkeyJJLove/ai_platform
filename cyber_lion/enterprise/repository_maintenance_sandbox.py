@@ -34,6 +34,7 @@ CLOSURE_MANIFEST_PATH = "LION/maintenance/branch-closure-manifest-v1.json"
 CLOSURE_SCHEMA_VERSION = "lion.branch-closure-manifest/v1"
 CLOSURE_RESEARCH_BASE_SHA = "c50465888d55257ff676712bc7de8431a843ad63"
 CLOSURE_RESEARCH_BASE_TREE = "ea4f7bd2c11cbc84d7283ae0b3b4bfc006bca5a6"
+CLOSURE_POLICY_ANCHOR_SHA = "ddcec0393f75ffb34d54d954bad2a1d15eb38466"
 CLOSURE_RESEARCH_MANIFEST_SHA256 = "ccfad8dbd1cc5adee8058dedeea578fe9c8f8178466b910a4c3a389dd2b92b79"
 CLOSURE_ARCHIVE_BUNDLE_SHA256 = "2c77fb2da36cfda82e97b9a5852172ffae783a1e299821d25dc678b7c2d7dd5e"
 CLOSURE_RESEARCH_CLASSES = frozenset({"A", "B", "C", "G", "H", "I"})
@@ -81,7 +82,7 @@ def _closure_evidence_from_manifest(value: object, *, branch: str, expected_head
         names.append(b)
     if len(names) != len(set(names)) or names != sorted(names):
         raise RepositoryMaintenanceError("closure manifest branches must be unique and sorted")
-    if CLOSURE_RESEARCH_BASE_SHA not in set(master_parents):
+    if CLOSURE_POLICY_ANCHOR_SHA not in set(master_parents):
         raise RepositoryMaintenanceError("closure manifest is stale for current master")
     matches = [item for item in entries if item.get("branch") == branch]
     if not matches:
@@ -97,6 +98,7 @@ def _closure_evidence_from_manifest(value: object, *, branch: str, expected_head
         "research_base_sha": CLOSURE_RESEARCH_BASE_SHA,
         "research_manifest_sha256": CLOSURE_RESEARCH_MANIFEST_SHA256,
         "archive_bundle_sha256": CLOSURE_ARCHIVE_BUNDLE_SHA256,
+        "policy_anchor_sha": CLOSURE_POLICY_ANCHOR_SHA,
         "current_master": master_sha,
         "entry": item,
     }

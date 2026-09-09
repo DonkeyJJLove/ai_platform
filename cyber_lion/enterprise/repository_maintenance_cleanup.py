@@ -15,6 +15,8 @@ import urllib.request
 
 from cyber_lion.contracts.repository_maintenance_sandbox import (
     REPOSITORY,
+    MAINTENANCE_BRANCH_PREFIXES,
+    MAINTENANCE_EXACT_BRANCHES,
     RepositoryMaintenanceOperation,
     RepositoryMaintenancePolicy,
     validate_branch_name,
@@ -143,7 +145,9 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
                 validate_branch_name(branch)
             except RepositoryMaintenanceContractError as exc:
                 raise RepositoryMaintenanceError("GitHub delete ref outside mission allowlist") from exc
-            if not (branch.startswith("docs/") or branch.startswith("mission/")):
+            if branch not in MAINTENANCE_EXACT_BRANCHES and not any(
+                branch.startswith(prefix) for prefix in MAINTENANCE_BRANCH_PREFIXES
+            ):
                 raise RepositoryMaintenanceError("GitHub delete ref outside mission allowlist")
             return
         raise RepositoryMaintenanceError("GitHub method not allowlisted")
