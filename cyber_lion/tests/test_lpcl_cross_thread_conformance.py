@@ -105,7 +105,7 @@ class LPCLCrossThreadConformanceTests(unittest.TestCase):
             "ACTIONS=\nEMIT_ACTION_INTENT\nRAW_SHELL\n\nPHASE_0=\nREACQUIRE",
         )
         compiled = compile_canonical_run(variant)
-        transition = compiled.process_ir.transitions[0]
+        transition = compiled.process_ir.as_dict()["transitions"][0]
         self.assertEqual(transition["transition_class"], "INTERNAL")
         self.assertEqual(transition["operator"], "REACQUIRE")
         self.assertEqual(compiled.fleet_mission_ir.authority_effect, "NONE")
