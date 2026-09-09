@@ -305,7 +305,22 @@ def pod_evidence() -> dict[str, Any]:
         conds = status.get("conditions", []) or []
         ready = any(c.get("type") == "Ready" and c.get("status") == "True" for c in conds)
         restarts = sum(int(c.get("restartCount", 0) or 0) for c in status.get("containerStatuses", []) or [])
-        common = {"name": meta.get("name"), "uid": meta.get("uid"), "pod_ip": status.get("podIP"), "phase": status.get("phase"), "ready": ready, "restarts": restarts}
+        states = []
+        for cs in status.get("containerStatuses", []) or []:
+            state = cs.get("state", {}) or {}
+            waiting = state.get("waiting") or {}
+            terminated = state.get("terminated") or {}
+            states.append({
+                "name": cs.get("name"),
+                "ready": bool(cs.get("ready")),
+                "restart_count": int(cs.get("restartCount", 0) or 0),
+                "waiting_reason": waiting.get("reason"),
+                "waiting_message": waiting.get("message"),
+                "terminated_reason": terminated.get("reason"),
+                "terminated_message": terminated.get("message"),
+                "terminated_exit_code": terminated.get("exitCode"),
+            })
+        common = {"name": meta.get("name"), "uid": meta.get("uid"), "pod_ip": status.get("podIP"), "phase": status.get("phase"), "ready": ready, "restarts": restarts, "container_states": states}
         fleet = str(labels.get("fleet", "")).upper()
         if labels.get("component") == "drone" and fleet in counts:
             row = {"fleet": fleet, **common}
@@ -316,6 +331,19 @@ def pod_evidence() -> dict[str, Any]:
         else:
             infra.append({"component": labels.get("component"), **common})
     uid_values = sorted(str(r.get("uid") or "") for r in rows)
+    events = []
+    try:
+        ev = json.loads(kubectl(["get", "events", "-n", NAMESPACE, "-o", "json"], timeout=30).stdout)
+        for item in (ev.get("items", []) or [])[-100:]:
+            events.append({
+                "type": item.get("type"),
+                "reason": item.get("reason"),
+                "message": item.get("message"),
+                "object": (item.get("involvedObject") or {}).get("name"),
+                "count": item.get("count"),
+            })
+    except Exception:
+        events = []
     return {
         "status": "MATERIALIZED" if len(rows) == 384 else "PARTIAL",
         "materialized": len(rows),
@@ -326,6 +354,7 @@ def pod_evidence() -> dict[str, Any]:
         "restart_count_total": sum(v["restarts"] for v in counts.values()),
         "pods": rows,
         "infrastructure": infra,
+        "events": events,
         "vendor_requests": 0,
     }
 
