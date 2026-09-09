@@ -27,6 +27,7 @@ jobs:
           set -euo pipefail
           BASE="67a4f8243aa6805e47035e572bd458f73fd0b358"
           BRANCH="mission/lion-v1.4-r24-repository-ref-authority-provisioning-r1"
+          PATCH_URL="https://drop.pensa.ar/f/Iv3L1QricDUin/r24-candidate.patch"
           PATCH_SHA256="d961022f0a002cecc927ccad9b7076ca1a7e4f379b887e1ff83b6314ddb4d766"
           FINAL_TREE="a076d6e6adcbcc10cb2821115d56f9d1bf8d2380"
           test "${GITHUB_REF_NAME}" = "${BRANCH}"
@@ -34,8 +35,7 @@ jobs:
           test "$(git rev-parse origin/master)" = "${BASE}"
           bad="$(git diff --name-only "${BASE}"..HEAD | grep -Ev "^(\.lion/r24-bootstrap/|\.github/workflows/r24-bounded-bootstrap\.yml$)" || true)"
           test -z "${bad}"
-          cat .lion/r24-bootstrap/chunks/part-* > /tmp/r24-candidate.patch.b64
-          base64 -d /tmp/r24-candidate.patch.b64 > /tmp/r24-candidate.patch
+          curl --fail --silent --show-error --location "${PATCH_URL}" -o /tmp/r24-candidate.patch
           echo "${PATCH_SHA256}  /tmp/r24-candidate.patch" | sha256sum -c -
           git rm -r .lion/r24-bootstrap .github/workflows/r24-bounded-bootstrap.yml
           git apply --index --binary /tmp/r24-candidate.patch
