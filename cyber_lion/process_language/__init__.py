@@ -11,6 +11,11 @@ from .canonical_run import (
     compile_canonical_run,
     parse_canonical_run,
 )
+from .interpretation import (
+    ProcessSourceInterpretation,
+    ProcessSourceInterpretationError,
+    interpret_process_source,
+)
 
 __all__ = [
     "CANONICAL_SURFACE_VERSION",
@@ -24,7 +29,10 @@ __all__ = [
     "LPCLParseError",
     "LegacyRunAdapter",
     "LegacyRunResult",
+    "ProcessSourceInterpretation",
+    "ProcessSourceInterpretationError",
     "compile_canonical_run",
+    "interpret_process_source",
     "parse_canonical_run",
     "parse_lpcl",
     "render_lpcl",
