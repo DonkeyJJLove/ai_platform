@@ -139,6 +139,10 @@ def start_k3s() -> dict:
 def runtime_configmap() -> str:
     drone_py = r'''import json, os, socket, time, urllib.request\nfleet=os.environ['FLEET']; drone=os.environ['DRONE_ID']; pod=os.environ.get('POD_NAME','?')\nwhile True:\n    body=json.dumps({'fleet':fleet,'drone_id':drone,'pod':pod,'t':time.time()}).encode()\n    try:\n        req=urllib.request.Request('http://vkt-fleet-router:8080/heartbeat',data=body,headers={'Content-Type':'application/json'})\n        urllib.request.urlopen(req,timeout=2).read()\n    except Exception:\n        pass\n    time.sleep(2)\n'''
     router_py = r'''from http.server import BaseHTTPRequestHandler,HTTPServer\nimport json,threading,time\nstate={}\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n=int(self.headers.get('Content-Length','0')); b=self.rfile.read(n)\n        try:\n            x=json.loads(b); state[(x.get('fleet'),x.get('drone_id'))]=x\n        except Exception: pass\n        self.send_response(204); self.end_headers()\n    def do_GET(self):\n        if self.path!='/state': self.send_response(404); self.end_headers(); return\n        b=json.dumps({'sample_utc':time.time(),'count':len(state),'items':list(state.values())}).encode()\n        self.send_response(200); self.send_header('Content-Type','application/json'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b)\n    def log_message(self,*a): pass\nHTTPServer(('0.0.0.0',8080),H).serve_forever()\n'''
+    # Raw literals make the embedded source readable in this generator, but
+    # ConfigMap file data must contain real LF bytes, not backslash+n tokens.
+    drone_py = drone_py.replace('\\n', '\n')
+    router_py = router_py.replace('\\n', '\n')
     return json.dumps({"drone.py": drone_py, "router.py": router_py})
 
 

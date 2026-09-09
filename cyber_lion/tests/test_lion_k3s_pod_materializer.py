@@ -41,6 +41,15 @@ class VktPodMaterializerTests(unittest.TestCase):
         self.assertNotIn("viktor.com", text)
         self.assertNotIn("api.viktor.com", text)
 
+    def test_embedded_runtime_sources_are_valid_python(self):
+        data = mod.manifest()["documents"][1]["data"]
+        self.assertIn("drone.py", data)
+        self.assertIn("router.py", data)
+        for name in ("drone.py", "router.py"):
+            self.assertNotIn("\\n", data[name])
+            compile(data[name], name, "exec")
+
+
 
 if __name__ == "__main__":
     unittest.main()
