@@ -127,7 +127,7 @@ END
 class CanonicalRunSurfaceTests(unittest.TestCase):
     def test_hybrid_surface_compiles_to_process_and_fleet_ir(self):
         compiled = compile_canonical_run(HYBRID_RUN)
-        self.assertEqual(compiled.process_ir.process_id, "LPCL-CANONICAL-SMOKE-R1")
+        self.assertEqual(compiled.process_ir.as_dict()["process_id"], "LPCL-CANONICAL-SMOKE-R1")
         self.assertEqual(compiled.fleet_mission_ir.fleet_class, "HYBRID")
         self.assertEqual(
             dict(compiled.fleet_mission_ir.routing),
