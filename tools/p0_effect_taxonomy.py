@@ -137,8 +137,26 @@ def _canonical_delete_alias(raw:EffectSurfaceInventory,sources:Mapping[str,str],
     calls={_call_name(n).split('.')[-1] for n in ast.walk(method) if isinstance(n,ast.Call)}
     if "delete_exact_branch_ref" in calls:return None
     attrs={n.attr for n in ast.walk(method) if isinstance(n,ast.Attribute)}
-    required={"validate","master_sha","branch_sha","master_tree","compare_branch_to_master","open_prs_for_branch","ownership_observation","_pending_delete"}
-    if not required.issubset(attrs):return None
+    required_direct={"validate","master_sha","branch_sha","master_tree","compare_branch_to_master","open_prs_for_branch","ownership_observation","_pending_delete"}
+    direct_gate=required_direct.issubset(attrs)
+    helper_gate=False
+    if not direct_gate:
+        method_calls={_call_name(n).split('.')[-1] for n in ast.walk(method) if isinstance(n,ast.Call)}
+        helper_path="cyber_lion/enterprise/repository_maintenance_sandbox.py"
+        helper_source=sources.get(helper_path)
+        helper_tree=ast.parse(helper_source) if helper_source else None
+        helper=_method(helper_tree,"_observe_delete_classification") if helper_tree is not None else None
+        helper_calls={_call_name(n).split('.')[-1] for n in ast.walk(helper) if isinstance(n,ast.Call)} if helper is not None else set()
+        helper_attrs={n.attr for n in ast.walk(helper) if isinstance(n,ast.Attribute)} if helper is not None else set()
+        helper_required={"branch_sha","compare_branch_to_master","open_prs_for_branch","ownership_observation"}
+        helper_gate=(
+            helper is not None
+            and "_observe_delete_classification" in method_calls
+            and helper_required.issubset(helper_attrs | helper_calls)
+            and "delete_exact_branch_ref" not in helper_calls
+            and {"validate","master_sha","branch_sha","master_tree","_pending_delete"}.issubset(attrs)
+        )
+    if not (direct_gate or helper_gate):return None
     if not any(isinstance(n,ast.Raise) for n in ast.walk(legacy)):return None
     targets=[s for s in raw.surfaces if s.effect_class=="repository_ref.delete" and s.mutation_kind.endswith("delete_exact_branch_ref")]
     if len(targets)!=1:return None
