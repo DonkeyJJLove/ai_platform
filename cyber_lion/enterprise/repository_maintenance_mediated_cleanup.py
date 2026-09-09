@@ -726,6 +726,98 @@ def _fence_from_environment() -> RepositoryDeleteFence:
     return RepositoryDeleteFence(str(path))
 
 
+def late_reconcile_unknown_delete(
+    *,
+    fence: RepositoryDeleteFence,
+    backend: CanonicalSlashSafeGitHubRepositoryMaintenanceBackend,
+    effect_key: str,
+    expected_master: str,
+    expected_tree: str,
+) -> dict[str, object]:
+    """Reconcile one attempted UNKNOWN using later independent read-only evidence.
+
+    No authority admission is replayed and no repository mutation is issued. The exact
+    original fence binding remains the subject of the proof.
+    """
+    if type(fence) is not RepositoryDeleteFence:
+        raise MediatedRepositoryMaintenanceError("exact RepositoryDeleteFence required")
+    if type(backend) is not CanonicalSlashSafeGitHubRepositoryMaintenanceBackend:
+        raise MediatedRepositoryMaintenanceError("canonical repository observer required")
+    _hex64(effect_key, "effect_key")
+    _sha40(expected_master, "expected_master")
+    _sha40(expected_tree, "expected_tree")
+    record = fence.get(effect_key)
+    if record.state != "UNKNOWN" or not record.attempted_at:
+        raise MediatedRepositoryMaintenanceError("attempted UNKNOWN fence required")
+    if record.expected_master != expected_master or record.expected_master_tree != expected_tree:
+        raise MediatedRepositoryMaintenanceError("late reconciliation master/tree binding mismatch")
+    master = backend.master_sha()
+    tree = backend.master_tree(master)
+    head = backend.branch_sha(record.branch)
+    if master != expected_master or tree != expected_tree or head is not None:
+        raise MediatedRepositoryMaintenanceError("late reconciliation repository observation mismatch")
+    observed_at = datetime.now(timezone.utc).isoformat()
+    observation_payload = {
+        "effect_key": record.effect_key,
+        "execution_id": record.execution_id,
+        "branch": record.branch,
+        "expected_head": record.expected_branch_head,
+        "branch_absent": True,
+        "master": master,
+        "tree": tree,
+        "attempted_at": record.attempted_at,
+        "mode": "LATE_UNKNOWN_ABSENCE",
+    }
+    observation_digest = _hash(_OBSERVATION_DOMAIN, observation_payload)
+    reconciliation_payload = {
+        **observation_payload,
+        "observation_digest": observation_digest,
+        "authority_lineage_digest": record.authority_lineage_digest,
+        "policy_digest": record.policy_digest,
+        "control_comment_id": record.control_comment_id,
+        "provider_id": record.provider_id,
+        "state": "RECONCILED",
+    }
+    reconciliation_digest = _hash(_RECONCILIATION_DOMAIN, reconciliation_payload)
+    final = fence.late_reconcile_unknown(
+        effect_key,
+        observation_digest=observation_digest,
+        observed_at=observed_at,
+        reconciliation_digest=reconciliation_digest,
+        reconciled_at=datetime.now(timezone.utc).isoformat(),
+        source_ref=f"github:late-readback:{record.branch}:absent@{master}",
+    )
+    return {
+        "schema_version": "1.0.0",
+        "effect": CAPABILITY_REPOSITORY_REF_DELETE,
+        "effect_key": effect_key,
+        "branch": record.branch,
+        "expected_head": record.expected_branch_head,
+        "master": master,
+        "tree": tree,
+        "observation_digest": observation_digest,
+        "reconciliation_digest": reconciliation_digest,
+        "fence_state": final.state,
+        "mode": "LATE_UNKNOWN_ABSENCE",
+        "repository_effect": False,
+    }
+
+
+def run_late_reconciliation(
+    *,
+    token: str,
+    effect_key: str,
+    expected_master: str,
+    expected_tree: str,
+) -> dict[str, object]:
+    fence = _fence_from_environment()
+    backend = CanonicalSlashSafeGitHubRepositoryMaintenanceBackend(REPOSITORY, token)
+    return late_reconcile_unknown_delete(
+        fence=fence, backend=backend, effect_key=effect_key,
+        expected_master=expected_master, expected_tree=expected_tree,
+    )
+
+
 def run_exact_request(
     *,
     token: str,
@@ -787,30 +879,38 @@ def run_exact_request(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--execute-exact-request", action="store_true")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--execute-exact-request", action="store_true")
+    mode.add_argument("--late-reconcile-effect-key")
     parser.add_argument("--expected-master", required=True)
     parser.add_argument("--expected-tree", required=True)
     args = parser.parse_args(argv)
-    if not args.execute_exact_request:
-        parser.error("--execute-exact-request required")
     try:
         token = _text(os.environ.get("GITHUB_TOKEN"), "GITHUB_TOKEN", limit=16384)
-        repository = _text(os.environ.get("GITHUB_REPOSITORY"), "GITHUB_REPOSITORY")
-        event_path = Path(_text(os.environ.get("GITHUB_EVENT_PATH"), "GITHUB_EVENT_PATH"))
-        run_id = _text(os.environ.get("GITHUB_RUN_ID"), "GITHUB_RUN_ID", limit=64)
-        run_attempt = _text(os.environ.get("GITHUB_RUN_ATTEMPT"), "GITHUB_RUN_ATTEMPT", limit=64)
-        result = run_exact_request(
-            token=token,
-            expected_master=args.expected_master,
-            expected_tree=args.expected_tree,
-            event_path=event_path,
-            repository=repository,
-            execution_id=f"github:{run_id}:{run_attempt}",
-        )
+        if args.late_reconcile_effect_key:
+            result = run_late_reconciliation(
+                token=token, effect_key=args.late_reconcile_effect_key,
+                expected_master=args.expected_master, expected_tree=args.expected_tree,
+            )
+            marker = "LION_REPOSITORY_MAINTENANCE_LATE_RECONCILIATION "
+        else:
+            repository = _text(os.environ.get("GITHUB_REPOSITORY"), "GITHUB_REPOSITORY")
+            event_path = Path(_text(os.environ.get("GITHUB_EVENT_PATH"), "GITHUB_EVENT_PATH"))
+            run_id = _text(os.environ.get("GITHUB_RUN_ID"), "GITHUB_RUN_ID", limit=64)
+            run_attempt = _text(os.environ.get("GITHUB_RUN_ATTEMPT"), "GITHUB_RUN_ATTEMPT", limit=64)
+            result = run_exact_request(
+                token=token,
+                expected_master=args.expected_master,
+                expected_tree=args.expected_tree,
+                event_path=event_path,
+                repository=repository,
+                execution_id=f"github:{run_id}:{run_attempt}",
+            )
+            marker = "LION_REPOSITORY_MAINTENANCE_RESULT "
     except Exception as exc:
         print(f"LION mediated repository maintenance denied: {exc}", file=sys.stderr)
         return 2
-    print("LION_REPOSITORY_MAINTENANCE_RESULT " + json.dumps(result, sort_keys=True, separators=(",", ":")))
+    print(marker + json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0
 
 

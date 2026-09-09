@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from cyber_lion.enterprise.repository_maintenance_cleanup import (
     SlashSafeGitHubRepositoryMaintenanceBackend,
@@ -111,6 +112,24 @@ class SlashSafeRepositoryMaintenanceBackendTests(unittest.TestCase):
                 backend._validate_api_path(
                     "DELETE", f"/repos/DonkeyJJLove/ai_platform/git/refs/heads/{branch}"
                 )
+
+    def test_delete_waits_for_bounded_ref_visibility_without_second_delete(self):
+        backend = self._backend()
+        branch = "reconcile/example"
+        head = "b" * 40
+        master = "a" * 40
+        admission = "d" * 64
+        backend._pending_delete = (branch, head, master, admission, "e" * 64)
+        backend.master_sha = lambda: master
+        observations = iter((head, head, head, None))
+        backend.branch_sha = lambda _branch: next(observations)
+        delete_calls = []
+        backend._delete_exact_branch_ref_http = lambda path: delete_calls.append(path) or 204
+        with patch("cyber_lion.enterprise.repository_maintenance_cleanup.time.sleep", lambda _seconds: None):
+            backend.delete_exact_branch_ref(branch, head)
+        self.assertEqual(len(delete_calls), 1)
+        self.assertIn("reconcile/example", delete_calls[0])
+        self.assertIn(admission, backend._consumed_delete_admissions)
 
     def test_noncanonical_origin_remains_denied(self):
         with self.assertRaisesRegex(RepositoryMaintenanceError, "canonical HTTPS"):

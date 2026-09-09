@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -32,6 +33,8 @@ from cyber_lion.enterprise.repository_maintenance_sandbox import (
 _CONTROL_ISSUE = 144
 _COMMAND = "LION-BRANCH-CLEANUP v1"
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
+_POST_DELETE_VISIBILITY_ATTEMPTS = 8
+_POST_DELETE_VISIBILITY_DELAY_SECONDS = 0.5
 
 
 @dataclass(frozen=True)
@@ -260,6 +263,14 @@ class SlashSafeGitHubRepositoryMaintenanceBackend(GitHubRepositoryMaintenanceBac
         if status != 204:
             raise RepositoryMaintenanceError(f"branch deletion not accepted: {status}")
         self._consumed_delete_admissions.add(admission_digest)
+        # GitHub may acknowledge DELETE before the ref read model converges. Bound the
+        # visibility wait; no second DELETE is ever issued. The sandbox performs its
+        # own independent post-effect observation after this method returns.
+        for attempt in range(_POST_DELETE_VISIBILITY_ATTEMPTS):
+            if self.branch_sha(branch) is None:
+                break
+            if attempt + 1 < _POST_DELETE_VISIBILITY_ATTEMPTS:
+                time.sleep(_POST_DELETE_VISIBILITY_DELAY_SECONDS)
 
 
 def run_cleanup(*, token: str, expected_master: str, event_path: Path, repository: str,

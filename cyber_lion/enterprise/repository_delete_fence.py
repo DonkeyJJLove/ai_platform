@@ -166,6 +166,15 @@ class RepositoryDeleteFence:
                 control_comment_id,branch,expected_branch_head,expected_master,
                 expected_master_tree,provider_id,execution_id,authority_epoch
               );
+            CREATE TABLE IF NOT EXISTS repository_delete_late_reconciliation (
+                effect_key TEXT PRIMARY KEY,
+                prior_state TEXT NOT NULL,
+                observation_digest TEXT NOT NULL,
+                reconciliation_digest TEXT NOT NULL,
+                observed_at TEXT NOT NULL,
+                reconciled_at TEXT NOT NULL,
+                source_ref TEXT NOT NULL
+            );
             """)
 
     @staticmethod
@@ -244,6 +253,56 @@ class RepositoryDeleteFence:
             if cursor.rowcount != 1:
                 connection.execute("ROLLBACK")
                 raise RepositoryDeleteFenceError("delete effect cannot enter RECONCILED")
+            connection.execute("COMMIT")
+        return self.get(effect_key)
+
+    def late_reconcile_unknown(
+        self,
+        effect_key: str,
+        *,
+        observation_digest: str,
+        observed_at: str,
+        reconciliation_digest: str,
+        reconciled_at: str,
+        source_ref: str,
+    ) -> RepositoryDeleteFenceRecord:
+        """Resolve an attempted UNKNOWN from later independent observation.
+
+        This is not a retry path: the original effect_key/admission remains consumed and
+        no repository effect is executed. The UNKNOWN provenance is preserved in a
+        dedicated append-only late-reconciliation ledger before the main fence becomes
+        RECONCILED.
+        """
+        _hex64(effect_key, "effect_key")
+        _hex64(observation_digest, "observation_digest")
+        _hex64(reconciliation_digest, "reconciliation_digest")
+        _text(observed_at, "observed_at")
+        _text(reconciled_at, "reconciled_at")
+        _text(source_ref, "source_ref")
+        with self._lock, self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT state,attempted_at FROM repository_delete_effect WHERE effect_key=?",
+                (effect_key,),
+            ).fetchone()
+            if row is None or row[0] != "UNKNOWN" or not row[1]:
+                connection.execute("ROLLBACK")
+                raise RepositoryDeleteFenceError("only attempted UNKNOWN may be late reconciled")
+            try:
+                connection.execute(
+                    "INSERT INTO repository_delete_late_reconciliation(effect_key,prior_state,observation_digest,reconciliation_digest,observed_at,reconciled_at,source_ref) VALUES(?,?,?,?,?,?,?)",
+                    (effect_key, "UNKNOWN", observation_digest, reconciliation_digest, observed_at, reconciled_at, source_ref),
+                )
+            except sqlite3.IntegrityError as exc:
+                connection.execute("ROLLBACK")
+                raise RepositoryDeleteFenceError("late reconciliation replay denied") from exc
+            cursor = connection.execute(
+                "UPDATE repository_delete_effect SET state='RECONCILED',observation_digest=?,observed_at=?,reconciliation_digest=?,reconciled_at=? WHERE effect_key=? AND state='UNKNOWN' AND attempted_at IS NOT NULL",
+                (observation_digest, observed_at, reconciliation_digest, reconciled_at, effect_key),
+            )
+            if cursor.rowcount != 1:
+                connection.execute("ROLLBACK")
+                raise RepositoryDeleteFenceError("late reconciliation state transition denied")
             connection.execute("COMMIT")
         return self.get(effect_key)
 

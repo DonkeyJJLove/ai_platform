@@ -93,6 +93,51 @@ class RepositoryDeleteFenceTests(unittest.TestCase):
             with self.assertRaises(RepositoryDeleteFenceError):
                 fence.mark_attempted(record.effect_key, attempted_at="2026-08-26T06:31:00+00:00")
 
+    def test_attempted_unknown_can_be_late_reconciled_without_retry(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = str(Path(td) / "delete.sqlite3")
+            fence = RepositoryDeleteFence(path)
+            record = self._record()
+            fence.prepare(record)
+            fence.mark_attempted(record.effect_key, attempted_at="2026-08-26T06:30:01+00:00")
+            fence.mark_unknown(record.effect_key)
+            final = fence.late_reconcile_unknown(
+                record.effect_key,
+                observation_digest="5" * 64,
+                observed_at="2026-08-26T06:31:00+00:00",
+                reconciliation_digest="6" * 64,
+                reconciled_at="2026-08-26T06:31:01+00:00",
+                source_ref="github:late-readback:mission/example:absent",
+            )
+            self.assertEqual(final.state, "RECONCILED")
+            self.assertEqual(final.attempted_at, "2026-08-26T06:30:01+00:00")
+            with self.assertRaises(RepositoryDeleteFenceError):
+                fence.mark_attempted(record.effect_key, attempted_at="2026-08-26T06:32:00+00:00")
+            with self.assertRaisesRegex(RepositoryDeleteFenceError, "only attempted UNKNOWN"):
+                fence.late_reconcile_unknown(
+                    record.effect_key, observation_digest="7" * 64, observed_at="x",
+                    reconciliation_digest="8" * 64, reconciled_at="y", source_ref="replay",
+                )
+            import sqlite3
+            with sqlite3.connect(path) as c:
+                row = c.execute(
+                    "SELECT prior_state,observation_digest,reconciliation_digest,source_ref FROM repository_delete_late_reconciliation WHERE effect_key=?",
+                    (record.effect_key,),
+                ).fetchone()
+            self.assertEqual(row, ("UNKNOWN", "5" * 64, "6" * 64, "github:late-readback:mission/example:absent"))
+
+    def test_prepared_unknown_without_attempt_cannot_be_late_reconciled(self):
+        with tempfile.TemporaryDirectory() as td:
+            fence = RepositoryDeleteFence(str(Path(td) / "delete.sqlite3"))
+            record = self._record()
+            fence.prepare(record)
+            fence.mark_unknown(record.effect_key)
+            with self.assertRaisesRegex(RepositoryDeleteFenceError, "only attempted UNKNOWN"):
+                fence.late_reconcile_unknown(
+                    record.effect_key, observation_digest="5" * 64, observed_at="x",
+                    reconciliation_digest="6" * 64, reconciled_at="y", source_ref="late",
+                )
+
     def test_cross_execution_binding_collision_is_denied(self):
         with tempfile.TemporaryDirectory() as td:
             fence = RepositoryDeleteFence(str(Path(td) / "delete.sqlite3"))
