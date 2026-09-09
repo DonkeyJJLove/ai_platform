@@ -84,7 +84,10 @@ def _validate_v11_profile(text: str) -> None:
     if not tuple(item for item in ast.globals.get("LINEAGE", ()) if item):
         raise ProcessSourceInterpretationError("LINEAGE must not be empty")
     for key in _NON_EFFECT_CONTROLS:
-        if key in ast.globals and _one(ast.globals.get(key), key) != "NONE":
+        values = ast.globals.get(key)
+        if values is None:
+            values = ast.global_annotations.get(key)
+        if values is not None and _one(values, key) != "NONE":
             raise ProcessSourceInterpretationError(f"{key} must be NONE")
 
 
