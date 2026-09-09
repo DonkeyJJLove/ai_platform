@@ -11,7 +11,7 @@ import re
 CLASSES = frozenset({"LOSSLESS_TRANSLATION", "LOSSY_BUT_SAFE", "AMBIGUOUS", "UNREPRESENTABLE"})
 _RUN = re.compile(r"^\s*RUN(?:=|\s+)([A-Za-z0-9_.:/-]+)\s*$", re.MULTILINE)
 _FIELD = re.compile(r"^\s*--([A-Za-z0-9_.-]+)=\s*(.*)$", re.MULTILINE)
-_PHASE = re.compile(r"^\s*(?:PHASE|--phase-|phase-)\s*\d+", re.MULTILINE | re.IGNORECASE)
+_PHASE = re.compile(r"^\s*(?:PHASE(?:_|\s+)|--phase-|phase-)\d+", re.MULTILINE | re.IGNORECASE)
 _THEN = re.compile(r"(?:^|[_\s])THEN(?:[_\s]|$)", re.IGNORECASE)
 
 
