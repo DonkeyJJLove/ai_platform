@@ -47,6 +47,15 @@ class VktK3sProviderTests(unittest.TestCase):
     def test_cardinality_drift_is_denied(self):
         p = self.manifest(); target = next(d for d in p["documents"] if d.get("metadata", {}).get("name") == "lion-drone"); target["spec"]["replicas"] = 127; self.assertDenied(p)
 
+    def test_provider_socket_directory_is_traversable_but_endpoint_is_group_protected(self):
+        socket_unit = (ROOT / "deploy" / "k8s" / "vkt-r3" / "lion-k3s-pod-provider.socket").read_text(encoding="utf-8")
+        installer = (ROOT / "deploy" / "k8s" / "vkt-r3" / "install.sh").read_text(encoding="utf-8")
+        self.assertIn("SocketGroup=lion-k3s-vkt-r3", socket_unit)
+        self.assertIn("SocketMode=0660", socket_unit)
+        self.assertIn("DirectoryMode=0755", socket_unit)
+        self.assertIn("install -d -o root -g root -m 0755 /run/lion-k3s-vkt-r3", installer)
+
+
 
 if __name__ == "__main__":
     unittest.main()

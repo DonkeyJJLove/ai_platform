@@ -79,7 +79,9 @@ printf '[Service]\nSupplementaryGroups=%s\n' "$PROVIDER_GROUP" >"$RUNNER_DROPIN/
 chmod 0644 "$RUNNER_DROPIN/20-lion-k3s-vkt-r3.conf"
 
 systemctl daemon-reload
-systemctl enable --now lion-k3s-pod-provider.socket
+install -d -o root -g root -m 0755 /run/lion-k3s-vkt-r3
+systemctl enable lion-k3s-pod-provider.socket
+systemctl restart lion-k3s-pod-provider.socket
 [[ "$(systemctl is-active lion-k3s-pod-provider.socket)" = active ]]
 
 echo "K3S_PROVIDER_INSTALLED=YES"
