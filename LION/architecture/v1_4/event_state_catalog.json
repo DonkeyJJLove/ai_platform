@@ -1,15 +1,104 @@
 {
-  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
   "canonical_flows": {
-    "FLOW-01": ["WORLD","OBSERVATION","EVIDENCE","HYPOTHESIS","EXPERIMENT","FALSIFICATION","PROMOTION","MEMORY","EVOLUTION_DELTA"],
-    "FLOW-02": ["EVOLUTION_DELTA","GOVERNED_CHANGE_PROPOSAL","BUILD_AUTHORIZATION","BUILDER_ENTRY","BUILDER_INVOCATION","INVOCATION_CONSUMPTION","START_ADMISSION","PROCESS_LAUNCH","DETACHED_CANDIDATE"],
-    "FLOW-03": ["DETACHED_CANDIDATE","INDEPENDENT_VERIFICATION","AUTHORITY_LOOKUP","POLICY_GATE","CURRENTNESS","EFFECT_ADMISSION","EXACT_EFFECT","OBSERVATION","RECONCILIATION"],
-    "FLOW-04": ["MISSION","CAPABILITY_REQUIREMENTS","SWARM_PLANNING","ROLE_ALLOCATION","EXECUTOR_PROVISIONING","SANDBOX_BINDING","RUNTIME_IDENTITY","DISPATCH","EXECUTION","STATUS","RECONCILIATION"],
-    "FLOW-05": ["AUTHORITY_SOURCE","ROOT_GRANT","AUTHORITY_LINEAGE","ATTENUATION","REVOCATION_STATE","PDP","RUNTIME_CURRENTNESS","PEP","EFFECT"],
-    "FLOW-06": ["REPOSITORY_BASELINE","DETACHED_CHANGE","EXACT_CANDIDATE_TREE","VERIFICATION","MERGE_AUTHORITY","EFFECT_TIME_CURRENTNESS","REF_MUTATION","POST_EFFECT_OBSERVATION","CLOSURE"],
-    "FLOW-07": ["SOURCE_TREE","STATIC_CODE_PERCEPTION","SYMBOL_GRAPH","ARCHITECTURE_PROJECTION","CANONICAL_DIAGRAM_MODEL","PUML","OPTIONAL_RENDERED_ARTIFACT"],
-    "FLOW-08": ["MARKET_EVIDENCE","PRODUCT_HYPOTHESIS","EXPERIMENT","SMALLEST_BUILD","LOCAL_CANDIDATE","OUTCOME","STARTUP_STATE_UPDATE"],
-    "FLOW-09": ["GOAL","WORLD_STATE","SYSTEM_STATE","GAP","REQUIRED_CAPABILITY","EXISTING_CAPABILITY_OR_NEW_BEAN","COMPOSITION","MOSAIC","GOVERNED_EFFECT","RECONCILED_OUTCOME"]
+    "FLOW-01": [
+      "WORLD",
+      "OBSERVATION",
+      "EVIDENCE",
+      "HYPOTHESIS",
+      "EXPERIMENT",
+      "FALSIFICATION",
+      "PROMOTION",
+      "MEMORY",
+      "EVOLUTION_DELTA"
+    ],
+    "FLOW-02": [
+      "EVOLUTION_DELTA",
+      "GOVERNED_CHANGE_PROPOSAL",
+      "BUILD_AUTHORIZATION",
+      "BUILDER_ENTRY",
+      "BUILDER_INVOCATION",
+      "INVOCATION_CONSUMPTION",
+      "START_ADMISSION",
+      "PROCESS_LAUNCH",
+      "DETACHED_CANDIDATE"
+    ],
+    "FLOW-03": [
+      "DETACHED_CANDIDATE",
+      "INDEPENDENT_VERIFICATION",
+      "AUTHORITY_LOOKUP",
+      "POLICY_GATE",
+      "CURRENTNESS",
+      "EFFECT_ADMISSION",
+      "EXACT_EFFECT",
+      "OBSERVATION",
+      "RECONCILIATION"
+    ],
+    "FLOW-04": [
+      "MISSION",
+      "CAPABILITY_REQUIREMENTS",
+      "SWARM_PLANNING",
+      "ROLE_ALLOCATION",
+      "EXECUTOR_PROVISIONING",
+      "SANDBOX_BINDING",
+      "RUNTIME_IDENTITY",
+      "DISPATCH",
+      "EXECUTION",
+      "STATUS",
+      "RECONCILIATION"
+    ],
+    "FLOW-05": [
+      "AUTHORITY_SOURCE",
+      "ROOT_GRANT",
+      "AUTHORITY_LINEAGE",
+      "ATTENUATION",
+      "REVOCATION_STATE",
+      "PDP",
+      "RUNTIME_CURRENTNESS",
+      "PEP",
+      "EFFECT"
+    ],
+    "FLOW-06": [
+      "REPOSITORY_BASELINE",
+      "DETACHED_CHANGE",
+      "EXACT_CANDIDATE_TREE",
+      "VERIFICATION",
+      "MERGE_AUTHORITY",
+      "EFFECT_TIME_CURRENTNESS",
+      "REF_MUTATION",
+      "POST_EFFECT_OBSERVATION",
+      "CLOSURE"
+    ],
+    "FLOW-07": [
+      "SOURCE_TREE",
+      "STATIC_CODE_PERCEPTION",
+      "SYMBOL_GRAPH",
+      "ARCHITECTURE_PROJECTION",
+      "CANONICAL_DIAGRAM_MODEL",
+      "PUML",
+      "OPTIONAL_RENDERED_ARTIFACT"
+    ],
+    "FLOW-08": [
+      "MARKET_EVIDENCE",
+      "PRODUCT_HYPOTHESIS",
+      "EXPERIMENT",
+      "SMALLEST_BUILD",
+      "LOCAL_CANDIDATE",
+      "OUTCOME",
+      "STARTUP_STATE_UPDATE"
+    ],
+    "FLOW-09": [
+      "GOAL",
+      "WORLD_STATE",
+      "SYSTEM_STATE",
+      "GAP",
+      "REQUIRED_CAPABILITY",
+      "EXISTING_CAPABILITY_OR_NEW_BEAN",
+      "COMPOSITION",
+      "MOSAIC",
+      "GOVERNED_EFFECT",
+      "RECONCILED_OUTCOME"
+    ]
   },
   "coverage_scope": "architecture-material canonical flows/states, not exhaustive all-symbol event extraction",
   "schema": "lion.documentation.event-state-catalog.v1",
@@ -21,5 +110,19 @@
     "observed": "not reconciled closure",
     "quarantined": "effect authority DENY",
     "target_only": "no implementation claim"
+  },
+  "r22h_reconciliation": {
+    "canonical_flow_change": "NONE",
+    "action_runtime_binding": "The new inert Action runtime binder is a material contract boundary between canonical PDP ALLOW evidence and the already represented effect-admission path. flows.py did not change, so documentation does not invent a new canonical state token.",
+    "model_plane": "The ASTRA-compatible model-plane adapter is a non-effectful contract. ASTRA runtime remains NOT_OBSERVED, so no runtime event/state is promoted.",
+    "factory": "B0 bounded generativity evidence and the out-of-grammar general-generativity falsifier change evidence classification, not the canonical event-state vocabulary.",
+    "authority_effect": "NONE"
+  },
+  "r23_reconciliation": {
+    "canonical_flow_change": "NONE",
+    "process_layer": "LPCL/CanonicalProcessIR is integrated as non-effectful process semantics inside the existing evolutionary/process control architecture; documentation does not invent a tenth canonical flow or a second Action/runtime path.",
+    "process_to_action": "ACTION_REQUIRED emits ActionIntentCandidate only; canonical Action IR/PDP/runtime admission/execution/observation/reconciliation remain separate existing planes.",
+    "combined_source_effect": "R23 combined source count 268, effect surfaces 236, raw unclassified 6, reconciled unclassified 0.",
+    "authority_effect": "NONE"
   }
 }

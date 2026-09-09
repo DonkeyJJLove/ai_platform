@@ -1,27 +1,100 @@
 {
+  "schema": "lion.documentation.current-state.v1",
+  "architecture_epoch": "1.4",
+  "process_epoch": "R23",
+  "repository": "DonkeyJJLove/ai_platform",
+  "baseline_branch": "master",
+  "baseline_head": "ab1ab2f2cbdeda1f10b2c73e78acf230f5be21da",
+  "baseline_tree": "0dea4254efc0c3da3db5fa994a9b87e9a2f85ba2",
+  "projection_scope": "POST_R24_DEFAULT_BRANCH_BASELINE_PLUS_EXPLICIT_R23_RECONCILIATION_CANDIDATE_EVIDENCE",
+  "projection_state": "EVIDENCE_BOUND_NONPROMOTING_POST_R24_RECONCILIATION",
+  "currentness_rule": "Default-branch truth is bound to merged R24 master HEAD/TREE above. PR #303 reconciliation evidence is separately bound to the explicit post-R24 pre-documentation HEAD/TREE below and never self-promotes to default truth, runtime deployment, authority or effect.",
+  "currentness_basis": {
+    "generator_kind": "MANUAL_EVIDENCE_RECONCILIATION",
+    "generator_version": "R23-R24-RECONCILIATION/1",
+    "candidate_source_observation_head": "93afd90f781d5421ad30dfcad92650347965dd0d",
+    "candidate_source_observation_tree": "e7f56e9de9a014a2371192c191e8f5471a547a37",
+    "candidate_pr": 303,
+    "candidate_observation_semantics": "POST_R24_MERGE_PRE_DOCUMENTATION_PRE_CARRIER_NONAUTHORITATIVE",
+    "candidate_branch": "integration/lion-v1.4-r23-ai-platform-frontier-consolidation-r1"
+  },
+  "source_and_effect_truth": {
+    "production_selector": "cyber_lion Python excluding cyber_lion/tests plus .github/workflows/*.yml and *.yaml",
+    "base_source_count": 256,
+    "candidate_source_count": 268,
+    "added_production_sources": [
+      ".github/workflows/lion-r22c-full-symbol-census.yml",
+      "cyber_lion/architecture_projection/full_symbol_census.py",
+      "cyber_lion/contracts/action_runtime_binding.py",
+      "cyber_lion/contracts/model_plane_adapter.py",
+      "cyber_lion/contracts/process_action.py",
+      "cyber_lion/contracts/process_ir.py",
+      "cyber_lion/enterprise/process_outcome_evidence.py",
+      "cyber_lion/enterprise/process_semantics.py",
+      "cyber_lion/process_language/__init__.py",
+      "cyber_lion/process_language/legacy_run.py",
+      "cyber_lion/process_language/lpcl.py",
+      "cyber_lion/process_language/reference_processes.py"
+    ],
+    "removed_production_sources": [],
+    "surface_count": 239,
+    "raw_unclassified_count": 6,
+    "reconciled_unclassified_count": 0,
+    "scan_digest": "861d7e2aed0d5e1dbf32aa6e13ae942682876cec4efcf4985bed4d14815725e2",
+    "raw_inventory_digest": "8776f95aecaeec571002e4fcc6c24ac8ac1d4da46a574fbc1ff1c24f69617068",
+    "reconciled_inventory_digest": "22cfe1d05c79d04682eda4fd8333ce7fc189a2dfcea52ee4123fb75dcf3bbc8b",
+    "taxonomy_reconciliation_digest": "96a162cdbde7bc8882dce99154b47b80e8459e16d59070ad26962b332d36c3f1",
+    "classification": "R23_RECONCILED_ON_MERGED_R24_BASELINE_WITH_268_SOURCES_239_SURFACES_AND_EXPLICIT_SCAN_DRIFT"
+  },
   "action_plane": {
-    "active_frontier": "General reusable canonical PDP ALLOW result -> exact RequestedRuntimeEffect + RuntimeIdentityBinding + CanonicalPDPDecisionEvidence materialization/binding before existing RuntimeAdmissionEngine.admit(...).",
-    "bounded_live_evidence": "F009 live_runtime_evidence_plane constructs exact runtime objects and demonstrates a bounded create-only file effect with separate observation/reconciliation.",
     "integrated": [
+      "Process→ActionIntentCandidate boundary",
+      "Canonical Process IR / LPCL non-effectful process layer",
       "ActionIntent/ActionSpec/CanonicalActionIR",
       "static projection",
       "ExplicitActionProposalContext",
       "ActionProposal",
       "canonical PDP handoff",
+      "inert reusable Action runtime binder",
+      "governed binder consumption by RuntimeAdmissionEngine",
       "RuntimeAdmissionEngine",
       "RuntimeExecutionEngine",
       "effect-time currentness",
       "RuntimeReconciler"
     ],
-    "non_claim": "The bounded F009 proof is not a general materializer and does not expand authority."
+    "runtime_binder": {
+      "path": "cyber_lion/contracts/action_runtime_binding.py",
+      "status": "R23_CONSOLIDATED_R22I_BINDER_GOVERNED_CONSUMPTION_TESTED_PRE_CARRIER",
+      "outputs": [
+        "RequestedRuntimeEffect",
+        "RuntimeIdentityBinding",
+        "CanonicalPDPDecisionEvidence"
+      ],
+      "requires": [
+        "exact ActionProposal/context",
+        "canonical PDP ALLOW",
+        "trusted currentness",
+        "exact ProvisionedExecutor",
+        "provisioned_executor_digest binding"
+      ],
+      "consumer": "RuntimeAdmissionEngine.admit_bound_action -> existing RuntimeAdmissionEngine.admit",
+      "runtime_effect": "NONE",
+      "authority_effect": "NONE"
+    },
+    "bounded_live_evidence": "F009 remains bounded create-only runtime evidence and is not reinterpreted as general authority.",
+    "active_frontier": "R24 repository-ref authority provisioning is merged into master. PR #303 R23 has been functionally reconciled against that baseline: 13 merge conflicts reduced to 11 current scan/count expectation carriers plus two truth carriers; the exact clean pre-documentation reconciliation candidate passes 2425/2425 repository tests with 5 controlled skips. Remaining work is documentation freeze, carrier-last truth rebinding, exact-head CI/security, separately administered exact PR #303 merge authority and post-merge readback."
   },
-  "architecture_epoch": "1.4",
-  "baseline_branch": "master",
-  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
-  "baseline_tree": "9725bebf8d9766c58096cfc34af06ffcb8aa32f1",
-  "currentness_rule": "This candidate is current only for the exact Git identities recorded here; baseline drift makes it STALE.",
+  "model_plane": {
+    "contract_path": "cyber_lion/contracts/model_plane_adapter.py",
+    "compatibility_target": "ASTRA",
+    "contract_status": "CANDIDATE_INTEGRATED_PROVIDER_INDEPENDENT",
+    "astra_runtime": "NOT_OBSERVED",
+    "local_model_runtime": "NOT_OBSERVED",
+    "runtime_effect": "NONE",
+    "authority_effect": "NONE",
+    "non_claim": "Compatibility is not deployment, provider selection, endpoint configuration, secret materialization or runtime authority."
+  },
   "factory": {
-    "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS in its bounded scope.",
     "integrated": [
       "BeanSpec",
       "BeanInstance/BeanCandidate family",
@@ -30,17 +103,54 @@
       "Mosaic",
       "BeanBuilderChainBinding"
     ],
-    "not_proven": [
-      "general Factory generativity",
-      "activated child autonomy",
-      "Factory-of-Factories"
-    ]
+    "bounded_proof": "B0 two-unseen-family candidate-only protocol PASS inside its closed grammar.",
+    "general_generativity": "FALSIFIED_OUTSIDE_B0_GRAMMAR",
+    "general_generativity_evidence": "R22F float-list out-of-grammar family is rejected with GenerativityProtocolError.",
+    "child_autonomy": "NOT_PROVEN",
+    "factory_of_factories": "NOT_PROVEN",
+    "human_authority_boundary": "REAL_CHILD_ACTIVATION"
+  },
+  "full_symbol_census": {
+    "candidate_source_observation_head": "93afd90f781d5421ad30dfcad92650347965dd0d",
+    "candidate_source_observation_tree": "e7f56e9de9a014a2371192c191e8f5471a547a37",
+    "observation_class": "R23_POST_R24_RECONCILIATION_PRE_DOCUMENTATION_PRE_CARRIER",
+    "committed_python_files": 536,
+    "parsed_python_files": 536,
+    "parse_failures": 0,
+    "symbols": 9131,
+    "public": 7213,
+    "private_material": 1088,
+    "census_digest": "f9826b4f8e107fe03df6308e9abe8d3edc15762dd702b65befd2c96201a51d8a",
+    "scope_note": "Exact clean post-R24 PR #303 reconciliation pre-documentation census bound to HEAD/TREE above. Documentation and carrier commits change Git identity; final carrier-bound HEAD requires a new exact census run.",
+    "final_exact_head_recheck_required_after_carriers": true,
+    "classes": 1512,
+    "functions": 2145,
+    "methods": 5474,
+    "protocols": 85,
+    "enums": 7,
+    "exceptions": 210,
+    "parse_coverage_percentage": 100.0,
+    "public_docstring_percentage": 4.630528,
+    "private_material_docstring_percentage": 1.838235
+  },
+  "federation": {
+    "member_count": 10,
+    "live_vector": "LION/architecture/v1_4/federation_current_vector.json",
+    "basis": "R22H_LIVE_SWEEP_CARRIED_FORWARD_WITHOUT_R23_FEDERATION_REACQUISITION",
+    "material_drift_members": [
+      "DonkeyJJLove/ai_platform",
+      "DonkeyJJLove/writeups"
+    ],
+    "manifest_absence": [
+      "DonkeyJJLove/writeups"
+    ],
+    "authority_effect": "NONE"
   },
   "global_complete_mediation": "UNKNOWN",
   "historical_currentness_defect": {
     "path": "LION/status.json",
-    "policy": "Do not treat as live current-state evidence; use this exact-baseline projection. R20 does not mutate the executable/consumer-sensitive legacy status contract without a separate safety proof.",
-    "state": "STALE_SELF_DECLARED_CURRENT"
+    "state": "STALE_SELF_DECLARED_CURRENT",
+    "policy": "Do not treat as live v1.4 current-state evidence. Preserve as legacy history until consumer analysis proves formal migration or explicit supersession safe."
   },
   "hosts": {
     "docker_active": [
@@ -60,17 +170,40 @@
     "observed_kernel": "6.6.87.2-microsoft-standard-WSL2",
     "physical_failure_domain_independence": "NOT_PROVEN"
   },
-  "preproduction": "NO",
-  "process_epoch": "R20",
   "production_claim": "NONE",
-  "projection_state": "EVIDENCE_BOUND_CANDIDATE",
+  "preproduction": "NO",
   "rag": {
-    "logical_records_read": 123,
-    "logical_records_total": 123,
     "profile": "LION-RAG32/1",
-    "release_read": "lion-rag32-v1.4-r1",
-    "validation_errors": 0
+    "target_candidate": "NOT_MATERIALIZED_FOR_R23",
+    "publication": "NO"
   },
-  "repository": "DonkeyJJLove/ai_platform",
-  "schema": "lion.documentation.current-state.v1"
+  "human_authority_boundaries": [
+    "R22E-HAB-BRANCH-MAINTENANCE-001",
+    "REAL_CHILD_ACTIVATION",
+    "MARK_READY",
+    "MERGE",
+    "RAG_PUBLICATION",
+    "RUNTIME_DEPLOYMENT",
+    "PRODUCTION_DEPLOYMENT"
+  ],
+  "process_plane": {
+    "status": "R23_CONSOLIDATED_CANDIDATE_PRE_CARRIER",
+    "language": "LPCL 1.0",
+    "canonical_ir": "cyber_lion/contracts/process_ir.py",
+    "process_action_boundary": "cyber_lion/contracts/process_action.py",
+    "selector": "cyber_lion/enterprise/process_semantics.py:TransitionSelector",
+    "outcome_evidence": "cyber_lion/enterprise/process_outcome_evidence.py:CanonicalDownstreamEvidence",
+    "surface": "cyber_lion/process_language/lpcl.py",
+    "invariants": [
+      "process layer is non-effectful",
+      "process layer never grants authority",
+      "ACTION_REQUIRED emits ActionIntentCandidate only",
+      "no second PDP",
+      "no second RuntimeAdmissionEngine",
+      "no EffectProvider selection",
+      "PASS for ACTION_REQUIRED requires exact downstream evidence"
+    ],
+    "authority_effect": "NONE",
+    "runtime_effect": "NONE"
+  }
 }

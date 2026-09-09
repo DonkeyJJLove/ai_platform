@@ -1,0 +1,23 @@
+{
+  "schema_version": "lion.process-language-test-plan-candidate/v1",
+  "status": "CANDIDATE_NOT_INTEGRATED",
+  "focused_tests": [
+    "cyber_lion.tests.test_process_ir",
+    "cyber_lion.tests.test_process_semantics",
+    "cyber_lion.tests.test_lpcl",
+    "cyber_lion.tests.test_process_reference_corpus"
+  ],
+  "repository_suite": "python -m unittest discover -s cyber_lion/tests -p test_*.py -v",
+  "compile_check": "python -m compileall cyber_lion",
+  "security_checks": ["Bandit", "CodeQL or current equivalent"],
+  "independent_semantic_checks": [
+    "no second PDP",
+    "no RuntimeAdmission implementation",
+    "no EffectProvider selection",
+    "no raw-shell operator",
+    "receipt != observation != reconciliation",
+    "authority requirement != grant"
+  ],
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE"
+}

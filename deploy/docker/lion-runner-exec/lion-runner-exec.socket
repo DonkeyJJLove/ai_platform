@@ -1,0 +1,14 @@
+[Unit]
+Description=LION root-only bounded runner execution socket
+
+[Socket]
+ListenStream=/run/lion-runner-exec.sock
+SocketUser=root
+SocketGroup=root
+SocketMode=0600
+Accept=yes
+RemoveOnStop=yes
+MaxConnections=4
+
+[Install]
+WantedBy=sockets.target

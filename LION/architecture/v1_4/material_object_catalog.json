@@ -1,46 +1,342 @@
 {
-  "schema":"lion.documentation.object-catalog.v1",
-  "baseline_head":"5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
-  "baseline_tree":"9725bebf8d9766c58096cfc34af06ffcb8aa32f1",
-  "coverage_scope":"ARCHITECTURE_MATERIAL",
-  "all_symbol_census":"UNPROVEN",
-  "record_semantics":"Each complete object record is record_defaults overlaid by the object-specific fields below.",
-  "record_defaults":{"repository":"DonkeyJJLove/ai_platform","object_class":"architecture_material","visibility":"material","semantic_owner":"live implementation/contract unless TARGET_ONLY","purpose":"source-bound architecture capability or contract","inputs":"source-defined","outputs":"source-defined","consumed_contracts":[],"provided_contracts":[],"capabilities":[],"authority_effect":"NONE_BY_DOCUMENTATION","effect_surface":"source-defined or NONE","observability":"source/test dependent","failure_semantics":"fail-closed where enforced; otherwise source-defined","currentness":"5d5a02b37fdfff4bcbf62f455d37ce4b86080f59","evidence_refs":"same as path","tests":[],"upstream_dependencies":[],"downstream_consumers":[],"historical_lineage":[],"documentation_owner":"LION/architecture/v1_4/README.md","documentation_state":"CATALOGED"},
-  "objects":[
-    {"object_id":"architecture-projection","architecture_plane":"ARCHITECTURE_PROJECTION","path":"cyber_lion/architecture_projection/extractor.py","symbol":"ArchitectureProjectionExtractor","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"authority-pdp","architecture_plane":"AUTHORITY_AND_EFFECT","path":"cyber_lion/enterprise/policy_gate.py","symbol":"CanonicalPolicyDecisionPoint","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"code-perception","architecture_plane":"CODE_PERCEPTION","path":"cyber_lion/enterprise/code_perception.py","symbol":"build_code_graph","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"evidence-observation","architecture_plane":"EVIDENCE_AND_EPISTEMIC_PLANE","path":"cyber_lion/contracts/evolutionary_rnd.py","symbol":"EvidenceObservation","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"evolutionary-epoch","architecture_plane":"EVOLUTIONARY_EPOCH","path":"cyber_lion/enterprise/evolutionary_epoch.py","symbol":"EvolutionaryEpochEngine","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"fleet-swarm-mission","architecture_plane":"FLEET_AND_SWARM","path":"cyber_lion/enterprise/models.py","symbol":"MissionSpec","lifecycle_state":"PARTIALLY_IMPLEMENTED"},
-    {"object_id":"governed-change","architecture_plane":"GOVERNED_SELF_IMPLEMENTATION","path":"cyber_lion/contracts/governed_change_proposal.py","symbol":"GovernedChangeProposal","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"runtime-reconciler","architecture_plane":"OBSERVABILITY_AND_RECONCILIATION","path":"cyber_lion/enterprise/runtime_reconciliation.py","symbol":"RuntimeReconciler","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"repository-mutation-pep","architecture_plane":"REPOSITORY_MUTATION","path":"cyber_lion/enterprise/repository_mutation_pep.py","symbol":"RepositoryMutationPEP","lifecycle_state":"VERIFIED_REFERENCE"},
-    {"object_id":"startup-agent","architecture_plane":"STARTUP_EVOLUTION","path":"cyber_lion/startup_agent/orchestrator.py","symbol":"AIDrivenStartupAgent","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"runtime-admission-engine","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/enterprise/runtime_enforcement.py","symbol":"RuntimeAdmissionEngine","lifecycle_state":"PARTIALLY_IMPLEMENTED"},
-    {"object_id":"f009-live-runtime-proof","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/enterprise/live_runtime_evidence_plane.py","symbol":"LION-F009-LIVE-RUNTIME-EVIDENCE-PLANE","lifecycle_state":"BOUNDED_EVIDENCE"},
-    {"object_id":"action-proposal","architecture_plane":"ACTION_INTENT_AND_IR","path":"cyber_lion/enterprise/control_plane.py","symbol":"ActionProposal","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"action-ir","architecture_plane":"ACTION_INTENT_AND_IR","path":"cyber_lion/contracts/action_ir.py","symbol":"CanonicalActionIR","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"requested-runtime-effect","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/contracts/runtime_enforcement.py","symbol":"RequestedRuntimeEffect","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"runtime-identity-binding","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/contracts/runtime_enforcement.py","symbol":"RuntimeIdentityBinding","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"canonical-pdp-evidence","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/contracts/runtime_enforcement.py","symbol":"CanonicalPDPDecisionEvidence","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"runtime-execution-engine","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/enterprise/runtime_execution.py","symbol":"RuntimeExecutionEngine","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"runtime-currentness","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/enterprise/runtime_currentness.py","symbol":"EffectTimeCurrentnessGuardedSandbox","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"runtime-observation","architecture_plane":"OBSERVABILITY_AND_RECONCILIATION","path":"cyber_lion/contracts/runtime_reconciliation.py","symbol":"RuntimeEffectObservation","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"bean-spec","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/contracts/bean.py","symbol":"BeanSpec","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"capability-need","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/contracts/capability_need.py","symbol":"CapabilityNeed","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"composition-contract","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/contracts/bean_composition.py","symbol":"CompositionContract","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"composition-engine","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/enterprise/bean_composition.py","symbol":"CompositionEngine","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"mosaic","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/contracts/mosaic.py","symbol":"MosaicCell","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"builder-chain-binding","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/contracts/bean_builder_bridge.py","symbol":"BeanBuilderChainBinding","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"complete-mediation-contract","architecture_plane":"AUTHORITY_AND_EFFECT","path":"cyber_lion/contracts/complete_mediation.py","symbol":"complete mediation contracts","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"complete-mediation-engine","architecture_plane":"AUTHORITY_AND_EFFECT","path":"cyber_lion/enterprise/complete_mediation.py","symbol":"complete mediation implementation","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"production-mediation","architecture_plane":"AUTHORITY_AND_EFFECT","path":"cyber_lion/enterprise/production_mediation.py","symbol":"production mediation implementation","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"fleet-runtime-trust","architecture_plane":"FLEET_AND_SWARM","path":"cyber_lion/contracts/fleet_runtime_trust.py","symbol":"fleet runtime trust contracts","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"fleet-effect-budget","architecture_plane":"FLEET_AND_SWARM","path":"cyber_lion/contracts/fleet_effect_budget.py","symbol":"fleet effect budget contracts","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"swarm-governor","architecture_plane":"FLEET_AND_SWARM","path":"cyber_lion/enterprise/swarm_governor.py","symbol":"SwarmGovernor","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"executor-provisioning","architecture_plane":"TRUSTED_RUNTIME","path":"cyber_lion/contracts/executor_provisioning.py","symbol":"ProvisionedExecutor","lifecycle_state":"IMPLEMENTED"},
-    {"object_id":"quarantined-f005","architecture_plane":"QUARANTINED_AND_NONCANONICAL","path":".lion/runtime/f005-runtime-plane-state.json","symbol":"f005-local-runtime-v1","lifecycle_state":"QUARANTINED"},
-    {"object_id":"bean-factory-target","architecture_plane":"TARGET_BEAN_FACTORY","path":"cyber_lion/TARGET_ARCHITECTURE.md","symbol":"#bean-factory","lifecycle_state":"TARGET_ONLY"}
+  "schema": "lion.documentation.object-catalog.v1",
+  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+  "baseline_tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
+  "coverage_scope": "ARCHITECTURE_MATERIAL",
+  "all_symbol_census": "PROVEN_FOR_R23_PRE_DOCUMENTATION_CANDIDATE_OBSERVATION",
+  "all_symbol_census_evidence": {
+    "candidate_head": "5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745",
+    "candidate_tree": "5dd5dc653c24bdd810faeb61f901328ad246e3a7",
+    "committed_python_files": 535,
+    "parsed_python_files": 535,
+    "parse_failures": 0,
+    "symbols": 9062,
+    "public_symbols": 7154,
+    "private_material_symbols": 1079,
+    "classes": 1503,
+    "functions": 2137,
+    "methods": 5422,
+    "protocols": 85,
+    "enums": 7,
+    "exceptions": 210,
+    "parse_coverage_percentage": 100.0,
+    "public_docstring_percentage": 4.598826,
+    "private_material_docstring_percentage": 1.853568,
+    "census_digest": "e559866f26b14800273e504639895048d8c923466a46609c556e1a7e5351587f",
+    "note": "Exact R23 pre-documentation candidate observation; it is not a claim that every symbol is an architecture-material object and must be rerun on the final carrier-bound HEAD."
+  },
+  "record_semantics": "Each complete object record is record_defaults overlaid by the object-specific fields below.",
+  "record_defaults": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "object_class": "architecture_material",
+    "visibility": "material",
+    "semantic_owner": "live implementation/contract unless TARGET_ONLY",
+    "purpose": "source-bound architecture capability or contract",
+    "inputs": "source-defined",
+    "outputs": "source-defined",
+    "consumed_contracts": [],
+    "provided_contracts": [],
+    "capabilities": [],
+    "authority_effect": "NONE_BY_DOCUMENTATION",
+    "effect_surface": "source-defined or NONE",
+    "observability": "source/test dependent",
+    "failure_semantics": "fail-closed where enforced; otherwise source-defined",
+    "currentness": "R23_RECONCILED_PRE_CARRIER",
+    "evidence_refs": "same as path",
+    "tests": [],
+    "upstream_dependencies": [],
+    "downstream_consumers": [],
+    "historical_lineage": [],
+    "documentation_owner": "LION/architecture/v1_4/README.md",
+    "documentation_state": "CATALOGED"
+  },
+  "objects": [
+    {
+      "object_id": "architecture-projection",
+      "architecture_plane": "ARCHITECTURE_PROJECTION",
+      "path": "cyber_lion/architecture_projection/extractor.py",
+      "symbol": "ArchitectureProjectionExtractor",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "authority-pdp",
+      "architecture_plane": "AUTHORITY_AND_EFFECT",
+      "path": "cyber_lion/enterprise/policy_gate.py",
+      "symbol": "CanonicalPolicyDecisionPoint",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "code-perception",
+      "architecture_plane": "CODE_PERCEPTION",
+      "path": "cyber_lion/enterprise/code_perception.py",
+      "symbol": "build_code_graph",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "evidence-observation",
+      "architecture_plane": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "path": "cyber_lion/contracts/evolutionary_rnd.py",
+      "symbol": "EvidenceObservation",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "evolutionary-epoch",
+      "architecture_plane": "EVOLUTIONARY_EPOCH",
+      "path": "cyber_lion/enterprise/evolutionary_epoch.py",
+      "symbol": "EvolutionaryEpochEngine",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "fleet-swarm-mission",
+      "architecture_plane": "FLEET_AND_SWARM",
+      "path": "cyber_lion/enterprise/models.py",
+      "symbol": "MissionSpec",
+      "lifecycle_state": "PARTIALLY_IMPLEMENTED"
+    },
+    {
+      "object_id": "governed-change",
+      "architecture_plane": "GOVERNED_SELF_IMPLEMENTATION",
+      "path": "cyber_lion/contracts/governed_change_proposal.py",
+      "symbol": "GovernedChangeProposal",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "runtime-reconciler",
+      "architecture_plane": "OBSERVABILITY_AND_RECONCILIATION",
+      "path": "cyber_lion/enterprise/runtime_reconciliation.py",
+      "symbol": "RuntimeReconciler",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "repository-mutation-pep",
+      "architecture_plane": "REPOSITORY_MUTATION",
+      "path": "cyber_lion/enterprise/repository_mutation_pep.py",
+      "symbol": "RepositoryMutationPEP",
+      "lifecycle_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "object_id": "startup-agent",
+      "architecture_plane": "STARTUP_EVOLUTION",
+      "path": "cyber_lion/startup_agent/orchestrator.py",
+      "symbol": "AIDrivenStartupAgent",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "canonical-process-ir",
+      "architecture_plane": "EVOLUTIONARY_EPOCH",
+      "path": "cyber_lion/contracts/process_ir.py",
+      "symbol": "CanonicalProcessIR",
+      "lifecycle_state": "CANDIDATE_INTEGRATED_NON_EFFECTFUL"
+    },
+    {
+      "object_id": "process-action-intent",
+      "architecture_plane": "ACTION_INTENT_AND_IR",
+      "path": "cyber_lion/contracts/process_action.py",
+      "symbol": "ActionIntentCandidate",
+      "lifecycle_state": "CANDIDATE_INTEGRATED_NON_AUTHORITATIVE"
+    },
+    {
+      "object_id": "process-transition-selector",
+      "architecture_plane": "EVOLUTIONARY_EPOCH",
+      "path": "cyber_lion/enterprise/process_semantics.py",
+      "symbol": "TransitionSelector",
+      "lifecycle_state": "CANDIDATE_INTEGRATED_NON_EFFECTFUL"
+    },
+    {
+      "object_id": "lpcl-process-language",
+      "architecture_plane": "EVOLUTIONARY_EPOCH",
+      "path": "cyber_lion/process_language/lpcl.py",
+      "symbol": "parse_lpcl",
+      "lifecycle_state": "CANDIDATE_INTEGRATED_NON_EXECUTING"
+    },
+    {
+      "object_id": "runtime-admission-engine",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/enterprise/runtime_enforcement.py",
+      "symbol": "RuntimeAdmissionEngine",
+      "lifecycle_state": "PARTIALLY_IMPLEMENTED"
+    },
+    {
+      "object_id": "f009-live-runtime-proof",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/enterprise/live_runtime_evidence_plane.py",
+      "symbol": "LION-F009-LIVE-RUNTIME-EVIDENCE-PLANE",
+      "lifecycle_state": "BOUNDED_EVIDENCE"
+    },
+    {
+      "object_id": "action-proposal",
+      "architecture_plane": "ACTION_INTENT_AND_IR",
+      "path": "cyber_lion/enterprise/control_plane.py",
+      "symbol": "ActionProposal",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "action-ir",
+      "architecture_plane": "ACTION_INTENT_AND_IR",
+      "path": "cyber_lion/contracts/action_ir.py",
+      "symbol": "CanonicalActionIR",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "action-runtime-binding",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/contracts/action_runtime_binding.py",
+      "symbol": "bind_allowed_action_to_runtime_inputs",
+      "lifecycle_state": "CANDIDATE_IMPLEMENTED_NON_EFFECTFUL"
+    },
+    {
+      "object_id": "requested-runtime-effect",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/contracts/runtime_enforcement.py",
+      "symbol": "RequestedRuntimeEffect",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "runtime-identity-binding",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/contracts/runtime_enforcement.py",
+      "symbol": "RuntimeIdentityBinding",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "canonical-pdp-evidence",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/contracts/runtime_enforcement.py",
+      "symbol": "CanonicalPDPDecisionEvidence",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "runtime-execution-engine",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/enterprise/runtime_execution.py",
+      "symbol": "RuntimeExecutionEngine",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "runtime-currentness",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/enterprise/runtime_currentness.py",
+      "symbol": "EffectTimeCurrentnessGuardedSandbox",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "runtime-observation",
+      "architecture_plane": "OBSERVABILITY_AND_RECONCILIATION",
+      "path": "cyber_lion/contracts/runtime_reconciliation.py",
+      "symbol": "RuntimeEffectObservation",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "model-plane-adapter",
+      "architecture_plane": "MODEL_PLANE",
+      "path": "cyber_lion/contracts/model_plane_adapter.py",
+      "symbol": "ModelProviderAdapter",
+      "lifecycle_state": "CANDIDATE_CONTRACT_INTEGRATED_RUNTIME_NOT_OBSERVED"
+    },
+    {
+      "object_id": "bean-spec",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/contracts/bean.py",
+      "symbol": "BeanSpec",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "capability-need",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/contracts/capability_need.py",
+      "symbol": "CapabilityNeed",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "composition-contract",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/contracts/bean_composition.py",
+      "symbol": "CompositionContract",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "composition-engine",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/enterprise/bean_composition.py",
+      "symbol": "CompositionEngine",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "mosaic",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/contracts/mosaic.py",
+      "symbol": "MosaicCell",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "builder-chain-binding",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/contracts/bean_builder_bridge.py",
+      "symbol": "BeanBuilderChainBinding",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "complete-mediation-contract",
+      "architecture_plane": "AUTHORITY_AND_EFFECT",
+      "path": "cyber_lion/contracts/complete_mediation.py",
+      "symbol": "complete mediation contracts",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "complete-mediation-engine",
+      "architecture_plane": "AUTHORITY_AND_EFFECT",
+      "path": "cyber_lion/enterprise/complete_mediation.py",
+      "symbol": "complete mediation implementation",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "production-mediation",
+      "architecture_plane": "AUTHORITY_AND_EFFECT",
+      "path": "cyber_lion/enterprise/production_mediation.py",
+      "symbol": "production mediation implementation",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "fleet-runtime-trust",
+      "architecture_plane": "FLEET_AND_SWARM",
+      "path": "cyber_lion/contracts/fleet_runtime_trust.py",
+      "symbol": "fleet runtime trust contracts",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "fleet-effect-budget",
+      "architecture_plane": "FLEET_AND_SWARM",
+      "path": "cyber_lion/contracts/fleet_effect_budget.py",
+      "symbol": "fleet effect budget contracts",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "swarm-governor",
+      "architecture_plane": "FLEET_AND_SWARM",
+      "path": "cyber_lion/enterprise/swarm_governor.py",
+      "symbol": "SwarmGovernor",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "executor-provisioning",
+      "architecture_plane": "TRUSTED_RUNTIME",
+      "path": "cyber_lion/contracts/executor_provisioning.py",
+      "symbol": "ProvisionedExecutor",
+      "lifecycle_state": "IMPLEMENTED"
+    },
+    {
+      "object_id": "quarantined-f005",
+      "architecture_plane": "QUARANTINED_AND_NONCANONICAL",
+      "path": ".lion/runtime/f005-runtime-plane-state.json",
+      "symbol": "f005-local-runtime-v1",
+      "lifecycle_state": "QUARANTINED"
+    },
+    {
+      "object_id": "bean-factory-target",
+      "architecture_plane": "TARGET_BEAN_FACTORY",
+      "path": "cyber_lion/TARGET_ARCHITECTURE.md",
+      "symbol": "#bean-factory",
+      "lifecycle_state": "TARGET_ONLY"
+    }
   ]
 }

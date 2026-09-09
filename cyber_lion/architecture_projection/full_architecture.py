@@ -89,6 +89,7 @@ _ELEMENT_SPECS = (
     ("constitution-governance", "CONSTITUTION_AND_GOVERNANCE", "Constitution and governance", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),
     ("evidence-epistemic", "EVIDENCE_AND_EPISTEMIC_PLANE", "Evidence and epistemic R&D", "VERIFIED_REFERENCE", "cyber_lion/contracts/evolutionary_rnd.py", "EvidenceObservation", "LIVE_CODE"),
     ("evolutionary-epoch", "EVOLUTIONARY_EPOCH", "Evolutionary epoch", "VERIFIED_REFERENCE", "cyber_lion/enterprise/evolutionary_epoch.py", "EvolutionaryEpochEngine", "LIVE_CODE"),
+    ("process-contract-language", "EVOLUTIONARY_EPOCH", "LION Process Contract Language", "IMPLEMENTED", "cyber_lion/contracts/process_ir.py", "CanonicalProcessIR", "LIVE_CODE"),
     ("fleet-swarm", "FLEET_AND_SWARM", "Fleet and swarm organization", "PARTIALLY_IMPLEMENTED", "cyber_lion/enterprise/models.py", "MissionSpec", "LIVE_CODE"),
     ("governed-self-implementation", "GOVERNED_SELF_IMPLEMENTATION", "Governed self-implementation", "VERIFIED_REFERENCE", "cyber_lion/contracts/governed_change_proposal.py", "GovernedChangeProposal", "LIVE_CODE"),
     ("observability-reconciliation", "OBSERVABILITY_AND_RECONCILIATION", "Observability and reconciliation", "VERIFIED_REFERENCE", "cyber_lion/enterprise/runtime_reconciliation.py", "RuntimeReconciler", "LIVE_CODE"),
