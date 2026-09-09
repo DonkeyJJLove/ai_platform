@@ -4,7 +4,7 @@
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
     "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
-    "subject_digest": "66a92d2978bdfbe6bfca461e12bc2793b7a6e7ec110848ff726d61b0281882be",
+    "subject_digest": "eef693c12b2c322e4278ba6c4cdaf1e45249f0c59e4446083addc7b7b79a8ef0",
     "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
@@ -12,9 +12,7 @@
       "id": "GoalContract",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/evolutionary_state.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -25,9 +23,7 @@
       "id": "WorldSnapshot",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/evolutionary_state.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -38,9 +34,7 @@
       "id": "SystemSnapshot",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/evolutionary_state.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -51,9 +45,7 @@
       "id": "Gap",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/evolutionary_state.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/evolutionary_state.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -64,9 +56,7 @@
       "id": "BeanSpec",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/bean.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/bean.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -77,9 +67,7 @@
       "id": "BeanInstance",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/bean.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/bean.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -90,9 +78,7 @@
       "id": "BeanCandidate",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/bean_candidate.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/bean_candidate.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -117,9 +103,7 @@
       "id": "CompositionContract",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/bean_composition.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/bean_composition.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -130,9 +114,7 @@
       "id": "CompositionEngine",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/enterprise/bean_composition.py"
-      ],
+      "evidence_refs": ["cyber_lion/enterprise/bean_composition.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -143,9 +125,7 @@
       "id": "MosaicCell",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/mosaic.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/mosaic.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -156,9 +136,7 @@
       "id": "HeterogeneousMosaicPlanner",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/enterprise/mosaic.py"
-      ],
+      "evidence_refs": ["cyber_lion/enterprise/mosaic.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -169,9 +147,7 @@
       "id": "BeanBuilderChainBinding",
       "plane": "AS_IS",
       "status": "INTEGRATED_VERIFIED_PRIMITIVE",
-      "evidence_refs": [
-        "cyber_lion/contracts/bean_builder_bridge.py"
-      ],
+      "evidence_refs": ["cyber_lion/contracts/bean_builder_bridge.py"],
       "integrated": true,
       "pr": null,
       "head": null,
@@ -227,16 +203,20 @@
     },
     {
       "id": "B0GenerativityProtocol",
-      "plane": "CANDIDATE",
-      "status": "STALE_BASE_CANDIDATE",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_BOUNDED_PROTOCOL",
       "evidence_refs": [
-        "PR#251"
+        "cyber_lion/tests/experiments/bean_generativity.py",
+        "PR#251",
+        "PR#255",
+        "PR#276",
+        "master:27911c67417d67613f9bbf6bb09327ec33b68d54"
       ],
-      "integrated": false,
-      "pr": 251,
-      "head": "85e77ac077f89ce892c1254d01f88a0889034b2f",
-      "tree": "e36f84e2fd1be653718dff1a33bbed7e420d41fa",
-      "base_head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
     },
     {
       "id": "ActionSpec",
@@ -314,9 +294,7 @@
       "id": "P0EntryCandidate",
       "plane": "CANDIDATE",
       "status": "STALE_BASE_CANDIDATE",
-      "evidence_refs": [
-        "PR#253"
-      ],
+      "evidence_refs": ["PR#253"],
       "integrated": false,
       "pr": 253,
       "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
