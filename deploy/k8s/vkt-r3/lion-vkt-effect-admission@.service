@@ -1,0 +1,31 @@
+[Unit]
+Description=LION VKT-R3 bounded effect admission request
+After=network-online.target lion-runner-exec.socket lion-k3s-pod-provider.socket
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 /usr/local/libexec/lion-vkt-effect-admission-broker.py
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/opt/lion/k3s-vkt-r3 /usr/local/libexec
+ReadWritePaths=/opt/lion/effect-admission/workspaces /var/lib/lion-effect-admission /run/lion-vkt-effect-admission.sock
+TimeoutStartSec=360
+TimeoutStopSec=30
