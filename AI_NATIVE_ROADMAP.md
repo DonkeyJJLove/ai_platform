@@ -59,3 +59,7 @@ Historical host observations remain documentation evidence only. Four logical WS
 ## Longer-horizon target
 
 The target remains a governed Bean Factory in which capability gaps can be materialized into bounded candidate components, independently verified, admitted under explicit authority and observed/reconciled after effects. Recursive child autonomy and Factory-of-Factories require new evidence and explicit authority gates; they are not implied by composition primitives, B0 bounded experiments or model compatibility contracts.
+
+## Post-R24 R23 reconciliation checkpoint
+
+R24 is now part of canonical `master` at `ab1ab2f2cbdeda1f10b2c73e78acf230f5be21da`. R23 was therefore reacquired rather than merged from its stale frozen head. The clean post-R24 pre-documentation reconciliation candidate is `93afd90f781d5421ad30dfcad92650347965dd0d` / `e7f56e9de9a014a2371192c191e8f5471a547a37`: 268 production sources, 239 effect surfaces, six raw unclassified references, zero unresolved taxonomy references, stable scan digest `861d7e2aed0d5e1dbf32aa6e13ae942682876cec4efcf4985bed4d14815725e2`, and 2425/2425 repository tests passing with five controlled skips. This checkpoint does not rewrite earlier R23 evidence; it records the later reconciliation state that must still pass carrier-last truth rebinding, exact-head CI/security and separate PR #303 merge authority.

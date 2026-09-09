@@ -4,18 +4,18 @@
   "process_epoch": "R23",
   "repository": "DonkeyJJLove/ai_platform",
   "baseline_branch": "master",
-  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
-  "baseline_tree": "4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5",
-  "projection_scope": "DEFAULT_BRANCH_BASELINE_PLUS_EXPLICIT_R23_CONSOLIDATION_CANDIDATE_EVIDENCE",
-  "projection_state": "EVIDENCE_BOUND_NONPROMOTING_RECONCILIATION",
-  "currentness_rule": "Default-branch truth remains bound to the exact master HEAD/TREE above. R23 candidate evidence is bound to the explicit pre-documentation HEAD/TREE below and never self-promotes to default truth, runtime deployment, authority or effect.",
+  "baseline_head": "ab1ab2f2cbdeda1f10b2c73e78acf230f5be21da",
+  "baseline_tree": "0dea4254efc0c3da3db5fa994a9b87e9a2f85ba2",
+  "projection_scope": "POST_R24_DEFAULT_BRANCH_BASELINE_PLUS_EXPLICIT_R23_RECONCILIATION_CANDIDATE_EVIDENCE",
+  "projection_state": "EVIDENCE_BOUND_NONPROMOTING_POST_R24_RECONCILIATION",
+  "currentness_rule": "Default-branch truth is bound to merged R24 master HEAD/TREE above. PR #303 reconciliation evidence is separately bound to the explicit post-R24 pre-documentation HEAD/TREE below and never self-promotes to default truth, runtime deployment, authority or effect.",
   "currentness_basis": {
     "generator_kind": "MANUAL_EVIDENCE_RECONCILIATION",
-    "generator_version": "R23/1",
-    "candidate_source_observation_head": "5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745",
-    "candidate_source_observation_tree": "5dd5dc653c24bdd810faeb61f901328ad246e3a7",
-    "candidate_pr": null,
-    "candidate_observation_semantics": "PRE_DOCUMENTATION_PRE_CARRIER_NONAUTHORITATIVE",
+    "generator_version": "R23-R24-RECONCILIATION/1",
+    "candidate_source_observation_head": "93afd90f781d5421ad30dfcad92650347965dd0d",
+    "candidate_source_observation_tree": "e7f56e9de9a014a2371192c191e8f5471a547a37",
+    "candidate_pr": 303,
+    "candidate_observation_semantics": "POST_R24_MERGE_PRE_DOCUMENTATION_PRE_CARRIER_NONAUTHORITATIVE",
     "candidate_branch": "integration/lion-v1.4-r23-ai-platform-frontier-consolidation-r1"
   },
   "source_and_effect_truth": {
@@ -37,14 +37,14 @@
       "cyber_lion/process_language/reference_processes.py"
     ],
     "removed_production_sources": [],
-    "surface_count": 236,
+    "surface_count": 239,
     "raw_unclassified_count": 6,
     "reconciled_unclassified_count": 0,
-    "scan_digest": "5f6561edcd368c2acce5f0e216bc9e21324da2913035e92ef175b7aca5b773a2",
-    "raw_inventory_digest": "548f7b7db610e793e6ec79c707db423bb82ca61a238c3edce5e638b2696ea79d",
-    "reconciled_inventory_digest": "6435a273d31f21393ac5748ce7c551a36897a8e136240483173b107292be06c4",
-    "taxonomy_reconciliation_digest": "5445e88512ef25352d877550482abd3dd611ea35138c546662f72ba7e29575fe",
-    "classification": "R23_CONSOLIDATED_R21_P0_R22I_SOURCESET_WITH_STABLE_EFFECT_SURFACE_AND_EXPLICIT_SCAN_DRIFT"
+    "scan_digest": "861d7e2aed0d5e1dbf32aa6e13ae942682876cec4efcf4985bed4d14815725e2",
+    "raw_inventory_digest": "8776f95aecaeec571002e4fcc6c24ac8ac1d4da46a574fbc1ff1c24f69617068",
+    "reconciled_inventory_digest": "22cfe1d05c79d04682eda4fd8333ce7fc189a2dfcea52ee4123fb75dcf3bbc8b",
+    "taxonomy_reconciliation_digest": "96a162cdbde7bc8882dce99154b47b80e8459e16d59070ad26962b332d36c3f1",
+    "classification": "R23_RECONCILED_ON_MERGED_R24_BASELINE_WITH_268_SOURCES_239_SURFACES_AND_EXPLICIT_SCAN_DRIFT"
   },
   "action_plane": {
     "integrated": [
@@ -82,7 +82,7 @@
       "authority_effect": "NONE"
     },
     "bounded_live_evidence": "F009 remains bounded create-only runtime evidence and is not reinterpreted as general authority.",
-    "active_frontier": "R23 has consolidated the R21 LPCL/Process lineage, P0 TEST_ONLY materialization lineage and R22I governed Action→Runtime binder-consumption lineage into one candidate. The implementation/source-currentness frontier is closed at the pre-documentation candidate with 2410/2410 tests passing. Remaining work is documentation freeze, truth carrier-last binding, exact-head CI/census, any required TEST_ONLY runtime proof, merge admission and post-merge readback."
+    "active_frontier": "R24 repository-ref authority provisioning is merged into master. PR #303 R23 has been functionally reconciled against that baseline: 13 merge conflicts reduced to 11 current scan/count expectation carriers plus two truth carriers; the exact clean pre-documentation reconciliation candidate passes 2425/2425 repository tests with 5 controlled skips. Remaining work is documentation freeze, carrier-last truth rebinding, exact-head CI/security, separately administered exact PR #303 merge authority and post-merge readback."
   },
   "model_plane": {
     "contract_path": "cyber_lion/contracts/model_plane_adapter.py",
@@ -111,27 +111,27 @@
     "human_authority_boundary": "REAL_CHILD_ACTIVATION"
   },
   "full_symbol_census": {
-    "candidate_source_observation_head": "5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745",
-    "candidate_source_observation_tree": "5dd5dc653c24bdd810faeb61f901328ad246e3a7",
-    "observation_class": "R23_PRE_DOCUMENTATION_PRE_CARRIER",
-    "committed_python_files": 535,
-    "parsed_python_files": 535,
+    "candidate_source_observation_head": "93afd90f781d5421ad30dfcad92650347965dd0d",
+    "candidate_source_observation_tree": "e7f56e9de9a014a2371192c191e8f5471a547a37",
+    "observation_class": "R23_POST_R24_RECONCILIATION_PRE_DOCUMENTATION_PRE_CARRIER",
+    "committed_python_files": 536,
+    "parsed_python_files": 536,
     "parse_failures": 0,
-    "symbols": 9062,
-    "public": 7154,
-    "private_material": 1079,
-    "census_digest": "e559866f26b14800273e504639895048d8c923466a46609c556e1a7e5351587f",
-    "scope_note": "Exact R23 pre-documentation census bound to HEAD/TREE above. Documentation and carrier commits change Git identity; final carrier-bound HEAD requires a new exact census run.",
+    "symbols": 9131,
+    "public": 7213,
+    "private_material": 1088,
+    "census_digest": "f9826b4f8e107fe03df6308e9abe8d3edc15762dd702b65befd2c96201a51d8a",
+    "scope_note": "Exact clean post-R24 PR #303 reconciliation pre-documentation census bound to HEAD/TREE above. Documentation and carrier commits change Git identity; final carrier-bound HEAD requires a new exact census run.",
     "final_exact_head_recheck_required_after_carriers": true,
-    "classes": 1503,
-    "functions": 2137,
-    "methods": 5422,
+    "classes": 1512,
+    "functions": 2145,
+    "methods": 5474,
     "protocols": 85,
     "enums": 7,
     "exceptions": 210,
     "parse_coverage_percentage": 100.0,
-    "public_docstring_percentage": 4.598826,
-    "private_material_docstring_percentage": 1.853568
+    "public_docstring_percentage": 4.630528,
+    "private_material_docstring_percentage": 1.838235
   },
   "federation": {
     "member_count": 10,
