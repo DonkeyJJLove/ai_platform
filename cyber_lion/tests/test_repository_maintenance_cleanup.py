@@ -92,6 +92,26 @@ class SlashSafeRepositoryMaintenanceBackendTests(unittest.TestCase):
                 "DELETE", "/repos/DonkeyJJLove/ai_platform/git/refs/heads/release/prod"
             )
 
+
+    def test_delete_route_accepts_every_canonical_cleanup_family(self):
+        backend = self._backend()
+        branches = (
+            "cyber-lion/evidence",
+            "docs/evidence",
+            "experiment/evidence",
+            "integration/evidence",
+            "mission/evidence",
+            "reconcile/evidence",
+            "verification/evidence",
+            "__invalid_never_create",
+            "tmp-r3-upload-staging",
+        )
+        for branch in branches:
+            with self.subTest(branch=branch):
+                backend._validate_api_path(
+                    "DELETE", f"/repos/DonkeyJJLove/ai_platform/git/refs/heads/{branch}"
+                )
+
     def test_noncanonical_origin_remains_denied(self):
         with self.assertRaisesRegex(RepositoryMaintenanceError, "canonical HTTPS"):
             SlashSafeGitHubRepositoryMaintenanceBackend(
