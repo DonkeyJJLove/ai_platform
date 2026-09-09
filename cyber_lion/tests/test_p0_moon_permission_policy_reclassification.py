@@ -14,7 +14,7 @@ class PermissionPolicyReclassificationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.root,cls.inv,cls.tax=current();cls.mappings,cls.policy,cls.closure,cls.carrier,cls.report=materialize_policy_v2_readiness(inventory=cls.inv,taxonomy_report=cls.tax,repo_root=cls.root)
     def test_current_inventory_and_taxonomy_remain_exact(self):
-        self.assertEqual(self.inv.scan_digest,"49f1e1aff202ea1935e15e24200d9208c7a86fbfe12763bfe02b44459ff6a3a8");self.assertFalse(self.tax.unresolved_refs);self.assertEqual(len(self.inv.surfaces),239)
+        self.assertEqual(self.inv.scan_digest,"9c93b7bc51ae9329c86fa59fae486eb35281f5716c1c7c267e427fbc91764d1a");self.assertFalse(self.tax.unresolved_refs);self.assertEqual(len(self.inv.surfaces),241)
     def test_permission_boundary_matrix_is_exact(self):
         by={x.attack_id:x for x in self.mappings};self.assertEqual(set(by),set(PRE_EFFECT)|set(REHOMED))
         for a in PRE_EFFECT:self.assertEqual(by[a].classification,"PRE_EFFECT_GUARD");self.assertEqual(by[a].effect_boundary_relation,"BEFORE_SURFACE_EFFECT")

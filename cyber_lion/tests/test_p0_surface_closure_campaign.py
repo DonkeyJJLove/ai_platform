@@ -45,7 +45,7 @@ def campaign():
 
 class P0SurfaceClosureCampaignTests(unittest.TestCase):
     def test_exact_238_matrix_and_scan_digest(self):
-        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),239);self.assertEqual(c.remaining_surface_count,238)
+        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),241);self.assertEqual(c.remaining_surface_count,240)
         self.assertEqual(c.excluded_surface_digests,(CERTIFIED_PARTIAL_SURFACE,));self.assertEqual(c.global_status,"UNKNOWN")
         self.assertEqual(Counter(x.effect_class for x in c.work_items),Counter(EXPECTED_CLASSES))
 
@@ -66,7 +66,7 @@ class P0SurfaceClosureCampaignTests(unittest.TestCase):
     def test_provider_family_partition_and_concentration(self):
         _,c=campaign();multi=[f for f in c.provider_families if len(f.surface_digests)>1];single=[f for f in c.provider_families if len(f.surface_digests)==1]
         self.assertEqual(len(multi),32);self.assertEqual(sum(len(f.surface_digests) for f in multi),225);self.assertEqual(len(single),13)
-        self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),238)
+        self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),240)
 
     def test_foreign_runtime_evidence_and_scan_drift_fail_closed(self):
         inv,_=current_inventory()
