@@ -137,4 +137,48 @@ def scale64_run(head:str,tree:str,request_id:str)->dict[str,Any]:
         with log_path.open('wb',buffering=0) as log:
             proc=subprocess.run(['/usr/bin/python3','tools/p0_docker_scale64_soak.py','--source-head',head,'--source-tree',tree,'--duration-seconds','180','--poll-seconds','15','--evidence-out',str(evidence_path)],cwd=str(FIXED_REPO),env=bounded_env(FIXED_REPO),stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,shell=False,check=False,timeout=900)
         log_raw=log_path.read_bytes()
-        if len(log_raw)>MAX_LOG: log_raw=log_raw$Ô…ôÄôs¥Ð¢Wf–FVæ6SÔæöæS²6÷W&6Uö†6ƒÔæöæP¢–bWf–FVæ6U÷F‚æ—5öf–ÆR‚“ ¢&sÖWf–FVæ6U÷F‚ç&VEö'—FW2‚¢–bÆVâ‡&r“äÔ…ôUd”DTä4S¢&—6RFVç’‚vWf–FVæ6R×FöòÖÆ&vRr¢6÷W&6Uö†6ƒ×6†#Sb‡&r“²Wf–FVæ6SÖ§6öâæÆöG2‡&ræFV6öFR‚’¢–bæ÷B—6–ç7Fæ6R†Wf–FVæ6RÆF–7B“¢&—6RFVç’‚vWf–FVæ6RÖæ÷BÖö&¦V7Br¢&WGW&â²w&WGW&æ6öFRs§&ö2ç&WGW&æ6öFRÂvÆörs¦Æöu÷&ræFV6öFR‚wWFbÓ‚rÂw&WÆ6Rr’ÂvWf–FVæ6Rs¦Wf–FVæ6RÂw6÷W&6UöWf–FVæ6U÷6†#Sbs§6÷W&6Uö†6‡Ð¢f–æÆÇ“ ¢6‡WF–Âç&×G&VR‡'VåöF—"Æ–væ÷&UöW'&÷'3ÕG'VR¦FVb†æFÆR‡&W¦F–7E·7G"Äç•Ò’ÓæF–7E·7G"Äç•Ó ¢–bVW%÷V–B‚’ÔU…T5DTEõ$ôõEõT”C¢&—6RFVç’‚v6ÆÆW"Öæ÷B×&ö÷Br¢–bvBævWGwV–B†÷2ævWFWV–B‚’’çuöæÖRÕ%TääU%õU4U#¢&—6RFVç’‚w&÷f–FW"×w&öær×W6W"r¢–b&WævWB‚w66†VÖ÷fW'6–öâr’Õ44„TÔ¢&—6RFVç’‚w66†VÖÖÖ—6ÖF6‚r¢&WV—&Uö†WƒcB‡&WævWB‚w&WVW7Eö–Br’Âw&WVW7Eö–Br“²÷×&WævWB‚v÷W&F–öâr¢–b÷ÓÒt”DTåD•E’s ¢–b6WB‡&W’×²w66†VÖ÷fW'6–öârÂw&WVW7Eö–BrÂv÷W&F–öâwÓ¢&—6RFVç’‚v–FVçF—G’Öf–VÆB×6WBr¢&WGW&â²wW6W&æÖRs¥%TääU%õU4U"ÂwV–Bs¦÷2ævWFWV–B‚’Âvv–Bs¦÷2ævWFVv–B‚’Âw7WÆVÖVçF'•öw&÷W2s¦÷2ævWFw&÷W2‚’ÂvæõöæWu÷&—g2s¦æõöæWu÷&—g2‚—Ð¢–b÷–â²u5DD”5õTä•EDU5BrÂu5DD”5õ”4ôÕ”ÄRwÓ ¢–b6WB‡&W’×²w66†VÖ÷fW'6–öârÂw&WVW7Eö–BrÂv÷W&F–öârÂw&Wõ÷F‚rÂw6÷W&6Uö†VBrÂw6÷W&6U÷G&VRwÓ¢&—6RFVç’‚w7FF–2Öf–VÆB×6WBr¢†VC×&WV—&Uö†WƒC‡&W²w6÷W&6Uö†VBuÒÂw6÷W&6Uö†VBr“²G&VS×&WV—&Uö†WƒC‡&W²w6÷W&6U÷G&VRuÒÂw6÷W&6U÷G&VRr“²×&Wõ÷F‚‡&W²w&Wõ÷F‚uÒ“²fW&–g•÷&Wò‡Æ†VBÇG&VR¢&wcÕ²r÷W7"ö&–â÷—F†öã2rÂrÖÒrÂwVæ—GFW7BrÂ¥5DD”5ôÔôETÄU5Ò–b÷ÓÒu5DD”5õTä•EDU5BrVÇ6R²r÷W7"ö&–â÷—F†öã2rÂrÖÒrÂw•ö6ö×–ÆRrÂ¥”4ôÕ”ÄUôd”ÄU5Ð¢&ö3×'Vâ†&wbÆ7vC×ÆVçcÖ&÷VæFVEöVçb‡’ÇF–ÖV÷WCÓ3–b÷ÓÒu5DD”5õTä•EDU5BrVÇ6R“¢–b&ö2ç&WGW&æ6öFRÓ¢&—6RFVç’†÷æÆ÷vW"‚’²rÖf–ÆVC¢r·&ö2ç7FF÷WBæFV6öFR‚wWFbÓ‚rÂw&WÆ6Rr•²ÓC¥Ò¢&WGW&â²w7FGW2s¢u52rÂv÷W&F–öâs¦÷Ð¢–b÷ÓÒu$õd”DU%ô4ÄÂs ¢–b6WB‡&W’×²w66†VÖ÷fW'6–öârÂw&WVW7Eö–BrÂv÷W&F–öârÂw&÷f–FW%ö÷W&F–öârÂw6÷W&6Uö†VBrÂw6÷W&6U÷G&VRwÓ¢&—6RFVç’‚w&÷f–FW"Öf–VÆB×6WBr¢†VC×&WV—&Uö†WƒC‡&W²w6÷W&6Uö†VBuÒÂw6÷W&6Uö†VBr“²G&VS×&WV—&Uö†WƒC‡&W²w6÷W&6U÷G&VRuÒÂw6÷W&6U÷G&VRr¢&WGW&â&÷f–FW%ö6ÆÂ‡&W²w&÷f–FW%ö÷W&F–öâuÒÆ†VBÇG&VR¢–b÷ÓÒuôEõ$õd”DU%ô4ÄÂs ¢–b6WB‡&W’×²w66†VÖ÷fW'6–öârÂw&WVW7Eö–BrÂv÷W&F–öârÂw&÷f–FW%ö÷W&F–öârÂw6÷W&6Uö†VBrÂw6÷W&6U÷G&VRrÂw'Våö–BwÓ¢&—6RFVç’‚wöB×&÷f–FW"Öf–VÆB×6WBr¢†VC×&WV—&Uö†WƒC‡&W²w6÷W&6Uö†VBuÒÂw6÷W&6Uö†VBr“²G&VS×&WV—&Uö†WƒC‡&W²w6÷W&6U÷G&VRuÒÂw6÷W&6U÷G&VRr¢&WGW&âöE÷&÷f–FW%ö6ÆÂ‡&W²w&÷f–FW%ö÷W&F–öâuÒÆ†VBÇG&VRÇ&W²w'Våö–BuÒ¢–b÷ÓÒu44ÄScEõ%Tâs ¢–b6WB‡&W’×²w66†VÖ÷fW'6–öârÂw&WVW7Eö–BrÂv÷W&F–öârÂw6÷W&6Uö†VBrÂw6÷W&6U÷G&VRrÂw'Vå÷&WVW7Eö–BwÓ¢&—6RFVç’‚w66ÆScBÖf–VÆB×6WBr¢&WGW&â66ÆScE÷'Vâ‡&WV—&Uö†WƒC‡&W²w6÷W&6Uö†VBuÒÂw6÷W&6Uö†VBr’Ç&WV—&Uö†WƒC‡&W²w6÷W&6U÷G&VRuÒÂw6÷W&6U÷G&VRr’Ç&WV—&Uö†WƒcB‡&W²w'Vå÷&WVW7Eö–BuÒÂw'Vå÷&WVW7Eö–Br’¢&—6RFVç’‚v÷W&F–öâÖæ÷BÖÆÆ÷vÆ—7FVBr¦FVbÖ–â‚’Óæ–çC ¢&–CÔæöæP¢G'“ ¢&W×&V6V—fR‚“²&–C×&WævWB‚w&WVW7Eö–Br’–b—6–ç7Fæ6R‡&WævWB‚w&WVW7Eö–Br’Ç7G"’VÇ6RæöæP¢&WÇ’‡²vö²s¥G'VRÂw&WVW7Eö–Bs§&–BÂw&W7VÇBs¦†æFÆR‡&W—Ò“²&WGW&â ¢W†6WBW†6WF–öâ2W†3 ¢&WÇ’‡²vö²s¤fÇ6RÂw&WVW7Eö–Bs§&–BÂvW'&÷"s§G—R†W†2’åõöæÖUõò²s¢r·7G"†W†2•³£C×Ò“²&WGW&â ¦–bõöæÖUõóÓÒuõöÖ–åõòs¢&—6R7—7FVÔW†—B†Ö–â‚’ 
+        if len(log_raw)>MAX_LOG: log_raw=log_raw[-MAX_LOG:]
+        evidence=None; source_hash=None
+        if evidence_path.is_file():
+            raw=evidence_path.read_bytes()
+            if len(raw)>MAX_EVIDENCE: raise Deny('evidence-too-large')
+            source_hash=sha256(raw); evidence=json.loads(raw.decode())
+            if not isinstance(evidence,dict): raise Deny('evidence-not-object')
+        return {'returncode':proc.returncode,'log':log_raw.decode('utf-8','replace'),'evidence':evidence,'source_evidence_sha256':source_hash}
+    finally:
+        shutil.rmtree(run_dir,ignore_errors=True)
+def handle(req:dict[str,Any])->dict[str,Any]:
+    if peer_uid()!=EXPECTED_ROOT_UID: raise Deny('caller-not-root')
+    if pwd.getpwuid(os.geteuid()).pw_name!=RUNNER_USER: raise Deny('provider-wrong-user')
+    if req.get('schema_version')!=SCHEMA: raise Deny('schema-mismatch')
+    require_hex64(req.get('request_id'),'request_id'); op=req.get('operation')
+    if op=='IDENTITY':
+        if set(req)!={'schema_version','request_id','operation'}: raise Deny('identity-field-set')
+        return {'username':RUNNER_USER,'uid':os.geteuid(),'gid':os.getegid(),'supplementary_groups':os.getgroups(),'no_new_privs':no_new_privs()}
+    if op in {'STATIC_UNITTEST','STATIC_PYCOMPILE'}:
+        if set(req)!={'schema_version','request_id','operation','repo_path','source_head','source_tree'}: raise Deny('static-field-set')
+        head=require_hex40(req['source_head'],'source_head'); tree=require_hex40(req['source_tree'],'source_tree'); p=repo_path(req['repo_path']); verify_repo(p,head,tree)
+        argv=['/usr/bin/python3','-m','unittest',*STATIC_MODULES] if op=='STATIC_UNITTEST' else ['/usr/bin/python3','-m','py_compile',*PYCOMPILE_FILES]
+        proc=run(argv,cwd=p,env=bounded_env(p),timeout=300 if op=='STATIC_UNITTEST' else 90)
+        if proc.returncode!=0: raise Deny(op.lower()+'-failed:'+proc.stdout.decode('utf-8','replace')[-4000:])
+        return {'status':'PASS','operation':op}
+    if op=='PROVIDER_CALL':
+        if set(req)!={'schema_version','request_id','operation','provider_operation','source_head','source_tree'}: raise Deny('provider-field-set')
+        head=require_hex40(req['source_head'],'source_head'); tree=require_hex40(req['source_tree'],'source_tree')
+        return provider_call(req['provider_operation'],head,tree)
+    if op=='POD_PROVIDER_CALL':
+        if set(req)!={'schema_version','request_id','operation','provider_operation','source_head','source_tree','run_id'}: raise Deny('pod-provider-field-set')
+        head=require_hex40(req['source_head'],'source_head'); tree=require_hex40(req['source_tree'],'source_tree')
+        return pod_provider_call(req['provider_operation'],head,tree,req['run_id'])
+    if op=='SCALE64_RUN':
+        if set(req)!={'schema_version','request_id','operation','source_head','source_tree','run_request_id'}: raise Deny('scale64-field-set')
+        return scale64_run(require_hex40(req['source_head'],'source_head'),require_hex40(req['source_tree'],'source_tree'),require_hex64(req['run_request_id'],'run_request_id'))
+    raise Deny('operation-not-allowlisted')
+def main()->int:
+    rid=None
+    try:
+        req=receive(); rid=req.get('request_id') if isinstance(req.get('request_id'),str) else None
+        reply({'ok':True,'request_id':rid,'result':handle(req)}); return 0
+    except Exception as exc:
+        reply({'ok':False,'request_id':rid,'error':type(exc).__name__+':'+str(exc)[:4000]}); return 2
+if __name__=='__main__': raise SystemExit(main())
