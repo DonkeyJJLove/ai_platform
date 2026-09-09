@@ -22,6 +22,7 @@ from typing import Mapping
 
 from cyber_lion.contracts.repository_maintenance_sandbox import (
     REPOSITORY,
+    MAINTENANCE_BRANCH_ALLOWLIST,
     RepositoryMaintenanceOperation,
     RepositoryMaintenancePolicy,
     canonical_json,
@@ -56,6 +57,7 @@ from cyber_lion.enterprise.repository_maintenance_sandbox import (
     RepositoryMaintenanceError,
     RepositoryMaintenanceSandbox,
     _build_operation,
+    _observe_delete_classification,
 )
 
 _CONTROL_ISSUE = 144
@@ -332,16 +334,10 @@ class CanonicalSlashSafeGitHubRepositoryMaintenanceBackend(SlashSafeGitHubReposi
         tree = self.master_tree(master)
         if master != admission.expected_master or head != admission.expected_branch_head or tree != admission.expected_master_tree:
             raise MediatedRepositoryMaintenanceError("canonical delete currentness failed")
-        compare = self.compare_branch_to_master(operation.branch_name)
-        prs = self.open_prs_for_branch(operation.branch_name)
-        ownership = self.ownership_observation(operation.branch_name, master)
-        if not (
-            operation.classification == "A"
-            and compare["status"] in {"ahead", "identical"}
-            and int(compare["behind_by"]) == 0
-            and not prs
-            and ownership.ownership_state == "UNOWNED"
-        ):
+        observed_head, _, _, _, observation, _ = _observe_delete_classification(
+            backend=self, branch=operation.branch_name, master_sha=master
+        )
+        if observed_head != operation.expected_branch_head or observation.classification != operation.classification or operation.classification not in {"A", "B"}:
             raise MediatedRepositoryMaintenanceError("canonical delete eligibility failed")
         if admission.admission_digest in self._consumed_delete_admissions:
             raise MediatedRepositoryMaintenanceError("canonical delete admission replay denied")
@@ -759,7 +755,7 @@ def run_exact_request(
         repository=REPOSITORY,
         mission_id=bundle.binding.mission_id,
         protected_ref="master",
-        allowed_prefixes=("docs/", "mission/"),
+        allowed_prefixes=MAINTENANCE_BRANCH_ALLOWLIST,
         max_deletions=1,
     ).validate()
     sandbox = RepositoryMaintenanceSandbox(policy=policy, backend=backend)

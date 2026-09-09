@@ -33,6 +33,34 @@ class EffectTaxonomyReconciliationTests(unittest.TestCase):
         self.assertTrue(any(s.digest()==delete.target_surface_digest and s.effect_class=="repository_ref.delete" for s in reconciled.surfaces))
         self.assertTrue(any(s.digest()==budget.target_surface_digest and s.effect_class=="persistent_state.write" for s in reconciled.surfaces))
 
+    def test_canonical_delete_alias_accepts_structurally_equivalent_helper_gate(self):
+        text="""class B:
+    def authorize_delete(self):
+        raise RuntimeError()
+    def authorize_canonical_delete(self):
+        self.validate(); self.master_sha(); self.branch_sha(); self.master_tree(); _observe_delete_classification(backend=self, branch='x', master_sha='m'); self._pending_delete=(1,)
+def f(backend):
+    backend.authorize_canonical_delete()
+"""
+        target="""def _observe_delete_classification(*,backend,branch,master_sha):
+    backend.branch_sha(branch); backend.compare_branch_to_master(branch); backend.open_prs_for_branch(branch); backend.ownership_observation(branch,master_sha)
+class T:
+    def delete_exact_branch_ref(self):
+        pass
+def g(t):
+    t.delete_exact_branch_ref()
+"""
+        src={
+            "cyber_lion/enterprise/repository_maintenance_mediated_cleanup.py":text,
+            "cyber_lion/enterprise/repository_maintenance_sandbox.py":target,
+        }
+        raw=scan(src)
+        # The helper-gated authorize call may only resolve if a unique delete surface exists.
+        rec,report,resolutions=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=src)
+        aliases=[r for r in resolutions if r.resolution_kind=="MEDIATION_GATE_ALIAS"]
+        self.assertEqual(len(aliases),1)
+        self.assertIn("authorize_canonical_delete",aliases[0].source_ref)
+
     def test_dynamic_mutating_sql_is_never_reconciled_as_read_only(self):
         text="""import sqlite3
 def _ro(p):

@@ -3,14 +3,21 @@ import unittest
 
 from cyber_lion.contracts.branch_ownership_registry import BranchOwnershipRecord
 from cyber_lion.contracts.repository_maintenance_sandbox import (
+    MAINTENANCE_BRANCH_ALLOWLIST,
     RepositoryMaintenanceOperation,
     RepositoryMaintenancePolicy,
     evidence_digest,
 )
 from cyber_lion.enterprise.repository_maintenance_sandbox import (
+    CLOSURE_ARCHIVE_BUNDLE_SHA256,
+    CLOSURE_RESEARCH_BASE_SHA,
+    CLOSURE_RESEARCH_BASE_TREE,
+    CLOSURE_RESEARCH_MANIFEST_SHA256,
+    CLOSURE_SCHEMA_VERSION,
     ReplayGuard,
     RepositoryMaintenanceError,
     RepositoryMaintenanceSandbox,
+    _closure_evidence_from_manifest,
 )
 
 MASTER = "a"*40
@@ -28,6 +35,7 @@ class FakeBackend:
     open_prs: tuple = ()
     ownership: str = "UNOWNED"
     deleted: bool = False
+    closure_digest: str | None = None
 
     def master_sha(self):
         return self.master
@@ -70,6 +78,11 @@ class FakeBackend:
             record_revision=1,
         ).validate()
 
+    def closure_evidence(self, branch, expected_head, master_sha):
+        if expected_head != self.head or master_sha != self.master:
+            return None
+        return self.closure_digest
+
     def delete_exact_branch_ref(self, branch, expected_head):
         if expected_head != self.head:
             raise RepositoryMaintenanceError("stale")
@@ -84,11 +97,11 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
             repository="DonkeyJJLove/ai_platform",
             mission_id="E003-BRANCH-ZERO-SANDBOX-AUTONOMIZATION",
             protected_ref="master",
-            allowed_prefixes=("docs/", "mission/"),
+            allowed_prefixes=MAINTENANCE_BRANCH_ALLOWLIST,
             max_deletions=45,
         ).validate()
 
-    def operation(self, backend, *, branch="mission/x", master=MASTER, head=HEAD):
+    def operation(self, backend, *, branch="mission/x", master=MASTER, head=HEAD, classification="A"):
         p = self.policy()
         ancestry = {
             "branch": branch,
@@ -109,8 +122,8 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
         ad = evidence_digest(ancestry, "ANCESTRY")
         pd = evidence_digest(pr_state, "PR")
         od = evidence_digest(ownership, "OWNERSHIP")
-        classification = {
-            "classification": "A",
+        classification_payload = {
+            "classification": classification,
             "branch": branch,
             "head": head,
             "master": master,
@@ -118,6 +131,10 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
             "pr": pd,
             "ownership": od,
         }
+        if classification == "B":
+            if backend.closure_digest is None:
+                raise AssertionError("test class B requires closure digest")
+            classification_payload["closure"] = backend.closure_digest
         return RepositoryMaintenanceOperation(
             schema_version="1.0.0",
             repository="DonkeyJJLove/ai_platform",
@@ -133,8 +150,8 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
             ancestry_evidence_digest=ad,
             pr_state_evidence_digest=pd,
             ownership_evidence_digest=od,
-            classification_digest=evidence_digest(classification, "CLASSIFICATION"),
-            classification="A",
+            classification_digest=evidence_digest(classification_payload, "CLASSIFICATION"),
+            classification=classification,
             requested_effect="DELETE_EXACT_REF",
             policy_digest=p.digest(),
         ).validate()
@@ -178,6 +195,79 @@ class RepositoryMaintenanceSandboxTests(unittest.TestCase):
         sandbox = RepositoryMaintenanceSandbox(policy=self.policy(), backend=backend)
         with self.assertRaisesRegex(RepositoryMaintenanceError, "deletion eligible"):
             sandbox.execute_delete(self.operation(backend))
+
+    def test_exact_manifest_bound_class_b_deletes_diverged_unowned_branch(self):
+        backend = FakeBackend(compare_status="diverged", behind_by=2, closure_digest="c"*64)
+        sandbox = RepositoryMaintenanceSandbox(policy=self.policy(), backend=backend)
+        receipt = sandbox.execute_delete(self.operation(backend, classification="B"))
+        self.assertEqual(receipt.outcome, "SUCCEEDED")
+        self.assertTrue(backend.deleted)
+
+    def test_class_b_without_exact_closure_evidence_is_denied(self):
+        backend = FakeBackend(compare_status="diverged", behind_by=2, closure_digest=None)
+        sandbox = RepositoryMaintenanceSandbox(policy=self.policy(), backend=backend)
+        # Forge a structurally valid B operation with a closure digest that runtime cannot reproduce.
+        backend.closure_digest = "c"*64
+        op = self.operation(backend, classification="B")
+        backend.closure_digest = None
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "deletion eligible"):
+            sandbox.execute_delete(op)
+
+    def test_class_b_active_ownership_is_denied_even_with_closure(self):
+        backend = FakeBackend(compare_status="diverged", behind_by=2, ownership="ACTIVE", closure_digest="c"*64)
+        sandbox = RepositoryMaintenanceSandbox(policy=self.policy(), backend=backend)
+        op = self.operation(backend, classification="B")
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "deletion eligible"):
+            sandbox.execute_delete(op)
+
+    def closure_manifest(self, *, head=HEAD, cleanup_class="B", archive_sha=CLOSURE_ARCHIVE_BUNDLE_SHA256):
+        return {
+            "schema_version": CLOSURE_SCHEMA_VERSION,
+            "repository": "DonkeyJJLove/ai_platform",
+            "research_base_sha": CLOSURE_RESEARCH_BASE_SHA,
+            "research_base_tree": CLOSURE_RESEARCH_BASE_TREE,
+            "research_manifest_sha256": CLOSURE_RESEARCH_MANIFEST_SHA256,
+            "archive_bundle_sha256": CLOSURE_ARCHIVE_BUNDLE_SHA256,
+            "count": 1,
+            "entries": [{
+                "branch": "mission/x",
+                "expected_head": head,
+                "research_class": "C",
+                "cleanup_class": cleanup_class,
+                "disposition": "SUPERSEDED_BY_MASTER",
+                "archive_bundle_sha256": archive_sha,
+                "archive_proven": True,
+            }],
+        }
+
+    def test_closure_manifest_exact_binding_produces_evidence_digest(self):
+        dg = _closure_evidence_from_manifest(
+            self.closure_manifest(), branch="mission/x", expected_head=HEAD, master_sha="f"*40,
+            master_parents=(CLOSURE_RESEARCH_BASE_SHA, "e"*40),
+        )
+        self.assertIsInstance(dg, str)
+        self.assertEqual(len(dg), 64)
+
+    def test_closure_manifest_head_substitution_is_not_eligible(self):
+        dg = _closure_evidence_from_manifest(
+            self.closure_manifest(), branch="mission/x", expected_head="c"*40, master_sha="f"*40,
+            master_parents=(CLOSURE_RESEARCH_BASE_SHA, "e"*40),
+        )
+        self.assertIsNone(dg)
+
+    def test_closure_manifest_stale_master_parent_is_denied(self):
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "stale"):
+            _closure_evidence_from_manifest(
+                self.closure_manifest(), branch="mission/x", expected_head=HEAD, master_sha="f"*40,
+                master_parents=("e"*40,),
+            )
+
+    def test_closure_manifest_archive_substitution_is_denied(self):
+        with self.assertRaisesRegex(RepositoryMaintenanceError, "archive"):
+            _closure_evidence_from_manifest(
+                self.closure_manifest(archive_sha="0"*64), branch="mission/x", expected_head=HEAD, master_sha="f"*40,
+                master_parents=(CLOSURE_RESEARCH_BASE_SHA,),
+            )
 
     def test_replay_denied(self):
         backend = FakeBackend()

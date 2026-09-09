@@ -28,7 +28,7 @@ from cyber_lion.enterprise.repository_maintenance_mediated_cleanup import (
 )
 from cyber_lion.enterprise.repository_maintenance_pdp_context import RepositoryMaintenancePDPContext, ResolvedRepositoryMaintenancePDPContext
 from cyber_lion.enterprise.repository_maintenance_sandbox import RepositoryMaintenanceSandbox, _build_operation
-from cyber_lion.contracts.repository_maintenance_sandbox import REPOSITORY, RepositoryMaintenancePolicy
+from cyber_lion.contracts.repository_maintenance_sandbox import REPOSITORY, MAINTENANCE_BRANCH_ALLOWLIST, RepositoryMaintenancePolicy
 from cyber_lion.enterprise.trusted_control_plane_providers import SQLiteTrustedControlPlaneStore
 
 Z = "0" * 64
@@ -124,6 +124,8 @@ class MemoryCanonicalBackend(CanonicalSlashSafeGitHubRepositoryMaintenanceBacken
         self._head = HEAD
         self.delete_calls = 0
         self.fake_204_without_delete = False
+        self.class_b = False
+        self.closure_digest = "d" * 64
 
     def master_sha(self):
         return self._master
@@ -143,6 +145,8 @@ class MemoryCanonicalBackend(CanonicalSlashSafeGitHubRepositoryMaintenanceBacken
 
     def compare_branch_to_master(self, branch):
         self._assert_branch(branch)
+        if self.class_b:
+            return {"status": "diverged", "ahead_by": 9, "behind_by": 2}
         return {"status": "ahead", "ahead_by": 1, "behind_by": 0}
 
     def open_prs_for_branch(self, branch):
@@ -164,6 +168,12 @@ class MemoryCanonicalBackend(CanonicalSlashSafeGitHubRepositoryMaintenanceBacken
             epistemic_class="OBSERVED",
             record_revision=1,
         ).validate()
+
+    def closure_evidence(self, branch, expected_head, master_sha):
+        self._assert_branch(branch)
+        if self.class_b and expected_head == self._head and master_sha == self._master:
+            return self.closure_digest
+        return None
 
     def _delete_exact_branch_ref_http(self, path):
         expected = f"/repos/{REPOSITORY}/git/refs/heads/{BRANCH}"
@@ -344,11 +354,12 @@ class R9D8UMediatedCleanupTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def setup_runtime(self, *, drift_on_second=False, fake_204=False):
+    def setup_runtime(self, *, drift_on_second=False, fake_204=False, class_b=False):
         backend = MemoryCanonicalBackend()
         backend.fake_204_without_delete = fake_204
+        backend.class_b = class_b
         repo_policy = RepositoryMaintenancePolicy(
-            "1.0.0", REPOSITORY, MISSION, "master", ("docs/", "mission/"), 1
+            "1.0.0", REPOSITORY, MISSION, "master", MAINTENANCE_BRANCH_ALLOWLIST, 1
         ).validate()
         sandbox = RepositoryMaintenanceSandbox(policy=repo_policy, backend=backend)
         operation, _ = _build_operation(sandbox=sandbox, branch=BRANCH, index=1, master_sha=MASTER)
@@ -381,6 +392,23 @@ class R9D8UMediatedCleanupTests(unittest.TestCase):
         self.assertIsNone(backend.branch_sha(BRANCH))
         self.assertEqual(backend.delete_calls, 1)
         self.assertEqual(result["effect"], CAPABILITY_REPOSITORY_REF_DELETE)
+
+    def test_full_canonical_chain_reconciles_exact_manifest_bound_class_b_effect(self):
+        runtime, backend, sandbox, operation, repo_policy = self.setup_runtime(class_b=True)
+        self.assertEqual(operation.classification, "B")
+        result = runtime.execute_one(
+            request=self.request,
+            bundle=self.bundle,
+            operation=operation,
+            policy=repo_policy,
+            sandbox=sandbox,
+            backend=backend,
+            expected_master_tree=TREE,
+            execution_id="test:b",
+        )
+        self.assertEqual(result["fence_state"], "RECONCILED")
+        self.assertIsNone(backend.branch_sha(BRANCH))
+        self.assertEqual(backend.delete_calls, 1)
 
     def test_legacy_pr_bound_authority_key_is_rejected_by_repository_ref_mediator(self):
         from cyber_lion.enterprise.authority_source import AuthorityLookupKey
