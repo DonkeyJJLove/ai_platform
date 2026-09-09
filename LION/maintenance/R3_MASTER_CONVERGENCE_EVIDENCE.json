@@ -1,0 +1,49 @@
+{
+  "schema_version": "lion.master-convergence-evidence/v1",
+  "process": "lion:v1.4:r3-autonomous-master-convergence",
+  "repository": "DonkeyJJLove/ai_platform",
+  "observed_master": "70929bb895726c0b4a552295e595e373191b0d2b",
+  "observed_master_tree": "0c463f98122145a1a39287240136d1a824a8038c",
+  "observed_master_parents": [
+    "c4725f5b4c68b3ebc569644417ac262fc5585f8a",
+    "14acb7e695717c565b560e7e566ee0429d285906"
+  ],
+  "observed_open_pr_count": 0,
+  "observed_branch_count_before_r3_candidate": 43,
+  "observed_non_master_branch_count_before_r3_candidate": 42,
+  "historical_closure_manifest": "LION/maintenance/branch-closure-manifest-v1.json",
+  "historical_closure_manifest_count": 47,
+  "historical_archive_bundle_sha256": "2c77fb2da36cfda82e97b9a5852172ffae783a1e299821d25dc678b7c2d7dd5e",
+  "historical_manifest_entries_absent_from_live_refs": [
+    "__invalid_never_create",
+    "cyber-lion/r2e4-r10-terminal-decision-evidence-repair-r13",
+    "cyber-lion/r2e4-r7-test-harness-repair-r10",
+    "reconcile/lion-v1.4-r22c-canonical-continuation",
+    "verification/r2e1-ci-standalone-2f04bd77"
+  ],
+  "live_refs_covered_by_historical_manifest": 42,
+  "frontier_classification": {
+    "material_delta_not_in_master": 0,
+    "active_or_open_pr": 0,
+    "unknown": 0,
+    "classification_basis": "fresh live ref identities plus zero open PRs plus exact historical closed-world disposition/archival evidence; every destructive effect requires fresh per-ref revalidation"
+  },
+  "truth_defects": [
+    "B0GenerativityProtocol remains represented as a stale PR#251 candidate despite merged PR#276 and post-merge PR#277 lineage",
+    "LION/architecture/v1_4/current_state.json still describes the R23/PR303 frontier after PR303, PR305, PR306 and PR307 integration",
+    "LION/status.json is a historical E003 self-declared CURRENT projection and is not v1.4 live truth"
+  ],
+  "closure_currentness": {
+    "historical_policy_anchor": "ddcec0393f75ffb34d54d954bad2a1d15eb38466",
+    "historical_policy_anchor_is_direct_parent_of_observed_master": false,
+    "state": "STALE_AFTER_PR307",
+    "required_r3_pre_merge_anchor": "70929bb895726c0b4a552295e595e373191b0d2b"
+  },
+  "r3_candidate_branch": "integration/lion-v1.4-r3-master-convergence-r1",
+  "authority_effect": "NONE_BY_THIS_EVIDENCE",
+  "runtime_effect": "NONE",
+  "production_effect": "NONE",
+  "merge_authority": "SEPARATE_EXACT_CONTEXT_REQUIRED",
+  "repository_ref_delete_authority": "SEPARATE_EXACT_CONTEXT_REQUIRED",
+  "global_complete_mediation": "UNKNOWN"
+}
