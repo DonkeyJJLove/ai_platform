@@ -1,0 +1,57 @@
+(* LPCL canonical RUN/PHASE authoring surface v1.1 candidate.
+   This syntax is non-effectful and must compile to CanonicalProcessIR plus
+   FleetMissionIR before any process semantics are consumed. *)
+
+document        = { blank | comment }, block, { block | blank | comment }, "END", newline ;
+block           = field, "=", [ inline-value ], newline, { value-line } ;
+field           = upper, { upper | digit | "_" } ;
+inline-value    = value-char, { value-char } ;
+value-line      = ? non-empty UTF-8 line that is not a field assignment, comment or END ?, newline ;
+comment         = [ whitespace ], "#", { ? any UTF-8 character except newline ? }, newline ;
+blank           = [ whitespace ], newline ;
+upper           = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+                | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;
+digit           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+whitespace      = " " | "\t" ;
+value-char      = ? any UTF-8 character except newline ? ;
+newline         = "\n" ;
+
+(* Normative semantic requirements are intentionally outside lexical EBNF.
+
+   Required global controls:
+   RUN
+   PROCESS_LANGUAGE=LPCL
+   LPCL_VERSION=1.1
+   MISSION_CLASS
+   MISSION_ID
+   PRIMARY_GOAL
+   SCOPE_DOMAINS
+   SCOPE_RESOURCES
+   WIDENING_ALLOWED=FALSE
+
+   MISSION_CLASS is exactly one of:
+   LOGICAL_FLEET_MISSION
+   LOCAL_FLEET_MISSION
+   HYBRID_FLEET_MISSION
+
+   Numbered phases are contiguous PHASE_0..PHASE_N.
+   Each phase requires:
+   TRANSITION_CLASS
+   OPERATOR
+   ROLE
+   EVIDENCE_REQUIREMENTS
+   CURRENTNESS_REQUIREMENTS
+   AUTHORITY_REQUIREMENTS
+   EXPECTED_POSTCONDITIONS
+   REPLAY_POLICY
+   IDEMPOTENCY_CLASS
+   RETRY_MAX_ATTEMPTS
+   RETRY_ON_EXHAUSTED
+
+   ACTION_REQUIRED must compile to EMIT_ACTION_INTENT and route to a LOCAL
+   role. LOGICAL-only missions therefore cannot contain ACTION_REQUIRED.
+
+   Descriptive blocks such as PURPOSE/ACTIONS/VERIFY/RECORD are annotations.
+   They may enrich human meaning but never override canonical transition,
+   currentness, authority, replay or routing controls.
+*)
