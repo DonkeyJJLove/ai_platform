@@ -1,18 +1,20 @@
-# LPCL independent review checklist
+# LPCL — checklista niezależnego review
 
-A reviewer should reject the candidate if any answer below is "yes":
+Reviewer powinien odrzucić kandydata, jeśli odpowiedź na którekolwiek z poniższych pytań brzmi „tak”:
 
-- Can LPCL grant or mint authority?
-- Can LPCL evaluate/replace the canonical PDP?
-- Can LPCL construct RuntimeAdmission?
-- Can LPCL select or execute an EffectProvider?
-- Can a historical RUN reach execution without canonicalization?
-- Can `UNKNOWN` be coerced into `PASS`?
-- Can `PASS` imply `CURRENT`, `AUTHORIZED`, `OBSERVED` or `RECONCILED`?
-- Can `CONTINUE` skip dependencies, ignore currentness or widen scope?
-- Can non-idempotent retry occur without reconciliation-first semantics?
-- Can a consequential `PASS` omit admission/effect/observation/reconciliation/currentness evidence?
-- Does LPCL require a 16th architecture layer merely to exist?
-- Does it replace EvolutionaryEpochEngine rather than coexist with it?
+- Czy LPCL może grantować lub mintować authority?
+- Czy LPCL może oceniać lub zastąpić canonical PDP?
+- Czy LPCL może konstruować `RuntimeAdmission`?
+- Czy LPCL może wybierać lub wykonywać `EffectProvider`?
+- Czy historyczny `RUN` może dotrzeć do wykonania bez canonicalization?
+- Czy `UNKNOWN` może zostać wymuszone jako `PASS`?
+- Czy `PASS` może implikować `CURRENT`, `AUTHORIZED`, `OBSERVED` albo `RECONCILED`?
+- Czy `CONTINUE` może pomijać dependencies, ignorować currentness albo rozszerzać scope?
+- Czy non-idempotent retry może nastąpić bez reconciliation-first semantics?
+- Czy consequential `PASS` może pominąć evidence dla admission/effect/observation/reconciliation/currentness?
+- Czy samo istnienie LPCL wymaga 16. warstwy architektury?
+- Czy LPCL zastępuje `EvolutionaryEpochEngine`, zamiast współistnieć z nim?
 
-The candidate is suitable for integration review only when all answers are "no" and exact-head CI is successful.
+Kandydat nadaje się do integration review dopiero wtedy, gdy wszystkie odpowiedzi brzmią „nie” i exact-head CI jest zakończone sukcesem.
+
+Ta checklista nie stanowi sama w sobie integration authority.

@@ -1,23 +1,23 @@
-# LPCL semantic negative rules
+# LPCL — semantyczne reguły negatywne
 
-This document is the human-readable companion to `cyber_lion/process_language/negative_corpus.json`.
+Ten dokument jest human-readable companion dla `cyber_lion/process_language/negative_corpus.json`.
 
-The validator must fail closed on these classes:
+Validator musi działać fail-closed dla następujących klas:
 
 - epistemic coercion (`UNKNOWN -> PASS`, `PASS -> CURRENT`);
-- currentness without an evidence-bound basis;
-- authority requirement interpreted as a grant or any process-level authority minting;
-- raw effect semantics, raw shell, PDP, RuntimeAdmission or EffectProvider selection inside ProcessIR;
-- consequential closure without independent observation and reconciliation;
-- direct execution of historical RUN material;
-- drift continuation without reacquisition;
-- unbounded continuation/retry or cycles without a bound/progress condition;
-- parallel transitions with unresolved scope/authority/replay/reconciliation conflicts;
+- currentness bez evidence-bound basis;
+- interpretowanie wymagania authority jako grant albo jakiekolwiek process-level authority minting;
+- raw effect semantics, raw shell, PDP, `RuntimeAdmission` albo wybór `EffectProvider` wewnątrz `ProcessIR`;
+- consequential closure bez niezależnej observation i reconciliation;
+- bezpośrednie wykonanie historycznego materiału `RUN`;
+- kontynuacja po drift bez reacquisition;
+- unbounded continuation/retry albo cycles bez bound/progress condition;
+- równoległe transitions z nierozwiązanymi konfliktami scope/authority/replay/reconciliation;
 - retry scope widening;
-- non-idempotent partial-effect retry without reconciliation-first semantics;
+- non-idempotent partial-effect retry bez reconciliation-first semantics;
 - dependency bypass;
-- ActionSpec execution fields leaking upward into ProcessIR;
-- reuse of the existing `process_profile` namespace for LPCL semantic identity;
-- treating historical PHASE order as authoritative when it conflicts with reconstructed dependencies.
+- przenikanie pól wykonawczych `ActionSpec` w górę do `ProcessIR`;
+- ponowne użycie istniejącego namespace `process_profile` jako semantic identity LPCL;
+- traktowanie historycznej kolejności PHASE jako autorytatywnej, gdy jest sprzeczna z odtworzonymi dependencies.
 
-These are architecture invariants, not merely parser errors.
+Są to inwarianty architektury, a nie wyłącznie parser errors.

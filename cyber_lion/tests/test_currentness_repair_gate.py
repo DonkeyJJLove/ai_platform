@@ -11,15 +11,16 @@ from cyber_lion.tests import test_truth_plane_reconciliation as gate
 
 class CurrentnessRepairGateTests(unittest.TestCase):
     def run_repair(self, *, ancestry=0, carriers=None, registry=None,
-                   declared=None, invalid_remote=False):
+                   declared=None, invalid_remote=False, invalid_records=False):
         case = gate.TruthPlaneReconciliationTests()
         local = case.state()
         local["baseline"]["subject_digest"] = declared or "b" * 64
         live = copy.deepcopy(local)
         live["baseline"]["subject_digest"] = "a" * 64
-        live["records"] = []
         if invalid_remote:
             live["baseline"]["currentness_mode"] = "INVALID"
+        if invalid_records:
+            live["records"] = []
 
         def git_run(args, **kwargs):
             if args[1] == "show":
@@ -57,8 +58,9 @@ class CurrentnessRepairGateTests(unittest.TestCase):
             ({"declared": "d" * 64,
               "registry": "truth-subject-v1@" + "d" * 64}, "CHECKOUT_SUBJECT_DIGEST_DRIFT"),
             ({"invalid_remote": True}, "LIVE_MASTER_FAILURE_IS_NOT_CURRENTNESS_DRIFT"),
+            ({"invalid_records": True}, "records must be a non-empty array"),
         )
         for options, error in cases:
             with self.subTest(options=options):
-                with self.assertRaisesRegex(AssertionError, error):
+                with self.assertRaisesRegex((AssertionError, gate.TruthProjectionError), error):
                     self.run_repair(**options)

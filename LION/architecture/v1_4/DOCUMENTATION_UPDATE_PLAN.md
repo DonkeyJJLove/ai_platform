@@ -1,30 +1,187 @@
-# LION v1.4 R22H documentation and truth-closure plan
+# LION v1.4 — plan aktualizacji dokumentacji R128
 
-R22H starts from live implementation, exact Git identity, exact production-source selection, exact effect inventory and a read-only federation sweep. Documentation is noncarrier work and therefore completes **before** truth carriers are rebound. It does not infer deployment, authority, effect or generality from code presence.
+**UPDATE_EPOCH_ID:** `LION-DOC-R128-2026-09-10-R1`  
+**Bazowy `master`:** `5e40338511fe2a5f0a891c823b03f9855d6ad1e8`  
+**Bazowy TREE:** `306b8cf245299517278ab0959a7aca79f66e5343`  
+**Gałąź kandydata:** `docs/lion-v1.4-r128-polish-homeostasis-r1`  
+**Authority effect:** `NONE`  
+**Production authority:** `NONE`
 
-## Dependency order
+Poprzednia treść tego pliku opisywała historyczny plan R22H. Jest zachowana w Git history, ale nie może być używana jako bieżący plan po późniejszych integracjach R23/R24/R2/R3 i VKT-R3. Ta rewizja superseduje wyłącznie bieżącą funkcję planistyczną tego pliku; nie przepisuje historycznych commitów, raportów ani evidence.
 
-1. Reacquire default/candidate HEAD/TREE, PR synthetic merge and exact candidate CI.
-2. Reconstruct the production selector from code and prove the source delta literally.
-3. Regenerate effect inventory, scan/inventory/taxonomy digests and classify every failure.
-4. Repair only stale noncarrier expectations supported by that literal proof.
-5. Reacquire all federation members from the live registry and record exact HEAD/TREE, manifest presence, PR count and material drift.
-6. Reconcile `current_state`, federation vector, capability/contract/material-object/event-state catalogs, semantic owners, history and roadmap without inventing new source semantics.
-7. Run noncarrier verification. A remaining stale-truth-carrier failure is classified, not masked.
-8. Freeze the noncarrier tree after all authorized noncarrier mutations and their verification are complete.
-9. Compute the truth-subject digest by enumerating Git leaves and excluding exactly the two carrier paths.
-10. Update only `LION/architecture/canonical-state-v1-3-candidate.json` and `cyber_lion/registry/repositories.json`, in that order, as the final repository-file commits.
-11. After the second carrier commit perform no repository-file mutation. Reacquire synthetic-merge tree equality and run final exact-head CI/census.
-12. Update draft PR #297 without marking ready or merging, then materialize an unpublished RAG candidate.
+## Cel
 
-## R22H non-effect rules
+Celem epoki jest doprowadzenie human-facing documentation do stanu, w którym:
 
-Documentation and verification do not mutate the default branch, host, runtime, production state, secrets or authority. The new Action runtime binder is itself inert; the ASTRA model-plane adapter is compatibility-only; B0 is bounded evidence; the general-generativity counterexample is negative evidence. No documentation label can convert any of those into deployment or authority.
+```text
+CURRENT_SYSTEM_MODEL
+≈
+CURRENT_DOCUMENTATION_MODEL
+```
 
-## Source and census truth
+w granicach jawnie zapisanej niepewności. Etap koncentruje się na uporządkowaniu dokumentacji, polskim języku podstawowym, currentness, semantic ownership, history/provenance oraz przygotowaniu repozytorium do kolejnego etapu ewolucji. Nie jest to etap rozszerzania runtime authority.
 
-The production selector includes Python under `cyber_lion/` except `cyber_lion/tests/**`, plus `.github/workflows/*.yml` and `*.yaml`. R22H candidate evidence observes 260 production sources versus 256 on master and no removals. The exact pre-documentation full symbol census parsed 501/501 committed Python files with zero parse failures and 8586 symbols. Its native docstring metrics are 4.736530% for public symbols and 1.906578% for private-material symbols; no synthetic 100% or unsupported aggregate coverage claim is permitted. The exact census digest is `06eec13de9e9a768c35ee1889a22fd943b533b83469237baf3790e751a29f913`. A final census must be reacquired on the exact carrier-final candidate HEAD.
+## Flota logiczna
 
-## Human authority boundaries
+Do audytu używana jest flota 128 logicznych dronów zdefiniowana w `documentation_fleet_r128.json`:
 
-`R22E-HAB-BRANCH-MAINTENANCE-001`, real child activation, mark-ready, merge, RAG publication, runtime deployment and production deployment remain outside autonomous R22H authority.
+```text
+8 sektorów * 16 dronów = 128 logicznych dronów
+```
+
+Sektory:
+
+1. `CURRENTNESS_BASELINES`
+2. `LANGUAGE_TRANSLATION`
+3. `NAVIGATION_STRUCTURE`
+4. `ARCHITECTURE_SEMANTICS`
+5. `AUTHORITY_SECURITY`
+6. `RUNTIME_VKT`
+7. `HISTORY_PROVENANCE`
+8. `VERIFICATION_RECONCILIATION`
+
+Flota logiczna nie dowodzi 128 jednoczesnych procesów, Podów, modeli ani executorów. Worker count nie zwiększa authority.
+
+## Kolejność zależności
+
+```text
+1. REACQUIRE exact master HEAD/TREE
+2. classify documentation by owner / artifact class / currentness
+3. identify human-facing non-Polish prose
+4. translate prose under DOCUMENTATION_LANGUAGE_POLICY
+5. repair navigation and stale currentness wording
+6. preserve exact historical evidence and supersession lineage
+7. reconcile architecture / authority / runtime statements
+8. validate Markdown, JSON references and relative links
+9. compare candidate against frozen base
+10. read back exact candidate HEAD/TREE
+11. run or observe applicable repository CI
+12. classify machine projections requiring regeneration
+13. do not promote candidate to current merely because prose is clean
+14. reconcile and produce next documentation/runtime frontier
+```
+
+## Polityka translacji
+
+Human-facing prose jest tłumaczony na polski. Następujące elementy pozostają literalne:
+
+```text
+contract/class/function names
+JSON/YAML/schema keys
+LPCL/LCMS tokens
+state identifiers
+paths
+commands
+branch names
+commit/tree/blob SHA
+hashes/digests
+runtime object identifiers
+exact historical evidence values
+```
+
+Nie tłumaczy się w miejscu byte-preserved source payloadów ani materiałów, których hash jest elementem provenance. Dla nich tworzy się polską warstwę objaśniającą.
+
+## Currentness
+
+Każdy dynamiczny dokument musi jawnie rozróżniać:
+
+```text
+LIVE_CURRENT
+CANDIDATE_BASELINE
+HISTORICAL_EVIDENCE
+TARGET
+UNKNOWN
+STALE
+```
+
+Obowiązuje:
+
+```text
+NO_VALID_CURRENTNESS_BASIS -> NOT_CURRENT
+MATERIAL_BASELINE_DRIFT    -> CURRENT_TO_STALE
+HISTORY_CHANGED_BY_REALITY -> SUPERSEDE_DO_NOT_REWRITE
+```
+
+Poprzedni v1.4 documentation baseline `67a4f8243aa6805e47035e572bd458f73fd0b358` / `4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5` jest historyczny względem bazowego `master` tej epoki `5e40338511fe2a5f0a891c823b03f9855d6ad1e8` / `306b8cf245299517278ab0959a7aca79f66e5343`.
+
+## Co aktualizujemy w tej fali
+
+Pierwsza fala obejmuje bieżące human-facing entry points i dokumentację VKT-R3:
+
+```text
+LION/README.md
+LION/architecture/v1_4/README.md
+LION/architecture/v1_4/DOCUMENTATION_UPDATE_PLAN.md
+LION/architecture/v1_4/DOCUMENTATION_LANGUAGE_POLICY.md
+LION/architecture/v1_4/documentation_fleet_r128.json
+LION/architecture/v1_4/VKT_R3_FINAL_REPORT.md
+LION/architecture/v1_4/VKT_R3_MISSION_CONTROL.md
+LION/architecture/v1_4/VKT_R3_RUNTIME_VALIDATION.md
+LION/architecture/v1_4/VKT_R3_RUNTIME_IMAGE.md
+AI_NATIVE_ROADMAP.md
+```
+
+Dokumenty już polskie nie są przepisywane bez potrzeby. Machine-readable projections, truth carriers i schematy nie są modyfikowane wyłącznie po to, aby wyglądały stylistycznie jednolicie.
+
+## Semantyczne bramki jakości
+
+Nowa dokumentacja ma zostać sfalsyfikowana pod kątem:
+
+```text
+FEATURE_DOCUMENTED_PRESENT_BUT_ABSENT
+FEATURE_PRESENT_BUT_DOCUMENTED_ABSENT
+STALE_BASELINE_PRESENTED_AS_CURRENT
+CANDIDATE_PRESENTED_AS_INTEGRATED
+INTEGRATED_PRESENTED_AS_DEPLOYED
+TEST_ONLY_PRESENTED_AS_PRODUCTION
+LOGICAL_DRONE_COUNT_PRESENTED_AS_REAL_RUNTIME_COUNT
+AUTHORITY_INFLATION_BY_DOCUMENTATION
+BROKEN_HISTORY_OR_PROVENANCE
+BROKEN_LINK_OR_OWNER_ROUTING
+RUNTIME_CLAIM_WITHOUT_RUNTIME_EVIDENCE
+```
+
+## VKT-R3
+
+VKT-R3 ma dwa odrębne rodzaje prawdy:
+
+```text
+HISTORICAL_TEST_EVIDENCE
+!=
+CURRENT_ACTIVE_RUNTIME
+```
+
+Historyczny test 3 × 128 real Kubernetes Pods pozostaje dowodem określonego przebiegu `TEST_ONLY`. Późniejsze PR #312 i #313 związały lokalny Mission Control i endpoint locator z canonical `master`, ale sama obecność implementacji nie dowodzi, że panel lub swarm jest aktualnie aktywny. Active runtime trzeba obserwować na właściwym hoście.
+
+## Authority
+
+Dokumentacja nie może:
+
+```text
+mint authority
+expand authority
+create runtime admission
+select an EffectProvider
+execute an effect
+turn CI PASS into production readiness
+turn translation into semantic integration
+```
+
+Gałąź dokumentacyjna jest kandydatem. Merge do `master`, runtime deployment, host mutation oraz production deployment pozostają oddzielnymi efektami.
+
+## Kryterium wyjścia tej epoki
+
+Etap może być nazwany `RECONCILED` dopiero wtedy, gdy:
+
+```text
+translated human-facing docs are internally consistent
+AND stale currentness claims are removed or explicitly classified
+AND exact historical evidence values remain intact
+AND navigation resolves to existing owners/files
+AND no documentation statement widens authority
+AND candidate Git identity is read back exactly
+AND applicable validation is terminal
+AND remaining machine-projection drift is explicitly listed
+```
+
+Sukces pojedynczego commita lub tłumaczenia nie jest closure.
