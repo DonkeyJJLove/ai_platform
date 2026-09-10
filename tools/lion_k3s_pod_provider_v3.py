@@ -27,6 +27,11 @@ def transformed_manifest_v3():
         if doc.get('kind') in {'Deployment','StatefulSet'}:
             meta=doc.setdefault('spec',{}).setdefault('template',{}).setdefault('metadata',{})
             meta.setdefault('annotations',{})['vkt-runtime-sha256']=runtime_sha
+    # Router serves concurrent heartbeat/task traffic from 384 drones.
+    for doc in payload.get('documents',[]):
+        if doc.get('kind')=='Deployment' and (doc.get('metadata') or {}).get('name')=='vkt-fleet-router':
+            c=doc['spec']['template']['spec']['containers'][0]
+            c['resources']={'requests':{'cpu':'50m','memory':'64Mi'},'limits':{'cpu':'1000m','memory':'512Mi'}}
     return payload
 
 v2.transformed_manifest=transformed_manifest_v3
