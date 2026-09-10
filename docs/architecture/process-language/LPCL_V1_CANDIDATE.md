@@ -1,4 +1,4 @@
-# LPCL v1 — LION Process Contract Language candidate
+# LPCL v1 — kandydat LION Process Contract Language
 
 ```text
 STATUS=CANDIDATE_NOT_INTEGRATED
@@ -8,31 +8,23 @@ RESEARCH_BASE=67a4f8243aa6805e47035e572bd458f73fd0b358
 RESEARCH_BASE_TREE=4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5
 ```
 
-LPCL makes the process *above* the existing LION Action plane explicit. It is a
-non-effectful process-contract language and canonical IR, not a second policy,
-authority, runtime-admission or execution plane.
+LPCL jawnie opisuje proces *nad* istniejącym LION Action plane. Jest non-effectful process-contract language oraz canonical IR, a nie drugim policy, authority, runtime-admission ani execution plane.
 
-## Architecture decision
+Powyższy `STATUS` i `RESEARCH_BASE` są historycznym identity kandydata. Nie należy ich przepisywać na bieżący `master`; późniejsza integracja musi być wykazywana przez osobne exact Git/code/test evidence.
 
-No new top-level architecture layer is required for v1. LPCL is a first-class
-contract family spanning the existing `EVOLUTIONARY_EPOCH` and
-`GOVERNED_SELF_IMPLEMENTATION` concerns.
+## Decyzja architektoniczna
 
-The federation roles remain split:
+Dla v1 nie jest wymagana nowa top-level architecture layer. LPCL jest first-class contract family przecinającą istniejące concerns `EVOLUTIONARY_EPOCH` i `GOVERNED_SELF_IMPLEMENTATION`.
 
-- `DonkeyJJLove/chunk-chunk` is the formal/research semantic reference for
-  process-state, process-transition, transition microcode and trajectory
-  diagnostics. This role grants no runtime authority.
-- `DonkeyJJLove/ai_platform` owns the canonical LION integration contract:
-  `ProcessContract`/`CanonicalProcessIR`, fail-closed validation, transition
-  selection, the Process→Action boundary and the reconciliation feedback
-  boundary.
-- `DonkeyJJLove/writeups` remains research/history evidence.
+Role federacji pozostają rozdzielone:
 
-This avoids turning both repositories into silent owners of the same executable
-contract.
+- `DonkeyJJLove/chunk-chunk` jest formalnym/badawczym semantic reference dla process-state, process-transition, transition microcode i trajectory diagnostics. Ta rola nie nadaje runtime authority.
+- `DonkeyJJLove/ai_platform` posiada canonical LION integration contract: `ProcessContract`/`CanonicalProcessIR`, fail-closed validation, transition selection, granicę Process→Action i reconciliation feedback boundary.
+- `DonkeyJJLove/writeups` pozostaje research/history evidence.
 
-## Boundary
+Dzięki temu dwa repozytoria nie stają się po cichu współwłaścicielami tego samego executable contract.
+
+## Granica
 
 ```text
 Goal / Mission / World State
@@ -74,18 +66,13 @@ Legal next transition
               ProcessState
 ```
 
-The process layer does not encode executable paths, argv, shell semantics,
-network policy, filesystem allowlists, PDP decisions, runtime admission objects
-or effect-provider selection.
+Process layer nie koduje executable paths, argv, shell semantics, network policy, filesystem allowlists, decyzji PDP, obiektów runtime admission ani wyboru effect provider.
 
-## Core semantic invariant
+## Główny inwariant semantyczny
 
-A process transition is a guarded transition contract. It binds source state,
-trigger, dependencies, guards, evidence requirements, currentness requirements,
-authority *requirements*, a typed non-effectful process operator, expected
-postconditions, outcome mapping and retry/replay/idempotency policy.
+Process transition jest guarded transition contract. Wiąże source state, trigger, dependencies, guards, evidence requirements, currentness requirements, *wymagania* authority, typed non-effectful process operator, oczekiwane postconditions, outcome mapping oraz retry/replay/idempotency policy.
 
-State dimensions are not implicitly coercible:
+Wymiary stanu nie są implicit coercible:
 
 ```text
 PASS != CURRENT
@@ -96,11 +83,11 @@ PASS != OBSERVED
 PASS != RECONCILED
 ```
 
-`UNKNOWN` remains a first-class result.
+`UNKNOWN` pozostaje first-class result.
 
 ## CONTINUE
 
-`CONTINUE` is selection, not execution.
+`CONTINUE` jest selection, a nie execution.
 
 ```text
 eligible =
@@ -117,11 +104,9 @@ first legal unfinished transition
 under the declared SchedulingPolicy
 ```
 
-An authority-context reference can make a transition eligible for handoff to the
-Action plane, but it is not proof of a valid downstream grant. The Action/PDP/
-RuntimeAdmission chain revalidates consequential authority independently.
+Authority-context reference może uczynić transition eligible do handoffu do Action plane, ale nie jest dowodem poprawnego downstream grant. Łańcuch Action/PDP/RuntimeAdmission niezależnie rewaliduje consequential authority.
 
-## Canonical representation
+## Reprezentacja kanoniczna
 
 ```text
 LPCL text
@@ -131,29 +116,18 @@ ProcessAST
 CanonicalProcessIR
 ```
 
-v1 uses strict LPCL statements carrying RFC8259 JSON values. The parser converts
-them into the canonical Process IR. Duplicate statements, duplicate JSON keys,
-unknown fields and noncanonical ProcessIR semantics fail closed.
+v1 używa strict LPCL statements zawierających wartości RFC8259 JSON. Parser konwertuje je do canonical Process IR. Duplicate statements, duplicate JSON keys, unknown fields i noncanonical `ProcessIR` semantics działają fail-closed.
 
-The ProcessIR digest uses its own `LION/PROCESS-IR/1` domain and never reuses the
-Action IR digest domain.
+Digest `ProcessIR` używa własnej domeny `LION/PROCESS-IR/1` i nigdy nie używa ponownie domeny digest Action IR.
 
-## Historical RUN
+## Historyczny RUN
 
-Historical `RUN` material remains evidence. `LegacyRunAdapter` only extracts a
-candidate semantic representation. Procedural `MODE=...THEN...` or numbered
-PHASE semantics are classified `AMBIGUOUS` until dependencies are reconstructed.
-The adapter has no execution path.
+Historyczny materiał `RUN` pozostaje evidence. `LegacyRunAdapter` jedynie ekstrahuje candidate semantic representation. Proceduralne `MODE=...THEN...` albo numerowane PHASE semantics są klasyfikowane jako `AMBIGUOUS`, dopóki dependencies nie zostaną odtworzone. Adapter nie ma execution path.
 
-## Existing domain state machines
+## Istniejące domenowe state machines
 
-LPCL does not replace `EvolutionaryEpochEngine`, MissionSpec, SwarmSpec, builder
-lifecycle or runtime admission. Domain state machines may later consume generic
-ProcessIR semantics where equivalence is demonstrated; otherwise they remain
-specialized state machines.
+LPCL nie zastępuje `EvolutionaryEpochEngine`, `MissionSpec`, `SwarmSpec`, builder lifecycle ani runtime admission. Domenowe state machines mogą później konsumować generic `ProcessIR` semantics tam, gdzie equivalence została udowodniona; w przeciwnym razie pozostają specialized state machines.
 
 ## Non-goals
 
-LPCL cannot mint authority, evaluate a PDP, construct RuntimeAdmission, select an
-EffectProvider, execute raw shell, merge/deploy directly, self-certify effects or
-treat a receipt as reconciled closure.
+LPCL nie może mintować authority, oceniać PDP, konstruować `RuntimeAdmission`, wybierać `EffectProvider`, wykonywać raw shell, wykonywać bezpośrednio merge/deploy, self-certify effects ani traktować receipt jako reconciled closure.

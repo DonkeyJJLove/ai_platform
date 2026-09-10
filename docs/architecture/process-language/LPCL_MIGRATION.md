@@ -1,8 +1,8 @@
-# LPCL migration candidate
+# LPCL — kandydat migracji
 
-LPCL v1 is introduced as an additive candidate. Existing MissionSpec, EvolutionaryEpoch, ActionSpec, ActionProposal, PDP, RuntimeAdmission and effect/reconciliation contracts remain canonical in their current domains.
+LPCL v1 został wprowadzony jako addytywny candidate. Istniejące `MissionSpec`, `EvolutionaryEpoch`, `ActionSpec`, `ActionProposal`, PDP, `RuntimeAdmission` oraz kontrakty effect/reconciliation pozostają kanoniczne w swoich domenach.
 
-## Historical RUN
+## Historyczny RUN
 
 ```text
 historical RUN text
@@ -12,19 +12,23 @@ historical RUN text
 → canonical ProcessIR validation
 ```
 
-Classifications:
+Klasyfikacje:
 
 - `LOSSLESS_TRANSLATION`
 - `LOSSY_BUT_SAFE`
 - `AMBIGUOUS`
 - `UNREPRESENTABLE`
 
-The current adapter intentionally classifies procedural `MODE=...THEN...`, numbered PHASE semantics or ambiguous authority fields as `AMBIGUOUS`. It never executes historical text.
+Bieżący adapter tej lineage celowo klasyfikuje proceduralne `MODE=...THEN...`, numerowane semantyki PHASE oraz niejednoznaczne pola authority jako `AMBIGUOUS`. Nigdy nie wykonuje historycznego tekstu.
 
-## Federation
+## Federacja
 
-The current central repository registry is truth-subject-derived. This candidate records the split ownership explicitly but does not manually rewrite that generated currentness carrier. Regeneration/reconciliation of that carrier is downstream of successful LPCL contract CI.
+Centralny repository registry jest truth-subject-derived. Kandydat zapisuje split ownership jawnie, ale nie przepisuje ręcznie generowanego currentness carrier. Regeneracja/reconciliation tego carrier jest krokiem późniejszym względem poprawnego LPCL contract CI.
 
-## Existing state machines
+## Istniejące state machines
 
-No bulk migration is authorized. `EvolutionaryEpochEngine` and other domain state machines remain as-is until equivalence with generic TransitionSpec semantics is individually proven.
+Nie ma zgody na bulk migration. `EvolutionaryEpochEngine` oraz inne domenowe state machines pozostają bez zmian, dopóki equivalence z generic `TransitionSpec` semantics nie zostanie indywidualnie udowodniona.
+
+## Granica translacji
+
+`LOSSLESS_TRANSLATION` jest klasyfikacją semantycznej migracji formatu procesu, a nie instrukcją językowej translacji nazw tokenów LPCL. Tokeny, identyfikatory i wire semantics pozostają literalne niezależnie od tego, że prose dokumentacji jest po polsku.
