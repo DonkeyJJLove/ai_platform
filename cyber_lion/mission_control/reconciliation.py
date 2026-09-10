@@ -11,6 +11,7 @@ HISTORICAL_VKT_SUMMARY = Path('/var/lib/sentinelx/uploads/vkt-r3-lpcl-v2-final/f
 HISTORICAL_VKT_VALIDATOR = Path('/var/lib/sentinelx/uploads/vkt-r3-validation/lpcl-v2-supervised-600s.json')
 HISTORICAL_OSS_SUMMARY = Path('/var/lib/sentinelx/uploads/oss-repository-tests/itsdangerous/final-summary.json')
 HISTORICAL_OSS_EVIDENCE = Path('/var/lib/sentinelx/uploads/oss-repository-tests/itsdangerous/final-evidence.json')
+TERMINAL_LIFECYCLE = {'CLEANING', 'CLEANED'}
 
 
 class Reconciler:
@@ -19,6 +20,23 @@ class Reconciler:
         self.registry = registry
         self.errors: dict[str, str] = {}
 
+    def _preserve_terminal_lifecycle(self, run: dict[str, Any]) -> dict[str, Any]:
+        existing = self.store.get_run(str(run.get('run_id') or ''))
+        if not existing or existing.get('status') not in TERMINAL_LIFECYCLE:
+            return run
+        # An adapter poll may have started before teardown and return after the
+        # lifecycle event has already committed CLEANING/CLEANED. Such a late
+        # runtime snapshot may enrich evidence but may not move lifecycle time
+        # backwards. A later RUN_STARTED event is handled by the event stream,
+        # not by this adapter guard, so a new incarnation remains possible.
+        guarded = dict(run)
+        guarded['status'] = existing['status']
+        guarded['phase'] = existing.get('phase') or guarded.get('phase')
+        guarded['cleanup'] = existing.get('cleanup') or {}
+        if existing.get('verification_status') == 'VERIFIED':
+            guarded['verification_status'] = 'VERIFIED'
+        return guarded
+
     def poll_once(self) -> list[dict[str, Any]]:
         observed: list[dict[str, Any]] = []
         for adapter in self.registry.all():
@@ -26,9 +44,11 @@ class Reconciler:
                 runs = adapter.poll()
                 self.errors.pop(adapter.adapter_id, None)
                 for run in runs:
+                    run = self._preserve_terminal_lifecycle(run)
                     normalized = self.store.upsert_run(run)
                     for name, value in (normalized.get('metrics') or {}).items():
-                        self.store.add_metric(normalized['run_id'], name, value)
+                        if value is not None:
+                            self.store.add_metric(normalized['run_id'], name, value)
                     for name, value in (normalized.get('participants') or {}).items():
                         self.store.add_participant(normalized['run_id'], name, value)
                     for artifact in normalized.get('artifacts') or []:
