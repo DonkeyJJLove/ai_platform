@@ -15,9 +15,11 @@ class AdapterTests(unittest.TestCase):
 
     def test_vkt_is_adapter_specific(self):
         a=VktR3Adapter('a'*40,'b'*40)
-        a._read=lambda:{'materialized':384,'ready':384,'unique_uid_count':384,'restart_count_total':0,'vendor_requests':0,'pod_uid_set_sha256':'c'*64,'router_state':{'mission':{'completed':True,'phase':'COMPLETE'},'fresh_count':384,'cases_seen':36,'cases_proven':36,'messages_total':768,'ack_rate':1.0}}
+        a._read=lambda:{'materialized':384,'ready':384,'unique_uid_count':384,'restart_count_total':0,'vendor_requests':0,'pod_uid_set_sha256':'c'*64,'by_fleet':{'TIGER':128,'SPECTRA':128,'LION':128},'router_state':{'mission':{'completed':True,'phase':'COMPLETE'},'fresh_count':384,'fresh_by_fleet':{'TIGER':128,'SPECTRA':128,'LION':128},'cases_seen':36,'cases_proven':36,'messages_total':768,'ack_rate':1.0,'messages':[{'message_id':'m1','timestamp':1.0,'from_fleet':'TIGER','from_drone_id':'1','from_pod_uid':'u1','to_fleet':'SPECTRA','case_id':'c1','phase':'TIGER_RELATION_ANALYSIS','type':'RELATION','payload_digest':'d'*64,'correlation_id':'e'*64,'parent_message_id':None,'evidence_class':'LOCAL_SYNTHETIC','vendor_requests':0}]}}
         run=a.poll()[0]
         self.assertEqual(run['adapter_type'],'VKT_R3'); self.assertEqual(run['metrics']['pods'],384)
+        self.assertEqual(run['metrics']['fleet_organizations']['TIGER'],128); self.assertEqual(run['metrics']['active_by_organization']['LION'],128)
+        self.assertEqual(run['_observation_events'][0]['event_type'],'CHANNEL_MESSAGE'); self.assertEqual(run['_observation_events'][0]['payload']['to_fleet'],'SPECTRA')
 
     def test_registry_has_generic_event_adapter(self):
         self.assertEqual(LpclEventStreamAdapter().adapter_id,'LPCL_EVENT_STREAM')

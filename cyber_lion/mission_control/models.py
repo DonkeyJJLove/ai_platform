@@ -102,3 +102,74 @@ def summary_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "artifacts": artifacts,
         "run_count": len(runs),
     }
+
+def _nonnegative_int(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int) and value >= 0:
+        return value
+    if isinstance(value, float) and value.is_integer() and value >= 0:
+        return int(value)
+    return None
+
+
+def fleet_summary_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    organizations_total: dict[str, int] = {}
+    organizations_active: dict[str, int] = {}
+    run_ids: list[str] = []
+    fleet_total = 0
+    working_drones = 0
+    unknown = False
+    for run in runs:
+        if run.get("status") in {"CLEANING", "CLEANED"} or (run.get("evidence") or {}).get("class") == "HISTORICAL_IMPORTED_EVIDENCE":
+            continue
+        metrics = run.get("metrics") or {}
+        if not isinstance(metrics, dict):
+            continue
+        total_map = metrics.get("fleet_organizations") or {}
+        active_map = metrics.get("active_by_organization") or {}
+        if not isinstance(total_map, dict) or not isinstance(active_map, dict):
+            continue
+        if "fleet_organizations" not in metrics and "active_by_organization" not in metrics:
+            continue
+        normalized_total = {str(name): _nonnegative_int(value) for name, value in total_map.items()}
+        normalized_active = {str(name): _nonnegative_int(value) for name, value in active_map.items()}
+        if any(value is None for value in (*normalized_total.values(), *normalized_active.values())):
+            unknown = True
+            continue
+        run_total = _nonnegative_int(metrics["pods"]) if "pods" in metrics else sum(normalized_total.values())
+        run_active = _nonnegative_int(metrics["fresh_drones"]) if "fresh_drones" in metrics else sum(normalized_active.values())
+        if (run_total is None or run_active is None or run_active > run_total
+                or sum(normalized_total.values()) != run_total
+                or sum(normalized_active.values()) != run_active
+                or any(value > normalized_total.get(name, 0) for name, value in normalized_active.items())):
+            unknown = True
+            continue
+        run_id = run.get("run_id")
+        if isinstance(run_id, str) and run_id:
+            run_ids.append(run_id)
+        fleet_total += run_total
+        working_drones += run_active
+        for name, value in normalized_total.items():
+            organizations_total[name] = organizations_total.get(name, 0) + value
+        for name, value in normalized_active.items():
+            organizations_active[name] = organizations_active.get(name, 0) + value
+    names = sorted(set(organizations_total) | set(organizations_active))
+    organizations = {
+        name: {
+            "total": organizations_total.get(name, 0),
+            "active": organizations_active.get(name, 0),
+            "idle": max(0, organizations_total.get(name, 0) - organizations_active.get(name, 0)),
+        }
+        for name in names
+    }
+    known = bool(run_ids) and not unknown
+    return {
+        "currentness": "OBSERVED" if known else "UNKNOWN",
+        "fleet_total": fleet_total if known else None,
+        "working_drones": working_drones if known else None,
+        "idle_drones": max(0, fleet_total - working_drones) if known else None,
+        "organization_count": len(names) if known else None,
+        "organizations": organizations if known else {},
+        "run_ids": sorted(set(run_ids)),
+    }
