@@ -1,5 +1,5 @@
 from __future__ import annotations
-import base64, errno, hashlib, json, mimetypes, os, struct, threading, time
+import base64, errno, hashlib, json, os, struct, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from .models import normalize, verify_read_only
@@ -28,6 +28,22 @@ def _frame(payload:bytes)->bytes:
     if n<65536: return bytes([0x81,126])+struct.pack('!H',n)+payload
     return bytes([0x81,127])+struct.pack('!Q',n)+payload
 
+def _safe_header_value(value:str)->str:
+    if '\r' in value or '\n' in value: raise ValueError('invalid HTTP header value')
+    return value
+
+def _safe_static_target(request_path:str):
+    if request_path in ('/','/index.html'): return STATIC/'index.html'
+    if request_path=='/app.css': return STATIC/'app.css'
+    if request_path=='/app.js': return STATIC/'app.js'
+    return None
+
+def _static_content_type(target:Path)->str:
+    if target.name=='index.html': return 'text/html; charset=utf-8'
+    if target.name=='app.css': return 'text/css; charset=utf-8'
+    if target.name=='app.js': return 'text/javascript; charset=utf-8'
+    raise ValueError('unknown static asset')
+
 def make_handler(mc:MissionControl):
     class H(BaseHTTPRequestHandler):
         server_version='LION-Mission-Control/1.0'
@@ -40,16 +56,16 @@ def make_handler(mc:MissionControl):
             if path=='/api/export': return self.send_json(mc.store.export())
             if path=='/health': return self.send_json({'ok':mc.error is None,'error':mc.error})
             if path=='/ws' and self.headers.get('Upgrade','').lower()=='websocket':
-                key=self.headers.get('Sec-WebSocket-Key',''); accept=base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode(), usedforsecurity=False).digest()).decode(); self.send_response(101); self.send_header('Upgrade','websocket'); self.send_header('Connection','Upgrade'); self.send_header('Sec-WebSocket-Accept',accept); self.end_headers()
+                key=self.headers.get('Sec-WebSocket-Key','')
+                if not key or '\r' in key or '\n' in key: return self.send_json({'ok':False,'error':'invalid websocket key'},400)
+                accept=base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode(), usedforsecurity=False).digest()).decode(); self.send_response(101); self.send_header('Upgrade','websocket'); self.send_header('Connection','Upgrade'); self.send_header('Sec-WebSocket-Accept',_safe_header_value(accept)); self.end_headers()
                 try:
                     while not mc.stop_event.is_set(): self.wfile.write(_frame(json.dumps(mc.state(),sort_keys=True,separators=(',',':')).encode())); self.wfile.flush(); time.sleep(1)
                 except Exception: pass
                 return
-            rel='index.html' if path=='/' else path.lstrip('/')
-            target=(STATIC/rel).resolve()
-            if STATIC.resolve() not in target.parents and target!=STATIC.resolve(): self.send_error(403); return
-            if not target.is_file(): self.send_error(404); return
-            b=target.read_bytes(); self.send_response(200); self.send_header('Content-Type',mimetypes.guess_type(str(target))[0] or 'application/octet-stream'); self.send_header('Content-Length',str(len(b))); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(b)
+            target=_safe_static_target(path)
+            if target is None: self.send_error(404); return
+            b=target.read_bytes(); self.send_response(200); self.send_header('Content-Type',_static_content_type(target)); self.send_header('Content-Length',str(len(b))); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(b)
     return H
 
 def serve(mc:MissionControl,host='127.0.0.1',port=8765,fallback_ports=(),listen_state=None):
