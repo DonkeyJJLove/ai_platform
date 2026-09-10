@@ -1,0 +1,48 @@
+{
+  "schema": "lion.codex-evolution-harness/v1",
+  "harness_version": "1.0.0",
+  "architecture_epoch": "1.4",
+  "rag_profile": "LION-RAG32/1",
+  "rag_release": "lion-rag32-v1.4-r1",
+  "rag_root": "LION/rag/lion_project_rag32_v1_4_r1/",
+  "agent_instruction_paths": [
+    "AGENTS.md",
+    "LION/AGENTS.md",
+    "cyber_lion/AGENTS.md",
+    "tools/AGENTS.md",
+    ".github/AGENTS.md"
+  ],
+  "runbook_paths": [
+    "LION/codex/README.md",
+    "LION/codex/CODEX_RUNBOOK.md",
+    "LION/codex/EVOLUTION_INVARIANTS.md",
+    "LION/codex/CHANGE_CLASSIFICATION.md",
+    "LION/codex/TOOL_AUTHORITY_MAP.yaml",
+    "LION/codex/LIVE_STATE.schema.json",
+    "LION/codex/FAILURE_SIGNATURES.md"
+  ],
+  "tiger_geometry_path": "LION/codex/TIGER_GEOMETRY.md",
+  "scaffolding_protocol_path": "LION/codex/SCAFFOLDING_PROTOCOL.md",
+  "eval_paths": [
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/evals/scaffolding/tiger_geometry_cases.yaml",
+    "LION/evals/evolution/README.md",
+    "LION/evals/scaffolding/README.md",
+    "LION/evals/retrieval/README.md"
+  ],
+  "adr_paths": [
+    "LION/ADR/ADR-001-proposal-is-not-authority.md",
+    "LION/ADR/ADR-002-pdp-is-not-runtime-admission.md",
+    "LION/ADR/ADR-003-effect-is-not-observation.md",
+    "LION/ADR/ADR-004-carrier-last-currentness.md",
+    "LION/ADR/ADR-005-independent-verification.md",
+    "LION/ADR/ADR-006-no-raw-shell-authority.md",
+    "LION/ADR/ADR-007-rag32-is-versioned-knowledge-not-live-truth.md",
+    "LION/ADR/ADR-008-tiger-geometry-is-scaffolding-not-proof.md"
+  ],
+  "skill_paths": [
+    ".codex/skills/lion-evolution/SKILL.md"
+  ],
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE"
+}
