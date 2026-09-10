@@ -108,8 +108,26 @@ def install_into_core(core) -> None:
         for name in recycled:
             core.kubectl(["delete", "pod", "-n", core.NAMESPACE, name, "--wait=false"], timeout=30)
         result = original_materialize()
+        # ConfigMap content changes do not themselves restart the Deployment.
+        # Recycle only the single fixed router Pod so it remounts the exact runtime payload.
+        router_recycled = []
+        try:
+            import json as _json
+            data = _json.loads(core.kubectl(["get", "pods", "-n", core.NAMESPACE, "-l", "app=vkt-fleet-router", "-o", "json"], timeout=30).stdout)
+            names = sorted(str((x.get("metadata") or {}).get("name") or "") for x in (data.get("items") or []))
+            names = [n for n in names if n.startswith("vkt-fleet-router-")]
+            if len(names) > 1:
+                raise RuntimeError(f"router-recycle-cardinality:{len(names)}")
+            for name in names:
+                core.kubectl(["delete", "pod", "-n", core.NAMESPACE, name, "--wait=false"], timeout=30)
+                router_recycled.append(name)
+        except Exception as exc:
+            text = str(exc).lower()
+            if "notfound" not in text and "not found" not in text:
+                raise
         result["recycled_stuck_zero_restart"] = recycled
         result["recycled_count"] = len(recycled)
+        result["router_recycled"] = router_recycled
         return result
 
     def stop_v2():
