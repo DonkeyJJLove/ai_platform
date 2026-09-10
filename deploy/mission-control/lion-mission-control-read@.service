@@ -1,0 +1,24 @@
+[Unit]
+Description=LION Mission Control read-only evidence proxy
+After=lion-vkt-effect-admission.socket
+Requires=lion-vkt-effect-admission.socket
+
+[Service]
+Type=simple
+User=sentinelx
+Group=sentinelx
+ExecStart=/usr/bin/python3 /opt/lion/k3s-vkt-r3/repo/tools/lion_mission_control_read_proxy.py
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+UMask=0077
