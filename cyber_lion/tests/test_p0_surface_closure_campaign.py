@@ -44,7 +44,7 @@ def campaign():
     )
 
 class P0SurfaceClosureCampaignTests(unittest.TestCase):
-    def test_exact_current_matrix_and_scan_digest(self):
+    def test_exact_238_matrix_and_scan_digest(self):
         inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),259);self.assertEqual(c.remaining_surface_count,258)
         self.assertEqual(c.excluded_surface_digests,(CERTIFIED_PARTIAL_SURFACE,));self.assertEqual(c.global_status,"UNKNOWN")
         self.assertEqual(Counter(x.effect_class for x in c.work_items),Counter(EXPECTED_CLASSES))
