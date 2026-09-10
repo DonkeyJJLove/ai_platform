@@ -50,14 +50,58 @@ def transformed_manifest() -> dict[str, Any]:
     return payload
 
 
+def _stuck_zero_restart_names(evidence: dict[str, Any]) -> list[str]:
+    names: list[str] = []
+    for pod in evidence.get("pods", []) or []:
+        if pod.get("ready") is True or int(pod.get("restarts", 0) or 0) != 0:
+            continue
+        states = pod.get("container_states", []) or []
+        if not any(s.get("waiting_reason") == "ContainerCreating" for s in states):
+            continue
+        name = str(pod.get("name") or "")
+        parts = name.rsplit("-", 1)
+        if len(parts) != 2 or parts[0] not in {"tiger-drone", "spectra-drone", "lion-drone"} or not parts[1].isdigit():
+            raise RuntimeError("stuck-recycle-name-denied:" + name)
+        names.append(name)
+    names = sorted(set(names))
+    if len(names) > 16:
+        raise RuntimeError(f"stuck-recycle-cardinality-exceeded:{len(names)}")
+    return names
+
+
 def install_into_core(core) -> None:
     core.ALLOWED_IMAGES = {RUNTIME_IMAGE}
+    original_materialize = core.materialize
 
     def load_manifest_v2():
         payload = transformed_manifest()
         return payload, core.validate_manifest_payload(payload)
 
+    def materialize_v2():
+        recycled: list[str] = []
+        try:
+            evidence = core.pod_evidence()
+            recycled = _stuck_zero_restart_names(evidence)
+        except Exception as exc:
+            text = str(exc).lower()
+            if "notfound" not in text and "not found" not in text:
+                raise
+        for name in recycled:
+            core.kubectl(["delete", "pod", "-n", core.NAMESPACE, name, "--wait=false"], timeout=30)
+        result = original_materialize()
+        result["recycled_stuck_zero_restart"] = recycled
+        result["recycled_count"] = len(recycled)
+        return result
+
+    def stop_v2():
+        if not core.service_active() or not core.KUBECONFIG.is_file():
+            return {"status": "ALREADY_STOPPED", "namespace": core.NAMESPACE}
+        core.kubectl(["delete", "namespace", core.NAMESPACE, "--ignore-not-found=true", "--wait=true", "--timeout=90s"], timeout=100)
+        return {"status": "STOPPED", "namespace": core.NAMESPACE}
+
     core.load_manifest = load_manifest_v2
+    core.materialize = materialize_v2
+    core.stop_vkt_pods = stop_v2
 
 
 def main() -> int:
