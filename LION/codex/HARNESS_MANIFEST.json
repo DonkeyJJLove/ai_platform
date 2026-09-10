@@ -1,6 +1,8 @@
 {
   "schema": "lion.codex-evolution-harness/v1",
   "harness_version": "1.0.0",
+  "source_commit": "df44c40140234aed5e618402374c2d719f156500",
+  "source_commit_scope": "OBSERVED_BASE_AT_MATERIALIZATION_NOT_LIVE_CURRENTNESS",
   "architecture_epoch": "1.4",
   "rag_profile": "LION-RAG32/1",
   "rag_release": "lion-rag32-v1.4-r1",
