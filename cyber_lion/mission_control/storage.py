@@ -16,7 +16,7 @@ class Store:
   raw=json.dumps(r,sort_keys=True,separators=(',',':'));rid=r['run_id']
   with self.lock:
    self.db.execute('INSERT OR REPLACE INTO runs VALUES(?,?)',(rid,raw))
-   for table in ('metrics','participants','artifacts','receipts'):self.db.execute(f'DELETE FROM {table} WHERE run_id=?',(rid,))
+   self.db.execute('DELETE FROM metrics WHERE run_id=?',(rid,));self.db.execute('DELETE FROM participants WHERE run_id=?',(rid,));self.db.execute('DELETE FROM artifacts WHERE run_id=?',(rid,));self.db.execute('DELETE FROM receipts WHERE run_id=?',(rid,))
    for name,value in (r.get('metrics') or {}).items():self.db.execute('INSERT INTO metrics(run_id,name,payload) VALUES(?,?,?)',(rid,name,json.dumps(value,sort_keys=True,separators=(',',':'))))
    participants=r.get('participants') or []
    if isinstance(participants,dict):participants=[{'id':k,'value':v} for k,v in participants.items()]
@@ -27,16 +27,15 @@ class Store:
  def upsert_run(self,r):self.index_run(r)
  def add_event(self,e):
   with self.lock:self.db.execute('INSERT OR IGNORE INTO events VALUES(?,?,?,?)',(e['event_id'],e['run_id'],float(e['timestamp']),json.dumps(e,sort_keys=True,separators=(',',':'))));self.db.commit()
- def runs(self): return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM runs ORDER BY run_id')]
+ def runs(self):return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM runs ORDER BY run_id')]
  def run(self,rid):
-  x=self.db.execute('SELECT payload FROM runs WHERE run_id=?',(rid,)).fetchone(); return json.loads(x[0]) if x else None
- def events(self,rid): return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM events WHERE run_id=? ORDER BY ts,event_id',(rid,))]
- def table_payloads(self,table,rid):
-  if table not in {'participants','receipts'}: raise ValueError('bad table')
-  return [json.loads(x[0]) for x in self.db.execute(f'SELECT payload FROM {table} WHERE run_id=? ORDER BY id',(rid,))]
- def metrics(self,rid): return {n:json.loads(p) for n,p in self.db.execute('SELECT name,payload FROM metrics WHERE run_id=? ORDER BY id',(rid,))}
- def artifacts(self,rid): return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM artifacts WHERE run_id=? ORDER BY id',(rid,))]
+  x=self.db.execute('SELECT payload FROM runs WHERE run_id=?',(rid,)).fetchone();return json.loads(x[0]) if x else None
+ def events(self,rid):return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM events WHERE run_id=? ORDER BY ts,event_id',(rid,))]
+ def participants(self,rid):return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM participants WHERE run_id=? ORDER BY id',(rid,))]
+ def receipts(self,rid):return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM receipts WHERE run_id=? ORDER BY id',(rid,))]
+ def metrics(self,rid):return {n:json.loads(p) for n,p in self.db.execute('SELECT name,payload FROM metrics WHERE run_id=? ORDER BY id',(rid,))}
+ def artifacts(self,rid):return [json.loads(x[0]) for x in self.db.execute('SELECT payload FROM artifacts WHERE run_id=? ORDER BY id',(rid,))]
  def export_run(self,rid):
   r=self.run(rid)
   if not r:return None
-  return {'run':r,'events':self.events(rid),'metrics':self.metrics(rid),'participants':self.table_payloads('participants',rid),'artifacts':self.artifacts(rid),'receipts':self.table_payloads('receipts',rid)}
+  return {'run':r,'events':self.events(rid),'metrics':self.metrics(rid),'participants':self.participants(rid),'artifacts':self.artifacts(rid),'receipts':self.receipts(rid)}

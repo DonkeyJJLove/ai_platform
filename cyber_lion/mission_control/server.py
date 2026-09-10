@@ -4,8 +4,9 @@ from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from .models import clean_run
 STATIC=Path(__file__).resolve().parent/'static'
+STATIC_FILES={'/':STATIC/'index.html','/index.html':STATIC/'index.html','/app.js':STATIC/'app.js','/app.css':STATIC/'app.css'}
 class MissionControl:
- def __init__(self,registry,store,interval=2.0): self.registry=registry;self.store=store;self.interval=interval;self.stop=threading.Event();self.error=None
+ def __init__(self,registry,store,interval=2.0):self.registry=registry;self.store=store;self.interval=interval;self.stop=threading.Event();self.error=None
  def poll_once(self):
   for r in self.registry.discover():self.store.index_run(clean_run(r))
   return self.store.runs()
@@ -42,19 +43,18 @@ def make_handler(mc):
     kind=q[1]
     if kind=='events':return self.js({'events':mc.store.events(rid)})
     if kind=='metrics':return self.js({'metrics':mc.store.metrics(rid)})
-    if kind=='participants':return self.js({'participants':mc.store.table_payloads('participants',rid)})
+    if kind=='participants':return self.js({'participants':mc.store.participants(rid)})
     if kind=='artifacts':return self.js({'artifacts':mc.store.artifacts(rid)})
-    if kind=='receipts':return self.js({'receipts':mc.store.table_payloads('receipts',rid)})
+    if kind=='receipts':return self.js({'receipts':mc.store.receipts(rid)})
    if p=='/ws' and self.headers.get('Upgrade','').lower()=='websocket':
-    key=self.headers.get('Sec-WebSocket-Key','');acc=base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode();self.send_response(101);self.send_header('Upgrade','websocket');self.send_header('Connection','Upgrade');self.send_header('Sec-WebSocket-Accept',acc);self.end_headers()
+    key=self.headers.get('Sec-WebSocket-Key','');acc=base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode(),usedforsecurity=False).digest()).decode();self.send_response(101);self.send_header('Upgrade','websocket');self.send_header('Connection','Upgrade');self.send_header('Sec-WebSocket-Accept',acc);self.end_headers()
     try:
      while not mc.stop.is_set():self.wfile.write(_frame(json.dumps({'summary':mc.summary()}).encode()));self.wfile.flush();time.sleep(1)
     except Exception:pass
     return
-   rel='index.html' if p=='/' else p.lstrip('/');t=(STATIC/rel).resolve()
-   if STATIC.resolve() not in t.parents and t!=STATIC.resolve():return self.send_error(403)
-   if not t.is_file():return self.send_error(404)
-   b=t.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(str(t))[0] or 'application/octet-stream');self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
+   f=STATIC_FILES.get(p)
+   if not f or not f.is_file():return self.send_error(404)
+   b=f.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(str(f))[0] or 'application/octet-stream');self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
  return H
 def serve(mc,host='127.0.0.1',ports=range(8765,8776),listen_state='/run/lion-mission-control/listen.json'):
  httpd=None;selected=None
