@@ -30,7 +30,7 @@ class EventSocketServer:
             pass
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.bind(str(self.path))
-        os.chmod(self.path, 0o660)
+        os.chmod(self.path, 0o600)
         sock.listen(16)
         sock.settimeout(0.5)
         self.sock = sock
