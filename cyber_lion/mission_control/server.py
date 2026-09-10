@@ -7,7 +7,7 @@ STATIC=Path(__file__).resolve().parent/'static'
 class MissionControl:
  def __init__(self,registry,store,interval=2.0): self.registry=registry;self.store=store;self.interval=interval;self.stop=threading.Event();self.error=None
  def poll_once(self):
-  for r in self.registry.discover(): self.store.upsert_run(clean_run(r))
+  for r in self.registry.discover():self.store.index_run(clean_run(r))
   return self.store.runs()
  def loop(self):
   while not self.stop.is_set():
@@ -33,14 +33,16 @@ def make_handler(mc):
    if p=='/api/adapters':return self.js({'adapters':mc.registry.ids()})
    if p=='/api/runs':return self.js({'runs':mc.store.runs()})
    if p=='/api/export':return self.js({'runs':mc.store.runs()})
+   if p.startswith('/api/export/'):
+    rid=p[len('/api/export/'):];x=mc.store.export_run(rid);return self.js(x if x else {'error':'not found'},200 if x else 404)
    if p.startswith('/api/runs/'):
     q=p[len('/api/runs/'):].split('/');rid=q[0];r=mc.store.run(rid)
     if not r:return self.js({'error':'not found'},404)
     if len(q)==1:return self.js(r)
     kind=q[1]
     if kind=='events':return self.js({'events':mc.store.events(rid)})
-    if kind=='metrics':return self.js({'metrics':r.get('metrics',{})})
-    if kind=='participants':return self.js({'participants':r.get('participants',[])})
+    if kind=='metrics':return self.js({'metrics':mc.store.metrics(rid)})
+    if kind=='participants':return self.js({'participants':mc.store.table_payloads('participants',rid)})
     if kind=='artifacts':return self.js({'artifacts':mc.store.artifacts(rid)})
     if kind=='receipts':return self.js({'receipts':mc.store.table_payloads('receipts',rid)})
    if p=='/ws' and self.headers.get('Upgrade','').lower()=='websocket':

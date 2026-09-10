@@ -24,7 +24,7 @@ ProtectKernelLogs=yes
 ProtectControlGroups=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 ReadOnlyPaths=/opt/lion/k3s-vkt-r3
-ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control /run/lion-mission-control /run/lion-vkt-mission-control
+ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control /run/lion-mission-control
 UMask=0077
 [Install]
 WantedBy=multi-user.target
