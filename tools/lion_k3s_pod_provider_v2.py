@@ -90,6 +90,24 @@ def install_into_core(core) -> None:
             } for n in items]
         except Exception as exc:
             result["node_evidence_error"] = str(exc)[:500]
+        try:
+            import json as _json
+            import urllib.request as _request
+            svc = _json.loads(core.kubectl(["get", "service", "vkt-fleet-router", "-n", core.NAMESPACE, "-o", "json"], timeout=20).stdout)
+            cluster_ip = (svc.get("spec") or {}).get("clusterIP")
+            if not cluster_ip or cluster_ip == "None":
+                raise RuntimeError("router-service-cluster-ip-missing")
+            with _request.urlopen(f"http://{cluster_ip}:8080/state", timeout=3) as response:
+                raw = response.read(4 * 1024 * 1024 + 1)
+            if len(raw) > 4 * 1024 * 1024:
+                raise RuntimeError("router-state-too-large")
+            state = _json.loads(raw)
+            if not isinstance(state, dict):
+                raise RuntimeError("router-state-not-object")
+            result["router_state"] = state
+            result["router_service"] = {"name": "vkt-fleet-router", "cluster_ip": cluster_ip, "port": 8080}
+        except Exception as exc:
+            result["router_state_error"] = str(exc)[:500]
         return result
 
     def load_manifest_v2():
@@ -108,8 +126,6 @@ def install_into_core(core) -> None:
         for name in recycled:
             core.kubectl(["delete", "pod", "-n", core.NAMESPACE, name, "--wait=false"], timeout=30)
         result = original_materialize()
-        # ConfigMap content changes do not themselves restart the Deployment.
-        # Recycle only the single fixed router Pod so it remounts the exact runtime payload.
         router_recycled = []
         try:
             import json as _json
