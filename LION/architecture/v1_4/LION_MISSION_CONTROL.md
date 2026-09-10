@@ -1,0 +1,2 @@
+# LION Mission Control
+Generic read-only observation plane for LION runs. VKT-R3 and bounded OSS repository tests are adapters, not global schema. Mission Control has no workload start/stop/materialization API. Runtime effects remain in LPCL → bounded admission → provider paths. The observer persists derived run/event/artifact/receipt state in SQLite and exposes loopback-only HTTP/WebSocket read APIs.
