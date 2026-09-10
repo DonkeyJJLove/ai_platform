@@ -1,0 +1,16 @@
+[Unit]
+Description=LION Mission Control read-only evidence socket
+After=lion-vkt-effect-admission.socket
+Requires=lion-vkt-effect-admission.socket
+
+[Socket]
+ListenStream=/run/lion-mission-control-read.sock
+SocketUser=sentinelx
+SocketGroup=sentinelx
+SocketMode=0600
+Accept=yes
+RemoveOnStop=yes
+MaxConnections=16
+
+[Install]
+WantedBy=sockets.target

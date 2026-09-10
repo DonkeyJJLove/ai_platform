@@ -38,6 +38,15 @@ required=(
   deploy/k8s/vkt-r3/lion-vkt-mission-control.service
   tools/vkt_r3_mission_control.py
   cyber_lion/vkt_r3/mission_control/server.py
+  tools/lion_mission_control.py
+  tools/lion_mission_control_event_client.py
+  tools/lion_mission_control_read_proxy.py
+  cyber_lion/mission_control/server.py
+  cyber_lion/mission_control/storage.py
+  deploy/mission-control/lion-mission-control.service
+  deploy/mission-control/lion-mission-control-read.socket
+  deploy/mission-control/lion-mission-control-read@.service
+  deploy/mission-control/install.sh
 )
 for rel in "${required[@]}"; do
   [[ -f "$REPO_ROOT/$rel" ]] || { echo "ERROR: missing $rel" >&2; exit 1; }
@@ -89,9 +98,6 @@ printf '[Service]\nSupplementaryGroups=%s\n' "$PROVIDER_GROUP" >"$RUNNER_DROPIN/
 chmod 0644 "$RUNNER_DROPIN/20-lion-k3s-vkt-r3.conf"
 
 systemctl daemon-reload
-# Node PodCIDR and containerd image snapshots are persisted in the K3s datastore.
-# An epoch change performs one deterministic TEST_ONLY reinitialization confined
-# to the VKT K3s data root, so changed network/rootfs execution semantics take effect.
 K3S_WAS_ACTIVE=NO
 if systemctl is-active --quiet lion-k3s-vkt-r3.service; then
   K3S_WAS_ACTIVE=YES

@@ -1,0 +1,34 @@
+[Unit]
+Description=LION generic read-only Mission Control
+After=network-online.target lion-mission-control-read.socket
+Wants=network-online.target
+Requires=lion-mission-control-read.socket
+
+[Service]
+Type=simple
+User=sentinelx
+Group=sentinelx
+RuntimeDirectory=lion-mission-control lion-vkt-mission-control
+RuntimeDirectoryMode=0755
+WorkingDirectory=/opt/lion/k3s-vkt-r3/repo
+Environment=PYTHONPATH=/opt/lion/k3s-vkt-r3/repo
+ExecStart=/usr/bin/python3 /opt/lion/k3s-vkt-r3/repo/tools/lion_mission_control.py --source-identity /opt/lion/k3s-vkt-r3/source-identity.json --read-socket /run/lion-mission-control-read.sock --db /var/lib/sentinelx/uploads/lion-mission-control/mission-control.db --interval 1.0 --event-socket /run/lion-mission-control/events.sock serve --host 127.0.0.1 --port 8765 --fallback-port 8766 --fallback-port 8767 --fallback-port 8768 --fallback-port 8769 --fallback-port 8770 --fallback-port 8771 --fallback-port 8772 --fallback-port 8773 --fallback-port 8774 --fallback-port 8775 --listen-state /run/lion-mission-control/listen.json --legacy-listen-state /run/lion-vkt-mission-control/listen.json
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/opt/lion/k3s-vkt-r3
+InaccessiblePaths=-/run/lion-vkt-effect-admission.sock -/run/lion-k3s-vkt-r3/provider.sock -/run/lion-runner-exec.sock -/run/lion-effect-admission.sock -/run/dbus/system_bus_socket
+ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control /run/lion-mission-control /run/lion-vkt-mission-control
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
