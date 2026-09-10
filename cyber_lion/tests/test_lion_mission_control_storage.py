@@ -2,6 +2,7 @@ import tempfile, time, unittest
 from pathlib import Path
 
 from cyber_lion.mission_control.events import EventSocketServer
+from cyber_lion.mission_control.reconciliation import Reconciler
 from cyber_lion.mission_control.storage import Store
 
 
@@ -45,5 +46,60 @@ class StorageTests(unittest.TestCase):
             self.assertEqual(run['authority']['class'],'BOUNDED_PRIVILEGED_ADMISSION')
             self.assertEqual(run['status'],'CLEANED')
             self.assertEqual(run['verification_status'],'VERIFIED')
+
+    def test_partial_snapshot_does_not_erase_non_null_nested_runtime_proof(self):
+        with tempfile.TemporaryDirectory() as d:
+            s=Store(Path(d)/'mc.db')
+            s.upsert_run({
+                'run_id':'oss-test','status':'PASS','verification_status':'VERIFIED','adapter_type':'OSS_REPOSITORY_TEST',
+                'target':{'commit':'c','cloned_head':'c'},
+                'workload':{'kind':'KubernetesJob','pod_uid':'pod-1','image_ids':{'pytest':'img'}},
+                'metrics':{'pytest_exit_code':0,'pytest_summary':'297 passed','clone_exit_code':0},
+                'evidence':{'image_ids':{'pytest':'img'},'job_status':{'succeeded':1}},
+            })
+            s.upsert_run({
+                'run_id':'oss-test','status':'RUNNING','verification_status':'OBSERVED','adapter_type':'OSS_REPOSITORY_TEST',
+                'target':{'commit':'c','cloned_head':None},
+                'workload':{'kind':'KubernetesJob','pod_uid':None,'image_ids':{}},
+                'metrics':{'pytest_exit_code':None,'pytest_summary':None,'clone_exit_code':None},
+                'evidence':{'image_ids':{},'job_status':{}},
+            })
+            run=s.get_run('oss-test')
+            self.assertEqual(run['target']['cloned_head'],'c')
+            self.assertEqual(run['workload']['pod_uid'],'pod-1')
+            self.assertEqual(run['metrics']['pytest_exit_code'],0)
+            self.assertEqual(run['metrics']['pytest_summary'],'297 passed')
+            self.assertEqual(run['evidence']['image_ids']['pytest'],'img')
+
+    def test_late_adapter_snapshot_cannot_regress_cleaned_verified_run(self):
+        class Adapter:
+            adapter_id='OSS_REPOSITORY_TEST'
+            def poll(self):
+                return [{
+                    'run_id':'oss-test','status':'RUNNING','verification_status':'OBSERVED','adapter_type':self.adapter_id,
+                    'target':{'commit':'c','cloned_head':None},
+                    'workload':{'pod_uid':None,'image_ids':{}},
+                    'metrics':{'pytest_exit_code':None,'pytest_summary':None},
+                    'evidence':{'image_ids':{},'job_status':{}},
+                }]
+        class Registry:
+            def __init__(self, adapter): self.adapter=adapter
+            def all(self): return [self.adapter]
+        with tempfile.TemporaryDirectory() as d:
+            s=Store(Path(d)/'mc.db')
+            s.upsert_run({
+                'run_id':'oss-test','status':'CLEANED','verification_status':'VERIFIED','adapter_type':'OSS_REPOSITORY_TEST','phase':'CLEANUP_COMPLETE',
+                'target':{'commit':'c','cloned_head':'c'},'workload':{'pod_uid':'pod-1'},
+                'metrics':{'pytest_exit_code':0,'pytest_summary':'297 passed'},'cleanup':{'status':'CLEANED'},
+            })
+            Reconciler(s,Registry(Adapter())).poll_once()
+            run=s.get_run('oss-test')
+            self.assertEqual(run['status'],'CLEANED')
+            self.assertEqual(run['verification_status'],'VERIFIED')
+            self.assertEqual(run['phase'],'CLEANUP_COMPLETE')
+            self.assertEqual(run['target']['cloned_head'],'c')
+            self.assertEqual(run['workload']['pod_uid'],'pod-1')
+            self.assertEqual(run['metrics']['pytest_exit_code'],0)
+            self.assertEqual(run['metrics']['pytest_summary'],'297 passed')
 
 if __name__=='__main__': unittest.main()

@@ -67,6 +67,25 @@ CREATE TABLE IF NOT EXISTS adapter_state(
 '''
 
 
+def _merge_non_null(existing: Any, incoming: Any) -> Any:
+    """Merge partial observation evidence without erasing stronger known values.
+
+    Adapters may race runtime teardown and legitimately return a structurally
+    valid but incomplete snapshot. A missing/None field is absence of new
+    evidence, not evidence that a previously observed value became null.
+    """
+    if incoming is None:
+        return existing
+    if isinstance(existing, dict) and isinstance(incoming, dict):
+        merged = dict(existing)
+        for key, value in incoming.items():
+            if value is None:
+                continue
+            merged[key] = _merge_non_null(merged.get(key), value)
+        return merged
+    return incoming
+
+
 class Store:
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -97,7 +116,7 @@ class Store:
                 for key, new_value in run.items():
                     if key == "run_id" or new_value is None:
                         continue
-                    merged[key] = new_value
+                    merged[key] = _merge_non_null(merged.get(key), new_value)
                 value = normalize_run(merged)
             else:
                 value = normalize_run(run)
