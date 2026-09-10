@@ -20,8 +20,12 @@ install -o root -g root -m 0644 "$R/deploy/k8s/vkt-r3/lion-vkt-effect-admission@
 systemctl daemon-reload
 systemctl enable --now lion-vkt-effect-admission.socket
 [[ "$(systemctl is-active lion-vkt-effect-admission.socket)" = active ]]
+systemctl enable lion-vkt-mission-control.service
+systemctl restart lion-vkt-mission-control.service
+[[ "$(systemctl is-active lion-vkt-mission-control.service)" = active ]]
 
 echo "VKT_AUTHORITY_BOOTSTRAPPED=YES"
+echo "MISSION_CONTROL_LOCAL_SERVICE=ACTIVE"
 echo "K3S_RUNTIME_STARTED=NO"
 echo "SOURCE_HEAD=$H"
 echo "SOURCE_TREE=$T"

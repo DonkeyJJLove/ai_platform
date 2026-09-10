@@ -16,9 +16,9 @@ def build(args):
     head,tree=resolve_source(args); return MissionControl(EvidenceSource(head,tree,args.client),args.db,args.interval)
 def main():
     p=argparse.ArgumentParser(); p.add_argument('--source-head'); p.add_argument('--source-tree'); p.add_argument('--source-identity',default='/opt/lion/k3s-vkt-r3/source-identity.json'); p.add_argument('--client',default='/usr/local/libexec/lion-vkt-effect-admission-client.py'); p.add_argument('--db',default='/var/lib/sentinelx/uploads/vkt-r3-mission-control/mission-control.db'); p.add_argument('--interval',type=float,default=2.0)
-    sp=p.add_subparsers(dest='command',required=True); s=sp.add_parser('serve'); s.add_argument('--host',default='127.0.0.1'); s.add_argument('--port',type=int,default=8765); sp.add_parser('status'); sp.add_parser('export'); sp.add_parser('verify')
+    sp=p.add_subparsers(dest='command',required=True); s=sp.add_parser('serve'); s.add_argument('--host',default='127.0.0.1'); s.add_argument('--port',type=int,default=8765); s.add_argument('--fallback-port',type=int,action='append',default=[]); s.add_argument('--listen-state',default='/var/lib/sentinelx/uploads/vkt-r3-mission-control/listen.json'); sp.add_parser('status'); sp.add_parser('export'); sp.add_parser('verify')
     a=p.parse_args(); mc=build(a)
-    if a.command=='serve': serve(mc,a.host,a.port); return 0
+    if a.command=='serve': serve(mc,a.host,a.port,a.fallback_port,a.listen_state); return 0
     if a.command=='status': print(json.dumps(mc.poll_once(),sort_keys=True)); return 0
     if a.command=='export': print(json.dumps(mc.store.export(),sort_keys=True)); return 0
     if a.command=='verify':
