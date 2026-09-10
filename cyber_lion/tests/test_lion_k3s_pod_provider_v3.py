@@ -10,6 +10,10 @@ class V3Tests(unittest.TestCase):
         self.assertNotIn('http://vkt-fleet-router:8080',cfg['data']['drone.py'])
         ws=[d for d in p['documents'] if d.get('kind') in {'Deployment','StatefulSet'}]
         self.assertEqual(len({d['spec']['template']['metadata']['annotations']['vkt-runtime-sha256'] for d in ws}),1)
-    def test_service_uses_v3(self):
-        s=(ROOT/'deploy/k8s/vkt-r3/lion-k3s-pod-provider@.service').read_text(); self.assertIn('lion_k3s_pod_provider_v3.py',s)
+    def test_service_uses_v4_that_wraps_v3(self):
+        s=(ROOT/'deploy/k8s/vkt-r3/lion-k3s-pod-provider@.service').read_text()
+        self.assertIn('lion_k3s_pod_provider_v4.py',s)
+        v4=(ROOT/'tools'/'lion_k3s_pod_provider_v4.py').read_text()
+        self.assertIn("V3_PATH=HERE/'lion_k3s_pod_provider_v3.py'",v4)
+        self.assertIn("v3=_load('lion_k3s_pod_provider_v3_base',V3_PATH)",v4)
 if __name__=='__main__': unittest.main()
