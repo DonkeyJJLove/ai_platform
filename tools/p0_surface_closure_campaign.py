@@ -1,11 +1,11 @@
-"""Build the exact evidence-only 235-surface closure campaign from current inventory."""
+"""Build the exact evidence-only surface closure campaign from current inventory."""
 from __future__ import annotations
 from collections import defaultdict
 from typing import Mapping,Tuple
 from cyber_lion.contracts.complete_mediation import EffectSurfaceInventory
 from tools.p0_surface_closure_campaign_contract import ProviderFamilyClosurePlan,SurfaceClosureCampaign,SurfaceClosureWorkItem
 
-EXPECTED_SCAN_DIGEST="9c93b7bc51ae9329c86fa59fae486eb35281f5716c1c7c267e427fbc91764d1a"
+EXPECTED_SCAN_DIGEST="a23aaf4b6fe387da94163019f09dc80a05fb1a20b913c98fc67df43b879d337d"
 CERTIFIED_PARTIAL_SURFACE="8c6d0020a0816d674a783504d2a8ccc25e3e75c0d446057ba3f4450bd768f687"
 MOON_PROVIDERS=frozenset({
     ".github.workflows.moon-file-write.yml",
