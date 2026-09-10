@@ -89,6 +89,10 @@ class EventSocketServer:
         for key in ("process_language", "process_class", "adapter_type", "host", "runtime", "phase", "status"):
             if event.get(key) is not None:
                 projected[key] = event[key]
+        # Observation events commonly carry only the subset of source/target/
+        # authority known to the LPCL emitter. Merge these contexts so later
+        # lifecycle events cannot erase stronger adapter-derived runtime proof
+        # such as target.cloned_head or exact image/runtime identity.
         for key in ("source", "target", "authority"):
             value = event.get(key)
             if isinstance(value, dict):
