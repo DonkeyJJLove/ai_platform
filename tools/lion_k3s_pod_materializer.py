@@ -199,7 +199,7 @@ def manifest() -> dict:
                             ],
                             "volumeMounts": [{"name": "runtime", "mountPath": "/opt/vkt"}],
                             "resources": {"requests": {"cpu": "1m", "memory": "8Mi"}, "limits": {"cpu": "50m", "memory": "32Mi"}},
-                            "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "runAsNonRoot": True, "runAsUser": 65532, "capabilities": {"drop": ["ALL"]}},
+                            "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "runAsNonRoot": True, "runAsUser": 1000, "capabilities": {"drop": ["ALL"]}},
                         }],
                         "volumes": [{"name": "runtime", "configMap": {"name": "vkt-runtime"}}],
                     },
