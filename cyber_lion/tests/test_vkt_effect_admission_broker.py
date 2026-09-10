@@ -22,10 +22,10 @@ class VktEffectAdmissionBrokerTests(unittest.TestCase):
 
     def test_only_mutating_start_operations_require_live_currentness(self):
         self.assertEqual(mod.LIVE_CURRENTNESS_REQUIRED, {
-            "PRECHECK_POD_RUNTIME",
             "PREPARE_LOCAL_K8S",
             "MATERIALIZE_VKT_PODS",
         })
+        self.assertNotIn("PRECHECK_POD_RUNTIME", mod.LIVE_CURRENTNESS_REQUIRED)
         self.assertNotIn("READ_POD_EVIDENCE", mod.LIVE_CURRENTNESS_REQUIRED)
         self.assertNotIn("STOP_VKT_PODS", mod.LIVE_CURRENTNESS_REQUIRED)
 
