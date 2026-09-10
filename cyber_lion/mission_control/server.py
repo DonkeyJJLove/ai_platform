@@ -4,7 +4,6 @@ import base64
 import errno
 import hashlib
 import json
-import mimetypes
 import os
 import struct
 import threading
@@ -69,14 +68,23 @@ def _safe_header_value(value: str) -> str:
 
 
 def _safe_static_target(request_path: str) -> Path | None:
-    rel = 'index.html' if request_path == '/' else request_path.lstrip('/')
-    candidate = (STATIC / rel).resolve()
-    static_root = STATIC.resolve()
-    try:
-        candidate.relative_to(static_root)
-    except ValueError:
-        return None
-    return candidate
+    if request_path in ('/', '/index.html'):
+        return STATIC / 'index.html'
+    if request_path == '/app.css':
+        return STATIC / 'app.css'
+    if request_path == '/app.js':
+        return STATIC / 'app.js'
+    return None
+
+
+def _static_content_type(target: Path) -> str:
+    if target.name == 'index.html':
+        return 'text/html; charset=utf-8'
+    if target.name == 'app.css':
+        return 'text/css; charset=utf-8'
+    if target.name == 'app.js':
+        return 'text/javascript; charset=utf-8'
+    raise ValueError('unknown static asset')
 
 
 def make_handler(mc: MissionControl):
@@ -163,15 +171,11 @@ def make_handler(mc: MissionControl):
                 return
             target = _safe_static_target(path)
             if target is None:
-                self.send_error(403)
-                return
-            if not target.is_file():
                 self.send_error(404)
                 return
             body = target.read_bytes()
-            content_type = _safe_header_value(mimetypes.guess_type(str(target))[0] or 'application/octet-stream')
             self.send_response(200)
-            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Type', _static_content_type(target))
             self.send_header('Content-Length', str(len(body)))
             self.send_header('Cache-Control', 'no-store')
             self.end_headers()
