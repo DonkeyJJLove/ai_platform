@@ -66,6 +66,12 @@ CREATE TABLE IF NOT EXISTS adapter_state(
 );
 '''
 
+_COUNT_QUERIES = {
+    "events": "SELECT COUNT(*) FROM events WHERE run_id=?",
+    "artifacts": "SELECT COUNT(*) FROM artifacts WHERE run_id=?",
+    "receipts": "SELECT COUNT(*) FROM receipts WHERE run_id=?",
+}
+
 
 def _merge_non_null(existing: Any, incoming: Any) -> Any:
     """Merge partial observation evidence without erasing stronger known values.
@@ -146,10 +152,11 @@ class Store:
         return json.loads(row[0]) if row else None
 
     def _count(self, table: str, run_id: str) -> int:
-        if table not in {"events", "artifacts", "receipts"}:
+        query = _COUNT_QUERIES.get(table)
+        if query is None:
             raise ValueError("invalid table")
         with self.lock:
-            row = self.db.execute(f"SELECT COUNT(*) FROM {table} WHERE run_id=?", (run_id,)).fetchone()
+            row = self.db.execute(query, (run_id,)).fetchone()
         return int(row[0])
 
     def append_event(self, event: dict[str, Any]) -> bool:
