@@ -28,11 +28,12 @@ STATIC_MODULES=(
  'cyber_lion.tests.test_scale64_runner_exec',
  'cyber_lion.tests.test_lion_k3s_pod_materializer',
  'cyber_lion.tests.test_lion_k3s_pod_provider',
+ 'cyber_lion.tests.test_lion_k3s_pod_provider_v4',
 )
 PYCOMPILE_FILES=(
  'tools/p0_docker_scale64_soak.py','tools/p0_docker_drone_runtime.py','tools/p0_rootless_docker_provider.py',
  'tools/lion_effect_admission_broker.py','tools/lion_runner_exec_provider.py','tools/lion_runner_exec_client.py',
- 'tools/lion_k3s_pod_provider.py','tools/lion_k3s_pod_provider_client.py','tools/lion_k3s_pod_materializer.py','tools/lion_lpcl_autonomous_vulnerability_research.py',
+ 'tools/lion_k3s_pod_provider.py','tools/lion_k3s_pod_provider_v2.py','tools/lion_k3s_pod_provider_v3.py','tools/lion_k3s_pod_provider_v4.py','tools/lion_k3s_pod_provider_client.py','tools/lion_k3s_pod_materializer.py','tools/lion_vkt_effect_admission_broker.py','tools/lion_vkt_effect_admission_client.py','tools/lion_lpcl_autonomous_vulnerability_research.py',
 )
 
 class Deny(RuntimeError): pass
@@ -92,7 +93,7 @@ def provider_call(op:str,head:str,tree:str)->dict[str,Any]:
     if not isinstance(v,dict) or v.get('ok') is not True or not isinstance(v.get('result'),dict): raise Deny('provider-call-failed')
     return v['result']
 def pod_provider_call(op:str,head:str,tree:str,run_id:str)->dict[str,Any]:
-    allowed={"PRECHECK_POD_RUNTIME","PREPARE_LOCAL_K8S","MATERIALIZE_VKT_PODS","READ_POD_EVIDENCE","STOP_VKT_PODS"}
+    allowed={"PRECHECK_POD_RUNTIME","PREPARE_LOCAL_K8S","MATERIALIZE_VKT_PODS","READ_POD_EVIDENCE","STOP_VKT_PODS","START_OSS_REPO_TEST","READ_OSS_REPO_TEST_EVIDENCE","STOP_OSS_REPO_TEST"}
     if op not in allowed: raise Deny('pod-provider-operation-denied')
     if not isinstance(run_id,str) or not SAFE_RUN_ID.fullmatch(run_id): raise Deny('pod-provider-run-id-invalid')
     req={
