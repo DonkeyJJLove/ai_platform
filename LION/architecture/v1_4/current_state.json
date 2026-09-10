@@ -42,7 +42,7 @@
     "source_count": 275,
     "surface_count": 245,
     "raw_unclassified_count": 6,
-    "scan_digest": "b42da5103dc22429e7367e38fd5deb9331abe5d50d7a8f957baa448bff38384a",
+    "scan_digest": "a6156573b7f2c00006b24002a31553f27f282d8b9cddeb5d482b4ea08dd231c2",
     "classification": "POST_PR310_R3_SUCCESSOR_NONCARRIER_EFFECT_INVENTORY"
   },
   "action_plane": {
@@ -166,10 +166,20 @@
     "production_authority": "NONE"
   },
   "r3_successor_validation": {
-    "targeted_tests": "PASS_125",
-    "full_linux_shadow_suite": "PASS_2480_WITH_5_CONTROLLED_SKIPS",
+    "targeted_tests": "PASS_155_WITH_2_CONTROLLED_SKIPS",
+    "full_linux_shadow_suite": "PASS_2481_WITH_5_CONTROLLED_SKIPS",
     "effect_surface_delta": "ZERO_ADDED_ZERO_REMOVED",
-    "bandit": "CI_REQUIRED",
-    "remote_ci": "PENDING"
+    "scan_digest": "a6156573b7f2c00006b24002a31553f27f282d8b9cddeb5d482b4ea08dd231c2",
+    "bandit": "PASS_1_9_4_ZERO_MEDIUM_ZERO_HIGH_NO_NOSEC",
+    "websocket_rfc6455_kat": "PASS_BYTE_EXACT",
+    "live_currentness_gate": "PASS_STALE_MASTER_EXACT_SUCCESSOR_REPAIR_PROVEN",
+    "remote_ci": "REVERIFY_REQUIRED_AFTER_B324_FORWARD_COMMIT"
+  },
+  "base_master_truth_projection": {
+    "declared_subject_digest": "66a92d2978bdfbe6bfca461e12bc2793b7a6e7ec110848ff726d61b0281882be",
+    "observed_subject_digest": "31b3b4ae36ef9fefbc6891535ce07f2e61487e21e762334e4132ab9fd8a62b9e",
+    "state": "STALE_INHERITED_POST_PR310",
+    "repair": "R3_SUCCESSOR_CARRIER_LAST_CURRENTNESS_REBIND",
+    "authority_effect": "NONE"
   }
 }

@@ -40,7 +40,7 @@ def make_handler(mc:MissionControl):
             if path=='/api/export': return self.send_json(mc.store.export())
             if path=='/health': return self.send_json({'ok':mc.error is None,'error':mc.error})
             if path=='/ws' and self.headers.get('Upgrade','').lower()=='websocket':
-                key=self.headers.get('Sec-WebSocket-Key',''); accept=base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode(); self.send_response(101); self.send_header('Upgrade','websocket'); self.send_header('Connection','Upgrade'); self.send_header('Sec-WebSocket-Accept',accept); self.end_headers()
+                key=self.headers.get('Sec-WebSocket-Key',''); accept=base64.b64encode(hashlib.sha1((key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode(), usedforsecurity=False).digest()).decode(); self.send_response(101); self.send_header('Upgrade','websocket'); self.send_header('Connection','Upgrade'); self.send_header('Sec-WebSocket-Accept',accept); self.end_headers()
                 try:
                     while not mc.stop_event.is_set(): self.wfile.write(_frame(json.dumps(mc.state(),sort_keys=True,separators=(',',':')).encode())); self.wfile.flush(); time.sleep(1)
                 except Exception: pass

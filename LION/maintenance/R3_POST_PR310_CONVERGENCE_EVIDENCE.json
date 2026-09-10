@@ -44,7 +44,7 @@
     "source_count": 275,
     "surface_count": 245,
     "unclassified_count": 6,
-    "scan_digest": "b42da5103dc22429e7367e38fd5deb9331abe5d50d7a8f957baa448bff38384a"
+    "scan_digest": "a6156573b7f2c00006b24002a31553f27f282d8b9cddeb5d482b4ea08dd231c2"
   },
   "vkt_r1_semantic_reconciliation": {
     "changed_paths": 36,
@@ -88,5 +88,45 @@
     "git_diff_check": "PASS",
     "local_bandit": "UNAVAILABLE_CI_REQUIRED"
   },
-  "lpcl_pr309_post_pr310": "STALE_BASE_DIVERGED_61_AHEAD_61_BEHIND"
+  "lpcl_pr309_post_pr310": "STALE_BASE_DIVERGED_61_AHEAD_61_BEHIND",
+  "b324_repair": {
+    "rule": "B324",
+    "target": "cyber_lion/vkt_r3/mission_control/server.py",
+    "origin": "INHERITED_FROM_PR310_MASTER",
+    "classification": "RFC6455_PROTOCOL_TRANSFORM_NOT_SECURITY_PRIMITIVE",
+    "repair": "hashlib.sha1(..., usedforsecurity=False)",
+    "rfc6455_guid": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
+    "known_answer": "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=",
+    "kat": "PASS",
+    "local_bandit_1_9_4": "PASS_ZERO_MEDIUM_ZERO_HIGH",
+    "nosec": "NOT_USED",
+    "scan_digest": "a6156573b7f2c00006b24002a31553f27f282d8b9cddeb5d482b4ea08dd231c2",
+    "effect_surface_delta": {
+      "added": 0,
+      "removed": 0,
+      "source_count": 275,
+      "surface_count": 245,
+      "raw_unclassified": 6,
+      "reconciled_unknown": 0
+    },
+    "targeted_tests": {
+      "ran": 155,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "full_linux_shadow_suite": {
+      "ran": 2481,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5
+    },
+    "live_currentness_gate": "PASS"
+  },
+  "base_master_truth_projection": {
+    "declared_subject_digest": "66a92d2978bdfbe6bfca461e12bc2793b7a6e7ec110848ff726d61b0281882be",
+    "observed_subject_digest": "31b3b4ae36ef9fefbc6891535ce07f2e61487e21e762334e4132ab9fd8a62b9e",
+    "classification": "STALE_INHERITED_POST_PR310",
+    "successor_obligation": "CARRIER_LAST_REPAIR_BEFORE_MERGE"
+  }
 }

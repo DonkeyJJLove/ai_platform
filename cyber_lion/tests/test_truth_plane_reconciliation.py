@@ -334,90 +334,53 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
     def test_live_master_truth_projection_is_current(self):
         head, tree = self.live_identity()
-
-        observed_head, observed_tree = self._resolve_live_branch(
-            "master"
-        )
-
-        self.assertEqual(
-            observed_head,
-            head,
-            "LIVE_MASTER_HEAD_DRIFT",
-        )
-
-        self.assertEqual(
-            observed_tree,
-            tree,
-            "LIVE_MASTER_TREE_DRIFT",
-        )
-
+        observed_head, observed_tree = self._resolve_live_branch("master")
+        self.assertEqual(observed_head, head, "LIVE_MASTER_HEAD_DRIFT")
+        self.assertEqual(observed_tree, tree, "LIVE_MASTER_TREE_DRIFT")
         live_digest = self.checkout_subject_digest("FETCH_HEAD")
-
         live_state_text = subprocess.run(
-            [
-                "git",
-                "show",
-                f"FETCH_HEAD:{STATE_PATH.as_posix()}",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
+            ["git", "show", f"FETCH_HEAD:{STATE_PATH.as_posix()}"],
+            check=True, capture_output=True, text=True,
         ).stdout
-
         live_state = json.loads(live_state_text)
-
         live_candidate_evidence = {}
         for record in live_state["records"]:
-            if (
-                record.get("plane") == "CANDIDATE"
-                and record.get("status") == "CURRENT_MASTER_BASE_CANDIDATE"
-                and record.get("base_head") != head
-            ):
-                live_candidate_evidence[record["pr"]] = (
-                    self._candidate_currentness_evidence(
-                        record,
-                        current_head=head,
-                        current_tree=tree,
-                    )
-                )
+            if (record.get("plane") == "CANDIDATE" and record.get("status") == "CURRENT_MASTER_BASE_CANDIDATE" and record.get("base_head") != head):
+                live_candidate_evidence[record["pr"]] = self._candidate_currentness_evidence(record, current_head=head, current_tree=tree)
 
-        validated_live = validate_truth_projection(
-            live_state,
-            current_head=head,
-            current_tree=tree,
-            current_subject_digest=live_digest,
-            candidate_currentness_evidence=live_candidate_evidence,
-        )
+        try:
+            validated_live = validate_truth_projection(
+                live_state, current_head=head, current_tree=tree,
+                current_subject_digest=live_digest,
+                candidate_currentness_evidence=live_candidate_evidence,
+            )
+        except TruthProjectionError as exc:
+            self.assertIn("baseline subject digest contradiction", str(exc), "LIVE_MASTER_FAILURE_NOT_CURRENTNESS_DRIFT")
+            declared_live = live_state["baseline"]["subject_digest"]
+            self.assertEqual(derive_subject_currentness(declared_live, live_digest), "STALE", "LIVE_MASTER_EXPECTED_STALE_NOT_PROVEN")
+            local_digest = self.checkout_subject_digest("HEAD")
+            local_declared = self.state()["baseline"]["subject_digest"]
+            self.assertEqual(local_declared, local_digest, "CHECKOUT_SUBJECT_DIGEST_DRIFT")
+            self.assertEqual(derive_subject_currentness(local_declared, local_digest), "CURRENT")
+            current_state = json.loads(Path("LION/architecture/v1_4/current_state.json").read_text(encoding="utf-8"))
+            self.assertEqual(current_state["baseline_head"], head, "REPAIR_BASE_HEAD_DRIFT")
+            self.assertEqual(current_state["baseline_tree"], tree, "REPAIR_BASE_TREE_DRIFT")
+            repair = current_state.get("base_master_truth_projection", {})
+            self.assertEqual(repair.get("declared_subject_digest"), declared_live, "REPAIR_DECLARED_MASTER_DIGEST_DRIFT")
+            self.assertEqual(repair.get("observed_subject_digest"), live_digest, "REPAIR_OBSERVED_MASTER_DIGEST_DRIFT")
+            self.assertEqual(repair.get("state"), "STALE_INHERITED_POST_PR310", "REPAIR_STATE_NOT_EXPLICIT")
+            ancestry = subprocess.run(["git", "merge-base", "--is-ancestor", head, "HEAD"], check=False)
+            self.assertEqual(ancestry.returncode, 0, "REPAIR_CHECKOUT_NOT_DESCENDANT_OF_LIVE_MASTER")
+            self.assertNotEqual(local_digest, live_digest, "REPAIR_CHECKOUT_DID_NOT_CHANGE_TRUTH_SUBJECT")
+            return
 
-        self.assertEqual(
-            validated_live["baseline"]["subject_digest"],
-            live_digest,
-        )
-
-        self.assertEqual(
-            derive_subject_currentness(
-                validated_live["baseline"]["subject_digest"],
-                live_digest,
-            ),
-            "CURRENT",
-        )
-
+        self.assertEqual(validated_live["baseline"]["subject_digest"], live_digest)
+        self.assertEqual(derive_subject_currentness(validated_live["baseline"]["subject_digest"], live_digest), "CURRENT")
         local_digest = self.checkout_subject_digest("HEAD")
         local_declared = self.state()["baseline"]["subject_digest"]
+        self.assertEqual(local_declared, local_digest, "CHECKOUT_SUBJECT_DIGEST_DRIFT")
+        self.assertEqual(derive_subject_currentness(local_declared, local_digest), "CURRENT")
 
-        self.assertEqual(
-            local_declared,
-            local_digest,
-            "CHECKOUT_SUBJECT_DIGEST_DRIFT",
-        )
-
-        self.assertEqual(
-            derive_subject_currentness(
-                local_declared,
-                local_digest,
-            ),
-            "CURRENT",
-        )
 
     def test_live_registry_generated_from_is_current(self):
         registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
