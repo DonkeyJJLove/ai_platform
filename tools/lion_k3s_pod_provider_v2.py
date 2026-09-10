@@ -72,6 +72,25 @@ def _stuck_zero_restart_names(evidence: dict[str, Any]) -> list[str]:
 def install_into_core(core) -> None:
     core.ALLOWED_IMAGES = {RUNTIME_IMAGE}
     original_materialize = core.materialize
+    original_pod_evidence = core.pod_evidence
+
+    def pod_evidence_v2():
+        result = original_pod_evidence()
+        try:
+            import json as _json
+            nodes = _json.loads(core.kubectl(["get", "nodes", "-o", "json"], timeout=30).stdout)
+            items = nodes.get("items", []) or []
+            result["node_evidence"] = [{
+                "name": (n.get("metadata") or {}).get("name"),
+                "podCIDR": (n.get("spec") or {}).get("podCIDR"),
+                "podCIDRs": (n.get("spec") or {}).get("podCIDRs") or [],
+                "capacity": (n.get("status") or {}).get("capacity") or {},
+                "allocatable": (n.get("status") or {}).get("allocatable") or {},
+                "conditions": [{"type": c.get("type"), "status": c.get("status"), "reason": c.get("reason"), "message": c.get("message")} for c in ((n.get("status") or {}).get("conditions") or [])],
+            } for n in items]
+        except Exception as exc:
+            result["node_evidence_error"] = str(exc)[:500]
+        return result
 
     def load_manifest_v2():
         payload = transformed_manifest()
@@ -100,6 +119,7 @@ def install_into_core(core) -> None:
         return {"status": "STOPPED", "namespace": core.NAMESPACE}
 
     core.load_manifest = load_manifest_v2
+    core.pod_evidence = pod_evidence_v2
     core.materialize = materialize_v2
     core.stop_vkt_pods = stop_v2
 
