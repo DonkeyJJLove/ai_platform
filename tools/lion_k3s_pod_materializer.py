@@ -137,13 +137,14 @@ def start_k3s() -> dict:
 
 
 def runtime_configmap() -> str:
-    drone_py = r'''import json, os, socket, time, urllib.request\nfleet=os.environ['FLEET']; pod=os.environ.get('POD_NAME','?'); drone=pod.rsplit('-',1)[-1] if '-' in pod else pod\nwhile True:\n    body=json.dumps({'fleet':fleet,'drone_id':drone,'pod':pod,'t':time.time()}).encode()\n    try:\n        req=urllib.request.Request('http://vkt-fleet-router:8080/heartbeat',data=body,headers={'Content-Type':'application/json'})\n        urllib.request.urlopen(req,timeout=2).read()\n    except Exception:\n        pass\n    time.sleep(2)\n'''
-    router_py = r'''from http.server import BaseHTTPRequestHandler,HTTPServer\nimport json,threading,time\nstate={}\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n=int(self.headers.get('Content-Length','0')); b=self.rfile.read(n)\n        try:\n            x=json.loads(b); state[(x.get('fleet'),x.get('drone_id'))]=x\n        except Exception: pass\n        self.send_response(204); self.end_headers()\n    def do_GET(self):\n        if self.path!='/state': self.send_response(404); self.end_headers(); return\n        b=json.dumps({'sample_utc':time.time(),'count':len(state),'items':list(state.values())}).encode()\n        self.send_response(200); self.send_header('Content-Type','application/json'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b)\n    def log_message(self,*a): pass\nHTTPServer(('0.0.0.0',8080),H).serve_forever()\n'''
-    # Raw literals make the embedded source readable in this generator, but
-    # ConfigMap file data must contain real LF bytes, not backslash+n tokens.
-    drone_py = drone_py.replace('\\n', '\n')
-    router_py = router_py.replace('\\n', '\n')
-    return json.dumps({"drone.py": drone_py, "router.py": router_py})
+    import importlib.util
+    payload_path = Path(__file__).resolve().parents[1] / "cyber_lion" / "vkt_r3" / "runtime_payload.py"
+    spec = importlib.util.spec_from_file_location("vkt_r3_runtime_payload", payload_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("VKT_RUNTIME_PAYLOAD_IMPORT_FAILED")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return json.dumps(module.runtime_sources())
 
 
 def manifest() -> dict:
@@ -196,6 +197,7 @@ def manifest() -> dict:
                             "env": [
                                 {"name": "FLEET", "value": fleet},
                                 {"name": "POD_NAME", "valueFrom": {"fieldRef": {"fieldPath": "metadata.name"}}},
+                                {"name": "POD_UID", "valueFrom": {"fieldRef": {"fieldPath": "metadata.uid"}}},
                             ],
                             "volumeMounts": [{"name": "runtime", "mountPath": "/opt/vkt"}],
                             "resources": {"requests": {"cpu": "1m", "memory": "8Mi"}, "limits": {"cpu": "50m", "memory": "32Mi"}},
@@ -206,6 +208,18 @@ def manifest() -> dict:
                 },
             },
         })
+    docs.append({
+        "apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
+        "metadata": {"name": "vkt-drone-egress", "namespace": NAMESPACE},
+        "spec": {
+            "podSelector": {"matchLabels": {"component": "drone"}},
+            "policyTypes": ["Egress"],
+            "egress": [
+                {"to": [{"podSelector": {"matchLabels": {"app": "vkt-fleet-router"}}}], "ports": [{"protocol": "TCP", "port": 8080}]},
+                {"to": [{"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "kube-system"}}}], "ports": [{"protocol": "UDP", "port": 53}, {"protocol": "TCP", "port": 53}]},
+            ],
+        },
+    })
     return {"apiVersion": "vkt.lpcl/v1", "kind": "VktPodMaterialization", "documents": docs}
 
 
