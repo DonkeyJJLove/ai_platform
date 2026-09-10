@@ -30,6 +30,39 @@ def transformed_manifest_v3():
     return payload
 
 v2.transformed_manifest=transformed_manifest_v3
+_original_install=v2.install_into_core
+
+def install_into_core_v3(core):
+    _original_install(core)
+    base_materialize=core.materialize
+    def materialize_v3():
+        desired=transformed_manifest_v3()
+        workloads=[d for d in desired.get('documents',[]) if d.get('kind')=='StatefulSet']
+        hashes={d['spec']['template']['metadata']['annotations']['vkt-runtime-sha256'] for d in workloads}
+        if len(hashes)!=1: raise RuntimeError('runtime-hash-cardinality')
+        expected_hash=next(iter(hashes))
+        result=base_materialize()
+        data=json.loads(core.kubectl(['get','pods','-n',core.NAMESPACE,'-l','component=drone','-o','json'],timeout=30).stdout)
+        stale=[]
+        for item in data.get('items',[]) or []:
+            meta=item.get('metadata') or {}; name=str(meta.get('name') or '')
+            ann=meta.get('annotations') or {}; actual=ann.get('vkt-runtime-sha256')
+            parts=name.rsplit('-',1)
+            if actual==expected_hash: continue
+            if len(parts)!=2 or parts[0] not in {'tiger-drone','spectra-drone','lion-drone'} or not parts[1].isdigit():
+                raise RuntimeError('runtime-rollout-name-denied:'+name)
+            stale.append(name)
+        stale=sorted(set(stale))
+        if len(stale)>384: raise RuntimeError('runtime-rollout-cardinality:'+str(len(stale)))
+        for name in stale:
+            core.kubectl(['delete','pod','-n',core.NAMESPACE,name,'--wait=false'],timeout=30)
+        result['runtime_hash_expected']=expected_hash
+        result['runtime_mismatch_recycled']=stale
+        result['runtime_mismatch_recycled_count']=len(stale)
+        return result
+    core.materialize=materialize_v3
+
+v2.install_into_core=install_into_core_v3
 
 def main(): return v2.main()
 if __name__=='__main__': raise SystemExit(main())
