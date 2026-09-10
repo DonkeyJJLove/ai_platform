@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import time
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +67,9 @@ class Reconciler:
                     for receipt in normalized.get('receipts') or []:
                         if isinstance(receipt, dict) and receipt.get('receipt_id'):
                             self.store.add_receipt(normalized['run_id'], receipt)
-                    observed.append(normalized)
+                    # Stored history preserves partial proof; current fleet counts
+                    # must use this poll's exact metrics, including empty maps.
+                    observed.append(dict(normalized, metrics=deepcopy(run.get('metrics') or {})))
                 self.store.set_adapter_state(adapter.adapter_id, {'ok': True, 'last_poll': time.time(), 'run_count': len(runs)})
             except Exception as exc:
                 message = type(exc).__name__ + ':' + str(exc)[:1000]
