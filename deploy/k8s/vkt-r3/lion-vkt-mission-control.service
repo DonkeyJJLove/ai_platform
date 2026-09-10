@@ -1,0 +1,30 @@
+[Unit]
+Description=LION VKT-R3 read-only Mission Control
+After=network-online.target lion-vkt-effect-admission.socket
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sentinelx
+Group=sentinelx
+WorkingDirectory=/opt/lion/k3s-vkt-r3/repo
+Environment=PYTHONPATH=/opt/lion/k3s-vkt-r3/repo
+ExecStart=/usr/bin/python3 /opt/lion/k3s-vkt-r3/repo/tools/vkt_r3_mission_control.py serve --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/opt/lion/k3s-vkt-r3
+ReadWritePaths=/var/lib/sentinelx/uploads/vkt-r3-mission-control
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
