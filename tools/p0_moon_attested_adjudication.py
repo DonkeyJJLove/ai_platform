@@ -226,7 +226,7 @@ def _adjudicated_bundle(*,inventory,surface,base_artifacts,record:RunnerAttested
             rule=ObservationReconciliationRule(sd,"MOON-OBSERVATION-RECONCILIATION/1",model,surface.entrypoints[0],record.adjudication_digest,record.inner_result_digest,False,(f"adjudication:{record.adjudication_digest}",f"inner-result:{record.inner_result_digest}")).validate()
             new.append(_promote_component(c,record,model,reconciliation_rule_digest=rule.digest(),historical_causality_claimed="false"));continue
         new.append(c)
-    bytype={}
+    bytype={};
     for c in new:bytype.setdefault(c.component_type,[]).append(c)
     base=base_artifacts.bundles[sd]
     obs=tuple(x.digest() for x in bytype["observer_identity"])

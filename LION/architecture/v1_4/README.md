@@ -1,5 +1,7 @@
 # Dokumentacja architektury LION — v1.4
 
+Odczyt po integracji #325 i reguły domknięcia #314 opisuje [notatka rekonsyliacji](PR314_PR325_CURRENTNESS.md). Poniższa epoka R128 i jej bazowe identyfikatory są historycznym zakresem tej dokumentacji, nie deklaracją bieżącego HEAD master.
+
 **Epoka dokumentacyjna:** `LION-DOC-R128-2026-09-10-R1`  
 **Bazowy stan `master` odtworzony przed utworzeniem kandydata:** HEAD `5e40338511fe2a5f0a891c823b03f9855d6ad1e8` / TREE `306b8cf245299517278ab0959a7aca79f66e5343`  
 **Gałąź kandydata dokumentacyjnego:** `docs/lion-v1.4-r128-polish-homeostasis-r1`  

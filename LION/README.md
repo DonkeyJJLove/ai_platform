@@ -4,6 +4,8 @@ LION jest architekturą związaną z dowodami i rozdzielającą authority, któr
 
 ## Bieżąca dokumentacja v1.4
 
+Zacznij od [rekonsyliacji #314/#325](architecture/v1_4/PR314_PR325_CURRENTNESS.md), która rozdziela zaobserwowany stan repozytorium od historycznych projekcji R128 i RAG.
+
 Punktem wejścia do bieżącej warstwy dokumentacyjnej architektury jest [`architecture/v1_4/README.md`](architecture/v1_4/README.md). Projekcje stanu muszą być związane z exact Git identity i stają się `STALE` po materialnym driftcie baseline'u. Model architektury wyprowadzany ze źródeł pozostaje własnością `cyber_lion/architecture_projection/full_architecture.py`; katalogi v1.4 są projekcjami i indeksami, a nie drugim wykonywalnym źródłem prawdy.
 
 `status.json` jest zachowany jako historyczna projekcja epoki E003. Jego samodeklarowany stan `CURRENT` nie jest dowodem bieżącego stanu repozytorium i nie może być używany jako źródło currentness dla v1.4.
