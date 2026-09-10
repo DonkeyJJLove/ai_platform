@@ -102,3 +102,60 @@ def summary_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "artifacts": artifacts,
         "run_count": len(runs),
     }
+
+def _nonnegative_int(value: Any) -> int:
+    if isinstance(value, bool):
+        return 0
+    if isinstance(value, int):
+        return max(0, value)
+    if isinstance(value, float) and value.is_integer():
+        return max(0, int(value))
+    return 0
+
+
+def fleet_summary_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    organizations_total: dict[str, int] = {}
+    organizations_active: dict[str, int] = {}
+    run_ids: list[str] = []
+    fleet_total = 0
+    working_drones = 0
+    for run in runs:
+        metrics = run.get("metrics") or {}
+        if not isinstance(metrics, dict):
+            continue
+        total_map = metrics.get("fleet_organizations") or {}
+        active_map = metrics.get("active_by_organization") or {}
+        if not isinstance(total_map, dict) or not isinstance(active_map, dict):
+            continue
+        if not total_map and not active_map:
+            continue
+        run_id = run.get("run_id")
+        if isinstance(run_id, str) and run_id:
+            run_ids.append(run_id)
+        normalized_total = {str(name): _nonnegative_int(value) for name, value in total_map.items()}
+        normalized_active = {str(name): _nonnegative_int(value) for name, value in active_map.items()}
+        run_total = _nonnegative_int(metrics.get("pods")) or sum(normalized_total.values())
+        run_active = _nonnegative_int(metrics.get("fresh_drones")) or sum(normalized_active.values())
+        fleet_total += run_total
+        working_drones += min(run_total, run_active) if run_total else run_active
+        for name, value in normalized_total.items():
+            organizations_total[name] = organizations_total.get(name, 0) + value
+        for name, value in normalized_active.items():
+            organizations_active[name] = organizations_active.get(name, 0) + value
+    names = sorted(set(organizations_total) | set(organizations_active))
+    organizations = {
+        name: {
+            "total": organizations_total.get(name, 0),
+            "active": organizations_active.get(name, 0),
+            "idle": max(0, organizations_total.get(name, 0) - organizations_active.get(name, 0)),
+        }
+        for name in names
+    }
+    return {
+        "fleet_total": fleet_total,
+        "working_drones": working_drones,
+        "idle_drones": max(0, fleet_total - working_drones),
+        "organization_count": len(names),
+        "organizations": organizations,
+        "run_ids": sorted(set(run_ids)),
+    }

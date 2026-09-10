@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote
 
-from .models import summary_from_runs
+from .models import fleet_summary_from_runs, summary_from_runs
 
 STATIC = Path(__file__).resolve().parent / 'static'
 
@@ -49,6 +49,7 @@ class MissionControl:
             'ok': self.error is None,
             'error': self.error,
             'summary': summary_from_runs(runs),
+            'fleet': fleet_summary_from_runs(runs),
             'adapter_errors': dict(self.reconciler.errors),
         }
 

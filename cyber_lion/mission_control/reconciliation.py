@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .artifacts import describe_artifact
+from .schema import validate_event
 
 HISTORICAL_VKT_SUMMARY = Path('/var/lib/sentinelx/uploads/vkt-r3-lpcl-v2-final/final-summary.json')
 HISTORICAL_VKT_VALIDATOR = Path('/var/lib/sentinelx/uploads/vkt-r3-validation/lpcl-v2-supervised-600s.json')
@@ -44,8 +45,16 @@ class Reconciler:
                 runs = adapter.poll()
                 self.errors.pop(adapter.adapter_id, None)
                 for run in runs:
+                    observation_events = run.pop("_observation_events", ())
+                    if not isinstance(observation_events, (list, tuple)):
+                        raise TypeError("adapter observation events must be a sequence")
                     run = self._preserve_terminal_lifecycle(run)
                     normalized = self.store.upsert_run(run)
+                    for event in observation_events:
+                        validated_event = validate_event(event)
+                        if validated_event["run_id"] != normalized["run_id"]:
+                            raise ValueError("adapter observation event run mismatch")
+                        self.store.append_event(validated_event)
                     for name, value in (normalized.get('metrics') or {}).items():
                         if value is not None:
                             self.store.add_metric(normalized['run_id'], name, value)

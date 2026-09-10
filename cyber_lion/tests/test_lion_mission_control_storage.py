@@ -71,6 +71,28 @@ class StorageTests(unittest.TestCase):
             self.assertEqual(run['metrics']['pytest_summary'],'297 passed')
             self.assertEqual(run['evidence']['image_ids']['pytest'],'img')
 
+    def test_adapter_channel_message_is_validated_persisted_and_deduplicated(self):
+        class Adapter:
+            adapter_id="VKT_R3"
+            def poll(self):
+                event={
+                    "schema_version":"lion.observation-event/v1","event_id":"channel-1","run_id":"fleet","timestamp":1.0,
+                    "event_type":"CHANNEL_MESSAGE","process_language":"LPCL-1_0","process_class":"VKT_R3_384_DRONE_TEST",
+                    "adapter_type":"VKT_R3","host":"LION-AUTH-LAB","runtime":"K3S","phase":"P1","status":"RUNNING",
+                    "payload":{"message_id":"m1","from_fleet":"TIGER","to_fleet":"SPECTRA","from_drone_id":"1","type":"RELATION"},
+                }
+                return [{"run_id":"fleet","status":"RUNNING","verification_status":"OBSERVED","adapter_type":"VKT_R3","_observation_events":[event]}]
+        class Registry:
+            def all(self): return [Adapter()]
+        with tempfile.TemporaryDirectory() as d:
+            s=Store(Path(d)/"mc.db")
+            r=Reconciler(s,Registry())
+            r.poll_once(); r.poll_once()
+            events=s.events("fleet")
+            self.assertEqual(len(events),1)
+            self.assertEqual(events[0]["event_type"],"CHANNEL_MESSAGE")
+            self.assertEqual(events[0]["payload"]["from_fleet"],"TIGER")
+
     def test_late_adapter_snapshot_cannot_regress_cleaned_verified_run(self):
         class Adapter:
             adapter_id='OSS_REPOSITORY_TEST'

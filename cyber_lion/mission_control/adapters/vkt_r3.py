@@ -26,6 +26,8 @@ class VktR3Adapter:
         router = evidence.get("router_state") or {}
         mission = router.get("mission") or {}
         materialized = int(evidence.get("materialized") or 0)
+        fleet_organizations = {str(k): int(v) for k, v in (evidence.get("by_fleet") or {}).items()}
+        active_by_organization = {str(k): int(v) for k, v in (router.get("fresh_by_fleet") or {}).items()}
         if materialized == 0 and not mission:
             return []
         complete = bool(mission.get("completed")) or str(mission.get("phase") or "").upper() == "COMPLETE"
@@ -42,6 +44,8 @@ class VktR3Adapter:
             "orphans": int(router.get("orphans") or 0),
             "duplicates": int(router.get("duplicates") or 0),
             "vendor_requests": int(evidence.get("vendor_requests") or 0),
+            "fleet_organizations": fleet_organizations,
+            "active_by_organization": active_by_organization,
         }
         verified = (
             complete and materialized == 384 and metrics["ready"] == 384 and metrics["uids"] == 384
@@ -61,6 +65,34 @@ class VktR3Adapter:
                 "status": "PASS",
                 "timestamp": None,
             }
+        observation_events = []
+        for message in (router.get("messages") or [])[-1000:]:
+            if not isinstance(message, dict):
+                continue
+            message_id = str(message.get("message_id") or "")
+            if not message_id:
+                continue
+            try:
+                timestamp = float(message.get("timestamp") or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if timestamp <= 0:
+                continue
+            observation_events.append({
+                "schema_version": "lion.observation-event/v1",
+                "event_id": "vkt-channel:" + message_id,
+                "run_id": "vkt-r3-live",
+                "timestamp": timestamp,
+                "event_type": "CHANNEL_MESSAGE",
+                "process_language": "LPCL-1_0",
+                "process_class": "VKT_R3_384_DRONE_TEST",
+                "adapter_type": self.adapter_id,
+                "host": "LION-AUTH-LAB",
+                "runtime": "K3S",
+                "phase": message.get("phase"),
+                "status": status,
+                "payload": dict(message),
+            })
         return [{
             "run_id": "vkt-r3-live",
             "process_language": "LPCL-1_0",
@@ -82,4 +114,5 @@ class VktR3Adapter:
             "receipts": [receipt] if receipt else [],
             "cleanup": {},
             "evidence": {"class": "KUBERNETES_RUNTIME", "uid_set": evidence.get("pod_uid_set_sha256")},
+            "_observation_events": observation_events,
         }]
