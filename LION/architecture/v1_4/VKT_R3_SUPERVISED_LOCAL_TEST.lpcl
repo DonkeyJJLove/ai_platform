@@ -53,7 +53,7 @@ MISSION_CONTROL_AUTHORITY=
 READ_ONLY
 
 MISSION_CONTROL_ENDPOINT_SOURCE=
-/var/lib/sentinelx/uploads/vkt-r3-mission-control/listen.json
+/run/lion-vkt-mission-control/listen.json
 
 PHASES=
 REACQUIRE

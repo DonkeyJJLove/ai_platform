@@ -71,6 +71,7 @@ def serve(mc:MissionControl,host='127.0.0.1',port=8765,fallback_ports=(),listen_
         tmp=state_path.with_suffix(state_path.suffix+'.tmp')
         tmp.write_text(json.dumps({'host':host,'port':selected,'pid':os.getpid(),'status':'LISTENING'},sort_keys=True)+'\n')
         os.replace(tmp,state_path)
+        os.chmod(state_path,0o644)
     t=threading.Thread(target=mc.loop,daemon=True); t.start()
     try: httpd.serve_forever()
     finally:

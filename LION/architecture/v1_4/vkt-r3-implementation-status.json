@@ -102,7 +102,7 @@
     "test_execution_authority": "LPCL_ONLY",
     "test_mutation_authority": "LPCL_ONLY",
     "mission_control_authority": "READ_ONLY",
-    "mission_control_endpoint_file": "/var/lib/sentinelx/uploads/vkt-r3-mission-control/listen.json",
+    "mission_control_endpoint_file": "/run/lion-vkt-mission-control/listen.json",
     "mission_control_port_candidates": [
       8765,
       8766,

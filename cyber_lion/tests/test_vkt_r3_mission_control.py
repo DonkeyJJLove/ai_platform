@@ -17,8 +17,10 @@ class MissionControlTests(unittest.TestCase):
   root=Path(__file__).resolve().parents[2]
   unit=(root/'deploy/k8s/vkt-r3/lion-vkt-mission-control.service').read_text()
   self.assertIn('User=sentinelx',unit); self.assertIn('--source-identity /opt/lion/k3s-vkt-r3/source-identity.json',unit)
+  self.assertIn('RuntimeDirectory=lion-vkt-mission-control',unit); self.assertIn('RuntimeDirectoryMode=0755',unit)
   for port in range(8765,8776): self.assertIn(str(port),unit)
-  self.assertIn('--listen-state /var/lib/sentinelx/uploads/vkt-r3-mission-control/listen.json',unit)
+  self.assertIn('--listen-state /run/lion-vkt-mission-control/listen.json',unit)
+  self.assertIn('/run/lion-vkt-mission-control',unit)
  def test_observer_has_no_test_mutation_authority(self):
   root=Path(__file__).resolve().parents[2]
   src=(root/'cyber_lion/vkt_r3/mission_control/source.py').read_text()
@@ -56,5 +58,10 @@ class MissionControlTests(unittest.TestCase):
   self.assertIn('lion-vkt-mission-control.service',install)
   self.assertIn('systemctl restart lion-vkt-mission-control.service',bootstrap)
   self.assertNotIn('mission/vkt-r3-pod-materialization-r2',install+bootstrap)
+
+ def test_operator_locator_is_explicitly_world_readable(self):
+  root=Path(__file__).resolve().parents[2]
+  server=(root/'cyber_lion/vkt_r3/mission_control/server.py').read_text()
+  self.assertIn('os.chmod(state_path,0o644)',server)
 
 if __name__=='__main__': unittest.main()

@@ -7,9 +7,11 @@ Wants=network-online.target
 Type=simple
 User=sentinelx
 Group=sentinelx
+RuntimeDirectory=lion-vkt-mission-control
+RuntimeDirectoryMode=0755
 WorkingDirectory=/opt/lion/k3s-vkt-r3/repo
 Environment=PYTHONPATH=/opt/lion/k3s-vkt-r3/repo
-ExecStart=/usr/bin/python3 /opt/lion/k3s-vkt-r3/repo/tools/vkt_r3_mission_control.py --source-identity /opt/lion/k3s-vkt-r3/source-identity.json --db /var/lib/sentinelx/uploads/vkt-r3-mission-control/mission-control.db serve --host 127.0.0.1 --port 8765 --fallback-port 8766 --fallback-port 8767 --fallback-port 8768 --fallback-port 8769 --fallback-port 8770 --fallback-port 8771 --fallback-port 8772 --fallback-port 8773 --fallback-port 8774 --fallback-port 8775 --listen-state /var/lib/sentinelx/uploads/vkt-r3-mission-control/listen.json
+ExecStart=/usr/bin/python3 /opt/lion/k3s-vkt-r3/repo/tools/vkt_r3_mission_control.py --source-identity /opt/lion/k3s-vkt-r3/source-identity.json --db /var/lib/sentinelx/uploads/vkt-r3-mission-control/mission-control.db serve --host 127.0.0.1 --port 8765 --fallback-port 8766 --fallback-port 8767 --fallback-port 8768 --fallback-port 8769 --fallback-port 8770 --fallback-port 8771 --fallback-port 8772 --fallback-port 8773 --fallback-port 8774 --fallback-port 8775 --listen-state /run/lion-vkt-mission-control/listen.json
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=yes
@@ -23,7 +25,7 @@ ProtectKernelLogs=yes
 ProtectControlGroups=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 ReadOnlyPaths=/opt/lion/k3s-vkt-r3
-ReadWritePaths=/var/lib/sentinelx/uploads/vkt-r3-mission-control
+ReadWritePaths=/var/lib/sentinelx/uploads/vkt-r3-mission-control /run/lion-vkt-mission-control
 UMask=0077
 
 [Install]
