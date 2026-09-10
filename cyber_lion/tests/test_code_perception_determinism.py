@@ -22,7 +22,7 @@ REPOSITORY = "DonkeyJJLove/ai_platform"
 
 def fixture_blob(path: str, data: bytes) -> BlobInput:
     framed = f"blob {len(data)}\0".encode("ascii") + data
-    return BlobInput(path, hashlib.sha1(framed).hexdigest(), len(data), data)
+    return BlobInput(path, hashlib.sha1(framed, usedforsecurity=False).hexdigest(), len(data), data)
 
 
 def call_edges(graph, qname: str):

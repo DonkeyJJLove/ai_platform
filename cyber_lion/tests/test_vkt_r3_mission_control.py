@@ -70,5 +70,18 @@ class MissionControlTests(unittest.TestCase):
   root=Path(__file__).resolve().parents[2]
   server=(root/'cyber_lion/mission_control/server.py').read_text()
   self.assertIn('os.chmod(p, 0o644)',server)
+ def test_static_path_resolution_is_root_bounded(self):
+  from cyber_lion.mission_control.server import _safe_static_target as generic_target
+  from cyber_lion.vkt_r3.mission_control.server import _safe_static_target as legacy_target
+  self.assertIsNone(generic_target('/../../etc/passwd'))
+  self.assertIsNone(legacy_target('/../../etc/passwd'))
+  self.assertIsNotNone(generic_target('/index.html'))
+  self.assertIsNotNone(legacy_target('/index.html'))
+ def test_header_value_rejects_response_splitting(self):
+  from cyber_lion.mission_control.server import _safe_header_value as generic_header
+  from cyber_lion.vkt_r3.mission_control.server import _safe_header_value as legacy_header
+  for helper in (generic_header,legacy_header):
+   self.assertEqual(helper('text/plain'),'text/plain')
+   with self.assertRaises(ValueError): helper('text/plain\r\nX-Evil: 1')
 
 if __name__=='__main__': unittest.main()
