@@ -1,5 +1,5 @@
 from __future__ import annotations
-import base64, hashlib, json, mimetypes, struct, threading, time
+import base64, errno, hashlib, json, mimetypes, os, struct, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from .models import normalize, verify_read_only
@@ -52,7 +52,29 @@ def make_handler(mc:MissionControl):
             b=target.read_bytes(); self.send_response(200); self.send_header('Content-Type',mimetypes.guess_type(str(target))[0] or 'application/octet-stream'); self.send_header('Content-Length',str(len(b))); self.send_header('Cache-Control','no-store'); self.end_headers(); self.wfile.write(b)
     return H
 
-def serve(mc:MissionControl,host='127.0.0.1',port=8765):
-    t=threading.Thread(target=mc.loop,daemon=True); t.start(); httpd=ThreadingHTTPServer((host,port),make_handler(mc))
+def serve(mc:MissionControl,host='127.0.0.1',port=8765,fallback_ports=(),listen_state=None):
+    candidates=[]
+    for candidate in (port,*fallback_ports):
+        candidate=int(candidate)
+        if candidate not in candidates: candidates.append(candidate)
+    httpd=None; selected=None
+    for candidate in candidates:
+        try:
+            httpd=ThreadingHTTPServer((host,candidate),make_handler(mc)); selected=candidate; break
+        except OSError as exc:
+            if exc.errno!=errno.EADDRINUSE: raise
+    if httpd is None or selected is None:
+        raise OSError(errno.EADDRINUSE,'no Mission Control port available in bounded candidate set')
+    state_path=Path(listen_state) if listen_state else None
+    if state_path is not None:
+        state_path.parent.mkdir(parents=True,exist_ok=True)
+        tmp=state_path.with_suffix(state_path.suffix+'.tmp')
+        tmp.write_text(json.dumps({'host':host,'port':selected,'pid':os.getpid(),'status':'LISTENING'},sort_keys=True)+'\n')
+        os.replace(tmp,state_path)
+    t=threading.Thread(target=mc.loop,daemon=True); t.start()
     try: httpd.serve_forever()
-    finally: mc.stop_event.set(); httpd.server_close()
+    finally:
+        mc.stop_event.set(); httpd.server_close()
+        if state_path is not None:
+            try: state_path.unlink()
+            except FileNotFoundError: pass

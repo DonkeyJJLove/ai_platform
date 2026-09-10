@@ -31,7 +31,7 @@ class VktEffectAdmissionBrokerTests(unittest.TestCase):
 
     def test_fixed_scope(self):
         self.assertEqual(mod.EXPECTED_HOST, "LION-AUTH-LAB")
-        self.assertEqual(mod.BRANCH, "mission/vkt-r3-pod-materialization-r2")
+        self.assertEqual(mod.BRANCH, "master")
         self.assertEqual(mod.MISSION_ID, "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2")
 
     def test_run_id_validation(self):
