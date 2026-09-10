@@ -79,6 +79,14 @@ printf '[Service]\nSupplementaryGroups=%s\n' "$PROVIDER_GROUP" >"$RUNNER_DROPIN/
 chmod 0644 "$RUNNER_DROPIN/20-lion-k3s-vkt-r3.conf"
 
 systemctl daemon-reload
+# If the fixed TEST_ONLY K3s runtime is already active, restart only that exact unit
+# so a reviewed unit-file change (for example kubelet max-pods) takes effect.
+# Bootstrap never starts a previously stopped K3s runtime implicitly.
+K3S_WAS_ACTIVE=NO
+if systemctl is-active --quiet lion-k3s-vkt-r3.service; then
+  K3S_WAS_ACTIVE=YES
+  systemctl restart lion-k3s-vkt-r3.service
+fi
 install -d -o root -g root -m 0755 /run/lion-k3s-vkt-r3
 systemctl enable lion-k3s-pod-provider.socket
 systemctl restart lion-k3s-pod-provider.socket
@@ -86,6 +94,7 @@ systemctl restart lion-k3s-pod-provider.socket
 
 echo "K3S_PROVIDER_INSTALLED=YES"
 echo "K3S_RUNTIME_STARTED=NO"
+echo "K3S_WAS_ACTIVE=$K3S_WAS_ACTIVE"
 echo "PROVIDER_SOCKET=/run/lion-k3s-vkt-r3/provider.sock"
 echo "SOURCE_HEAD=$EXPECTED_HEAD"
 echo "SOURCE_TREE=$EXPECTED_TREE"
