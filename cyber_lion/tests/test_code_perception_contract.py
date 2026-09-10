@@ -14,7 +14,7 @@ from cyber_lion.contracts.code_perception import (
 
 
 def blob_sha(data: bytes) -> str:
-    return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+    return hashlib.sha1(f"blob {len(data)}\0".encode() + data, usedforsecurity=False).hexdigest()
 
 
 class CodePerceptionContractTests(unittest.TestCase):
