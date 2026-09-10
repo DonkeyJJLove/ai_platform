@@ -23,4 +23,20 @@ class ProviderV2Tests(unittest.TestCase):
         unit=(ROOT/'deploy/k8s/vkt-r3/lion-k3s-pod-provider@.service').read_text()
         self.assertIn('/opt/lion/k3s-vkt-r3/repo/tools/lion_k3s_pod_provider_v2.py',unit)
 
+    def test_stuck_recycle_predicate_is_narrow_and_bounded(self):
+        sample={"pods":[
+            {"name":"lion-drone-101","ready":False,"restarts":0,"container_states":[{"waiting_reason":"ContainerCreating"}]},
+            {"name":"tiger-drone-1","ready":True,"restarts":0,"container_states":[{"waiting_reason":None}]},
+            {"name":"spectra-drone-2","ready":False,"restarts":1,"container_states":[{"waiting_reason":"CrashLoopBackOff"}]},
+        ]}
+        self.assertEqual(v2._stuck_zero_restart_names(sample),["lion-drone-101"])
+        too_many={"pods":[{"name":f"lion-drone-{i}","ready":False,"restarts":0,"container_states":[{"waiting_reason":"ContainerCreating"}]} for i in range(17)]}
+        with self.assertRaises(RuntimeError):
+            v2._stuck_zero_restart_names(too_many)
+
+    def test_cleanup_is_fixed_namespace_only(self):
+        text=P.read_text()
+        self.assertIn('["delete", "namespace", core.NAMESPACE', text)
+        self.assertNotIn('core.kubectl(["exec"', text)
+
 if __name__=='__main__': unittest.main()
