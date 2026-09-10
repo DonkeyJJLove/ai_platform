@@ -86,9 +86,17 @@ class EventSocketServer:
     def _project_run(self, event: dict[str, Any]) -> None:
         existing = self.store.get_run(event["run_id"]) or {"run_id": event["run_id"]}
         projected = dict(existing)
-        for key in ("process_language", "process_class", "adapter_type", "host", "runtime", "phase", "status", "source", "target", "authority"):
+        for key in ("process_language", "process_class", "adapter_type", "host", "runtime", "phase", "status"):
             if event.get(key) is not None:
                 projected[key] = event[key]
+        # Observation events commonly carry only the subset of source/target/
+        # authority known to the LPCL emitter. Merge these contexts so later
+        # lifecycle events cannot erase stronger adapter-derived runtime proof
+        # such as target.cloned_head or exact image/runtime identity.
+        for key in ("source", "target", "authority"):
+            value = event.get(key)
+            if isinstance(value, dict):
+                projected[key] = {**(projected.get(key) or {}), **value}
         payload = event.get("payload") or {}
         event_type = event["event_type"]
         if event_type == "RUN_STARTED":
