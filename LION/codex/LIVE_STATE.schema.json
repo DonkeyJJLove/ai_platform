@@ -1,0 +1,1021 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LION scope-bound observed state",
+  "description": "Instance evidence, not authority. Schema validity does not prove claims. Semantic validation must resolve evidence refs, compare head identities and digests, validate gate authority, and reject stale or circular evidence. Empty collections mean NOT_OBSERVED within scope, not a claim of global absence.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "lion.live-state/v1"
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 1
+    },
+    "master": {
+      "description": "Exact observed master identity; null means NOT_OBSERVED, never an inferred SHA. Explain missing observation in unknowns/currentness.",
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "head": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "tree": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          },
+          "required": [
+            "head",
+            "tree"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "branches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "branch": {
+            "type": "string",
+            "minLength": 1
+          },
+          "head": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "tree": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          }
+        },
+        "required": [
+          "branch",
+          "head",
+          "tree"
+        ]
+      }
+    },
+    "pull_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pr_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "state": {
+            "enum": [
+              "OPEN",
+              "CLOSED",
+              "MERGED"
+            ]
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1
+          },
+          "head": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "tree": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "base_head": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "merge_commit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pr_number",
+          "state",
+          "branch",
+          "head",
+          "tree",
+          "base_head",
+          "merge_commit"
+        ]
+      }
+    },
+    "ci": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "run_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "job_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "head": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "tree": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "event": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "PASS",
+              "FAIL",
+              "SUPERSEDED",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "synthetic_merge": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "head": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{40}$"
+                  },
+                  "tree": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{40}$"
+                  },
+                  "parents": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                },
+                "required": [
+                  "head",
+                  "tree",
+                  "parents"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "run_id",
+          "job_id",
+          "head",
+          "tree",
+          "event",
+          "status",
+          "evidence_refs",
+          "synthetic_merge"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "PASS"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "evidence_refs": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "code_scanning": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "alert_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "head": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "state": {
+            "enum": [
+              "OPEN",
+              "FIXED",
+              "DISMISSED",
+              "UNKNOWN"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "alert_number",
+          "head",
+          "state",
+          "evidence_refs"
+        ]
+      }
+    },
+    "production_inventory": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "subject": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "head": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}$"
+                }
+              },
+              "required": [
+                "head",
+                "tree"
+              ]
+            },
+            "source_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "surface_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "raw_unclassified_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "r9d8_unresolved_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scan_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "r9d7_inventory_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "r9d8_inventory_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "evidence_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "subject",
+            "source_count",
+            "surface_count",
+            "raw_unclassified_count",
+            "r9d8_unresolved_count",
+            "scan_digest",
+            "r9d7_inventory_digest",
+            "r9d8_inventory_digest",
+            "evidence_refs"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "truth_plane": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "declared_subject": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_subject": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registry_generated_from": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "CURRENT",
+            "STALE",
+            "UNKNOWN",
+            "NOT_APPLICABLE",
+            "PASS",
+            "FAIL",
+            "PENDING",
+            "SUPERSEDED"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "declared_subject",
+        "observed_subject",
+        "registry_generated_from",
+        "state",
+        "evidence_refs"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "CURRENT",
+                  "PASS"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "declared_subject": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "observed_subject": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "registry_generated_from": {
+                "type": "string",
+                "pattern": "^truth-subject-v1@[0-9a-f]{64}$"
+              },
+              "evidence_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "currentness": {
+      "$ref": "#/$defs/claim"
+    },
+    "documentation": {
+      "$ref": "#/$defs/claim"
+    },
+    "hosts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "host_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hostname": {
+            "type": "string",
+            "minLength": 1
+          },
+          "physical_domain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "CURRENT",
+              "STALE",
+              "UNKNOWN",
+              "NOT_APPLICABLE",
+              "PASS",
+              "FAIL",
+              "PENDING",
+              "SUPERSEDED"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "host_id",
+          "hostname",
+          "physical_domain",
+          "state",
+          "evidence_refs"
+        ]
+      }
+    },
+    "runtime": {
+      "$ref": "#/$defs/claim"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "enum": [
+            "NONE",
+            "AUTHORIZED",
+            "DENIED",
+            "UNKNOWN"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "scope",
+        "state",
+        "evidence_refs"
+      ]
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "effect_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reported": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observed": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reconciliation_state": {
+            "enum": [
+              "PENDING",
+              "RECONCILED",
+              "CONTRADICTED",
+              "UNKNOWN"
+            ]
+          },
+          "idempotent": {
+            "type": "boolean"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "effect_id",
+          "target",
+          "operation",
+          "reported",
+          "observed",
+          "reconciliation_state",
+          "idempotent",
+          "evidence_refs"
+        ]
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "active_frontier": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "first_unfinished_dependency": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "continuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "completed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "remaining_dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "next_action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "authorization_basis": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "retry_limit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempts_used": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "goal",
+        "completed",
+        "remaining_dependencies",
+        "next_action",
+        "authorization_basis",
+        "blockers",
+        "artifact_refs",
+        "decisions",
+        "retry_limit",
+        "attempts_used"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "plane": {
+            "enum": [
+              "GIT",
+              "CI",
+              "RUNTIME",
+              "AUTHORITY",
+              "RAG",
+              "DOCUMENTATION",
+              "MODEL",
+              "TEST"
+            ]
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "head": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{40}$"
+                  },
+                  "tree": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{40}$"
+                  }
+                },
+                "required": [
+                  "head",
+                  "tree"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "independent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "plane",
+          "locator",
+          "observed_at",
+          "subject",
+          "independent"
+        ]
+      }
+    },
+    "dependency_graph": {
+      "description": "Semantic validator checks unique node IDs, resolved endpoints, acyclicity and whether the first unfinished node has completed predecessors. Unknown edges cannot authorize execution.",
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nodes",
+            "edges"
+          ],
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "scope",
+                  "state"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "scope": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "state": {
+                    "enum": [
+                      "PENDING",
+                      "READY",
+                      "COMPLETED",
+                      "BLOCKED",
+                      "UNKNOWN"
+                    ]
+                  }
+                }
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "predecessor",
+                  "successor",
+                  "state",
+                  "evidence_refs"
+                ],
+                "properties": {
+                  "predecessor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "successor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "state": {
+                    "enum": [
+                      "PROVEN",
+                      "UNKNOWN"
+                    ]
+                  },
+                  "evidence_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "observation_id",
+    "observed_at",
+    "repository",
+    "master",
+    "branches",
+    "pull_requests",
+    "ci",
+    "code_scanning",
+    "production_inventory",
+    "truth_plane",
+    "currentness",
+    "documentation",
+    "hosts",
+    "runtime",
+    "authority",
+    "effects",
+    "contradictions",
+    "unknowns",
+    "active_frontier",
+    "first_unfinished_dependency",
+    "continuation",
+    "evidence",
+    "dependency_graph"
+  ],
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": [
+            "CURRENT",
+            "STALE",
+            "UNKNOWN",
+            "NOT_APPLICABLE",
+            "PASS",
+            "FAIL",
+            "PENDING",
+            "SUPERSEDED"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "state",
+        "scope",
+        "evidence_refs",
+        "unknowns"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "CURRENT",
+                  "PASS"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidence_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "state": {
+                "const": "AUTHORIZED"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "evidence_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "master": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "unknowns": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}
