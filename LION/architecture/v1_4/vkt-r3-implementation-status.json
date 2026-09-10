@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "project": "LION_EVOLUSION",
+  "mission_id": "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2",
+  "repository": "DonkeyJJLove/ai_platform",
+  "branch": "mission/vkt-r3-pod-materialization-r2",
+  "implementation": {
+    "bounded_k3s_provider": "IMPLEMENTED_STATIC",
+    "384_real_pod_materializer": "IMPLEMENTED_AND_HISTORICALLY_PROVEN",
+    "structured_runtime": "IMPLEMENTED_STATIC_AND_DEPLOYED_ON_PRIOR_HEAD",
+    "36_case_registry": "IMPLEMENTED_STATIC",
+    "tiger_pipeline": "IMPLEMENTED_STATIC",
+    "spectra_pipeline": "IMPLEMENTED_STATIC",
+    "lion_pipeline": "IMPLEMENTED_STATIC",
+    "router_state_evidence": "IMPLEMENTED_STATIC",
+    "mission_control": "IMPLEMENTED_STATIC",
+    "validator_600s": "IMPLEMENTED_STATIC"
+  },
+  "historical_evidence": {
+    "substrate_384_ready": true,
+    "substrate_unique_uid_count": 384,
+    "substrate_restart_count": 0,
+    "substrate_uid_set_sha256": "38d5e750a210b8d7041f2ef3afbb404c999d4e2e2914cc67d246a460800aa265",
+    "vendor_requests": 0,
+    "cni_leak_ip_lease_files_observed": 1021,
+    "cni_leak_cleanup_performed": true
+  },
+  "active_runtime": {
+    "status": "UNKNOWN_HOST_OFFLINE",
+    "host": "LION-AUTH-LAB",
+    "reason": "SentinelX host disconnected during read-only semantic rollout monitoring",
+    "semantic_36_case_proof": "UNVERIFIED_CURRENT",
+    "mission_control_live": "UNVERIFIED_CURRENT",
+    "validator_600s": "NOT_RUN"
+  },
+  "authority": {
+    "trust_class": "TEST_ONLY",
+    "production_authority": "NONE",
+    "vendor_production_testing": "DENY",
+    "vendor_requests_allowed": 0
+  },
+  "next_legal_action": [
+    "REACQUIRE_LION_AUTH_LAB",
+    "REACQUIRE_LIVE_K3S_AND_POD_STATE",
+    "INSTALL_LATEST_EXACT_HEAD_TREE",
+    "READ_ROUTER_STATE",
+    "PROVE_384_FRESH_HEARTBEATS",
+    "PROVE_36_CASE_PIPELINE",
+    "START_READ_ONLY_MISSION_CONTROL",
+    "RUN_EXACTLY_ONE_600_SECOND_VALIDATION",
+    "CLEANUP_AND_PROVE_CLEANUP",
+    "FINAL_MASTER_RECONCILIATION_AND_MERGE_GATE"
+  ]
+}
