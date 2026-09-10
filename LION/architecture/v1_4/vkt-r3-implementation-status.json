@@ -4,51 +4,86 @@
   "mission_id": "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2",
   "repository": "DonkeyJJLove/ai_platform",
   "branch": "mission/vkt-r3-pod-materialization-r2",
+  "validated_runtime_source": {
+    "head": "f4587b58aeb8107f090fabfe5431711bc972602e",
+    "tree": "a17ec821ed7b49a030d5499dacde5b27e5d0bdc5"
+  },
   "implementation": {
-    "bounded_k3s_provider": "IMPLEMENTED_STATIC",
-    "384_real_pod_materializer": "IMPLEMENTED_AND_HISTORICALLY_PROVEN",
-    "structured_runtime": "IMPLEMENTED_STATIC_AND_DEPLOYED_ON_PRIOR_HEAD",
-    "36_case_registry": "IMPLEMENTED_STATIC",
-    "tiger_pipeline": "IMPLEMENTED_STATIC",
-    "spectra_pipeline": "IMPLEMENTED_STATIC",
-    "lion_pipeline": "IMPLEMENTED_STATIC",
-    "router_state_evidence": "IMPLEMENTED_STATIC",
-    "mission_control": "IMPLEMENTED_STATIC",
-    "validator_600s": "IMPLEMENTED_STATIC"
+    "bounded_k3s_provider": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "384_real_pod_materializer": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "structured_runtime": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "36_case_registry": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "tiger_pipeline": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "spectra_pipeline": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "lion_pipeline": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "router_state_evidence": "IMPLEMENTED_AND_RUNTIME_PROVEN",
+    "mission_control": "IMPLEMENTED_AND_RUNTIME_PROVEN_ON_127.0.0.1:8766",
+    "validator_600s": "PASS",
+    "cleanup": "PASS"
   },
-  "historical_evidence": {
-    "substrate_384_ready": true,
-    "substrate_unique_uid_count": 384,
-    "substrate_restart_count": 0,
-    "substrate_uid_set_sha256": "38d5e750a210b8d7041f2ef3afbb404c999d4e2e2914cc67d246a460800aa265",
-    "vendor_requests": 0,
-    "cni_leak_ip_lease_files_observed": 1021,
-    "cni_leak_cleanup_performed": true
+  "runtime_evidence": {
+    "real_pods": 384,
+    "ready": 384,
+    "unique_uid_count": 384,
+    "restart_count": 0,
+    "uid_set_sha256": "a1b16bcf4929652fab776696a85964604bc8004410c762f788df873563b996c3",
+    "fresh_heartbeats": 384,
+    "fresh_by_fleet": {"TIGER": 128, "SPECTRA": 128, "LION": 128},
+    "cases_total": 36,
+    "cases_seen": 36,
+    "cases_proven": 36,
+    "messages_total": 768,
+    "ack_rate": 1.0,
+    "duplicates": 0,
+    "orphans": 0,
+    "participants": {
+      "TIGER_RELATION_ANALYSIS": 128,
+      "SPECTRA_FALSIFIER": 128,
+      "LION_LOCAL_EXECUTION": 128,
+      "LION_RECEIPT": 128,
+      "SPECTRA_PROOF_UPDATE": 128,
+      "TIGER_ADJACENCY": 128
+    },
+    "vendor_requests": 0
   },
-  "active_runtime": {
-    "status": "UNKNOWN_HOST_OFFLINE",
-    "host": "LION-AUTH-LAB",
-    "reason": "SentinelX host disconnected during read-only semantic rollout monitoring",
-    "semantic_36_case_proof": "UNVERIFIED_CURRENT",
-    "mission_control_live": "UNVERIFIED_CURRENT",
-    "validator_600s": "NOT_RUN"
+  "validation_600s": {
+    "status": "PASS",
+    "elapsed_seconds": 608.9660982460009,
+    "sample_count": 65,
+    "errors": [],
+    "baseline_uid_set": "a1b16bcf4929652fab776696a85964604bc8004410c762f788df873563b996c3",
+    "final_uid_set": "a1b16bcf4929652fab776696a85964604bc8004410c762f788df873563b996c3",
+    "artifact_sha256": "c8010b77e8d8667f567174346011f0d29c33ef5abd838d3bb3174e6194f8ad17"
+  },
+  "mission_control": {
+    "requested_port": 8765,
+    "requested_port_status": "OCCUPIED_BY_PREEXISTING_LOCAL_SERVICE",
+    "validated_port": 8766,
+    "bind": "127.0.0.1",
+    "final_export_sha256": "635e38e00c50a0329a4a05975822db9d3da7bb62298317ed10a89d07be5755f9",
+    "stopped_after_export": true
+  },
+  "cleanup": {
+    "status": "PASS",
+    "namespace": "vkt-r3",
+    "receipt_sha256": "47dfbf22cb91ffdd2e11d0c4f8727e433b1e8c41aa1741e8b5aa8a7c1445ec4d",
+    "idempotent_confirmation_receipt_sha256": "245e99e46c4b07998643af17adbf3017108f39eb4bd4a0f984c8404282fbe796",
+    "mission_control_port_8766_free": true,
+    "k3s_service_left_active_without_vkt_namespace": true
   },
   "authority": {
     "trust_class": "TEST_ONLY",
     "production_authority": "NONE",
     "vendor_production_testing": "DENY",
-    "vendor_requests_allowed": 0
+    "vendor_requests_allowed": 0,
+    "vendor_requests_observed": 0
   },
-  "next_legal_action": [
-    "REACQUIRE_LION_AUTH_LAB",
-    "REACQUIRE_LIVE_K3S_AND_POD_STATE",
-    "INSTALL_LATEST_EXACT_HEAD_TREE",
-    "READ_ROUTER_STATE",
-    "PROVE_384_FRESH_HEARTBEATS",
-    "PROVE_36_CASE_PIPELINE",
-    "START_READ_ONLY_MISSION_CONTROL",
-    "RUN_EXACTLY_ONE_600_SECOND_VALIDATION",
-    "CLEANUP_AND_PROVE_CLEANUP",
-    "FINAL_MASTER_RECONCILIATION_AND_MERGE_GATE"
-  ]
+  "merge_gate": {
+    "master_head_at_validation": "70929bb895726c0b4a552295e595e373191b0d2b",
+    "master_tree_at_validation": "0c463f98122145a1a39287240136d1a824a8038c",
+    "branch_status_before_final_reporting": "AHEAD_ONLY",
+    "behind_by": 0,
+    "merge_base": "70929bb895726c0b4a552295e595e373191b0d2b"
+  },
+  "mission_final_status": "PASS"
 }
