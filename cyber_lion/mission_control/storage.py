@@ -146,10 +146,15 @@ class Store:
         return json.loads(row[0]) if row else None
 
     def _count(self, table: str, run_id: str) -> int:
-        if table not in {"events", "artifacts", "receipts"}:
-            raise ValueError("invalid table")
         with self.lock:
-            row = self.db.execute(f"SELECT COUNT(*) FROM {table} WHERE run_id=?", (run_id,)).fetchone()
+            if table == "events":
+                row = self.db.execute("SELECT COUNT(*) FROM events WHERE run_id=?", (run_id,)).fetchone()
+            elif table == "artifacts":
+                row = self.db.execute("SELECT COUNT(*) FROM artifacts WHERE run_id=?", (run_id,)).fetchone()
+            elif table == "receipts":
+                row = self.db.execute("SELECT COUNT(*) FROM receipts WHERE run_id=?", (run_id,)).fetchone()
+            else:
+                raise ValueError("invalid table")
         return int(row[0])
 
     def append_event(self, event: dict[str, Any]) -> bool:
