@@ -1,0 +1,23 @@
+[Unit]
+Description=LION VKT-R3 bounded local K3s runtime
+Documentation=https://github.com/DonkeyJJLove/ai_platform
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=root
+Group=root
+ExecStart=/opt/lion/k3s/k3s server --write-kubeconfig /var/lib/lion-effect-admission/vkt-r3-k3s/kubeconfig.yaml --write-kubeconfig-mode 600 --data-dir /var/lib/lion-effect-admission/vkt-r3-k3s/data --disable traefik --disable servicelb --disable metrics-server --flannel-backend host-gw --node-name lion-auth-lab --cluster-cidr=10.42.0.0/16 --kube-controller-manager-arg=node-cidr-mask-size-ipv4=22 --kubelet-arg=max-pods=512
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=0
+TimeoutStopSec=60
+KillMode=process
+Delegate=yes
+TasksMax=infinity
+LimitNOFILE=1048576
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=LION VKT-R3 bounded effect admission socket
+
+[Socket]
+ListenStream=/run/lion-vkt-effect-admission.sock
+SocketUser=root
+SocketGroup=sentinelx
+SocketMode=0660
+Accept=yes
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target
