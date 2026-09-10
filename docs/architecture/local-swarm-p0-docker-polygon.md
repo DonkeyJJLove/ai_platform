@@ -2,11 +2,11 @@
 
 Status: `EXPERIMENT / TEST_ONLY / IMPLEMENTED_NOT_MATERIALIZED`
 
-This document records the first local-fleet Docker proving-ground implementation boundary for LION 1.4. It grants no authority and is not a runtime-currentness source.
+Ten dokument zapisuje historyczną granicę implementacyjną pierwszego lokalnego Docker proving-ground dla floty LION 1.4. Nie nadaje authority i nie jest źródłem runtime currentness.
 
-## Objective
+## Cel
 
-P0 is intended to prove the bounded chain:
+P0 miał udowodnić ograniczony łańcuch:
 
 ```text
 Mission
@@ -20,11 +20,11 @@ Mission
 -> exact cleanup
 ```
 
-Container startup alone is not success. `FULL_SUCCESS` requires a live authorized Docker effect, five bound terminal results, mandatory negative tests, independent observation, `MATCHED` reconciliation and cleanup evidence.
+Sam start kontenera nie jest sukcesem. `FULL_SUCCESS` wymaga live authorized Docker effect, pięciu związanych terminal results, obowiązkowych negative tests, niezależnej observation, reconciliation `MATCHED` oraz cleanup evidence.
 
 ## Test-only implementation plane
 
-The P0 implementation intentionally lives under the repository's established `tools/p0_*` experiment plane:
+Implementacja P0 celowo znajduje się w utrwalonej w repozytorium experiment plane `tools/p0_*`:
 
 ```text
 tools/p0_docker_fleet_contract.py
@@ -34,19 +34,19 @@ cyber_lion/tests/test_docker_fleet_polygon.py
 deploy/docker/lion-drone-p0/Dockerfile
 ```
 
-This separation is material. The canonical `_production_path()` inventory treats non-test `cyber_lion/*.py` as production sources. An initial placement under `cyber_lion` changed the frozen production scan digest and correctly failed global Core regressions. The experiment was therefore moved to `tools/p0_*` rather than refreezing historical production evidence around a TEST_ONLY feature.
+To rozdzielenie jest materialne. Canonical inventory `_production_path()` traktuje non-test `cyber_lion/*.py` jako production sources. Pierwotne umieszczenie pod `cyber_lion` zmieniło zamrożony production scan digest i prawidłowo spowodowało failure globalnych Core regressions. Eksperyment został więc przeniesiony do `tools/p0_*`, zamiast ponownie zamrażać historyczne production evidence wokół funkcji `TEST_ONLY`.
 
-## Runtime profile
+## Profil runtime
 
-The image definition is pinned to Docker Hardened Images Python 3.11 / Debian 13 for `linux/amd64` by immutable index digest:
+Definicja obrazu była przypięta immutable index digestem do Docker Hardened Images Python 3.11 / Debian 13 dla `linux/amd64`:
 
 ```text
 sha256:ee6f2172d994d5197755698750a815f842fe7f7df67cadfa0d32f47076a3523e
 ```
 
-The Dockerfile copies only the P0 contract and one-shot drone runtime. It has no `RUN`, package-install or shell step.
+Dockerfile kopiuje wyłącznie kontrakt P0 i one-shot drone runtime. Nie ma kroku `RUN`, instalacji pakietów ani shell step.
 
-Required runtime posture:
+Wymagany runtime posture:
 
 ```text
 uid:gid                 65532:65532
@@ -66,13 +66,13 @@ runtime shell           absent by image profile
 runtime package manager absent by image profile
 ```
 
-The container is not the drone identity. `DockerDroneBinding` binds logical identity to executor, generation, lease, capsule digest, exact image digest and expected container name.
+Kontener nie jest tożsamością drona. `DockerDroneBinding` wiąże logical identity z executor, generation, lease, capsule digest, exact image digest oraz expected container name.
 
-## Mission capsules and D0 work
+## Mission capsules i praca D0
 
-Each drone receives one immutable `MissionCapsule` mounted read-only at `/mission/capsule.json`. It binds mission/fleet/drone/role, generation/work unit, issue and expiry time, deterministic operation, bounded input plus digest, policy digest and capsule digest. Mutation, identity substitution, stale/invalid input or unsupported operation is denied.
+Każdy dron otrzymuje jeden immutable `MissionCapsule`, montowany read-only pod `/mission/capsule.json`. Wiąże mission/fleet/drone/role, generation/work unit, issue i expiry time, deterministic operation, bounded input wraz z digestem, policy digest oraz capsule digest. Mutation, identity substitution, stale/invalid input albo unsupported operation są odrzucane.
 
-The five mandatory roles are:
+Pięć obowiązkowych ról:
 
 ```text
 architecture
@@ -82,15 +82,15 @@ provenance
 falsifier
 ```
 
-All work is deterministic. No LLM, SaaS model, GitHub API or external service is part of the drone runtime.
+Cała praca jest deterministyczna. LLM, SaaS model, GitHub API ani zewnętrzny service nie są częścią drone runtime.
 
-For P0 the receipt transport is deliberately narrower than a broker: every one-shot drone emits one canonical terminal result on stdout, and the trusted host-side provider would retrieve it through `docker logs`. `FleetResultAggregator` then enforces mission/drone/generation/input/replay bindings. A mission-owned Docker `--internal` network remains required for observable isolation and later P1 reuse; no host port is published.
+Dla P0 receipt transport był celowo węższy niż broker: każdy one-shot drone emituje jeden canonical terminal result na stdout, a zaufany host-side provider miał pobrać go przez `docker logs`. `FleetResultAggregator` następnie egzekwuje mission/drone/generation/input/replay bindings. Mission-owned Docker `--internal` network pozostaje wymagany dla observable isolation i późniejszego reuse P1; żaden host port nie jest publikowany.
 
-## Docker authority boundary
+## Granica Docker authority
 
-`tools.p0_docker_fleet_materializer` does **not** invoke Docker. It compiles immutable fleet intent into exact Docker CLI argv and interprets independent `docker inspect` evidence. A separate host-side provider must already possess authorized access to the appropriate Docker endpoint.
+`tools.p0_docker_fleet_materializer` **nie** wywołuje Dockera. Kompiluje immutable fleet intent do exact Docker CLI argv i interpretuje niezależne `docker inspect` evidence. Oddzielny host-side provider musi już posiadać autoryzowany dostęp do właściwego Docker endpoint.
 
-The compiler never generates:
+Compiler nigdy nie generuje:
 
 ```text
 --privileged
@@ -101,11 +101,11 @@ The compiler never generates:
 /run/docker.sock mounts
 ```
 
-P0 must not alter Docker socket permissions, group membership, sudoers, SentinelX policy or Docker daemon configuration to make a run succeed.
+P0 nie może zmieniać permissions socketa Docker, group membership, sudoers, SentinelX policy ani konfiguracji Docker daemon tylko po to, aby run zakończył się sukcesem.
 
-## Live-state blocker observed during the mission
+## Live-state blocker zaobserwowany podczas misji
 
-The reacquired `LION-AUTH-LAB` state showed:
+Odtworzony wtedy stan `LION-AUTH-LAB` pokazywał:
 
 ```text
 host                      LION-AUTH-LAB
@@ -122,15 +122,15 @@ trust class               TEST_ONLY
 physical domain           WINDOWS-MOON
 ```
 
-The current SentinelX and self-hosted-runner principals cannot reach either Docker endpoint. No existing authority-preserving Docker effect broker/provider was found. Therefore live image build, five-container fleet execution and Docker-side observation were **not executed**. The correct classification is `IMPLEMENTED_NOT_MATERIALIZED` with blocker `NO_AUTHORIZED_DOCKER_EFFECT_PROVIDER`.
+Ówczesne principals SentinelX i self-hosted runner nie mogły dotrzeć do żadnego Docker endpoint. Nie znaleziono istniejącego authority-preserving Docker effect broker/provider. Dlatego live image build, uruchomienie floty pięciu kontenerów i Docker-side observation **nie zostały wykonane**. Prawidłowa klasyfikacja brzmiała `IMPLEMENTED_NOT_MATERIALIZED`, blocker `NO_AUTHORIZED_DOCKER_EFFECT_PROVIDER`.
 
-This blocker was not bypassed using group changes, socket ownership/mode changes, sudoers, `su`, Docker-socket mounts or runner hardening changes.
+Blockera nie obchodzono przez zmiany grup, ownership/mode socketa, sudoers, `su`, mounty Docker socket ani zmiany hardeningu runnera.
 
-## Validation and falsification
+## Walidacja i falsyfikacja
 
-The dedicated suite covers 12 static cases, including hardening degradation, capsule mutation, mission/drone substitution, fleet cardinality/role binding, internal network compilation, privileged/socket/host-namespace exclusion, wrong capsule binding, deterministic execution of all five D0 roles, replay/stale generation, image substitution, independent `docker inspect` parsing and final-image definition checks.
+Dedykowany suite obejmował 12 static cases, w tym hardening degradation, capsule mutation, mission/drone substitution, fleet cardinality/role binding, internal network compilation, wykluczenie privileged/socket/host-namespace, wrong capsule binding, deterministic execution wszystkich pięciu ról D0, replay/stale generation, image substitution, niezależne parsowanie `docker inspect` oraz final-image definition checks.
 
-After placement was corrected to the test-only tools plane, an exact WSL2 run on feature head `75660e3c75257e898fed1cd157a27cf233caf480` produced:
+Po poprawieniu placement do test-only tools plane exact WSL2 run na feature head `75660e3c75257e898fed1cd157a27cf233caf480` dał:
 
 ```text
 P0 targeted tests: 12/12 OK
@@ -138,11 +138,15 @@ full repository suite: 2264 tests OK, 5 skipped
 compileall: PASS
 ```
 
-The environment-dependent negative tests — real rootfs write failure, actual egress denial, live shell/package-manager absence, effective capability set, restart/lease behaviour and exact Docker cleanup — remain unproven until the authorized live provider exists.
+Environment-dependent negative tests — real rootfs write failure, rzeczywiste egress denial, live shell/package-manager absence, effective capability set, restart/lease behaviour oraz exact Docker cleanup — pozostały nieudowodnione do czasu istnienia autoryzowanego live provider.
 
-## Next transition
+## Historyczna granica a późniejsza ewolucja
 
-Live P0 `FULL_SUCCESS` is blocked on a narrow authority-preserving provider for the existing rootless Docker runtime. Only after that live proof may the next experiment add:
+Ten dokument opisuje P0 przed późniejszym VKT-R3. Fakt, że VKT-R3 później zmaterializował 3 × 128 rzeczywistych Kubernetes Podów przez inną, ograniczoną ścieżkę authority, nie zmienia historycznego wyniku P0 `IMPLEMENTED_NOT_MATERIALIZED`. Jest to supersession currentness/frontieru, a nie powód do przepisania dawnego eksperymentu.
+
+## Następne transition w tamtym evidence epoch
+
+Live P0 `FULL_SUCCESS` było zablokowane na wąskim authority-preserving provider dla istniejącego rootless Docker runtime. Dopiero po takim live proof następny eksperyment miał dodać:
 
 ```text
 D0 deterministic fleet
@@ -150,4 +154,6 @@ D0 deterministic fleet
 -> one shared LocalModelRuntime
 ```
 
-P1 must keep model weights and SaaS credentials out of drone images and separately measure shared-context, cache and batching economics.
+P1 miał utrzymać model weights i SaaS credentials poza drone images oraz osobno mierzyć shared-context, cache i batching economics.
+
+Bieżący następny krok należy dziś wyprowadzić ponownie z exact live `master`; nie należy automatycznie kontynuować historycznego P0 frontier.
