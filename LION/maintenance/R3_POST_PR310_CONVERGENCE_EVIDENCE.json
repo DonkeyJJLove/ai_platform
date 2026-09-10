@@ -1,0 +1,92 @@
+{
+  "schema_version": "lion.post-pr310-r3-convergence-evidence/v1",
+  "process": "lion:v1.4:r3-post-pr310-convergence-r2",
+  "repository": "DonkeyJJLove/ai_platform",
+  "observed_master": "e30734892bd8a89c0a16bcd80944da99bdea6495",
+  "observed_master_tree": "04da92ca9cd0ac5868dbf912b31020a80bce00a2",
+  "observed_master_parents": [
+    "70929bb895726c0b4a552295e595e373191b0d2b",
+    "909e5c42a19d8c33fd95ec4a3b28970b59437b48"
+  ],
+  "pr310": {
+    "number": 310,
+    "merged": true,
+    "head": "909e5c42a19d8c33fd95ec4a3b28970b59437b48",
+    "merge_commit": "e30734892bd8a89c0a16bcd80944da99bdea6495"
+  },
+  "reacquired_frontier": {
+    "branch_count_before_successor": 6,
+    "open_prs": [
+      308,
+      309
+    ],
+    "unknown_refs": 0
+  },
+  "classifications": {
+    "integration/lion-v1.4-r3-master-convergence-r1": "STALE_BASE_REQUIRED_SEMANTIC_DELTA",
+    "architecture/lpcl-canonical-interpretation-r1": "STALE_BASE_SEPARATE_FRONTIER",
+    "mission/vkt-r3-pod-materialization": "RETIREMENT_CANDIDATE_SEMANTICALLY_SUPERSEDED_BY_MASTER",
+    "mission/vkt-r3-pod-materialization-r2": "MERGED_REF_PRESERVED_RUNTIME_REF_DEPENDENCY",
+    "bounty/trinity-prompt-injection-20260910": "PRESERVED_INDEPENDENT_SECURITY_RESEARCH"
+  },
+  "old_r3_failure_revalidation": {
+    "fleet_effect_budget_provenance_drift": "FIXED_BY_PR310_CURRENT_MASTER",
+    "exact_inventory_blob_binding": "FIXED_BY_PR310_CURRENT_MASTER",
+    "scan_currentness_binding": "STILL_PRESENT_RECOMPUTE_REQUIRED",
+    "post_pr310_observed_scan_digest": "bb32c7706eca63769c23b0b9a00c3ba2be5ae88cf1ea913aeb395778863e8506",
+    "stale_scan_digest": "9c93b7bc51ae9329c86fa59fae486eb35281f5716c1c7c267e427fbc91764d1a"
+  },
+  "successor_branch": "integration/lion-v1.4-r3-post-pr310-convergence-r2",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE_BY_THIS_R3_PROCESS",
+  "production_authority": "NONE",
+  "successor_recomputation": {
+    "source_count": 275,
+    "surface_count": 245,
+    "unclassified_count": 6,
+    "scan_digest": "b42da5103dc22429e7367e38fd5deb9331abe5d50d7a8f957baa448bff38384a"
+  },
+  "vkt_r1_semantic_reconciliation": {
+    "changed_paths": 36,
+    "exact_in_current_master": 32,
+    "evolved_or_superseding_in_current_master": 4,
+    "missing_in_current_master": 0,
+    "disposition": "RETIREMENT_CANDIDATE"
+  },
+  "vkt_r2_runtime_ref_dependency": {
+    "disposition": "PRESERVE",
+    "reason": "CURRENT_REPOSITORY_RUNTIME_CONTRACT_BINDS_BRANCH_IDENTITY",
+    "observed_references": [
+      "LION/architecture/v1_4/vkt-r3-implementation-status.json",
+      "cyber_lion/tests/test_vkt_effect_admission_broker.py",
+      "deploy/k8s/vkt-r3/install.sh",
+      "tools/lion_vkt_effect_admission_broker.py"
+    ]
+  },
+  "validation": {
+    "targeted_tests": {
+      "ran": 125,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "full_linux_shadow_suite": {
+      "ran": 2480,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5
+    },
+    "effect_surface_delta": {
+      "master_surfaces": 245,
+      "successor_surfaces": 245,
+      "added": 0,
+      "removed": 0,
+      "raw_unclassified_sets_equal": true,
+      "reconciled_unknown": 0
+    },
+    "compileall": "PASS",
+    "git_diff_check": "PASS",
+    "local_bandit": "UNAVAILABLE_CI_REQUIRED"
+  },
+  "lpcl_pr309_post_pr310": "STALE_BASE_DIVERGED_61_AHEAD_61_BEHIND"
+}

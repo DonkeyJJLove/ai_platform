@@ -42,7 +42,7 @@ class SevenClosureReadinessReport:
     inventory_digest:str;taxonomy_digest:str;attack_policy_digest:str;structural_plan_digest:str;closure_record_digests:Tuple[str,...];global_carrier_digest:str
     mediated_count:int;partial_count:int;unknown_outside_seven_count:int;missing_attack_keys:Tuple[str,...];global_status:str;evidence_refs:Tuple[str,...]
     def validate(self):
-        if self.mediated_count!=6 or self.partial_count!=1 or self.unknown_outside_seven_count!=232: raise MoonSevenClosureReadinessError("unexpected seven-surface readiness counts")
+        if self.mediated_count!=6 or self.partial_count!=1 or self.unknown_outside_seven_count!=236: raise MoonSevenClosureReadinessError("unexpected seven-surface readiness counts")
         if len(self.closure_record_digests)!=7: raise MoonSevenClosureReadinessError("seven closure records required")
         if self.missing_attack_keys!=(f"{PERMISSION_SURFACE}:STALE_AUTHORITY_SOURCE",f"{PERMISSION_SURFACE}:UNTRUSTED_PERMISSION"): raise MoonSevenClosureReadinessError("minimal missing batch drift")
         if self.global_status!="UNKNOWN": raise MoonSevenClosureReadinessError("global status must remain UNKNOWN")
@@ -100,7 +100,7 @@ def materialize_seven_closure_readiness(*,inventory:EffectSurfaceInventory,taxon
         closure.append(MediationClosureRecord(sd,inventory.digest(),binding.digest(),chain.trace_digest,tuple(sorted(r.digest() for r in selected)),status,tuple(refs)).validate())
     carrier=GlobalMediationClosureCarrierBuilder().materialize(inventory=inventory,taxonomy_report=taxonomy_report,closure_records=tuple(closure),evidence_refs=(f"attack-policy:{att.policy.digest()}",f"structural-plan:{structural.plan.digest()}","seven-surface-readiness:diagnostic"))
     counts={s:sum(1 for x in carrier.surface_statuses if x.status==s) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")}
-    if counts!={"MEDIATED":6,"PARTIAL":1,"UNMEDIATED":0,"UNKNOWN":234} or carrier.global_status!="UNKNOWN": raise MoonSevenClosureReadinessError("global carrier readiness counts drift")
+    if counts!={"MEDIATED":6,"PARTIAL":1,"UNMEDIATED":0,"UNKNOWN":238} or carrier.global_status!="UNKNOWN": raise MoonSevenClosureReadinessError("global carrier readiness counts drift")
     missing=tuple(sorted(f"{x.surface_digest}:{x.attack_id}" for x in readiness if x.classification!=CLASS_CANONICAL))
-    report=SevenClosureReadinessReport(inventory.digest(),taxonomy_report.digest(),att.policy.digest(),structural.plan.digest(),tuple(sorted(mediation_closure_record_digest(r) for r in closure)),carrier.digest(),6,1,232,missing,"UNKNOWN",(f"assessment:{assessment.inventory_digest}","no-live-execution","no-test-as-bypass-result")).validate()
+    report=SevenClosureReadinessReport(inventory.digest(),taxonomy_report.digest(),att.policy.digest(),structural.plan.digest(),tuple(sorted(mediation_closure_record_digest(r) for r in closure)),carrier.digest(),6,1,236,missing,"UNKNOWN",(f"assessment:{assessment.inventory_digest}","no-live-execution","no-test-as-bypass-result")).validate()
     return SevenClosureReadinessArtifacts(tuple(readiness),tuple(closure),carrier,structural,report)
