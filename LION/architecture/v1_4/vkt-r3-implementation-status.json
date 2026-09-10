@@ -3,7 +3,7 @@
   "project": "LION_EVOLUSION",
   "mission_id": "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2",
   "repository": "DonkeyJJLove/ai_platform",
-  "branch": "mission/vkt-r3-pod-materialization-r2",
+  "branch": "master",
   "validated_runtime_source": {
     "head": "f4587b58aeb8107f090fabfe5431711bc972602e",
     "tree": "a17ec821ed7b49a030d5499dacde5b27e5d0bdc5"
@@ -17,7 +17,7 @@
     "spectra_pipeline": "IMPLEMENTED_AND_RUNTIME_PROVEN",
     "lion_pipeline": "IMPLEMENTED_AND_RUNTIME_PROVEN",
     "router_state_evidence": "IMPLEMENTED_AND_RUNTIME_PROVEN",
-    "mission_control": "IMPLEMENTED_AND_RUNTIME_PROVEN_ON_127.0.0.1:8766",
+    "mission_control": "IMPLEMENTED_AND_RUNTIME_PROVEN_READ_ONLY_LOCAL_SERVICE",
     "validator_600s": "PASS",
     "cleanup": "PASS"
   },
@@ -28,7 +28,11 @@
     "restart_count": 0,
     "uid_set_sha256": "a1b16bcf4929652fab776696a85964604bc8004410c762f788df873563b996c3",
     "fresh_heartbeats": 384,
-    "fresh_by_fleet": {"TIGER": 128, "SPECTRA": 128, "LION": 128},
+    "fresh_by_fleet": {
+      "TIGER": 128,
+      "SPECTRA": 128,
+      "LION": 128
+    },
     "cases_total": 36,
     "cases_seen": 36,
     "cases_proven": 36,
@@ -85,5 +89,32 @@
     "behind_by": 0,
     "merge_base": "70929bb895726c0b4a552295e595e373191b0d2b"
   },
-  "mission_final_status": "PASS"
+  "mission_final_status": "PASS",
+  "canonical_runtime_source": {
+    "branch": "master",
+    "identity_file": "/opt/lion/k3s-vkt-r3/source-identity.json",
+    "resolution": "EXACT_INSTALLED_HEAD_TREE"
+  },
+  "operational_contract": {
+    "local_environment_preparation": "ALLOWED",
+    "local_observation": "ALLOWED",
+    "local_manual_test_start": "DENY",
+    "test_execution_authority": "LPCL_ONLY",
+    "test_mutation_authority": "LPCL_ONLY",
+    "mission_control_authority": "READ_ONLY",
+    "mission_control_endpoint_file": "/run/lion-vkt-mission-control/listen.json",
+    "mission_control_port_candidates": [
+      8765,
+      8766,
+      8767,
+      8768,
+      8769,
+      8770,
+      8771,
+      8772,
+      8773,
+      8774,
+      8775
+    ]
+  }
 }

@@ -24,6 +24,9 @@ id "$RUNNER_USER" >/dev/null
 
 required=(
   tools/lion_k3s_pod_provider.py
+  tools/lion_k3s_pod_provider_v2.py
+  tools/lion_k3s_pod_provider_v3.py
+  tools/lion_k3s_pod_provider_v4.py
   tools/lion_k3s_pod_provider_client.py
   tools/lion_k3s_pod_materializer.py
   tools/lion_runner_exec_provider.py
@@ -32,6 +35,18 @@ required=(
   deploy/k8s/vkt-r3/lion-k3s-pod-provider.socket
   deploy/k8s/vkt-r3/lion-k3s-pod-provider@.service
   deploy/k8s/vkt-r3/provider-policy.json
+  deploy/k8s/vkt-r3/lion-vkt-mission-control.service
+  tools/vkt_r3_mission_control.py
+  cyber_lion/vkt_r3/mission_control/server.py
+  tools/lion_mission_control.py
+  tools/lion_mission_control_event_client.py
+  tools/lion_mission_control_read_proxy.py
+  cyber_lion/mission_control/server.py
+  cyber_lion/mission_control/storage.py
+  deploy/mission-control/lion-mission-control.service
+  deploy/mission-control/lion-mission-control-read.socket
+  deploy/mission-control/lion-mission-control-read@.service
+  deploy/mission-control/install.sh
 )
 for rel in "${required[@]}"; do
   [[ -f "$REPO_ROOT/$rel" ]] || { echo "ERROR: missing $rel" >&2; exit 1; }
@@ -42,6 +57,7 @@ usermod -aG "$PROVIDER_GROUP" "$RUNNER_USER"
 
 install -d -o root -g root -m 0755 /opt/lion/k3s /opt/lion/k3s-vkt-r3 /etc/lion
 install -d -o root -g root -m 0700 /var/lib/lion/k3s-vkt-r3 /var/lib/lion-effect-admission/vkt-r3-k3s
+install -d -o sentinelx -g sentinelx -m 0700 /var/lib/sentinelx/uploads/vkt-r3-mission-control
 
 if [[ ! -f /opt/lion/k3s/k3s ]]; then
   tmp="$(mktemp)"
@@ -68,12 +84,13 @@ install -o root -g root -m 0555 "$REPO_ROOT/tools/lion_runner_exec_provider.py" 
 install -o root -g root -m 0555 "$REPO_ROOT/tools/lion_runner_exec_client.py" /usr/local/libexec/lion-runner-exec-client.py
 install -o root -g root -m 0444 "$REPO_ROOT/deploy/k8s/vkt-r3/provider-policy.json" /opt/lion/k3s-vkt-r3/provider-policy.json
 
-printf '{"repository":"DonkeyJJLove/ai_platform","branch":"mission/vkt-r3-pod-materialization-r2","source_head":"%s","source_tree":"%s","trust_class":"TEST_ONLY","k3s_version":"%s","k3s_sha256":"%s"}\n' "$EXPECTED_HEAD" "$EXPECTED_TREE" "$K3S_VERSION" "$K3S_SHA256" >/opt/lion/k3s-vkt-r3/source-identity.json
+printf '{"repository":"DonkeyJJLove/ai_platform","branch":"master","source_head":"%s","source_tree":"%s","trust_class":"TEST_ONLY","k3s_version":"%s","k3s_sha256":"%s"}\n' "$EXPECTED_HEAD" "$EXPECTED_TREE" "$K3S_VERSION" "$K3S_SHA256" >/opt/lion/k3s-vkt-r3/source-identity.json
 chmod 0444 /opt/lion/k3s-vkt-r3/source-identity.json
 
 install -o root -g root -m 0644 "$REPO_ROOT/deploy/k8s/vkt-r3/lion-k3s-vkt-r3.service" /etc/systemd/system/lion-k3s-vkt-r3.service
 install -o root -g root -m 0644 "$REPO_ROOT/deploy/k8s/vkt-r3/lion-k3s-pod-provider.socket" /etc/systemd/system/lion-k3s-pod-provider.socket
 install -o root -g root -m 0644 "$REPO_ROOT/deploy/k8s/vkt-r3/lion-k3s-pod-provider@.service" /etc/systemd/system/lion-k3s-pod-provider@.service
+install -o root -g root -m 0644 "$REPO_ROOT/deploy/k8s/vkt-r3/lion-vkt-mission-control.service" /etc/systemd/system/lion-vkt-mission-control.service
 
 RUNNER_DROPIN=/etc/systemd/system/lion-runner-exec@.service.d
 install -d -o root -g root -m 0755 "$RUNNER_DROPIN"
@@ -81,9 +98,6 @@ printf '[Service]\nSupplementaryGroups=%s\n' "$PROVIDER_GROUP" >"$RUNNER_DROPIN/
 chmod 0644 "$RUNNER_DROPIN/20-lion-k3s-vkt-r3.conf"
 
 systemctl daemon-reload
-# Node PodCIDR and containerd image snapshots are persisted in the K3s datastore.
-# An epoch change performs one deterministic TEST_ONLY reinitialization confined
-# to the VKT K3s data root, so changed network/rootfs execution semantics take effect.
 K3S_WAS_ACTIVE=NO
 if systemctl is-active --quiet lion-k3s-vkt-r3.service; then
   K3S_WAS_ACTIVE=YES

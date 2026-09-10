@@ -19,9 +19,12 @@ class ProviderV2Tests(unittest.TestCase):
             self.assertEqual(c['securityContext']['runAsUser'],1000)
             self.assertEqual(c['securityContext']['capabilities']['drop'],['ALL'])
 
-    def test_service_executes_v3_overlay_from_fixed_repo(self):
+    def test_service_executes_v4_overlay_that_chains_v3(self):
         unit=(ROOT/'deploy/k8s/vkt-r3/lion-k3s-pod-provider@.service').read_text()
-        self.assertIn('/opt/lion/k3s-vkt-r3/repo/tools/lion_k3s_pod_provider_v3.py',unit)
+        v4=(ROOT/'tools/lion_k3s_pod_provider_v4.py').read_text()
+        self.assertIn('/opt/lion/k3s-vkt-r3/repo/tools/lion_k3s_pod_provider_v4.py',unit)
+        self.assertIn('lion_k3s_pod_provider_v3.py',v4)
+        self.assertIn('_original_install = v3.v2.install_into_core',v4)
 
     def test_stuck_recycle_predicate_is_narrow_and_bounded(self):
         sample={"pods":[

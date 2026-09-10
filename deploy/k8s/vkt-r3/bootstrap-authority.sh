@@ -21,7 +21,20 @@ systemctl daemon-reload
 systemctl enable --now lion-vkt-effect-admission.socket
 [[ "$(systemctl is-active lion-vkt-effect-admission.socket)" = active ]]
 
+# Mission Control is installed only after the exact VKT authority and fixed
+# source tree are in place. The generic observer is read-only and owns the
+# legacy listen locator as a compatibility pointer; the legacy HTTP service
+# is not left independently running.
+bash "$R/deploy/mission-control/install.sh" "$R" "$H" "$T"
+[[ "$(systemctl is-active lion-mission-control.service)" = active ]]
+if systemctl is-active --quiet lion-vkt-mission-control.service; then
+  echo "ERROR: legacy Mission Control still independently active" >&2
+  exit 1
+fi
+
 echo "VKT_AUTHORITY_BOOTSTRAPPED=YES"
+echo "MISSION_CONTROL_GENERIC_SERVICE=ACTIVE"
+echo "MISSION_CONTROL_LEGACY_PRIMARY=NO"
 echo "K3S_RUNTIME_STARTED=NO"
 echo "SOURCE_HEAD=$H"
 echo "SOURCE_TREE=$T"

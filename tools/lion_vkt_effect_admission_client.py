@@ -18,6 +18,9 @@ COMMANDS = {
     "materialize": "MATERIALIZE_VKT_PODS",
     "evidence": "READ_POD_EVIDENCE",
     "stop": "STOP_VKT_PODS",
+    "oss-start": "START_OSS_REPO_TEST",
+    "oss-evidence": "READ_OSS_REPO_TEST_EVIDENCE",
+    "oss-stop": "STOP_OSS_REPO_TEST",
 }
 
 

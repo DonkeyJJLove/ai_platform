@@ -1,33 +1,48 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "project": "LION_EVOLUSION",
   "mission_id": "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2",
   "authority_class": "BOUNDED_PRIVILEGED_ADMISSION",
   "host": "LION-AUTH-LAB",
-  "namespace": "vkt-r3",
+  "primary_namespace": "vkt-r3",
   "allowed_operations": [
     "PRECHECK_POD_RUNTIME",
     "PREPARE_LOCAL_K8S",
     "MATERIALIZE_VKT_PODS",
     "READ_POD_EVIDENCE",
-    "STOP_VKT_PODS"
+    "STOP_VKT_PODS",
+    "START_OSS_REPO_TEST",
+    "READ_OSS_REPO_TEST_EVIDENCE",
+    "STOP_OSS_REPO_TEST"
   ],
   "fleet_cardinality": {"TIGER": 128, "SPECTRA": 128, "LION": 128},
   "max_drone_pods": 384,
-  "allowed_images": ["python:3.12-alpine"],
+  "oss_repository_test": {
+    "namespace": "oss-test-itsdangerous",
+    "job": "itsdangerous-pytest",
+    "repository": "https://github.com/pallets/itsdangerous.git",
+    "commit": "672971d66a2ef9f85151e53283113f33d642dabd",
+    "git_image": "alpine/git@sha256:53a6239398162098fed2f49a46512f9cbba9e3f31b9f2cea4fa90129ee069a99",
+    "python_image": "python@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254",
+    "arbitrary_target": false,
+    "arbitrary_command": false,
+    "production_target_testing": false
+  },
   "forbidden": [
     "arbitrary_yaml",
     "arbitrary_kubectl",
     "arbitrary_namespace",
     "arbitrary_image",
-    "privileged_drone",
+    "arbitrary_repository_target",
+    "arbitrary_test_command",
+    "privileged_container",
     "hostPID",
     "hostIPC",
     "hostNetwork",
     "hostPath",
     "docker_socket",
     "containerd_socket",
-    "vendor_network"
+    "production_target_testing"
   ],
   "vendor_requests": 0
 }

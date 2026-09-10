@@ -11,7 +11,7 @@ from tools.p0_surface_closure_campaign import (
 
 REPO="DonkeyJJLove/ai_platform"
 EXPECTED_CLASSES={
-    "persistent_state.write":193,"filesystem.write":12,"filesystem.delete":11,"runtime.tool_execution":9,"filesystem.replace":5,
+    "persistent_state.write":200,"filesystem.write":14,"filesystem.delete":14,"runtime.tool_execution":9,"filesystem.replace":7,
     "external.network.post":4,"filesystem.bootstrap.write":3,"filesystem.bootstrap.mkdir":2,"external.network.authority_observation":1,
     "external.network.delete":1,"external.network.patch":1,"repository_ref.delete":1,"runtime.process_launch":1,
 }
@@ -45,7 +45,7 @@ def campaign():
 
 class P0SurfaceClosureCampaignTests(unittest.TestCase):
     def test_exact_238_matrix_and_scan_digest(self):
-        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),245);self.assertEqual(c.remaining_surface_count,244)
+        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),259);self.assertEqual(c.remaining_surface_count,258)
         self.assertEqual(c.excluded_surface_digests,(CERTIFIED_PARTIAL_SURFACE,));self.assertEqual(c.global_status,"UNKNOWN")
         self.assertEqual(Counter(x.effect_class for x in c.work_items),Counter(EXPECTED_CLASSES))
 
@@ -60,13 +60,13 @@ class P0SurfaceClosureCampaignTests(unittest.TestCase):
         self.assertTrue(all(by[d].runtime_state=="UNKNOWN" for d in WORKFLOW_STEP_ONLY));self.assertEqual(by[MARK_UNKNOWN].runtime_state,"UNKNOWN")
 
     def test_no_surface_is_synthetically_mediated(self):
-        _,c=campaign();self.assertEqual(sum(x.closure_status=="PARTIAL" for x in c.work_items),7);self.assertEqual(sum(x.closure_status=="UNKNOWN" for x in c.work_items),237)
+        _,c=campaign();self.assertEqual(sum(x.closure_status=="PARTIAL" for x in c.work_items),7);self.assertEqual(sum(x.closure_status=="UNKNOWN" for x in c.work_items),251)
         self.assertTrue(all(x.binding_state==x.chain_state==x.bypass_state=="ABSENT" for x in c.work_items));self.assertEqual(c.live_falsification_carrier_state,"ABSENT")
 
     def test_provider_family_partition_and_concentration(self):
         _,c=campaign();multi=[f for f in c.provider_families if len(f.surface_digests)>1];single=[f for f in c.provider_families if len(f.surface_digests)==1]
-        self.assertEqual(len(multi),33);self.assertEqual(sum(len(f.surface_digests) for f in multi),230);self.assertEqual(len(single),14)
-        self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),244)
+        self.assertEqual(len(multi),37);self.assertEqual(sum(len(f.surface_digests) for f in multi),244);self.assertEqual(len(single),14)
+        self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),258)
 
     def test_foreign_runtime_evidence_and_scan_drift_fail_closed(self):
         inv,_=current_inventory()

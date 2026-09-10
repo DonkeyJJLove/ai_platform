@@ -20,7 +20,7 @@ SENTINEL_USER = "sentinelx"
 RUNNER_EXEC_CLIENT = "/usr/local/libexec/lion-runner-exec-client.py"
 REPOSITORY = "DonkeyJJLove/ai_platform"
 REPO_URL = "https://github.com/DonkeyJJLove/ai_platform.git"
-BRANCH = "mission/vkt-r3-pod-materialization-r2"
+BRANCH = "master"
 MISSION_ID = "VKT-R3-384-REAL-POD-MISSION-CONTROL-R2"
 IDENTITY_FILE = Path("/opt/lion/k3s-vkt-r3/source-identity.json")
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
@@ -35,10 +35,14 @@ OPERATIONS = {
     "MATERIALIZE_VKT_PODS",
     "READ_POD_EVIDENCE",
     "STOP_VKT_PODS",
+    "START_OSS_REPO_TEST",
+    "READ_OSS_REPO_TEST_EVIDENCE",
+    "STOP_OSS_REPO_TEST",
 }
 LIVE_CURRENTNESS_REQUIRED = {
     "PREPARE_LOCAL_K8S",
     "MATERIALIZE_VKT_PODS",
+    "START_OSS_REPO_TEST",
 }
 
 

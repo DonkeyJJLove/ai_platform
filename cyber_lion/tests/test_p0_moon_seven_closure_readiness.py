@@ -27,7 +27,7 @@ class MoonSevenClosureReadinessTests(unittest.TestCase):
         self.assertEqual(self.inventory.scan_digest,EXPECTED_SCAN_DIGEST);self.assertFalse(self.inventory.unclassified_refs);self.assertFalse(self.taxonomy.unresolved_refs)
         self.assertEqual(self.art.global_carrier.global_status,"UNKNOWN")
         counts={s:sum(1 for x in self.art.global_carrier.surface_statuses if x.status==s) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")}
-        self.assertEqual(counts,{"MEDIATED":6,"PARTIAL":1,"UNMEDIATED":0,"UNKNOWN":238})
+        self.assertEqual(counts,{"MEDIATED":6,"PARTIAL":1,"UNMEDIATED":0,"UNKNOWN":252})
 
     def test_structural_adapter_materializes_exact_surface_local_matrix(self):
         self.assertEqual(len(self.art.structural.bypass_results),24);self.assertEqual(len(self.art.structural.observations),24)
