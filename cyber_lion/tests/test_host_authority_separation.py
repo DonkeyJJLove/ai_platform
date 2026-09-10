@@ -317,7 +317,14 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         files=self.files(); _,tree,_,payload,obj,_=tree_material(files)
         tr=fixture_receipt(hostsep.CANDIDATE_TREE_PROVIDER,"fixture-tree:1","tree",originver.ORIGIN_CANDIDATE_TREE,tree,obj,payload)
         rows=(("table","x","x","CREATE TABLE x(y TEXT)"),)
-        with self.assertRaises(HostAuthoritySeparationError): derive_schema_manifest_evidence(tr,rows,source_database_sha256=H)
+        entries=((rows[0][0],rows[0][1],rows[0][2],hostsep._normalize_sql(rows[0][3])),)
+        md=hostsep._schema_manifest_digest(entries); sp=hostsep._pre_schema_payload_digest(H,entries); so=hostsep._pre_schema_object_digest(H,md)
+        sr=fixture_receipt(hostsep.SCHEMA_MANIFEST_PROVIDER,"fixture-schema:1","schema",originver.ORIGIN_PRE_SCHEMA,LIVE_DB_PATH,so,sp)
+        self.production_verifier()
+        with self.assertRaises(originver.IndependentEvidenceOriginError):
+            derive_candidate_tree_evidence(sr,files)
+        with self.assertRaises(originver.IndependentEvidenceOriginError):
+            derive_schema_manifest_evidence(tr,rows,source_database_sha256=H)
         old=self.tree(); repo=self.repo(old); new=self.tree(changed=True); pre=self.pre()
         with self.assertRaises(HostAuthoritySeparationError):
             HostAuthoritySeparationBroker.canonical_plan(repository_evidence=repo,candidate_tree_evidence=new,pre_schema_evidence=pre,
@@ -337,7 +344,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         revision=subprocess.run(["git","rev-parse","HEAD"],check=True,capture_output=True,text=True).stdout.strip()
         tree_digest=subprocess.run(["git","write-tree"],check=True,capture_output=True,text=True).stdout.strip()
         inv=EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY,revision=revision,tree_digest=tree_digest,sources=sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(268,241,6))
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(273,241,6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",
