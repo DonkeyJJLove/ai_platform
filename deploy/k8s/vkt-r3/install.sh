@@ -7,7 +7,7 @@ PROVIDER_GROUP="lion-k3s-vkt-r3"
 K3S_VERSION="v1.36.4+k3s1"
 K3S_SHA256="835873f37245fc615f547a2fe2af9402a347875f13fa64a1f136de644955ea3f"
 K3S_URL="https://github.com/k3s-io/k3s/releases/download/v1.36.4%2Bk3s1/k3s"
-NETWORK_EPOCH="vkt-r3-node-cidr-mask-22-v1"
+NETWORK_EPOCH="vkt-r3-node-cidr-mask-22-umask-0022-v2"
 NETWORK_EPOCH_FILE="/var/lib/lion/k3s-vkt-r3/network-epoch"
 
 [[ $# -eq 3 ]] || { echo "usage: sudo bash install.sh <repo-root> <expected-head> <expected-tree>" >&2; exit 2; }
@@ -81,8 +81,9 @@ printf '[Service]\nSupplementaryGroups=%s\n' "$PROVIDER_GROUP" >"$RUNNER_DROPIN/
 chmod 0644 "$RUNNER_DROPIN/20-lion-k3s-vkt-r3.conf"
 
 systemctl daemon-reload
-# Node PodCIDR is persisted in the K3s datastore. A network epoch change therefore
-# performs one deterministic TEST_ONLY reinitialization, confined to the VKT K3s data root.
+# Node PodCIDR and containerd image snapshots are persisted in the K3s datastore.
+# An epoch change performs one deterministic TEST_ONLY reinitialization confined
+# to the VKT K3s data root, so changed network/rootfs execution semantics take effect.
 K3S_WAS_ACTIVE=NO
 if systemctl is-active --quiet lion-k3s-vkt-r3.service; then
   K3S_WAS_ACTIVE=YES
