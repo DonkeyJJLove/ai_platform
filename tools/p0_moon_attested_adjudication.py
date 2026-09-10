@@ -22,7 +22,7 @@ from tools.p0_moon_attested_adjudication_contract import (
 SOURCE_REVISION="830f8c2e5561655dc35118c97f4574acc3bf0816"
 SOURCE_TREE="5189c1a582400de829f08c4103fdfafa993ba2e6"
 SOURCE_INVENTORY="a87e0f9ccb4fb81bbbc168900a8db8984f554a74a0b3f8c2a637d75e85fcb9df"
-EXPECTED_SCAN_DIGEST="9c93b7bc51ae9329c86fa59fae486eb35281f5716c1c7c267e427fbc91764d1a"
+EXPECTED_SCAN_DIGEST="a23aaf4b6fe387da94163019f09dc80a05fb1a20b913c98fc67df43b879d337d"
 SOURCE_BRIDGE_BLOB="a5ec373145f01ae2713fa620baa9799819cb813a"
 WORKFLOW_PATH=".github/workflows/lion-moon-runner-attested-execution-bridge.yml"
 WORKFLOW_REF="DonkeyJJLove/ai_platform/.github/workflows/lion-moon-runner-attested-execution-bridge.yml@refs/heads/mission/p0-moon-runner-attested-execution-bridge-attach-r1"
@@ -226,7 +226,7 @@ def _adjudicated_bundle(*,inventory,surface,base_artifacts,record:RunnerAttested
             rule=ObservationReconciliationRule(sd,"MOON-OBSERVATION-RECONCILIATION/1",model,surface.entrypoints[0],record.adjudication_digest,record.inner_result_digest,False,(f"adjudication:{record.adjudication_digest}",f"inner-result:{record.inner_result_digest}")).validate()
             new.append(_promote_component(c,record,model,reconciliation_rule_digest=rule.digest(),historical_causality_claimed="false"));continue
         new.append(c)
-    bytype={};
+    bytype={}
     for c in new:bytype.setdefault(c.component_type,[]).append(c)
     base=base_artifacts.bundles[sd]
     obs=tuple(x.digest() for x in bytype["observer_identity"])
