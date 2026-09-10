@@ -215,8 +215,14 @@ def manifest() -> dict:
             "podSelector": {"matchLabels": {"component": "drone"}},
             "policyTypes": ["Egress"],
             "egress": [
-                {"to": [{"podSelector": {"matchLabels": {"app": "vkt-fleet-router"}}}], "ports": [{"protocol": "TCP", "port": 8080}]},
-                {"to": [{"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "kube-system"}}}], "ports": [{"protocol": "UDP", "port": 53}, {"protocol": "TCP", "port": 53}]},
+                {"to": [
+                    {"ipBlock": {"cidr": "10.42.0.0/16"}},
+                    {"ipBlock": {"cidr": "10.43.0.0/16"}},
+                ], "ports": [{"protocol": "TCP", "port": 8080}]},
+                {"to": [
+                    {"ipBlock": {"cidr": "10.42.0.0/16"}},
+                    {"ipBlock": {"cidr": "10.43.0.0/16"}},
+                ], "ports": [{"protocol": "UDP", "port": 53}, {"protocol": "TCP", "port": 53}]},
             ],
         },
     })

@@ -15,4 +15,16 @@ class VktR3RuntimePayloadTests(unittest.TestCase):
         self.assertIn("mission['duplicates']",ROUTER_SOURCE)
         self.assertIn("mission['orphans']",ROUTER_SOURCE)
 
+    def test_network_policy_is_cluster_only(self):
+        import importlib.util
+        from pathlib import Path
+        root=Path(__file__).resolve().parents[2]
+        spec=importlib.util.spec_from_file_location("mat", root/"tools"/"lion_k3s_pod_materializer.py")
+        mat=importlib.util.module_from_spec(spec); spec.loader.exec_module(mat)
+        pol=next(d for d in mat.manifest()["documents"] if d.get("kind")=="NetworkPolicy")
+        text=str(pol)
+        self.assertIn("10.42.0.0/16", text)
+        self.assertIn("10.43.0.0/16", text)
+        self.assertNotIn("0.0.0.0/0", text)
+
 if __name__=='__main__': unittest.main()
