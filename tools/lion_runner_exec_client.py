@@ -18,7 +18,7 @@ p=argparse.ArgumentParser(); sub=p.add_subparsers(dest='cmd',required=True); sub
 for n in ('static-unittest','static-pycompile'):
     q=sub.add_parser(n); q.add_argument('--repo-path',required=True); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True)
 q=sub.add_parser('provider-call'); q.add_argument('--provider-operation',choices=['PING','LIST_FLEET_RESOURCES'],required=True); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True)
-q=sub.add_parser('pod-provider-call'); q.add_argument('--provider-operation',choices=['PRECHECK_POD_RUNTIME','PREPARE_LOCAL_K8S','MATERIALIZE_VKT_PODS','READ_POD_EVIDENCE','STOP_VKT_PODS'],required=True); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True); q.add_argument('--run-id',required=True)
+q=sub.add_parser('pod-provider-call'); q.add_argument('--provider-operation',choices=['PRECHECK_POD_RUNTIME','PREPARE_LOCAL_K8S','MATERIALIZE_VKT_PODS','READ_POD_EVIDENCE','STOP_VKT_PODS','START_OSS_REPO_TEST','READ_OSS_REPO_TEST_EVIDENCE','STOP_OSS_REPO_TEST'],required=True); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True); q.add_argument('--run-id',required=True)
 q=sub.add_parser('scale64-run'); q.add_argument('--source-head',required=True); q.add_argument('--source-tree',required=True); q.add_argument('--run-request-id',required=True)
 a=p.parse_args(); req={'schema_version':'1.0.0','request_id':rid()}
 if a.cmd=='identity': req['operation']='IDENTITY'

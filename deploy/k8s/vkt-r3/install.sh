@@ -24,6 +24,9 @@ id "$RUNNER_USER" >/dev/null
 
 required=(
   tools/lion_k3s_pod_provider.py
+  tools/lion_k3s_pod_provider_v2.py
+  tools/lion_k3s_pod_provider_v3.py
+  tools/lion_k3s_pod_provider_v4.py
   tools/lion_k3s_pod_provider_client.py
   tools/lion_k3s_pod_materializer.py
   tools/lion_runner_exec_provider.py
