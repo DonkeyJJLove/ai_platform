@@ -7,6 +7,8 @@ PROVIDER_GROUP="lion-k3s-vkt-r3"
 K3S_VERSION="v1.36.4+k3s1"
 K3S_SHA256="835873f37245fc615f547a2fe2af9402a347875f13fa64a1f136de644955ea3f"
 K3S_URL="https://github.com/k3s-io/k3s/releases/download/v1.36.4%2Bk3s1/k3s"
+NETWORK_EPOCH="vkt-r3-node-cidr-mask-22-v1"
+NETWORK_EPOCH_FILE="/var/lib/lion/k3s-vkt-r3/network-epoch"
 
 [[ $# -eq 3 ]] || { echo "usage: sudo bash install.sh <repo-root> <expected-head> <expected-tree>" >&2; exit 2; }
 REPO_ROOT="$(realpath "$1")"
@@ -79,13 +81,30 @@ printf '[Service]\nSupplementaryGroups=%s\n' "$PROVIDER_GROUP" >"$RUNNER_DROPIN/
 chmod 0644 "$RUNNER_DROPIN/20-lion-k3s-vkt-r3.conf"
 
 systemctl daemon-reload
-# If the fixed TEST_ONLY K3s runtime is already active, restart only that exact unit
-# so a reviewed unit-file change (for example kubelet max-pods) takes effect.
-# Bootstrap never starts a previously stopped K3s runtime implicitly.
+# Node PodCIDR is persisted in the K3s datastore. A network epoch change therefore
+# performs one deterministic TEST_ONLY reinitialization, confined to the VKT K3s data root.
 K3S_WAS_ACTIVE=NO
 if systemctl is-active --quiet lion-k3s-vkt-r3.service; then
   K3S_WAS_ACTIVE=YES
-  systemctl restart lion-k3s-vkt-r3.service
+fi
+CURRENT_NETWORK_EPOCH=""
+if [[ -f "$NETWORK_EPOCH_FILE" ]]; then
+  CURRENT_NETWORK_EPOCH="$(cat "$NETWORK_EPOCH_FILE")"
+fi
+NETWORK_REINITIALIZED=NO
+if [[ "$CURRENT_NETWORK_EPOCH" != "$NETWORK_EPOCH" ]]; then
+  if [[ "$K3S_WAS_ACTIVE" = YES ]]; then
+    systemctl stop lion-k3s-vkt-r3.service
+  fi
+  rm -rf /var/lib/lion-effect-admission/vkt-r3-k3s/data
+  rm -f /var/lib/lion-effect-admission/vkt-r3-k3s/kubeconfig.yaml
+  install -d -o root -g root -m 0700 /var/lib/lion-effect-admission/vkt-r3-k3s
+  printf '%s\n' "$NETWORK_EPOCH" >"$NETWORK_EPOCH_FILE"
+  chmod 0600 "$NETWORK_EPOCH_FILE"
+  NETWORK_REINITIALIZED=YES
+fi
+if [[ "$K3S_WAS_ACTIVE" = YES ]]; then
+  systemctl start lion-k3s-vkt-r3.service
 fi
 install -d -o root -g root -m 0755 /run/lion-k3s-vkt-r3
 systemctl enable lion-k3s-pod-provider.socket
@@ -95,6 +114,8 @@ systemctl restart lion-k3s-pod-provider.socket
 echo "K3S_PROVIDER_INSTALLED=YES"
 echo "K3S_RUNTIME_STARTED=NO"
 echo "K3S_WAS_ACTIVE=$K3S_WAS_ACTIVE"
+echo "NETWORK_EPOCH=$NETWORK_EPOCH"
+echo "NETWORK_REINITIALIZED=$NETWORK_REINITIALIZED"
 echo "PROVIDER_SOCKET=/run/lion-k3s-vkt-r3/provider.sock"
 echo "SOURCE_HEAD=$EXPECTED_HEAD"
 echo "SOURCE_TREE=$EXPECTED_TREE"
