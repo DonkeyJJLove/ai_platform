@@ -1,0 +1,85 @@
+[
+  {
+    "id": "N-V11-01",
+    "scenario": "logical",
+    "replacements": [["LPCL_VERSION=\n1.1\n", ""]],
+    "expected": "DATA_ONLY"
+  },
+  {
+    "id": "N-V11-02",
+    "scenario": "logical",
+    "replacements": [["TERMINATION=\nCOMPLETE_ON_DONE\n", ""]],
+    "expected": "ERROR",
+    "error_contains": "TERMINATION"
+  },
+  {
+    "id": "N-V11-03",
+    "scenario": "logical",
+    "replacements": [["LINEAGE=\nreference:logical\n", ""]],
+    "expected": "ERROR",
+    "error_contains": "LINEAGE"
+  },
+  {
+    "id": "N-V11-04",
+    "scenario": "logical",
+    "replacements": [["MISSION_CLASS=\nLOGICAL_FLEET_MISSION\n", "MISSION_CLASS=\nGLOBAL_FLEET_MISSION\n"]],
+    "expected": "ERROR",
+    "error_contains": "MISSION_CLASS"
+  },
+  {
+    "id": "N-V11-05",
+    "scenario": "logical",
+    "replacements": [["PHASE_0=\nREACQUIRE\n", "AUTHORITY_EFFECT=\nALLOW\nPHASE_0=\nREACQUIRE\n"]],
+    "expected": "ERROR",
+    "error_contains": "AUTHORITY_EFFECT"
+  },
+  {
+    "id": "N-V11-06",
+    "scenario": "logical",
+    "replacements": [["PHASE_0=\nREACQUIRE\n", "EXECUTION_EFFECT=\nALLOW\nPHASE_0=\nREACQUIRE\n"]],
+    "expected": "ERROR",
+    "error_contains": "EXECUTION_EFFECT"
+  },
+  {
+    "id": "N-V11-07",
+    "scenario": "logical",
+    "replacements": [["TRANSITION_CLASS=\nINTERNAL\n", "TRANSITION_CLASS=\nACTION_REQUIRED\n"], ["OPERATOR=\nREACQUIRE\n", "OPERATOR=\nEMIT_ACTION_INTENT\n"]],
+    "expected": "ERROR",
+    "error_contains": "LOGICAL-only"
+  },
+  {
+    "id": "N-V11-08",
+    "scenario": "logical",
+    "replacements": [["ROLE=\nANALYST\n", "ROLE=\nMATERIALIZER\n"]],
+    "expected": "ERROR",
+    "error_contains": "undeclared role"
+  },
+  {
+    "id": "N-V11-09",
+    "scenario": "local",
+    "replacements": [["AUTHORITY_REQUIREMENTS=\nauthority-context:required\n", "AUTHORITY_REQUIREMENTS=\n"]],
+    "expected": "ERROR",
+    "error_contains": "requires evidence"
+  },
+  {
+    "id": "N-V11-10",
+    "scenario": "local",
+    "replacements": [["OPERATOR=\nEMIT_ACTION_INTENT\n", "OPERATOR=\nEXECUTE\n"]],
+    "expected": "ERROR",
+    "error_contains": "EMIT_ACTION_INTENT"
+  },
+  {
+    "id": "N-V11-11",
+    "scenario": "logical",
+    "replacements": [["TRANSITION_CLASS=", "TRANSITION_CLAS="]],
+    "expected": "ERROR",
+    "error_contains": "TRANSITION_CLAS"
+  },
+  {
+    "id": "N-V11-12",
+    "scenario": "hybrid",
+    "replacements": [["ROLE_SEPARATION=\nMATERIALIZER!=OBSERVER\n", "ROLE_SEPARATION=\nMATERIALIZER!=MATERIALIZER\n"]],
+    "expected": "ERROR",
+    "error_contains": "ROLE_SEPARATION"
+  }
+]
