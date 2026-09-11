@@ -52,7 +52,7 @@ async function main() {
   run(`latestFleet.pod_observations=[{run_id:'live',pods:[{uid:'uid-1',name:'<script>bad</script>',fleet:'A',ready:true,phase:'Running'}]}];renderCluster(true)`);
   assert.match(node('clusterMap').innerHTML,/pod-ready/);
   assert.match(node('clusterMap').innerHTML,/data-pod="uid-1"/);
-  assert.doesNotMatch(node('clusterMap').innerHTML,/<script>/);
+  assert.ok(node('clusterMap').innerHTML.includes('&lt;script&gt;bad&lt;/script&gt;'));
   const podButton={dataset:{pod:'uid-1'}};
   node('clusterMap').querySelectorAll=()=>[podButton];
   run('renderCluster(true)');
