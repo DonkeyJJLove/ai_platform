@@ -24,4 +24,21 @@ class AdapterTests(unittest.TestCase):
     def test_registry_has_generic_event_adapter(self):
         self.assertEqual(LpclEventStreamAdapter().adapter_id,'LPCL_EVENT_STREAM')
 
+    def test_real_provider_structured_counts_and_pod_identities(self):
+        a = VktR3Adapter('a'*40, 'b'*40)
+        a._read = lambda: {
+            'materialized': 1, 'by_fleet': {'TIGER': {'materialized': 1, 'ready': 1, 'restarts': 0}},
+            'pods': [{'uid': 'uid-1', 'name': 'drone-1', 'fleet': 'TIGER', 'ready': True,
+                      'phase': 'Running', 'restarts': 0, 'pod_ip': 'not-for-ui'}, {'name': 'no-uid'}],
+            'router_state': {'participants': {'RELATION': 128}},
+        }
+        run = a.poll()[0]
+        self.assertEqual(run['metrics']['fleet_organizations'], {'TIGER': 1})
+        self.assertEqual(run['participants'], {'RELATION': 128})
+        pods = run['metrics']['drone_pods']
+        self.assertEqual(len(pods), 1)
+        self.assertEqual(pods[0]['uid'], 'uid-1')
+        self.assertIs(pods[0]['ready'], True)
+        self.assertNotIn('pod_ip', pods[0])
+
 if __name__=='__main__': unittest.main()

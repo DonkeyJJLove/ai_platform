@@ -39,6 +39,42 @@ async function main() {
   assert.notEqual(run("tone('CLEANED')"),run("tone('VERIFIED')"));
   assert.equal(run('stamp(null)'),'UNKNOWN');
   assert.equal(run('stamp(0)'),'1970-01-01T00:00:00.000Z');
+  run(`allRuns=[{run_id:'history',adapter_type:'VKT_R3',status:'PASS',workload:{pods:384},evidence:{class:'HISTORICAL_IMPORTED_EVIDENCE'},participants:{PHASE_A:128}}];latestFleet={};renderCluster(true)`);
+  assert.match(node('clusterState').textContent,/HISTORICAL/);
+  assert.equal((node('clusterMap').innerHTML.match(/class="drone-cell cell-unknown"/g)||[]).length,385); // 384 + legend
+  assert.match(node('clusterMap').innerHTML,/128 participants \(aggregate\)/);
+  assert.doesNotMatch(node('clusterMap').innerHTML,/pod_uid|drone_id/);
+  run(`allRuns=[{run_id:'live',adapter_type:'VKT_R3',status:'RUNNING',host:'<img src=x>',namespace:'vkt-r3',participants:{}}];latestFleet={currentness:'OBSERVED',run_ids:['live'],fleet_total:3,organizations:{A:{total:3,active:2}}};renderCluster(true)`);
+  assert.match(node('clusterState').textContent,/OBSERVED/);
+  assert.match(node('clusterMap').innerHTML,/2 fresh heartbeats/);
+  assert.equal((node('clusterMap').innerHTML.match(/class="drone-cell cell-fresh"/g)||[]).length,3); // 2 + legend
+  assert.doesNotMatch(node('clusterMap').innerHTML,/<img/);
+  run(`latestFleet.pod_observations=[{run_id:'live',pods:[{uid:'uid-1',name:'<script>bad</script>',fleet:'A',ready:true,phase:'Running'}]}];renderCluster(true)`);
+  assert.match(node('clusterMap').innerHTML,/pod-ready/);
+  assert.match(node('clusterMap').innerHTML,/data-pod="uid-1"/);
+  assert.ok(node('clusterMap').innerHTML.includes('&lt;script&gt;bad&lt;/script&gt;'));
+  const podButton={dataset:{pod:'uid-1'}};
+  node('clusterMap').querySelectorAll=()=>[podButton];
+  run('renderCluster(true)');
+  podButton.onclick();
+  assert.equal(node('clusterPodDetail').hidden,false);
+  assert.match(node('clusterPodDetail').textContent,/uid-1/);
+  run('renderCluster(true)');
+  assert.equal(node('clusterPodDetail').hidden,false);
+  node('clusterMap').querySelectorAll=()=>[];
+  run('renderCluster(false)');
+  assert.match(node('clusterState').textContent,/OFFLINE/);
+  assert.doesNotMatch(node('clusterMap').innerHTML,/pod-ready/);
+  assert.equal((node('clusterMap').innerHTML.match(/class="drone-cell cell-fresh"/g)||[]).length,1); // legend only
+  run(`latestFleet.run_ids=['other'];renderCluster(true)`);
+  assert.match(node('clusterState').textContent,/UNKNOWN/);
+  run(`allRuns[0].workload={pods:10000000};renderCluster(true)`);
+  assert.equal((node('clusterMap').innerHTML.match(/class="drone-cell cell-unknown"/g)||[]).length,513);
+  run(`allRuns[0].workload={pods:-1};renderCluster(true)`);
+  assert.match(node('clusterMap').innerHTML,/No valid count/);
+  run(`allRuns=[];renderCluster(true)`);
+  assert.match(node('clusterState').textContent,/No fleet evidence/);
+  assert.equal(node('clusterDetails').hidden,true);
   // An old request cannot replace a newer selection, even when it finishes last.
   const pending=[];
   context.fetch=url=>new Promise(resolve=>pending.push({url,resolve}));

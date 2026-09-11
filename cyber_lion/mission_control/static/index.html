@@ -18,6 +18,15 @@
 
   <section id="summary" class="cards"></section>
 
+  <section class="panel cluster-panel" id="cluster">
+    <div class="panel-head"><div><p class="cluster-kicker">CLUSTER OBSERVATORY</p><h2>Drone fleet</h2></div><label class="cluster-picker">Run <select id="clusterRun"><option value="">Follow latest fleet</option></select></label></div>
+    <p id="clusterState" role="status" class="hint">Waiting for fleet evidence…</p>
+    <div id="clusterMap"></div>
+    <p class="hint">Clickable squares represent identified pods; select one for its UID and state. Outlined count cells are aggregates, not identified pods. Grouping shows fleet membership, not network links.</p>
+    <pre id="clusterPodDetail" hidden></pre>
+    <button type="button" id="clusterDetails" class="cluster-details" hidden>Open run evidence</button>
+  </section>
+
   <nav aria-label="Sections"><a href="#registry">Run registry</a><a href="#runDetail">Run detail</a><a href="#environment">Environment</a><a href="#recent">Recent events</a></nav>
   <section class="panel" id="environment"><h2>Environment observation</h2><p id="currentness" class="hint">Currentness: UNKNOWN</p><p id="readiness">Readiness: UNKNOWN — no readiness evidence supplied by this API.</p><div class="detail-grid"><div><h3>Adapters</h3><div id="adapters"></div></div><div><h3>Hosts in recorded runs</h3><div id="hosts"></div></div></div></section>
   <section class="panel" id="registry">

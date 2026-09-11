@@ -52,19 +52,24 @@ class FleetCurrentnessTests(unittest.TestCase):
             try:
                 registry = AdapterRegistry()
                 adapter = Adapter()
+                adapter.runs[0]['metrics']['drone_pods'] = [{'uid': 'pod-one', 'ready': True}]
                 registry.register(adapter)
                 mc = MissionControl(store, registry, Reconciler(store, registry))
                 self.assertIsNone(mc.summary()['fleet']['working_drones'])
                 mc.poll_once()
                 self.assertEqual(mc.summary()['fleet']['working_drones'], 384)
+                self.assertEqual(mc.summary()['fleet']['pod_observations'][0]['pods'][0]['uid'], 'pod-one')
                 with patch('cyber_lion.mission_control.server.time.monotonic', return_value=mc.last_poll_at + 6):
                     self.assertIsNone(mc.summary()['fleet']['working_drones'])
+                    self.assertEqual(mc.summary()['fleet']['pod_observations'], [])
                 store.upsert_run({'run_id': 'fleet', 'status': 'CLEANED'})
                 self.assertIsNone(mc.summary()['fleet']['working_drones'])
+                self.assertEqual(mc.summary()['fleet']['pod_observations'], [])
                 store.upsert_run({'run_id': 'fleet', 'status': 'RUNNING'})
                 adapter.fail = True
                 mc.poll_once()
                 self.assertIsNone(mc.summary()['fleet']['working_drones'])
+                self.assertEqual(mc.summary()['fleet']['pod_observations'], [])
                 adapter.fail = False
                 adapter.runs = []
                 mc.poll_once()
