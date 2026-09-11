@@ -7,6 +7,8 @@ separate process that never consumes the runtime execution receipt.
 """
 from __future__ import annotations
 
+from contextlib import closing
+
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
@@ -203,10 +205,10 @@ class FileRuntimeAdmissionSource:
 class SQLiteSingleUseGuard:
     def __init__(self,path:Path):
         self.path=path
-        with sqlite3.connect(path) as db: db.execute("CREATE TABLE IF NOT EXISTS consumed(key TEXT PRIMARY KEY,value TEXT NOT NULL)")
+        with closing(sqlite3.connect(path)) as db, db: db.execute("CREATE TABLE IF NOT EXISTS consumed(key TEXT PRIMARY KEY,value TEXT NOT NULL)")
     def consume(self,key:str,value:str="consumed")->bool:
         try:
-            with sqlite3.connect(self.path) as db: db.execute("INSERT INTO consumed VALUES(?,?)",(key,value))
+            with closing(sqlite3.connect(self.path)) as db, db: db.execute("INSERT INTO consumed VALUES(?,?)",(key,value))
             return True
         except sqlite3.IntegrityError: return False
 
