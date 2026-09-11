@@ -337,7 +337,10 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         revision=subprocess.run(["git","rev-parse","HEAD"],check=True,capture_output=True,text=True).stdout.strip()
         tree_digest=subprocess.run(["git","write-tree"],check=True,capture_output=True,text=True).stdout.strip()
         inv=EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY,revision=revision,tree_digest=tree_digest,sources=sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(295,259,6))
+        # Two application-assignment modules add sources but no effect surfaces.
+        self.assertIn('cyber_lion/app_coordination/__init__.py', sources)
+        self.assertIn('cyber_lion/app_coordination/task_assignment.py', sources)
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(297,259,6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",
