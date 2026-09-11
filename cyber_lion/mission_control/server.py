@@ -53,6 +53,13 @@ class MissionControl:
             current_status = {run['run_id']: run['status'] for run in runs}
             fleet_runs = [dict(run, status=current_status.get(run['run_id'], run['status'])) for run in self.fleet_observations] if fresh and self.error is None else []
             fleet = fleet_summary_from_runs(fleet_runs)
+            # Only this successful poll supplies current pod identities. Persisted
+            # run metrics intentionally remain historical after cleanup/errors.
+            fleet['pod_observations'] = [
+                {'run_id': run['run_id'], 'pods': (run.get('metrics') or {}).get('drone_pods', [])}
+                for run in fleet_runs if fleet['currentness'] == 'OBSERVED'
+                and run['run_id'] in fleet['run_ids']
+            ]
         return {
             'ok': self.error is None,
             'error': self.error,

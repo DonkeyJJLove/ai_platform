@@ -26,12 +26,19 @@ class VktR3Adapter:
         router = evidence.get("router_state") or {}
         mission = router.get("mission") or {}
         materialized = int(evidence.get("materialized") or 0)
-        fleet_organizations = {str(k): int(v) for k, v in (evidence.get("by_fleet") or {}).items()}
+        # Provider v2 supplies structured counts; older receipts supply integers.
+        fleet_organizations = {str(k): int(v.get("materialized", 0) if isinstance(v, dict) else v)
+                               for k, v in (evidence.get("by_fleet") or {}).items()}
         active_by_organization = {str(k): int(v) for k, v in (router.get("fresh_by_fleet") or {}).items()}
         if materialized == 0 and not mission:
             return []
         complete = bool(mission.get("completed")) or str(mission.get("phase") or "").upper() == "COMPLETE"
         metrics = {
+            "drone_pods": [
+                {key: pod.get(key) for key in ("uid", "name", "fleet", "phase", "ready", "restarts")}
+                for pod in (evidence.get("pods") or [])
+                if isinstance(pod, dict) and isinstance(pod.get("uid"), str) and pod["uid"]
+            ],
             "pods": materialized,
             "ready": int(evidence.get("ready") or 0),
             "uids": int(evidence.get("unique_uid_count") or 0),
