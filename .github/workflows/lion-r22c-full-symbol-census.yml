@@ -61,6 +61,40 @@ jobs:
             --source-tree "${{ steps.gitstate.outputs.tree }}" \
             > "$RUNNER_TEMP/LION_FULL_SYMBOL_CENSUS_v1_4.json"
 
+      - name: Materialize exact truth-subject digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import subprocess
+          from pathlib import Path
+          from cyber_lion.architecture_projection.truth_plane import SubjectEntry, subject_digest
+
+          raw = subprocess.run(
+              ['git', 'ls-tree', '-r', '-z', 'HEAD'],
+              check=True,
+              capture_output=True,
+          ).stdout
+          entries = []
+          for item in raw.split(b'\0'):
+              if not item:
+                  continue
+              meta, path = item.split(b'\t', 1)
+              mode, object_type, object_sha = meta.decode('ascii').split()
+              entries.append(
+                  SubjectEntry(
+                      path.decode('utf-8'),
+                      mode,
+                      object_type,
+                      object_sha,
+                  )
+              )
+          digest = subject_digest(entries)
+          target = Path(__import__('os').environ['RUNNER_TEMP']) / 'LION_TRUTH_SUBJECT_v1.txt'
+          target.write_text(digest + '\n', encoding='utf-8')
+          print('TRUTH_SUBJECT=' + digest)
+          PY
+
       - name: Validate census exact binding and zero parse failures
         shell: bash
         env:
@@ -95,10 +129,12 @@ jobs:
           print('CENSUS_DIGEST=' + str(value.get('census_digest')))
           PY
 
-      - name: Upload exact census evidence
+      - name: Upload exact census and truth-subject evidence
         uses: actions/upload-artifact@v4
         with:
           name: lion-r22c-full-symbol-census-${{ github.event.pull_request.head.sha }}
-          path: ${{ runner.temp }}/LION_FULL_SYMBOL_CENSUS_v1_4.json
+          path: |
+            ${{ runner.temp }}/LION_FULL_SYMBOL_CENSUS_v1_4.json
+            ${{ runner.temp }}/LION_TRUTH_SUBJECT_v1.txt
           if-no-files-found: error
           retention-days: 30

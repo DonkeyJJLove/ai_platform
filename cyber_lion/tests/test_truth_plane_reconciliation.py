@@ -662,7 +662,7 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
 
     def test_stale_candidate_cannot_hide_current_master_base(self):
         state = self._isolated_currentness_fixture_state()
-        candidate = next(item for item in state["records"] if item["id"] == "B0GenerativityProtocol")
+        candidate = next(item for item in state["records"] if item["id"] == "HybridModelRouter")
         candidate["base_head"] = FIXTURE_MASTER_HEAD
         with self.assertRaisesRegex(TruthProjectionError, "candidate base currentness contradiction"):
             self.validate(state, head=FIXTURE_MASTER_HEAD)
@@ -943,7 +943,6 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
         }
 
         persistent_candidates = {
-            "B0GenerativityProtocol",
             "LCMS",
             "ReadonlyProcessAdapter",
             "HybridModelRouter",

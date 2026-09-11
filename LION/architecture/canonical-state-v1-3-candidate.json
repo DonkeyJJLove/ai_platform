@@ -4,7 +4,7 @@
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
     "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
-    "subject_digest": "d4dd5285503c84b5cc614e62ad6fc9aa4a1796483cfe738675a581c066cfddfb",
+    "subject_digest": "37f341e8b42b16b7615008354de91d93ab467f5a64298267abf0670256d637e7",
     "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
@@ -227,16 +227,19 @@
     },
     {
       "id": "B0GenerativityProtocol",
-      "plane": "CANDIDATE",
-      "status": "STALE_BASE_CANDIDATE",
+      "plane": "AS_IS",
+      "status": "INTEGRATED_BOUNDED_PROTOCOL",
       "evidence_refs": [
-        "PR#251"
+        "cyber_lion/tests/experiments/bean_generativity.py",
+        "cyber_lion/tests/test_bean_generativity_protocol.py",
+        "cyber_lion/tests/test_r22f_factory_falsifier.py",
+        "git:0834c97e0cbbd2d9144157e8ec03cd402acbe616"
       ],
-      "integrated": false,
-      "pr": 251,
-      "head": "85e77ac077f89ce892c1254d01f88a0889034b2f",
-      "tree": "e36f84e2fd1be653718dff1a33bbed7e420d41fa",
-      "base_head": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd"
+      "integrated": true,
+      "pr": null,
+      "head": null,
+      "tree": null,
+      "base_head": null
     },
     {
       "id": "ActionSpec",
