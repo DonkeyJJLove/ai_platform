@@ -136,6 +136,17 @@ class CanonicalRunSurfaceTests(unittest.TestCase):
         self.assertEqual(compiled.fleet_mission_ir.authority_effect, "NONE")
         self.assertEqual(compiled.fleet_mission_ir.runtime_effect, "NONE")
 
+    def test_end_requires_full_input_consumption(self):
+        for suffix in ("END\n", "UNKNOWN_FIELD=ignored\nEND\n", HYBRID_RUN):
+            with self.subTest(suffix=suffix[:30]):
+                with self.assertRaises(CanonicalRunError):
+                    compile_canonical_run(HYBRID_RUN + suffix)
+
+    def test_comments_after_end_preserve_semantics(self):
+        original = compile_canonical_run(HYBRID_RUN)
+        commented = compile_canonical_run(HYBRID_RUN + "\n# trailing comment\n")
+        self.assertEqual(original.process_ir.as_dict(), commented.process_ir.as_dict())
+
     def test_action_required_must_route_to_local_role(self):
         broken = HYBRID_RUN.replace("ROLE=\nMATERIALIZER", "ROLE=\nANALYST", 1)
         with self.assertRaisesRegex(CanonicalRunError, "LOCAL role"):

@@ -1,19 +1,29 @@
-# LPCL candidate status
+# Status kandydata LPCL
 
-```text
-LPCL_1_0_STRICT_PROCESS_IR=INTEGRATED_NON_EFFECTFUL
-LPCL_1_1_RUN_PHASE_SURFACE=CANDIDATE_NOT_MERGED
-FLEET_MISSION_IR=CANDIDATE_NOT_MERGED
-CROSS_THREAD_GENERATION_STANDARD=CANDIDATE_NOT_MERGED
-PROCESS_ORCHESTRATION_PROJECTION=CANDIDATE_NOT_MERGED
-AUTHORITY_EFFECT=NONE
-RUNTIME_EFFECT=NONE
-PRODUCTION_AUTHORITY=NONE
-MERGE_AUTHORITY=NONE
-```
+`CANDIDATE_NOT_INTEGRATED`
 
-The v1.1 work branch contains a non-effectful language/architecture candidate and associated tests. It does not make a default-branch, runtime, host, production, release or deployment claim.
+Ta etykieta jest historycznym statusem dokumentu/kandydata, a nie bieżącą klasyfikacją live `master`. Dokument opisuje non-effectful architecture candidate i powiązane testy w jego evidence epoch. Nie tworzy żadnego twierdzenia o default branch, runtime, hoście, produkcji, release ani deployment.
 
-The candidate is based on master `70929bb895726c0b4a552295e595e373191b0d2b` / tree `0c463f98122145a1a39287240136d1a824a8038c`. Exact candidate HEAD/TREE are live Git state and must be reacquired rather than copied from this documentation.
+Po późniejszych integracjach status LPCL należy odtwarzać z exact Git/code/test evidence zamiast aktualizować ten historyczny token na podstawie samej dokumentacji.
 
-Current candidate implementation includes the versioned RUN/PHASE surface, unified process-source interpretation, FleetMissionIR, LOGICAL/LOCAL/HYBRID routing, source-derived process-orchestration architecture projection, positive/negative corpora and cross-thread authoring rules. Verification, truth-carrier rebind and merge remain downstream gates.
+
+## Uzgodnienie LPCL 1.1 — integracja PR #309
+
+Opis LPCL 1.0 powyżej zachowuje zakres historyczny i zgodność wsteczną.
+Jawnie wersjonowane `RUN` z `LPCL_VERSION=1.1` mają osobny parser
+`cyber_lion/process_language/canonical_run.py` oraz punkt interpretacji
+`cyber_lion/process_language/interpretation.py`. Niewersjonowane `RUN` pozostają
+danymi historycznymi. Parser wymaga pojedynczego końcowego `END`; znacząca treść
+po nim jest błędem, a nie pomijanym fragmentem.
+
+Gramatyka: `cyber_lion/process_language/lpcl_run_1_1.ebnf`.
+Model ról: `cyber_lion/process_language/fleet_mission.py`; klasy LOGICAL, LOCAL,
+HYBRID opisują reprezentację ról, nie uruchomione drony ani uprawnienia.
+Interpretacja zwraca kandydatów ProcessIR/FleetMissionIR bez efektów. Nie zastępuje
+Action/PDP/RuntimeAdmission. Projekcja `process_orchestration.py` wiąże istniejące
+warstwy i nie dodaje nowej warstwy nadrzędnej.
+
+Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTITUTION.md`,
+`LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
+#309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
+Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.

@@ -381,29 +381,84 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
                     )
                 )
 
-        validated_live = validate_truth_projection(
-            live_state,
-            current_head=head,
-            current_tree=tree,
-            current_subject_digest=live_digest,
-            candidate_currentness_evidence=live_candidate_evidence,
-        )
-
-        self.assertEqual(
-            validated_live["baseline"]["subject_digest"],
-            live_digest,
-        )
-
-        self.assertEqual(
-            derive_subject_currentness(
-                validated_live["baseline"]["subject_digest"],
-                live_digest,
-            ),
-            "CURRENT",
-        )
-
         local_digest = self.checkout_subject_digest("HEAD")
         local_declared = self.state()["baseline"]["subject_digest"]
+
+        try:
+            validated_live = validate_truth_projection(
+                live_state,
+                current_head=head,
+                current_tree=tree,
+                current_subject_digest=live_digest,
+                candidate_currentness_evidence=live_candidate_evidence,
+            )
+        except TruthProjectionError as exc:
+            self.assertIn(
+                "baseline subject digest contradiction",
+                str(exc),
+                "LIVE_MASTER_FAILURE_IS_NOT_CURRENTNESS_DRIFT",
+            )
+            self.assertEqual(
+                derive_subject_currentness(
+                    live_state["baseline"]["subject_digest"],
+                    live_digest,
+                ),
+                "STALE",
+                "LIVE_MASTER_RECOVERY_REQUIRES_PROVEN_STALE_BASE",
+            )
+            # The digest check precedes record/history validation. Revalidate
+            # those fields with only the observed digest substituted in memory;
+            # the original remote projection remains explicitly STALE.
+            remote_structure = copy.deepcopy(live_state)
+            remote_structure["baseline"]["subject_digest"] = live_digest
+            validate_truth_projection(
+                remote_structure,
+                current_head=head,
+                current_tree=tree,
+                current_subject_digest=live_digest,
+                candidate_currentness_evidence=live_candidate_evidence,
+            )
+            ancestry = subprocess.run(
+                ["git", "merge-base", "--is-ancestor", head, "HEAD"],
+                check=False,
+            )
+            self.assertEqual(
+                ancestry.returncode,
+                0,
+                "CURRENTNESS_REPAIR_HEAD_MUST_DESCEND_FROM_LIVE_MASTER",
+            )
+            changed = set(
+                subprocess.run(
+                    ["git", "diff", "--name-only", head, "HEAD"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.splitlines()
+            )
+            self.assertTrue(
+                CARRIER_PATHS.issubset(changed),
+                "STALE_MASTER_RECOVERY_REQUIRES_BOTH_TRUTH_CARRIERS",
+            )
+            local_registry = json.loads(
+                REGISTRY_PATH.read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                local_registry["generated_from"],
+                f"truth-subject-v1@{local_declared}",
+                "CURRENTNESS_REPAIR_REGISTRY_DRIFT",
+            )
+        else:
+            self.assertEqual(
+                validated_live["baseline"]["subject_digest"],
+                live_digest,
+            )
+            self.assertEqual(
+                derive_subject_currentness(
+                    validated_live["baseline"]["subject_digest"],
+                    live_digest,
+                ),
+                "CURRENT",
+            )
 
         self.assertEqual(
             local_declared,

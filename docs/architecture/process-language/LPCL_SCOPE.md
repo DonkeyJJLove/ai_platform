@@ -1,33 +1,38 @@
-# LPCL v1.1 candidate write scope
+# Zakres zapisu kandydata LPCL
 
-This candidate intentionally changes only process-language contracts, process-source interpretation, FleetMissionIR, process/fleet tests and corpora, source-derived architecture projection metadata, LPCL architecture documentation and downstream truth/currentness carriers in the carrier-last phase.
+Ten historyczny candidate celowo zmieniał wyłącznie kontrakty process-language, testy, metadata architecture projection oraz dokumentację.
 
-Permitted candidate source families are bounded to:
+Nie zmieniał:
 
-```text
-cyber_lion/process_language/**
-cyber_lion/architecture_projection/** only where LPCL/process-orchestration projection is represented
-cyber_lion/tests/test_lpcl*
-docs/architecture/process-language/**
-LION/architecture/v1_4/** only for LPCL-related documentation/projections and carrier-last reconciliation
-```
+- implementacji policy-gate/PDP,
+- authority source/grant/revocation,
+- `RuntimeAdmissionEngine`,
+- `RuntimeExecutionEngine`,
+- `EffectProvider`,
+- stanu hosta,
+- konfiguracji deployment/release,
+- stanu runtime F005.
 
-The candidate does not change or replace:
+Każda późniejsza integracja wykraczająca poza ten zakres wymaga nowej decyzji związanej z exact baseline. Sam opis scope nie nadaje authority i nie jest dowodem bieżącego statusu implementacji.
 
-- policy-gate/PDP implementation or decision semantics;
-- authority sources, grants or revocation;
-- `RuntimeAdmissionEngine`;
-- `RuntimeExecutionEngine`;
-- EffectProvider implementations or raw provider selection;
-- Action IR authority semantics;
-- host state or local runtime state;
-- deployment/release configuration;
-- F005 runtime state;
-- production authority;
-- specialized MissionSpec/SwarmSpec semantics unless separately proven equivalent.
 
-The v1.1 authoring surface may route an `ACTION_REQUIRED` transition to a LOCAL role, but this produces only the existing non-authoritative `ActionIntentCandidate` boundary.
+## Uzgodnienie LPCL 1.1 — integracja PR #309
 
-Truth/currentness carriers are not permitted to move until noncarrier implementation and verification are frozen. Merge and branch deletion require separate exact authority and are outside ordinary candidate-write authority.
+Opis LPCL 1.0 powyżej zachowuje zakres historyczny i zgodność wsteczną.
+Jawnie wersjonowane `RUN` z `LPCL_VERSION=1.1` mają osobny parser
+`cyber_lion/process_language/canonical_run.py` oraz punkt interpretacji
+`cyber_lion/process_language/interpretation.py`. Niewersjonowane `RUN` pozostają
+danymi historycznymi. Parser wymaga pojedynczego końcowego `END`; znacząca treść
+po nim jest błędem, a nie pomijanym fragmentem.
 
-Any integration beyond this scope requires a new exact-baseline decision.
+Gramatyka: `cyber_lion/process_language/lpcl_run_1_1.ebnf`.
+Model ról: `cyber_lion/process_language/fleet_mission.py`; klasy LOGICAL, LOCAL,
+HYBRID opisują reprezentację ról, nie uruchomione drony ani uprawnienia.
+Interpretacja zwraca kandydatów ProcessIR/FleetMissionIR bez efektów. Nie zastępuje
+Action/PDP/RuntimeAdmission. Projekcja `process_orchestration.py` wiąże istniejące
+warstwy i nie dodaje nowej warstwy nadrzędnej.
+
+Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTITUTION.md`,
+`LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
+#309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
+Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.

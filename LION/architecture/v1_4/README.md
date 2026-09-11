@@ -1,89 +1,129 @@
-# LION architecture documentation — v1.4 candidate
+# Dokumentacja architektury LION — v1.4
 
-**Origin process:** R20  
-**Completion/reconciliation process:** R23  
-**LPCL interpretation evolution:** `architecture/lpcl-canonical-interpretation-r1` candidate, not merged  
-**Evidence baseline:** master `67a4f8243aa6805e47035e572bd458f73fd0b358` / tree `4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5`; R23 pre-documentation candidate `5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745` / tree `5dd5dc653c24bdd810faeb61f901328ad246e3a7`  
-**Authority effect of this documentation:** `NONE`
+Odczyt po integracji #325 i reguły domknięcia #314 opisuje [notatka rekonsyliacji](PR314_PR325_CURRENTNESS.md). Poniższa epoka R128 i jej bazowe identyfikatory są historycznym zakresem tej dokumentacji, nie deklaracją bieżącego HEAD master.
 
-This directory is the v1.4 documentation homeostasis layer. It does not replace source code, contracts, runtime evidence or historical RAG records. It routes each concept to one primary semantic owner and provides exact-baseline machine projections for high-cardinality facts.
+**Epoka dokumentacyjna:** `LION-DOC-R128-2026-09-10-R1`  
+**Bazowy stan `master` odtworzony przed utworzeniem kandydata:** HEAD `5e40338511fe2a5f0a891c823b03f9855d6ad1e8` / TREE `306b8cf245299517278ab0959a7aca79f66e5343`  
+**Gałąź kandydata dokumentacyjnego:** `docs/lion-v1.4-r128-polish-homeostasis-r1`  
+**Authority effect dokumentacji:** `NONE`
 
-## Current architecture
+Ten katalog jest warstwą homeostazy dokumentacji v1.4. Nie zastępuje kodu źródłowego, kontraktów, runtime evidence ani historycznych rekordów RAG. Każdy koncept powinien posiadać jednego głównego semantic ownera, a fakty o wysokiej kardynalności powinny być materializowane jako exact-baseline machine projections zamiast ręcznie przepisywanej narracji.
 
-The source-derived architecture model is owned by `cyber_lion/architecture_projection/full_architecture.py`: 15 canonical layers and nine canonical flows. R23 reconciles that model with the consolidated LPCL/Process, Action→Runtime and P0 source lineages while preserving the existing canonical flow set; it does not mint a second executable architecture, PDP, runtime admission engine or authority source.
+## Currentness
 
-The consolidated R23 candidate contains the R21 LPCL/Canonical Process IR layer, the R22I governed Action→Runtime binder-consumption path, canonical PDP evaluation, runtime admission, runtime execution, effect-time currentness and independent reconciliation surfaces. LPCL is non-effectful: ACTION_REQUIRED transitions can emit only a non-authoritative `ActionIntentCandidate`; they do not evaluate the PDP, create RuntimeAdmission, choose an EffectProvider or execute an effect. F009 and P0 remain bounded TEST_ONLY evidence rather than general or production authority.
+Poprzednia wersja tego dokumentu była nadal związana z baseline'em R23 `67a4f8243aa6805e47035e572bd458f73fd0b358` / `4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5`. W chwili rozpoczęcia tej epoki live `master` został odtworzony jako `5e40338511fe2a5f0a891c823b03f9855d6ad1e8` / `306b8cf245299517278ab0959a7aca79f66e5343`. Stary baseline pozostaje historią, ale nie jest bieżącym currentness basis.
 
-Bean/Composition/Mosaic primitives and bounded B0 candidate protocols exist. They do not prove unrestricted Factory generativity, activated recursive autonomy or Factory-of-Factories.
-
-## LPCL process-orchestration projection — v1.1 candidate
-
-The LPCL interpretation candidate does **not** add a sixteenth top-level architecture layer. It makes process orchestration an explicit cross-layer projection over the existing 15-layer architecture. The source projection is `cyber_lion/architecture_projection/process_orchestration.py` and binds existing layers as follows:
+Obowiązuje:
 
 ```text
-INTENT / GOAL
-→ LPCL canonical RUN/PHASE surface              [EVOLUTIONARY_EPOCH]
-→ CanonicalRunAST                              [EVOLUTIONARY_EPOCH]
-→ CanonicalProcessIR                           [EVOLUTIONARY_EPOCH]
-→ FleetMissionIR                               [FLEET_AND_SWARM]
-→ bounded role routing                         [FLEET_AND_SWARM]
-→ ActionIntentCandidate when ACTION_REQUIRED   [GOVERNED_SELF_IMPLEMENTATION]
-→ existing authority decision                  [AUTHORITY_AND_EFFECT]
-→ existing RuntimeAdmission                    [TRUSTED_RUNTIME]
-→ existing effect boundary                     [AUTHORITY_AND_EFFECT]
-→ independent observation                      [OBSERVABILITY_AND_RECONCILIATION]
-→ reconciliation                               [OBSERVABILITY_AND_RECONCILIATION]
+NO_VALID_CURRENTNESS_BASIS -> NOT_CURRENT
+MATERIAL_BASELINE_DRIFT    -> CURRENT_TO_STALE
+HISTORY_CHANGED_BY_REALITY -> SUPERSEDE_DO_NOT_REWRITE
 ```
 
-This is a candidate projection until its implementation, tests, documentation, currentness carriers and final exact head are independently reconciled. It must not be read as an AS-IS promotion merely because the candidate files exist.
+Dokumentacja nie może sama odświeżyć `current_state.json`, truth carriers ani runtime evidence. Ich ponowne związanie wymaga właściwego generatora/walidatora i osobnego readbacku.
 
-The candidate defines three execution-topology classes:
+## Bieżąca architektura
 
-```text
-LOGICAL_FLEET_MISSION
-LOCAL_FLEET_MISSION
-HYBRID_FLEET_MISSION
-```
+Model architektury wyprowadzany ze źródeł jest własnością `cyber_lion/architecture_projection/full_architecture.py`. Dokumentacja v1.4 opisuje ten model i jego dowody; nie tworzy drugiej wykonywalnej architektury, drugiego PDP, drugiego `RuntimeAdmissionEngine` ani nowego źródła authority.
 
-`FleetMissionIR` is non-authoritative. It binds roles and transition routing but contains no grants, credentials, PDP result, RuntimeAdmission or raw effect provider. A LOGICAL role may be virtual and sequentially materialized by one model runtime while retaining logical identity and evidence lineage. A material `ACTION_REQUIRED` transition must route to a LOCAL role and still crosses the existing Process→Action→PDP→RuntimeAdmission boundary.
+W zintegrowanej linii rozwojowej znajdują się między innymi LPCL/Process IR, Action IR/proposal, canonical PDP evaluation/handoff, Action→Runtime binding, runtime admission, runtime execution, effect-time currentness, observation i reconciliation. Dokładna klasyfikacja `AS_IS/CANDIDATE/TARGET` musi być zawsze ponownie odtwarzana z live `master` i nie może być dziedziczona z dawnego raportu.
 
-The candidate also establishes one authoring convention for future LION threads: explicitly versioned LPCL 1.1 processes use the key/value `RUN=/PHASE_N=` surface and compile into canonical machine semantics. Historical unversioned RUN material remains data. Strict JSON LPCL 1.0 remains an explicitly versioned compatibility/machine surface rather than the default human authoring form.
+Ostatnie zintegrowane etapy obejmują także VKT-R3: ograniczony `TEST_ONLY` runtime K3s, 3 × 128 realnych Podów w historycznym teście, Mission Control oraz późniejsze związanie lokalnego obserwatora i endpoint locatora z canonical `master`. Te wyniki są dowodem określonych eksperymentów i implementacji; nie są produkcyjnym authority ani dowodem stale aktywnego runtime.
 
-Normative candidate documents:
+Bean/Composition/Mosaic primitives oraz ograniczone protokoły B0 pozostają osobną osią dojrzałości. Bounded evidence nie może być rozszerzana semantycznie na nieudowodnioną generalną Factory generativity, child autonomy albo Factory-of-Factories.
 
-- `docs/architecture/process-language/LPCL_LANGUAGE_CONSTITUTION.md`
-- `docs/architecture/process-language/LPCL_CROSS_THREAD_GENERATION_STANDARD.md`
-- `docs/architecture/process-language/LPCL_FLEET_MISSION_MODEL.md`
-- `docs/architecture/process-language/LPCL_MIGRATION.md`
-
-## Evidence and authority boundaries
-
-Documentation is not authority. A PDP ALLOW is not runtime admission; admission is not an effect; an execution receipt is not independent observation; observation is not reconciled closure. Code presence is not deployment evidence. Four logical WSL2 hosts were observed during R20, but physical failure-domain independence was not proven. No local model service was observed during that host revalidation. R20Q revalidates Git/documentation state; it does not silently promote those host observations to a newer runtime observation.
-
-The LPCL v1.1 candidate preserves the same boundary:
+## Granice evidence i authority
 
 ```text
-PROCESS_CANDIDATE != AUTHORITY
-FLEET_MISSION != AUTHORITY
-ACTION_INTENT != AUTHORITY_DECISION
-AUTHORITY_DECISION != RUNTIME_ADMISSION
+DOCUMENTATION != AUTHORITY
+CODE_PRESENCE != DEPLOYMENT
+CI_PASS != PRODUCTION_READY
+PDP_ALLOW != RUNTIME_ADMISSION
 RUNTIME_ADMISSION != EFFECT
-REPORTED_EFFECT != OBSERVED_EFFECT
-OBSERVED_EFFECT != RECONCILED_CLOSURE
+EXECUTION_RECEIPT != INDEPENDENT_OBSERVATION
+OBSERVATION != RECONCILED_CLOSURE
 ```
 
-## Navigation
+Liczba logicznych dronów jest również oddzielona od liczby realnych executorów. Manifest `documentation_fleet_r128.json` tworzy 128 logicznych tożsamości pracy dokumentacyjnej, ale nie jest dowodem 128 procesów, Podów, modeli ani niezależnych failure domains.
 
-- `current_state.json` — exact-baseline current-state projection; host/runtime observations retain their stated R20 evidence epoch.
-- `federation_current_vector.json` — R20Q-revalidated Git identities plus role/layer/maturity fields copied from the exact live registry.
-- `material_object_catalog.json` — architecture-material objects; explicitly not an exhaustive all-symbol AST census.
-- `capability_catalog.json` — integrated, bounded, partial, target and unproven capabilities.
-- `contract_catalog.json` — material contracts and compatibility contradictions.
-- `event_state_catalog.json` — the nine canonical architecture flows and state semantics.
-- `semantic_owners.json` — exactly one primary owner for each required global documentation concept.
-- `documentation_gap_register.json` — repaired and intentionally unresolved documentation/formal gaps.
-- `documentation_mutation_manifest.json` — documentation-only mutation scope.
-- `DOCUMENTATION_UPDATE_PLAN.md` — update policy and dependency order.
-- `history_and_supersession.md` — preserved supersession/falsification lineage.
+## Flota dokumentacyjna R128
 
-Existing human semantic owners remain `cyber_lion/CAPABILITY_MAP.md`, `CONTRACT_MAP.md`, `EVENT_DATA_MODEL.md`, `SCIENTIFIC_STATUS.md`, `TARGET_ARCHITECTURE.md`, `cyber_lion/enterprise/README.md` and `AI_NATIVE_ROADMAP.md`. The exact routing between owners is canonicalized by `semantic_owners.json` for this candidate.
+Epoka wykorzystuje osiem sektorów po 16 logicznych dronów:
+
+```text
+DOC-001..016  CURRENTNESS_BASELINES
+DOC-017..032  LANGUAGE_TRANSLATION
+DOC-033..048  NAVIGATION_STRUCTURE
+DOC-049..064  ARCHITECTURE_SEMANTICS
+DOC-065..080  AUTHORITY_SECURITY
+DOC-081..096  RUNTIME_VKT
+DOC-097..112  HISTORY_PROVENANCE
+DOC-113..128  VERIFICATION_RECONCILIATION
+```
+
+W każdym sektorze role builder/analyzer, verifier, observer i reconciler pozostają logicznie rozdzielone. Zwiększenie liczby workerów nie zwiększa authority.
+
+## Polityka językowa
+
+Bieżąca dokumentacja human-facing używa języka polskiego jako języka podstawowego. Literalnie zachowywane są nazwy kontraktów, klas, funkcji, pól schematów, tokenów LPCL/LCMS, statusów maszynowych, ścieżek, komend, commitów, hashy oraz innych identyfikatorów potrzebnych do reprodukcji. Szczegóły: [`DOCUMENTATION_LANGUAGE_POLICY.md`](DOCUMENTATION_LANGUAGE_POLICY.md).
+
+Historyczne exact evidence nie jest „spolszczane” przez zmianę jego wartości. Można tłumaczyć opis, ale nie commit/tree/hash, wynik eksperymentu, stan historyczny ani znaczenie falsyfikacji.
+
+## Nawigacja
+
+- `current_state.json` — projekcja stanu; wymaga sprawdzenia currentness względem exact baseline'u.
+- `federation_current_vector.json` — exact federation identities dla epoki generatora.
+- `material_object_catalog.json` — katalog materialnych obiektów architektury; nie jest automatycznie pełnym all-symbol census.
+- `capability_catalog.json` — capabilities: integrated/bounded/partial/target/unproven.
+- `contract_catalog.json` — materialne kontrakty i znane sprzeczności kompatybilności.
+- `event_state_catalog.json` — kanoniczne przepływy i semantyka stanów.
+- `semantic_owners.json` — routing semantic ownership.
+- `documentation_gap_register.json` — naprawione, otwarte i historyczne luki dokumentacyjne/formalne.
+- `documentation_mutation_manifest.json` — historyczny manifest zakresu zmian dokumentacyjnych poprzedniej epoki; nie stanowi bieżącego planu sam przez się.
+- `DOCUMENTATION_UPDATE_PLAN.md` — plan bieżącej epoki dokumentacyjnej.
+- `DOCUMENTATION_LANGUAGE_POLICY.md` — zasady translacji i zachowania tokenów technicznych.
+- `DOCUMENTATION_CURRENTNESS_AUDIT.md` — audyt translacji, stale machine projections i kolejności regeneracji.
+- `documentation_fleet_r128.json` — logiczna flota 128 dronów dokumentacyjnych.
+- `history_and_supersession.md` — zachowany lineage, falsyfikacja i supersession.
+- `VKT_R3_FINAL_REPORT.md` — historyczny raport końcowy ograniczonego testu VKT-R3.
+- `VKT_R3_MISSION_CONTROL.md` — model obserwacyjny Mission Control.
+- `VKT_R3_RUNTIME_VALIDATION.md` — kontrakt i wynikowe granice walidacji runtime.
+- `VKT_R3_RUNTIME_IMAGE.md` — identity obrazu runtime i granice dowodu.
+
+Głównymi human semantic ownerami pozostają m.in. `cyber_lion/CAPABILITY_MAP.md`, `CONTRACT_MAP.md`, `EVENT_DATA_MODEL.md`, `SCIENTIFIC_STATUS.md`, `TARGET_ARCHITECTURE.md`, `cyber_lion/enterprise/README.md` i `AI_NATIVE_ROADMAP.md`. Routing między właścicielami należy odczytywać z bieżącego `semantic_owners.json` tylko w zakresie jego aktualnego baseline'u.
+
+## Następny etap ewolucji dokumentacji
+
+Po translacji i uporządkowaniu prose layer należy ponownie wygenerować lub zweryfikować machine projections, w szczególności `current_state.json`, federation/currentness artefacts i truth carriers. Sam commit dokumentacyjny nie jest closure. Closure wymaga:
+
+```text
+CANDIDATE UPDATE
+-> STRUCTURAL VALIDATION
+-> SEMANTIC FALSIFICATION
+-> EXACT GIT READBACK
+-> CURRENTNESS CHECK
+-> RECONCILIATION
+```
+
+
+## Uzgodnienie LPCL 1.1 — integracja PR #309
+
+Opis LPCL 1.0 powyżej zachowuje zakres historyczny i zgodność wsteczną.
+Jawnie wersjonowane `RUN` z `LPCL_VERSION=1.1` mają osobny parser
+`cyber_lion/process_language/canonical_run.py` oraz punkt interpretacji
+`cyber_lion/process_language/interpretation.py`. Niewersjonowane `RUN` pozostają
+danymi historycznymi. Parser wymaga pojedynczego końcowego `END`; znacząca treść
+po nim jest błędem, a nie pomijanym fragmentem.
+
+Gramatyka: `cyber_lion/process_language/lpcl_run_1_1.ebnf`.
+Model ról: `cyber_lion/process_language/fleet_mission.py`; klasy LOGICAL, LOCAL,
+HYBRID opisują reprezentację ról, nie uruchomione drony ani uprawnienia.
+Interpretacja zwraca kandydatów ProcessIR/FleetMissionIR bez efektów. Nie zastępuje
+Action/PDP/RuntimeAdmission. Projekcja `process_orchestration.py` wiąże istniejące
+warstwy i nie dodaje nowej warstwy nadrzędnej.
+
+Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTITUTION.md`,
+`LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
+#309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
+Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.

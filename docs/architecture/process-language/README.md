@@ -1,42 +1,46 @@
-# Process language architecture
+# Architektura języka procesu
 
-The process-language documentation now separates the integrated LPCL 1.0 machine-oriented surface from the LPCL 1.1 canonical RUN/PHASE authoring candidate.
+Zacznij od:
 
-Start with:
+1. `LPCL_V1_CANDIDATE.md` — model semantyczny i architektoniczny.
+2. `LPCL_NEGATIVE_RULES.md` — klasy falsyfikacji fail-closed.
+3. `LPCL_MIGRATION.md` — addytywna migracja i granica historycznych `RUN`.
 
-1. `LPCL_LANGUAGE_CONSTITUTION.md` — normative v1.1 candidate language interpretation.
-2. `LPCL_CROSS_THREAD_GENERATION_STANDARD.md` — one authoring profile for all LION threads.
-3. `LPCL_FLEET_MISSION_MODEL.md` — LOGICAL/LOCAL/HYBRID execution-topology semantics.
-4. `LPCL_V1_CANDIDATE.md` — ProcessIR and architecture boundary, including v1.0 compatibility.
-5. `LPCL_NEGATIVE_RULES.md` — fail-closed falsification classes for both surfaces.
-6. `LPCL_MIGRATION.md` — explicit v1.0/v1.1/legacy migration model.
-7. `LPCL_V1_1_DESIGN_FREEZE.md` — candidate design-freeze receipt.
+Machine-readable candidate decisions znajdują się pod `LION/architecture/v1_4/process_language_*_candidate.json`.
 
-Machine-readable historical/current architecture decisions under `LION/architecture/v1_4/` remain subject to carrier-last reconciliation. They are not manually promoted merely because the candidate implementation exists.
+Implementacja znajduje się w:
 
-Implementation lives in:
+- `cyber_lion/contracts/process_ir.py`
+- `cyber_lion/contracts/process_action.py`
+- `cyber_lion/enterprise/process_semantics.py`
+- `cyber_lion/process_language/`
 
-- `cyber_lion/contracts/process_ir.py` — canonical deterministic process semantics;
-- `cyber_lion/contracts/process_action.py` — existing Process→Action boundary;
-- `cyber_lion/enterprise/process_semantics.py` — transition semantics;
-- `cyber_lion/process_language/lpcl.py` — strict LPCL 1.0 compatibility parser;
-- `cyber_lion/process_language/canonical_run.py` — v1.1 RUN/PHASE parser/compiler;
-- `cyber_lion/process_language/interpretation.py` — unified fail-closed source interpretation;
-- `cyber_lion/process_language/fleet_mission.py` — non-authoritative FleetMissionIR;
-- `cyber_lion/architecture_projection/process_orchestration.py` — cross-layer process-orchestration projection.
+Process layer jest non-effectful i nie zastępuje ani nie omija łańcucha Action/PDP/RuntimeAdmission.
 
-Canonical candidate path:
+## Currentness
 
-```text
-process source
-→ interpret_process_source
-→ CanonicalProcessIR
-→ FleetMissionIR when v1.1
-→ bounded role routing
-→ ActionIntent only for ACTION_REQUIRED
-→ existing PDP / RuntimeAdmission / effect path
-→ observation
-→ reconciliation
-```
+Dokumenty tego katalogu mają zachowywać lineage kandydatów LPCL, ale ich historyczne etykiety statusu nie mogą być automatycznie traktowane jako bieżący stan `master`. Bieżącą integrację należy odtwarzać z exact Git/code/test evidence.
 
-The process and fleet-mission layers are non-effectful and do not supersede the Action/PDP/RuntimeAdmission chain.
+Zasady językowe dla human-facing prose określa `LION/architecture/v1_4/DOCUMENTATION_LANGUAGE_POLICY.md`.
+
+
+## Uzgodnienie LPCL 1.1 — integracja PR #309
+
+Opis LPCL 1.0 powyżej zachowuje zakres historyczny i zgodność wsteczną.
+Jawnie wersjonowane `RUN` z `LPCL_VERSION=1.1` mają osobny parser
+`cyber_lion/process_language/canonical_run.py` oraz punkt interpretacji
+`cyber_lion/process_language/interpretation.py`. Niewersjonowane `RUN` pozostają
+danymi historycznymi. Parser wymaga pojedynczego końcowego `END`; znacząca treść
+po nim jest błędem, a nie pomijanym fragmentem.
+
+Gramatyka: `cyber_lion/process_language/lpcl_run_1_1.ebnf`.
+Model ról: `cyber_lion/process_language/fleet_mission.py`; klasy LOGICAL, LOCAL,
+HYBRID opisują reprezentację ról, nie uruchomione drony ani uprawnienia.
+Interpretacja zwraca kandydatów ProcessIR/FleetMissionIR bez efektów. Nie zastępuje
+Action/PDP/RuntimeAdmission. Projekcja `process_orchestration.py` wiąże istniejące
+warstwy i nie dodaje nowej warstwy nadrzędnej.
+
+Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTITUTION.md`,
+`LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
+#309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
+Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.

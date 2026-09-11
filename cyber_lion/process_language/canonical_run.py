@@ -120,6 +120,8 @@ def _blocks(text: str) -> tuple[tuple[str, tuple[str, ...]], ...]:
     ]
     if not meaningful or meaningful[-1] != "END":
         raise CanonicalRunError("END marker missing")
+    if meaningful.count("END") != 1:
+        raise CanonicalRunError("END must occur exactly once at the end")
 
     result: list[tuple[str, tuple[str, ...]]] = []
     key: str | None = None

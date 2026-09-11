@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LION Mission Control</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>LION MISSION CONTROL</h1>
+      <p class="sub">Global process and mission observability · Observation only · Test execution through LPCL</p>
+    </div>
+    <div id="health" class="pill">connecting…</div>
+  </header>
+
+  <section id="summary" class="cards"></section>
+
+  <nav aria-label="Sections"><a href="#registry">Run registry</a><a href="#runDetail">Run detail</a><a href="#environment">Environment</a><a href="#recent">Recent events</a></nav>
+  <section class="panel" id="environment"><h2>Environment observation</h2><p id="currentness" class="hint">Currentness: UNKNOWN</p><p id="readiness">Readiness: UNKNOWN — no readiness evidence supplied by this API.</p><div class="detail-grid"><div><h3>Adapters</h3><div id="adapters"></div></div><div><h3>Hosts in recorded runs</h3><div id="hosts"></div></div></div></section>
+  <section class="panel" id="registry">
+    <div class="panel-head">
+      <h2>Run registry</h2>
+      <div class="filters"><label>Adapter <select id="adapter"><option value="">All adapters</option></select></label><label>Status <select id="status"><option value="">All statuses</option></select></label><label>Process class <select id="processClass"><option value="">All process classes</option></select></label></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Run ID</th><th>Process class</th><th>Adapter</th><th>Host</th><th>Runtime</th><th>Target</th><th>Phase</th><th>Started</th><th>Duration</th></tr></thead>
+        <tbody id="runs"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="runDetail">
+    <h2>Run detail</h2>
+    <p id="detailState" role="status" class="hint"></p>
+    <div id="empty">Select a run.</div>
+    <div id="detail" hidden>
+      <div class="detail-grid">
+        <div><h3>Identity</h3><div id="identity" class="chip-grid"></div></div>
+        <div><h3>Source</h3><div id="source" class="chip-grid"></div></div>
+        <div><h3>Target</h3><div id="target" class="chip-grid"></div></div>
+        <div><h3>Authority</h3><div id="authority" class="chip-grid"></div></div>
+      </div>
+      <h3>Timeline</h3><div id="timeline" class="chip-grid"></div><h3>Phases</h3><div id="phases"></div><h3>Events</h3><div id="events"></div>
+      <div class="detail-grid">
+        <div><h3>Metrics · <span id="adapterTitle">Adapter detail</span></h3><div id="metrics" class="chip-grid"></div><p class="hint">Metrics belong to this recorded run; they do not assert current environment state.</p></div>
+        <div><h3>Participants / roles</h3><div id="participants"></div></div>
+        <div><h3>Artifacts</h3><div id="artifacts"></div></div>
+        <div><h3>Receipts</h3><p class="hint">Receipt presence does not prove an effect or completed reconciliation.</p><div id="receipts"></div></div>
+      </div>
+      <h3>Cleanup</h3><div id="cleanup" class="chip-grid"></div><h3>Verification</h3><div id="verification" class="chip-grid"></div>
+      <div id="vktDetail" hidden>  <section class="panel fleet-panel">
+    <div class="panel-head">
+      <div><h2>Fleet organization</h2><p id="fleetCurrentness" class="hint">Current fleet topology is unknown.</p></div>
+      <div class="fleet-headline"><span id="workingDrones">—</span><small>working drones</small></div>
+    </div>
+    <div id="fleetOrganizations" class="org-grid"><div class="empty-state">No active fleet evidence.</div></div>
+  </section>
+
+  <section class="panel channels-panel">
+    <div class="panel-head channels-head">
+      <div><h2>Drone channels</h2><p id="channelContext" class="hint">No active channel source.</p></div>
+      <div id="channelFilters" class="channel-filters"></div>
+    </div>
+    <div id="channelFeed" class="channel-feed"><div class="empty-state">No conversation evidence.</div></div>
+  </section>
+
+</div>
+    </div>
+  </section>
+  <section class="panel" id="recent"><h2>Recent events</h2><p class="hint">Recorded events across runs; history remains after cleanup.</p><div id="recentEvents"></div></section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

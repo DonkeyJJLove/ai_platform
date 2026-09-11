@@ -1,0 +1,31 @@
+[Unit]
+Description=LION VKT-R3 bounded K3s provider request
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 /opt/lion/k3s-vkt-r3/repo/tools/lion_k3s_pod_provider_v4.py
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/opt/lion/k3s /opt/lion/k3s-vkt-r3
+ReadWritePaths=/var/lib/lion/k3s-vkt-r3 /var/lib/lion-effect-admission/vkt-r3-k3s /run/lion-k3s-vkt-r3
+TimeoutStartSec=180
+TimeoutStopSec=30

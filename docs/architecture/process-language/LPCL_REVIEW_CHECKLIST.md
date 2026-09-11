@@ -1,29 +1,42 @@
-# LPCL independent review checklist
+# LPCL — checklista niezależnego review
 
-A reviewer should reject the v1.1 candidate if any answer below is "yes":
+Reviewer powinien odrzucić kandydata, jeśli odpowiedź na którekolwiek z poniższych pytań brzmi „tak”:
 
-- Can LPCL grant or mint authority?
-- Can `FleetMissionIR` grant authority, carry credentials, construct RuntimeAdmission or select an EffectProvider?
-- Can LPCL evaluate/replace the canonical PDP?
-- Can LPCL construct RuntimeAdmission?
-- Can LPCL select or execute an EffectProvider?
-- Can unversioned historical RUN material become a process candidate merely because it contains `PHASE_N` blocks?
-- Can an explicitly versioned invalid v1.1 source fall back to legacy and continue as executable?
-- Can a canonical v1.1 source omit `TERMINATION` or `LINEAGE`?
-- Can a LOGICAL-only fleet mission contain an `ACTION_REQUIRED` transition?
-- Can an `ACTION_REQUIRED` transition route to a non-LOCAL role?
-- Can `ACTION_REQUIRED` use any operator other than `EMIT_ACTION_INTENT`?
-- Can an `ACTIONS`/`VERIFY`/`RECORD` annotation override typed transition semantics?
-- Can role-separation metadata be presented as proof of physical independence?
-- Can `UNKNOWN` be coerced into `PASS`?
-- Can `PASS` imply `CURRENT`, `AUTHORIZED`, `OBSERVED` or `RECONCILED`?
-- Can `CONTINUE` skip dependencies, ignore currentness or widen scope?
-- Can non-idempotent retry occur without reconciliation-first semantics?
-- Can a consequential `PASS` omit admission/effect/observation/reconciliation/currentness evidence?
-- Does LPCL require a 16th architecture layer merely to exist?
-- Does the process-orchestration projection alter the existing 15-layer set rather than bind existing layers?
-- Does the candidate replace EvolutionaryEpochEngine, MissionSpec or SwarmSpec without separately proven equivalence?
-- Are truth/currentness carriers being updated before noncarrier verification is frozen?
-- Is documentation or a green receipt being treated as merge/production authority?
+- Czy LPCL może grantować lub mintować authority?
+- Czy LPCL może oceniać lub zastąpić canonical PDP?
+- Czy LPCL może konstruować `RuntimeAdmission`?
+- Czy LPCL może wybierać lub wykonywać `EffectProvider`?
+- Czy historyczny `RUN` może dotrzeć do wykonania bez canonicalization?
+- Czy `UNKNOWN` może zostać wymuszone jako `PASS`?
+- Czy `PASS` może implikować `CURRENT`, `AUTHORIZED`, `OBSERVED` albo `RECONCILED`?
+- Czy `CONTINUE` może pomijać dependencies, ignorować currentness albo rozszerzać scope?
+- Czy non-idempotent retry może nastąpić bez reconciliation-first semantics?
+- Czy consequential `PASS` może pominąć evidence dla admission/effect/observation/reconciliation/currentness?
+- Czy samo istnienie LPCL wymaga 16. warstwy architektury?
+- Czy LPCL zastępuje `EvolutionaryEpochEngine`, zamiast współistnieć z nim?
 
-The candidate is suitable for integration review only when all answers are "no", the exact candidate head is bound, focused and repository-wide tests are executed on that exact identity, source-set/currentness drift is reconciled, and carrier-last readback succeeds.
+Kandydat nadaje się do integration review dopiero wtedy, gdy wszystkie odpowiedzi brzmią „nie” i exact-head CI jest zakończone sukcesem.
+
+Ta checklista nie stanowi sama w sobie integration authority.
+
+
+## Uzgodnienie LPCL 1.1 — integracja PR #309
+
+Opis LPCL 1.0 powyżej zachowuje zakres historyczny i zgodność wsteczną.
+Jawnie wersjonowane `RUN` z `LPCL_VERSION=1.1` mają osobny parser
+`cyber_lion/process_language/canonical_run.py` oraz punkt interpretacji
+`cyber_lion/process_language/interpretation.py`. Niewersjonowane `RUN` pozostają
+danymi historycznymi. Parser wymaga pojedynczego końcowego `END`; znacząca treść
+po nim jest błędem, a nie pomijanym fragmentem.
+
+Gramatyka: `cyber_lion/process_language/lpcl_run_1_1.ebnf`.
+Model ról: `cyber_lion/process_language/fleet_mission.py`; klasy LOGICAL, LOCAL,
+HYBRID opisują reprezentację ról, nie uruchomione drony ani uprawnienia.
+Interpretacja zwraca kandydatów ProcessIR/FleetMissionIR bez efektów. Nie zastępuje
+Action/PDP/RuntimeAdmission. Projekcja `process_orchestration.py` wiąże istniejące
+warstwy i nie dodaje nowej warstwy nadrzędnej.
+
+Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTITUTION.md`,
+`LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
+#309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
+Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.

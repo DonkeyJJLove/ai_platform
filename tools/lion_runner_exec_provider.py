@@ -8,12 +8,14 @@ SCHEMA='1.0.0'
 RUNNER_USER='lion-maintenance-runner'
 EXPECTED_ROOT_UID=0
 PROVIDER_SOCKET='/run/lion-docker-p0/provider.sock'
+POD_PROVIDER_SOCKET='/run/lion-k3s-vkt-r3/provider.sock'
 FIXED_REPO=Path('/opt/lion/effect-admission/scale64-repo')
 FIXED_IDENTITY=Path('/opt/lion/effect-admission/scale64-source-identity.json')
 STATE_ROOT=Path('/var/lib/lion-runner-exec')
 WORKSPACE_ROOT=Path('/opt/lion/effect-admission/workspaces')
 HEX40=re.compile(r'^[0-9a-f]{40}$')
 HEX64=re.compile(r'^[0-9a-f]{64}$')
+SAFE_RUN_ID=re.compile(r'^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')
 MAX_REQUEST=64*1024
 MAX_RESPONSE=10*1024*1024
 MAX_LOG=1024*1024
@@ -24,10 +26,14 @@ STATIC_MODULES=(
  'cyber_lion.tests.test_docker_fleet_polygon',
  'cyber_lion.tests.test_scale64_control_plane',
  'cyber_lion.tests.test_scale64_runner_exec',
+ 'cyber_lion.tests.test_lion_k3s_pod_materializer',
+ 'cyber_lion.tests.test_lion_k3s_pod_provider',
+ 'cyber_lion.tests.test_lion_k3s_pod_provider_v4',
 )
 PYCOMPILE_FILES=(
  'tools/p0_docker_scale64_soak.py','tools/p0_docker_drone_runtime.py','tools/p0_rootless_docker_provider.py',
  'tools/lion_effect_admission_broker.py','tools/lion_runner_exec_provider.py','tools/lion_runner_exec_client.py',
+ 'tools/lion_k3s_pod_provider.py','tools/lion_k3s_pod_provider_v2.py','tools/lion_k3s_pod_provider_v3.py','tools/lion_k3s_pod_provider_v4.py','tools/lion_k3s_pod_provider_client.py','tools/lion_k3s_pod_materializer.py','tools/lion_vkt_effect_admission_broker.py','tools/lion_vkt_effect_admission_client.py','tools/lion_lpcl_autonomous_vulnerability_research.py',
 )
 
 class Deny(RuntimeError): pass
@@ -86,6 +92,34 @@ def provider_call(op:str,head:str,tree:str)->dict[str,Any]:
     s.close(); v=json.loads(bytes(data).decode())
     if not isinstance(v,dict) or v.get('ok') is not True or not isinstance(v.get('result'),dict): raise Deny('provider-call-failed')
     return v['result']
+def pod_provider_call(op:str,head:str,tree:str,run_id:str)->dict[str,Any]:
+    allowed={"PRECHECK_POD_RUNTIME","PREPARE_LOCAL_K8S","MATERIALIZE_VKT_PODS","READ_POD_EVIDENCE","STOP_VKT_PODS","START_OSS_REPO_TEST","READ_OSS_REPO_TEST_EVIDENCE","STOP_OSS_REPO_TEST"}
+    if op not in allowed: raise Deny('pod-provider-operation-denied')
+    if not isinstance(run_id,str) or not SAFE_RUN_ID.fullmatch(run_id): raise Deny('pod-provider-run-id-invalid')
+    req={
+        'schema_version':'1.0.0',
+        'request_id':sha256(os.urandom(32)),
+        'operation':op,
+        'mission_id':'VKT-R3-384-REAL-POD-MISSION-CONTROL-R2',
+        'run_id':run_id,
+        'source_head':head,
+        'source_tree':tree,
+    }
+    sock=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
+    sock.connect(POD_PROVIDER_SOCKET)
+    sock.sendall(canonical(req)+b'\n'); sock.shutdown(socket.SHUT_WR)
+    data=bytearray()
+    while True:
+        part=sock.recv(65536)
+        if not part: break
+        data.extend(part)
+        if len(data)>MAX_RESPONSE: raise Deny('pod-provider-response-too-large')
+    sock.close()
+    value=json.loads(bytes(data).decode())
+    if not isinstance(value,dict) or value.get('ok') is not True or not isinstance(value.get('result'),dict):
+        raise Deny('pod-provider-call-failed:'+str(value.get('error') if isinstance(value,dict) else 'malformed'))
+    return value['result']
+
 def no_new_privs()->int:
     for line in Path('/proc/self/status').read_text().splitlines():
         if line.startswith('NoNewPrivs:'): return int(line.split()[1])
@@ -133,6 +167,10 @@ def handle(req:dict[str,Any])->dict[str,Any]:
         if set(req)!={'schema_version','request_id','operation','provider_operation','source_head','source_tree'}: raise Deny('provider-field-set')
         head=require_hex40(req['source_head'],'source_head'); tree=require_hex40(req['source_tree'],'source_tree')
         return provider_call(req['provider_operation'],head,tree)
+    if op=='POD_PROVIDER_CALL':
+        if set(req)!={'schema_version','request_id','operation','provider_operation','source_head','source_tree','run_id'}: raise Deny('pod-provider-field-set')
+        head=require_hex40(req['source_head'],'source_head'); tree=require_hex40(req['source_tree'],'source_tree')
+        return pod_provider_call(req['provider_operation'],head,tree,req['run_id'])
     if op=='SCALE64_RUN':
         if set(req)!={'schema_version','request_id','operation','source_head','source_tree','run_request_id'}: raise Deny('scale64-field-set')
         return scale64_run(require_hex40(req['source_head'],'source_head'),require_hex40(req['source_tree'],'source_tree'),require_hex64(req['run_request_id'],'run_request_id'))

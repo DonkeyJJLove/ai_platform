@@ -1,26 +1,26 @@
-# R21 LPCL candidate build
+# R21 — build kandydata LPCL
 
-This candidate materializes LION Process Contract Language as a non-effectful process-contract layer. It does not grant authority, evaluate policy, construct runtime admission, select an effect provider, or execute effects.
+Ten historyczny candidate materializuje LION Process Contract Language jako non-effectful process-contract layer. Nie grantuje authority, nie ocenia policy, nie konstruuje runtime admission, nie wybiera effect provider i nie wykonuje effects.
 
 ## Ownership
 
-- `DonkeyJJLove/chunk-chunk`: formal process-semantics reference (`process.state`, `process.transition`, transition microcode, trajectory diagnostics).
-- `DonkeyJJLove/ai_platform`: canonical LION integration contract (`CanonicalProcessIR`, validation/selection, Process→Action and Reconciliation→Process boundaries).
+- `DonkeyJJLove/chunk-chunk`: formalny process-semantics reference (`process.state`, `process.transition`, transition microcode, trajectory diagnostics).
+- `DonkeyJJLove/ai_platform`: canonical LION integration contract (`CanonicalProcessIR`, validation/selection, granice Process→Action i Reconciliation→Process).
 - `DonkeyJJLove/writeups`: research/history corpus.
 
-The central `cyber_lion/registry/repositories.json` remains truth-subject-derived and is intentionally not rewritten by this semantic candidate. Reconciliation of that generated projection is a follow-on currentness task after the candidate contract passes exact-head CI.
+Centralny `cyber_lion/registry/repositories.json` pozostaje truth-subject-derived i celowo nie był przepisywany przez tego semantic candidate. Reconciliation tej generowanej projekcji jest osobnym currentness task po przejściu exact-head CI przez candidate contract.
 
 ## Currentness
 
-Candidate base: `67a4f8243aa6805e47035e572bd458f73fd0b358` / tree `4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5`.
+Historyczny candidate base: `67a4f8243aa6805e47035e572bd458f73fd0b358` / tree `4f6fbc481c8df8f7e1fd75f04188207a1c6fbcf5`.
 
-Any default-branch drift before integration invalidates attach assumptions and requires rebase/revalidation.
+Każdy default-branch drift przed integracją unieważniał attach assumptions i wymagał rebase/revalidation. Ten exact baseline pozostaje częścią historycznego lineage i nie powinien być zastępowany dzisiejszym `master`.
 
-## Architecture placement
+## Umiejscowienie w architekturze
 
-LPCL is represented inside the existing `EVOLUTIONARY_EPOCH` architecture layer. No 16th top-level layer and no 10th canonical flow are introduced in v1.
+LPCL jest reprezentowany wewnątrz istniejącej architecture layer `EVOLUTIONARY_EPOCH`. W v1 nie wprowadzono 16. top-level layer ani 10. canonical flow.
 
-## Mandatory invariants
+## Obowiązkowe inwarianty
 
 ```text
 PROCESS_TEXT != AUTHORITY
@@ -34,4 +34,4 @@ EFFECT != OBSERVATION
 OBSERVATION != RECONCILIATION
 ```
 
-CI and independent semantic review are required before any integration decision.
+Przed każdą decyzją integracyjną wymagane są CI i niezależny semantic review związane z właściwym exact head. Sam ten dokument nie jest integration authority.

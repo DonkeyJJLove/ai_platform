@@ -1,119 +1,56 @@
-# LPCL migration — v1.0 to v1.1 candidate
+# LPCL — kandydat migracji
+
+LPCL v1 został wprowadzony jako addytywny candidate. Istniejące `MissionSpec`, `EvolutionaryEpoch`, `ActionSpec`, `ActionProposal`, PDP, `RuntimeAdmission` oraz kontrakty effect/reconciliation pozostają kanoniczne w swoich domenach.
+
+## Historyczny RUN
 
 ```text
-STATUS=CANDIDATE_NOT_MERGED
-AUTHORITY_EFFECT=NONE
-RUNTIME_EFFECT=NONE
-```
-
-LPCL v1.1 is an additive authoring-surface and execution-topology evolution over the integrated non-effectful ProcessIR model. Existing MissionSpec, EvolutionaryEpoch, ActionSpec, ActionProposal, PDP, RuntimeAdmission and effect/reconciliation contracts remain canonical in their current domains.
-
-## Migration classes
-
-Three source classes are kept distinct:
-
-```text
-LPCL_1_0_STRICT_JSON
-VERSIONED_LPCL_1_1_RUN_PHASE
-UNVERSIONED_HISTORICAL_RUN
-```
-
-They are not silently coerced into one another.
-
-## LPCL 1.0
-
-Existing strict LPCL 1.0 remains parseable by `parse_lpcl` and renders directly from `CanonicalProcessIR`. No bulk rewrite of historical 1.0 artifacts is required.
-
-## Versioned LPCL 1.1
-
-A new canonical authoring path is introduced:
-
-```text
-versioned RUN/PHASE text
-→ parse_canonical_run
-→ CanonicalRunAST
-→ compile_canonical_run
-→ CanonicalProcessIR
-+ FleetMissionIR
-```
-
-The resulting ProcessIR is validated by the existing canonical contract. The compiler cannot weaken evidence, currentness, authority, replay or ActionIntent requirements.
-
-## Historical RUN
-
-Historical material remains evidence:
-
-```text
-unversioned historical RUN text
+historical RUN text
 → LegacyRunAdapter
 → classification
-→ read-only semantic candidate where non-ambiguous
+→ semantic candidate only when non-ambiguous
+→ canonical ProcessIR validation
 ```
 
-Classifications remain:
+Klasyfikacje:
 
 - `LOSSLESS_TRANSLATION`
 - `LOSSY_BUT_SAFE`
 - `AMBIGUOUS`
 - `UNREPRESENTABLE`
 
-Numbered PHASE semantics in historical material remain ambiguous to `LegacyRunAdapter`. They do **not** automatically become v1.1. Only an explicitly versioned canonical surface with the required controls is a v1.1 process candidate.
+Bieżący adapter tej lineage celowo klasyfikuje proceduralne `MODE=...THEN...`, numerowane semantyki PHASE oraz niejednoznaczne pola authority jako `AMBIGUOUS`. Nigdy nie wykonuje historycznego tekstu.
 
-## Migration of RUN/PHASE authoring practice
+## Federacja
 
-For new processes, cross-thread authoring moves to the versioned form:
+Centralny repository registry jest truth-subject-derived. Kandydat zapisuje split ownership jawnie, ale nie przepisuje ręcznie generowanego currentness carrier. Regeneracja/reconciliation tego carrier jest krokiem późniejszym względem poprawnego LPCL contract CI.
 
-```text
-RUN=
-...
-PROCESS_LANGUAGE=
-LPCL
-LPCL_VERSION=
-1.1
-MISSION_CLASS=
-LOGICAL_FLEET_MISSION | LOCAL_FLEET_MISSION | HYBRID_FLEET_MISSION
-...
-PHASE_0=
-...
-```
+## Istniejące state machines
 
-Historical descriptive blocks (`ACTIONS`, `REQUIRE`, `VERIFY`, `DENY`, `RECORD`, etc.) may remain annotations, but machine-significant transition meaning must be represented by canonical phase controls. This prevents different threads from assigning different execution meaning to the same prose.
+Nie ma zgody na bulk migration. `EvolutionaryEpochEngine` oraz inne domenowe state machines pozostają bez zmian, dopóki equivalence z generic `TransitionSpec` semantics nie zostanie indywidualnie udowodniona.
 
-## Fleet mission migration
+## Granica translacji
 
-No existing fleet implementation is silently replaced. `FleetMissionIR` is an inert routing contract:
+`LOSSLESS_TRANSLATION` jest klasyfikacją semantycznej migracji formatu procesu, a nie instrukcją językowej translacji nazw tokenów LPCL. Tokeny, identyfikatory i wire semantics pozostają literalne niezależnie od tego, że prose dokumentacji jest po polsku.
 
-```text
-CanonicalProcessIR
-→ FleetMissionIR
-→ bounded role routing
-```
 
-It carries no grants, credentials, PDP decisions, RuntimeAdmission or effect-provider selection. Existing fleet/swarm state machines remain valid until equivalence or integration is separately demonstrated.
+## Uzgodnienie LPCL 1.1 — integracja PR #309
 
-## Architecture and documentation migration
+Opis LPCL 1.0 powyżej zachowuje zakres historyczny i zgodność wsteczną.
+Jawnie wersjonowane `RUN` z `LPCL_VERSION=1.1` mają osobny parser
+`cyber_lion/process_language/canonical_run.py` oraz punkt interpretacji
+`cyber_lion/process_language/interpretation.py`. Niewersjonowane `RUN` pozostają
+danymi historycznymi. Parser wymaga pojedynczego końcowego `END`; znacząca treść
+po nim jest błędem, a nie pomijanym fragmentem.
 
-The v1.1 candidate introduces an explicit process-orchestration projection:
+Gramatyka: `cyber_lion/process_language/lpcl_run_1_1.ebnf`.
+Model ról: `cyber_lion/process_language/fleet_mission.py`; klasy LOGICAL, LOCAL,
+HYBRID opisują reprezentację ról, nie uruchomione drony ani uprawnienia.
+Interpretacja zwraca kandydatów ProcessIR/FleetMissionIR bez efektów. Nie zastępuje
+Action/PDP/RuntimeAdmission. Projekcja `process_orchestration.py` wiąże istniejące
+warstwy i nie dodaje nowej warstwy nadrzędnej.
 
-```text
-Intent
-→ LPCL surface
-→ ProcessIR
-→ FleetMissionIR
-→ ActionIntent if required
-→ existing authority / runtime / effect chain
-```
-
-This projection must be reflected consistently in LPCL documentation, architecture documentation, capability projections and truth carriers. Truth/currentness carriers are updated only after noncarrier implementation and verification are frozen.
-
-## Federation
-
-The central repository registry remains truth-subject-derived. Manual early promotion of generated/currentness carriers is prohibited. Regeneration/reconciliation is downstream of successful candidate verification.
-
-## Existing state machines
-
-No bulk migration is authorized. `EvolutionaryEpochEngine`, MissionSpec, SwarmSpec and other domain state machines remain as-is until equivalence with generic ProcessIR and FleetMissionIR semantics is individually proven.
-
-## Failure rule
-
-Any ambiguous translation remains `AMBIGUOUS` or `UNREPRESENTABLE`; migration never invents missing authority, dependencies, role routing, currentness or transition outcomes.
+Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTITUTION.md`,
+`LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
+#309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
+Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.
