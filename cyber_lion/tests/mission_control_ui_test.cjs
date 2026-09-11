@@ -29,8 +29,25 @@ async function main() {
   run(`participants({a:{state:'RUNNING',logical_id:'a'}},{host:'h'})`);
   assert.match(node('participants').innerHTML,/NONE OBSERVED/);
   assert.match(node('participants').innerHTML,/LOGICAL ONLY/);
-  run(`artifacts([{artifact_id:'<img src=x>',path:'<script>bad()</script>'}],'r')`);
-  assert.doesNotMatch(node('artifacts').innerHTML,/<img|<script>/);
+  // Verify exact text encoding, not a partial blacklist of HTML tag spellings.
+  const artifactTextCases = [
+    ['<img src=x>', '&lt;img src=x&gt;'],
+    ['<IMG src=x>', '&lt;IMG src=x&gt;'],
+    ['<ImG src=x>', '&lt;ImG src=x&gt;'],
+    ['<script>sample</script>', '&lt;script&gt;sample&lt;/script&gt;'],
+    ['<SCRIPT>sample</SCRIPT>', '&lt;SCRIPT&gt;sample&lt;/SCRIPT&gt;'],
+    ['<ScRiPt>sample</ScRiPt>', '&lt;ScRiPt&gt;sample&lt;/ScRiPt&gt;'],
+    ['&<>\'"', '&amp;&lt;&gt;&#39;&quot;'],
+  ];
+  for (const [input, encoded] of artifactTextCases) {
+    context.artifactFixture = [{artifact_id:input,path:input}];
+    run("artifacts(artifactFixture,'r')");
+    const html = node('artifacts').innerHTML;
+    assert.equal(html.split(`<td>${encoded}</td>`).length - 1, 2,
+      'artifact ID and path must both preserve the fully escaped text');
+    assert.equal(html.includes(input), false, 'raw fixture must not enter HTML');
+  }
+  delete context.artifactFixture;
   run(`allRuns=[{run_id:'r',adapter_type:'VKT_R3',process_class:'A',status:'PASS'}];$('processClass').value='B';renderRuns()`);
   assert.match(node('runs').innerHTML,/No runs match/);
   run(`$('processClass').value='A';renderRuns()`);
