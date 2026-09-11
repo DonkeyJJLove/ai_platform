@@ -1,0 +1,33 @@
+{
+  "schema_version": "lion.documentation-fleet/v1",
+  "fleet_id": "LION-DOC-R128-2026-09-10-R1",
+  "repository": "DonkeyJJLove/ai_platform",
+  "base_branch": "master",
+  "base_head": "5e40338511fe2a5f0a891c823b03f9855d6ad1e8",
+  "base_tree": "306b8cf245299517278ab0959a7aca79f66e5343",
+  "candidate_branch": "docs/lion-v1.4-r128-polish-homeostasis-r1",
+  "worker_count": 128,
+  "logical_parallelism": true,
+  "real_parallel_runtime_proven": false,
+  "authority_effect": "NONE",
+  "production_authority": "NONE",
+  "policy": {
+    "documentation_is_authority": false,
+    "translation_may_change_machine_tokens": false,
+    "historical_evidence_rewrite": "FORBIDDEN",
+    "technical_identifiers": "PRESERVE_LITERAL",
+    "currentness_rule": "STALE_ON_MATERIAL_BASELINE_DRIFT"
+  },
+  "sectors": [
+    {"sector":"CURRENTNESS_BASELINES","id_range":"DOC-001..DOC-016","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Audit exact Git identity, stale/current markers, generated projections and baseline drift."},
+    {"sector":"LANGUAGE_TRANSLATION","id_range":"DOC-017..DOC-032","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Identify human-facing non-Polish documentation and prepare Polish translations while preserving technical tokens and evidence literals."},
+    {"sector":"NAVIGATION_STRUCTURE","id_range":"DOC-033..DOC-048","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Audit README/index/navigation, duplicate paths, naming, discoverability and document ownership."},
+    {"sector":"ARCHITECTURE_SEMANTICS","id_range":"DOC-049..DOC-064","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Verify AS_IS/CANDIDATE/TARGET semantics, action/runtime/factory descriptions and cross-document consistency."},
+    {"sector":"AUTHORITY_SECURITY","id_range":"DOC-065..DOC-080","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Verify authority, policy, security boundary and no-authority-inflation statements."},
+    {"sector":"RUNTIME_VKT","id_range":"DOC-081..DOC-096","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Verify VKT-R3 runtime, Mission Control, image, test and currentness documentation against repository evidence."},
+    {"sector":"HISTORY_PROVENANCE","id_range":"DOC-097..DOC-112","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Preserve historical commits, trees, PRs, falsification and supersession lineage; prevent destructive rewrites."},
+    {"sector":"VERIFICATION_RECONCILIATION","id_range":"DOC-113..DOC-128","workers":16,"roles":{"ANALYZER":8,"VERIFIER":4,"OBSERVER":2,"RECONCILER":2},"task":"Validate Markdown/links/schema references, compare intended vs resulting documentation state and record unresolved gaps."}
+  ],
+  "cardinality_proof": "8 sectors * 16 logical drones = 128 logical drones",
+  "interpretation": "This manifest materializes 128 logical documentation-worker identities by disjoint ID ranges. It does not claim 128 independent OS processes, Pods, model sessions or production executors."
+}

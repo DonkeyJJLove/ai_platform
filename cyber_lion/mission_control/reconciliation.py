@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import time
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 from .artifacts import describe_artifact
+from .schema import validate_event
 
 HISTORICAL_VKT_SUMMARY = Path('/var/lib/sentinelx/uploads/vkt-r3-lpcl-v2-final/final-summary.json')
 HISTORICAL_VKT_VALIDATOR = Path('/var/lib/sentinelx/uploads/vkt-r3-validation/lpcl-v2-supervised-600s.json')
@@ -44,8 +46,16 @@ class Reconciler:
                 runs = adapter.poll()
                 self.errors.pop(adapter.adapter_id, None)
                 for run in runs:
+                    observation_events = run.pop("_observation_events", ())
+                    if not isinstance(observation_events, (list, tuple)):
+                        raise TypeError("adapter observation events must be a sequence")
                     run = self._preserve_terminal_lifecycle(run)
                     normalized = self.store.upsert_run(run)
+                    for event in observation_events:
+                        validated_event = validate_event(event)
+                        if validated_event["run_id"] != normalized["run_id"]:
+                            raise ValueError("adapter observation event run mismatch")
+                        self.store.append_event(validated_event)
                     for name, value in (normalized.get('metrics') or {}).items():
                         if value is not None:
                             self.store.add_metric(normalized['run_id'], name, value)
@@ -57,7 +67,9 @@ class Reconciler:
                     for receipt in normalized.get('receipts') or []:
                         if isinstance(receipt, dict) and receipt.get('receipt_id'):
                             self.store.add_receipt(normalized['run_id'], receipt)
-                    observed.append(normalized)
+                    # Stored history preserves partial proof; current fleet counts
+                    # must use this poll's exact metrics, including empty maps.
+                    observed.append(dict(normalized, metrics=deepcopy(run.get('metrics') or {})))
                 self.store.set_adapter_state(adapter.adapter_id, {'ok': True, 'last_poll': time.time(), 'run_count': len(runs)})
             except Exception as exc:
                 message = type(exc).__name__ + ':' + str(exc)[:1000]

@@ -406,6 +406,18 @@ class TruthPlaneReconciliationTests(unittest.TestCase):
                 "STALE",
                 "LIVE_MASTER_RECOVERY_REQUIRES_PROVEN_STALE_BASE",
             )
+            # The digest check precedes record/history validation. Revalidate
+            # those fields with only the observed digest substituted in memory;
+            # the original remote projection remains explicitly STALE.
+            remote_structure = copy.deepcopy(live_state)
+            remote_structure["baseline"]["subject_digest"] = live_digest
+            validate_truth_projection(
+                remote_structure,
+                current_head=head,
+                current_tree=tree,
+                current_subject_digest=live_digest,
+                candidate_currentness_evidence=live_candidate_evidence,
+            )
             ancestry = subprocess.run(
                 ["git", "merge-base", "--is-ancestor", head, "HEAD"],
                 check=False,

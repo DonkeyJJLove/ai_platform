@@ -4,7 +4,7 @@
     "repository": "DonkeyJJLove/ai_platform",
     "branch": "master",
     "subject_digest_domain": "LION/TRUTH-SUBJECT/1",
-    "subject_digest": "7377c9708a0cc28a6094ebc0927eae3f4684561aa84040a563a7f403350818ab",
+    "subject_digest": "1e048a9687ac2bf6f11c0e0411d23597006fa491f0e553c5a4295b5109fcd183",
     "currentness_mode": "DERIVED_SUBJECT_DIGEST"
   },
   "records": [
@@ -231,10 +231,9 @@
       "status": "INTEGRATED_BOUNDED_PROTOCOL",
       "evidence_refs": [
         "cyber_lion/tests/experiments/bean_generativity.py",
-        "PR#251",
-        "PR#255",
-        "PR#276",
-        "master:27911c67417d67613f9bbf6bb09327ec33b68d54"
+        "cyber_lion/tests/test_bean_generativity_protocol.py",
+        "cyber_lion/tests/test_r22f_factory_falsifier.py",
+        "git:0834c97e0cbbd2d9144157e8ec03cd402acbe616"
       ],
       "integrated": true,
       "pr": null,

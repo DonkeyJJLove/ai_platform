@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote
 
-from .models import summary_from_runs
+from .models import fleet_summary_from_runs, summary_from_runs
 
 STATIC = Path(__file__).resolve().parent / 'static'
 
@@ -26,11 +26,15 @@ class MissionControl:
         self.stop_event = threading.Event()
         self.error: str | None = None
         self.lock = threading.RLock()
+        self.fleet_observations = []
+        self.last_poll_at: float | None = None
 
     def poll_once(self):
         observed = self.reconciler.poll_once()
         with self.lock:
             self.error = None if not self.reconciler.errors else json.dumps(self.reconciler.errors, sort_keys=True)
+            self.fleet_observations = [run for run in observed if run.get('adapter_type') not in self.reconciler.errors]
+            self.last_poll_at = time.monotonic()
         return observed
 
     def loop(self):
@@ -44,10 +48,16 @@ class MissionControl:
 
     def summary(self):
         runs = self.store.list_runs()
+        with self.lock:
+            fresh = self.last_poll_at is not None and time.monotonic() - self.last_poll_at <= max(5.0, self.interval * 3)
+            current_status = {run['run_id']: run['status'] for run in runs}
+            fleet_runs = [dict(run, status=current_status.get(run['run_id'], run['status'])) for run in self.fleet_observations] if fresh and self.error is None else []
+            fleet = fleet_summary_from_runs(fleet_runs)
         return {
             'ok': self.error is None,
             'error': self.error,
             'summary': summary_from_runs(runs),
+            'fleet': fleet,
             'adapter_errors': dict(self.reconciler.errors),
         }
 

@@ -1,185 +1,66 @@
 {
   "schema": "lion.documentation.current-state.v1",
   "architecture_epoch": "1.4",
-  "process_epoch": "R3_POST_PR310_CONVERGENCE",
+  "process_epoch": "MASTER_ONLY_CONVERGENCE_20260911",
   "repository": "DonkeyJJLove/ai_platform",
   "baseline_branch": "master",
-  "baseline_head": "e30734892bd8a89c0a16bcd80944da99bdea6495",
-  "baseline_tree": "04da92ca9cd0ac5868dbf912b31020a80bce00a2",
-  "projection_scope": "POST_PR310_EXACT_DEFAULT_BRANCH_PLUS_R3_SUCCESSOR_NONAUTHORITATIVE_CONVERGENCE_EVIDENCE",
-  "projection_state": "EVIDENCE_BOUND_POST_PR310_R3_SUCCESSOR_PRE_PR",
-  "currentness_rule": "Default-branch facts are bound to the exact observed post-PR310 master HEAD/TREE. The R3 successor is non-authoritative until exact-head CI, independent readback, and a separately authorized merge/reconciliation.",
-  "currentness_basis": {
-    "generator_kind": "POST_PR310_LIVE_REACQUISITION_AND_R3_SEMANTIC_PORT",
-    "generator_version": "R3-POST-PR310-CONVERGENCE/1",
-    "source_observation_head": "e30734892bd8a89c0a16bcd80944da99bdea6495",
-    "source_observation_tree": "04da92ca9cd0ac5868dbf912b31020a80bce00a2",
-    "source_observation_semantics": "POST_PR310_LIVE_DEFAULT_BRANCH_PRE_R3_SUCCESSOR_EFFECT",
-    "candidate_branch": "integration/lion-v1.4-r3-post-pr310-convergence-r2",
-    "candidate_authority_effect": "NONE"
-  },
+  "baseline_head": "38d526a00c2648f723d37df974ed7d0e3927b855",
+  "baseline_tree": "37df0a801fc96f635a6ee5dbceaa7946d79de680",
+  "projection_state": "EXACT_BASE_OBSERVATION_WITH_SEPARATE_CONVERGENCE_CANDIDATE",
+  "currentness_rule": "Odczyt dotyczy wyłącznie baseline HEAD/TREE. Integracja kandydata wymaga osobnych exact-head CI i merge. Zmiana lub usunięcie gałęzi nie dowodzi wdrożenia, authority ani działania floty.",
+  "historical_observations": [
+    "LION/maintenance/R23_CURRENT_STATE_HISTORICAL.json",
+    "LION/maintenance/R3_POST_PR310_CONVERGENCE_EVIDENCE.json"
+  ],
   "repository_convergence": {
-    "open_pr_count_at_reacquisition": 2,
-    "branch_count_at_post_pr310_reacquisition_before_successor": 6,
-    "non_master_branch_count_at_post_pr310_reacquisition_before_successor": 5,
-    "legacy_refs_remaining_from_legacy42": 0,
-    "pr310_merged_head": "909e5c42a19d8c33fd95ec4a3b28970b59437b48",
-    "vkt_r2_ref_disposition": "MERGED_REF_PRESERVED_RUNTIME_REF_DEPENDENCY",
-    "vkt_r1_ref_disposition": "RETIREMENT_CANDIDATE_PENDING_FINAL_EXACT_REVALIDATION",
-    "old_r3_pr": 308,
-    "old_r3_branch": "integration/lion-v1.4-r3-master-convergence-r1",
-    "lpcl_pr": 309,
-    "lpcl_branch": "architecture/lpcl-canonical-interpretation-r1",
-    "bounty_branch": "bounty/trinity-prompt-injection-20260910",
-    "bounty_disposition": "PRESERVED_INDEPENDENT_SECURITY_RESEARCH",
-    "unknown_refs": 0,
-    "closure_policy_anchor": "70929bb895726c0b4a552295e595e373191b0d2b",
-    "cleanup_effect": "LEGACY42_COLLAPSE_ALREADY_OBSERVED_BEFORE_PR310",
-    "master_only": false
-  },
-  "source_and_effect_truth": {
-    "production_selector": "cyber_lion Python excluding cyber_lion/tests plus .github/workflows/*.yml and *.yaml",
-    "source_count": 275,
-    "surface_count": 245,
-    "raw_unclassified_count": 6,
-    "scan_digest": "a6156573b7f2c00006b24002a31553f27f282d8b9cddeb5d482b4ea08dd231c2",
-    "classification": "POST_PR310_R3_SUCCESSOR_NONCARRIER_EFFECT_INVENTORY"
-  },
-  "action_plane": {
-    "integrated": [
-      "Process to ActionIntentCandidate boundary",
-      "Canonical Process IR / LPCL non-effectful process layer",
-      "ActionIntent/ActionSpec/CanonicalActionIR",
-      "static projection",
-      "ExplicitActionProposalContext",
-      "ActionProposal",
-      "canonical PDP handoff",
-      "inert reusable Action runtime binder",
-      "governed binder consumption by RuntimeAdmissionEngine",
-      "RuntimeAdmissionEngine",
-      "RuntimeExecutionEngine",
-      "effect-time currentness",
-      "RuntimeReconciler"
-    ],
-    "active_frontier": "Post-PR310 R3 truth/currentness convergence while VKT-R2 remains branch-ref-bound and LPCL PR309 remains separately stale-base.",
-    "runtime_effect": "NONE_BY_R3_PROCESS_LAYER",
-    "authority_effect": "NONE_BY_R3_PROCESS_LAYER"
-  },
-  "model_plane": {
-    "contract_path": "cyber_lion/contracts/model_plane_adapter.py",
-    "compatibility_target": "ASTRA",
-    "contract_status": "INTEGRATED_PROVIDER_INDEPENDENT_CONTRACT",
-    "astra_runtime": "NOT_OBSERVED",
-    "local_model_runtime": "NOT_OBSERVED",
-    "runtime_effect": "NONE",
-    "authority_effect": "NONE"
+    "requested_terminal_state": "ONLY_MASTER",
+    "observed_terminal_state": "NOT_YET_RECONCILED",
+    "bounty_disposition": "ARCHIVED_AND_DELETED_BY_EXPLICIT_USER_REQUEST",
+    "bounty_head": "1fd4340548ae9e8f27e927e51d01c958becd17c2",
+    "closure_policy": "PRESERVE_CURRENT_POLICY; THIS_CLEANUP_USES_SEPARATE_EXPLICIT_USER_AUTHORIZATION",
+    "pending_prs": [
+      309,
+      311
+    ]
   },
   "factory": {
-    "integrated": [
-      "BeanSpec",
-      "BeanInstance/BeanCandidate family",
-      "CapabilityNeed",
-      "CompositionContract/CompositionEngine",
-      "Mosaic",
-      "BeanBuilderChainBinding",
-      "B0 bounded two-unseen-family generativity protocol"
+    "bounded_protocol": "INTEGRATED_TEST_IMPLEMENTATION",
+    "source": "cyber_lion/tests/experiments/bean_generativity.py",
+    "source_commit": "0834c97e0cbbd2d9144157e8ec03cd402acbe616",
+    "tests": [
+      "cyber_lion/tests/test_bean_generativity_protocol.py",
+      "cyber_lion/tests/test_r22f_factory_falsifier.py"
     ],
-    "bounded_proof": "B0 two-unseen-family protocol is integrated by PR #276 lineage and remains a bounded PASS inside its closed grammar.",
-    "general_generativity": "FALSIFIED_OUTSIDE_B0_GRAMMAR",
-    "general_generativity_evidence": "R22F float-list out-of-grammar family is rejected with GenerativityProtocolError.",
+    "general_generativity": "NOT_PROVEN_OUTSIDE_BOUNDED_GRAMMAR",
     "child_autonomy": "NOT_PROVEN",
     "factory_of_factories": "NOT_PROVEN",
-    "human_authority_boundary": "REAL_CHILD_ACTIVATION"
+    "runtime_activation": "NONE_BY_THIS_RECONCILIATION"
   },
   "full_symbol_census": {
-    "state": "FINAL_SUCCESSOR_TREE_RECHECK_AND_CI_ARTIFACT_REQUIRED",
-    "historical_last_complete_census": "PRESERVED_IN_PRIOR_EVIDENCE",
-    "parse_failures_claim_for_successor": "NOT_YET_MEASURED"
+    "state": "EXACT_HEAD_CI_ARTIFACT_REQUIRED",
+    "workflow": ".github/workflows/lion-r22c-full-symbol-census.yml",
+    "truth_subject_artifact": "LION_TRUTH_SUBJECT_v1.txt"
   },
-  "federation": {
-    "member_count": 10,
-    "live_vector": "LION/architecture/v1_4/federation_current_vector.json",
-    "basis": "R22H_LIVE_SWEEP_CARRIED_FORWARD_WITHOUT_R3_FEDERATION_REACQUISITION",
+  "mission_control": {
+    "ui_pr": 329,
+    "repository_integration": "MERGED",
+    "host_source_update": "USER_WILL_PULL; NOT_OBSERVED",
+    "ui_first_order": "PRESERVED",
+    "cluster_implementation": "NOT_STARTED"
+  },
+  "hosts": {
+    "runtime_currentness": "NOT_REACQUIRED_IN_THIS_REPOSITORY_CONVERGENCE",
+    "physical_failure_domain_independence": "NOT_PROVEN"
+  },
+  "source_and_effect_truth": {
+    "state": "RECOMPUTE_FROM_EXACT_CANDIDATE_AFTER_SOURCE_FREEZE",
     "authority_effect": "NONE"
   },
   "global_complete_mediation": "UNKNOWN",
-  "historical_currentness_defect": {
-    "path": "LION/status.json",
-    "state": "HISTORICAL_STALE_SELF_DECLARED_CURRENT",
-    "policy": "Do not treat LION/status.json as v1.4 live current-state evidence. Preserve it as historical lineage until a separately validated migration or supersession removes all legacy consumers."
-  },
-  "hosts": {
-    "logical_hosts_last_documented": [
-      "LION-AUTH-LAB",
-      "MOON",
-      "LAB-UBUNTU",
-      "LAB-DEBIAN"
-    ],
-    "host_state_reacquired_by_r3": false,
-    "physical_failure_domain_independence": "NOT_PROVEN",
-    "local_model_runtime": "NOT_OBSERVED_BY_CARRIED_FORWARD_EVIDENCE"
-  },
   "production_claim": "NONE",
   "preproduction": "NO",
   "rag": {
     "profile": "LION-RAG32/1",
-    "r3_repository_convergence_evidence": "LION/maintenance/R3_POST_PR310_CONVERGENCE_EVIDENCE.json",
-    "publication": "NO"
-  },
-  "human_authority_boundaries": [
-    "R22E-HAB-BRANCH-MAINTENANCE-001",
-    "REAL_CHILD_ACTIVATION",
-    "MARK_READY",
-    "MERGE",
-    "RAG_PUBLICATION",
-    "RUNTIME_DEPLOYMENT",
-    "PRODUCTION_DEPLOYMENT"
-  ],
-  "process_plane": {
-    "status": "R3_POST_PR310_CONVERGENCE_SUCCESSOR_CANDIDATE",
-    "language": "LPCL 1.0",
-    "canonical_ir": "cyber_lion/contracts/process_ir.py",
-    "process_action_boundary": "cyber_lion/contracts/process_action.py",
-    "selector": "cyber_lion/enterprise/process_semantics.py:TransitionSelector",
-    "outcome_evidence": "cyber_lion/enterprise/process_outcome_evidence.py:CanonicalDownstreamEvidence",
-    "surface": "cyber_lion/process_language/lpcl.py",
-    "invariants": [
-      "process layer is non-effectful",
-      "process layer never grants authority",
-      "ACTION_REQUIRED emits ActionIntentCandidate only",
-      "no second PDP",
-      "no second RuntimeAdmissionEngine",
-      "no EffectProvider selection",
-      "PASS for ACTION_REQUIRED requires exact downstream evidence"
-    ],
-    "authority_effect": "NONE",
-    "runtime_effect": "NONE"
-  },
-  "vkt_r3": {
-    "pr": 310,
-    "merged_head": "909e5c42a19d8c33fd95ec4a3b28970b59437b48",
-    "merged_into_master": "e30734892bd8a89c0a16bcd80944da99bdea6495",
-    "repository_integration": "MERGED",
-    "runtime_evidence": "CARRIED_FROM_PR310_NOT_REOBSERVED_BY_THIS_R3_RUN",
-    "remote_ref": "mission/vkt-r3-pod-materialization-r2",
-    "remote_ref_state": "PRESERVED_BECAUSE_CURRENT_REPOSITORY_RUNTIME_CONTRACT_REFERENCES_BRANCH_IDENTITY",
-    "production_authority": "NONE"
-  },
-  "r3_successor_validation": {
-    "targeted_tests": "PASS_155_WITH_2_CONTROLLED_SKIPS",
-    "full_linux_shadow_suite": "PASS_2481_WITH_5_CONTROLLED_SKIPS",
-    "effect_surface_delta": "ZERO_ADDED_ZERO_REMOVED",
-    "scan_digest": "a6156573b7f2c00006b24002a31553f27f282d8b9cddeb5d482b4ea08dd231c2",
-    "bandit": "PASS_1_9_4_ZERO_MEDIUM_ZERO_HIGH_NO_NOSEC",
-    "websocket_rfc6455_kat": "PASS_BYTE_EXACT",
-    "live_currentness_gate": "PASS_STALE_MASTER_EXACT_SUCCESSOR_REPAIR_PROVEN",
-    "remote_ci": "REVERIFY_REQUIRED_AFTER_B324_FORWARD_COMMIT"
-  },
-  "base_master_truth_projection": {
-    "declared_subject_digest": "66a92d2978bdfbe6bfca461e12bc2793b7a6e7ec110848ff726d61b0281882be",
-    "observed_subject_digest": "31b3b4ae36ef9fefbc6891535ce07f2e61487e21e762334e4132ab9fd8a62b9e",
-    "state": "STALE_INHERITED_POST_PR310",
-    "repair": "R3_SUCCESSOR_CARRIER_LAST_CURRENTNESS_REBIND",
-    "authority_effect": "NONE"
+    "publication": "NO; ARCHIVAL_PAYLOAD_UNCHANGED"
   }
 }

@@ -1,16 +1,16 @@
-# LPCL candidate write scope
+# Zakres zapisu kandydata LPCL
 
-This candidate intentionally changes only process-language contracts, tests, architecture projection metadata and documentation.
+Ten historyczny candidate celowo zmieniał wyłącznie kontrakty process-language, testy, metadata architecture projection oraz dokumentację.
 
-It does not change:
+Nie zmieniał:
 
-- policy-gate/PDP implementation,
+- implementacji policy-gate/PDP,
 - authority source/grant/revocation,
-- RuntimeAdmissionEngine,
-- RuntimeExecutionEngine,
-- EffectProvider,
-- host state,
-- deployment/release configuration,
-- F005 runtime state.
+- `RuntimeAdmissionEngine`,
+- `RuntimeExecutionEngine`,
+- `EffectProvider`,
+- stanu hosta,
+- konfiguracji deployment/release,
+- stanu runtime F005.
 
-Any later integration beyond this scope requires a new exact-baseline decision.
+Każda późniejsza integracja wykraczająca poza ten zakres wymaga nowej decyzji związanej z exact baseline. Sam opis scope nie nadaje authority i nie jest dowodem bieżącego statusu implementacji.
