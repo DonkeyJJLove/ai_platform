@@ -56,12 +56,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          printf 'GIT_TREE_HEAD=%s
-' "${{ steps.gitstate.outputs.head }}"
-          printf 'GIT_TREE_TREE=%s
-' "${{ steps.gitstate.outputs.tree }}"
-          printf 'GIT_TREE_ARTIFACT_SHA256=%s
-' "$(sha256sum "$RUNNER_TEMP/lion-git-logical-tree.json" | awk '{print $1}')"
+          printf 'GIT_TREE_HEAD=%s\n' "${{ steps.gitstate.outputs.head }}"
+          printf 'GIT_TREE_TREE=%s\n' "${{ steps.gitstate.outputs.tree }}"
+          printf 'GIT_TREE_ARTIFACT_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-git-logical-tree.json" | awk '{print $1}')"
           printf 'GIT_TREE_VALIDATION_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-git-logical-tree-validation.json" | awk '{print $1}')"
       - name: Upload exact graph evidence
         uses: actions/upload-artifact@v4

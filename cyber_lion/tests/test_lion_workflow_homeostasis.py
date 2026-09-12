@@ -11,6 +11,29 @@ class WorkflowHomeostasisTests(unittest.TestCase):
   for row in r['workflows']:
    if row['advisory_findings'] and not row['critical_evidence']:
     self.assertEqual(row['blocking_defects'],[],row['name'])
+ def test_run_block_indent_escape_is_blocking_for_any_workflow(self):
+  with tempfile.TemporaryDirectory() as td:
+   root=Path(td);p=root/'.github/workflows';p.mkdir(parents=True)
+   for name in CRITICAL:(p/name).write_text(GOOD)
+   malformed="\n".join((
+    "permissions:",
+    "  contents: read",
+    "concurrency:",
+    "  group: x",
+    "jobs:",
+    "  x:",
+    "    timeout-minutes: 1",
+    "    steps:",
+    "      - run: |",
+    "          printf 'X=%s",
+    "' \"$x\"",
+    "",
+   ))
+   (p/'observation.yml').write_text(malformed)
+   r=audit(root); row=next(x for x in r['workflows'] if x['name']=='observation.yml')
+   self.assertTrue(row['run_block_syntax_defects']);self.assertGreater(r['blocking_defect_count'],0)
+ def test_repository_has_no_run_block_indent_escape(self):
+  r=audit(ROOT); self.assertEqual([x['name'] for x in r['workflows'] if x['run_block_syntax_defects']],[])
  def test_critical_write_permission_is_detected(self):
   with tempfile.TemporaryDirectory() as td:
    root=Path(td);p=root/'.github/workflows';p.mkdir(parents=True)

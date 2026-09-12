@@ -87,6 +87,11 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:2ab8b77c3b6f",
+      "target": "git:336526aeb66b"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:2b5df03dbc83",
       "target": "git:22793ebe6518"
     },
@@ -363,6 +368,11 @@
     {
       "relation": "PARENT_OF",
       "source": "git:master",
+      "target": "git:2ab8b77c3b6f"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:master",
       "target": "git:8b4c5c8451a5"
     },
     {
@@ -441,9 +451,9 @@
       "target": "truth:r7-boundary"
     }
   ],
-  "generated_from_head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
-  "generated_from_tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
-  "graph_digest": "f76707a2fbda25447d563917e62f53df64030d9e2becd2732630ebfca54479a2",
+  "generated_from_head": "336526aeb66b640d5a05eb8049dbd5b3a61564be",
+  "generated_from_tree": "819b797867cd954be1c4fd20dbfcca620490e54f",
+  "graph_digest": "f9819677427c2a017388a4c13fe9c14815467191ca7388a02d511b4fbfffa0ae",
   "graph_digest_domain": "LION/GIT-LOGICAL-TREE/3",
   "invariants": [
     "NO_AUTHORITY_FROM_GRAPH",
@@ -880,6 +890,30 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:2ab8b77c3b6fd6a84ad8845f6edd5c12f63e77e7"
+      ],
+      "head": "2ab8b77c3b6fd6a84ad8845f6edd5c12f63e77e7",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:2ab8b77c3b6f",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "feat(r8): add bounded hybrid routing candidate",
+      "observed_at": null,
+      "parent_heads": [
+        "473afeb5fcdc7b5dabac00cef617f8067b285a29"
+      ],
+      "rag_release": null,
+      "ref": "mission/r8-hybrid-m64-candidate-r3",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "8c51af748a5487059dcf3bf37df870bc26f6718b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
         "git-object:2b5df03dbc838a590369cffcb5472af6f7293511",
@@ -951,6 +985,30 @@
       "superseded_by": [],
       "supersedes": [],
       "tree": "82160767eb713440b2da6115fb58933b95d3909f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_LINEAGE",
+      "evidence_refs": [
+        "git-object:336526aeb66b640d5a05eb8049dbd5b3a61564be"
+      ],
+      "head": "336526aeb66b640d5a05eb8049dbd5b3a61564be",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:336526aeb66b",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(r8): document hybrid state and bind truth",
+      "observed_at": null,
+      "parent_heads": [
+        "2ab8b77c3b6fd6a84ad8845f6edd5c12f63e77e7"
+      ],
+      "rag_release": null,
+      "ref": "mission/r8-hybrid-m64-candidate-r3",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "819b797867cd954be1c4fd20dbfcca620490e54f",
       "truth_subject": null
     },
     {
@@ -2601,25 +2659,22 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "CURRENT_REMOTE_TRACKING_EXACT",
       "evidence_refs": [
-        "git-object:bf8e17f60e29f46b479fc488914725db00c0feb2"
+        "git-object:473afeb5fcdc7b5dabac00cef617f8067b285a29"
       ],
-      "head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "head": "473afeb5fcdc7b5dabac00cef617f8067b285a29",
       "integration_state": "MERGED",
       "node_id": "git:master",
       "node_type": "REMOTE_MASTER",
       "notes": "Remote-tracking snapshot; network currentness must be reacquired separately.",
       "observed_at": null,
-      "parent_heads": [
-        "938aa94460a2e0f81c470c1586626290bb74bc2c",
-        "65fe21fe11266dd0334a0e4f41f47fd97f3dcf27"
-      ],
+      "parent_heads": [],
       "rag_release": null,
       "ref": "master",
       "repository": "DonkeyJJLove/ai_platform",
       "runtime_state": "REPOSITORY_ONLY",
       "superseded_by": [],
       "supersedes": [],
-      "tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
+      "tree": "121a275cfef896627bf79d59529172535ed4dfaa",
       "truth_subject": null
     },
     {
