@@ -1,0 +1,26 @@
+{
+  "schema": "lion.e02-installation-proposal/v1",
+  "status": "NOT_INSTALLED_NOT_RUNTIME_READY",
+  "installation_enabled": false,
+  "runtime_enabled": false,
+  "start_services": false,
+  "app_session_enabled": false,
+  "target_host_proposal": "MOON",
+  "external_state_root_proposal": "C:/ProgramData/LION/E02/state",
+  "external_verifier_root_proposal": "C:/ProgramData/LION/E02/verifier",
+  "key_backend": null,
+  "service_identities": null,
+  "application_attestation_provider": null,
+  "canonical_source_origin": null,
+  "verifier_implementation_digest": null,
+  "live_replay_result_integration": null,
+  "blockers": [
+    "Operator-selected external verifier and key-status backend",
+    "Provisioned service identities and independently verified ACL isolation",
+    "Actual application attestation or APP_SESSION remaining disabled",
+    "Typed payload decoders and durable producer sequence state",
+    "Canonical producer ingress and replay/result crash integration",
+    "Source inventory and exact-candidate integration validation",
+    "Separate installation and live admission decision"
+  ]
+}

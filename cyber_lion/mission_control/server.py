@@ -8,6 +8,7 @@ import os
 import struct
 import threading
 import time
+from copy import deepcopy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote
@@ -28,28 +29,65 @@ class MissionControl:
         self.lock = threading.RLock()
         self.fleet_observations = []
         self.last_poll_at: float | None = None
+        self.poll_lock = threading.Lock()
+        self.poll_attempt_at = None
+        self.poll_completed_at = None
+        self.poll_success_at = None
+        self.poll_success_monotonic = None
+        self.poll_in_progress = False
+        self.adapter_diagnostics = {}
+        self.adapter_errors = {}
 
     def poll_once(self):
-        observed = self.reconciler.poll_once()
-        with self.lock:
-            self.error = None if not self.reconciler.errors else json.dumps(self.reconciler.errors, sort_keys=True)
-            self.fleet_observations = [run for run in observed if run.get('adapter_type') not in self.reconciler.errors]
-            self.last_poll_at = time.monotonic()
-        return observed
+        # Serialize poll writers; readers see one completed snapshot, not half a poll.
+        with self.poll_lock:
+            with self.lock:
+                self.poll_attempt_at = time.time()
+                self.poll_in_progress = True
+            try:
+                observed = self.reconciler.poll_once()
+                errors = dict(self.reconciler.errors)
+                diagnostics = deepcopy(getattr(self.reconciler, 'poll_diagnostics', {}))
+            except Exception:
+                with self.lock:
+                    self.error = 'POLL_ERROR'
+                    self.fleet_observations = []
+                    self.adapter_errors = {}
+                    self.adapter_diagnostics = {}
+                    self.poll_completed_at = time.time()
+                    self.last_poll_at = time.monotonic()
+                    self.poll_in_progress = False
+                raise
+            with self.lock:
+                self.error = 'POLL_ERROR' if errors else None
+                self.adapter_errors = {key: 'POLL_ERROR' for key in errors}
+                self.adapter_diagnostics = diagnostics
+                self.fleet_observations = deepcopy([run for run in observed if run.get('adapter_type') not in errors])
+                self.last_poll_at = time.monotonic()
+                self.poll_completed_at = time.time()
+                self.poll_in_progress = False
+                if not errors:
+                    self.poll_success_at = self.poll_completed_at
+                    self.poll_success_monotonic = self.last_poll_at
+            return observed
 
     def loop(self):
         while not self.stop_event.is_set():
             try:
                 self.poll_once()
-            except Exception as exc:
-                with self.lock:
-                    self.error = type(exc).__name__ + ':' + str(exc)[:1000]
+            except Exception:
+                # poll_once already published the failure. Do not overwrite a
+                # newer successful poll that another caller may have completed.
+                pass
             self.stop_event.wait(self.interval)
 
     def summary(self):
         runs = self.store.list_runs()
         with self.lock:
-            fresh = self.last_poll_at is not None and time.monotonic() - self.last_poll_at <= max(5.0, self.interval * 3)
+            now = time.monotonic()
+            threshold = max(5.0, self.interval * 3)
+            age = None if self.last_poll_at is None else max(0.0, now - self.last_poll_at)
+            fresh = age is not None and age <= threshold
             current_status = {run['run_id']: run['status'] for run in runs}
             fleet_runs = [dict(run, status=current_status.get(run['run_id'], run['status'])) for run in self.fleet_observations] if fresh and self.error is None else []
             fleet = fleet_summary_from_runs(fleet_runs)
@@ -60,13 +98,62 @@ class MissionControl:
                 for run in fleet_runs if fleet['currentness'] == 'OBSERVED'
                 and run['run_id'] in fleet['run_ids']
             ]
-        return {
-            'ok': self.error is None,
-            'error': self.error,
-            'summary': summary_from_runs(runs),
-            'fleet': fleet,
-            'adapter_errors': dict(self.reconciler.errors),
-        }
+            reason = ('NEVER_POLLED' if age is None else 'POLL_STALE' if not fresh
+                      else 'POLL_ERROR' if self.error else 'EMPTY_OBSERVATION' if not self.fleet_observations
+                      else 'OBSERVED' if fleet['currentness'] == 'OBSERVED'
+                      else 'NO_FLEET_OBSERVATION' if not any(
+                          any(k in (r.get('metrics') or {}) for k in ('fleet_organizations', 'active_by_organization'))
+                          and r.get('status') not in {'CLEANING', 'CLEANED'} for r in fleet_runs)
+                      else 'INVALID_OBSERVATION')
+            by_id = {r['run_id']: r for r in fleet_runs}
+            observations = {}
+            for run in runs:
+                current = by_id.get(run['run_id'])
+                metrics = (current or {}).get('metrics') or {}
+                per_run_reason = reason
+                if fresh and self.error is None:
+                    if current is None:
+                        per_run_reason = 'NOT_IN_CURRENT_OBSERVATION'
+                    elif current.get('status') in {'CLEANING', 'CLEANED'}:
+                        per_run_reason = 'TERMINAL_HISTORY'
+                    elif any(key in metrics for key in ('fleet_organizations', 'active_by_organization')):
+                        per_run_reason = ('OBSERVED' if fleet_summary_from_runs([current])['currentness'] == 'OBSERVED'
+                                          else 'INVALID_OBSERVATION')
+                    else:
+                        per_run_reason = 'OBSERVED'
+                count = metrics.get('fresh_drones')
+                heartbeat = ('UNKNOWN' if per_run_reason != 'OBSERVED' or current is None
+                             or isinstance(count, bool) or not isinstance(count, int) or count < 0
+                             else 'NONE_FRESH' if count == 0 else 'FRESH_REPORTED')
+                diagnostic = self.adapter_diagnostics.get(run.get('adapter_type'), {})
+                source_reason = per_run_reason
+                if per_run_reason == 'NOT_IN_CURRENT_OBSERVATION':
+                    source_reason = diagnostic.get('empty_reason') or diagnostic.get('reason') or per_run_reason
+                observations[run['run_id']] = {'recorded_status': run['status'],
+                    'observation_status': per_run_reason,
+                    'source_reason': source_reason,
+                    'heartbeat_status': heartbeat}
+            # A selected run needs its own topology. Aggregated fleet counts may
+            # span several runs and must never be assigned to one run's panel.
+            run_fleets = {run['run_id']: fleet_summary_from_runs([run]) for run in fleet_runs}
+            for run in fleet_runs:
+                run_fleets[run['run_id']]['pod_observations'] = [
+                    {'run_id': run['run_id'], 'pods': (run.get('metrics') or {}).get('drone_pods') or []}
+                ]
+            summary = summary_from_runs(runs)
+            summary['recorded_active_runs'] = summary['active_runs']
+            summary['observed_active_runs'] = (sum(r['status'] in {'STARTING', 'RUNNING', 'CLEANING'}
+                and observations.get(r['run_id'], {}).get('observation_status') == 'OBSERVED'
+                for r in fleet_runs) if fresh and self.error is None and not any(
+                    value['observation_status'] == 'INVALID_OBSERVATION' for value in observations.values()) else None)
+            return {'ok': self.error is None, 'error': self.error, 'summary': summary,
+                'fleet': fleet, 'run_fleets': run_fleets,
+                'adapter_errors': dict(self.adapter_errors), 'run_observations': observations,
+                'observation': {'reason': reason, 'attempt_at': self.poll_attempt_at,
+                    'completed_at': self.poll_completed_at, 'success_at': self.poll_success_at,
+                    'age_seconds': age, 'success_age_seconds': None if self.poll_success_monotonic is None
+                    else max(0.0, now - self.poll_success_monotonic), 'threshold_seconds': threshold,
+                    'in_progress': self.poll_in_progress, 'adapters': deepcopy(self.adapter_diagnostics)}}
 
 
 def _frame(payload: bytes) -> bytes:
@@ -91,6 +178,8 @@ def _safe_static_target(request_path: str) -> Path | None:
         return STATIC / 'app.css'
     if request_path == '/app.js':
         return STATIC / 'app.js'
+    if request_path == '/passive.js':
+        return STATIC / 'passive.js'
     return None
 
 
@@ -99,7 +188,7 @@ def _static_content_type(target: Path) -> str:
         return 'text/html; charset=utf-8'
     if target.name == 'app.css':
         return 'text/css; charset=utf-8'
-    if target.name == 'app.js':
+    if target.name in ('app.js', 'passive.js'):
         return 'text/javascript; charset=utf-8'
     raise ValueError('unknown static asset')
 
@@ -230,17 +319,20 @@ def serve(mc: MissionControl, event_server, host='127.0.0.1', port=8765, fallbac
                 raise
     if httpd is None or selected is None:
         raise OSError(errno.EADDRINUSE, 'no Mission Control port available')
-    _write_listen(listen_state, host, selected)
-    _write_listen(legacy_listen_state, host, selected)
-    event_server.start()
-    thread = threading.Thread(target=mc.loop, daemon=True)
-    thread.start()
+    thread = None
     try:
+        _write_listen(listen_state, host, selected)
+        _write_listen(legacy_listen_state, host, selected)
+        event_server.start()
+        thread = threading.Thread(target=mc.loop, daemon=True)
+        thread.start()
         httpd.serve_forever()
     finally:
         mc.stop_event.set()
         event_server.close()
         httpd.server_close()
+        if thread is not None and thread.ident is not None:
+            thread.join()
         for path in (listen_state, legacy_listen_state):
             if path:
                 try:

@@ -37,9 +37,11 @@ class OssRepositoryTestAdapter:
         return sum(int(state.get("restart_count") or 0) for pod in evidence.get("pods") or [] for state in pod.get("states") or [])
 
     def poll(self) -> list[dict[str, Any]]:
+        self.empty_reason = None
         evidence = self._read()
         raw_status = str(evidence.get("status") or "UNKNOWN").upper()
         if raw_status in {"ABSENT", "K3S_NOT_RUNNING"}:
+            self.empty_reason = raw_status
             return []
         status = "RUNNING" if raw_status in {"PENDING", "RUNNING"} else raw_status
         if status not in {"RUNNING", "PASS", "FAIL"}:

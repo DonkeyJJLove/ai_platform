@@ -22,7 +22,7 @@ from tools.p0_moon_attested_adjudication_contract import (
 SOURCE_REVISION="830f8c2e5561655dc35118c97f4574acc3bf0816"
 SOURCE_TREE="5189c1a582400de829f08c4103fdfafa993ba2e6"
 SOURCE_INVENTORY="a87e0f9ccb4fb81bbbc168900a8db8984f554a74a0b3f8c2a637d75e85fcb9df"
-EXPECTED_SCAN_DIGEST="375e62076071b9a3e681af7a99cc03d7bcda95e7ac49e4b88de78a1b52104ee0"
+EXPECTED_SCAN_DIGEST="47f3411585c349108f6b05176025aaa37ff945580dc180402dbc757ed06d5cb6"
 SOURCE_BRIDGE_BLOB="a5ec373145f01ae2713fa620baa9799819cb813a"
 WORKFLOW_PATH=".github/workflows/lion-moon-runner-attested-execution-bridge.yml"
 WORKFLOW_REF="DonkeyJJLove/ai_platform/.github/workflows/lion-moon-runner-attested-execution-bridge.yml@refs/heads/mission/p0-moon-runner-attested-execution-bridge-attach-r1"
@@ -36,8 +36,16 @@ SOURCE_BLOBS={
 SOURCE_SEMANTIC_ANCHORS={
     ("cyber_lion/enterprise/moon_file_write.py","function","_github_permission"):"a5b3c38ea1be59b35dbdab6ba09a898d0cc803f04b09eb055d20f0a96cbe1a31",
     ("cyber_lion/enterprise/moon_file_write.py","class","ExactMoonFileWriteEffectProvider"):"479a4f7d199bf95581ba4fc67a99d2019c7d377589120cc0d55fb8daa1dcc502",
-    ("cyber_lion/enterprise/moon_file_write_mediation.py","class","DurableMoonFileWriteFence"):"193019a30ab776df81a7be2069d8e2a210212111ce2e0a0f179068488943b642",
     ("cyber_lion/enterprise/moon_file_write_mediation.py","class","MoonFileWriteObserver"):"9899f2d0fee3e710e3a169157d0c243e6ce3ec1e33531a563edcb126954066f5",
+}
+DURABLE_FENCE_METHOD_ANCHORS={
+    "_initialize":"e003e86618e8268ca47507dd40527247145bf9ad28a99ec0f890294bf84d2477",
+    "get":"43bb290e94ab02b618a069b2902969b7ebbcda9c90466bf5f14326727288f0bd",
+    "prepare":"8567e7ce9ee16cc99b774ea436de219bb5f7fbac3fbe26133d7874b4b23130a3",
+    "mark_attempted":"4474a0d74f3c8f14d5dfe8c830e72156355bbf46fd567dc5fdf5848707743a70",
+    "mark_observed":"3125121998f593375a2d55b919b968b9ab7346b55f1b1166009df1c1b830966d",
+    "mark_reconciled":"7c3b5092b5f9438973511a13cb5a7f7e13974253ef4a60776b016c8bf324df18",
+    "mark_unknown":"80d77fabcdeca91eea7d82615ecee4878215882ee1ea4223042ad4fb6921aeb2",
 }
 CREATE_TABLE_SURFACE="478e559a2f8762b471ec9d69eca2bf03ed2744ab0e4f34593ab5060ae95cad9d"
 PRAGMA_SURFACE="e631906532cb4c60aa69736270432263cb1d5346afde33cbb01fecec6c793de0"
@@ -137,6 +145,34 @@ def _require_semantic_anchor(source:str,path:str,kind:str,name:str)->None:
     expected=SOURCE_SEMANTIC_ANCHORS[(path,kind,name)]
     if _ast_digest(source,kind,name)!=expected:
         raise AttestedAdjudicationError(f"semantic continuity anchor drift: {path}:{kind}:{name}")
+def _class_method(source:str,class_name:str,method_name:str):
+    cls=_node(source,"class",class_name)
+    matches=[node for node in cls.body if isinstance(node,ast.FunctionDef) and node.name==method_name]
+    if not matches:raise AttestedAdjudicationError(f"semantic continuity method absent: {class_name}:{method_name}")
+    if len(matches)!=1:raise AttestedAdjudicationError(f"semantic continuity method ambiguous: {class_name}:{method_name}")
+    return matches[0]
+def _method_ast_digest(source:str,class_name:str,method_name:str)->str:
+    canonical=_canonical_ast_node(_class_method(source,class_name,method_name))
+    try:payload=json.dumps(canonical,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode("utf-8")
+    except (TypeError,ValueError,UnicodeError) as exc:raise AttestedAdjudicationError("semantic continuity method serialization failed") from exc
+    return sha256(_AST_V2_DOMAIN+payload).hexdigest()
+def _require_durable_fence_method_anchors(source:str)->None:
+    for name,expected in DURABLE_FENCE_METHOD_ANCHORS.items():
+        if _method_ast_digest(source,"DurableMoonFileWriteFence",name)!=expected:
+            raise AttestedAdjudicationError(f"semantic continuity method drift: DurableMoonFileWriteFence:{name}")
+def _require_durable_connect_lifecycle_extension(source:str)->None:
+    node=_class_method(source,"DurableMoonFileWriteFence","_connect")
+    rendered=ast.unparse(node)
+    required=(
+        "sqlite3.connect(self._path, timeout=10, isolation_level=None, check_same_thread=False, factory=_ClosingSQLiteConnection)",
+        "c.execute('PRAGMA journal_mode=WAL')",
+        "c.execute('PRAGMA synchronous=FULL')",
+        "return c",
+    )
+    if any(item not in rendered for item in required):
+        raise AttestedAdjudicationError("durable fence _connect lifecycle extension drift")
+    if rendered.count("sqlite3.connect(")!=1 or "factory=_ClosingSQLiteConnection" not in rendered:
+        raise AttestedAdjudicationError("durable fence _connect lifecycle extension ambiguous")
 def source_semantic_continuity_proofs(*,inventory:EffectSurfaceInventory,repo_root:Path)->Tuple[SourceSemanticContinuityProof,...]:
     inventory.validate();out=[]
     provider="cyber_lion/enterprise/moon_file_write.py";mediation="cyber_lion/enterprise/moon_file_write_mediation.py"
@@ -151,15 +187,16 @@ def source_semantic_continuity_proofs(*,inventory:EffectSurfaceInventory,repo_ro
     out.append(SourceSemanticContinuityProof(provider,old_pb,new_pb,SOURCE_REVISION,inventory.revision,("_github_permission AST unchanged","ExactMoonFileWriteEffectProvider AST unchanged","trusted permission set unchanged","connection.request remains line 120","os.replace remains line 315","repository/actor substitution remains before authority observation"),("pure _require_trusted_permission boundary introduced after authority observation",),(f"source-live:{provider}@{old_pb}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(provider,'function','_github_permission')]}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(provider,'class','ExactMoonFileWriteEffectProvider')]}",f"source-current:{provider}@{new_pb}","no-effect-provider-change")).validate())
     new_med=(repo_root/mediation).read_text();old_mb=SOURCE_BLOBS[mediation];new_mb=_git_blob(repo_root,mediation)
     if new_mb==old_mb:raise AttestedAdjudicationError("mediation semantic change proof expected changed blob")
-    for cls in ("DurableMoonFileWriteFence","MoonFileWriteObserver"):
-        _require_semantic_anchor(new_med,mediation,"class",cls)
+    _require_semantic_anchor(new_med,mediation,"class","MoonFileWriteObserver")
+    _require_durable_fence_method_anchors(new_med)
+    _require_durable_connect_lifecycle_extension(new_med)
     lines=new_med.splitlines()
     if 'c.execute("INSERT INTO moon_file_write_effect' not in lines[305] or 'self.fence.prepare(' not in lines[434] or 'self.fence.mark_attempted(' not in lines[443] or 'self.effect.write_exact(' not in lines[444]:raise AttestedAdjudicationError("mediation effect entrypoint line identity drift")
     execute=new_med[new_med.index('    def execute(self, request: MoonFileWriteRequest)'):new_med.index('\n\ndef _require_current_admission')];i_pre=execute.index('pre_fence_admission = self.admissions.resolve(request)');i_precheck=execute.index('_require_current_admission(admission, pre_fence_admission)');i_prepare=execute.index('self.fence.prepare(');i_post=execute.index('current_admission = self.admissions.resolve(request)');i_postcheck=execute.index('_require_current_admission(admission, current_admission)');i_attempt=execute.index('self.fence.mark_attempted(');i_effect=execute.index('self.effect.write_exact(')
     if not i_pre<i_precheck<i_prepare<i_post<i_postcheck<i_attempt<i_effect:raise AttestedAdjudicationError("authority currentness strengthened order drift")
     helper=new_med[new_med.index('def _require_current_admission('):]
     if 'current.admission_digest != baseline.admission_digest' not in helper or 'raise MoonFileWriteMediationError("authority drift")' not in helper:raise AttestedAdjudicationError("pure currentness comparator semantics drift")
-    out.append(SourceSemanticContinuityProof(mediation,old_mb,new_mb,SOURCE_REVISION,inventory.revision,("DurableMoonFileWriteFence AST unchanged","MoonFileWriteObserver AST unchanged","fence INSERT remains line 306","fence.prepare call remains line 435","mark_attempted remains line 444","effect.write_exact remains line 445","post-prepare authority revalidation preserved"),("pre-fence authority revalidation added before durable state","pure admission-digest currentness comparator introduced"),(f"source-live:{mediation}@{old_mb}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(mediation,'class','DurableMoonFileWriteFence')]}",f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(mediation,'class','MoonFileWriteObserver')]}",f"source-current:{mediation}@{new_mb}","post-prepare-toctou-defence-preserved")).validate())
+    out.append(SourceSemanticContinuityProof(mediation,old_mb,new_mb,SOURCE_REVISION,inventory.revision,("DurableMoonFileWriteFence certified effect methods AST unchanged","DurableMoonFileWriteFence _connect changed only by close-on-exit factory","MoonFileWriteObserver AST unchanged","fence INSERT remains line 306","fence.prepare call remains line 435","mark_attempted remains line 444","effect.write_exact remains line 445","post-prepare authority revalidation preserved"),("pre-fence authority revalidation added before durable state","pure admission-digest currentness comparator introduced","SQLite connection lifecycle closes after context exit without changing certified effect entrypoints"),(f"source-live:{mediation}@{old_mb}",*(f"source-live-method-anchor:{name}:{digest}" for name,digest in sorted(DURABLE_FENCE_METHOD_ANCHORS.items())),f"source-live-ast-anchor:{SOURCE_SEMANTIC_ANCHORS[(mediation,'class','MoonFileWriteObserver')]}",f"source-current:{mediation}@{new_mb}","post-prepare-toctou-defence-preserved")).validate())
     return tuple(out)
 def revision_rebind_proof(*,inventory:EffectSurfaceInventory,repo_root:Path)->RevisionRebindProof:
     inventory.validate()

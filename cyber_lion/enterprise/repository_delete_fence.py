@@ -21,6 +21,16 @@ class RepositoryDeleteFenceError(RuntimeError):
     pass
 
 
+class _ClosingSQLiteConnection(sqlite3.Connection):
+    """Preserve sqlite transaction semantics and close the connection at context exit."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()
+
+
 def _text(value: object, name: str, *, limit: int = 4096) -> str:
     if not isinstance(value, str) or not value.strip() or len(value) > limit or "\x00" in value:
         raise RepositoryDeleteFenceError(f"{name} is invalid")
@@ -128,7 +138,7 @@ class RepositoryDeleteFence:
         return cls(str(path))
 
     def _connect(self):
-        connection = sqlite3.connect(self._path, timeout=10, isolation_level=None, check_same_thread=False)
+        connection = sqlite3.connect(self._path, timeout=10, isolation_level=None, check_same_thread=False, factory=_ClosingSQLiteConnection)
         connection.execute("PRAGMA foreign_keys=ON")
         connection.execute("PRAGMA journal_mode=WAL")
         connection.execute("PRAGMA synchronous=FULL")

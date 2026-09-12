@@ -1,0 +1,3 @@
+# SQLite resource hygiene — R6
+
+The exact 2793-test suite remains green but emits 2136 `ResourceWarning` instances for unclosed SQLite connections. The signal is distributed because connection objects are frequently collected later by stdlib call sites, but project hotspots include `persistent_authority_state.py` around lines 605, 700, 735, 952 and 981; `maintenance_bundle.py:572`; `authority_source_adapter.py:219`; and `process_language/canonical_run.py:133`. Because these stores carry transaction, durability and authority semantics, R6 does not apply a blanket close/context-manager rewrite and does not suppress warnings. Debt remains OPEN and must be repaired one module family at a time with lifecycle and rollback tests.

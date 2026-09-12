@@ -1,0 +1,74 @@
+name: LION Git Logical Tree Evidence
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "tools/lion_git_logical_tree.py"
+      - "cyber_lion/tests/test_lion_git_logical_tree.py"
+      - "LION/architecture/v1_4/GIT_LOGICAL_TREE.schema.json"
+      - "LION/architecture/v1_4/GIT_LOGICAL_TREE.json"
+      - "LION/architecture/v1_4/GIT_LOGICAL_TREE_FACTS.json"
+      - ".github/workflows/lion-git-logical-tree.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-git-logical-tree-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Bind checkout identity
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$head" = "$EXPECTED_HEAD"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+      - name: Run generator falsifiers
+        run: python -m unittest cyber_lion.tests.test_lion_git_logical_tree -v
+      - name: Validate checked-in canonical v3 spine snapshot
+        run: python tools/lion_git_logical_tree.py --repository . --validate LION/architecture/v1_4/GIT_LOGICAL_TREE.json > "$RUNNER_TEMP/lion-git-logical-tree-validation.json"
+      - name: Generate read-only v3 graph evidence
+        run: python tools/lion_git_logical_tree.py --repository . --external-facts LION/architecture/v1_4/GIT_LOGICAL_TREE_FACTS.json > "$RUNNER_TEMP/lion-git-logical-tree.json"
+      - name: Emit graph evidence digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'GIT_TREE_HEAD=%s
+' "${{ steps.gitstate.outputs.head }}"
+          printf 'GIT_TREE_TREE=%s
+' "${{ steps.gitstate.outputs.tree }}"
+          printf 'GIT_TREE_ARTIFACT_SHA256=%s
+' "$(sha256sum "$RUNNER_TEMP/lion-git-logical-tree.json" | awk '{print $1}')"
+          printf 'GIT_TREE_VALIDATION_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-git-logical-tree-validation.json" | awk '{print $1}')"
+      - name: Upload exact graph evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-git-logical-tree-${{ steps.gitstate.outputs.head }}
+          path: |
+            ${{ runner.temp }}/lion-git-logical-tree.json
+            ${{ runner.temp }}/lion-git-logical-tree-validation.json
+          if-no-files-found: error
+          retention-days: 30

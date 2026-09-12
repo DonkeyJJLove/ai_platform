@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 
@@ -32,6 +33,33 @@ class RepositoryDeleteFenceTests(unittest.TestCase):
             state="PREPARED",
             prepared_at="2026-08-26T06:30:00+00:00",
         ).validate()
+
+    def test_connection_context_closes_after_read(self):
+        with tempfile.TemporaryDirectory() as td:
+            fence = RepositoryDeleteFence(str(Path(td) / "delete.sqlite3"))
+            connection = fence._connect()
+            with connection as active:
+                self.assertEqual(active.execute("SELECT 1").fetchone(), (1,))
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+
+    def test_connection_context_rolls_back_and_closes(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = str(Path(td) / "delete.sqlite3")
+            fence = RepositoryDeleteFence(path)
+            connection = fence._connect()
+            with self.assertRaisesRegex(RuntimeError, "rollback-probe"):
+                with connection as active:
+                    active.execute("BEGIN IMMEDIATE")
+                    active.execute("INSERT INTO repository_delete_late_reconciliation VALUES(?,?,?,?,?,?,?)", ("1"*64,"UNKNOWN","2"*64,"3"*64,"a","b","c"))
+                    raise RuntimeError("rollback-probe")
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+            check = sqlite3.connect(path)
+            try:
+                self.assertEqual(check.execute("SELECT COUNT(*) FROM repository_delete_late_reconciliation").fetchone(), (0,))
+            finally:
+                check.close()
 
     def test_restart_durable_exact_replay_is_denied(self):
         with tempfile.TemporaryDirectory() as td:
@@ -118,12 +146,14 @@ class RepositoryDeleteFenceTests(unittest.TestCase):
                     record.effect_key, observation_digest="7" * 64, observed_at="x",
                     reconciliation_digest="8" * 64, reconciled_at="y", source_ref="replay",
                 )
-            import sqlite3
-            with sqlite3.connect(path) as c:
+            c = sqlite3.connect(path)
+            try:
                 row = c.execute(
                     "SELECT prior_state,observation_digest,reconciliation_digest,source_ref FROM repository_delete_late_reconciliation WHERE effect_key=?",
                     (record.effect_key,),
                 ).fetchone()
+            finally:
+                c.close()
             self.assertEqual(row, ("UNKNOWN", "5" * 64, "6" * 64, "github:late-readback:mission/example:absent"))
 
     def test_prepared_unknown_without_attempt_cannot_be_late_reconciled(self):

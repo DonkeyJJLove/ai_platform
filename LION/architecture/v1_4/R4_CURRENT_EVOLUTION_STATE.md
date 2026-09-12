@@ -1,0 +1,7 @@
+# R4 Current Evolution State — Generation 10 local fixed-point candidate
+
+Remote master is still `938aa94460a2e0f81c470c1586626290bb74bc2c` / `70d698f937608495c3845b9b7c1f0bc515a3789d`. Generation-10 validated noncarrier source snapshot: `24bc9ac35eefd2a571e919a398d169f7a6c51007` / `6f675abeef7d81924f9689b87dc5fbd960435a2d`. The final documentation and carrier-last commits are descendants and do not imply publication.
+
+Security/currentness: **308 production sources**, **268 effect surfaces**, **6 raw unclassified references**, **0 unresolved taxonomy**, production scan `e6ebf004e2179630ee4455c1226eb94c46aac52f3bfdd0d389eb07a0ea6c9447`. Full suite: **2716 tests, 0 failures/errors, 6 skips**. Bandit 1.9.4: 0 findings/errors, artifact `2c1e6e49f1076e940f3240deb2b35d70e204beceb3a707a31c9ab88ffd9541eb`. Full Symbol Census: **628/628 Python files**, **9958 symbols**, zero parse failures, digest `2138bef0760d2d7f53af289153ace2c09f30af23cd14e22176dc5ec646e16c02`.
+
+Workflow plane: 24 workflows; five critical evidence workflows, 0 blocking defects, 42 advisory legacy findings. Git logical spine v3: digest `2ac441953dd62991909989a8babea665a9e5c2a91e4fabb4a970e0fe7ed0c69f`. APP_SESSION moved from NOT_IMPLEMENTED to an effect-free partial binding contract requiring an external attester; no provider or activation exists. Mission Control stays active on stale source `743cb77bdcc798dcb2d57e7dd389bd763ba81f41`; K3s is inactive and VKT has zero observed active runs. All four WSL hosts still share one boot ID, so independent material execution is not proven.

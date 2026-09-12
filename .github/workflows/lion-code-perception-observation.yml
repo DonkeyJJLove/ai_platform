@@ -28,6 +28,10 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: lion-code-perception-observation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   actions: read
@@ -35,9 +39,28 @@ permissions:
 jobs:
   observe:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout observer implementation
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Bind observer implementation identity
+        id: implementation
+        shell: bash
+        env:
+          EXPECTED_IMPLEMENTATION_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          implementation_head="$(git rev-parse HEAD)"
+          implementation_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$implementation_head" = "$EXPECTED_IMPLEMENTATION_HEAD"
+          printf 'OBSERVER_IMPLEMENTATION_HEAD=%s\n' "$implementation_head"
+          printf 'OBSERVER_IMPLEMENTATION_TREE=%s\n' "$implementation_tree"
+          echo "head=$implementation_head" >> "$GITHUB_OUTPUT"
+          echo "tree=$implementation_tree" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v6

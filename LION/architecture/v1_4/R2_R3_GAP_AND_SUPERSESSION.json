@@ -1,0 +1,54 @@
+{
+  "schema": "lion.r2-r3-gap-supersession/v1",
+  "project": "LION_EVOLUSION",
+  "r2_lineage_state": "INCOMPLETE_HISTORICAL_UNRECOVERED",
+  "available_predecessor_records": 132,
+  "expected_predecessor_records": 136,
+  "missing_exact_records": 4,
+  "r3_base_mode": "BYTE_PRESERVE_AVAILABLE_132_PLUS_EXPLICIT_GAP_LEDGER_PLUS_NEW_CURRENT_RECORDS",
+  "supercession_is_recovery": false,
+  "generated_from_head": "cee7861fb548e01db7678a83dfe43fae477c3ab2",
+  "generated_at": "2026-09-12T11:34:17.271121Z",
+  "gaps": [
+    {
+      "missing_topic": "POST_R1_REPOSITORY_EVOLUTION",
+      "expected_predecessor_role": "R2_OVERLAY_RECORD",
+      "exact_bytes_available": false,
+      "historical_digest_if_known": null,
+      "current_replacement_record_id": "SRC-V14R3-8da3fdb5c105",
+      "replacement_is_equivalent": false,
+      "reason": "Exact predecessor bytes were not recoverable after the declared recovery budget. Forward state is rebuilt only from fresh evidence.",
+      "supersession_state": "HISTORICAL_GAP_SUPERSEDED_FOR_FORWARD_EVOLUTION"
+    },
+    {
+      "missing_topic": "PR333",
+      "expected_predecessor_role": "R2_OVERLAY_RECORD",
+      "exact_bytes_available": false,
+      "historical_digest_if_known": null,
+      "current_replacement_record_id": "SRC-V14R3-32aea226d1fd",
+      "replacement_is_equivalent": false,
+      "reason": "Exact predecessor bytes were not recoverable after the declared recovery budget. Forward state is rebuilt only from fresh evidence.",
+      "supersession_state": "HISTORICAL_GAP_SUPERSEDED_FOR_FORWARD_EVOLUTION"
+    },
+    {
+      "missing_topic": "LOCAL_E02_LINEAGE",
+      "expected_predecessor_role": "R2_OVERLAY_RECORD",
+      "exact_bytes_available": false,
+      "historical_digest_if_known": null,
+      "current_replacement_record_id": "SRC-V14R3-fc0e8af9a6e9",
+      "replacement_is_equivalent": false,
+      "reason": "Exact predecessor bytes were not recoverable after the declared recovery budget. Forward state is rebuilt only from fresh evidence.",
+      "supersession_state": "HISTORICAL_GAP_SUPERSEDED_FOR_FORWARD_EVOLUTION"
+    },
+    {
+      "missing_topic": "MISSION_CONTROL",
+      "expected_predecessor_role": "R2_OVERLAY_RECORD",
+      "exact_bytes_available": false,
+      "historical_digest_if_known": null,
+      "current_replacement_record_id": "SRC-V14R3-0ae92600c514",
+      "replacement_is_equivalent": false,
+      "reason": "Exact predecessor bytes were not recoverable after the declared recovery budget. Forward state is rebuilt only from fresh evidence.",
+      "supersession_state": "HISTORICAL_GAP_SUPERSEDED_FOR_FORWARD_EVOLUTION"
+    }
+  ]
+}

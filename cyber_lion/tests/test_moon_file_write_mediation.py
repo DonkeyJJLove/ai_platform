@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 
@@ -38,6 +39,30 @@ def _prepared(fence, request, admission, key):
 
 
 class MoonFileWriteMediationTests(unittest.TestCase):
+    def test_fence_connection_closes_after_context_exit(self):
+        with tempfile.TemporaryDirectory() as td:
+            fence=DurableMoonFileWriteFence(str(Path(td)/"f.sqlite3"))
+            connection=fence._connect()
+            with connection as active:
+                self.assertEqual(active.execute("SELECT 1").fetchone(),(1,))
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+
+    def test_fence_connection_rolls_back_and_closes(self):
+        with tempfile.TemporaryDirectory() as td:
+            fence=DurableMoonFileWriteFence(str(Path(td)/"f.sqlite3"))
+            connection=fence._connect()
+            with self.assertRaisesRegex(RuntimeError,"rollback-probe"):
+                with connection as active:
+                    active.execute("BEGIN IMMEDIATE")
+                    active.execute("INSERT INTO moon_file_write_effect VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", ("1"*64,"2"*64,"3"*64,"repo","/tmp/x","PREPARED","t",None,None,None,"4"*64,None,None))
+                    raise RuntimeError("rollback-probe")
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+            check=sqlite3.connect(fence._path)
+            try:self.assertEqual(check.execute("SELECT COUNT(*) FROM moon_file_write_effect").fetchone(),(0,))
+            finally:check.close()
+
     def test_admission_exactly_binds_request(self):
         request=_request(); admission=_admission(request)
         admission.binds(request)

@@ -39,6 +39,16 @@ class MaintenanceBundleError(RuntimeError):
     pass
 
 
+class _ClosingSQLiteConnection(sqlite3.Connection):
+    """Preserve sqlite transaction context semantics and close the handle on exit."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()
+
+
 def _text(value: object, name: str, *, limit: int = 4096) -> str:
     if not isinstance(value, str) or not value.strip() or len(value) > limit or "\x00" in value:
         raise MaintenanceBundleError(f"{name} is invalid")
@@ -347,9 +357,9 @@ class SQLiteMaintenanceBundleRepository:
     def _connect(self, *, read_only: bool = False) -> sqlite3.Connection:
         if read_only:
             uri = Path(self._path).resolve().as_uri() + "?mode=ro"
-            connection = sqlite3.connect(uri, uri=True, timeout=5, isolation_level=None)
+            connection = sqlite3.connect(uri, uri=True, timeout=5, isolation_level=None, factory=_ClosingSQLiteConnection)
         else:
-            connection = sqlite3.connect(self._path, timeout=5, isolation_level=None)
+            connection = sqlite3.connect(self._path, timeout=5, isolation_level=None, factory=_ClosingSQLiteConnection)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys=ON")
         return connection

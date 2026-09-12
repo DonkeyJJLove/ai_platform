@@ -281,7 +281,7 @@ class DurableMoonFileWriteFence:
         self._path = str(path); self._lock = RLock(); self._initialize()
 
     def _connect(self):
-        c = sqlite3.connect(self._path, timeout=10, isolation_level=None, check_same_thread=False)
+        c = sqlite3.connect(self._path, timeout=10, isolation_level=None, check_same_thread=False, factory=_ClosingSQLiteConnection)
         c.execute("PRAGMA journal_mode=WAL"); c.execute("PRAGMA synchronous=FULL")
         return c
 
@@ -475,3 +475,13 @@ def _require_current_admission(baseline: CanonicalMoonFileWriteAdmission, curren
     if current.admission_digest != baseline.admission_digest:
         raise MoonFileWriteMediationError("authority drift")
     return current
+
+
+class _ClosingSQLiteConnection(sqlite3.Connection):
+    """Preserve transaction context semantics and close the handle at exit."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()

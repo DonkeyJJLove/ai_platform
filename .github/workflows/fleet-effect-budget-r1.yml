@@ -32,27 +32,36 @@ on:
       - "cyber_lion/tests/test_fleet_effect_budget_claim_materialization.py"
       - ".github/workflows/fleet-effect-budget-r1.yml"
 
+concurrency:
+  group: fleet-effect-budget-r1-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   fleet-effect-budget-r1:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Exact successor identity and digests
         shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           BASE='8bf8934a0cf2809b58b460c01976cf82ae0692e7'
           ACTUAL="$(git rev-parse HEAD)"
           TREE="$(git rev-parse HEAD^{tree})"
+          test "$ACTUAL" = "$EXPECTED_HEAD"
           git merge-base --is-ancestor "$BASE" "$ACTUAL"
           CONTRACT_DIGEST="$(sha256sum cyber_lion/contracts/fleet_effect_budget.py | awk '{print $1}')"
           IMPLEMENTATION_DIGEST="$(sha256sum cyber_lion/enterprise/fleet_effect_budget.py | awk '{print $1}')"

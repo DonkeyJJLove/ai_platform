@@ -22,6 +22,16 @@ class TrustedControlPlaneProviderError(RuntimeError):
     pass
 
 
+class _ClosingSQLiteConnection(sqlite3.Connection):
+    """Preserve sqlite context commit/rollback while closing the handle on exit."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()
+
+
 _RUNTIME_IMPL_DOMAIN = b"LION/E004-BUILDER-RUNTIME-IMPLEMENTATION/1\0"
 _RUNTIME_RESOLVER_DOMAIN = b"LION/E004-BUILDER-RUNTIME-RESOLVER/1\0"
 _PROVIDER_SOURCE_ORIGIN_DOMAIN = b"LION/E004-BUILDER-RUNTIME-SOURCE-ORIGIN/1\0"
@@ -104,7 +114,7 @@ class SQLiteTrustedControlPlaneStore(TrustedControlPlaneStore):
         return sha256(_DATABASE_IDENTITY_DOMAIN + path.encode("utf-8")).hexdigest()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self._path, timeout=5, isolation_level=None)
+        connection = sqlite3.connect(self._path, timeout=5, isolation_level=None, factory=_ClosingSQLiteConnection)
         connection.execute("PRAGMA foreign_keys=ON")
         connection.execute("PRAGMA journal_mode=WAL")
         return connection

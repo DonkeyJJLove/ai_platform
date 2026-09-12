@@ -21,8 +21,30 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout repository
+      - name: Checkout exact source
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact checked-out source
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          if [ "$actual_head" != "$EXPECTED_HEAD" ]; then
+            printf 'BANDIT_HEAD_MISMATCH actual=%s expected=%s\n' "$actual_head" "$EXPECTED_HEAD" >&2
+            exit 1
+          fi
+          printf 'BANDIT_HEAD=%s\n' "$actual_head"
+          printf 'BANDIT_TREE=%s\n' "$actual_tree"
+          echo "head=$actual_head" >> "$GITHUB_OUTPUT"
+          echo "tree=$actual_tree" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -33,4 +55,23 @@ jobs:
         run: python -m pip install --disable-pip-version-check bandit==1.9.4
 
       - name: Scan production Python
-        run: bandit --recursive cyber_lion --exclude cyber_lion/tests --severity-level medium --confidence-level medium
+        run: bandit --recursive cyber_lion --exclude cyber_lion/tests --severity-level medium --confidence-level medium --format json --output "$RUNNER_TEMP/lion-bandit.json"
+
+      - name: Emit Bandit artifact digest
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$RUNNER_TEMP/lion-bandit.json"
+          printf 'BANDIT_HEAD=%s\n' "${{ steps.gitstate.outputs.head }}"
+          printf 'BANDIT_TREE=%s\n' "${{ steps.gitstate.outputs.tree }}"
+          printf 'BANDIT_ARTIFACT_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-bandit.json" | awk '{print $1}')"
+
+      - name: Upload exact Bandit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-bandit-${{ steps.gitstate.outputs.head }}
+          path: ${{ runner.temp }}/lion-bandit.json
+          if-no-files-found: error
+          retention-days: 30

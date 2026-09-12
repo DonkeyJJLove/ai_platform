@@ -6,4 +6,5 @@ class LpclEventStreamAdapter:
     supported_process_classes = ("*",)
 
     def poll(self):
+        self.empty_reason = "EVENT_STREAM_ONLY"
         return []

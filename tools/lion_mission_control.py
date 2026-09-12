@@ -55,20 +55,23 @@ def main() -> int:
     sub.add_parser('import-history')
     args = parser.parse_args()
     mc, event_server = build(args)
-    if args.command == 'serve':
-        serve(mc, event_server, args.host, args.port, args.fallback_port, args.listen_state, args.legacy_listen_state)
-        return 0
-    if args.command == 'status':
-        mc.poll_once()
-        print(json.dumps({'summary': mc.summary(), 'runs': mc.store.list_runs()}, sort_keys=True))
-        return 0
-    if args.command == 'export':
-        print(json.dumps(mc.store.export(), sort_keys=True))
-        return 0
-    if args.command == 'import-history':
-        print(json.dumps(mc.reconciler.import_known_history(), sort_keys=True))
-        return 0
-    return 2
+    try:
+        if args.command == 'serve':
+            serve(mc, event_server, args.host, args.port, args.fallback_port, args.listen_state, args.legacy_listen_state)
+            return 0
+        if args.command == 'status':
+            mc.poll_once()
+            print(json.dumps({'summary': mc.summary(), 'runs': mc.store.list_runs()}, sort_keys=True))
+            return 0
+        if args.command == 'export':
+            print(json.dumps(mc.store.export(), sort_keys=True))
+            return 0
+        if args.command == 'import-history':
+            print(json.dumps(mc.reconciler.import_known_history(), sort_keys=True))
+            return 0
+        return 2
+    finally:
+        mc.store.close()
 
 
 if __name__ == '__main__':

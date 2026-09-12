@@ -1,0 +1,3 @@
+# Mission Control deployment admission — R6
+
+The existing source-rebind plan targets exact remote master `938aa94460a2e0f81c470c1586626290bb74bc2c` / `70d698f937608495c3845b9b7c1f0bc515a3789d` from observed runtime `743cb77bdcc798dcb2d57e7dd389bd763ba81f41` / `5afea703fd887f2609245a48000dbc47b8cd1b0f`. R6 adds a pure admission contract with max attempts 1, retry 0 and `RECONCILE_FIRST`; its apply function hard-fails. Current state is `AUTHORITY_REQUIRED_NOT_EXECUTED`. A future authorized apply must reacquire rollback configuration, adapter-set and schema identities and then read back PID, release, source HEAD/TREE, health, API summary, VKT observation and recorded-vs-observed active state.

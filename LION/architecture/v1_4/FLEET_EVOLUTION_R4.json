@@ -1,0 +1,25 @@
+{
+  "schema": "lion.adaptive-logical-fleet/v1",
+  "selected_at_source_head": "24bc9ac35eefd2a571e919a398d169f7a6c51007",
+  "logical_drones": 128,
+  "swarms": 16,
+  "drones_per_swarm": 8,
+  "formations": 32,
+  "formation_roles": [
+    "BUILDER",
+    "REVIEWER",
+    "FALSIFIER",
+    "RECONCILER"
+  ],
+  "sizing_reason": [
+    "10 independent project domains",
+    "24 workflow plane",
+    "Git/RAG/truth/runtime/security independent evidence planes",
+    "parallel workflow, E02 and provenance falsification fronts"
+  ],
+  "material_executor_claim": "NONE",
+  "connected_hosts": 4,
+  "shared_boot_id": "58008236-23d6-48d9-a501-7e13b2b8c7b6",
+  "independent_material_executors_proven": 0,
+  "authority_effect": "NONE"
+}

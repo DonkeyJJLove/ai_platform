@@ -1,0 +1,11 @@
+{
+  "schema": "lion.r3-r4-artifact-currentness/v1",
+  "r3_release": "lion-rag32-v1.4-r3-rebased-candidate",
+  "historical_record_count": 151,
+  "historical_content_digest": "b8606f0bccb5a3d7318d52ff78ac0be2ebda42a17b7226ede729f76675fab38e",
+  "historical_zip_digest": "c9f09a647bd421103f59b65ba5a75f3cb8d68c77cea041c082d2236fa529d3fb",
+  "current_reacquisition": "NOT_FOUND_IN_CURRENT_HOST_ARTIFACT_STORES",
+  "equivalence_claim": "NOT_PERMITTED",
+  "r4_policy": "REBASE_FROM_EXACT_BYTES_ACTUALLY_AVAILABLE_AND_WRITE_GAP_LEDGER; NEVER CLAIM_151_PREDECESSOR_PRESERVATION_WITHOUT_151_BYTES",
+  "authority_effect": "NONE"
+}

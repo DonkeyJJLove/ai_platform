@@ -27,7 +27,7 @@ from tools.p0_moon_runner_attested_bridge_contract import (
 import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-CURRENT_SCAN = "375e62076071b9a3e681af7a99cc03d7bcda95e7ac49e4b88de78a1b52104ee0"
+CURRENT_SCAN = "47f3411585c349108f6b05176025aaa37ff945580dc180402dbc757ed06d5cb6"
 HISTORICAL_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 LIVE_SOURCE_REVISION = "830f8c2e5561655dc35118c97f4574acc3bf0816"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
@@ -93,7 +93,7 @@ class RunnerAttestedExecutionBridgeTests(unittest.TestCase):
         workflow_bytes = workflow.read_bytes()
         source_bytes = source.read_bytes()
         self.assertEqual(workflow_bytes, source_bytes)
-        self.assertEqual(sha256(workflow_bytes).hexdigest(), "518b0ac3015e4d499595fce752cb9fa15d838237ee292921d3774bf58acb616f")
+        self.assertEqual(sha256(workflow_bytes).hexdigest(), "6013c8e8b5407b60f2a39e6e9daa13ef7c92ec9500cb441836855101694442ce")
         text = workflow_bytes.decode("utf-8")
         self.assertIn("workflow_dispatch:", text)
         self.assertNotIn("issue_comment:", text)

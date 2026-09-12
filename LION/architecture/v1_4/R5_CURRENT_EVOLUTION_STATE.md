@@ -1,0 +1,13 @@
+# R5 Current Evolution State — pre-truth local fixed point
+
+This is a local, unpublished candidate. It grants no authority and proves no deployment. Remote master remains `938aa94460a2e0f81c470c1586626290bb74bc2c` / `70d698f937608495c3845b9b7c1f0bc515a3789d`.
+
+The current local lineage added an exact R4 rebased knowledge package, an external APP_SESSION verifier boundary, an effect-free Mission Control source-rebind package, RAG artifact-currentness classification, and semantic workflow-family hardening. The Git informational spine is `LION/GIT-LOGICAL-TREE/3` digest `a2f330e9c47ec26c5e02f5c780dc68d103cb6eadb33096958bfa321e174cab86`, generated from `20b8a54befcbe38c453efbef883d17d813ee807a`. Later documentation and truth-carrier commits are descendants and must be reacquired rather than self-referenced.
+
+Security state: 309 production sources, 268 effect surfaces, 6 raw unclassified references, zero unresolved taxonomy, scan `eebf184fdf2b9faebdf899d9e07595c1a7fc1a9de7c0f64c6d705ef3bc73ddcd`. Pre-documentation full suite: 2762 tests, zero failures/errors, six skips. Bandit 1.9.4: zero findings/errors. Full Symbol Census: 638/638 Python files, 10060 symbols, zero parse failures, digest `9ee1b216acf70d8250a9f8c00e5139155e87826022320191963b5a2d58d2a748`.
+
+RAG R4 is a verified 32-container / 145-record rebased knowledge candidate preserving 132 materially available predecessor blocks and adding 13 R4 records. It does not claim the unreacquired historical 151-record R3 as byte predecessor. Because repository evolution continued after Generation 10, R4 is verified historical/current-run knowledge rather than a representation of the final R5 repository state; R5 is built only after final carrier-last truth.
+
+E02 APP_SESSION now has an external-verifier boundary with provider/issuer/trust-anchor/session/app/subject/freshness/replay/sequence checks. No real external verifier or durable replay/sequence provider is installed; the state is partial candidate, never runtime-ready. Mission Control remains active on stale source `743cb77...`; the source-rebind package is effect-free and not applied. K3s remains inactive and VKT activity is not observed. Four connected WSL hosts share one boot ID, so physical/material independence is not proven.
+
+Workflow homeostasis v2 classifies 24 workflows. Five critical evidence workflows have zero blocking defects. Safe read-only/observation/live-proof families were hardened; 23 control findings remain only across ten self-hosted-runtime or external-write workflows and therefore require family-specific effect/idempotency review rather than blanket mutation.

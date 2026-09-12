@@ -1,0 +1,19 @@
+{
+  "files": {
+    "AUTHORITY_BOUNDARY.json": "b137bc8784cd8f55c2deb28b14d8bace2d7686a2249d27ea2d75500146308682",
+    "PROJECT_STATE.json": "19c1f32cdedd03879fcd5bae75d6dedbe95d903b59c4141c1346f1e3ade29a41",
+    "RAG_R7_DESCRIPTOR.json": "2fb8e5fa871baa91be10e0751ce34c85439aae5e6f4ec3a8dd10b0844da7d9a9"
+  },
+  "hosts": [
+    "LION-AUTH-LAB",
+    "MOON",
+    "LAB-UBUNTU",
+    "LAB-DEBIAN"
+  ],
+  "k3s_mutation": false,
+  "path": "/var/lib/sentinelx/uploads/lion-project-state-r7",
+  "runtime_effect": "NONE",
+  "schema": "lion.r7.host-file-distribution/v1",
+  "service_restart": false,
+  "state": "COMPLETED_NO_SERVICE_RESTART"
+}

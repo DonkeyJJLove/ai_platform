@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 
@@ -79,6 +80,29 @@ class R9D8UMaintenanceBundleTests(unittest.TestCase):
             source_system_id="lion-control-plane-prod",
             provisioned_at="2026-08-26T09:00:00+00:00",
         )
+
+    def test_repository_connection_closes_after_context_exit(self):
+        connection = self.repo._connect()
+        with connection as active:
+            self.assertEqual(active.execute("SELECT 1").fetchone()[0], 1)
+        with self.assertRaises(sqlite3.ProgrammingError):
+            connection.execute("SELECT 1")
+
+    def test_repository_connection_rolls_back_and_closes(self):
+        connection = self.repo._connect()
+        with self.assertRaisesRegex(RuntimeError, "rollback-probe"):
+            with connection as active:
+                active.execute("BEGIN IMMEDIATE")
+                active.execute("CREATE TABLE lifecycle_probe(value INTEGER NOT NULL)")
+                active.execute("INSERT INTO lifecycle_probe VALUES(1)")
+                raise RuntimeError("rollback-probe")
+        with self.assertRaises(sqlite3.ProgrammingError):
+            connection.execute("SELECT 1")
+        check = sqlite3.connect(self.db)
+        try:
+            self.assertEqual(check.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='lifecycle_probe'").fetchone(), (0,))
+        finally:
+            check.close()
 
     def test_atomic_producer_output_is_direct_consumer_input(self):
         bundle = self.provision()

@@ -28,6 +28,6 @@ class ServerTests(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError) as ctx: urllib.request.urlopen(req,timeout=2)
                 self.assertEqual(ctx.exception.code,405)
             finally:
-                srv.shutdown(); srv.server_close()
+                srv.shutdown(); srv.server_close(); store.close()
 
 if __name__=='__main__': unittest.main()

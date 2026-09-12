@@ -60,6 +60,10 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: f005-runtime-trust-provisioning
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -75,6 +79,9 @@ jobs:
       LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.expected_master }}
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -85,8 +92,9 @@ jobs:
           EXPECTED_MASTER_TREE: ${{ inputs.expected_master_tree }}
           RUNTIME_INSTANCE: ${{ inputs.runtime_instance }}
         run: |
-          if ($env:GITHUB_SHA -ne $env:EXPECTED_MASTER) {
-            throw "master binding mismatch: checkout=$env:GITHUB_SHA expected=$env:EXPECTED_MASTER"
+          $actualSha = (git rev-parse HEAD).Trim()
+          if ($actualSha -ne $env:EXPECTED_MASTER) {
+            throw "master binding mismatch: checkout=$actualSha expected=$env:EXPECTED_MASTER"
           }
           $actualTree = (git show -s --format=%T HEAD).Trim()
           if ($actualTree -ne $env:EXPECTED_MASTER_TREE) {

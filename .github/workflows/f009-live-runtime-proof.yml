@@ -9,6 +9,10 @@ on:
       - 'cyber_lion/tests/test_live_runtime_evidence_workflow_contract.py'
       - '.github/workflows/f009-live-runtime-proof.yml'
 
+concurrency:
+  group: f009-live-runtime-proof-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -24,6 +28,24 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Bind exact proof source identity
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$actual_head" = "$EXPECTED_HEAD"
+          printf 'F009_SOURCE_HEAD=%s
+' "$actual_head"
+          printf 'F009_SOURCE_TREE=%s
+' "$actual_tree"
+          echo "head=$actual_head" >> "$GITHUB_OUTPUT"
+          echo "tree=$actual_tree" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -215,6 +237,20 @@ jobs:
           assert manifest["f005_runtime_resumed"] is False
           assert manifest["production_effect"] is False
           PY
+
+      - name: Digest immutable proof evidence set
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_dir="$RUNNER_TEMP/f009-live-artifacts-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test -d "$artifact_dir"
+          find "$artifact_dir" -maxdepth 1 -type f ! -name 'artifact-set.sha256' -print0             | sort -z             | xargs -0 sha256sum > "$artifact_dir/artifact-set.sha256"
+          test -s "$artifact_dir/artifact-set.sha256"
+          printf 'F009_PROOF_MANIFEST_SHA256=%s
+' "$(sha256sum "$artifact_dir/proof-manifest.json" | awk '{print $1}')"
+          printf 'F009_ARTIFACT_SET_SHA256=%s
+' "$(sha256sum "$artifact_dir/artifact-set.sha256" | awk '{print $1}')"
 
       - name: Upload immutable proof evidence
         if: success()

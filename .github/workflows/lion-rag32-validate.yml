@@ -1,0 +1,71 @@
+name: LION RAG32 Candidate Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      rag_root:
+        description: Repository-local RAG32 directory under LION/rag
+        required: false
+        default: LION/rag/lion_project_rag32_v1_4_r1
+  pull_request:
+    branches: [master]
+    paths:
+      - "LION/rag/**"
+      - "tools/lion_rag32_validate.py"
+      - ".github/workflows/lion-rag32-validate.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-rag32-validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Bind checkout identity
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$head" = "$EXPECTED_HEAD"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+      - name: Validate RAG32 candidate
+        shell: bash
+        env:
+          REQUESTED_RAG_ROOT: ${{ inputs.rag_root }}
+        run: |
+          set -euo pipefail
+          root="${REQUESTED_RAG_ROOT:-LION/rag/lion_project_rag32_v1_4_r1}"
+          python tools/lion_rag32_validate.py --repository . --root "$root" > "$RUNNER_TEMP/lion-rag32-validation.json"
+          printf 'RAG_VALIDATION_HEAD=%s
+' "${{ steps.gitstate.outputs.head }}"
+          printf 'RAG_VALIDATION_TREE=%s
+' "${{ steps.gitstate.outputs.tree }}"
+          printf 'RAG_VALIDATION_SHA256=%s
+' "$(sha256sum "$RUNNER_TEMP/lion-rag32-validation.json" | awk '{print $1}')"
+      - name: Upload exact validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-rag32-validation-${{ steps.gitstate.outputs.head }}
+          path: ${{ runner.temp }}/lion-rag32-validation.json
+          if-no-files-found: error
+          retention-days: 30

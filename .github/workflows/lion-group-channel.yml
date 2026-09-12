@@ -39,7 +39,11 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/master"
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$actual_head" = "$GITHUB_SHA"
+          printf 'GROUP_CHANNEL_HEAD=%s\n' "$actual_head"
+          printf 'GROUP_CHANNEL_TREE=%s\n' "$actual_tree"
           umask 077
           receipt="$RUNNER_TEMP/lion-group-channel-receipt.json"
           python -m cyber_lion.enterprise.group_channel > "$receipt"
@@ -54,6 +58,7 @@ jobs:
           assert value["repository_effect"] is False
           assert "payload" not in value
           PY
+          printf 'GROUP_CHANNEL_RECEIPT_SHA256=%s\n' "$(sha256sum "$receipt" | awk '{print $1}')"
 
       - name: Upload evidence-only receipt
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f

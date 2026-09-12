@@ -1,12 +1,265 @@
 {
-  "baseline_head": "5d5a02b37fdfff4bcbf62f455d37ce4b86080f59",
+  "baseline_head": "2ff869023c18817611100fd4d62a4290f96a2584",
   "gaps": [
-    {"classification":"STALE","description":"Self-declared CURRENT projects E003-M128 from 2026-08-24 while live master is R19P-era.","id":"DOC-CURRENTNESS-001","path":"LION/status.json","r20_action":"Supersede for v1.4 documentation through exact-baseline current_state.json; do not mutate consumer-sensitive legacy contract without proof.","remaining":true},
-    {"classification":"STALE","description":"Describes ai_platform as primarily non-executable/specification despite live control-plane/runtime code.","id":"DOC-INVENTORY-001","path":"cyber_lion/REPOSITORY_INVENTORY.md","r20_action":"Update human-readable inventory.","remaining":false},
-    {"classification":"AMBIGUOUS","description":"Action gap wording can be read as RuntimeAdmissionEngine missing although engine exists.","id":"DOC-GAP-001","path":"cyber_lion/architecture_projection/gap.py","r20_action":"Do not mutate executable projection in docs-only run; human docs clarify generalized materializer gap.","remaining":true},
-    {"classification":"STALE","description":"Embedded x-lion baseline/support metadata is older than current live implementation.","id":"DOC-ACTIONSPEC-001","path":"cyber_lion/contracts/v1/action_spec.schema.json","r20_action":"Do not mutate schema/consumer-sensitive metadata without semantic non-effect proof.","remaining":true},
-    {"classification":"CONTRADICTORY","description":"Wire schema requires schema_version while runtime ActionProposal dataclass lacks it.","id":"DOC-ACTIONPROPOSAL-001","path":"cyber_lion/contracts/v1/action_spec_support_matrix.json","r20_action":"Preserve NO_WIRE_SCHEMA_CONFORMANCE_CLAIM.","remaining":true},
-    {"classification":"UNKNOWN","description":"Exhaustive all-symbol AST census cannot be independently proven from current connector-only snapshot.","id":"DOC-CENSUS-001","path":"repository-wide","r20_action":"Publish explicit architecture-material catalog; all_symbol_census=UNPROVEN.","remaining":true}
+    {
+      "classification": "STALE",
+      "description": "Self-declared CURRENT projects E003-M128 from 2026-08-24 while live master is R19P-era.",
+      "id": "DOC-CURRENTNESS-001",
+      "path": "LION/status.json",
+      "r20_action": "Supersede for v1.4 documentation through exact-baseline current_state.json; do not mutate consumer-sensitive legacy contract without proof.",
+      "remaining": true
+    },
+    {
+      "classification": "STALE",
+      "description": "Describes ai_platform as primarily non-executable/specification despite live control-plane/runtime code.",
+      "id": "DOC-INVENTORY-001",
+      "path": "cyber_lion/REPOSITORY_INVENTORY.md",
+      "r20_action": "Update human-readable inventory.",
+      "remaining": false
+    },
+    {
+      "classification": "AMBIGUOUS",
+      "description": "Action gap wording can be read as RuntimeAdmissionEngine missing although engine exists.",
+      "id": "DOC-GAP-001",
+      "path": "cyber_lion/architecture_projection/gap.py",
+      "r20_action": "Do not mutate executable projection in docs-only run; human docs clarify generalized materializer gap.",
+      "remaining": true
+    },
+    {
+      "classification": "STALE",
+      "description": "Embedded x-lion baseline/support metadata is older than current live implementation.",
+      "id": "DOC-ACTIONSPEC-001",
+      "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+      "r20_action": "Do not mutate schema/consumer-sensitive metadata without semantic non-effect proof.",
+      "remaining": true
+    },
+    {
+      "classification": "CONTRADICTORY",
+      "description": "Wire schema requires schema_version while runtime ActionProposal dataclass lacks it.",
+      "id": "DOC-ACTIONPROPOSAL-001",
+      "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+      "r20_action": "Preserve NO_WIRE_SCHEMA_CONFORMANCE_CLAIM.",
+      "remaining": true
+    },
+    {
+      "classification": "RESOLVED_LOCAL_CANDIDATE",
+      "description": "Exhaustive all-symbol AST census cannot be independently proven from current connector-only snapshot.",
+      "id": "DOC-CENSUS-001",
+      "path": "repository-wide",
+      "r20_action": "Full Symbol Census materialized locally at 03fc2ed8317c5cff775af217b8c9f65b5b1f1c05: 615/615 Python files, 9819 symbols, zero parse failures; remote exact-head artifact still requires publication.",
+      "remaining": false
+    },
+    {
+      "classification": "HISTORICAL_GAP",
+      "description": "Four exact R2 overlay record bytes are unrecoverable from available sources.",
+      "id": "R3-RAG-001",
+      "path": "R2/R3 lineage",
+      "r3_action": "Freeze 132 records; supersede with new R3 current-state records and explicit non-equivalence.",
+      "remaining": true
+    },
+    {
+      "classification": "RESOLVED_LOCAL_CANDIDATE",
+      "description": "Canonical v3 Git spine regenerated and validated at Generation-10 pre-documentation snapshot; later docs/truth commits are explicit descendants.",
+      "id": "R3-GIT-001",
+      "path": "LION/architecture/v1_4/GIT_LOGICAL_TREE.json",
+      "r3_action": "Use v3 workflow validation and live readback; do not require self-referential snapshot.",
+      "remaining": false
+    },
+    {
+      "classification": "STALE_RUNTIME_SOURCE",
+      "description": "Mission Control service remains active on stale source 743cb77...; K3s inactive; VKT recorded RUNNING but not in current observation and heartbeat UNKNOWN.",
+      "id": "R3-RUNTIME-001",
+      "path": "Mission Control / VKT",
+      "r3_action": "Effect-free exact-master source-rebind package is prepared; deployment/restart remains a separate authority effect.",
+      "remaining": true
+    },
+    {
+      "classification": "PARTIAL_HOMEOSTASIS_FAMILY_REVIEW_BOUNDARY",
+      "description": "24 workflows classified by effect family. Critical blocking defects are zero; 23 control findings remain exclusively on ten SELF_HOSTED_RUNTIME/EXTERNAL_WRITE workflows.",
+      "id": "R3-WORKFLOW-001",
+      "path": ".github/workflows",
+      "r3_action": "Continue family-specific effect/idempotency/authority review; no blanket YAML mutation.",
+      "remaining": true
+    },
+    {
+      "classification": "PARTIAL_EXTERNAL_ATTESTER_BOUNDARY",
+      "description": "APP_SESSION external verifier boundary exists and rejects substitution/stale/replay/rollback, but no real external verifier or durable replay/sequence provider is installed.",
+      "id": "R4-E02-001",
+      "path": "E02 trust",
+      "r3_action": "Materialize durable external providers as candidates before any runtime admission; keep authority/runtime effects NONE.",
+      "remaining": true
+    },
+    {
+      "classification": "STALE_RUNTIME_SOURCE_REBIND_PACKAGE_READY",
+      "description": "Mission Control source remains older than master; exact target-bound source-rebind package exists and is not activated.",
+      "id": "R4-MC-001",
+      "path": "Mission Control source",
+      "r3_action": "Separate current deployment authority required; after any authorized apply perform PID/release/source/API/VKT readback and reconciliation.",
+      "remaining": true
+    },
+    {
+      "classification": "FALSIFIED_SHARED_BOOT_DOMAIN",
+      "description": "Four observed WSL hosts share one boot ID; physical/material independence not proven.",
+      "id": "R4-EXEC-001",
+      "path": "failure domains",
+      "r3_action": "Require genuinely independent hardware evidence.",
+      "remaining": true
+    },
+    {
+      "classification": "NOT_PUBLISHED",
+      "description": "Current local multigeneration candidate has no remote exact-head CI.",
+      "id": "R4-CI-001",
+      "path": "Current local R5 lineage remote CI",
+      "r3_action": "Remote push/PR creation only through consolidated authority packet.",
+      "remaining": true
+    },
+    {
+      "classification": "RESOLVED_FORWARD_BY_EXACT_R4_REBASE",
+      "description": "Historical 151-record R3 remains unreacquired, but R4 rebased was built from 132 materially available exact predecessor blocks plus 13 new records and fully validated.",
+      "id": "R4-RAG-ARTIFACT-001",
+      "path": "R3/R4 RAG artifact lineage",
+      "r3_action": "Preserve R3 historical gap; use exact R4 material bytes as R5 predecessor.",
+      "remaining": false
+    },
+    {
+      "classification": "RESOLVED_VERIFIED_R5",
+      "description": "Exact R5 package exists: 32 files, 158 records, 145 preserved predecessor blocks plus 13 R5 records, self-test 18/18 and retrieval 27/27.",
+      "id": "R5-RAG-001",
+      "path": "RAG R5 lineage",
+      "r3_action": "Byte-preserve all 145 exact R4 blocks and add current R5 records after final truth bind.",
+      "r6_action": "Use exact R5 bytes as R6 predecessor.",
+      "remaining": false
+    },
+    {
+      "classification": "RESOLVED_LOCAL_CANDIDATE",
+      "description": "All 24 workflows now audit with zero blocking, zero advisory and zero family-review findings after effect-family hardening.",
+      "id": "R5-WORKFLOW-FAMILY-001",
+      "path": ".github/workflows",
+      "r3_action": "Per-family authority/idempotency/currentness review in successor LPCL.",
+      "r6_action": "Preserve exact-head binding, permission scope and non-idempotent retry semantics; rerun audit after any workflow change.",
+      "remaining": false
+    },
+    {
+      "classification": "AUTHORITY_BOUNDARY",
+      "description": "Effect-free source-rebind package is ready, but apply/restart/deployment is not authorized.",
+      "id": "R5-MC-AUTH-001",
+      "path": "Mission Control deployment",
+      "r3_action": "Batch into authority packet after all safe internal work.",
+      "remaining": true
+    },
+    {
+      "classification": "PARTIAL_DURABLE_LOCAL_CANDIDATE",
+      "description": "Durable replay/sequence SQLite candidate exists with atomic consume and restart/replay/rollback falsifiers; real external verifier installation and production trust anchors remain absent.",
+      "id": "R5-E02-DURABLE-001",
+      "path": "E02 APP_SESSION external trust",
+      "r3_action": "Build and falsify provider adapters without keys or activation; production installation is separate.",
+      "r6_action": "Keep candidate-only until separate provider installation and authority are available.",
+      "remaining": true
+    },
+    {
+      "classification": "PENDING_POST_TRUTH_BUILD",
+      "description": "Repository evolved beyond R5; R6 must be built after final carrier-last truth from exact 158-record R5 predecessor.",
+      "id": "R6-RAG-001",
+      "path": "R6",
+      "r6_action": "Build outside Git, preserve all 158 predecessor record blocks, validate 32-container package and retrieval.",
+      "remaining": true
+    },
+    {
+      "classification": "OPEN_HYGIENE_DEBT",
+      "description": "Full suite emits 2136 ResourceWarning instances for unclosed SQLite connections; hotspots span multiple persistent authority/state families, so blanket lifecycle repair is unsafe.",
+      "id": "R6-SQLITE-HYGIENE-001",
+      "path": "R6",
+      "r6_action": "Repair one module family at a time with lifecycle tests; do not suppress warnings globally.",
+      "remaining": true
+    },
+    {
+      "classification": "AUTHORITY_BOUNDARY",
+      "description": "Mission Control source-rebind deployment admission contract exists and is one-shot/retry-zero/reconcile-first, but no apply/restart occurred.",
+      "id": "R6-MC-ADMISSION-001",
+      "path": "R6",
+      "r6_action": "At authority time reacquire rollback configuration/adapter/schema identity and perform mandatory post-apply readback.",
+      "remaining": true
+    },
+    {
+      "classification": "FALSIFIED_SHARED_BOOT_DOMAIN",
+      "description": "Four current SentinelX connectors all report identical WSL2 boot ID; material executor independence remains not proven.",
+      "id": "R6-EXECUTOR-INDEPENDENCE-001",
+      "path": "R6",
+      "r6_action": "Require at least two external attestations for distinct runtime, physical and control domains with distinct trust anchors.",
+      "remaining": true
+    },
+    {
+      "classification": "NOT_PUBLISHED",
+      "description": "Local R6 candidate has no remote exact-head CI because no push/PR mutation is authorized.",
+      "id": "R6-REMOTE-CI-001",
+      "path": "R6",
+      "r6_action": "Include exact local head/tree and security evidence in consolidated authority packet; do not infer CI from local results.",
+      "remaining": true
+    },
+    {
+      "classification": "PENDING_CARRIER_LAST",
+      "description": "R6 documentation/Git-spine changes alter the noncarrier truth subject and require a final carrier-only bind.",
+      "id": "R6-TRUTH-001",
+      "path": "R6",
+      "r6_action": "Compute subject from final noncarrier tree, update exactly two carriers, then forbid further noncarrier mutations.",
+      "remaining": true
+    },
+    {
+      "classification": "PARTIAL_REDUCED_DEBT",
+      "description": "ResourceWarning count reduced from 2136 to 307 across five proven lifecycle families; remaining origins are GC-delayed and not yet exactly allocated.",
+      "id": "R7-SQLITE-001",
+      "path": "repository-wide SQLite lifecycle",
+      "r7_action": "Classify exact allocation origins before any further one-family-at-a-time repair; never globally suppress warnings.",
+      "remaining": true
+    },
+    {
+      "classification": "OFFLINE_CANDIDATE_NOT_INSTALLED",
+      "description": "Effect-free external attester installation contract exists; no key material, installation, secret provisioning or runtime activation occurred.",
+      "id": "R7-E02-INSTALL-001",
+      "path": "E02 APP_SESSION external trust",
+      "r7_action": "Real provider/issuer/trust-anchor/trusted-time/store installation requires separate current authority and external evidence.",
+      "remaining": true
+    },
+    {
+      "classification": "INCOMPLETE_AUTHORITY_PACKET_DO_NOT_APPLY",
+      "description": "Source/release rollback identity is known but rollback configuration/adapter/schema digests are not independently recomputable.",
+      "id": "R7-MC-AUTH-001",
+      "path": "Mission Control deployment",
+      "r7_action": "Reacquire exact rollback digests before any authority decision; max attempts 1, retry 0, reconcile first.",
+      "remaining": true
+    },
+    {
+      "classification": "PENDING_POST_TRUTH_BUILD",
+      "description": "Exact R6 173-record package is available and verified; R7 must be built only after final carrier-last truth.",
+      "id": "R7-RAG-001",
+      "path": "RAG R7 lineage",
+      "r7_action": "Byte-preserve all 173 R6 record blocks and add R7 current records outside Git.",
+      "remaining": true
+    },
+    {
+      "classification": "NOT_PUBLISHED",
+      "description": "Local R7 lineage is unpublished and therefore has no remote exact-head CI.",
+      "id": "R7-CI-001",
+      "path": "current local R7 exact-head CI",
+      "r7_action": "Push/PR only through separate consolidated authority.",
+      "remaining": true
+    },
+    {
+      "classification": "RESOLVED_LOCAL_CANDIDATE",
+      "description": "R7 fixed-point, authority and RAG validation summaries are materialized in the repository as auditable files.",
+      "id": "R7-ARTIFACTIZATION-001",
+      "path": "LION/architecture/v1_4/artifacts/r7",
+      "r8_action": "Preserve as source evidence; do not confuse repository files with external authority.",
+      "remaining": false
+    },
+    {
+      "classification": "RESOLVED_FILE_DISTRIBUTION",
+      "description": "Four connected hosts received identical R7 project-state, RAG descriptor and authority-boundary JSON files without service restart or K3s mutation.",
+      "id": "R7-HOST-DISTRIBUTION-001",
+      "path": "/var/lib/sentinelx/uploads/lion-project-state-r7",
+      "r8_action": "After final carrier rebind refresh only PROJECT_STATE repository binding on each host.",
+      "remaining": false
+    }
   ],
   "schema": "lion.documentation.gap-register.v1"
 }

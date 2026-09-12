@@ -16,6 +16,10 @@ on:
           - DENY_ACTOR_SUBSTITUTION
           - DENY_CONTROL_ISSUE_SUBSTITUTION
 
+concurrency:
+  group: lion-moon-runner-attested-execution-bridge
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -29,5 +33,15 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.sha }}
+      - name: Bind exact dispatched revision and tree
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$actual_head" = "$EXPECTED_HEAD"
+          printf 'MOON_BRIDGE_HEAD=%s\n' "$actual_head" >> "$GITHUB_STEP_SUMMARY"
+          printf 'MOON_BRIDGE_TREE=%s\n' "$actual_tree" >> "$GITHUB_STEP_SUMMARY"
       - name: Execute exact runner-attested operation
         run: python3 -m tools.p0_moon_runner_attested_execution_bridge --operation '${{ inputs.operation }}'

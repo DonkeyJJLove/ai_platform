@@ -12,6 +12,10 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: f005-runtime-reconciliation-preflight
+  cancel-in-progress: false
+
 permissions:
   contents: read
 

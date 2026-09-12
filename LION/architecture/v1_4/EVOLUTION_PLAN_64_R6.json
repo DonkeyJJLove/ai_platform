@@ -1,0 +1,1158 @@
+{
+  "epoch": "R6_TO_R7",
+  "generated_from_head": "16abf0ee06e31cdbd7e8c0e63104efc038aa7db8",
+  "project": "LION_EVOLUSION",
+  "schema": "lion.evolution-plan/v1",
+  "steps": [
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Freeze final noncarrier R6 subject",
+      "predecessors": [],
+      "priority": "P0_NON_IDEMPOTENT_EFFECT",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-01"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Bind canonical truth carrier",
+      "predecessors": [
+        "R6-01"
+      ],
+      "priority": "P0_NON_IDEMPOTENT_EFFECT",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-02"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Bind repository registry carrier",
+      "predecessors": [
+        "R6-02"
+      ],
+      "priority": "P0_NON_IDEMPOTENT_EFFECT",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-03"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Verify carrier-only ancestry",
+      "predecessors": [
+        "R6-03"
+      ],
+      "priority": "P0_NON_IDEMPOTENT_EFFECT",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-04"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Build exact R6 RAG from R5",
+      "predecessors": [
+        "R6-04"
+      ],
+      "priority": "P0_NON_IDEMPOTENT_EFFECT",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-05"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Verify 158 predecessor blocks byte-identical",
+      "predecessors": [
+        "R6-05"
+      ],
+      "priority": "P0_NON_IDEMPOTENT_EFFECT",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-06"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Run R6 RAG self-test",
+      "predecessors": [
+        "R6-06"
+      ],
+      "priority": "P1_SECURITY_AUTHORITY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-07"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Run R6 retrieval suite",
+      "predecessors": [
+        "R6-07"
+      ],
+      "priority": "P1_SECURITY_AUTHORITY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-08"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Prepare consolidated authority packet",
+      "predecessors": [
+        "R6-08"
+      ],
+      "priority": "P1_SECURITY_AUTHORITY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-09"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reacquire master before any publication",
+      "predecessors": [
+        "R6-09"
+      ],
+      "priority": "P1_SECURITY_AUTHORITY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-10"
+    },
+    {
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Publish candidate branch if authorized",
+      "predecessors": [
+        "R6-10"
+      ],
+      "priority": "P1_SECURITY_AUTHORITY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-11"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Verify remote exact-head CI if published",
+      "predecessors": [
+        "R6-11"
+      ],
+      "priority": "P1_SECURITY_AUTHORITY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-12"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reconcile PR333 historical disposition",
+      "predecessors": [
+        "R6-12"
+      ],
+      "priority": "P2_GIT_TRUTH",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-13"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Inventory SQLite connection factories",
+      "predecessors": [
+        "R6-13"
+      ],
+      "priority": "P2_GIT_TRUTH",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-14"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Repair first low-risk SQLite family",
+      "predecessors": [
+        "R6-14"
+      ],
+      "priority": "P2_GIT_TRUTH",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-15"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Add SQLite lifecycle falsifiers",
+      "predecessors": [
+        "R6-15"
+      ],
+      "priority": "P2_GIT_TRUTH",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-16"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Re-run full suite with ResourceWarning census",
+      "predecessors": [
+        "R6-16"
+      ],
+      "priority": "P2_GIT_TRUTH",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-17"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Design E02 real external verifier adapter",
+      "predecessors": [
+        "R6-17"
+      ],
+      "priority": "P2_GIT_TRUTH",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-18"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Define E02 trust-anchor provisioning contract",
+      "predecessors": [
+        "R6-18"
+      ],
+      "priority": "P3_TEST_CURRENTNESS",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-19"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Define E02 keyless verifier installation preflight",
+      "predecessors": [
+        "R6-19"
+      ],
+      "priority": "P3_TEST_CURRENTNESS",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-20"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Falsify external verifier substitution",
+      "predecessors": [
+        "R6-20"
+      ],
+      "priority": "P3_TEST_CURRENTNESS",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-21"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Falsify replay across process restart",
+      "predecessors": [
+        "R6-21"
+      ],
+      "priority": "P3_TEST_CURRENTNESS",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-22"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Falsify durable sequence rollback",
+      "predecessors": [
+        "R6-22"
+      ],
+      "priority": "P3_TEST_CURRENTNESS",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-23"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reacquire Mission Control rollback identity",
+      "predecessors": [
+        "R6-23"
+      ],
+      "priority": "P3_TEST_CURRENTNESS",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-24"
+    },
+    {
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Instantiate MC admission packet",
+      "predecessors": [
+        "R6-24"
+      ],
+      "priority": "P4_SQLITE_RESOURCE_HYGIENE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-25"
+    },
+    {
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Require one-shot non-idempotent apply",
+      "predecessors": [
+        "R6-25"
+      ],
+      "priority": "P4_SQLITE_RESOURCE_HYGIENE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-26"
+    },
+    {
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Define MC rollback postcondition",
+      "predecessors": [
+        "R6-26"
+      ],
+      "priority": "P4_SQLITE_RESOURCE_HYGIENE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-27"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Define post-restart source readback",
+      "predecessors": [
+        "R6-27"
+      ],
+      "priority": "P4_SQLITE_RESOURCE_HYGIENE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-28"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Define VKT recorded/observed reconciliation",
+      "predecessors": [
+        "R6-28"
+      ],
+      "priority": "P4_SQLITE_RESOURCE_HYGIENE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-29"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Acquire independent hardware executor evidence",
+      "predecessors": [
+        "R6-29"
+      ],
+      "priority": "P4_SQLITE_RESOURCE_HYGIENE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-30"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Attest runtime instance identity",
+      "predecessors": [
+        "R6-30"
+      ],
+      "priority": "P5_E02_EXTERNAL_PROVIDER_INSTALLATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-31"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Attest physical-domain identity",
+      "predecessors": [
+        "R6-31"
+      ],
+      "priority": "P5_E02_EXTERNAL_PROVIDER_INSTALLATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-32"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Attest independent control domain",
+      "predecessors": [
+        "R6-32"
+      ],
+      "priority": "P5_E02_EXTERNAL_PROVIDER_INSTALLATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-33"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Attest distinct trust anchors",
+      "predecessors": [
+        "R6-33"
+      ],
+      "priority": "P5_E02_EXTERNAL_PROVIDER_INSTALLATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-34"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Falsify same-hypervisor substitution",
+      "predecessors": [
+        "R6-34"
+      ],
+      "priority": "P5_E02_EXTERNAL_PROVIDER_INSTALLATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-35"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Falsify connector multiplicity promotion",
+      "predecessors": [
+        "R6-35"
+      ],
+      "priority": "P5_E02_EXTERNAL_PROVIDER_INSTALLATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-36"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Recompute executor-independence assessment",
+      "predecessors": [
+        "R6-36"
+      ],
+      "priority": "P6_MISSION_CONTROL_AUTHORIZED_APPLY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-37"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Audit all workflow permissions",
+      "predecessors": [
+        "R6-37"
+      ],
+      "priority": "P6_MISSION_CONTROL_AUTHORIZED_APPLY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-38"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Audit exact-head/tree bindings",
+      "predecessors": [
+        "R6-38"
+      ],
+      "priority": "P6_MISSION_CONTROL_AUTHORIZED_APPLY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-39"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Audit concurrency semantics",
+      "predecessors": [
+        "R6-39"
+      ],
+      "priority": "P6_MISSION_CONTROL_AUTHORIZED_APPLY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-40"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Audit non-idempotent retry rules",
+      "predecessors": [
+        "R6-40"
+      ],
+      "priority": "P6_MISSION_CONTROL_AUTHORIZED_APPLY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-41"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Audit persisted checkout credentials",
+      "predecessors": [
+        "R6-41"
+      ],
+      "priority": "P6_MISSION_CONTROL_AUTHORIZED_APPLY",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-42"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Recompute production effect inventory",
+      "predecessors": [
+        "R6-42"
+      ],
+      "priority": "P7_INDEPENDENT_HARDWARE_EXECUTOR_EVIDENCE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-43"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reconcile all raw taxonomy references",
+      "predecessors": [
+        "R6-43"
+      ],
+      "priority": "P7_INDEPENDENT_HARDWARE_EXECUTOR_EVIDENCE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-44"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Run canonical Bandit",
+      "predecessors": [
+        "R6-44"
+      ],
+      "priority": "P7_INDEPENDENT_HARDWARE_EXECUTOR_EVIDENCE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-45"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Run Full Symbol Census",
+      "predecessors": [
+        "R6-45"
+      ],
+      "priority": "P7_INDEPENDENT_HARDWARE_EXECUTOR_EVIDENCE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-46"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Run complete test suite",
+      "predecessors": [
+        "R6-46"
+      ],
+      "priority": "P7_INDEPENDENT_HARDWARE_EXECUTOR_EVIDENCE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-47"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Regenerate Git logical spine",
+      "predecessors": [
+        "R6-47"
+      ],
+      "priority": "P7_INDEPENDENT_HARDWARE_EXECUTOR_EVIDENCE",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-48"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate Git ancestry and supersession",
+      "predecessors": [
+        "R6-48"
+      ],
+      "priority": "P8_REMOTE_EXACT_HEAD_CI",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-49"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Update current-state documentation",
+      "predecessors": [
+        "R6-49"
+      ],
+      "priority": "P8_REMOTE_EXACT_HEAD_CI",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-50"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Update contradiction and gap ledger",
+      "predecessors": [
+        "R6-50"
+      ],
+      "priority": "P8_REMOTE_EXACT_HEAD_CI",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-51"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Generate next 64-step plan",
+      "predecessors": [
+        "R6-51"
+      ],
+      "priority": "P8_REMOTE_EXACT_HEAD_CI",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-52"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Generate next LPCL",
+      "predecessors": [
+        "R6-52"
+      ],
+      "priority": "P8_REMOTE_EXACT_HEAD_CI",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-53"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Build next RAG overlay records",
+      "predecessors": [
+        "R6-53"
+      ],
+      "priority": "P8_REMOTE_EXACT_HEAD_CI",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-54"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate RAG manifest hashes",
+      "predecessors": [
+        "R6-54"
+      ],
+      "priority": "P9_RAG_CURRENTNESS_AUTOMATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-55"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate RAG source IDs unique",
+      "predecessors": [
+        "R6-55"
+      ],
+      "priority": "P9_RAG_CURRENTNESS_AUTOMATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-56"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate RAG virtual paths unique",
+      "predecessors": [
+        "R6-56"
+      ],
+      "priority": "P9_RAG_CURRENTNESS_AUTOMATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-57"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate 32-container invariant",
+      "predecessors": [
+        "R6-57"
+      ],
+      "priority": "P9_RAG_CURRENTNESS_AUTOMATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-58"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate RAG roundtrip",
+      "predecessors": [
+        "R6-58"
+      ],
+      "priority": "P9_RAG_CURRENTNESS_AUTOMATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-59"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Validate retrieval currentness",
+      "predecessors": [
+        "R6-59"
+      ],
+      "priority": "P9_RAG_CURRENTNESS_AUTOMATION",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-60"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reacquire four-host runtime state",
+      "predecessors": [
+        "R6-60"
+      ],
+      "priority": "P10_NEXT_CAPABILITY_FRONTIER",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-61"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reacquire Mission Control API state",
+      "predecessors": [
+        "R6-61"
+      ],
+      "priority": "P10_NEXT_CAPABILITY_FRONTIER",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-62"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "REACQUIRE_BEFORE_EFFECT",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Reacquire open PR and CI state",
+      "predecessors": [
+        "R6-62"
+      ],
+      "priority": "P10_NEXT_CAPABILITY_FRONTIER",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-63"
+    },
+    {
+      "authority_class": "LOCAL_SAFE",
+      "currentness_requirement": "EXACT_LOCAL_STATE",
+      "effect_class": "NONE",
+      "evidence_required": [
+        "exact identity",
+        "independent readback or falsifier"
+      ],
+      "expected_postcondition": "Evidence-bound state transition without authority promotion",
+      "name": "Derive R7 fixed point or authority stop",
+      "predecessors": [
+        "R6-63"
+      ],
+      "priority": "P10_NEXT_CAPABILITY_FRONTIER",
+      "rollback_or_reconciliation": "RECONCILE_FIRST; non-idempotent retry=0",
+      "state": "PLANNED",
+      "step_id": "R6-64"
+    }
+  ]
+}

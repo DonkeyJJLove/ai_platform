@@ -1,6 +1,8 @@
 from __future__ import annotations
 from pathlib import Path
+import sqlite3
 import tempfile,unittest
+import cyber_lion.enterprise.trusted_control_plane_providers as provider_module
 from cyber_lion.contracts.builder_process_launch import BuilderExecutionGateEvidence,BuilderProcessRuntimeProviderDescriptor,PREPARE_CAPABILITY_CLASS
 from cyber_lion.enterprise.trusted_control_plane_providers import (
     PinnedBuilderProcessRuntimeProviderSource,PinnedRuntimeResolver,SQLiteTrustedControlPlaneStore,
@@ -52,6 +54,35 @@ def pinned_resolver():
     return PinnedRuntimeResolver(runtime_resolver,implementation_identity=_callable_implementation_digest(runtime_resolver),attestation_digest=D("f"))
 
 class TrustedControlPlaneProviderTests(unittest.TestCase):
+    def test_sqlite_context_manager_closes_and_commits(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=str(Path(d)/"lifecycle.db")
+            connection=sqlite3.connect(path, isolation_level=None, factory=provider_module._ClosingSQLiteConnection)
+            with connection as active:
+                active.execute("CREATE TABLE lifecycle(value INTEGER NOT NULL)")
+                active.execute("BEGIN IMMEDIATE")
+                active.execute("INSERT INTO lifecycle VALUES(1)")
+                active.execute("COMMIT")
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+            reopened=sqlite3.connect(path)
+            try:self.assertEqual(reopened.execute("SELECT value FROM lifecycle").fetchone(),(1,))
+            finally:reopened.close()
+
+    def test_sqlite_context_manager_closes_and_rolls_back(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=str(Path(d)/"lifecycle.db")
+            setup=sqlite3.connect(path);setup.execute("CREATE TABLE lifecycle(value INTEGER NOT NULL)");setup.commit();setup.close()
+            connection=sqlite3.connect(path, factory=provider_module._ClosingSQLiteConnection)
+            with self.assertRaisesRegex(RuntimeError,"rollback-probe"):
+                with connection as active:
+                    active.execute("INSERT INTO lifecycle VALUES(2)")
+                    raise RuntimeError("rollback-probe")
+            with self.assertRaises(sqlite3.ProgrammingError):connection.execute("SELECT 1")
+            reopened=sqlite3.connect(path)
+            try:self.assertEqual(reopened.execute("SELECT COUNT(*) FROM lifecycle").fetchone(),(0,))
+            finally:reopened.close()
+
     def setUp(self):
         global _RUNTIME_TARGET
         _RUNTIME_TARGET=None

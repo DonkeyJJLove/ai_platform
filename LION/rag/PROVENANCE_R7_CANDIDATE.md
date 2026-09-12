@@ -1,0 +1,3 @@
+# RAG R7 candidate provenance
+
+Target release: `lion-rag32-v1.4-r7-multigeneration-candidate`. Predecessor: exact R6 ZIP `35a19cf3cde06ccab7713bdc51dcaa39abd03221f2ec771bc2bdb739f5bb3309`, 32 containers, 173 records, content `6a62153dc5fa7495eb51c6f5ef39372ccb736a5e9be1007d471628c03afeb4cd`. R7 build is forbidden before final carrier-last truth. All 173 predecessor record blocks must remain byte-identical. New R7 records use new source IDs and bind SQLite hygiene reduction, Moon surface continuity, E02 installation candidate, current Git spine, security/workflow/runtime state, Mission Control authority boundary, executor independence, truth, falsification/supersession, evolution plan and successor LPCL. Publication is a separate effect.

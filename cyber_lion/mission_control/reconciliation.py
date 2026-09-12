@@ -13,7 +13,7 @@ HISTORICAL_VKT_SUMMARY = Path('/var/lib/sentinelx/uploads/vkt-r3-lpcl-v2-final/f
 HISTORICAL_VKT_VALIDATOR = Path('/var/lib/sentinelx/uploads/vkt-r3-validation/lpcl-v2-supervised-600s.json')
 HISTORICAL_OSS_SUMMARY = Path('/var/lib/sentinelx/uploads/oss-repository-tests/itsdangerous/final-summary.json')
 HISTORICAL_OSS_EVIDENCE = Path('/var/lib/sentinelx/uploads/oss-repository-tests/itsdangerous/final-evidence.json')
-TERMINAL_LIFECYCLE = {'CLEANING', 'CLEANED'}
+TERMINAL_LIFECYCLE = {'PASS', 'FAIL', 'CLEANING', 'CLEANED'}
 
 
 class Reconciler:
@@ -21,6 +21,7 @@ class Reconciler:
         self.store = store
         self.registry = registry
         self.errors: dict[str, str] = {}
+        self.poll_diagnostics: dict[str, dict[str, Any]] = {}
 
     def _preserve_terminal_lifecycle(self, run: dict[str, Any]) -> dict[str, Any]:
         existing = self.store.get_run(str(run.get('run_id') or ''))
@@ -42,6 +43,9 @@ class Reconciler:
     def poll_once(self) -> list[dict[str, Any]]:
         observed: list[dict[str, Any]] = []
         for adapter in self.registry.all():
+            prior = self.poll_diagnostics.get(adapter.adapter_id, {})
+            diagnostic = {'attempt_at': time.time(), 'success_at': prior.get('success_at'),
+                          'completed_at': None, 'result_count': None, 'reason': 'POLL_ERROR'}
             try:
                 runs = adapter.poll()
                 self.errors.pop(adapter.adapter_id, None)
@@ -71,10 +75,19 @@ class Reconciler:
                     # must use this poll's exact metrics, including empty maps.
                     observed.append(dict(normalized, metrics=deepcopy(run.get('metrics') or {})))
                 self.store.set_adapter_state(adapter.adapter_id, {'ok': True, 'last_poll': time.time(), 'run_count': len(runs)})
+                diagnostic.update(success_at=time.time(), result_count=len(runs),
+                                  reason='OBSERVED' if runs else 'EMPTY_OBSERVATION')
+                if not runs:
+                    reason = getattr(adapter, 'empty_reason', None)
+                    if isinstance(reason, str) and reason in {'K3S_NOT_RUNNING', 'ABSENT', 'NO_MATERIALIZED_FLEET', 'EVENT_STREAM_ONLY'}:
+                        diagnostic['empty_reason'] = reason
             except Exception as exc:
                 message = type(exc).__name__ + ':' + str(exc)[:1000]
                 self.errors[adapter.adapter_id] = message
                 self.store.set_adapter_state(adapter.adapter_id, {'ok': False, 'last_poll': time.time(), 'error': message})
+            finally:
+                diagnostic['completed_at'] = time.time()
+                self.poll_diagnostics[adapter.adapter_id] = diagnostic
         return observed
 
     def import_known_history(self) -> dict[str, Any]:
