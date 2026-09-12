@@ -1,0 +1,64 @@
+name: LION master post-merge homeostasis publisher
+
+on:
+  push:
+    branches:
+      - mission/master-homeostasis-publisher-r1
+    paths:
+      - .github/workflows/lion-master-homeostasis-publisher.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lion-master-homeostasis-publisher-r1
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: self-hosted
+    timeout-minutes: 15
+    steps:
+      - name: Checkout canonical master
+        uses: actions/checkout@v6
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Verify exact base and patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "bf8e17f60e29f46b479fc488914725db00c0feb2"
+          NON=/mnt/c/Users/d2j3/LION/master-convergence/master-noncarrier.patch.gz
+          CAR=/mnt/c/Users/d2j3/LION/master-convergence/master-carrier.patch.gz
+          test "$(sha256sum "$NON" | awk '{print $1}')" = "8f1af771e63b96791bda028e107edb4001d5645cc2bccba94fc8eb4fbb5f9978"
+          test "$(sha256sum "$CAR" | awk '{print $1}')" = "0c87b32b0f063513498c3f306529dccf62871b95a5c163f20280803fa612c6b3"
+          gzip -dc "$NON" > "$RUNNER_TEMP/non.patch"
+          gzip -dc "$CAR" > "$RUNNER_TEMP/car.patch"
+          test "$(sha256sum "$RUNNER_TEMP/non.patch" | awk '{print $1}')" = "b641941dbaa45c3e6d28a74990cf7cb38b8b0d7cee7f1e1d0d871dba1184d375"
+          test "$(sha256sum "$RUNNER_TEMP/car.patch" | awk '{print $1}')" = "70b3550c4387a74c33f3bfd32f823a712ff55542906884cf714448fc8da22bc6"
+
+      - name: Commit exact post-merge noncarrier snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --binary --index "$RUNNER_TEMP/non.patch"
+          test "$(git write-tree)" = "fe31eddb322dfa63118068e0178a0f3f360bf30e"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(r7.1): bind post-merge master convergence state"
+
+      - name: Commit exact carrier-last truth bind
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --binary --index "$RUNNER_TEMP/car.patch"
+          test "$(git write-tree)" = "121a275cfef896627bf79d59529172535ed4dfaa"
+          git commit -m "chore(truth): bind post-merge converged master subject"
+
+      - name: Publish final master
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:master
