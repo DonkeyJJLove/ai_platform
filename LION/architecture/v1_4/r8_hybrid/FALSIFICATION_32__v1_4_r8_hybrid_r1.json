@@ -1,0 +1,198 @@
+{
+  "entries": [
+    {
+      "claim": "remote master drifted during run",
+      "evidence": "master remained 473afeb5/121a275",
+      "id": "F01",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "lost prior ephemeral worktree can be treated as current candidate",
+      "evidence": "prior path absent; candidate reconstructed clean-room",
+      "id": "F02",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "dirty operator worktree may be reset for convergence",
+      "evidence": "dirty tree preserved",
+      "id": "F03",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "production scan pin can be inherited after source additions",
+      "evidence": "scan changed to 621c35a0 and failed closed",
+      "id": "F04",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "blind global scan-digest replacement is acceptable",
+      "evidence": "10 current pins classified; R7 docs preserved",
+      "id": "F05",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "historical R7 pins must be rewritten",
+      "evidence": "historical occurrences preserved",
+      "id": "F06",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "hybrid modules widened effect surface count",
+      "evidence": "273 before and after",
+      "id": "F07",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "new effect taxonomy has unresolved entries",
+      "evidence": "unresolved taxonomy zero",
+      "id": "F08",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "source count remains 314",
+      "evidence": "tracked production sources 318",
+      "id": "F09",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "canonical projection may run on dirty checkout",
+      "evidence": "extractor rejected dirty checkout",
+      "id": "F10",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "clean verification requires publication",
+      "evidence": "detached local verification commit/worktree sufficient",
+      "id": "F11",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "full suite remains failing after truth rebind",
+      "evidence": "2857 pass, 3 skip",
+      "id": "F12",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "skips can be silently counted as pass",
+      "evidence": "3 skips reported separately",
+      "id": "F13",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "Bandit medium/high finding exists",
+      "evidence": "0 findings/0 errors at configured gate",
+      "id": "F14",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "symbol census has parse failures",
+      "evidence": "success true; zero parse failures",
+      "id": "F15",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "workflow homeostasis has blocking regression",
+      "evidence": "11/11 focused workflow tests pass",
+      "id": "F16",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "old master truth subject remains valid for candidate",
+      "evidence": "candidate subject changed to c25b1a15...",
+      "id": "F17",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "truth carrier change changes its own subject",
+      "evidence": "carrier-only changes excluded by algorithm",
+      "id": "F18",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "currentness negative matrix permits silent promotion",
+      "evidence": "truth/currentness gates pass fail-closed matrix",
+      "id": "F19",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "gpt-oss server is currently active",
+      "evidence": "no port 8772 / no llama server process observed",
+      "id": "F20",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "local model is generally qualified",
+      "evidence": "entry M01 43/64; class-scoped only",
+      "id": "F21",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "small diff interpretation is safe local autonomous class",
+      "evidence": "entry score 1/8",
+      "id": "F22",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "RAG retrieval with source identity failed threshold",
+      "evidence": "entry score 7/8 and threshold-qualified",
+      "id": "F23",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "test-case proposal failed threshold",
+      "evidence": "entry score 7/8 and threshold-qualified",
+      "id": "F24",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "authority/currentness class may route local autonomously",
+      "evidence": "policy override requires SaaS review",
+      "id": "F25",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "two local inferences may run concurrently on shared pool",
+      "evidence": "policy queues second slot",
+      "id": "F26",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "context overflow may be solved by silent truncation",
+      "evidence": "router escalates, no truncation",
+      "id": "F27",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "four WSL names prove four physical failure domains",
+      "evidence": "shared boot id and resource pool",
+      "id": "F28",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "Mission Control recorded RUNNING proves active fleet",
+      "evidence": "current fleet state UNKNOWN/EMPTY_OBSERVATION",
+      "id": "F29",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "canonical R7 Git logical tree remains a valid ancestor/current spine",
+      "evidence": "validator: R7 snapshot not ancestor after remote compaction; R8 spine generated from actual local phase1 commit 2ab8b77 with graph digest a2387eea...; history not rewritten",
+      "id": "F30",
+      "verdict": "FALSIFIED"
+    },
+    {
+      "claim": "global complete mediation is proven",
+      "evidence": "tests preserve UNKNOWN fail-closed",
+      "id": "F31",
+      "verdict": "NOT_PROVEN"
+    },
+    {
+      "claim": "repository publication/runtime deployment occurred",
+      "evidence": "explicit effect boundary preserved",
+      "id": "F32",
+      "verdict": "NOT_ATTEMPTED"
+    }
+  ],
+  "generated_at": "2026-09-12T19:21:19.428665Z",
+  "schema": "lion.r8.falsification-register/v1"
+}

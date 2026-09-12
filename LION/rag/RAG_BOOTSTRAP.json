@@ -1,0 +1,9 @@
+{
+  "authority_effect": "NONE",
+  "embedded_fallback_currentness": "HISTORICAL_UNLESS_REACQUIRED",
+  "embedded_fallback_path": "LION/rag/lion_project_rag32_v1_4_r1",
+  "preferred_release": "lion-rag32-v1.4-r8-hybrid-m64-candidate",
+  "preferred_release_location": "EXTERNAL_ARTIFACT_NOT_EMBEDDED",
+  "routing": "NEWEST_VERIFIED_AVAILABLE",
+  "schema": "lion.rag-bootstrap/v1"
+}
