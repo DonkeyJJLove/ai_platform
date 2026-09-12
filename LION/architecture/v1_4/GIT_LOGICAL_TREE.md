@@ -1,0 +1,175 @@
+# LION Git Logical Tree v3
+
+Generated from head `73e628847753a3f60c288facd959c15a352a9087`.
+Graph digest `a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6`.
+Nodes: 83. Edges: 81.
+
+## Nodes
+
+- `e02:attester-installation-r7` — E02_EXTERNAL_ATTESTER_INSTALLATION_CANDIDATE — currentness `CURRENT_LOCAL_CANDIDATE` — integration `OFFLINE_CANDIDATE_NOT_INSTALLED`
+- `hosts:r7-state-files` — HOST_STATE_DISTRIBUTION — currentness `CURRENT_OBSERVED_FILE_DISTRIBUTION` — integration `FILES_WRITTEN_ON_4_CONNECTORS`
+- `git:03fc2ed8317c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:0c3a7d78931f` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:0cccc8fa68e8` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:166d33660fca` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:16abf0ee06e3` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:1807c624d887` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:1f9e10b43355` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:20b8a54befcb` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:22793ebe6518` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:22b0b5424c9c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:22eb558c55d2` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:24bc9ac35eef` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:28b0361310a9` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:28cca4509f88` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:2b5df03dbc83` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:2ff869023c18` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:31d82795f023` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:33ccfbf36fee` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:34c3107c1d3c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:381ef77a5436` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:4150ac3db34c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:4194805d5294` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:491db646fd92` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:4ad684f7f82c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:4b6e1420108c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:52642060d7c7` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:552b45d8c0c6` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:5762f4441d08` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:5fd079304f9e` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:6863df340b02` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:696c17cc9713` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:705f0db4b703` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:722a4a165377` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:73e628847753` — LOCAL_EVOLUTION_COMMIT — currentness `CURRENT_LOCAL_LINEAGE` — integration `LOCAL_UNPUBLISHED`
+- `git:7bc0432f4a4b` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:81f9d71e3a82` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:8b4c5c8451a5` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:8daa0236e2e2` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:8ecd990e7110` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:8f276d87adc7` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:9e36d8ac90a0` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:9e753e8b6f9f` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:a0b985abb2ae` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:a1e0268c536e` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:b5eac6ca0888` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:b95f73561a87` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:ba4931c9ae34` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:bb3de9cd2ad2` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:c0132cb767cc` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:c529da7c0377` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:c572a3ec74ac` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:c82364a9c28b` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:c85749bfc19c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:cb28d5a769f9` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:cee7861fb548` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:d309b6c91647` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:d5c3270b1e4a` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:d6ff97434e70` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:d769c451f757` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:d94e208b285c` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:dd134176bf91` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:e08ebeab6465` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:e0f7f277fbc5` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:e46cd3bb272a` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:ec88811fcae1` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:f0955139e560` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `git:fca0299f0354` — LOCAL_EVOLUTION_COMMIT — currentness `HISTORICAL_LOCAL_ANCESTOR` — integration `LOCAL_UNPUBLISHED`
+- `mc:authority-boundary-r7` — MISSION_CONTROL_AUTHORITY_BOUNDARY — currentness `INCOMPLETE_ROLLBACK_IDENTITY` — integration `INCOMPLETE_DO_NOT_APPLY`
+- `mc:admission-r6` — MISSION_CONTROL_DEPLOYMENT_ADMISSION_CONTRACT — currentness `CURRENT_LOCAL_CONTRACT` — integration `LOCAL_CANDIDATE`
+- `mc:source-rebind-r5` — MISSION_CONTROL_SOURCE_REBIND_PACKAGE — currentness `TARGET_BOUND_TO_CURRENT_REMOTE_MASTER` — integration `LOCAL_OFFLINE_CANDIDATE_NOT_ACTIVATED`
+- `git:pr333` — OPEN_PR — currentness `CURRENT_OPEN_DRAFT_REACQUIRED` — integration `OPEN_DRAFT_UNMERGED`
+- `artifact:r7-repository-files` — R7_ARTIFACTIZED_STATE_SET — currentness `CURRENT_LOCAL_MATERIALIZED` — integration `LOCAL_CANDIDATE_MATERIALIZED`
+- `rag:r6-target` — RAG_TARGET — currentness `TARGET_AFTER_FINAL_CARRIER_LAST` — integration `NOT_BUILT_YET`
+- `rag:r5` — RAG_VERIFIED_LOCAL_CANDIDATE — currentness `VERIFIED_MATERIAL_BYTES_CURRENT_PREDECESSOR` — integration `LOCAL_UNPUBLISHED`
+- `rag:r6` — RAG_VERIFIED_LOCAL_CANDIDATE — currentness `VERIFIED_MATERIAL_BYTES_CURRENT_PREDECESSOR` — integration `LOCAL_UNPUBLISHED`
+- `rag:r7-target` — RAG_VERIFIED_LOCAL_CANDIDATE — currentness `CURRENT_LOCAL_VERIFIED_ARTIFACT` — integration `LOCAL_UNPUBLISHED`
+- `git:master` — REMOTE_MASTER — currentness `CURRENT_REMOTE_TRACKING_EXACT` — integration `MERGED`
+- `runtime:mission-control` — RUNTIME_SOURCE_IDENTITY — currentness `STALE_RELATIVE_TO_REMOTE_MASTER` — integration `OBSERVED_RUNTIME_SOURCE`
+- `sqlite:hygiene-r7` — SQLITE_RESOURCE_HYGIENE_STATE — currentness `CURRENT_LOCAL_MEASURED` — integration `PARTIAL_REDUCED_DEBT`
+- `truth:r6-boundary` — TRUTH_BINDING_BOUNDARY — currentness `HISTORICAL_BOUND_PREDECESSOR` — integration `CARRIER_LAST_BOUND`
+- `truth:r7-boundary` — TRUTH_BINDING_BOUNDARY — currentness `BOUND_CARRIER_LAST` — integration `BOUND`
+
+## Edges
+
+- `artifact:r7-repository-files` — **DESCRIBES** → `rag:r7-target`
+- `artifact:r7-repository-files` — **INVALIDATES_AND_REQUIRES_REBIND** → `truth:r7-boundary`
+- `e02:attester-installation-r7` — **VALIDATED_IN** → `truth:r7-boundary`
+- `git:03fc2ed8317c` — **PARENT_OF** → `git:33ccfbf36fee`
+- `git:0c3a7d78931f` — **PARENT_OF** → `git:8daa0236e2e2`
+- `git:0cccc8fa68e8` — **PARENT_OF** → `git:c82364a9c28b`
+- `git:166d33660fca` — **PARENT_OF** → `git:0cccc8fa68e8`
+- `git:16abf0ee06e3` — **PARENT_OF** → `git:28b0361310a9`
+- `git:1807c624d887` — **PARENT_OF** → `git:c529da7c0377`
+- `git:1f9e10b43355` — **PARENT_OF** → `git:fca0299f0354`
+- `git:20b8a54befcb` — **PARENT_OF** → `git:bb3de9cd2ad2`
+- `git:22793ebe6518` — **PARENT_OF** → `git:8ecd990e7110`
+- `git:22b0b5424c9c` — **PARENT_OF** → `git:166d33660fca`
+- `git:22eb558c55d2` — **PARENT_OF** → `git:d6ff97434e70`
+- `git:24bc9ac35eef` — **PARENT_OF** → `git:22b0b5424c9c`
+- `git:28b0361310a9` — **PARENT_OF** → `git:9e753e8b6f9f`
+- `git:28cca4509f88` — **PARENT_OF** → `git:381ef77a5436`
+- `git:2b5df03dbc83` — **PARENT_OF** → `git:22793ebe6518`
+- `git:2ff869023c18` — **PARENT_OF** → `git:ec88811fcae1`
+- `git:31d82795f023` — **PARENT_OF** → `git:dd134176bf91`
+- `git:33ccfbf36fee` — **PARENT_OF** → `git:d309b6c91647`
+- `git:34c3107c1d3c` — **PARENT_OF** → `git:0c3a7d78931f`
+- `git:381ef77a5436` — **PARENT_OF** → `git:22eb558c55d2`
+- `git:4150ac3db34c` — **PARENT_OF** → `git:2ff869023c18`
+- `git:4194805d5294` — **PARENT_OF** → `git:722a4a165377`
+- `git:491db646fd92` — **PARENT_OF** → `git:16abf0ee06e3`
+- `git:4ad684f7f82c` — **PARENT_OF** → `git:c0132cb767cc`
+- `git:4b6e1420108c` — **PARENT_OF** → `git:491db646fd92`
+- `git:52642060d7c7` — **PARENT_OF** → `git:b5eac6ca0888`
+- `git:552b45d8c0c6` — **PARENT_OF** → `git:c572a3ec74ac`
+- `git:5762f4441d08` — **PARENT_OF** → `git:8f276d87adc7`
+- `git:5fd079304f9e` — **PARENT_OF** → `git:f0955139e560`
+- `git:6863df340b02` — **PARENT_OF** → `git:cb28d5a769f9`
+- `git:696c17cc9713` — **PARENT_OF** → `git:1f9e10b43355`
+- `git:705f0db4b703` — **PARENT_OF** → `git:81f9d71e3a82`
+- `git:722a4a165377` — **PARENT_OF** → `git:a1e0268c536e`
+- `git:7bc0432f4a4b` — **PARENT_OF** → `git:d94e208b285c`
+- `git:81f9d71e3a82` — **PARENT_OF** → `git:34c3107c1d3c`
+- `git:8b4c5c8451a5` — **PARENT_OF** → `git:b95f73561a87`
+- `git:8daa0236e2e2` — **PARENT_OF** → `git:4b6e1420108c`
+- `git:8ecd990e7110` — **PARENT_OF** → `git:705f0db4b703`
+- `git:8f276d87adc7` — **PARENT_OF** → `git:d769c451f757`
+- `git:9e36d8ac90a0` — **PARENT_OF** → `git:7bc0432f4a4b`
+- `git:9e753e8b6f9f` — **PARENT_OF** → `git:e0f7f277fbc5`
+- `git:a0b985abb2ae` — **PARENT_OF** → `git:e46cd3bb272a`
+- `git:a1e0268c536e` — **PARENT_OF** → `git:5fd079304f9e`
+- `git:b5eac6ca0888` — **PARENT_OF** → `git:a0b985abb2ae`
+- `git:b95f73561a87` — **PARENT_OF** → `git:cee7861fb548`
+- `git:ba4931c9ae34` — **PARENT_OF** → `git:4ad684f7f82c`
+- `git:bb3de9cd2ad2` — **PARENT_OF** → `git:2b5df03dbc83`
+- `git:c0132cb767cc` — **PARENT_OF** → `git:9e36d8ac90a0`
+- `git:c529da7c0377` — **PARENT_OF** → `git:20b8a54befcb`
+- `git:c572a3ec74ac` — **PARENT_OF** → `git:5762f4441d08`
+- `git:c82364a9c28b` — **PARENT_OF** → `git:4194805d5294`
+- `git:c85749bfc19c` — **PARENT_OF** → `git:1807c624d887`
+- `git:cb28d5a769f9` — **PARENT_OF** → `git:696c17cc9713`
+- `git:cee7861fb548` — **PARENT_OF** → `git:d5c3270b1e4a`
+- `git:d309b6c91647` — **PARENT_OF** → `git:e08ebeab6465`
+- `git:d5c3270b1e4a` — **PARENT_OF** → `git:03fc2ed8317c`
+- `git:d6ff97434e70` — **PARENT_OF** → `git:552b45d8c0c6`
+- `git:d769c451f757` — **PARENT_OF** → `git:31d82795f023`
+- `git:d94e208b285c` — **PARENT_OF** → `git:c85749bfc19c`
+- `git:dd134176bf91` — **PARENT_OF** → `git:24bc9ac35eef`
+- `git:e08ebeab6465` — **PARENT_OF** → `git:28cca4509f88`
+- `git:e0f7f277fbc5` — **PARENT_OF** → `git:6863df340b02`
+- `git:e46cd3bb272a` — **PARENT_OF** → `git:4150ac3db34c`
+- `git:ec88811fcae1` — **PARENT_OF** → `git:73e628847753`
+- `git:f0955139e560` — **PARENT_OF** → `git:ba4931c9ae34`
+- `git:fca0299f0354` — **PARENT_OF** → `git:52642060d7c7`
+- `git:master` — **PARENT_OF** → `git:8b4c5c8451a5`
+- `hosts:r7-state-files` — **DISTRIBUTES_KNOWLEDGE_OF** → `rag:r7-target`
+- `mc:source-rebind-r5` — **ADMISSION_GATED_BY** → `mc:admission-r6`
+- `mc:source-rebind-r5` — **GATED_BY** → `mc:authority-boundary-r7`
+- `mc:source-rebind-r5` — **TARGETS_EXACT_SOURCE** → `git:master`
+- `rag:r5` — **BYTE_PREDECESSOR_OF** → `rag:r6-target`
+- `rag:r6` — **BYTE_PREDECESSOR_OF** → `rag:r7-target`
+- `rag:r6-target` — **BUILT_AFTER** → `truth:r6-boundary`
+- `rag:r7-target` — **BUILT_AFTER** → `truth:r7-boundary`
+- `runtime:mission-control` — **SOURCE_REBIND_PLANNED_BY** → `mc:source-rebind-r5`
+- `sqlite:hygiene-r7` — **VALIDATED_IN** → `truth:r7-boundary`
+- `truth:r6-boundary` — **SUPERSEDED_BY** → `truth:r7-boundary`

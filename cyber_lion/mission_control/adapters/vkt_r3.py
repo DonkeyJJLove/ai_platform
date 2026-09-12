@@ -1,9 +1,22 @@
 from __future__ import annotations
 
 import uuid
+import math
 from typing import Any
 
 from ..read_client import SOCKET_PATH, call as read_call
+
+
+def optional_number(value, fractional=False):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if value < 0 or (isinstance(value, float) and not math.isfinite(value)) or (not fractional and int(value) != value):
+        return None
+    try:
+        result = float(value) if fractional else int(value)
+    except OverflowError:
+        return None
+    return result if not fractional or math.isfinite(result) else None
 
 
 class VktR3Adapter:
@@ -22,15 +35,17 @@ class VktR3Adapter:
         )
 
     def poll(self) -> list[dict[str, Any]]:
+        self.empty_reason = None
         evidence = self._read()
         router = evidence.get("router_state") or {}
         mission = router.get("mission") or {}
-        materialized = int(evidence.get("materialized") or 0)
+        materialized = optional_number(evidence.get("materialized"))
         # Provider v2 supplies structured counts; older receipts supply integers.
-        fleet_organizations = {str(k): int(v.get("materialized", 0) if isinstance(v, dict) else v)
+        fleet_organizations = {str(k): optional_number(v.get("materialized") if isinstance(v, dict) else v)
                                for k, v in (evidence.get("by_fleet") or {}).items()}
-        active_by_organization = {str(k): int(v) for k, v in (router.get("fresh_by_fleet") or {}).items()}
+        active_by_organization = {str(k): optional_number(v) for k, v in (router.get("fresh_by_fleet") or {}).items()}
         if materialized == 0 and not mission:
+            self.empty_reason = "K3S_NOT_RUNNING" if evidence.get("status") == "K3S_NOT_RUNNING" else "NO_MATERIALIZED_FLEET"
             return []
         complete = bool(mission.get("completed")) or str(mission.get("phase") or "").upper() == "COMPLETE"
         metrics = {
@@ -40,17 +55,17 @@ class VktR3Adapter:
                 if isinstance(pod, dict) and isinstance(pod.get("uid"), str) and pod["uid"]
             ],
             "pods": materialized,
-            "ready": int(evidence.get("ready") or 0),
-            "uids": int(evidence.get("unique_uid_count") or 0),
-            "restarts": int(evidence.get("restart_count_total") or 0),
-            "fresh_drones": int(router.get("fresh_count") or 0),
-            "cases": int(router.get("cases_seen") or 0),
-            "proven": int(router.get("cases_proven") or 0),
-            "messages": int(router.get("messages_total") or 0),
-            "ack_rate": float(router.get("ack_rate") or 0.0),
-            "orphans": int(router.get("orphans") or 0),
-            "duplicates": int(router.get("duplicates") or 0),
-            "vendor_requests": int(evidence.get("vendor_requests") or 0),
+            "ready": optional_number(evidence.get("ready")),
+            "uids": optional_number(evidence.get("unique_uid_count")),
+            "restarts": optional_number(evidence.get("restart_count_total")),
+            "fresh_drones": optional_number(router.get("fresh_count")),
+            "cases": optional_number(router.get("cases_seen")),
+            "proven": optional_number(router.get("cases_proven")),
+            "messages": optional_number(router.get("messages_total")),
+            "ack_rate": optional_number(router.get("ack_rate"), fractional=True),
+            "orphans": optional_number(router.get("orphans")),
+            "duplicates": optional_number(router.get("duplicates")),
+            "vendor_requests": optional_number(evidence.get("vendor_requests")),
             "fleet_organizations": fleet_organizations,
             "active_by_organization": active_by_organization,
         }

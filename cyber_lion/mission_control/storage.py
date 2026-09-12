@@ -117,6 +117,13 @@ class Store:
                     if key == "run_id" or new_value is None:
                         continue
                     merged[key] = _merge_non_null(merged.get(key), new_value)
+                    # Passive input is a complete recorded snapshot, not partial
+                    # runtime proof. Empty groups and unknown fields replace old claims.
+                    if (key == 'evidence'
+                            and run.get('adapter_type', existing.get('adapter_type')) == 'PASSIVE_UNVERIFIED'
+                            and isinstance(new_value, dict)
+                            and isinstance(new_value.get('passive_observation'), dict)):
+                        merged[key]['passive_observation'] = new_value['passive_observation']
                 value = normalize_run(merged)
             else:
                 value = normalize_run(run)

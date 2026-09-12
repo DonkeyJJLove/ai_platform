@@ -1,0 +1,63 @@
+name: LION Workflow Homeostasis Evidence
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/**"
+      - "tools/lion_workflow_homeostasis.py"
+      - "cyber_lion/tests/test_lion_workflow_homeostasis.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-workflow-homeostasis-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Bind exact checkout identity
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$head" = "$EXPECTED_HEAD"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+      - name: Run workflow-homeostasis falsifiers
+        run: python -m unittest cyber_lion.tests.test_lion_workflow_homeostasis -v
+      - name: Audit workflow plane
+        run: python tools/lion_workflow_homeostasis.py --repository . > "$RUNNER_TEMP/lion-workflow-homeostasis.json"
+      - name: Emit digest-bound evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'WORKFLOW_AUDIT_HEAD=%s\n' "${{ steps.gitstate.outputs.head }}"
+          printf 'WORKFLOW_AUDIT_TREE=%s\n' "${{ steps.gitstate.outputs.tree }}"
+          printf 'WORKFLOW_AUDIT_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-workflow-homeostasis.json" | awk '{print $1}')"
+      - name: Upload exact audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-workflow-homeostasis-${{ steps.gitstate.outputs.head }}
+          path: ${{ runner.temp }}/lion-workflow-homeostasis.json
+          if-no-files-found: error
+          retention-days: 30

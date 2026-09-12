@@ -6,15 +6,21 @@ on:
   push:
     branches: ["master", "cyber-lion/**", "mission/r2e4-fleet-manifest-exact-head-semantic-binding", "mission/r2e4-merge-authority-observability", "mission/r2e4-merge-authority-observability-clean"]
     paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json", "LION/evolution/SPECTRA_R2E4_MERGE_AUTHORITY_FALSIFICATION_CONTRACT_V2.json"]
+concurrency:
+  group: cyber-lion-core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 jobs:
   core:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Emit literal checkout identity evidence
         shell: bash
         run: |
@@ -418,8 +424,11 @@ jobs:
   merge-authority-admission:
     name: Cyber-Lion Merge Authority Admission
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Emit literal merge authority identity evidence
         shell: bash
         run: |
@@ -446,6 +455,7 @@ jobs:
     name: Cyber-Lion Merge Authority Observation
     if: github.event_name == 'pull_request' && vars.CYBER_LION_AUTHORITY_OBSERVATION_ENABLED == '1'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
     env:
@@ -467,6 +477,8 @@ jobs:
       CYBER_LION_CONTROL_PLANE_TOKEN: ${{ secrets.CYBER_LION_CONTROL_PLANE_TOKEN }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with: {python-version: "3.11"}
       - name: Compile merge authority observer

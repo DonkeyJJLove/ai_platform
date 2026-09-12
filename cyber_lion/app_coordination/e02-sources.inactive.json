@@ -1,0 +1,13 @@
+{
+  "schema": "lion.e02.inactive-sources/v1",
+  "enabled": false,
+  "mode": "INACTIVE_CANDIDATE",
+  "mission_id": "APP_COORDINATION_R2",
+  "max_age_seconds": 300,
+  "subject": null,
+  "sources": {
+    "task_binding": {"locator": null, "snapshot_sha256": null, "trust": null},
+    "request_index": {"locator": null, "snapshot_sha256": null, "trust": null},
+    "admission": {"locator": null, "snapshot_sha256": null, "trust": null}
+  }
+}

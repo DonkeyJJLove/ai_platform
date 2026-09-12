@@ -10,7 +10,7 @@ from tools.p0_moon_runner_attested_bridge_contract import RunnerAttestedOperatio
 from tools.p0_moon_attested_adjudication_contract import ADJUDICATION_DOMAIN,POLICY_DOMAIN,AttestedAdjudicationContractError,GitHubJobEvidence
 from tools.p0_moon_attested_adjudication import (
     EXPECTED_SCAN_DIGEST,SOURCE_BRIDGE_BLOB,SOURCE_REVISION,SOURCE_TREE,SOURCE_SEMANTIC_ANCHORS,AttestedAdjudicationError,
-    RunnerAttestedReceiptAdjudicator,_ast_digest,_canonical_ast_node,_job,_outer,_require_semantic_anchor,_run,
+    DURABLE_FENCE_METHOD_ANCHORS,RunnerAttestedReceiptAdjudicator,_ast_digest,_canonical_ast_node,_job,_outer,_require_semantic_anchor,_require_durable_connect_lifecycle_extension,_require_durable_fence_method_anchors,_run,
     adjudicate_live_receipts,materialize_attested_adjudication,source_semantic_continuity_proofs,
 )
 from tools.p0_moon_same_connection_denial_carrier import _attack_plans
@@ -89,7 +89,7 @@ class MoonAttestedAdjudicationTests(unittest.TestCase):
     def test_semantic_continuity_is_shallow_checkout_safe_and_anchor_bound(self):
         source=(Path(__file__).resolve().parents[2]/"tools/p0_moon_attested_adjudication.py").read_text(encoding="utf-8")
         self.assertNotIn('git","show',source);self.assertNotIn("ast.dump(",source);self.assertIn("LION/MOON-SOURCE-SEMANTIC-AST/2",source)
-        self.assertEqual(len(SOURCE_SEMANTIC_ANCHORS),4)
+        self.assertEqual(len(SOURCE_SEMANTIC_ANCHORS),3);self.assertEqual(len(DURABLE_FENCE_METHOD_ANCHORS),7)
         self.assertEqual(
             SOURCE_SEMANTIC_ANCHORS[("cyber_lion/enterprise/moon_file_write.py","function","_github_permission")],
             "a5b3c38ea1be59b35dbdab6ba09a898d0cc803f04b09eb055d20f0a96cbe1a31",
@@ -110,6 +110,12 @@ class MoonAttestedAdjudicationTests(unittest.TestCase):
         root=Path(__file__).resolve().parents[2]
         for (path,kind,name),expected in SOURCE_SEMANTIC_ANCHORS.items():
             self.assertEqual(_ast_digest((root/path).read_text(encoding="utf-8"),kind,name),expected)
+        mediation=(root/"cyber_lion/enterprise/moon_file_write_mediation.py").read_text(encoding="utf-8")
+        _require_durable_fence_method_anchors(mediation);_require_durable_connect_lifecycle_extension(mediation)
+        mutated_connect=mediation.replace("factory=_ClosingSQLiteConnection", "factory=sqlite3.Connection", 1)
+        with self.assertRaisesRegex(AttestedAdjudicationError,"lifecycle extension"):_require_durable_connect_lifecycle_extension(mutated_connect)
+        mutated_prepare=mediation.replace("INSERT INTO moon_file_write_effect", "INSERT OR REPLACE INTO moon_file_write_effect", 1)
+        with self.assertRaisesRegex(AttestedAdjudicationError,"method drift"):_require_durable_fence_method_anchors(mutated_prepare)
         provider="cyber_lion/enterprise/moon_file_write.py";source=(root/provider).read_text(encoding="utf-8")
         mutated=source.replace('connection.request("GET", path, headers=headers)','connection.request("POST", path, headers=headers)',1)
         self.assertNotEqual(mutated,source)

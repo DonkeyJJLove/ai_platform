@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lion.git-logical-tree/v3",
+  "type": "object",
+  "required": [
+    "graph_digest_domain",
+    "graph_digest",
+    "schema",
+    "project",
+    "repository",
+    "generated_from_head",
+    "generated_from_tree",
+    "snapshot_semantics",
+    "nodes",
+    "edges",
+    "invariants"
+  ],
+  "properties": {
+    "graph_digest_domain": {
+      "const": "LION/GIT-LOGICAL-TREE/3"
+    },
+    "graph_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "schema": {
+      "const": "lion.git-logical-tree/v3"
+    },
+    "project": {
+      "const": "LION_EVOLUSION"
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_from_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "generated_from_tree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "snapshot_semantics": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1
+    },
+    "edges": {
+      "type": "array"
+    },
+    "invariants": {
+      "type": "array",
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

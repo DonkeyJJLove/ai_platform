@@ -1,0 +1,1479 @@
+{
+  "generated_at": "2026-09-12T15:43:04Z",
+  "generated_from_head": "2ff869023c18817611100fd4d62a4290f96a2584",
+  "no_false_completion": true,
+  "project": "LION_EVOLUSION",
+  "schema": "lion.evolution-plan/64-r7-v1",
+  "steps": [
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [],
+      "priority": 1,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-01",
+      "subject": "R7_FINALIZE stage 1/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-01"
+      ],
+      "priority": 2,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-02",
+      "subject": "R7_FINALIZE stage 2/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-02"
+      ],
+      "priority": 3,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-03",
+      "subject": "R7_FINALIZE stage 3/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-03"
+      ],
+      "priority": 4,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-04",
+      "subject": "R7_FINALIZE stage 4/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-04"
+      ],
+      "priority": 5,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-05",
+      "subject": "R7_FINALIZE stage 5/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-05"
+      ],
+      "priority": 6,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-06",
+      "subject": "R7_FINALIZE stage 6/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-06"
+      ],
+      "priority": 7,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-07",
+      "subject": "R7_FINALIZE stage 7/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "R7_FINALIZE",
+      "predecessors": [
+        "R7-07"
+      ],
+      "priority": 8,
+      "reason": "Freeze R7 documentation, Git spine, security evidence and carrier-last truth",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-08",
+      "subject": "R7_FINALIZE stage 8/8",
+      "swarm": "R7_FINALIZE"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-08"
+      ],
+      "priority": 9,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-09",
+      "subject": "SQLITE_R8 stage 1/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-09"
+      ],
+      "priority": 10,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-10",
+      "subject": "SQLITE_R8 stage 2/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-10"
+      ],
+      "priority": 11,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-11",
+      "subject": "SQLITE_R8 stage 3/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-11"
+      ],
+      "priority": 12,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-12",
+      "subject": "SQLITE_R8 stage 4/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-12"
+      ],
+      "priority": 13,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-13",
+      "subject": "SQLITE_R8 stage 5/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-13"
+      ],
+      "priority": 14,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-14",
+      "subject": "SQLITE_R8 stage 6/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-14"
+      ],
+      "priority": 15,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-15",
+      "subject": "SQLITE_R8 stage 7/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "SQLITE_R8",
+      "predecessors": [
+        "R7-15"
+      ],
+      "priority": 16,
+      "reason": "Allocate remaining SQLite warning origins and repair one exact module family at a time",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-16",
+      "subject": "SQLITE_R8 stage 8/8",
+      "swarm": "SQLITE_R8"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-16"
+      ],
+      "priority": 17,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-17",
+      "subject": "E02_PROVIDER stage 1/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-17"
+      ],
+      "priority": 18,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-18",
+      "subject": "E02_PROVIDER stage 2/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-18"
+      ],
+      "priority": 19,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-19",
+      "subject": "E02_PROVIDER stage 3/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-19"
+      ],
+      "priority": 20,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-20",
+      "subject": "E02_PROVIDER stage 4/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-20"
+      ],
+      "priority": 21,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-21",
+      "subject": "E02_PROVIDER stage 5/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-21"
+      ],
+      "priority": 22,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-22",
+      "subject": "E02_PROVIDER stage 6/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-22"
+      ],
+      "priority": 23,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-23",
+      "subject": "E02_PROVIDER stage 7/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "OFFLINE_CANDIDATE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "E02_PROVIDER",
+      "predecessors": [
+        "R7-23"
+      ],
+      "priority": 24,
+      "reason": "Materialize real-provider adapter contracts, trusted-time binding and install/readback proof without keys",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-24",
+      "subject": "E02_PROVIDER stage 8/8",
+      "swarm": "E02_PROVIDER"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-24"
+      ],
+      "priority": 25,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-25",
+      "subject": "MISSION_CONTROL stage 1/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-25"
+      ],
+      "priority": 26,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-26",
+      "subject": "MISSION_CONTROL stage 2/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-26"
+      ],
+      "priority": 27,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-27",
+      "subject": "MISSION_CONTROL stage 3/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-27"
+      ],
+      "priority": 28,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-28",
+      "subject": "MISSION_CONTROL stage 4/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-28"
+      ],
+      "priority": 29,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-29",
+      "subject": "MISSION_CONTROL stage 5/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-29"
+      ],
+      "priority": 30,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-30",
+      "subject": "MISSION_CONTROL stage 6/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-30"
+      ],
+      "priority": 31,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-31",
+      "subject": "MISSION_CONTROL stage 7/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MISSION_CONTROL",
+      "predecessors": [
+        "R7-31"
+      ],
+      "priority": 32,
+      "reason": "Close rollback identity, authority packet, one-shot apply/readback/rollback reconciliation",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-32",
+      "subject": "MISSION_CONTROL stage 8/8",
+      "swarm": "MISSION_CONTROL"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-32"
+      ],
+      "priority": 33,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-33",
+      "subject": "EXECUTOR stage 1/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-33"
+      ],
+      "priority": 34,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-34",
+      "subject": "EXECUTOR stage 2/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-34"
+      ],
+      "priority": 35,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-35",
+      "subject": "EXECUTOR stage 3/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-35"
+      ],
+      "priority": 36,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-36",
+      "subject": "EXECUTOR stage 4/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-36"
+      ],
+      "priority": 37,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-37",
+      "subject": "EXECUTOR stage 5/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-37"
+      ],
+      "priority": 38,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-38",
+      "subject": "EXECUTOR stage 6/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-38"
+      ],
+      "priority": 39,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-39",
+      "subject": "EXECUTOR stage 7/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "EXTERNAL_EVIDENCE",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "EXECUTOR",
+      "predecessors": [
+        "R7-39"
+      ],
+      "priority": 40,
+      "reason": "Acquire externally attested independent runtime/physical/control/trust domains",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-40",
+      "subject": "EXECUTOR stage 8/8",
+      "swarm": "EXECUTOR"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-40"
+      ],
+      "priority": 41,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-41",
+      "subject": "REMOTE_CI stage 1/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-41"
+      ],
+      "priority": 42,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-42",
+      "subject": "REMOTE_CI stage 2/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-42"
+      ],
+      "priority": 43,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-43",
+      "subject": "REMOTE_CI stage 3/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-43"
+      ],
+      "priority": 44,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-44",
+      "subject": "REMOTE_CI stage 4/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-44"
+      ],
+      "priority": 45,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-45",
+      "subject": "REMOTE_CI stage 5/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-45"
+      ],
+      "priority": 46,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-46",
+      "subject": "REMOTE_CI stage 6/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-46"
+      ],
+      "priority": 47,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-47",
+      "subject": "REMOTE_CI stage 7/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "AUTHORITY_BOUNDARY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "REMOTE_CI",
+      "predecessors": [
+        "R7-47"
+      ],
+      "priority": 48,
+      "reason": "Publish only if separately authorized and bind exact remote-head CI/artifacts",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-48",
+      "subject": "REMOTE_CI stage 8/8",
+      "swarm": "REMOTE_CI"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-48"
+      ],
+      "priority": 49,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-49",
+      "subject": "RAG_AUTOMATION stage 1/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-49"
+      ],
+      "priority": 50,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-50",
+      "subject": "RAG_AUTOMATION stage 2/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-50"
+      ],
+      "priority": 51,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-51",
+      "subject": "RAG_AUTOMATION stage 3/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-51"
+      ],
+      "priority": 52,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-52",
+      "subject": "RAG_AUTOMATION stage 4/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-52"
+      ],
+      "priority": 53,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-53",
+      "subject": "RAG_AUTOMATION stage 5/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-53"
+      ],
+      "priority": 54,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-54",
+      "subject": "RAG_AUTOMATION stage 6/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-54"
+      ],
+      "priority": 55,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-55",
+      "subject": "RAG_AUTOMATION stage 7/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "RAG_AUTOMATION",
+      "predecessors": [
+        "R7-55"
+      ],
+      "priority": 56,
+      "reason": "Automate RAG currentness, predecessor admission, roundtrip and retrieval evidence",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-56",
+      "subject": "RAG_AUTOMATION stage 8/8",
+      "swarm": "RAG_AUTOMATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-56"
+      ],
+      "priority": 57,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-57",
+      "subject": "MEDIATION stage 1/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-57"
+      ],
+      "priority": 58,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-58",
+      "subject": "MEDIATION stage 2/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-58"
+      ],
+      "priority": 59,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-59",
+      "subject": "MEDIATION stage 3/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-59"
+      ],
+      "priority": 60,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-60",
+      "subject": "MEDIATION stage 4/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-60"
+      ],
+      "priority": 61,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-61",
+      "subject": "MEDIATION stage 5/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-61"
+      ],
+      "priority": 62,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-62",
+      "subject": "MEDIATION stage 6/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-62"
+      ],
+      "priority": 63,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-63",
+      "subject": "MEDIATION stage 7/8",
+      "swarm": "MEDIATION"
+    },
+    {
+      "acceptance": "EVIDENCE_BOUND_FAIL_CLOSED",
+      "authority_class": "LOCAL_CANDIDATE_ONLY",
+      "blocking_class": "NONE_UNTIL_PRECONDITION_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_INPUTS_BEFORE_EFFECT_OR_PROMOTION",
+      "effect_class": "READ_ONLY_OR_LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact-source",
+        "tests-or-readback",
+        "independent-falsifier"
+      ],
+      "generation": "MEDIATION",
+      "predecessors": [
+        "R7-63"
+      ],
+      "priority": 64,
+      "reason": "Reduce UNKNOWN effect surfaces only with exact observed binding and falsification",
+      "rollback_or_reconciliation": "LOCAL_ROLLBACK_OR_RECONCILE_FIRST",
+      "state": "PLANNED",
+      "step_id": "R7-64",
+      "subject": "MEDIATION stage 8/8",
+      "swarm": "MEDIATION"
+    }
+  ]
+}

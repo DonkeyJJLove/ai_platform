@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
+import sqlite3
 import threading
 import unittest
 
@@ -23,6 +24,7 @@ from cyber_lion.enterprise.live_authority_admission import (
     LiveAuthorityAdmission,
     LiveAuthorityAdmissionError,
 )
+import cyber_lion.enterprise.persistent_authority_state as authority_state_module
 from cyber_lion.enterprise.persistent_authority_state import (
     DurableReplayGuard,
     PersistentAuthorityStateError,
@@ -127,6 +129,45 @@ def admit(subject: LiveAuthorityAdmission, *, nonce="nonce-1"):
 
 
 class PersistentAuthorityStateTests(unittest.TestCase):
+    def test_sqlite_context_manager_closes_after_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "lifecycle.db")
+            connection = sqlite3.connect(path, isolation_level=None, factory=authority_state_module._ClosingSQLiteConnection)
+            with connection as active:
+                active.execute("CREATE TABLE lifecycle(value INTEGER NOT NULL)")
+                active.execute("BEGIN IMMEDIATE")
+                active.execute("INSERT INTO lifecycle VALUES(1)")
+                active.execute("COMMIT")
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+            reopened = sqlite3.connect(path)
+            try:
+                self.assertEqual(reopened.execute("SELECT value FROM lifecycle").fetchone(), (1,))
+            finally:
+                reopened.close()
+
+    def test_sqlite_context_manager_closes_after_rollback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "lifecycle.db")
+            setup = sqlite3.connect(path)
+            try:
+                setup.execute("CREATE TABLE lifecycle(value INTEGER NOT NULL)")
+                setup.commit()
+            finally:
+                setup.close()
+            connection = sqlite3.connect(path, factory=authority_state_module._ClosingSQLiteConnection)
+            with self.assertRaisesRegex(RuntimeError, "rollback-probe"):
+                with connection as active:
+                    active.execute("INSERT INTO lifecycle VALUES(2)")
+                    raise RuntimeError("rollback-probe")
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+            reopened = sqlite3.connect(path)
+            try:
+                self.assertEqual(reopened.execute("SELECT COUNT(*) FROM lifecycle").fetchone(), (0,))
+            finally:
+                reopened.close()
+
     def test_epoch_revocation_root_and_replay_survive_restart(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = str(Path(directory) / "authority.db")

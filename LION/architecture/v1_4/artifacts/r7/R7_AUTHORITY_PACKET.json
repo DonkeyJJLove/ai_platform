@@ -1,0 +1,32 @@
+{
+  "authority_granted": false,
+  "effect_executed": false,
+  "mission_control": {
+    "max_attempts": 1,
+    "replay_policy": "RECONCILE_FIRST",
+    "retry": 0,
+    "rollback_adapter_set_digest": "UNKNOWN_NOT_RECOMPUTABLE",
+    "rollback_configuration_digest": "UNKNOWN_NOT_RECOMPUTABLE",
+    "rollback_database_schema_digest": "UNKNOWN_NOT_RECOMPUTABLE",
+    "runtime_release": "e02-passive-daffa37f3b14ab29",
+    "runtime_source_head": "743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+    "runtime_source_tree": "5afea703fd887f2609245a48000dbc47b8cd1b0f",
+    "target_master_head": "938aa94460a2e0f81c470c1586626290bb74bc2c",
+    "target_master_tree": "70d698f937608495c3845b9b7c1f0bc515a3789d"
+  },
+  "reason": "Mission Control rollback configuration/adapter/schema digests are not independently recomputable from current live evidence.",
+  "schema": "lion.r7.consolidated-authority-packet/v1",
+  "separate_authority_required": [
+    "REMOTE_PUSH",
+    "CREATE_OR_MUTATE_PR",
+    "MERGE",
+    "MISSION_CONTROL_DEPLOYMENT",
+    "SERVICE_RESTART",
+    "K3S_MUTATION",
+    "E02_PROVIDER_INSTALLATION",
+    "CREDENTIAL_OR_SECRET_CHANGE",
+    "PRODUCTION_ACTION",
+    "RAG_PUBLICATION"
+  ],
+  "state": "INCOMPLETE_DO_NOT_APPLY"
+}

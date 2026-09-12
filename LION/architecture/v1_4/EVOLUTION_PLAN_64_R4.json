@@ -1,0 +1,1480 @@
+{
+  "schema": "lion.evolution-plan/v1",
+  "project": "LION_EVOLUSION",
+  "architecture_epoch": "1.4",
+  "source_snapshot_head": "24bc9ac35eefd2a571e919a398d169f7a6c51007",
+  "fleet_logical_drones": 128,
+  "steps": [
+    {
+      "step_id": "R4-01",
+      "generation": 10,
+      "swarm": "SWARM-01",
+      "predecessors": [],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Freeze Generation-10 noncarrier snapshot",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-02",
+      "generation": 10,
+      "swarm": "SWARM-02",
+      "predecessors": [
+        "R4-01"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Validate Git logical spine v3",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-03",
+      "generation": 10,
+      "swarm": "SWARM-03",
+      "predecessors": [
+        "R4-02"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Enforce critical workflow homeostasis",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-04",
+      "generation": 10,
+      "swarm": "SWARM-04",
+      "predecessors": [
+        "R4-03"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Rebind production scan after workflow evolution",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-05",
+      "generation": 10,
+      "swarm": "SWARM-05",
+      "predecessors": [
+        "R4-04"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Materialize effect-free APP_SESSION binding",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-06",
+      "generation": 10,
+      "swarm": "SWARM-06",
+      "predecessors": [
+        "R4-05"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Rebind production scan after APP_SESSION change",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-07",
+      "generation": 10,
+      "swarm": "SWARM-07",
+      "predecessors": [
+        "R4-06"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run full local suite",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-08",
+      "generation": 10,
+      "swarm": "SWARM-08",
+      "predecessors": [
+        "R4-07"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run Bandit 1.9.4",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-09",
+      "generation": 11,
+      "swarm": "SWARM-09",
+      "predecessors": [
+        "R4-08"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run Full Symbol Census",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-10",
+      "generation": 11,
+      "swarm": "SWARM-10",
+      "predecessors": [
+        "R4-09"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reacquire master and PR333",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-11",
+      "generation": 11,
+      "swarm": "SWARM-11",
+      "predecessors": [
+        "R4-10"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reacquire four-host failure domain",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-12",
+      "generation": 11,
+      "swarm": "SWARM-12",
+      "predecessors": [
+        "R4-11"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reacquire Mission Control and VKT",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-13",
+      "generation": 11,
+      "swarm": "SWARM-13",
+      "predecessors": [
+        "R4-12"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Correct R3/R4 artifact currentness",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-14",
+      "generation": 11,
+      "swarm": "SWARM-14",
+      "predecessors": [
+        "R4-13"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Update Generation-10 documentation",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-15",
+      "generation": 11,
+      "swarm": "SWARM-15",
+      "predecessors": [
+        "R4-14"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Generate adaptive fleet record",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-16",
+      "generation": 11,
+      "swarm": "SWARM-16",
+      "predecessors": [
+        "R4-15"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Generate Evolution Plan 64",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-17",
+      "generation": 12,
+      "swarm": "SWARM-01",
+      "predecessors": [
+        "R4-16"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Generate next LPCL",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "DONE",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-18",
+      "generation": 12,
+      "swarm": "SWARM-02",
+      "predecessors": [
+        "R4-17"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Commit final noncarrier documentation",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "IN_PROGRESS",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-19",
+      "generation": 12,
+      "swarm": "SWARM-03",
+      "predecessors": [
+        "R4-18"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Recompute final production inventory",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-20",
+      "generation": 12,
+      "swarm": "SWARM-04",
+      "predecessors": [
+        "R4-19"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Recompute workflow audit",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-21",
+      "generation": 12,
+      "swarm": "SWARM-05",
+      "predecessors": [
+        "R4-20"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Recompute full symbol census",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-22",
+      "generation": 12,
+      "swarm": "SWARM-06",
+      "predecessors": [
+        "R4-21"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Recompute Bandit",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-23",
+      "generation": 12,
+      "swarm": "SWARM-07",
+      "predecessors": [
+        "R4-22"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Final Git-spine validation",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-24",
+      "generation": 12,
+      "swarm": "SWARM-08",
+      "predecessors": [
+        "R4-23"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Compute canonical truth subject",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-25",
+      "generation": 13,
+      "swarm": "SWARM-09",
+      "predecessors": [
+        "R4-24"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Bind truth carriers last",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-26",
+      "generation": 13,
+      "swarm": "SWARM-10",
+      "predecessors": [
+        "R4-25"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run post-truth regressions",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P2",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-27",
+      "generation": 13,
+      "swarm": "SWARM-11",
+      "predecessors": [
+        "R4-26"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Build R4 rebased package from exact available predecessor bytes",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN_PROVENANCE_DEPENDENCY",
+      "blocking_class": "PROVENANCE"
+    },
+    {
+      "step_id": "R4-28",
+      "generation": 13,
+      "swarm": "SWARM-12",
+      "predecessors": [
+        "R4-27"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Validate R4 package manifest/hashes",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-29",
+      "generation": 13,
+      "swarm": "SWARM-13",
+      "predecessors": [
+        "R4-28"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run R4 roundtrip extraction",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-30",
+      "generation": 13,
+      "swarm": "SWARM-14",
+      "predecessors": [
+        "R4-29"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run R4 self-test suite",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-31",
+      "generation": 13,
+      "swarm": "SWARM-15",
+      "predecessors": [
+        "R4-30"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Run R4 retrieval suite",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-32",
+      "generation": 13,
+      "swarm": "SWARM-16",
+      "predecessors": [
+        "R4-31"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Record R4 package provenance",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-33",
+      "generation": 14,
+      "swarm": "SWARM-01",
+      "predecessors": [
+        "R4-32"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Prepare remote publication authority packet",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-34",
+      "generation": 14,
+      "swarm": "SWARM-02",
+      "predecessors": [
+        "R4-33"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Publish candidate branch if authorized",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "effect_class": "EXTERNAL_EFFECT",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "BLOCKED_AUTHORITY",
+      "blocking_class": "AUTHORITY"
+    },
+    {
+      "step_id": "R4-35",
+      "generation": 14,
+      "swarm": "SWARM-03",
+      "predecessors": [
+        "R4-34"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Observe exact-head remote CI",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-36",
+      "generation": 14,
+      "swarm": "SWARM-04",
+      "predecessors": [
+        "R4-35"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reconcile CodeQL and workflow artifacts",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-37",
+      "generation": 14,
+      "swarm": "SWARM-05",
+      "predecessors": [
+        "R4-36"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Create or update canonical PR if authorized",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "effect_class": "EXTERNAL_EFFECT",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "BLOCKED_AUTHORITY",
+      "blocking_class": "AUTHORITY"
+    },
+    {
+      "step_id": "R4-38",
+      "generation": 14,
+      "swarm": "SWARM-06",
+      "predecessors": [
+        "R4-37"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Independent review of PR currentness",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-39",
+      "generation": 14,
+      "swarm": "SWARM-07",
+      "predecessors": [
+        "R4-38"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Merge only with separate authority",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "effect_class": "EXTERNAL_EFFECT",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "BLOCKED_AUTHORITY",
+      "blocking_class": "AUTHORITY"
+    },
+    {
+      "step_id": "R4-40",
+      "generation": 14,
+      "swarm": "SWARM-08",
+      "predecessors": [
+        "R4-39"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reacquire master after merge",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-41",
+      "generation": 15,
+      "swarm": "SWARM-09",
+      "predecessors": [
+        "R4-40"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reconcile Git logical spine post-merge",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-42",
+      "generation": 15,
+      "swarm": "SWARM-10",
+      "predecessors": [
+        "R4-41"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Rebind truth after merge if material tree changed",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P3",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-43",
+      "generation": 15,
+      "swarm": "SWARM-11",
+      "predecessors": [
+        "R4-42"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Prepare Mission Control source-rebind package",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P6",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-44",
+      "generation": 15,
+      "swarm": "SWARM-12",
+      "predecessors": [
+        "R4-43"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Verify MC package source/config/adapter/schema digests",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P6",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-45",
+      "generation": 15,
+      "swarm": "SWARM-13",
+      "predecessors": [
+        "R4-44"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Request batched restart/deploy authority",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "effect_class": "EXTERNAL_EFFECT",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P6",
+      "state": "BLOCKED_AUTHORITY",
+      "blocking_class": "AUTHORITY"
+    },
+    {
+      "step_id": "R4-46",
+      "generation": 15,
+      "swarm": "SWARM-14",
+      "predecessors": [
+        "R4-45"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Deploy MC source rebind if authorized",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY_REQUIRED",
+      "effect_class": "EXTERNAL_EFFECT",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P6",
+      "state": "BLOCKED_AUTHORITY",
+      "blocking_class": "AUTHORITY"
+    },
+    {
+      "step_id": "R4-47",
+      "generation": 15,
+      "swarm": "SWARM-15",
+      "predecessors": [
+        "R4-46"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Read back MC PID/release/source",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P6",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-48",
+      "generation": 15,
+      "swarm": "SWARM-16",
+      "predecessors": [
+        "R4-47"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Reconcile VKT observation after source rebind",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P6",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-49",
+      "generation": 16,
+      "swarm": "SWARM-01",
+      "predecessors": [
+        "R4-48"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Implement external APP_SESSION attestation provider candidate",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-50",
+      "generation": 16,
+      "swarm": "SWARM-02",
+      "predecessors": [
+        "R4-49"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Add independent provider verification interface",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-51",
+      "generation": 16,
+      "swarm": "SWARM-03",
+      "predecessors": [
+        "R4-50"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Add attestation replay ledger",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-52",
+      "generation": 16,
+      "swarm": "SWARM-04",
+      "predecessors": [
+        "R4-51"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Bind attestation to trusted-time provider",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-53",
+      "generation": 16,
+      "swarm": "SWARM-05",
+      "predecessors": [
+        "R4-52"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Bind attestation to durable sequence provider",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-54",
+      "generation": 16,
+      "swarm": "SWARM-06",
+      "predecessors": [
+        "R4-53"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Close local runtime attestation provenance",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-55",
+      "generation": 16,
+      "swarm": "SWARM-07",
+      "predecessors": [
+        "R4-54"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Add replay-result atomicity candidate",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-56",
+      "generation": 16,
+      "swarm": "SWARM-08",
+      "predecessors": [
+        "R4-55"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Materialize canonical runtime-source selector candidate",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-57",
+      "generation": 17,
+      "swarm": "SWARM-09",
+      "predecessors": [
+        "R4-56"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Falsify source/identity/attestation substitution",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P5",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-58",
+      "generation": 17,
+      "swarm": "SWARM-10",
+      "predecessors": [
+        "R4-57"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Semantically harden legacy F005 workflows family",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-59",
+      "generation": 17,
+      "swarm": "SWARM-11",
+      "predecessors": [
+        "R4-58"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Semantically harden runtime-proof workflow family",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-60",
+      "generation": 17,
+      "swarm": "SWARM-12",
+      "predecessors": [
+        "R4-59"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Harden attestation/effect-budget workflow family",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-61",
+      "generation": 17,
+      "swarm": "SWARM-13",
+      "predecessors": [
+        "R4-60"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Automate RAG currentness artifact discovery",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P7",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-62",
+      "generation": 17,
+      "swarm": "SWARM-14",
+      "predecessors": [
+        "R4-61"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Materialize independent physical executor evidence contract",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P12",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-63",
+      "generation": 17,
+      "swarm": "SWARM-15",
+      "predecessors": [
+        "R4-62"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Integrate local model runtime candidate",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P12",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    },
+    {
+      "step_id": "R4-64",
+      "generation": 17,
+      "swarm": "SWARM-16",
+      "predecessors": [
+        "R4-63"
+      ],
+      "reason": "Advance the highest-value evidence-bound dependency while preserving truth/currentness separation.",
+      "subject": "Build autonomous evolution orchestrator candidate",
+      "currentness_requirement": "Reacquire exact subject inputs if any predecessor identity changed.",
+      "authority_class": "LOCAL_AUTONOMOUS",
+      "effect_class": "LOCAL_CANDIDATE",
+      "evidence_required": [
+        "exact Git identity",
+        "scope-appropriate tests or readback",
+        "no unsupported PASS promotion"
+      ],
+      "acceptance": "Postcondition is explicit, evidence-bound and does not widen authority.",
+      "rollback_or_reconciliation": "Discard/rebuild unpublished local candidate or reconcile external effect before retry.",
+      "priority": "P12",
+      "state": "OPEN",
+      "blocking_class": "NONE"
+    }
+  ],
+  "no_false_completion": true
+}

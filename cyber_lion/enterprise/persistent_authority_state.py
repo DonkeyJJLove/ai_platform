@@ -19,6 +19,16 @@ class PersistentAuthorityStateError(RuntimeError):
     """Raised when persistent authority state cannot be proven safe."""
 
 
+class _ClosingSQLiteConnection(sqlite3.Connection):
+    """SQLite context manager that preserves commit/rollback and closes on exit."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.close()
+
+
 def _sha256(value: object, *, name: str) -> str:
     if not isinstance(value, str) or len(value) != 64:
         raise PersistentAuthorityStateError(f"{name} is invalid")
@@ -600,7 +610,7 @@ class SQLiteAuthorityStateStore:
         self._initialize()
 
     def _connect(self):
-        connection = sqlite3.connect(self._path, timeout=5, isolation_level=None, check_same_thread=False)
+        connection = sqlite3.connect(self._path, timeout=5, isolation_level=None, check_same_thread=False, factory=_ClosingSQLiteConnection)
         connection.execute("PRAGMA foreign_keys=ON")
         connection.execute("PRAGMA journal_mode=WAL")
         return connection

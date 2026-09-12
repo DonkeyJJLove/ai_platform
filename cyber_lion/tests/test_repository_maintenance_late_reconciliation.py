@@ -50,8 +50,11 @@ class RepositoryMaintenanceLateReconciliationTests(unittest.TestCase):
             self.assertEqual(out["mode"], "LATE_UNKNOWN_ABSENCE")
             self.assertFalse(out["repository_effect"])
             self.assertEqual(fence.get(EFFECT).state, "RECONCILED")
-            with sqlite3.connect(path) as c:
+            c = sqlite3.connect(path)
+            try:
                 row = c.execute("SELECT prior_state,source_ref FROM repository_delete_late_reconciliation WHERE effect_key=?", (EFFECT,)).fetchone()
+            finally:
+                c.close()
             self.assertEqual(row[0], "UNKNOWN")
             self.assertIn("cyber-lion/example:absent@" + MASTER, row[1])
 

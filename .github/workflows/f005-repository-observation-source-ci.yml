@@ -14,6 +14,10 @@ on:
       - '.github/workflows/f005-runtime-repository-observation.yml'
   workflow_dispatch:
 
+concurrency:
+  group: f005-repository-observation-source-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -21,12 +25,29 @@ jobs:
   observation-source-ci:
     name: F005-K Repository Observation Source
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       LION_FLEET_RUNTIME_ROOT: 'C:\Users\d2j3\Documents\LION\runtime\f005'
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
           persist-credentials: false
+      - name: Bind exact checkout identity
+        id: gitstate
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_head="$(git rev-parse HEAD)"
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$actual_head" = "$EXPECTED_HEAD"
+          printf 'F005_CHECKED_OUT_HEAD=%s\n' "$actual_head"
+          printf 'F005_CHECKED_OUT_TREE=%s\n' "$actual_tree"
+          echo "head=$actual_head" >> "$GITHUB_OUTPUT"
+          echo "tree=$actual_tree" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'

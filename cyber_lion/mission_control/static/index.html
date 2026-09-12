@@ -61,6 +61,7 @@
         <div><h3>Receipts</h3><p class="hint">Receipt presence does not prove an effect or completed reconciliation.</p><div id="receipts"></div></div>
       </div>
       <h3>Cleanup</h3><div id="cleanup" class="chip-grid"></div><h3>Verification</h3><div id="verification" class="chip-grid"></div>
+      <section id="passiveDetail" class="panel" hidden aria-label="Unverified passive evidence"></section>
       <div id="vktDetail" hidden>  <section class="panel fleet-panel">
     <div class="panel-head">
       <div><h2>Fleet organization</h2><p id="fleetCurrentness" class="hint">Current fleet topology is unknown.</p></div>
@@ -82,6 +83,7 @@
   </section>
   <section class="panel" id="recent"><h2>Recent events</h2><p class="hint">Recorded events across runs; history remains after cleanup.</p><div id="recentEvents"></div></section>
 </main>
+<script src="passive.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

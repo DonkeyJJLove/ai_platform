@@ -1,0 +1,14 @@
+{
+  "content_digest": "6dd701bca2813b59af0a4652cb09a768cb73e1c59715b3cb4414ffb24d086d1f",
+  "files": 32,
+  "manifest_sha256": "f2e82f68dbb6e03abb567f83c8d1dd543bd9fa2b1f4b1b5f3d90918f1df59f20",
+  "new_records": 15,
+  "predecessor_exact_blocks": 173,
+  "records": 188,
+  "retrieval_pass": 30,
+  "roundtrip": "PASS",
+  "schema": "lion.r7.rag-validation-summary/v1",
+  "self_test_pass": 18,
+  "status": "PASS",
+  "zip_sha256": "0965df6dd05b8e155506d2c619fa1ae5157e1934639509c25b98f17e55a1d811"
+}

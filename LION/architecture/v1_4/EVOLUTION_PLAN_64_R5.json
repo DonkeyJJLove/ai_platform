@@ -1,0 +1,1543 @@
+{
+  "architecture_epoch": "1.4",
+  "fleet": "M192_ADAPTIVE_TARGET",
+  "project": "LION_EVOLUSION",
+  "schema": "lion.evolution-plan/v2",
+  "step_count": 64,
+  "steps": [
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Reacquire remote master PR333 and local descendant",
+      "predecessors": [],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-01",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S01"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Reacquire final carrier-last truth subject",
+      "predecessors": [
+        "R5P-01"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-02",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S02"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Validate material R5 artifact currentness",
+      "predecessors": [
+        "R5P-02"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-03",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S03"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Reconcile final Git logical-spine descendant",
+      "predecessors": [
+        "R5P-03"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-04",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S04"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Re-run workflow homeostasis v2",
+      "predecessors": [
+        "R5P-04"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-05",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S05"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Reacquire four-host failure domain state",
+      "predecessors": [
+        "R5P-05"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-06",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S06"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Revalidate Mission Control rebind target",
+      "predecessors": [
+        "R5P-06"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-07",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S07"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 1,
+      "name": "Select next family fronts from evidence",
+      "predecessors": [
+        "R5P-07"
+      ],
+      "priority": "P1",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-08",
+      "subject": "currentness-reacquire",
+      "swarm": "M192-S08"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Inventory F005 self-hosted runtime workflows",
+      "predecessors": [
+        "R5P-08"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-09",
+      "subject": "workflow-family",
+      "swarm": "M192-S09"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Build F005 effect and idempotency matrix",
+      "predecessors": [
+        "R5P-09"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-10",
+      "subject": "workflow-family",
+      "swarm": "M192-S10"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Review branch-ownership refresh workflow",
+      "predecessors": [
+        "R5P-10"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-11",
+      "subject": "workflow-family",
+      "swarm": "M192-S11"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Review runtime-composition workflow",
+      "predecessors": [
+        "R5P-11"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-12",
+      "subject": "workflow-family",
+      "swarm": "M192-S12"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Review reconciliation-preflight workflow",
+      "predecessors": [
+        "R5P-12"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-13",
+      "subject": "workflow-family",
+      "swarm": "M192-S13"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Review reconciliation-ingestion workflow",
+      "predecessors": [
+        "R5P-13"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-14",
+      "subject": "workflow-family",
+      "swarm": "M192-S14"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Review reconciliation-execution workflow",
+      "predecessors": [
+        "R5P-14"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-15",
+      "subject": "workflow-family",
+      "swarm": "M192-S15"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 2,
+      "name": "Review repository-observation and trust-provisioning workflows",
+      "predecessors": [
+        "R5P-15"
+      ],
+      "priority": "P2",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-16",
+      "subject": "workflow-family",
+      "swarm": "M192-S16"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Review MOON runner attested execution bridge",
+      "predecessors": [
+        "R5P-16"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-17",
+      "subject": "workflow-family",
+      "swarm": "M192-S17"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Review fleet-attestation external-write workflow",
+      "predecessors": [
+        "R5P-17"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-18",
+      "subject": "workflow-family",
+      "swarm": "M192-S18"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Review Actions dispatch external-write bridge",
+      "predecessors": [
+        "R5P-18"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-19",
+      "subject": "workflow-family",
+      "swarm": "M192-S19"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Model external-write authority boundaries",
+      "predecessors": [
+        "R5P-19"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-20",
+      "subject": "workflow-family",
+      "swarm": "M192-S20"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Model non-idempotent replay and reconciliation",
+      "predecessors": [
+        "R5P-20"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-21",
+      "subject": "workflow-family",
+      "swarm": "M192-S21"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Bind external artifact attestation digests",
+      "predecessors": [
+        "R5P-21"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-22",
+      "subject": "workflow-family",
+      "swarm": "M192-S22"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Falsify permission and secret scope widening",
+      "predecessors": [
+        "R5P-22"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-23",
+      "subject": "workflow-family",
+      "swarm": "M192-S23"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 3,
+      "name": "Materialize only safe local workflow candidates",
+      "predecessors": [
+        "R5P-23"
+      ],
+      "priority": "P3",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-24",
+      "subject": "workflow-family",
+      "swarm": "M192-S24"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Define APP_SESSION external verifier adapter",
+      "predecessors": [
+        "R5P-24"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-25",
+      "subject": "e02-trust",
+      "swarm": "M192-S01"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Define APP_SESSION trust-anchor registry candidate",
+      "predecessors": [
+        "R5P-25"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-26",
+      "subject": "e02-trust",
+      "swarm": "M192-S02"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Define durable replay provider interface",
+      "predecessors": [
+        "R5P-26"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-27",
+      "subject": "e02-trust",
+      "swarm": "M192-S03"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Define durable monotonic sequence provider interface",
+      "predecessors": [
+        "R5P-27"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-28",
+      "subject": "e02-trust",
+      "swarm": "M192-S04"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Define trusted-time provider interface",
+      "predecessors": [
+        "R5P-28"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-29",
+      "subject": "e02-trust",
+      "swarm": "M192-S05"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Compose end-to-end attestation atomicity candidate",
+      "predecessors": [
+        "R5P-29"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-30",
+      "subject": "e02-trust",
+      "swarm": "M192-S06"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Run APP_SESSION offline attack matrix",
+      "predecessors": [
+        "R5P-30"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-31",
+      "subject": "e02-trust",
+      "swarm": "M192-S07"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 4,
+      "name": "Reconcile E02 trust matrix and documentation",
+      "predecessors": [
+        "R5P-31"
+      ],
+      "priority": "P4",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-32",
+      "subject": "e02-trust",
+      "swarm": "M192-S08"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Reacquire fresh Mission Control target master",
+      "predecessors": [
+        "R5P-32"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-33",
+      "subject": "mission-control",
+      "swarm": "M192-S09"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Revalidate source-rebind package against target",
+      "predecessors": [
+        "R5P-33"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-34",
+      "subject": "mission-control",
+      "swarm": "M192-S10"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Build Mission Control deployment admission contract",
+      "predecessors": [
+        "R5P-34"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-35",
+      "subject": "mission-control",
+      "swarm": "M192-S11"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Build deterministic rollback package contract",
+      "predecessors": [
+        "R5P-35"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-36",
+      "subject": "mission-control",
+      "swarm": "M192-S12"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Build mandatory post-apply readback contract",
+      "predecessors": [
+        "R5P-36"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-37",
+      "subject": "mission-control",
+      "swarm": "M192-S13"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Bind VKT observation and heartbeat reconciliation",
+      "predecessors": [
+        "R5P-37"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-38",
+      "subject": "mission-control",
+      "swarm": "M192-S14"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Add Mission Control effect to authority packet",
+      "predecessors": [
+        "R5P-38"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-39",
+      "subject": "mission-control",
+      "swarm": "M192-S15"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY",
+      "blocking_class": "AUTHORITY",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 5,
+      "name": "Keep source rebind unapplied without authority",
+      "predecessors": [
+        "R5P-39"
+      ],
+      "priority": "P5",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "DEFERRED_AUTHORITY_BOUND",
+      "step_id": "R5P-40",
+      "subject": "mission-control",
+      "swarm": "M192-S16"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Define physical failure-domain evidence taxonomy",
+      "predecessors": [
+        "R5P-40"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-41",
+      "subject": "executor-independence",
+      "swarm": "M192-S17"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Define independent hardware attestation contract",
+      "predecessors": [
+        "R5P-41"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-42",
+      "subject": "executor-independence",
+      "swarm": "M192-S18"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Bind machine boot chassis and provider identities",
+      "predecessors": [
+        "R5P-42"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-43",
+      "subject": "executor-independence",
+      "swarm": "M192-S19"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Falsify same-parent and shared-kernel independence",
+      "predecessors": [
+        "R5P-43"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-44",
+      "subject": "executor-independence",
+      "swarm": "M192-S20"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Define material executor admission proof",
+      "predecessors": [
+        "R5P-44"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-45",
+      "subject": "executor-independence",
+      "swarm": "M192-S21"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Define swarm materialization observation proof",
+      "predecessors": [
+        "R5P-45"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-46",
+      "subject": "executor-independence",
+      "swarm": "M192-S22"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Define VKT application-activity proof",
+      "predecessors": [
+        "R5P-46"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-47",
+      "subject": "executor-independence",
+      "swarm": "M192-S23"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 6,
+      "name": "Run executor-independence negative matrix",
+      "predecessors": [
+        "R5P-47"
+      ],
+      "priority": "P6",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-48",
+      "subject": "executor-independence",
+      "swarm": "M192-S24"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "READ_ONLY",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Reacquire final local publication candidate",
+      "predecessors": [
+        "R5P-48"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-49",
+      "subject": "publication-ci",
+      "swarm": "M192-S01"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY",
+      "blocking_class": "AUTHORITY",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Build remote-push effect packet",
+      "predecessors": [
+        "R5P-49"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "DEFERRED_AUTHORITY_BOUND",
+      "step_id": "R5P-50",
+      "subject": "publication-ci",
+      "swarm": "M192-S02"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY",
+      "blocking_class": "AUTHORITY",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Resolve PR333 and new-PR disposition",
+      "predecessors": [
+        "R5P-50"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "DEFERRED_AUTHORITY_BOUND",
+      "step_id": "R5P-51",
+      "subject": "publication-ci",
+      "swarm": "M192-S03"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Define exact-head remote CI expected set",
+      "predecessors": [
+        "R5P-51"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-52",
+      "subject": "publication-ci",
+      "swarm": "M192-S04"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Read CodeQL Bandit census workflow evidence",
+      "predecessors": [
+        "R5P-52"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-53",
+      "subject": "publication-ci",
+      "swarm": "M192-S05"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY",
+      "blocking_class": "AUTHORITY",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Keep merge as independent authority effect",
+      "predecessors": [
+        "R5P-53"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "DEFERRED_AUTHORITY_BOUND",
+      "step_id": "R5P-54",
+      "subject": "publication-ci",
+      "swarm": "M192-S06"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY",
+      "blocking_class": "AUTHORITY",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Keep deployment as independent authority effect",
+      "predecessors": [
+        "R5P-54"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "DEFERRED_AUTHORITY_BOUND",
+      "step_id": "R5P-55",
+      "subject": "publication-ci",
+      "swarm": "M192-S07"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "SEPARATE_CURRENT_AUTHORITY",
+      "blocking_class": "AUTHORITY",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "EXTERNAL_OR_RUNTIME_EFFECT",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 7,
+      "name": "Reconcile any explicitly authorized external effects",
+      "predecessors": [
+        "R5P-55"
+      ],
+      "priority": "P7",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "DEFERRED_AUTHORITY_BOUND",
+      "step_id": "R5P-56",
+      "subject": "publication-ci",
+      "swarm": "M192-S08"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Run final documentation homeostasis",
+      "predecessors": [
+        "R5P-56"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-57",
+      "subject": "truth-rag",
+      "swarm": "M192-S09"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Regenerate final Git logical spine",
+      "predecessors": [
+        "R5P-57"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-58",
+      "subject": "truth-rag",
+      "swarm": "M192-S10"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Recompute production inventory and taxonomy",
+      "predecessors": [
+        "R5P-58"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-59",
+      "subject": "truth-rag",
+      "swarm": "M192-S11"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Run full suite Bandit and Full Symbol Census",
+      "predecessors": [
+        "R5P-59"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-60",
+      "subject": "truth-rag",
+      "swarm": "M192-S12"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Compute final truth subject",
+      "predecessors": [
+        "R5P-60"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-61",
+      "subject": "truth-rag",
+      "swarm": "M192-S13"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Bind truth carriers last",
+      "predecessors": [
+        "R5P-61"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-62",
+      "subject": "truth-rag",
+      "swarm": "M192-S14"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Build RAG R6 from exact R5 bytes",
+      "predecessors": [
+        "R5P-62"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-63",
+      "subject": "truth-rag",
+      "swarm": "M192-S15"
+    },
+    {
+      "acceptance": "Evidence-bound postcondition with UNKNOWN never promoted to PASS.",
+      "authority_class": "AUTONOMOUS_LOCAL",
+      "blocking_class": "NONE_UNTIL_EVIDENCE_FAILS",
+      "currentness_requirement": "REACQUIRE_EXACT_BEFORE_DECISION",
+      "effect_class": "LOCAL_CANDIDATE_MUTATION",
+      "evidence_required": [
+        "exact-source-identity",
+        "tests-or-readback-as-applicable",
+        "independent-falsifier-result"
+      ],
+      "generation": 8,
+      "name": "Validate R6 and derive next autonomous LCPL",
+      "predecessors": [
+        "R5P-63"
+      ],
+      "priority": "P8",
+      "reason": "Advance the highest-value unresolved dependency while preserving effect/currentness boundaries.",
+      "rollback_or_reconciliation": "Local candidates may be reset/rebuilt in isolated scope; external/non-idempotent effects require reconcile-first and zero retry.",
+      "state": "PENDING",
+      "step_id": "R5P-64",
+      "subject": "truth-rag",
+      "swarm": "M192-S16"
+    }
+  ]
+}

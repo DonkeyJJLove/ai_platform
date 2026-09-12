@@ -1,5 +1,11 @@
 # Dokumentacja architektury LION — v1.4
 
+> **Generation 8 / R4 local entry (2026-09-12T12:10:33.768699Z)** — validated source `c572a3ec74ac58f20414f81fcb51d0c586f4df01` / `0ec64acce259300c28a031ea9bfcd56d18a4d691`; 307 production sources, 268 effect surfaces, 0 unresolved taxonomy, 2709-test suite green, 23 workflows, E02 trust/source-rebind/Git-generator/failure-domain candidates materialized. Final documentation and truth descendants must be reacquired after this commit. See [`R4_CURRENT_EVOLUTION_STATE.md`](R4_CURRENT_EVOLUTION_STATE.md) and [`GIT_LOGICAL_TREE.json`](GIT_LOGICAL_TREE.json).
+
+
+> **R3 rebased current entry (2026-09-12T11:34:17.271121Z)** — live remote master `938aa94460a2e0f81c470c1586626290bb74bc2c` / `70d698f937608495c3845b9b7c1f0bc515a3789d`; final validated noncarrier snapshot `03fc2ed8317c5cff775af217b8c9f65b5b1f1c05` / `0898c7b6337acf6963eb11562080d70cd0d4624f`. Exact currentness after this documentation commit must be reacquired. R2 remains incomplete historical evidence (132/136 records) and is superseded for forward evolution, never synthetically completed. Git logical spine: [`GIT_LOGICAL_TREE.json`](GIT_LOGICAL_TREE.json); current R3 state: [`R3_CURRENT_EVOLUTION_STATE.md`](R3_CURRENT_EVOLUTION_STATE.md); R2→R3 gap: [`R2_R3_GAP_AND_SUPERSESSION.json`](R2_R3_GAP_AND_SUPERSESSION.json); workflow audit: [`WORKFLOW_HOMEOSTASIS_R3.md`](WORKFLOW_HOMEOSTASIS_R3.md).
+
+
 Odczyt po integracji #325 i reguły domknięcia #314 opisuje [notatka rekonsyliacji](PR314_PR325_CURRENTNESS.md). Poniższa epoka R128 i jej bazowe identyfikatory są historycznym zakresem tej dokumentacji, nie deklaracją bieżącego HEAD master.
 
 **Epoka dokumentacyjna:** `LION-DOC-R128-2026-09-10-R1`  
@@ -127,3 +133,11 @@ Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTIT
 `LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
 #309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
 Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.
+## Generation 10 forward-evolution entry
+
+Current local-candidate truth is described by `current_state.json`; Git lineage by `GIT_LOGICAL_TREE.json`/`.md`; adaptive fleet sizing by `FLEET_EVOLUTION_R4.json`; R3→R4 artifact currentness by `R3_R4_ARTIFACT_CURRENTNESS.json`; the 64-step continuation by `EVOLUTION_PLAN_64_R4.json`; and the next autonomous process by `NEXT_LPCL_R4_TO_R5.txt`. Exact final truth digest is read from the carrier files, not predicted in this noncarrier document.
+## R5 multigeneration local state
+
+The current local unpublished lineage is documented by `R5_CURRENT_EVOLUTION_STATE.md`. The informational Git spine is the v3 snapshot in `GIT_LOGICAL_TREE.json`; runtime, RAG and repository nodes remain separate evidence planes. R4 is an exact verified 145-record rebased knowledge candidate, while R5 is built only after final carrier-last truth because code/workflow evolution continued after R4.
+
+E02 now contains an external APP_SESSION verifier boundary but no installed external verifier or durable replay/sequence provider. Mission Control remains on stale runtime source; an effect-free exact-master source-rebind package is prepared but not applied. Workflow homeostasis v2 has zero blocking defects in critical evidence workflows and routes all remaining findings to self-hosted-runtime/external-write family review rather than blanket mutation.

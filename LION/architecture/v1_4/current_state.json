@@ -1,73 +1,191 @@
 {
-  "schema": "lion.documentation.current-state.v1",
   "architecture_epoch": "1.4",
-  "process_epoch": "MASTER_ONLY_CONVERGENCE_20260911",
-  "repository": "DonkeyJJLove/ai_platform",
+  "artifactization": {
+    "host_binding_mode": "HOST_REPOSITORY_BINDING_IS_POST_CARRIER_RUNTIME_FACT_AND_MUST_BE_REACQUIRED",
+    "host_distribution": {
+      "files": {
+        "AUTHORITY_BOUNDARY.json": "b137bc8784cd8f55c2deb28b14d8bace2d7686a2249d27ea2d75500146308682",
+        "PROJECT_STATE.json": "19c1f32cdedd03879fcd5bae75d6dedbe95d903b59c4141c1346f1e3ade29a41",
+        "RAG_R7_DESCRIPTOR.json": "2fb8e5fa871baa91be10e0751ce34c85439aae5e6f4ec3a8dd10b0844da7d9a9"
+      },
+      "hosts": [
+        "LION-AUTH-LAB",
+        "MOON",
+        "LAB-UBUNTU",
+        "LAB-DEBIAN"
+      ],
+      "k3s_mutation": false,
+      "path": "/var/lib/sentinelx/uploads/lion-project-state-r7",
+      "runtime_effect": "NONE",
+      "schema": "lion.r7.host-file-distribution/v1",
+      "service_restart": false,
+      "state": "COMPLETED_NO_SERVICE_RESTART"
+    },
+    "path": "LION/architecture/v1_4/artifacts/r7",
+    "rag_r7": {
+      "content_digest": "6dd701bca2813b59af0a4652cb09a768cb73e1c59715b3cb4414ffb24d086d1f",
+      "files": 32,
+      "independent_validation": "PASS",
+      "manifest_sha256": "f2e82f68dbb6e03abb567f83c8d1dd543bd9fa2b1f4b1b5f3d90918f1df59f20",
+      "new_records": 15,
+      "package_authority": "NONE",
+      "publication": "LOCAL_UNPUBLISHED",
+      "r6_predecessor_records": 173,
+      "records": 188,
+      "release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "retrieval": "30/30",
+      "schema": "lion.r7.rag-package-descriptor/v1",
+      "self_test": "18/18",
+      "zip_sha256": "0965df6dd05b8e155506d2c619fa1ae5157e1934639509c25b98f17e55a1d811"
+    },
+    "repository_truth_binding_mode": "CARRIER_LAST_EXTERNAL_READBACK",
+    "source_r7_head": "73e628847753a3f60c288facd959c15a352a9087",
+    "source_r7_tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+    "state": "MATERIALIZED_IN_REPOSITORY"
+  },
+  "authority_effect": "NONE",
   "baseline_branch": "master",
-  "baseline_head": "38d526a00c2648f723d37df974ed7d0e3927b855",
-  "baseline_tree": "37df0a801fc96f635a6ee5dbceaa7946d79de680",
-  "projection_state": "EXACT_BASE_OBSERVATION_WITH_SEPARATE_CONVERGENCE_CANDIDATE",
-  "currentness_rule": "Odczyt dotyczy wyłącznie baseline HEAD/TREE. Integracja kandydata wymaga osobnych exact-head CI i merge. Zmiana lub usunięcie gałęzi nie dowodzi wdrożenia, authority ani działania floty.",
-  "historical_observations": [
-    "LION/maintenance/R23_CURRENT_STATE_HISTORICAL.json",
-    "LION/maintenance/R3_POST_PR310_CONVERGENCE_EVIDENCE.json"
-  ],
-  "repository_convergence": {
-    "requested_terminal_state": "ONLY_MASTER",
-    "observed_terminal_state": "REQUIRES_LIVE_REMOTE_READBACK",
-    "bounty_disposition": "ARCHIVED_AND_DELETED_BY_EXPLICIT_USER_REQUEST",
-    "bounty_head": "1fd4340548ae9e8f27e927e51d01c958becd17c2",
-    "closure_policy": "PRESERVE_CURRENT_POLICY; THIS_CLEANUP_USES_SEPARATE_EXPLICIT_USER_AUTHORIZATION",
-    "prs_in_scope": [
-      309,
-      311
-    ]
+  "baseline_head": "938aa94460a2e0f81c470c1586626290bb74bc2c",
+  "baseline_tree": "70d698f937608495c3845b9b7c1f0bc515a3789d",
+  "candidate": {
+    "branch": "mission/r3-rebased-local-r1",
+    "final_descendant_identity": "REACQUIRE_AFTER_CARRIER_LAST",
+    "pre_documentation_head": "2ff869023c18817611100fd4d62a4290f96a2584",
+    "pre_documentation_tree": "d12b504cf13e4ec80714905ffae437cb20d731d8",
+    "remote_exact_head_ci": "NOT_PUBLISHED",
+    "state": "FINAL_SAFE_SOURCE_TEST_RUNTIME_REACQUIRED_PRETRUTH"
   },
-  "factory": {
-    "bounded_protocol": "INTEGRATED_TEST_IMPLEMENTATION",
-    "source": "cyber_lion/tests/experiments/bean_generativity.py",
-    "source_commit": "0834c97e0cbbd2d9144157e8ec03cd402acbe616",
-    "tests": [
-      "cyber_lion/tests/test_bean_generativity_protocol.py",
-      "cyber_lion/tests/test_r22f_factory_falsifier.py"
-    ],
-    "general_generativity": "NOT_PROVEN_OUTSIDE_BOUNDED_GRAMMAR",
-    "child_autonomy": "NOT_PROVEN",
-    "factory_of_factories": "NOT_PROVEN",
-    "runtime_activation": "NONE_BY_THIS_RECONCILIATION"
+  "e02_trust": {
+    "app_session_attestation": "EXTERNAL_ATTESTATION_CANDIDATE",
+    "durable_replay": "DURABLE_ATOMIC_LOCAL_STORE_CANDIDATE",
+    "durable_sequence": "DURABLE_ATOMIC_LOCAL_STORE_CANDIDATE",
+    "installation_authority": "SEPARATE_CURRENT_INSTALLATION_AUTHORITY_REQUIRED",
+    "installation_contract": "OFFLINE_CANDIDATE_NOT_INSTALLED",
+    "key_material_present": false,
+    "runtime_activation": "NOT_AUTHORIZED_NOT_INSTALLED"
   },
-  "full_symbol_census": {
-    "state": "EXACT_HEAD_CI_ARTIFACT_REQUIRED",
-    "workflow": ".github/workflows/lion-r22c-full-symbol-census.yml",
-    "truth_subject_artifact": "LION_TRUTH_SUBJECT_v1.txt"
+  "fleet": {
+    "formations": 56,
+    "independent_material_executors_proven": 0,
+    "logical_drones": 224,
+    "material_executors_promoted": 0,
+    "semantics": "LOGICAL_DRONE_NE_MATERIAL_EXECUTOR",
+    "swarms": 28
   },
-  "mission_control": {
-    "ui_pr": 329,
-    "repository_integration": "MERGED",
-    "host_source_update": "USER_WILL_PULL; NOT_OBSERVED",
-    "ui_first_order": "PRESERVED",
-    "cluster_implementation": "NOT_STARTED"
+  "git_logical_tree": {
+    "digest": "ca3ec109b9810965cb421fbe741f049cb24ebdae169edcc0ae7ae3fb3543475a",
+    "digest_domain": "LION/GIT-LOGICAL-TREE/3",
+    "edges": 76,
+    "generated_from_head": "2ff869023c18817611100fd4d62a4290f96a2584",
+    "nodes": 79,
+    "path": "LION/architecture/v1_4/GIT_LOGICAL_TREE.json",
+    "state": "FINAL_PRE_DOCUMENTATION_SNAPSHOT"
   },
   "hosts": {
-    "runtime_currentness": "NOT_REACQUIRED_IN_THIS_REPOSITORY_CONVERGENCE",
-    "physical_failure_domain_independence": "NOT_PROVEN"
+    "connected": 4,
+    "kernel_boot_domain_independence": "FALSIFIED_SHARED_BOOT_ID",
+    "material_executor_independence": "NOT_PROVEN",
+    "physical_independence": "NOT_PROVEN",
+    "shared_boot_id": "58008236-23d6-48d9-a501-7e13b2b8c7b6"
   },
-  "source_and_effect_truth": {
-    "head": "6837fe33565653b95ab618ca5e8341f028d0a5aa",
-    "tree": "5478408e9c41ac035e42c1ef8279da751b917b7b",
-    "scan_digest": "da2ff4014cd8bce2d02bb45405bc26293f17907d48c23c6874ab859befd798de",
-    "source_count": 295,
-    "surface_count": 259,
-    "raw_unclassified_count": 6,
-    "r9d8_unresolved_count": 0,
-    "scope": "EXACT_PRE_CARRIER_SOURCE_OBSERVATION; FINAL_CANDIDATE_REVALIDATED_BY_CI",
-    "authority_effect": "NONE"
+  "mission_control": {
+    "authority_packet_state": "INCOMPLETE_DO_NOT_APPLY",
+    "k3s": "INACTIVE",
+    "max_attempts": 1,
+    "observed_active_runs": 0,
+    "recorded_active_runs": 1,
+    "replay_policy": "RECONCILE_FIRST",
+    "retry_max_attempts": 0,
+    "rollback_adapter_set_digest": "UNKNOWN_NOT_RECOMPUTABLE",
+    "rollback_configuration_digest": "UNKNOWN_NOT_RECOMPUTABLE",
+    "rollback_database_schema_digest": "UNKNOWN_NOT_RECOMPUTABLE",
+    "rollback_release_id": "e02-passive-daffa37f3b14ab29",
+    "rollback_source_head": "743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+    "rollback_source_tree": "5afea703fd887f2609245a48000dbc47b8cd1b0f",
+    "runtime_release": "e02-passive-daffa37f3b14ab29",
+    "runtime_source_head": "743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+    "runtime_source_tree": "5afea703fd887f2609245a48000dbc47b8cd1b0f",
+    "service": "ACTIVE",
+    "source_currentness": "STALE",
+    "source_rebind_package_digest": "6041ac732002b44468bdd5ca8c56e28843fa3fcb4f7ac4994fb6dc1ec40f0fa6",
+    "source_rebind_plan_digest": "d5e5e60a75aad3c7a45b776739d25ccfc694011b80e541154b0e78312713f15a",
+    "vkt_heartbeat": "UNKNOWN",
+    "vkt_observed": "NOT_IN_CURRENT_OBSERVATION",
+    "vkt_recorded": "RUNNING"
   },
-  "global_complete_mediation": "UNKNOWN",
+  "pr333": {
+    "disposition": "PRESERVE_HISTORY_R7_LOCAL_LINEAGE_SEPARATE",
+    "exact_head_ci": "4_WORKFLOWS_SUCCESS_REACQUIRED",
+    "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+    "state": "OPEN_DRAFT_UNMERGED",
+    "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b"
+  },
+  "process_epoch": "R7_ARTIFACTIZED_HOST_DISTRIBUTED_STABLE_BOUNDARY_20260912",
   "production_claim": "NONE",
-  "preproduction": "NO",
+  "projection_state": "LOCAL_UNPUBLISHED_R7_ARTIFACTIZED_STABLE_BOUNDARY",
   "rag": {
-    "profile": "LION-RAG32/1",
-    "publication": "NO; ARCHIVAL_PAYLOAD_UNCHANGED"
+    "publication": "NO",
+    "r6": {
+      "content_digest": "6a62153dc5fa7495eb51c6f5ef39372ccb736a5e9be1007d471628c03afeb4cd",
+      "manifest_sha256": "93fb4cecf74b645195f4c6b6b5e5f5706ca00f6f50d587a9db101c58d7901774",
+      "new_records": 15,
+      "predecessor_records_byte_preserved": 158,
+      "records": 173,
+      "release": "lion-rag32-v1.4-r6-multigeneration-candidate",
+      "validation": "PASS_32_173_158_PLUS_15_ROUNDTRIP_SELF18_RETRIEVAL30",
+      "zip_sha256": "35a19cf3cde06ccab7713bdc51dcaa39abd03221f2ec771bc2bdb739f5bb3309"
+    },
+    "r7_build": "AFTER_FINAL_CARRIER_LAST_TRUTH",
+    "r7_target": "lion-rag32-v1.4-r7-multigeneration-candidate"
+  },
+  "repository": "DonkeyJJLove/ai_platform",
+  "runtime_effect": "NONE",
+  "schema": "lion.documentation.current-state.v2",
+  "security": {
+    "bandit": "1.9.4 / 0 findings / 0 errors",
+    "bandit_artifact_sha256": "00e3d008112e98221d388ea56a4b0e5d0df89a2a2947308ee1a89a93dd8aa566",
+    "full_suite": "2810 tests / 0 fail / 0 error / 6 skip",
+    "full_suite_artifact_sha256": "4439f230868021858f355f7ead44ac858d1e0b5a7d06e88a3497db08ea284b8d",
+    "full_symbol_artifact_sha256": "f7132181dc451b8351883cc4f2f098baea7fffbe5fcc9b1da4a90c6a852ead58",
+    "full_symbol_census_digest": "7600123fa4580db7eb018717656446ab24fe05cbf8824a1e8289306e3ea2e93e",
+    "full_symbol_parse_failures": 0,
+    "full_symbol_python_files": 647,
+    "full_symbol_symbols": 10197,
+    "production_scan_digest": "d7975486e7bf78b02222d39a5c92b1dfa30cf3f3153a351c9e21256f2ee81872",
+    "raw_unclassified_count": 6,
+    "source_count": 314,
+    "surface_count": 273,
+    "unresolved_taxonomy": 0
+  },
+  "sqlite_hygiene": {
+    "baseline_resource_warnings": 2136,
+    "current_resource_warnings": 307,
+    "global_warning_suppression": false,
+    "proven_repaired_families": [
+      "persistent_authority_state",
+      "trusted_control_plane_providers",
+      "maintenance_bundle",
+      "repository_delete_fence",
+      "moon_file_write_mediation"
+    ],
+    "reduction": 1829,
+    "reduction_percent": 85.6,
+    "remaining_policy": "CLASSIFY_ALLOCATION_ORIGINS_THEN_ONE_FAMILY_AT_A_TIME",
+    "state": "PARTIAL_REDUCED_DEBT"
+  },
+  "truth": {
+    "carrier_last": true,
+    "currentness_rule": "CURRENT_STATE_DOCUMENT_DOES_NOT_PREDICT_ITS_OWN_DESCENDANT_SUBJECT",
+    "final_subject": "READ_FROM_TRUTH_CARRIERS_AT_CURRENT_HEAD",
+    "predecessor_truth_subject": "551f296c1ee344e1d362bde2cead7fd1f963117f6dc9fbd8c0eb06341c9eb922",
+    "state": "CARRIER_LAST_BOUNDARY_EXTERNAL_READBACK_REQUIRED"
+  },
+  "workflow": {
+    "audit_digest": "7a471ab0b47d98a9a84b8734abd999079317fb9c9c94a58ed5ead9f1947c4a10",
+    "control_advisory_findings": 0,
+    "critical_blocking_defects": 0,
+    "family_review_workflows": 0,
+    "inventory_count": 24,
+    "state": "ZERO_STRUCTURAL_HOMEOSTASIS_DEBT"
   }
 }

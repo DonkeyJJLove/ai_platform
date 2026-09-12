@@ -1,0 +1,2423 @@
+{
+  "edges": [
+    {
+      "relation": "DESCRIBES",
+      "source": "artifact:r7-repository-files",
+      "target": "rag:r7-target"
+    },
+    {
+      "relation": "INVALIDATES_AND_REQUIRES_REBIND",
+      "source": "artifact:r7-repository-files",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "VALIDATED_IN",
+      "source": "e02:attester-installation-r7",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:03fc2ed8317c",
+      "target": "git:33ccfbf36fee"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:0c3a7d78931f",
+      "target": "git:8daa0236e2e2"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:0cccc8fa68e8",
+      "target": "git:c82364a9c28b"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:166d33660fca",
+      "target": "git:0cccc8fa68e8"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:16abf0ee06e3",
+      "target": "git:28b0361310a9"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:1807c624d887",
+      "target": "git:c529da7c0377"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:1f9e10b43355",
+      "target": "git:fca0299f0354"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:20b8a54befcb",
+      "target": "git:bb3de9cd2ad2"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:22793ebe6518",
+      "target": "git:8ecd990e7110"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:22b0b5424c9c",
+      "target": "git:166d33660fca"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:22eb558c55d2",
+      "target": "git:d6ff97434e70"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:24bc9ac35eef",
+      "target": "git:22b0b5424c9c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:28b0361310a9",
+      "target": "git:9e753e8b6f9f"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:28cca4509f88",
+      "target": "git:381ef77a5436"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:2b5df03dbc83",
+      "target": "git:22793ebe6518"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:2ff869023c18",
+      "target": "git:ec88811fcae1"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:31d82795f023",
+      "target": "git:dd134176bf91"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:33ccfbf36fee",
+      "target": "git:d309b6c91647"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:34c3107c1d3c",
+      "target": "git:0c3a7d78931f"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:381ef77a5436",
+      "target": "git:22eb558c55d2"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:4150ac3db34c",
+      "target": "git:2ff869023c18"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:4194805d5294",
+      "target": "git:722a4a165377"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:491db646fd92",
+      "target": "git:16abf0ee06e3"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:4ad684f7f82c",
+      "target": "git:c0132cb767cc"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:4b6e1420108c",
+      "target": "git:491db646fd92"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:52642060d7c7",
+      "target": "git:b5eac6ca0888"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:552b45d8c0c6",
+      "target": "git:c572a3ec74ac"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:5762f4441d08",
+      "target": "git:8f276d87adc7"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:5fd079304f9e",
+      "target": "git:f0955139e560"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:6863df340b02",
+      "target": "git:cb28d5a769f9"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:696c17cc9713",
+      "target": "git:1f9e10b43355"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:705f0db4b703",
+      "target": "git:81f9d71e3a82"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:722a4a165377",
+      "target": "git:a1e0268c536e"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:7bc0432f4a4b",
+      "target": "git:d94e208b285c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:81f9d71e3a82",
+      "target": "git:34c3107c1d3c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:8b4c5c8451a5",
+      "target": "git:b95f73561a87"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:8daa0236e2e2",
+      "target": "git:4b6e1420108c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:8ecd990e7110",
+      "target": "git:705f0db4b703"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:8f276d87adc7",
+      "target": "git:d769c451f757"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:9e36d8ac90a0",
+      "target": "git:7bc0432f4a4b"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:9e753e8b6f9f",
+      "target": "git:e0f7f277fbc5"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:a0b985abb2ae",
+      "target": "git:e46cd3bb272a"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:a1e0268c536e",
+      "target": "git:5fd079304f9e"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:b5eac6ca0888",
+      "target": "git:a0b985abb2ae"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:b95f73561a87",
+      "target": "git:cee7861fb548"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:ba4931c9ae34",
+      "target": "git:4ad684f7f82c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:bb3de9cd2ad2",
+      "target": "git:2b5df03dbc83"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:c0132cb767cc",
+      "target": "git:9e36d8ac90a0"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:c529da7c0377",
+      "target": "git:20b8a54befcb"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:c572a3ec74ac",
+      "target": "git:5762f4441d08"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:c82364a9c28b",
+      "target": "git:4194805d5294"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:c85749bfc19c",
+      "target": "git:1807c624d887"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:cb28d5a769f9",
+      "target": "git:696c17cc9713"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:cee7861fb548",
+      "target": "git:d5c3270b1e4a"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:d309b6c91647",
+      "target": "git:e08ebeab6465"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:d5c3270b1e4a",
+      "target": "git:03fc2ed8317c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:d6ff97434e70",
+      "target": "git:552b45d8c0c6"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:d769c451f757",
+      "target": "git:31d82795f023"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:d94e208b285c",
+      "target": "git:c85749bfc19c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:dd134176bf91",
+      "target": "git:24bc9ac35eef"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:e08ebeab6465",
+      "target": "git:28cca4509f88"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:e0f7f277fbc5",
+      "target": "git:6863df340b02"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:e46cd3bb272a",
+      "target": "git:4150ac3db34c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:ec88811fcae1",
+      "target": "git:73e628847753"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:f0955139e560",
+      "target": "git:ba4931c9ae34"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:fca0299f0354",
+      "target": "git:52642060d7c7"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:master",
+      "target": "git:8b4c5c8451a5"
+    },
+    {
+      "relation": "DISTRIBUTES_KNOWLEDGE_OF",
+      "source": "hosts:r7-state-files",
+      "target": "rag:r7-target"
+    },
+    {
+      "relation": "ADMISSION_GATED_BY",
+      "source": "mc:source-rebind-r5",
+      "target": "mc:admission-r6"
+    },
+    {
+      "relation": "GATED_BY",
+      "source": "mc:source-rebind-r5",
+      "target": "mc:authority-boundary-r7"
+    },
+    {
+      "relation": "TARGETS_EXACT_SOURCE",
+      "source": "mc:source-rebind-r5",
+      "target": "git:master"
+    },
+    {
+      "relation": "BYTE_PREDECESSOR_OF",
+      "source": "rag:r5",
+      "target": "rag:r6-target"
+    },
+    {
+      "relation": "BYTE_PREDECESSOR_OF",
+      "source": "rag:r6",
+      "target": "rag:r7-target"
+    },
+    {
+      "relation": "BUILT_AFTER",
+      "source": "rag:r6-target",
+      "target": "truth:r6-boundary"
+    },
+    {
+      "relation": "BUILT_AFTER",
+      "source": "rag:r7-target",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "SOURCE_REBIND_PLANNED_BY",
+      "source": "runtime:mission-control",
+      "target": "mc:source-rebind-r5"
+    },
+    {
+      "relation": "VALIDATED_IN",
+      "source": "sqlite:hygiene-r7",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "SUPERSEDED_BY",
+      "source": "truth:r6-boundary",
+      "target": "truth:r7-boundary"
+    }
+  ],
+  "generated_from_head": "73e628847753a3f60c288facd959c15a352a9087",
+  "generated_from_tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+  "graph_digest": "a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6",
+  "graph_digest_domain": "LION/GIT-LOGICAL-TREE/3",
+  "invariants": [
+    "NO_AUTHORITY_FROM_GRAPH",
+    "RUNTIME_IS_SEPARATE_FROM_REPOSITORY",
+    "RAG_IS_NOT_LIVE_TRUTH",
+    "LOCAL_CURRENT_HEAD_DESCENDS_FROM_TRACKED_MASTER"
+  ],
+  "nodes": [
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_CANDIDATE",
+      "evidence_refs": [
+        "state:OFFLINE_CANDIDATE_NOT_INSTALLED",
+        "key-material:false",
+        "authority-effect:NONE",
+        "runtime-effect:NONE"
+      ],
+      "head": "4150ac3db34c991d3511ed5ef6f9ccf64a96b08f",
+      "integration_state": "OFFLINE_CANDIDATE_NOT_INSTALLED",
+      "node_id": "e02:attester-installation-r7",
+      "node_type": "E02_EXTERNAL_ATTESTER_INSTALLATION_CANDIDATE",
+      "notes": "Binds provider/issuer/trust-anchor/durable-store/trusted-time/source identity. Apply path hard-fails and requires separate authority.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_INSTALLED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6b7931d154ace2fe91f7b693c0e844f101400de4",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_OBSERVED_FILE_DISTRIBUTION",
+      "evidence_refs": [
+        "hosts:4",
+        "path:/var/lib/sentinelx/uploads/lion-project-state-r7",
+        "authority-boundary-sha256:b137bc8784cd8f55c2deb28b14d8bace2d7686a2249d27ea2d75500146308682",
+        "rag-descriptor-sha256:2fb8e5fa871baa91be10e0751ce34c85439aae5e6f4ec3a8dd10b0844da7d9a9"
+      ],
+      "head": null,
+      "integration_state": "FILES_WRITTEN_ON_4_CONNECTORS",
+      "node_id": "hosts:r7-state-files",
+      "node_type": "HOST_STATE_DISTRIBUTION",
+      "notes": "Identical knowledge-state files written to all four connectors; not service deployment and not material-executor proof.",
+      "observed_at": "2026-09-12T16:30:00Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "FILES_WRITTEN_NO_SERVICE_RESTART",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:03fc2ed8317c5cff775af217b8c9f65b5b1f1c05"
+      ],
+      "head": "03fc2ed8317c5cff775af217b8c9f65b5b1f1c05",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:03fc2ed8317c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind current production scan after workflow homeostasis",
+      "observed_at": null,
+      "parent_heads": [
+        "d5c3270b1e4a24c07b303ddcd891deb82e6419b6"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "0898c7b6337acf6963eb11562080d70cd0d4624f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:0c3a7d78931f69c3a17ee77c50b16f6d403fe187"
+      ],
+      "head": "0c3a7d78931f69c3a17ee77c50b16f6d403fe187",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:0c3a7d78931f",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after final workflow family hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6dae27e5d6fa9f9b5751d89dfa50c5e1a2c83e9f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:0cccc8fa68e806c972170308460eb6716d5711b7"
+      ],
+      "head": "0cccc8fa68e806c972170308460eb6716d5711b7",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:0cccc8fa68e8",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(e02): add external app-session attester boundary",
+      "observed_at": null,
+      "parent_heads": [
+        "166d33660fca507bc3918415998d60824c962e49"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "04b704ba540ab2711247816af906bd399934747c",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:166d33660fca507bc3918415998d60824c962e49"
+      ],
+      "head": "166d33660fca507bc3918415998d60824c962e49",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:166d33660fca",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(truth): bind generation-10 final noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "06142e956bda8df8c281231fdccfce5cfefeedd8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:16abf0ee06e31cdbd7e8c0e63104efc038aa7db8"
+      ],
+      "head": "16abf0ee06e31cdbd7e8c0e63104efc038aa7db8",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:16abf0ee06e3",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after executor independence taxonomy",
+      "observed_at": null,
+      "parent_heads": [
+        "491db646fd9206c84414a16350e671de55a04bd9"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "94a6cccceba12fae3339103cf796d0103868b447",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:1807c624d8877376dee533cf2dda62bfe102635c"
+      ],
+      "head": "1807c624d8877376dee533cf2dda62bfe102635c",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:1807c624d887",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after F009 hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "c85749bfc19c52151664ea1304c9db5418004a17"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "0c6f2b37614d96bf8ac9596aafdf3a3d9bd42c1e",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:1f9e10b433559ad2b82db45cb8170aa1b1ba6021"
+      ],
+      "head": "1f9e10b433559ad2b82db45cb8170aa1b1ba6021",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:1f9e10b43355",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(sqlite): close maintenance bundle connections on context exit",
+      "observed_at": null,
+      "parent_heads": [
+        "696c17cc97134bdaaee1938173439ac525716806"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "831ca4a26234f82bf010b4423dc234ac898f9290",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:20b8a54befcbe38c453efbef883d17d813ee807a"
+      ],
+      "head": "20b8a54befcbe38c453efbef883d17d813ee807a",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:20b8a54befcb",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs(git-spine): refresh R4 runtime and rebind external facts",
+      "observed_at": null,
+      "parent_heads": [
+        "c529da7c03773cad2461615aaf21f175abf76de4"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "274fa4502a6783dccfb9659aa57a57df39f87bd5",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:22793ebe651882b9c0c523d9ff8d207952241a6e"
+      ],
+      "head": "22793ebe651882b9c0c523d9ff8d207952241a6e",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:22793ebe6518",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(e02): add durable atomic app-session replay sequence store",
+      "observed_at": null,
+      "parent_heads": [
+        "2b5df03dbc838a590369cffcb5472af6f7293511"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "06b37a27a9e474ab41c1b899d10348b25afda7f0",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4"
+      ],
+      "head": "22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:22b0b5424c9c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs: reconcile generation-10 git spine trust and forward plan",
+      "observed_at": null,
+      "parent_heads": [
+        "24bc9ac35eefd2a571e919a398d169f7a6c51007"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "12d87c8c45049bd154f1c593123aa153ce90a0d8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:22eb558c55d22779b6ade76677af5b5d45c7343a"
+      ],
+      "head": "22eb558c55d22779b6ade76677af5b5d45c7343a",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:22eb558c55d2",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci: automate RAG32 and Git logical-tree validation evidence",
+      "observed_at": null,
+      "parent_heads": [
+        "381ef77a54365bf8e1e30ca972394658ec2f71ed"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "df75eccf5dd6d7a3bd65ae52310a61faa15ae1ee",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:24bc9ac35eefd2a571e919a398d169f7a6c51007"
+      ],
+      "head": "24bc9ac35eefd2a571e919a398d169f7a6c51007",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:24bc9ac35eef",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after app-session trust candidate",
+      "observed_at": null,
+      "parent_heads": [
+        "dd134176bf912ae847674fdb16208693a857eba1"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6f675abeef7d81924f9689b87dc5fbd960435a2d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:28b0361310a93e31931b35f54a7a7ccb9445915d"
+      ],
+      "head": "28b0361310a93e31931b35f54a7a7ccb9445915d",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:28b0361310a9",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs(r6): freeze final noncarrier homeostasis snapshot",
+      "observed_at": null,
+      "parent_heads": [
+        "16abf0ee06e31cdbd7e8c0e63104efc038aa7db8"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "f3cfe3ee24058249daa79f6b0450206ec0e9d4ce",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:28cca4509f886781430979bfa354d02cee7042d1"
+      ],
+      "head": "28cca4509f886781430979bfa354d02cee7042d1",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:28cca4509f88",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(mission-control): model effect-free source rebind plan",
+      "observed_at": null,
+      "parent_heads": [
+        "e08ebeab6465ce48f89718e5937214e69fa27403"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "dc517bda7128aded3b2b8d9a431064f03f39b277",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:2b5df03dbc838a590369cffcb5472af6f7293511"
+      ],
+      "head": "2b5df03dbc838a590369cffcb5472af6f7293511",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:2b5df03dbc83",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(truth): bind R5 final noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "bb3de9cd2ad23331a95f631105de7a2232465189"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6f94abe2a444d1ad7d97aa46bca9e9e7c4cdd18f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:2ff869023c18817611100fd4d62a4290f96a2584"
+      ],
+      "head": "2ff869023c18817611100fd4d62a4290f96a2584",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:2ff869023c18",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after E02 attester installation candidate",
+      "observed_at": null,
+      "parent_heads": [
+        "4150ac3db34c991d3511ed5ef6f9ccf64a96b08f"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "d12b504cf13e4ec80714905ffae437cb20d731d8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:31d82795f023420fb0d44a41a1129a6ee04c48a8"
+      ],
+      "head": "31d82795f023420fb0d44a41a1129a6ee04c48a8",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:31d82795f023",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after workflow-spine evolution",
+      "observed_at": null,
+      "parent_heads": [
+        "d769c451f757ce304893b5825eefd9efe10eafce"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "82160767eb713440b2da6115fb58933b95d3909f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:33ccfbf36feedf6eed20ffc4d4178089111e88cb"
+      ],
+      "head": "33ccfbf36feedf6eed20ffc4d4178089111e88cb",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:33ccfbf36fee",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs: reconcile final R3 noncarrier validation state",
+      "observed_at": null,
+      "parent_heads": [
+        "03fc2ed8317c5cff775af217b8c9f65b5b1f1c05"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9a3678e5c11733d6fb2328a0b5f8996a18a0e8d0",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85"
+      ],
+      "head": "34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:34c3107c1d3c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(moon): bind hardened runner workflow to exact source mirror",
+      "observed_at": null,
+      "parent_heads": [
+        "81f9d71e3a82f85050bbb1470d024d2460816459"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "3d8241598c5bacaa944116a83bb36dad2bab4c31",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:381ef77a54365bf8e1e30ca972394658ec2f71ed"
+      ],
+      "head": "381ef77a54365bf8e1e30ca972394658ec2f71ed",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:381ef77a5436",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "feat(git-spine): add deterministic logical-tree generator",
+      "observed_at": null,
+      "parent_heads": [
+        "28cca4509f886781430979bfa354d02cee7042d1"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "72093a1975cd4e80f0b4cef7a5d843fcf6fda1c0",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:4150ac3db34c991d3511ed5ef6f9ccf64a96b08f"
+      ],
+      "head": "4150ac3db34c991d3511ed5ef6f9ccf64a96b08f",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:4150ac3db34c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(e02): bind external app-session attester installation contract",
+      "observed_at": null,
+      "parent_heads": [
+        "e46cd3bb272a11868b09da8287d95335f4798654"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6b7931d154ace2fe91f7b693c0e844f101400de4",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:4194805d5294469c94d68dd7d7d5fded12fd2924"
+      ],
+      "head": "4194805d5294469c94d68dd7d7d5fded12fd2924",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:4194805d5294",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(f005): bind read-only CI workflows to exact checkout identity",
+      "observed_at": null,
+      "parent_heads": [
+        "c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "ae5007cf1b6e1a72a2319b16ea9ef6f7ed97e542",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:491db646fd9206c84414a16350e671de55a04bd9"
+      ],
+      "head": "491db646fd9206c84414a16350e671de55a04bd9",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:491db646fd92",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(executor): formalize attested material independence taxonomy",
+      "observed_at": null,
+      "parent_heads": [
+        "4b6e1420108cae41a7890bc0dd7550c5d4d9413f"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "b46644150415adb9afc30125a3938ccd5a0c4cac",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:4ad684f7f82cd2dd312f1d4332dad97142b05baa"
+      ],
+      "head": "4ad684f7f82cd2dd312f1d4332dad97142b05baa",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:4ad684f7f82c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "feat(workflow): classify homeostasis findings by effect family",
+      "observed_at": null,
+      "parent_heads": [
+        "ba4931c9ae344ea7888475e17efc9f1668dee977"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "1d4a3bdba1e872b0774c62e0c9d680836ca712e9",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:4b6e1420108cae41a7890bc0dd7550c5d4d9413f"
+      ],
+      "head": "4b6e1420108cae41a7890bc0dd7550c5d4d9413f",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:4b6e1420108c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after mission-control admission candidate",
+      "observed_at": null,
+      "parent_heads": [
+        "8daa0236e2e20b4c1a9e01be598e49d75037f26a"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "92afd5500969e6558d7d5322ddbddc3596c514ff",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:52642060d7c73fd800991a63a78b8444adba1769"
+      ],
+      "head": "52642060d7c73fd800991a63a78b8444adba1769",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:52642060d7c7",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(sqlite): close repository delete fence connections on context exit",
+      "observed_at": null,
+      "parent_heads": [
+        "fca0299f0354440201c0b84d6eecbdc10f9d9b3c"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9c7fce225b4d7208646d3c6bc1e54836ebefdf83",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:552b45d8c0c62297ccc72a369ec97c55a5e2b2d2"
+      ],
+      "head": "552b45d8c0c62297ccc72a369ec97c55a5e2b2d2",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:552b45d8c0c6",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after multigeneration source evolution",
+      "observed_at": null,
+      "parent_heads": [
+        "d6ff97434e707f94f332d44102ab39d79959829b"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "d363e7cdf2400bc130832241f4ac25f84242af77",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:5762f4441d08f524e0b01697202f6e347ea9e560"
+      ],
+      "head": "5762f4441d08f524e0b01697202f6e347ea9e560",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:5762f4441d08",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs: reconcile generation-eight R4 current state and Git spine",
+      "observed_at": null,
+      "parent_heads": [
+        "c572a3ec74ac58f20414f81fcb51d0c586f4df01"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "cb597d5f32cf61ae5d40606efed71328221166b1",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:5fd079304f9e3a4f6fb169e43d723f3bef661eea"
+      ],
+      "head": "5fd079304f9e3a4f6fb169e43d723f3bef661eea",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:5fd079304f9e",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after fleet workflow hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "a1e0268c536ee3083653025f710c90d2fa2d1f58"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "35bbd0369004271f9178920767e2e53463ddef1e",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:6863df340b02e24e9dce683416a3cc096cc9cd65"
+      ],
+      "head": "6863df340b02e24e9dce683416a3cc096cc9cd65",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:6863df340b02",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after authority sqlite lifecycle fix",
+      "observed_at": null,
+      "parent_heads": [
+        "e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "49b9d1249b28a1c2949a8acd96ab71eea4506e43",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:696c17cc97134bdaaee1938173439ac525716806"
+      ],
+      "head": "696c17cc97134bdaaee1938173439ac525716806",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:696c17cc9713",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after trusted control-plane sqlite lifecycle fix",
+      "observed_at": null,
+      "parent_heads": [
+        "cb28d5a769f98ff603bc2076d45cecb15d1032b2"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "b006944e219651effdb57f8963385790e6e991bb",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:705f0db4b70309865e830d06ea92001020272578"
+      ],
+      "head": "705f0db4b70309865e830d06ea92001020272578",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:705f0db4b703",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production surface closure after durable app-session store",
+      "observed_at": null,
+      "parent_heads": [
+        "8ecd990e71105f3fe5571a71dac25c586f4334e5"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c999d3c943bccf684aee58a653a7a3cab67ab7bc",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:722a4a16537712b86d3e6edb39432b509cc16b13"
+      ],
+      "head": "722a4a16537712b86d3e6edb39432b509cc16b13",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:722a4a165377",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after F005 CI hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "4194805d5294469c94d68dd7d7d5fded12fd2924"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9aaf1f02cf9cb9533c5485fda3461838c2157e0d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_LINEAGE",
+      "evidence_refs": [
+        "git-object:73e628847753a3f60c288facd959c15a352a9087"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:73e628847753",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(truth): bind R7 final noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "ec88811fcae19d7c8b906ed473e81ed2d3554f95"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:7bc0432f4a4b80ac68493dbc569500d20e593f54"
+      ],
+      "head": "7bc0432f4a4b80ac68493dbc569500d20e593f54",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:7bc0432f4a4b",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(core): queue evidence runs without cancellation",
+      "observed_at": null,
+      "parent_heads": [
+        "9e36d8ac90a02efc17454df0727900a08a8b6379"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "de9abab0589e822278a397c5266e003f40565b87",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:81f9d71e3a82f85050bbb1470d024d2460816459"
+      ],
+      "head": "81f9d71e3a82f85050bbb1470d024d2460816459",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:81f9d71e3a82",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(workflow): close remaining effect-family homeostasis findings",
+      "observed_at": null,
+      "parent_heads": [
+        "705f0db4b70309865e830d06ea92001020272578"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "10a85875cfa03890ce5eeaff3db03a5874fe4600",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:8b4c5c8451a53ea8221d28042e6fcbccb69a149f"
+      ],
+      "head": "8b4c5c8451a53ea8221d28042e6fcbccb69a149f",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:8b4c5c8451a5",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate: replay E02 and Mission Control delta on current master",
+      "observed_at": null,
+      "parent_heads": [
+        "938aa94460a2e0f81c470c1586626290bb74bc2c"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "ff78adb1ea30a3b9835cd45696734b97a7cb7271",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:8daa0236e2e20b4c1a9e01be598e49d75037f26a"
+      ],
+      "head": "8daa0236e2e20b4c1a9e01be598e49d75037f26a",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:8daa0236e2e2",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(mission-control): add source-rebind deployment admission contract",
+      "observed_at": null,
+      "parent_heads": [
+        "0c3a7d78931f69c3a17ee77c50b16f6d403fe187"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "14d72ed9d53819f7f933b51b22bde05cefba4d48",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:8ecd990e71105f3fe5571a71dac25c586f4334e5"
+      ],
+      "head": "8ecd990e71105f3fe5571a71dac25c586f4334e5",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:8ecd990e7110",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production surface closure after durable app-session store",
+      "observed_at": null,
+      "parent_heads": [
+        "22793ebe651882b9c0c523d9ff8d207952241a6e"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e146212dba5e01e61a0ea46001ffae3047a43691",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:8f276d87adc77bed7eb514aec59df569d4ee2040"
+      ],
+      "head": "8f276d87adc77bed7eb514aec59df569d4ee2040",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:8f276d87adc7",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(truth): bind generation-eight R4 final noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "5762f4441d08f524e0b01697202f6e347ea9e560"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "830ff7f93058ba92b27edf9cb5f20c3faa5d76ac",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:9e36d8ac90a02efc17454df0727900a08a8b6379"
+      ],
+      "head": "9e36d8ac90a02efc17454df0727900a08a8b6379",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:9e36d8ac90a0",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after group-channel hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6027f63b6fb75c2da34b431a65e512d3682d9e41",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:9e753e8b6f9ff8358222ae75acb8b34456e88ec9"
+      ],
+      "head": "9e753e8b6f9ff8358222ae75acb8b34456e88ec9",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:9e753e8b6f9f",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(truth): bind R6 final noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "28b0361310a93e31931b35f54a7a7ccb9445915d"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c3d98a26b7e4a913145c30d0e0bb7fec717574f1",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:a0b985abb2aeb556960bdee87452eb6a1bbfb4e7"
+      ],
+      "head": "a0b985abb2aeb556960bdee87452eb6a1bbfb4e7",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:a0b985abb2ae",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(sqlite): close moon file-write fence connections on context exit",
+      "observed_at": null,
+      "parent_heads": [
+        "b5eac6ca08883bf69948147585c273b448dd9415"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "991334695afb742bc12354dbdbf6867e2062461a",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:a1e0268c536ee3083653025f710c90d2fa2d1f58"
+      ],
+      "head": "a1e0268c536ee3083653025f710c90d2fa2d1f58",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:a1e0268c536e",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(fleet): harden read-only aggregate effect budget evidence",
+      "observed_at": null,
+      "parent_heads": [
+        "722a4a16537712b86d3e6edb39432b509cc16b13"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c8c3e4c564244f7caf2a416197fc74206d1a9ff9",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:b5eac6ca08883bf69948147585c273b448dd9415"
+      ],
+      "head": "b5eac6ca08883bf69948147585c273b448dd9415",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:b5eac6ca0888",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after repository fence sqlite lifecycle fix",
+      "observed_at": null,
+      "parent_heads": [
+        "52642060d7c73fd800991a63a78b8444adba1769"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6a293556d293280c5734cd9ac6df87adbd8870db",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:b95f73561a876a148052c166f4df370bc7cbe832"
+      ],
+      "head": "b95f73561a876a148052c166f4df370bc7cbe832",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:b95f73561a87",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs(codex): add exact project integration contract",
+      "observed_at": null,
+      "parent_heads": [
+        "8b4c5c8451a53ea8221d28042e6fcbccb69a149f"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "8ecfca2feecd3045a6e725b29eb9fd3a099831de",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:ba4931c9ae344ea7888475e17efc9f1668dee977"
+      ],
+      "head": "ba4931c9ae344ea7888475e17efc9f1668dee977",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:ba4931c9ae34",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after observation workflow hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "f0955139e5608147f3e223833865fdd74bbb0896"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "4183bdd1a9a175d3f098600331ed0a43bd82058c",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:bb3de9cd2ad23331a95f631105de7a2232465189"
+      ],
+      "head": "bb3de9cd2ad23331a95f631105de7a2232465189",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:bb3de9cd2ad2",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs: reconcile R5 workflow trust runtime and forward evolution state",
+      "observed_at": null,
+      "parent_heads": [
+        "20b8a54befcbe38c453efbef883d17d813ee807a"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "b25a78073559f1d654b68464c6048977094a5d35",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d"
+      ],
+      "head": "c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:c0132cb767cc",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(observation): bind group-channel evidence head tree and receipt digest",
+      "observed_at": null,
+      "parent_heads": [
+        "4ad684f7f82cd2dd312f1d4332dad97142b05baa"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9bcd9f0144cfdcca776b9a2d09a25c7cc763a48e",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:c529da7c03773cad2461615aaf21f175abf76de4"
+      ],
+      "head": "c529da7c03773cad2461615aaf21f175abf76de4",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:c529da7c0377",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "feat(rag): add exact artifact currentness classifier",
+      "observed_at": null,
+      "parent_heads": [
+        "1807c624d8877376dee533cf2dda62bfe102635c"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "803714397a2fdae113fad142ae1cc704cb810015",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:c572a3ec74ac58f20414f81fcb51d0c586f4df01"
+      ],
+      "head": "c572a3ec74ac58f20414f81fcb51d0c586f4df01",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:c572a3ec74ac",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind host authority inventory to generation-eight sources",
+      "observed_at": null,
+      "parent_heads": [
+        "552b45d8c0c62297ccc72a369ec97c55a5e2b2d2"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "0ec64acce259300c28a031ea9bfcd56d18a4d691",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93"
+      ],
+      "head": "c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:c82364a9c28b",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after external app attester candidate",
+      "observed_at": null,
+      "parent_heads": [
+        "0cccc8fa68e806c972170308460eb6716d5711b7"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c618413538a03365f16d3bc6cb96acdc2cecc355",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:c85749bfc19c52151664ea1304c9db5418004a17"
+      ],
+      "head": "c85749bfc19c52151664ea1304c9db5418004a17",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:c85749bfc19c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(f009): bind live-proof source tree and evidence set",
+      "observed_at": null,
+      "parent_heads": [
+        "d94e208b285ce867aa42b3f01192452eb7c0910a"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "692f554d03ac1a5906364cf426edf199c6b3b645",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:cb28d5a769f98ff603bc2076d45cecb15d1032b2"
+      ],
+      "head": "cb28d5a769f98ff603bc2076d45cecb15d1032b2",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:cb28d5a769f9",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(sqlite): close trusted control-plane connections on context exit",
+      "observed_at": null,
+      "parent_heads": [
+        "6863df340b02e24e9dce683416a3cc096cc9cd65"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "ef4170b27937ad9ad041240a643f715f16c3d693",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:cee7861fb548e01db7678a83dfe43fae477c3ab2"
+      ],
+      "head": "cee7861fb548e01db7678a83dfe43fae477c3ab2",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:cee7861fb548",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci: strengthen exact-head security and bounded workflow evidence",
+      "observed_at": null,
+      "parent_heads": [
+        "b95f73561a876a148052c166f4df370bc7cbe832"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "17abcb6921fa46577c59ee3d2014aef4863b756b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:d309b6c91647917a469ee461313a685c560b9913"
+      ],
+      "head": "d309b6c91647917a469ee461313a685c560b9913",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:d309b6c91647",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(truth): bind R3 rebased final noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "33ccfbf36feedf6eed20ffc4d4178089111e88cb"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "ca7344507bfc202a67c09da9796b9c7621188a7b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:d5c3270b1e4a24c07b303ddcd891deb82e6419b6"
+      ],
+      "head": "d5c3270b1e4a24c07b303ddcd891deb82e6419b6",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:d5c3270b1e4a",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs: materialize R3 git logical spine and supersession state",
+      "observed_at": null,
+      "parent_heads": [
+        "cee7861fb548e01db7678a83dfe43fae477c3ab2"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "76254f37501d09c454ab5346029e6d3d92719cc6",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:d6ff97434e707f94f332d44102ab39d79959829b"
+      ],
+      "head": "d6ff97434e707f94f332d44102ab39d79959829b",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:d6ff97434e70",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(executor): bind shared boot failure-domain evidence",
+      "observed_at": null,
+      "parent_heads": [
+        "22eb558c55d22779b6ade76677af5b5d45c7343a"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e9f578a68d377300f8fe55a1cc59e39b8673ae04",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:d769c451f757ce304893b5825eefd9efe10eafce"
+      ],
+      "head": "d769c451f757ce304893b5825eefd9efe10eafce",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:d769c451f757",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(git-spine): validate canonical v3 and workflow homeostasis",
+      "observed_at": null,
+      "parent_heads": [
+        "8f276d87adc77bed7eb514aec59df569d4ee2040"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "03fb3c8e36e0da67f2ffb11ea22dbf6ceefee7e2",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:d94e208b285ce867aa42b3f01192452eb7c0910a"
+      ],
+      "head": "d94e208b285ce867aa42b3f01192452eb7c0910a",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:d94e208b285c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after core workflow hardening",
+      "observed_at": null,
+      "parent_heads": [
+        "7bc0432f4a4b80ac68493dbc569500d20e593f54"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "dffd2fe9faac030664182f261dc68d7657f71e57",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:dd134176bf912ae847674fdb16208693a857eba1"
+      ],
+      "head": "dd134176bf912ae847674fdb16208693a857eba1",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:dd134176bf91",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(e02): add effect-free app-session attestation binding",
+      "observed_at": null,
+      "parent_heads": [
+        "31d82795f023420fb0d44a41a1129a6ee04c48a8"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c75da0922446c9cd4234cb5f77c296e79381a22e",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:e08ebeab6465ce48f89718e5937214e69fa27403"
+      ],
+      "head": "e08ebeab6465ce48f89718e5937214e69fa27403",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:e08ebeab6465",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "candidate(e02): bind provenance time and sequence trust primitives",
+      "observed_at": null,
+      "parent_heads": [
+        "d309b6c91647917a469ee461313a685c560b9913"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "0044fee9356f1f057bb76583b4b5302896230869",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f"
+      ],
+      "head": "e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:e0f7f277fbc5",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(sqlite): close persistent authority connections on context exit",
+      "observed_at": null,
+      "parent_heads": [
+        "9e753e8b6f9ff8358222ae75acb8b34456e88ec9"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "8fb9eecd4928f9d66814b7557f269cdcb6f4cad6",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:e46cd3bb272a11868b09da8287d95335f4798654"
+      ],
+      "head": "e46cd3bb272a11868b09da8287d95335f4798654",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:e46cd3bb272a",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test(moon): preserve certified surfaces across sqlite lifecycle fix",
+      "observed_at": null,
+      "parent_heads": [
+        "a0b985abb2aeb556960bdee87452eb6a1bbfb4e7"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "2a91e41441758f84067ac5ebd66857d67f5a9a90",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:ec88811fcae19d7c8b906ed473e81ed2d3554f95"
+      ],
+      "head": "ec88811fcae19d7c8b906ed473e81ed2d3554f95",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:ec88811fcae1",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs(r7): freeze final noncarrier spine and authority boundaries",
+      "observed_at": null,
+      "parent_heads": [
+        "2ff869023c18817611100fd4d62a4290f96a2584"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "b71e30f3aaae50381e4b3c6cccd54c51108373d0",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:f0955139e5608147f3e223833865fdd74bbb0896"
+      ],
+      "head": "f0955139e5608147f3e223833865fdd74bbb0896",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:f0955139e560",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "ci(observation): bind code-perception observer implementation identity",
+      "observed_at": null,
+      "parent_heads": [
+        "5fd079304f9e3a4f6fb169e43d723f3bef661eea"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c5aa95bee71b11300d02d5d27f114bb55b9fe481",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "evidence_refs": [
+        "git-object:fca0299f0354440201c0b84d6eecbdc10f9d9b3c"
+      ],
+      "head": "fca0299f0354440201c0b84d6eecbdc10f9d9b3c",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:fca0299f0354",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "test: rebind production scan after maintenance sqlite lifecycle fix",
+      "observed_at": null,
+      "parent_heads": [
+        "1f9e10b433559ad2b82db45cb8170aa1b1ba6021"
+      ],
+      "rag_release": null,
+      "ref": "mission/r3-rebased-local-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "5faeea02ff56d1441ab0c1d8902e2bc5ee27943d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "INCOMPLETE_ROLLBACK_IDENTITY",
+      "evidence_refs": [
+        "runtime-source:743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+        "runtime-tree:5afea703fd887f2609245a48000dbc47b8cd1b0f",
+        "runtime-release:e02-passive-daffa37f3b14ab29",
+        "rollback-configuration-digest:UNKNOWN",
+        "rollback-adapter-digest:UNKNOWN",
+        "rollback-schema-digest:UNKNOWN",
+        "max-attempts:1",
+        "retry:0",
+        "replay:RECONCILE_FIRST"
+      ],
+      "head": null,
+      "integration_state": "INCOMPLETE_DO_NOT_APPLY",
+      "node_id": "mc:authority-boundary-r7",
+      "node_type": "MISSION_CONTROL_AUTHORITY_BOUNDARY",
+      "notes": "No deployment may be admitted until exact current rollback configuration/adapter/schema digests are independently bound.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_EXECUTED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_CONTRACT",
+      "evidence_refs": [
+        "git:8daa0236e2e20b4c1a9e01be598e49d75037f26a",
+        "contract:one-shot-retry0-reconcile-first"
+      ],
+      "head": "8daa0236e2e20b4c1a9e01be598e49d75037f26a",
+      "integration_state": "LOCAL_CANDIDATE",
+      "node_id": "mc:admission-r6",
+      "node_type": "MISSION_CONTROL_DEPLOYMENT_ADMISSION_CONTRACT",
+      "notes": "Admission contract cannot execute apply; exact rollback configuration still requires fresh readback at authority time.",
+      "observed_at": "2026-09-12T14:41:53Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "AUTHORITY_REQUIRED_NOT_EXECUTED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "14d72ed9d53819f7f933b51b22bde05cefba4d48",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "TARGET_BOUND_TO_CURRENT_REMOTE_MASTER",
+      "evidence_refs": [
+        "plan-digest:d5e5e60a75aad3c7a45b776739d25ccfc694011b80e541154b0e78312713f15a",
+        "package-digest:6041ac732002b44468bdd5ca8c56e28843fa3fcb4f7ac4994fb6dc1ec40f0fa6"
+      ],
+      "head": "938aa94460a2e0f81c470c1586626290bb74bc2c",
+      "integration_state": "LOCAL_OFFLINE_CANDIDATE_NOT_ACTIVATED",
+      "node_id": "mc:source-rebind-r5",
+      "node_type": "MISSION_CONTROL_SOURCE_REBIND_PACKAGE",
+      "notes": "Effect-free target package only; deployment/restart not authorized.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "master",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_APPLIED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "70d698f937608495c3845b9b7c1f0bc515a3789d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_OPEN_DRAFT_REACQUIRED",
+      "evidence_refs": [
+        "github:PR#333:3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+        "ci:exact-head:4-workflows-success"
+      ],
+      "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+      "integration_state": "OPEN_DRAFT_UNMERGED",
+      "node_id": "git:pr333",
+      "node_type": "OPEN_PR",
+      "notes": "Historical draft; R7 local lineage is separate and unpublished.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "mission/e02-offline-candidate-codeql24-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_MATERIALIZED",
+      "evidence_refs": [
+        "path:LION/architecture/v1_4/artifacts/r7",
+        "files:6"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "LOCAL_CANDIDATE_MATERIALIZED",
+      "node_id": "artifact:r7-repository-files",
+      "node_type": "R7_ARTIFACTIZED_STATE_SET",
+      "notes": "Materializes R7 reports, authority state, host distribution and RAG validation summaries into Git.",
+      "observed_at": "2026-09-12T16:30:00Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "TARGET_AFTER_FINAL_CARRIER_LAST",
+      "evidence_refs": [
+        "lpcl:R6:RAG-R6",
+        "predecessor:rag:r5"
+      ],
+      "head": null,
+      "integration_state": "NOT_BUILT_YET",
+      "node_id": "rag:r6-target",
+      "node_type": "RAG_TARGET",
+      "notes": "R6 must be built outside Git after carrier-last truth, preserving all 158 R5 record blocks.",
+      "observed_at": "2026-09-12T14:41:53Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r6-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "VERIFIED_MATERIAL_BYTES_CURRENT_PREDECESSOR",
+      "evidence_refs": [
+        "zip-sha256:52fa9b3f78f7fcb77b6f96f3c83caa2183d35bce658e8e23835d43544d3827d0",
+        "manifest-sha256:942872520e8e98f2aa655f67f9d7f568c3970dd16e8d72a93c04c53f42de5348",
+        "content:a23438679445a96b0e54730500dbffa5da7c45c7ef79bdc89750d2bcd146aaa6",
+        "validation:self18-pass",
+        "retrieval:27-pass"
+      ],
+      "head": null,
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "rag:r5",
+      "node_type": "RAG_VERIFIED_LOCAL_CANDIDATE",
+      "notes": "32 containers / 158 records / 145 predecessor records byte-preserved / 13 R5 records. Exact R6 predecessor.",
+      "observed_at": "2026-09-12T14:41:53Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r5-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "VERIFIED_MATERIAL_BYTES_CURRENT_PREDECESSOR",
+      "evidence_refs": [
+        "zip-sha256:35a19cf3cde06ccab7713bdc51dcaa39abd03221f2ec771bc2bdb739f5bb3309",
+        "manifest-sha256:93fb4cecf74b645195f4c6b6b5e5f5706ca00f6f50d587a9db101c58d7901774",
+        "content:6a62153dc5fa7495eb51c6f5ef39372ccb736a5e9be1007d471628c03afeb4cd",
+        "records:173",
+        "predecessor-byte-identity:158/158",
+        "self-test:18/18",
+        "retrieval:30/30"
+      ],
+      "head": null,
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "rag:r6",
+      "node_type": "RAG_VERIFIED_LOCAL_CANDIDATE",
+      "notes": "Exact R6 predecessor for R7; 32 containers / 173 records; not live truth or authority.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r6-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": "96860b6fdcd5ea21e0d59911e6c6c5c0dc8ff2443835392b40dba27c68e5de4c"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_VERIFIED_ARTIFACT",
+      "evidence_refs": [
+        "zip-sha256:0965df6dd05b8e155506d2c619fa1ae5157e1934639509c25b98f17e55a1d811",
+        "records:188",
+        "predecessor-exact:173/173",
+        "self-test:18/18",
+        "retrieval:30/30",
+        "independent-validation:PASS"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "rag:r7-target",
+      "node_type": "RAG_VERIFIED_LOCAL_CANDIDATE",
+      "notes": "R7 RAG32 exact local package verified by generator and independent validator; no publication authority.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": "551f296c1ee344e1d362bde2cead7fd1f963117f6dc9fbd8c0eb06341c9eb922"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_REMOTE_TRACKING_EXACT",
+      "evidence_refs": [
+        "git-object:938aa94460a2e0f81c470c1586626290bb74bc2c"
+      ],
+      "head": "938aa94460a2e0f81c470c1586626290bb74bc2c",
+      "integration_state": "MERGED",
+      "node_id": "git:master",
+      "node_type": "REMOTE_MASTER",
+      "notes": "Remote-tracking snapshot; network currentness must be reacquired separately.",
+      "observed_at": null,
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "master",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "REPOSITORY_ONLY",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "70d698f937608495c3845b9b7c1f0bc515a3789d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "STALE_RELATIVE_TO_REMOTE_MASTER",
+      "evidence_refs": [
+        "runtime:release:e02-passive-daffa37f3b14ab29",
+        "mission-control:/api/summary:2026-09-12T15:43:04Z"
+      ],
+      "head": "743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+      "integration_state": "OBSERVED_RUNTIME_SOURCE",
+      "node_id": "runtime:mission-control",
+      "node_type": "RUNTIME_SOURCE_IDENTITY",
+      "notes": "observed_active_runs=0; recorded_active_runs=1; vkt-r3-live recorded RUNNING but NOT_IN_CURRENT_OBSERVATION; heartbeat UNKNOWN.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "master",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "SERVICE_ACTIVE_K3S_INACTIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "5afea703fd887f2609245a48000dbc47b8cd1b0f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_MEASURED",
+      "evidence_refs": [
+        "warnings:r6=2136",
+        "warnings:r7=307",
+        "reduction:1829",
+        "families:5"
+      ],
+      "head": "2ff869023c18817611100fd4d62a4290f96a2584",
+      "integration_state": "PARTIAL_REDUCED_DEBT",
+      "node_id": "sqlite:hygiene-r7",
+      "node_type": "SQLITE_RESOURCE_HYGIENE_STATE",
+      "notes": "Five lifecycle families repaired with commit/rollback/replay/concurrency falsifiers; remaining GC-delayed warnings retained as debt.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "d12b504cf13e4ec80714905ffae437cb20d731d8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_BOUND_PREDECESSOR",
+      "evidence_refs": [
+        "truth-subject:96860b6fdcd5ea21e0d59911e6c6c5c0dc8ff2443835392b40dba27c68e5de4c"
+      ],
+      "head": "9e753e8b6f9ff8358222ae75acb8b34456e88ec9",
+      "integration_state": "CARRIER_LAST_BOUND",
+      "node_id": "truth:r6-boundary",
+      "node_type": "TRUTH_BINDING_BOUNDARY",
+      "notes": "R6 carrier-last predecessor truth.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c3d98a26b7e4a913145c30d0e0bb7fec717574f1",
+      "truth_subject": "96860b6fdcd5ea21e0d59911e6c6c5c0dc8ff2443835392b40dba27c68e5de4c"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "BOUND_CARRIER_LAST",
+      "evidence_refs": [
+        "truth-order:NONCARRIER_THEN_CARRIERS_LAST"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "BOUND",
+      "node_id": "truth:r7-boundary",
+      "node_type": "TRUTH_BINDING_BOUNDARY",
+      "notes": "R7 carrier-last subject was bound and independently read back before artifactization; artifactization requires a successor rebind.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": "551f296c1ee344e1d362bde2cead7fd1f963117f6dc9fbd8c0eb06341c9eb922"
+    }
+  ],
+  "project": "LION_EVOLUSION",
+  "repository": "DonkeyJJLove/ai_platform",
+  "schema": "lion.git-logical-tree/v3",
+  "snapshot_semantics": "Exact deterministic pre-commit Git snapshot. Later documentation/truth commits are valid descendants; read live carriers for final truth binding."
+}

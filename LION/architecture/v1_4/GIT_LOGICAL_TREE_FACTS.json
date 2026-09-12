@@ -1,0 +1,445 @@
+{
+  "edges": [
+    {
+      "relation": "DESCRIBES",
+      "source": "artifact:r7-repository-files",
+      "target": "rag:r7-target"
+    },
+    {
+      "relation": "INVALIDATES_AND_REQUIRES_REBIND",
+      "source": "artifact:r7-repository-files",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "VALIDATED_IN",
+      "source": "e02:attester-installation-r7",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "DISTRIBUTES_KNOWLEDGE_OF",
+      "source": "hosts:r7-state-files",
+      "target": "rag:r7-target"
+    },
+    {
+      "relation": "ADMISSION_GATED_BY",
+      "source": "mc:source-rebind-r5",
+      "target": "mc:admission-r6"
+    },
+    {
+      "relation": "GATED_BY",
+      "source": "mc:source-rebind-r5",
+      "target": "mc:authority-boundary-r7"
+    },
+    {
+      "relation": "TARGETS_EXACT_SOURCE",
+      "source": "mc:source-rebind-r5",
+      "target": "git:master"
+    },
+    {
+      "relation": "BYTE_PREDECESSOR_OF",
+      "source": "rag:r5",
+      "target": "rag:r6-target"
+    },
+    {
+      "relation": "BYTE_PREDECESSOR_OF",
+      "source": "rag:r6",
+      "target": "rag:r7-target"
+    },
+    {
+      "relation": "BUILT_AFTER",
+      "source": "rag:r6-target",
+      "target": "truth:r6-boundary"
+    },
+    {
+      "relation": "BUILT_AFTER",
+      "source": "rag:r7-target",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "SOURCE_REBIND_PLANNED_BY",
+      "source": "runtime:mission-control",
+      "target": "mc:source-rebind-r5"
+    },
+    {
+      "relation": "VALIDATED_IN",
+      "source": "sqlite:hygiene-r7",
+      "target": "truth:r7-boundary"
+    },
+    {
+      "relation": "SUPERSEDED_BY",
+      "source": "truth:r6-boundary",
+      "target": "truth:r7-boundary"
+    }
+  ],
+  "nodes": [
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_MATERIALIZED",
+      "evidence_refs": [
+        "path:LION/architecture/v1_4/artifacts/r7",
+        "files:6"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "LOCAL_CANDIDATE_MATERIALIZED",
+      "node_id": "artifact:r7-repository-files",
+      "node_type": "R7_ARTIFACTIZED_STATE_SET",
+      "notes": "Materializes R7 reports, authority state, host distribution and RAG validation summaries into Git.",
+      "observed_at": "2026-09-12T16:30:00Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_CANDIDATE",
+      "evidence_refs": [
+        "state:OFFLINE_CANDIDATE_NOT_INSTALLED",
+        "key-material:false",
+        "authority-effect:NONE",
+        "runtime-effect:NONE"
+      ],
+      "head": "4150ac3db34c991d3511ed5ef6f9ccf64a96b08f",
+      "integration_state": "OFFLINE_CANDIDATE_NOT_INSTALLED",
+      "node_id": "e02:attester-installation-r7",
+      "node_type": "E02_EXTERNAL_ATTESTER_INSTALLATION_CANDIDATE",
+      "notes": "Binds provider/issuer/trust-anchor/durable-store/trusted-time/source identity. Apply path hard-fails and requires separate authority.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_INSTALLED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "6b7931d154ace2fe91f7b693c0e844f101400de4",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_OPEN_DRAFT_REACQUIRED",
+      "evidence_refs": [
+        "github:PR#333:3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+        "ci:exact-head:4-workflows-success"
+      ],
+      "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+      "integration_state": "OPEN_DRAFT_UNMERGED",
+      "node_id": "git:pr333",
+      "node_type": "OPEN_PR",
+      "notes": "Historical draft; R7 local lineage is separate and unpublished.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "mission/e02-offline-candidate-codeql24-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_OBSERVED_FILE_DISTRIBUTION",
+      "evidence_refs": [
+        "hosts:4",
+        "path:/var/lib/sentinelx/uploads/lion-project-state-r7",
+        "authority-boundary-sha256:b137bc8784cd8f55c2deb28b14d8bace2d7686a2249d27ea2d75500146308682",
+        "rag-descriptor-sha256:2fb8e5fa871baa91be10e0751ce34c85439aae5e6f4ec3a8dd10b0844da7d9a9"
+      ],
+      "head": null,
+      "integration_state": "FILES_WRITTEN_ON_4_CONNECTORS",
+      "node_id": "hosts:r7-state-files",
+      "node_type": "HOST_STATE_DISTRIBUTION",
+      "notes": "Identical knowledge-state files written to all four connectors; not service deployment and not material-executor proof.",
+      "observed_at": "2026-09-12T16:30:00Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "FILES_WRITTEN_NO_SERVICE_RESTART",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_CONTRACT",
+      "evidence_refs": [
+        "git:8daa0236e2e20b4c1a9e01be598e49d75037f26a",
+        "contract:one-shot-retry0-reconcile-first"
+      ],
+      "head": "8daa0236e2e20b4c1a9e01be598e49d75037f26a",
+      "integration_state": "LOCAL_CANDIDATE",
+      "node_id": "mc:admission-r6",
+      "node_type": "MISSION_CONTROL_DEPLOYMENT_ADMISSION_CONTRACT",
+      "notes": "Admission contract cannot execute apply; exact rollback configuration still requires fresh readback at authority time.",
+      "observed_at": "2026-09-12T14:41:53Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "AUTHORITY_REQUIRED_NOT_EXECUTED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "14d72ed9d53819f7f933b51b22bde05cefba4d48",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "INCOMPLETE_ROLLBACK_IDENTITY",
+      "evidence_refs": [
+        "runtime-source:743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+        "runtime-tree:5afea703fd887f2609245a48000dbc47b8cd1b0f",
+        "runtime-release:e02-passive-daffa37f3b14ab29",
+        "rollback-configuration-digest:UNKNOWN",
+        "rollback-adapter-digest:UNKNOWN",
+        "rollback-schema-digest:UNKNOWN",
+        "max-attempts:1",
+        "retry:0",
+        "replay:RECONCILE_FIRST"
+      ],
+      "head": null,
+      "integration_state": "INCOMPLETE_DO_NOT_APPLY",
+      "node_id": "mc:authority-boundary-r7",
+      "node_type": "MISSION_CONTROL_AUTHORITY_BOUNDARY",
+      "notes": "No deployment may be admitted until exact current rollback configuration/adapter/schema digests are independently bound.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_EXECUTED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "TARGET_BOUND_TO_CURRENT_REMOTE_MASTER",
+      "evidence_refs": [
+        "plan-digest:d5e5e60a75aad3c7a45b776739d25ccfc694011b80e541154b0e78312713f15a",
+        "package-digest:6041ac732002b44468bdd5ca8c56e28843fa3fcb4f7ac4994fb6dc1ec40f0fa6"
+      ],
+      "head": "938aa94460a2e0f81c470c1586626290bb74bc2c",
+      "integration_state": "LOCAL_OFFLINE_CANDIDATE_NOT_ACTIVATED",
+      "node_id": "mc:source-rebind-r5",
+      "node_type": "MISSION_CONTROL_SOURCE_REBIND_PACKAGE",
+      "notes": "Effect-free target package only; deployment/restart not authorized.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "master",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_APPLIED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "70d698f937608495c3845b9b7c1f0bc515a3789d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "VERIFIED_MATERIAL_BYTES_CURRENT_PREDECESSOR",
+      "evidence_refs": [
+        "zip-sha256:52fa9b3f78f7fcb77b6f96f3c83caa2183d35bce658e8e23835d43544d3827d0",
+        "manifest-sha256:942872520e8e98f2aa655f67f9d7f568c3970dd16e8d72a93c04c53f42de5348",
+        "content:a23438679445a96b0e54730500dbffa5da7c45c7ef79bdc89750d2bcd146aaa6",
+        "validation:self18-pass",
+        "retrieval:27-pass"
+      ],
+      "head": null,
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "rag:r5",
+      "node_type": "RAG_VERIFIED_LOCAL_CANDIDATE",
+      "notes": "32 containers / 158 records / 145 predecessor records byte-preserved / 13 R5 records. Exact R6 predecessor.",
+      "observed_at": "2026-09-12T14:41:53Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r5-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "VERIFIED_MATERIAL_BYTES_CURRENT_PREDECESSOR",
+      "evidence_refs": [
+        "zip-sha256:35a19cf3cde06ccab7713bdc51dcaa39abd03221f2ec771bc2bdb739f5bb3309",
+        "manifest-sha256:93fb4cecf74b645195f4c6b6b5e5f5706ca00f6f50d587a9db101c58d7901774",
+        "content:6a62153dc5fa7495eb51c6f5ef39372ccb736a5e9be1007d471628c03afeb4cd",
+        "records:173",
+        "predecessor-byte-identity:158/158",
+        "self-test:18/18",
+        "retrieval:30/30"
+      ],
+      "head": null,
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "rag:r6",
+      "node_type": "RAG_VERIFIED_LOCAL_CANDIDATE",
+      "notes": "Exact R6 predecessor for R7; 32 containers / 173 records; not live truth or authority.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r6-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": "96860b6fdcd5ea21e0d59911e6c6c5c0dc8ff2443835392b40dba27c68e5de4c"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "TARGET_AFTER_FINAL_CARRIER_LAST",
+      "evidence_refs": [
+        "lpcl:R6:RAG-R6",
+        "predecessor:rag:r5"
+      ],
+      "head": null,
+      "integration_state": "NOT_BUILT_YET",
+      "node_id": "rag:r6-target",
+      "node_type": "RAG_TARGET",
+      "notes": "R6 must be built outside Git after carrier-last truth, preserving all 158 R5 record blocks.",
+      "observed_at": "2026-09-12T14:41:53Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r6-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": null,
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_VERIFIED_ARTIFACT",
+      "evidence_refs": [
+        "zip-sha256:0965df6dd05b8e155506d2c619fa1ae5157e1934639509c25b98f17e55a1d811",
+        "records:188",
+        "predecessor-exact:173/173",
+        "self-test:18/18",
+        "retrieval:30/30",
+        "independent-validation:PASS"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "rag:r7-target",
+      "node_type": "RAG_VERIFIED_LOCAL_CANDIDATE",
+      "notes": "R7 RAG32 exact local package verified by generator and independent validator; no publication authority.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NON_AUTHORITATIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": "551f296c1ee344e1d362bde2cead7fd1f963117f6dc9fbd8c0eb06341c9eb922"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "STALE_RELATIVE_TO_REMOTE_MASTER",
+      "evidence_refs": [
+        "runtime:release:e02-passive-daffa37f3b14ab29",
+        "mission-control:/api/summary:2026-09-12T15:43:04Z"
+      ],
+      "head": "743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
+      "integration_state": "OBSERVED_RUNTIME_SOURCE",
+      "node_id": "runtime:mission-control",
+      "node_type": "RUNTIME_SOURCE_IDENTITY",
+      "notes": "observed_active_runs=0; recorded_active_runs=1; vkt-r3-live recorded RUNNING but NOT_IN_CURRENT_OBSERVATION; heartbeat UNKNOWN.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "master",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "SERVICE_ACTIVE_K3S_INACTIVE",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "5afea703fd887f2609245a48000dbc47b8cd1b0f",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_LOCAL_MEASURED",
+      "evidence_refs": [
+        "warnings:r6=2136",
+        "warnings:r7=307",
+        "reduction:1829",
+        "families:5"
+      ],
+      "head": "2ff869023c18817611100fd4d62a4290f96a2584",
+      "integration_state": "PARTIAL_REDUCED_DEBT",
+      "node_id": "sqlite:hygiene-r7",
+      "node_type": "SQLITE_RESOURCE_HYGIENE_STATE",
+      "notes": "Five lifecycle families repaired with commit/rollback/replay/concurrency falsifiers; remaining GC-delayed warnings retained as debt.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "d12b504cf13e4ec80714905ffae437cb20d731d8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_BOUND_PREDECESSOR",
+      "evidence_refs": [
+        "truth-subject:96860b6fdcd5ea21e0d59911e6c6c5c0dc8ff2443835392b40dba27c68e5de4c"
+      ],
+      "head": "9e753e8b6f9ff8358222ae75acb8b34456e88ec9",
+      "integration_state": "CARRIER_LAST_BOUND",
+      "node_id": "truth:r6-boundary",
+      "node_type": "TRUTH_BINDING_BOUNDARY",
+      "notes": "R6 carrier-last predecessor truth.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "c3d98a26b7e4a913145c30d0e0bb7fec717574f1",
+      "truth_subject": "96860b6fdcd5ea21e0d59911e6c6c5c0dc8ff2443835392b40dba27c68e5de4c"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "BOUND_CARRIER_LAST",
+      "evidence_refs": [
+        "truth-order:NONCARRIER_THEN_CARRIERS_LAST"
+      ],
+      "head": "73e628847753a3f60c288facd959c15a352a9087",
+      "integration_state": "BOUND",
+      "node_id": "truth:r7-boundary",
+      "node_type": "TRUTH_BINDING_BOUNDARY",
+      "notes": "R7 carrier-last subject was bound and independently read back before artifactization; artifactization requires a successor rebind.",
+      "observed_at": "2026-09-12T15:43:04Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": null,
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
+      "truth_subject": "551f296c1ee344e1d362bde2cead7fd1f963117f6dc9fbd8c0eb06341c9eb922"
+    }
+  ],
+  "schema": "lion.git-logical-tree-external-facts/v2"
+}

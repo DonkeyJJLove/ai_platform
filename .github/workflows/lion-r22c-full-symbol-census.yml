@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: lion-r22c-full-symbol-census-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   census:
     runs-on: ubuntu-24.04
@@ -128,6 +132,13 @@ jobs:
           print('PRIVATE_MATERIAL_SYMBOLS=' + str(counts.get('private_material_symbols')))
           print('CENSUS_DIGEST=' + str(value.get('census_digest')))
           PY
+
+      - name: Emit digest-bound census artifact evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'FULL_SYMBOL_CENSUS_ARTIFACT_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/LION_FULL_SYMBOL_CENSUS_v1_4.json" | awk '{print $1}')"
+          printf 'TRUTH_SUBJECT_ARTIFACT_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/LION_TRUTH_SUBJECT_v1.txt" | awk '{print $1}')"
 
       - name: Upload exact census and truth-subject evidence
         uses: actions/upload-artifact@v4

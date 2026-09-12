@@ -1,0 +1,14 @@
+{
+  "carrier_bindings_match": true,
+  "files": 32,
+  "manifest_hashes_match": true,
+  "new_records": 15,
+  "payload_hashes_match": true,
+  "predecessor_exact_blocks": 173,
+  "records": 188,
+  "schema": "lion.r7.rag-independent-validation-summary/v1",
+  "source_ids_unique": true,
+  "status": "PASS",
+  "virtual_paths_unique": true,
+  "zip_roundtrip": "PASS"
+}

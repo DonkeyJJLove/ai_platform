@@ -10,6 +10,10 @@ on:
       - "cyber_lion/tests/test_fleet_attested_admission.py"
       - ".github/workflows/fleet-attestation-n2.yml"
 
+concurrency:
+  group: lion-fleet-attestation-n2-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   id-token: write
@@ -19,6 +23,7 @@ jobs:
   n2-runtime-evidence:
     name: N2 runtime evidence / ${{ matrix.slot }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +36,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
 
       - name: Establish isolated runtime marker
         shell: bash

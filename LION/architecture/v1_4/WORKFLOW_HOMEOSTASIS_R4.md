@@ -1,0 +1,5 @@
+# Workflow Homeostasis — Generation 10
+
+Inventory: **24** workflows. The critical evidence plane contains five workflows: Bandit, Full Symbol Census, RAG32 validation, Git logical-tree evidence and Workflow Homeostasis evidence. Current audit: **0 blocking defects**, **42 advisory findings**, audit digest `8e6641b284a0ad1558f4abd1636636440b008fea151606a2893cbe35daff367c`. Advisory findings on legacy/effect workflows are not auto-mutated because timeout, concurrency, checkout credentials or exact-head behavior can be part of effect semantics and require workflow-family review.
+
+Generation 9 upgraded the Git logical-tree workflow to validate the checked-in canonical v3 spine and emit separate digest-bound generation and validation artifacts. Full Symbol Census now has bounded concurrency and SHA-bound census/truth artifacts. Generation 10 added the read-only Workflow Homeostasis evidence workflow; it never widens permissions and never promotes advisory findings to PASS. Remote exact-head CI remains NOT_PUBLISHED.
