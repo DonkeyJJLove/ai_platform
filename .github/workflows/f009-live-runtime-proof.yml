@@ -40,10 +40,8 @@ jobs:
           actual_head="$(git rev-parse HEAD)"
           actual_tree="$(git rev-parse 'HEAD^{tree}')"
           test "$actual_head" = "$EXPECTED_HEAD"
-          printf 'F009_SOURCE_HEAD=%s
-' "$actual_head"
-          printf 'F009_SOURCE_TREE=%s
-' "$actual_tree"
+          printf 'F009_SOURCE_HEAD=%s\n' "$actual_head"
+          printf 'F009_SOURCE_TREE=%s\n' "$actual_tree"
           echo "head=$actual_head" >> "$GITHUB_OUTPUT"
           echo "tree=$actual_tree" >> "$GITHUB_OUTPUT"
 
@@ -247,10 +245,8 @@ jobs:
           test -d "$artifact_dir"
           find "$artifact_dir" -maxdepth 1 -type f ! -name 'artifact-set.sha256' -print0             | sort -z             | xargs -0 sha256sum > "$artifact_dir/artifact-set.sha256"
           test -s "$artifact_dir/artifact-set.sha256"
-          printf 'F009_PROOF_MANIFEST_SHA256=%s
-' "$(sha256sum "$artifact_dir/proof-manifest.json" | awk '{print $1}')"
-          printf 'F009_ARTIFACT_SET_SHA256=%s
-' "$(sha256sum "$artifact_dir/artifact-set.sha256" | awk '{print $1}')"
+          printf 'F009_PROOF_MANIFEST_SHA256=%s\n' "$(sha256sum "$artifact_dir/proof-manifest.json" | awk '{print $1}')"
+          printf 'F009_ARTIFACT_SET_SHA256=%s\n' "$(sha256sum "$artifact_dir/artifact-set.sha256" | awk '{print $1}')"
 
       - name: Upload immutable proof evidence
         if: success()

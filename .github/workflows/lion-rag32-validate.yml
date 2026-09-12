@@ -56,12 +56,9 @@ jobs:
           set -euo pipefail
           root="${REQUESTED_RAG_ROOT:-LION/rag/lion_project_rag32_v1_4_r1}"
           python tools/lion_rag32_validate.py --repository . --root "$root" > "$RUNNER_TEMP/lion-rag32-validation.json"
-          printf 'RAG_VALIDATION_HEAD=%s
-' "${{ steps.gitstate.outputs.head }}"
-          printf 'RAG_VALIDATION_TREE=%s
-' "${{ steps.gitstate.outputs.tree }}"
-          printf 'RAG_VALIDATION_SHA256=%s
-' "$(sha256sum "$RUNNER_TEMP/lion-rag32-validation.json" | awk '{print $1}')"
+          printf 'RAG_VALIDATION_HEAD=%s\n' "${{ steps.gitstate.outputs.head }}"
+          printf 'RAG_VALIDATION_TREE=%s\n' "${{ steps.gitstate.outputs.tree }}"
+          printf 'RAG_VALIDATION_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/lion-rag32-validation.json" | awk '{print $1}')"
       - name: Upload exact validation evidence
         uses: actions/upload-artifact@v4
         with:

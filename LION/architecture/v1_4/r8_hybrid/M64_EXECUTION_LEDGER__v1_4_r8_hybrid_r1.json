@@ -1,0 +1,589 @@
+{
+  "generated_at": "2026-09-12T19:21:19.428665Z",
+  "invariant": "LOGICAL_ROLE_NE_MATERIAL_EXECUTOR",
+  "logical_roles": [
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D01_MISSION_COORDINATOR",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D02_DEPENDENCY_DAG_OWNER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D03_AUTHORITY_SCOPE_READER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D04_RESOURCE_BUDGET_OWNER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D05_ROUTING_DECISION_RECORDER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D06_CONTINUITY_AND_RESUME_OWNER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D07_COORDINATION_REVIEWER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D08_DEADLOCK_AND_ESCALATION_FALSIFIER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D09_WINDOWS_INVENTORY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D10_WSL_INVENTORY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D11_REGISTERED_HOST_INVENTORY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D12_PROCESS_AND_RUNTIME_IDENTITY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D13_CPU_RAM_GPU_STORAGE_TOPOLOGY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D14_SHARED_RESOURCE_DOMAIN_RECONCILIATION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D15_INFRASTRUCTURE_ARCHITECTURE_REVIEWER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_HOST_REACQUISITION",
+        "RESOURCE_DOMAIN_OBSERVATION"
+      ],
+      "material_executor_observed": false,
+      "role": "D16_FALSE_INDEPENDENCE_FALSIFIER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D17_SAAS_CAPABILITY_PROFILE",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D18_LOCAL_MODEL_PROFILE",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D19_TOKEN_AND_TEMPLATE_BUDGET",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D20_TASK_COMPLEXITY_TAXONOMY",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D21_CALIBRATION_DATASET_OWNER",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D22_ROUTER_CANDIDATE_BUILDER",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D23_HELD_OUT_ROUTE_REVIEWER",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ENTRY_M01_CALIBRATION",
+        "R8_ROUTING_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D24_WEAK_MODEL_AND_OVERFLOW_FALSIFIER",
+      "state": "EVIDENCE_REUSED_REVALIDATED"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D25_REGISTERED_NETWORK_GRAPH",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D26_CONNECTOR_CAPABILITY_INVENTORY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D27_TYPED_ACTION_CONTRACTS",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D28_TRANSPORT_AND_QUEUE_DESIGN",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D29_IDENTITY_AND_LEASE_BINDING",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D30_PARTITION_RECOVERY_DESIGN",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D31_ACCESS_BOUNDARY_REVIEWER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "ROUTING_AND_CROSS_PLANE_TESTS",
+        "LIVE_MISSION_CONTROL_READBACK"
+      ],
+      "material_executor_observed": false,
+      "role": "D32_UNAUTHORIZED_EFFECT_FALSIFIER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D33_REPOSITORY_INSTANCE_CENSUS",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D34_NTFS_AND_WORKTREE_DEDUPLICATION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D35_BRANCH_AND_PR_ANCESTRY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D36_DIRTY_STATE_AND_HISTORY_PROTECTION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D37_SYNC_COORDINATOR_DESIGN",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D38_GIT_LOGICAL_SPINE_OWNER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D39_INTEGRATION_AND_CONVERGENCE_REVIEWER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "LIVE_10_REPOSITORY_VECTOR",
+        "REPOSITORY_SYNC_DRY_RUN"
+      ],
+      "material_executor_observed": false,
+      "role": "D40_SPLIT_BRAIN_AND_STALE_BASE_FALSIFIER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D41_TEST_INVENTORY_AND_DEPENDENCIES",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D42_TEST_RESOURCE_PROFILING",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D43_LOCAL_TEST_SCHEDULER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D44_REMOTE_CI_MAPPING",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D45_CACHE_AND_DEDUPLICATION_CONTRACT",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D46_PLATFORM_AND_INTEGRATION_TESTS",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D47_COVERAGE_AND_RESULT_REVIEWER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "FULL_SUITE_2857",
+        "TEST_PLACEMENT_TESTS"
+      ],
+      "material_executor_observed": false,
+      "role": "D48_FALSE_GREEN_AND_CACHE_FALSIFIER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D49_EFFECT_SURFACE_CLASSIFICATION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D50_SECURITY_SCAN_ORCHESTRATION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D51_E02_AND_ATTESTATION_GAPS",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D52_RUNTIME_AND_MISSION_CONTROL_RECONCILIATION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D53_REPLAY_IDEMPOTENCY_AND_ROLLBACK",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D54_CANONICAL_TRUTH_BINDING",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D55_EVIDENCE_PROVENANCE_REVIEWER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "PRODUCTION_SCAN",
+        "BANDIT_1_9_4",
+        "TRUTH_CURRENTNESS_GATES"
+      ],
+      "material_executor_observed": false,
+      "role": "D56_CROSS_PLANE_TRUST_FALSIFIER",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "WORKFLOW_HOMEOSTASIS",
+        "DOCUMENTATION_BUILD"
+      ],
+      "material_executor_observed": false,
+      "role": "D57_WORKFLOW_HOMEOSTASIS",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "WORKFLOW_HOMEOSTASIS",
+        "DOCUMENTATION_BUILD"
+      ],
+      "material_executor_observed": false,
+      "role": "D58_CODEX_AND_AGENTS_DISCOVERY",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "WORKFLOW_HOMEOSTASIS",
+        "DOCUMENTATION_BUILD"
+      ],
+      "material_executor_observed": false,
+      "role": "D59_SHARED_MODEL_USAGE_PLAYBOOK",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "WORKFLOW_HOMEOSTASIS",
+        "DOCUMENTATION_BUILD"
+      ],
+      "material_executor_observed": false,
+      "role": "D60_VERSIONED_DOCUMENTATION",
+      "state": "EXECUTED_LOGICAL"
+    },
+    {
+      "evidence_refs": [
+        "R8_PROCESS_DAG"
+      ],
+      "material_executor_observed": false,
+      "role": "D61_RAG_BUILD_AND_PRESERVATION",
+      "state": "PENDING_DOWNSTREAM"
+    },
+    {
+      "evidence_refs": [
+        "R8_PROCESS_DAG"
+      ],
+      "material_executor_observed": false,
+      "role": "D62_SEPARATE_RAG_VALIDATION_PATH",
+      "state": "PENDING_DOWNSTREAM"
+    },
+    {
+      "evidence_refs": [
+        "CURRENT_FRONTIER_ANALYSIS"
+      ],
+      "material_executor_observed": false,
+      "role": "D63_EVOLUTION_FRONTIER_AND_PLAN",
+      "state": "PARTIAL"
+    },
+    {
+      "evidence_refs": [
+        "R8_PROCESS_DAG"
+      ],
+      "material_executor_observed": false,
+      "role": "D64_FINAL_RECONCILIATION_AND_NEXT_LPCL",
+      "state": "PENDING_DOWNSTREAM"
+    }
+  ],
+  "logical_roles_declared": 64,
+  "material_executors_proven": 0,
+  "schema": "lion.r8.m64-ledger/v1"
+}

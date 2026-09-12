@@ -29,6 +29,22 @@ def _workflow_class(name,text,writes):
     if name in OBSERVATION_WORKFLOWS:return 'OBSERVATION'
     return 'READ_ONLY_CI'
 class WorkflowAuditError(ValueError):pass
+def _run_block_syntax_defects(text):
+ lines=text.splitlines(); defects=[]
+ for i,line in enumerate(lines):
+  m=re.match(r'^(\s*)(?:-\s+)?run:\s*[|>]\s*$',line)
+  if not m: continue
+  key_indent=len(m.group(1)); j=i+1
+  while j<len(lines):
+   raw=lines[j]; stripped=raw.strip()
+   if not stripped: j+=1; continue
+   indent=len(raw)-len(raw.lstrip(' '))
+   if indent>key_indent: j+=1; continue
+   if stripped.startswith('#'): j+=1; continue
+   if re.match(r'^(?:-\s+)?[A-Za-z_][A-Za-z0-9_.-]*\s*:',stripped): break
+   defects.append(f'RUN_BLOCK_INDENT_ESCAPE:{j+1}')
+   j+=1
+ return defects
 def _canonical(v):return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
 def _permissions(text):
  out=[];active=False
@@ -45,8 +61,8 @@ def audit(root):
  for p in sorted(list(wf.glob('*.yml'))+list(wf.glob('*.yaml'))):
   t=p.read_text(encoding='utf-8');perms=_permissions(t);writes=sorted(x for x in perms if x.endswith(': write'));checkout='actions/checkout@' in t
   workflow_class=_workflow_class(p.name,t,writes)
-  row={"name":p.name,"sha256":sha256(p.read_bytes()).hexdigest(),"workflow_class":workflow_class,"semantic_mutation_policy":"AUTO_LOCAL_HARDEN" if workflow_class in {"CRITICAL_EVIDENCE","READ_ONLY_CI","OBSERVATION"} else "FAMILY_REVIEW_REQUIRED","critical_evidence":p.name in CRITICAL,"permissions":perms,"write_permissions":writes,"uses_checkout":checkout,"persist_credentials_false":('persist-credentials: false' in t) if checkout else True,"bounded_timeout":'timeout-minutes:' in t,"concurrency":'concurrency:' in t,"explicit_head_tree_binding":_exact_head_tree_binding(t),"artifact_upload":'actions/upload-artifact@v4' in t,"artifact_sha_binding":('_SHA256' in t and 'sha256sum' in t),"secret_reference":'secrets.' in t}
-  defects=[]
+  row={"name":p.name,"sha256":sha256(p.read_bytes()).hexdigest(),"workflow_class":workflow_class,"semantic_mutation_policy":"AUTO_LOCAL_HARDEN" if workflow_class in {"CRITICAL_EVIDENCE","READ_ONLY_CI","OBSERVATION"} else "FAMILY_REVIEW_REQUIRED","critical_evidence":p.name in CRITICAL,"permissions":perms,"write_permissions":writes,"uses_checkout":checkout,"persist_credentials_false":('persist-credentials: false' in t) if checkout else True,"bounded_timeout":'timeout-minutes:' in t,"concurrency":'concurrency:' in t,"explicit_head_tree_binding":_exact_head_tree_binding(t),"artifact_upload":'actions/upload-artifact@v4' in t,"artifact_sha_binding":('_SHA256' in t and 'sha256sum' in t),"secret_reference":'secrets.' in t,"run_block_syntax_defects":_run_block_syntax_defects(t)}
+  defects=["WORKFLOW_SYNTAX_"+x for x in row['run_block_syntax_defects']]
   if row['critical_evidence']:
    if 'contents: read' not in perms:defects.append('CRITICAL_MINIMUM_CONTENTS_READ_MISSING')
    if writes:defects.append('CRITICAL_WRITE_PERMISSION')

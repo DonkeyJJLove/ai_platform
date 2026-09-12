@@ -346,7 +346,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         self.assertIn('cyber_lion/mission_control/source_rebind.py', sources)
         self.assertIn('cyber_lion/contracts/failure_domain_evidence.py', sources)
         self.assertIn('cyber_lion/enterprise/failure_domain_evidence.py', sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(314,273,6))
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(318,273,6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",
