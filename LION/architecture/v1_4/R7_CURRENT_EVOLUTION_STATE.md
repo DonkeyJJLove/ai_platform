@@ -16,3 +16,8 @@ Four connected WSL connectors still share boot id `58008236-23d6-48d9-a501-7e13b
 R7.1 replaces substring-based GitHub remote normalization with anchored canonical remote parsing, adds a hostile-URL regression, and makes the F005 credential-persistence check structural rather than adjacency-based. Exact production inventory remains 314 sources / 273 effect surfaces / 6 raw unclassified with zero unresolved taxonomy after currentness rebind to `47f3411585c349108f6b05176025aaa37ff945580dc180402dbc757ed06d5cb6`.
 
 PR333 head `3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871` is a parent of the R7.1 genealogy merge. Thirteen of its 33 changed paths are byte-identical in R7.1, nineteen are evolved descendants, and the only missing document (`docs/architecture/E02_SCAN_TRUTH_RECONCILIATION.md`) was restored before the genealogy merge. Remote master merge and branch convergence remain subsequent repository effects.
+
+
+## R7.1 remote convergence and master merge
+
+GitHub R7.1 exact head `65fe21fe11266dd0334a0e4f41f47fd97f3dcf27` passed CodeQL (no new alerts in changed code), Bandit, Full Symbol Census, Workflow Homeostasis, Fleet Attestation, Effect Budget, F005-K/F005-L and Cyber-Lion Core. PR333 was absorbed as a second parent of R7.1; PR334 then merged R7.1 into master as `bf8e17f60e29f46b479fc488914725db00c0feb2`. All three mission branch refs were fast-forwarded to the same master before this post-merge homeostasis snapshot.

@@ -414,6 +414,31 @@
       "relation": "PARENT_OF",
       "source": "git:master",
       "target": "git:8b4c5c8451a5"
+    },
+    {
+      "relation": "REF_EQUALS",
+      "source": "git:branch-converged:mission_e02-offline-candidate-codeql24-r1",
+      "target": "git:master-current"
+    },
+    {
+      "relation": "REF_EQUALS",
+      "source": "git:branch-converged:mission_r7-artifactized-host-upgraded-r1",
+      "target": "git:master-current"
+    },
+    {
+      "relation": "REF_EQUALS",
+      "source": "git:branch-converged:mission_r7-1-convergence-r1",
+      "target": "git:master-current"
+    },
+    {
+      "relation": "MERGED_INTO",
+      "source": "git:pr333",
+      "target": "git:master-current"
+    },
+    {
+      "relation": "MERGED_INTO",
+      "source": "git:pr334",
+      "target": "git:master-current"
     }
   ],
   "nodes": [
@@ -467,24 +492,24 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "MERGED_IN_LOCAL_R7_1_LINEAGE_REMOTE_PR_STILL_OPEN",
+      "currentness": "MERGED_IN_MASTER",
       "evidence_refs": [
         "github:PR#333:3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
         "ci:exact-head:4-workflows-success"
       ],
       "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
-      "integration_state": "LOCAL_GENEALOGY_MERGED_PENDING_REMOTE_MASTER",
+      "integration_state": "MERGED_VIA_R7_1_SECOND_PARENT",
       "node_id": "git:pr333",
-      "node_type": "OPEN_PR",
-      "notes": "PR333 functional E02 delta is subsumed by R7.1; 13/33 changed paths are byte-identical, 19 are evolved, and the sole missing reconciliation document was restored before genealogy merge.",
-      "observed_at": "2026-09-12T17:27:29Z",
+      "node_type": "MERGED_PR",
+      "notes": "PR333 exact head is an ancestor of remote R7.1 and master; GitHub reports PR333 merged via R7.1 genealogy.",
+      "observed_at": "2026-09-12T17:39:54Z",
       "parent_heads": [],
       "rag_release": null,
       "ref": "mission/e02-offline-candidate-codeql24-r1",
       "repository": "DonkeyJJLove/ai_platform",
       "runtime_state": "NOT_DEPLOYED",
       "superseded_by": [
-        "git:1d383f5560d1"
+        "git:master-current"
       ],
       "supersedes": [],
       "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
@@ -789,24 +814,24 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "STALE_RELATIVE_TO_LOCAL_R7_1",
+      "currentness": "MERGED_IN_MASTER",
       "evidence_refs": [
         "github:PR#334:334874c90e7cef755b0e856149d57d78b45ff9d8",
         "tree:7c8237807567677d2f215a296a51a1e78e9b641c"
       ],
       "head": "334874c90e7cef755b0e856149d57d78b45ff9d8",
-      "integration_state": "OPEN_DRAFT_REMOTE_R7_PRE_R7_1",
+      "integration_state": "MERGED_AS_R7_1_TO_MASTER",
       "node_id": "git:pr334",
-      "node_type": "OPEN_PR",
-      "notes": "Remote exact R7 tree before R7.1 CI/CodeQL fixes and PR333 genealogy merge.",
-      "observed_at": "2026-09-12T17:27:29Z",
+      "node_type": "MERGED_PR",
+      "notes": "PR334 merged after exact-head CodeQL/Bandit/census/workflow/core success. CodeQL reported no new alerts in changed code.",
+      "observed_at": "2026-09-12T17:39:54Z",
       "parent_heads": [],
       "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
       "ref": "mission/r7-artifactized-host-upgraded-r1",
       "repository": "DonkeyJJLove/ai_platform",
       "runtime_state": "NOT_DEPLOYED",
       "superseded_by": [
-        "git:1d383f5560d1"
+        "git:master-current"
       ],
       "supersedes": [],
       "tree": "7c8237807567677d2f215a296a51a1e78e9b641c",
@@ -2485,6 +2510,206 @@
       "superseded_by": [],
       "supersedes": [],
       "tree": "5faeea02ff56d1441ab0c1d8902e2bc5ee27943d",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CURRENT_REACQUIRED_POST_R7_1_MERGE",
+      "evidence_refs": [
+        "github:master:bf8e17f60e29f46b479fc488914725db00c0feb2",
+        "github:PR333:merged",
+        "github:PR334:merged",
+        "github:CodeQL:R7.1:success",
+        "github:Bandit:R7.1:success",
+        "github:Core:R7.1:success"
+      ],
+      "head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "integration_state": "CANONICAL_REMOTE_MASTER",
+      "node_id": "git:master-current",
+      "node_type": "REMOTE_MASTER",
+      "notes": "All four remote branches master, PR333 branch, R7 branch and R7.1 convergence branch were fast-forwarded to this master before post-merge homeostasis.",
+      "observed_at": "2026-09-12T17:39:54Z",
+      "parent_heads": [
+        "938aa94460a2e0f81c470c1586626290bb74bc2c",
+        "65fe21fe11266dd0334a0e4f41f47fd97f3dcf27"
+      ],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": "master",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "REPOSITORY_ONLY",
+      "superseded_by": [],
+      "supersedes": [
+        "git:pr333",
+        "git:pr334"
+      ],
+      "tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
+      "truth_subject": "223720384839f2e978ced0648f878740627d22c47ae1c5df599cbe904712e4af"
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CONVERGED_TO_MASTER",
+      "evidence_refs": [
+        "github:branch:mission/e02-offline-candidate-codeql24-r1:bf8e17f60e29f46b479fc488914725db00c0feb2"
+      ],
+      "head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "integration_state": "BRANCH_REF_EQUALS_MASTER",
+      "node_id": "git:branch-converged:mission_e02-offline-candidate-codeql24-r1",
+      "node_type": "REMOTE_BRANCH_REF",
+      "notes": "Remote branch ref equals canonical master after R7.1 convergence.",
+      "observed_at": "2026-09-12T17:39:54Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "mission/e02-offline-candidate-codeql24-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CONVERGED_TO_MASTER",
+      "evidence_refs": [
+        "github:branch:mission/r7-artifactized-host-upgraded-r1:bf8e17f60e29f46b479fc488914725db00c0feb2"
+      ],
+      "head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "integration_state": "BRANCH_REF_EQUALS_MASTER",
+      "node_id": "git:branch-converged:mission_r7-artifactized-host-upgraded-r1",
+      "node_type": "REMOTE_BRANCH_REF",
+      "notes": "Remote branch ref equals canonical master after R7.1 convergence.",
+      "observed_at": "2026-09-12T17:39:54Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "CONVERGED_TO_MASTER",
+      "evidence_refs": [
+        "github:branch:mission/r7-1-convergence-r1:bf8e17f60e29f46b479fc488914725db00c0feb2"
+      ],
+      "head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "integration_state": "BRANCH_REF_EQUALS_MASTER",
+      "node_id": "git:branch-converged:mission_r7-1-convergence-r1",
+      "node_type": "REMOTE_BRANCH_REF",
+      "notes": "Remote branch ref equals canonical master after R7.1 convergence.",
+      "observed_at": "2026-09-12T17:39:54Z",
+      "parent_heads": [],
+      "rag_release": null,
+      "ref": "mission/r7-1-convergence-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_AFTER_MASTER_COMPACTION",
+      "evidence_refs": [
+        "git-object:1d383f5560d115cb0fc22bad6088bf2401ad9e2b",
+        "preserved-from-r7-1-spine:bd35866c9189105844a60ea33c41d76583ebccbdfbf120dbf8c6bed576f666e6"
+      ],
+      "head": "1d383f5560d115cb0fc22bad6088bf2401ad9e2b",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
+      "node_id": "git:1d383f5560d1",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "merge(r7.1): absorb superseded PR333 lineage without regressing evolved tree Preserved because remote master compaction no longer materializes this local commit node directly.",
+      "observed_at": null,
+      "parent_heads": [
+        "597bf68943dad11ab1a196aee902936932232a91",
+        "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9dda616cd23bd060edb6b0d76c8fa6dc58b20b44",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_AFTER_MASTER_COMPACTION",
+      "evidence_refs": [
+        "git-object:597bf68943dad11ab1a196aee902936932232a91",
+        "preserved-from-r7-1-spine:bd35866c9189105844a60ea33c41d76583ebccbdfbf120dbf8c6bed576f666e6"
+      ],
+      "head": "597bf68943dad11ab1a196aee902936932232a91",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
+      "node_id": "git:597bf68943da",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs(r7.1): preserve PR333 E02 scan-truth reconciliation Preserved because remote master compaction no longer materializes this local commit node directly.",
+      "observed_at": null,
+      "parent_heads": [
+        "c539da194382d0336804d1e0a8f7198395baf9ca"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9dda616cd23bd060edb6b0d76c8fa6dc58b20b44",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_AFTER_MASTER_COMPACTION",
+      "evidence_refs": [
+        "git-object:c539da194382d0336804d1e0a8f7198395baf9ca",
+        "preserved-from-r7-1-spine:bd35866c9189105844a60ea33c41d76583ebccbdfbf120dbf8c6bed576f666e6"
+      ],
+      "head": "c539da194382d0336804d1e0a8f7198395baf9ca",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
+      "node_id": "git:c539da194382",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(r7.1): rebind production scan currentness Preserved because remote master compaction no longer materializes this local commit node directly.",
+      "observed_at": null,
+      "parent_heads": [
+        "cad58262b7d50a1759b1b022a2e0799472757f2b"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "21f28a27fb9a2a56eae9f44a0dfcf42a0ecbe771",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_AFTER_MASTER_COMPACTION",
+      "evidence_refs": [
+        "git-object:cad58262b7d50a1759b1b022a2e0799472757f2b",
+        "preserved-from-r7-1-spine:bd35866c9189105844a60ea33c41d76583ebccbdfbf120dbf8c6bed576f666e6"
+      ],
+      "head": "cad58262b7d50a1759b1b022a2e0799472757f2b",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
+      "node_id": "git:cad58262b7d5",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(r7.1): harden Git remote parsing and F005 credential gate Preserved because remote master compaction no longer materializes this local commit node directly.",
+      "observed_at": null,
+      "parent_heads": [
+        "334874c90e7cef755b0e856149d57d78b45ff9d8"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "26667c31a41fdeb590d61b175422612c2696582e",
       "truth_subject": null
     }
   ],
