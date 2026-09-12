@@ -104,8 +104,23 @@ jobs:
           from pathlib import Path
 
           workflow = Path('.github/workflows/f005-runtime-repository-observation.yml').read_text(encoding='utf-8')
-          expected = "- uses: actions/checkout@v6\n        with:\n          persist-credentials: false"
-          if expected not in workflow:
+          lines = workflow.splitlines()
+          checkout_indexes = [
+              index for index, line in enumerate(lines)
+              if line.strip() == '- uses: actions/checkout@v6'
+          ]
+          if len(checkout_indexes) != 1:
+              raise SystemExit('FAIL: runtime workflow must contain exactly one checkout@v6 step')
+          start = checkout_indexes[0]
+          base_indent = len(lines[start]) - len(lines[start].lstrip())
+          block = []
+          for line in lines[start + 1:]:
+              stripped = line.strip()
+              indent = len(line) - len(line.lstrip())
+              if stripped.startswith('- ') and indent <= base_indent:
+                  break
+              block.append(stripped)
+          if 'persist-credentials: false' not in block:
               raise SystemExit('FAIL: runtime checkout must set persist-credentials: false')
           print('PASS: runtime checkout credential persistence disabled')
           PY

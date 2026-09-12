@@ -17,6 +17,11 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:0191cf29ff2a",
+      "target": "git:cdb8b420d07d"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:03fc2ed8317c",
       "target": "git:33ccfbf36fee"
     },
@@ -102,6 +107,11 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:334874c90e7c",
+      "target": "git:cad58262b7d5"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:33ccfbf36fee",
       "target": "git:d309b6c91647"
     },
@@ -114,6 +124,11 @@
       "relation": "PARENT_OF",
       "source": "git:381ef77a5436",
       "target": "git:22eb558c55d2"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:3e7c8ba48452",
+      "target": "git:1d383f5560d1"
     },
     {
       "relation": "PARENT_OF",
@@ -157,6 +172,11 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:597bf68943da",
+      "target": "git:1d383f5560d1"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:5fd079304f9e",
       "target": "git:f0955139e560"
     },
@@ -179,6 +199,11 @@
       "relation": "PARENT_OF",
       "source": "git:722a4a165377",
       "target": "git:a1e0268c536e"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:7ba3f78230cb",
+      "target": "git:aef98a10969f"
     },
     {
       "relation": "PARENT_OF",
@@ -232,6 +257,11 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:aef98a10969f",
+      "target": "git:3e7c8ba48452"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:b5eac6ca0888",
       "target": "git:a0b985abb2ae"
     },
@@ -262,6 +292,11 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:c539da194382",
+      "target": "git:597bf68943da"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:c572a3ec74ac",
       "target": "git:5762f4441d08"
     },
@@ -277,8 +312,18 @@
     },
     {
       "relation": "PARENT_OF",
+      "source": "git:cad58262b7d5",
+      "target": "git:c539da194382"
+    },
+    {
+      "relation": "PARENT_OF",
       "source": "git:cb28d5a769f9",
       "target": "git:696c17cc9713"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:cdb8b420d07d",
+      "target": "git:7ba3f78230cb"
     },
     {
       "relation": "PARENT_OF",
@@ -348,7 +393,22 @@
     {
       "relation": "PARENT_OF",
       "source": "git:master",
+      "target": "git:334874c90e7c"
+    },
+    {
+      "relation": "PARENT_OF",
+      "source": "git:master",
       "target": "git:8b4c5c8451a5"
+    },
+    {
+      "relation": "GENEALOGY_MERGED_INTO",
+      "source": "git:pr333",
+      "target": "git:1d383f5560d1"
+    },
+    {
+      "relation": "SUPERSEDED_BY_LOCAL",
+      "source": "git:pr334",
+      "target": "git:1d383f5560d1"
     },
     {
       "relation": "DISTRIBUTES_KNOWLEDGE_OF",
@@ -406,9 +466,9 @@
       "target": "truth:r7-boundary"
     }
   ],
-  "generated_from_head": "73e628847753a3f60c288facd959c15a352a9087",
-  "generated_from_tree": "e4ed28b5a739d424f564d2b49e446343876f0e33",
-  "graph_digest": "a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6",
+  "generated_from_head": "1d383f5560d115cb0fc22bad6088bf2401ad9e2b",
+  "generated_from_tree": "9dda616cd23bd060edb6b0d76c8fa6dc58b20b44",
+  "graph_digest": "bd35866c9189105844a60ea33c41d76583ebccbdfbf120dbf8c6bed576f666e6",
   "graph_digest_domain": "LION/GIT-LOGICAL-TREE/3",
   "invariants": [
     "NO_AUTHORITY_FROM_GRAPH",
@@ -471,13 +531,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:03fc2ed8317c5cff775af217b8c9f65b5b1f1c05"
+        "git-object:0191cf29ff2a5cd4a74a2bcf154d62f96daab6a5"
+      ],
+      "head": "0191cf29ff2a5cd4a74a2bcf154d62f96daab6a5",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:0191cf29ff2a",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "Local E02 integration review snapshot; no publication or runtime authority.",
+      "observed_at": null,
+      "parent_heads": [
+        "d578c5d00d5f5e1f4930e214b400c119ad7de3ac"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "bab3a8390735b63823c52dcf0a5dd234c29a0e0b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:03fc2ed8317c5cff775af217b8c9f65b5b1f1c05",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "03fc2ed8317c5cff775af217b8c9f65b5b1f1c05",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:03fc2ed8317c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind current production scan after workflow homeostasis",
+      "notes": "test: rebind current production scan after workflow homeostasis Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "d5c3270b1e4a24c07b303ddcd891deb82e6419b6"
@@ -493,15 +578,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:0c3a7d78931f69c3a17ee77c50b16f6d403fe187"
+        "git-object:0c3a7d78931f69c3a17ee77c50b16f6d403fe187",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "0c3a7d78931f69c3a17ee77c50b16f6d403fe187",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:0c3a7d78931f",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after final workflow family hardening",
+      "notes": "test: rebind production scan after final workflow family hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85"
@@ -517,15 +603,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:0cccc8fa68e806c972170308460eb6716d5711b7"
+        "git-object:0cccc8fa68e806c972170308460eb6716d5711b7",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "0cccc8fa68e806c972170308460eb6716d5711b7",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:0cccc8fa68e8",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(e02): add external app-session attester boundary",
+      "notes": "candidate(e02): add external app-session attester boundary Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "166d33660fca507bc3918415998d60824c962e49"
@@ -541,15 +628,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:166d33660fca507bc3918415998d60824c962e49"
+        "git-object:166d33660fca507bc3918415998d60824c962e49",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "166d33660fca507bc3918415998d60824c962e49",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:166d33660fca",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "chore(truth): bind generation-10 final noncarrier subject",
+      "notes": "chore(truth): bind generation-10 final noncarrier subject Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4"
@@ -565,15 +653,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:16abf0ee06e31cdbd7e8c0e63104efc038aa7db8"
+        "git-object:16abf0ee06e31cdbd7e8c0e63104efc038aa7db8",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "16abf0ee06e31cdbd7e8c0e63104efc038aa7db8",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:16abf0ee06e3",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after executor independence taxonomy",
+      "notes": "test: rebind production scan after executor independence taxonomy Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "491db646fd9206c84414a16350e671de55a04bd9"
@@ -589,15 +678,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:1807c624d8877376dee533cf2dda62bfe102635c"
+        "git-object:1807c624d8877376dee533cf2dda62bfe102635c",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "1807c624d8877376dee533cf2dda62bfe102635c",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:1807c624d887",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after F009 hardening",
+      "notes": "test: rebind production scan after F009 hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "c85749bfc19c52151664ea1304c9db5418004a17"
@@ -613,15 +703,41 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "CURRENT_LOCAL_LINEAGE",
       "evidence_refs": [
-        "git-object:1f9e10b433559ad2b82db45cb8170aa1b1ba6021"
+        "git-object:1d383f5560d115cb0fc22bad6088bf2401ad9e2b"
+      ],
+      "head": "1d383f5560d115cb0fc22bad6088bf2401ad9e2b",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:1d383f5560d1",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "merge(r7.1): absorb superseded PR333 lineage without regressing evolved tree",
+      "observed_at": null,
+      "parent_heads": [
+        "597bf68943dad11ab1a196aee902936932232a91",
+        "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9dda616cd23bd060edb6b0d76c8fa6dc58b20b44",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:1f9e10b433559ad2b82db45cb8170aa1b1ba6021",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "1f9e10b433559ad2b82db45cb8170aa1b1ba6021",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:1f9e10b43355",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "fix(sqlite): close maintenance bundle connections on context exit",
+      "notes": "fix(sqlite): close maintenance bundle connections on context exit Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "696c17cc97134bdaaee1938173439ac525716806"
@@ -637,15 +753,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:20b8a54befcbe38c453efbef883d17d813ee807a"
+        "git-object:20b8a54befcbe38c453efbef883d17d813ee807a",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "20b8a54befcbe38c453efbef883d17d813ee807a",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:20b8a54befcb",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs(git-spine): refresh R4 runtime and rebind external facts",
+      "notes": "docs(git-spine): refresh R4 runtime and rebind external facts Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "c529da7c03773cad2461615aaf21f175abf76de4"
@@ -661,15 +778,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:22793ebe651882b9c0c523d9ff8d207952241a6e"
+        "git-object:22793ebe651882b9c0c523d9ff8d207952241a6e",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "22793ebe651882b9c0c523d9ff8d207952241a6e",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:22793ebe6518",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(e02): add durable atomic app-session replay sequence store",
+      "notes": "candidate(e02): add durable atomic app-session replay sequence store Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "2b5df03dbc838a590369cffcb5472af6f7293511"
@@ -685,15 +803,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4"
+        "git-object:22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "22b0b5424c9c86bbcdb2b2a2e6137e00d3a7f1f4",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:22b0b5424c9c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs: reconcile generation-10 git spine trust and forward plan",
+      "notes": "docs: reconcile generation-10 git spine trust and forward plan Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "24bc9ac35eefd2a571e919a398d169f7a6c51007"
@@ -709,15 +828,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:22eb558c55d22779b6ade76677af5b5d45c7343a"
+        "git-object:22eb558c55d22779b6ade76677af5b5d45c7343a",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "22eb558c55d22779b6ade76677af5b5d45c7343a",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:22eb558c55d2",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci: automate RAG32 and Git logical-tree validation evidence",
+      "notes": "ci: automate RAG32 and Git logical-tree validation evidence Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "381ef77a54365bf8e1e30ca972394658ec2f71ed"
@@ -733,15 +853,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:24bc9ac35eefd2a571e919a398d169f7a6c51007"
+        "git-object:24bc9ac35eefd2a571e919a398d169f7a6c51007",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "24bc9ac35eefd2a571e919a398d169f7a6c51007",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:24bc9ac35eef",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after app-session trust candidate",
+      "notes": "test: rebind production scan after app-session trust candidate Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "dd134176bf912ae847674fdb16208693a857eba1"
@@ -757,15 +878,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:28b0361310a93e31931b35f54a7a7ccb9445915d"
+        "git-object:28b0361310a93e31931b35f54a7a7ccb9445915d",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "28b0361310a93e31931b35f54a7a7ccb9445915d",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:28b0361310a9",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs(r6): freeze final noncarrier homeostasis snapshot",
+      "notes": "docs(r6): freeze final noncarrier homeostasis snapshot Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "16abf0ee06e31cdbd7e8c0e63104efc038aa7db8"
@@ -781,15 +903,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:28cca4509f886781430979bfa354d02cee7042d1"
+        "git-object:28cca4509f886781430979bfa354d02cee7042d1",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "28cca4509f886781430979bfa354d02cee7042d1",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:28cca4509f88",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(mission-control): model effect-free source rebind plan",
+      "notes": "candidate(mission-control): model effect-free source rebind plan Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "e08ebeab6465ce48f89718e5937214e69fa27403"
@@ -805,15 +928,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:2b5df03dbc838a590369cffcb5472af6f7293511"
+        "git-object:2b5df03dbc838a590369cffcb5472af6f7293511",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "2b5df03dbc838a590369cffcb5472af6f7293511",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:2b5df03dbc83",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "chore(truth): bind R5 final noncarrier subject",
+      "notes": "chore(truth): bind R5 final noncarrier subject Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "bb3de9cd2ad23331a95f631105de7a2232465189"
@@ -829,15 +953,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:2ff869023c18817611100fd4d62a4290f96a2584"
+        "git-object:2ff869023c18817611100fd4d62a4290f96a2584",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "2ff869023c18817611100fd4d62a4290f96a2584",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:2ff869023c18",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after E02 attester installation candidate",
+      "notes": "test: rebind production scan after E02 attester installation candidate Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "4150ac3db34c991d3511ed5ef6f9ccf64a96b08f"
@@ -853,15 +978,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:31d82795f023420fb0d44a41a1129a6ee04c48a8"
+        "git-object:31d82795f023420fb0d44a41a1129a6ee04c48a8",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "31d82795f023420fb0d44a41a1129a6ee04c48a8",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:31d82795f023",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after workflow-spine evolution",
+      "notes": "test: rebind production scan after workflow-spine evolution Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "d769c451f757ce304893b5825eefd9efe10eafce"
@@ -879,13 +1005,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:33ccfbf36feedf6eed20ffc4d4178089111e88cb"
+        "git-object:334874c90e7cef755b0e856149d57d78b45ff9d8"
+      ],
+      "head": "334874c90e7cef755b0e856149d57d78b45ff9d8",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:334874c90e7c",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "feat(r7): publish artifactized host-upgraded lineage",
+      "observed_at": null,
+      "parent_heads": [
+        "938aa94460a2e0f81c470c1586626290bb74bc2c"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "7c8237807567677d2f215a296a51a1e78e9b641c",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:33ccfbf36feedf6eed20ffc4d4178089111e88cb",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "33ccfbf36feedf6eed20ffc4d4178089111e88cb",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:33ccfbf36fee",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs: reconcile final R3 noncarrier validation state",
+      "notes": "docs: reconcile final R3 noncarrier validation state Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "03fc2ed8317c5cff775af217b8c9f65b5b1f1c05"
@@ -901,15 +1052,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85"
+        "git-object:34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "34c3107c1d3c7473918b8f5a4f5f5ac2b1ac3e85",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:34c3107c1d3c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(moon): bind hardened runner workflow to exact source mirror",
+      "notes": "ci(moon): bind hardened runner workflow to exact source mirror Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "81f9d71e3a82f85050bbb1470d024d2460816459"
@@ -925,15 +1077,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:381ef77a54365bf8e1e30ca972394658ec2f71ed"
+        "git-object:381ef77a54365bf8e1e30ca972394658ec2f71ed",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "381ef77a54365bf8e1e30ca972394658ec2f71ed",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:381ef77a5436",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "feat(git-spine): add deterministic logical-tree generator",
+      "notes": "feat(git-spine): add deterministic logical-tree generator Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "28cca4509f886781430979bfa354d02cee7042d1"
@@ -951,13 +1104,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:4150ac3db34c991d3511ed5ef6f9ccf64a96b08f"
+        "git-object:3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871"
+      ],
+      "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:3e7c8ba48452",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "Rebind truth subject after CodeQL 24 UI test repair",
+      "observed_at": null,
+      "parent_heads": [
+        "aef98a10969fe157156ce96abf0b89f07882473e"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:4150ac3db34c991d3511ed5ef6f9ccf64a96b08f",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "4150ac3db34c991d3511ed5ef6f9ccf64a96b08f",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:4150ac3db34c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(e02): bind external app-session attester installation contract",
+      "notes": "candidate(e02): bind external app-session attester installation contract Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "e46cd3bb272a11868b09da8287d95335f4798654"
@@ -973,15 +1151,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:4194805d5294469c94d68dd7d7d5fded12fd2924"
+        "git-object:4194805d5294469c94d68dd7d7d5fded12fd2924",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "4194805d5294469c94d68dd7d7d5fded12fd2924",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:4194805d5294",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(f005): bind read-only CI workflows to exact checkout identity",
+      "notes": "ci(f005): bind read-only CI workflows to exact checkout identity Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93"
@@ -997,15 +1176,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:491db646fd9206c84414a16350e671de55a04bd9"
+        "git-object:491db646fd9206c84414a16350e671de55a04bd9",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "491db646fd9206c84414a16350e671de55a04bd9",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:491db646fd92",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(executor): formalize attested material independence taxonomy",
+      "notes": "candidate(executor): formalize attested material independence taxonomy Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "4b6e1420108cae41a7890bc0dd7550c5d4d9413f"
@@ -1021,15 +1201,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:4ad684f7f82cd2dd312f1d4332dad97142b05baa"
+        "git-object:4ad684f7f82cd2dd312f1d4332dad97142b05baa",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "4ad684f7f82cd2dd312f1d4332dad97142b05baa",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:4ad684f7f82c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "feat(workflow): classify homeostasis findings by effect family",
+      "notes": "feat(workflow): classify homeostasis findings by effect family Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "ba4931c9ae344ea7888475e17efc9f1668dee977"
@@ -1045,15 +1226,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:4b6e1420108cae41a7890bc0dd7550c5d4d9413f"
+        "git-object:4b6e1420108cae41a7890bc0dd7550c5d4d9413f",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "4b6e1420108cae41a7890bc0dd7550c5d4d9413f",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:4b6e1420108c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after mission-control admission candidate",
+      "notes": "test: rebind production scan after mission-control admission candidate Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "8daa0236e2e20b4c1a9e01be598e49d75037f26a"
@@ -1069,15 +1251,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:52642060d7c73fd800991a63a78b8444adba1769"
+        "git-object:52642060d7c73fd800991a63a78b8444adba1769",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "52642060d7c73fd800991a63a78b8444adba1769",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:52642060d7c7",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "fix(sqlite): close repository delete fence connections on context exit",
+      "notes": "fix(sqlite): close repository delete fence connections on context exit Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "fca0299f0354440201c0b84d6eecbdc10f9d9b3c"
@@ -1093,15 +1276,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:552b45d8c0c62297ccc72a369ec97c55a5e2b2d2"
+        "git-object:552b45d8c0c62297ccc72a369ec97c55a5e2b2d2",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "552b45d8c0c62297ccc72a369ec97c55a5e2b2d2",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:552b45d8c0c6",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after multigeneration source evolution",
+      "notes": "test: rebind production scan after multigeneration source evolution Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "d6ff97434e707f94f332d44102ab39d79959829b"
@@ -1117,15 +1301,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:5762f4441d08f524e0b01697202f6e347ea9e560"
+        "git-object:5762f4441d08f524e0b01697202f6e347ea9e560",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "5762f4441d08f524e0b01697202f6e347ea9e560",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:5762f4441d08",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs: reconcile generation-eight R4 current state and Git spine",
+      "notes": "docs: reconcile generation-eight R4 current state and Git spine Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "c572a3ec74ac58f20414f81fcb51d0c586f4df01"
@@ -1143,13 +1328,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:5fd079304f9e3a4f6fb169e43d723f3bef661eea"
+        "git-object:597bf68943dad11ab1a196aee902936932232a91"
+      ],
+      "head": "597bf68943dad11ab1a196aee902936932232a91",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:597bf68943da",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "docs(r7.1): preserve PR333 E02 scan-truth reconciliation",
+      "observed_at": null,
+      "parent_heads": [
+        "c539da194382d0336804d1e0a8f7198395baf9ca"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9dda616cd23bd060edb6b0d76c8fa6dc58b20b44",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:5fd079304f9e3a4f6fb169e43d723f3bef661eea",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "5fd079304f9e3a4f6fb169e43d723f3bef661eea",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:5fd079304f9e",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after fleet workflow hardening",
+      "notes": "test: rebind production scan after fleet workflow hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "a1e0268c536ee3083653025f710c90d2fa2d1f58"
@@ -1165,15 +1375,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:6863df340b02e24e9dce683416a3cc096cc9cd65"
+        "git-object:6863df340b02e24e9dce683416a3cc096cc9cd65",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "6863df340b02e24e9dce683416a3cc096cc9cd65",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:6863df340b02",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after authority sqlite lifecycle fix",
+      "notes": "test: rebind production scan after authority sqlite lifecycle fix Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f"
@@ -1189,15 +1400,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:696c17cc97134bdaaee1938173439ac525716806"
+        "git-object:696c17cc97134bdaaee1938173439ac525716806",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "696c17cc97134bdaaee1938173439ac525716806",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:696c17cc9713",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after trusted control-plane sqlite lifecycle fix",
+      "notes": "test: rebind production scan after trusted control-plane sqlite lifecycle fix Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "cb28d5a769f98ff603bc2076d45cecb15d1032b2"
@@ -1213,15 +1425,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:705f0db4b70309865e830d06ea92001020272578"
+        "git-object:705f0db4b70309865e830d06ea92001020272578",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "705f0db4b70309865e830d06ea92001020272578",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:705f0db4b703",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production surface closure after durable app-session store",
+      "notes": "test: rebind production surface closure after durable app-session store Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "8ecd990e71105f3fe5571a71dac25c586f4334e5"
@@ -1237,15 +1450,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:722a4a16537712b86d3e6edb39432b509cc16b13"
+        "git-object:722a4a16537712b86d3e6edb39432b509cc16b13",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "722a4a16537712b86d3e6edb39432b509cc16b13",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:722a4a165377",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after F005 CI hardening",
+      "notes": "test: rebind production scan after F005 CI hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "4194805d5294469c94d68dd7d7d5fded12fd2924"
@@ -1261,15 +1475,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "CURRENT_LOCAL_LINEAGE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:73e628847753a3f60c288facd959c15a352a9087"
+        "git-object:73e628847753a3f60c288facd959c15a352a9087",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "73e628847753a3f60c288facd959c15a352a9087",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:73e628847753",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "chore(truth): bind R7 final noncarrier subject",
+      "notes": "chore(truth): bind R7 final noncarrier subject Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "ec88811fcae19d7c8b906ed473e81ed2d3554f95"
@@ -1287,13 +1502,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:7bc0432f4a4b80ac68493dbc569500d20e593f54"
+        "git-object:7ba3f78230cbf78899f3ecd87b301ba2a256f812"
+      ],
+      "head": "7ba3f78230cbf78899f3ecd87b301ba2a256f812",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:7ba3f78230cb",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "Bind E02 truth carriers to exact noncarrier subject",
+      "observed_at": null,
+      "parent_heads": [
+        "cdb8b420d07dc640bd66169da6ee69412ddf1393"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "7b2c216df651b5e9bf45fab8a684573d073b2d73",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:7bc0432f4a4b80ac68493dbc569500d20e593f54",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "7bc0432f4a4b80ac68493dbc569500d20e593f54",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:7bc0432f4a4b",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(core): queue evidence runs without cancellation",
+      "notes": "ci(core): queue evidence runs without cancellation Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "9e36d8ac90a02efc17454df0727900a08a8b6379"
@@ -1309,15 +1549,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:81f9d71e3a82f85050bbb1470d024d2460816459"
+        "git-object:81f9d71e3a82f85050bbb1470d024d2460816459",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "81f9d71e3a82f85050bbb1470d024d2460816459",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:81f9d71e3a82",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(workflow): close remaining effect-family homeostasis findings",
+      "notes": "ci(workflow): close remaining effect-family homeostasis findings Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "705f0db4b70309865e830d06ea92001020272578"
@@ -1333,15 +1574,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:8b4c5c8451a53ea8221d28042e6fcbccb69a149f"
+        "git-object:8b4c5c8451a53ea8221d28042e6fcbccb69a149f",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "8b4c5c8451a53ea8221d28042e6fcbccb69a149f",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:8b4c5c8451a5",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate: replay E02 and Mission Control delta on current master",
+      "notes": "candidate: replay E02 and Mission Control delta on current master Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "938aa94460a2e0f81c470c1586626290bb74bc2c"
@@ -1357,15 +1599,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:8daa0236e2e20b4c1a9e01be598e49d75037f26a"
+        "git-object:8daa0236e2e20b4c1a9e01be598e49d75037f26a",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "8daa0236e2e20b4c1a9e01be598e49d75037f26a",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:8daa0236e2e2",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(mission-control): add source-rebind deployment admission contract",
+      "notes": "candidate(mission-control): add source-rebind deployment admission contract Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "0c3a7d78931f69c3a17ee77c50b16f6d403fe187"
@@ -1381,15 +1624,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:8ecd990e71105f3fe5571a71dac25c586f4334e5"
+        "git-object:8ecd990e71105f3fe5571a71dac25c586f4334e5",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "8ecd990e71105f3fe5571a71dac25c586f4334e5",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:8ecd990e7110",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production surface closure after durable app-session store",
+      "notes": "test: rebind production surface closure after durable app-session store Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "22793ebe651882b9c0c523d9ff8d207952241a6e"
@@ -1405,15 +1649,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:8f276d87adc77bed7eb514aec59df569d4ee2040"
+        "git-object:8f276d87adc77bed7eb514aec59df569d4ee2040",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "8f276d87adc77bed7eb514aec59df569d4ee2040",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:8f276d87adc7",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "chore(truth): bind generation-eight R4 final noncarrier subject",
+      "notes": "chore(truth): bind generation-eight R4 final noncarrier subject Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "5762f4441d08f524e0b01697202f6e347ea9e560"
@@ -1429,15 +1674,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:9e36d8ac90a02efc17454df0727900a08a8b6379"
+        "git-object:9e36d8ac90a02efc17454df0727900a08a8b6379",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "9e36d8ac90a02efc17454df0727900a08a8b6379",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:9e36d8ac90a0",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after group-channel hardening",
+      "notes": "test: rebind production scan after group-channel hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d"
@@ -1453,15 +1699,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:9e753e8b6f9ff8358222ae75acb8b34456e88ec9"
+        "git-object:9e753e8b6f9ff8358222ae75acb8b34456e88ec9",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "9e753e8b6f9ff8358222ae75acb8b34456e88ec9",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:9e753e8b6f9f",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "chore(truth): bind R6 final noncarrier subject",
+      "notes": "chore(truth): bind R6 final noncarrier subject Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "28b0361310a93e31931b35f54a7a7ccb9445915d"
@@ -1477,15 +1724,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:a0b985abb2aeb556960bdee87452eb6a1bbfb4e7"
+        "git-object:a0b985abb2aeb556960bdee87452eb6a1bbfb4e7",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "a0b985abb2aeb556960bdee87452eb6a1bbfb4e7",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:a0b985abb2ae",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "fix(sqlite): close moon file-write fence connections on context exit",
+      "notes": "fix(sqlite): close moon file-write fence connections on context exit Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "b5eac6ca08883bf69948147585c273b448dd9415"
@@ -1501,15 +1749,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:a1e0268c536ee3083653025f710c90d2fa2d1f58"
+        "git-object:a1e0268c536ee3083653025f710c90d2fa2d1f58",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "a1e0268c536ee3083653025f710c90d2fa2d1f58",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:a1e0268c536e",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(fleet): harden read-only aggregate effect budget evidence",
+      "notes": "ci(fleet): harden read-only aggregate effect budget evidence Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "722a4a16537712b86d3e6edb39432b509cc16b13"
@@ -1527,13 +1776,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:b5eac6ca08883bf69948147585c273b448dd9415"
+        "git-object:aef98a10969fe157156ce96abf0b89f07882473e"
+      ],
+      "head": "aef98a10969fe157156ce96abf0b89f07882473e",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:aef98a10969f",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "Assert exact escaped artifact text instead of incomplete HTML tag regex",
+      "observed_at": null,
+      "parent_heads": [
+        "7ba3f78230cbf78899f3ecd87b301ba2a256f812"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "9e3645a5206b8e46890c2fdb533b4fd0fd778251",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:b5eac6ca08883bf69948147585c273b448dd9415",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "b5eac6ca08883bf69948147585c273b448dd9415",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:b5eac6ca0888",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after repository fence sqlite lifecycle fix",
+      "notes": "test: rebind production scan after repository fence sqlite lifecycle fix Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "52642060d7c73fd800991a63a78b8444adba1769"
@@ -1549,15 +1823,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:b95f73561a876a148052c166f4df370bc7cbe832"
+        "git-object:b95f73561a876a148052c166f4df370bc7cbe832",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "b95f73561a876a148052c166f4df370bc7cbe832",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:b95f73561a87",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs(codex): add exact project integration contract",
+      "notes": "docs(codex): add exact project integration contract Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "8b4c5c8451a53ea8221d28042e6fcbccb69a149f"
@@ -1573,15 +1848,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:ba4931c9ae344ea7888475e17efc9f1668dee977"
+        "git-object:ba4931c9ae344ea7888475e17efc9f1668dee977",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "ba4931c9ae344ea7888475e17efc9f1668dee977",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:ba4931c9ae34",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after observation workflow hardening",
+      "notes": "test: rebind production scan after observation workflow hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "f0955139e5608147f3e223833865fdd74bbb0896"
@@ -1597,15 +1873,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:bb3de9cd2ad23331a95f631105de7a2232465189"
+        "git-object:bb3de9cd2ad23331a95f631105de7a2232465189",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "bb3de9cd2ad23331a95f631105de7a2232465189",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:bb3de9cd2ad2",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs: reconcile R5 workflow trust runtime and forward evolution state",
+      "notes": "docs: reconcile R5 workflow trust runtime and forward evolution state Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "20b8a54befcbe38c453efbef883d17d813ee807a"
@@ -1621,15 +1898,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d"
+        "git-object:c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "c0132cb767cca68b2aa8ac5f3b0c2e46ade0829d",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:c0132cb767cc",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(observation): bind group-channel evidence head tree and receipt digest",
+      "notes": "ci(observation): bind group-channel evidence head tree and receipt digest Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "4ad684f7f82cd2dd312f1d4332dad97142b05baa"
@@ -1645,15 +1923,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:c529da7c03773cad2461615aaf21f175abf76de4"
+        "git-object:c529da7c03773cad2461615aaf21f175abf76de4",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "c529da7c03773cad2461615aaf21f175abf76de4",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:c529da7c0377",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "feat(rag): add exact artifact currentness classifier",
+      "notes": "feat(rag): add exact artifact currentness classifier Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "1807c624d8877376dee533cf2dda62bfe102635c"
@@ -1671,13 +1950,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:c572a3ec74ac58f20414f81fcb51d0c586f4df01"
+        "git-object:c539da194382d0336804d1e0a8f7198395baf9ca"
+      ],
+      "head": "c539da194382d0336804d1e0a8f7198395baf9ca",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:c539da194382",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "chore(r7.1): rebind production scan currentness",
+      "observed_at": null,
+      "parent_heads": [
+        "cad58262b7d50a1759b1b022a2e0799472757f2b"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "21f28a27fb9a2a56eae9f44a0dfcf42a0ecbe771",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:c572a3ec74ac58f20414f81fcb51d0c586f4df01",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "c572a3ec74ac58f20414f81fcb51d0c586f4df01",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:c572a3ec74ac",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind host authority inventory to generation-eight sources",
+      "notes": "test: rebind host authority inventory to generation-eight sources Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "552b45d8c0c62297ccc72a369ec97c55a5e2b2d2"
@@ -1693,15 +1997,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93"
+        "git-object:c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "c82364a9c28bc6c93a5d1bd0b9e4a2dbdfee2b93",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:c82364a9c28b",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after external app attester candidate",
+      "notes": "test: rebind production scan after external app attester candidate Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "0cccc8fa68e806c972170308460eb6716d5711b7"
@@ -1717,15 +2022,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:c85749bfc19c52151664ea1304c9db5418004a17"
+        "git-object:c85749bfc19c52151664ea1304c9db5418004a17",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "c85749bfc19c52151664ea1304c9db5418004a17",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:c85749bfc19c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(f009): bind live-proof source tree and evidence set",
+      "notes": "ci(f009): bind live-proof source tree and evidence set Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "d94e208b285ce867aa42b3f01192452eb7c0910a"
@@ -1743,13 +2049,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:cb28d5a769f98ff603bc2076d45cecb15d1032b2"
+        "git-object:cad58262b7d50a1759b1b022a2e0799472757f2b"
+      ],
+      "head": "cad58262b7d50a1759b1b022a2e0799472757f2b",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:cad58262b7d5",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "fix(r7.1): harden Git remote parsing and F005 credential gate",
+      "observed_at": null,
+      "parent_heads": [
+        "334874c90e7cef755b0e856149d57d78b45ff9d8"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "26667c31a41fdeb590d61b175422612c2696582e",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:cb28d5a769f98ff603bc2076d45cecb15d1032b2",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "cb28d5a769f98ff603bc2076d45cecb15d1032b2",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:cb28d5a769f9",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "fix(sqlite): close trusted control-plane connections on context exit",
+      "notes": "fix(sqlite): close trusted control-plane connections on context exit Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "6863df340b02e24e9dce683416a3cc096cc9cd65"
@@ -1767,13 +2098,38 @@
       "authority_state": "NONE_BY_THIS_NODE",
       "currentness": "HISTORICAL_LOCAL_ANCESTOR",
       "evidence_refs": [
-        "git-object:cee7861fb548e01db7678a83dfe43fae477c3ab2"
+        "git-object:cdb8b420d07dc640bd66169da6ee69412ddf1393"
+      ],
+      "head": "cdb8b420d07dc640bd66169da6ee69412ddf1393",
+      "integration_state": "LOCAL_UNPUBLISHED",
+      "node_id": "git:cdb8b420d07d",
+      "node_type": "LOCAL_EVOLUTION_COMMIT",
+      "notes": "Reconcile E02 current scan with canonical Git blobs and preserve unknown surfaces",
+      "observed_at": null,
+      "parent_heads": [
+        "0191cf29ff2a5cd4a74a2bcf154d62f96daab6a5"
+      ],
+      "rag_release": null,
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [],
+      "supersedes": [],
+      "tree": "f8c8066d11f3a0d1c0626bda7e4dd0c12854b7e1",
+      "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
+      "evidence_refs": [
+        "git-object:cee7861fb548e01db7678a83dfe43fae477c3ab2",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "cee7861fb548e01db7678a83dfe43fae477c3ab2",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:cee7861fb548",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci: strengthen exact-head security and bounded workflow evidence",
+      "notes": "ci: strengthen exact-head security and bounded workflow evidence Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "b95f73561a876a148052c166f4df370bc7cbe832"
@@ -1789,15 +2145,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:d309b6c91647917a469ee461313a685c560b9913"
+        "git-object:d309b6c91647917a469ee461313a685c560b9913",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "d309b6c91647917a469ee461313a685c560b9913",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:d309b6c91647",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "chore(truth): bind R3 rebased final noncarrier subject",
+      "notes": "chore(truth): bind R3 rebased final noncarrier subject Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "33ccfbf36feedf6eed20ffc4d4178089111e88cb"
@@ -1813,15 +2170,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:d5c3270b1e4a24c07b303ddcd891deb82e6419b6"
+        "git-object:d5c3270b1e4a24c07b303ddcd891deb82e6419b6",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "d5c3270b1e4a24c07b303ddcd891deb82e6419b6",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:d5c3270b1e4a",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs: materialize R3 git logical spine and supersession state",
+      "notes": "docs: materialize R3 git logical spine and supersession state Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "cee7861fb548e01db7678a83dfe43fae477c3ab2"
@@ -1837,15 +2195,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:d6ff97434e707f94f332d44102ab39d79959829b"
+        "git-object:d6ff97434e707f94f332d44102ab39d79959829b",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "d6ff97434e707f94f332d44102ab39d79959829b",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:d6ff97434e70",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(executor): bind shared boot failure-domain evidence",
+      "notes": "candidate(executor): bind shared boot failure-domain evidence Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "22eb558c55d22779b6ade76677af5b5d45c7343a"
@@ -1861,15 +2220,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:d769c451f757ce304893b5825eefd9efe10eafce"
+        "git-object:d769c451f757ce304893b5825eefd9efe10eafce",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "d769c451f757ce304893b5825eefd9efe10eafce",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:d769c451f757",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(git-spine): validate canonical v3 and workflow homeostasis",
+      "notes": "ci(git-spine): validate canonical v3 and workflow homeostasis Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "8f276d87adc77bed7eb514aec59df569d4ee2040"
@@ -1885,15 +2245,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:d94e208b285ce867aa42b3f01192452eb7c0910a"
+        "git-object:d94e208b285ce867aa42b3f01192452eb7c0910a",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "d94e208b285ce867aa42b3f01192452eb7c0910a",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:d94e208b285c",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after core workflow hardening",
+      "notes": "test: rebind production scan after core workflow hardening Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "7bc0432f4a4b80ac68493dbc569500d20e593f54"
@@ -1909,15 +2270,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:dd134176bf912ae847674fdb16208693a857eba1"
+        "git-object:dd134176bf912ae847674fdb16208693a857eba1",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "dd134176bf912ae847674fdb16208693a857eba1",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:dd134176bf91",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(e02): add effect-free app-session attestation binding",
+      "notes": "candidate(e02): add effect-free app-session attestation binding Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "31d82795f023420fb0d44a41a1129a6ee04c48a8"
@@ -1933,15 +2295,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:e08ebeab6465ce48f89718e5937214e69fa27403"
+        "git-object:e08ebeab6465ce48f89718e5937214e69fa27403",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "e08ebeab6465ce48f89718e5937214e69fa27403",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:e08ebeab6465",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "candidate(e02): bind provenance time and sequence trust primitives",
+      "notes": "candidate(e02): bind provenance time and sequence trust primitives Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "d309b6c91647917a469ee461313a685c560b9913"
@@ -1957,15 +2320,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f"
+        "git-object:e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "e0f7f277fbc5f3ef7f01425ca31f59bb73d9d90f",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:e0f7f277fbc5",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "fix(sqlite): close persistent authority connections on context exit",
+      "notes": "fix(sqlite): close persistent authority connections on context exit Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "9e753e8b6f9ff8358222ae75acb8b34456e88ec9"
@@ -1981,15 +2345,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:e46cd3bb272a11868b09da8287d95335f4798654"
+        "git-object:e46cd3bb272a11868b09da8287d95335f4798654",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "e46cd3bb272a11868b09da8287d95335f4798654",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:e46cd3bb272a",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test(moon): preserve certified surfaces across sqlite lifecycle fix",
+      "notes": "test(moon): preserve certified surfaces across sqlite lifecycle fix Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "a0b985abb2aeb556960bdee87452eb6a1bbfb4e7"
@@ -2005,15 +2370,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:ec88811fcae19d7c8b906ed473e81ed2d3554f95"
+        "git-object:ec88811fcae19d7c8b906ed473e81ed2d3554f95",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "ec88811fcae19d7c8b906ed473e81ed2d3554f95",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:ec88811fcae1",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "docs(r7): freeze final noncarrier spine and authority boundaries",
+      "notes": "docs(r7): freeze final noncarrier spine and authority boundaries Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "2ff869023c18817611100fd4d62a4290f96a2584"
@@ -2029,15 +2395,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:f0955139e5608147f3e223833865fdd74bbb0896"
+        "git-object:f0955139e5608147f3e223833865fdd74bbb0896",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "f0955139e5608147f3e223833865fdd74bbb0896",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:f0955139e560",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "ci(observation): bind code-perception observer implementation identity",
+      "notes": "ci(observation): bind code-perception observer implementation identity Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "5fd079304f9e3a4f6fb169e43d723f3bef661eea"
@@ -2053,15 +2420,16 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "HISTORICAL_LOCAL_ANCESTOR",
+      "currentness": "HISTORICAL_PRESERVED_PRE_REMOTE_COMPACTION",
       "evidence_refs": [
-        "git-object:fca0299f0354440201c0b84d6eecbdc10f9d9b3c"
+        "git-object:fca0299f0354440201c0b84d6eecbdc10f9d9b3c",
+        "preserved-from-git-spine:a00aef160e26d015d6823e66e85b000cc5d5c747540048c92d9c3bb004a7fba6"
       ],
       "head": "fca0299f0354440201c0b84d6eecbdc10f9d9b3c",
-      "integration_state": "LOCAL_UNPUBLISHED",
+      "integration_state": "HISTORICAL_LINEAGE_PRESERVED",
       "node_id": "git:fca0299f0354",
       "node_type": "LOCAL_EVOLUTION_COMMIT",
-      "notes": "test: rebind production scan after maintenance sqlite lifecycle fix",
+      "notes": "test: rebind production scan after maintenance sqlite lifecycle fix Historical local commit preserved after exact-tree GitHub publication compacted repository ancestry.",
       "observed_at": null,
       "parent_heads": [
         "1f9e10b433559ad2b82db45cb8170aa1b1ba6021"
@@ -2153,26 +2521,53 @@
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
-      "currentness": "CURRENT_OPEN_DRAFT_REACQUIRED",
+      "currentness": "MERGED_IN_LOCAL_R7_1_LINEAGE_REMOTE_PR_STILL_OPEN",
       "evidence_refs": [
         "github:PR#333:3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
         "ci:exact-head:4-workflows-success"
       ],
       "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
-      "integration_state": "OPEN_DRAFT_UNMERGED",
+      "integration_state": "LOCAL_GENEALOGY_MERGED_PENDING_REMOTE_MASTER",
       "node_id": "git:pr333",
       "node_type": "OPEN_PR",
-      "notes": "Historical draft; R7 local lineage is separate and unpublished.",
-      "observed_at": "2026-09-12T15:43:04Z",
+      "notes": "PR333 functional E02 delta is subsumed by R7.1; 13/33 changed paths are byte-identical, 19 are evolved, and the sole missing reconciliation document was restored before genealogy merge.",
+      "observed_at": "2026-09-12T17:27:29Z",
       "parent_heads": [],
       "rag_release": null,
       "ref": "mission/e02-offline-candidate-codeql24-r1",
       "repository": "DonkeyJJLove/ai_platform",
       "runtime_state": "NOT_DEPLOYED",
-      "superseded_by": [],
+      "superseded_by": [
+        "git:1d383f5560d1"
+      ],
       "supersedes": [],
       "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
       "truth_subject": null
+    },
+    {
+      "authority_state": "NONE_BY_THIS_NODE",
+      "currentness": "STALE_RELATIVE_TO_LOCAL_R7_1",
+      "evidence_refs": [
+        "github:PR#334:334874c90e7cef755b0e856149d57d78b45ff9d8",
+        "tree:7c8237807567677d2f215a296a51a1e78e9b641c"
+      ],
+      "head": "334874c90e7cef755b0e856149d57d78b45ff9d8",
+      "integration_state": "OPEN_DRAFT_REMOTE_R7_PRE_R7_1",
+      "node_id": "git:pr334",
+      "node_type": "OPEN_PR",
+      "notes": "Remote exact R7 tree before R7.1 CI/CodeQL fixes and PR333 genealogy merge.",
+      "observed_at": "2026-09-12T17:27:29Z",
+      "parent_heads": [],
+      "rag_release": "lion-rag32-v1.4-r7-multigeneration-candidate",
+      "ref": "mission/r7-artifactized-host-upgraded-r1",
+      "repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "NOT_DEPLOYED",
+      "superseded_by": [
+        "git:1d383f5560d1"
+      ],
+      "supersedes": [],
+      "tree": "7c8237807567677d2f215a296a51a1e78e9b641c",
+      "truth_subject": "a1bea3896b2743fa0862f002e466a9d0f79de747e4d196c62b297964ed6ea360"
     },
     {
       "authority_state": "NONE_BY_THIS_NODE",
@@ -2313,7 +2708,10 @@
       "node_type": "REMOTE_MASTER",
       "notes": "Remote-tracking snapshot; network currentness must be reacquired separately.",
       "observed_at": null,
-      "parent_heads": [],
+      "parent_heads": [
+        "7238c09ab89d0b890d90050a23c2029df0e98aeb",
+        "d578c5d00d5f5e1f4930e214b400c119ad7de3ac"
+      ],
       "rag_release": null,
       "ref": "master",
       "repository": "DonkeyJJLove/ai_platform",

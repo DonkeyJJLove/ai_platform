@@ -30,6 +30,12 @@ class GitLogicalTreeTests(unittest.TestCase):
  def test_snapshot_digest_substitution_denied(self):
   td,r=repo();self.addCleanup(td.cleanup);v=generate(r,facts(r));v["graph_digest"]="0"*64
   with self.assertRaisesRegex(GitLogicalTreeError,"digest mismatch"):validate_snapshot(r,v)
+ def test_canonical_github_remote_maps_to_owner_repo(self):
+  td,r=repo();self.addCleanup(td.cleanup);run(r,"remote","add","origin","https://github.com/DonkeyJJLove/ai_platform.git");g=generate(r,facts(r));self.assertEqual(g["repository"],"DonkeyJJLove/ai_platform")
+ def test_hostile_url_containing_github_path_is_not_sanitized_as_github(self):
+  td,r=repo();self.addCleanup(td.cleanup);run(r,"remote","add","origin","https://evil.example/github.com/attacker/repo.git");g=generate(r,facts(r));self.assertEqual(g["repository"],r.name);self.assertNotEqual(g["repository"],"attacker/repo")
+ def test_canonical_scp_github_remote_maps_to_owner_repo(self):
+  td,r=repo();self.addCleanup(td.cleanup);run(r,"remote","add","origin","git@github.com:DonkeyJJLove/ai_platform.git");g=generate(r,facts(r));self.assertEqual(g["repository"],"DonkeyJJLove/ai_platform")
  def test_generator_does_not_mutate_repository(self):
   td,r=repo();self.addCleanup(td.cleanup);p=facts(r);before=subprocess.check_output(["git","-C",str(r),"status","--porcelain"]);generate(r,p);after=subprocess.check_output(["git","-C",str(r),"status","--porcelain"]);self.assertEqual(before,after)
 if __name__=='__main__':unittest.main()

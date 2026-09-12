@@ -13,6 +13,12 @@ from pathlib import Path
 
 DOMAIN=b"LION/GIT-LOGICAL-TREE/3\0"
 HEX40=re.compile(r"^[0-9a-f]{40}$")
+_GITHUB_REMOTE_PATTERNS=(
+    re.compile(r"^https://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?$"),
+    re.compile(r"^git://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?$"),
+    re.compile(r"^ssh://git@github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?$"),
+    re.compile(r"^git@github\.com:([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?$"),
+)
 SCHEMA="lion.git-logical-tree/v3"
 FACTS_SCHEMA="lion.git-logical-tree-external-facts/v2"
 
@@ -42,6 +48,13 @@ def _opt_text(v,label):
     return _text(v,label)
 
 def _canonical(v):return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+
+def _repository_name_from_remote(remote,fallback):
+    if not remote:return fallback
+    for pattern in _GITHUB_REMOTE_PATTERNS:
+        match=pattern.fullmatch(remote)
+        if match is not None:return match.group(1)+"/"+match.group(2)
+    return fallback
 
 def _parents(root,head):
     raw=_git(root,"show","-s","--format=%P",head) or ""
@@ -88,9 +101,8 @@ def generate(root,external_facts=None):
     root=Path(root).resolve()
     if _git(root,"rev-parse","--is-inside-work-tree")!="true":raise GitLogicalTreeError("Git worktree required")
     head=_sha40(_git(root,"rev-parse","HEAD^{commit}"),"head"); head_tree=_sha40(_git(root,"rev-parse","HEAD^{tree}"),"head tree")
-    repo_name=_git(root,"config","--get","remote.origin.url",required=False) or root.name
-    if repo_name.endswith('.git'):repo_name=repo_name[:-4]
-    if 'github.com/' in repo_name:repo_name=repo_name.split('github.com/',1)[1]
+    remote_url=_git(root,"config","--get","remote.origin.url",required=False)
+    repo_name=_repository_name_from_remote(remote_url,root.name)
     master_ref="refs/remotes/origin/master"; master_head=_git(root,"rev-parse",master_ref+"^{commit}",required=False)
     nodes=[];edges=[]
     if master_head:

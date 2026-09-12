@@ -48,12 +48,12 @@
   "baseline_head": "938aa94460a2e0f81c470c1586626290bb74bc2c",
   "baseline_tree": "70d698f937608495c3845b9b7c1f0bc515a3789d",
   "candidate": {
-    "branch": "mission/r3-rebased-local-r1",
+    "branch": "mission/r7-artifactized-host-upgraded-r1",
+    "pre_documentation_head": "1d383f5560d115cb0fc22bad6088bf2401ad9e2b",
+    "pre_documentation_tree": "9dda616cd23bd060edb6b0d76c8fa6dc58b20b44",
     "final_descendant_identity": "REACQUIRE_AFTER_CARRIER_LAST",
-    "pre_documentation_head": "2ff869023c18817611100fd4d62a4290f96a2584",
-    "pre_documentation_tree": "d12b504cf13e4ec80714905ffae437cb20d731d8",
-    "remote_exact_head_ci": "NOT_PUBLISHED",
-    "state": "FINAL_SAFE_SOURCE_TEST_RUNTIME_REACQUIRED_PRETRUTH"
+    "remote_exact_head_ci": "PENDING_R7_1_PUBLICATION",
+    "state": "FINAL_R7_1_NONCARRIER_PRETRUTH_IN_PROGRESS"
   },
   "e02_trust": {
     "app_session_attestation": "EXTERNAL_ATTESTATION_CANDIDATE",
@@ -73,13 +73,13 @@
     "swarms": 28
   },
   "git_logical_tree": {
-    "digest": "ca3ec109b9810965cb421fbe741f049cb24ebdae169edcc0ae7ae3fb3543475a",
+    "digest": "bd35866c9189105844a60ea33c41d76583ebccbdfbf120dbf8c6bed576f666e6",
     "digest_domain": "LION/GIT-LOGICAL-TREE/3",
-    "edges": 76,
-    "generated_from_head": "2ff869023c18817611100fd4d62a4290f96a2584",
-    "nodes": 79,
+    "edges": 93,
+    "generated_from_head": "1d383f5560d115cb0fc22bad6088bf2401ad9e2b",
+    "nodes": 94,
     "path": "LION/architecture/v1_4/GIT_LOGICAL_TREE.json",
-    "state": "FINAL_PRE_DOCUMENTATION_SNAPSHOT"
+    "state": "R7_1_PRE_DOCUMENTATION_SNAPSHOT_WITH_PRESERVED_LOCAL_LINEAGE"
   },
   "hosts": {
     "connected": 4,
@@ -114,15 +114,15 @@
     "vkt_recorded": "RUNNING"
   },
   "pr333": {
-    "disposition": "PRESERVE_HISTORY_R7_LOCAL_LINEAGE_SEPARATE",
-    "exact_head_ci": "4_WORKFLOWS_SUCCESS_REACQUIRED",
     "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
-    "state": "OPEN_DRAFT_UNMERGED",
-    "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b"
+    "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
+    "state": "GENEALOGY_MERGED_IN_LOCAL_R7_1_REMOTE_PR_STILL_OPEN",
+    "exact_head_ci": "4_WORKFLOWS_SUCCESS_REACQUIRED",
+    "disposition": "CLOSE_AFTER_MASTER_CONTAINS_PR333_HEAD"
   },
-  "process_epoch": "R7_ARTIFACTIZED_HOST_DISTRIBUTED_STABLE_BOUNDARY_20260912",
+  "process_epoch": "R7_1_BRANCH_CONVERGENCE_PRE_MASTER_MERGE_20260912",
   "production_claim": "NONE",
-  "projection_state": "LOCAL_UNPUBLISHED_R7_ARTIFACTIZED_STABLE_BOUNDARY",
+  "projection_state": "LOCAL_R7_1_CODEQL_FIXED_PR333_GENEALOGY_MERGED_PRETRUTH",
   "rag": {
     "publication": "NO",
     "r6": {
@@ -151,7 +151,7 @@
     "full_symbol_parse_failures": 0,
     "full_symbol_python_files": 647,
     "full_symbol_symbols": 10197,
-    "production_scan_digest": "d7975486e7bf78b02222d39a5c92b1dfa30cf3f3153a351c9e21256f2ee81872",
+    "production_scan_digest": "47f3411585c349108f6b05176025aaa37ff945580dc180402dbc757ed06d5cb6",
     "raw_unclassified_count": 6,
     "source_count": 314,
     "surface_count": 273,
@@ -177,8 +177,8 @@
     "carrier_last": true,
     "currentness_rule": "CURRENT_STATE_DOCUMENT_DOES_NOT_PREDICT_ITS_OWN_DESCENDANT_SUBJECT",
     "final_subject": "READ_FROM_TRUTH_CARRIERS_AT_CURRENT_HEAD",
-    "predecessor_truth_subject": "551f296c1ee344e1d362bde2cead7fd1f963117f6dc9fbd8c0eb06341c9eb922",
-    "state": "CARRIER_LAST_BOUNDARY_EXTERNAL_READBACK_REQUIRED"
+    "predecessor_truth_subject": "a1bea3896b2743fa0862f002e466a9d0f79de747e4d196c62b297964ed6ea360",
+    "state": "R7_1_CARRIER_REBIND_REQUIRED_AFTER_FINAL_NONCARRIER_SNAPSHOT"
   },
   "workflow": {
     "audit_digest": "7a471ab0b47d98a9a84b8734abd999079317fb9c9c94a58ed5ead9f1947c4a10",
