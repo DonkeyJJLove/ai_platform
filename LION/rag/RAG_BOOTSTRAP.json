@@ -2,8 +2,11 @@
   "authority_effect": "NONE",
   "embedded_fallback_currentness": "HISTORICAL_UNLESS_REACQUIRED",
   "embedded_fallback_path": "LION/rag/lion_project_rag32_v1_4_r1",
-  "preferred_release": "lion-rag32-v1.4-r8-hybrid-m64-candidate",
+  "preferred_release": "lion-rag32-v1.4-r9-auth-lifecycle-candidate",
+  "preferred_release_content_digest": "64a192e83c18f03b658e4584b62cd4da23ff54891dce8f8906dba0a076431fe4",
   "preferred_release_location": "EXTERNAL_ARTIFACT_NOT_EMBEDDED",
+  "preferred_release_zip_sha256": "e9fa2ff9e04c8841cb23e616ea9a9238b4ed0f56ffded0d3a621f7db90e07d5d",
+  "repository_delta_records": "LION/rag/R9_AUTHORIZATION_LIFECYCLE_RECORDS.md",
   "routing": "NEWEST_VERIFIED_AVAILABLE",
   "schema": "lion.rag-bootstrap/v1"
 }

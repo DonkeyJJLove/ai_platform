@@ -1,0 +1,103 @@
+{
+  "activation_event": {
+    "not_sufficient": [
+      "assistant_generation",
+      "assistant_repetition",
+      "repository_presence",
+      "RAG_retrieval",
+      "tool_presence",
+      "PDP_allow_alone",
+      "historical_user_launch_for_different_identity"
+    ],
+    "required_semantics": "user explicitly launches, runs, executes or authorizes the exact generated LPCL",
+    "source": "EXPLICIT_USER_MESSAGE_OR_EQUIVALENT_OPERATOR_ACTION"
+  },
+  "authority_effect": "NONE",
+  "currentness": {
+    "identity_substitution": "DENY",
+    "policy": "REACQUIRE_BEFORE_CONSEQUENTIAL_EFFECT",
+    "stale_result": "NO_CURRENT_AUTHORITY",
+    "unknown_result": "NO_CURRENT_AUTHORITY"
+  },
+  "invariants": [
+    "LPCL_GENERATION_NE_AUTHORITY",
+    "LPCL_TEXT_NE_AUTHORITY",
+    "LPCL_GENERATION_MATERIALIZES_AUTHORITY_INTENT_SCOPE_AND_EFFECT_BOUNDARIES",
+    "USER_EXPLICIT_LAUNCH_OR_RUN_OF_EXACT_LPCL_IS_EXTERNAL_ACTIVATION_EVENT",
+    "ACTIVATION_VALID_ONLY_FOR_BOUND_IDENTITIES_SCOPE_CURRENTNESS_AND_EFFECTS",
+    "MODEL_OUTPUT_NE_AUTHORITY",
+    "TOOL_AVAILABILITY_NE_AUTHORITY",
+    "RAG_CONTENT_NE_AUTHORITY",
+    "UNLAUNCHED_LPCL_NE_AUTHORITY",
+    "STALE_LPCL_NE_CURRENT_AUTHORITY",
+    "SUCCESSOR_IDENTITY_OUTSIDE_BOUND_SCOPE_REQUIRES_NEW_LPCL_AND_NEW_USER_LAUNCH",
+    "PR_AUTHORITY_NE_MERGE_AUTHORITY_UNLESS_EXPLICITLY_INCLUDED",
+    "MERGE_AUTHORITY_NE_RUNTIME_AUTHORITY_UNLESS_EXPLICITLY_INCLUDED",
+    "RECONCILIATION_REQUIRED_AFTER_NON_IDEMPOTENT_EFFECT"
+  ],
+  "lifecycle": [
+    {
+      "authorization": "NONE",
+      "evidence": "LPCL exists but no explicit user launch event is bound to it",
+      "state": "MATERIALIZED_UNLAUNCHED"
+    },
+    {
+      "authorization": "BOUNDED_BY_EXACT_LPCL",
+      "evidence": "explicit user launch/run event plus current identity/scope/effect match",
+      "state": "ACTIVATED_CURRENT"
+    },
+    {
+      "authorization": "NONE",
+      "evidence": "identity, target, scope, effect or currentness differs from the activated LPCL",
+      "state": "STALE_OR_SUBSTITUTED"
+    },
+    {
+      "authorization": "NO_SUCCESS_INFERENCE",
+      "evidence": "tool/provider report is insufficient until readback",
+      "state": "EFFECT_REPORTED"
+    },
+    {
+      "authorization": "CONSUMED_OR_CONTINUING_AS_DECLARED",
+      "evidence": "expected, reported and independently observed target state are reconciled",
+      "state": "RECONCILED"
+    }
+  ],
+  "ownership": {
+    "contract": "LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json",
+    "discovery": [
+      "AGENTS.md",
+      ".codex/skills/lion-evolution/SKILL.md",
+      "LION/codex/README.md",
+      "LION/codex/CODEX_PROJECT_INTEGRATION.md",
+      "LION/codex/TOOL_AUTHORITY_MAP.yaml"
+    ],
+    "human_semantics": "LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE.md",
+    "tests": "cyber_lion/tests/test_lpcl_authorization_lifecycle.py"
+  },
+  "purpose": "Define when an already-materialized LPCL scope becomes current operator authorization without making LPCL text, repository documentation, model output, tools, or RAG an authority source.",
+  "reconciliation": {
+    "non_idempotent_retry_default": 0,
+    "on_unknown_effect": "READBACK_AND_RECONCILE_BEFORE_ANY_RETRY",
+    "success_requires": [
+      "expected_state",
+      "reported_state",
+      "independently_observed_state",
+      "reconciled_state"
+    ]
+  },
+  "runtime_effect": "NONE",
+  "schema": "lion.authorization-lifecycle/v1",
+  "scope_binding": {
+    "effect_separation": "PR, merge, deployment, runtime activation, credential/trust mutation and other consequential classes are separate unless the launched LPCL explicitly binds them together.",
+    "required_dimensions": [
+      "run_or_process_identity",
+      "repository_or_target_identity",
+      "operation_or_effect_class",
+      "bound_ref_or_object_identity_when_declared",
+      "currentness_preconditions",
+      "explicit_stop_boundaries"
+    ],
+    "successor_rule": "A successor HEAD/tree/ref/runtime identity outside the activated binding requires a newly materialized LPCL and a new explicit user launch."
+  },
+  "status": "CANONICAL_ARCHITECTURE_CONTRACT"
+}
