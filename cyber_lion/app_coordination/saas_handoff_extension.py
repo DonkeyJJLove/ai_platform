@@ -136,19 +136,43 @@ def apply_saas_handoff_extension(cls):
         if isinstance(message, str) and _dual_saas_local(message):
             if not callable(getattr(self, "control_provider", None)):
                 return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
-            local_question, saas_question, independent = _dual_queries(message)
-            local = original_chat(self, local_question, use_web=use_web, history=None if independent else history, output_language=output_language)
             recent = self.control_provider("recent", {})
             mission_id = recent.get("focus_mission_id")
             if not mission_id:
-                raise ValueError("SaaS handoff requires focus mission")
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_question})
-            polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:co|kim|czy|jak|zapytaj|porównaj|porownaj)\b", message.lower())))
-            local_label = "### Model lokalny · gpt-oss-20b-MXFP4\n" if polish else "### Local model · gpt-oss-20b-MXFP4\n"
-            wait_label = ("\n\n### CHATGPT_SAAS_SUPERVISOR\nOdpowiedź SaaS została zlecona w tym samym zapytaniu. "
-                          f"Request `{handoff['request_id']}`, kod `{handoff['request_code']}`. Panel oczekuje na receipt z bieżącej sesji ChatGPT." if polish else
-                          "\n\n### CHATGPT_SAAS_SUPERVISOR\nThe SaaS answer was dispatched by the same query. "
-                          f"Request `{handoff['request_id']}`, code `{handoff['request_code']}`. The panel is waiting for the current ChatGPT-session receipt.")
+                raise ValueError("dual evaluation requires focus mission")
+            try:
+                mission_snapshot = self.control_provider("process", {"mission_id": mission_id})
+                durable_dual = True
+            except Exception:
+                mission_snapshot = {"mission_id":mission_id,"state":"UNKNOWN","runtime_state":"UNKNOWN","materialized":None,"ready":None,"process":{}}
+                durable_dual = False
+            currentness = {
+                "mission_id": mission_id,
+                "state": mission_snapshot.get("state"),
+                "runtime_state": mission_snapshot.get("runtime_state"),
+                "materialized": mission_snapshot.get("materialized"),
+                "ready": mission_snapshot.get("ready"),
+                "process": {k:(mission_snapshot.get("process") or {}).get(k) for k in ("current_phase","progress","authority_state","lpcl_digest")},
+                "execution_driver": mission_snapshot.get("execution_driver"),
+            }
+            if durable_dual:
+                dual = self.control_provider("dual_create", {"mission_id":mission_id,"original_request":message,"currentness":currentness})
+                local_prompt = dual["local_prompt"]
+                saas_prompt = dual["saas_prompt"]
+            else:
+                local_prompt,saas_prompt,independent=_dual_queries(message)
+                dual={"request_id":None,"local_prompt":local_prompt,"saas_prompt":saas_prompt,"independent":independent}
+            local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
+            if durable_dual:
+                self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
+            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt})
+            if durable_dual:
+                self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
+                handoff["dual_request_id"] = dual["request_id"]
+            polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:co|kim|czy|jak|zapytaj|porównaj|porownaj|zadaj)\b", message.lower())))
+            local_label = "### LOCAL · gpt-oss-20b-MXFP4\n" if polish else "### LOCAL · gpt-oss-20b-MXFP4\n"
+            wait_label = ("\n\n### CHATGPT_SAAS_SUPERVISOR\nOdpowiedź SaaS została zlecona jako niezależna trajektoria. "
+                          f"Request `{handoff['request_id']}`, dual `{dual.get('request_id') or 'LEGACY_COMPAT'}`, kod `{handoff['request_code']}`. Panel czeka na receipt; końcowy wynik zostanie złączony dopiero po receipt obu modeli.")
             answer = local_label + str(local.get("answer") or "") + wait_label
             return {
                 "route": "DUAL_EVALUATION_LIVE",
@@ -159,12 +183,13 @@ def apply_saas_handoff_extension(cls):
                 "web_sources": local.get("web_sources", []),
                 "web_fetches": local.get("web_fetches", []),
                 "source_evidence": local.get("source_evidence", []),
-                "mission_control": local.get("mission_control", {"focus_mission_id": mission_id}),
-                "tool_calls": list(local.get("tool_calls", [])) + ["lion.saas.handoff.create"],
+                "mission_control": mission_snapshot,
+                "tool_calls": list(local.get("tool_calls", [])) + ["lion.dual.create","lion.dual.local.receipt","lion.saas.handoff.create","lion.dual.link"],
                 "material_receipts": local.get("material_receipts", []),
-                "local_evaluation": {"model": "gpt-oss-20b-MXFP4", "question": local_question, "answer": local.get("answer"), "route": local.get("route")},
-                "saas_question": saas_question,
-                "independent_questions": independent,
+                "local_evaluation": {"model": "gpt-oss-20b-MXFP4", "question": local_prompt, "answer": local.get("answer"), "route": local.get("route")},
+                "saas_question": saas_prompt,
+                "independent_questions": True,
+                "dual_evaluation": dual,
                 "saas_handoff": handoff,
                 "response_language": output_language,
             }

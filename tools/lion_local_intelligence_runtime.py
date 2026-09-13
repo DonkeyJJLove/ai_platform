@@ -180,6 +180,23 @@ class LpclControlBridge:
             rid=args.get('request_id')
             if not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('saas request id')
             return self._get('/api/v3/saas/requests/'+rid)
+        if op=='mission_action':
+            mid=args.get('mission_id');action=args.get('action');payload=args.get('payload') or {}
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
+            if not isinstance(action,str):raise ValueError('action')
+            return self._post('/api/v3/missions/'+mid+'/actions',{'action':action,**payload},timeout=240)
+        if op=='dual_create':
+            mid=args.get('mission_id');req=args.get('original_request');cur=args.get('currentness')
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(req,str) or not isinstance(cur,dict):raise ValueError('dual create')
+            return self._post('/api/v3/dual/create',{'mission_id':mid,'original_request':req,'currentness':cur})
+        if op=='dual_link_saas':
+            return self._post('/api/v3/dual/link-saas',{'request_id':args.get('request_id'),'saas_request_id':args.get('saas_request_id')})
+        if op=='dual_response':
+            return self._post('/api/v3/dual/response',{'request_id':args.get('request_id'),'provider':args.get('provider'),'response_text':args.get('response_text'),'transport':args.get('transport')})
+        if op=='dual_result':
+            rid=args.get('request_id')
+            if not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('dual request id')
+            return self._get('/api/v3/dual/'+rid)
         if op=='process':
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')

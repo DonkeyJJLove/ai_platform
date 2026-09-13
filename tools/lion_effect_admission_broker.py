@@ -1581,6 +1581,35 @@ def e3_validate_execution():
  if fails:raise Deny("E3_EXECUTION_VALIDATION_FAILED:"+json.dumps(fails[:5]))
  return {"mission_id":E3_ID,"validated_pods":64,"logical_drones":12,"ready":64,"unique_uid_count":64,"execution_digest":sha256(canonical(rows)),"rows":rows,"authority_effect":"NONE"}
 
+def e3_component_handle(req):
+ op=req.get("operation")
+ expected={"schema_version","request_id","operation","mission_id","source_head","source_tree","spec_digest","logical_id"}
+ if set(req)!=expected:raise Deny("E3_COMPONENT_FIELD_SET")
+ if req.get("mission_id")!=E3_ID:raise Deny("E3_ID_MISMATCH")
+ if req.get("spec_digest")!=E3_LPCL_DIGEST:raise Deny("E3_LPCL_DIGEST_MISMATCH")
+ head=require_hex40(req.get("source_head"),"source_head");tree=require_hex40(req.get("source_tree"),"source_tree")
+ lid=str(req.get("logical_id") or "").upper()
+ row=next((x for x in E3_LOGICAL if x[0]==lid),None)
+ if row is None:raise Deny("E3_LOGICAL_ID_DENIED")
+ role,expected_replicas=row[1],row[2];dep="e3-"+lid.lower()+"-worker"
+ def component_rows():return [x for x in e3_rows() if str(x.get("logical_drone") or "").upper()==lid]
+ def wait_component(timeout=120,old_uids=None):
+  import time as _time;end=_time.time()+timeout;last=[]
+  while _time.time()<end:
+   last=component_rows();ready=sum(1 for x in last if x.get("ready"));uids={x.get("uid") for x in last if x.get("uid")}
+   if len(last)==expected_replicas and ready==expected_replicas and (old_uids is None or uids!=old_uids):return last
+   _time.sleep(2)
+  raise Deny("E3_COMPONENT_CONVERGENCE_TIMEOUT:"+lid+":"+json.dumps({"materialized":len(last),"ready":sum(1 for x in last if x.get('ready'))}))
+ before=component_rows();before_uids={x.get("uid") for x in before if x.get("uid")}
+ if op=="EPOCH3_M64_START_LOGICAL":
+  mission64_kubectl(["scale","deployment",dep,"-n",E3_NAMESPACE,f"--replicas={expected_replicas}"],timeout=30);after=wait_component()
+ elif op=="EPOCH3_M64_RESTART_LOGICAL":
+  mission64_kubectl(["rollout","restart","deployment/"+dep,"-n",E3_NAMESPACE],timeout=30);after=wait_component(old_uids=before_uids)
+ elif op=="EPOCH3_M64_VALIDATE_LOGICAL":after=wait_component()
+ else:raise Deny("E3_COMPONENT_OPERATION")
+ res={"mission_id":E3_ID,"logical_id":lid,"role":role,"operation":op,"expected":expected_replicas,"materialized":len(after),"ready":sum(1 for x in after if x.get('ready')),"uids":sorted(x.get('uid') for x in after if x.get('uid')),"authority_effect":"MISSION_SCOPED_K3S" if op!="EPOCH3_M64_VALIDATE_LOGICAL" else "NONE"}
+ res.update(e3_receipt(req,res));return res
+
 def e3_handle(req):
  op=req["operation"];head,tree=e3_require(req,worker=op=="EPOCH3_M64_RESTART_ONE")
  if op in {"EPOCH3_M64_START"}:mission64_verify_current(head,tree)
@@ -1758,6 +1787,9 @@ def handle(
                 "EPOCH3_M64_RESTART_ONE",
                 "EPOCH3_M64_VALIDATE",
                 "EPOCH3_M64_STOP",
+                "EPOCH3_M64_START_LOGICAL",
+                "EPOCH3_M64_RESTART_LOGICAL",
+                "EPOCH3_M64_VALIDATE_LOGICAL",
             ],
             "mission64": mission64_spec(),
         }
@@ -1856,6 +1888,9 @@ def handle(
 
     if operation == "MISSION_CONTROL_V3_INSTALL":
         return mission_control_v3_install(request)
+
+    if operation in {"EPOCH3_M64_START_LOGICAL","EPOCH3_M64_RESTART_LOGICAL","EPOCH3_M64_VALIDATE_LOGICAL"}:
+        return e3_component_handle(request)
 
     if operation in {"EPOCH3_M64_PRECHECK","EPOCH3_M64_START","EPOCH3_M64_READ","EPOCH3_M64_RESTART_ONE","EPOCH3_M64_VALIDATE","EPOCH3_M64_STOP"}:
         return e3_handle(request)

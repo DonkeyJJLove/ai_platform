@@ -185,11 +185,11 @@ def schema_context(conn, mission_id):
         raise ValueError("mission not found")
     has_process = conn.execute("SELECT 1 FROM mission_process_specs WHERE mission_id=?", (mission_id,)).fetchone() is not None
     profile = _source_profile(row, has_process)
-    migration = conn.execute("SELECT * FROM schema_migrations WHERE version=?", (SCHEMA_VERSION,)).fetchone()
+    migration = conn.execute("SELECT * FROM schema_migrations ORDER BY version DESC LIMIT 1").fetchone()
     gaps = [dict(x) for x in conn.execute("SELECT field_name,reason_class,source_stage,source_schema,detail FROM mission_data_gaps WHERE mission_id=? ORDER BY field_name", (mission_id,))]
     return {
-        "current_schema": SCHEMA_ID,
-        "current_schema_version": SCHEMA_VERSION,
+        "current_schema": (migration["schema_id"] if migration else SCHEMA_ID),
+        "current_schema_version": (migration["version"] if migration else SCHEMA_VERSION),
         **profile,
         "missing_fields": gaps,
         "migration": dict(migration) if migration else None,
@@ -205,13 +205,19 @@ def capabilities(conn, mission_id, *, current_mission_id, rebound_adapter="LPCL_
     current = mission_id == current_mission_id and adapter == "MISSION64_K3S"
     epoch3 = mission_id == "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1"
     rebound = adapter == rebound_adapter
+    driver_capable = rebound
     return {
         "REFRESH": {"state": "SUPPORTED", "effect": "READ_ONLY_CURRENTNESS" if not historical else "HISTORICAL_SOURCE_REINDEX"},
         "AUDIT": {"state": "SUPPORTED", "effect": "CONTROL_DB_METADATA_ONLY"},
         "RESTART": {"state": "SUPPORTED_BOUNDED_EFFECT" if (current or epoch3 or rebound) else ("REVISION_DRAFT_ONLY" if historical else "ADAPTER_REQUIRED"), "effect": "MATERIAL" if (current or epoch3 or rebound) else "NONE"},
-        "START_COMPONENT": {"state": "ADAPTER_REQUIRED", "effect": "NONE", "reason": "No exact per-component material effect adapter is installed in Epoch 3. The control contract is present and fails closed."},
+        "PAUSE": {"state": "SUPPORTED_DRIVER_CONTROL" if driver_capable else "ADAPTER_REQUIRED", "effect": "CONTROL_STATE" if driver_capable else "NONE"},
+        "RESUME": {"state": "SUPPORTED_DRIVER_CONTROL" if driver_capable else "ADAPTER_REQUIRED", "effect": "CONTROL_STATE" if driver_capable else "NONE"},
+        "VALIDATE": {"state": "SUPPORTED", "effect": "NONE"},
+        "STOP": {"state": "SUPPORTED_DRIVER_CONTROL" if driver_capable else "ADAPTER_REQUIRED", "effect": "CONTROL_STATE" if driver_capable else "NONE"},
+        "START_COMPONENT": {"state": "SUPPORTED_BOUNDED_EFFECT" if rebound else "ADAPTER_REQUIRED", "effect": "MATERIAL" if rebound else "NONE", "reason": None if rebound else "Exact per-component material adapter is available only for an exact activated rebound mission."},
         "ADD_COMPONENT": {"state": "DRAFT_REVISION_SUPPORTED", "effect": "NONE"},
         "REDESIGN": {"state": "DRAFT_REVISION_SUPPORTED", "effect": "NONE"},
+        "ACTIVATE_REVISION": {"state": "EXPLICIT_EXACT_DIGEST_ACTIVATION_REQUIRED", "effect": "CONTROL_STATE"},
         "ROLLBACK": {"state": "CONTROL_PLANE_PLAN_SUPPORTED", "effect": "NONE", "reason": "Material rollback requires an exact rollback point plus bounded runtime adapter; metadata rollback is represented as a new revision, never database time-travel."},
     }
 

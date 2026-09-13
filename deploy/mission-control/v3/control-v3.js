@@ -66,7 +66,11 @@ function renderSchemaContext(s){
 }
 
 function renderLifecycleActions(s){
-  let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart mission')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
+  let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart mission')+mcbtn('VALIDATE','Validate')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
+  const ds=s.execution_driver?.state;
+  if(['ACTIVE','WAITING','BLOCKED'].includes(ds))a+=mcbtn('PAUSE','Pause driver');
+  if(['BOOTSTRAP_PAUSED','PAUSED','STOPPED','FAILED'].includes(ds))a+=mcbtn('RESUME','Resume driver');
+  if(ds&&!['COMPLETE','STOPPED'].includes(ds))a+=mcbtn('STOP','Stop driver','danger');
   if(s.mission_id==='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'){
     if(s.state==='RUNNING')a+=`<button type="button" data-low-action="PAUSE">Pause</button><button type="button" data-low-action="VALIDATE">Validate fleet</button>`;
     if(s.state==='PAUSED')a+=`<button type="button" data-low-action="RESUME">Resume</button>`;
@@ -93,6 +97,8 @@ function mcRender(s,registry,sources){
   MC('mcProgressBar').style.width=hasProgress?Math.max(0,Math.min(100,progress))+'%':'0%';
   MC('mcV3Cards').innerHTML=[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',`${s.materialized}/${s.material_target}`],['READY',`${s.ready}/${s.material_target}`],['PROGRESS',hasProgress?progress.toFixed(1)+'%':'N/A'],['SCHEMA',sc.record_class||'UNKNOWN'],['AUTH',p.authority_state||'N/A']].map(x=>mccard(...x)).join('');
   renderSchemaContext(s);renderLifecycleActions(s);
+  const d=s.execution_driver||{};
+  MC('mcDriverState').innerHTML=d.driver_id?`<div class="mc-driver-grid"><span><b>DRIVER</b> ${mcesc(d.state||'UNKNOWN')}</span><span><b>GEN</b> ${mcesc(d.generation)}</span><span><b>HEARTBEAT</b> ${mcesc(d.heartbeat_at||'NONE')}</span><span><b>PHASE</b> ${mcesc(d.current_phase||'—')}</span><span><b>ATTEMPT</b> ${mcesc((d.latest_attempt||{}).attempt_id||'—')}</span><span><b>WAIT</b> ${mcesc(d.waiting_reason||'—')}</span><span><b>GATE</b> ${mcesc(d.blocking_gate||'—')}</span><span><b>NEXT</b> ${mcesc(d.next_action||'—')}</span><span><b>LAST EFFECT</b> ${mcesc(d.last_effect||'—')}</span><span><b>RECEIPT</b> ${mcesc(d.last_effect_receipt||'—')}</span></div>`:'<div class="mc-line mc-history"><b>DRIVER:</b> not materialized for this mission/stage.</div>';
   MC('mcPhases').innerHTML=(s.phases||[]).map(x=>`<article class="mc-phase"><div><b>${mcesc(x.phase_id)} · ${mcesc(x.title)}</b><span class="${['PASS','COMPLETE'].includes(x.status)?'mc-live':x.status==='FAIL'?'mc-bad':x.status==='BLOCKED'?'mc-warn':''}">${mcesc(x.status)}</span></div><div class="bar"><i style="width:${Math.max(0,Math.min(100,Number(x.progress||0)))}%"></i></div><small>${mcesc(x.detail||'')}</small></article>`).join('')||`<div class="mc-line mc-history">${historical?'No phase plan existed when this mission was recorded.':'No phase plan recorded.'}</div>`;
   mcRenderProtocols(s);
   const startComponentAllowed=capState('START_COMPONENT')!=='UNAVAILABLE';

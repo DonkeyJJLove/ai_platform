@@ -29,3 +29,5 @@
 
 /* Epoch 3 closure: schema-aware lifecycle controls */
 .mc-schema-notice{border:1px solid #35505e;border-radius:8px;padding:10px;margin:8px 0;background:#0d171e;color:#b9cfda}.mc-schema-notice.historical{border-color:#7a6334;background:#1d180d;color:#e5c77c}.mc-gap-list{margin-top:5px;font-size:11px}.mc-lifecycle-info{margin:6px 0 10px}.mc-capability-matrix{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 12px}.mc-cap{border:1px solid #334955;border-radius:999px;padding:4px 8px;font-size:10px;color:#b9cfda;background:#0c1419}.mc-actions{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.mc-actions button{cursor:pointer}.mc-ld button{margin-top:6px;font-size:10px;padding:4px 7px}
+
+.mc-driver-state{margin:10px 0;padding:10px;border:1px solid #2a4656;border-radius:8px;background:#0b1820}.mc-driver-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px;font:12px/1.35 ui-monospace,Consolas,monospace}.mc-driver-grid span{border:1px solid #263843;border-radius:6px;padding:7px;overflow-wrap:anywhere}.mc-driver-grid b{color:#71b7d6}
