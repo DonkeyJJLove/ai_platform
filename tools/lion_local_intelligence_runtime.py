@@ -15,6 +15,8 @@ from datetime import datetime,timezone
 from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway
 from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
 apply_hybrid_gateway_extension(Gateway)
+from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
+apply_saas_handoff_extension(Gateway)
 from cyber_lion.app_coordination.web_research_broker import WebEvidence
 
 DRONE_ROLES={
@@ -166,6 +168,18 @@ class LpclControlBridge:
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':return self._get('/api/v3/missions/recent')
+        if op=='saas_request':
+            mid=args.get('mission_id');question=args.get('question')
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(question,str) or not question.strip() or len(question)>8000:raise ValueError('saas request')
+            return self._post('/api/v3/saas/request',{'mission_id':mid,'question':question})
+        if op=='saas_status':
+            mid=args.get('mission_id')
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
+            return self._get('/api/v3/saas/status?mission_id='+mid)
+        if op=='saas_request_status':
+            rid=args.get('request_id')
+            if not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('saas request id')
+            return self._get('/api/v3/saas/requests/'+rid)
         if op=='process':
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')

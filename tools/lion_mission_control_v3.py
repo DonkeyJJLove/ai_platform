@@ -4,12 +4,16 @@ import argparse,hashlib,json,os,socket,sqlite3,threading,uuid
 from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse,unquote
+from urllib.parse import urlparse,unquote,parse_qs
 from mission_control_compat import compat_get, STATIC
 try:
  from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
 except ImportError:
  from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
+try:
+ from lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
+except ImportError:
+ from tools.lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -50,6 +54,7 @@ def migrate():
  import_legacy(c)
  process_migrate(c)
  lifecycle_migrate(c,now,current_mission_id=MISSION,source_head=HEAD,source_tree=TREE)
+ saas_migrate(c,now,source_head=HEAD,source_tree=TREE)
  c.commit();c.close()
 
 def broker(op,pod=None):
@@ -468,6 +473,50 @@ def recent_process_missions():
     c.close();return rows
 # ---- end LPCL mission process extension v1 -------------------------------
 
+
+def create_saas_handoff(x):
+    if type(x) is not dict or set(x)!={'mission_id','question'}:raise ValueError('saas request schema')
+    mid=x.get('mission_id');question=x.get('question')
+    if not _safe_id(mid,127):raise ValueError('mission_id')
+    c=connect()
+    try:
+      out=saas_create(c,mid,question,now)
+      phase=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      _process_message(c,mid,'ASSIGNMENT','LPCL_PANEL','CHATGPT_SAAS_SUPERVISOR',(phase['current_phase'] if phase else None),{'event':'SAAS_HANDOFF_REQUESTED','request_id':out['request_id'],'request_code':out['request_code'],'question_digest':out['question_digest'],'transport':out['transport'],'authority_effect':'NONE'},'OUT')
+      c.commit();return out
+    finally:c.close()
+
+
+def get_saas_pending(code=None,mission_id=None):
+    c=connect()
+    try:return saas_pending(c,now,request_code=code,mission_id=mission_id)
+    finally:c.close()
+
+
+def get_saas_request_status(request_id):
+    c=connect()
+    try:return saas_request_status(c,request_id,now)
+    finally:c.close()
+
+
+def get_saas_bridge_status(mission_id):
+    c=connect()
+    try:return saas_bridge_status(c,mission_id,now)
+    finally:c.close()
+
+
+def respond_saas_handoff(x):
+    required={'request_id','response_token','answer','model_identity','transport','attestation_class'}
+    if type(x) is not dict or set(x)!=required:raise ValueError('saas response schema')
+    if x['transport']!=SAAS_TRANSPORT or x['attestation_class']!=SAAS_ATTESTATION_CLASS:raise ValueError('saas transport binding')
+    c=connect()
+    try:
+      out=saas_respond(c,x['request_id'],x['response_token'],x['answer'],now,model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'])
+      mid=out['receipt']['mission_id'];phase=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      _process_message(c,mid,'RECEIPT','CHATGPT_SAAS_SUPERVISOR','MISSION_CONTROL',(phase['current_phase'] if phase else None),{'event':'SAAS_HANDOFF_RESPONSE','request_id':x['request_id'],'binding_id':out['receipt']['binding_id'],'model_identity':x['model_identity'],'transport':x['transport'],'response_digest':out['receipt']['response_digest'],'attestation_digest':out['receipt']['attestation_digest'],'receipt_digest':out['receipt']['receipt_digest'],'authority_effect':'NONE'},'IN')
+      c.commit();return out
+    finally:c.close()
+
 UI=r'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LION Mission Control</title><style>:root{color-scheme:dark;--b:#080d12;--p:#111820;--l:#293744;--t:#edf5fa;--m:#91a7b7;--g:#55d99d;--y:#e5bd68;--r:#ff7580}*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--t);font:14px/1.45 Inter,Segoe UI,system-ui}.app{max-width:1500px;margin:auto;padding:18px}h1{margin:0;font-size:24px}.sub{color:var(--m)}.top{display:flex;justify-content:space-between;gap:12px}.pill,.card,.panel{border:1px solid var(--l);background:var(--p);border-radius:10px}.pill{padding:8px 12px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}.card{padding:10px}.k{font-size:10px;color:#7fa7bb}.v{font-size:18px;font-weight:700}.grid{display:grid;grid-template-columns:1.35fr .65fr;gap:10px}.panel{padding:14px;margin-bottom:10px}.logical{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ld{border:1px solid var(--l);border-radius:8px;padding:9px}.bar{height:7px;background:#22303a;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g)}button{background:#173743;color:white;border:1px solid #3c6575;border-radius:7px;padding:8px 12px;margin:2px}button.danger{border-color:#7a3d45;background:#3a2025}.workers{max-height:440px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px;border-bottom:1px solid #202c35;text-align:left}.ok{color:var(--g)}.warn{color:var(--y)}.bad{color:var(--r)}.cmd{font-family:Consolas,monospace;font-size:11px}.legacy{color:var(--m)}@media(max-width:950px){.grid{grid-template-columns:1fr}.logical{grid-template-columns:1fr 1fr}}</style></head><body><div class="app"><div class="top"><div><h1>LION MISSION CONTROL</h1><div class="sub">Mission registry · bounded control · live material execution · receipts</div></div><div id="authority" class="pill">loading</div></div><div id="cards" class="cards"></div><div class="grid"><div><div class="panel"><h2 id="title"></h2><div id="meta" class="sub"></div><div id="actions"></div><h3>Logical control plane · 12 drones</h3><div id="logical" class="logical"></div></div><div class="panel"><h3>Material plane · 64 Kubernetes Pods</h3><div class="workers"><table><thead><tr><th>Pod</th><th>Logical</th><th>Phase</th><th>Ready</th><th>Restarts</th><th>UID</th><th></th></tr></thead><tbody id="workers"></tbody></table></div></div></div><div><div class="panel"><h3>Mission registry</h3><div id="registry"></div></div><div class="panel"><h3>Command / receipt ledger</h3><div id="commands"></div></div><div class="panel"><h3>Mission events</h3><div id="events"></div></div><div class="panel legacy"><b>Legacy recorded runs:</b> <span id="legacy"></span><br>Legacy history remains evidence, not live state.</div></div></div></div><script>const $=x=>document.getElementById(x);let S=null;function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function get(){let r=await fetch('/api/v3/missions/current',{cache:'no-store'});S=await r.json();render()}function btn(a,label,cls=''){return '<button class="'+cls+'" onclick="act(\''+a+'\')">'+label+'</button>'}async function act(a,pod){if(!confirm(a+(pod?' '+pod:'')))return;let r=await fetch('/api/v3/missions/current/actions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:a,...(pod?{pod_name:pod}:{})})});let x=await r.json();if(!r.ok)alert(x.error||'control failed');await get()}function render(){let s=S;$('authority').innerHTML='CONTROL: <b>'+esc(s.control_authority)+'</b>';$('title').textContent=s.title;$('meta').textContent=s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · spec '+s.spec_digest.slice(0,16);let cs=[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',s.materialized+'/'+s.material_target],['READY',s.ready+'/'+s.material_target],['SOURCE',s.source_head.slice(0,8)],['LEGACY',s.legacy_recorded_runs]];$('cards').innerHTML=cs.map(x=>'<div class="card"><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>').join('');let a='';if(['AUTHORIZED','STOPPED','FAILED'].includes(s.state))a+=btn('START','Start mission');if(s.state==='RUNNING'){a+=btn('PAUSE','Pause');a+=btn('VALIDATE','Validate fleet');}if(s.state==='PAUSED')a+=btn('RESUME','Resume');if(['RUNNING','PAUSED','FAILED','CONVERGING'].includes(s.state))a+=btn('STOP','Stop','danger');$('actions').innerHTML=a;$('logical').innerHTML=s.logical.map(x=>'<div class="ld"><b>'+x.logical_id+' · '+esc(x.role)+'</b><div>'+x.ready+'/'+x.material_target+' ready</div><div class="bar"><i style="width:'+(100*x.ready/Math.max(1,x.material_target))+'%"></i></div></div>').join('');$('workers').innerHTML=s.workers.map(x=>'<tr><td>'+esc(x.pod_name)+'</td><td>'+esc(x.logical_id)+'</td><td>'+esc(x.phase)+'</td><td class="'+(x.ready?'ok':'warn')+'">'+(x.ready?'YES':'NO')+'</td><td>'+x.restarts+'</td><td>'+esc((x.pod_uid||'').slice(0,12))+'</td><td>'+(s.state==='RUNNING'?'<button onclick="act(\'RESTART_ONE\',\''+esc(x.pod_name)+'\')">restart</button>':'')+'</td></tr>').join('');$('registry').innerHTML=(s.registry||[]).map(x=>'<div class="cmd">'+(x.controllable?'● ':'○ ')+esc(x.mission_id)+' · '+esc(x.state)+' · '+esc(x.adapter)+'</div>').join('');$('commands').innerHTML=s.commands.map(x=>'<div class="cmd">'+esc(x.requested_at)+' '+esc(x.action)+' <b class="'+(x.status==='PASS'?'ok':x.status==='FAIL'?'bad':'warn')+'">'+x.status+'</b>'+(x.pod_name?' '+esc(x.pod_name):'')+'</div>').join('')||'none';$('events').innerHTML=s.events.map(x=>'<div class="cmd">'+esc(x.observed_at)+' '+esc(x.event_type)+'</div>').join('')||'none';$('legacy').textContent=s.legacy_recorded_runs}get();setInterval(get,3000)</script></body></html>'''
 
 class H(BaseHTTPRequestHandler):
@@ -501,9 +550,29 @@ class H(BaseHTTPRequestHandler):
    mid=path[len('/api/v3/missions/'):-len('/messages')].strip('/')
    try:return self.json({'mission_id':mid,'messages':process_snapshot(mid)['protocol_messages']})
    except ValueError as e:return self.json({'error':str(e)},404)
+  if path=='/api/v3/saas/pending':
+   q=parse_qs(urlparse(self.path).query);return self.json({'pending':get_saas_pending((q.get('code') or [None])[0],(q.get('mission_id') or [None])[0])})
+  if path=='/api/v3/saas/status':
+   q=parse_qs(urlparse(self.path).query);mid=(q.get('mission_id') or [focus_mission_id()])[0];return self.json(get_saas_bridge_status(mid))
+  if path.startswith('/api/v3/saas/requests/'):
+   rid=path[len('/api/v3/saas/requests/'):].strip('/')
+   try:return self.json(get_saas_request_status(rid))
+   except ValueError as e:return self.json({'error':str(e)},404)
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
+  if path=='/api/v3/saas/request':
+   try:
+    n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>20000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    return self.json(create_saas_handoff(json.loads(self.rfile.read(n))),201)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},400)
+  if path=='/api/v3/saas/respond':
+   try:
+    n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>40000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    return self.json(respond_saas_handoff(json.loads(self.rfile.read(n))),200)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path.startswith('/api/v3/missions/') and path.endswith('/actions') and path!='/api/v3/missions/current/actions':
    try:
     mid=path[len('/api/v3/missions/'):-len('/actions')].strip('/');n=int(self.headers.get('Content-Length','0'))
