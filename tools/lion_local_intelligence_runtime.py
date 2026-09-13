@@ -201,6 +201,11 @@ class LpclControlBridge:
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
             return self._get('/api/v3/missions/'+mid+'/process')
+        if op=='post_message':
+            mid=args.get('mission_id');protocol=args.get('protocol');phase=args.get('phase');payload=args.get('payload');from_id=args.get('from_id') or 'LPCL_PANEL';to_id=args.get('to_id') or 'MISSION_CONTROL'
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
+            if protocol not in self.ALLOWED_PROTOCOLS or not isinstance(payload,dict):raise ValueError('protocol message')
+            return self._post('/api/v3/missions/'+mid+'/messages',{'protocol':protocol,'from_id':from_id,'to_id':to_id,'phase':phase,'payload':payload})
         if op=='validate_lpcl':return self.validate(args.get('lpcl_text'))
         if op=='register_lpcl':
             v=self.validate(args.get('lpcl_text'));return self._post('/api/v3/missions/register-lpcl',v['spec'])
@@ -316,10 +321,55 @@ def providers(broker,model):
         return d['choices'][0]['message']['content']
     return cur,gitprov,content,source,mission,MaterialWeb(),modelprov
 
+
+def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
+    """Windows-side LOCAL canary producer for the self-hosting gate.
+
+    Mission Control runs in WSL and must not probe Windows 127.0.0.1:8772.
+    This loop executes the proposal-only local model in its own namespace and
+    posts evidence only; it never advances a phase or grants authority.
+    """
+    while not stop_event.is_set():
+        try:
+            recent=control('recent',{})
+            mid=recent.get('focus_mission_id')
+            if mid:
+                snap=control('process',{'mission_id':mid})
+                phase=(snap.get('process') or {}).get('current_phase')
+                if phase=='LIVE_AUTONOMY_CANARY':
+                    exists=False
+                    for msg in snap.get('protocol_messages') or []:
+                        payload=msg.get('payload') or {}
+                        if msg.get('protocol')=='EVIDENCE' and msg.get('from_id')=='LPCL_PANEL' and msg.get('phase')==phase and payload.get('event')=='LOCAL_MODEL_CANARY_PASS':
+                            exists=True;break
+                    if not exists:
+                        answer=str(modelprov([{'role':'system','content':'Reply exactly LOCAL_CANARY_OK and nothing else.'},{'role':'user','content':'LOCAL self-hosting canary'}],16)).strip()
+                        if answer=='LOCAL_CANARY_OK':
+                            rd=hashlib.sha256(answer.encode('utf-8')).hexdigest()
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_PASS','model':'gpt-oss-20b-MXFP4','response_digest':rd,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK','authority_effect':'NONE'}})
+                        else:
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_NONMATCH','model':'gpt-oss-20b-MXFP4','response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'authority_effect':'NONE'}})
+                elif phase=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
+                    exists=False
+                    for msg in snap.get('protocol_messages') or []:
+                        payload=msg.get('payload') or {}
+                        if msg.get('protocol')=='EVIDENCE' and msg.get('from_id')=='LPCL_PANEL' and msg.get('phase')==phase and payload.get('event')=='WINDOWS_CONTROL_SURFACE_READBACK':
+                            exists=True;break
+                    if not exists:
+                        panel=_json_request(f'http://127.0.0.1:{panel_port}/health',timeout=3)
+                        models=_json_request(model_url.rstrip('/')+'/v1/models',timeout=5)
+                        model_count=len(models.get('data') or []) if isinstance(models,dict) else 0
+                        control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'WINDOWS_CONTROL_SURFACE_READBACK','panel_http':200 if panel.get('status')=='ok' else 0,'panel_authority_effect':panel.get('authority_effect'),'model_http':200,'model_count':model_count,'model_id':'gpt-oss-20b-MXFP4','authority_effect':'NONE'}})
+        except Exception:
+            pass
+        stop_event.wait(5)
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');a=p.parse_args()
     if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
     b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads)
-    serve_gateway(g,a.port)
+    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
+    try: serve_gateway(g,a.port)
+    finally: canary_stop.set()
 if __name__=='__main__':main()

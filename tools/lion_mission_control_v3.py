@@ -725,17 +725,27 @@ def drive_self_hosted_once(mid=SELF_HOSTING_MISSION):
         out=saas_create(c,mid,'LION SELF HOSTING CANARY: respond with SAAS_CANARY_OK and no authority effect.',now,ttl_seconds=3600)
         _process_message(c,mid,'ASSIGNMENT','MISSION_EXECUTION_DRIVER','CHATGPT_SAAS_SUPERVISOR',pid,{'event':'SELF_HOSTING_SAAS_CANARY_REQUESTED','request_id':out['request_id'],'request_code':out['request_code'],'authority_effect':'NONE'},'OUT');c.commit();existing={'request_id':out['request_id'],'status':'PENDING'}
        sr=c.execute('SELECT status,response_digest,receipt_digest FROM saas_handoff_requests WHERE request_id=?',(existing['request_id'],)).fetchone()
-       local_ok=False;local_text=''
-       try:
-        req=urllib.request.Request('http://127.0.0.1:8772/v1/chat/completions',data=json.dumps({'messages':[{'role':'user','content':'Reply exactly LOCAL_CANARY_OK'}],'max_tokens':16,'temperature':0}).encode(),headers={'Content-Type':'application/json'},method='POST')
-        with urllib.request.urlopen(req,timeout=30) as r:
-         lx=json.load(r);local_text=str(lx['choices'][0]['message']['content']);local_ok='LOCAL_CANARY_OK' in local_text
-       except Exception as e:local_text=type(e).__name__+':'+str(e)
-       evidence={'request_id':existing['request_id'],'saas_status':sr['status'] if sr else 'UNKNOWN','local_ok':local_ok,'local_text':local_text[:300]}
+       # The local model is Windows-loopback scoped. WSL Mission Control must not
+       # infer 127.0.0.1:8772 reachability. The Windows LPCL runtime performs the
+       # actual LOCAL canary and posts a digest-bound EVIDENCE receipt here.
+       lr=None
+       for msg in c.execute("SELECT observed_at,payload_json,payload_digest FROM protocol_messages WHERE mission_id=? AND protocol='EVIDENCE' AND from_id='LPCL_PANEL' AND phase=? ORDER BY id DESC LIMIT 20",(mid,pid)).fetchall():
+        try:
+         payload=json.loads(msg['payload_json'])
+        except Exception:
+         payload={}
+        if payload.get('event')=='LOCAL_MODEL_CANARY_PASS' and payload.get('model')=='gpt-oss-20b-MXFP4' and payload.get('authority_effect')=='NONE':
+         lr={'observed_at':msg['observed_at'],'payload_digest':msg['payload_digest'],'response_digest':payload.get('response_digest')}
+         break
+       local_ok=bool(lr and lr.get('response_digest'))
+       evidence={'request_id':existing['request_id'],'saas_status':sr['status'] if sr else 'UNKNOWN','local_ok':local_ok,'local_receipt':lr}
        if not sr or sr['status']!='RESPONDED' or not local_ok:
-        driver_finish_attempt(c,attempt,now,state='WAITING',evidence=evidence,detail='Waiting for real SaaS receipt/local canary')
-        _driver_phase_result(c,mid,pid,'WAITING','Live autonomy canary waiting for real SaaS response receipt and LOCAL canary.',evidence,'HEARTBEAT')
-        driver_transition(c,mid,'WAITING',now,blocking_gate='SAAS_RESPONSE_RECEIPT',waiting_reason='Operator-mediated ChatGPT SaaS canary response not yet received',next_action='WAIT_FOR_SAAS_RECEIPT',current_phase=pid);return
+        driver_finish_attempt(c,attempt,now,state='WAITING',evidence=evidence,detail='Waiting for real SaaS and Windows-local model receipts')
+        _driver_phase_result(c,mid,pid,'WAITING','Live autonomy canary waiting for real SaaS receipt and Windows-local model receipt.',evidence,'HEARTBEAT')
+        missing=[]
+        if not sr or sr['status']!='RESPONDED': missing.append('SAAS_RESPONSE_RECEIPT')
+        if not local_ok: missing.append('LOCAL_MODEL_RECEIPT')
+        driver_transition(c,mid,'WAITING',now,blocking_gate='+'.join(missing),waiting_reason='Waiting for '+', '.join(missing),next_action='WAIT_FOR_CANARY_RECEIPTS',current_phase=pid);return
        evidence.update({'saas_response_digest':sr['response_digest'],'saas_receipt_digest':sr['receipt_digest']})
        driver_finish_attempt(c,attempt,now,state='PASS',evidence=evidence,detail='Live autonomy canary passed')
        _driver_phase_result(c,mid,pid,'PASS','LOCAL canary and operator-mediated SaaS receipt both observed by durable driver.',{'event':'LIVE_AUTONOMY_CANARY_PASS',**evidence},'VALIDATION');return
@@ -758,10 +768,16 @@ def drive_self_hosted_once(mid=SELF_HOSTING_MISSION):
        _driver_phase_result(c,mid,pid,'PASS','All required workflows green on exact current PR337 head; no merge performed.',{'event':'PR337_EXACT_HEAD_CI_GREEN',**evidence},'GITHUB');return
       if pid=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
        g=_github_pr_state();green,_=_all_required_ci_green(g);m=c.execute('SELECT materialized,ready FROM missions WHERE mission_id=?',(mid,)).fetchone();integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
-       health={'8766':_local_health(8766),'8772':_local_health(8772,'/v1/models')}
-       # 8780 may live in Windows namespace; Mission Control cannot infer WSL loopback absence as failure.
-       evidence={'materialized':m['materialized'],'ready':m['ready'],'db_integrity':integrity,'github_head':g['head'],'github_green':green,'health':health,'driver_heartbeat':driver_snapshot(c,mid).get('heartbeat_at')}
-       if m['ready']!=64 or integrity!='ok' or not green or not health['8766']['ok'] or not health['8772']['ok']:
+       health={'8766':_local_health(8766)}
+       win=None
+       for msg in c.execute("SELECT payload_json,payload_digest,observed_at FROM protocol_messages WHERE mission_id=? AND protocol='EVIDENCE' AND from_id='LPCL_PANEL' AND phase=? ORDER BY id DESC LIMIT 20",(mid,pid)).fetchall():
+        try: payload=json.loads(msg['payload_json'])
+        except Exception: payload={}
+        if payload.get('event')=='WINDOWS_CONTROL_SURFACE_READBACK' and payload.get('authority_effect')=='NONE':
+         win={'payload':payload,'payload_digest':msg['payload_digest'],'observed_at':msg['observed_at']};break
+       windows_ok=bool(win and win['payload'].get('panel_http')==200 and win['payload'].get('model_http')==200 and int(win['payload'].get('model_count') or 0)>=1)
+       evidence={'materialized':m['materialized'],'ready':m['ready'],'db_integrity':integrity,'github_head':g['head'],'github_green':green,'health':health,'windows_control_surface_readback':win,'driver_heartbeat':driver_snapshot(c,mid).get('heartbeat_at')}
+       if m['ready']!=64 or integrity!='ok' or not green or not health['8766']['ok'] or not windows_ok:
         driver_finish_attempt(c,attempt,now,state='BLOCKED',evidence=evidence,detail='Terminal readback incomplete')
         _driver_phase_result(c,mid,pid,'BLOCKED','Terminal readiness evidence incomplete.',evidence,'VALIDATION');driver_transition(c,mid,'BLOCKED',now,blocking_gate='SYSTEM_ACCEPTANCE_START_VECTOR',waiting_reason='Terminal system readback incomplete',next_action='REACQUIRE_TERMINAL_CURRENTNESS',current_phase=pid);return
        driver_finish_attempt(c,attempt,now,state='PASS',evidence=evidence,detail='Ready for system acceptance tests')
