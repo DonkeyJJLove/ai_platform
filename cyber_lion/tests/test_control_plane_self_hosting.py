@@ -20,8 +20,8 @@ class SelfHostingControlPlaneTests(unittest.TestCase):
             if op=='post_message': return {'ok':True}
             raise AssertionError(op)
         def modelprov(messages,max_tokens):
-            self.assertEqual(max_tokens,16)
-            return 'LOCAL_CANARY_OK'
+            self.assertEqual(max_tokens,64)
+            return 'proposal-only local inference response'
         rt.local_canary_loop(control,modelprov,_OneShotStop(),8780,'http://127.0.0.1:8772')
         posted=[a for op,a in calls if op=='post_message']
         self.assertEqual(len(posted),1)

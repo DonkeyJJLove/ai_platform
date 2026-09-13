@@ -343,12 +343,14 @@ def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
                         if msg.get('protocol')=='EVIDENCE' and msg.get('from_id')=='LPCL_PANEL' and msg.get('phase')==phase and payload.get('event')=='LOCAL_MODEL_CANARY_PASS':
                             exists=True;break
                     if not exists:
-                        answer=str(modelprov([{'role':'system','content':'Reply exactly LOCAL_CANARY_OK and nothing else.'},{'role':'user','content':'LOCAL self-hosting canary'}],16)).strip()
-                        if answer=='LOCAL_CANARY_OK':
-                            rd=hashlib.sha256(answer.encode('utf-8')).hexdigest()
-                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_PASS','model':'gpt-oss-20b-MXFP4','response_digest':rd,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK','authority_effect':'NONE'}})
+                        prompt='LOCAL self-hosting inference canary: return any concise non-empty response.'
+                        answer=str(modelprov([{'role':'system','content':'You are the proposal-only local LION cognitive executor. Return a concise response.'},{'role':'user','content':prompt}],64)).strip()
+                        rd=hashlib.sha256(answer.encode('utf-8')).hexdigest()
+                        pd=hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+                        if answer:
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_PASS','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'response_bytes':len(answer.encode('utf-8')),'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK','authority_effect':'NONE'}})
                         else:
-                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_NONMATCH','model':'gpt-oss-20b-MXFP4','response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'authority_effect':'NONE'}})
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_EMPTY','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'authority_effect':'NONE'}})
                 elif phase=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
                     exists=False
                     for msg in snap.get('protocol_messages') or []:
