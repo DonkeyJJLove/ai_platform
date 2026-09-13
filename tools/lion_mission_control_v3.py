@@ -679,7 +679,7 @@ def _github_pr_state():
 
 def _all_required_ci_green(v):
     names={r['name']:r for r in v.get('runs',[]) if r.get('head_sha')==v.get('head')}
-    required=('Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core','PR #337')
+    required=('Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core')
     return all(names.get(n,{}).get('status')=='completed' and names.get(n,{}).get('conclusion')=='success' for n in required),names
 
 

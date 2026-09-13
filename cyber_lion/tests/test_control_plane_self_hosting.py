@@ -1,5 +1,6 @@
 from __future__ import annotations
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 from tools import lion_local_intelligence_runtime as rt
 
@@ -53,6 +54,23 @@ class SelfHostingControlPlaneTests(unittest.TestCase):
         self.assertEqual(payload['model_http'],200)
         self.assertEqual(payload['model_count'],1)
         self.assertEqual(payload['authority_effect'],'NONE')
+
+    def test_exact_head_gate_requires_real_workflow_names_only(self):
+        import importlib,sys
+        tools=Path(__file__).resolve().parents[2]/'tools'
+        if str(tools) not in sys.path: sys.path.insert(0,str(tools))
+        sys.modules['mission_control_compat']=importlib.import_module('lion_mission_control_compat')
+        mc=importlib.import_module('lion_mission_control_v3')
+        head='a'*40
+        runs=[
+            {'name':'Bandit Security Scan','status':'completed','conclusion':'success','head_sha':head},
+            {'name':'LION R22C Full Symbol Census','status':'completed','conclusion':'success','head_sha':head},
+            {'name':'Cyber-Lion Core','status':'completed','conclusion':'success','head_sha':head},
+        ]
+        green,names=mc._all_required_ci_green({'head':head,'runs':runs})
+        self.assertTrue(green)
+        self.assertEqual(set(names),{'Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core'})
+
 
 
 if __name__=='__main__': unittest.main()
