@@ -111,6 +111,44 @@ class MissionLifecycleDbTests(unittest.TestCase):
         cap = self.mc.process_snapshot(self.mc.MISSION)["capabilities"]["START_COMPONENT"]
         self.assertEqual(cap["state"], "ADAPTER_REQUIRED")
 
+    def test_redesign_of_canonical_lpcl_compiles_registered_successor_without_authority(self):
+        lpcl = """PROJECT=LION_EVOLUSION
+MODE=AUTONOMOUS_EXECUTE
+CONTROL_LANGUAGE=LPCL/1.1
+MISSION_ID=TEST-CANONICAL
+MISSION_TITLE=Canonical test
+MISSION_OBJECTIVE=Test design revision compilation
+MISSION_DESCRIPTION=Test only
+PROTOCOLS=LPCL,AUTHORITY,CURRENTNESS,RECEIPT,CONTROL
+LOGICAL_DRONE_COUNT=12
+MATERIAL_DRONE_COUNT=64
+CONTINUE_EXISTING_EPOCH3_MISSION=TRUE
+CREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE
+REUSE_EXISTING_HEALTHY_MATERIAL_FLEET=ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND
+PARENT_MISSION_ID=PARENT-X
+LD01=A
+LD02=B
+LD03=C
+LD04=D
+LD05=E
+LD06=F
+LD07=G
+LD08=H
+LD09=I
+LD10=J
+LD11=K
+LD12=L
+PHASE_01=P1|One
+"""
+        import hashlib
+        dg=hashlib.sha256(lpcl.encode()).hexdigest()
+        self.mc.register_lpcl_mission({'mission_id':'TEST-CANONICAL','title':'Canonical test','objective':'Test design revision compilation','description':'Test only','lpcl_digest':dg,'lpcl_text':lpcl,'source_head':'1'*40,'source_tree':'2'*40,'logical_count':12,'material_target':64,'phases':[{'id':'P1','title':'One'}],'protocols':['LPCL','AUTHORITY','CURRENTNESS','RECEIPT','CONTROL']})
+        out=self.mc.mission_action('TEST-CANONICAL',{'action':'REDESIGN','reason':'new scheduler policy'})
+        succ=out['result']['successor'];self.assertEqual(succ['state'],'REGISTERED_AWAITING_EXPLICIT_ACTIVATION')
+        snap=self.mc.process_snapshot('TEST-CANONICAL');self.assertEqual(len(snap['revision_compilations']),1)
+        child=self.mc.process_snapshot(succ['successor_mission_id']);self.assertEqual(child['state'],'REGISTERED');self.assertEqual(child['process']['authority_state'],'NONE')
+        with self.assertRaises(ValueError):self.mc.mission_action('TEST-CANONICAL',{'action':'ACTIVATE_REVISION','revision_id':out['result']['revision_id'],'lpcl_digest':'0'*64})
+
     def test_refresh_legacy_reindexes_historical_source_without_promoting_authority(self):
         out = self.mc.mission_action("legacy::legacy-vkt", {"action": "REFRESH"})
         self.assertEqual(out["effect_class"], "NONE")

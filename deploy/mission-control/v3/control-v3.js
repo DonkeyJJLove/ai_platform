@@ -39,6 +39,13 @@ async function mcActionPrompt(action){
     const component_class=prompt('Component class / role','LOGICAL_COMPONENT')||'LOGICAL_COMPONENT';
     return mcLifecycleAct(action,{component:{component_id,component_class},reason:'operator requested component addition'});
   }
+  if(action==='ACTIVATE_REVISION'){
+    const comp=(MC_DATA?.revision_compilations||[]).find(x=>String(x.state||'').includes('AWAITING_EXPLICIT_ACTIVATION'));
+    if(!comp)return alert('No compiled successor revision is awaiting explicit activation.');
+    const typed=prompt('Exact successor LPCL digest to activate\n'+comp.successor_mission_id,comp.lpcl_digest);if(!typed)return;
+    if(typed.trim()!==comp.lpcl_digest)return alert('Exact digest mismatch; activation denied.');
+    return mcLifecycleAct(action,{revision_id:comp.revision_id,lpcl_digest:typed.trim()});
+  }
   if(action==='ROLLBACK'){
     const point=(MC_DATA?.rollback_points||[])[0];
     if(!point)return alert('No rollback evidence point exists yet. Run Audit first.');
@@ -67,6 +74,7 @@ function renderSchemaContext(s){
 
 function renderLifecycleActions(s){
   let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart mission')+mcbtn('VALIDATE','Validate')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
+  if((s.revision_compilations||[]).some(x=>String(x.state||'').includes('AWAITING_EXPLICIT_ACTIVATION')))a+=mcbtn('ACTIVATE_REVISION','Activate revision');
   const ds=s.execution_driver?.state;
   if(['ACTIVE','WAITING','BLOCKED'].includes(ds))a+=mcbtn('PAUSE','Pause driver');
   if(['BOOTSTRAP_PAUSED','PAUSED','STOPPED','FAILED'].includes(ds))a+=mcbtn('RESUME','Resume driver');

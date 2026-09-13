@@ -16,9 +16,9 @@ try:
 except ImportError:
  from tools.lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 try:
- from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition
+ from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, adaptive_worker_plan as driver_adaptive_worker_plan
 except ImportError:
- from execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition
+ from execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, adaptive_worker_plan as driver_adaptive_worker_plan
 try:
  from cyber_lion.mission_control.dual_result_join import create_dual as dual_create, link_saas_request as dual_link_saas, record_response as dual_record_response, join_result as dual_join_result, LOCAL_PROVIDER as DUAL_LOCAL_PROVIDER, SAAS_PROVIDER as DUAL_SAAS_PROVIDER
 except ImportError:
@@ -424,9 +424,74 @@ def refresh_legacy(mid):
     payload=json.loads(row[0]);src=payload.get('source') or {};metrics=payload.get('metrics') or {};work=payload.get('workload') or {};status=str(payload.get('status') or 'UNKNOWN');mat=int(work.get('pods') or metrics.get('ready') or 0);ready=int(metrics.get('ready') or (mat if status=='PASS' else 0));runtime=str((payload.get('evidence') or {}).get('class') or 'HISTORICAL_IMPORTED_EVIDENCE');t=now();dg=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest();c=connect();c.execute('UPDATE missions SET state=?,runtime_state=?,material_target=?,materialized=?,ready=?,source_head=?,source_tree=?,spec_digest=?,spec_json=?,updated_at=?,last_error=NULL WHERE mission_id=?',('RECORDED_'+status,runtime,mat,mat,ready,src.get('head'),src.get('tree'),dg,json.dumps(payload,sort_keys=True,ensure_ascii=False),t,mid));c.commit();c.close();return {'mission_id':mid,'source':'generic_mission_control','recorded_status':status,'materialized':mat,'ready':ready,'effect':'READ_ONLY_REINDEX'}
 
 
+def _replace_lpcl_key(text,key,value):
+    import re
+    pat=re.compile(r'^'+re.escape(key)+r'=.*$',re.MULTILINE)
+    line=f'{key}={value}'
+    return pat.sub(line,text,count=1) if pat.search(text) else text.rstrip()+'\n'+line+'\n'
+
+
+def compile_design_revision(mid,revision_id):
+    c=connect()
+    try:
+      rev=c.execute('SELECT revision_id,mission_id,revision_no,action,state,request_json,request_digest FROM mission_design_revisions WHERE revision_id=? AND mission_id=?',(revision_id,mid)).fetchone()
+      ps=c.execute('SELECT lpcl_text FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      m=c.execute('SELECT source_head,source_tree FROM missions WHERE mission_id=?',(mid,)).fetchone()
+      if not rev or not ps or not ps['lpcl_text'] or not m:raise ValueError('revision compilation source missing')
+      existing=c.execute('SELECT * FROM mission_revision_compilations WHERE revision_id=?',(revision_id,)).fetchone()
+      if existing:return dict(existing)
+      suffix=f"-REV{int(rev['revision_no']):02d}"
+      successor=(mid+suffix)[:127]
+      if successor==mid or len(mid+suffix)>127:
+       successor=(mid[:110]+'-R'+hashlib.sha256((mid+suffix).encode()).hexdigest()[:12])
+      text=str(ps['lpcl_text'])
+      text=_replace_lpcl_key(text,'MISSION_ID',successor)
+      text=_replace_lpcl_key(text,'RUN','THE-BEAN-FACTORY-LION-EVOLUTION-V1_4-DESIGN-REVISION-'+hashlib.sha256(successor.encode()).hexdigest()[:16].upper())
+      text=_replace_lpcl_key(text,'PARENT_MISSION_ID',mid)
+      text=_replace_lpcl_key(text,'MISSION_RELATION','DESIGN_REVISION_SUCCESSOR')
+      text=_replace_lpcl_key(text,'REVISION_SOURCE_ID',revision_id)
+      text=_replace_lpcl_key(text,'REVISION_ACTION',rev['action'])
+      text=_replace_lpcl_key(text,'REVISION_REQUEST_DIGEST',rev['request_digest'])
+      dg=hashlib.sha256(text.encode('utf-8')).hexdigest();stamp=now()
+      c.execute('INSERT INTO mission_revision_compilations(revision_id,mission_id,successor_mission_id,lpcl_digest,lpcl_text,state,created_at,activated_at) VALUES(?,?,?,?,?,?,?,NULL)',(revision_id,mid,successor,dg,text,'COMPILED_AWAITING_EXPLICIT_ACTIVATION',stamp));c.commit()
+      return dict(c.execute('SELECT * FROM mission_revision_compilations WHERE revision_id=?',(revision_id,)).fetchone())
+    finally:c.close()
+
+
+def register_compiled_revision(mid,revision_id):
+    comp=compile_design_revision(mid,revision_id)
+    kv=_lpcl_pairs(comp['lpcl_text'])
+    phases=[]
+    for key,val in sorted(((k,v) for k,v in kv.items() if __import__('re').fullmatch(r'PHASE_[0-9]{2}',k))):
+      if '|' not in val:raise ValueError('compiled phase format')
+      pid,title=val.split('|',1);phases.append({'id':pid.strip(),'title':title.strip()[:180]})
+    protocols=[x.strip() for x in kv.get('PROTOCOLS','').split(',') if x.strip()]
+    c=connect();m=c.execute('SELECT source_head,source_tree FROM missions WHERE mission_id=?',(mid,)).fetchone();c.close()
+    payload={'mission_id':comp['successor_mission_id'],'title':kv.get('MISSION_TITLE','Design revision successor')[:180],'objective':kv.get('MISSION_OBJECTIVE','Design revision successor')[:4000],'description':kv.get('MISSION_DESCRIPTION','')[:8000],'lpcl_digest':comp['lpcl_digest'],'lpcl_text':comp['lpcl_text'],'source_head':m['source_head'],'source_tree':m['source_tree'],'logical_count':int(kv.get('LOGICAL_DRONE_COUNT') or 12),'material_target':int(kv.get('MATERIAL_DRONE_COUNT') or 64),'phases':phases,'protocols':protocols}
+    registered=register_lpcl_mission(payload)
+    c=connect();c.execute("UPDATE mission_design_revisions SET state='SUCCESSOR_COMPILED_REGISTERED' WHERE revision_id=?",(revision_id,));c.execute("UPDATE mission_revision_compilations SET state='REGISTERED_AWAITING_EXPLICIT_ACTIVATION' WHERE revision_id=?",(revision_id,));c.commit();c.close()
+    return {'revision_id':revision_id,'successor_mission_id':comp['successor_mission_id'],'lpcl_digest':comp['lpcl_digest'],'state':'REGISTERED_AWAITING_EXPLICIT_ACTIVATION','authority_effect':'NONE','registered':registered.get('idempotent') is not None}
+
+
+def maybe_register_compiled_revision(mid,revision_id):
+    c=connect();row=c.execute('SELECT lpcl_text FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();c.close()
+    if not row or not row['lpcl_text']:
+        return {'state':'NO_CANONICAL_LPCL_SOURCE','authority_effect':'NONE'}
+    return register_compiled_revision(mid,revision_id)
+
+
+def activate_compiled_revision(mid,revision_id,lpcl_digest):
+    c=connect();row=c.execute('SELECT successor_mission_id,lpcl_digest,state FROM mission_revision_compilations WHERE revision_id=? AND mission_id=?',(revision_id,mid)).fetchone();c.close()
+    if not row:raise ValueError('compiled revision not found')
+    if row['lpcl_digest']!=lpcl_digest:raise ValueError('revision activation digest drift')
+    result=activate_lpcl_mission(row['successor_mission_id'],{'lpcl_digest':lpcl_digest,'activation_event':'EXPLICIT_UI_ACTIVATION'})
+    c=connect();stamp=now();c.execute("UPDATE mission_revision_compilations SET state='ACTIVATED',activated_at=? WHERE revision_id=?",(stamp,revision_id));c.execute("UPDATE mission_design_revisions SET state='ACTIVATED',activated_at=? WHERE revision_id=?",(stamp,revision_id));c.commit();c.close()
+    return {'revision_id':revision_id,'successor_mission_id':row['successor_mission_id'],'lpcl_digest':lpcl_digest,'state':'ACTIVATED','mission':result,'authority_effect':'EXPLICIT_USER_ACTIVATION'}
+
+
 def mission_action(mid,x):
     if type(x) is not dict or 'action' not in x or not isinstance(x['action'],str):raise ValueError('action schema')
-    action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','AUDIT','ROLLBACK','PAUSE','RESUME','VALIDATE','STOP','DRIVER_START'}
+    action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','ACTIVATE_REVISION','AUDIT','ROLLBACK','PAUSE','RESUME','VALIDATE','STOP','DRIVER_START'}
     if action not in allowed:raise ValueError('action denied')
     request={k:v for k,v in x.items() if k!='action'}
     c=connect();row=c.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mid,)).fetchone();c.close()
@@ -488,10 +553,14 @@ def mission_action(mid,x):
       elif action=='ADD_COMPONENT':
         component=request.get('component')
         if type(component) is not dict or not str(component.get('component_id') or '').strip():raise ValueError('component object with component_id required')
-        c=connect();result=lifecycle_create_design_revision(c,mid,'ADD_COMPONENT',request,now);c.close()
+        c=connect();rev=lifecycle_create_design_revision(c,mid,'ADD_COMPONENT',request,now);c.close();result={**rev,'successor':maybe_register_compiled_revision(mid,rev['revision_id'])}
       elif action=='REDESIGN':
         if not request:raise ValueError('redesign request required')
-        c=connect();result=lifecycle_create_design_revision(c,mid,'REDESIGN',request,now);c.close()
+        c=connect();rev=lifecycle_create_design_revision(c,mid,'REDESIGN',request,now);c.close();result={**rev,'successor':maybe_register_compiled_revision(mid,rev['revision_id'])}
+      elif action=='ACTIVATE_REVISION':
+        revision_id=str(request.get('revision_id') or '').strip();lpcl_digest=str(request.get('lpcl_digest') or '').strip()
+        if not revision_id or not _hex(lpcl_digest,64):raise ValueError('revision_id and exact lpcl_digest required')
+        result=activate_compiled_revision(mid,revision_id,lpcl_digest);effect='CONTROL_STATE'
       elif action=='ROLLBACK':
         rollback_id=str(request.get('rollback_id') or '').strip()
         if not rollback_id:raise ValueError('rollback_id required')
@@ -530,6 +599,10 @@ def process_snapshot(mid):
     lifecycle_sync_components(c,mid,now)
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
     d['execution_driver']=driver_snapshot(c,mid)
+    try:d['revision_compilations']=[dict(x) for x in c.execute('SELECT revision_id,successor_mission_id,lpcl_digest,state,created_at,activated_at FROM mission_revision_compilations WHERE mission_id=? ORDER BY created_at DESC LIMIT 20',(mid,))]
+    except sqlite3.OperationalError:d['revision_compilations']=[]
+    try:d['adaptive_worker_plan']=driver_adaptive_worker_plan(c,mid,preferred_roles=('LD01','LD02','LD10','LD11'),limit=16) if int(d.get('ready') or 0)==64 else None
+    except Exception:d['adaptive_worker_plan']=None
     c.commit();c.close();return d
 
 def focus_mission_id():
@@ -546,6 +619,14 @@ def recent_process_missions():
 
 SELF_HOSTING_MISSION='EPOCH3-CONTROL-PLANE-AUTONOMY-RECOVERY-SELF-HOSTING-R1'
 SELF_HOSTED_PHASES=('SELF_HOSTING_TAKEOVER','LIVE_AUTONOMY_CANARY','PARENT_MISSION_RECONCILIATION','PR337_FAST_FORWARD_AND_GREEN_EXACT_HEAD_CI','READY_FOR_SYSTEM_ACCEPTANCE_TESTS')
+PHASE_HANDLER_REGISTRY={
+ 'SELF_HOSTING_TAKEOVER':'SELF_HOSTING_TAKEOVER',
+ 'LIVE_AUTONOMY_CANARY':'LIVE_AUTONOMY_CANARY',
+ 'PARENT_MISSION_RECONCILIATION':'PARENT_MISSION_RECONCILIATION',
+ 'PR337_FAST_FORWARD_AND_GREEN_EXACT_HEAD_CI':'GITHUB_EXACT_HEAD_GATE',
+ 'READY_FOR_SYSTEM_ACCEPTANCE_TESTS':'TERMINAL_READINESS',
+}
+PHASE_HANDLER_AUTHORITY={k:'BOUNDED_EXACT_HANDLER' for k in PHASE_HANDLER_REGISTRY}
 DRIVER_STOP=threading.Event()
 
 

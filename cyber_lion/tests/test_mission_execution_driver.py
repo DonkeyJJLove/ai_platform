@@ -19,3 +19,12 @@ class DriverTests(unittest.TestCase):
     def test_illegal_complete_resume_fails(self):
         d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now);d.transition(self.c,'M1','COMPLETE',now)
         with self.assertRaises(ValueError): d.activate(self.c,'M1',now)
+    def test_adaptive_plan_is_bounded_and_identity_preserving(self):
+        self.c.execute('CREATE TABLE material_workers(mission_id TEXT,pod_name TEXT,pod_uid TEXT,logical_id TEXT,phase TEXT,ready INTEGER,restarts INTEGER,pod_ip TEXT,observed_at TEXT)')
+        for i in range(64):
+            lid=f"LD{(i%12)+1:02d}"
+            self.c.execute('INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)',('M1',f'p{i:02d}',f'u{i:02d}',lid,'RUNNING',1,0,'10.0.0.1',now()))
+        out=d.adaptive_worker_plan(self.c,'M1',preferred_roles=('LD03','LD01'),limit=16)
+        self.assertEqual(out['selected_count'],16);self.assertEqual(out['unique_uid_count'],64);self.assertEqual(out['authority_effect'],'NONE')
+        self.assertTrue(all(x['logical_id'] in {'LD03','LD01'} for x in out['selected'][:10]))
+        with self.assertRaises(ValueError):d.adaptive_worker_plan(self.c,'M1',limit=17)

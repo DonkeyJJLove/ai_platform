@@ -94,6 +94,16 @@ CREATE TABLE IF NOT EXISTS mission_dual_receipts(
   created_at TEXT NOT NULL,
   UNIQUE(request_id,provider)
 );
+CREATE TABLE IF NOT EXISTS mission_revision_compilations(
+  revision_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  successor_mission_id TEXT NOT NULL UNIQUE,
+  lpcl_digest TEXT NOT NULL UNIQUE,
+  lpcl_text TEXT NOT NULL,
+  state TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  activated_at TEXT
+);
 """
 
 
@@ -193,6 +203,34 @@ def finish_attempt(conn, attempt_id, now_fn, *, state, evidence=None, effect_rec
 def observe_gate(conn, mission_id, phase_id, gate_id, state, value, now_fn):
     oid="gate-"+uuid.uuid4().hex; stamp=now_fn(); dg=digest(value)
     conn.execute("INSERT INTO mission_gate_observations VALUES(?,?,?,?,?,?,?,?)",(oid,mission_id,phase_id,gate_id,state,_canon(value),dg,stamp));conn.commit();return {"observation_id":oid,"digest":dg}
+
+
+def adaptive_worker_plan(conn, mission_id, *, preferred_roles=(), limit=16):
+    """Return a deterministic, read-only allocation plan inside the existing M64 pool.
+
+    This never scales or mutates Kubernetes.  It selects already-bound READY workers
+    while preserving logical/material identity and caps active concurrency.
+    """
+    if type(limit) is not int or not 1 <= limit <= 16:
+        raise ValueError("adaptive concurrency limit")
+    roles=tuple(str(x).upper() for x in preferred_roles if str(x).strip())
+    rows=conn.execute("SELECT pod_name,pod_uid,logical_id,ready FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name",(mission_id,)).fetchall()
+    ready=[dict(r) for r in rows if int(r["ready"] or 0)==1 and r["pod_uid"]]
+    if len(ready) != 64 or len({r["pod_uid"] for r in ready}) != 64:
+        raise ValueError("adaptive scheduler requires exact ready M64 identity")
+    rank={role:i for i,role in enumerate(roles)}
+    ready.sort(key=lambda r:(rank.get(str(r["logical_id"]).upper(),len(rank)),str(r["logical_id"]),str(r["pod_name"])))
+    selected=ready[:limit]
+    return {
+        "mission_id":mission_id,
+        "policy":"BOUNDED_EXISTING_M64_READ_ONLY_ALLOCATION",
+        "limit":limit,
+        "selected":[{"pod_name":r["pod_name"],"pod_uid":r["pod_uid"],"logical_id":r["logical_id"]} for r in selected],
+        "selected_count":len(selected),
+        "pool_ready":64,
+        "unique_uid_count":64,
+        "authority_effect":"NONE",
+    }
 
 
 def snapshot(conn, mission_id):
