@@ -149,6 +149,36 @@ PHASE_01=P1|One
         child=self.mc.process_snapshot(succ['successor_mission_id']);self.assertEqual(child['state'],'REGISTERED');self.assertEqual(child['process']['authority_state'],'NONE')
         with self.assertRaises(ValueError):self.mc.mission_action('TEST-CANONICAL',{'action':'ACTIVATE_REVISION','revision_id':out['result']['revision_id'],'lpcl_digest':'0'*64})
 
+    def test_driver_phase_result_commits_phase_and_advances_cursor(self):
+        lpcl = """PROJECT=LION_EVOLUSION
+MODE=AUTONOMOUS_EXECUTE
+CONTROL_LANGUAGE=LPCL/1.1
+MISSION_ID=TEST-DRIVER-COMMIT
+MISSION_TITLE=Driver commit test
+MISSION_OBJECTIVE=Verify durable phase advancement
+MISSION_DESCRIPTION=Test only
+PROTOCOLS=LPCL,VALIDATION,RECEIPT
+LOGICAL_DRONE_COUNT=12
+MATERIAL_DRONE_COUNT=64
+PHASE_01=P1|One
+PHASE_02=P2|Two
+"""
+        import hashlib
+        dg=hashlib.sha256(lpcl.encode()).hexdigest()
+        self.mc.register_lpcl_mission({'mission_id':'TEST-DRIVER-COMMIT','title':'Driver commit test','objective':'Verify durable phase advancement','description':'Test only','lpcl_digest':dg,'lpcl_text':lpcl,'source_head':'1'*40,'source_tree':'2'*40,'logical_count':12,'material_target':64,'phases':[{'id':'P1','title':'One'},{'id':'P2','title':'Two'}],'protocols':['LPCL','VALIDATION','RECEIPT']})
+        c=self.mc.connect()
+        self.mc._driver_phase_result(c,'TEST-DRIVER-COMMIT','P1','PASS','done',{'event':'TEST_PASS'},'VALIDATION')
+        c.close()
+        c=self.mc.connect()
+        p1=c.execute("SELECT status,progress FROM mission_phases WHERE mission_id='TEST-DRIVER-COMMIT' AND phase_id='P1'").fetchone()
+        p2=c.execute("SELECT status FROM mission_phases WHERE mission_id='TEST-DRIVER-COMMIT' AND phase_id='P2'").fetchone()
+        process=c.execute("SELECT current_phase,progress FROM mission_process_specs WHERE mission_id='TEST-DRIVER-COMMIT'").fetchone()
+        c.close()
+        self.assertEqual((p1['status'],p1['progress']),('PASS',100.0))
+        self.assertEqual(p2['status'],'RUNNING')
+        self.assertEqual(process['current_phase'],'P2')
+        self.assertEqual(process['progress'],50.0)
+
     def test_refresh_legacy_reindexes_historical_source_without_promoting_authority(self):
         out = self.mc.mission_action("legacy::legacy-vkt", {"action": "REFRESH"})
         self.assertEqual(out["effect_class"], "NONE")

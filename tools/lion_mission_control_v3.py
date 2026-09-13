@@ -657,6 +657,10 @@ def _driver_phase_result(c,mid,pid,status,detail,payload,protocol='VALIDATION'):
     current,overall=_recompute_process(c,mid)
     life='COMPLETE' if current is None and status in {'PASS','COMPLETE','SKIPPED'} else ('FAILED' if status=='FAIL' else ('WAITING' if status=='WAITING' else ('BLOCKED' if status=='BLOCKED' else 'RUNNING')))
     c.execute('UPDATE missions SET state=?,runtime_state=?,updated_at=? WHERE mission_id=?',(life,'DRIVER_'+life,t,mid))
+    # Phase advancement is part of the durable driver transaction. Without this
+    # commit the attempt receipt can be durable while mission_phases rolls back,
+    # causing an infinite replay of an already-PASS attempt.
+    c.commit()
     return current,overall
 
 
