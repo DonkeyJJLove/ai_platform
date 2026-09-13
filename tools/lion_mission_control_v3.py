@@ -508,7 +508,7 @@ def mission_action(mid,x):
       elif action=='AUDIT':
         c=connect();result=lifecycle_create_audit(c,mid,now);c.close()
       elif action in {'RESUME','DRIVER_START'}:
-        c=connect();result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE');c.close();effect='CONTROL_STATE'
+        c=connect();result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE',owner_id=DRIVER_PROCESS_ID);c.close();effect='CONTROL_STATE'
       elif action=='PAUSE':
         c=connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
@@ -628,6 +628,7 @@ PHASE_HANDLER_REGISTRY={
 }
 PHASE_HANDLER_AUTHORITY={k:'BOUNDED_EXACT_HANDLER' for k in PHASE_HANDLER_REGISTRY}
 DRIVER_STOP=threading.Event()
+DRIVER_PROCESS_ID=f'{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex}'
 
 
 def _mission_lpcl_kv(c,mid):
@@ -694,12 +695,12 @@ def drive_self_hosted_once(mid=SELF_HOSTING_MISSION):
        driver_transition(c,mid,'COMPLETE',now,next_action='SYSTEM_ACCEPTANCE_TESTS');c.execute("UPDATE missions SET state='COMPLETE',runtime_state='DRIVER_COMPLETE',updated_at=? WHERE mission_id=?",(now(),mid));c.commit();return
       pid=row['phase_id']
       if pid not in SELF_HOSTED_PHASES:
-       driver_heartbeat(c,mid,now,phase=pid,next_action='BOOTSTRAP_PHASE_NOT_DRIVER_OWNED');return
+       driver_heartbeat(c,mid,now,phase=pid,next_action='BOOTSTRAP_PHASE_NOT_DRIVER_OWNED',owner_id=DRIVER_PROCESS_ID);return
       if ds['state'] in {'WAITING','BLOCKED'}:
        # Gate phases are re-evaluated on each loop; legal transition back to ACTIVE.
        driver_transition(c,mid,'ACTIVE',now,current_phase=pid,next_action='REEVALUATE_GATE')
-      driver_heartbeat(c,mid,now,phase=pid,next_action='EXECUTE_'+pid)
-      attempt=driver_begin_attempt(c,mid,pid,now,preconditions={'mission_id':mid,'phase':pid})
+      driver_heartbeat(c,mid,now,phase=pid,next_action='EXECUTE_'+pid,owner_id=DRIVER_PROCESS_ID)
+      attempt=driver_begin_attempt(c,mid,pid,now,preconditions={'mission_id':mid,'phase':pid},owner_id=DRIVER_PROCESS_ID)
       if pid=='SELF_HOSTING_TAKEOVER':
        kv=_mission_lpcl_kv(c,mid);parent=kv.get('PARENT_MISSION_ID')
        p=c.execute('SELECT state,materialized,ready FROM missions WHERE mission_id=?',(parent,)).fetchone()

@@ -16,6 +16,15 @@ class DriverTests(unittest.TestCase):
         aid=d.begin_attempt(self.c,'M1','P1',now,preconditions={'x':1});self.assertTrue(aid.startswith('attempt-'))
         out=d.finish_attempt(self.c,aid,now,state='PASS',evidence={'ok':True});self.assertEqual(out['state'],'PASS')
         snap=d.snapshot(self.c,'M1');self.assertTrue(snap['heartbeat_at']);self.assertEqual(snap['latest_attempt']['state'],'PASS')
+    def test_driver_lease_fences_second_owner(self):
+        d.ensure_driver(self.c,'M1',now);first=d.activate(self.c,'M1',now,owner_id='owner-A',lease_seconds=60)
+        self.assertEqual(first['lease_owner'],'owner-A')
+        with self.assertRaisesRegex(ValueError,'lease held'):
+            d.activate(self.c,'M1',now,owner_id='owner-B',lease_seconds=60)
+        with self.assertRaisesRegex(ValueError,'lease not owned'):
+            d.begin_attempt(self.c,'M1','P1',now,owner_id='owner-B')
+        aid=d.begin_attempt(self.c,'M1','P1',now,owner_id='owner-A');self.assertTrue(aid.startswith('attempt-'))
+
     def test_illegal_complete_resume_fails(self):
         d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now);d.transition(self.c,'M1','COMPLETE',now)
         with self.assertRaises(ValueError): d.activate(self.c,'M1',now)

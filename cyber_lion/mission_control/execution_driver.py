@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS mission_execution_drivers(
   generation INTEGER NOT NULL,
   state TEXT NOT NULL,
   lease_token TEXT NOT NULL,
+  lease_owner TEXT,
   lease_expires_at TEXT,
   heartbeat_at TEXT,
   current_phase TEXT,
@@ -115,8 +116,23 @@ def digest(v):
     return hashlib.sha256(_canon(v).encode("utf-8")).hexdigest()
 
 
+def _plus_seconds(stamp, seconds):
+    value=str(stamp).replace('Z','+00:00')
+    dt=datetime.fromisoformat(value)
+    return (dt + __import__('datetime').timedelta(seconds=int(seconds))).astimezone(timezone.utc).isoformat().replace('+00:00','Z')
+
+
+def _lease_held_by_other(row, stamp, owner_id):
+    owner=row['lease_owner'] if 'lease_owner' in row.keys() else None
+    expires=row['lease_expires_at']
+    return bool(owner and owner_id and owner != owner_id and expires and str(expires) > str(stamp))
+
+
 def migrate(conn, now_fn, *, source_head=None, source_tree=None):
     conn.executescript(DDL)
+    cols={r[1] for r in conn.execute("PRAGMA table_info(mission_execution_drivers)").fetchall()}
+    if "lease_owner" not in cols:
+        conn.execute("ALTER TABLE mission_execution_drivers ADD COLUMN lease_owner TEXT")
     stamp = now_fn()
     dg = hashlib.sha256(DDL.encode("utf-8")).hexdigest()
     conn.execute(
@@ -166,27 +182,36 @@ def transition(conn, mission_id, new_state, now_fn, *, waiting_reason=None, bloc
     conn.commit(); return cp
 
 
-def activate(conn, mission_id, now_fn, *, next_action="SELECT_NEXT_PHASE"):
+def activate(conn, mission_id, now_fn, *, next_action="SELECT_NEXT_PHASE", owner_id=None, lease_seconds=20):
     ensure_driver(conn,mission_id,now_fn)
-    row=conn.execute("SELECT state,generation FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
-    if row["state"] == "ACTIVE": return snapshot(conn,mission_id)
+    row=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if row["state"] == "COMPLETE": raise ValueError("driver complete")
-    stamp=now_fn(); gen=int(row["generation"])+1; token=uuid.uuid4().hex
-    conn.execute("UPDATE mission_execution_drivers SET generation=?,state='ACTIVE',lease_token=?,heartbeat_at=?,last_currentness_at=?,waiting_reason=NULL,blocking_gate=NULL,next_action=?,updated_at=? WHERE mission_id=?",
-        (gen,token,stamp,stamp,next_action,stamp,mission_id))
-    _checkpoint(conn,mission_id,now_fn,{"state":"ACTIVE","event":"DRIVER_ACTIVATED","generation":gen,"next_action":next_action})
+    stamp=now_fn(); owner_id=str(owner_id or ("process:"+str(os.getpid())))
+    if _lease_held_by_other(row,stamp,owner_id):
+        raise ValueError("driver lease held by another owner")
+    if row["state"] == "ACTIVE" and row["lease_owner"] == owner_id:
+        heartbeat(conn,mission_id,now_fn,next_action=next_action,owner_id=owner_id,lease_seconds=lease_seconds)
+        return snapshot(conn,mission_id)
+    gen=int(row["generation"])+1; token=uuid.uuid4().hex; expires=_plus_seconds(stamp,lease_seconds)
+    conn.execute("UPDATE mission_execution_drivers SET generation=?,state='ACTIVE',lease_token=?,lease_owner=?,lease_expires_at=?,heartbeat_at=?,last_currentness_at=?,waiting_reason=NULL,blocking_gate=NULL,next_action=?,updated_at=? WHERE mission_id=?",
+        (gen,token,owner_id,expires,stamp,stamp,next_action,stamp,mission_id))
+    _checkpoint(conn,mission_id,now_fn,{"state":"ACTIVE","event":"DRIVER_ACTIVATED","generation":gen,"owner_id":owner_id,"lease_expires_at":expires,"next_action":next_action})
     conn.commit(); return snapshot(conn,mission_id)
 
-
-def heartbeat(conn, mission_id, now_fn, *, phase=None, next_action=None):
-    row=conn.execute("SELECT state FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+def heartbeat(conn, mission_id, now_fn, *, phase=None, next_action=None, owner_id=None, lease_seconds=20):
+    row=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not row or row["state"] not in {"ACTIVE","WAITING","BLOCKED"}: return None
-    stamp=now_fn();conn.execute("UPDATE mission_execution_drivers SET heartbeat_at=?,last_currentness_at=?,current_phase=COALESCE(?,current_phase),next_action=COALESCE(?,next_action),updated_at=? WHERE mission_id=?",(stamp,stamp,phase,next_action,stamp,mission_id));conn.commit();return stamp
+    stamp=now_fn(); owner_id=str(owner_id or row["lease_owner"] or ("process:"+str(os.getpid())))
+    if _lease_held_by_other(row,stamp,owner_id): raise ValueError("driver heartbeat fenced")
+    expires=_plus_seconds(stamp,lease_seconds)
+    conn.execute("UPDATE mission_execution_drivers SET lease_owner=?,lease_expires_at=?,heartbeat_at=?,last_currentness_at=?,current_phase=COALESCE(?,current_phase),next_action=COALESCE(?,next_action),updated_at=? WHERE mission_id=?",(owner_id,expires,stamp,stamp,phase,next_action,stamp,mission_id));conn.commit();return stamp
 
-
-def begin_attempt(conn, mission_id, phase_id, now_fn, *, preconditions=None):
+def begin_attempt(conn, mission_id, phase_id, now_fn, *, preconditions=None, owner_id=None):
     d=conn.execute("SELECT generation,state FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not d or d["state"]!="ACTIVE": raise ValueError("driver not active")
+    if owner_id:
+        lease=conn.execute("SELECT lease_owner,lease_expires_at FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone();stamp0=now_fn()
+        if not lease or lease["lease_owner"]!=owner_id or not lease["lease_expires_at"] or str(lease["lease_expires_at"])<=str(stamp0):raise ValueError("driver attempt lease not owned")
     no=int(conn.execute("SELECT COALESCE(MAX(attempt_no),0)+1 FROM mission_phase_attempts WHERE mission_id=? AND phase_id=?",(mission_id,phase_id)).fetchone()[0])
     aid="attempt-"+uuid.uuid4().hex; stamp=now_fn(); pd=digest(preconditions or {})
     conn.execute("INSERT INTO mission_phase_attempts(attempt_id,mission_id,phase_id,driver_generation,attempt_no,state,started_at,precondition_digest) VALUES(?,?,?,?,?,?,?,?)",(aid,mission_id,phase_id,d["generation"],no,"RUNNING",stamp,pd))
