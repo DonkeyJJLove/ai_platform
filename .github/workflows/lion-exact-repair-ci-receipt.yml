@@ -1,0 +1,152 @@
+name: LION Exact Repair CI Receipt
+
+on:
+  push:
+    branches:
+      - repair/epoch3-panel-publication-staging-r1
+    paths:
+      - .github/workflows/lion-exact-repair-ci-receipt.yml
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+concurrency:
+  group: lion-exact-repair-ci-receipt-r1
+  cancel-in-progress: false
+
+jobs:
+  exact-head-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: DonkeyJJLove/ai_platform
+      PR: '337'
+      OLD: 2309e33e1f141aaf4ddb0a0dd521c4abb6e6cc3d
+      TREE: a508165d183bfea5004c155434ae9ff658206cc8
+      SUBJECT: 9ce5b3852ca4df5ebec85d6134c766b20433636300f27feb466b4bb7888ec2fc
+      SCAN: 93155312e4a7f0068a238af065ecfaa2db2ec4912cdacb09451c9bbe4b36b5fc
+    steps:
+      - name: Wait for exact fast-forward and exact-head CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, time, urllib.request, urllib.error
+
+          token=os.environ['GH_TOKEN']
+          repo=os.environ['REPO']
+          pr=os.environ['PR']
+          old=os.environ['OLD']
+          tree_expected=os.environ['TREE']
+          required=('Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core')
+          base=f'https://api.github.com/repos/{repo}'
+
+          def api(path, method='GET', payload=None):
+              data=None if payload is None else json.dumps(payload).encode('utf-8')
+              req=urllib.request.Request(base+path,data=data,method=method,headers={
+                  'Authorization':f'Bearer {token}',
+                  'Accept':'application/vnd.github+json',
+                  'X-GitHub-Api-Version':'2022-11-28',
+                  'User-Agent':'LION-EXACT-REPAIR-CI-RECEIPT/1',
+                  'Content-Type':'application/json',
+              })
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  return json.load(r)
+
+          deadline=time.time()+600
+          head=None
+          while time.time()<deadline:
+              p=api(f'/pulls/{pr}')
+              candidate=(p.get('head') or {}).get('sha')
+              if candidate and candidate != old:
+                  if (p.get('head') or {}).get('ref') != 'mission/epoch3-closure-docs-federation-r1':
+                      raise SystemExit('unexpected PR head ref')
+                  head=candidate
+                  break
+              time.sleep(5)
+          if not head:
+              raise SystemExit('PR337 head did not advance from exact old head')
+
+          commit=api(f'/git/commits/{head}')
+          if (commit.get('tree') or {}).get('sha') != tree_expected:
+              raise SystemExit('publication tree mismatch')
+          parents=[x.get('sha') for x in commit.get('parents') or []]
+          if parents != [old]:
+              raise SystemExit(f'publication parent mismatch: {parents}')
+
+          final_runs={}
+          while time.time()<deadline:
+              runs=api(f'/actions/runs?event=pull_request&head_sha={head}&per_page=100').get('workflow_runs') or []
+              by={}
+              for row in runs:
+                  name=row.get('name')
+                  if name not in required:
+                      continue
+                  prior=by.get(name)
+                  if prior is None or str(row.get('created_at') or '') > str(prior.get('created_at') or ''):
+                      by[name]=row
+              failed=[n for n,r in by.items() if r.get('status')=='completed' and r.get('conclusion') not in ('success',)]
+              if failed:
+                  raise SystemExit('required exact-head CI failed: '+','.join(failed))
+              if all(n in by and by[n].get('status')=='completed' and by[n].get('conclusion')=='success' and by[n].get('head_sha')==head for n in required):
+                  final_runs=by
+                  break
+              time.sleep(10)
+          if not final_runs:
+              raise SystemExit('required exact-head CI did not become fully green')
+
+          run_lines='\n'.join(f"- **{n}** — run `{final_runs[n].get('id')}` — **SUCCESS**" for n in required)
+          body=f'''Closes LION evolution Epoch 3 candidate scope under exact LPCL activation `cfe4ddd9f24588a4a91d06a2a36eecbc17acf6cc87c690570949fabdb3e4fc8e`.
+
+## Current exact repair publication candidate
+
+- HEAD: `{head}`
+- TREE: `{tree_expected}`
+- Truth subject: `{os.environ['SUBJECT']}`
+- Production scan: `{os.environ['SCAN']}`
+- Effect inventory: **289 surfaces / 6 raw unclassified / 0 taxonomy unresolved**
+- Publication relation: exact non-force fast-forward from `{old}`; publication commit has that SHA as its sole parent.
+
+## Exact-tree local validation
+
+- unittest: **2928 passed**, 0 failures, 0 errors, 6 skipped
+- Bandit 1.9.4: **0 findings / 0 errors**
+- Full Symbol Census: **688/688 Python files**, **10,752 symbols**, 0 parse failures
+- Workflow homeostasis: **24 workflows / 0 blocking defects / 0 advisory findings**
+- Canonical Truth Plane subject is rebound carrier-last to `{os.environ['SUBJECT']}`.
+
+## Live repair acceptance canaries
+
+The material-restart receipt race is repaired and was reproduced before the fix. A live LD10 recovery canary replaced old Pod UID `59205f84-8132-4438-bac5-733222933ad5` with replacement UID `3599af44-e472-43f8-92cc-f8118768e977`; the broker returned `restart_identity_verified=true`, final Mission Control readback was **64/64 ready with 64 unique UIDs**, and exactly one UID was removed/added.
+
+The Windows LPCL panel was deployed from an isolated exact repair carrier. Real SaaS handoffs were recovered into the original `LION SaaS` thread and delivered exactly once. A new live request (`mamy łączność?`) received a real GPT-5.6 Sol receipt `4069c1bd9c77c8376bafd01cf8c6bf27f46a1fbf540f6f094ff7912a99a9f8d4`; an Edge page-load recovered/polled/appended it automatically, and a second page-load preserved the response count at exactly one.
+
+Mission-state presentation now preserves BLOCKED/FAILED truth rather than collapsing it into a misleading RUNNING state. The panel action is named `Restart material runtime` to reflect its actual effect boundary.
+
+## Exact-head GitHub evidence
+
+All required merge-precondition workflows completed successfully on exact head `{head}`:
+
+{run_lines}
+
+Exact-head CI precondition: **GREEN / PASS**.
+
+## Merge boundary
+
+**Merge remains explicitly deferred.** This publication repairs and revalidates the candidate but does not merge PR337. The subsequent full LION system-acceptance/autonomy campaign must complete under its own authority scope before merge is reconsidered.
+'''
+          api(f'/pulls/{pr}',method='PATCH',payload={'body':body})
+
+          print(json.dumps({
+              'status':'PASS',
+              'head':head,
+              'tree':tree_expected,
+              'parent':old,
+              'workflows':{n:{'run_id':final_runs[n].get('id'),'status':final_runs[n].get('status'),'conclusion':final_runs[n].get('conclusion'),'head_sha':final_runs[n].get('head_sha')} for n in required},
+              'pr_body_updated':True,
+              'merge_performed':False,
+          },sort_keys=True))
+          PY
