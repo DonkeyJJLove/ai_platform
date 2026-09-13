@@ -79,13 +79,26 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         self.assertIn('CHATGPT_SENTINELX_SESSION_MEDIATED',answer)
         self.assertIn('authority_effect=NONE',answer)
 
-    def test_dual_evaluation_stays_on_existing_hybrid_route(self):
+    def test_dual_evaluation_dispatches_local_and_live_saas_handoff(self):
         class Dummy:
-            def _route(self,m):return ('DUAL_EVALUATION','dual')
+            def _route(self,m):return ('MODEL_ONLY','local')
             def state(self):return {'status':'ok'}
-            def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'DUAL_EVALUATION','answer':'dual'}
+            def chat(self,message,use_web=False,history=None,output_language='auto'):
+                return {'route':'MODEL_ONLY','answer':'LOCAL:'+message,'tool_calls':['local.model'],'material_receipts':[]}
         apply_saas_handoff_extension(Dummy)
-        d=Dummy();d.control_provider=None
-        self.assertEqual(d._route('Zapytaj model SaaS i model lokalny o to samo pytanie: Co to LION')[0],'DUAL_EVALUATION')
+        d=Dummy()
+        def control(op,args):
+            if op=='recent':return {'focus_mission_id':'M1','missions':[]}
+            if op=='saas_request':return {'request_code':'DUAL1234','request_id':'saas-'+'2'*32,'authority_effect':'NONE'}
+            if op=='saas_status':return {'state':'BOUND'}
+            raise AssertionError(op)
+        d.control_provider=control
+        q='Zapytaj model SaaS i model lokalny o to samo pytanie: Co to LION'
+        self.assertEqual(d._route(q)[0],'DUAL_EVALUATION_LIVE')
+        out=d.chat(q,output_language='pl')
+        self.assertEqual(out['route'],'DUAL_EVALUATION_LIVE')
+        self.assertEqual(out['local_evaluation']['answer'],'LOCAL:Co to LION')
+        self.assertEqual(out['saas_handoff']['request_code'],'DUAL1234')
+        self.assertIn('lion.saas.handoff.create',out['tool_calls'])
 
 if __name__=='__main__':unittest.main()

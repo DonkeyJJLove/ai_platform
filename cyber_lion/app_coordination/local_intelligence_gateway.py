@@ -137,12 +137,14 @@ class Gateway:
         web=any(x in low for x in WEB_WORDS) or bool(re.search(r'\b[a-z0-9-]+\.(?:pl|com|org|net|io|ai|dev)\b',low))
         explicit_domain=bool(re.search(r'\b[a-z0-9-]+\.(?:pl|com|org|net|io|ai|dev)\b',low))
         definition=bool(re.match(r'^\s*(?:co to|czym jest|kim jest|what is|what are|who is)\b',low))
+        lion_system_definition=bool(re.match(r'^\s*(?:co to|czym jest|what is)\s+lion\b',low))
         repo=any(x in low for x in REPO_WORDS);local=any(x in low for x in LOCAL_SOURCE_WORDS);fed=any(x in low for x in FED_WORDS)
         mission=any(x in low for x in ('misj','mission','cel misji','postęp','postep','proces autonom','lpcl','lcpl','dron','flot','aktualny stan lion','stan lion','co się dzieje','co sie dzieje'))
         if web and (repo or local):return 'MIXED_SOURCE_WEB','automatic mixed evidence route'
         if fed:return 'FEDERATION_CURRENTNESS','automatic federation currentness route'
         if local:return 'LOCAL_SOURCE','automatic local source route'
         if repo:return 'REPOSITORY_CURRENTNESS','automatic repository currentness route'
+        if lion_system_definition:return 'SYSTEM_CONTEXT','canonical LION context route'
         if mission:return 'MISSION_CONTROL_CURRENTNESS','automatic live Mission Control route'
         if web:return 'PUBLIC_WEB','automatic public web route'
         if definition:return 'KNOWLEDGE_WEB','automatic factual-definition verification route'
@@ -171,6 +173,38 @@ class Gateway:
             else:return {'status':'DENY','reason':'tool not implemented','authority_effect':'NONE'}
             return {'status':'OK','data':x,'authority_effect':'NONE'}
         except Exception as e:return {'status':'UNKNOWN','error':type(e).__name__,'authority_effect':'NONE'}
+    @staticmethod
+    def _mission_answer(message,mission,output_language):
+        focus=(mission or {}).get('focus') or {}
+        if not focus:return None
+        proc_phase=focus.get('current_phase') or 'NONE'
+        progress=float(focus.get('progress') or 0.0)
+        state=focus.get('state') or 'UNKNOWN';runtime=focus.get('runtime_state') or 'UNKNOWN'
+        mid=focus.get('mission_id') or 'UNKNOWN';ready=int(focus.get('ready') or 0);target=int(focus.get('material_target') or 0)
+        phases=focus.get('phases') or []
+        detailed=any(x in str(message).lower() for x in ('szczeg','detail','dokład','doklad','pełn','peln'))
+        passed=[p for p in phases if p.get('status') in {'PASS','COMPLETE','SKIPPED'}]
+        active=[p for p in phases if p.get('status') in {'RUNNING','WAITING','BLOCKED'}]
+        pending=[p for p in phases if p.get('status')=='PENDING']
+        polish=output_language=='pl' or output_language=='auto'
+        if polish:
+            head=(f"Misja **{mid}** jest w stanie **{state}** (runtime: `{runtime}`), postęp **{progress:.1f}%**. "
+                  f"Aktywna faza: **{proc_phase}**. Material plane: **{ready}/{target} ready**.")
+            if not detailed:return head
+            rows=[head,f"Fazy zakończone: **{len(passed)}/{len(phases)}**; aktywne: **{len(active)}**; oczekujące: **{len(pending)}**."]
+            if active:
+                for p in active[:3]:rows.append(f"Aktywna: `{p.get('phase_id')}` · {p.get('status')} · {float(p.get('progress') or 0):.1f}% — {p.get('detail') or p.get('title') or ''}")
+            if pending:
+                rows.append('Następne oczekujące: '+', '.join('`'+str(p.get('phase_id'))+'`' for p in pending[:5])+'.')
+            msgs=focus.get('protocol_messages') or []
+            if msgs:
+                last=msgs[:5]
+                rows.append('Ostatnie zdarzenia protokołu: '+ '; '.join(str(m.get('protocol'))+':'+str((m.get('payload') or {}).get('event') or m.get('phase') or 'event') for m in last)+'.')
+            return "\n\n".join(rows)
+        head=(f"Mission **{mid}** is **{state}** (runtime `{runtime}`), progress **{progress:.1f}%**. Active phase: **{proc_phase}**. Material plane: **{ready}/{target} ready**.")
+        if not detailed:return head
+        return head+f"\n\nCompleted phases: **{len(passed)}/{len(phases)}**; active: **{len(active)}**; pending: **{len(pending)}**."
+
     @staticmethod
     def _knowledge_query(message):
         m=re.match(r'^\s*(?:co to|czym jest|kim jest|what is|what are|who is)\s+(.+?)\s*[?.!]*$',message,re.IGNORECASE)
@@ -251,13 +285,18 @@ class Gateway:
         if route=='LOCAL_SOURCE':source=self.repo.search(message,8);tools.append('lion.source.search')
         if route=='MISSION_CONTROL_CURRENTNESS':
             if not callable(self.mission_provider):raise ValueError('mission provider unavailable')
-            recent=self.mission_provider('recent',{});fid=recent.get('focus_mission_id');focus=self.mission_provider('process',{'mission_id':fid}) if fid else None
+            recent=self.mission_provider('recent',{});fid=recent.get('focus_mission_id');rows0=recent.get('missions') or [];fid=next((r.get('mission_id') for r in rows0 if isinstance(r,dict) and isinstance(r.get('mission_id'),str) and r.get('mission_id') in message),fid);focus=self.mission_provider('process',{'mission_id':fid}) if fid else None
             rrows=[]
             for x in (recent.get('missions') or [])[:8]:rrows.append({k:x.get(k) for k in ('mission_id','title','state','runtime_state','logical_count','material_target','materialized','ready','objective','current_phase','progress','authority_state')})
             compact=None
             if isinstance(focus,dict):
                 proc=focus.get('process') or {};compact={'mission_id':focus.get('mission_id'),'title':focus.get('title'),'state':focus.get('state'),'runtime_state':focus.get('runtime_state'),'logical_count':focus.get('logical_count'),'material_target':focus.get('material_target'),'materialized':focus.get('materialized'),'ready':focus.get('ready'),'objective':proc.get('objective'),'description':proc.get('description'),'current_phase':proc.get('current_phase'),'progress':proc.get('progress'),'authority_state':proc.get('authority_state'),'phases':[{k:p.get(k) for k in ('phase_id','title','status','progress','detail')} for p in (focus.get('phases') or [])[:32]],'protocol_messages':[{k:m.get(k) for k in ('observed_at','protocol','from_id','to_id','phase','payload')} for m in (focus.get('protocol_messages') or [])[:24]]}
             mission={'focus_mission_id':fid,'recent':rrows,'focus':compact};tools.append('lion.mission.currentness')
+        if route=='MISSION_CONTROL_CURRENTNESS':
+            raw=self._mission_answer(message,mission,output_language)
+            recon=self.material_reconcile() if callable(self.material_reconcile) else None
+            receipts=self.material_receipts() if callable(self.material_receipts) else []
+            return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':[],'web_fetches':[],'source_evidence':[],'mission_control':mission,'tool_calls':tools+['lion.evidence.render'],'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language}
         if route in {'PUBLIC_WEB','MIXED_SOURCE_WEB','KNOWLEDGE_WEB'}:
             domain=_named_domain(message)
             if domain:
@@ -311,7 +350,7 @@ class Gateway:
         if len(prompt)>14500:return {'route':'SAAS_REQUIRED','answer':'CONTEXT_OVERFLOW_ESCALATE','authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':self.material_receipts() if callable(self.material_receipts) else [],'response_language':output_language}
         system=('You are the proposal-only local model inside LION_EVOLUSION R10 Unified Local Intelligence. '+language_rule+' The operator uses one automatic evidence plane. The raw model owns no sockets, Git or authority. This LION session supplies mediated read-only repositories/currentness and mediated public HTTPS through material drones. If ROUTE=PUBLIC_WEB, KNOWLEDGE_WEB or MIXED_SOURCE_WEB, web evidence was fetched now; never claim you have no web capability. For a named-domain request, prioritize WEB:UNTRUSTED_DIRECT_FETCH from that exact domain over generic search results; if direct fetch succeeded, do not say the site was inaccessible. If LIVE contains currentness, answer exactly from LIVE. If ROUTE=MISSION_CONTROL_CURRENTNESS and MISSION_CONTROL_LIVE contains a focus mission, answer from that live Mission Control evidence and never claim mission data are unavailable. RAG is loaded only when RAG_RUNTIME_STATUS=LOADED. Material drones are OS processes with authority NONE and are not independent physical failure domains. Never infer write, merge, push, delete, credential, service-admin or runtime authority. Prefer a direct, useful answer over meta-commentary. Use clean Markdown when structure helps. For latest/news requests, if WEB:UNTRUSTED_DIRECT_FETCH contains multiple headline-like items, list 5 to 8 distinct substantive headlines from that direct-domain evidence and cite each article URL when one is supplied. Treat fetched_at only as retrieval time, never as publication time. If evidence provides only a headline and URL, do not invent a publication date, article body, cause, consequence, or summary beyond what the headline itself supports. Do not claim there is no additional information when multiple headlines are present. For stable technical definitions, do not invent or volunteer exact version numbers, release dates or historical milestones unless they are grounded in supplied evidence or you are highly confident; if uncertain, omit the detail or say you are uncertain. Do not mention internal routing unless the user asks. Preserve the user language across follow-up turns. Cite source URLs/identities when present.')
         max_tokens=900 if route in {'FEDERATION_CURRENTNESS','MISSION_CONTROL_CURRENTNESS'} else (760 if route=='MIXED_SOURCE_WEB' else (680 if route in {'PUBLIC_WEB','KNOWLEDGE_WEB','LOCAL_SOURCE','REPOSITORY_CURRENTNESS'} else 520))
-        deterministic=self._latest_headline_answer(fetches,message,output_language) if route=='PUBLIC_WEB' and domain and latest_intent else None
+        deterministic=self._mission_answer(message,mission,output_language) if route=='MISSION_CONTROL_CURRENTNESS' else (self._latest_headline_answer(fetches,message,output_language) if route=='PUBLIC_WEB' and domain and latest_intent else None)
         if deterministic is not None:
             raw=deterministic;tools.append('lion.evidence.render')
         else:
