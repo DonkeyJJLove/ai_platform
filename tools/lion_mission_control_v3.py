@@ -318,7 +318,12 @@ def update_lpcl_phase(mid,x):
     required={'phase_id','status','progress','protocol','from_id','to_id','detail','payload'}
     if type(x) is not dict or set(x)!=required:raise ValueError('phase update schema')
     if x['status'] not in PHASE_STATES or type(x['progress']) not in (int,float) or not 0<=float(x['progress'])<=100 or x['protocol'] not in PROTOCOLS:raise ValueError('phase update')
-    c=connect();row=c.execute('SELECT status,started_at FROM mission_phases WHERE mission_id=? AND phase_id=?',(mid,x['phase_id'])).fetchone()
+    c=connect()
+    life=c.execute('SELECT m.state AS mission_state,p.authority_state FROM missions m LEFT JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE m.mission_id=?',(mid,)).fetchone()
+    if not life:c.close();raise ValueError('mission not found')
+    if str(life['mission_state']).upper()=='SUPERSEDED' or str(life['authority_state'] or '').upper().startswith('SUPERSEDED'):
+      c.close();raise ValueError('mission superseded')
+    row=c.execute('SELECT status,started_at FROM mission_phases WHERE mission_id=? AND phase_id=?',(mid,x['phase_id'])).fetchone()
     if not row:c.close();raise ValueError('phase not found')
     t=now();started=row['started_at'];finished=None
     if x['status']=='RUNNING' and not started:started=t

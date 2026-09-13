@@ -97,8 +97,9 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900):
         raise ValueError("saas question")
     mission, process = _mission_binding(conn, mission_id)
     stamp = now_fn()
-    # Keep the UI unambiguous: at most one active pending handoff per mission.
-    conn.execute("UPDATE saas_handoff_requests SET status='SUPERSEDED' WHERE mission_id=? AND status='PENDING'", (mission_id,))
+    # Queue semantics: multiple independent handoffs may coexist for one mission.
+    # The panel polls exact request_id, while operator mediation consumes the oldest pending
+    # request (FIFO). Never destroy a still-pending answer merely because a newer query arrived.
     request_id = "saas-" + uuid.uuid4().hex
     request_code = secrets.token_hex(4).upper()
     token = secrets.token_hex(32)
@@ -137,7 +138,7 @@ def pending_request(conn, now_fn, *, request_code=None, mission_id=None):
     if mission_id:
         where.append("mission_id=?"); args.append(mission_id)
     row = conn.execute(
-        "SELECT * FROM saas_handoff_requests WHERE " + " AND ".join(where) + " ORDER BY created_at DESC LIMIT 1",
+        "SELECT * FROM saas_handoff_requests WHERE " + " AND ".join(where) + " ORDER BY created_at ASC LIMIT 1",
         tuple(args),
     ).fetchone()
     if row is None:
@@ -166,14 +167,17 @@ def bridge_status(conn, mission_id, now_fn):
         (mission_id,),
     ).fetchone()
     pending = conn.execute(
-        "SELECT request_id,request_code,status,created_at,expires_at,question_digest FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING' ORDER BY created_at DESC LIMIT 1",
+        "SELECT request_id,request_code,status,created_at,expires_at,question_digest FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING' ORDER BY created_at ASC LIMIT 1",
         (mission_id,),
     ).fetchone()
+    pending_count = int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING'", (mission_id,)).fetchone()[0])
     return {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
         "binding": dict(binding) if binding else None,
         "pending": dict(pending) if pending else None,
+        "pending_count": pending_count,
+        "queue_policy": "FIFO_MULTI_PENDING",
         "transport": TRANSPORT,
         "automatic_local_to_saas_hop": False,
         "operator_mediation_required": True,

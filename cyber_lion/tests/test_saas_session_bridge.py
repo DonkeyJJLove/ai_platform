@@ -45,12 +45,16 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'response token'):
             saas.respond(self.c,req['request_id'],'wrong','answer',lambda:T,model_identity='GPT-5.6 Sol')
 
-    def test_only_one_pending_per_mission(self):
+    def test_multiple_pending_requests_are_fifo_and_not_superseded(self):
         a=saas.create_request(self.c,'M1','one',lambda:T)
         b=saas.create_request(self.c,'M1','two',lambda:T)
-        ra=self.c.execute('SELECT status FROM saas_handoff_requests WHERE request_id=?',(a['request_id'],)).fetchone()['status']
-        self.assertEqual(ra,'SUPERSEDED')
-        self.assertEqual(saas.pending_request(self.c,lambda:T,mission_id='M1')['request_id'],b['request_id'])
+        rows={r['request_id']:r['status'] for r in self.c.execute('SELECT request_id,status FROM saas_handoff_requests WHERE mission_id=?',('M1',)).fetchall()}
+        self.assertEqual(rows[a['request_id']],'PENDING')
+        self.assertEqual(rows[b['request_id']],'PENDING')
+        self.assertEqual(saas.pending_request(self.c,lambda:T,mission_id='M1')['request_id'],a['request_id'])
+        status=saas.bridge_status(self.c,'M1',lambda:T)
+        self.assertEqual(status['pending_count'],2)
+        self.assertEqual(status['queue_policy'],'FIFO_MULTI_PENDING')
 
 class SaaSHandoffExtensionTests(unittest.TestCase):
     def test_explicit_saas_route_is_not_capability_answer(self):
