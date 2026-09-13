@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 SOURCES=("AGENTS.md","LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json","LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE.md","LION/codex/CODEX_PROJECT_INTEGRATION.md","LION/codex/TOOL_AUTHORITY_MAP.yaml","LION/codex/HARNESS_MANIFEST.json","LION/rag/RAG_BOOTSTRAP.json")
 FED=(("DonkeyJJLove/ai_platform","master"),("DonkeyJJLove/chunk-chunk","master"),("DonkeyJJLove/glitchlab","master"),("DonkeyJJLove/HA2D","master"),("DonkeyJJLove/hipotezy_nadawcze_LLM","main"),("DonkeyJJLove/mosaic_lab_pro.py","main"),("DonkeyJJLove/sbom","main"),("DonkeyJJLove/swarm","master"),("DonkeyJJLove/SymulacjaKaskadySieciowej","main"),("DonkeyJJLove/writeups","master"))
-INV=("MODEL_OUTPUT_NE_AUTHORITY","TOOL_AVAILABILITY_NE_AUTHORITY","RAG_NE_LIVE_TRUTH","LOGICAL_DRONE_NE_MATERIAL_EXECUTOR","PR_NE_MERGE_AUTHORITY","MERGE_NE_RUNTIME_AUTHORITY","UNKNOWN_FAILS_CLOSED","NO_FALSE_COMPLETION","MATERIAL_DRONE_NE_AUTHORITY","MATERIAL_DRONE_NE_FAILURE_DOMAIN")
+INV=("MODEL_OUTPUT_NE_AUTHORITY","TOOL_AVAILABILITY_NE_AUTHORITY","RAG_NE_LIVE_TRUTH","LOGICAL_DRONE_NE_MATERIAL_EXECUTOR","PR_NE_MERGE_AUTHORITY","MERGE_NE_RUNTIME_AUTHORITY","UNKNOWN_FAILS_CLOSED","NO_FALSE_COMPLETION","MATERIAL_DRONE_NE_AUTHORITY","MATERIAL_DRONE_NE_FAILURE_DOMAIN","HYBRID_ARCHITECTURE_REQUIRED","SAAS_SUPERVISOR_NE_EFFECT_AUTHORITY")
 def _j(v):return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False)
 @dataclass(frozen=True)
 class LionContext:
