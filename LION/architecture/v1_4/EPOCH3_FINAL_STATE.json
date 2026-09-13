@@ -3,6 +3,7 @@
   "authorized_lpcl_sha256": "be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951",
   "branch_closure": "PENDING",
   "carrier": "PENDING",
+  "consequential_surfaces": 273,
   "control_plane": "LIVE_INTEGRATED",
   "documentation": "CANDIDATE_MATERIALIZED",
   "evolution_epoch": "EPOCH_3_CLOSURE_IN_PROGRESS",
@@ -13,13 +14,17 @@
   "material_pods": 64,
   "material_ready": 64,
   "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+  "production_scan": "f28761327e774d670474dfb90f33f8f7163890b393586807d0d0d29c872cac19",
+  "production_sources": 328,
   "publication": "PENDING",
   "rag": "DEFERRED_NOT_LOADED",
+  "raw_unclassified": 6,
   "schema": "lion.epoch3.final-state/v1",
   "source_master": {
     "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
     "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608"
   },
   "success_terminal": "NOT_YET",
+  "taxonomy_unresolved": 0,
   "validation": "PENDING_FULL_GATE"
 }

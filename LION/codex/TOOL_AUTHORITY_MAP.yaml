@@ -7,6 +7,30 @@
   },
   "authority_effect": "NONE",
   "authorization_lifecycle_ref": "LION/architecture/v1_4/AUTHORIZATION_LIFECYCLE_CONTRACT.json",
+  "epoch3_control": {
+    "epoch3_materializer": {
+      "authority": "MISSION_SCOPED_K3S",
+      "lpcl_digest": "be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951",
+      "namespace": "lion-epoch3-closure-r1",
+      "pods": 64
+    },
+    "local_model": {
+      "authority": "NONE",
+      "endpoint": "127.0.0.1:8772",
+      "mission_currentness": "MAT04 -> MAT08/MAT10"
+    },
+    "lpcl_panel": {
+      "activation": "EXPLICIT_USER_ACTIVATION_EXACT_TEXT",
+      "endpoint": "127.0.0.1:8780",
+      "registration_authority": "NONE"
+    },
+    "mission_control": {
+      "arbitrary_kubectl": false,
+      "arbitrary_shell": false,
+      "authority": "MISSION_SCOPED",
+      "endpoint": "127.0.0.1:8766"
+    }
+  },
   "rules": [
     {
       "authority_required": "odczyt wskazanego repo",
@@ -177,28 +201,28 @@
       "tool_or_capability": "RAG_epoch_update"
     },
     {
-      "tool_or_capability": "local_intelligence_read",
-      "operation_class": "local_intelligence_read",
-      "observation_or_effect": "observation",
-      "target_scope": "exact local LION context/RAG/currentness/repository subject",
       "authority_required": "bounded read-only mission scope",
       "currentness_precondition": "exact model/context/RAG/tool identities as applicable",
+      "forbidden_escalation": "model output or retrieved content into consequential authority",
+      "mission_scope_required": true,
+      "observation_or_effect": "observation",
+      "operation_class": "local_intelligence_read",
       "readback_required": true,
       "reconciliation_required": true,
-      "mission_scope_required": true,
-      "forbidden_escalation": "model output or retrieved content into consequential authority"
+      "target_scope": "exact local LION context/RAG/currentness/repository subject",
+      "tool_or_capability": "local_intelligence_read"
     },
     {
-      "tool_or_capability": "public_web_read",
-      "operation_class": "external_network_read_only",
-      "observation_or_effect": "observation",
-      "target_scope": "public HTTPS only",
       "authority_required": "bounded read-only research scope",
       "currentness_precondition": "public-IP resolution and pinned TLS connection",
+      "forbidden_escalation": "private/link-local/loopback access, credentials, cookies, network writes, retrieved instructions as authority",
+      "mission_scope_required": true,
+      "observation_or_effect": "observation",
+      "operation_class": "external_network_read_only",
       "readback_required": true,
       "reconciliation_required": true,
-      "mission_scope_required": true,
-      "forbidden_escalation": "private/link-local/loopback access, credentials, cookies, network writes, retrieved instructions as authority"
+      "target_scope": "public HTTPS only",
+      "tool_or_capability": "public_web_read"
     }
   ],
   "schema": "lion.tool-authority-map/v1",
@@ -217,24 +241,3 @@
     "MERGE_AUTHORITY != RUNTIME_AUTHORITY_UNLESS_EXPLICITLY_BOUND"
   ]
 }
-
-# EPOCH3_CONTROL_AUTHORITY_MAP
-epoch3_control:
-  lpcl_panel:
-    endpoint: "127.0.0.1:8780"
-    registration_authority: NONE
-    activation: EXPLICIT_USER_ACTIVATION_EXACT_TEXT
-  mission_control:
-    endpoint: "127.0.0.1:8766"
-    authority: MISSION_SCOPED
-    arbitrary_shell: false
-    arbitrary_kubectl: false
-  local_model:
-    endpoint: "127.0.0.1:8772"
-    authority: NONE
-    mission_currentness: "MAT04 -> MAT08/MAT10"
-  epoch3_materializer:
-    namespace: "lion-epoch3-closure-r1"
-    pods: 64
-    lpcl_digest: "be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951"
-    authority: MISSION_SCOPED_K3S

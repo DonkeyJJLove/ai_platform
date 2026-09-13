@@ -69,6 +69,7 @@
     "branch_closure": "PENDING",
     "candidate_branch": "mission/epoch3-closure-docs-federation-r1",
     "carrier": "PENDING",
+    "consequential_surfaces": 273,
     "control_panel": "ACTIVE_127.0.0.1_8780",
     "entry_master_head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
     "entry_master_tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
@@ -83,10 +84,14 @@
     "material_ready": 64,
     "mission_control": "ACTIVE_127.0.0.1_8766_HISTORICAL_OBSERVER_PLUS_V3_CONTROL",
     "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+    "production_scan": "f28761327e774d670474dfb90f33f8f7163890b393586807d0d0d29c872cac19",
+    "production_sources": 328,
     "publication": "PENDING",
     "rag": "DEFERRED_NOT_LOADED_BUILD_NOT_AUTHORIZED",
+    "raw_unclassified": 6,
     "source_provenance": "LION/architecture/v1_4/EPOCH3_SOURCE_PROVENANCE.json",
     "state": "ACTIVE_ARCH_DOCS",
+    "taxonomy_unresolved": 0,
     "validation": "PENDING_EPOCH3_FULL_GATE"
   },
   "fleet": {
