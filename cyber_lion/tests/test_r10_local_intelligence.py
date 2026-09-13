@@ -100,4 +100,10 @@ class T(unittest.TestCase):
         self.assertIn("replace(/\\r/g,'').split('\\n')",UI)
         self.assertNotIn("replace(/\\n/g,'').split('\\n')",UI)
 
+
+    def test_rss_parser_does_not_require_xml_dom(self):
+        from cyber_lion.app_coordination.web_research_broker import _RSSParser
+        p=_RSSParser();p.feed('<rss><channel><item><title>Example &amp; Test</title><link>https://example.com/a</link></item></channel></rss>');p.close()
+        self.assertEqual(p.rows,[('Example & Test','https://example.com/a')])
+
 if __name__=='__main__':unittest.main()

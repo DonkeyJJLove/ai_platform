@@ -3,7 +3,6 @@ from datetime import datetime,timezone
 from hashlib import sha256
 from html.parser import HTMLParser
 import http.client,ipaddress,socket,ssl,urllib.parse
-import xml.etree.ElementTree as ET
 
 DENIED_HOST_SUFFIXES=('.localhost','.local')
 
@@ -54,6 +53,27 @@ class _Parser(HTMLParser):
     def handle_endtag(self,tag):
         if tag=='a' and self.href:self.rows.append((' '.join(''.join(self.buf).split()),self.href));self.href=None
 
+class _RSSParser(HTMLParser):
+    """Bounded RSS item extractor without XML entity/DTD processing."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True);self.in_item=False;self.current=None;self.buf=[];self.title='';self.link='';self.rows=[]
+    def handle_starttag(self,tag,attrs):
+        tag=tag.lower()
+        if tag=='item':self.in_item=True;self.title='';self.link='';self.current=None;self.buf=[]
+        elif self.in_item and tag in {'title','link'}:self.current=tag;self.buf=[]
+    def handle_data(self,data):
+        if self.in_item and self.current:self.buf.append(data)
+    def handle_endtag(self,tag):
+        tag=tag.lower()
+        if self.in_item and self.current==tag and tag in {'title','link'}:
+            value=' '.join(''.join(self.buf).split())
+            if tag=='title':self.title=value
+            else:self.link=value
+            self.current=None;self.buf=[]
+        if tag=='item' and self.in_item:
+            if self.title and self.link:self.rows.append((self.title,self.link))
+            self.in_item=False;self.current=None;self.buf=[]
+
 class PublicWebReadBroker:
     def __init__(self,resolver=socket.getaddrinfo,max_redirects=3):
         self.resolver=resolver;self.max_redirects=max_redirects
@@ -92,10 +112,7 @@ class PublicWebReadBroker:
             try:
                 ev=self.fetch(url);out=[]
                 if provider=='bing-rss':
-                    root=ET.fromstring(ev.text);rows=[]
-                    for item in root.findall('.//item'):
-                        title=(item.findtext('title') or '').strip();href=(item.findtext('link') or '').strip()
-                        if title and href:rows.append((title,href))
+                    p=_RSSParser();p.feed(ev.text);p.close();rows=p.rows
                 else:
                     p=_Parser();p.feed(ev.text);rows=p.rows
                 for title,href in rows:
