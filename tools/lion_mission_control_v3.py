@@ -125,6 +125,86 @@ def snapshot():
 # ---- LPCL mission process extension v1 -----------------------------------
 PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL')
 PHASE_STATES=('PENDING','READY','RUNNING','WAITING','BLOCKED','PASS','FAIL','SKIPPED','COMPLETE','CANCELLED')
+LPCL_REBIND_SOURCE='EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1'
+LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
+LPCL_REBIND_DISTRIBUTION=(6,6,6,6,5,5,5,5,5,5,5,5)
+
+
+def _lpcl_pairs(text):
+    import re
+    lines=str(text or '').replace('\r\n','\n').replace('\r','\n').split('\n');out={};i=0
+    while i<len(lines):
+      m=re.match(r'^([A-Z][A-Z0-9_]*)\s*=\s*(.*)$',lines[i].strip())
+      if not m:i+=1;continue
+      key,val=m.group(1),m.group(2).strip();i+=1
+      if not val:
+       buf=[]
+       while i<len(lines):
+        row=lines[i].strip()
+        if re.match(r'^([A-Z][A-Z0-9_]*)\s*=\s*(.*)$',row):break
+        if row and not row.startswith('#'):buf.append(row)
+        i+=1
+       val=' '.join(buf).strip()
+      out[key]=val
+    return out
+
+
+def bind_lpcl_execution(mid):
+    c=connect()
+    try:
+      m=c.execute('SELECT mission_id,state,spec_digest,source_head,source_tree,logical_count,material_target,adapter FROM missions WHERE mission_id=?',(mid,)).fetchone()
+      ps=c.execute('SELECT lpcl_text,authority_state,current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      if not m or not ps:return None
+      if m['adapter']==LPCL_REBIND_ADAPTER:return process_snapshot(mid)
+      if m['state']!='AUTHORIZED' or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return None
+      if m['logical_count']!=12 or m['material_target']!=64:raise ValueError('lpcl execution adapter cardinality')
+      kv=_lpcl_pairs(ps['lpcl_text'])
+      if kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')!='TRUE' or kv.get('CREATE_PARALLEL_COMPETING_EPOCH3_MISSION')!='FALSE':raise ValueError('lpcl continuation contract')
+      reuse=kv.get('REUSE_EXISTING_HEALTHY_MATERIAL_FLEET','')
+      if 'ALLOWED' not in reuse:raise ValueError('lpcl material rebind not allowed')
+      src=c.execute('SELECT state,runtime_state,materialized,ready,source_head,source_tree FROM missions WHERE mission_id=?',(LPCL_REBIND_SOURCE,)).fetchone()
+      if not src or src['state'] not in {'RUNNING','AUTHORIZED'} or src['materialized']!=64 or src['ready']!=64:raise ValueError('lpcl source fleet not healthy')
+      workers=c.execute('SELECT pod_name,pod_uid,logical_id,phase,ready,restarts,pod_ip,observed_at FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(LPCL_REBIND_SOURCE,)).fetchall()
+      if len(workers)!=64 or len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl source fleet identity')
+      roles=[]
+      for i,target in enumerate(LPCL_REBIND_DISTRIBUTION,1):
+       lid=f'LD{i:02d}';role=kv.get(lid)
+       if not role:raise ValueError('lpcl logical role '+lid)
+       roles.append((lid,role,target))
+      by={lid:[0,0] for lid,_,_ in roles}
+      for r in workers:
+       lid=str(r['logical_id']).upper()
+       if lid not in by:raise ValueError('lpcl worker logical id')
+       by[lid][0]+=1;by[lid][1]+=int(r['ready'])
+      for lid,_,target in roles:
+       if by[lid] != [target,target]:raise ValueError('lpcl worker distribution '+lid)
+      first=c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal LIMIT 1',(mid,)).fetchone()
+      if not first:raise ValueError('lpcl first phase missing')
+      t=now();c.execute('DELETE FROM logical_drones WHERE mission_id=?',(mid,));c.execute('DELETE FROM material_workers WHERE mission_id=?',(mid,))
+      for lid,role,target in roles:c.execute('INSERT INTO logical_drones VALUES(?,?,?,?,?,?)',(mid,lid,role,target,target,target))
+      for r in workers:c.execute('INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)',(mid,r['pod_name'],r['pod_uid'],str(r['logical_id']).upper(),r['phase'],r['ready'],r['restarts'],r['pod_ip'],t))
+      c.execute('UPDATE missions SET adapter=?,state=?,runtime_state=?,materialized=64,ready=64,updated_at=?,last_error=NULL WHERE mission_id=?',(LPCL_REBIND_ADAPTER,'RUNNING','REBOUND_EXISTING_HEALTHY_FLEET',t,mid))
+      c.execute('UPDATE mission_process_specs SET current_phase=?,updated_at=? WHERE mission_id=?',(first['phase_id'],t,mid))
+      c.execute('UPDATE mission_phases SET status=?,progress=?,detail=?,started_at=COALESCE(started_at,?),updated_at=? WHERE mission_id=? AND phase_id=?',('RUNNING',0.0,'64/64 healthy material workers rebound from '+LPCL_REBIND_SOURCE+'; currentness reacquisition started',t,t,mid,first['phase_id']))
+      c.execute('UPDATE missions SET state=?,runtime_state=?,updated_at=? WHERE mission_id=?',('SUPERSEDED','REBOUND_TO:'+mid,t,LPCL_REBIND_SOURCE))
+      c.execute('UPDATE mission_process_specs SET current_phase=NULL,authority_state=?,updated_at=? WHERE mission_id=?',('SUPERSEDED_BY_EXACT_LPCL',t,LPCL_REBIND_SOURCE))
+      uid_digest=_payload_digest({'uids':sorted(r['pod_uid'] for r in workers)})
+      _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','MATERIAL_FLEET',first['phase_id'],{'event':'EXISTING_HEALTHY_FLEET_REBOUND','source_mission_id':LPCL_REBIND_SOURCE,'worker_count':64,'unique_uid_count':64,'worker_uid_digest':uid_digest,'binding_class':'CONTROL_PLANE_REBIND','pod_role_environment_rewritten':False,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
+      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',first['phase_id'],{'event':'CURRENTNESS_REACQUIRE_STARTED','source_head':m['source_head'],'source_tree':m['source_tree'],'material_ready':64,'material_target':64},'INTERNAL')
+      _process_message(c,mid,'RECEIPT','MISSION_CONTROL','OPERATOR',first['phase_id'],{'event':'LPCL_EXECUTION_ADAPTER_BOUND','adapter':LPCL_REBIND_ADAPTER,'source_mission_id':LPCL_REBIND_SOURCE,'lpcl_digest':m['spec_digest'],'worker_uid_digest':uid_digest},'OUT')
+      c.commit()
+    finally:c.close()
+    return process_snapshot(mid)
+
+
+def reconcile_lpcl_execution_bindings():
+    c=connect()
+    try:rows=[r['mission_id'] for r in c.execute("SELECT mission_id FROM missions WHERE adapter='LPCL_MISSION' AND state='AUTHORIZED' ORDER BY updated_at DESC").fetchall()]
+    finally:c.close()
+    for mid in rows:
+      try:bind_lpcl_execution(mid)
+      except Exception:
+       c=connect();c.execute('UPDATE missions SET last_error=?,updated_at=? WHERE mission_id=?',('LPCL_EXECUTION_BIND:'+__import__('traceback').format_exc(limit=1)[-900:],now(),mid));c.commit();c.close()
 
 def process_migrate(c):
     c.executescript('''
@@ -219,7 +299,10 @@ def activate_lpcl_mission(mid,x):
     t=now();c.execute('UPDATE missions SET state=?,authorized_at=?,updated_at=? WHERE mission_id=?',('AUTHORIZED',t,t,mid));c.execute('UPDATE mission_process_specs SET authority_state=?,updated_at=? WHERE mission_id=?',('EXPLICIT_USER_ACTIVATION',t,mid))
     _process_message(c,mid,'AUTHORITY','OPERATOR','MISSION_CONTROL',None,{'event':'MISSION_AUTHORIZED','lpcl_digest':x['lpcl_digest']},'IN')
     c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,t))
-    c.commit();c.close();return process_snapshot(mid)
+    c.commit();c.close()
+    try:return bind_lpcl_execution(mid) or process_snapshot(mid)
+    except Exception as e:
+      c=connect();c.execute('UPDATE missions SET last_error=?,updated_at=? WHERE mission_id=?',('LPCL_EXECUTION_BIND:'+type(e).__name__+':'+str(e)[:800],now(),mid));c.commit();c.close();return process_snapshot(mid)
 
 def update_lpcl_phase(mid,x):
     required={'phase_id','status','progress','protocol','from_id','to_id','detail','payload'}
@@ -262,7 +345,10 @@ def process_snapshot(mid):
       try:q['payload']=json.loads(q.pop('payload_json'))
       except Exception:q['payload']={}
       msgs.append(q)
-    d['protocol_messages']=msgs;d['control_authority']='BOUNDED_MISSION_CONTROL' if mid==MISSION else ('ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE')
+    d['protocol_messages']=msgs
+    if mid==MISSION:d['control_authority']='BOUNDED_MISSION_CONTROL'
+    elif d.get('adapter')==LPCL_REBIND_ADAPTER:d['control_authority']='BOUNDED_LPCL_EXECUTION_ADAPTER'
+    else:d['control_authority']='ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE'
     c.close();return d
 
 def focus_mission_id():
@@ -349,7 +435,7 @@ class H(BaseHTTPRequestHandler):
  def do_DELETE(self):self.json({'error':'method denied'},405)
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();observe_once();threading.Thread(target=observer,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
+ ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
  for lp in (a.listen_state,a.legacy_listen_state):
   q=Path(lp);q.parent.mkdir(parents=True,exist_ok=True);tmp=q.with_name(q.name+'.tmp-'+uuid.uuid4().hex[:8]);tmp.write_text(json.dumps(loc,sort_keys=True),encoding='utf-8');os.replace(tmp,q)
  print(json.dumps(loc),flush=True)

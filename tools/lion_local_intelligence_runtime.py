@@ -133,22 +133,28 @@ class LpclControlBridge:
     def validate(self,text):
         if not isinstance(text,str) or not 20<=len(text)<=200000:raise ValueError('lpcl text')
         kv=self._parse_pairs(text)
+        # Authoring normalization: preserve a strict canonical backend while accepting
+        # semantically equivalent LPCL/1.1 surface forms at intake.
+        if not kv.get('MISSION_DESCRIPTION') and kv.get('MISSION_OBJECTIVE'):kv['MISSION_DESCRIPTION']=kv['MISSION_OBJECTIVE']
+        if not kv.get('LOGICAL_DRONE_COUNT') and kv.get('LOGICAL_DRONES'):kv['LOGICAL_DRONE_COUNT']=kv['LOGICAL_DRONES']
+        if not kv.get('MATERIAL_DRONE_COUNT') and kv.get('MATERIAL_FLEET_TARGET'):kv['MATERIAL_DRONE_COUNT']=kv['MATERIAL_FLEET_TARGET']
         required=('PROJECT','MODE','CONTROL_LANGUAGE','MISSION_ID','MISSION_TITLE','MISSION_OBJECTIVE','MISSION_DESCRIPTION','LOGICAL_DRONE_COUNT','MATERIAL_DRONE_COUNT','PROTOCOLS')
         missing=[k for k in required if not kv.get(k)]
-        if missing:raise ValueError('missing '+','.join(missing))
+        if missing:raise ValueError('LPCL_MISSING_REQUIRED:'+','.join(missing))
         if kv['PROJECT']!='LION_EVOLUSION' or kv['MODE']!='AUTONOMOUS_EXECUTE' or kv['CONTROL_LANGUAGE']!='LPCL/1.1':raise ValueError('lpcl envelope')
         mid=kv['MISSION_ID']
         if not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
         logical=int(kv['LOGICAL_DRONE_COUNT']);material=int(kv['MATERIAL_DRONE_COUNT'])
         if not 1<=logical<=512 or not 0<=material<=4096:raise ValueError('fleet cardinality')
-        prot=[x.strip() for x in kv['PROTOCOLS'].replace(';',',').split(',') if x.strip()]
+        prot=[x for x in re.split(r'[,;\s]+',kv['PROTOCOLS'].strip()) if x]
         if not prot or any(x not in self.ALLOWED_PROTOCOLS for x in prot):raise ValueError('protocols')
         phases=[]
         for key in sorted(k for k in kv if re.fullmatch(r'PHASE_[0-9]{2}',k)):
             val=kv[key]
-            if '|' not in val:raise ValueError(key+' format')
-            pid,title=[x.strip() for x in val.split('|',1)]
-            if not self.MID_RE.fullmatch(pid) or not title:raise ValueError(key)
+            if '|' in val:pid,title=[x.strip() for x in val.split('|',1)]
+            else:
+                pid=val.strip();title=' '.join(w.capitalize() for w in pid.split('_'))
+            if not self.MID_RE.fullmatch(pid) or not title:raise ValueError('LPCL_PHASE_INVALID:'+key)
             phases.append({'id':pid,'title':title[:180]})
         if not phases:raise ValueError('no phases')
         cur=self.broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result']
