@@ -4,8 +4,12 @@ import argparse,hashlib,json,os,socket,sqlite3,threading,uuid
 from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse,unquote
 from mission_control_compat import compat_get, STATIC
+try:
+ from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
+except ImportError:
+ from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -45,6 +49,7 @@ def migrate():
  for i,r,n in LOGICAL:c.execute('INSERT OR IGNORE INTO logical_drones VALUES(?,?,?,?,?,?)',(MISSION,i,r,n,0,0))
  import_legacy(c)
  process_migrate(c)
+ lifecycle_migrate(c,now,current_mission_id=MISSION,source_head=HEAD,source_tree=TREE)
  c.commit();c.close()
 
 def broker(op,pod=None):
@@ -327,6 +332,105 @@ def post_protocol_message(mid,x):
     if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone():c.close();raise ValueError('mission not found')
     out=_process_message(c,mid,x['protocol'],x['from_id'],x['to_id'],x['phase'],x['payload'],'INTERNAL');c.commit();c.close();return out
 
+def _send_broker_request(req):
+    s=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);s.settimeout(240);s.connect(SOCKET);s.sendall(json.dumps(req,sort_keys=True,separators=(',',':')).encode()+b'\n');s.shutdown(socket.SHUT_WR);data=bytearray()
+    while True:
+      b=s.recv(65536)
+      if not b:break
+      data.extend(b)
+      if len(data)>16*1024*1024:raise RuntimeError('broker response too large')
+    s.close();value=json.loads(bytes(data).decode())
+    if not isinstance(value,dict) or value.get('ok') is not True:raise RuntimeError('broker denied:'+str(value.get('error') if isinstance(value,dict) else 'malformed'))
+    return value['result'],req['request_id']
+
+
+def epoch3_broker(operation,pod=None):
+    c=connect();row=c.execute('SELECT mission_id,spec_digest,source_head,source_tree FROM missions WHERE mission_id=?',(LPCL_REBIND_SOURCE,)).fetchone();c.close()
+    if not row:raise ValueError('epoch3 source mission missing')
+    req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':LPCL_REBIND_SOURCE,'source_head':row['source_head'],'source_tree':row['source_tree'],'spec_digest':row['spec_digest']}
+    if pod is not None:req['pod_name']=pod
+    return _send_broker_request(req)
+
+
+def apply_runtime_for(c,mid,r):
+    state=str(r.get('state') or 'UNKNOWN');mat=int(r.get('materialized',0) or 0);ready=int(r.get('ready',0) or 0);t=now();row=c.execute('SELECT state FROM missions WHERE mission_id=?',(mid,)).fetchone();cur=row['state'] if row else 'UNKNOWN'
+    if state=='RUNNING':life='RUNNING'
+    elif state=='PAUSED':life='PAUSED'
+    elif state in {'ABSENT','K3S_NOT_RUNNING'}:life='STOPPED' if cur not in {'AUTHORIZED'} else cur
+    elif state=='CONVERGING':life='CONVERGING'
+    else:life=cur
+    c.execute('UPDATE missions SET state=?,runtime_state=?,materialized=?,ready=?,updated_at=? WHERE mission_id=?',(life,state,mat,ready,t,mid));c.execute('DELETE FROM material_workers WHERE mission_id=?',(mid,));by={}
+    for pod in r.get('pods',[]) or []:
+      lid=str(pod.get('logical_drone') or '').upper();by.setdefault(lid,[0,0]);by[lid][0]+=1;by[lid][1]+=1 if pod.get('ready') else 0
+      c.execute('INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)',(mid,pod.get('name'),pod.get('uid'),lid,pod.get('phase'),1 if pod.get('ready') else 0,int(pod.get('restarts',0) or 0),pod.get('pod_ip'),t))
+    for logical in c.execute('SELECT logical_id FROM logical_drones WHERE mission_id=?',(mid,)).fetchall():
+      vals=by.get(str(logical['logical_id']).upper(),[0,0]);c.execute('UPDATE logical_drones SET materialized=?,ready=? WHERE mission_id=? AND logical_id=?',(vals[0],vals[1],mid,logical['logical_id']))
+    lifecycle_sync_components(c,mid,now)
+
+
+def refresh_legacy(mid):
+    if not mid.startswith('legacy::'):raise ValueError('not legacy mission')
+    run_id=mid[len('legacy::'):]
+    if not LEGACY_DB.is_file():raise ValueError('legacy source unavailable')
+    lc=sqlite3.connect('file:'+str(LEGACY_DB)+'?mode=ro',uri=True);row=lc.execute('SELECT payload FROM runs WHERE run_id=?',(run_id,)).fetchone();lc.close()
+    if not row:raise ValueError('legacy source record unavailable')
+    payload=json.loads(row[0]);src=payload.get('source') or {};metrics=payload.get('metrics') or {};work=payload.get('workload') or {};status=str(payload.get('status') or 'UNKNOWN');mat=int(work.get('pods') or metrics.get('ready') or 0);ready=int(metrics.get('ready') or (mat if status=='PASS' else 0));runtime=str((payload.get('evidence') or {}).get('class') or 'HISTORICAL_IMPORTED_EVIDENCE');t=now();dg=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest();c=connect();c.execute('UPDATE missions SET state=?,runtime_state=?,material_target=?,materialized=?,ready=?,source_head=?,source_tree=?,spec_digest=?,spec_json=?,updated_at=?,last_error=NULL WHERE mission_id=?',('RECORDED_'+status,runtime,mat,mat,ready,src.get('head'),src.get('tree'),dg,json.dumps(payload,sort_keys=True,ensure_ascii=False),t,mid));c.commit();c.close();return {'mission_id':mid,'source':'generic_mission_control','recorded_status':status,'materialized':mat,'ready':ready,'effect':'READ_ONLY_REINDEX'}
+
+
+def mission_action(mid,x):
+    if type(x) is not dict or 'action' not in x or not isinstance(x['action'],str):raise ValueError('action schema')
+    action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','AUDIT','ROLLBACK'}
+    if action not in allowed:raise ValueError('action denied')
+    request={k:v for k,v in x.items() if k!='action'}
+    c=connect();row=c.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mid,)).fetchone();c.close()
+    if not row:raise ValueError('mission not found')
+    effect='NONE';status='PASS';result=None
+    try:
+      if action=='REFRESH':
+        if mid==MISSION:
+          observe_once();result={'mission_id':mid,'source':'MISSION64_READ','effect':'READ_ONLY_CURRENTNESS'}
+        elif mid==LPCL_REBIND_SOURCE:
+          runtime,rid=epoch3_broker('EPOCH3_M64_READ');c=connect();apply_runtime_for(c,mid,runtime);c.commit();c.close();result={'mission_id':mid,'source':'EPOCH3_M64_READ','request_id':rid,'runtime':{k:runtime.get(k) for k in ('state','materialized','ready','unique_uid_count')},'effect':'READ_ONLY_CURRENTNESS'}
+        elif mid.startswith('legacy::'):result=refresh_legacy(mid)
+        else:result={'mission_id':mid,'effect':'CONTROL_DB_READBACK','state':'NO_MATERIAL_CURRENTNESS_ADAPTER'}
+      elif action=='AUDIT':
+        c=connect();result=lifecycle_create_audit(c,mid,now);c.close()
+      elif action=='RESTART':
+        if mid==MISSION:
+          effect='BOUNDED_MATERIAL';with_lock=LOCK
+          with with_lock:
+            first=command('STOP');second=command('START')
+          result={'mission_id':mid,'restart_class':'STOP_THEN_START','stop':first,'start':second}
+        elif mid==LPCL_REBIND_SOURCE:
+          effect='BOUNDED_MATERIAL'
+          stop,sid=epoch3_broker('EPOCH3_M64_STOP');start,stid=epoch3_broker('EPOCH3_M64_START');c=connect();apply_runtime_for(c,mid,start);c.commit();c.close();result={'mission_id':mid,'restart_class':'EPOCH3_STOP_THEN_START','stop_request_id':sid,'start_request_id':stid,'runtime':{k:start.get(k) for k in ('state','materialized','ready','unique_uid_count')}}
+        else:
+          c=connect();result=lifecycle_create_design_revision(c,mid,'RESTART',request or {'reason':'operator requested restart/replay'},now,state='AWAITING_EXACT_LPCL_ACTIVATION');c.close()
+      elif action=='START_COMPONENT':
+        component=str(request.get('component_id') or '').strip()
+        if not component:raise ValueError('component_id required')
+        c=connect();exists=c.execute('SELECT 1 FROM mission_components WHERE mission_id=? AND component_id=?',(mid,component)).fetchone()
+        if not exists:c.close();raise ValueError('component not found')
+        result=lifecycle_create_design_revision(c,mid,'START_COMPONENT',{'component_id':component,'reason':request.get('reason') or 'bounded component start requested'},now,state='BLOCKED_EXACT_COMPONENT_ADAPTER_REQUIRED');c.close()
+      elif action=='ADD_COMPONENT':
+        component=request.get('component')
+        if type(component) is not dict or not str(component.get('component_id') or '').strip():raise ValueError('component object with component_id required')
+        c=connect();result=lifecycle_create_design_revision(c,mid,'ADD_COMPONENT',request,now);c.close()
+      elif action=='REDESIGN':
+        if not request:raise ValueError('redesign request required')
+        c=connect();result=lifecycle_create_design_revision(c,mid,'REDESIGN',request,now);c.close()
+      elif action=='ROLLBACK':
+        rollback_id=str(request.get('rollback_id') or '').strip()
+        if not rollback_id:raise ValueError('rollback_id required')
+        c=connect();result=lifecycle_rollback_plan(c,mid,rollback_id,now);c.close()
+      c=connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,status,request,result,now);c.close();return {'mission_id':mid,'action':action,'status':status,'effect_class':effect,'result':result,'receipt':receipt}
+    except Exception as e:
+      try:
+        c=connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,'FAIL',request,{'error':type(e).__name__+':'+str(e)[:1000]},now);c.close()
+      except Exception:receipt=None
+      raise ValueError(type(e).__name__+':'+str(e)+((' receipt='+str(receipt.get('receipt_id'))) if receipt else ''))
+
+
 def process_snapshot(mid):
     c=connect();m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
     if not m:c.close();raise ValueError('mission not found')
@@ -348,8 +452,11 @@ def process_snapshot(mid):
     d['protocol_messages']=msgs
     if mid==MISSION:d['control_authority']='BOUNDED_MISSION_CONTROL'
     elif d.get('adapter')==LPCL_REBIND_ADAPTER:d['control_authority']='BOUNDED_LPCL_EXECUTION_ADAPTER'
+    elif mid==LPCL_REBIND_SOURCE:d['control_authority']='BOUNDED_EPOCH3_MATERIAL_ADAPTER'
     else:d['control_authority']='ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE'
-    c.close();return d
+    lifecycle_sync_components(c,mid,now)
+    d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
+    c.commit();c.close();return d
 
 def focus_mission_id():
     c=connect();r=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();c.close();return r['value'] if r else MISSION
@@ -370,7 +477,7 @@ class H(BaseHTTPRequestHandler):
   if isinstance(body,str):body=body.encode('utf-8')
   self.send_response(status);self.send_header('Content-Type',content_type);self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(body)
  def do_GET(self):
-  path=urlparse(self.path).path
+  path=unquote(urlparse(self.path).path)
   static_map={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/app.css':('app.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/passive.js':('passive.js','text/javascript; charset=utf-8'),'/control-v3.js':('control-v3.js','text/javascript; charset=utf-8')}
   if path in static_map:
    name,ctype=static_map[path];target=STATIC/name
@@ -396,7 +503,14 @@ class H(BaseHTTPRequestHandler):
    except ValueError as e:return self.json({'error':str(e)},404)
   return self.json({'error':'not found'},404)
  def do_POST(self):
-  path=urlparse(self.path).path
+  path=unquote(urlparse(self.path).path)
+  if path.startswith('/api/v3/missions/') and path.endswith('/actions') and path!='/api/v3/missions/current/actions':
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/actions')].strip('/');n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>65536 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n));return self.json(mission_action(mid,x),200)
+   except ValueError as e:return self.json({'error':str(e)},409)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},500)
   if path=='/api/v3/missions/register-lpcl':
    try:
     n=int(self.headers.get('Content-Length','0'));

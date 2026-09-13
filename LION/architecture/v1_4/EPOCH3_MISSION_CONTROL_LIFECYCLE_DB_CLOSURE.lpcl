@@ -1,0 +1,189 @@
+RUN=
+THE-BEAN-FACTORY-LION-EVOLUTION-V1_4-EPOCH3-MISSION-CONTROL-LIFECYCLE-DB-SCAFFOLD-CLOSURE-R1
+
+PROJECT=
+LION_EVOLUSION
+
+MODE=
+AUTONOMOUS_EXECUTE
+
+CONTROL_LANGUAGE=
+LPCL/1.1
+
+NO_FALSE_COMPLETION=
+TRUE
+
+MISSION_ID=
+EPOCH3-CLOSURE-CONTROL-DB-SCAFFOLD-R1
+
+MISSION_TITLE=
+Epoch 3 closure · Mission Control lifecycle database · historical compatibility · Epoch 4 scaffold
+
+MISSION_OBJECTIVE=
+Close the remaining Mission Control and control-database architectural gap before Epoch 4: eliminate historical mission HTTP 404 failures; represent schema-era absence truthfully; make refresh, audit, restart, component-start contract, add-component, redesign and rollback planning explicit; preserve exact authority/effect separation; finish or supersede the active Epoch 3 mission chain; restore the LPCL Panel as a live integrated control surface; validate the exact repository candidate and GitHub state; and produce the reconciled Epoch 4 handoff without promoting future Semantic Inference Compiler target architecture to AS-IS.
+
+MISSION_DESCRIPTION=
+This is a successor closure mission for the end of Epoch 3. It extends the already-authorized hybrid Local plus ChatGPT SaaS control-plane recovery with a versioned Mission Control database lifecycle, historical-schema compatibility and mission redesign scaffolding. Historical evidence must never be rewritten into fabricated modern process state. Material effects are allowed only through exact bounded adapters already proven for the relevant mission; unsupported component/restart/rollback actions fail closed into typed revision or plan state. Database migrations are additive, versioned, auditable and rollback-aware. The mission must leave LION MISSION CONTROL and LION CONTROL LPCL PANEL as the operational entry surfaces for Epoch 4, while repository validation remains the proof boundary.
+
+CONTINUE_EXISTING_EPOCH3_MISSION=
+TRUE
+
+CREATE_PARALLEL_COMPETING_EPOCH3_MISSION=
+FALSE
+
+REUSE_EXISTING_HEALTHY_MATERIAL_FLEET=
+ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND
+
+SUPERSEDES_MISSION=
+EPOCH3-CLOSURE-HYBRID-SAAS-RECOVERY-R1
+
+PRESERVE_HISTORY=
+TRUE
+
+DATABASE_HISTORY_REWRITE=
+DENY
+
+DATABASE_MIGRATION_CLASS=
+ADDITIVE_VERSIONED_IDEMPOTENT
+
+DATABASE_SCHEMA_TARGET=
+lion.mission-control.lifecycle-db/v2
+
+HISTORICAL_ABSENCE_RULE=
+NOT_RECORDED_AT_SOURCE_STAGE_NE_ZERO_NE_FAILURE
+
+LEGACY_PROCESS_COMPATIBILITY=
+HISTORICAL_PRE_SCHEMA_WITH_EXPLICIT_SOURCE_STAGE_AND_DATA_GAPS
+
+MISSION_RESTART_POLICY=
+BOUNDED_EFFECT_ONLY_WHEN_EXACT_MISSION_ADAPTER_EXISTS_ELSE_SUCCESSOR_REVISION_REQUIRED
+
+COMPONENT_START_POLICY=
+CONTRACT_VISIBLE_FAIL_CLOSED_UNTIL_EXACT_PER_COMPONENT_ADAPTER_EXISTS
+
+ADD_COMPONENT_POLICY=
+DESIGN_REVISION_ONLY_UNTIL_SUCCESSOR_EXACT_LPCL_ACTIVATION
+
+REDESIGN_POLICY=
+DESIGN_REVISION_ONLY_UNTIL_SUCCESSOR_EXACT_LPCL_ACTIVATION
+
+ROLLBACK_POLICY=
+EXACT_ROLLBACK_POINT_PLUS_BOUNDED_RUNTIME_ADAPTER_REQUIRED_NO_DATABASE_TIME_TRAVEL
+
+SEMANTIC_INFERENCE_COMPILER=
+TARGET_ARCHITECTURE_CANDIDATE_ONLY_AUTHORITY_NONE_RUNTIME_NONE
+
+EPOCH4_ENTRY_SURFACES=
+LION_MISSION_CONTROL_8766_AND_LION_CONTROL_LPCL_PANEL_8780
+
+LOGICAL_DRONE_COUNT=
+12
+
+MATERIAL_DRONE_COUNT=
+64
+
+LD01=
+MISSION_PLANNER
+LD02=
+AUTHORITY_CURRENTNESS
+LD03=
+FEDERATION_CURRENTNESS
+LD04=
+GITHUB_LINEAGE_AND_BRANCH
+LD05=
+ARCHITECTURE_DOCUMENTATION
+LD06=
+SOURCE_PROVENANCE
+LD07=
+LOCAL_MODEL_DELEGATION
+LD08=
+MATERIAL_SCHEDULER
+LD09=
+SECURITY_FALSIFIER
+LD10=
+VALIDATION
+LD11=
+PUBLICATION_AND_RECOVERY
+LD12=
+RECONCILIATION_AND_CARRIER
+
+PROTOCOLS=
+LPCL AUTHORITY CURRENTNESS ASSIGNMENT HEARTBEAT EVIDENCE VALIDATION RECEIPT RECOVERY GITHUB HUMAN CONTROL
+
+PHASE_01=
+CURRENTNESS_REACQUIRE|Reacquire live Mission Control, LPCL Panel, material fleet, repository, GitHub PR and database identities
+PHASE_02=
+HISTORICAL_SCHEMA_COMPAT|Repair four historical VKT and OSS mission process endpoints and materialize explicit pre-schema data-gap semantics
+PHASE_03=
+CONTROL_DB_MIGRATION|Apply and verify additive lifecycle database schema v2 with migration receipt and source binding
+PHASE_04=
+MISSION_LIFECYCLE_ACTIONS|Materialize refresh, audit, restart and fail-closed capability routing with action receipts
+PHASE_05=
+MISSION_DESIGN_SCAFFOLD|Materialize start-component contract, add-component revisions and redesign revisions without implicit authority
+PHASE_06=
+ROLLBACK_ARCHITECTURE|Materialize audit rollback evidence and rollback-plan semantics; prove no database time-travel and no unsupported material rollback
+PHASE_07=
+MISSION_CONTROL_UI|Display schema provenance, historical absence, capability states, lifecycle controls, lineage, audits and receipts
+PHASE_08=
+LPCL_PANEL_RECOVERY|Restore and validate LION CONTROL LPCL PANEL at 127.0.0.1:8780 and integrate it with Mission Control truth
+PHASE_09=
+SEMANTIC_TARGET_BINDING|Integrate Semantic Inference Compiler as target Track F documentation only, preserving AS-IS/CANDIDATE/TARGET separation
+PHASE_10=
+MISSION_CHAIN_RECONCILIATION|Finish or supersede Epoch 3 missions without parallel contradictory control truth; bind healthy 64-worker fleet to this exact successor identity
+PHASE_11=
+FULL_VALIDATION|Run focused tests, full suite, effect inventory/taxonomy, symbol census, security validation and browser/API canaries on exact candidate
+PHASE_12=
+GITHUB_CONVERGENCE|Publish exact candidate, obtain exact-head CI, reconcile PR and branch lineage, and prevent stale validation reuse
+PHASE_13=
+EPOCH3_TERMINAL_CARRIER|Write carrier-last closure only after live UI, databases, mission chain, repository and GitHub states independently read back
+PHASE_14=
+EPOCH4_HANDOFF|Produce exact next-epoch handoff with known compiled state, material delta, unresolved unknowns and target-only semantic compilation frontier
+
+REQUIRED_CANARY_01=
+GET_ENCODED_LEGACY_MISSION_PROCESS_RETURNS_HTTP_200
+REQUIRED_CANARY_02=
+LEGACY_PROGRESS_IS_NULL_OR_NA_NOT_SYNTHETIC_ZERO
+REQUIRED_CANARY_03=
+LEGACY_SOURCE_STAGE_IS_EXPLICIT
+REQUIRED_CANARY_04=
+AUDIT_HAS_AUTHORITY_EFFECT_NONE
+REQUIRED_CANARY_05=
+ROLLBACK_POINT_IS_NON_RESTORABLE_UNTIL_EXACT_RUNTIME_ADAPTER
+REQUIRED_CANARY_06=
+START_COMPONENT_WITHOUT_EXACT_ADAPTER_FAILS_CLOSED
+REQUIRED_CANARY_07=
+REDESIGN_AND_ADD_COMPONENT_CREATE_REVISION_NOT_EFFECT
+REQUIRED_CANARY_08=
+CURRENT_MISSION_RESTART_USES_ONLY_BOUND_MATERIAL_ADAPTER
+REQUIRED_CANARY_09=
+MISSION_CONTROL_8766_LIVE
+REQUIRED_CANARY_10=
+LPCL_PANEL_8780_LIVE
+REQUIRED_CANARY_11=
+MATERIAL_FLEET_64_OF_64_READY_OR_EXPLICITLY_RECONCILED_STOPPED_STATE
+REQUIRED_CANARY_12=
+GITHUB_EXACT_HEAD_VALIDATION_CURRENT
+
+CLOSURE_INVARIANT_01=
+MODEL_OUTPUT_NE_AUTHORITY
+CLOSURE_INVARIANT_02=
+PROVIDER_SELECTION_NE_AUTHORITY
+CLOSURE_INVARIANT_03=
+HISTORICAL_EVIDENCE_NE_CURRENT_RUNTIME
+CLOSURE_INVARIANT_04=
+MISSING_HISTORICAL_FIELD_NE_ZERO
+CLOSURE_INVARIANT_05=
+DATABASE_SCHEMA_MIGRATION_NE_AUTHORITY
+CLOSURE_INVARIANT_06=
+MISSION_REVISION_NE_EFFECT
+CLOSURE_INVARIANT_07=
+ROLLBACK_PLAN_NE_ROLLBACK_EFFECT
+CLOSURE_INVARIANT_08=
+SEMANTIC_SCAFFOLD_NE_AUTHORITY
+CLOSURE_INVARIANT_09=
+LPCL_GENERATION_NE_AUTHORITY
+CLOSURE_INVARIANT_10=
+EXPLICIT_USER_LAUNCH_OF_EXACT_LPCL_REQUIRED
+
+FINAL_INVARIANT=
+Epoch 3 is closed only when historical and current missions coexist under explicit schema provenance; Mission Control exposes truthful lifecycle and design operations; unsupported effects fail closed; control database lineage and rollback evidence are validated; the current mission chain is reconciled; both 8766 and 8780 are live and integrated; exact repository and GitHub validation are current; future SIC remains target-only; and a carrier-last handoff permits Epoch 4 to begin without inheriting hidden schema, control or authority debt.
