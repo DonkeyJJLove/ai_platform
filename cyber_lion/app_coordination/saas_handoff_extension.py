@@ -104,7 +104,9 @@ def apply_saas_handoff_extension(cls):
 
     def capability_answer(message, mission, state, output_language):
         low = str(message or "").lower()
-        if "saas" in low or "chatgpt" in low:
+        saas_named = "saas" in low or "chatgpt" in low
+        transport_intent = any(x in low for x in ("masz łączność", "masz lacznosc", "czy masz łączność", "czy masz lacznosc", "kanał saas", "kanal saas", "binding", "transport", "połączenie z saas", "polaczenie z saas", "dostęp do saas", "dostep do saas", "saas status", "status saas"))
+        if saas_named and transport_intent:
             bridge = (state or {}).get("saas_session_bridge") or {}
             bstate = bridge.get("state") or "UNKNOWN"
             binding = bridge.get("binding") or {}

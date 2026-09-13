@@ -399,8 +399,8 @@ def mission_action(mid,x):
       if action=='REFRESH':
         if mid==MISSION:
           observe_once();result={'mission_id':mid,'source':'MISSION64_READ','effect':'READ_ONLY_CURRENTNESS'}
-        elif mid==LPCL_REBIND_SOURCE:
-          runtime,rid=epoch3_broker('EPOCH3_M64_READ');c=connect();apply_runtime_for(c,mid,runtime);c.commit();c.close();result={'mission_id':mid,'source':'EPOCH3_M64_READ','request_id':rid,'runtime':{k:runtime.get(k) for k in ('state','materialized','ready','unique_uid_count')},'effect':'READ_ONLY_CURRENTNESS'}
+        elif mid==LPCL_REBIND_SOURCE or row['adapter']==LPCL_REBIND_ADAPTER:
+          runtime,rid=epoch3_broker('EPOCH3_M64_READ');c=connect();apply_runtime_for(c,mid,runtime);c.commit();c.close();result={'mission_id':mid,'source':'EPOCH3_M64_READ','request_id':rid,'runtime':{k:runtime.get(k) for k in ('state','materialized','ready','unique_uid_count')},'effect':'READ_ONLY_CURRENTNESS','adapter_binding':'LPCL_REBOUND_SOURCE_RUNTIME' if row['adapter']==LPCL_REBIND_ADAPTER else 'DIRECT'}
         elif mid.startswith('legacy::'):result=refresh_legacy(mid)
         else:result={'mission_id':mid,'effect':'CONTROL_DB_READBACK','state':'NO_MATERIAL_CURRENTNESS_ADAPTER'}
       elif action=='AUDIT':
@@ -411,9 +411,15 @@ def mission_action(mid,x):
           with with_lock:
             first=command('STOP');second=command('START')
           result={'mission_id':mid,'restart_class':'STOP_THEN_START','stop':first,'start':second}
-        elif mid==LPCL_REBIND_SOURCE:
+        elif mid==LPCL_REBIND_SOURCE or row['adapter']==LPCL_REBIND_ADAPTER:
           effect='BOUNDED_MATERIAL'
-          stop,sid=epoch3_broker('EPOCH3_M64_STOP');start,stid=epoch3_broker('EPOCH3_M64_START');c=connect();apply_runtime_for(c,mid,start);c.commit();c.close();result={'mission_id':mid,'restart_class':'EPOCH3_STOP_THEN_START','stop_request_id':sid,'start_request_id':stid,'runtime':{k:start.get(k) for k in ('state','materialized','ready','unique_uid_count')}}
+          stop,sid=epoch3_broker('EPOCH3_M64_STOP');start,stid=epoch3_broker('EPOCH3_M64_START');c=connect();apply_runtime_for(c,mid,start)
+          if row['adapter']==LPCL_REBIND_ADAPTER:
+            phase=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();pid=phase['current_phase'] if phase else None
+            if pid:
+              c.execute("UPDATE mission_phases SET status='RUNNING',started_at=COALESCE(started_at,?),finished_at=NULL,updated_at=?,detail=? WHERE mission_id=? AND phase_id=?",(now(),now(),'Mission material runtime restarted under exact rebound adapter; autonomous phase execution resumed',mid,pid))
+              _process_message(c,mid,'RECOVERY','MISSION_CONTROL','MATERIAL_FLEET',pid,{'event':'MISSION_RESTARTED_AND_RESUMED','stop_request_id':sid,'start_request_id':stid,'materialized':int(start.get('materialized',0) or 0),'ready':int(start.get('ready',0) or 0),'authority_effect':'MISSION_SCOPED'},'OUT')
+          c.commit();c.close();result={'mission_id':mid,'restart_class':'EPOCH3_STOP_THEN_START','stop_request_id':sid,'start_request_id':stid,'runtime':{k:start.get(k) for k in ('state','materialized','ready','unique_uid_count')},'autonomous_resume':row['adapter']==LPCL_REBIND_ADAPTER}
         else:
           c=connect();result=lifecycle_create_design_revision(c,mid,'RESTART',request or {'reason':'operator requested restart/replay'},now,state='AWAITING_EXACT_LPCL_ACTIVATION');c.close()
       elif action=='START_COMPONENT':

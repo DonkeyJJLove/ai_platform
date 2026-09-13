@@ -208,7 +208,7 @@ def capabilities(conn, mission_id, *, current_mission_id, rebound_adapter="LPCL_
     return {
         "REFRESH": {"state": "SUPPORTED", "effect": "READ_ONLY_CURRENTNESS" if not historical else "HISTORICAL_SOURCE_REINDEX"},
         "AUDIT": {"state": "SUPPORTED", "effect": "CONTROL_DB_METADATA_ONLY"},
-        "RESTART": {"state": "SUPPORTED_BOUNDED_EFFECT" if (current or epoch3) else ("REVISION_DRAFT_ONLY" if historical or rebound else "ADAPTER_REQUIRED"), "effect": "MATERIAL" if (current or epoch3) else "NONE"},
+        "RESTART": {"state": "SUPPORTED_BOUNDED_EFFECT" if (current or epoch3 or rebound) else ("REVISION_DRAFT_ONLY" if historical else "ADAPTER_REQUIRED"), "effect": "MATERIAL" if (current or epoch3 or rebound) else "NONE"},
         "START_COMPONENT": {"state": "ADAPTER_REQUIRED", "effect": "NONE", "reason": "No exact per-component material effect adapter is installed in Epoch 3. The control contract is present and fails closed."},
         "ADD_COMPONENT": {"state": "DRAFT_REVISION_SUPPORTED", "effect": "NONE"},
         "REDESIGN": {"state": "DRAFT_REVISION_SUPPORTED", "effect": "NONE"},
