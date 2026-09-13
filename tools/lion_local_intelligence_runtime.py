@@ -13,6 +13,8 @@ from dataclasses import dataclass
 import argparse,hashlib,json,os,threading,time,urllib.request,uuid,sqlite3,re
 from datetime import datetime,timezone
 from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway
+from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
+apply_hybrid_gateway_extension(Gateway)
 from cyber_lion.app_coordination.web_research_broker import WebEvidence
 
 DRONE_ROLES={

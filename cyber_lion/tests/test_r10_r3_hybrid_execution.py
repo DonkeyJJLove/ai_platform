@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from cyber_lion.app_coordination.local_intelligence_gateway import Gateway
+from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
 from cyber_lion.app_coordination.lion_context_provider import SOURCES, build_lion_context
 from tools.lion_local_intelligence_runtime import LpclControlBridge
 
@@ -49,7 +50,10 @@ class HybridGatewayTests(unittest.TestCase):
 
     def test_lion_definition_is_system_context_not_public_web(self):
         td, root = self.ctxrepo(); self.addCleanup(td.cleanup)
-        g = Gateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: 'local', self.cur, self.git)
+        class ExtendedGateway(Gateway):
+            pass
+        apply_hybrid_gateway_extension(ExtendedGateway)
+        g = ExtendedGateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: 'local', self.cur, self.git)
         self.assertEqual(g._route('Co to LION')[0], 'SYSTEM_CONTEXT')
         self.assertEqual(g.state()['saas_supervisor']['transport'], 'EXTERNAL_SESSION_MEDIATED')
         self.assertFalse(g.state()['saas_supervisor']['automatic_hop_materialized'])
@@ -57,7 +61,10 @@ class HybridGatewayTests(unittest.TestCase):
     def test_dual_evaluation_never_fakes_saas_answer(self):
         td, root = self.ctxrepo(); self.addCleanup(td.cleanup)
         calls = []
-        g = Gateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: (calls.append(m) or 'LOCAL'), self.cur, self.git)
+        class ExtendedGateway(Gateway):
+            pass
+        apply_hybrid_gateway_extension(ExtendedGateway)
+        g = ExtendedGateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: (calls.append(m) or 'LOCAL'), self.cur, self.git)
         out = g.chat('Zapytaj model SaaS i model lokalny o to samo pytanie: Co to LION', output_language='pl')
         self.assertEqual(out['route'], 'DUAL_EVALUATION')
         self.assertEqual(out['local_evaluation']['answer'], 'LOCAL')
