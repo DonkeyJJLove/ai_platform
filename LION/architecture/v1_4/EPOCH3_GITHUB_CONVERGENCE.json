@@ -1,0 +1,67 @@
+{
+  "branch_closure_state": "PENDING",
+  "branches": [
+    {
+      "classification": "DEFAULT",
+      "name": "master",
+      "tip": "849db8f5ea6434f5647ee072cd4835fd2264e078"
+    },
+    {
+      "ancestor": true,
+      "branch_only": 0,
+      "classification": "ANCESTOR_MERGED_PR333",
+      "name": "mission/e02-offline-candidate-codeql24-r1",
+      "tip": "bf8e17f60e29f46b479fc488914725db00c0feb2"
+    },
+    {
+      "ancestor": true,
+      "branch_only": 0,
+      "classification": "TRANSITIVELY_ABSORBED",
+      "name": "mission/r7-1-convergence-r1",
+      "tip": "bf8e17f60e29f46b479fc488914725db00c0feb2"
+    },
+    {
+      "ancestor": true,
+      "branch_only": 0,
+      "classification": "ANCESTOR_MERGED_PR334",
+      "name": "mission/r7-artifactized-host-upgraded-r1",
+      "tip": "bf8e17f60e29f46b479fc488914725db00c0feb2"
+    },
+    {
+      "ancestor": true,
+      "branch_only": 0,
+      "classification": "ANCESTOR_MERGED_PR335",
+      "name": "mission/r8-hybrid-m64-candidate-r2",
+      "tip": "79d6d91571e9c033c91a5e2427d22ae29287b8f3"
+    },
+    {
+      "ancestor": true,
+      "branch_only": 0,
+      "classification": "ANCESTOR_MERGED_PR336",
+      "name": "mission/r9-auth-lifecycle-candidate-r1",
+      "tip": "f6139fdeebf82f919bee13f1a729392a118ae658"
+    },
+    {
+      "ancestor": false,
+      "branch_only": 1,
+      "classification": "SUPERSEDED_DO_NOT_MERGE",
+      "name": "mission/master-homeostasis-publisher-r1",
+      "tip": "1712d16d2e0b5cdd82443a873c1007cf74042103"
+    }
+  ],
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "master": {
+    "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608"
+  },
+  "merge_state": "PENDING",
+  "open_prs": 0,
+  "publication_branch": "mission/epoch3-closure-docs-federation-r1",
+  "publication_state": "PENDING",
+  "remote_branch_count": 7,
+  "schema": "lion.epoch3.github-convergence/v1",
+  "terminal_target": [
+    "master"
+  ],
+  "write_transport_dry_run": "PASS_NO_EFFECT"
+}

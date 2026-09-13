@@ -1,0 +1,132 @@
+{
+  "schema": "lion.r10.federation-sync/v1",
+  "generated_at": "2026-09-12T23:42:09.775737+00:00",
+  "repositories": [
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "branch": "master",
+      "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+      "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "branch": "master",
+      "head": "b8657037e94787a103c99f1fbb3058341821ffd7",
+      "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "branch": "master",
+      "head": "329d670e53f3e4606f60eeb2f446eb34df3bb05d",
+      "tree": "653f7593e4c6f0478c2f85b48d3091d0faed7892",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "13ac2c760aa0c4f528addaacc782239c00e3890e",
+      "tree": "bc6c8a067074fead00b57d6c9f8f852f1fa74977",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "branch": "main",
+      "head": "569acad16f0ca8eb0c4e4522586914b57f5bf475",
+      "tree": "0c1f6d690a2bdae34f0ecd6c9afbb04933af220c",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "branch": "main",
+      "head": "0ad23c8a9fb9f942e41ade83ecafa8f393e5d481",
+      "tree": "ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "branch": "main",
+      "head": "86b92e9f7c3361d69e2322193441f4626f8205e7",
+      "tree": "8d7cc0e5b5025899d0889c4a5c17ac230681c4fb",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "branch": "master",
+      "head": "6aee0442d4b8a861989503ca55aac0c45f065afb",
+      "tree": "86830750c688e9e65d3eafc7232e89f20267c705",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "2fa3b9f8285387d8f14e116901a671c4fcb75174",
+      "tree": "9c3fc13abab6ac22631615ac4ac72085bd84ded9",
+      "currentness": "LIVE_REACQUIRED"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "branch": "master",
+      "head": "cadc3cdf59b1bf5a65917690e28e20deb776fb01",
+      "tree": "2456655b88e761364ffd4fa5439e878e2885481d",
+      "currentness": "LIVE_REACQUIRED"
+    }
+  ],
+  "local_clones": [
+    {
+      "host": "MOON-Windows",
+      "path": "C:/Users/d2j3/PycharmProjects/ai_platform",
+      "repo": "ai_platform",
+      "head": "473afeb5fcdc7b5dabac00cef617f8067b285a29",
+      "dirty": 24,
+      "action": "PRESERVE_DIRTY"
+    },
+    {
+      "host": "MOON-Windows",
+      "path": "C:/Users/d2j3/PycharmProjects/abstrakcyjnaSymulacjaKaskadySieciowej",
+      "repo": "SymulacjaKaskadySieciowej",
+      "head": "ee40d8ec5a095bf5cbd240546b543308dff9a116",
+      "dirty": 13,
+      "action": "PRESERVE_DIRTY"
+    },
+    {
+      "host": "MOON-Windows",
+      "path": "C:/Users/d2j3/PycharmProjects/writeups",
+      "repo": "writeups",
+      "head": "cadc3cdf59b1bf5a65917690e28e20deb776fb01",
+      "dirty": 0,
+      "action": "FAST_FORWARD_COMPLETED",
+      "before": "cb7e304512566f16ed11f1a659799ec79fa5f5f6",
+      "ahead_before": 0,
+      "behind_before": 2
+    },
+    {
+      "host": "MOON-Windows",
+      "path": "C:/Users/d2j3/Documents/Codex/2026-09-12/r10-local-intelligence/ai_platform",
+      "repo": "ai_platform",
+      "head": "c69eb0ed9b96389c06f6e434dc1189a2726a1e7c",
+      "action": "PRESERVE_ACTIVE_CANDIDATE"
+    },
+    {
+      "host": "LION-AUTH-LAB",
+      "repo": "ai_platform",
+      "action": "PRESERVE_HISTORICAL_AND_DIRTY",
+      "observed_checkouts": 7
+    },
+    {
+      "host": "LAB-DEBIAN",
+      "repo": "ai_platform",
+      "action": "PRESERVE_HISTORICAL_AND_DIRTY",
+      "observed_checkouts": 5
+    },
+    {
+      "host": "LAB-UBUNTU",
+      "repo": "federation",
+      "action": "NO_LOCAL_CLONES_OBSERVED"
+    }
+  ],
+  "remote_member_mutation": "NONE",
+  "local_data_loss": false,
+  "status": "PARTIAL_SYNC_COMPLETE_WITH_PRESERVATION"
+}

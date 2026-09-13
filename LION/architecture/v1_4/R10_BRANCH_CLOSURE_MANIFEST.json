@@ -1,0 +1,72 @@
+{
+  "schema": "lion.r10.branch-closure/v1",
+  "generated_at": "2026-09-12T23:42:09.775737+00:00",
+  "master": {
+    "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "original_expected_head": "c69eb0ed9b96389c06f6e434dc1189a2726a1e7c",
+    "tree_restored_exact": true,
+    "unexpected_mutation": true
+  },
+  "open_prs": 0,
+  "remote_branch_count": 7,
+  "branches": [
+    {
+      "name": "master",
+      "tip": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+      "classification": "KEEP"
+    },
+    {
+      "name": "mission/e02-offline-candidate-codeql24-r1",
+      "tip": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "classification": "ANCESTOR_DELETE_ELIGIBLE"
+    },
+    {
+      "name": "mission/master-homeostasis-publisher-r1",
+      "tip": "1712d16d2e0b5cdd82443a873c1007cf74042103",
+      "classification": "SUPERSEDED_DO_NOT_MERGE_DELETE_ELIGIBLE_AFTER_PRESERVATION"
+    },
+    {
+      "name": "mission/r7-1-convergence-r1",
+      "tip": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "classification": "TRANSITIVELY_ABSORBED_DELETE_ELIGIBLE"
+    },
+    {
+      "name": "mission/r7-artifactized-host-upgraded-r1",
+      "tip": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+      "classification": "ANCESTOR_DELETE_ELIGIBLE"
+    },
+    {
+      "name": "mission/r8-hybrid-m64-candidate-r2",
+      "tip": "79d6d91571e9c033c91a5e2427d22ae29287b8f3",
+      "classification": "ANCESTOR_DELETE_ELIGIBLE"
+    },
+    {
+      "name": "mission/r9-auth-lifecycle-candidate-r1",
+      "tip": "f6139fdeebf82f919bee13f1a729392a118ae658",
+      "classification": "ANCESTOR_DELETE_ELIGIBLE"
+    }
+  ],
+  "publisher_compare": {
+    "status": "diverged",
+    "ahead_by_master": 13,
+    "behind_by_master": 1,
+    "merge_base": "bf8e17f60e29f46b479fc488914725db00c0feb2"
+  },
+  "delete_authority": "AUTHORIZED_BY_LAUNCHED_LPCL",
+  "delete_execution": "BLOCKED_CONNECTOR_HAS_NO_DELETE_REF_OR_DELETE_BRANCH_ACTION",
+  "master_drift_incident": {
+    "cause": "assistant wrong GitHub connector action during reacquisition",
+    "original_tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "current_tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "content_tree_restored": true,
+    "head_not_restored_without_forbidden_force_reset": true,
+    "observed_commits": [
+      "3b1580810e86c37e7f610a975cb4faef29d3bc00",
+      "9bc3ffd8094518eb3851d1d863c8adee828e3022",
+      "ae59bbe20469ede530039b7c82cb1dcc5fc29ca2",
+      "2916b8ba171d86effb32b808a4e66c73a12b1662",
+      "849db8f5ea6434f5647ee072cd4835fd2264e078"
+    ]
+  }
+}

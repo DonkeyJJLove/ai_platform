@@ -561,3 +561,13 @@ READBACK
 +
 RECONCILIATION
 ```
+
+## R10 Local Intelligence candidate
+
+R10 materializuje lokalny, proposal-only intelligence gateway nad istniejącym R8 hybrid routing. Gateway nie jest drugim PDP ani RuntimeAdmissionEngine. Model `gpt-oss-20b-MXFP4` jest bieżąco obserwowany na MOON/RTX 5090 przez llama.cpp/Vulkan0. Narzędzia lokalnego modelu są zamkniętym zbiorem read-only/deterministic; push, merge, branch delete, shell, credentials, service-admin i runtime-authority są niedostępne. RAG pozostaje versioned knowledge i wymaga exact source identity; bieżący Git/runtime wymaga osobnego currentness readback.
+
+R10-R1 nie publikuje nowych SHA i nie zamyka zdalnych branch refs. Exact branch-closure manifest jest przygotowany w `LION/architecture/v1_4/R10_BRANCH_CLOSURE_MANIFEST.json`; publikacja/merge/delete należą do późniejszego exact R10-R2.
+
+## Epoch 3 LPCL/Mission Control integration
+
+The operator-facing entry point is `LION CONTROL LPCL PANEL` (`127.0.0.1:8780`). LPCL is validated and registered first; registration has authority `NONE`. Only explicit authorization of the exact LPCL text becomes the external activation event. `LION MISSION CONTROL` (`127.0.0.1:8766`) records focus, objective, phases, progress and typed protocol messages and exposes bounded mission adapters. The local GPT-OSS remains proposal-only and receives live mission state through the material read path `MAT04 -> MAT08/MAT10`; RAG remains non-live evidence and is currently deferred.

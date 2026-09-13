@@ -1,0 +1,22 @@
+{
+  "schema": "lion.r10.pod-fleet/v1",
+  "generated_at": "2026-09-12T23:42:09.775737+00:00",
+  "requested": 12,
+  "materialized": 0,
+  "cooperation_test": "NOT_RUN",
+  "status": "BLOCKED_K3S_ACTIVATION",
+  "evidence": {
+    "hosts_checked": [
+      "MOON",
+      "LION-AUTH-LAB",
+      "LAB-UBUNTU",
+      "LAB-DEBIAN"
+    ],
+    "shared_boot_id": "58008236-23d6-48d9-a501-7e13b2b8c7b6",
+    "k3s": "not-found/inactive",
+    "kubectl": "absent",
+    "installation_forbidden_by_lpcl": true
+  },
+  "physical_failure_domains_claimed": 1,
+  "authority_effect": "NONE"
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "lion.r10.web-boundary/v1",
+  "methods": [
+    "GET"
+  ],
+  "https_only": true,
+  "dns_public_validation": true,
+  "tcp_ip_pinning": true,
+  "tls_hostname_validation": true,
+  "redirect_revalidation": true,
+  "response_bound_bytes": 524288,
+  "trust_class": "UNTRUSTED_EXTERNAL_EVIDENCE",
+  "denied": [
+    "loopback",
+    "private",
+    "link-local",
+    "reserved",
+    "metadata",
+    "credentials",
+    "cookies",
+    "non-https",
+    "write-methods"
+  ],
+  "live_canary": "PASS_SEARCH_AND_FETCH",
+  "authority_effect": "NONE"
+}

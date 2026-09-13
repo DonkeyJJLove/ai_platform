@@ -1,0 +1,21 @@
+{
+  "authority_effect": "NONE_FOR_MODEL",
+  "embedded_model_ui": "LION Local Model",
+  "endpoint": "http://127.0.0.1:8780",
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "gpu": "NVIDIA GeForce RTX 5090 / Vulkan0",
+  "local_model_endpoint": "http://127.0.0.1:8772",
+  "lpcl_flow": [
+    "VALIDATE",
+    "REGISTER",
+    "EXPLICIT_AUTHORIZE"
+  ],
+  "mission_control_endpoint": "http://127.0.0.1:8766",
+  "mission_currentness_route": "MISSION_CONTROL_CURRENTNESS via MAT04 + validators",
+  "model_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+  "persistent_threads": true,
+  "product": "LION CONTROL LPCL PANEL",
+  "rag_status": "DEFERRED_NOT_LOADED",
+  "saas_capability": "UNAVAILABLE_NO_OFFICIAL_SESSION_BRIDGE",
+  "schema": "lion.epoch3.local-control-panel/v1"
+}

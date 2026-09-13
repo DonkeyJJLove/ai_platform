@@ -1,0 +1,34 @@
+{
+  "communication_rule": "messages are typed protocol records, not authority by themselves",
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+  "protocols": [
+    "LPCL",
+    "AUTHORITY",
+    "CURRENTNESS",
+    "ASSIGNMENT",
+    "HEARTBEAT",
+    "EVIDENCE",
+    "VALIDATION",
+    "RECEIPT",
+    "RECOVERY",
+    "GITHUB",
+    "HUMAN",
+    "CONTROL"
+  ],
+  "schema": "lion.epoch3.control-protocols/v1",
+  "semantics": {
+    "ASSIGNMENT": "logical-to-material work delegation",
+    "AUTHORITY": "external activation/current authority facts",
+    "CONTROL": "Mission Control bounded lifecycle effects",
+    "CURRENTNESS": "fresh identity and source observations",
+    "EVIDENCE": "source-bound evidence transfer",
+    "GITHUB": "repository collaboration and branch/PR state",
+    "HEARTBEAT": "liveness/material readiness",
+    "HUMAN": "explicit operator checkpoints/unsupported ambiguity",
+    "LPCL": "mission definition and registration",
+    "RECEIPT": "durable execution/control receipt",
+    "RECOVERY": "retry/reconcile/handoff",
+    "VALIDATION": "falsification and acceptance"
+  }
+}

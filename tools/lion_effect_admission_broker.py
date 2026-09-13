@@ -26,6 +26,7 @@ HOST_ID = "host_f78ddce3275144e4"
 SENTINEL_USER = "sentinelx"
 RUNNER_USER = "lion-maintenance-runner"
 PROVIDER_GROUP = "lion-docker-p0"
+TRUST_CLASS = "TEST_ONLY"
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
 REPO_URL = "https://github.com/DonkeyJJLove/ai_platform.git"
@@ -395,9 +396,9 @@ def precheck_scale64(head: str, tree: str) -> dict[str, Any]:
     clean=provider_current and container_count==0 and network_count==0
     return {"source_head":head,"source_tree":tree,"provider_source_head":provider_head,"provider_source_tree":provider_tree,"provider_current":provider_current,"docker_server_version":docker_version,"containers":containers,"networks":networks,"container_count":container_count,"network_count":network_count,"stale_resources":None if not provider_current else not clean,"clean_for_new_run":clean}
 
-def static_gate(repo: Path) -> None:
-    head=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD"],capture=True).stdout.decode().strip()
-    tree=run(["/usr/bin/git","-C",str(repo),"rev-parse","HEAD^{tree}"],capture=True).stdout.decode().strip()
+def static_gate(repo: Path, head: str, tree: str) -> None:
+    require_hex40(head, "static-gate-head")
+    require_hex40(tree, "static-gate-tree")
     runner_exec_call("STATIC_UNITTEST",repo=repo,head=head,tree=tree,timeout=300)
     runner_exec_call("STATIC_PYCOMPILE",repo=repo,head=head,tree=tree,timeout=90)
 
@@ -419,6 +420,9 @@ def refresh_provider(
 
     env = dict(os.environ)
     env["RESTART_RUNNER"] = "0"
+    env["GIT_CONFIG_COUNT"] = "1"
+    env["GIT_CONFIG_KEY_0"] = "safe.directory"
+    env["GIT_CONFIG_VALUE_0"] = str(repo)
 
     run(
         [
@@ -450,6 +454,8 @@ def install_fixed_source(
         FIXED_REPO,
         symlinks=True,
     )
+
+    os.chmod(FIXED_REPO, 0o755)
 
     git_dir = FIXED_REPO / ".git"
 
@@ -503,7 +509,7 @@ def prepare_scale64(
     workspace = repo.parent
 
     try:
-        static_gate(repo)
+        static_gate(repo, head, tree)
 
         refresh_provider(
             repo,
@@ -1203,6 +1209,450 @@ def reply(
     sys.stdout.buffer.flush()
 
 
+
+# ---- LION Mission64 bounded Kubernetes control extension -----------------
+MISSION64_ID = "LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3"
+MISSION64_NAMESPACE = "lion-mission64-r4-preflight"
+MISSION64_K3S_BIN = Path("/opt/lion/k3s/k3s")
+MISSION64_K3S_UNIT = "lion-k3s-vkt-r3.service"
+MISSION64_KUBECONFIG = Path("/var/lib/lion-effect-admission/vkt-r3-k3s/kubeconfig.yaml")
+MISSION64_K3S_SHA256 = "835873f37245fc615f547a2fe2af9402a347875f13fa64a1f136de644955ea3f"
+MISSION64_IMAGE = "python@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254"
+MISSION64_LOGICAL = (
+    ("LD01","MISSION_PLANNER",6),
+    ("LD02","AUTHORITY_CURRENTNESS",6),
+    ("LD03","REPOSITORY_CURRENTNESS",6),
+    ("LD04","LOCAL_MODEL_ROUTER",6),
+    ("LD05","SAAS_DELEGATION",5),
+    ("LD06","DETERMINISTIC_EXECUTION",5),
+    ("LD07","WEB_EVIDENCE",5),
+    ("LD08","MATERIAL_SCHEDULER",5),
+    ("LD09","SECURITY_FALSIFIER",5),
+    ("LD10","VALIDATION",5),
+    ("LD11","RECOVERY",5),
+    ("LD12","RECONCILIATION",5),
+)
+MISSION64_STATE = STATE_ROOT / "mission64"
+MISSION64_MASTER_REPO = "https://github.com/DonkeyJJLove/ai_platform.git"
+MISSION64_MASTER_BRANCH = "master"
+
+
+def mission64_spec() -> dict[str, Any]:
+    value={
+        "schema_version":"1.0.0",
+        "mission_id":MISSION64_ID,
+        "namespace":MISSION64_NAMESPACE,
+        "logical_drones":[{"id":i,"role":r,"replicas":n} for i,r,n in MISSION64_LOGICAL],
+        "logical_drone_count":12,
+        "material_pod_count":64,
+        "image":MISSION64_IMAGE,
+        "network":"DENY_ALL",
+        "authority_effect":"BOUNDED_MISSION_CONTROL",
+    }
+    value["spec_digest"]=sha256(canonical(value))
+    return value
+
+
+def mission64_require_envelope(request: dict[str,Any], *, worker: bool=False) -> tuple[str,str,str]:
+    expected={"schema_version","request_id","operation","mission_id","source_head","source_tree","spec_digest"}
+    if worker: expected.add("pod_name")
+    if set(request)!=expected: raise Deny("MISSION64_FIELD_SET")
+    if request.get("mission_id")!=MISSION64_ID: raise Deny("MISSION64_ID_MISMATCH")
+    spec=mission64_spec()
+    if request.get("spec_digest")!=spec["spec_digest"]: raise Deny("MISSION64_SPEC_DIGEST_MISMATCH")
+    head=require_hex40(request.get("source_head"),"source_head")
+    tree=require_hex40(request.get("source_tree"),"source_tree")
+    return head,tree,spec["spec_digest"]
+
+
+def mission64_git_identity() -> tuple[str,str]:
+    td=Path(tempfile.mkdtemp(prefix="lion-mission64-currentness-"))
+    try:
+        run(["/usr/bin/git","init",str(td)],timeout=30)
+        run(["/usr/bin/git","-C",str(td),"remote","add","origin",MISSION64_MASTER_REPO],timeout=30)
+        run(["/usr/bin/git","-C",str(td),"fetch","--no-tags","--depth=1","origin",f"refs/heads/{MISSION64_MASTER_BRANCH}"],timeout=180)
+        head=run(["/usr/bin/git","-C",str(td),"rev-parse","FETCH_HEAD"],capture=True,timeout=30).stdout.decode().strip()
+        tree=run(["/usr/bin/git","-C",str(td),"rev-parse","FETCH_HEAD^{tree}"],capture=True,timeout=30).stdout.decode().strip()
+        return require_hex40(head,"mission64-live-head"),require_hex40(tree,"mission64-live-tree")
+    finally:
+        shutil.rmtree(td,ignore_errors=True)
+
+
+def mission64_verify_current(head:str,tree:str)->None:
+    live_h,live_t=mission64_git_identity()
+    if live_h!=head or live_t!=tree: raise Deny("MISSION64_LIVE_SOURCE_DRIFT:"+live_h+":"+live_t)
+
+
+def mission64_k3s_state()->dict[str,Any]:
+    exists=MISSION64_K3S_BIN.is_file()
+    digest=sha256_file(MISSION64_K3S_BIN) if exists else None
+    if not exists or digest!=MISSION64_K3S_SHA256: raise Deny("MISSION64_K3S_IDENTITY_MISMATCH")
+    active=subprocess.run(["/bin/systemctl","is-active","--quiet",MISSION64_K3S_UNIT],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=False).returncode==0
+    return {"exists":exists,"sha256":digest,"service_active":active,"kubeconfig_exists":MISSION64_KUBECONFIG.is_file()}
+
+
+def mission64_kubectl(args:list[str], *, payload:bytes|None=None, timeout:int=120, check:bool=True)->subprocess.CompletedProcess[bytes]:
+    if not MISSION64_KUBECONFIG.is_file(): raise Deny("MISSION64_KUBECONFIG_MISSING")
+    argv=[str(MISSION64_K3S_BIN),"kubectl","--kubeconfig",str(MISSION64_KUBECONFIG),*args]
+    kwargs={"stdout":subprocess.PIPE,"stderr":subprocess.PIPE,"shell":False,"check":False,"timeout":timeout,"env":{"PATH":"/usr/sbin:/usr/bin:/sbin:/bin","LANG":"C.UTF-8","LC_ALL":"C.UTF-8"}}
+    if payload is None: kwargs["stdin"]=subprocess.DEVNULL
+    else: kwargs["input"]=payload
+    proc=subprocess.run(argv,**kwargs)
+    if check and proc.returncode!=0: raise Deny("MISSION64_KUBECTL_FAILED:"+(proc.stderr or proc.stdout).decode("utf-8","replace")[-2000:])
+    return proc
+
+
+def mission64_wait_k3s(timeout:float=120)->None:
+    end=datetime.now(timezone.utc).timestamp()+timeout
+    last=""
+    while datetime.now(timezone.utc).timestamp()<end:
+        state=mission64_k3s_state()
+        if state["service_active"] and state["kubeconfig_exists"]:
+            p=mission64_kubectl(["get","nodes","-o","json"],timeout=15,check=False)
+            if p.returncode==0:
+                try:
+                    data=json.loads(p.stdout.decode())
+                    if any(any(c.get("type")=="Ready" and c.get("status")=="True" for c in (x.get("status",{}).get("conditions") or [])) for x in data.get("items",[])): return
+                except Exception as exc: last=str(exc)
+            else: last=(p.stderr or p.stdout).decode("utf-8","replace")[-1000:]
+        import time as _time; _time.sleep(2)
+    raise Deny("MISSION64_K3S_NOT_READY:"+last)
+
+
+def mission64_start_k3s()->None:
+    state=mission64_k3s_state()
+    if not state["service_active"]:
+        proc=subprocess.run(["/bin/systemctl","start",MISSION64_K3S_UNIT],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=False,check=False,timeout=60)
+        if proc.returncode!=0: raise Deny("MISSION64_K3S_START_FAILED:"+(proc.stderr or proc.stdout).decode("utf-8","replace")[-2000:])
+    mission64_wait_k3s()
+
+
+def mission64_manifest()->dict[str,Any]:
+    spec=mission64_spec(); docs=[]
+    labels={"lion.openai/mission":MISSION64_ID.lower(),"lion.openai/spec":spec["spec_digest"][:16]}
+    docs.append({"apiVersion":"v1","kind":"Namespace","metadata":{"name":MISSION64_NAMESPACE,"labels":labels}})
+    for logical_id,role,replicas in MISSION64_LOGICAL:
+        name=logical_id.lower()+"-worker"
+        plabels={**labels,"app":name,"component":"material-drone","logical-drone":logical_id.lower()}
+        docs.append({
+            "apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":name,"namespace":MISSION64_NAMESPACE,"labels":plabels},
+            "spec":{"replicas":replicas,"selector":{"matchLabels":{"app":name}},"strategy":{"type":"RollingUpdate","rollingUpdate":{"maxUnavailable":1,"maxSurge":1}},"template":{
+                "metadata":{"labels":plabels},
+                "spec":{"automountServiceAccountToken":False,"terminationGracePeriodSeconds":3,"securityContext":{"runAsNonRoot":True,"runAsUser":1000,"runAsGroup":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{
+                    "name":"drone","image":MISSION64_IMAGE,"imagePullPolicy":"IfNotPresent","command":["/bin/sh","-ec","echo MISSION=$MISSION_ID LOGICAL=$LOGICAL_DRONE ROLE=$LOGICAL_ROLE POD=$POD_NAME; while true; do sleep 3600; done"],
+                    "env":[{"name":"MISSION_ID","value":MISSION64_ID},{"name":"LOGICAL_DRONE","value":logical_id},{"name":"LOGICAL_ROLE","value":role},{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"POD_UID","valueFrom":{"fieldRef":{"fieldPath":"metadata.uid"}}}],
+                    "resources":{"requests":{"cpu":"1m","memory":"8Mi"},"limits":{"cpu":"50m","memory":"32Mi"}},
+                    "securityContext":{"allowPrivilegeEscalation":False,"readOnlyRootFilesystem":True,"runAsNonRoot":True,"runAsUser":1000,"capabilities":{"drop":["ALL"]}}
+                }]}
+            }}
+        })
+    docs.append({"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"name":"deny-all","namespace":MISSION64_NAMESPACE},"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[],"egress":[]}})
+    return {"apiVersion":"v1","kind":"List","items":docs}
+
+
+def mission64_validate_manifest(value:dict[str,Any])->None:
+    if value.get("kind")!="List" or type(value.get("items")) is not list: raise Deny("MISSION64_MANIFEST_SHAPE")
+    deps=[x for x in value["items"] if x.get("kind")=="Deployment"]
+    if len(deps)!=12 or sum(int(x.get("spec",{}).get("replicas",-1)) for x in deps)!=64: raise Deny("MISSION64_CARDINALITY")
+    if [int(x["spec"]["replicas"]) for x in deps] != [x[2] for x in MISSION64_LOGICAL]: raise Deny("MISSION64_DISTRIBUTION")
+    for doc in deps:
+        ps=doc["spec"]["template"]["spec"]
+        if ps.get("automountServiceAccountToken") is not False: raise Deny("MISSION64_SERVICE_ACCOUNT")
+        for forbidden in ("hostNetwork","hostPID","hostIPC"):
+            if ps.get(forbidden) is True: raise Deny("MISSION64_HOST_NAMESPACE")
+        for vol in ps.get("volumes",[]) or []:
+            if "hostPath" in vol: raise Deny("MISSION64_HOSTPATH")
+        for c in ps.get("containers",[]):
+            if c.get("image")!=MISSION64_IMAGE: raise Deny("MISSION64_IMAGE")
+            sc=c.get("securityContext") or {}
+            if sc.get("allowPrivilegeEscalation") is not False or sc.get("readOnlyRootFilesystem") is not True or sc.get("runAsNonRoot") is not True or (sc.get("capabilities") or {}).get("drop") != ["ALL"]: raise Deny("MISSION64_SECURITY_CONTEXT")
+    nps=[x for x in value["items"] if x.get("kind")=="NetworkPolicy"]
+    if len(nps)!=1 or nps[0].get("spec",{}).get("egress")!=[] or nps[0].get("spec",{}).get("ingress")!=[]: raise Deny("MISSION64_NETWORK_POLICY")
+
+
+def mission64_apply()->str:
+    manifest=mission64_manifest(); mission64_validate_manifest(manifest)
+    raw=canonical(manifest)
+    mission64_kubectl(["apply","-f","-"],payload=raw,timeout=180)
+    return sha256(raw)
+
+
+def mission64_pod_rows()->list[dict[str,Any]]:
+    p=mission64_kubectl(["get","pods","-n",MISSION64_NAMESPACE,"-l","component=material-drone","-o","json"],timeout=30,check=False)
+    if p.returncode!=0:
+        text=(p.stderr or p.stdout).decode("utf-8","replace").lower()
+        if "notfound" in text or "not found" in text:return []
+        raise Deny("MISSION64_POD_READ:"+text[-1200:])
+    data=json.loads(p.stdout.decode())
+    rows=[]
+    for x in data.get("items",[]):
+        meta=x.get("metadata") or {}; st=x.get("status") or {}; labels=meta.get("labels") or {}
+        if labels.get("component")!="material-drone":continue
+        ready=any(c.get("type")=="Ready" and c.get("status")=="True" for c in st.get("conditions",[]) or [])
+        rows.append({"name":meta.get("name"),"uid":meta.get("uid"),"logical_drone":labels.get("logical-drone"),"phase":st.get("phase"),"ready":ready,"pod_ip":st.get("podIP"),"restarts":sum(int(c.get("restartCount",0) or 0) for c in st.get("containerStatuses",[]) or [])})
+    return sorted(rows,key=lambda r:r["name"] or "")
+
+
+def mission64_deployment_state()->list[dict[str,Any]]:
+    p=mission64_kubectl(["get","deployments","-n",MISSION64_NAMESPACE,"-o","json"],timeout=30,check=False)
+    if p.returncode!=0:return []
+    data=json.loads(p.stdout.decode()); out=[]
+    for x in data.get("items",[]):
+        m=x.get("metadata") or {}; s=x.get("spec") or {}; st=x.get("status") or {}; labels=m.get("labels") or {}
+        if labels.get("component")!="material-drone":continue
+        out.append({"name":m.get("name"),"logical_drone":labels.get("logical-drone"),"desired":int(s.get("replicas",0) or 0),"ready":int(st.get("readyReplicas",0) or 0),"available":int(st.get("availableReplicas",0) or 0)})
+    return sorted(out,key=lambda r:r["name"] or "")
+
+
+def mission64_read()->dict[str,Any]:
+    spec=mission64_spec(); ks=mission64_k3s_state()
+    if not ks["service_active"] or not ks["kubeconfig_exists"]:
+        return {"mission_id":MISSION64_ID,"spec_digest":spec["spec_digest"],"state":"K3S_NOT_RUNNING","logical_drones":12,"materialized":0,"ready":0,"pods":[],"deployments":[],"k3s":ks}
+    ns=mission64_kubectl(["get","namespace",MISSION64_NAMESPACE,"-o","json"],timeout=15,check=False)
+    if ns.returncode!=0:
+        return {"mission_id":MISSION64_ID,"spec_digest":spec["spec_digest"],"state":"ABSENT","logical_drones":12,"materialized":0,"ready":0,"pods":[],"deployments":[],"k3s":ks}
+    pods=mission64_pod_rows(); deps=mission64_deployment_state(); ready=sum(1 for x in pods if x["ready"]); desired=sum(x["desired"] for x in deps)
+    state="RUNNING" if len(pods)==64 and ready==64 and desired==64 else ("PAUSED" if desired==0 and len(pods)==0 else "CONVERGING")
+    by={i.lower():{"role":r,"expected":n,"materialized":0,"ready":0} for i,r,n in MISSION64_LOGICAL}
+    for row in pods:
+        if row["logical_drone"] in by:
+            by[row["logical_drone"]]["materialized"]+=1;by[row["logical_drone"]]["ready"]+=1 if row["ready"] else 0
+    return {"mission_id":MISSION64_ID,"spec_digest":spec["spec_digest"],"state":state,"logical_drones":12,"materialized":len(pods),"ready":ready,"unique_uid_count":len({x["uid"] for x in pods if x.get("uid")}),"desired":desired,"by_logical":by,"pods":pods,"deployments":deps,"k3s":ks}
+
+
+def mission64_wait(expected_ready:int, expected_pods:int, timeout:float=180)->dict[str,Any]:
+    import time as _time
+    end=_time.time()+timeout; last=None
+    while _time.time()<end:
+        last=mission64_read()
+        if last.get("ready")==expected_ready and last.get("materialized")==expected_pods:return last
+        _time.sleep(2)
+    raise Deny("MISSION64_CONVERGENCE_TIMEOUT:"+json.dumps({k:last.get(k) for k in ("state","materialized","ready","desired")} if last else {}))
+
+
+def mission64_receipt(request:dict[str,Any],result:dict[str,Any])->dict[str,Any]:
+    payload={"schema_version":"1.0.0","timestamp":now(),"request_id":request["request_id"],"operation":request["operation"],"mission_id":MISSION64_ID,"spec_digest":mission64_spec()["spec_digest"],"source_head":request.get("source_head"),"source_tree":request.get("source_tree"),"result_digest":sha256(canonical(result)),"authority":"EXPLICIT_USER_AUTHORIZED_MISSION"}
+    payload["receipt_digest"]=sha256(canonical(payload))
+    path=MISSION64_STATE/"receipts"/(request["request_id"]+".json");atomic_json(path,payload)
+    return {"control_receipt":payload}
+
+
+def mission64_validate_execution()->dict[str,Any]:
+ runtime=mission64_read()
+ if runtime.get("state")!="RUNNING" or runtime.get("ready")!=64 or runtime.get("unique_uid_count")!=64:raise Deny("MISSION64_VALIDATE_NOT_READY")
+ roles={i.lower():r for i,r,_ in MISSION64_LOGICAL};rows=[];fail=[]
+ for pod in runtime.get("pods",[]):
+  name=pod.get("name");lid=pod.get("logical_drone");role=roles.get(lid)
+  if not name or not role:fail.append({"pod":name,"reason":"logical-role"});continue
+  p=mission64_kubectl(["logs",name,"-n",MISSION64_NAMESPACE,"--tail=10"],timeout=15,check=False)
+  text=(p.stdout if p.returncode==0 else p.stderr).decode("utf-8","replace")[-4096:]
+  expected=f"MISSION={MISSION64_ID} LOGICAL={lid.upper()} ROLE={role} POD={name}"
+  ok=p.returncode==0 and expected in text
+  row={"pod":name,"uid":pod.get("uid"),"logical_drone":lid.upper(),"role":role,"receipt_line_sha256":sha256(expected.encode()),"ok":ok};rows.append(row)
+  if not ok:fail.append({"pod":name,"reason":"execution-line-mismatch","tail":text[-300:]})
+ if fail:raise Deny("MISSION64_EXECUTION_VALIDATION_FAILED:"+json.dumps(fail[:5],ensure_ascii=False))
+ return {"mission_id":MISSION64_ID,"validated_pods":len(rows),"logical_drones":12,"ready":64,"unique_uid_count":64,"execution_digest":sha256(canonical(rows)),"rows":rows,"authority_effect":"NONE"}
+
+def mission64_handle(request:dict[str,Any])->dict[str,Any]:
+    op=request["operation"]; worker=op=="MISSION64_RESTART_ONE";head,tree,_=mission64_require_envelope(request,worker=worker)
+    if op in {"MISSION64_START","MISSION64_RESUME"}: mission64_verify_current(head,tree)
+    if op=="MISSION64_PRECHECK": result={"source_head":head,"source_tree":tree,"spec":mission64_spec(),"k3s":mission64_k3s_state(),"runtime":mission64_read()}
+    elif op=="MISSION64_START":
+        mission64_start_k3s(); before=mission64_read()
+        if before["state"] not in {"ABSENT","PAUSED","CONVERGING"}: raise Deny("MISSION64_START_STATE:"+before["state"])
+        manifest_sha=mission64_apply(); result=mission64_wait(64,64);result["manifest_sha256"]=manifest_sha
+    elif op=="MISSION64_READ": result=mission64_read()
+    elif op=="MISSION64_PAUSE":
+        if mission64_read()["state"] not in {"RUNNING","CONVERGING"}: raise Deny("MISSION64_PAUSE_STATE")
+        for i,_,_ in MISSION64_LOGICAL: mission64_kubectl(["scale","deployment",i.lower()+"-worker","-n",MISSION64_NAMESPACE,"--replicas=0"],timeout=30)
+        result=mission64_wait(0,0)
+    elif op=="MISSION64_RESUME":
+        before=mission64_read()
+        if before["state"] not in {"PAUSED","CONVERGING"}: raise Deny("MISSION64_RESUME_STATE:"+before["state"])
+        for i,_,n in MISSION64_LOGICAL: mission64_kubectl(["scale","deployment",i.lower()+"-worker","-n",MISSION64_NAMESPACE,f"--replicas={n}"],timeout=30)
+        result=mission64_wait(64,64)
+    elif op=="MISSION64_RESTART_ONE":
+        before=mission64_read();name=request.get("pod_name")
+        row=next((x for x in before.get("pods",[]) if x.get("name")==name),None)
+        if row is None or not re.fullmatch(r"ld(?:0[1-9]|1[0-2])-worker-[a-z0-9-]+",str(name)): raise Deny("MISSION64_POD_NAME_DENIED")
+        old_uid=row["uid"];mission64_kubectl(["delete","pod",name,"-n",MISSION64_NAMESPACE,"--wait=false"],timeout=30)
+        result=mission64_wait(64,64)
+        if any(x.get("uid")==old_uid for x in result["pods"]): raise Deny("MISSION64_RESTART_UID_UNCHANGED")
+        result["restarted_pod"]=name;result["old_uid"]=old_uid
+    elif op=="MISSION64_VALIDATE": result=mission64_validate_execution()
+    elif op=="MISSION64_STOP":
+        mission64_kubectl(["delete","namespace",MISSION64_NAMESPACE,"--ignore-not-found=true","--wait=true","--timeout=120s"],timeout=140)
+        result=mission64_read()
+        if result["state"]!="ABSENT": raise Deny("MISSION64_STOP_NOT_ABSENT")
+    else: raise Deny("MISSION64_OPERATION_UNREACHABLE")
+    result.update(mission64_receipt(request,result));return result
+# ---- end Mission64 extension ----------------------------------------------
+
+
+
+# ---- Epoch3 Closure exact mission-scoped Kubernetes materializer ---------
+E3_ID="EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1"
+E3_NAMESPACE="lion-epoch3-closure-r1"
+E3_LPCL_DIGEST="be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951"
+E3_LOGICAL=(
+ ("LD01","MISSION_PLANNER",6),("LD02","AUTHORITY_CURRENTNESS",6),("LD03","FEDERATION_CURRENTNESS",6),("LD04","GITHUB_LINEAGE_AND_BRANCH",6),
+ ("LD05","ARCHITECTURE_DOCUMENTATION",5),("LD06","SOURCE_PROVENANCE",5),("LD07","LOCAL_MODEL_DELEGATION",5),("LD08","MATERIAL_SCHEDULER",5),
+ ("LD09","SECURITY_FALSIFIER",5),("LD10","VALIDATION",5),("LD11","PUBLICATION_AND_RECOVERY",5),("LD12","RECONCILIATION_AND_CARRIER",5),
+)
+E3_STATE=STATE_ROOT/"epoch3-closure-r1"
+
+def e3_spec():
+ v={"schema_version":"1.0.0","mission_id":E3_ID,"namespace":E3_NAMESPACE,"lpcl_digest":E3_LPCL_DIGEST,
+    "logical_drones":[{"id":i,"role":r,"replicas":n} for i,r,n in E3_LOGICAL],"logical_drone_count":12,"material_pod_count":64,
+    "image":MISSION64_IMAGE,"network":"DENY_ALL","authority_effect":"MISSION_SCOPED_K3S"}
+ v["material_spec_digest"]=sha256(canonical(v));return v
+
+def e3_require(request,worker=False):
+ exp={"schema_version","request_id","operation","mission_id","source_head","source_tree","spec_digest"}
+ if worker: exp.add("pod_name")
+ if set(request)!=exp: raise Deny("E3_FIELD_SET")
+ if request.get("mission_id")!=E3_ID: raise Deny("E3_ID_MISMATCH")
+ if request.get("spec_digest")!=E3_LPCL_DIGEST: raise Deny("E3_LPCL_DIGEST_MISMATCH")
+ return require_hex40(request.get("source_head"),"source_head"),require_hex40(request.get("source_tree"),"source_tree")
+
+def e3_manifest():
+ docs=[];labels={"lion.openai/epoch3":"true","lion.openai/spec":E3_LPCL_DIGEST[:16]}
+ docs.append({"apiVersion":"v1","kind":"Namespace","metadata":{"name":E3_NAMESPACE,"labels":labels}})
+ for lid,role,repl in E3_LOGICAL:
+  name="e3-"+lid.lower()+"-worker";pl={**labels,"app":name,"component":"epoch3-material-drone","logical-drone":lid.lower()}
+  docs.append({"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":name,"namespace":E3_NAMESPACE,"labels":pl},"spec":{"replicas":repl,"selector":{"matchLabels":{"app":name}},"strategy":{"type":"RollingUpdate","rollingUpdate":{"maxUnavailable":1,"maxSurge":1}},"template":{"metadata":{"labels":pl},"spec":{"automountServiceAccountToken":False,"terminationGracePeriodSeconds":3,"securityContext":{"runAsNonRoot":True,"runAsUser":1000,"runAsGroup":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"drone","image":MISSION64_IMAGE,"imagePullPolicy":"IfNotPresent","command":["/bin/sh","-ec","echo MISSION=$MISSION_ID LOGICAL=$LOGICAL_DRONE ROLE=$LOGICAL_ROLE POD=$POD_NAME; while true; do sleep 3600; done"],"env":[{"name":"MISSION_ID","value":E3_ID},{"name":"LOGICAL_DRONE","value":lid},{"name":"LOGICAL_ROLE","value":role},{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}}],"resources":{"requests":{"cpu":"1m","memory":"8Mi"},"limits":{"cpu":"50m","memory":"32Mi"}},"securityContext":{"allowPrivilegeEscalation":False,"readOnlyRootFilesystem":True,"runAsNonRoot":True,"runAsUser":1000,"capabilities":{"drop":["ALL"]}}}]}}}})
+ docs.append({"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"name":"deny-all","namespace":E3_NAMESPACE},"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[],"egress":[]}})
+ return {"apiVersion":"v1","kind":"List","items":docs}
+
+def e3_validate_manifest(v):
+ deps=[x for x in v.get("items",[]) if x.get("kind")=="Deployment"]
+ if len(deps)!=12 or sum(int(x["spec"]["replicas"]) for x in deps)!=64: raise Deny("E3_CARDINALITY")
+ if [int(x["spec"]["replicas"]) for x in deps] != [x[2] for x in E3_LOGICAL]: raise Deny("E3_DISTRIBUTION")
+ for d in deps:
+  ps=d["spec"]["template"]["spec"]
+  if ps.get("automountServiceAccountToken") is not False: raise Deny("E3_SERVICE_ACCOUNT")
+  for forbidden in ("hostNetwork","hostPID","hostIPC"):
+   if ps.get(forbidden) is True: raise Deny("E3_HOST_NAMESPACE")
+  for vol in ps.get("volumes",[]) or []:
+   if "hostPath" in vol: raise Deny("E3_HOSTPATH")
+  c=ps["containers"][0];sc=c.get("securityContext") or {}
+  if c.get("image")!=MISSION64_IMAGE or sc.get("allowPrivilegeEscalation") is not False or sc.get("readOnlyRootFilesystem") is not True or sc.get("runAsNonRoot") is not True or (sc.get("capabilities") or {}).get("drop") != ["ALL"]: raise Deny("E3_SECURITY")
+ nps=[x for x in v.get("items",[]) if x.get("kind")=="NetworkPolicy"]
+ if len(nps)!=1 or nps[0]["spec"].get("ingress")!=[] or nps[0]["spec"].get("egress")!=[]: raise Deny("E3_NETWORK")
+
+def e3_rows():
+ p=mission64_kubectl(["get","pods","-n",E3_NAMESPACE,"-l","component=epoch3-material-drone","-o","json"],timeout=30,check=False)
+ if p.returncode!=0:
+  t=(p.stderr or p.stdout).decode("utf-8","replace").lower()
+  if "not found" in t or "notfound" in t:return []
+  raise Deny("E3_POD_READ:"+t[-1200:])
+ data=json.loads(p.stdout.decode());out=[]
+ for x in data.get("items",[]):
+  m=x.get("metadata") or {};st=x.get("status") or {};lab=m.get("labels") or {};ready=any(c.get("type")=="Ready" and c.get("status")=="True" for c in st.get("conditions",[]) or [])
+  out.append({"name":m.get("name"),"uid":m.get("uid"),"logical_drone":lab.get("logical-drone"),"phase":st.get("phase"),"ready":ready,"pod_ip":st.get("podIP"),"restarts":sum(int(c.get("restartCount",0) or 0) for c in st.get("containerStatuses",[]) or [])})
+ return sorted(out,key=lambda x:x.get("name") or "")
+
+def e3_read():
+ ks=mission64_k3s_state()
+ if not ks["service_active"] or not ks["kubeconfig_exists"]: return {"mission_id":E3_ID,"spec_digest":E3_LPCL_DIGEST,"state":"K3S_NOT_RUNNING","logical_drones":12,"materialized":0,"ready":0,"pods":[],"k3s":ks}
+ ns=mission64_kubectl(["get","namespace",E3_NAMESPACE,"-o","json"],timeout=15,check=False)
+ if ns.returncode!=0:return {"mission_id":E3_ID,"spec_digest":E3_LPCL_DIGEST,"state":"ABSENT","logical_drones":12,"materialized":0,"ready":0,"pods":[],"k3s":ks}
+ pods=e3_rows();ready=sum(1 for x in pods if x["ready"]);state="RUNNING" if len(pods)==64 and ready==64 else "CONVERGING"
+ return {"mission_id":E3_ID,"spec_digest":E3_LPCL_DIGEST,"material_spec_digest":e3_spec()["material_spec_digest"],"state":state,"logical_drones":12,"materialized":len(pods),"ready":ready,"unique_uid_count":len({x['uid'] for x in pods if x.get('uid')}),"pods":pods,"k3s":ks}
+
+def e3_wait(timeout=180):
+ import time as _time;end=_time.time()+timeout;last=None
+ while _time.time()<end:
+  last=e3_read()
+  if last.get("materialized")==64 and last.get("ready")==64:return last
+  _time.sleep(2)
+ raise Deny("E3_CONVERGENCE_TIMEOUT:"+json.dumps(last or {}))
+
+def e3_receipt(req,res):
+ payload={"schema_version":"1.0.0","timestamp":now(),"request_id":req["request_id"],"operation":req["operation"],"mission_id":E3_ID,"lpcl_digest":E3_LPCL_DIGEST,"source_head":req.get("source_head"),"source_tree":req.get("source_tree"),"result_digest":sha256(canonical(res)),"authority":"EXPLICIT_UI_ACTIVATION"};payload["receipt_digest"]=sha256(canonical(payload));atomic_json(E3_STATE/"receipts"/(req["request_id"]+".json"),payload);return {"control_receipt":payload}
+
+def e3_validate_execution():
+ runtime=e3_read()
+ if runtime.get("state")!="RUNNING" or runtime.get("ready")!=64 or runtime.get("unique_uid_count")!=64:raise Deny("E3_VALIDATE_NOT_READY")
+ roles={i.lower():r for i,r,_ in E3_LOGICAL};rows=[];fails=[]
+ for pod in runtime["pods"]:
+  name=pod["name"];lid=pod["logical_drone"];role=roles.get(lid);p=mission64_kubectl(["logs",name,"-n",E3_NAMESPACE,"--tail=10"],timeout=15,check=False);text=(p.stdout if p.returncode==0 else p.stderr).decode("utf-8","replace")[-4096:];expected=f"MISSION={E3_ID} LOGICAL={lid.upper()} ROLE={role} POD={name}";ok=p.returncode==0 and expected in text;rows.append({"pod":name,"uid":pod.get("uid"),"logical_drone":lid.upper(),"role":role,"receipt_line_sha256":sha256(expected.encode()),"ok":ok});
+  if not ok:fails.append({"pod":name,"tail":text[-300:]})
+ if fails:raise Deny("E3_EXECUTION_VALIDATION_FAILED:"+json.dumps(fails[:5]))
+ return {"mission_id":E3_ID,"validated_pods":64,"logical_drones":12,"ready":64,"unique_uid_count":64,"execution_digest":sha256(canonical(rows)),"rows":rows,"authority_effect":"NONE"}
+
+def e3_handle(req):
+ op=req["operation"];head,tree=e3_require(req,worker=op=="EPOCH3_M64_RESTART_ONE")
+ if op in {"EPOCH3_M64_START"}:mission64_verify_current(head,tree)
+ if op=="EPOCH3_M64_PRECHECK":res={"source_head":head,"source_tree":tree,"spec":e3_spec(),"k3s":mission64_k3s_state(),"runtime":e3_read()}
+ elif op=="EPOCH3_M64_START":
+  mission64_start_k3s();before=e3_read()
+  if before["state"]=="RUNNING":res=before;res["idempotent"]=True
+  else:
+   manifest=e3_manifest();e3_validate_manifest(manifest);raw=canonical(manifest);mission64_kubectl(["apply","-f","-"],payload=raw,timeout=180);res=e3_wait();res["manifest_sha256"]=sha256(raw)
+ elif op=="EPOCH3_M64_READ":res=e3_read()
+ elif op=="EPOCH3_M64_RESTART_ONE":
+  before=e3_read();name=req.get("pod_name");row=next((x for x in before.get("pods",[]) if x.get("name")==name),None)
+  if row is None or not re.fullmatch(r"e3-ld(?:0[1-9]|1[0-2])-worker-[a-z0-9-]+",str(name)):raise Deny("E3_POD_NAME_DENIED")
+  old=row["uid"];mission64_kubectl(["delete","pod",name,"-n",E3_NAMESPACE,"--wait=false"],timeout=30);res=e3_wait();
+  if any(x.get("uid")==old for x in res["pods"]):raise Deny("E3_RESTART_UID_UNCHANGED")
+  res["restarted_pod"]=name;res["old_uid"]=old
+ elif op=="EPOCH3_M64_VALIDATE":res=e3_validate_execution()
+ elif op=="EPOCH3_M64_STOP":
+  mission64_kubectl(["delete","namespace",E3_NAMESPACE,"--ignore-not-found=true","--wait=true","--timeout=120s"],timeout=140);res=e3_read()
+  if res["state"]!="ABSENT":raise Deny("E3_STOP_NOT_ABSENT")
+ else:raise Deny("E3_OPERATION_UNREACHABLE")
+ res.update(e3_receipt(req,res));return res
+# ---- end Epoch3 materializer ---------------------------------------------
+
+
+
+MISSION_CONTROL_V3_PATH=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3/mission_control_v3.py")
+MISSION_CONTROL_V3_SHA256="51bf76d74f1d437537647188b6d164a97c8d33094eee8c62fa224d469b6255bc"
+MISSION_CONTROL_V3_DROPIN=Path("/etc/systemd/system/lion-mission-control.service.d/99-v3-control.conf")
+MISSION_CONTROL_V3_LOCATOR=Path("/run/lion-mission-control/listen.json")
+MISSION_CONTROL_V3_UNIT="lion-mission-control.service"
+MISSION_CONTROL_V3_DROPIN_TEXT='''[Service]
+WorkingDirectory=/var/lib/sentinelx/uploads/lion-mission-control-v3
+Environment="PYTHONPATH=/var/lib/sentinelx/uploads/lion-mission-control-v3"
+ExecStart=
+ExecStart=/usr/bin/python3 /var/lib/sentinelx/uploads/lion-mission-control-v3/mission_control_v3.py --host 127.0.0.1 --port 8766 --listen-state /run/lion-mission-control/listen.json --legacy-listen-state /run/lion-vkt-mission-control/listen.json
+InaccessiblePaths=
+InaccessiblePaths=-/run/lion-vkt-effect-admission.sock -/run/lion-k3s-vkt-r3/provider.sock -/run/lion-runner-exec.sock -/run/dbus/system_bus_socket
+ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control-v3
+'''
+
+def mission_control_v3_install(request:dict[str,Any])->dict[str,Any]:
+ head,tree,_=mission64_require_envelope(request,worker=False);mission64_verify_current(head,tree)
+ if not MISSION_CONTROL_V3_PATH.is_file() or sha256_file(MISSION_CONTROL_V3_PATH)!=MISSION_CONTROL_V3_SHA256:raise Deny("MISSION_CONTROL_V3_SOURCE_IDENTITY")
+ MISSION_CONTROL_V3_DROPIN.parent.mkdir(parents=True,exist_ok=True)
+ current=MISSION_CONTROL_V3_DROPIN.read_bytes() if MISSION_CONTROL_V3_DROPIN.is_file() else None
+ if current is not None:
+  backup=MISSION64_STATE/"mission-control-backups"/("99-v3-control."+sha256(current)+"."+datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")+".bak");backup.parent.mkdir(parents=True,exist_ok=True);backup.write_bytes(current);os.chmod(backup,0o400)
+ raw=MISSION_CONTROL_V3_DROPIN_TEXT.encode();fd,tmpname=tempfile.mkstemp(prefix=".99-v3-control.",suffix=".tmp",dir=str(MISSION_CONTROL_V3_DROPIN.parent));tmp=Path(tmpname)
+ try:
+  with os.fdopen(fd,"wb") as h:h.write(raw);h.flush();os.fsync(h.fileno())
+  os.chmod(tmp,0o644);os.replace(tmp,MISSION_CONTROL_V3_DROPIN)
+ finally:
+  if tmp.exists():tmp.unlink()
+ for argv in (["/bin/systemctl","daemon-reload"],["/bin/systemctl","restart",MISSION_CONTROL_V3_UNIT]):
+  proc=subprocess.run(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=False,check=False,timeout=60)
+  if proc.returncode!=0:raise Deny("MISSION_CONTROL_V3_SYSTEMD:"+(proc.stderr or proc.stdout).decode("utf-8","replace")[-2000:])
+ import time as _time
+ end=_time.time()+20;loc=None
+ while _time.time()<end:
+  active=subprocess.run(["/bin/systemctl","is-active","--quiet",MISSION_CONTROL_V3_UNIT],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=False).returncode==0
+  if active and MISSION_CONTROL_V3_LOCATOR.is_file():
+   try:
+    loc=json.loads(MISSION_CONTROL_V3_LOCATOR.read_text(encoding="utf-8"))
+    if loc.get("port")==8766 and loc.get("generation")=="MISSION_CONTROL_V3":break
+   except Exception:pass
+  _time.sleep(.25)
+ else:raise Deny("MISSION_CONTROL_V3_NOT_READY")
+ result={"installed":True,"unit":MISSION_CONTROL_V3_UNIT,"port":8766,"source_sha256":MISSION_CONTROL_V3_SHA256,"dropin_sha256":sha256(raw),"locator":loc}
+ result.update(mission64_receipt(request,result));return result
+
+
 def handle(
     request: dict[str, Any],
 ) -> dict[str, Any]:
@@ -1293,7 +1743,23 @@ def handle(
                 "PREPARE_SCALE64",
                 "RUN_SCALE64",
                 "READ_EVIDENCE",
+                "MISSION64_PRECHECK",
+                "MISSION64_START",
+                "MISSION64_READ",
+                "MISSION64_PAUSE",
+                "MISSION64_RESUME",
+                "MISSION64_RESTART_ONE",
+                "MISSION64_VALIDATE",
+                "MISSION64_STOP",
+                "MISSION_CONTROL_V3_INSTALL",
+                "EPOCH3_M64_PRECHECK",
+                "EPOCH3_M64_START",
+                "EPOCH3_M64_READ",
+                "EPOCH3_M64_RESTART_ONE",
+                "EPOCH3_M64_VALIDATE",
+                "EPOCH3_M64_STOP",
             ],
+            "mission64": mission64_spec(),
         }
 
     if operation == "PRECHECK_SCALE64":
@@ -1387,6 +1853,15 @@ def handle(
         return read_evidence(
             target
         )
+
+    if operation == "MISSION_CONTROL_V3_INSTALL":
+        return mission_control_v3_install(request)
+
+    if operation in {"EPOCH3_M64_PRECHECK","EPOCH3_M64_START","EPOCH3_M64_READ","EPOCH3_M64_RESTART_ONE","EPOCH3_M64_VALIDATE","EPOCH3_M64_STOP"}:
+        return e3_handle(request)
+
+    if operation in {"MISSION64_PRECHECK","MISSION64_START","MISSION64_READ","MISSION64_PAUSE","MISSION64_RESUME","MISSION64_RESTART_ONE","MISSION64_VALIDATE","MISSION64_STOP"}:
+        return mission64_handle(request)
 
     raise Deny(
         "OPERATION_NOT_ALLOWLISTED"

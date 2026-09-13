@@ -1,0 +1,15 @@
+{
+  "schema": "lion.r10.local-model-runtime/v1",
+  "generated_at": "2026-09-12T23:42:09.775737+00:00",
+  "model": "gpt-oss-20b-MXFP4",
+  "sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+  "runtime": "llama.cpp 0.4.0-dev build 10809 commit 5266f24da",
+  "model_endpoint": "127.0.0.1:8772",
+  "gateway_endpoint": "127.0.0.1:8780",
+  "gpu": "RTX 5090",
+  "backend": "Vulkan0",
+  "ngl": 99,
+  "observed_sm_peak_percent": 90,
+  "proposal_only": true,
+  "authority_effect": "NONE"
+}

@@ -4,6 +4,13 @@
 **Baseline repozytorium:** `master@7adb0de8036e98f346d7ecac113876157c2abebf`  
 **Status dokumentu:** inventory / documentation only — ten dokument nie nadaje authority i nie jest źródłem currentness przy wykonywaniu efektu.
 
+
+## R10 addendum — GPU i lokalny model (2026-09-13)
+
+Świeży reacquisition po R9 falsyfikuje historyczne sformułowanie „GPU niewidoczne = brak GPU”. Fizyczny `WINDOWS-MOON` ma `NVIDIA GeForce RTX 5090` (32607 MiB VRAM, driver 591.44, CUDA driver API 13.1, PCIe Gen5 x16). `MOON`, `LION-AUTH-LAB`, `LAB-UBUNTU` i `LAB-DEBIAN` widzą ten sam UUID GPU przez WSL `/dev/dxg`, `libcuda.so.1` i NVML. Wszystkie cztery środowiska nadal dzielą boot ID `58008236-23d6-48d9-a501-7e13b2b8c7b6`, więc obserwacja GPU nie zwiększa liczby niezależnych physical failure domains.
+
+Exact `gpt-oss-20b-MXFP4.gguf` działa na Windows MOON przez `llama.cpp b10809/5266f24da`, `Vulkan0`, `-ngl 99`, loopback `127.0.0.1:8772`, context 4096 i jeden slot. Model jest proposal-only. Szczegóły i benchmark: [`R10_GPU_MODEL_RUNTIME.md`](../LION/architecture/v1_4/R10_GPU_MODEL_RUNTIME.md).
+
 ## 1. Reguła interpretacji
 
 LION rozdziela co najmniej pięć różnych pojęć, których nie wolno utożsamiać:
@@ -164,3 +171,10 @@ Wpis inventory nie zwiększa authority. Jeżeli currentness, wymagane obserwator
 ---
 
 **Invariant końcowy:** liczba logicznych hostów, dronów, WSL, runnerów albo repozytoriów nie może być użyta jako substytut liczby niezależnych fizycznych failure domains ani jako substytut authority.
+## R10 live correction — GPU, K3s and P12
+
+R10 live observation confirms one physical Windows-MOON failure domain shared by four WSL logical hosts (shared boot ID `58008236-23d6-48d9-a501-7e13b2b8c7b6`). The RTX 5090 is visible through Windows and WSL `/dev/dxg`; the exact local gpt-oss-20b runtime executes on `Vulkan0`. Twelve requested Kubernetes pods were **not** materialized: `k3s` and `kubectl` are absent on all four WSL hosts, and the launched LPCL forbids installation. Therefore `P12=BLOCKED_K3S_ACTIVATION`; 12 pods must never be counted as 12 physical hosts or failure domains.
+
+## Epoch 3 closure live topology
+
+Current mission evidence (2026-09-13T11:39:58.645675Z) keeps the four logical SentinelX host identities but still proves only one physical/kernel failure domain (shared boot domain). LION-AUTH-LAB hosts K3s and Mission Control. The Epoch 3 mission namespace `lion-epoch3-closure-r1` contains 64/64 Ready Pods distributed over 12 logical roles; Pods are material execution instances, not independent hosts. Windows MOON runs `gpt-oss-20b-MXFP4` on RTX 5090/Vulkan0 at `127.0.0.1:8772`, `LION CONTROL LPCL PANEL` at `127.0.0.1:8780`, and the 12 user-level MAT mediation workers. Dirty operator checkouts are preserved and are not silently synchronized.

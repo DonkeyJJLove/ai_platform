@@ -49,9 +49,9 @@
   "baseline_tree": "70d698f937608495c3845b9b7c1f0bc515a3789d",
   "candidate": {
     "branch": "master",
+    "final_descendant_identity": "REACQUIRE_AFTER_FINAL_CARRIER_BIND",
     "pre_documentation_head": "bf8e17f60e29f46b479fc488914725db00c0feb2",
     "pre_documentation_tree": "38f4dace66cb38ed40c6201363bbec182c98d0e8",
-    "final_descendant_identity": "REACQUIRE_AFTER_FINAL_CARRIER_BIND",
     "remote_exact_head_ci": "R7_1_PREMERGE_ALL_CRITICAL_GATES_SUCCESS",
     "state": "POST_MERGE_NONCARRIER_HOMEOSTASIS"
   },
@@ -63,6 +63,31 @@
     "installation_contract": "OFFLINE_CANDIDATE_NOT_INSTALLED",
     "key_material_present": false,
     "runtime_activation": "NOT_AUTHORIZED_NOT_INSTALLED"
+  },
+  "epoch3_closure": {
+    "authorized_lpcl_sha256": "be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951",
+    "branch_closure": "PENDING",
+    "candidate_branch": "mission/epoch3-closure-docs-federation-r1",
+    "carrier": "PENDING",
+    "control_panel": "ACTIVE_127.0.0.1_8780",
+    "entry_master_head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "entry_master_tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "federation": "10_REPOSITORIES_CURRENTNESS_RECONCILED",
+    "generated_at": "2026-09-13T11:39:58.645675Z",
+    "github": "7_BRANCHES_0_OPEN_PRS_PUBLICATION_PENDING",
+    "local_model": "GPT_OSS_20B_MXFP4_RTX5090_PROPOSAL_ONLY",
+    "logical_drones": 12,
+    "material_execution_digest": "9b01fc231170b1e156a9e3b4b1fbb10c34ccb8086e074328d5b6f5d163789532",
+    "material_namespace": "lion-epoch3-closure-r1",
+    "material_pods": 64,
+    "material_ready": 64,
+    "mission_control": "ACTIVE_127.0.0.1_8766_HISTORICAL_OBSERVER_PLUS_V3_CONTROL",
+    "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+    "publication": "PENDING",
+    "rag": "DEFERRED_NOT_LOADED_BUILD_NOT_AUTHORIZED",
+    "source_provenance": "LION/architecture/v1_4/EPOCH3_SOURCE_PROVENANCE.json",
+    "state": "ACTIVE_ARCH_DOCS",
+    "validation": "PENDING_EPOCH3_FULL_GATE"
   },
   "fleet": {
     "formations": 56,
@@ -90,8 +115,17 @@
   },
   "mission_control": {
     "authority_packet_state": "INCOMPLETE_DO_NOT_APPLY",
+    "collector": "MULTI_SQLITE_READ_MODEL",
+    "control_authority": "MISSION_SCOPED_EXPLICIT_UI_ACTIVATION",
+    "endpoint": "127.0.0.1:8766",
+    "epoch3_logical": 12,
+    "epoch3_materialized": 64,
+    "epoch3_ready": 64,
+    "focus_mission": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+    "generation": "MISSION_CONTROL_V3",
     "k3s": "INACTIVE",
     "max_attempts": 1,
+    "mission_registry": 5,
     "observed_active_runs": 0,
     "recorded_active_runs": 1,
     "replay_policy": "RECONCILE_FIRST",
@@ -106,23 +140,97 @@
     "runtime_source_head": "743cb77bdcc798dcb2d57e7dd389bd763ba81f41",
     "runtime_source_tree": "5afea703fd887f2609245a48000dbc47b8cd1b0f",
     "service": "ACTIVE",
-    "source_currentness": "STALE",
+    "source_currentness": "LIVE_DEPLOYED_SOURCE_RECONCILED_TO_EPOCH3_CANDIDATE",
     "source_rebind_package_digest": "6041ac732002b44468bdd5ca8c56e28843fa3fcb4f7ac4994fb6dc1ec40f0fa6",
     "source_rebind_plan_digest": "d5e5e60a75aad3c7a45b776739d25ccfc694011b80e541154b0e78312713f15a",
+    "ui": "HISTORICAL_OBSERVER_PLUS_V3_CONTROL",
     "vkt_heartbeat": "UNKNOWN",
     "vkt_observed": "NOT_IN_CURRENT_OBSERVATION",
     "vkt_recorded": "RUNNING"
   },
   "pr333": {
-    "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
-    "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b",
-    "state": "MERGED_IN_MASTER",
+    "disposition": "CLOSED_MERGED_VIA_R7_1",
     "exact_head_ci": "HISTORICAL_SUCCESS",
-    "disposition": "CLOSED_MERGED_VIA_R7_1"
+    "head": "3e7c8ba48452f7eab0e15dc6e7a941dbe50a2871",
+    "state": "MERGED_IN_MASTER",
+    "tree": "f40443ea49fb71c60b5789e2eab66ba6423bf29b"
   },
-  "process_epoch": "R7_1_POST_MERGE_MASTER_HOMEOSTASIS_20260912",
+  "pr334": {
+    "bandit": "SUCCESS",
+    "codeql": "SUCCESS_NO_NEW_ALERTS",
+    "core": "SUCCESS",
+    "disposition": "CLOSED_MERGED",
+    "head": "65fe21fe11266dd0334a0e4f41f47fd97f3dcf27",
+    "state": "MERGED_IN_MASTER"
+  },
+  "process_epoch": "EPOCH3_CLOSURE_ACTIVE",
   "production_claim": "NONE",
-  "projection_state": "MASTER_MERGED_BRANCHES_CONVERGED_CODEQL_GREEN_PRE_FINAL_TRUTH",
+  "projection_state": "EPOCH3_CANDIDATE_PRE_VALIDATION_PRE_PUBLICATION",
+  "r10_local_intelligence_candidate": {
+    "authority_effect": "NONE",
+    "base_master_head": "c69eb0ed9b96389c06f6e434dc1189a2726a1e7c",
+    "base_master_tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "branch_closure_manifest": "LION/architecture/v1_4/R10_BRANCH_CLOSURE_MANIFEST.json",
+    "candidate_branch": "mission/r10-local-intelligence-federation-r1",
+    "gateway": {
+      "implementation": "LOCAL_CANDIDATE",
+      "start_blocker": "EXACT_R9_RAG_DEFERRED_TO_THREAD_HANDOFF",
+      "started": false,
+      "target": "127.0.0.1:8780",
+      "write_authority": "NONE"
+    },
+    "gpu": {
+      "all_four_wsl_visible": true,
+      "name": "NVIDIA GeForce RTX 5090",
+      "physical_domains": 1,
+      "shared_boot_id": "58008236-23d6-48d9-a501-7e13b2b8c7b6",
+      "vram_mib": 32607
+    },
+    "gpu_evidence": "LION/architecture/v1_4/R10_GPU_MODEL_RUNTIME.json",
+    "model": {
+      "context": 4096,
+      "device": "Vulkan0",
+      "endpoint": "127.0.0.1:8772",
+      "model_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+      "parallel_slots": 1,
+      "runtime": "llama.cpp b10809/5266f24da",
+      "state": "ACTIVE_PROPOSAL_ONLY_GPU_ACCELERATED"
+    },
+    "rag": {
+      "binding": "DEFERRED_BY_OPERATOR_TO_THREAD_HANDOFF",
+      "live_truth": false,
+      "preferred_release": "lion-rag32-v1.4-r9-auth-lifecycle-candidate"
+    },
+    "remote_effects": {
+      "branch_delete": false,
+      "merge": false,
+      "pr_create": false,
+      "push": false
+    },
+    "runtime_authority": "NONE",
+    "state": "LOCAL_CANDIDATE_PRE_RAG_PRE_CARRIER"
+  },
+  "r10_m64_p12": {
+    "authority_effect": "NONE",
+    "branch_closure": "BLOCKED",
+    "gateway": "ACTIVE_127.0.0.1_8780",
+    "logical_drones": 64,
+    "master_head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "master_tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "pod_state": "BLOCKED_K3S_ACTIVATION",
+    "pods_materialized": 0,
+    "production_scan": "bd4af99891ee4b08001960bb6d9e2504477b57540ef1f67cbdc08ae43aae7c98",
+    "rag": "DEFERRED_NOT_LOADED",
+    "state_file": "LION/architecture/v1_4/R10_M64_P12_STATE.json",
+    "validation": {
+      "bandit": "1.9.4_0_FINDINGS_0_ERRORS",
+      "full_suite": "2879_PASS_0_FAIL_0_ERROR_6_SKIP",
+      "full_symbol": "669_FILES_10375_SYMBOLS_0_PARSE_FAILURES",
+      "full_symbol_digest": "778da5fa70b697ccb239272a6a757fbc9b6d607636444548745949de384c42a3",
+      "workflow_digest": "e7f3d353460c9cebc4238415250c3916a48351f048ea68bedd18914be107802f",
+      "workflow_homeostasis": "24_0_BLOCKING_0_ADVISORY"
+    }
+  },
   "rag": {
     "publication": "NO",
     "r6": {
@@ -137,6 +245,13 @@
     },
     "r7_build": "AFTER_FINAL_CARRIER_LAST_TRUTH",
     "r7_target": "lion-rag32-v1.4-r7-multigeneration-candidate"
+  },
+  "remote_branch_convergence": {
+    "master": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+    "mission/e02-offline-candidate-codeql24-r1": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+    "mission/r7-1-convergence-r1": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+    "mission/r7-artifactized-host-upgraded-r1": "bf8e17f60e29f46b479fc488914725db00c0feb2",
+    "state": "ALL_REMOTE_BRANCH_REFS_EQUAL"
   },
   "repository": "DonkeyJJLove/ai_platform",
   "runtime_effect": "NONE",
@@ -157,6 +272,7 @@
     "surface_count": 273,
     "unresolved_taxonomy": 0
   },
+  "security_currentness": "PREDECESSOR_SECURITY_RECEIPTS_RETAINED; EPOCH3_TERMINAL_VALIDATION_PENDING",
   "sqlite_hygiene": {
     "baseline_resource_warnings": 2136,
     "current_resource_warnings": 307,
@@ -187,20 +303,5 @@
     "family_review_workflows": 0,
     "inventory_count": 24,
     "state": "ZERO_STRUCTURAL_HOMEOSTASIS_DEBT"
-  },
-  "pr334": {
-    "head": "65fe21fe11266dd0334a0e4f41f47fd97f3dcf27",
-    "state": "MERGED_IN_MASTER",
-    "codeql": "SUCCESS_NO_NEW_ALERTS",
-    "bandit": "SUCCESS",
-    "core": "SUCCESS",
-    "disposition": "CLOSED_MERGED"
-  },
-  "remote_branch_convergence": {
-    "master": "bf8e17f60e29f46b479fc488914725db00c0feb2",
-    "mission/e02-offline-candidate-codeql24-r1": "bf8e17f60e29f46b479fc488914725db00c0feb2",
-    "mission/r7-artifactized-host-upgraded-r1": "bf8e17f60e29f46b479fc488914725db00c0feb2",
-    "mission/r7-1-convergence-r1": "bf8e17f60e29f46b479fc488914725db00c0feb2",
-    "state": "ALL_REMOTE_BRANCH_REFS_EQUAL"
   }
 }

@@ -1,0 +1,111 @@
+const $=id=>document.getElementById(id);
+let allRuns=[];
+let selectedRunId=null;
+let selectedChannel='ALL';
+let channelEvents=[];
+let refreshInFlight=false;
+let detailGeneration=0;
+const pretty=v=>JSON.stringify(v??{},null,2);
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const targetText=r=>r?.target?.repository||r?.target?.kind||'';
+async function get(path){const r=await fetch(path,{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}
+function card(k,v,sub=''){return `<div class="card"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>${sub?`<div class="mini">${esc(sub)}</div>`:''}</div>`}
+function tone(v){const x=String(v??'').toUpperCase();if(['PASS','VERIFIED','COMPLETE'].includes(x))return 'tone-good';if(['RUNNING','STARTING','CLEANING','OBSERVED','PARTIAL','CORROBORATED'].includes(x))return 'tone-live';if(['FAIL','ERROR','CONTRADICTED'].includes(x))return 'tone-bad';if(['DEFER','UNKNOWN','DEGRADED'].includes(x))return 'tone-warn';return ''}
+function flatten(value,prefix='',depth=0){if(value===null||value===undefined)return [[prefix||'value','UNKNOWN']];if(Array.isArray(value))return [[prefix||'value',value.length?JSON.stringify(value):'[]']];if(typeof value!=='object')return [[prefix||'value',value]];const entries=Object.entries(value);if(!entries.length)return [[prefix||'value','{}']];let out=[];for(const [k,v] of entries){const key=prefix?`${prefix}.${k}`:k;if(v&&typeof v==='object'&&!Array.isArray(v)&&depth<1)out=out.concat(flatten(v,key,depth+1));else out.push([key,v===null?'UNKNOWN':typeof v==='object'?JSON.stringify(v):v])}return out}
+function renderChips(id,obj){const root=$(id);const pairs=flatten(obj);root.innerHTML=pairs.map(([k,v])=>`<button type="button" class="data-chip ${tone(v)}" data-copy="${esc(v)}" title="Click to copy"><span>${esc(k)}</span><b>${esc(v)}</b></button>`).join('');root.querySelectorAll('.data-chip').forEach(b=>b.onclick=()=>navigator.clipboard?.writeText(b.dataset.copy||''))}
+function renderFleet(fleet,recordedRun=null){
+  const current=fleet.currentness==='OBSERVED';
+  let orgs=fleet.organizations||{};
+  if(!current && recordedRun){
+    const counts=recordedRun.metrics?.fleet_organizations||{};
+    orgs=Object.fromEntries(Object.entries(counts).map(([name,total])=>[name,{total,active:null,idle:null}]));
+    if(!Object.keys(orgs).length){for(const pod of recordedRun.metrics?.drone_pods||[]){if(!pod.fleet)continue;orgs[pod.fleet]??={total:0,active:null,idle:null};orgs[pod.fleet].total++}}
+  }
+  $('workingDrones').textContent=current?(fleet.working_drones??'UNKNOWN'):'UNKNOWN';
+  $('fleetCurrentness').textContent=current?'Latest observed fleet organization; activity requires heartbeat evidence.':'Recorded fleet membership only. Current activity and topology are UNKNOWN.';
+  const rows=Object.entries(orgs);
+  $('fleetOrganizations').innerHTML=rows.length?rows.map(([name,v])=>{
+    const total=countValue(v.total),active=current?countValue(v.active):null,idle=current?countValue(v.idle):null;
+    const pct=total>0&&active!==null?Math.min(100,Math.round(active*100/total)):null;
+    return `<article class="org-card"><div class="org-title"><b>${esc(name)}</b><span>${total??'UNKNOWN'} ${current?'observed':'recorded'} pods</span></div>${pct===null?'':`<div class="org-bar"><i style="width:${pct}%"></i></div>`}<div class="org-meta"><span>active ${active??'UNKNOWN'}</span><span>idle ${idle??'UNKNOWN'}</span></div></article>`;
+  }).join(''):'<div class="empty-state">No organization evidence for this run. No groups have been invented.</div>';
+}
+function channelKey(p){return `${p?.from_fleet||'UNKNOWN'} → ${p?.to_fleet||'UNKNOWN'}`}
+function renderChannels(runId,events){channelEvents=(events||[]).filter(e=>e.event_type==='CHANNEL_MESSAGE');const counts={};for(const e of channelEvents){const key=channelKey(e.payload||{});counts[key]=(counts[key]||0)+1}const keys=Object.keys(counts).sort();if(selectedChannel!=='ALL'&&!counts[selectedChannel])selectedChannel='ALL';$('channelContext').textContent=runId?`${runId} · ${channelEvents.length} recorded messages · ${keys.length} recorded channels`:'No active channel source.';$('channelFilters').innerHTML=(keys.length?`<button class="channel-btn ${selectedChannel==='ALL'?'active':''}" data-channel="ALL">ALL <b>${channelEvents.length}</b></button>`:'')+keys.map(k=>`<button class="channel-btn ${selectedChannel===k?'active':''}" data-channel="${esc(k)}">${esc(k)} <b>${counts[k]}</b></button>`).join('');$('channelFilters').querySelectorAll('.channel-btn').forEach(b=>b.onclick=()=>{selectedChannel=b.dataset.channel;renderChannels(runId,channelEvents)});const feed=$('channelFeed');const stick=feed.scrollHeight-feed.scrollTop-feed.clientHeight<80||feed.scrollHeight===0;const shown=channelEvents.filter(e=>selectedChannel==='ALL'||channelKey(e.payload||{})===selectedChannel).slice(-300);feed.innerHTML=shown.length?shown.map(e=>{const p=e.payload||{};const ts=e.timestamp?new Date(e.timestamp*1000).toLocaleTimeString():'';return `<article class="message"><div class="message-top"><span class="message-route">${esc(p.from_fleet||'?')} / ${esc(p.from_drone_id||'?')} → ${esc(p.to_fleet||'?')}</span><time>${esc(ts)}</time></div><div class="message-tags"><span>${esc(p.phase||e.phase||'')}</span><span>${esc(p.type||'MESSAGE')}</span><span>${esc(p.case_id||'')}</span></div><div class="message-id">${esc(p.message_id||e.event_id||'')}</div></article>`}).join(''):'<div class="empty-state">No recorded CHANNEL_MESSAGE events for this run. Live drone communication is not established.</div>';if(stick)feed.scrollTop=feed.scrollHeight}
+
+let latestFleet={};
+let latestObservations={};
+const known=v=>v===null||v===undefined||v===''?'UNKNOWN':typeof v==='object'?JSON.stringify(v):String(v);
+const stamp=v=>v===null||v===undefined?'UNKNOWN':Number.isFinite(Number(v))?new Date(Number(v)*1000).toISOString():String(v);
+const badge=(v,status=v)=>`<span class="state ${tone(status)}">${esc(known(v))}</span>`;
+function renderSummary(x){x={...x,recorded_active_runs:x.recorded_active_runs??x.active_runs};$('summary').innerHTML=[['Recorded active runs','recorded_active_runs'],['Observed active runs','observed_active_runs'],['Completed runs','completed_runs'],['Failed runs','failed_runs'],['Deferred runs','deferred_runs'],['Hosts','hosts'],['Workloads','workloads'],['Events','events'],['Artifacts','artifacts']].map(([label,key])=>card(label,x[key]??'UNKNOWN')).join('')}
+function table(id,columns,rows){$(id).innerHTML=rows.length?`<div class="table-wrap"><table><thead><tr>${columns.map(c=>`<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(v=>`<td>${esc(known(v))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<p class="empty-state">No recorded evidence.</p>'}
+function rebuildFilters(){for(const [id,key,label] of [['adapter','adapter_type','adapters'],['status','status','statuses'],['processClass','process_class','process classes']]){const root=$(id),cur=root.value;const values=[...new Set(allRuns.map(r=>r[key]).filter(Boolean))].sort();if(cur&&!values.includes(cur))values.push(cur);const html=`<option value="">All ${label}</option>`+values.map(x=>`<option>${esc(x)}</option>`).join('');if(root.innerHTML!==html){root.innerHTML=html;root.value=cur}}}
+function renderRuns(){const a=$('adapter').value,s=$('status').value,c=$('processClass').value;const rows=allRuns.filter(r=>(!a||r.adapter_type===a)&&(!s||r.status===s)&&(!c||r.process_class===c));$('runs').innerHTML=rows.length?rows.map(r=>`<tr data-run="${encodeURIComponent(r.run_id)}" class="${r.run_id===selectedRunId?'selected':''}"><td data-label="Recorded status">${badge('RECORDED · '+r.status,r.status)}</td><td data-label="Run ID"><button class="run-select" data-id="${encodeURIComponent(r.run_id)}">${esc(r.run_id)}</button></td><td data-label="Process class">${esc(known(r.process_class))}</td><td data-label="Adapter">${esc(known(r.adapter_type))}</td><td data-label="Host">${esc(known(r.host))}</td><td data-label="Runtime">${esc(known(r.runtime))}</td><td data-label="Target">${esc(targetText(r))}</td><td data-label="Phase">${esc(known(r.phase))}</td><td data-label="Started">${esc(stamp(r.started_at))}</td><td data-label="Duration">${esc(r.duration==null?'UNKNOWN':Number(r.duration).toFixed(1)+' s')}</td></tr>`).join(''):'<tr><td colspan="10" class="empty-state">No runs match these filters. Recorded history is retained.</td></tr>';$('runs').querySelectorAll('.run-select').forEach(b=>b.onclick=()=>detail(decodeURIComponent(b.dataset.id)))}
+function eventRows(events){return [...events].sort((a,b)=>(a.timestamp??Infinity)-(b.timestamp??Infinity)||String(a.event_id).localeCompare(String(b.event_id))).map(e=>[stamp(e.timestamp),e.event_type,e.run_id,e.phase,e.source||e.adapter_type||e.host,e.payload])}
+function participants(value,run){table('participants',['Participant ID','Role','Fleet','Logical identity','Material identity','Host','Runtime','State','Observation state'],Object.entries(value||{}).map(([id,p])=>{p=p&&typeof p==='object'?p:{state:p};return [p.participant_id??id,p.role,p.fleet,p.logical_identity??p.logical_id??p.drone_id??id,p.material_identity??p.pod_uid??p.uid??'NONE OBSERVED',p.host??run.host,p.runtime??run.runtime,(p.material_identity??p.pod_uid??p.uid)?(p.state??p.status):'LOGICAL ONLY · '+known(p.state??p.status),p.observation_state??p.verification_status]}))}
+function artifacts(value,id){table('artifacts',['Artifact ID','Type','Run ID','Origin','Path / reference','Digest','Created at','Verification state'],(value||[]).map(a=>[a.artifact_id,a.type??a.artifact_type,a.run_id??id,a.origin??a.evidence_class,a.path??a.reference,a.sha256??a.digest,stamp(a.created_at??a.timestamp),a.verification_state??a.verification_status]))}
+function receipts(value,id){table('receipts',['Receipt ID','Run ID','Presence','Operation','Reported status','Effect observed','Reconciliation complete','Path / reference','Digest','Created at'],(value||[]).map(r=>[r.receipt_id,r.run_id??id,'RECEIPT_PRESENT',r.operation,r.status,r.effect_observed,r.reconciliation_complete,r.path??r.reference,r.sha256??r.digest,stamp(r.created_at??r.timestamp)]))}
+async function detail(id,silent=false){const generation=++detailGeneration;if(selectedRunId!==id)selectedChannel='ALL';selectedRunId=id;if(!silent){$('detail').hidden=true;$('empty').hidden=true;$('detailState').textContent='Loading selected run…';renderRuns();$('runDetail').scrollIntoView?.({behavior:'smooth',block:'start'})}try{const [r,e,m,p,a,rc]=await Promise.all(['','/events','/metrics','/participants','/artifacts','/receipts'].map(s=>get('/api/runs/'+encodeURIComponent(id)+s)));if(generation!==detailGeneration||selectedRunId!==id)return;const run=r.run;if(!run)throw new Error('Run unavailable');$('empty').hidden=true;$('detail').hidden=false;$('detailState').textContent='Recorded run evidence · '+id;renderChips('identity',{run_id:run.run_id,process_language:run.process_language,process_class:run.process_class,adapter_type:run.adapter_type,recorded_status:run.status,observation_status:latestObservations[run.run_id]?.observation_status,heartbeat_status:latestObservations[run.run_id]?.heartbeat_status,phase:run.phase,host:run.host,runtime:run.runtime,namespace:run.namespace});renderChips('source',run.source);renderChips('target',run.target);renderChips('authority',run.authority);renderChips('timeline',{started_at:stamp(run.started_at),finished_at:stamp(run.finished_at),duration_seconds:run.duration??'UNKNOWN'});table('events',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(e.events||[]));table('phases',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows((e.events||[]).filter(x=>['PHASE_STARTED','PHASE_COMPLETED'].includes(x.event_type))));$('adapterTitle').textContent=run.adapter_type==='VKT_R3'?'Vulnerability Knowledge Test':run.adapter_type==='OSS_REPOSITORY_TEST'?'OSS repository test':known(run.adapter_type);const metricValues={...(run.metrics||{}),...(m.metrics||{})};delete metricValues.drone_pods;renderChips('metrics',metricValues);participants({...run.participants,...p.participants},run);artifacts(a.artifacts,id);receipts(rc.receipts,id);renderChips('cleanup',run.cleanup);renderChips('verification',{verification_status:run.verification_status,evidence:run.evidence});renderPassiveEvidence(run,e.events||[]);$('vktDetail').hidden=run.adapter_type!=='VKT_R3';if(run.adapter_type==='VKT_R3'){renderChannels(id,e.events||[]);renderFleet((latestFleet.run_ids||[]).length===1&&latestFleet.run_ids[0]===id?latestFleet:{},run)}}catch(error){if(generation!==detailGeneration)return;$('detail').hidden=true;$('detailState').textContent='UNKNOWN — selected run could not be refreshed. '+error.message}}
+function environment(summary,adapters){$('adapters').textContent=(adapters.adapters||[]).map(a=>`${a.adapter_id} · ${(a.supported_process_classes||[]).join(', ')} · ${a.control_authority||'OBSERVATION_ONLY'}`).join(' | ')||'No registered adapters reported.';$('hosts').textContent=[...new Set(allRuns.map(r=>r.host).filter(Boolean))].join(', ')||'UNKNOWN';$('currentness').textContent='API read at '+new Date().toISOString()+'. Runtime currentness: '+(summary.fleet?.currentness??'UNKNOWN')+'. '+(summary.observation?('Reason: '+summary.observation.reason+'; poll age: '+known(summary.observation.age_seconds)+' s; last success: '+stamp(summary.observation.success_at)):(summary.error||'API availability does not establish readiness.'));if(summary.observation?.adapters){const reasons=Object.entries(summary.observation.adapters).filter(([,v])=>v.empty_reason).map(([k,v])=>k+': '+v.empty_reason);if(reasons.length)$('currentness').textContent+='; '+reasons.join(' | ')}$('health').textContent=summary.ok?'API AVAILABLE':'DEGRADED';$('health').className='pill '+(summary.ok?'':'tone-warn')}
+
+// Count visualization only: aggregate phase participants are not drone identities.
+let clusterOnline=false;
+let clusterSelectedPod=null;
+let clusterSelectedPodRun=null;
+const countValue=v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=0?v:null;
+const fleetRun=r=>r.adapter_type==='VKT_R3'||r.workload?.kind==='KubernetesFleet'||r.metrics?.fleet_organizations;
+function renderCluster(online=clusterOnline){
+  clusterOnline=online;
+  const candidates=allRuns.filter(fleetRun).sort((a,b)=>
+    Number((latestFleet.run_ids||[]).includes(b.run_id))-Number((latestFleet.run_ids||[]).includes(a.run_id))||
+    Number(['RUNNING','STARTING'].includes(b.status))-Number(['RUNNING','STARTING'].includes(a.status))||
+    (b.started_at??b.finished_at??0)-(a.started_at??a.finished_at??0)||String(a.run_id).localeCompare(String(b.run_id)));
+  const picker=$('clusterRun'),selected=picker.value;
+  picker.innerHTML='<option value="">Follow latest fleet</option>'+candidates.map(r=>`<option value="${esc(r.run_id)}">${esc(r.run_id)}</option>`).join('');
+  picker.value=selected;
+  const run=selected?candidates.find(r=>r.run_id===selected):candidates[0];
+  $('clusterPodDetail').hidden=true;
+  $('clusterDetails').hidden=!run;
+  if(!run){$('clusterState').textContent=online?'No fleet evidence recorded. Cluster state: UNKNOWN.':'OFFLINE · Cluster state: UNKNOWN.';$('clusterMap').innerHTML='<div class="empty-state">Waiting for a fleet observation. No drones have been inferred.</div>';return}
+  const historical=run.evidence?.class==='HISTORICAL_IMPORTED_EVIDENCE'||['CLEANED','CLEANING'].includes(run.status)||['STOPPED','CLEANED'].includes(run.cleanup?.status);
+  // Use the fresh summary itself; never color persisted participant records as live.
+  const current=online&&!historical&&latestFleet.currentness==='OBSERVED'&&latestFleet.run_ids?.length===1&&latestFleet.run_ids[0]===run.run_id;
+  const metrics=run.metrics||{};
+  const records=current?(latestFleet.pod_observations||[]).find(x=>x.run_id===run.run_id)?.pods:metrics.drone_pods;
+  const pods=Array.isArray(records)?records.filter(p=>p&&typeof p.uid==='string'&&p.uid):[];
+  const identitiesValid=new Set(pods.map(p=>p.uid)).size===pods.length;
+  $('clusterPodDetail').hidden=true;
+  const raw=current?latestFleet.organizations:(metrics.fleet_organizations||{});
+  let groups=Object.entries(raw||{}).map(([name,v])=>({name,total:countValue(current?v.total:v),active:current?countValue(v.active):null}));
+  const reportedTotal=countValue(current?latestFleet.fleet_total:(metrics.pods??run.workload?.pods));
+  if(!groups.length)groups=[{name:'Fleet · organization breakdown unavailable',total:reportedTotal,active:null}];
+  const mode=!online?'OFFLINE · cached evidence':current?'OBSERVED · latest fleet counts':historical?'HISTORICAL · completed or cleaned run':'RECORDED · runtime currentness UNKNOWN';
+  $('clusterState').textContent=mode+' · '+run.run_id;
+  $('clusterDetails').onclick=()=>{detail(run.run_id);$('runDetail').scrollIntoView?.({behavior:'smooth'})};
+  let budget=512;
+  const groupsHtml=groups.slice(0,64).map(g=>{
+    const total=g.total,active=g.active!==null&&total!==null&&g.active<=total?g.active:null;
+    const shown=total===null?0:Math.min(total,budget);budget-=shown;
+    const members=identitiesValid?pods.filter(p=>p.fleet===g.name||(groups.length===1&&g.name.startsWith('Fleet ·'))):[];
+    const identityMode=members.length>0;
+    const dots=identityMode?members.slice(0,shown).map(p=>`<button type="button" class="pod-cell ${current?(p.phase==='Failed'?'pod-failed':p.ready===true?'pod-ready':p.ready===false?'pod-not-ready':'cell-unknown'):'cell-unknown'}" data-pod="${esc(p.uid)}" title="${esc(p.name||p.uid)} · ${current?'observed':'recorded'} · ${esc(known(p.phase))}" aria-label="${esc(p.name||p.uid)} · ${esc(p.uid)}"></button>`).join(''):Array.from({length:shown},(_,i)=>`<i class="drone-cell ${current&&active!==null?(i<active?'cell-fresh':'cell-no-heartbeat'):'cell-unknown'}"></i>`).join('');
+    return `<article class="cluster-group"><div class="org-title"><h3>${esc(g.name)}</h3><strong>${total??'UNKNOWN'}</strong></div><p class="hint">${current&&active!==null?active+' fresh heartbeats · '+(total-active)+' without fresh heartbeat':'Current activity: UNKNOWN'}</p><div class="drone-matrix" ${identityMode?'':'aria-hidden="true"'}>${dots}</div>${identityMode?`<p class="hint">${Math.min(members.length,shown)} identified pods shown · ${current?'Kubernetes readiness':'historical observation'}. Heartbeats above are aggregate counts.</p>`:total===null?'<p class="hint">No valid count supplied.</p>':shown<total?`<p class="hint">${shown} of ${total} count cells shown.</p>`:''}</article>`;
+  }).join('');
+  const phaseCounts=Object.entries(run.participants||{}).filter(([,v])=>countValue(v)!==null);
+  $('clusterMap').innerHTML=`<div class="cluster-host"><div><span class="cluster-kicker">HOST / RUNTIME</span><h3>${esc(known(run.host))}</h3><span>${esc(known(run.runtime))} · namespace ${esc(known(run.namespace))}</span></div><div class="cluster-total"><strong>${reportedTotal??'UNKNOWN'}</strong><span>${current?'observed pods':'recorded pods'}</span></div></div><div class="cluster-branch" aria-hidden="true"></div><div class="cluster-groups">${groupsHtml}</div>${groups.length>64?'<p class="hint">First 64 groups shown.</p>':''}<div class="cluster-legend"><span><i class="drone-cell cell-fresh"></i> Fresh heartbeat count</span><span><i class="drone-cell cell-no-heartbeat"></i> No fresh heartbeat count</span><span><i class="drone-cell cell-unknown"></i> Historical / unknown activity</span></div><div class="cluster-phases"><b>Recorded phase: ${esc(known(run.phase))}</b>${phaseCounts.map(([k,v])=>`<span>${esc(k)} · ${v} participants (aggregate)</span>`).join('')}</div>`;
+  if(pods.length&&identitiesValid)$('clusterMap').innerHTML+='<p class="hint">Identified pod colors: cyan = Ready, amber = Not Ready, red = Failed, outline = historical / unknown. Kubernetes readiness is separate from application heartbeat freshness.</p>';
+  const showPod=uid=>{
+    const pod=identitiesValid?pods.find(p=>p.uid===uid):null;
+    if(!pod)return;
+    clusterSelectedPod=uid;clusterSelectedPodRun=run.run_id;
+    $('clusterPodDetail').hidden=false;
+    $('clusterPodDetail').textContent=pretty({observation:current?'LATEST PROVIDER OBSERVATION':'RECORDED · CURRENT STATE UNKNOWN',run_id:run.run_id,host:run.host,namespace:run.namespace,...pod});
+  };
+  $('clusterMap').querySelectorAll('[data-pod]').forEach(button=>button.onclick=()=>showPod(button.dataset.pod));
+  if(clusterSelectedPodRun===run.run_id)showPod(clusterSelectedPod);
+}
+
+async function refresh(){if(refreshInFlight)return;refreshInFlight=true;try{const [s,data,adapters]=await Promise.all([get('/api/summary'),get('/api/runs'),get('/api/adapters')]);latestFleet=s.ok===true?(s.fleet||{}):{};latestObservations=s.run_observations||{};allRuns=data.runs||[];renderSummary(s.summary||{});environment(s,adapters);rebuildFilters();renderRuns();renderCluster(true);const events=await Promise.all(allRuns.map(r=>get('/api/runs/'+encodeURIComponent(r.run_id)+'/events')));table('recentEvents',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(events.flatMap(x=>x.events||[])).slice(-30));if(selectedRunId)await detail(selectedRunId,true)}catch(e){$('health').textContent='OFFLINE';$('health').className='pill tone-bad';$('currentness').textContent='Runtime currentness: UNKNOWN — refresh failed. Visible records may be stale.';$('detailState').textContent='UNKNOWN — connection lost; previous details are hidden.';$('detail').hidden=true;latestFleet={};latestObservations={};renderSummary({});renderCluster(false)}finally{refreshInFlight=false}}
+$('clusterRun').onchange=()=>renderCluster();
+$('adapter').onchange=renderRuns;$('status').onchange=renderRuns;$('processClass').onchange=renderRuns;refresh();setInterval(refresh,5000);
