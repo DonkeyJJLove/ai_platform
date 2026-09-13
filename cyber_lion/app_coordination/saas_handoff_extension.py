@@ -204,15 +204,15 @@ def apply_saas_handoff_extension(cls):
             handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": question})
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
             if polish:
-                answer = ("Żądanie zostało zapisane w kontrolowanym mailboxie SaaS. "
+                answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
                           f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
-                          "W bieżącej sesji ChatGPT wyślij tylko: `LION SaaS`. "
-                          "Odpowiedź SaaS zostanie związana z exact LPCL i receipt, ale ma authority_effect=NONE.")
+                          "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
+                          "Transport pozostaje EXTERNAL_SESSION_MEDIATED — panel nie udaje automatycznego przejęcia sesji ChatGPT; odpowiedź ma authority_effect=NONE.")
             else:
-                answer = ("The request is queued in the controlled SaaS mailbox. "
+                answer = ("The request is queued in the controlled SaaS channel. "
                           f"Code {handoff['request_code']}; request {handoff['request_id']}. "
-                          "In the current ChatGPT session send only: `LION SaaS`. "
-                          "The SaaS response will be bound to the exact LPCL with a receipt and authority_effect=NONE.")
+                          "The panel automatically follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
+                          "Transport remains EXTERNAL_SESSION_MEDIATED; no automatic ChatGPT-session ingress is claimed and authority_effect=NONE.")
             return {
                 "route": "SAAS_HANDOFF",
                 "answer": answer,

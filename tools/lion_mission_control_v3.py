@@ -150,6 +150,22 @@ LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_REBIND_DISTRIBUTION=(6,6,6,6,5,5,5,5,5,5,5,5)
 
 
+def _phase_lifecycle_state(rows,current_phase=None):
+    statuses=[str(r['status']) for r in rows]
+    current_status=None
+    if current_phase:
+      current_status=next((str(r['status']) for r in rows if r['phase_id']==current_phase),None)
+    if current_status=='BLOCKED':return 'BLOCKED'
+    if current_status=='WAITING':return 'WAITING'
+    if current_status=='RUNNING':return 'RUNNING'
+    if 'RUNNING' in statuses:return 'RUNNING'
+    if 'WAITING' in statuses:return 'WAITING'
+    if 'BLOCKED' in statuses:return 'BLOCKED'
+    if 'FAIL' in statuses:return 'FAILED'
+    if statuses and all(s in {'PASS','COMPLETE','SKIPPED'} for s in statuses):return 'COMPLETE'
+    return 'AUTHORIZED'
+
+
 def _lpcl_pairs(text):
     import re
     lines=str(text or '').replace('\r\n','\n').replace('\r','\n').split('\n');out={};i=0
@@ -232,6 +248,8 @@ def bind_lpcl_execution(mid):
       c.execute('UPDATE mission_process_specs SET current_phase=?,updated_at=? WHERE mission_id=?',(current,t,mid))
       if current:
        c.execute("UPDATE mission_phases SET status=CASE WHEN status='PENDING' THEN 'RUNNING' ELSE status END,started_at=COALESCE(started_at,?),updated_at=? WHERE mission_id=? AND phase_id=?",(t,t,mid,current))
+      phase_rows=c.execute('SELECT phase_id,status FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,)).fetchall();life=_phase_lifecycle_state(phase_rows,current)
+      c.execute('UPDATE missions SET state=?,updated_at=? WHERE mission_id=?',(life,t,mid))
       # Preserve the parent until explicit self-hosting/lineage reconciliation.
       keep_parent=kv.get('PARENT_MISSION_REMAINS_AUTHORITY_CARRIER_UNTIL_SELF_HOSTING_TAKEOVER')=='TRUE'
       if not keep_parent and source_mid==LPCL_REBIND_SOURCE:
@@ -376,7 +394,7 @@ def update_lpcl_phase(mid,x):
     if x['status'] in {'PASS','FAIL','SKIPPED','COMPLETE','CANCELLED'}:finished=t
     c.execute('UPDATE mission_phases SET status=?,progress=?,detail=?,started_at=?,finished_at=?,updated_at=? WHERE mission_id=? AND phase_id=?',(x['status'],float(x['progress']),str(x['detail'])[:4000],started,finished,t,mid,x['phase_id']))
     rows=c.execute('SELECT status,progress,phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,)).fetchall();overall=sum(float(r['progress']) for r in rows)/max(1,len(rows));current=next((r['phase_id'] for r in rows if r['status'] in {'RUNNING','WAITING','BLOCKED'}),None)
-    states={r['status'] for r in rows};life='RUNNING' if any(s in states for s in ('RUNNING','WAITING','BLOCKED')) else ('COMPLETE' if states and states.issubset({'PASS','COMPLETE','SKIPPED'}) else 'AUTHORIZED')
+    life=_phase_lifecycle_state(rows,current)
     c.execute('UPDATE mission_process_specs SET current_phase=?,progress=?,updated_at=? WHERE mission_id=?',(current,overall,t,mid));c.execute('UPDATE missions SET state=?,updated_at=? WHERE mission_id=?',(life,t,mid))
     _process_message(c,mid,x['protocol'],x['from_id'],x['to_id'],x['phase_id'],x['payload'],'INTERNAL')
     c.commit();c.close();return process_snapshot(mid)

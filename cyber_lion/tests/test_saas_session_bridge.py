@@ -5,6 +5,7 @@ from pathlib import Path
 
 from tools import lion_mission_lifecycle_db as lifecycle
 from tools import lion_saas_session_bridge as saas
+from tools.lion_local_intelligence_runtime import ThreadStore
 from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
 
 T='2026-09-13T15:10:00Z'
@@ -67,7 +68,8 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         self.assertEqual(d._route('No to wykonaj na SaaS zapytanie: Kim jesteś?')[0],'SAAS_HANDOFF')
         out=d.chat('No to wykonaj na SaaS zapytanie: Kim jesteś?',output_language='pl')
         self.assertEqual(out['route'],'SAAS_HANDOFF')
-        self.assertIn('LION SaaS',out['answer'])
+        self.assertIn('automatycznie',out['answer'])
+        self.assertIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
 
     def test_capability_answer_reports_bound_session(self):
         class Dummy:
@@ -104,5 +106,26 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         self.assertEqual(out['local_evaluation']['answer'],'LOCAL:Co to LION')
         self.assertEqual(out['saas_handoff']['request_code'],'DUAL1234')
         self.assertIn('lion.saas.handoff.create',out['tool_calls'])
+
+class PanelThreadDeliveryTests(unittest.TestCase):
+    def test_saas_assistant_delivery_is_persistent_and_exactly_once(self):
+        with tempfile.TemporaryDirectory() as td:
+            store=ThreadStore(Path(td)/'threads.db')
+            t=store('create',{})
+            store('append_pair',{'thread_id':t['thread_id'],'user':'Na SaaS: test','assistant':'queued','meta':{'saas_request_id':'saas-'+'1'*32,'saas_request_code':'ABCDEF12'}})
+            a=store('append_assistant_once',{'thread_id':t['thread_id'],'assistant':'real SaaS response','dedupe_key':'saas:'+'saas-'+'1'*32,'meta':{'saas_request_id':'saas-'+'1'*32,'receipt_digest':'d'*64}})
+            b=store('append_assistant_once',{'thread_id':t['thread_id'],'assistant':'duplicate must not append','dedupe_key':'saas:'+'saas-'+'1'*32,'meta':{'saas_request_id':'saas-'+'1'*32}})
+            self.assertTrue(a['inserted']);self.assertFalse(b['inserted'])
+            snap=store('get',{'thread_id':t['thread_id']})
+            self.assertEqual([m['content'] for m in snap['messages']].count('real SaaS response'),1)
+            self.assertEqual(len(snap['messages']),3)
+            self.assertEqual(snap['messages'][-1]['meta']['external_receipt_key'],'saas:'+'saas-'+'1'*32)
+
+    def test_panel_ui_recovers_pending_saas_requests_after_thread_reopen(self):
+        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
+        self.assertIn('resumeThreadSaas',gateway.UI)
+        self.assertIn('append_assistant_once',Path(__import__('tools.lion_local_intelligence_runtime',fromlist=['x']).__file__).read_text(encoding='utf-8'))
+        self.assertIn('Restart material runtime',gateway.UI)
+
 
 if __name__=='__main__':unittest.main()

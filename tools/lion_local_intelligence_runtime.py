@@ -101,6 +101,17 @@ class ThreadStore:
                     title=row['title']
                     if title=='Nowa rozmowa':title=' '.join(user.split())[:64] or title
                     c.execute('UPDATE threads SET title=?,updated_at=? WHERE thread_id=?',(title,t,tid));c.commit();return {'thread_id':tid,'title':title,'updated_at':t}
+                if op=='append_assistant_once':
+                    row=c.execute('SELECT title FROM threads WHERE thread_id=?',(tid,)).fetchone()
+                    if row is None:raise KeyError('thread not found')
+                    assistant=str(args.get('assistant') or '')[:24000];dedupe_key=str(args.get('dedupe_key') or '')[:200]
+                    if not assistant or not dedupe_key:raise ValueError('assistant/dedupe_key')
+                    for m in c.execute("SELECT message_id,meta_json FROM messages WHERE thread_id=? AND role='assistant' ORDER BY seq",(tid,)):
+                        try:meta_existing=json.loads(m['meta_json'] or '{}')
+                        except Exception:meta_existing={}
+                        if meta_existing.get('external_receipt_key')==dedupe_key:return {'thread_id':tid,'inserted':False,'message_id':m['message_id'],'dedupe_key':dedupe_key}
+                    seq=int(c.execute('SELECT COALESCE(MAX(seq),0) FROM messages WHERE thread_id=?',(tid,)).fetchone()[0]);t=time.time();meta=args.get('meta') if isinstance(args.get('meta'),dict) else {};meta={**meta,'external_receipt_key':dedupe_key}
+                    message_id=uuid.uuid4().hex;c.execute('INSERT INTO messages VALUES(?,?,?,?,?,?,?)',(message_id,tid,seq+1,'assistant',assistant,t,json.dumps(meta,ensure_ascii=False,sort_keys=True)));c.execute('UPDATE threads SET updated_at=? WHERE thread_id=?',(t,tid));c.commit();return {'thread_id':tid,'inserted':True,'message_id':message_id,'dedupe_key':dedupe_key,'updated_at':t}
                 raise ValueError('thread operation denied')
             finally:c.close()
 

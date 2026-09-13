@@ -22,7 +22,8 @@ async function mcCurrentMaterialAct(action,pod){
 async function mcLifecycleAct(action,payload={}){
   if(!MC_SELECTED)return;
   const label=action.replaceAll('_',' ');
-  if(['RESTART','ROLLBACK'].includes(action)&&!confirm(label+' mission '+MC_SELECTED+'?'))return;
+  if(action==='RESTART'&&!confirm('Restart material runtime for '+MC_SELECTED+'?\nThis does not clear PASS/FAIL/BLOCKED phase verdicts.'))return;
+  if(action==='ROLLBACK'&&!confirm(label+' mission '+MC_SELECTED+'?'))return;
   const r=await fetch(missionPath(MC_SELECTED,'/actions'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
   const x=await r.json();
   if(!r.ok){alert(x.error||'mission lifecycle action failed');return}
@@ -73,7 +74,7 @@ function renderSchemaContext(s){
 }
 
 function renderLifecycleActions(s){
-  let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart mission')+mcbtn('VALIDATE','Validate')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
+  let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart material runtime')+mcbtn('VALIDATE','Validate')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
   if((s.revision_compilations||[]).some(x=>String(x.state||'').includes('AWAITING_EXPLICIT_ACTIVATION')))a+=mcbtn('ACTIVATE_REVISION','Activate revision');
   const ds=s.execution_driver?.state;
   if(['ACTIVE','WAITING','BLOCKED'].includes(ds))a+=mcbtn('PAUSE','Pause driver');

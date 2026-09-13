@@ -1568,6 +1568,17 @@ def e3_wait(timeout=180):
   _time.sleep(2)
  raise Deny("E3_CONVERGENCE_TIMEOUT:"+json.dumps(last or {}))
 
+
+def e3_wait_restarted_uid(old_uid,timeout=180,poll_interval=2):
+ import time as _time;end=_time.time()+timeout;last=None
+ while _time.time()<end:
+  last=e3_read();pods=last.get("pods") or []
+  old_present=any(x.get("uid")==old_uid for x in pods)
+  if last.get("materialized")==64 and last.get("ready")==64 and last.get("unique_uid_count")==64 and not old_present:return last
+  _time.sleep(poll_interval)
+ evidence={"old_uid":old_uid,"old_uid_present":bool(last and any(x.get("uid")==old_uid for x in (last.get("pods") or []))),"materialized":(last or {}).get("materialized"),"ready":(last or {}).get("ready"),"unique_uid_count":(last or {}).get("unique_uid_count")}
+ raise Deny("E3_RESTART_REPLACEMENT_TIMEOUT:"+json.dumps(evidence,sort_keys=True))
+
 def e3_receipt(req,res):
  payload={"schema_version":"1.0.0","timestamp":now(),"request_id":req["request_id"],"operation":req["operation"],"mission_id":E3_ID,"lpcl_digest":E3_LPCL_DIGEST,"source_head":req.get("source_head"),"source_tree":req.get("source_tree"),"result_digest":sha256(canonical(res)),"authority":"EXPLICIT_UI_ACTIVATION"};payload["receipt_digest"]=sha256(canonical(payload));atomic_json(E3_STATE/"receipts"/(req["request_id"]+".json"),payload);return {"control_receipt":payload}
 
@@ -1623,9 +1634,12 @@ def e3_handle(req):
  elif op=="EPOCH3_M64_RESTART_ONE":
   before=e3_read();name=req.get("pod_name");row=next((x for x in before.get("pods",[]) if x.get("name")==name),None)
   if row is None or not re.fullmatch(r"e3-ld(?:0[1-9]|1[0-2])-worker-[a-z0-9-]+",str(name)):raise Deny("E3_POD_NAME_DENIED")
-  old=row["uid"];mission64_kubectl(["delete","pod",name,"-n",E3_NAMESPACE,"--wait=false"],timeout=30);res=e3_wait();
-  if any(x.get("uid")==old for x in res["pods"]):raise Deny("E3_RESTART_UID_UNCHANGED")
-  res["restarted_pod"]=name;res["old_uid"]=old
+  old=row["uid"];lid=str(row.get("logical_drone") or "").upper();before_role_uids={x.get("uid") for x in before.get("pods",[]) if str(x.get("logical_drone") or "").upper()==lid and x.get("uid")}
+  mission64_kubectl(["delete","pod",name,"-n",E3_NAMESPACE,"--wait=false"],timeout=30);res=e3_wait_restarted_uid(old)
+  after_role=[x for x in res.get("pods",[]) if str(x.get("logical_drone") or "").upper()==lid];after_role_uids={x.get("uid") for x in after_role if x.get("uid")};new_uids=after_role_uids-before_role_uids
+  if len(new_uids)!=1:raise Deny("E3_RESTART_REPLACEMENT_IDENTITY_AMBIGUOUS:"+json.dumps({"logical_id":lid,"old_uid":old,"new_uids":sorted(new_uids)}))
+  replacement_uid=next(iter(new_uids));replacement=next(x for x in after_role if x.get("uid")==replacement_uid)
+  res["restarted_pod"]=name;res["old_uid"]=old;res["replacement_pod"]=replacement.get("name");res["replacement_uid"]=replacement_uid;res["restart_identity_verified"]=True
  elif op=="EPOCH3_M64_VALIDATE":res=e3_validate_execution()
  elif op=="EPOCH3_M64_STOP":
   mission64_kubectl(["delete","namespace",E3_NAMESPACE,"--ignore-not-found=true","--wait=true","--timeout=120s"],timeout=140);res=e3_read()

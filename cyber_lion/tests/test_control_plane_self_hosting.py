@@ -130,4 +130,17 @@ class SelfHostingControlPlaneTests(unittest.TestCase):
 
 
 
+    def test_phase_lifecycle_state_preserves_blocked_and_failed_truth(self):
+        import importlib,sys
+        tools=Path(__file__).resolve().parents[2]/'tools'
+        if str(tools) not in sys.path: sys.path.insert(0,str(tools))
+        sys.modules['mission_control_compat']=importlib.import_module('lion_mission_control_compat')
+        mc=importlib.import_module('lion_mission_control_v3')
+        rows=[{'phase_id':'P1','status':'PASS'},{'phase_id':'P2','status':'BLOCKED'}]
+        self.assertEqual(mc._phase_lifecycle_state(rows,'P2'),'BLOCKED')
+        self.assertEqual(mc._phase_lifecycle_state([{'phase_id':'P1','status':'FAIL'}],None),'FAILED')
+        self.assertEqual(mc._phase_lifecycle_state([{'phase_id':'P1','status':'PASS'}],None),'COMPLETE')
+
+
+
 if __name__=='__main__': unittest.main()
