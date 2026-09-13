@@ -116,9 +116,7 @@ class PublicWebReadBroker:
                 else:
                     p=_Parser();p.feed(ev.text);rows=p.rows
                 for title,href in rows:
-                    if href.startswith('//'):href='https:'+href
-                    u=urllib.parse.urlsplit(href)
-                    if 'duckduckgo.com' in (u.hostname or ''):href=urllib.parse.unquote((urllib.parse.parse_qs(u.query).get('uddg') or [''])[0])
+                    href=unwrap_search_result_url(href)
                     try:validate_public_https_url(href,self.resolver)
                     except ValueError:continue
                     out.append({'provider':provider,'query':query,'title':title,'url':href,'searched_at':ev.fetched_at,'trust_class':'UNTRUSTED_EXTERNAL_EVIDENCE','result_digest':sha256((title+'\0'+href).encode()).hexdigest()})
@@ -126,3 +124,16 @@ class PublicWebReadBroker:
                 if out:return tuple(out)
             except Exception:continue
         raise ValueError('no public search provider available')
+
+def unwrap_search_result_url(href):
+    """Normalize only an exact DuckDuckGo result redirect authority."""
+    if not isinstance(href,str) or not href:raise ValueError('href')
+    if href.startswith('//'):href='https:'+href
+    u=urllib.parse.urlsplit(href)
+    host=(u.hostname or '').rstrip('.').lower()
+    allowed={'duckduckgo.com','www.duckduckgo.com','html.duckduckgo.com','lite.duckduckgo.com'}
+    if u.scheme=='https' and not u.username and not u.password and host in allowed and u.path in {'/l','/l/'}:
+        targets=urllib.parse.parse_qs(u.query,keep_blank_values=False).get('uddg') or ()
+        if len(targets)==1 and targets[0]:return targets[0]
+    return href
+

@@ -188,6 +188,21 @@ def bind_lpcl_execution(mid):
       if 'ALLOWED' not in reuse:raise ValueError('lpcl material rebind not allowed')
       source_mid=_lpcl_rebind_source(kv)
       if source_mid==mid:raise ValueError('lpcl parent self-reference')
+      # After an evidence-bound SELF_HOSTING_TAKEOVER, the child owns its durable
+      # execution cursor and exact 64-worker identity snapshot. A later process
+      # restart must not require the intentionally superseded parent to still be
+      # RUNNING; doing so turns correct lineage closure into a false bind error.
+      if m['adapter']==LPCL_REBIND_ADAPTER:
+       takeover=False
+       for rr in c.execute("SELECT payload_json FROM protocol_messages WHERE mission_id=? AND protocol='RECEIPT' AND phase='SELF_HOSTING_TAKEOVER' ORDER BY id DESC LIMIT 20",(mid,)).fetchall():
+        try: payload=json.loads(rr['payload_json'])
+        except Exception: payload={}
+        if payload.get('event')=='SELF_HOSTING_TAKEOVER_COMPLETE' and payload.get('uids_equal') is True and int(payload.get('child_uid_count') or 0)==64:
+         takeover=True;break
+       if takeover:
+        own=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=? ORDER BY pod_uid',(mid,)).fetchall()
+        if len(own)==64 and len({r['pod_uid'] for r in own if r['pod_uid']})==64 and all(int(r['ready'])==1 for r in own):
+         c.execute('UPDATE missions SET last_error=NULL,updated_at=? WHERE mission_id=?',(now(),mid));c.commit();return process_snapshot(mid)
       src=c.execute('SELECT mission_id,state,runtime_state,materialized,ready,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
       if not src or src['state'] not in {'RUNNING','AUTHORIZED','WAITING','BLOCKED'} or src['materialized']!=64 or src['ready']!=64:raise ValueError('lpcl source fleet not healthy:'+source_mid)
       workers=c.execute('SELECT pod_name,pod_uid,logical_id,phase,ready,restarts,pod_ip,observed_at FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(source_mid,)).fetchall()
@@ -398,7 +413,6 @@ def epoch3_component_broker(operation,logical_id):
     if not row:raise ValueError('epoch3 material adapter identity missing')
     req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':LPCL_REBIND_SOURCE,'source_head':row['source_head'],'source_tree':row['source_tree'],'spec_digest':row['spec_digest'],'logical_id':str(logical_id).upper()}
     return _send_broker_request(req)
-
 def apply_runtime_for(c,mid,r):
     state=str(r.get('state') or 'UNKNOWN');mat=int(r.get('materialized',0) or 0);ready=int(r.get('ready',0) or 0);t=now();row=c.execute('SELECT state FROM missions WHERE mission_id=?',(mid,)).fetchone();cur=row['state'] if row else 'UNKNOWN'
     if state=='RUNNING':life='RUNNING'
@@ -672,8 +686,12 @@ def _http_json(url,timeout=10):
 def _github_pr_state():
     pr=_http_json('https://api.github.com/repos/DonkeyJJLove/ai_platform/pulls/337')
     head=((pr.get('head') or {}).get('sha'));base=((pr.get('base') or {}).get('sha'))
-    runs=_http_json('https://api.github.com/repos/DonkeyJJLove/ai_platform/actions/runs?head_sha='+str(head)+'&per_page=50') if head else {'workflow_runs':[]}
-    rr=[{'name':x.get('name'),'status':x.get('status'),'conclusion':x.get('conclusion'),'head_sha':x.get('head_sha'),'id':x.get('id')} for x in runs.get('workflow_runs',[])]
+    if not _hex(head,40) or not _hex(base,40):raise ValueError('GitHub PR identity is not an exact SHA-1')
+    # Keep the outbound request target fully static.  The PR head is external
+    # observation data and is used only for local exact-head filtering, never
+    # interpolated back into a network URL (SSRF/target-substitution boundary).
+    runs=_http_json('https://api.github.com/repos/DonkeyJJLove/ai_platform/actions/runs?event=pull_request&per_page=50')
+    rr=[{'name':x.get('name'),'status':x.get('status'),'conclusion':x.get('conclusion'),'head_sha':x.get('head_sha'),'id':x.get('id')} for x in runs.get('workflow_runs',[]) if x.get('head_sha')==head]
     return {'state':pr.get('state'),'merged':pr.get('merged'),'head':head,'base':base,'mergeable':pr.get('mergeable'),'runs':rr}
 
 
@@ -708,6 +726,11 @@ def _connector_github_gate(c,mid,pid,max_age_seconds=900):
       if valid:
        return {'state':'open','merged':False,'head':head,'base':payload.get('base'),'mergeable':payload.get('mergeable'),'runs':runs,'connector_payload_digest':row['payload_digest'],'connector_observed_at':row['observed_at']}
     return None
+
+
+def _terminal_github_state(c,mid):
+    receipt=_connector_github_gate(c,mid,'PR337_FAST_FORWARD_AND_GREEN_EXACT_HEAD_CI',max_age_seconds=3600)
+    return receipt if receipt is not None else _github_pr_state()
 
 
 def _local_health(port,path='/health'):
@@ -805,7 +828,18 @@ def drive_self_hosted_once(mid=SELF_HOSTING_MISSION):
        driver_finish_attempt(c,attempt,now,state='PASS',evidence=evidence,detail='Exact-head CI green')
        _driver_phase_result(c,mid,pid,'PASS','All required workflows green on exact current PR337 head; no merge performed.',{'event':'PR337_EXACT_HEAD_CI_GREEN',**evidence},'GITHUB');return
       if pid=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
-       g=_github_pr_state();green,_=_all_required_ci_green(g);m=c.execute('SELECT materialized,ready FROM missions WHERE mission_id=?',(mid,)).fetchone();integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
+       # Reuse the fresh, exact-head, read-only connector receipt accepted by
+       # the immediately preceding GitHub gate.  This keeps terminal readiness
+       # restart-safe when the unauthenticated public API is rate-limited.
+       try:g=_terminal_github_state(c,mid)
+       except urllib.error.HTTPError as exc:
+        if exc.code==403:
+         evidence={'source':'GITHUB_PUBLIC_API','http_status':403,'rate_limited':True,'connector_receipt':False}
+         driver_finish_attempt(c,attempt,now,state='WAITING',evidence=evidence,detail='Terminal currentness waiting for connector receipt or GitHub rate reset')
+         _driver_phase_result(c,mid,pid,'WAITING','Terminal readiness currentness is rate-limited; waiting for bounded exact-head connector evidence.',evidence,'GITHUB')
+         driver_transition(c,mid,'WAITING',now,blocking_gate='GITHUB_CONNECTOR_OR_RATE_RESET',waiting_reason='GitHub public API rate limit exhausted',next_action='WAIT_FOR_EXACT_GITHUB_RECEIPT',current_phase=pid);return
+        raise
+       green,_=_all_required_ci_green(g);m=c.execute('SELECT materialized,ready FROM missions WHERE mission_id=?',(mid,)).fetchone();integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
        health={'8766':_local_health(8766)}
        win=None
        for msg in c.execute("SELECT payload_json,payload_digest,observed_at FROM protocol_messages WHERE mission_id=? AND protocol='EVIDENCE' AND from_id='LPCL_PANEL' AND phase=? ORDER BY id DESC LIMIT 20",(mid,pid)).fetchall():
@@ -866,7 +900,6 @@ def get_dual_result(rid):
     c=connect()
     try:return dual_join_result(c,rid)
     finally:c.close()
-
 def create_saas_handoff(x):
     if type(x) is not dict or set(x)!={'mission_id','question'}:raise ValueError('saas request schema')
     mid=x.get('mission_id');question=x.get('question')

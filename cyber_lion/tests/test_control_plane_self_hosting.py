@@ -72,6 +72,44 @@ class SelfHostingControlPlaneTests(unittest.TestCase):
         self.assertEqual(set(names),{'Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core'})
 
 
+    def test_github_pr_state_never_interpolates_observed_head_into_request_target(self):
+        import importlib,sys
+        tools=Path(__file__).resolve().parents[2]/'tools'
+        if str(tools) not in sys.path: sys.path.insert(0,str(tools))
+        sys.modules['mission_control_compat']=importlib.import_module('lion_mission_control_compat')
+        mc=importlib.import_module('lion_mission_control_v3')
+        head='a'*40;base='b'*40;calls=[]
+        def fake_http(url,timeout=10):
+            calls.append(url)
+            if url.endswith('/pulls/337'):
+                return {'state':'open','merged':False,'head':{'sha':head},'base':{'sha':base},'mergeable':True}
+            return {'workflow_runs':[{'name':'Cyber-Lion Core','status':'completed','conclusion':'success','head_sha':head,'id':1}]}
+        with patch.object(mc,'_http_json',side_effect=fake_http):
+            out=mc._github_pr_state()
+        self.assertEqual(out['head'],head)
+        self.assertEqual(len(calls),2)
+        self.assertNotIn(head,calls[1])
+        self.assertEqual(calls[1],'https://api.github.com/repos/DonkeyJJLove/ai_platform/actions/runs?event=pull_request&per_page=50')
+
+    def test_terminal_readiness_reuses_exact_connector_receipt_without_public_api(self):
+        import importlib,sys,sqlite3,json,datetime
+        tools=Path(__file__).resolve().parents[2]/'tools'
+        if str(tools) not in sys.path: sys.path.insert(0,str(tools))
+        sys.modules['mission_control_compat']=importlib.import_module('lion_mission_control_compat')
+        mc=importlib.import_module('lion_mission_control_v3')
+        c=sqlite3.connect(':memory:');c.row_factory=sqlite3.Row
+        c.execute('CREATE TABLE protocol_messages(id INTEGER PRIMARY KEY,mission_id TEXT,observed_at TEXT,protocol TEXT,from_id TEXT,to_id TEXT,phase TEXT,direction TEXT,payload_json TEXT,payload_digest TEXT)')
+        head='a'*40;phase='PR337_FAST_FORWARD_AND_GREEN_EXACT_HEAD_CI'
+        workflows={n:{'status':'completed','conclusion':'success','head_sha':head,'run_id':i} for i,n in enumerate(('Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core'),1)}
+        payload={'event':'GITHUB_EXACT_HEAD_CI_RECEIPT','source':'GITHUB_CONNECTOR','head':head,'base':'b'*40,'mergeable':True,'workflows':workflows,'authority_effect':'NONE'}
+        observed=datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00','Z')
+        c.execute('INSERT INTO protocol_messages VALUES(1,?,?,?,?,?,?,?,?,?)',('M1',observed,'GITHUB','CHATGPT_SAAS_SUPERVISOR','MISSION_CONTROL',phase,'IN',json.dumps(payload),'d'*64))
+        with patch.object(mc,'_github_pr_state',side_effect=AssertionError('public API must not be called')):
+            out=mc._terminal_github_state(c,'M1')
+        self.assertEqual(out['head'],head)
+        green,_=mc._all_required_ci_green(out);self.assertTrue(green)
+        c.close()
+
     def test_connector_github_receipt_is_exact_head_bound(self):
         import importlib,sys,sqlite3
         tools=Path(__file__).resolve().parents[2]/'tools'

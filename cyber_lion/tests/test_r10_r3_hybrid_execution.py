@@ -124,6 +124,32 @@ class MissionRebindTests(unittest.TestCase):
         self.assertEqual(out['control_authority'], 'BOUNDED_LPCL_EXECUTION_ADAPTER')
         self.assertIn('ASSIGNMENT', {x['protocol'] for x in out['protocol_messages']})
 
+    def test_post_takeover_restart_does_not_require_superseded_parent(self):
+        tools = Path(__file__).resolve().parents[2] / 'tools'
+        if str(tools) not in sys.path: sys.path.insert(0, str(tools))
+        compat = importlib.import_module('lion_mission_control_compat'); sys.modules['mission_control_compat'] = compat
+        mc = importlib.import_module('lion_mission_control_v3')
+        td = tempfile.TemporaryDirectory(); self.addCleanup(td.cleanup)
+        old_db, old_legacy = mc.DB, mc.LEGACY_DB
+        self.addCleanup(lambda: setattr(mc, 'DB', old_db)); self.addCleanup(lambda: setattr(mc, 'LEGACY_DB', old_legacy))
+        mc.DB = Path(td.name) / 'mc.db'; mc.LEGACY_DB = Path(td.name) / 'none.db'; mc.migrate()
+        protocols=list(mc.PROTOCOLS)
+        def spec(mid,text):
+            return {'mission_id':mid,'title':mid,'objective':'o','description':'d','lpcl_digest':hashlib.sha256(text.encode()).hexdigest(),'lpcl_text':text,'source_head':'a'*40,'source_tree':'b'*40,'logical_count':12,'material_target':64,'phases':[{'id':'CURRENTNESS_REACQUIRE','title':'Currentness'}],'protocols':protocols}
+        parent=mc.LPCL_REBIND_SOURCE
+        mc.register_lpcl_mission(spec(parent,'PROJECT=LION_EVOLUSION\n'))
+        c=mc.connect()
+        for i in range(1,13):
+            lid=f'LD{i:02d}';n=6 if i<=4 else 5
+            c.execute('INSERT INTO logical_drones VALUES(?,?,?,?,?,?)',(parent,lid,'OLD',n,n,n))
+            for j in range(n): c.execute('INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)',(parent,f'p-{lid}-{j}',f'uid-{lid}-{j}',lid,'Running',1,0,'10.0.0.1',mc.now()))
+        c.execute("UPDATE missions SET state='RUNNING',runtime_state='RUNNING',materialized=64,ready=64 WHERE mission_id=?",(parent,));c.execute("UPDATE mission_process_specs SET authority_state='EXPLICIT_USER_ACTIVATION' WHERE mission_id=?",(parent,));c.commit();c.close()
+        text='CONTINUE_EXISTING_EPOCH3_MISSION=TRUE\nCREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE\nREUSE_EXISTING_HEALTHY_MATERIAL_FLEET=ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND\n'+''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1,13))
+        child=spec('CHILD-SELFHOST-R1',text);mc.register_lpcl_mission(child);mc.activate_lpcl_mission(child['mission_id'],{'lpcl_digest':child['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        c=mc.connect();mc._process_message(c,child['mission_id'],'RECEIPT','MISSION_EXECUTION_DRIVER','MISSION_CONTROL','SELF_HOSTING_TAKEOVER',{'event':'SELF_HOSTING_TAKEOVER_COMPLETE','uids_equal':True,'child_uid_count':64},'INTERNAL');c.execute("UPDATE missions SET state='SUPERSEDED',runtime_state=? WHERE mission_id=?",('REBOUND_TO:'+child['mission_id'],parent));c.commit();c.close()
+        out=mc.bind_lpcl_execution(child['mission_id'])
+        self.assertEqual((out['materialized'],out['ready']),(64,64));self.assertIsNone(out['last_error'])
+
 
 if __name__ == '__main__':
     unittest.main()
