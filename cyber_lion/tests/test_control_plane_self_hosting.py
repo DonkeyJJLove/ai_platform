@@ -72,5 +72,24 @@ class SelfHostingControlPlaneTests(unittest.TestCase):
         self.assertEqual(set(names),{'Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core'})
 
 
+    def test_connector_github_receipt_is_exact_head_bound(self):
+        import importlib,sys,sqlite3
+        tools=Path(__file__).resolve().parents[2]/'tools'
+        if str(tools) not in sys.path: sys.path.insert(0,str(tools))
+        sys.modules['mission_control_compat']=importlib.import_module('lion_mission_control_compat')
+        mc=importlib.import_module('lion_mission_control_v3')
+        c=sqlite3.connect(':memory:');c.row_factory=sqlite3.Row
+        c.execute('CREATE TABLE protocol_messages(id INTEGER PRIMARY KEY,mission_id TEXT,observed_at TEXT,protocol TEXT,from_id TEXT,to_id TEXT,phase TEXT,direction TEXT,payload_json TEXT,payload_digest TEXT)')
+        head='a'*40;phase='PR337_FAST_FORWARD_AND_GREEN_EXACT_HEAD_CI'
+        workflows={n:{'status':'completed','conclusion':'success','head_sha':head,'run_id':i} for i,n in enumerate(('Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core'),1)}
+        payload={'event':'GITHUB_EXACT_HEAD_CI_RECEIPT','source':'GITHUB_CONNECTOR','head':head,'base':'b'*40,'mergeable':True,'workflows':workflows,'authority_effect':'NONE'}
+        import json,datetime
+        observed=datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00','Z')
+        c.execute('INSERT INTO protocol_messages VALUES(1,?,?,?,?,?,?,?,?,?)',('M1',observed,'GITHUB','CHATGPT_SAAS_SUPERVISOR','MISSION_CONTROL',phase,'IN',json.dumps(payload),'d'*64))
+        out=mc._connector_github_gate(c,'M1',phase)
+        self.assertEqual(out['head'],head);green,names=mc._all_required_ci_green(out);self.assertTrue(green);self.assertEqual(set(names),set(workflows))
+        c.close()
+
+
 
 if __name__=='__main__': unittest.main()

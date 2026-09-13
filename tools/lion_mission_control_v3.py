@@ -683,6 +683,33 @@ def _all_required_ci_green(v):
     return all(names.get(n,{}).get('status')=='completed' and names.get(n,{}).get('conclusion')=='success' for n in required),names
 
 
+def _connector_github_gate(c,mid,pid,max_age_seconds=900):
+    required=('Bandit Security Scan','LION R22C Full Symbol Census','Cyber-Lion Core')
+    rows=c.execute("SELECT observed_at,payload_json,payload_digest FROM protocol_messages WHERE mission_id=? AND protocol='GITHUB' AND from_id='CHATGPT_SAAS_SUPERVISOR' AND phase=? ORDER BY id DESC LIMIT 20",(mid,pid)).fetchall()
+    stamp=datetime.now(timezone.utc)
+    for row in rows:
+      try: payload=json.loads(row['payload_json'])
+      except Exception: continue
+      if payload.get('event')!='GITHUB_EXACT_HEAD_CI_RECEIPT' or payload.get('authority_effect')!='NONE' or payload.get('source')!='GITHUB_CONNECTOR': continue
+      head=str(payload.get('head') or '')
+      if not _hex(head,40): continue
+      try:
+       observed=datetime.fromisoformat(str(row['observed_at']).replace('Z','+00:00'))
+       if (stamp-observed).total_seconds()>max_age_seconds: continue
+      except Exception: continue
+      workflows=payload.get('workflows') or {}
+      if set(workflows)!=set(required): continue
+      runs=[]
+      valid=True
+      for name in required:
+       item=workflows.get(name) or {}
+       if item.get('head_sha')!=head or item.get('status')!='completed' or item.get('conclusion')!='success': valid=False
+       runs.append({'name':name,'status':item.get('status'),'conclusion':item.get('conclusion'),'head_sha':item.get('head_sha'),'id':item.get('run_id')})
+      if valid:
+       return {'state':'open','merged':False,'head':head,'base':payload.get('base'),'mergeable':payload.get('mergeable'),'runs':runs,'connector_payload_digest':row['payload_digest'],'connector_observed_at':row['observed_at']}
+    return None
+
+
 def _local_health(port,path='/health'):
     try:
       with urllib.request.urlopen(f'http://127.0.0.1:{port}{path}',timeout=3) as r:return {'ok':r.status==200,'status':r.status}
@@ -758,7 +785,18 @@ def drive_self_hosted_once(mid=SELF_HOSTING_MISSION):
        driver_finish_attempt(c,attempt,now,state='PASS',evidence=evidence,detail='Parent lineage reconciled')
        _driver_phase_result(c,mid,pid,'PASS','Parent mission reconciled only after live child driver heartbeat and exact material rebind.',{'event':'PARENT_MISSION_RECONCILED',**evidence},'RECOVERY');return
       if pid=='PR337_FAST_FORWARD_AND_GREEN_EXACT_HEAD_CI':
-       g=_github_pr_state();green,names=_all_required_ci_green(g);driver_observe_gate(c,mid,pid,'GITHUB_PR337_EXACT_HEAD_CI','PASS' if green else 'WAITING',g,now)
+       g=_connector_github_gate(c,mid,pid)
+       if g is None:
+        try:
+         g=_github_pr_state()
+        except urllib.error.HTTPError as exc:
+         if exc.code==403:
+          evidence={'source':'GITHUB_PUBLIC_API','http_status':403,'rate_limited':True,'connector_receipt':False}
+          driver_finish_attempt(c,attempt,now,state='WAITING',evidence=evidence,detail='GitHub public API rate limited; waiting for connector receipt or rate reset')
+          _driver_phase_result(c,mid,pid,'WAITING','GitHub currentness rate-limited; exact connector receipt is accepted as bounded read-only fallback.',evidence,'GITHUB')
+          driver_transition(c,mid,'WAITING',now,blocking_gate='GITHUB_CONNECTOR_OR_RATE_RESET',waiting_reason='GitHub public API rate limit exhausted',next_action='WAIT_FOR_EXACT_GITHUB_RECEIPT',current_phase=pid);return
+         raise
+       green,names=_all_required_ci_green(g);driver_observe_gate(c,mid,pid,'GITHUB_PR337_EXACT_HEAD_CI','PASS' if green else 'WAITING',g,now)
        evidence={'head':g['head'],'base':g['base'],'mergeable':g['mergeable'],'required':{k:{'status':v.get('status'),'conclusion':v.get('conclusion')} for k,v in names.items()}}
        if not green:
         driver_finish_attempt(c,attempt,now,state='WAITING',evidence=evidence,detail='Exact-head CI not green')
