@@ -1,0 +1,86 @@
+name: LION Exact Repair Publication Materializer
+
+on:
+  push:
+    branches:
+      - repair/epoch3-panel-publication-staging-r1
+    paths:
+      - .github/workflows/lion-exact-repair-publication.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lion-exact-repair-publication-r1
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: [self-hosted, linux, lion-trust-client]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout isolated staging ref
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Materialize exact validated repair tree
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STAGING='repair/epoch3-panel-publication-staging-r1'
+          READY='repair/epoch3-panel-publication-ready-r1'
+          OLD='2309e33e1f141aaf4ddb0a0dd521c4abb6e6cc3d'
+          LOCAL='6228ec8344480c9a2c1cb95199986bfb500037f0'
+          TREE='a508165d183bfea5004c155434ae9ff658206cc8'
+          SRC='/var/lib/sentinelx/uploads/epoch3-receipt-panel-repair-r1/ai_platform'
+
+          test "${GITHUB_REF_NAME}" = "${STAGING}"
+          test -d "${SRC}/.git"
+          test "$(git -C "${SRC}" rev-parse HEAD)" = "${LOCAL}"
+          test "$(git -C "${SRC}" rev-parse 'HEAD^{tree}')" = "${TREE}"
+          test -z "$(git -C "${SRC}" status --porcelain)"
+          git -C "${SRC}" merge-base --is-ancestor "${OLD}" "${LOCAL}"
+
+          if git ls-remote --exit-code --heads origin "refs/heads/${READY}" >/dev/null 2>&1; then
+            echo "ready branch already exists; refusing replacement" >&2
+            exit 1
+          fi
+
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          git -C "${SRC}" archive --format=tar "${LOCAL}" | tar -xf - -C "${tmp}"
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
+          cp -a "${tmp}/." .
+          git add -A
+
+          materialized_tree="$(git write-tree)"
+          test "${materialized_tree}" = "${TREE}"
+
+          export GIT_AUTHOR_NAME='LION Publication Bot'
+          export GIT_AUTHOR_EMAIL='lion-publication@users.noreply.github.com'
+          export GIT_COMMITTER_NAME='LION Publication Bot'
+          export GIT_COMMITTER_EMAIL='lion-publication@users.noreply.github.com'
+
+          commit="$(printf '%s\n\n%s\n' \
+            'Epoch3: repair restart receipts and panel SaaS threading' \
+            'Materialized from validated repair candidate 6228ec8344480c9a2c1cb95199986bfb500037f0 with exact tree a508165d183bfea5004c155434ae9ff658206cc8.' \
+            | git commit-tree "${TREE}" -p "${OLD}")"
+
+          test "$(git rev-parse "${commit}^{tree}")" = "${TREE}"
+          test "$(git rev-parse "${commit}^")" = "${OLD}"
+          git merge-base --is-ancestor "${OLD}" "${commit}"
+
+          git push origin "${commit}:refs/heads/${READY}"
+
+          {
+            echo '### Exact repair publication candidate'
+            echo "- commit: ${commit}"
+            echo "- parent: ${OLD}"
+            echo "- tree: ${TREE}"
+            echo "- source: ${LOCAL}"
+            echo "- ready branch: ${READY}"
+          } >> "${GITHUB_STEP_SUMMARY}"
