@@ -1,0 +1,18 @@
+{
+  "scope": "DISPOSABLE_SQLITE_BACKUP_OF_LIVE_DB",
+  "integrity": [
+    "ok"
+  ],
+  "preserved_tables": 30,
+  "added_tables": [
+    "mission_scheduler_migrations",
+    "mission_scheduler_turns"
+  ],
+  "migration_idempotent": true,
+  "missions_projected": 25,
+  "projection_versions": [
+    "lion.mission-projection/v1"
+  ],
+  "historical_record_count": 4,
+  "live_database_mutated": false
+}
