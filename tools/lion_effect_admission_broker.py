@@ -1654,7 +1654,7 @@ def e3_handle(req):
 
 MISSION_CONTROL_V3_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3")
 MISSION_CONTROL_V3_REQUIRED_SHA256={
- "mission_control_v3.py":"b566cc65381132febcf1b08cc1f5f71de378c68d7d6852ad758e547f1ccdd094",
+ "mission_control_v3.py":"b97cbf14e39b79197fcac55c0df56f7f94a287bbc0c9d2a02bca00a4be79586c",
  "mission_control_compat.py":"67ce2f6b7f40336ca09012e7a7e414c0f2feb52fcf78947dce628427d70fd4e7",
  "lion_mission_lifecycle_db.py":"9b2d37e1d6e3273800a31cb5417143deb117916444be1cef0c18f0339b8a915f",
  "lion_saas_session_bridge.py":"c0df56851c4968e53441c609cca616d437d2fd8e52ac1499bdf86e4cc34ddbed",

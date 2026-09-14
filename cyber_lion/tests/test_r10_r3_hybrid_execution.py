@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from cyber_lion.app_coordination.local_intelligence_gateway import Gateway
@@ -90,6 +91,14 @@ class ParserNormalizationTests(unittest.TestCase):
 
 
 class MissionRebindTests(unittest.TestCase):
+    @staticmethod
+    def live_runtime(uid_prefix='live'):
+        pods=[]
+        for i in range(1,13):
+            lid=f'LD{i:02d}';n=6 if i<=4 else 5
+            for j in range(n):
+                pods.append({'name':f'e3-{lid.lower()}-worker-{j}','uid':f'{uid_prefix}-uid-{lid}-{j}','logical_drone':lid.lower(),'phase':'Running','ready':True,'restarts':0,'pod_ip':f'10.42.{i}.{j+1}'})
+        return {'state':'RUNNING','materialized':64,'ready':64,'unique_uid_count':64,'pods':pods}
     def test_authorized_continuation_rebinds_healthy_64_worker_fleet(self):
         tools = Path(__file__).resolve().parents[2] / 'tools'
         sys.path.insert(0, str(tools))
@@ -117,7 +126,8 @@ class MissionRebindTests(unittest.TestCase):
         text = 'CONTINUE_EXISTING_EPOCH3_MISSION=TRUE\nCREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE\nREUSE_EXISTING_HEALTHY_MATERIAL_FLEET=ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND\n' + ''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1, 13))
         new = spec('EPOCH3-CLOSURE-HYBRID-SAAS-RECOVERY-R1', text)
         mc.register_lpcl_mission(new)
-        out = mc.activate_lpcl_mission(new['mission_id'], {'lpcl_digest': new['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
+        with patch.object(mc, 'epoch3_broker', return_value=(self.live_runtime(), 'live-read-rid')):
+            out = mc.activate_lpcl_mission(new['mission_id'], {'lpcl_digest': new['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
         self.assertEqual((out['state'], out['materialized'], out['ready']), ('RUNNING', 64, 64))
         self.assertEqual(out['process']['current_phase'], 'CURRENTNESS_REACQUIRE')
         self.assertEqual(out['logical'][0]['role'], 'ROLE_01')
@@ -145,9 +155,12 @@ class MissionRebindTests(unittest.TestCase):
             for j in range(n): c.execute('INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)',(parent,f'p-{lid}-{j}',f'uid-{lid}-{j}',lid,'Running',1,0,'10.0.0.1',mc.now()))
         c.execute("UPDATE missions SET state='RUNNING',runtime_state='RUNNING',materialized=64,ready=64 WHERE mission_id=?",(parent,));c.execute("UPDATE mission_process_specs SET authority_state='EXPLICIT_USER_ACTIVATION' WHERE mission_id=?",(parent,));c.commit();c.close()
         text='CONTINUE_EXISTING_EPOCH3_MISSION=TRUE\nCREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE\nREUSE_EXISTING_HEALTHY_MATERIAL_FLEET=ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND\n'+''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1,13))
-        child=spec('CHILD-SELFHOST-R1',text);mc.register_lpcl_mission(child);mc.activate_lpcl_mission(child['mission_id'],{'lpcl_digest':child['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        child=spec('CHILD-SELFHOST-R1',text);mc.register_lpcl_mission(child)
+        with patch.object(mc,'epoch3_broker',return_value=(self.live_runtime(), 'live-read-rid')):
+            mc.activate_lpcl_mission(child['mission_id'],{'lpcl_digest':child['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
         c=mc.connect();mc._process_message(c,child['mission_id'],'RECEIPT','MISSION_EXECUTION_DRIVER','MISSION_CONTROL','SELF_HOSTING_TAKEOVER',{'event':'SELF_HOSTING_TAKEOVER_COMPLETE','uids_equal':True,'child_uid_count':64},'INTERNAL');c.execute("UPDATE missions SET state='SUPERSEDED',runtime_state=? WHERE mission_id=?",('REBOUND_TO:'+child['mission_id'],parent));c.commit();c.close()
-        out=mc.bind_lpcl_execution(child['mission_id'])
+        with patch.object(mc,'epoch3_broker',side_effect=AssertionError('healthy rebound must not reread or clone parent')):
+            out=mc.bind_lpcl_execution(child['mission_id'])
         self.assertEqual((out['materialized'],out['ready']),(64,64));self.assertIsNone(out['last_error'])
 
 

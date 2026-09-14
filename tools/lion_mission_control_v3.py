@@ -204,25 +204,31 @@ def bind_lpcl_execution(mid):
       if 'ALLOWED' not in reuse:raise ValueError('lpcl material rebind not allowed')
       source_mid=_lpcl_rebind_source(kv)
       if source_mid==mid:raise ValueError('lpcl parent self-reference')
-      # After an evidence-bound SELF_HOSTING_TAKEOVER, the child owns its durable
-      # execution cursor and exact 64-worker identity snapshot. A later process
-      # restart must not require the intentionally superseded parent to still be
-      # RUNNING; doing so turns correct lineage closure into a false bind error.
+      # A rebound child owns its durable worker snapshot. Process restart must
+      # never overwrite that newer child identity from a recorded parent row.
+      # Preserve an exact 64/64 child snapshot without a network dependency; if
+      # the snapshot is incomplete, reacquire the material truth from the live
+      # bounded Epoch3 broker below instead of cloning possibly stale DB state.
       if m['adapter']==LPCL_REBIND_ADAPTER:
-       takeover=False
-       for rr in c.execute("SELECT payload_json FROM protocol_messages WHERE mission_id=? AND protocol='RECEIPT' AND phase='SELF_HOSTING_TAKEOVER' ORDER BY id DESC LIMIT 20",(mid,)).fetchall():
-        try: payload=json.loads(rr['payload_json'])
-        except Exception: payload={}
-        if payload.get('event')=='SELF_HOSTING_TAKEOVER_COMPLETE' and payload.get('uids_equal') is True and int(payload.get('child_uid_count') or 0)==64:
-         takeover=True;break
-       if takeover:
-        own=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=? ORDER BY pod_uid',(mid,)).fetchall()
-        if len(own)==64 and len({r['pod_uid'] for r in own if r['pod_uid']})==64 and all(int(r['ready'])==1 for r in own):
-         c.execute('UPDATE missions SET last_error=NULL,updated_at=? WHERE mission_id=?',(now(),mid));c.commit();return process_snapshot(mid)
-      src=c.execute('SELECT mission_id,state,runtime_state,materialized,ready,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
-      if not src or src['state'] not in {'RUNNING','AUTHORIZED','WAITING','BLOCKED'} or src['materialized']!=64 or src['ready']!=64:raise ValueError('lpcl source fleet not healthy:'+source_mid)
-      workers=c.execute('SELECT pod_name,pod_uid,logical_id,phase,ready,restarts,pod_ip,observed_at FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(source_mid,)).fetchall()
-      if len(workers)!=64 or len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl source fleet identity')
+       own=c.execute('SELECT pod_name,pod_uid,logical_id,phase,ready,restarts,pod_ip,observed_at FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,)).fetchall()
+       own_by={f'LD{i:02d}':[0,0] for i in range(1,13)}
+       for r in own:
+        lid=str(r['logical_id'] or '').upper()
+        if lid in own_by:
+         own_by[lid][0]+=1;own_by[lid][1]+=int(r['ready'] or 0)
+       own_distribution_ok=all(own_by[f'LD{i:02d}']==[target,target] for i,target in enumerate(LPCL_REBIND_DISTRIBUTION,1))
+       if len(own)==64 and len({r['pod_uid'] for r in own if r['pod_uid']})==64 and all(int(r['ready'])==1 for r in own) and own_distribution_ok:
+        c.execute('UPDATE missions SET last_error=NULL,updated_at=? WHERE mission_id=?',(now(),mid));c.commit();return process_snapshot(mid)
+      src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
+      if not src:raise ValueError('lpcl source mission missing:'+source_mid)
+      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ')
+      live_pods=runtime.get('pods') or []
+      if runtime.get('state')!='RUNNING' or int(runtime.get('materialized',0) or 0)!=64 or int(runtime.get('ready',0) or 0)!=64 or int(runtime.get('unique_uid_count',0) or 0)!=64 or len(live_pods)!=64:
+       raise ValueError('lpcl live material fleet not healthy')
+      workers=[]
+      for pod in live_pods:
+       workers.append({'pod_name':pod.get('name'),'pod_uid':pod.get('uid'),'logical_id':str(pod.get('logical_drone') or '').upper(),'phase':pod.get('phase'),'ready':1 if pod.get('ready') else 0,'restarts':int(pod.get('restarts',0) or 0),'pod_ip':pod.get('pod_ip')})
+      if len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl live material fleet identity')
       roles=[]
       for i,target in enumerate(LPCL_REBIND_DISTRIBUTION,1):
        lid=f'LD{i:02d}';role=kv.get(lid)
@@ -261,8 +267,8 @@ def bind_lpcl_execution(mid):
       except sqlite3.OperationalError:pass
       uid_digest=_payload_digest({'uids':new_uids})
       changed=old_uids!=new_uids
-      _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','MATERIAL_FLEET',current,{'event':'EXISTING_HEALTHY_FLEET_REBOUND','source_mission_id':source_mid,'worker_count':64,'unique_uid_count':64,'worker_uid_digest':uid_digest,'previous_binding_changed':changed,'binding_class':'CONTROL_PLANE_REBIND','pod_role_environment_rewritten':False,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
-      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','source_head':m['source_head'],'source_tree':m['source_tree'],'material_ready':64,'material_target':64,'parent_mission_id':source_mid},'INTERNAL')
+      _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','MATERIAL_FLEET',current,{'event':'EXISTING_HEALTHY_FLEET_REBOUND','source_mission_id':source_mid,'worker_count':64,'unique_uid_count':64,'worker_uid_digest':uid_digest,'previous_binding_changed':changed,'binding_class':'CONTROL_PLANE_REBIND','material_currentness_source':'EPOCH3_M64_READ','material_request_id':material_request_id,'pod_role_environment_rewritten':False,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
+      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','source_head':m['source_head'],'source_tree':m['source_tree'],'material_ready':64,'material_target':64,'parent_mission_id':source_mid,'material_currentness_source':'EPOCH3_M64_READ','material_request_id':material_request_id},'INTERNAL')
       _process_message(c,mid,'RECEIPT','MISSION_CONTROL','OPERATOR',current,{'event':'LPCL_EXECUTION_ADAPTER_BOUND','adapter':LPCL_REBIND_ADAPTER,'source_mission_id':source_mid,'lpcl_digest':m['spec_digest'],'worker_uid_digest':uid_digest,'parent_preserved':keep_parent},'OUT')
       ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
       c.commit()
