@@ -17,3 +17,5 @@ These eleven source descriptions are versioned here in documentation commit C. N
 - [EPOCH4_HANDOFF.md](EPOCH4_HANDOFF.md)
 
 The older canonical EPOCH3_CLOSURE.md retains its dated 2026-09-13 observations and links this source description. Its old not-listening observation is historical; the recorded 2026-09-14 observation supersedes it as latest status. Final effect receipts, not prose, attest deployment, merge and terminal closure.
+
+The metadata-only focus correction in 68accb2 and package rebind in 813c2bb supplement the initial source freeze. Their behavior and counterexample are documented in CONTROL_PLANE_AS_IS and FAILURE_AND_COUNTEREXAMPLE_HISTORY. Final effect receipts identify the final carrier-last commit.
