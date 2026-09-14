@@ -4,7 +4,7 @@ from tools.lion_local_intelligence_runtime import local_assignment_worker_once
 class LocalAssignmentWorkerTests(unittest.TestCase):
     def test_worker_claims_executes_dual_and_receipts_without_browser(self):
         calls=[]
-        row={"assignment_id":"assignment-1","material_drone_id":"MD025","input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],\"max_tokens\":64,\"dual_request_id\":\"dual-11111111111111111111111111111111\"}"}
+        row={"assignment_id":"assignment-1","material_drone_id":"MD025","lease_generation":7,"input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],\"max_tokens\":64,\"dual_request_id\":\"dual-11111111111111111111111111111111\"}"}
         def control(op,args):
             calls.append((op,args))
             if op=="local_assignments":return {"assignments":[row]}
@@ -17,6 +17,8 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
         self.assertEqual([x[0] for x in calls],["local_assignments","local_assignment_claim","dual_response","local_assignment_receipt"])
         receipt=calls[-1][1]
         self.assertEqual(receipt["status"],"PASS")
+        self.assertEqual(receipt["material_drone_id"],"MD025")
+        self.assertEqual(receipt["lease_generation"],7)
         self.assertEqual(receipt["result"]["response_text"],"LOCAL OK")
         self.assertEqual(receipt["result"]["authority_effect"],"NONE")
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-import hashlib,json,sqlite3,time
+import hashlib,json,sqlite3,time,threading
 from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import unquote
@@ -9,6 +9,7 @@ VKT_FINAL_DB=Path('/var/lib/sentinelx/uploads/vkt-r3-lpcl-v2-final/mission-contr
 STATIC=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/static')
 V3_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 CURRENT_ID='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'
+V3_READ_LOCK=threading.Lock()
 
 def ro(path):
  c=sqlite3.connect('file:'+str(path)+'?mode=ro',uri=True,timeout=5);c.row_factory=sqlite3.Row;return c
@@ -46,13 +47,15 @@ def _v3_has_run(run_id):
  except Exception:return False
  finally:c.close()
 
-def _mission_run_from_db(c,m):
+def _mission_run_from_db(c,m,*,focus_id=None):
+ if focus_id is None:
+  focus=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();focus_id=str(focus[0]) if focus and focus[0] else CURRENT_ID
  mid=m['mission_id'];ps=c.execute('SELECT * FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
  logical=c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,)).fetchall()
  workers=c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,)).fetchall()
  org={r['logical_id']:int(r['material_target'] or 0) for r in logical};active={r['logical_id']:int(r['ready'] or 0) for r in logical}
  pods=[{'fleet':r['logical_id'],'name':r['pod_name'],'uid':r['pod_uid'],'phase':r['phase'],'ready':bool(r['ready']),'restarts':int(r['restarts'] or 0),'pod_ip':r['pod_ip']} for r in workers]
- parts={r['logical_id']:{'participant_id':r['logical_id'],'role':r['role'],'fleet':r['logical_id'],'logical_identity':r['logical_id'],'material_identity':f"{int(r['materialized'] or 0)} Kubernetes Pods",'host':'LION-AUTH-LAB','runtime':'K3S' if int(m['materialized'] or 0)>0 else 'MISSION_CONTROL','state':'RUNNING' if int(r['ready'] or 0)==int(r['material_target'] or 0) and int(r['material_target'] or 0)>0 else 'PARTIAL_OR_UNKNOWN','observation_state':'OBSERVED' if mid==_v3_focus_id() else 'RECORDED_PROCESS'} for r in logical}
+ parts={r['logical_id']:{'participant_id':r['logical_id'],'role':r['role'],'fleet':r['logical_id'],'logical_identity':r['logical_id'],'material_identity':f"{int(r['materialized'] or 0)} Kubernetes Pods",'host':'LION-AUTH-LAB','runtime':'K3S' if int(m['materialized'] or 0)>0 else 'MISSION_CONTROL','state':'RUNNING' if int(r['ready'] or 0)==int(r['material_target'] or 0) and int(r['material_target'] or 0)>0 else 'PARTIAL_OR_UNKNOWN','observation_state':'OBSERVED' if mid==focus_id else 'RECORDED_PROCESS'} for r in logical}
  current_phase=ps['current_phase'] if ps else None;authority_state=ps['authority_state'] if ps else 'UNKNOWN'
  phases=c.execute('SELECT status,finished_at FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,)).fetchall() if ps else []
  terminal=bool(phases) and all(str(r['status']) in {'PASS','COMPLETE','SKIPPED','CANCELLED'} for r in phases)
@@ -60,14 +63,18 @@ def _mission_run_from_db(c,m):
  process_class='LION_LPCL_MISSION_PROCESS' if ps else 'MISSION_CORE_RECORD'
  runtime='K3S' if int(m['materialized'] or 0)>0 else 'MISSION_CONTROL'
  state=str(m['state'] or 'UNKNOWN')
- verification='SUPERSEDED' if state=='SUPERSEDED' else ('OBSERVED' if mid==_v3_focus_id() and state in {'RUNNING','WAITING','BLOCKED'} else 'SCHEMA_AWARE_RECORDED')
+ verification='SUPERSEDED' if state=='SUPERSEDED' else ('OBSERVED' if mid==focus_id and state in {'RUNNING','WAITING','BLOCKED'} else 'SCHEMA_AWARE_RECORDED')
  return {'run_id':mid,'process_language':'LPCL/1.1' if ps else 'UNKNOWN','process_class':process_class,'adapter_type':m['adapter'],'status':state,'verification_status':verification,'phase':current_phase or m['runtime_state'] or 'UNKNOWN','started_at':m['authorized_at'] or m['created_at'],'finished_at':finished,'duration':None,'host':'LION-AUTH-LAB','runtime':runtime,'namespace':m['namespace'],'source':{'repository':'DonkeyJJLove/ai_platform','head':m['source_head'],'tree':m['source_tree']},'target':{'kind':'MISSION_PROCESS','mission_id':mid},'workload':{'kind':'KubernetesFleet' if int(m['material_target'] or 0)>0 else 'MissionProcess','pods':int(m['material_target'] or 0)},'authority':{'class':authority_state,'mission_control':'BOUNDED_LPCL_EXECUTION_ADAPTER' if m['adapter']=='LPCL_REBOUND_EPOCH3_64' else 'MISSION_PROCESS_CONTROL','model_authority':'NONE'},'participants':parts,'metrics':{'pods':int(m['materialized'] or 0),'fresh_drones':int(m['ready'] or 0),'fleet_organizations':org,'active_by_organization':active,'drone_pods':pods,'unique_uid_count':len({p['uid'] for p in pods if p.get('uid')})},'artifacts':[],'receipts':[],'cleanup':{},'objective':ps['objective'] if ps else None,'evidence':{'class':'MISSION_PROCESS_DB','record_class':'CURRENT_PROCESS_RECORD' if ps else 'CURRENT_CORE_ONLY','authority_state':authority_state,'spec_digest':m['spec_digest'],'runtime_state':m['runtime_state'],'current_phase':current_phase,'progress':float(ps['progress']) if ps else None,'database_schema':'lion.mission-control.lifecycle-db/v2'}}
 
 def v3_mission_runs():
+ with V3_READ_LOCK:return _v3_mission_runs()
+
+def _v3_mission_runs():
  if not V3_DB.is_file():return []
  c=ro(V3_DB);out=[]
  try:
-  for m in c.execute("SELECT * FROM missions WHERE mission_id<>? AND adapter NOT LIKE 'LEGACY_OBSERVATION:%' ORDER BY updated_at DESC,mission_id",(CURRENT_ID,)).fetchall():out.append(_mission_run_from_db(c,m))
+  focus=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();focus_id=str(focus[0]) if focus and focus[0] else CURRENT_ID
+  for m in c.execute("SELECT * FROM missions WHERE mission_id<>? AND adapter NOT LIKE 'LEGACY_OBSERVATION:%' ORDER BY updated_at DESC,mission_id",(CURRENT_ID,)).fetchall():out.append(_mission_run_from_db(c,m,focus_id=focus_id))
  finally:c.close()
  return out
 

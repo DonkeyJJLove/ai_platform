@@ -1,0 +1,3366 @@
+{
+  "candidate": "72fbb40",
+  "source_object_store": "/opt/sentinelx-cloud-core/r25-repair-work",
+  "families": [
+    {
+      "head": "2ce0f43c63e474979ef867fcfa7776c7ce320b0d",
+      "aliases": [
+        "refs/remotes/r25-collapse/__invalid_never_create",
+        "refs/remotes/r25/__invalid_never_create"
+      ],
+      "subject": "chore: reconcile accidental temp-ref file residue",
+      "merge_base": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+      "paths": [
+        {
+          "path": "cyber_lion/tests/test_docker_fleet_polygon.py",
+          "change": "A",
+          "branch_blob": "f9621bd66925de9adc801c3d6c3207cae604a665",
+          "candidate_blob": "f9621bd66925de9adc801c3d6c3207cae604a665",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_p0_docker_scale64.py",
+          "change": "A",
+          "branch_blob": "1bdf0116ccfca5c461d507dca0d844f07c017f49",
+          "candidate_blob": "1bdf0116ccfca5c461d507dca0d844f07c017f49",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_p0_rootless_docker_provider.py",
+          "change": "A",
+          "branch_blob": "1ca2ae2a72615c0c7ef75163f6d44d0b5fa600b8",
+          "candidate_blob": "1ca2ae2a72615c0c7ef75163f6d44d0b5fa600b8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_scale64_control_plane.py",
+          "change": "A",
+          "branch_blob": "500d2927ae9791a68ef6e0a890d3177cdcca8ee8",
+          "candidate_blob": "542061c1f0dc0090422585d20f48029a2fb449b3",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_scale64_runner_exec.py",
+          "change": "A",
+          "branch_blob": "aec49ea8969405aa689dcb9b1d627aae5c1c7b55",
+          "candidate_blob": "bb150a41decd693ee2c3acc0f21ee877eb763522",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "deploy/docker/lion-drone-p0/Dockerfile",
+          "change": "A",
+          "branch_blob": "16071c0590056fe1a7303222974423ac0d1362e2",
+          "candidate_blob": "16071c0590056fe1a7303222974423ac0d1362e2",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-p0-provider/install.sh",
+          "change": "A",
+          "branch_blob": "5605c223426a77ee33dd689fd6a5a4179d028f1d",
+          "candidate_blob": "5605c223426a77ee33dd689fd6a5a4179d028f1d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-p0-provider/lion-p0-rootless-docker-provider.service",
+          "change": "A",
+          "branch_blob": "16d8e0ed954f6c5adc534d7636aad356d0498bfb",
+          "candidate_blob": "16d8e0ed954f6c5adc534d7636aad356d0498bfb",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-runner-exec/lion-runner-exec.socket",
+          "change": "A",
+          "branch_blob": "e983b25bc4ea6cc91faa3c4bb7ac6cd42db246fb",
+          "candidate_blob": "e983b25bc4ea6cc91faa3c4bb7ac6cd42db246fb",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-runner-exec/lion-runner-exec@.service",
+          "change": "A",
+          "branch_blob": "ec8ff01b30a4693a0bb2989ad7caf650132f40a3",
+          "candidate_blob": "ec8ff01b30a4693a0bb2989ad7caf650132f40a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/install.sh",
+          "change": "A",
+          "branch_blob": "8e999b14ac176a1d79d31fa3883c943e9502ac07",
+          "candidate_blob": "8e999b14ac176a1d79d31fa3883c943e9502ac07",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-broker-update.socket",
+          "change": "A",
+          "branch_blob": "31fbc773f045d4ba9f0aaf3b096345672b0a60ef",
+          "candidate_blob": "31fbc773f045d4ba9f0aaf3b096345672b0a60ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-broker-update@.service",
+          "change": "A",
+          "branch_blob": "b5cd32969193f87d40a7fa8cdf2eef096c5a1c4a",
+          "candidate_blob": "b5cd32969193f87d40a7fa8cdf2eef096c5a1c4a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-effect-admission.socket",
+          "change": "A",
+          "branch_blob": "348c95ed612cbb0926c9f6b48c9aa39f21246ae0",
+          "candidate_blob": "348c95ed612cbb0926c9f6b48c9aa39f21246ae0",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-effect-admission@.service",
+          "change": "A",
+          "branch_blob": "3d471005272f7f1cee0ae15fd8dea17dc9398efe",
+          "candidate_blob": "3d471005272f7f1cee0ae15fd8dea17dc9398efe",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-scale64-control.service",
+          "change": "A",
+          "branch_blob": "45df36e0bbfba5bfe8823b636048b8eaff351d1d",
+          "candidate_blob": "45df36e0bbfba5bfe8823b636048b8eaff351d1d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-scale64-control.sudoers",
+          "change": "A",
+          "branch_blob": "e7031bcc5d9ef9a0600cd55f25c44f1def89911e",
+          "candidate_blob": "e7031bcc5d9ef9a0600cd55f25c44f1def89911e",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "docs/architecture/local-swarm-p0-docker-polygon.md",
+          "change": "A",
+          "branch_blob": "aacfba0ab43bd24cdc3bae13e1ccc4ef7e0ddb44",
+          "candidate_blob": "06215c5cb4181a807d6f1df1eb21d21ab498e621",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "docs/evidence/local-swarm-p0/docker-polygon-implemented-not-materialized.json",
+          "change": "A",
+          "branch_blob": "f7f954478fab34212c07e09e66852d52b581f03c",
+          "candidate_blob": "f7f954478fab34212c07e09e66852d52b581f03c",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "noop",
+          "change": "A",
+          "branch_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_broker_update_client.py",
+          "change": "A",
+          "branch_blob": "3cfbdb38c4a03df06e9bd68074dd7bd6c6a62387",
+          "candidate_blob": "3cfbdb38c4a03df06e9bd68074dd7bd6c6a62387",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_broker_update_provider.py",
+          "change": "A",
+          "branch_blob": "7383a1352bdca9a5f29210f2a797a64502f847f4",
+          "candidate_blob": "7383a1352bdca9a5f29210f2a797a64502f847f4",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_effect_admission_broker.py",
+          "change": "A",
+          "branch_blob": "da8ed32eb49a08450a92560d2cbaad62b6bf4a53",
+          "candidate_blob": "9c05f89abcceab89535a3053bb6b9798ac76a56f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/lion_effect_admission_client.py",
+          "change": "A",
+          "branch_blob": "8a1166e75ade06466afc535773eef03c406d12db",
+          "candidate_blob": "8a1166e75ade06466afc535773eef03c406d12db",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_runner_exec_client.py",
+          "change": "A",
+          "branch_blob": "40f8081a7b30357912d2a25b02a9b429d1a9015b",
+          "candidate_blob": "3160f3e30ed3a198b69998bc56dca2ddbc03cdec",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_runner_exec_provider.py",
+          "change": "A",
+          "branch_blob": "14d6288b50d6e9008dcb5a54e7b569925a5ccaad",
+          "candidate_blob": "024bc6841de9cd92b492c3ba93077e6974debb74",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/lion_scale64_controller.py",
+          "change": "A",
+          "branch_blob": "f4c6623bed092cd56ffde0663d859f7fce06d003",
+          "candidate_blob": "f4c6623bed092cd56ffde0663d859f7fce06d003",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_drone_runtime.py",
+          "change": "A",
+          "branch_blob": "d18b3e8f3761e26554247e6a6fe07a9ebf302623",
+          "candidate_blob": "d18b3e8f3761e26554247e6a6fe07a9ebf302623",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_fleet_contract.py",
+          "change": "A",
+          "branch_blob": "05c68786b017ac9c480bdfe3f047c71465d3110d",
+          "candidate_blob": "05c68786b017ac9c480bdfe3f047c71465d3110d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_fleet_materializer.py",
+          "change": "A",
+          "branch_blob": "21b8dcd3f17fcbc35932b400d4d92cb257827550",
+          "candidate_blob": "21b8dcd3f17fcbc35932b400d4d92cb257827550",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_polygon_full_run.py",
+          "change": "A",
+          "branch_blob": "c61cd3708e51f1987bc0765a134c2cb951afcb2c",
+          "candidate_blob": "c61cd3708e51f1987bc0765a134c2cb951afcb2c",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_scale64_soak.py",
+          "change": "A",
+          "branch_blob": "b35dff3d5cdf591e70b4e12bfde0bd20b6e2d680",
+          "candidate_blob": "b35dff3d5cdf591e70b4e12bfde0bd20b6e2d680",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_rootless_docker_provider.py",
+          "change": "A",
+          "branch_blob": "04980b1060e6e3f320c72dbea1fe33bc9a0dfc1d",
+          "candidate_blob": "04980b1060e6e3f320c72dbea1fe33bc9a0dfc1d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_rootless_docker_provider_client.py",
+          "change": "A",
+          "branch_blob": "513437f324b6596495a0211d0ce68aff1ee9df8a",
+          "candidate_blob": "513437f324b6596495a0211d0ce68aff1ee9df8a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "2ce0f43c chore: reconcile accidental temp-ref file residue\n12426549 noop\n4154552f noop\n3193c6d0 fix: require prepared Scale64 source before controller run\n9418c03e fix: close Scale64 service authority and evidence relay\n04652842 fix: move Scale64 runner identity boundary to systemd\n3539403f fix: make Scale64 identity transitions NNP-compatible\n87e4006d feat: make Scale64 control plane repository-native\n4fe5a484 test: allow defensive Docker-socket inspection in scale64 runner\nf04aa436 test: cover LION 64-drone scale soak control and teardown\n6e8d4d90 scale64: add autonomous 64-drone three-minute soak and teardown\nd034f74a scale64: add bounded hold and heartbeat mode to drone runtime\n89fa9caf p0: add canonical full live Docker polygon runner\ncefb50a3 test: cover live P0 hardening and lease fence\nbbefe8b0 p0: add live hardening probes and lease fencing\nbca9eb77 test: cover bounded provider registry transport\n0947f870 fix: allow provider registry transport for pinned P0 build\ncba3bf31 test: cover provider writable client state\n04e662df fix: keep Docker client state inside provider state dir\n8b70272e fix: make P0 capsule readable by non-root drone\n02ea6b4a fix: restart P0 provider after unit update\n83875cad fix: expose only rootless Docker socket to P0 provider\nb336dad7 fix: make P0 provider smoke probe group-readable\n1f20b783 p0: bind provider to canonical capsule digests\n07dadbaf test: cover P0 rootless Docker provider boundary\n8580c223 p0: add exact host bootstrap for rootless provider\n7eac9a0a p0: add hardened rootless provider systemd unit\na31b8958 p0: add provider client transport\n844c624e p0: add bounded rootless Docker effect provider\n6e9538ce evidence: freeze Docker P0 implemented-not-materialized result\n080557e0 docs: preserve Docker P0 as explicit test-only tools plane\n75660e3c refactor: remove Docker P0 materializer from production plane\na7f9cd83 refactor: remove Docker P0 runtime from production plane\n8ec44a3c refactor: remove Docker P0 contract from production plane\n24a9b0dd test: bind Docker P0 tests to test-only tools plane\ndd5c0a98 refactor: build P0 drone from test-only tools plane\n7e6a81b2 refactor: keep Docker P0 materializer in test-only tools plane\n68448b68 refactor: keep Docker P0 drone runtime in test-only tools plane\n8c8f8d19 refactor: keep Docker P0 contract in test-only tools plane\nacde833c fix: distinguish container tmpfs target from host temp paths\n899fcc38 docs: define Local Swarm P0 Docker polygon\n8f7a7f27 test: cover Docker fleet polygon contracts and falsification\naa628e42 build: add pinned hardened P0 drone image\n1d9d8621 feat: add Docker fleet materialization and reconciliation adapter\nda3e2992 feat: add deterministic P0 drone runtime\na190bc0b feat: add bounded Docker fleet polygon contracts",
+      "classification": "SUPERSEDED",
+      "reason": "Runner/provider intent represented in canonical broker/runner/provider with newer workspace ownership, diagnostics and fleet resource listing. Old monolithic installation recipe is historical host deployment machinery, not current required source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "f0b43abb815a3ce415fefb14b27b37bfe7de4f55",
+      "aliases": [
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-r10-terminal-decision-evidence-repair-r13",
+        "refs/remotes/r25/cyber-lion/r2e4-r10-terminal-decision-evidence-repair-r13"
+      ],
+      "subject": "R13 bind merge terminal evidence to semantic admission result",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/cyber-lion-contracts.yml",
+          "change": "M",
+          "branch_blob": "8721ee925bc4beca951395df662b5f3518a6be25",
+          "candidate_blob": "46403358e8923d06eda5abd88ebebb5991ee61ae",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "f8c76f29de2a127fac6499c8c22fe14e70bb5cdd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/_r6_host_authority_separation_original.py",
+          "change": "A",
+          "branch_blob": "3f51438f49daab058b9dd14350d58e872cd21496",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "283e1c308148a56a2b04b69f729c43838cb5964f",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "f0b43abb R13 bind merge terminal evidence to semantic admission result\ne93e737b R10 repair R7 source/effect cardinality test harness\nb2455a29 R2E4 R7: repair production source inventory cardinality\n8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "reason": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "e93e737b43e75dd47bb2a915f57069aad49ba89a",
+      "aliases": [
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-r7-test-harness-repair-r10",
+        "refs/remotes/r25/cyber-lion/r2e4-r7-test-harness-repair-r10"
+      ],
+      "subject": "R10 repair R7 source/effect cardinality test harness",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "f8c76f29de2a127fac6499c8c22fe14e70bb5cdd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/_r6_host_authority_separation_original.py",
+          "change": "A",
+          "branch_blob": "3f51438f49daab058b9dd14350d58e872cd21496",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "283e1c308148a56a2b04b69f729c43838cb5964f",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "e93e737b R10 repair R7 source/effect cardinality test harness\nb2455a29 R2E4 R7: repair production source inventory cardinality\n8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "reason": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "b2455a2930e6c13bc10c9f515d8db26aeca60ffe",
+      "aliases": [
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-source-count-repair-r7",
+        "refs/remotes/r25/cyber-lion/r2e4-source-count-repair-r7"
+      ],
+      "subject": "R2E4 R7: repair production source inventory cardinality",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "f8c76f29de2a127fac6499c8c22fe14e70bb5cdd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/_r6_host_authority_separation_original.py",
+          "change": "A",
+          "branch_blob": "3f51438f49daab058b9dd14350d58e872cd21496",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "95ca80f7e938d9f1dd7093e5dbc285cd1fb700db",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "b2455a29 R2E4 R7: repair production source inventory cardinality\n8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "reason": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "8d9157da019c9b09b2cd82a9e4b2d6233641e92b",
+      "aliases": [
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-terminal-evidence-r6",
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-terminal-evidence-r6-ci",
+        "refs/remotes/r25/cyber-lion/r2e4-terminal-evidence-r6",
+        "refs/remotes/r25/cyber-lion/r2e4-terminal-evidence-r6-ci"
+      ],
+      "subject": "R2E4 R6: bind terminal evidence to merge admission result",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "1c68c718a18162d29e787d5cab58b89b0c296505",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "reason": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "8f6612fcc45e2068451701377b3ec6c0ea56a830",
+      "aliases": [
+        "refs/remotes/r25-collapse/experiment/local-swarm-p0-docker-polygon",
+        "refs/remotes/r25/experiment/local-swarm-p0-docker-polygon"
+      ],
+      "subject": "fix: reconcile R12 checkout handoff change",
+      "merge_base": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+      "paths": [
+        {
+          "path": "cyber_lion/tests/test_docker_fleet_polygon.py",
+          "change": "A",
+          "branch_blob": "f9621bd66925de9adc801c3d6c3207cae604a665",
+          "candidate_blob": "f9621bd66925de9adc801c3d6c3207cae604a665",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_p0_docker_scale64.py",
+          "change": "A",
+          "branch_blob": "1bdf0116ccfca5c461d507dca0d844f07c017f49",
+          "candidate_blob": "1bdf0116ccfca5c461d507dca0d844f07c017f49",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_p0_rootless_docker_provider.py",
+          "change": "A",
+          "branch_blob": "1ca2ae2a72615c0c7ef75163f6d44d0b5fa600b8",
+          "candidate_blob": "1ca2ae2a72615c0c7ef75163f6d44d0b5fa600b8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_scale64_control_plane.py",
+          "change": "A",
+          "branch_blob": "542061c1f0dc0090422585d20f48029a2fb449b3",
+          "candidate_blob": "542061c1f0dc0090422585d20f48029a2fb449b3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_scale64_runner_exec.py",
+          "change": "A",
+          "branch_blob": "bb150a41decd693ee2c3acc0f21ee877eb763522",
+          "candidate_blob": "bb150a41decd693ee2c3acc0f21ee877eb763522",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-drone-p0/Dockerfile",
+          "change": "A",
+          "branch_blob": "16071c0590056fe1a7303222974423ac0d1362e2",
+          "candidate_blob": "16071c0590056fe1a7303222974423ac0d1362e2",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-p0-provider/install.sh",
+          "change": "A",
+          "branch_blob": "5605c223426a77ee33dd689fd6a5a4179d028f1d",
+          "candidate_blob": "5605c223426a77ee33dd689fd6a5a4179d028f1d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-p0-provider/lion-p0-rootless-docker-provider.service",
+          "change": "A",
+          "branch_blob": "16d8e0ed954f6c5adc534d7636aad356d0498bfb",
+          "candidate_blob": "16d8e0ed954f6c5adc534d7636aad356d0498bfb",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-runner-exec/lion-runner-exec.socket",
+          "change": "A",
+          "branch_blob": "e983b25bc4ea6cc91faa3c4bb7ac6cd42db246fb",
+          "candidate_blob": "e983b25bc4ea6cc91faa3c4bb7ac6cd42db246fb",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-runner-exec/lion-runner-exec@.service",
+          "change": "A",
+          "branch_blob": "ec8ff01b30a4693a0bb2989ad7caf650132f40a3",
+          "candidate_blob": "ec8ff01b30a4693a0bb2989ad7caf650132f40a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/install.sh",
+          "change": "A",
+          "branch_blob": "8e999b14ac176a1d79d31fa3883c943e9502ac07",
+          "candidate_blob": "8e999b14ac176a1d79d31fa3883c943e9502ac07",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-broker-update.socket",
+          "change": "A",
+          "branch_blob": "31fbc773f045d4ba9f0aaf3b096345672b0a60ef",
+          "candidate_blob": "31fbc773f045d4ba9f0aaf3b096345672b0a60ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-broker-update@.service",
+          "change": "A",
+          "branch_blob": "b5cd32969193f87d40a7fa8cdf2eef096c5a1c4a",
+          "candidate_blob": "b5cd32969193f87d40a7fa8cdf2eef096c5a1c4a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-effect-admission.socket",
+          "change": "A",
+          "branch_blob": "348c95ed612cbb0926c9f6b48c9aa39f21246ae0",
+          "candidate_blob": "348c95ed612cbb0926c9f6b48c9aa39f21246ae0",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-effect-admission@.service",
+          "change": "A",
+          "branch_blob": "3d471005272f7f1cee0ae15fd8dea17dc9398efe",
+          "candidate_blob": "3d471005272f7f1cee0ae15fd8dea17dc9398efe",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-scale64-control.service",
+          "change": "A",
+          "branch_blob": "45df36e0bbfba5bfe8823b636048b8eaff351d1d",
+          "candidate_blob": "45df36e0bbfba5bfe8823b636048b8eaff351d1d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-scale64-control/lion-scale64-control.sudoers",
+          "change": "A",
+          "branch_blob": "e7031bcc5d9ef9a0600cd55f25c44f1def89911e",
+          "candidate_blob": "e7031bcc5d9ef9a0600cd55f25c44f1def89911e",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "docs/architecture/local-swarm-p0-docker-polygon.md",
+          "change": "A",
+          "branch_blob": "aacfba0ab43bd24cdc3bae13e1ccc4ef7e0ddb44",
+          "candidate_blob": "06215c5cb4181a807d6f1df1eb21d21ab498e621",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "docs/evidence/local-swarm-p0/docker-polygon-implemented-not-materialized.json",
+          "change": "A",
+          "branch_blob": "f7f954478fab34212c07e09e66852d52b581f03c",
+          "candidate_blob": "f7f954478fab34212c07e09e66852d52b581f03c",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_broker_update_client.py",
+          "change": "A",
+          "branch_blob": "3cfbdb38c4a03df06e9bd68074dd7bd6c6a62387",
+          "candidate_blob": "3cfbdb38c4a03df06e9bd68074dd7bd6c6a62387",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_broker_update_provider.py",
+          "change": "A",
+          "branch_blob": "7383a1352bdca9a5f29210f2a797a64502f847f4",
+          "candidate_blob": "7383a1352bdca9a5f29210f2a797a64502f847f4",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_effect_admission_broker.py",
+          "change": "A",
+          "branch_blob": "3133640e3190ac39bbfe7eb74a0b3a06f26a723d",
+          "candidate_blob": "9c05f89abcceab89535a3053bb6b9798ac76a56f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_effect_admission_client.py",
+          "change": "A",
+          "branch_blob": "8a1166e75ade06466afc535773eef03c406d12db",
+          "candidate_blob": "8a1166e75ade06466afc535773eef03c406d12db",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_runner_exec_client.py",
+          "change": "A",
+          "branch_blob": "40f8081a7b30357912d2a25b02a9b429d1a9015b",
+          "candidate_blob": "3160f3e30ed3a198b69998bc56dca2ddbc03cdec",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_runner_exec_provider.py",
+          "change": "A",
+          "branch_blob": "c13849686b583191343441277d90fb02a946614d",
+          "candidate_blob": "024bc6841de9cd92b492c3ba93077e6974debb74",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/lion_scale64_controller.py",
+          "change": "A",
+          "branch_blob": "f4c6623bed092cd56ffde0663d859f7fce06d003",
+          "candidate_blob": "f4c6623bed092cd56ffde0663d859f7fce06d003",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_drone_runtime.py",
+          "change": "A",
+          "branch_blob": "d18b3e8f3761e26554247e6a6fe07a9ebf302623",
+          "candidate_blob": "d18b3e8f3761e26554247e6a6fe07a9ebf302623",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_fleet_contract.py",
+          "change": "A",
+          "branch_blob": "05c68786b017ac9c480bdfe3f047c71465d3110d",
+          "candidate_blob": "05c68786b017ac9c480bdfe3f047c71465d3110d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_fleet_materializer.py",
+          "change": "A",
+          "branch_blob": "21b8dcd3f17fcbc35932b400d4d92cb257827550",
+          "candidate_blob": "21b8dcd3f17fcbc35932b400d4d92cb257827550",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_polygon_full_run.py",
+          "change": "A",
+          "branch_blob": "c61cd3708e51f1987bc0765a134c2cb951afcb2c",
+          "candidate_blob": "c61cd3708e51f1987bc0765a134c2cb951afcb2c",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_scale64_soak.py",
+          "change": "A",
+          "branch_blob": "b35dff3d5cdf591e70b4e12bfde0bd20b6e2d680",
+          "candidate_blob": "b35dff3d5cdf591e70b4e12bfde0bd20b6e2d680",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_rootless_docker_provider.py",
+          "change": "A",
+          "branch_blob": "04980b1060e6e3f320c72dbea1fe33bc9a0dfc1d",
+          "candidate_blob": "04980b1060e6e3f320c72dbea1fe33bc9a0dfc1d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_rootless_docker_provider_client.py",
+          "change": "A",
+          "branch_blob": "513437f324b6596495a0211d0ce68aff1ee9df8a",
+          "candidate_blob": "513437f324b6596495a0211d0ce68aff1ee9df8a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "8f6612fc fix: reconcile R12 checkout handoff change\n4154552f noop\n3193c6d0 fix: require prepared Scale64 source before controller run\n9418c03e fix: close Scale64 service authority and evidence relay\n04652842 fix: move Scale64 runner identity boundary to systemd\n3539403f fix: make Scale64 identity transitions NNP-compatible\n87e4006d feat: make Scale64 control plane repository-native\n4fe5a484 test: allow defensive Docker-socket inspection in scale64 runner\nf04aa436 test: cover LION 64-drone scale soak control and teardown\n6e8d4d90 scale64: add autonomous 64-drone three-minute soak and teardown\nd034f74a scale64: add bounded hold and heartbeat mode to drone runtime\n89fa9caf p0: add canonical full live Docker polygon runner\ncefb50a3 test: cover live P0 hardening and lease fence\nbbefe8b0 p0: add live hardening probes and lease fencing\nbca9eb77 test: cover bounded provider registry transport\n0947f870 fix: allow provider registry transport for pinned P0 build\ncba3bf31 test: cover provider writable client state\n04e662df fix: keep Docker client state inside provider state dir\n8b70272e fix: make P0 capsule readable by non-root drone\n02ea6b4a fix: restart P0 provider after unit update\n83875cad fix: expose only rootless Docker socket to P0 provider\nb336dad7 fix: make P0 provider smoke probe group-readable\n1f20b783 p0: bind provider to canonical capsule digests\n07dadbaf test: cover P0 rootless Docker provider boundary\n8580c223 p0: add exact host bootstrap for rootless provider\n7eac9a0a p0: add hardened rootless provider systemd unit\na31b8958 p0: add provider client transport\n844c624e p0: add bounded rootless Docker effect provider\n6e9538ce evidence: freeze Docker P0 implemented-not-materialized result\n080557e0 docs: preserve Docker P0 as explicit test-only tools plane\n75660e3c refactor: remove Docker P0 materializer from production plane\na7f9cd83 refactor: remove Docker P0 runtime from production plane\n8ec44a3c refactor: remove Docker P0 contract from production plane\n24a9b0dd test: bind Docker P0 tests to test-only tools plane\ndd5c0a98 refactor: build P0 drone from test-only tools plane\n7e6a81b2 refactor: keep Docker P0 materializer in test-only tools plane\n68448b68 refactor: keep Docker P0 drone runtime in test-only tools plane\n8c8f8d19 refactor: keep Docker P0 contract in test-only tools plane\nacde833c fix: distinguish container tmpfs target from host temp paths\n899fcc38 docs: define Local Swarm P0 Docker polygon\n8f7a7f27 test: cover Docker fleet polygon contracts and falsification\naa628e42 build: add pinned hardened P0 drone image\n1d9d8621 feat: add Docker fleet materialization and reconciliation adapter\nda3e2992 feat: add deterministic P0 drone runtime\na190bc0b feat: add bounded Docker fleet polygon contracts",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted blob exists in candidate history; no required unique source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "7d8937b457f74431096db41a0bf1ea24c60bdfae",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/a0-truth-reconciliation-v1-3-r1",
+        "refs/remotes/r25/mission/a0-truth-reconciliation-v1-3-r1"
+      ],
+      "subject": "A0: bind exact production inventory to truth-plane source addition",
+      "merge_base": "2be0b312407920ac25d812f1c0bb6ecfcb31aa4c",
+      "paths": [
+        {
+          "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+          "change": "A",
+          "branch_blob": "5fb4fa92a6b72c4fa2be1667712cc79161d4f8bc",
+          "candidate_blob": "d44de648561670450f79fe616adf274144d02784",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "257068ffeb064288add0605705ebd0621303b66e",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/architecture_projection/gap.py",
+          "change": "M",
+          "branch_blob": "96cda3fb9a8ce6252dfee9021a888c37f94de92c",
+          "candidate_blob": "6a3aefa64d52a037340660cfc378d3a4f1d6f976",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/architecture_projection/truth_plane.py",
+          "change": "A",
+          "branch_blob": "42e940a235f85f3b97014509998f38bfb534a848",
+          "candidate_blob": "9ace9ba2a4ff44380b40d52dea6ce3bc53ac162c",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/registry/repositories.json",
+          "change": "M",
+          "branch_blob": "2d8f610a3aca55fbba544771f28d3c210a65e9cf",
+          "candidate_blob": "4e490d958c7699fa47f17e28b28e984e6c59addb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_architecture_projection_gap.py",
+          "change": "M",
+          "branch_blob": "96fb46690a88cc56665d31ce2cc83eec1ce213b1",
+          "candidate_blob": "85ac149edb0f4b11737385fe5a9d8700e267639f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "9d9432969b1955756657bb175e89c75f6425d83e",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_startup_cli.py",
+          "change": "M",
+          "branch_blob": "74796fb7dacb16274854c723f26c4b2d8fa379d7",
+          "candidate_blob": "f3a5dc10b14dfdbfa19e6b1a6cef58fcb5e694ee",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_truth_plane_reconciliation.py",
+          "change": "A",
+          "branch_blob": "8f2793609d577816da726b804679bbf2daa4b415",
+          "candidate_blob": "b8adbcaef0df756ca1a0b7a755c51d2d17a126f2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "7d8937b4 A0: bind exact production inventory to truth-plane source addition\n527100dc A0: make local build gate test independent of evidence clock\n929cb718 A0: add contradiction and currentness falsification tests\n408dab79 A0: materialize AS-IS candidate target truth projection\nfd8c7354 A0: add fail-closed canonical truth projection validator\n656062e8 A0: degrade historical implementation map to STALE\ne4cf935c A0: reconcile ai_platform registry maturity\n41e3b9f1 A0: make gap tests reject stale truth classifications\n02491cf3 A0: reconcile canonical gap projection with exact master",
+      "classification": "SUPERSEDED",
+      "reason": "Old A0/P0 truth pins and v1.3 validation superseded by canonical v1.4 subject-digest currentness, candidate lineage and current tests; no old live pins restored.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "85e77ac077f89ce892c1254d01f88a0889034b2f",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/b0-bean-generativity-protocol-r1",
+        "refs/remotes/r25/mission/b0-bean-generativity-protocol-r1"
+      ],
+      "subject": "B0: keep generativity harness outside production source inventory",
+      "merge_base": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd",
+      "paths": [
+        {
+          "path": "cyber_lion/tests/experiments/bean_generativity.py",
+          "change": "A",
+          "branch_blob": "236d8bcc03b02b00c809a6f9ec50e8769106340d",
+          "candidate_blob": "236d8bcc03b02b00c809a6f9ec50e8769106340d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_bean_generativity_protocol.py",
+          "change": "A",
+          "branch_blob": "77ce1147aada974cdd6e3f42b8bbd535dc091df5",
+          "candidate_blob": "11c8fbed1ba2885c1cc8ba1ecfe9e8c2ebe135a8",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "85e77ac0 B0: keep generativity harness outside production source inventory\na2fdb086 B0: bind BUILT candidate to explicit empty verification evidence\n00892dd7 B0: add two-unseen-problem generativity falsification matrix\n98430e60 B0: add candidate-only generic Bean generativity protocol",
+      "classification": "SUPERSEDED",
+      "reason": "Only BEAN generativity fixture BASELINE/TREE differ; protocol behavior identical.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "2f140e430681414e215d084934ff13aec111b3e3",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/b0-bean-generativity-protocol-r2",
+        "refs/remotes/r25/mission/b0-bean-generativity-protocol-r2"
+      ],
+      "subject": "B0 R2: rebind generativity evidence to current master",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/tests/experiments/bean_generativity.py",
+          "change": "A",
+          "branch_blob": "236d8bcc03b02b00c809a6f9ec50e8769106340d",
+          "candidate_blob": "236d8bcc03b02b00c809a6f9ec50e8769106340d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_bean_generativity_protocol.py",
+          "change": "A",
+          "branch_blob": "c1639042560f52fe936247090616f2c353ff160c",
+          "candidate_blob": "11c8fbed1ba2885c1cc8ba1ecfe9e8c2ebe135a8",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "2f140e43 B0 R2: rebind generativity evidence to current master",
+      "classification": "SUPERSEDED",
+      "reason": "Only BEAN generativity fixture BASELINE/TREE differ; protocol behavior identical.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "d31a6385793909909b62d2d6bf7825713dbe3dab",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r2",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r2"
+      ],
+      "subject": "C0: freeze ActionSpec schema candidate against live contracts",
+      "merge_base": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "96d927869a2aa362bc015f7826d25ad17eb473bd",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "b6f74032507d8ea3b3c37e45b9d86738009194e2",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "eb5d0b70ddfecdc7bfb20c908fc8fbe91ea3519f",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "3c815251228498f0520ae00bd90aca7b509aa137",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "d31a6385 C0: freeze ActionSpec schema candidate against live contracts",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "f8d8e44191d5c84ecca9feec1a8602f574948619",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r3",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r3"
+      ],
+      "subject": "C0 R3 rebind Action IR freeze documentation",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "437c5722e8b4169b5af63e22d249e7bbddf438dc",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "db36bb735e52b77fd54cf31f4282b2d8ddc437c7",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "af7a33e04ce927c8e52c34df266ad414deb71474",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "1ae2de5996ddcce430dff9a081536a55e921e65a",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "f8d8e441 C0 R3 rebind Action IR freeze documentation\nd86a7889 C0 R3 rebind ActionSpec schema tests\n1fc06d7c C0 R3 rebind ActionSpec support matrix\na0feb758 C0 R3 rebind ActionSpec schema to current master",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "52e39bff2f29f2e006f3fce9186c3b6d9a2e440c",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r4",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r4"
+      ],
+      "subject": "",
+      "merge_base": "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e",
+      "paths": [
+        {
+          "path": "__never__",
+          "change": "A",
+          "branch_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "4c651bb16d8028690911fc510fe43467e68f3764",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "20b03a6ed1d8f06ea7a4385d88936fd12334a3cc",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "f04283eb000a5196c38501d1a7e10d4e73aeddec",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "e498bd2326a1a415fa7a851409a2684bca218123",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "52e39bff \n3c6929f3 C0: rebind ActionSpec candidate to current master",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r5",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r5"
+      ],
+      "subject": "C0: rebind ActionSpec candidate to current master",
+      "merge_base": "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "4c651bb16d8028690911fc510fe43467e68f3764",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "20b03a6ed1d8f06ea7a4385d88936fd12334a3cc",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "f04283eb000a5196c38501d1a7e10d4e73aeddec",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "e498bd2326a1a415fa7a851409a2684bca218123",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "3c6929f3 C0: rebind ActionSpec candidate to current master",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "5794db2c5d36f65658ce10c0bf8fa2aef478ccc4",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r6",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r6"
+      ],
+      "subject": "C0: rebind ActionSpec candidate to post-R18 master",
+      "merge_base": "01395441c82c38ca0b3625e842c038af271dca31",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "8ea13f51e6bb0675b192aa2f57813f45f0861abd",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "0ee5fba27b9852c4e10173c08392020f35d09808",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "bb84df81fea9f9983cb2f7b39d9e8379660af868",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "06dd338445d8530a6eba6b4f7cc89bd1c5b8dd10",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "5794db2c C0: rebind ActionSpec candidate to post-R18 master",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "0156b98b3cbf2829f91fa6e830082a16976ab7a4",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r7",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r7"
+      ],
+      "subject": "C0 R7: rebind ActionSpec candidate to post-R19A master",
+      "merge_base": "b51ad15d4e4f2a444cd91f1e6f34701c00bafcb6",
+      "paths": [
+        {
+          "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+          "change": "M",
+          "branch_blob": "32691deff3f0097c8e782b6a96273bd8fed28a41",
+          "candidate_blob": "d44de648561670450f79fe616adf274144d02784",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "7f608d631542359a86ff73e520f0fce3885f4415",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "02f33351cc287c7cc77e63e0393f23e0f35d372d",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/registry/repositories.json",
+          "change": "M",
+          "branch_blob": "85fc2aa1362e264910b4ab6c7f2723654c1ab7ff",
+          "candidate_blob": "4e490d958c7699fa47f17e28b28e984e6c59addb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "a8cd7e30e4c078ca5ad26eda84fdb30191b85f4a",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "16d82cfbd7fd767088bd7d675a5275c421f0a008",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "0156b98b C0 R7: rebind ActionSpec candidate to post-R19A master",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "7176409f8d43c0b04eac57aaada98ad201c2d556",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r8",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r8"
+      ],
+      "subject": "C0 R8: rebind ActionSpec candidate to post-R19C master",
+      "merge_base": "db51d0eb8784cb3b9a45a180aa421b35bc86d9c3",
+      "paths": [
+        {
+          "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+          "change": "M",
+          "branch_blob": "57f8b598f49b5eafb618f6fc7ffe7ff6af4ec0bd",
+          "candidate_blob": "d44de648561670450f79fe616adf274144d02784",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "80a0a4f553563b0e788b7c23863f69968637fc04",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "3ecd317e60facd634903f7ae6e943cc75af71097",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/registry/repositories.json",
+          "change": "M",
+          "branch_blob": "55a7ca9508ce0e8cfafd6016a1e53cfc45d1d706",
+          "candidate_blob": "4e490d958c7699fa47f17e28b28e984e6c59addb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "83a86f67fbbeac29d1b1969549580fc0b6920ec8",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "f27184a65a6bca8d9ee8fd256e5ca1ddc4f9dfec",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "7176409f C0 R8: rebind ActionSpec candidate to post-R19C master",
+      "classification": "SUPERSEDED",
+      "reason": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "0f75af9212a814177e08a5c206d1a8504b0937d5",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c1-lcms-canonicalization-r1",
+        "refs/remotes/r25/mission/c1-lcms-canonicalization-r1"
+      ],
+      "subject": "C1: strengthen LCMS effect-surface falsification",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "437c5722e8b4169b5af63e22d249e7bbddf438dc",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "db36bb735e52b77fd54cf31f4282b2d8ddc437c7",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/lcms.ebnf",
+          "change": "A",
+          "branch_blob": "c9adb8648777f501b3a729ee92ccc3e4a0b9401f",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "af7a33e04ce927c8e52c34df266ad414deb71474",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_lcms.py",
+          "change": "A",
+          "branch_blob": "6fca43b588c7727b936f110cd4a780efbbf2676d",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "1ae2de5996ddcce430dff9a081536a55e921e65a",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C1_LCMS_CANONICALIZATION.md",
+          "change": "A",
+          "branch_blob": "2912dd1b4aa8e6732bb0c030f83c5cbf60fa4c2b",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/lcms.py",
+          "change": "A",
+          "branch_blob": "71d09ed955522b8841b89ac4e344131413f55e73",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "0f75af92 C1: strengthen LCMS effect-surface falsification\na37655fe C1: add deterministic LCMS compiler tool\ncdaa1423 C1: document LCMS canonicalization boundary\ne51d426e C1: add LCMS falsification corpus\nbeb28bd6 C1: add LCMS candidate grammar\nf8d8e441 C0 R3 rebind Action IR freeze documentation\nd86a7889 C0 R3 rebind ActionSpec schema tests\n1fc06d7c C0 R3 rebind ActionSpec support matrix\na0feb758 C0 R3 rebind ActionSpec schema to current master",
+      "classification": "EXPERIMENTAL",
+      "reason": "Historical document explicitly candidate-only/unpublished and no merge in its phase. Separate LCMS compiler/read-only Lab process experiment; defer optional adoption to Epoch4, not required Mission Runtime normalization or current UI lifecycle.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "86dc7ac367ad2cd83e873e0ae3508f42a72eaac5",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/c2-readonly-process-exec-r1",
+        "refs/remotes/r25/mission/c2-readonly-process-exec-r1"
+      ],
+      "subject": "C2: isolate effect-time currentness falsification from host digest",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "437c5722e8b4169b5af63e22d249e7bbddf438dc",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "db36bb735e52b77fd54cf31f4282b2d8ddc437c7",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/lcms.ebnf",
+          "change": "A",
+          "branch_blob": "c9adb8648777f501b3a729ee92ccc3e4a0b9401f",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "af7a33e04ce927c8e52c34df266ad414deb71474",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_c2_readonly_process_exec.py",
+          "change": "A",
+          "branch_blob": "7a226a2851f349447c79a24ca31f2828a1bd01a8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_lcms.py",
+          "change": "A",
+          "branch_blob": "6fca43b588c7727b936f110cd4a780efbbf2676d",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "1ae2de5996ddcce430dff9a081536a55e921e65a",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C1_LCMS_CANONICALIZATION.md",
+          "change": "A",
+          "branch_blob": "2912dd1b4aa8e6732bb0c030f83c5cbf60fa4c2b",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C2_READONLY_PROCESS_EXEC.md",
+          "change": "A",
+          "branch_blob": "0da294f6cda90bc6274a643249c4963a458d1a0e",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/lcms.py",
+          "change": "A",
+          "branch_blob": "71d09ed955522b8841b89ac4e344131413f55e73",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/readonly_process_exec.py",
+          "change": "A",
+          "branch_blob": "03ded62d33e6bdf58b88ba2958e916291e5403f6",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/readonly_process_observer.py",
+          "change": "A",
+          "branch_blob": "689788f47a5172cdd11d775919f3802340029092",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/readonly_process_reconciliation.py",
+          "change": "A",
+          "branch_blob": "b54a6962769f1a5b8f8f57018c2c0eaa2b198608",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "86dc7ac3 C2: isolate effect-time currentness falsification from host digest\nb72fe31f C2: separate LAB live evidence from portable CI\n591a99d2 C2: add read-only process execution candidate\n0f75af92 C1: strengthen LCMS effect-surface falsification\na37655fe C1: add deterministic LCMS compiler tool\ncdaa1423 C1: document LCMS canonicalization boundary\ne51d426e C1: add LCMS falsification corpus\nbeb28bd6 C1: add LCMS candidate grammar\nf8d8e441 C0 R3 rebind Action IR freeze documentation\nd86a7889 C0 R3 rebind ActionSpec schema tests\n1fc06d7c C0 R3 rebind ActionSpec support matrix\na0feb758 C0 R3 rebind ActionSpec schema to current master",
+      "classification": "EXPERIMENTAL",
+      "reason": "Historical document explicitly candidate-only/unpublished and no merge in its phase. Separate LCMS compiler/read-only Lab process experiment; defer optional adoption to Epoch4, not required Mission Runtime normalization or current UI lifecycle.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "75f0c40696782d8c583606998f929bcd24885037",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/e001-evolution-bootstrap",
+        "refs/remotes/r25/mission/e001-evolution-bootstrap"
+      ],
+      "subject": "LION E001: bootstrap first evolutionary epoch",
+      "merge_base": "95af3012c2441a26e6d32a31a932f70b9daf4974",
+      "paths": [
+        {
+          "path": "LION/archive/E001/MANIFEST.json",
+          "change": "A",
+          "branch_blob": "a1d3191973786cecb53ec4efdf8657451b2b415b",
+          "candidate_blob": "a1d3191973786cecb53ec4efdf8657451b2b415b",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/archive/E001/MOVED_PATHS.json",
+          "change": "A",
+          "branch_blob": "97ad97429c6b3636868937235117477d80e62646",
+          "candidate_blob": "97ad97429c6b3636868937235117477d80e62646",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/archive/E001/README.md",
+          "change": "A",
+          "branch_blob": "db90a68398a63402c7c8158338d9b4e491b28702",
+          "candidate_blob": "f58e6181571fe283c2bdfac7a5abe2a06a0332da",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/archive/E001/SUPERSESSION.json",
+          "change": "A",
+          "branch_blob": "d0e86a14c43dbdb9571abcbf9e4ed7edd587220f",
+          "candidate_blob": "d0e86a14c43dbdb9571abcbf9e4ed7edd587220f",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/ARCHITECTURE_DELTA.json",
+          "change": "A",
+          "branch_blob": "4e5584d5487d51ceffde4b253f89b45e3da1d51e",
+          "candidate_blob": "19be5c22d2120bbf597b4e5f59b8578b69b63c25",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/FAILURES.json",
+          "change": "A",
+          "branch_blob": "7636a7414630b51f0a3d713b26dda445dfd89fa7",
+          "candidate_blob": "cd0b070990b7acdd8b0d607c8c384c3d834df0b9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/FLEET_TRACE.json",
+          "change": "A",
+          "branch_blob": "95ed9b1f4444ad9e5bef5f20526ac616c5dcc415",
+          "candidate_blob": "e04f8eee0552690d4d8921af053f2497abc3d333",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/FORMATION_TRACE.json",
+          "change": "A",
+          "branch_blob": "92ca22c1b86d628ac9f2f44e46f7075658193a1d",
+          "candidate_blob": "c9c37c8e43c0cac07b70e0ada2a4256eb1c25b3a",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/INPUT.json",
+          "change": "A",
+          "branch_blob": "193fb39f3a2df937caf7c309b68749a8273ea009",
+          "candidate_blob": "193fb39f3a2df937caf7c309b68749a8273ea009",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/INTEGRATION_TRACE.json",
+          "change": "A",
+          "branch_blob": "c2d5537f67ed677e75fff129a8fc9ddfbb2186bf",
+          "candidate_blob": "74abeae8a62b4aba62f901e87d1869ad26047246",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/LESSONS.json",
+          "change": "A",
+          "branch_blob": "235c70cd55a28e685b8790703290b9c4665cb283",
+          "candidate_blob": "d583b8050fc661f3b1031fe8307aac3a6dda3ca2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/MISSION_GRAPH.json",
+          "change": "A",
+          "branch_blob": "454cf24b15629c92228f4ac3d1bffb136cc22520",
+          "candidate_blob": "454cf24b15629c92228f4ac3d1bffb136cc22520",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/NEXT_EPOCH.json",
+          "change": "A",
+          "branch_blob": "09f3b129b0d6d840ca5d1ea1d34c338c8b636625",
+          "candidate_blob": "5d1321ecdf663efce948ad74de77e4e0968dc01a",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/REPOSITORY_INVENTORY.json",
+          "change": "A",
+          "branch_blob": "0d5bf0d85036274a0c45ce19b3d9f51f2d58f7e2",
+          "candidate_blob": "15caadd0fa68b1207b016a8aaae3f8acb2c66edc",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/evolution/E001/RESULTS.json",
+          "change": "A",
+          "branch_blob": "ac471d5dd8879f9fe92c423e132535ef066ff01e",
+          "candidate_blob": "601d9b14c956396507aadd0d77d840f5f2d7f1fe",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "75f0c406 LION E001: bootstrap first evolutionary epoch",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted blob exists in candidate history; no required unique source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "eb05e1beebe5d3f9388a0827ab7bce5d7144e565",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/e001-status-activation",
+        "refs/remotes/r25/mission/e001-status-activation"
+      ],
+      "subject": "LION E001: activate fleet status revision 3",
+      "merge_base": "e5923818b9fb539c4f1eaaca1f6bdf4db2127f7d",
+      "paths": [
+        {
+          "path": "LION/status.json",
+          "change": "M",
+          "branch_blob": "df02a6d9ab9a72774b2dad00f27f1dba48b54e76",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "eb05e1be LION E001: activate fleet status revision 3",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted blob exists in candidate history; no required unique source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "6fb5877d8e1933e19abeff93ee5db8905678a394",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/e006-r2q2b3-canary-issue-scope-contract",
+        "refs/remotes/r25/mission/e006-r2q2b3-canary-issue-scope-contract"
+      ],
+      "subject": "E006 R2Q2B3: add exact canary-scope negative tests",
+      "merge_base": "f9aefe2a2499b032cb26295fdd9e956fdc12ef12",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/issue_comment_write.py",
+          "change": "A",
+          "branch_blob": "87ab7a04a9509d58dbca93653dd0928865f53208",
+          "candidate_blob": "87ab7a04a9509d58dbca93653dd0928865f53208",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/actions_control_ledger.py",
+          "change": "M",
+          "branch_blob": "a05bbccfa77d26219e900bdde4ef860803b39313",
+          "candidate_blob": "a05bbccfa77d26219e900bdde4ef860803b39313",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/actions_dispatch_bridge.py",
+          "change": "M",
+          "branch_blob": "45ded10749305a6e48b6dbd667042c5c2d72fbf8",
+          "candidate_blob": "45ded10749305a6e48b6dbd667042c5c2d72fbf8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/actions_failure_receipt.py",
+          "change": "M",
+          "branch_blob": "91d4a4dd6a81368dda1e61f8174e3e04e60ab2a3",
+          "candidate_blob": "91d4a4dd6a81368dda1e61f8174e3e04e60ab2a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/complete_mediation.py",
+          "change": "M",
+          "branch_blob": "6e51b59afcdcc1983c24e969d8815cad86eebef9",
+          "candidate_blob": "3932debfc80876e47d2b74735a07b04cf837e8fb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/issue_comment_write_github_effect.py",
+          "change": "A",
+          "branch_blob": "247379af41ca0944d0d9ec1582c6f2d544b80ad2",
+          "candidate_blob": "fe9dd9125eb43f24e05634e2c62f42ecb4b543c6",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/issue_comment_write_mediation.py",
+          "change": "A",
+          "branch_blob": "e8f34c3e84ba02112ccae63513b5690bef6a9712",
+          "candidate_blob": "e8f34c3e84ba02112ccae63513b5690bef6a9712",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/issue_comment_write_runtime.py",
+          "change": "A",
+          "branch_blob": "7ccc445e7e0453ed0384c311ad2deba22522d3d0",
+          "candidate_blob": "f3941fb428208c1b93b3b402c626562f1448f96f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/repository_maintenance_cleanup.py",
+          "change": "M",
+          "branch_blob": "2e871ccfd693f977d5ddd3dcb50c29e468252a56",
+          "candidate_blob": "20dab9e083429adcaac49b7848b871a0241c5444",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/repository_maintenance_receipt.py",
+          "change": "M",
+          "branch_blob": "f8525b7c8145af73afa97d049a246a138d0e1da8",
+          "candidate_blob": "f8525b7c8145af73afa97d049a246a138d0e1da8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/repository_maintenance_sandbox.py",
+          "change": "M",
+          "branch_blob": "dcde9a84a2624d3c8c78d2409fb78b98b16b3e3e",
+          "candidate_blob": "70ec304b59be902ca11c06c02027b3f960def991",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_actions_control_failure_receipt_workflow.py",
+          "change": "M",
+          "branch_blob": "2d2b65165f918763286a30dae7a6eed199b2755f",
+          "candidate_blob": "f21cefbd84fa7732944b0a8462c558909b6e19ad",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_actions_control_ledger.py",
+          "change": "M",
+          "branch_blob": "b5962d0a70c556c8110909a6507fdaedac8d189d",
+          "candidate_blob": "b5962d0a70c556c8110909a6507fdaedac8d189d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_actions_failure_receipt.py",
+          "change": "M",
+          "branch_blob": "9b845be5d7c923969c2f4e9dbb16a7c2f6985fb8",
+          "candidate_blob": "9b845be5d7c923969c2f4e9dbb16a7c2f6985fb8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_complete_mediation.py",
+          "change": "M",
+          "branch_blob": "f962dcfb1836e384fe992bb4fcef8705240da3e3",
+          "candidate_blob": "b3b657c13c0f07c09a007025e4d7920e29c99ddb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_issue_comment_write_mediation.py",
+          "change": "A",
+          "branch_blob": "3240ffc3a15dfd3bb92000adaba08fa2ea0555a6",
+          "candidate_blob": "bc21ca7fabcc602434d1e77248151bb491dc4ea3",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_repository_maintenance_receipt.py",
+          "change": "M",
+          "branch_blob": "9d9b46637f1b45acbf6d186034a376a80b3f49a9",
+          "candidate_blob": "9d9b46637f1b45acbf6d186034a376a80b3f49a9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "6fb5877d E006 R2Q2B3: add exact canary-scope negative tests\n1668a2d8 E006 R2Q2B3: add exact TEST-only issue canary scope\n860c0883 Merge current master f9aefe2 into PR224 after MOON CI repair\nf70e30f1 E006 R2Q2A2: add urlopen read/write scanner regression\n1e67d3f2 E006 R2Q2A2: classify urlopen GET as read-only\n440c5098 E006 R2Q2A1: integrate current master into issue-comment complete mediation\n17f46cc7 E006 R2Q2: exact-byte repair maintenance sandbox\na62d2607 E006 R2Q2: make generic maintenance transport read-only\n3d9b284e E006 R2Q2: resolve bounded repository maintenance HTTP methods\nef45812e E006 R2Q2: route maintenance receipts through canonical mediator\n6c973965 E006 R2Q2: update maintenance receipt mediation tests\nde9bd194 E006 R2Q2: add issue-comment mediation tests\nb788ba2b E006 R2Q2: update failure-receipt mediation tests\ne1fd7bb2 E006 R2Q2: update control-ledger mediation tests\n81e2e8c9 E006 R2Q2: update failure-receipt workflow tests\n22b5dd7d E006 R2Q2: add pinned issue-comment runtime loader\n0436aa8a E006 R2Q2: exact-byte repair issue-comment mediation\n819b35d8 E006 R2Q2: exact-byte repair issue-comment effect\n84072507 E006 R2Q2: exact-byte repair failure receipt\n060737f5 E006 R2Q2: route failure receipts through canonical mediator\n07818f01 E006 R2Q2: add durable issue-comment mediation\naef986d2 E006 R2Q2: add exact issue-comment effect provider\nedfdfdb0 E006 R2Q2: exact-byte repair dispatch bridge\needfa556 E006 R2Q2: wire canonical issue-comment runtime\n2b42c205 E006 R2Q2: route control ledger through canonical mediator\nab409230 E006 R2Q2: add exact issue-comment contract",
+      "classification": "SUPERSEDED",
+      "reason": "Canonical exact canary/test-only scope and admission binding remain; compact old tests include optional additional issue/repository/action examples absent from rewritten suite. This is optional coverage, not a missing required runtime feature.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "fda33a15192dd1675276b9c926d70cfd341e1474",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f006-agent-foundry-registry",
+        "refs/remotes/r25/mission/f006-agent-foundry-registry"
+      ],
+      "subject": "F006 R2: keep verifier candidates in swarm test projection",
+      "merge_base": "07f5ed508addc73051f4858c2f78b20eec188c73",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/agent_registry.py",
+          "change": "A",
+          "branch_blob": "c2c9cc38a213d33714776b77730efbbb1e58a1a3",
+          "candidate_blob": "c2c9cc38a213d33714776b77730efbbb1e58a1a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/agent_instance.schema.json",
+          "change": "A",
+          "branch_blob": "25e6b2ca3e45956a880291f281005c763cb7c5a8",
+          "candidate_blob": "25e6b2ca3e45956a880291f281005c763cb7c5a8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/agent_registry_projection.schema.json",
+          "change": "A",
+          "branch_blob": "d5b66200791ec689d6d71005a1d3ccb3f9a62f17",
+          "candidate_blob": "d5b66200791ec689d6d71005a1d3ccb3f9a62f17",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/__init__.py",
+          "change": "M",
+          "branch_blob": "d20fa0ef1e4ebe6858a95dc9f1cc652d9dfce9b2",
+          "candidate_blob": "ffa1d7f7dd0f6234fc94894d0ff70d0f3bcdbec2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/agent_registry.py",
+          "change": "A",
+          "branch_blob": "634cd832f3518750f0d0d89afea28aa91690c4bd",
+          "candidate_blob": "634cd832f3518750f0d0d89afea28aa91690c4bd",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/planner.py",
+          "change": "M",
+          "branch_blob": "077534d3cb599b8cb3e54caae41a3bf603ddcd30",
+          "candidate_blob": "077534d3cb599b8cb3e54caae41a3bf603ddcd30",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_agent_registry.py",
+          "change": "A",
+          "branch_blob": "8025d70797a8ddb317671cfb30dcba9bc56b05d8",
+          "candidate_blob": "8025d70797a8ddb317671cfb30dcba9bc56b05d8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_agent_registry_contract.py",
+          "change": "A",
+          "branch_blob": "a841edb607044a4e1691c14257acb720cb8dbff9",
+          "candidate_blob": "a841edb607044a4e1691c14257acb720cb8dbff9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_control_plane.py",
+          "change": "M",
+          "branch_blob": "0438500bca874340364577929e1c93c1951b9dd3",
+          "candidate_blob": "0438500bca874340364577929e1c93c1951b9dd3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_event_bridge.py",
+          "change": "M",
+          "branch_blob": "c5be430972425d5aea2a7e331e0d8b919c8b8df4",
+          "candidate_blob": "c5be430972425d5aea2a7e331e0d8b919c8b8df4",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_swarm.py",
+          "change": "M",
+          "branch_blob": "8c39e34d8053db09b9137d5939bf2102fb50dcf7",
+          "candidate_blob": "8c39e34d8053db09b9137d5939bf2102fb50dcf7",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_rccm_1d_glitchlab_conformance.py",
+          "change": "M",
+          "branch_blob": "8ce107ef8abdf137a83de694784c8d8ffbfb0901",
+          "candidate_blob": "8ce107ef8abdf137a83de694784c8d8ffbfb0901",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "fda33a15 F006 R2: keep verifier candidates in swarm test projection\n8c3dc52a F006 R2: migrate RCCM conformance test to registry projection\n0eac0e5a F006 R2: migrate event-bridge tests to registry projections\nd6d81059 F006 R2: migrate control-plane tests to registry projections\n81ef504a F006 R2: preserve verifier discovery in registry projection\nf5e055b9 F006: migrate planner tests to registry projection\nefeec831 F006: add durable registry tests\n001d4283 F006: add registry contract tests\nb99329b6 F006: export registry surfaces\n5f4c6e22 F006: bind planner to registry projection\n5daf8508 F006: complete durable agent registry\n7f7fea34 F006: implement durable agent registry\n8afe47a3 F006: add registry projection schema\n2d6e0c36 F006: add agent instance schema\n38a69d7e F006: add agent registry contracts",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "62b44ac66cf367b5bf725dec03cfcd09da5abc99",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f007-enterprise-graph",
+        "refs/remotes/r25/mission/f007-enterprise-graph"
+      ],
+      "subject": "F007: test causality provenance binding",
+      "merge_base": "6ce5c24baa52468e1217c51cbff7b638d886084d",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/enterprise_graph.py",
+          "change": "A",
+          "branch_blob": "bda404e4939d321744599de01cd32ee7259d3f45",
+          "candidate_blob": "bda404e4939d321744599de01cd32ee7259d3f45",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/enterprise_graph_edge.schema.json",
+          "change": "A",
+          "branch_blob": "323234c6a1a991d47b2df1c385810baa686216ff",
+          "candidate_blob": "323234c6a1a991d47b2df1c385810baa686216ff",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/enterprise_graph_node.schema.json",
+          "change": "A",
+          "branch_blob": "a84b404d776c87aef1fba0c8a8a720a03282263d",
+          "candidate_blob": "a84b404d776c87aef1fba0c8a8a720a03282263d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/enterprise_graph_projection.schema.json",
+          "change": "A",
+          "branch_blob": "59b8d6c86ee2440c007e8f513e2d6a3303a9a03a",
+          "candidate_blob": "59b8d6c86ee2440c007e8f513e2d6a3303a9a03a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/__init__.py",
+          "change": "M",
+          "branch_blob": "669f59e8472f848863f190108c4eda3375e796cf",
+          "candidate_blob": "ffa1d7f7dd0f6234fc94894d0ff70d0f3bcdbec2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/enterprise_graph.py",
+          "change": "A",
+          "branch_blob": "944bc6647fc24da66d0b372a65c796ed0fb9e9a1",
+          "candidate_blob": "944bc6647fc24da66d0b372a65c796ed0fb9e9a1",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/event_graph_projection.py",
+          "change": "A",
+          "branch_blob": "8e5b5d3eb2a31035a2a3a908ba020af440e95db6",
+          "candidate_blob": "8e5b5d3eb2a31035a2a3a908ba020af440e95db6",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph.py",
+          "change": "A",
+          "branch_blob": "f6e102b09b8f0cdb3b13207fa14d425725475f0b",
+          "candidate_blob": "f6e102b09b8f0cdb3b13207fa14d425725475f0b",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph_authority_separation.py",
+          "change": "A",
+          "branch_blob": "4aa59aa45b39d42f57f487d3b1b3e63128eb1a28",
+          "candidate_blob": "4aa59aa45b39d42f57f487d3b1b3e63128eb1a28",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph_contract.py",
+          "change": "A",
+          "branch_blob": "5f62148f86709a32955c3688eefd3bfa95c291d3",
+          "candidate_blob": "5f62148f86709a32955c3688eefd3bfa95c291d3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph_event_projection.py",
+          "change": "A",
+          "branch_blob": "f7bf800dad52e6a24d19adda8bb0ff5ffafb2d17",
+          "candidate_blob": "f7bf800dad52e6a24d19adda8bb0ff5ffafb2d17",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "62b44ac6 F007: test causality provenance binding\n16449b33 F007: provenance-bind EventEnvelope causation\n61633e24 F007: bind causality evidence to provenance\nfbd50032 F007: implement typed durable Enterprise Graph",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "736a86459ebe775cdec3fec2e605471f76ef4ae6",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f007-post-integration-reconcile",
+        "refs/remotes/r25/mission/f007-post-integration-reconcile"
+      ],
+      "subject": "LION: reconcile F007 catalog projections",
+      "merge_base": "c6fbe360e1cdf2a07e59a4045b5b715f031fcd27",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "7bfc582d5afd8de614fd534d4605cc8c32cd6b3f",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "652801404a34125af1faf4b61877df0a3e822e6a",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "2c3bc1406185a5a8a8d76013acf5e1b45f772c2a",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "5677c6f3468aad0b2218de51a8c91d76f2d3f150",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "736a8645 LION: reconcile F007 catalog projections\n712d054d LION: reconcile F007 implementation state\n72b74d6f LION: reconcile F007 and advance critical path to F008",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "faf415728dfb0efef41408c18a16a70c307901f1",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f008-s0-post-integration-reconcile",
+        "refs/remotes/r25/mission/f008-s0-post-integration-reconcile"
+      ],
+      "subject": "LION: advance critical path to F008 PDP",
+      "merge_base": "b012364296a9f1459df26bb3d635b4f35f07873e",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "750846fbb184ec7ba09ca1077ff62d3df924eba0",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "b388d841f2bb8f3f4ccbc58189daf4ca4a130ecd",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "0f86f603c31df3d353baaba1e60af464de50e4ee",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "6000e3e052404df6934a3e56d0cf0be73057040c",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/status.json",
+          "change": "M",
+          "branch_blob": "cb396f4e6070adf958a42ff79f3c19692eabac7a",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "faf41572 LION: advance critical path to F008 PDP\nbe01bcde LION: retire F008-S0 builder projection\n8f78db0d LION: reconcile F008 mission registry\nbaf57c63 LION: mark F008-S0 observed\n317f9960 LION: reconcile F008-S0 deterministic status",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "8c8b2842a31157ae525c751027cc3e48e8bfe1a1",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f008-s0-status-post-binding-reconcile",
+        "refs/remotes/r25/mission/f008-s0-status-post-binding-reconcile"
+      ],
+      "subject": "LION: keep F008 PDP selected after semantic binding reconcile",
+      "merge_base": "3152e79060ba916edc3e299d94e3c5db86dec816",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "a9c85d4453759e17c849ac784b985848745d7707",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "16d8d478fe70176933ea4bf3fd5704fb9c8c87e2",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "7b5e945a5b2ac9a08d99beeba8e1ab7aa57ada9e",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "c79bbd1ec995233f75c535bbc925fd994d223d9d",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/status.json",
+          "change": "M",
+          "branch_blob": "9be0fb4056dbb59f1693a41fc11cf2bcd735a948",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "8c8b2842 LION: keep F008 PDP selected after semantic binding reconcile\n61eee181 LION: reconcile drone registry after semantic binding\n030e0dbf LION: reconcile mission registry after status semantic binding\na4b72b28 LION: refresh implementation projection after semantic binding\n8d59f792 LION: reconcile status to semantic binding code master",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "1cf90c829712e458bc984bcf2e7cb812b14fccbf",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f008-s0-status-semantic-master-binding",
+        "refs/remotes/r25/mission/f008-s0-status-semantic-master-binding"
+      ],
+      "subject": "F008-S0: define semantic master freshness protocol",
+      "merge_base": "4a03956c15c2f61c4026f25c5575b88c9e51c1ac",
+      "paths": [
+        {
+          "path": "LION/protocols/DETERMINISTIC_STATUS_READ.md",
+          "change": "M",
+          "branch_blob": "933130e7cb8b41f04a4769b9bc9488828a88dbaa",
+          "candidate_blob": "9d9a0fb8cf32ba5515737be7d3f01d30ea2c2f00",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_status_projection.py",
+          "change": "M",
+          "branch_blob": "a472f4fcc84e5dade5cf3537bc0a7cffc7c538e7",
+          "candidate_blob": "a472f4fcc84e5dade5cf3537bc0a7cffc7c538e7",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_status.py",
+          "change": "M",
+          "branch_blob": "829a56d038401d86d5fe888132c3df4c0a336cdf",
+          "candidate_blob": "829a56d038401d86d5fe888132c3df4c0a336cdf",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "1cf90c82 F008-S0: define semantic master freshness protocol\n64d0e81a F008-S0: test projection-only descendant freshness\na656a937 F008-S0: add bounded projection-only master freshness",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "4b4ca4bb32706c5d3b49ea1123090103e0c8497f",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f008-s0-swarm-governance-status",
+        "refs/remotes/r25/mission/f008-s0-swarm-governance-status"
+      ],
+      "subject": "F008-S0 R2: test full canonical status tamper detection",
+      "merge_base": "2680d1412c7023c0ef4e39b7bb415c44de4e3803",
+      "paths": [
+        {
+          "path": "LION/protocols/DETERMINISTIC_STATUS_READ.md",
+          "change": "A",
+          "branch_blob": "e15d3b8d345d4f85979beb914a7e7074c40f0224",
+          "candidate_blob": "9d9a0fb8cf32ba5515737be7d3f01d30ea2c2f00",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/status.json",
+          "change": "A",
+          "branch_blob": "14ae318e95bc8ea46f94c7b7991a9318ff5ef1d3",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/swarm_governance.py",
+          "change": "A",
+          "branch_blob": "c34af06455cc2d04bb13d3b9c7f17b1847f2a854",
+          "candidate_blob": "c34af06455cc2d04bb13d3b9c7f17b1847f2a854",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/swarm_status.py",
+          "change": "A",
+          "branch_blob": "a79f1d49cff10b8efe63c825c557868906d44da3",
+          "candidate_blob": "a79f1d49cff10b8efe63c825c557868906d44da3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/swarm_formation.schema.json",
+          "change": "A",
+          "branch_blob": "22b5f7392bc03c90b0c53106b9e863b495c1881a",
+          "candidate_blob": "22b5f7392bc03c90b0c53106b9e863b495c1881a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/swarm_status.schema.json",
+          "change": "A",
+          "branch_blob": "3e97153ab48b3d653fa62a78cf1fa1b4320978dc",
+          "candidate_blob": "3e97153ab48b3d653fa62a78cf1fa1b4320978dc",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/__init__.py",
+          "change": "M",
+          "branch_blob": "26cc1654b16c7caac0b1e8af67356901ecd69167",
+          "candidate_blob": "ffa1d7f7dd0f6234fc94894d0ff70d0f3bcdbec2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_formation_manager.py",
+          "change": "A",
+          "branch_blob": "557088886a203785ca8d8eab8c2be73a6b53cf15",
+          "candidate_blob": "557088886a203785ca8d8eab8c2be73a6b53cf15",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_governor.py",
+          "change": "A",
+          "branch_blob": "5ffe977eb74cac99b0123dbb6b3dc2c67f2764c6",
+          "candidate_blob": "5ffe977eb74cac99b0123dbb6b3dc2c67f2764c6",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_role_allocator.py",
+          "change": "A",
+          "branch_blob": "1a64f9c5fb962dd223b86d766a743d4061d285f6",
+          "candidate_blob": "1a64f9c5fb962dd223b86d766a743d4061d285f6",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_status.py",
+          "change": "A",
+          "branch_blob": "d5c9fe1cec7c3b4f626f805e99c33f885b9efb08",
+          "candidate_blob": "d5c9fe1cec7c3b4f626f805e99c33f885b9efb08",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_status_projection.py",
+          "change": "A",
+          "branch_blob": "4849d818f7fbdab8fd0788bf96c668a753f876cf",
+          "candidate_blob": "a472f4fcc84e5dade5cf3537bc0a7cffc7c538e7",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_formation_manager.py",
+          "change": "A",
+          "branch_blob": "ff0144e535deb3818d01a7c35e45f52235154c9e",
+          "candidate_blob": "ff0144e535deb3818d01a7c35e45f52235154c9e",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_governance_contract.py",
+          "change": "A",
+          "branch_blob": "20c94b6a7589fb33b01ad0851d4158b2ac68fab2",
+          "candidate_blob": "20c94b6a7589fb33b01ad0851d4158b2ac68fab2",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_governor.py",
+          "change": "A",
+          "branch_blob": "8f97bd6c72e8b565bf8bd153b02dae36da29ccb5",
+          "candidate_blob": "8f97bd6c72e8b565bf8bd153b02dae36da29ccb5",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_role_allocator.py",
+          "change": "A",
+          "branch_blob": "91354abdbf7b014a1bf58aeec5b27dc417d9ba60",
+          "candidate_blob": "91354abdbf7b014a1bf58aeec5b27dc417d9ba60",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_status.py",
+          "change": "A",
+          "branch_blob": "a143e90d33a9244662c0e70abb4824075b5170b9",
+          "candidate_blob": "829a56d038401d86d5fe888132c3df4c0a336cdf",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "4b4ca4bb F008-S0 R2: test full canonical status tamper detection\n97719f7a F008-S0 R2: test governor fencing across commit boundary\n7022a00e F008-S0 R2: fence status transactions and bind full status bytes\n235fab32 F008-S0 R2: fence status commit against governor takeover\n2b8ec577 F008-S0: adapt swarm governance tests to unittest harness\n4a7832d4 F008-S0: dynamic swarm governance and deterministic status core",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "fe3f19c28b9d4b6f8e57999e979ab752cfab2e9d",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/f009-effect-time-currentness",
+        "refs/remotes/r25/mission/f009-effect-time-currentness"
+      ],
+      "subject": "F009: add admission-bound runtime execution tests",
+      "merge_base": "c56b8d453c39b8b68889b49ac7e794c07c264a97",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "candidate_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "candidate_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "213b8c6c1001a2f9bd98a42b482e5a3a736ab8a1",
+          "candidate_blob": "4cba9b7e25eb7484a63c8f56663c26db848c7276",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "candidate_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "candidate_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+          "change": "A",
+          "branch_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "candidate_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution.py",
+          "change": "A",
+          "branch_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "candidate_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution_contract.py",
+          "change": "A",
+          "branch_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "candidate_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "fe3f19c2 F009: add admission-bound runtime execution tests\n4079dc59 F009: add runtime execution contract tests\n060ef79e F009: carry exact test command into sandbox operation\n515ab509 F009: bind test command in runtime execution request\nd9bbe581 F009: add admission-bound runtime execution engine\nc22007ae F009: add runtime execution binding contracts\n8e56b7f4 F009 R2: expand adversarial runtime admission verification\n3015374b F009 R2: test canonical PDP and provisioned identity contracts\n0105726d F009 R2: require trusted PDP and provisioned runtime evidence\ne453cd7a F009 R2: harden runtime admission evidence contracts\n0f375cb0 F009: add fail-closed runtime admission tests\nefa40ab7 F009: add runtime admission contract tests\n79c482c7 F009: implement fail-closed runtime admission\n88ce74eb F009: add runtime admission contracts",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "b2e2b4561d44d0683bcfa5822b8bab1bb57e7fcf",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/lion-evolutionary-swarm-ops-catalog",
+        "refs/remotes/r25/mission/lion-evolutionary-swarm-ops-catalog"
+      ],
+      "subject": "LION: add evolutionary architecture and swarm ops catalog",
+      "merge_base": "0db83f4847e3d4973c9640b723fab9f0f4e965b4",
+      "paths": [
+        {
+          "path": "LION/README.md",
+          "change": "A",
+          "branch_blob": "b6d40c926f9c9c39b5afbb24ee45d26ed4ac1ba0",
+          "candidate_blob": "815b850e8b87f546493adc760cb544cda5043c32",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/architecture/evolution-map.json",
+          "change": "A",
+          "branch_blob": "1ffaa11d008d7cac01fb10a466eeeabcd30a91de",
+          "candidate_blob": "1ffaa11d008d7cac01fb10a466eeeabcd30a91de",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "A",
+          "branch_blob": "b180ec090a20300c082d0329204e422e66174ebb",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/architecture/target-map.json",
+          "change": "A",
+          "branch_blob": "21c2b1935abef15b046048ad945233f4970fcd33",
+          "candidate_blob": "21c2b1935abef15b046048ad945233f4970fcd33",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/catalog.json",
+          "change": "A",
+          "branch_blob": "db1600def49e62b06e7788452db86b146f1a21ae",
+          "candidate_blob": "c65e4adf756a0d91426bfd752c72154eb1530155",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/channel-registry.json",
+          "change": "A",
+          "branch_blob": "c234cb058c543ff6a83b374e8295f512658a1c90",
+          "candidate_blob": "19c0d007e219fb6b9a34faba6c435297181aec52",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/dependency-graph.json",
+          "change": "A",
+          "branch_blob": "55e054529c7791e2a8940274ec3ff315e5ff20d4",
+          "candidate_blob": "55e054529c7791e2a8940274ec3ff315e5ff20d4",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "A",
+          "branch_blob": "5151a02d39741c6dadd59514b391ded57d0c308c",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "A",
+          "branch_blob": "3f2363e600d660aa08c37a041411e57e363205ee",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "A",
+          "branch_blob": "8c9c84823b382f4153b16c1276f0582fdced83b7",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/protocols/BOOTSTRAP.md",
+          "change": "A",
+          "branch_blob": "cf7576525bd05087eace7d95b282199e69c68630",
+          "candidate_blob": "9d24bf31468ad60abb524787927a50635bc06377",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/protocols/EVOLUTION.md",
+          "change": "A",
+          "branch_blob": "681be9daaa84bf0f53fe1b0542f6c9546b169018",
+          "candidate_blob": "b294c0779b78ceb85ca131bfec0613aceb2293be",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/protocols/SWARM_COMMUNICATION.md",
+          "change": "A",
+          "branch_blob": "762f7a6ae4222134b893085dcece276a6706b8f7",
+          "candidate_blob": "2160a652e8db04967dedabb4da031df261443429",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/schemas/catalog.schema.json",
+          "change": "A",
+          "branch_blob": "dda0b7164b5b6a81589ed34b519d4c1036e16e9a",
+          "candidate_blob": "dda0b7164b5b6a81589ed34b519d4c1036e16e9a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/schemas/operational-records.schema.json",
+          "change": "A",
+          "branch_blob": "83fcfbd1495df93630a682baa4154d29196a9f0d",
+          "candidate_blob": "83fcfbd1495df93630a682baa4154d29196a9f0d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "b2e2b456 LION: add evolutionary architecture and swarm ops catalog",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted blob exists in candidate history; no required unique source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "937f403aeb4815beaa14f03f66049959a202034e",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/lion-swarm-ops-activate",
+        "refs/remotes/r25/mission/lion-swarm-ops-activate"
+      ],
+      "subject": "LION: finalize swarm ops activation projection",
+      "merge_base": "f873e9d6ab3ce995c17a479bde35f107f1441258",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "3590548337ff5c3914c85671a4e066943f10aaa1",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/channel-registry.json",
+          "change": "M",
+          "branch_blob": "75da782a727c824f8e9644279fa982a4a7db156f",
+          "candidate_blob": "19c0d007e219fb6b9a34faba6c435297181aec52",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "991ce15a2b02e4fa8bb1fef7531728d55678cf20",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "eed829ebb4034146a0e4bd0b3fa21ec5fa9dc0e6",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "0fe75156d3adbdbda5477e42b203fc6761f43dfa",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "937f403a LION: finalize swarm ops activation projection\ndbf40703 noop\nde1561bf LION: reconcile swarm ops activation commits\nbe6c3cc7 LION: activate swarm ops channels and F007 mission\n025270b8 LION: activate swarm ops channels and F007 mission",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted blob exists in candidate history; no required unique source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "61b963e8664d6832f8bfe22bd31327ff63618a07",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/p0-entry-candidate-r1",
+        "refs/remotes/r25/mission/p0-entry-candidate-r1"
+      ],
+      "subject": "P0: support exact-head and synthetic PR perception carriers",
+      "merge_base": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd",
+      "paths": [
+        {
+          "path": ".github/workflows/cyber-lion-contracts.yml",
+          "change": "M",
+          "branch_blob": "9e97829605839d1f6d9ab52278b13d5c39465ecb",
+          "candidate_blob": "46403358e8923d06eda5abd88ebebb5991ee61ae",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/architecture_projection/__init__.py",
+          "change": "M",
+          "branch_blob": "9534602d9f8c1275657b5903f545156653244625",
+          "candidate_blob": "ebdedbafc08e379beadcff3f17a0fe4f17ff01b7",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/architecture_projection/current_truth.py",
+          "change": "A",
+          "branch_blob": "21b0d026f4323c3c448bc19ec077b2d02a156c45",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "96d927869a2aa362bc015f7826d25ad17eb473bd",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "b6f74032507d8ea3b3c37e45b9d86738009194e2",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/lcms.ebnf",
+          "change": "A",
+          "branch_blob": "69c7bee27c77f0af402a1c93277440945337ea3c",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/physical_action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "7580e9d6374c7ef019e371d54bed027e2449e3ee",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/complete_mediation.py",
+          "change": "M",
+          "branch_blob": "0454f99347cbca7e967c61c3f4fecfcb057d8c07",
+          "candidate_blob": "3932debfc80876e47d2b74735a07b04cf837e8fb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/fleet_runtime_composition.py",
+          "change": "M",
+          "branch_blob": "93924d24cdf9df36bdb1ccda380294a152db852a",
+          "candidate_blob": "ac4320c0b2a34a0b2c3cd9b54de64162870daad3",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/fleet_runtime_snapshot_source.py",
+          "change": "M",
+          "branch_blob": "9e01c3af1bcffb4ce47ab468dd09c9b12b41680f",
+          "candidate_blob": "3b35b71d85a664aa38d2860025643194f4f30981",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/hybrid_router.py",
+          "change": "A",
+          "branch_blob": "39b3f04361dc51f242819271c2415a5487f3706c",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/lcms.py",
+          "change": "A",
+          "branch_blob": "5d0ef705f9e3990e0ab1b96818cb2e192811a425",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/physical_action_simulation.py",
+          "change": "A",
+          "branch_blob": "ed5e29395a68e8b405a6eea1a5784da4edd6b95b",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/readonly_process_exec.py",
+          "change": "A",
+          "branch_blob": "60fbc146db0d1a8652fbde7439a2da1387ccd093",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/c2_readonly_probe.py",
+          "change": "A",
+          "branch_blob": "3f37f5dfcdfa62f333f761d4ec239b93b07de957",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "eb5d0b70ddfecdc7bfb20c908fc8fbe91ea3519f",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_code_perception_determinism.py",
+          "change": "M",
+          "branch_blob": "790254a0b2ca59e3547651b4a942a780b709d8f8",
+          "candidate_blob": "879a1abcbd9c3a20de692c9b704e1ae1b2cfae65",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_current_truth_projection.py",
+          "change": "A",
+          "branch_blob": "17cc7039187436a31ff2c51be0de9961951990bd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_global_mediation_inventory_closure.py",
+          "change": "A",
+          "branch_blob": "f3f5f6dfe5710c1e956d212f21f769773a58b4a7",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "2ee2d9502e1f6130e8e3246b577c6d51e2d097b9",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_hybrid_router.py",
+          "change": "A",
+          "branch_blob": "bf957799a56d6f58bbe8995d2fbea6fc79be1374",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_lcms.py",
+          "change": "A",
+          "branch_blob": "c1bef5df4b2bbc02d16db3e821051fe2b219d39b",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_physical_action_simulation.py",
+          "change": "A",
+          "branch_blob": "7ca9b96be28081b1c260e97168407dabb83c4976",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_readonly_process_exec.py",
+          "change": "A",
+          "branch_blob": "7f5ddac1b493eb9ce2fe2430a92331e0ffafd8ca",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "3c815251228498f0520ae00bd90aca7b509aa137",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C1_LCMS_R1.md",
+          "change": "A",
+          "branch_blob": "625fabeff5d88e41397cecf7564c6d955049bf2d",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C2_READONLY_PROCESS_EXEC_R1.md",
+          "change": "A",
+          "branch_blob": "40584a4c891d90e088e2243f24b9c646c2e965fc",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/cyber-physical/E0_PHYSICAL_ACTION_SIMULATION.md",
+          "change": "A",
+          "branch_blob": "29927b2583154ab240b636e953f18b09d5588de1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "61b963e8 P0: support exact-head and synthetic PR perception carriers\n20e29b1e P0: add exact-head GitHub-hosted candidate verification\n18f70c4b C2: enforce isolated temp root before sandbox mutation\n570c9f74 Reconcile exact AS-IS candidate target truth plane\n73a8c7db Reconcile global effect inventory classification without fake mediation pass\n369fa391 E0: add simulation-only PhysicalActionSpec and digital twin falsification\n4ed11daa D1: add authority-preserving hybrid route policy\n02d44eca C2: bind probe to exact workspace and expose bounded failure diagnostics\n25ee9e18 C2: bind Landlock and writable-root evidence into reconciliation\n9c4079db C2: replace WSL bind mounts with Landlock filesystem sandbox\n0164c8db C2: remove procfs exposure and pin seccomp ABI\n258e2149 C2: consume gate before sandbox mutation\nc9bf340e C2: materialize read-only process adapter locally\ne3fd5162 C1: materialize LCMS parser and canonicalizer locally\nd31a6385 C0: freeze ActionSpec schema candidate against live contracts",
+      "classification": "EXPERIMENTAL",
+      "reason": "Mixed detached P0 proposal: LCMS/C2/E0 simulation, static hybrid_router and current_truth source-perception projection absent from canonical runtime are optional architecture experiments. Current mission runtime projection and existing truth_plane cover required Epoch3 visibility/currentness. Canonical fleet SQL and mediation implementations retained. No claim of runtime equivalence to optional modules.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "d642fd5556b8fd9036bf30cca6564f7b91b09115",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/p0-post-moon-master-truth-rebind-r1",
+        "refs/remotes/r25/mission/p0-post-moon-master-truth-rebind-r1"
+      ],
+      "subject": "P0: rebind truth plane to post-MOON master",
+      "merge_base": "221b9e60c0ceda2d6a16c59d4e9982c3ac06df39",
+      "paths": [
+        {
+          "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+          "change": "M",
+          "branch_blob": "bd51f17555b31ffa4706ab72367db2f0734fdd47",
+          "candidate_blob": "d44de648561670450f79fe616adf274144d02784",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/registry/repositories.json",
+          "change": "M",
+          "branch_blob": "4b96831f3abcd4bb009abb5e04605235ae79c398",
+          "candidate_blob": "4e490d958c7699fa47f17e28b28e984e6c59addb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_truth_plane_reconciliation.py",
+          "change": "M",
+          "branch_blob": "e3c260e8bc9ab456497a0e2aff12deaa2876a6a3",
+          "candidate_blob": "b8adbcaef0df756ca1a0b7a755c51d2d17a126f2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "d642fd55 P0: rebind truth plane to post-MOON master",
+      "classification": "SUPERSEDED",
+      "reason": "Old A0/P0 truth pins and v1.3 validation superseded by canonical v1.4 subject-digest currentness, candidate lineage and current tests; no old live pins restored.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "4151cbec2af93e62d05314569e40018ef41c004f",
+      "aliases": [
+        "refs/remotes/r25-collapse/mission/r2e4-merge-authority-observability",
+        "refs/remotes/r25/mission/r2e4-merge-authority-observability"
+      ],
+      "subject": "R2E4: repair test-carrier branch contamination",
+      "merge_base": "ba9bb9ca1bfe40152c2e6eb7bf826356621dbb83",
+      "paths": [
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "25f7c5fe61ffca073359d623e2701ceca8cea3f1",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "4151cbec R2E4: repair test-carrier branch contamination\nd8bb94a1 __never__",
+      "classification": "INTEGRATED",
+      "reason": "Every changed nondeleted blob exists in candidate history; no required unique source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "4fe5a484be9db26725b964667526cd4628de774c",
+      "aliases": [
+        "refs/remotes/r25-collapse/tmp-r3-upload-staging",
+        "refs/remotes/r25/tmp-r3-upload-staging"
+      ],
+      "subject": "test: allow defensive Docker-socket inspection in scale64 runner",
+      "merge_base": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+      "paths": [
+        {
+          "path": "cyber_lion/tests/test_docker_fleet_polygon.py",
+          "change": "A",
+          "branch_blob": "f9621bd66925de9adc801c3d6c3207cae604a665",
+          "candidate_blob": "f9621bd66925de9adc801c3d6c3207cae604a665",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_p0_docker_scale64.py",
+          "change": "A",
+          "branch_blob": "1bdf0116ccfca5c461d507dca0d844f07c017f49",
+          "candidate_blob": "1bdf0116ccfca5c461d507dca0d844f07c017f49",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_p0_rootless_docker_provider.py",
+          "change": "A",
+          "branch_blob": "1ca2ae2a72615c0c7ef75163f6d44d0b5fa600b8",
+          "candidate_blob": "1ca2ae2a72615c0c7ef75163f6d44d0b5fa600b8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-drone-p0/Dockerfile",
+          "change": "A",
+          "branch_blob": "16071c0590056fe1a7303222974423ac0d1362e2",
+          "candidate_blob": "16071c0590056fe1a7303222974423ac0d1362e2",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "deploy/docker/lion-p0-provider/install.sh",
+          "change": "A",
+          "branch_blob": "7db5558b7d1e05b9b89fd3485b94ec045ffefc86",
+          "candidate_blob": "5605c223426a77ee33dd689fd6a5a4179d028f1d",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "deploy/docker/lion-p0-provider/lion-p0-rootless-docker-provider.service",
+          "change": "A",
+          "branch_blob": "16d8e0ed954f6c5adc534d7636aad356d0498bfb",
+          "candidate_blob": "16d8e0ed954f6c5adc534d7636aad356d0498bfb",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "docs/architecture/local-swarm-p0-docker-polygon.md",
+          "change": "A",
+          "branch_blob": "aacfba0ab43bd24cdc3bae13e1ccc4ef7e0ddb44",
+          "candidate_blob": "06215c5cb4181a807d6f1df1eb21d21ab498e621",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "docs/evidence/local-swarm-p0/docker-polygon-implemented-not-materialized.json",
+          "change": "A",
+          "branch_blob": "f7f954478fab34212c07e09e66852d52b581f03c",
+          "candidate_blob": "f7f954478fab34212c07e09e66852d52b581f03c",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_drone_runtime.py",
+          "change": "A",
+          "branch_blob": "d18b3e8f3761e26554247e6a6fe07a9ebf302623",
+          "candidate_blob": "d18b3e8f3761e26554247e6a6fe07a9ebf302623",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_fleet_contract.py",
+          "change": "A",
+          "branch_blob": "05c68786b017ac9c480bdfe3f047c71465d3110d",
+          "candidate_blob": "05c68786b017ac9c480bdfe3f047c71465d3110d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_fleet_materializer.py",
+          "change": "A",
+          "branch_blob": "21b8dcd3f17fcbc35932b400d4d92cb257827550",
+          "candidate_blob": "21b8dcd3f17fcbc35932b400d4d92cb257827550",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_polygon_full_run.py",
+          "change": "A",
+          "branch_blob": "c61cd3708e51f1987bc0765a134c2cb951afcb2c",
+          "candidate_blob": "c61cd3708e51f1987bc0765a134c2cb951afcb2c",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_docker_scale64_soak.py",
+          "change": "A",
+          "branch_blob": "b35dff3d5cdf591e70b4e12bfde0bd20b6e2d680",
+          "candidate_blob": "b35dff3d5cdf591e70b4e12bfde0bd20b6e2d680",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "tools/p0_rootless_docker_provider.py",
+          "change": "A",
+          "branch_blob": "e5d62630a3616b50d7a70add87e90d262393de49",
+          "candidate_blob": "04980b1060e6e3f320c72dbea1fe33bc9a0dfc1d",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/p0_rootless_docker_provider_client.py",
+          "change": "A",
+          "branch_blob": "513437f324b6596495a0211d0ce68aff1ee9df8a",
+          "candidate_blob": "513437f324b6596495a0211d0ce68aff1ee9df8a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "4fe5a484 test: allow defensive Docker-socket inspection in scale64 runner\nf04aa436 test: cover LION 64-drone scale soak control and teardown\n6e8d4d90 scale64: add autonomous 64-drone three-minute soak and teardown\nd034f74a scale64: add bounded hold and heartbeat mode to drone runtime\n89fa9caf p0: add canonical full live Docker polygon runner\ncefb50a3 test: cover live P0 hardening and lease fence\nbbefe8b0 p0: add live hardening probes and lease fencing\nbca9eb77 test: cover bounded provider registry transport\n0947f870 fix: allow provider registry transport for pinned P0 build\ncba3bf31 test: cover provider writable client state\n04e662df fix: keep Docker client state inside provider state dir\n8b70272e fix: make P0 capsule readable by non-root drone\n02ea6b4a fix: restart P0 provider after unit update\n83875cad fix: expose only rootless Docker socket to P0 provider\nb336dad7 fix: make P0 provider smoke probe group-readable\n1f20b783 p0: bind provider to canonical capsule digests\n07dadbaf test: cover P0 rootless Docker provider boundary\n8580c223 p0: add exact host bootstrap for rootless provider\n7eac9a0a p0: add hardened rootless provider systemd unit\na31b8958 p0: add provider client transport\n844c624e p0: add bounded rootless Docker effect provider\n6e9538ce evidence: freeze Docker P0 implemented-not-materialized result\n080557e0 docs: preserve Docker P0 as explicit test-only tools plane\n75660e3c refactor: remove Docker P0 materializer from production plane\na7f9cd83 refactor: remove Docker P0 runtime from production plane\n8ec44a3c refactor: remove Docker P0 contract from production plane\n24a9b0dd test: bind Docker P0 tests to test-only tools plane\ndd5c0a98 refactor: build P0 drone from test-only tools plane\n7e6a81b2 refactor: keep Docker P0 materializer in test-only tools plane\n68448b68 refactor: keep Docker P0 drone runtime in test-only tools plane\n8c8f8d19 refactor: keep Docker P0 contract in test-only tools plane\nacde833c fix: distinguish container tmpfs target from host temp paths\n899fcc38 docs: define Local Swarm P0 Docker polygon\n8f7a7f27 test: cover Docker fleet polygon contracts and falsification\naa628e42 build: add pinned hardened P0 drone image\n1d9d8621 feat: add Docker fleet materialization and reconciliation adapter\nda3e2992 feat: add deterministic P0 drone runtime\na190bc0b feat: add bounded Docker fleet polygon contracts",
+      "classification": "SUPERSEDED",
+      "reason": "Runner/provider intent represented in canonical broker/runner/provider with newer workspace ownership, diagnostics and fleet resource listing. Old monolithic installation recipe is historical host deployment machinery, not current required source.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "61090e889110a1dde15e795711a9fe8f6f04ed1a",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e1-ci-standalone-2f04bd77",
+        "refs/remotes/r25/verification/r2e1-ci-standalone-2f04bd77"
+      ],
+      "subject": "R2E1: add independent final LION integration gate",
+      "merge_base": "2f04bd77a1c03d43aa1c52f4f08d6e1f4a47a705",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e1-final-integration-gate.yml",
+          "change": "A",
+          "branch_blob": "4d24084a3d6cc6247972208b2c3df5ebc22c2f60",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e1-spectra-mutation.yml",
+          "change": "A",
+          "branch_blob": "67096c61b71aa213865950c93c1d1583a4db0df5",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e1-standalone-refalsification.yml",
+          "change": "A",
+          "branch_blob": "0f7f3f2209e54d2da65f81be634450f6659909b7",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "61090e88 R2E1: add independent final LION integration gate\n775a9b27 R2E1: bind SPECTRA mutation campaign to Tiger patch head\nde03a6a9 R2E1: bind standalone LION verification to Tiger patch head",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "d1086be1f6ec209857e68e3f69da97daa0fd1bf0",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e1-ci-standalone-b7b980ae",
+        "refs/remotes/r25/verification/r2e1-ci-standalone-b7b980ae"
+      ],
+      "subject": "R2E1: add CI-only SPECTRA baseline mutation campaign",
+      "merge_base": "b7b980ae87bb18e5c721c029a5efdfd450239311",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e1-spectra-mutation.yml",
+          "change": "A",
+          "branch_blob": "9f1fbb94ae45373eeeecccb6f311f060788d59bf",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e1-standalone-refalsification.yml",
+          "change": "A",
+          "branch_blob": "508eb2104f139aa8668ae5a2febbd432ad2a4316",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "d1086be1 R2E1: add CI-only SPECTRA baseline mutation campaign\nb0685474 R2E1: add CI-only standalone LION refalsification",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "dfa51b7e83e1091712dc01c5eeeaca43b9a4528b",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e2-post-merge-receipt-24e788e2",
+        "refs/remotes/r25/verification/r2e2-post-merge-receipt-24e788e2"
+      ],
+      "subject": "R2E2: materialize literal post-merge receipt",
+      "merge_base": "24e788e2a03aecdb5563b6710b89156b182746cf",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e2-post-merge-receipt.yml",
+          "change": "A",
+          "branch_blob": "ae5bff7443b59846af42a13b9c71116d9bb07697",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "dfa51b7e R2E2: materialize literal post-merge receipt",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "8a6a2f99ee823aa0f9dd545eab84092575dc0c50",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e2-spectra-c16f7dee",
+        "refs/remotes/r25/verification/r2e2-spectra-c16f7dee"
+      ],
+      "subject": "R2E2: correct literal registry and snapshot receipt digests",
+      "merge_base": "c16f7dee4b165d2b1dd1c314b97e7904e628cabf",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e2-lion-final-integration-gate.yml",
+          "change": "A",
+          "branch_blob": "b07f3b787104e08138a5bb23a6f4f79654eaa7f5",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e2-spectra-mutation.yml",
+          "change": "A",
+          "branch_blob": "6d25005fce2bb12ce1e539be59407dd495312ad1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "8a6a2f99 R2E2: correct literal registry and snapshot receipt digests\n9b762ada R2E2: bind final LION gate to corrected evidence receipt\n9c8d53a5 R2E2: run final LION integration gate on exact candidate\n8fd5aaed R2E2: run SPECTRA registry pin mutation campaign",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "e07fb0709a7248c8bf1254fce2c371eb8ef69ab8",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e3-lion-final-gate-9ea145df",
+        "refs/remotes/r25/verification/r2e3-lion-final-gate-9ea145df"
+      ],
+      "subject": "R2E3: materialize independent final integration receipt",
+      "merge_base": "9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e3-lion-final-integration-receipt.yml",
+          "change": "A",
+          "branch_blob": "65896a7edb3ba8e27a0ac6355d19f8eabc46a6d8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "e07fb070 R2E3: materialize independent final integration receipt",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "d498647aea50e35fe82afecbb30591497081e021",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e3-post-merge-receipt-2be0b312",
+        "refs/remotes/r25/verification/r2e3-post-merge-receipt-2be0b312"
+      ],
+      "subject": "R2E3: materialize post-merge literal receipt",
+      "merge_base": "2be0b312407920ac25d812f1c0bb6ecfcb31aa4c",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e3-post-merge-receipt.yml",
+          "change": "A",
+          "branch_blob": "67c00ca54aab000868318dab492eb600681ce2c6",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "d498647a R2E3: materialize post-merge literal receipt",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    },
+    {
+      "head": "28ae385aa5cc1873aa0f7ac93c29f475e80dc8fa",
+      "aliases": [
+        "refs/remotes/r25-collapse/verification/r2e3-spectra-9ea145df",
+        "refs/remotes/r25/verification/r2e3-spectra-9ea145df"
+      ],
+      "subject": "R2E3: repair SPECTRA mutation harness API binding",
+      "merge_base": "9ea145dfbad9c2e9ae93076a3f0ae62a5ed83b58",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e3-spectra-mutation-receipt-note.txt",
+          "change": "A",
+          "branch_blob": "b8a41398c7df1865b90414f7d7ea8de715879948",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e3-spectra-mutation-trigger-2.txt",
+          "change": "A",
+          "branch_blob": "daabf988fc4a64c7ab9cf93a9e2fbb25c3a74ae4",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e3-spectra-mutation.yml",
+          "change": "A",
+          "branch_blob": "d1667aa37e6a57fdcb02b57dbb85a76b0dfe58ca",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-2.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-3.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-4.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-5.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-6.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-7.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-8.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger-9.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "r2e3-spectra-control-trigger.marker",
+          "change": "A",
+          "branch_blob": "d1fd546a52ad49f7fc11f412a43a9bcfdc7985d1",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "28ae385a R2E3: repair SPECTRA mutation harness API binding\n523a44b6 R2E3: correct SPECTRA candidate tree receipt\nbcfddd91 R2E3: control trigger marker\n9885c946 R2E3: control trigger marker\n1d88209f R2E3: control trigger marker\n8285fb74 R2E3: control trigger marker\n9e20503b R2E3: control trigger marker\na5291332 R2E3: control trigger marker\nc3565911 R2E3: workflow control marker\nf0875b88 R2E3: workflow trigger marker\ne3335841 R2E3: final control trigger\n24bae6a1 R2E3: trigger mutation workflow second receipt\n264b3c89 R2E3: trigger mutation workflow receipt readback\ne908700f R2E3: add SPECTRA live pin mutation campaign",
+      "classification": "HISTORICAL",
+      "reason": "Only one-off R2E1/R2E2/R2E3 CI verification, literal receipt, mutation campaign or trigger artifacts differ. Preserve historical evidence; not a current runtime implementation or live acceptance receipt.",
+      "required_unique_epoch3_source_work": 0
+    }
+  ],
+  "scope": {
+    "remote_alias_entries": 176,
+    "ancestor_entries": 90,
+    "nonancestor_entries": 86,
+    "unique_nonancestor_heads": 42,
+    "required_unique_epoch3_source_work": 0,
+    "unclassified_heads": 0
+  }
+}

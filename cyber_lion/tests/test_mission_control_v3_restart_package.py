@@ -24,6 +24,11 @@ SOURCE_MAP = {
     "cyber_lion/mission_control/execution_driver_contract.py": ROOT / "cyber_lion/mission_control/execution_driver_contract.py",
     "cyber_lion/mission_control/dual_result_join.py": ROOT / "cyber_lion/mission_control/dual_result_join.py",
     "cyber_lion/mission_control/global_scheduler.py": ROOT / "cyber_lion/mission_control/global_scheduler.py",
+    "cyber_lion/mission_control/supervisor_projection.py": ROOT / "cyber_lion/mission_control/supervisor_projection.py",
+    "cyber_lion/mission_control/runtime_projection.py": ROOT / "cyber_lion/mission_control/runtime_projection.py",
+    "cyber_lion/mission_control/phase_control.py": ROOT / "cyber_lion/mission_control/phase_control.py",
+    **{"static/" + name: ROOT / "deploy/mission-control/v3" / name
+       for name in ("index.html", "app.css", "app.js", "passive.js", "control-v3.js")},
 }
 
 
@@ -106,6 +111,16 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 0, proc.stderr)
             self.assertEqual(proc.stdout.strip(), "IMPORT_OK")
+
+    def test_drifted_static_control_ui_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.materialize(root)
+            with (root / 'static/control-v3.js').open('ab') as handle:
+                handle.write(b'\n// stale frontend\n')
+            with patch.object(broker, 'MISSION_CONTROL_V3_ROOT', root):
+                with self.assertRaisesRegex(broker.Deny, '^MISSION_CONTROL_V3_PACKAGE_IDENTITY:static/control-v3.js:'):
+                    broker.mission_control_v3_package_identity()
 
 
 if __name__ == "__main__":

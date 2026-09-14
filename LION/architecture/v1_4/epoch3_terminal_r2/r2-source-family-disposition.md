@@ -1,0 +1,54 @@
+# R2 source-family disposition
+
+This supplements the branch/ref inventory. A family classification describes its source content; it does not assert that every historical commit is reachable or that Epoch 3 is closed.
+
+| Family | Evidence | Disposition |
+|---|---|---|
+| Full-control-plane scheduler fairness | Preserved claim_next records persistent turns; original candidate next_dispatch repeatedly chose the first eligible row. | Required generic storage intent committed in candidate 72fbb40. Durable turn order survives reopen, equal timestamps and simultaneous selectors. No executor/model pathways changed. |
+| Full-control-plane assignment receipts | Original candidate uniqueness covered assignment plus result digest, allowing competing receipts and state rewrites. Preserved work rejected result conflicts but accepted identical replay. | Required immutable-first-receipt intent implemented with stricter current contract: identical replay and conflicting content/metadata fail closed. Historical multiple receipts retained. |
+| Dual provider receipts | Prior candidate 5234e57 already replaced destructive receipt overwrite with immutable duplicate/conflict rejection. | Integrated in committed candidate. Do not copy dirty JOINED shortcut or weaker idempotent policy. |
+| Restart package static assets | Candidate 5234e57 contains static frontend member hashes and drift test. | Integrated intent; final hashes must follow final source. |
+| Retired LOCAL pending/complete API and separate payload/output tables | Master/candidate use list/claim/receipt, material identity fencing and input_json. Dirty files assume a different schema and signatures. | Superseded implementation; retain as history. Not necessary Epoch-3 code to merge. |
+| Backend SaaS dual join | Both preserved and canonical implementations perform backend receipt join; names differ. | Integrated behavior. Do not restore browser receipt writes or duplicate backend pathways. |
+| Normalized runtime/schema, phase detail, material detail and structured events | These are explicit current user requirements; preserved UI only supplies partial inspector/scheduler features. | Required Epoch-3 normalization, structured detail, phase capabilities and UI projection implemented in candidate 72fbb40. Final observed runtime acceptance remains separate. |
+| RAW dialog/tree/digest and SSE transport | Dirty UI has these, but also loses newer queued-refresh, stale-response and viewport guards; RAW accumulator is unbounded. | Required structured detail/liveness intent implemented through canonical shared projection and browser refresh safeguards in 72fbb40. Particular modal layout, digest tooling and SSE transport are optional future design; do not wholesale merge dirty UI. |
+| R10 local intelligence/GPU governance | Five old dirty documentation/state blobs carry candidate-era identities, topology observations and R10 boundary descriptions. | Historical evidence input to current documentation, not live authority or pins. Preserve originals; AS_IS documentation must derive current identities independently. |
+| R11 control-plane tests/controller | Direct comparison shows dirty R11 tests are contained in current candidate with an additional R12 assertion; controller blob is in candidate history. | Superseded/integrated behavior. No missing runtime code established. |
+| R15 static runner boundary | Candidate already has static_gate(repo,head,tree) delegating the fixed static test/compile operations. Two preserved source-assertion tests are absent. | Optional defensive coverage, not a missing execution feature. Can be retained as historical tests or separately adapted; do not replace older broker implementation. |
+| Security SHA-1 annotation branch | Candidate's code-perception Git blob fixtures already use usedforsecurity=False. Branch also changes historical scan/truth pins. | Annotation intent represented; old scan/truth bindings superseded and must not be copied. Other offensive/research source families were not executed or developed. |
+| Local closure ab3ebb / d913f44 | Old truth rebind plus restart-safe child takeover. Current candidate already preserves child exact worker identities and checks distribution before fallback reacquisition. | Superseded source/pins, preserve commits. |
+| Debian R8 verification trees | Commit subjects explicitly verification-only/pregraph/pretruth; actual R8 head 79d6d915 is a candidate ancestor. | Temporary probes/historical evidence. Preserve, do not merge probes. |
+| Old publisher/repair publication workflows | One-off homeostasis and exact-PR publication staging. | Historical machinery. Current ordinary protected publication does not require these workflows. |
+| Sentinelx base checkouts and cache/config stores | Remote is pensados/sentinelx-cloud-core and repository is shallow, separate from ai_platform; nested LION repos separately inspected. | Host/runtime carrier family, not missing ai_platform branch work. Runtime hash/readback belongs to deployment acceptance. |
+| Historical F/C/R2e4 and remote r25/r25-collapse aliases | Inventory records resolved objects and ancestor/non-ancestor status; many aliases repeat a head. | Resolved by r2-historical-family-proof.json (25 heads) and r2-r25-family-proof.json (42 nonancestor heads; overlap exists). Each head has an explicit integrated, superseded, historical or experimental disposition and rationale; optional experiments are not claimed runtime-equivalent. |
+
+## Storage validation performed
+
+Twelve scheduler tests passed: existing canonical tests and six new database-only tests. New coverage includes equal-clock restart fairness, concurrent selectors, concurrent identical/conflicting receipt ingress, metadata conflict, reopened storage, legacy turn-table forward migration, preserved historical conflicting receipts, and integrity before/after migration. No live scheduler or workflow executor ran.
+
+New schema objects are mission_scheduler_turns and mission_scheduler_migrations. Migration version 1 is lion.scheduler-storage-reconciliation/v1. The existing historical turns shape gains last_dispatch_order only if absent; dispatch counts and times remain intact.
+
+The preserved source-family review now identifies zero concrete required unique Epoch-3 source packages remaining outside candidate 72fbb40. This is a finite source disposition result, not global runtime convergence or Epoch-3 closure. Final currentness, deployment, regression, pins, documentation and publication gates remain separately owned by the parent acceptance process.
+
+## Final r25 and r25-collapse alias disposition
+
+The remote names are alias stores, not two additional unfinished implementations. Across 176 recorded alias/head entries, 90 were candidate ancestors. The remaining 86 entries map to 42 unique heads compared against candidate `72fbb405f5c023baa4605a53c15f1b7b96533a98`. Exact merge bases, changed paths, historical and candidate blob identities, and candidate-history membership are recorded in `r2-r25-family-proof.json`. The earlier 25-head F/C/R2e4 proof overlaps this set; these counts must not be summed as distinct families.
+
+- F006–F009 and E001/catalog/status content: changed source blobs occur in canonical history; integrated.
+- C0: constraints structurally match the canonical contract aside from explicit schema identity/metadata; superseded freeze variants.
+- C1/C2 and the mixed detached P0 branch: optional compiler/process/simulation/source-perception experiments. P0 also contains `hybrid_router.py`, `architecture_projection/current_truth.py` and physical simulation modules absent from canonical runtime. These are preserved proposals for separate adoption, not runtime equivalents. Required mission visibility uses the implemented shared runtime projection; required truth currentness uses canonical `truth_plane.py`. Adopting alternate LCMS, a physical simulator or static router is not required to complete those current requirements.
+- A0 and P0 truth rebind variants: old fixture/pin identities and v1.3 projection superseded by v1.4 candidate-lineage and subject-digest currentness. B0 variants differ from canonical only in fixture BASELINE/TREE values.
+- E006 canary scope: canonical issue/test-only scope and admission binding remain. The older compact test adds some further negative issue/repository/action combinations absent from the rewritten suite; these are optional defensive coverage, not a missing required runtime feature.
+- Temporary runner/provider branches: canonical source contains later workspace ownership checks, bounded diagnostics and fleet resource inspection. The old monolithic host installer is historical deployment machinery; it is not required for the current package/deployment path.
+- R2E1/R2E2/R2E3 verification branches: one-off workflows, literal historical receipts, mutation-campaign wiring and trigger files. Historical evidence; no live grant or current acceptance can be inferred from them.
+- R2e4 PR248 terminal-evidence variants: previously classified historical synthetic test fixtures. Ordinary current exact-head CI and protected publication remain required.
+
+Every one of the 42 selected heads has an explicit disposition; no head remains unclassified. Optional historical tests and experiments remain preserved. No historical source was executed or imported during this review.
+
+## Inventory denominator and remaining work
+
+The raw JSON inventory contains **10 Windows path entries and 34 WSL path entries**, totaling 44 observations. Two Windows entries are the same mounted WSL worktrees, giving **42 distinct locations**. Four Windows locations are non-Git runtime/source carriers and one WSL location has a broken historical Git pointer. This leaves **37 functioning checkouts: the candidate plus 36 others**. Four are separate `sentinelx-cloud-core` base repositories; **33 are ai_platform checkouts: candidate plus 32 others**. These are checkouts/worktrees, not necessarily independent Git object stores. This corrects the older prose's erroneous 11 Windows count.
+
+For the enumerated and reviewed preserved source families: **required unique Epoch-3 source packages remaining = 0; unclassified source families = 0** after the implemented canonical UI/schema/storage reconciliation in 72fbb40. Receipt ingress received additional defensive binding checks in the subsequent integration work; its reported 21 focused tests passed. No source was modified by this audit turn.
+
+This denominator does not prove that every possible directory on every host was discovered. Entry inventory heads are historical observations; final remote/host head and dirty-file reacquisition, deployed package identity, live readback, complete regression/CI, generated pins, current documentation and protected publication remain separate acceptance gates. Therefore **global repository/runtime convergence and Epoch-3 closure are not asserted here**.

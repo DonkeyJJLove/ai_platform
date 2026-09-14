@@ -1,0 +1,1904 @@
+{
+  "candidate": "5234e57ace18d107f8a8b48ba06766345d253f11",
+  "source_object_store": "/opt/sentinelx-cloud-core/r25-repair-work",
+  "families": [
+    {
+      "head": "f0b43abb815a3ce415fefb14b27b37bfe7de4f55",
+      "aliases": [
+        "refs/remotes/origin/cyber-lion/r2e4-r10-terminal-decision-evidence-repair-r13",
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-r10-terminal-decision-evidence-repair-r13",
+        "refs/remotes/r25/cyber-lion/r2e4-r10-terminal-decision-evidence-repair-r13"
+      ],
+      "subject": "R13 bind merge terminal evidence to semantic admission result",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/cyber-lion-contracts.yml",
+          "change": "M",
+          "branch_blob": "8721ee925bc4beca951395df662b5f3518a6be25",
+          "candidate_blob": "46403358e8923d06eda5abd88ebebb5991ee61ae",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "f8c76f29de2a127fac6499c8c22fe14e70bb5cdd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/_r6_host_authority_separation_original.py",
+          "change": "A",
+          "branch_blob": "3f51438f49daab058b9dd14350d58e872cd21496",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "283e1c308148a56a2b04b69f729c43838cb5964f",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "f0b43abb R13 bind merge terminal evidence to semantic admission result\ne93e737b R10 repair R7 source/effect cardinality test harness\nb2455a29 R2E4 R7: repair production source inventory cardinality\n8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "disposition_rationale": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "e93e737b43e75dd47bb2a915f57069aad49ba89a",
+      "aliases": [
+        "refs/remotes/origin/cyber-lion/r2e4-r7-test-harness-repair-r10",
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-r7-test-harness-repair-r10",
+        "refs/remotes/r25/cyber-lion/r2e4-r7-test-harness-repair-r10"
+      ],
+      "subject": "R10 repair R7 source/effect cardinality test harness",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "f8c76f29de2a127fac6499c8c22fe14e70bb5cdd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/_r6_host_authority_separation_original.py",
+          "change": "A",
+          "branch_blob": "3f51438f49daab058b9dd14350d58e872cd21496",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "283e1c308148a56a2b04b69f729c43838cb5964f",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "e93e737b R10 repair R7 source/effect cardinality test harness\nb2455a29 R2E4 R7: repair production source inventory cardinality\n8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "disposition_rationale": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "b2455a2930e6c13bc10c9f515d8db26aeca60ffe",
+      "aliases": [
+        "refs/remotes/origin/cyber-lion/r2e4-source-count-repair-r7",
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-source-count-repair-r7",
+        "refs/remotes/r25/cyber-lion/r2e4-source-count-repair-r7"
+      ],
+      "subject": "R2E4 R7: repair production source inventory cardinality",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "f8c76f29de2a127fac6499c8c22fe14e70bb5cdd",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/_r6_host_authority_separation_original.py",
+          "change": "A",
+          "branch_blob": "3f51438f49daab058b9dd14350d58e872cd21496",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_host_authority_separation.py",
+          "change": "M",
+          "branch_blob": "95ca80f7e938d9f1dd7093e5dbc285cd1fb700db",
+          "candidate_blob": "228721c25081a5d4eb071f4d3855982363d062e9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "b2455a29 R2E4 R7: repair production source inventory cardinality\n8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "disposition_rationale": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "8d9157da019c9b09b2cd82a9e4b2d6233641e92b",
+      "aliases": [
+        "refs/remotes/origin/cyber-lion/r2e4-terminal-evidence-r6",
+        "refs/remotes/origin/cyber-lion/r2e4-terminal-evidence-r6-ci",
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-terminal-evidence-r6",
+        "refs/remotes/r25-collapse/cyber-lion/r2e4-terminal-evidence-r6-ci",
+        "refs/remotes/r25/cyber-lion/r2e4-terminal-evidence-r6",
+        "refs/remotes/r25/cyber-lion/r2e4-terminal-evidence-r6-ci"
+      ],
+      "subject": "R2E4 R6: bind terminal evidence to merge admission result",
+      "merge_base": "a3151a4e32bca235abca309fc66b01dfc595f99b",
+      "paths": [
+        {
+          "path": ".github/workflows/r2e4-r6-terminal-evidence.yml",
+          "change": "A",
+          "branch_blob": "1c68c718a18162d29e787d5cab58b89b0c296505",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/enterprise/merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "76b245d61a39d856aae2151a829b664f74babaf8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_merge_admission_terminal_evidence.py",
+          "change": "A",
+          "branch_blob": "5269e959a01b838d23ae196139c91a0c8637a943",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "8d9157da R2E4 R6: bind terminal evidence to merge admission result",
+      "classification": "HISTORICAL",
+      "disposition_rationale": "R2E4 PR248 terminal-evidence fixture uses synthetic test verifier, static authority source and expired August grant. Canonical non-consuming admission tests already cover actual result semantics; historical workflow/pins not current grant evidence.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "d31a6385793909909b62d2d6bf7825713dbe3dab",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r2",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r2",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r2"
+      ],
+      "subject": "C0: freeze ActionSpec schema candidate against live contracts",
+      "merge_base": "22ae615c3ec6eedf2a500d0d70d8ecc97ba1cabd",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "96d927869a2aa362bc015f7826d25ad17eb473bd",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "b6f74032507d8ea3b3c37e45b9d86738009194e2",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "eb5d0b70ddfecdc7bfb20c908fc8fbe91ea3519f",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "3c815251228498f0520ae00bd90aca7b509aa137",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "d31a6385 C0: freeze ActionSpec schema candidate against live contracts",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "f8d8e44191d5c84ecca9feec1a8602f574948619",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r3",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r3",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r3"
+      ],
+      "subject": "C0 R3 rebind Action IR freeze documentation",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "437c5722e8b4169b5af63e22d249e7bbddf438dc",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "db36bb735e52b77fd54cf31f4282b2d8ddc437c7",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "af7a33e04ce927c8e52c34df266ad414deb71474",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "1ae2de5996ddcce430dff9a081536a55e921e65a",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "f8d8e441 C0 R3 rebind Action IR freeze documentation\nd86a7889 C0 R3 rebind ActionSpec schema tests\n1fc06d7c C0 R3 rebind ActionSpec support matrix\na0feb758 C0 R3 rebind ActionSpec schema to current master",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "52e39bff2f29f2e006f3fce9186c3b6d9a2e440c",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r4",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r4",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r4"
+      ],
+      "subject": "",
+      "merge_base": "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e",
+      "paths": [
+        {
+          "path": "__never__",
+          "change": "A",
+          "branch_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "4c651bb16d8028690911fc510fe43467e68f3764",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "20b03a6ed1d8f06ea7a4385d88936fd12334a3cc",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "f04283eb000a5196c38501d1a7e10d4e73aeddec",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "e498bd2326a1a415fa7a851409a2684bca218123",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "52e39bff \n3c6929f3 C0: rebind ActionSpec candidate to current master",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "3c6929f35623a3f4a16cfdc129ffbbf660a6d1f6",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r5",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r5",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r5"
+      ],
+      "subject": "C0: rebind ActionSpec candidate to current master",
+      "merge_base": "af1e5da79ebd83dfca2d22ba1fc9cab372e54b5e",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "4c651bb16d8028690911fc510fe43467e68f3764",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "20b03a6ed1d8f06ea7a4385d88936fd12334a3cc",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "f04283eb000a5196c38501d1a7e10d4e73aeddec",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "e498bd2326a1a415fa7a851409a2684bca218123",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "3c6929f3 C0: rebind ActionSpec candidate to current master",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "5794db2c5d36f65658ce10c0bf8fa2aef478ccc4",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r6",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r6",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r6"
+      ],
+      "subject": "C0: rebind ActionSpec candidate to post-R18 master",
+      "merge_base": "01395441c82c38ca0b3625e842c038af271dca31",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "8ea13f51e6bb0675b192aa2f57813f45f0861abd",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "0ee5fba27b9852c4e10173c08392020f35d09808",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "bb84df81fea9f9983cb2f7b39d9e8379660af868",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "06dd338445d8530a6eba6b4f7cc89bd1c5b8dd10",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "5794db2c C0: rebind ActionSpec candidate to post-R18 master",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "0156b98b3cbf2829f91fa6e830082a16976ab7a4",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r7",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r7",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r7"
+      ],
+      "subject": "C0 R7: rebind ActionSpec candidate to post-R19A master",
+      "merge_base": "b51ad15d4e4f2a444cd91f1e6f34701c00bafcb6",
+      "paths": [
+        {
+          "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+          "change": "M",
+          "branch_blob": "32691deff3f0097c8e782b6a96273bd8fed28a41",
+          "candidate_blob": "d44de648561670450f79fe616adf274144d02784",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "7f608d631542359a86ff73e520f0fce3885f4415",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "02f33351cc287c7cc77e63e0393f23e0f35d372d",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/registry/repositories.json",
+          "change": "M",
+          "branch_blob": "85fc2aa1362e264910b4ab6c7f2723654c1ab7ff",
+          "candidate_blob": "4e490d958c7699fa47f17e28b28e984e6c59addb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "a8cd7e30e4c078ca5ad26eda84fdb30191b85f4a",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "16d82cfbd7fd767088bd7d675a5275c421f0a008",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "0156b98b C0 R7: rebind ActionSpec candidate to post-R19A master",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "7176409f8d43c0b04eac57aaada98ad201c2d556",
+      "aliases": [
+        "refs/remotes/origin/mission/c0-action-ir-schema-freeze-r8",
+        "refs/remotes/r25-collapse/mission/c0-action-ir-schema-freeze-r8",
+        "refs/remotes/r25/mission/c0-action-ir-schema-freeze-r8"
+      ],
+      "subject": "C0 R8: rebind ActionSpec candidate to post-R19C master",
+      "merge_base": "db51d0eb8784cb3b9a45a180aa421b35bc86d9c3",
+      "paths": [
+        {
+          "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+          "change": "M",
+          "branch_blob": "57f8b598f49b5eafb618f6fc7ffe7ff6af4ec0bd",
+          "candidate_blob": "d44de648561670450f79fe616adf274144d02784",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "80a0a4f553563b0e788b7c23863f69968637fc04",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "3ecd317e60facd634903f7ae6e943cc75af71097",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/registry/repositories.json",
+          "change": "M",
+          "branch_blob": "55a7ca9508ce0e8cfafd6016a1e53cfc45d1d706",
+          "candidate_blob": "4e490d958c7699fa47f17e28b28e984e6c59addb",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "83a86f67fbbeac29d1b1969549580fc0b6920ec8",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "f27184a65a6bca8d9ee8fd256e5ca1ddc4f9dfec",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "7176409f C0 R8: rebind ActionSpec candidate to post-R19C master",
+      "classification": "SUPERSEDED",
+      "disposition_rationale": "All seven schema variants have zero constraint differences beyond $id/title/schema_version identity and x-lion-c0 metadata. Canonical contract-only schema/support tests supersede candidate freeze and truth pins.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "0f75af9212a814177e08a5c206d1a8504b0937d5",
+      "aliases": [
+        "refs/remotes/origin/mission/c1-lcms-canonicalization-r1",
+        "refs/remotes/r25-collapse/mission/c1-lcms-canonicalization-r1",
+        "refs/remotes/r25/mission/c1-lcms-canonicalization-r1"
+      ],
+      "subject": "C1: strengthen LCMS effect-surface falsification",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "437c5722e8b4169b5af63e22d249e7bbddf438dc",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "db36bb735e52b77fd54cf31f4282b2d8ddc437c7",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/lcms.ebnf",
+          "change": "A",
+          "branch_blob": "c9adb8648777f501b3a729ee92ccc3e4a0b9401f",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "af7a33e04ce927c8e52c34df266ad414deb71474",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_lcms.py",
+          "change": "A",
+          "branch_blob": "6fca43b588c7727b936f110cd4a780efbbf2676d",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "1ae2de5996ddcce430dff9a081536a55e921e65a",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C1_LCMS_CANONICALIZATION.md",
+          "change": "A",
+          "branch_blob": "2912dd1b4aa8e6732bb0c030f83c5cbf60fa4c2b",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/lcms.py",
+          "change": "A",
+          "branch_blob": "71d09ed955522b8841b89ac4e344131413f55e73",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "0f75af92 C1: strengthen LCMS effect-surface falsification\na37655fe C1: add deterministic LCMS compiler tool\ncdaa1423 C1: document LCMS canonicalization boundary\ne51d426e C1: add LCMS falsification corpus\nbeb28bd6 C1: add LCMS candidate grammar\nf8d8e441 C0 R3 rebind Action IR freeze documentation\nd86a7889 C0 R3 rebind ActionSpec schema tests\n1fc06d7c C0 R3 rebind ActionSpec support matrix\na0feb758 C0 R3 rebind ActionSpec schema to current master",
+      "classification": "EXPERIMENTAL",
+      "disposition_rationale": "Historical document explicitly candidate-only/unpublished and no merge in its phase. Separate LCMS compiler/read-only Lab process experiment; defer optional adoption to Epoch4, not required Mission Runtime normalization or current UI lifecycle.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "86dc7ac367ad2cd83e873e0ae3508f42a72eaac5",
+      "aliases": [
+        "refs/remotes/origin/mission/c2-readonly-process-exec-r1",
+        "refs/remotes/r25-collapse/mission/c2-readonly-process-exec-r1",
+        "refs/remotes/r25/mission/c2-readonly-process-exec-r1"
+      ],
+      "subject": "C2: isolate effect-time currentness falsification from host digest",
+      "merge_base": "9082a974e8105dd7e47afc889583b1fc67535b59",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/v1/action_spec.schema.json",
+          "change": "A",
+          "branch_blob": "437c5722e8b4169b5af63e22d249e7bbddf438dc",
+          "candidate_blob": "dc6006262f005dddf9ce2eb3adc71aab12995156",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/action_spec_support_matrix.json",
+          "change": "A",
+          "branch_blob": "db36bb735e52b77fd54cf31f4282b2d8ddc437c7",
+          "candidate_blob": "76e1bd276a56636f17a40c448a3090be8ea42f59",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/contracts/v1/lcms.ebnf",
+          "change": "A",
+          "branch_blob": "c9adb8648777f501b3a729ee92ccc3e4a0b9401f",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_action_spec_schema.py",
+          "change": "A",
+          "branch_blob": "af7a33e04ce927c8e52c34df266ad414deb71474",
+          "candidate_blob": "d7c651a2e791a8746a5642558ae7085fcc2e3a2f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_c2_readonly_process_exec.py",
+          "change": "A",
+          "branch_blob": "7a226a2851f349447c79a24ca31f2828a1bd01a8",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "cyber_lion/tests/test_lcms.py",
+          "change": "A",
+          "branch_blob": "6fca43b588c7727b936f110cd4a780efbbf2676d",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C0_ACTION_IR_SCHEMA_FREEZE.md",
+          "change": "A",
+          "branch_blob": "1ae2de5996ddcce430dff9a081536a55e921e65a",
+          "candidate_blob": "0b0b568dceb5f7a1429875a08decf34677efd8fd",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C1_LCMS_CANONICALIZATION.md",
+          "change": "A",
+          "branch_blob": "2912dd1b4aa8e6732bb0c030f83c5cbf60fa4c2b",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "docs/architecture/action-ir/C2_READONLY_PROCESS_EXEC.md",
+          "change": "A",
+          "branch_blob": "0da294f6cda90bc6274a643249c4963a458d1a0e",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/lcms.py",
+          "change": "A",
+          "branch_blob": "71d09ed955522b8841b89ac4e344131413f55e73",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/readonly_process_exec.py",
+          "change": "A",
+          "branch_blob": "03ded62d33e6bdf58b88ba2958e916291e5403f6",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/readonly_process_observer.py",
+          "change": "A",
+          "branch_blob": "689788f47a5172cdd11d775919f3802340029092",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        },
+        {
+          "path": "tools/readonly_process_reconciliation.py",
+          "change": "A",
+          "branch_blob": "b54a6962769f1a5b8f8f57018c2c0eaa2b198608",
+          "candidate_blob": null,
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": false
+        }
+      ],
+      "unique_branch_commits": "86dc7ac3 C2: isolate effect-time currentness falsification from host digest\nb72fe31f C2: separate LAB live evidence from portable CI\n591a99d2 C2: add read-only process execution candidate\n0f75af92 C1: strengthen LCMS effect-surface falsification\na37655fe C1: add deterministic LCMS compiler tool\ncdaa1423 C1: document LCMS canonicalization boundary\ne51d426e C1: add LCMS falsification corpus\nbeb28bd6 C1: add LCMS candidate grammar\nf8d8e441 C0 R3 rebind Action IR freeze documentation\nd86a7889 C0 R3 rebind ActionSpec schema tests\n1fc06d7c C0 R3 rebind ActionSpec support matrix\na0feb758 C0 R3 rebind ActionSpec schema to current master",
+      "classification": "EXPERIMENTAL",
+      "disposition_rationale": "Historical document explicitly candidate-only/unpublished and no merge in its phase. Separate LCMS compiler/read-only Lab process experiment; defer optional adoption to Epoch4, not required Mission Runtime normalization or current UI lifecycle.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "fda33a15192dd1675276b9c926d70cfd341e1474",
+      "aliases": [
+        "refs/remotes/origin/mission/f006-agent-foundry-registry",
+        "refs/remotes/r25-collapse/mission/f006-agent-foundry-registry",
+        "refs/remotes/r25/mission/f006-agent-foundry-registry"
+      ],
+      "subject": "F006 R2: keep verifier candidates in swarm test projection",
+      "merge_base": "07f5ed508addc73051f4858c2f78b20eec188c73",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/agent_registry.py",
+          "change": "A",
+          "branch_blob": "c2c9cc38a213d33714776b77730efbbb1e58a1a3",
+          "candidate_blob": "c2c9cc38a213d33714776b77730efbbb1e58a1a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/agent_instance.schema.json",
+          "change": "A",
+          "branch_blob": "25e6b2ca3e45956a880291f281005c763cb7c5a8",
+          "candidate_blob": "25e6b2ca3e45956a880291f281005c763cb7c5a8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/agent_registry_projection.schema.json",
+          "change": "A",
+          "branch_blob": "d5b66200791ec689d6d71005a1d3ccb3f9a62f17",
+          "candidate_blob": "d5b66200791ec689d6d71005a1d3ccb3f9a62f17",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/__init__.py",
+          "change": "M",
+          "branch_blob": "d20fa0ef1e4ebe6858a95dc9f1cc652d9dfce9b2",
+          "candidate_blob": "ffa1d7f7dd0f6234fc94894d0ff70d0f3bcdbec2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/agent_registry.py",
+          "change": "A",
+          "branch_blob": "634cd832f3518750f0d0d89afea28aa91690c4bd",
+          "candidate_blob": "634cd832f3518750f0d0d89afea28aa91690c4bd",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/planner.py",
+          "change": "M",
+          "branch_blob": "077534d3cb599b8cb3e54caae41a3bf603ddcd30",
+          "candidate_blob": "077534d3cb599b8cb3e54caae41a3bf603ddcd30",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_agent_registry.py",
+          "change": "A",
+          "branch_blob": "8025d70797a8ddb317671cfb30dcba9bc56b05d8",
+          "candidate_blob": "8025d70797a8ddb317671cfb30dcba9bc56b05d8",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_agent_registry_contract.py",
+          "change": "A",
+          "branch_blob": "a841edb607044a4e1691c14257acb720cb8dbff9",
+          "candidate_blob": "a841edb607044a4e1691c14257acb720cb8dbff9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_control_plane.py",
+          "change": "M",
+          "branch_blob": "0438500bca874340364577929e1c93c1951b9dd3",
+          "candidate_blob": "0438500bca874340364577929e1c93c1951b9dd3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_event_bridge.py",
+          "change": "M",
+          "branch_blob": "c5be430972425d5aea2a7e331e0d8b919c8b8df4",
+          "candidate_blob": "c5be430972425d5aea2a7e331e0d8b919c8b8df4",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_swarm.py",
+          "change": "M",
+          "branch_blob": "8c39e34d8053db09b9137d5939bf2102fb50dcf7",
+          "candidate_blob": "8c39e34d8053db09b9137d5939bf2102fb50dcf7",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_rccm_1d_glitchlab_conformance.py",
+          "change": "M",
+          "branch_blob": "8ce107ef8abdf137a83de694784c8d8ffbfb0901",
+          "candidate_blob": "8ce107ef8abdf137a83de694784c8d8ffbfb0901",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "fda33a15 F006 R2: keep verifier candidates in swarm test projection\n8c3dc52a F006 R2: migrate RCCM conformance test to registry projection\n0eac0e5a F006 R2: migrate event-bridge tests to registry projections\nd6d81059 F006 R2: migrate control-plane tests to registry projections\n81ef504a F006 R2: preserve verifier discovery in registry projection\nf5e055b9 F006: migrate planner tests to registry projection\nefeec831 F006: add durable registry tests\n001d4283 F006: add registry contract tests\nb99329b6 F006: export registry surfaces\n5f4c6e22 F006: bind planner to registry projection\n5daf8508 F006: complete durable agent registry\n7f7fea34 F006: implement durable agent registry\n8afe47a3 F006: add registry projection schema\n2d6e0c36 F006: add agent instance schema\n38a69d7e F006: add agent registry contracts",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "62b44ac66cf367b5bf725dec03cfcd09da5abc99",
+      "aliases": [
+        "refs/remotes/origin/mission/f007-enterprise-graph",
+        "refs/remotes/r25-collapse/mission/f007-enterprise-graph",
+        "refs/remotes/r25/mission/f007-enterprise-graph"
+      ],
+      "subject": "F007: test causality provenance binding",
+      "merge_base": "6ce5c24baa52468e1217c51cbff7b638d886084d",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/enterprise_graph.py",
+          "change": "A",
+          "branch_blob": "bda404e4939d321744599de01cd32ee7259d3f45",
+          "candidate_blob": "bda404e4939d321744599de01cd32ee7259d3f45",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/enterprise_graph_edge.schema.json",
+          "change": "A",
+          "branch_blob": "323234c6a1a991d47b2df1c385810baa686216ff",
+          "candidate_blob": "323234c6a1a991d47b2df1c385810baa686216ff",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/enterprise_graph_node.schema.json",
+          "change": "A",
+          "branch_blob": "a84b404d776c87aef1fba0c8a8a720a03282263d",
+          "candidate_blob": "a84b404d776c87aef1fba0c8a8a720a03282263d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/enterprise_graph_projection.schema.json",
+          "change": "A",
+          "branch_blob": "59b8d6c86ee2440c007e8f513e2d6a3303a9a03a",
+          "candidate_blob": "59b8d6c86ee2440c007e8f513e2d6a3303a9a03a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/__init__.py",
+          "change": "M",
+          "branch_blob": "669f59e8472f848863f190108c4eda3375e796cf",
+          "candidate_blob": "ffa1d7f7dd0f6234fc94894d0ff70d0f3bcdbec2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/enterprise_graph.py",
+          "change": "A",
+          "branch_blob": "944bc6647fc24da66d0b372a65c796ed0fb9e9a1",
+          "candidate_blob": "944bc6647fc24da66d0b372a65c796ed0fb9e9a1",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/event_graph_projection.py",
+          "change": "A",
+          "branch_blob": "8e5b5d3eb2a31035a2a3a908ba020af440e95db6",
+          "candidate_blob": "8e5b5d3eb2a31035a2a3a908ba020af440e95db6",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph.py",
+          "change": "A",
+          "branch_blob": "f6e102b09b8f0cdb3b13207fa14d425725475f0b",
+          "candidate_blob": "f6e102b09b8f0cdb3b13207fa14d425725475f0b",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph_authority_separation.py",
+          "change": "A",
+          "branch_blob": "4aa59aa45b39d42f57f487d3b1b3e63128eb1a28",
+          "candidate_blob": "4aa59aa45b39d42f57f487d3b1b3e63128eb1a28",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph_contract.py",
+          "change": "A",
+          "branch_blob": "5f62148f86709a32955c3688eefd3bfa95c291d3",
+          "candidate_blob": "5f62148f86709a32955c3688eefd3bfa95c291d3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_enterprise_graph_event_projection.py",
+          "change": "A",
+          "branch_blob": "f7bf800dad52e6a24d19adda8bb0ff5ffafb2d17",
+          "candidate_blob": "f7bf800dad52e6a24d19adda8bb0ff5ffafb2d17",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "62b44ac6 F007: test causality provenance binding\n16449b33 F007: provenance-bind EventEnvelope causation\n61633e24 F007: bind causality evidence to provenance\nfbd50032 F007: implement typed durable Enterprise Graph",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "736a86459ebe775cdec3fec2e605471f76ef4ae6",
+      "aliases": [
+        "refs/remotes/origin/mission/f007-post-integration-reconcile",
+        "refs/remotes/r25-collapse/mission/f007-post-integration-reconcile",
+        "refs/remotes/r25/mission/f007-post-integration-reconcile"
+      ],
+      "subject": "LION: reconcile F007 catalog projections",
+      "merge_base": "c6fbe360e1cdf2a07e59a4045b5b715f031fcd27",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "7bfc582d5afd8de614fd534d4605cc8c32cd6b3f",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "652801404a34125af1faf4b61877df0a3e822e6a",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "2c3bc1406185a5a8a8d76013acf5e1b45f772c2a",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "5677c6f3468aad0b2218de51a8c91d76f2d3f150",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "736a8645 LION: reconcile F007 catalog projections\n712d054d LION: reconcile F007 implementation state\n72b74d6f LION: reconcile F007 and advance critical path to F008",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "faf415728dfb0efef41408c18a16a70c307901f1",
+      "aliases": [
+        "refs/remotes/origin/mission/f008-s0-post-integration-reconcile",
+        "refs/remotes/r25-collapse/mission/f008-s0-post-integration-reconcile",
+        "refs/remotes/r25/mission/f008-s0-post-integration-reconcile"
+      ],
+      "subject": "LION: advance critical path to F008 PDP",
+      "merge_base": "b012364296a9f1459df26bb3d635b4f35f07873e",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "750846fbb184ec7ba09ca1077ff62d3df924eba0",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "b388d841f2bb8f3f4ccbc58189daf4ca4a130ecd",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "0f86f603c31df3d353baaba1e60af464de50e4ee",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "6000e3e052404df6934a3e56d0cf0be73057040c",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/status.json",
+          "change": "M",
+          "branch_blob": "cb396f4e6070adf958a42ff79f3c19692eabac7a",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "faf41572 LION: advance critical path to F008 PDP\nbe01bcde LION: retire F008-S0 builder projection\n8f78db0d LION: reconcile F008 mission registry\nbaf57c63 LION: mark F008-S0 observed\n317f9960 LION: reconcile F008-S0 deterministic status",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "8c8b2842a31157ae525c751027cc3e48e8bfe1a1",
+      "aliases": [
+        "refs/remotes/origin/mission/f008-s0-status-post-binding-reconcile",
+        "refs/remotes/r25-collapse/mission/f008-s0-status-post-binding-reconcile",
+        "refs/remotes/r25/mission/f008-s0-status-post-binding-reconcile"
+      ],
+      "subject": "LION: keep F008 PDP selected after semantic binding reconcile",
+      "merge_base": "3152e79060ba916edc3e299d94e3c5db86dec816",
+      "paths": [
+        {
+          "path": "LION/architecture/implementation-map.json",
+          "change": "M",
+          "branch_blob": "a9c85d4453759e17c849ac784b985848745d7707",
+          "candidate_blob": "6e906141b34acb5e8ec4eb69c865d7bb51215f7f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/drone-registry.json",
+          "change": "M",
+          "branch_blob": "16d8d478fe70176933ea4bf3fd5704fb9c8c87e2",
+          "candidate_blob": "1e05684fb47785c83a7003445f6304b502e1f7d9",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/future-mission-pool.json",
+          "change": "M",
+          "branch_blob": "7b5e945a5b2ac9a08d99beeba8e1ab7aa57ada9e",
+          "candidate_blob": "bf5678c67a544f8a583256099df4242fd530d20f",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/ops/mission-registry.json",
+          "change": "M",
+          "branch_blob": "c79bbd1ec995233f75c535bbc925fd994d223d9d",
+          "candidate_blob": "aeeaab5eebf3a979a122493f9ffdb2a5f303a7ff",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/status.json",
+          "change": "M",
+          "branch_blob": "9be0fb4056dbb59f1693a41fc11cf2bcd735a948",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "8c8b2842 LION: keep F008 PDP selected after semantic binding reconcile\n61eee181 LION: reconcile drone registry after semantic binding\n030e0dbf LION: reconcile mission registry after status semantic binding\na4b72b28 LION: refresh implementation projection after semantic binding\n8d59f792 LION: reconcile status to semantic binding code master",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "1cf90c829712e458bc984bcf2e7cb812b14fccbf",
+      "aliases": [
+        "refs/remotes/origin/mission/f008-s0-status-semantic-master-binding",
+        "refs/remotes/r25-collapse/mission/f008-s0-status-semantic-master-binding",
+        "refs/remotes/r25/mission/f008-s0-status-semantic-master-binding"
+      ],
+      "subject": "F008-S0: define semantic master freshness protocol",
+      "merge_base": "4a03956c15c2f61c4026f25c5575b88c9e51c1ac",
+      "paths": [
+        {
+          "path": "LION/protocols/DETERMINISTIC_STATUS_READ.md",
+          "change": "M",
+          "branch_blob": "933130e7cb8b41f04a4769b9bc9488828a88dbaa",
+          "candidate_blob": "9d9a0fb8cf32ba5515737be7d3f01d30ea2c2f00",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_status_projection.py",
+          "change": "M",
+          "branch_blob": "a472f4fcc84e5dade5cf3537bc0a7cffc7c538e7",
+          "candidate_blob": "a472f4fcc84e5dade5cf3537bc0a7cffc7c538e7",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_status.py",
+          "change": "M",
+          "branch_blob": "829a56d038401d86d5fe888132c3df4c0a336cdf",
+          "candidate_blob": "829a56d038401d86d5fe888132c3df4c0a336cdf",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "1cf90c82 F008-S0: define semantic master freshness protocol\n64d0e81a F008-S0: test projection-only descendant freshness\na656a937 F008-S0: add bounded projection-only master freshness",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "4b4ca4bb32706c5d3b49ea1123090103e0c8497f",
+      "aliases": [
+        "refs/remotes/origin/mission/f008-s0-swarm-governance-status",
+        "refs/remotes/r25-collapse/mission/f008-s0-swarm-governance-status",
+        "refs/remotes/r25/mission/f008-s0-swarm-governance-status"
+      ],
+      "subject": "F008-S0 R2: test full canonical status tamper detection",
+      "merge_base": "2680d1412c7023c0ef4e39b7bb415c44de4e3803",
+      "paths": [
+        {
+          "path": "LION/protocols/DETERMINISTIC_STATUS_READ.md",
+          "change": "A",
+          "branch_blob": "e15d3b8d345d4f85979beb914a7e7074c40f0224",
+          "candidate_blob": "9d9a0fb8cf32ba5515737be7d3f01d30ea2c2f00",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "LION/status.json",
+          "change": "A",
+          "branch_blob": "14ae318e95bc8ea46f94c7b7991a9318ff5ef1d3",
+          "candidate_blob": "f22547b07d3240ce39f291fbcd655d5b1713bf46",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/swarm_governance.py",
+          "change": "A",
+          "branch_blob": "c34af06455cc2d04bb13d3b9c7f17b1847f2a854",
+          "candidate_blob": "c34af06455cc2d04bb13d3b9c7f17b1847f2a854",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/swarm_status.py",
+          "change": "A",
+          "branch_blob": "a79f1d49cff10b8efe63c825c557868906d44da3",
+          "candidate_blob": "a79f1d49cff10b8efe63c825c557868906d44da3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/swarm_formation.schema.json",
+          "change": "A",
+          "branch_blob": "22b5f7392bc03c90b0c53106b9e863b495c1881a",
+          "candidate_blob": "22b5f7392bc03c90b0c53106b9e863b495c1881a",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/v1/swarm_status.schema.json",
+          "change": "A",
+          "branch_blob": "3e97153ab48b3d653fa62a78cf1fa1b4320978dc",
+          "candidate_blob": "3e97153ab48b3d653fa62a78cf1fa1b4320978dc",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/__init__.py",
+          "change": "M",
+          "branch_blob": "26cc1654b16c7caac0b1e8af67356901ecd69167",
+          "candidate_blob": "ffa1d7f7dd0f6234fc94894d0ff70d0f3bcdbec2",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_formation_manager.py",
+          "change": "A",
+          "branch_blob": "557088886a203785ca8d8eab8c2be73a6b53cf15",
+          "candidate_blob": "557088886a203785ca8d8eab8c2be73a6b53cf15",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_governor.py",
+          "change": "A",
+          "branch_blob": "5ffe977eb74cac99b0123dbb6b3dc2c67f2764c6",
+          "candidate_blob": "5ffe977eb74cac99b0123dbb6b3dc2c67f2764c6",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_role_allocator.py",
+          "change": "A",
+          "branch_blob": "1a64f9c5fb962dd223b86d766a743d4061d285f6",
+          "candidate_blob": "1a64f9c5fb962dd223b86d766a743d4061d285f6",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_status.py",
+          "change": "A",
+          "branch_blob": "d5c9fe1cec7c3b4f626f805e99c33f885b9efb08",
+          "candidate_blob": "d5c9fe1cec7c3b4f626f805e99c33f885b9efb08",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/swarm_status_projection.py",
+          "change": "A",
+          "branch_blob": "4849d818f7fbdab8fd0788bf96c668a753f876cf",
+          "candidate_blob": "a472f4fcc84e5dade5cf3537bc0a7cffc7c538e7",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_formation_manager.py",
+          "change": "A",
+          "branch_blob": "ff0144e535deb3818d01a7c35e45f52235154c9e",
+          "candidate_blob": "ff0144e535deb3818d01a7c35e45f52235154c9e",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_governance_contract.py",
+          "change": "A",
+          "branch_blob": "20c94b6a7589fb33b01ad0851d4158b2ac68fab2",
+          "candidate_blob": "20c94b6a7589fb33b01ad0851d4158b2ac68fab2",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_governor.py",
+          "change": "A",
+          "branch_blob": "8f97bd6c72e8b565bf8bd153b02dae36da29ccb5",
+          "candidate_blob": "8f97bd6c72e8b565bf8bd153b02dae36da29ccb5",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_role_allocator.py",
+          "change": "A",
+          "branch_blob": "91354abdbf7b014a1bf58aeec5b27dc417d9ba60",
+          "candidate_blob": "91354abdbf7b014a1bf58aeec5b27dc417d9ba60",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_swarm_status.py",
+          "change": "A",
+          "branch_blob": "a143e90d33a9244662c0e70abb4824075b5170b9",
+          "candidate_blob": "829a56d038401d86d5fe888132c3df4c0a336cdf",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "4b4ca4bb F008-S0 R2: test full canonical status tamper detection\n97719f7a F008-S0 R2: test governor fencing across commit boundary\n7022a00e F008-S0 R2: fence status transactions and bind full status bytes\n235fab32 F008-S0 R2: fence status commit against governor takeover\n2b8ec577 F008-S0: adapt swarm governance tests to unittest harness\n4a7832d4 F008-S0: dynamic swarm governance and deterministic status core",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "fe3f19c28b9d4b6f8e57999e979ab752cfab2e9d",
+      "aliases": [
+        "refs/remotes/origin/mission/f009-effect-time-currentness",
+        "refs/remotes/origin/mission/f009-runtime-execution-binding",
+        "refs/remotes/r25-collapse/mission/f009-effect-time-currentness",
+        "refs/remotes/r25/mission/f009-effect-time-currentness"
+      ],
+      "subject": "F009: add admission-bound runtime execution tests",
+      "merge_base": "c56b8d453c39b8b68889b49ac7e794c07c264a97",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "candidate_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "candidate_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "213b8c6c1001a2f9bd98a42b482e5a3a736ab8a1",
+          "candidate_blob": "4cba9b7e25eb7484a63c8f56663c26db848c7276",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "candidate_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "candidate_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+          "change": "A",
+          "branch_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "candidate_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution.py",
+          "change": "A",
+          "branch_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "candidate_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution_contract.py",
+          "change": "A",
+          "branch_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "candidate_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "fe3f19c2 F009: add admission-bound runtime execution tests\n4079dc59 F009: add runtime execution contract tests\n060ef79e F009: carry exact test command into sandbox operation\n515ab509 F009: bind test command in runtime execution request\nd9bbe581 F009: add admission-bound runtime execution engine\nc22007ae F009: add runtime execution binding contracts\n8e56b7f4 F009 R2: expand adversarial runtime admission verification\n3015374b F009 R2: test canonical PDP and provisioned identity contracts\n0105726d F009 R2: require trusted PDP and provisioned runtime evidence\ne453cd7a F009 R2: harden runtime admission evidence contracts\n0f375cb0 F009: add fail-closed runtime admission tests\nefa40ab7 F009: add runtime admission contract tests\n79c482c7 F009: implement fail-closed runtime admission\n88ce74eb F009: add runtime admission contracts",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "8e56b7f46b0e18fbbdfbff2485e939a90a46c74c",
+      "aliases": [
+        "refs/remotes/origin/mission/f009-runtime-admission"
+      ],
+      "subject": "F009 R2: expand adversarial runtime admission verification",
+      "merge_base": "c56b8d453c39b8b68889b49ac7e794c07c264a97",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "candidate_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "213b8c6c1001a2f9bd98a42b482e5a3a736ab8a1",
+          "candidate_blob": "4cba9b7e25eb7484a63c8f56663c26db848c7276",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "candidate_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+          "change": "A",
+          "branch_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "candidate_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "8e56b7f4 F009 R2: expand adversarial runtime admission verification\n3015374b F009 R2: test canonical PDP and provisioned identity contracts\n0105726d F009 R2: require trusted PDP and provisioned runtime evidence\ne453cd7a F009 R2: harden runtime admission evidence contracts\n0f375cb0 F009: add fail-closed runtime admission tests\nefa40ab7 F009: add runtime admission contract tests\n79c482c7 F009: implement fail-closed runtime admission\n88ce74eb F009: add runtime admission contracts",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "2a9500e6891c4504ef2c7da3cb3f7d6803b8aae7",
+      "aliases": [
+        "refs/remotes/origin/mission/f009-adversarial-e2e-r1"
+      ],
+      "subject": "F009: repair E2E exception-boundary expectations",
+      "merge_base": "c56b8d453c39b8b68889b49ac7e794c07c264a97",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "321a250f1afeab511633ceb0b82e82053187a7bc",
+          "candidate_blob": "321a250f1afeab511633ceb0b82e82053187a7bc",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "candidate_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "candidate_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_reconciliation.py",
+          "change": "A",
+          "branch_blob": "cb9c3d2d3c7487dbf4c382e4def31c7f33444c35",
+          "candidate_blob": "cb9c3d2d3c7487dbf4c382e4def31c7f33444c35",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "59c371231300297c5d449a50b8a7a5aa2b23afb3",
+          "candidate_blob": "59c371231300297c5d449a50b8a7a5aa2b23afb3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "213b8c6c1001a2f9bd98a42b482e5a3a736ab8a1",
+          "candidate_blob": "4cba9b7e25eb7484a63c8f56663c26db848c7276",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "candidate_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_reconciliation.py",
+          "change": "A",
+          "branch_blob": "523ea8eb6974c9b768dee787f47dfc00974e6f8d",
+          "candidate_blob": "523ea8eb6974c9b768dee787f47dfc00974e6f8d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "37a1b5fad7e61526a818f61278963aa45ae0a5ca",
+          "candidate_blob": "37a1b5fad7e61526a818f61278963aa45ae0a5ca",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_currentness_contract.py",
+          "change": "A",
+          "branch_blob": "0cdfe175751b0178972f43b600285b1d6c717f94",
+          "candidate_blob": "0cdfe175751b0178972f43b600285b1d6c717f94",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_e2e_falsification.py",
+          "change": "A",
+          "branch_blob": "66451994584d0b306d8317b781a5a3acd7cca14d",
+          "candidate_blob": "66451994584d0b306d8317b781a5a3acd7cca14d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "candidate_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+          "change": "A",
+          "branch_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "candidate_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution.py",
+          "change": "A",
+          "branch_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "candidate_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution_contract.py",
+          "change": "A",
+          "branch_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "candidate_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_reconciliation.py",
+          "change": "A",
+          "branch_blob": "8c806808eef0417a63fafe1645445f7f14b08398",
+          "candidate_blob": "8c806808eef0417a63fafe1645445f7f14b08398",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_reconciliation_contract.py",
+          "change": "A",
+          "branch_blob": "39ff2d4d21175148b2731648e5954480e0638e35",
+          "candidate_blob": "39ff2d4d21175148b2731648e5954480e0638e35",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "2a9500e F009: repair E2E exception-boundary expectations\n540d668 F009: add adversarial end-to-end runtime-chain falsification\nf53125d F009: test independent runtime reconciliation\ne5ae8dd F009: test runtime reconciliation contracts\n9e00f8c F009: add independent runtime reconciliation engine\n3ff02ac F009: add independent runtime reconciliation contracts\n6c9a283 F009: test effect-time currentness guard\ne7fb31e F009: test effect-time currentness contract\nb5516a0 F009: add effect-time currentness guard\n78c8504 F009: add effect-time currentness contract\nfe3f19c F009: add admission-bound runtime execution tests\n4079dc5 F009: add runtime execution contract tests\n060ef79 F009: carry exact test command into sandbox operation\n515ab50 F009: bind test command in runtime execution request\nd9bbe58 F009: add admission-bound runtime execution engine\nc22007a F009: add runtime execution binding contracts\n8e56b7f F009 R2: expand adversarial runtime admission verification\n3015374 F009 R2: test canonical PDP and provisioned identity contracts\n0105726 F009 R2: require trusted PDP and provisioned runtime evidence\ne453cd7 F009 R2: harden runtime admission evidence contracts\n0f375cb F009: add fail-closed runtime admission tests\nefa40ab F009: add runtime admission contract tests\n79c482c F009: implement fail-closed runtime admission\n88ce74e F009: add runtime admission contracts",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "6c9a283c5410ec78b0b25d694fe4d3b7c116378c",
+      "aliases": [
+        "refs/remotes/origin/mission/f009-effect-time-currentness-r2"
+      ],
+      "subject": "F009: test effect-time currentness guard",
+      "merge_base": "c56b8d453c39b8b68889b49ac7e794c07c264a97",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "321a250f1afeab511633ceb0b82e82053187a7bc",
+          "candidate_blob": "321a250f1afeab511633ceb0b82e82053187a7bc",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "candidate_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "candidate_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "59c371231300297c5d449a50b8a7a5aa2b23afb3",
+          "candidate_blob": "59c371231300297c5d449a50b8a7a5aa2b23afb3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "213b8c6c1001a2f9bd98a42b482e5a3a736ab8a1",
+          "candidate_blob": "4cba9b7e25eb7484a63c8f56663c26db848c7276",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "candidate_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "37a1b5fad7e61526a818f61278963aa45ae0a5ca",
+          "candidate_blob": "37a1b5fad7e61526a818f61278963aa45ae0a5ca",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_currentness_contract.py",
+          "change": "A",
+          "branch_blob": "0cdfe175751b0178972f43b600285b1d6c717f94",
+          "candidate_blob": "0cdfe175751b0178972f43b600285b1d6c717f94",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "candidate_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+          "change": "A",
+          "branch_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "candidate_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution.py",
+          "change": "A",
+          "branch_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "candidate_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution_contract.py",
+          "change": "A",
+          "branch_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "candidate_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "6c9a283 F009: test effect-time currentness guard\ne7fb31e F009: test effect-time currentness contract\nb5516a0 F009: add effect-time currentness guard\n78c8504 F009: add effect-time currentness contract\nfe3f19c F009: add admission-bound runtime execution tests\n4079dc5 F009: add runtime execution contract tests\n060ef79 F009: carry exact test command into sandbox operation\n515ab50 F009: bind test command in runtime execution request\nd9bbe58 F009: add admission-bound runtime execution engine\nc22007a F009: add runtime execution binding contracts\n8e56b7f F009 R2: expand adversarial runtime admission verification\n3015374 F009 R2: test canonical PDP and provisioned identity contracts\n0105726 F009 R2: require trusted PDP and provisioned runtime evidence\ne453cd7 F009 R2: harden runtime admission evidence contracts\n0f375cb F009: add fail-closed runtime admission tests\nefa40ab F009: add runtime admission contract tests\n79c482c F009: implement fail-closed runtime admission\n88ce74e F009: add runtime admission contracts",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    },
+    {
+      "head": "f53125ddf5399193287a995b6ccdf9e238c968d6",
+      "aliases": [
+        "refs/remotes/origin/mission/f009-runtime-reconciliation-r1"
+      ],
+      "subject": "F009: test independent runtime reconciliation",
+      "merge_base": "c56b8d453c39b8b68889b49ac7e794c07c264a97",
+      "paths": [
+        {
+          "path": "cyber_lion/contracts/runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "321a250f1afeab511633ceb0b82e82053187a7bc",
+          "candidate_blob": "321a250f1afeab511633ceb0b82e82053187a7bc",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "candidate_blob": "93dee195e5b58a2f1a8efde5487bfb3c99da54ef",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "candidate_blob": "699ff2cffe0153b50dac3d4c925dcef755a46d7d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/contracts/runtime_reconciliation.py",
+          "change": "A",
+          "branch_blob": "cb9c3d2d3c7487dbf4c382e4def31c7f33444c35",
+          "candidate_blob": "cb9c3d2d3c7487dbf4c382e4def31c7f33444c35",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "59c371231300297c5d449a50b8a7a5aa2b23afb3",
+          "candidate_blob": "59c371231300297c5d449a50b8a7a5aa2b23afb3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "213b8c6c1001a2f9bd98a42b482e5a3a736ab8a1",
+          "candidate_blob": "4cba9b7e25eb7484a63c8f56663c26db848c7276",
+          "same_as_candidate": false,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_execution.py",
+          "change": "A",
+          "branch_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "candidate_blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/enterprise/runtime_reconciliation.py",
+          "change": "A",
+          "branch_blob": "523ea8eb6974c9b768dee787f47dfc00974e6f8d",
+          "candidate_blob": "523ea8eb6974c9b768dee787f47dfc00974e6f8d",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_currentness.py",
+          "change": "A",
+          "branch_blob": "37a1b5fad7e61526a818f61278963aa45ae0a5ca",
+          "candidate_blob": "37a1b5fad7e61526a818f61278963aa45ae0a5ca",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_currentness_contract.py",
+          "change": "A",
+          "branch_blob": "0cdfe175751b0178972f43b600285b1d6c717f94",
+          "candidate_blob": "0cdfe175751b0178972f43b600285b1d6c717f94",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement.py",
+          "change": "A",
+          "branch_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "candidate_blob": "3cd4e99c8d86495f6f038eb3f9c1380655a7a7b9",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+          "change": "A",
+          "branch_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "candidate_blob": "db8041b617fa273dbca695d14488d91b2c77f835",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution.py",
+          "change": "A",
+          "branch_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "candidate_blob": "dcff2f89888ea78ba02b2ee0235fc6d088b101a3",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_execution_contract.py",
+          "change": "A",
+          "branch_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "candidate_blob": "04370155b71de5c7f36b7c3a7d876a50265e2184",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_reconciliation.py",
+          "change": "A",
+          "branch_blob": "8c806808eef0417a63fafe1645445f7f14b08398",
+          "candidate_blob": "8c806808eef0417a63fafe1645445f7f14b08398",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        },
+        {
+          "path": "cyber_lion/tests/test_runtime_reconciliation_contract.py",
+          "change": "A",
+          "branch_blob": "39ff2d4d21175148b2731648e5954480e0638e35",
+          "candidate_blob": "39ff2d4d21175148b2731648e5954480e0638e35",
+          "same_as_candidate": true,
+          "branch_blob_in_candidate_history": true
+        }
+      ],
+      "unique_branch_commits": "f53125d F009: test independent runtime reconciliation\ne5ae8dd F009: test runtime reconciliation contracts\n9e00f8c F009: add independent runtime reconciliation engine\n3ff02ac F009: add independent runtime reconciliation contracts\n6c9a283 F009: test effect-time currentness guard\ne7fb31e F009: test effect-time currentness contract\nb5516a0 F009: add effect-time currentness guard\n78c8504 F009: add effect-time currentness contract\nfe3f19c F009: add admission-bound runtime execution tests\n4079dc5 F009: add runtime execution contract tests\n060ef79 F009: carry exact test command into sandbox operation\n515ab50 F009: bind test command in runtime execution request\nd9bbe58 F009: add admission-bound runtime execution engine\nc22007a F009: add runtime execution binding contracts\n8e56b7f F009 R2: expand adversarial runtime admission verification\n3015374 F009 R2: test canonical PDP and provisioned identity contracts\n0105726 F009 R2: require trusted PDP and provisioned runtime evidence\ne453cd7 F009 R2: harden runtime admission evidence contracts\n0f375cb F009: add fail-closed runtime admission tests\nefa40ab F009: add runtime admission contract tests\n79c482c F009: implement fail-closed runtime admission\n88ce74e F009: add runtime admission contracts",
+      "classification": "INTEGRATED",
+      "disposition_rationale": "Every changed nondeleted branch blob is reachable in candidate Git history. Old ref itself need not be ancestor; preserve historical alias. No new runtime equivalence is inferred.",
+      "required_unique_epoch3_work": false
+    }
+  ],
+  "finite_scope_result": {
+    "global_repository_convergence_claim": false,
+    "required_unique_epoch3_work": 0,
+    "unclassified_heads": 0,
+    "unique_heads": 25
+  }
+}

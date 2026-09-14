@@ -1,8 +1,19 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
+
+from cyber_lion.mission_control.supervisor_projection import supervisor_projection
 
 _APPLIED = "_lion_saas_handoff_extension_v1"
+
+
+def _supervisor_status_question(message):
+    low = str(message or "").lower()
+    return ("saas" in low or "chatgpt" in low) and any(token in low for token in (
+        "łączność", "lacznosc", "połączenie", "polaczenie", "kanał", "kanal",
+        "binding", "transport", "dostęp", "dostep", "status", "connected", "connection",
+    ))
 
 
 def _explicit_saas(message: str) -> bool:
@@ -85,6 +96,8 @@ def apply_saas_handoff_extension(cls):
     original_capability = getattr(cls, "_capability_answer", None)
 
     def route(self, message):
+        if _supervisor_status_question(message) and not _explicit_saas(message) and not _dual_saas_local(message):
+            return "LION_CAPABILITY_CURRENTNESS", "canonical SaaS supervisor status"
         if isinstance(message, str) and _dual_saas_local(message):
             return "DUAL_EVALUATION_LIVE", "explicit local plus live SaaS comparison requested"
         if isinstance(message, str) and _explicit_saas(message):
@@ -93,43 +106,53 @@ def apply_saas_handoff_extension(cls):
 
     def state(self):
         out = original_state(self)
+        observed_at = None
         if callable(getattr(self, "control_provider", None)):
             try:
                 recent = self.control_provider("recent", {})
                 mid = recent.get("focus_mission_id")
-                out["saas_session_bridge"] = self.control_provider("saas_status", {"mission_id": mid}) if mid else {"state": "UNBOUND"}
+                if mid:
+                    out["saas_session_bridge"] = self.control_provider("saas_status", {"mission_id": mid})
+                    observed_at = datetime.now(timezone.utc).isoformat()
+                else:
+                    out["saas_session_bridge"] = {"state": "UNKNOWN", "error": "NO_FOCUS_MISSION"}
             except Exception as exc:
                 out["saas_session_bridge"] = {"state": "UNKNOWN", "error": type(exc).__name__, "authority_effect": "NONE"}
+        bridge = out.get("saas_session_bridge") or {}
+        supplied = bridge.get("supervisor_projection") if isinstance(bridge, dict) else None
+        out["supervisor_projection"] = supplied if isinstance(supplied, dict) else supervisor_projection(
+            bridge, now=datetime.now(timezone.utc).isoformat(), observed_at=observed_at,
+        )
         return out
 
     def capability_answer(message, mission, state, output_language):
         low = str(message or "").lower()
-        saas_named = "saas" in low or "chatgpt" in low
-        transport_intent = any(x in low for x in ("masz łączność", "masz lacznosc", "czy masz łączność", "czy masz lacznosc", "kanał saas", "kanal saas", "binding", "transport", "połączenie z saas", "polaczenie z saas", "dostęp do saas", "dostep do saas", "saas status", "status saas"))
-        if saas_named and transport_intent:
-            bridge = (state or {}).get("saas_session_bridge") or {}
-            bstate = bridge.get("state") or "UNKNOWN"
-            binding = bridge.get("binding") or {}
-            pending = bridge.get("pending") or {}
-            polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:masz|czy|jest|łącz|lacz|saas|chatgpt)\b", low)))
-            if bstate == "BOUND":
-                model = binding.get("model_identity") or "ChatGPT SaaS"
-                transport = binding.get("transport") or bridge.get("transport") or "CHATGPT_SENTINELX_SESSION_MEDIATED"
-                expires = binding.get("expires_at") or "UNKNOWN"
-                if polish:
-                    return (f"Tak. LION ma obecnie aktywne, czasowe powiązanie z bieżącą sesją SaaS: {model}. "
-                            f"Transport: {transport}; binding wygasa {expires}. "
-                            "Nie jest to OpenAI API ani automatyczne przejęcie sesji przeglądarki: żądania SaaS są przekazywane przez kontrolowany handoff tej sesji ChatGPT i wracają z receiptem związanym z exact LPCL. "
-                            "SaaS supervisor ma authority_effect=NONE; skutki nadal wymagają aktywnego LPCL i bounded executora.")
-                return (f"Yes. LION currently has a time-bounded binding to the live SaaS session: {model}. "
-                        f"Transport: {transport}; binding expires at {expires}. This is not OpenAI API or browser-session takeover; SaaS requests use the controlled ChatGPT-session handoff and return with an exact-LPCL-bound receipt. SaaS authority_effect=NONE.")
-            if bstate == "PENDING_HANDOFF":
-                code = pending.get("request_code") or "UNKNOWN"
-                return ((f"Kanał SaaS oczekuje na obsługę bieżącej sesji ChatGPT. Pending handoff: {code}. Wyślij w tej sesji `LION SaaS`; authority_effect=NONE.") if polish else
-                        (f"The SaaS channel has a pending handoff ({code}). Send `LION SaaS` in the bound ChatGPT session; authority_effect=NONE."))
-            if polish:
-                return ("Kanał SaaS jest zaimplementowany, ale bieżąca sesja nie jest teraz związana. Wysłanie jawnego polecenia w rodzaju `Na SaaS: <pytanie>` utworzy kontrolowany handoff; następnie bieżąca sesja ChatGPT musi potwierdzić go gestem `LION SaaS`. Nie używamy OpenAI API.")
-            return ("The SaaS bridge is implemented but no live session is currently bound. An explicit `SaaS: <question>` creates a controlled handoff; the current ChatGPT session then acknowledges it with `LION SaaS`. No OpenAI API is used.")
+        if _supervisor_status_question(message):
+            projection = (state or {}).get("supervisor_projection")
+            if not isinstance(projection, dict):
+                projection = supervisor_projection(None, now=datetime.now(timezone.utc).isoformat())
+            polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:masz|mamy|czy|jest|saas|chatgpt)\b", low)))
+            hop = {True: "true", False: "false", None: "UNKNOWN"}.get(projection.get("automatic_hop"), "UNKNOWN")
+            pending = projection.get("pending") or {}
+            receipt = projection.get("last_receipt") or {}
+            lease = projection.get("lease") or {}
+            freshness = projection.get("freshness") or {}
+            labels = ("Kanał", "sesja", "model", "ważność", "świeżość", "Powody niepewności") if polish else ("Channel", "session", "model", "lease", "freshness", "Unknown reasons")
+            answer = (
+                f"{labels[0]} SaaS: {projection.get('channel', 'UNKNOWN')}; {labels[1]}: {projection.get('session', 'UNKNOWN')}; "
+                f"{labels[2]}: {projection.get('model', 'UNKNOWN')}. "
+                f"Transport: {projection.get('transport', 'UNKNOWN')}; "
+                f"{labels[3]}: {lease.get('state', 'UNKNOWN')} ({lease.get('expires_at') or 'UNKNOWN'}); "
+                f"{labels[4]}: {freshness.get('state', 'UNKNOWN')}. "
+                f"Pending: {pending.get('request_id') or projection.get('pending_state', 'UNKNOWN')}; last_receipt: {receipt.get('receipt_digest') or projection.get('last_receipt_state', 'UNKNOWN')}. "
+                f"automatic_local_to_saas_hop={hop}; authority_effect={projection.get('authority', 'NONE')}. "
+            )
+            answer += ("BOUND oznacza powiązanie sesji, a automatyczny handoff ma osobny stan." if polish else
+                       "BOUND describes the session binding; automatic handoff has a separate state.")
+            reasons = projection.get("unknown_reasons") or []
+            if reasons:
+                answer += f" {labels[5]}: " + ", ".join(reasons) + "."
+            return answer
         return original_capability(message, mission, state, output_language) if callable(original_capability) else None
 
     def chat(self, message, use_web=False, history=None, output_language="auto"):

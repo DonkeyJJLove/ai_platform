@@ -169,7 +169,7 @@ def _checkpoint(conn, mission_id, now_fn, cursor):
     return {"checkpoint_id":cid,"checkpoint_digest":dg}
 
 
-def transition(conn, mission_id, new_state, now_fn, *, waiting_reason=None, blocking_gate=None, next_action=None, last_effect=None, last_effect_receipt=None, current_phase=None):
+def transition(conn, mission_id, new_state, now_fn, *, waiting_reason=None, blocking_gate=None, next_action=None, last_effect=None, last_effect_receipt=None, current_phase=None, commit=True):
     row=conn.execute("SELECT state FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not row: raise ValueError("driver missing")
     old=row["state"]
@@ -179,7 +179,8 @@ def transition(conn, mission_id, new_state, now_fn, *, waiting_reason=None, bloc
     conn.execute("UPDATE mission_execution_drivers SET state=?,waiting_reason=?,blocking_gate=?,next_action=?,last_effect=COALESCE(?,last_effect),last_effect_receipt=COALESCE(?,last_effect_receipt),current_phase=COALESCE(?,current_phase),updated_at=? WHERE mission_id=?",
         (new_state,waiting_reason,blocking_gate,next_action,last_effect,last_effect_receipt,current_phase,stamp,mission_id))
     cp=_checkpoint(conn,mission_id,now_fn,{"state":new_state,"waiting_reason":waiting_reason,"blocking_gate":blocking_gate,"next_action":next_action,"current_phase":current_phase})
-    conn.commit(); return cp
+    if commit:conn.commit()
+    return cp
 
 
 def activate(conn, mission_id, now_fn, *, next_action="SELECT_NEXT_PHASE", owner_id=None, lease_seconds=20):

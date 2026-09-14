@@ -18,6 +18,7 @@ apply_hybrid_gateway_extension(Gateway)
 from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
 apply_saas_handoff_extension(Gateway)
 from cyber_lion.app_coordination.web_research_broker import WebEvidence
+from cyber_lion.app_coordination import ui_runtime_events
 
 DRONE_ROLES={
 'MAT01':'LOCAL_REPOSITORY_CURRENTNESS','MAT02':'LOCAL_REPOSITORY_CONTENT','MAT03':'LOCAL_CLONE_INVENTORY','MAT04':'FEDERATION_CURRENTNESS',
@@ -49,7 +50,7 @@ class ThreadStore:
             CREATE TABLE IF NOT EXISTS messages(message_id TEXT PRIMARY KEY,thread_id TEXT NOT NULL,seq INTEGER NOT NULL,role TEXT NOT NULL,content TEXT NOT NULL,created_at REAL NOT NULL,meta_json TEXT NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE,UNIQUE(thread_id,seq));
             CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_thread_seq ON messages(thread_id,seq);
-            """);c.commit();c.close()
+            """);c.commit();ui_runtime_events.migrate(c);c.close()
     def _id(self,v):
         if not isinstance(v,str) or not self.ID_RE.fullmatch(v):raise ValueError('thread_id')
         return v
@@ -58,6 +59,8 @@ class ThreadStore:
         with self.lock:
             c=self._conn()
             try:
+                if op=='ui_runtime_event':
+                    return ui_runtime_events.record(c,args)
                 if op=='list':
                     rows=[dict(x) for x in c.execute('SELECT thread_id,title,created_at,updated_at FROM threads ORDER BY updated_at DESC LIMIT 500')];return {'threads':rows}
                 if op=='create':
@@ -179,6 +182,12 @@ class LpclControlBridge:
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':return self._get('/api/v3/missions/recent')
+        if op=='phase_action':
+            if type(args) is not dict or set(args)!={'mission_id','phase_id','action','control_token'}:raise ValueError('phase action schema')
+            mid=args['mission_id'];pid=args['phase_id'];action=args['action'];token=args['control_token']
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(pid,str) or not self.MID_RE.fullmatch(pid):raise ValueError('phase identity')
+            if action not in {'PAUSE','STOP'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase containment action/token')
+            return self._post('/api/v3/missions/'+mid+'/phase-actions',{'phase_id':pid,'action':action,'control_token':token})
         if op=='saas_request':
             mid=args.get('mission_id');question=args.get('question')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(question,str) or not question.strip() or len(question)>8000:raise ValueError('saas request')
@@ -215,7 +224,7 @@ class LpclControlBridge:
         if op=='local_assignment_claim':
             return self._post('/api/v3/local/assignments/claim',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id')})
         if op=='local_assignment_receipt':
-            return self._post('/api/v3/local/assignments/receipt',{'assignment_id':args.get('assignment_id'),'status':args.get('status'),'result':args.get('result'),'effect_receipt_digest':args.get('effect_receipt_digest'),'authority_effect':'NONE'})
+            return self._post('/api/v3/local/assignments/receipt',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id'),'lease_generation':args.get('lease_generation'),'status':args.get('status'),'result':args.get('result'),'effect_receipt_digest':args.get('effect_receipt_digest'),'authority_effect':'NONE'})
         if op=='process':
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
@@ -362,10 +371,10 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             dual_id=payload.get('dual_request_id')
             if dual_id:
                 control('dual_response',{'request_id':dual_id,'provider':'gpt-oss-20b-MXFP4','response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
-            return control('local_assignment_receipt',{'assignment_id':aid,'status':'PASS','result':result,'effect_receipt_digest':None})
+            return control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})
         except Exception as exc:
             result={'kind':'LOCAL_MODEL_INFERENCE','error':type(exc).__name__+':'+str(exc)[:600],'authority_effect':'NONE'}
-            return control('local_assignment_receipt',{'assignment_id':aid,'status':'FAIL','result':result,'effect_receipt_digest':None})
+            return control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'FAIL','result':result,'effect_receipt_digest':None})
     return None
 
 

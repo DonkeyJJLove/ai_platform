@@ -1,0 +1,51 @@
+{
+  "schema": "lion.r2.inventory-comparison/v1",
+  "scope": "EXACT_COMMITTED_SOURCE_STATIC_SCAN",
+  "classification": "SEMANTIC_SURFACE_SET_CHANGED",
+  "surface_count_delta": [
+    {
+      "paths": [
+        "cyber_lion/app_coordination/ui_runtime_events.py"
+      ],
+      "effect_class": "persistent_state.write",
+      "mutation_kind": "connection.execute",
+      "before": 0,
+      "after": 4
+    },
+    {
+      "paths": [
+        "cyber_lion/mission_control/global_scheduler.py"
+      ],
+      "effect_class": "persistent_state.write",
+      "mutation_kind": "conn.execute",
+      "before": 15,
+      "after": 20
+    }
+  ],
+  "before": {
+    "head": "ae1f115e2fab87f7dd91aa07523e9fb1a794d787",
+    "tree": "821a7b81f7d947e217b03c7cf0f1d691b858d320",
+    "source_count": 334,
+    "surface_count": 304,
+    "raw_unclassified_count": 6,
+    "taxonomy_unresolved_count": 0,
+    "production_scan_digest": "08dc45fc118e4f3c89349dd6b0527d44bcf7666f9a3fe2eafc028251b7cf06f7",
+    "inventory_digest": "12eb5fcbda91376c16f88532e1ddb2a62722a08a107047de40a608a2919f60d6"
+  },
+  "after": {
+    "head": "72fbb405f5c023baa4605a53c15f1b7b96533a98",
+    "tree": "ebc715e1ffa360b2d6d5b629030a0c74379f6417",
+    "source_count": 338,
+    "surface_count": 313,
+    "raw_unclassified_count": 6,
+    "taxonomy_unresolved_count": 0,
+    "production_scan_digest": "3d123cdbc3290c635448dd9ad8f14ed9c0a6bbe36ca379e5c5a2387c0a598b3f",
+    "inventory_digest": "ce3e19571ba98ab18b942284f91d44517f5b75f3d828c90a06ac84499fe9a51c"
+  },
+  "review": {
+    "semantic_delta": "Four bounded UI diagnostic writes and five scheduler bookkeeping/fencing writes; no new external executor.",
+    "taxonomy_unresolved": 0,
+    "mediation_promotion": "NONE; remaining campaign UNKNOWN=305, PARTIAL=7",
+    "package_members": 17
+  }
+}

@@ -6,6 +6,8 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+from cyber_lion.mission_control.supervisor_projection import supervisor_projection
+
 SCHEMA_VERSION = 5
 SCHEMA_ID = "lion.saas-session-bridge/v2"
 TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"
@@ -216,6 +218,14 @@ def bridge_status(conn, mission_id, now_fn):
             "SELECT * FROM saas_session_bindings WHERE mission_id=? AND status='BOUND' ORDER BY bound_at DESC LIMIT 1",
             (mission_id,),
         ).fetchone()
+    last_binding = None
+    if binding is None:
+        # Preserve historical lease evidence without treating it as active binding.
+        last_binding = conn.execute(
+            "SELECT binding_id,mission_id,model_identity,transport,status,expires_at,binding_scope,authority_effect "
+            "FROM saas_session_bindings WHERE binding_scope='GLOBAL_SUPERVISOR_CHANNEL' OR mission_id=? "
+            "ORDER BY bound_at DESC LIMIT 1", (mission_id,),
+        ).fetchone()
     pending = conn.execute(
         "SELECT request_id,request_code,status,created_at,expires_at,question_digest,progress_state,deadline_elapsed_at,retry_of_request_id FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING' ORDER BY created_at ASC LIMIT 1",
         (mission_id,),
@@ -228,13 +238,14 @@ def bridge_status(conn, mission_id, now_fn):
         "SELECT request_id,responded_at,response_digest,receipt_digest,binding_id FROM saas_handoff_requests WHERE mission_id=? AND status='RESPONDED' ORDER BY responded_at DESC LIMIT 1",
         (mission_id,),
     ).fetchone()
-    return {
+    out = {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
         "channel_state": "READY_FOR_HANDOFF",
         "session_attestation_state": "BOUND" if binding else "NOT_ATTESTED",
         "session_scope": (binding["binding_scope"] if binding else None),
         "binding": dict(binding) if binding else None,
+        "last_binding": dict(last_binding) if last_binding else None,
         "pending": pending_value,
         "pending_count": pending_count,
         "last_response": dict(last_response) if last_response else None,
@@ -245,6 +256,8 @@ def bridge_status(conn, mission_id, now_fn):
         "cryptographic_provider_attestation": False,
         "authority_effect": "NONE",
     }
+    out["supervisor_projection"] = supervisor_projection(out, now=stamp, observed_at=stamp)
+    return out
 
 
 def respond(conn, request_id, response_token, answer, now_fn, *, model_identity, transport=TRANSPORT, attestation_class=ATTESTATION_CLASS, lease_seconds=7200):

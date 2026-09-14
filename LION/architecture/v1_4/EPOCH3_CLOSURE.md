@@ -1,3 +1,5 @@
+> Historical candidate observation dated 2026-09-13. The current source description and separately gated terminal process are in [Epoch 3 terminal R2](epoch3_terminal_r2/INDEX.md). The observations below retain their original time and scope.
+
 # Epoch 3 closure — architecture, federation and control plane
 
 Generated from live evidence at `2026-09-13T11:39:17.100008Z`. This document is a **candidate projection**, not a terminal completion receipt. Epoch 3 closes only after full validation, exact GitHub publication/CI/merge, remote-ref closure and carrier-last binding.
