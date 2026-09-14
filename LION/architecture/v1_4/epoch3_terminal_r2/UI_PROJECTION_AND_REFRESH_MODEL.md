@@ -17,3 +17,5 @@ Acceptance must exercise unchanged polls, changing heartbeat/content, detail exp
 Sources: deploy/mission-control/v3/control-v3.js, app.js, index.html; local_intelligence_gateway.py; ui_runtime_events.py.
 
 The later source correction 68accb2 adds POST /api/v3/missions/{existing-id}/focus with exactly an empty JSON object. It changes only focus metadata and records a FOCUS_CHANGED event plus a CONTROL_DB_METADATA_ONLY receipt with authority_effect=NONE in one transaction. Historical and current targets are allowed; missing targets fail before changes; repeating the same focus is idempotent. Driver, phase, mission authority and all other tables remain unchanged in integration tests. This permits reversible PIN/FOCUS acceptance without mission registration or activation. Package identity was refreshed in 813c2bb.
+
+The narrow-layout repair sets the LPCL application grid item to its track width, wraps header/progress content and bounds selects. Mission Control header metadata and registry labels wrap within their containers. Overflow is corrected by sizing and wrapping, not by hiding source text.
