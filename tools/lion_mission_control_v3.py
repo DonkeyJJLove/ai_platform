@@ -23,6 +23,10 @@ try:
  from cyber_lion.mission_control.dual_result_join import create_dual as dual_create, link_saas_request as dual_link_saas, record_response as dual_record_response, join_result as dual_join_result, LOCAL_PROVIDER as DUAL_LOCAL_PROVIDER, SAAS_PROVIDER as DUAL_SAAS_PROVIDER
 except ImportError:
  from dual_result_join import create_dual as dual_create, link_saas_request as dual_link_saas, record_response as dual_record_response, join_result as dual_join_result, LOCAL_PROVIDER as DUAL_LOCAL_PROVIDER, SAAS_PROVIDER as DUAL_SAAS_PROVIDER
+try:
+ from cyber_lion.mission_control import global_scheduler as global_sched
+except ImportError:
+ import global_scheduler as global_sched
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -65,6 +69,7 @@ def migrate():
  lifecycle_migrate(c,now,current_mission_id=MISSION,source_head=HEAD,source_tree=TREE)
  saas_migrate(c,now,source_head=HEAD,source_tree=TREE)
  driver_migrate(c,now,source_head=HEAD,source_tree=TREE)
+ global_sched.migrate(c,now)
  c.commit();c.close()
 
 def broker(op,pod=None):
@@ -197,7 +202,7 @@ def bind_lpcl_execution(mid):
       ps=c.execute('SELECT lpcl_text,authority_state,current_phase,progress FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
       if not m or not ps:return None
       if m['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return None
-      if m['logical_count']!=12 or m['material_target']!=64:raise ValueError('lpcl execution adapter cardinality')
+      if m['material_target']!=64 or m['logical_count'] not in {12,128}:raise ValueError('lpcl execution adapter cardinality')
       kv=_lpcl_pairs(ps['lpcl_text'])
       if kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')!='TRUE' or kv.get('CREATE_PARALLEL_COMPETING_EPOCH3_MISSION')!='FALSE':raise ValueError('lpcl continuation contract')
       reuse=kv.get('REUSE_EXISTING_HEALTHY_MATERIAL_FLEET','')
@@ -229,6 +234,26 @@ def bind_lpcl_execution(mid):
       for pod in live_pods:
        workers.append({'pod_name':pod.get('name'),'pod_uid':pod.get('uid'),'logical_id':str(pod.get('logical_drone') or '').upper(),'phase':pod.get('phase'),'ready':1 if pod.get('ready') else 0,'restarts':int(pod.get('restarts',0) or 0),'pod_ip':pod.get('pod_ip')})
       if len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl live material fleet identity')
+      if int(m['logical_count'])==128:
+       bound=global_sched.bind_128l64m(c,mid,ps['lpcl_text'],workers,now)
+       handlers={
+        'EXACT_128L64M_TOPOLOGY_BIND':{'handler_id':'VERIFY_128L64M_BIND','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'},
+        'DATABASE_AND_SCHEDULER_SCHEMA_MIGRATION':{'handler_id':'VERIFY_SCHEDULER_SCHEMA','effect_class':'INTERNAL_DB','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'MISSION_CONTROL'},
+        'GLOBAL_MULTI_RUN_DISPATCHER':{'handler_id':'GLOBAL_MULTI_RUN_DISPATCH','effect_class':'CONTROL_STATE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'MISSION_CONTROL'},
+        'PER_MISSION_LEASE_AND_FAIRNESS':{'handler_id':'VERIFY_LEASE_FAIRNESS','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'},
+        'PHASE_EXECUTION_PLAN_COMPILER':{'handler_id':'VERIFY_PHASE_PLAN','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'},
+        'DRIVER_LIFECYCLE_NORMALIZATION':{'handler_id':'VERIFY_DRIVER_LIFECYCLE','effect_class':'CONTROL_STATE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'MISSION_CONTROL'},
+        'UNKNOWN_HANDLER_FAIL_CLOSED':{'handler_id':'VERIFY_UNKNOWN_HANDLER_WAIT','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'},
+       }
+       global_sched.compile_phase_specs(c,mid,handlers)
+       nxt=c.execute("SELECT phase_id FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
+       current=nxt['phase_id'] if nxt else None;t=now()
+       c.execute('UPDATE mission_process_specs SET current_phase=?,updated_at=? WHERE mission_id=?',(current,t,mid))
+       if current:c.execute("UPDATE mission_phases SET status=CASE WHEN status='PENDING' THEN 'RUNNING' ELSE status END,started_at=COALESCE(started_at,?),updated_at=? WHERE mission_id=? AND phase_id=?",(t,t,mid,current))
+       ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
+       driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','GLOBAL_SCHEDULER',current,{'event':'EXACT_128L64M_BOUND','logical_count':128,'material_count':64,'assignments':128,'ratio':'2:1','unique_uid_count':64,'material_request_id':material_request_id,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
+       c.commit();return process_snapshot(mid)
       roles=[]
       for i,target in enumerate(LPCL_REBIND_DISTRIBUTION,1):
        lid=f'LD{i:02d}';role=kv.get(lid)
@@ -637,6 +662,9 @@ def process_snapshot(mid):
     lifecycle_sync_components(c,mid,now)
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
     d['execution_driver']=driver_snapshot(c,mid)
+    d['scheduler']=global_sched.scheduler_snapshot(c)
+    try:d['execution_assignment_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=?',(mid,)).fetchone()[0]);d['execution_receipt_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=?',(mid,)).fetchone()[0])
+    except sqlite3.OperationalError:d['execution_assignment_count']=0;d['execution_receipt_count']=0
     try:d['revision_compilations']=[dict(x) for x in c.execute('SELECT revision_id,successor_mission_id,lpcl_digest,state,created_at,activated_at FROM mission_revision_compilations WHERE mission_id=? ORDER BY created_at DESC LIMIT 20',(mid,))]
     except sqlite3.OperationalError:d['revision_compilations']=[]
     try:d['adaptive_worker_plan']=driver_adaptive_worker_plan(c,mid,preferred_roles=('LD01','LD02','LD10','LD11'),limit=16) if int(d.get('ready') or 0)==64 else None
@@ -887,11 +915,138 @@ def drive_self_hosted_once(mid=SELF_HOSTING_MISSION):
     finally:c.close()
 
 
+CONTROL_PLANE_MISSION='LION-EPOCH3-FULL-CONTROL-PLANE-PANEL-AND-AUTONOMOUS-RUN-DISPATCHER-128L64M-R1'
+CONTROL_PLANE_EARLY_HANDLERS={
+ 'EXACT_128L64M_TOPOLOGY_BIND',
+ 'DATABASE_AND_SCHEDULER_SCHEMA_MIGRATION',
+ 'GLOBAL_MULTI_RUN_DISPATCHER',
+ 'PER_MISSION_LEASE_AND_FAIRNESS',
+ 'PHASE_EXECUTION_PLAN_COMPILER',
+ 'DRIVER_LIFECYCLE_NORMALIZATION',
+ 'UNKNOWN_HANDLER_FAIL_CLOSED',
+}
+
+
+def _phase_exec_spec(c,mid,pid):
+    try:
+      row=c.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()
+      return dict(row) if row else None
+    except sqlite3.OperationalError:return None
+
+
+def _normalize_complete_driver(c,mid):
+    m=c.execute('SELECT state FROM missions WHERE mission_id=?',(mid,)).fetchone()
+    d=driver_snapshot(c,mid)
+    if not m or not d:return False
+    if m['state']=='COMPLETE' and d['state']!='COMPLETE':
+      # Never resume a terminal mission just to normalize the driver.  Record
+      # the terminal truth directly only from a durable mission COMPLETE row.
+      c.execute("UPDATE mission_execution_drivers SET state='COMPLETE',waiting_reason=NULL,blocking_gate=NULL,next_action='TERMINAL_RECONCILED',updated_at=? WHERE mission_id=?",(now(),mid))
+      _process_message(c,mid,'RECOVERY','GLOBAL_SCHEDULER','MISSION_CONTROL',None,{'event':'MISSION_COMPLETE_DRIVER_NORMALIZED','previous_driver_state':d['state'],'authority_effect':'CONTROL_STATE'},'INTERNAL')
+      c.commit();return True
+    return False
+
+
+def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
+    c=connect()
+    try:
+      m=c.execute('SELECT state,ready,materialized FROM missions WHERE mission_id=?',(mid,)).fetchone()
+      ps=c.execute('SELECT authority_state,current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      if not m or not ps or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return
+      d=driver_snapshot(c,mid)
+      if not d:return
+      if d['state']=='BOOTSTRAP_PAUSED':
+       d=driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+      elif d['state'] in {'ACTIVE','WAITING','BLOCKED'}:
+       try:driver_heartbeat(c,mid,now,phase=ps['current_phase'],next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       except ValueError:return
+      else:return
+      row=c.execute("SELECT phase_id,status FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
+      if not row:
+       if driver_snapshot(c,mid)['state']!='COMPLETE':driver_transition(c,mid,'COMPLETE',now,next_action='TERMINAL_RECONCILED')
+       c.execute("UPDATE missions SET state='COMPLETE',runtime_state='DRIVER_COMPLETE',updated_at=? WHERE mission_id=?",(now(),mid));c.commit();return
+      pid=row['phase_id'];spec=_phase_exec_spec(c,mid,pid)
+      if not spec or spec['handler_id']=='PHASE_HANDLER_NOT_REGISTERED':
+       evidence={'phase_id':pid,'handler':None if not spec else spec['handler_id'],'gate':'PHASE_HANDLER_NOT_REGISTERED'}
+       if row['status']!='WAITING':_driver_phase_result(c,mid,pid,'WAITING','No registered phase handler; fail closed without progress.',evidence,'CONTROL')
+       cur=driver_snapshot(c,mid)
+       if cur and cur['state']!='WAITING':driver_transition(c,mid,'WAITING',now,blocking_gate='PHASE_HANDLER_NOT_REGISTERED',waiting_reason='No exact handler registered for '+pid,next_action='WAIT_FOR_HANDLER_REGISTRATION',current_phase=pid)
+       return
+      # Early repair phases are evidence-verification handlers.  They never
+      # mutate external systems and may only close after their exact invariant exists.
+      if pid=='EXACT_128L64M_TOPOLOGY_BIND':
+       logical=c.execute('SELECT COUNT(*) FROM logical_drones WHERE mission_id=?',(mid,)).fetchone()[0]
+       material=c.execute('SELECT COUNT(*) FROM material_workers WHERE mission_id=?',(mid,)).fetchone()[0]
+       uids=c.execute('SELECT COUNT(DISTINCT pod_uid) FROM material_workers WHERE mission_id=? AND pod_uid IS NOT NULL',(mid,)).fetchone()[0]
+       assignments=c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mid,)).fetchone()[0]
+       evidence={'logical_count':logical,'material_count':material,'unique_uid_count':uids,'topology_assignments':assignments,'ratio':'2:1'}
+       ok=(logical,material,uids,assignments)==(128,64,64,128)
+      elif pid=='DATABASE_AND_SCHEDULER_SCHEMA_MIGRATION':
+       tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+       required={'mission_scheduler_state','mission_phase_execution_specs','mission_execution_assignments','mission_execution_receipts'}
+       evidence={'required_tables':sorted(required),'present':sorted(required & tables),'integrity':c.execute('PRAGMA integrity_check').fetchone()[0]};ok=required<=tables and evidence['integrity']=='ok'
+      elif pid=='GLOBAL_MULTI_RUN_DISPATCHER':
+       sched=global_sched.scheduler_snapshot(c);eligible=global_sched.eligible_missions(c)
+       evidence={'scheduler':sched,'eligible_missions':[r['mission_id'] for r in eligible],'dispatcher':'DB_DRIVEN_MULTI_MISSION'};ok=bool(sched and sched['state']=='ACTIVE')
+      elif pid=='PER_MISSION_LEASE_AND_FAIRNESS':
+       sched=global_sched.scheduler_snapshot(c);evidence={'scheduler':sched,'policy':'BOUNDED_ROUND_ROBIN_ACTIVE_BEFORE_WAITING','lease_owner':driver_snapshot(c,mid).get('lease_owner')};ok=bool(evidence['lease_owner'])
+      elif pid=='PHASE_EXECUTION_PLAN_COMPILER':
+       total=c.execute('SELECT COUNT(*) FROM mission_phases WHERE mission_id=?',(mid,)).fetchone()[0]
+       compiled=c.execute('SELECT COUNT(*) FROM mission_phase_execution_specs WHERE mission_id=?',(mid,)).fetchone()[0]
+       unknown=c.execute("SELECT COUNT(*) FROM mission_phase_execution_specs WHERE mission_id=? AND handler_id='PHASE_HANDLER_NOT_REGISTERED'",(mid,)).fetchone()[0]
+       evidence={'phase_count':total,'compiled_count':compiled,'unknown_handler_count':unknown};ok=compiled==total and total>0
+      elif pid=='DRIVER_LIFECYCLE_NORMALIZATION':
+       normalized=[]
+       for r in c.execute("SELECT mission_id FROM missions WHERE state='COMPLETE'").fetchall():
+        if _normalize_complete_driver(c,r['mission_id']):normalized.append(r['mission_id'])
+       evidence={'normalized':normalized,'rule':'MISSION_COMPLETE_IMPLIES_DRIVER_COMPLETE'}
+       bad=c.execute("SELECT COUNT(*) FROM missions m JOIN mission_execution_drivers d ON d.mission_id=m.mission_id WHERE m.state='COMPLETE' AND d.state!='COMPLETE'").fetchone()[0];evidence['remaining_mismatch']=bad;ok=bad==0
+      elif pid=='UNKNOWN_HANDLER_FAIL_CLOSED':
+       unknown=c.execute("SELECT COUNT(*) FROM mission_phase_execution_specs WHERE mission_id=? AND handler_id='PHASE_HANDLER_NOT_REGISTERED'",(mid,)).fetchone()[0]
+       evidence={'unknown_handler_count':unknown,'behavior':'WAITING_NO_PROGRESS'};ok=unknown>=1
+      else:return
+      aid=driver_begin_attempt(c,mid,pid,now,preconditions={'handler_id':spec['handler_id']},owner_id=DRIVER_PROCESS_ID)
+      driver_finish_attempt(c,aid,now,state='PASS' if ok else 'BLOCKED',evidence=evidence,detail=pid)
+      if ok:
+       _driver_phase_result(c,mid,pid,'PASS','Verified by global scheduler repair handler.',{'event':'PHASE_HANDLER_PASS',**evidence},'VALIDATION')
+       if driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=pid,next_action='SELECT_NEXT_PHASE')
+      else:
+       _driver_phase_result(c,mid,pid,'BLOCKED','Exact invariant not satisfied.',{'event':'PHASE_HANDLER_BLOCKED',**evidence},'VALIDATION')
+       if driver_snapshot(c,mid)['state']!='BLOCKED':driver_transition(c,mid,'BLOCKED',now,blocking_gate=pid,waiting_reason='Exact invariant not satisfied',next_action='REACQUIRE',current_phase=pid)
+    finally:c.close()
+
+
+def global_scheduler_once():
+    c=connect()
+    try:
+      # Terminal state reconciliation is orthogonal to dispatch and prevents
+      # historical COMPLETE missions from presenting a PAUSED driver.
+      for row in c.execute("SELECT mission_id FROM missions WHERE state='COMPLETE'").fetchall():
+       _normalize_complete_driver(c,row['mission_id'])
+      pick=global_sched.next_dispatch(c,now)
+    finally:c.close()
+    if not pick:return
+    mid=pick['mission_id']
+    if mid==SELF_HOSTING_MISSION:drive_self_hosted_once(mid)
+    elif mid==CONTROL_PLANE_MISSION:drive_control_plane_once(mid)
+    else:
+      # Generic runs with no registered executable driver remain durably
+      # scheduled but cannot be promoted. Their own exact handlers must opt in.
+      c=connect()
+      try:
+       d=driver_snapshot(c,mid)
+       if d and d['state']=='ACTIVE':driver_heartbeat(c,mid,now,next_action='NO_REGISTERED_GLOBAL_DRIVER',owner_id=d.get('lease_owner'))
+      finally:c.close()
+
+
 def mission_driver_loop():
     while not DRIVER_STOP.is_set():
-      try:drive_self_hosted_once()
-      except Exception:pass
-      DRIVER_STOP.wait(5)
+      try:global_scheduler_once()
+      except Exception as exc:
+       try:
+        c=connect();global_sched.heartbeat(c,now,queue_depth=len(global_sched.eligible_missions(c)),active_run_count=sum(1 for x in global_sched.eligible_missions(c) if x['state']=='ACTIVE'),last_error=type(exc).__name__+':'+str(exc)[:900]);c.close()
+       except Exception:pass
+      DRIVER_STOP.wait(2)
 
 
 def create_dual_evaluation(x):
@@ -964,6 +1119,40 @@ def respond_saas_handoff(x):
       out=saas_respond(c,x['request_id'],x['response_token'],x['answer'],now,model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'])
       mid=out['receipt']['mission_id'];phase=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
       _process_message(c,mid,'RECEIPT','CHATGPT_SAAS_SUPERVISOR','MISSION_CONTROL',(phase['current_phase'] if phase else None),{'event':'SAAS_HANDOFF_RESPONSE','request_id':x['request_id'],'binding_id':out['receipt']['binding_id'],'model_identity':x['model_identity'],'transport':x['transport'],'response_digest':out['receipt']['response_digest'],'attestation_digest':out['receipt']['attestation_digest'],'receipt_digest':out['receipt']['receipt_digest'],'authority_effect':'NONE'},'IN')
+      # Browser-independent join: the SaaS ingress is the authoritative moment
+      # at which the durable SaaS receipt exists.  If this request belongs to a
+      # dual evaluation, persist that receipt and compute the join here, not in JS.
+      dual=c.execute('SELECT request_id FROM mission_dual_evaluations WHERE saas_request_id=? ORDER BY updated_at DESC LIMIT 1',(x['request_id'],)).fetchone()
+      if dual:
+       drid=dual['request_id'];dual_record_response(c,drid,DUAL_SAAS_PROVIDER,x['answer'],now,transport=x['transport'],authority_effect='NONE');joined=dual_join_result(c,drid);out['dual_result']=joined
+       _process_message(c,mid,'RECEIPT','MISSION_CONTROL','DUAL_RESULT_JOIN',(phase['current_phase'] if phase else None),{'event':'SAAS_RECEIPT_AUTO_JOINED','dual_request_id':drid,'dual_state':joined.get('state'),'saas_response_digest':out['receipt']['response_digest'],'authority_effect':'NONE'},'INTERNAL')
+      c.commit();return out
+    finally:c.close()
+
+
+def local_assignment_list(mission_id=None,limit=16):
+    c=connect()
+    try:return {'assignments':global_sched.pending_local_assignments(c,mission_id=mission_id,limit=limit),'authority_effect':'NONE'}
+    finally:c.close()
+
+
+def local_assignment_claim(x):
+    if type(x) is not dict or set(x)!={'assignment_id','material_drone_id'}:raise ValueError('local assignment claim schema')
+    c=connect()
+    try:return global_sched.claim_assignment(c,x['assignment_id'],now,expected_material_drone_id=x['material_drone_id'])
+    finally:c.close()
+
+
+def local_assignment_receipt(x):
+    required={'assignment_id','status','result','effect_receipt_digest','authority_effect'}
+    if type(x) is not dict or set(x)!=required:raise ValueError('local assignment receipt schema')
+    if x['status'] not in {'PASS','FAIL'} or x['authority_effect']!='NONE':raise ValueError('local assignment receipt status/authority')
+    if type(x['result']) is not dict:raise ValueError('local assignment result')
+    c=connect()
+    try:
+      out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
+      row=c.execute('SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
+      if row:_process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'status':x['status'],'authority_effect':'NONE'},'IN')
       c.commit();return out
     finally:c.close()
 
@@ -1012,9 +1201,17 @@ class H(BaseHTTPRequestHandler):
    rid=path[len('/api/v3/dual/'):].strip('/')
    try:return self.json(get_dual_result(rid))
    except ValueError as e:return self.json({'error':str(e)},404)
+  if path=='/api/v3/local/assignments':
+   q=parse_qs(urlparse(self.path).query);mid=(q.get('mission_id') or [None])[0];limit=int((q.get('limit') or ['16'])[0]);return self.json(local_assignment_list(mid,limit))
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
+  if path in {'/api/v3/local/assignments/claim','/api/v3/local/assignments/receipt'}:
+   try:
+    n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>100000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n));out=local_assignment_claim(x) if path.endswith('/claim') else local_assignment_receipt(x);return self.json(out)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path in {'/api/v3/dual/create','/api/v3/dual/link-saas','/api/v3/dual/response'}:
    try:
     n=int(self.headers.get('Content-Length','0'))

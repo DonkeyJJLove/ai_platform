@@ -1654,7 +1654,7 @@ def e3_handle(req):
 
 MISSION_CONTROL_V3_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3")
 MISSION_CONTROL_V3_REQUIRED_SHA256={
- "mission_control_v3.py":"b97cbf14e39b79197fcac55c0df56f7f94a287bbc0c9d2a02bca00a4be79586c",
+ "mission_control_v3.py":"d5faba8233ecf35d3e72a1a7729ef56edba4677387f749cd242d3cb37455c6fd",
  "mission_control_compat.py":"67ce2f6b7f40336ca09012e7a7e414c0f2feb52fcf78947dce628427d70fd4e7",
  "lion_mission_lifecycle_db.py":"9b2d37e1d6e3273800a31cb5417143deb117916444be1cef0c18f0339b8a915f",
  "lion_saas_session_bridge.py":"969fbfd365a7e912c001006a44ccb41f6e5744ee06b154bc7d554baf1210dcfb",
@@ -1662,6 +1662,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "cyber_lion/mission_control/execution_driver.py":"ba4495cca425ab52d3391b25281d98a26d32b80ca8fae46b0e5fb1e938bfec3f",
  "cyber_lion/mission_control/execution_driver_contract.py":"aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821",
  "cyber_lion/mission_control/dual_result_join.py":"215868ca5800377bc880d12cee633d1507bbe0d23687a39b8160af42274023a8",
+ "cyber_lion/mission_control/global_scheduler.py":"2b98eb3f22adcc23c95a24136fccd4b02c70d4d9e8ea9a71c15c990bd559337f",
 }
 MISSION_CONTROL_V3_PATH=MISSION_CONTROL_V3_ROOT/"mission_control_v3.py"
 MISSION_CONTROL_V3_SHA256=MISSION_CONTROL_V3_REQUIRED_SHA256["mission_control_v3.py"]

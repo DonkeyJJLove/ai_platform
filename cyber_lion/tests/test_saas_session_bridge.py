@@ -159,6 +159,17 @@ class PanelThreadDeliveryTests(unittest.TestCase):
         self.assertIn('FOLLOW_FOCUS',ui)
         self.assertIn('missionsRefreshing',ui)
 
+    def test_browser_no_longer_posts_dual_saas_receipt_and_has_stable_raw_ui(self):
+        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
+        ui=gateway.UI
+        self.assertNotIn("fetch('/api/dual/response'",ui)
+        self.assertIn('Return to focus',ui)
+        self.assertIn('missionRenderKey',ui)
+        self.assertIn('stateRenderKey',ui)
+        self.assertIn('html,body{height:100%;overflow:hidden}',ui)
+        self.assertIn('position:fixed;left:280px;right:0;bottom:0',ui)
+        self.assertIn('<summary>RAW</summary>',ui)
+
     def test_global_control_view_has_focus_follow_refresh_guard_and_stable_render_key(self):
         root=Path(__file__).resolve().parents[2]
         js=(root/'deploy/mission-control/v3/control-v3.js').read_text(encoding='utf-8')

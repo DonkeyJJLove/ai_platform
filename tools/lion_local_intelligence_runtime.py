@@ -208,6 +208,14 @@ class LpclControlBridge:
             rid=args.get('request_id')
             if not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('dual request id')
             return self._get('/api/v3/dual/'+rid)
+        if op=='local_assignments':
+            mid=args.get('mission_id');limit=int(args.get('limit',16))
+            q=('?mission_id='+mid if isinstance(mid,str) and mid else '')+('&' if isinstance(mid,str) and mid else '?')+'limit='+str(limit)
+            return self._get('/api/v3/local/assignments'+q)
+        if op=='local_assignment_claim':
+            return self._post('/api/v3/local/assignments/claim',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id')})
+        if op=='local_assignment_receipt':
+            return self._post('/api/v3/local/assignments/receipt',{'assignment_id':args.get('assignment_id'),'status':args.get('status'),'result':args.get('result'),'effect_receipt_digest':args.get('effect_receipt_digest'),'authority_effect':'NONE'})
         if op=='process':
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
@@ -333,6 +341,40 @@ def providers(broker,model):
     return cur,gitprov,content,source,mission,MaterialWeb(),modelprov
 
 
+
+def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025'):
+    pending=control('local_assignments',{'limit':16}).get('assignments') or []
+    for row in pending:
+        if row.get('material_drone_id')!=material_drone_id:continue
+        aid=row.get('assignment_id')
+        try:claimed=control('local_assignment_claim',{'assignment_id':aid,'material_drone_id':material_drone_id})
+        except Exception:continue
+        try:
+            payload=json.loads(claimed.get('input_json') or '{}')
+            if payload.get('kind')!='LOCAL_MODEL_INFERENCE':raise ValueError('unsupported local assignment kind')
+            messages=payload.get('messages')
+            if not isinstance(messages,list) or not messages:raise ValueError('local assignment messages')
+            max_tokens=int(payload.get('max_tokens') or 384)
+            if not 1<=max_tokens<=2048:raise ValueError('local assignment max_tokens')
+            answer=str(modelprov(messages,max_tokens)).strip()
+            if not answer:raise ValueError('empty local model result')
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':'gpt-oss-20b-MXFP4','response_text':answer,'response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'authority_effect':'NONE'}
+            dual_id=payload.get('dual_request_id')
+            if dual_id:
+                control('dual_response',{'request_id':dual_id,'provider':'gpt-oss-20b-MXFP4','response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
+            return control('local_assignment_receipt',{'assignment_id':aid,'status':'PASS','result':result,'effect_receipt_digest':None})
+        except Exception as exc:
+            result={'kind':'LOCAL_MODEL_INFERENCE','error':type(exc).__name__+':'+str(exc)[:600],'authority_effect':'NONE'}
+            return control('local_assignment_receipt',{'assignment_id':aid,'status':'FAIL','result':result,'effect_receipt_digest':None})
+    return None
+
+
+def local_assignment_worker_loop(control,modelprov,stop_event,material_drone_id='MD025'):
+    while not stop_event.is_set():
+        try:local_assignment_worker_once(control,modelprov,material_drone_id=material_drone_id)
+        except Exception:pass
+        stop_event.wait(1)
+
 def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
     """Windows-side LOCAL canary producer for the self-hosting gate.
 
@@ -382,7 +424,7 @@ def main():
     if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
     b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads)
-    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
+    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start();threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop),daemon=True).start()
     try: serve_gateway(g,a.port)
     finally: canary_stop.set()
 if __name__=='__main__':main()

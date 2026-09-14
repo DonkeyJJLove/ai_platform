@@ -23,6 +23,7 @@ SOURCE_MAP = {
     "cyber_lion/mission_control/execution_driver.py": ROOT / "cyber_lion/mission_control/execution_driver.py",
     "cyber_lion/mission_control/execution_driver_contract.py": ROOT / "cyber_lion/mission_control/execution_driver_contract.py",
     "cyber_lion/mission_control/dual_result_join.py": ROOT / "cyber_lion/mission_control/dual_result_join.py",
+    "cyber_lion/mission_control/global_scheduler.py": ROOT / "cyber_lion/mission_control/global_scheduler.py",
 }
 
 

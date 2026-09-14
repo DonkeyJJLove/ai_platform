@@ -1,0 +1,89 @@
+import sqlite3
+import unittest
+from datetime import datetime, timezone
+
+from cyber_lion.mission_control import global_scheduler as g
+
+
+def now():
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+class GlobalSchedulerTests(unittest.TestCase):
+    def setUp(self):
+        self.c = sqlite3.connect(":memory:")
+        self.c.row_factory = sqlite3.Row
+        self.c.executescript("""
+        CREATE TABLE missions(mission_id TEXT PRIMARY KEY,state TEXT,updated_at TEXT,adapter TEXT,runtime_state TEXT,materialized INTEGER,ready INTEGER,last_error TEXT);
+        CREATE TABLE mission_execution_drivers(mission_id TEXT PRIMARY KEY,state TEXT,heartbeat_at TEXT,current_phase TEXT);
+        CREATE TABLE mission_phases(mission_id TEXT,phase_id TEXT,ordinal INTEGER,status TEXT);
+        CREATE TABLE logical_drones(mission_id TEXT,logical_id TEXT,role TEXT,material_target INTEGER,materialized INTEGER,ready INTEGER,PRIMARY KEY(mission_id,logical_id));
+        CREATE TABLE material_workers(mission_id TEXT,pod_name TEXT,pod_uid TEXT,logical_id TEXT,phase TEXT,ready INTEGER,restarts INTEGER,pod_ip TEXT,observed_at TEXT,PRIMARY KEY(mission_id,pod_name));
+        """)
+        g.migrate(self.c, now)
+
+    def tearDown(self):
+        self.c.close()
+
+    def test_required_durable_tables_exist(self):
+        tables={r[0] for r in self.c.execute("SELECT name FROM sqlite_master WHERE type='table'") }
+        for name in ("mission_scheduler_state","mission_phase_execution_specs","mission_execution_assignments","mission_execution_receipts"):
+            self.assertIn(name,tables)
+
+    def test_unknown_handler_compiles_fail_closed(self):
+        self.c.execute("INSERT INTO mission_phases VALUES('M','P1',1,'PENDING')")
+        specs=g.compile_phase_specs(self.c,'M',{})
+        self.assertEqual(specs[0]['handler_id'],'PHASE_HANDLER_NOT_REGISTERED')
+        self.assertEqual(specs[0]['gate_class'],'WAITING')
+        self.assertEqual(specs[0]['retry_policy'],'NO_AUTOMATIC_RETRY')
+
+    def test_waiting_run_does_not_block_active_run(self):
+        for mid,state,ts in [('A','WAITING','2026-01-01T00:00:00Z'),('B','ACTIVE','2026-01-01T00:00:01Z')]:
+            self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",(mid,'RUNNING',ts,'x','x',0,0,None))
+            self.c.execute("INSERT INTO mission_execution_drivers VALUES(?,?,?,?)",(mid,state,ts,'P'))
+        pick=g.next_dispatch(self.c,now)
+        self.assertEqual(pick['mission_id'],'B')
+        snap=g.scheduler_snapshot(self.c)
+        self.assertEqual(snap['queue_depth'],2)
+        self.assertEqual(snap['active_run_count'],1)
+
+    def test_128l64m_binding_is_two_to_one_and_uid_exact(self):
+        lp=[]
+        for i in range(1,17):
+            a=(i-1)*8+1;b=i*8;m1=(i-1)*4+1;m2=i*4
+            lp += [f'COHORT_{i:02d}=',f'LD{a:03d}-LD{b:03d}','ROLE=',f'ROLE_{i:02d}','MATERIAL=',f'MD{m1:03d}-MD{m2:03d}']
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','AUTHORIZED',now(),'LPCL_MISSION','NOT_STARTED',0,0,'x'))
+        workers=[{'pod_name':f'p{i:02d}','pod_uid':f'uid-{i:02d}','phase':'Running','ready':1,'restarts':0,'pod_ip':f'10.0.0.{i+1}'} for i in range(64)]
+        out=g.bind_128l64m(self.c,'M','\n'.join(lp),workers,now)
+        self.assertEqual(out['assignments'],128)
+        self.assertEqual(self.c.execute("SELECT COUNT(*) FROM logical_drones WHERE mission_id='M'").fetchone()[0],128)
+        self.assertEqual(self.c.execute("SELECT COUNT(*) FROM material_workers WHERE mission_id='M'").fetchone()[0],64)
+        counts=[r[0] for r in self.c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id='M' GROUP BY material_drone_id")]
+        self.assertEqual(counts,[2]*64)
+
+    def test_local_assignment_claim_is_durable_and_fenced(self):
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
+        aid=g.create_assignment(self.c,'M','LOCAL','LD001','MD001',{'prompt':'x'},now,lease_generation=1)
+        pending=g.pending_local_assignments(self.c,mission_id='M')
+        self.assertEqual([x['assignment_id'] for x in pending],[aid])
+        with self.assertRaisesRegex(ValueError,'material identity mismatch'):
+            g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD002')
+        out=g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
+        self.assertEqual(out['state'],'CLAIMED')
+        self.assertIn('\"prompt\":\"x\"',out['input_json'])
+        self.assertEqual(g.pending_local_assignments(self.c,mission_id='M'),[])
+        with self.assertRaisesRegex(ValueError,'not ready'):
+            g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
+
+    def test_receipt_is_exactly_once_for_same_result(self):
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
+        aid=g.create_assignment(self.c,'M','P','LD001','MD001',{'x':1},now,lease_generation=1)
+        a=g.record_receipt(self.c,aid,{'ok':True},now)
+        b=g.record_receipt(self.c,aid,{'ok':True},now)
+        self.assertFalse(a['duplicate'])
+        self.assertTrue(b['duplicate'])
+        self.assertEqual(a['receipt_id'],b['receipt_id'])
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -63,7 +63,7 @@ function mcRenderProtocols(s){
   MC('mcProtocolFilters').innerHTML=(rows.length?`<button class="mc-proto ${MC_PROTOCOL==='ALL'?'active':''}" data-proto="ALL">ALL <b>${rows.length}</b></button>`:'')+keys.map(k=>`<button class="mc-proto ${MC_PROTOCOL===k?'active':''}" data-proto="${mcesc(k)}">${mcesc(k)} <b>${counts[k]}</b></button>`).join('');
   MC('mcProtocolFilters').querySelectorAll('[data-proto]').forEach(b=>b.onclick=()=>{MC_PROTOCOL=b.dataset.proto;mcRenderProtocols(s)});
   const shown=rows.filter(x=>MC_PROTOCOL==='ALL'||x.protocol===MC_PROTOCOL).slice(0,120);
-  MC('mcProtocolFeed').innerHTML=shown.length?shown.map(x=>`<article class="mc-message"><div><b>${mcesc(x.protocol)}</b> · ${mcesc(x.from_id)} → ${mcesc(x.to_id)}</div><div class="mc-message-meta">${mcesc(x.observed_at)} · phase ${mcesc(x.phase||'—')} · ${mcesc(x.direction)}</div><div>${mcesc(JSON.stringify(x.payload||{}))}</div></article>`).join(''):'<div class="mc-line mc-history">No protocol messages recorded for this mission/stage.</div>';
+  MC('mcProtocolFeed').innerHTML=shown.length?shown.map(x=>{const q=x.payload||{},summary=[q.event,q.status,q.action,q.gate,q.state].filter(Boolean).join(' · ')||'RECORDED';return `<article class="mc-message"><div><b>${mcesc(x.protocol)}</b> · ${mcesc(x.from_id)} → ${mcesc(x.to_id)}</div><div class="mc-message-meta">${mcesc(x.observed_at)} · phase ${mcesc(x.phase||'—')} · ${mcesc(x.direction)}</div><div class="mc-labels"><span>${mcesc(summary)}</span>${q.authority_effect?`<span>AUTH ${mcesc(q.authority_effect)}</span>`:''}</div><details class="mc-raw"><summary>RAW</summary><pre>${mcesc(JSON.stringify(q,null,2))}</pre></details></article>`}).join(''):'<div class="mc-line mc-history">No protocol messages recorded for this mission/stage.</div>';
 }
 
 function renderSchemaContext(s){
@@ -134,7 +134,7 @@ async function mcRefresh(){
     if(!MC_PINNED||!MC_SELECTED||!registry.some(x=>x.mission_id===MC_SELECTED))MC_SELECTED=MC_FOCUS;
     const s=await mcget(missionPath(MC_SELECTED,'/process'));
     const select=MC('mcMissionSelect');select.innerHTML=registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join('');
-    select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};
+    select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};const rf=MC('mcReturnFocus');if(rf){rf.hidden=!MC_PINNED;rf.onclick=()=>{MC_PINNED=false;MC_SELECTED=MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()}};
     const key=mcRenderKey(s,registry,src.sources||[]);if(key!==MC_LAST_RENDER_KEY){mcRender(s,registry,src.sources||[]);MC_LAST_RENDER_KEY=key}else mcRenderHeader(s);
   }catch(e){MC('mcV3Authority').textContent='CONTROL UNKNOWN';MC('mcV3Meta').textContent='Mission control refresh failed: '+e.message}
   finally{MC_REFRESHING=false}
