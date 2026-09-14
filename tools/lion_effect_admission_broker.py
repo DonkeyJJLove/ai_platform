@@ -1657,7 +1657,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "mission_control_v3.py":"949794bdabbf6bedb94ab2c4cbbe307a38898e407eebff2839a0d7ed1c31ab68",
  "mission_control_compat.py":"67ce2f6b7f40336ca09012e7a7e414c0f2feb52fcf78947dce628427d70fd4e7",
  "lion_mission_lifecycle_db.py":"9b2d37e1d6e3273800a31cb5417143deb117916444be1cef0c18f0339b8a915f",
- "lion_saas_session_bridge.py":"969fbfd365a7e912c001006a44ccb41f6e5744ee06b154bc7d554baf1210dcfb",
+ "lion_saas_session_bridge.py":"72f981980452eac3e2063169ccbe0b73233a232fd2bc9dca7e104bc730c903db",
  "cyber_lion/mission_control/__init__.py":"8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c",
  "cyber_lion/mission_control/execution_driver.py":"ba4495cca425ab52d3391b25281d98a26d32b80ca8fae46b0e5fb1e938bfec3f",
  "cyber_lion/mission_control/execution_driver_contract.py":"aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821",

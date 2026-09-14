@@ -6,8 +6,8 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-SCHEMA_VERSION = 3
-SCHEMA_ID = "lion.saas-session-bridge/v1"
+SCHEMA_VERSION = 5
+SCHEMA_ID = "lion.saas-session-bridge/v2"
 TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"
 ATTESTATION_CLASS = "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP"
 
@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS saas_session_bindings(
   expires_at TEXT NOT NULL,
   last_request_id TEXT,
   attestation_json TEXT NOT NULL,
-  attestation_digest TEXT NOT NULL
+  attestation_digest TEXT NOT NULL,
+  binding_scope TEXT NOT NULL DEFAULT 'MISSION'
 );
 CREATE INDEX IF NOT EXISTS idx_saas_binding_mission ON saas_session_bindings(mission_id,status,expires_at);
 CREATE TABLE IF NOT EXISTS saas_handoff_requests(
@@ -46,7 +47,10 @@ CREATE TABLE IF NOT EXISTS saas_handoff_requests(
   response_digest TEXT,
   binding_id TEXT,
   response_meta_json TEXT,
-  receipt_digest TEXT
+  receipt_digest TEXT,
+  progress_state TEXT,
+  deadline_elapsed_at TEXT,
+  retry_of_request_id TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_saas_request_mission ON saas_handoff_requests(mission_id,status,created_at);
 """
@@ -68,14 +72,28 @@ def _future(stamp, seconds):
     return (_parse_ts(stamp) + timedelta(seconds=int(seconds))).astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _columns(conn, table):
+    return {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+
+
+def _ensure_column(conn, table, name, ddl):
+    if name not in _columns(conn, table):
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+
+
 def migrate(conn, now_fn, *, source_head, source_tree):
     conn.executescript(DDL)
+    # Forward-only compatibility for live databases created by schema v1.
+    _ensure_column(conn, "saas_session_bindings", "binding_scope", "TEXT NOT NULL DEFAULT 'MISSION'")
+    _ensure_column(conn, "saas_handoff_requests", "progress_state", "TEXT")
+    _ensure_column(conn, "saas_handoff_requests", "deadline_elapsed_at", "TEXT")
+    _ensure_column(conn, "saas_handoff_requests", "retry_of_request_id", "TEXT")
     stamp = now_fn()
     digest = hashlib.sha256(DDL.encode("utf-8")).hexdigest()
     conn.execute(
         "INSERT OR IGNORE INTO schema_migrations(version,schema_id,applied_at,source_head,source_tree,migration_digest,note) VALUES(?,?,?,?,?,?,?)",
         (SCHEMA_VERSION, SCHEMA_ID, stamp, source_head, source_tree, digest,
-         "Epoch 3 hybrid cognitive-plane bridge: no OpenAI API key, no browser cookie capture, operator-mediated ChatGPT session plus SentinelX connector round-trip; authority effect NONE."),
+         "Epoch 3 SaaS supervisor v2: durable overdue handoffs, independent session lease, global supervisor-channel binding; authority effect NONE."),
     )
     conn.commit()
 
@@ -107,8 +125,8 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900):
     qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
     expires = _future(stamp, ttl_seconds)
     conn.execute(
-        "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
-        (request_id, mission_id, mission["spec_digest"], request_code, token, question, qdigest, "PENDING", stamp, expires),
+        "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at,progress_state) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        (request_id, mission_id, mission["spec_digest"], request_code, token, question, qdigest, "PENDING", stamp, expires, "WAITING_OPERATOR"),
     )
     conn.commit()
     return {
@@ -126,7 +144,15 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900):
 
 
 def _expire(conn, now_value):
-    conn.execute("UPDATE saas_handoff_requests SET status='EXPIRED' WHERE status='PENDING' AND expires_at<=?", (now_value,))
+    # Request deadlines are advisory progress deadlines, not destructive TTLs.
+    # A handoff remains answerable until it is explicitly responded/rejected/superseded.
+    conn.execute(
+        "UPDATE saas_handoff_requests SET progress_state='WAITING_OPERATOR_OVERDUE', "
+        "deadline_elapsed_at=COALESCE(deadline_elapsed_at,?) "
+        "WHERE status='PENDING' AND expires_at<=?",
+        (now_value, now_value),
+    )
+    # Session attestation is an independent freshness lease and may truthfully expire.
     conn.execute("UPDATE saas_session_bindings SET status='EXPIRED' WHERE status='BOUND' AND expires_at<=?", (now_value,))
 
 
@@ -180,12 +206,18 @@ def request_status(conn, request_id, now_fn):
 
 def bridge_status(conn, mission_id, now_fn):
     stamp = now_fn(); _expire(conn, stamp); conn.commit()
+    # The ChatGPT supervisor session is a control-plane channel, not a mission-local object.
+    # Prefer a current global channel attestation and retain legacy mission-scoped fallback.
     binding = conn.execute(
-        "SELECT * FROM saas_session_bindings WHERE mission_id=? AND status='BOUND' ORDER BY bound_at DESC LIMIT 1",
-        (mission_id,),
+        "SELECT * FROM saas_session_bindings WHERE binding_scope='GLOBAL_SUPERVISOR_CHANNEL' AND status='BOUND' ORDER BY bound_at DESC LIMIT 1"
     ).fetchone()
+    if binding is None:
+        binding = conn.execute(
+            "SELECT * FROM saas_session_bindings WHERE mission_id=? AND status='BOUND' ORDER BY bound_at DESC LIMIT 1",
+            (mission_id,),
+        ).fetchone()
     pending = conn.execute(
-        "SELECT request_id,request_code,status,created_at,expires_at,question_digest FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING' ORDER BY created_at ASC LIMIT 1",
+        "SELECT request_id,request_code,status,created_at,expires_at,question_digest,progress_state,deadline_elapsed_at,retry_of_request_id FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING' ORDER BY created_at ASC LIMIT 1",
         (mission_id,),
     ).fetchone()
     pending_count = int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING'", (mission_id,)).fetchone()[0])
@@ -201,6 +233,7 @@ def bridge_status(conn, mission_id, now_fn):
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
         "channel_state": "READY_FOR_HANDOFF",
         "session_attestation_state": "BOUND" if binding else "NOT_ATTESTED",
+        "session_scope": (binding["binding_scope"] if binding else None),
         "binding": dict(binding) if binding else None,
         "pending": pending_value,
         "pending_count": pending_count,
@@ -214,7 +247,7 @@ def bridge_status(conn, mission_id, now_fn):
     }
 
 
-def respond(conn, request_id, response_token, answer, now_fn, *, model_identity, transport=TRANSPORT, attestation_class=ATTESTATION_CLASS, lease_seconds=1800):
+def respond(conn, request_id, response_token, answer, now_fn, *, model_identity, transport=TRANSPORT, attestation_class=ATTESTATION_CLASS, lease_seconds=7200):
     if not isinstance(answer, str) or not answer.strip() or len(answer) > 24000:
         raise ValueError("saas answer")
     if not isinstance(model_identity, str) or not model_identity.strip() or len(model_identity) > 120:
@@ -249,14 +282,19 @@ def respond(conn, request_id, response_token, answer, now_fn, *, model_identity,
         "bound_at": stamp,
         "expires_at": expires,
         "cryptographic_provider_attestation": False,
+        "binding_scope": "GLOBAL_SUPERVISOR_CHANNEL",
     }
     adigest = _digest(attestation)
-    conn.execute("UPDATE saas_session_bindings SET status='SUPERSEDED' WHERE mission_id=? AND status='BOUND'", (row["mission_id"],))
     conn.execute(
-        "INSERT INTO saas_session_bindings(binding_id,mission_id,lpcl_digest,supervisor_role,model_identity,transport,attestation_class,authority_effect,status,created_at,bound_at,expires_at,last_request_id,attestation_json,attestation_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (binding_id,row["mission_id"],row["lpcl_digest"],"CHATGPT_SAAS_SUPERVISOR",model_identity.strip(),transport,attestation_class,"NONE","BOUND",stamp,stamp,expires,request_id,_canon(attestation),adigest),
+        "UPDATE saas_session_bindings SET status='SUPERSEDED' "
+        "WHERE status='BOUND' AND (binding_scope='GLOBAL_SUPERVISOR_CHANNEL' OR mission_id=?)",
+        (row["mission_id"],),
     )
-    meta = {"model_identity": model_identity.strip(), "transport": transport, "attestation_class": attestation_class, "authority_effect": "NONE"}
+    conn.execute(
+        "INSERT INTO saas_session_bindings(binding_id,mission_id,lpcl_digest,supervisor_role,model_identity,transport,attestation_class,authority_effect,status,created_at,bound_at,expires_at,last_request_id,attestation_json,attestation_digest,binding_scope) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (binding_id,row["mission_id"],row["lpcl_digest"],"CHATGPT_SAAS_SUPERVISOR",model_identity.strip(),transport,attestation_class,"NONE","BOUND",stamp,stamp,expires,request_id,_canon(attestation),adigest,"GLOBAL_SUPERVISOR_CHANNEL"),
+    )
+    meta = {"model_identity": model_identity.strip(), "transport": transport, "attestation_class": attestation_class, "authority_effect": "NONE", "binding_scope": "GLOBAL_SUPERVISOR_CHANNEL"}
     receipt = {
         "request_id": request_id,
         "request_code": row["request_code"],
@@ -271,7 +309,7 @@ def respond(conn, request_id, response_token, answer, now_fn, *, model_identity,
     }
     receipt_digest = _digest(receipt)
     conn.execute(
-        "UPDATE saas_handoff_requests SET status='RESPONDED',responded_at=?,response_text=?,response_digest=?,binding_id=?,response_meta_json=?,receipt_digest=? WHERE request_id=?",
+        "UPDATE saas_handoff_requests SET status='RESPONDED',progress_state='RECEIPT_BOUND',responded_at=?,response_text=?,response_digest=?,binding_id=?,response_meta_json=?,receipt_digest=? WHERE request_id=?",
         (stamp,answer,rdigest,binding_id,_canon(meta),receipt_digest,request_id),
     )
     conn.commit()

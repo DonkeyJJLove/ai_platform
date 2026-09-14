@@ -23,6 +23,9 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         mid='M1';dg='a'*64
         self.c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,'m','LPCL_REBOUND_EPOCH3_64',dg,'b'*40,'c'*40,None,'RUNNING','RUNNING',12,64,64,64,T,T,T,None,'{}'))
         self.c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,'m','o','d',dg,'x','[]','EXPLICIT_USER_ACTIVATION','HYBRID_COGNITIVE_PLANE_RECONCILIATION',30.0,T,T))
+        mid2='M2'
+        self.c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid2,'m2','LPCL_MISSION','d'*64,'e'*40,'f'*40,None,'AUTHORIZED','NOT_STARTED',12,64,0,0,T,T,T,None,'{}'))
+        self.c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid2,'m2','o2','d2','d'*64,'x2','[]','EXPLICIT_USER_ACTIVATION',None,0.0,T,T))
         lifecycle.migrate(self.c,lambda:T,current_mission_id=mid,source_head='b'*40,source_tree='c'*40)
         saas.migrate(self.c,lambda:T,source_head='b'*40,source_tree='c'*40)
         self.c.execute('CREATE TABLE IF NOT EXISTS mission_dual_evaluations(request_id TEXT PRIMARY KEY,saas_request_id TEXT,updated_at TEXT)')
@@ -42,6 +45,50 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         saved=saas.request_status(self.c,req['request_id'],lambda:T)
         self.assertEqual(saved['status'],'RESPONDED')
         self.assertNotIn('response_token',saved)
+
+    def test_global_supervisor_binding_is_visible_across_mission_focus(self):
+        req=saas.create_request(self.c,'M1','bind global supervisor',lambda:T)
+        pending=saas.pending_request(self.c,lambda:T,mission_id='M1')
+        out=saas.respond(self.c,req['request_id'],pending['response_token'],'GLOBAL SESSION OK',lambda:T,model_identity='GPT-5.6 Sol')
+        self.assertEqual(out['binding']['binding_scope'],'GLOBAL_SUPERVISOR_CHANNEL')
+        other=saas.bridge_status(self.c,'M2',lambda:T)
+        self.assertEqual(other['state'],'BOUND')
+        self.assertEqual(other['session_attestation_state'],'BOUND')
+        self.assertEqual(other['session_scope'],'GLOBAL_SUPERVISOR_CHANNEL')
+        self.assertEqual(other['binding']['mission_id'],'M1')
+        self.assertEqual(other['binding']['model_identity'],'GPT-5.6 Sol')
+
+    def test_request_deadline_becomes_overdue_but_remains_answerable(self):
+        later='2026-09-13T15:12:00Z'
+        req=saas.create_request(self.c,'M1','slow operator',lambda:T,ttl_seconds=30)
+        pending=saas.pending_request(self.c,lambda:later,mission_id='M1')
+        self.assertIsNotNone(pending)
+        self.assertEqual(pending['request_id'],req['request_id'])
+        self.assertEqual(pending['status'],'PENDING')
+        self.assertEqual(pending['progress_state'],'WAITING_OPERATOR_OVERDUE')
+        self.assertEqual(pending['deadline_elapsed_at'],later)
+        out=saas.respond(self.c,req['request_id'],pending['response_token'],'late but valid',lambda:later,model_identity='GPT-5.6 Sol')
+        self.assertEqual(out['status'],'RESPONDED')
+        saved=saas.request_status(self.c,req['request_id'],lambda:later)
+        self.assertEqual(saved['status'],'RESPONDED')
+        self.assertEqual(saved['progress_state'],'RECEIPT_BOUND')
+
+    def test_session_lease_expires_independently_of_responded_request(self):
+        req=saas.create_request(self.c,'M1','lease test',lambda:T)
+        pending=saas.pending_request(self.c,lambda:T,mission_id='M1')
+        saas.respond(self.c,req['request_id'],pending['response_token'],'ok',lambda:T,model_identity='GPT-5.6 Sol',lease_seconds=30)
+        later='2026-09-13T15:11:00Z'
+        status=saas.bridge_status(self.c,'M2',lambda:later)
+        self.assertEqual(status['session_attestation_state'],'NOT_ATTESTED')
+        saved=saas.request_status(self.c,req['request_id'],lambda:later)
+        self.assertEqual(saved['status'],'RESPONDED')
+        self.assertEqual(saved['progress_state'],'RECEIPT_BOUND')
+
+    def test_schema_v2_forward_columns_are_materialized(self):
+        bindings={r[1] for r in self.c.execute('PRAGMA table_info(saas_session_bindings)').fetchall()}
+        requests={r[1] for r in self.c.execute('PRAGMA table_info(saas_handoff_requests)').fetchall()}
+        self.assertIn('binding_scope',bindings)
+        self.assertTrue({'progress_state','deadline_elapsed_at','retry_of_request_id'} <= requests)
 
     def test_wrong_response_token_fails_closed(self):
         req=saas.create_request(self.c,'M1','test',lambda:T)
