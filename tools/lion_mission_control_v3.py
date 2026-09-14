@@ -654,7 +654,9 @@ def mission_action(mid,x,*,phase_guard=None):
 
 
 def process_snapshot(mid, *, read_only=False):
-    c=connect();m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
+    c=connect()
+    if read_only:c.execute('BEGIN')
+    m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
     if not m:c.close();raise ValueError('mission not found')
     d=dict(m);s=c.execute('SELECT * FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();d['process']=dict(s) if s else None
     if d['process']:
