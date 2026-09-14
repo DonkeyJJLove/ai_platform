@@ -142,6 +142,35 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(request['source_tree'], child['source_tree'])
         self.assertIn('explicit-parent-live-LD12-0', {row['pod_uid'] for row in out['workers']})
 
+    def test_fresh_128l64m_mission_binds_without_epoch3_parent_and_compiles_generic_phases(self):
+        mid='FRESH-GENERIC-128L64M-R1'
+        text='PROJECT=LION_EVOLUSION\n'
+        fresh=self.spec(mid,text);fresh['logical_count']=128;fresh['phases']=[{'id':'GENERIC_STEP','title':'Generic step'}]
+        self.mc.register_lpcl_mission(fresh)
+        with patch.object(self.mc,'epoch3_broker',return_value=(self.runtime('fresh-generic'),'fresh-generic-read')):
+            out=self.mc.activate_lpcl_mission(mid,{'lpcl_digest':fresh['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual((out['state'],out['adapter'],out['materialized'],out['ready']),('RUNNING','LPCL_GENERIC_128L64M',64,64))
+        self.assertEqual(len(out['logical']),128);self.assertEqual(len(out['workers']),64)
+        self.assertEqual(out['process']['current_phase'],'GENERIC_STEP')
+        self.assertEqual(out['phases'][0]['status'],'RUNNING')
+        self.assertEqual(out['phase_execution_specs'][0]['handler_id'],'GENERIC_LPCL_PHASE')
+        self.assertEqual(out['execution_driver']['state'],'ACTIVE')
+
+    def test_generic_scheduler_creates_local_plan_assignment_then_waits_fail_closed(self):
+        mid='GENERIC-DISPATCH-R1'
+        text='PROJECT=LION_EVOLUSION\n'
+        fresh=self.spec(mid,text);fresh['logical_count']=128;fresh['phases']=[{'id':'GENERIC_STEP','title':'Generic step'}]
+        self.mc.register_lpcl_mission(fresh)
+        with patch.object(self.mc,'epoch3_broker',return_value=(self.runtime('generic-dispatch'),'generic-read')):
+            self.mc.activate_lpcl_mission(mid,{'lpcl_digest':fresh['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        with patch.object(self.mc.global_sched,'next_dispatch',return_value={'mission_id':mid}): self.mc.global_scheduler_once()
+        c=self.mc.connect();d=self.mc.driver_snapshot(c,mid)
+        self.assertEqual(d['state'],'WAITING');self.assertEqual(d['blocking_gate'],'GENERIC_PHASE_LOCAL_PLAN_RECEIPT')
+        self.assertIsNone(d['lease_owner']);self.assertEqual(d['current_phase'],'GENERIC_STEP')
+        rows=c.execute("SELECT phase_id,logical_drone_id,material_drone_id,state,input_json FROM mission_execution_assignments WHERE mission_id=? AND phase_id!='__TOPOLOGY__'",(mid,)).fetchall()
+        self.assertEqual(len(rows),1);self.assertEqual((rows[0]['phase_id'],rows[0]['logical_drone_id'],rows[0]['material_drone_id'],rows[0]['state']),('GENERIC_STEP','LD001','MD025','READY'))
+        self.assertIn('LOCAL_MODEL_INFERENCE',rows[0]['input_json']);c.close()
+
     def test_nonexistent_explicit_parent_fails_closed_before_broker_request(self):
         missing_parent = 'NONEXISTENT-PARENT-R1'
         child = self.spec('MISSING-PARENT-CHILD-R1', self.child_text(missing_parent))
@@ -151,6 +180,29 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(out['state'], 'AUTHORIZED')
         self.assertEqual(out['runtime_state'], 'NOT_STARTED')
         self.assertIn('lpcl source mission missing:'+missing_parent, out['last_error'])
+
+    def test_orphan_active_driver_is_parked_without_replaying_stale_owner(self):
+        mid='ORPHAN-ACTIVE-R1'
+        spec=self.spec(mid,'PROJECT=LION_EVOLUSION\n')
+        self.mc.register_lpcl_mission(spec)
+        c=self.mc.connect()
+        c.execute("UPDATE missions SET state='AUTHORIZED',runtime_state='NOT_STARTED',last_error='LPCL_EXECUTION_BIND:ValueError:test' WHERE mission_id=?",(mid,))
+        c.execute("UPDATE mission_process_specs SET authority_state='EXPLICIT_USER_ACTIVATION' WHERE mission_id=?",(mid,))
+        self.mc.ensure_driver(c,mid,self.mc.now,initial_state='BOOTSTRAP_PAUSED')
+        self.mc.driver_activate(c,mid,self.mc.now,owner_id='obsolete-owner',lease_seconds=60)
+        c.close()
+        with patch.object(self.mc.global_sched,'next_dispatch',return_value={'mission_id':mid}):
+            self.mc.global_scheduler_once()
+            self.mc.global_scheduler_once()
+        c=self.mc.connect();d=self.mc.driver_snapshot(c,mid)
+        self.assertEqual(d['state'],'WAITING');self.assertIsNone(d['lease_owner']);self.assertIsNone(d['lease_expires_at'])
+        self.assertIsNone(d['current_phase']);self.assertIsNone(d['current_attempt_id'])
+        self.assertEqual(d['blocking_gate'],'GLOBAL_DRIVER_NOT_REGISTERED');self.assertEqual(d['next_action'],'WAIT_FOR_EXECUTION_BINDING')
+        self.assertIn('execution binding failed',d['waiting_reason'])
+        cps=c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0]
+        c.close()
+        with patch.object(self.mc.global_sched,'next_dispatch',return_value={'mission_id':mid}): self.mc.global_scheduler_once()
+        c=self.mc.connect();self.assertEqual(cps,c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0]);c.close()
 
     def test_global_scheduler_routes_any_mission_with_registered_early_handler(self):
         mid = 'GENERIC-EARLY-HANDLER-R1'

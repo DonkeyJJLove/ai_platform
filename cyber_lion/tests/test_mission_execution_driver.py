@@ -28,6 +28,19 @@ class DriverTests(unittest.TestCase):
     def test_illegal_complete_resume_fails(self):
         d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now);d.transition(self.c,'M1','COMPLETE',now)
         with self.assertRaises(ValueError): d.activate(self.c,'M1',now)
+    def test_wait_for_execution_binding_releases_lease_and_is_idempotent(self):
+        d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now,owner_id='old-owner',lease_seconds=60)
+        out=d.wait_for_execution_binding(self.c,'M1',now)
+        self.assertFalse(out['idempotent'])
+        snap=d.snapshot(self.c,'M1')
+        self.assertEqual(snap['state'],'WAITING');self.assertEqual(snap['blocking_gate'],'GLOBAL_DRIVER_NOT_REGISTERED')
+        self.assertEqual(snap['next_action'],'WAIT_FOR_EXECUTION_BINDING')
+        self.assertIsNone(snap['lease_owner']);self.assertIsNone(snap['lease_expires_at'])
+        self.assertIsNone(snap['current_phase']);self.assertIsNone(snap['current_attempt_id'])
+        count=self.c.execute("SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id='M1'").fetchone()[0]
+        again=d.wait_for_execution_binding(self.c,'M1',now)
+        self.assertTrue(again['idempotent'])
+        self.assertEqual(count,self.c.execute("SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id='M1'").fetchone()[0])
     def test_complete_releases_lease_clears_cursor_and_persists_terminal_checkpoint(self):
         d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now,owner_id='owner-A',lease_seconds=60)
         aid=d.begin_attempt(self.c,'M1','P1',now,owner_id='owner-A');d.finish_attempt(self.c,aid,now,state='PASS',evidence={'ok':True})

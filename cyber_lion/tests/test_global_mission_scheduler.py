@@ -64,6 +64,15 @@ class GlobalSchedulerTests(unittest.TestCase):
         self.assertEqual(snap['queue_depth'],2)
         self.assertEqual(snap['active_run_count'],1)
 
+    def test_default_128l64m_topology_is_exact_and_generic_adapter_is_preserved(self):
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('G','AUTHORIZED',now(),'LPCL_MISSION','NOT_STARTED',0,0,'x'))
+        workers=[{'pod_name':f'p{i:02d}','pod_uid':f'uid-{i:02d}','phase':'Running','ready':1,'restarts':0,'pod_ip':f'10.0.0.{i+1}'} for i in range(64)]
+        text=g.default_128l64m_topology_text()
+        out=g.bind_128l64m(self.c,'G',text,workers,now,adapter='LPCL_GENERIC_128L64M',runtime_state='GENERIC_SHARED_HEALTHY_FLEET_128L64M')
+        self.assertEqual((out['logical_count'],out['material_count'],out['assignments']),(128,64,128))
+        row=self.c.execute("SELECT adapter,runtime_state FROM missions WHERE mission_id='G'").fetchone()
+        self.assertEqual(tuple(row),('LPCL_GENERIC_128L64M','GENERIC_SHARED_HEALTHY_FLEET_128L64M'))
+
     def test_128l64m_binding_is_two_to_one_and_uid_exact(self):
         lp=[]
         for i in range(1,17):

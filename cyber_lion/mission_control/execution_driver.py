@@ -192,6 +192,22 @@ def reconcile_complete(conn, mission_id, now_fn, *, next_action="TERMINAL_RECONC
     return _terminalize(conn,mission_id,now_fn,next_action=next_action,reconcile=True,commit=commit)
 
 
+def wait_for_execution_binding(conn, mission_id, now_fn, *, blocking_gate="GLOBAL_DRIVER_NOT_REGISTERED", waiting_reason="No executable global driver is registered for the mission", next_action="WAIT_FOR_EXECUTION_BINDING", commit=True):
+    row=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+    if not row: raise ValueError("driver missing")
+    if row["state"] not in {"ACTIVE","WAITING"}:
+        raise ValueError("driver not eligible for execution-binding wait")
+    latest=conn.execute("SELECT checkpoint_id,state,cursor_digest,created_at FROM mission_execution_checkpoints WHERE mission_id=? ORDER BY created_at DESC,rowid DESC LIMIT 1",(mission_id,)).fetchone()
+    clean=(row["state"]=="WAITING" and row["lease_owner"] is None and row["lease_expires_at"] is None and row["current_phase"] is None and row["current_attempt_id"] is None and row["waiting_reason"]==waiting_reason and row["blocking_gate"]==blocking_gate and row["next_action"]==next_action and latest is not None and latest["state"]=="WAITING" and row["checkpoint_digest"]==latest["cursor_digest"])
+    if clean:
+        return {"checkpoint_id":latest["checkpoint_id"],"checkpoint_digest":latest["cursor_digest"],"idempotent":True,"previous_state":row["state"]}
+    previous=row["state"];last_phase=row["current_phase"];last_attempt=row["current_attempt_id"];stamp=now_fn()
+    conn.execute("UPDATE mission_execution_drivers SET state='WAITING',lease_owner=NULL,lease_expires_at=NULL,current_phase=NULL,current_attempt_id=NULL,waiting_reason=?,blocking_gate=?,next_action=?,updated_at=? WHERE mission_id=?",(waiting_reason,blocking_gate,next_action,stamp,mission_id))
+    cp=_checkpoint(conn,mission_id,now_fn,{"state":"WAITING","event":"DRIVER_EXECUTION_BINDING_WAIT","previous_state":previous,"blocking_gate":blocking_gate,"waiting_reason":waiting_reason,"next_action":next_action,"last_phase_id":last_phase,"last_attempt_id":last_attempt,"lease_released":True})
+    if commit:conn.commit()
+    return {**cp,"idempotent":False,"previous_state":previous,"last_phase_id":last_phase,"last_attempt_id":last_attempt}
+
+
 def transition(conn, mission_id, new_state, now_fn, *, waiting_reason=None, blocking_gate=None, next_action=None, last_effect=None, last_effect_receipt=None, current_phase=None, commit=True):
     row=conn.execute("SELECT state FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not row: raise ValueError("driver missing")

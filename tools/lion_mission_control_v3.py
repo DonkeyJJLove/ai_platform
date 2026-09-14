@@ -20,9 +20,9 @@ try:
 except ImportError:
  from tools.lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, cancel_request as saas_cancel, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 try:
- from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, reconcile_complete as driver_reconcile_complete, adaptive_worker_plan as driver_adaptive_worker_plan
+ from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, reconcile_complete as driver_reconcile_complete, adaptive_worker_plan as driver_adaptive_worker_plan, wait_for_execution_binding as driver_wait_for_execution_binding
 except ImportError:
- from execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, reconcile_complete as driver_reconcile_complete, adaptive_worker_plan as driver_adaptive_worker_plan
+ from execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, reconcile_complete as driver_reconcile_complete, adaptive_worker_plan as driver_adaptive_worker_plan, wait_for_execution_binding as driver_wait_for_execution_binding
 try:
  from cyber_lion.mission_control.dual_result_join import create_dual as dual_create, link_saas_request as dual_link_saas, record_response as dual_record_response, join_result as dual_join_result, LOCAL_PROVIDER as DUAL_LOCAL_PROVIDER, SAAS_PROVIDER as DUAL_SAAS_PROVIDER
 except ImportError:
@@ -220,6 +220,7 @@ LPCL_REBIND_SOURCE='EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1'
 EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
+LPCL_GENERIC_ADAPTER='LPCL_GENERIC_128L64M'
 LPCL_REBIND_DISTRIBUTION=(6,6,6,6,5,5,5,5,5,5,5,5)
 
 
@@ -273,18 +274,22 @@ def bind_lpcl_execution(mid):
       if m['material_target']!=64 or m['logical_count'] not in {12,128}:raise ValueError('lpcl execution adapter cardinality')
       kv=_lpcl_pairs(ps['lpcl_text'])
       continuation_ok=(kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')=='TRUE' or kv.get('CONTINUE_EXISTING_EPOCH3_LINEAGE')=='TRUE')
-      if not continuation_ok or kv.get('CREATE_PARALLEL_COMPETING_EPOCH3_MISSION')!='FALSE':raise ValueError('lpcl continuation contract')
-      reuse=kv.get('REUSE_EXISTING_HEALTHY_MATERIAL_FLEET','')
-      legacy_reuse=kv.get('MATERIAL_REUSE_POLICY','')
-      reuse_ok=('ALLOWED' in reuse or legacy_reuse=='REUSE_EXISTING_HEALTHY_EPOCH3_M64_AFTER_EXACT_IDENTITY_READBACK')
-      if not reuse_ok:raise ValueError('lpcl material rebind not allowed')
-      source_mid=_lpcl_rebind_source(kv)
-      if source_mid==mid:raise ValueError('lpcl parent self-reference')
-      # A rebound child owns its durable worker snapshot. Process restart must
-      # never overwrite that newer child identity from a recorded parent row.
-      # Preserve an exact 64/64 child snapshot without a network dependency; if
-      # the snapshot is incomplete, reacquire the material truth from the live
-      # bounded Epoch3 broker below instead of cloning possibly stale DB state.
+      explicit_parent=str(kv.get('PARENT_MISSION_ID') or '').strip()
+      fresh_ok=(not continuation_ok and not explicit_parent)
+      if not continuation_ok and not fresh_ok:raise ValueError('lpcl lineage mode')
+      if continuation_ok:
+       if kv.get('CREATE_PARALLEL_COMPETING_EPOCH3_MISSION')!='FALSE':raise ValueError('lpcl continuation contract')
+       reuse=kv.get('REUSE_EXISTING_HEALTHY_MATERIAL_FLEET','')
+       legacy_reuse=kv.get('MATERIAL_REUSE_POLICY','')
+       reuse_ok=('ALLOWED' in reuse or legacy_reuse=='REUSE_EXISTING_HEALTHY_EPOCH3_M64_AFTER_EXACT_IDENTITY_READBACK')
+       if not reuse_ok:raise ValueError('lpcl material rebind not allowed')
+       source_mid=_lpcl_rebind_source(kv)
+       if source_mid==mid:raise ValueError('lpcl parent self-reference')
+      else:
+       source_mid=None
+      # A bound mission owns its durable logical/material snapshot. Preserve a
+      # complete snapshot across process restarts; otherwise reacquire the exact
+      # physical carrier read-only and rebuild the binding.
       if m['adapter']==LPCL_REBIND_ADAPTER:
        own=c.execute('SELECT pod_name,pod_uid,logical_id,phase,ready,restarts,pod_ip,observed_at FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,)).fetchall()
        own_by={f'LD{i:02d}':[0,0] for i in range(1,13)}
@@ -295,8 +300,15 @@ def bind_lpcl_execution(mid):
        own_distribution_ok=all(own_by[f'LD{i:02d}']==[target,target] for i,target in enumerate(LPCL_REBIND_DISTRIBUTION,1))
        if len(own)==64 and len({r['pod_uid'] for r in own if r['pod_uid']})==64 and all(int(r['ready'])==1 for r in own) and own_distribution_ok:
         c.execute('UPDATE missions SET last_error=NULL,updated_at=? WHERE mission_id=?',(now(),mid));c.commit();return process_snapshot(mid)
-      src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
-      if not src:raise ValueError('lpcl source mission missing:'+source_mid)
+      if m['adapter']==LPCL_GENERIC_ADAPTER:
+       own=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=?',(mid,)).fetchall()
+       logical_total=c.execute('SELECT COUNT(*) FROM logical_drones WHERE mission_id=?',(mid,)).fetchone()[0]
+       topo_total=c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mid,)).fetchone()[0]
+       if len(own)==64 and len({r['pod_uid'] for r in own if r['pod_uid']})==64 and all(int(r['ready'])==1 for r in own) and logical_total==128 and topo_total==128:
+        c.execute('UPDATE missions SET last_error=NULL,updated_at=? WHERE mission_id=?',(now(),mid));c.commit();return process_snapshot(mid)
+      if continuation_ok:
+       src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
+       if not src:raise ValueError('lpcl source mission missing:'+source_mid)
       runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid,current_head=m['source_head'],current_tree=m['source_tree'])
       live_pods=runtime.get('pods') or []
       if runtime.get('state')!='RUNNING' or int(runtime.get('materialized',0) or 0)!=64 or int(runtime.get('ready',0) or 0)!=64 or int(runtime.get('unique_uid_count',0) or 0)!=64 or len(live_pods)!=64:
@@ -306,7 +318,12 @@ def bind_lpcl_execution(mid):
        workers.append({'pod_name':pod.get('name'),'pod_uid':pod.get('uid'),'logical_id':str(pod.get('logical_drone') or '').upper(),'phase':pod.get('phase'),'ready':1 if pod.get('ready') else 0,'restarts':int(pod.get('restarts',0) or 0),'pod_ip':pod.get('pod_ip')})
       if len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl live material fleet identity')
       if int(m['logical_count'])==128:
-       bound=global_sched.bind_128l64m(c,mid,ps['lpcl_text'],workers,now)
+       fresh=not continuation_ok
+       has_explicit_topology=any(__import__('re').fullmatch(r'COHORT_[0-9]{2}',k) for k in kv)
+       topology_text=ps['lpcl_text'] if (continuation_ok or has_explicit_topology) else global_sched.default_128l64m_topology_text()
+       adapter=LPCL_REBIND_ADAPTER.replace('_64','_128L64M') if continuation_ok else LPCL_GENERIC_ADAPTER
+       runtime_state='REBOUND_EXISTING_HEALTHY_FLEET_128L64M' if continuation_ok else 'GENERIC_SHARED_HEALTHY_FLEET_128L64M'
+       bound=global_sched.bind_128l64m(c,mid,topology_text,workers,now,adapter=adapter,runtime_state=runtime_state)
        handlers={
         'EXACT_128L64M_TOPOLOGY_BIND':{'handler_id':'VERIFY_128L64M_BIND','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'},
         'DATABASE_AND_SCHEDULER_SCHEMA_MIGRATION':{'handler_id':'VERIFY_SCHEDULER_SCHEMA','effect_class':'INTERNAL_DB','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'MISSION_CONTROL'},
@@ -316,14 +333,21 @@ def bind_lpcl_execution(mid):
         'DRIVER_LIFECYCLE_NORMALIZATION':{'handler_id':'VERIFY_DRIVER_LIFECYCLE','effect_class':'CONTROL_STATE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'MISSION_CONTROL'},
         'UNKNOWN_HANDLER_FAIL_CLOSED':{'handler_id':'VERIFY_UNKNOWN_HANDLER_WAIT','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'},
        }
+       if fresh:
+        generic={'handler_id':'GENERIC_LPCL_PHASE','effect_class':'NONE','gate_class':'COGNITIVE_PLAN','retry_policy':'IDEMPOTENT','authority_class':'NONE'}
+        for prow in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=?',(mid,)).fetchall():handlers.setdefault(prow['phase_id'],generic)
        global_sched.compile_phase_specs(c,mid,handlers)
        nxt=c.execute("SELECT phase_id FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
        current=nxt['phase_id'] if nxt else None;t=now()
        c.execute('UPDATE mission_process_specs SET current_phase=?,updated_at=? WHERE mission_id=?',(current,t,mid))
        if current:c.execute("UPDATE mission_phases SET status=CASE WHEN status='PENDING' THEN 'RUNNING' ELSE status END,started_at=COALESCE(started_at,?),updated_at=? WHERE mission_id=? AND phase_id=?",(t,t,mid,current))
        ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
+       prior=driver_snapshot(c,mid)
+       if prior and prior['state']=='ACTIVE' and prior.get('lease_owner')!=DRIVER_PROCESS_ID:
+        driver_wait_for_execution_binding(c,mid,now,blocking_gate='EXECUTION_REBIND_HANDOFF',waiting_reason='Fresh execution binding superseded an orphan active driver',next_action='EXECUTION_BINDING_READY')
        driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
-       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','GLOBAL_SCHEDULER',current,{'event':'EXACT_128L64M_BOUND','logical_count':128,'material_count':64,'assignments':128,'ratio':'2:1','unique_uid_count':64,'material_request_id':material_request_id,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
+       event_name='EXACT_128L64M_BOUND' if continuation_ok else 'GENERIC_SHARED_128L64M_BOUND'
+       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','GLOBAL_SCHEDULER',current,{'event':event_name,'logical_count':128,'material_count':64,'assignments':128,'ratio':'2:1','unique_uid_count':64,'material_request_id':material_request_id,'binding_class':'LINEAGE_REBIND' if continuation_ok else 'FRESH_SHARED_CAPACITY','authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
        c.commit();return process_snapshot(mid)
       roles=[]
       for i,target in enumerate(LPCL_REBIND_DISTRIBUTION,1):
@@ -375,7 +399,7 @@ def bind_lpcl_execution(mid):
 def reconcile_lpcl_execution_bindings():
     c=connect()
     try:
-      rows=[r['mission_id'] for r in c.execute("SELECT m.mission_id FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE p.authority_state='EXPLICIT_USER_ACTIVATION' AND m.state IN ('AUTHORIZED','RUNNING','WAITING','BLOCKED') AND m.adapter IN ('LPCL_MISSION','LPCL_REBOUND_EPOCH3_64') ORDER BY m.updated_at DESC").fetchall()]
+      rows=[r['mission_id'] for r in c.execute("SELECT m.mission_id FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE p.authority_state='EXPLICIT_USER_ACTIVATION' AND m.state IN ('AUTHORIZED','RUNNING','WAITING','BLOCKED') AND m.adapter IN ('LPCL_MISSION','LPCL_REBOUND_EPOCH3_64','LPCL_GENERIC_128L64M') ORDER BY m.updated_at DESC").fetchall()]
     finally:c.close()
     for mid in rows:
       try:bind_lpcl_execution(mid)
@@ -524,13 +548,19 @@ def _send_broker_request(req):
 
 
 def epoch3_broker(operation,pod=None,source_mission_id=None,current_head=None,current_tree=None):
-    # Mission lineage and material-carrier authority are distinct identities.
-    # The explicit source mission must exist, but the privileged E3 broker
-    # remains pinned to its exact physical carrier identity/spec.
-    source_mid=str(source_mission_id or LPCL_REBIND_SOURCE).strip()
-    c=connect();source=c.execute('SELECT mission_id,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone();c.close()
-    if not source:raise ValueError('epoch3 source mission missing:'+source_mid)
-    head=str(current_head or source['source_head'] or '').strip();tree=str(current_tree or source['source_tree'] or '').strip()
+    # Logical lineage and material-carrier authority are distinct identities.
+    # Continuations validate their explicit logical parent. Fresh missions may
+    # acquire the same bounded shared carrier without inventing a parent.
+    source=None
+    if source_mission_id is not None:
+     source_mid=str(source_mission_id).strip()
+     c=connect();source=c.execute('SELECT mission_id,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone();c.close()
+     if not source:raise ValueError('epoch3 source mission missing:'+source_mid)
+    elif current_head is None or current_tree is None:
+     source_mid=LPCL_REBIND_SOURCE
+     c=connect();source=c.execute('SELECT mission_id,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone();c.close()
+     if not source:raise ValueError('epoch3 source mission missing:'+source_mid)
+    head=str(current_head or (source['source_head'] if source else '') or '').strip();tree=str(current_tree or (source['source_tree'] if source else '') or '').strip()
     if not _hex(head,40) or not _hex(tree,40):raise ValueError('epoch3 currentness identity')
     req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':EPOCH3_MATERIAL_CARRIER_ID,'source_head':head,'source_tree':tree,'spec_digest':EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST}
     if pod is not None:req['pod_name']=pod
@@ -759,6 +789,7 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d['protocol_messages']=msgs
     if mid==MISSION:d['control_authority']='BOUNDED_MISSION_CONTROL'
     elif d.get('adapter')==LPCL_REBIND_ADAPTER:d['control_authority']='BOUNDED_LPCL_EXECUTION_ADAPTER'
+    elif d.get('adapter')==LPCL_GENERIC_ADAPTER:d['control_authority']='BOUNDED_GENERIC_LPCL_EXECUTION_ADAPTER'
     elif mid==LPCL_REBIND_SOURCE:d['control_authority']='BOUNDED_EPOCH3_MATERIAL_ADAPTER'
     else:d['control_authority']='ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE'
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
@@ -1195,6 +1226,78 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
     finally:c.close()
 
 
+GENERIC_PHASE_HANDLER='GENERIC_LPCL_PHASE'
+
+
+def _registered_generic_driver(mid):
+    c=connect()
+    try:
+      row=c.execute("SELECT phase_id FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
+      if not row:return False
+      spec=_phase_exec_spec(c,mid,row['phase_id'])
+      return bool(spec and spec.get('handler_id')==GENERIC_PHASE_HANDLER)
+    finally:c.close()
+
+
+def _generic_wait(c,mid,pid,*,gate,reason,next_action,status='WAITING',detail=None):
+    d=driver_snapshot(c,mid)
+    target_state='BLOCKED' if status=='BLOCKED' else 'WAITING'
+    if d and d.get('state')==target_state and d.get('blocking_gate')==gate and d.get('next_action')==next_action and d.get('current_phase')==pid and d.get('lease_owner') is None:
+     return False
+    if detail is not None:
+     c.execute('UPDATE mission_phases SET status=?,detail=?,updated_at=? WHERE mission_id=? AND phase_id=?',(status,str(detail)[:4000],now(),mid,pid))
+    driver_transition(c,mid,target_state,now,blocking_gate=gate,waiting_reason=reason,next_action=next_action,current_phase=pid,commit=False)
+    c.execute('UPDATE mission_execution_drivers SET lease_owner=NULL,lease_expires_at=NULL WHERE mission_id=?',(mid,))
+    c.commit();return True
+
+
+def drive_generic_once(mid):
+    c=connect()
+    try:
+      m=c.execute('SELECT state,title FROM missions WHERE mission_id=?',(mid,)).fetchone()
+      ps=c.execute('SELECT authority_state,current_phase,objective,description FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      if not m or not ps or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return
+      d=driver_snapshot(c,mid)
+      if not d or d['state'] not in {'ACTIVE','WAITING','BLOCKED'}:return
+      row=c.execute("SELECT phase_id,title,status FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
+      if not row:
+       if d['state']!='COMPLETE':driver_transition(c,mid,'COMPLETE',now,next_action='TERMINAL_RECONCILED')
+       c.execute("UPDATE missions SET state='COMPLETE',runtime_state='DRIVER_COMPLETE',updated_at=? WHERE mission_id=?",(now(),mid));c.commit();return
+      pid=row['phase_id'];spec=_phase_exec_spec(c,mid,pid)
+      if not spec or spec.get('handler_id')!=GENERIC_PHASE_HANDLER:return
+      assignment=c.execute("SELECT assignment_id,state,lease_generation FROM mission_execution_assignments WHERE mission_id=? AND phase_id=? AND phase_id!='__TOPOLOGY__' ORDER BY created_at DESC,assignment_id DESC LIMIT 1",(mid,pid)).fetchone()
+      if assignment is None:
+       if d['state']!='ACTIVE':
+        d=driver_activate(c,mid,now,next_action='GENERIC_PHASE_PLAN',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       else:
+        driver_heartbeat(c,mid,now,phase=pid,next_action='GENERIC_PHASE_PLAN',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+        d=driver_snapshot(c,mid)
+       prompt=(
+        'LION generic LPCL phase planning. You are proposal-only and have authority_effect=NONE. '
+        'Do not claim that any effect was executed. Produce a bounded execution plan, required capabilities, evidence, '
+        'authority/currentness prerequisites, delegation candidates, and a clear completion test.\n\n'
+        f'Mission: {m["title"]}\nObjective: {ps["objective"]}\nPhase: {pid} — {row["title"]}\nDescription: {ps["description"]}'
+       )
+       payload={'kind':'LOCAL_MODEL_INFERENCE','messages':[{'role':'user','content':prompt}], 'max_tokens':768, 'mission_id':mid, 'phase_id':pid, 'authority_effect':'NONE'}
+       aid=global_sched.create_assignment(c,mid,pid,'LD001','MD025',payload,now,lease_generation=int(d['generation']))
+       _process_message(c,mid,'ASSIGNMENT','GLOBAL_SCHEDULER','LOCAL_MODEL',pid,{'event':'GENERIC_PHASE_LOCAL_PLAN_REQUESTED','assignment_id':aid,'material_drone_id':'MD025','authority_effect':'NONE'},'OUT')
+       _generic_wait(c,mid,pid,gate='GENERIC_PHASE_LOCAL_PLAN_RECEIPT',reason='Waiting for proposal-only LOCAL planning receipt',next_action='WAIT_FOR_LOCAL_PLAN',detail='Generic phase started; waiting for proposal-only LOCAL planning receipt.')
+       return
+      astate=str(assignment['state'])
+      if astate in {'READY','CLAIMED'}:
+       _generic_wait(c,mid,pid,gate='GENERIC_PHASE_LOCAL_PLAN_RECEIPT',reason='Waiting for proposal-only LOCAL planning receipt',next_action='WAIT_FOR_LOCAL_PLAN',detail='Generic phase started; waiting for proposal-only LOCAL planning receipt.')
+       return
+      receipt=c.execute('SELECT receipt_id,result_digest,status,observed_at FROM mission_execution_receipts WHERE assignment_id=? ORDER BY observed_at DESC,receipt_id DESC LIMIT 1',(assignment['assignment_id'],)).fetchone()
+      if astate=='PASS' and receipt:
+       changed=_generic_wait(c,mid,pid,gate='GENERIC_PHASE_EFFECT_EXECUTOR_REQUIRED',reason='LOCAL planning receipt observed; an admitted effect/evidence executor is required before phase completion',next_action='WAIT_FOR_EFFECT_EXECUTOR',detail='LOCAL planning receipt observed. Phase remains open: effect/evidence executor is not registered.')
+       if changed:_process_message(c,mid,'RECEIPT','GLOBAL_SCHEDULER','MISSION_CONTROL',pid,{'event':'GENERIC_PHASE_LOCAL_PLAN_RECEIVED','assignment_id':assignment['assignment_id'],'receipt_id':receipt['receipt_id'],'result_digest':receipt['result_digest'],'authority_effect':'NONE'},'INTERNAL');c.commit()
+       return
+      if astate=='FAIL':
+       changed=_generic_wait(c,mid,pid,gate='GENERIC_PHASE_LOCAL_PLAN_FAILED',reason='LOCAL proposal worker failed; no automatic effect retry',next_action='REPLAN_OR_OPERATOR_REVIEW',status='BLOCKED',detail='LOCAL proposal worker failed; generic phase blocked without effect.')
+       if changed:_process_message(c,mid,'RECOVERY','GLOBAL_SCHEDULER','MISSION_CONTROL',pid,{'event':'GENERIC_PHASE_LOCAL_PLAN_FAILED','assignment_id':assignment['assignment_id'],'authority_effect':'NONE'},'INTERNAL');c.commit()
+    finally:c.close()
+
+
 def _registered_control_plane_early_driver(mid):
     c=connect()
     try:
@@ -1219,13 +1322,22 @@ def global_scheduler_once():
     mid=pick['mission_id']
     if mid==SELF_HOSTING_MISSION:drive_self_hosted_once(mid)
     elif mid==CONTROL_PLANE_MISSION or _registered_control_plane_early_driver(mid):drive_control_plane_once(mid)
+    elif _registered_generic_driver(mid):drive_generic_once(mid)
     else:
-      # Generic runs with no registered executable driver remain durably
-      # scheduled but cannot be promoted. Their own exact handlers must opt in.
+      # A generic driver without an executable registration is not running.
+      # Park it durably instead of replaying a persisted lease_owner and
+      # manufacturing an ACTIVE heartbeat from an obsolete process identity.
       c=connect()
       try:
        d=driver_snapshot(c,mid)
-       if d and d['state']=='ACTIVE':driver_heartbeat(c,mid,now,next_action='NO_REGISTERED_GLOBAL_DRIVER',owner_id=d.get('lease_owner'))
+       if d and d['state']=='ACTIVE':
+        mrow=c.execute('SELECT last_error FROM missions WHERE mission_id=?',(mid,)).fetchone()
+        bind_failed=bool(mrow and str(mrow['last_error'] or '').startswith('LPCL_EXECUTION_BIND:'))
+        reason='No executable global driver is registered for the mission'
+        if bind_failed:reason+='; execution binding failed (see mission.last_error)'
+        parked=driver_wait_for_execution_binding(c,mid,now,blocking_gate='GLOBAL_DRIVER_NOT_REGISTERED',waiting_reason=reason,next_action='WAIT_FOR_EXECUTION_BINDING')
+        if not parked.get('idempotent'):
+         _process_message(c,mid,'RECOVERY','GLOBAL_SCHEDULER','MISSION_CONTROL',None,{'event':'ORPHAN_ACTIVE_DRIVER_PARKED','blocking_gate':'GLOBAL_DRIVER_NOT_REGISTERED','execution_bind_failed':bind_failed,'authority_effect':'CONTROL_STATE'},'INTERNAL');c.commit()
       finally:c.close()
 
 

@@ -232,7 +232,15 @@ def parse_128l64m_topology(lpcl_text):
     return cohorts
 
 
-def bind_128l64m(conn, mission_id, lpcl_text, workers, now_fn):
+def default_128l64m_topology_text(role_prefix="GENERIC_EXECUTION_POOL"):
+    lines=[]
+    for i in range(1,17):
+        la=(i-1)*8+1;lb=i*8;ma=(i-1)*4+1;mb=i*4
+        lines.extend([f"COHORT_{i:02d}=LD{la:03d}-LD{lb:03d}",f"ROLE={role_prefix}_{i:02d}",f"MATERIAL=MD{ma:03d}-MD{mb:03d}"])
+    return "\n".join(lines)+"\n"
+
+
+def bind_128l64m(conn, mission_id, lpcl_text, workers, now_fn, *, adapter="LPCL_REBOUND_EPOCH3_128L64M", runtime_state="REBOUND_EXISTING_HEALTHY_FLEET_128L64M"):
     cohorts = parse_128l64m_topology(lpcl_text)
     if len(workers) != 64:
         raise ValueError("material worker count must be 64")
@@ -268,8 +276,8 @@ def bind_128l64m(conn, mission_id, lpcl_text, workers, now_fn):
                 (assignment_id, mission_id, "__TOPOLOGY__", lid, material_id, input_digest, _canon({"pod_uid":pod_uid}), "BOUND", 1, stamp, stamp, stamp),
             )
     conn.execute(
-        "UPDATE missions SET adapter='LPCL_REBOUND_EPOCH3_128L64M',state='RUNNING',runtime_state='REBOUND_EXISTING_HEALTHY_FLEET_128L64M',materialized=64,ready=64,updated_at=?,last_error=NULL WHERE mission_id=?",
-        (stamp, mission_id),
+        "UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=64,ready=64,updated_at=?,last_error=NULL WHERE mission_id=?",
+        (str(adapter),str(runtime_state),stamp,mission_id),
     )
     conn.commit()
     return {
