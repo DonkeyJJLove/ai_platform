@@ -26,7 +26,7 @@ class PermissionPolicyReclassificationTests(unittest.TestCase):
         self.assertEqual(len(self.closure),7);self.assertTrue(all(x.status=="MEDIATED" for x in self.closure));self.assertEqual(self.report.seven_mediated_count,7);self.assertEqual(self.report.unresolved_security_requirement_keys,("STALE_AUTHORITY_SOURCE","UNTRUSTED_PERMISSION"));self.assertEqual(self.report.global_status,"UNKNOWN")
     def test_global_carrier_remains_fail_closed(self):
         self.assertEqual(self.report.unknown_outside_seven_count, len(self.inv.surfaces)-7)
-        counts={s:sum(x.status==s for x in self.carrier.surface_statuses) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")};self.assertEqual(counts,{"MEDIATED":7,"PARTIAL":0,"UNMEDIATED":0,"UNKNOWN":297});self.assertEqual(self.carrier.global_status,"UNKNOWN")
+        counts={s:sum(x.status==s for x in self.carrier.surface_statuses) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")};self.assertEqual(counts,{"MEDIATED":7,"PARTIAL":0,"UNMEDIATED":0,"UNKNOWN":306});self.assertEqual(self.carrier.global_status,"UNKNOWN")
     def test_no_new_bypass_evidence_is_invented_for_rehomed_requirements(self):
         for x in self.policy.security_requirements:self.assertEqual(x.evidence_state,"CONTROL_FLOW_OBSERVED_EVIDENCE_REQUIRED")
     def test_next_minimal_plan_requires_boundary_refactor_not_live_probe(self):
