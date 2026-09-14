@@ -293,13 +293,16 @@ def record_receipt(conn, assignment_id, result, now_fn, *, status="PASS", effect
 def pending_local_assignments(conn, *, mission_id=None, limit=16):
     if type(limit) is not int or not 1 <= limit <= 64:
         raise ValueError("assignment limit")
-    where=["state='READY'"];args=[]
     if mission_id:
-        where.append("mission_id=?");args.append(mission_id)
-    rows=conn.execute(
-        "SELECT * FROM mission_execution_assignments WHERE "+" AND ".join(where)+" ORDER BY created_at,assignment_id LIMIT ?",
-        (*args,limit),
-    ).fetchall()
+        rows=conn.execute(
+            "SELECT * FROM mission_execution_assignments WHERE state='READY' AND mission_id=? ORDER BY created_at,assignment_id LIMIT ?",
+            (mission_id, limit),
+        ).fetchall()
+    else:
+        rows=conn.execute(
+            "SELECT * FROM mission_execution_assignments WHERE state='READY' ORDER BY created_at,assignment_id LIMIT ?",
+            (limit,),
+        ).fetchall()
     return [dict(r) for r in rows]
 
 
