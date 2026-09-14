@@ -1652,8 +1652,19 @@ def e3_handle(req):
 
 
 
-MISSION_CONTROL_V3_PATH=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3/mission_control_v3.py")
-MISSION_CONTROL_V3_SHA256="51bf76d74f1d437537647188b6d164a97c8d33094eee8c62fa224d469b6255bc"
+MISSION_CONTROL_V3_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3")
+MISSION_CONTROL_V3_REQUIRED_SHA256={
+ "mission_control_v3.py":"b566cc65381132febcf1b08cc1f5f71de378c68d7d6852ad758e547f1ccdd094",
+ "mission_control_compat.py":"67ce2f6b7f40336ca09012e7a7e414c0f2feb52fcf78947dce628427d70fd4e7",
+ "lion_mission_lifecycle_db.py":"9b2d37e1d6e3273800a31cb5417143deb117916444be1cef0c18f0339b8a915f",
+ "lion_saas_session_bridge.py":"c0df56851c4968e53441c609cca616d437d2fd8e52ac1499bdf86e4cc34ddbed",
+ "cyber_lion/mission_control/__init__.py":"8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c",
+ "cyber_lion/mission_control/execution_driver.py":"ba4495cca425ab52d3391b25281d98a26d32b80ca8fae46b0e5fb1e938bfec3f",
+ "cyber_lion/mission_control/execution_driver_contract.py":"aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821",
+ "cyber_lion/mission_control/dual_result_join.py":"215868ca5800377bc880d12cee633d1507bbe0d23687a39b8160af42274023a8",
+}
+MISSION_CONTROL_V3_PATH=MISSION_CONTROL_V3_ROOT/"mission_control_v3.py"
+MISSION_CONTROL_V3_SHA256=MISSION_CONTROL_V3_REQUIRED_SHA256["mission_control_v3.py"]
 MISSION_CONTROL_V3_DROPIN=Path("/etc/systemd/system/lion-mission-control.service.d/99-v3-control.conf")
 MISSION_CONTROL_V3_LOCATOR=Path("/run/lion-mission-control/listen.json")
 MISSION_CONTROL_V3_UNIT="lion-mission-control.service"
@@ -1667,9 +1678,19 @@ InaccessiblePaths=-/run/lion-vkt-effect-admission.sock -/run/lion-k3s-vkt-r3/pro
 ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control-v3
 '''
 
+def mission_control_v3_package_identity()->dict[str,str]:
+ observed={}
+ for name,expected in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256.items()):
+  path=MISSION_CONTROL_V3_ROOT/name
+  if not path.is_file():raise Deny("MISSION_CONTROL_V3_PACKAGE_MISSING:"+name)
+  actual=sha256_file(path)
+  if actual!=expected:raise Deny("MISSION_CONTROL_V3_PACKAGE_IDENTITY:"+name+":"+actual)
+  observed[name]=actual
+ return observed
+
 def mission_control_v3_install(request:dict[str,Any])->dict[str,Any]:
  head,tree,_=mission64_require_envelope(request,worker=False);mission64_verify_current(head,tree)
- if not MISSION_CONTROL_V3_PATH.is_file() or sha256_file(MISSION_CONTROL_V3_PATH)!=MISSION_CONTROL_V3_SHA256:raise Deny("MISSION_CONTROL_V3_SOURCE_IDENTITY")
+ package_identity=mission_control_v3_package_identity()
  MISSION_CONTROL_V3_DROPIN.parent.mkdir(parents=True,exist_ok=True)
  current=MISSION_CONTROL_V3_DROPIN.read_bytes() if MISSION_CONTROL_V3_DROPIN.is_file() else None
  if current is not None:
@@ -1694,7 +1715,7 @@ def mission_control_v3_install(request:dict[str,Any])->dict[str,Any]:
    except Exception:pass
   _time.sleep(.25)
  else:raise Deny("MISSION_CONTROL_V3_NOT_READY")
- result={"installed":True,"unit":MISSION_CONTROL_V3_UNIT,"port":8766,"source_sha256":MISSION_CONTROL_V3_SHA256,"dropin_sha256":sha256(raw),"locator":loc}
+ result={"installed":True,"unit":MISSION_CONTROL_V3_UNIT,"port":8766,"source_sha256":package_identity["mission_control_v3.py"],"package_identity":package_identity,"package_digest":sha256(canonical(package_identity)),"dropin_sha256":sha256(raw),"locator":loc}
  result.update(mission64_receipt(request,result));return result
 
 
