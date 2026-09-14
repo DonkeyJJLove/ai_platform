@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import re
+from contextvars import ContextVar
 from datetime import datetime, timezone
 
 from cyber_lion.mission_control.supervisor_projection import supervisor_projection
+
+THREAD_CONTEXT=ContextVar('lion_saas_thread',default=None)
+ROUTE_CONTEXT=ContextVar('lion_composer_route',default='AUTO')
 
 _APPLIED = "_lion_saas_handoff_extension_v1"
 
@@ -17,6 +21,8 @@ def _supervisor_status_question(message):
 
 
 def _explicit_saas(message: str) -> bool:
+    if ROUTE_CONTEXT.get()=="LOCAL":return False
+    if ROUTE_CONTEXT.get()=="SAAS":return True
     low = message.lower()
     if "saas" not in low:
         return False
@@ -25,11 +31,13 @@ def _explicit_saas(message: str) -> bool:
         return False
     return any(token in low for token in (
         "na saas", "do saas", "wykonaj na saas", "wyślij do saas", "wyslij do saas",
-        "handoff", "saas supervisor", "saas:", "saas ->"
+        "handoff", "saas supervisor", "saas:", "saas ->", "zapytaj saas"
     ))
 
 
 def _dual_saas_local(message: str) -> bool:
+    if ROUTE_CONTEXT.get() in {"LOCAL","SAAS"}:return False
+    if ROUTE_CONTEXT.get()=="DUAL":return True
     low = message.lower()
     marked = bool(re.search(r"(?is)(?:^|\n)\s*(?:#+\s*)?local\s*:.*(?:^|\n)\s*(?:#+\s*)?saas\s*:", message))
     return marked or (("saas" in low or "chatgpt" in low)
@@ -109,13 +117,8 @@ def apply_saas_handoff_extension(cls):
         observed_at = None
         if callable(getattr(self, "control_provider", None)):
             try:
-                recent = self.control_provider("recent", {})
-                mid = recent.get("focus_mission_id")
-                if mid:
-                    out["saas_session_bridge"] = self.control_provider("saas_status", {"mission_id": mid})
-                    observed_at = datetime.now(timezone.utc).isoformat()
-                else:
-                    out["saas_session_bridge"] = {"state": "UNKNOWN", "error": "NO_FOCUS_MISSION"}
+                out["saas_session_bridge"] = self.control_provider("saas_status", {})
+                observed_at = datetime.now(timezone.utc).isoformat()
             except Exception as exc:
                 out["saas_session_bridge"] = {"state": "UNKNOWN", "error": type(exc).__name__, "authority_effect": "NONE"}
         bridge = out.get("saas_session_bridge") or {}
@@ -161,9 +164,9 @@ def apply_saas_handoff_extension(cls):
                 return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
             recent = self.control_provider("recent", {})
             mission_id = recent.get("focus_mission_id")
-            if not mission_id:
-                raise ValueError("dual evaluation requires focus mission")
+
             try:
+                if not mission_id:raise ValueError("no optional mission context")
                 mission_snapshot = self.control_provider("process", {"mission_id": mission_id})
                 durable_dual = True
             except Exception:
@@ -188,7 +191,7 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt})
+            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE"})
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
@@ -219,12 +222,9 @@ def apply_saas_handoff_extension(cls):
         if isinstance(message, str) and _explicit_saas(message):
             if not callable(getattr(self, "control_provider", None)):
                 raise ValueError("SaaS handoff control provider unavailable")
-            recent = self.control_provider("recent", {})
-            mission_id = recent.get("focus_mission_id")
-            if not mission_id:
-                raise ValueError("SaaS handoff requires focus mission")
+            mission_id = None
             question = _question(message)
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": question})
+            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE"})
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
             if polish:
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "

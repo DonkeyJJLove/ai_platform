@@ -98,7 +98,7 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         saas.respond(self.c,req['request_id'],pending['response_token'],'ok',lambda:T,model_identity='GPT-5.6 Sol',lease_seconds=30)
         later='2026-09-13T15:11:00Z'
         status=saas.bridge_status(self.c,'M2',lambda:later)
-        self.assertEqual(status['session_attestation_state'],'NOT_ATTESTED')
+        self.assertEqual(status['session_attestation_state'],'EXPIRED')
         saved=saas.request_status(self.c,req['request_id'],lambda:later)
         self.assertEqual(saved['status'],'RESPONDED')
         self.assertEqual(saved['progress_state'],'RECEIPT_BOUND')

@@ -44,11 +44,61 @@ LOGICAL=(('LD01','MISSION_PLANNER',6),('LD02','AUTHORITY_CURRENTNESS',6),('LD03'
 ACTIONS={'START':'MISSION64_START','PAUSE':'MISSION64_PAUSE','RESUME':'MISSION64_RESUME','RESTART_ONE':'MISSION64_RESTART_ONE','VALIDATE':'MISSION64_VALIDATE','STOP':'MISSION64_STOP'}
 LOCK=threading.Lock();STOP_EVENT=threading.Event()
 
+try:
+ import lion_saas_broker as saas_broker
+except ModuleNotFoundError:
+ from tools import lion_saas_broker as saas_broker
+
+
+def saas_broker_api(method,path,payload=None):
+ c=connect()
+ try:
+  prefix='/api/v3/saas-broker';tail=path[len(prefix):];x=payload or {}
+  if method=='GET':
+   if tail in {'/status','/session'}:return saas_broker.bridge_status(c,None,now)
+   if tail=='/pending':return saas_broker.broker_pending(c,now)
+   if tail.startswith('/requests/'):return saas_broker.request_status(c,tail[len('/requests/'):],now)
+  if method=='POST' and tail=='/requests':
+   if type(x) is not dict or not {'scope_type','question','authority_effect'}<=set(x) or set(x)-{'scope_type','scope_id','thread_id','mission_id','question','authority_effect'}:raise ValueError('broker request schema')
+   return saas_broker.create_request(c,x.get('mission_id'),x['question'],now,scope_type=x['scope_type'],scope_id=x.get('scope_id'),thread_id=x.get('thread_id'),authority_effect=x['authority_effect'])
+  if method=='POST' and tail=='/session/attest':
+   if set(x)!={'request_id','receipt_digest'}:raise ValueError('attestation receipt schema')
+   row=saas_broker.request_status(c,x['request_id'],now);status=saas_broker.bridge_status(c,None,now);binding=status.get('binding')
+   if row['receipt_digest']!=x['receipt_digest'] or not binding or binding['binding_id']!=row['binding_id']:raise ValueError('fresh roundtrip receipt required')
+   return {'binding':binding,'authority_effect':'NONE'}
+  if method=='POST' and tail.startswith('/requests/'):
+   parts=tail.split('/')
+   if len(parts)!=4:raise ValueError('broker path')
+   rid,action=parts[2:]
+   if action=='claim':
+    if x:raise ValueError('claim schema')
+    return saas_broker.claim(c,rid,now)
+   if action=='cancel':
+    if x:raise ValueError('cancel schema')
+    return saas_broker.cancel_request(c,rid,now)
+   if action=='respond':
+    if set(x)!={'response_token','claim_generation','answer','model_identity','transport','attestation_class'}:raise ValueError('response schema')
+    row=c.execute('SELECT claim_generation FROM saas_handoff_requests WHERE request_id=?',(rid,)).fetchone()
+    if row is None or type(x['claim_generation']) is not int or row[0]!=x['claim_generation']:raise ValueError('stale claim')
+    return saas_broker.respond(c,rid,x['response_token'],x['answer'],now,model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'],claim_generation=x['claim_generation'])
+  raise ValueError('broker endpoint')
+ finally:c.close()
+
+
+def mediator_authorized(headers):
+ # The key is available only to the local mediator/host connector, never to UI GETs.
+ path=DB.parent/'saas-mediator.key'
+ try:key=path.read_text(encoding='utf-8').strip()
+ except OSError:return False
+ return len(key)>=64 and __import__('secrets').compare_digest(headers.get('X-LION-Mediator-Key',''),key)
+
+
 def now():return datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
 def connect():
  DB.parent.mkdir(parents=True,exist_ok=True);c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute('PRAGMA journal_mode=WAL');c.execute('PRAGMA foreign_keys=ON');return c
 
 def import_legacy(c):
+ if c.execute("SELECT 1 FROM mission_meta WHERE key='runtime_mission_reset' AND value='1'").fetchone():return
  if not LEGACY_DB.is_file():return
  try:lc=sqlite3.connect('file:'+str(LEGACY_DB)+'?mode=ro',uri=True);rows=lc.execute('SELECT run_id,payload FROM runs').fetchall();lc.close()
  except Exception:return
@@ -66,10 +116,11 @@ def migrate():
  CREATE TABLE IF NOT EXISTS mission_events(id INTEGER PRIMARY KEY AUTOINCREMENT,mission_id TEXT NOT NULL,observed_at TEXT NOT NULL,event_type TEXT NOT NULL,payload_json TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS mission_meta(key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TEXT NOT NULL);
  ''')
- spec={'mission_id':MISSION,'spec_digest':SPEC,'source_head':HEAD,'source_tree':TREE,'namespace':NAMESPACE,'logical_drones':[{'id':i,'role':r,'replicas':n} for i,r,n in LOGICAL],'logical_count':12,'material_target':64,'authority':'EXPLICIT_USER_AUTHORIZED_MISSION'}
- t=now();c.execute('INSERT OR IGNORE INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(MISSION,'R4 Preflight · 12 Logical / 64 Material','MISSION64_K3S',SPEC,HEAD,TREE,NAMESPACE,'AUTHORIZED','UNKNOWN',12,64,0,0,t,t,t,None,json.dumps(spec,sort_keys=True)))
- for i,r,n in LOGICAL:c.execute('INSERT OR IGNORE INTO logical_drones VALUES(?,?,?,?,?,?)',(MISSION,i,r,n,0,0))
- import_legacy(c)
+ if not c.execute("SELECT 1 FROM mission_meta WHERE key='runtime_mission_reset' AND value='1'").fetchone():
+  spec={'mission_id':MISSION,'spec_digest':SPEC,'source_head':HEAD,'source_tree':TREE,'namespace':NAMESPACE,'logical_drones':[{'id':i,'role':r,'replicas':n} for i,r,n in LOGICAL],'logical_count':12,'material_target':64,'authority':'EXPLICIT_USER_AUTHORIZED_MISSION'}
+  t=now();c.execute('INSERT OR IGNORE INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(MISSION,'R4 Preflight · 12 Logical / 64 Material','MISSION64_K3S',SPEC,HEAD,TREE,NAMESPACE,'AUTHORIZED','UNKNOWN',12,64,0,0,t,t,t,None,json.dumps(spec,sort_keys=True)))
+  for i,r,n in LOGICAL:c.execute('INSERT OR IGNORE INTO logical_drones VALUES(?,?,?,?,?,?)',(MISSION,i,r,n,0,0))
+  import_legacy(c)
  process_migrate(c)
  lifecycle_migrate(c,now,current_mission_id=MISSION,source_head=HEAD,source_tree=TREE)
  saas_migrate(c,now,source_head=HEAD,source_tree=TREE)
@@ -92,6 +143,7 @@ def broker(op,pod=None):
 
 def event(c,etype,payload):c.execute('INSERT INTO mission_events(mission_id,observed_at,event_type,payload_json) VALUES(?,?,?,?)',(MISSION,now(),etype,json.dumps(payload,sort_keys=True,ensure_ascii=False)))
 def apply_runtime(c,r):
+ if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(MISSION,)).fetchone():return
  state=r.get('state','UNKNOWN');mat=int(r.get('materialized',0) or 0);ready=int(r.get('ready',0) or 0);t=now();m=c.execute('SELECT state FROM missions WHERE mission_id=?',(MISSION,)).fetchone();cur=m['state'] if m else 'UNKNOWN'
  if state=='RUNNING':life='RUNNING'
  elif state=='PAUSED':life='PAUSED'
@@ -106,6 +158,10 @@ def apply_runtime(c,r):
   vals=by.get(i,[0,0]);c.execute('UPDATE logical_drones SET materialized=?,ready=? WHERE mission_id=? AND logical_id=?',(vals[0],vals[1],MISSION,i))
 
 def observe_once():
+ c=connect()
+ try:present=c.execute('SELECT 1 FROM missions WHERE mission_id=?',(MISSION,)).fetchone()
+ finally:c.close()
+ if not present:return
  try:r,_=broker('MISSION64_READ')
  except Exception as e:
   c=connect();c.execute('UPDATE missions SET runtime_state=?,updated_at=?,last_error=? WHERE mission_id=?',('UNKNOWN',now(),type(e).__name__+':'+str(e)[:1000],MISSION));c.commit();c.close();return
@@ -115,7 +171,9 @@ def observer():
 
 def command(action,pod=None):
  if action not in ACTIONS:raise ValueError('action denied')
- cid=uuid.uuid4().hex;c=connect();state=c.execute('SELECT state FROM missions WHERE mission_id=?',(MISSION,)).fetchone()['state'];allowed={'START':{'AUTHORIZED','STOPPED','FAILED'},'PAUSE':{'RUNNING'},'RESUME':{'PAUSED'},'RESTART_ONE':{'RUNNING'},'VALIDATE':{'RUNNING'},'STOP':{'RUNNING','PAUSED','FAILED','STARTING','CONVERGING'}}
+ cid=uuid.uuid4().hex;c=connect();row=c.execute('SELECT state FROM missions WHERE mission_id=?',(MISSION,)).fetchone()
+ if row is None:c.close();raise ValueError('no active mission')
+ state=row['state'];allowed={'START':{'AUTHORIZED','STOPPED','FAILED'},'PAUSE':{'RUNNING'},'RESUME':{'PAUSED'},'RESTART_ONE':{'RUNNING'},'VALIDATE':{'RUNNING'},'STOP':{'RUNNING','PAUSED','FAILED','STARTING','CONVERGING'}}
  if state not in allowed[action]:c.close();raise ValueError('action denied from state '+state)
  if action=='RESTART_ONE' and (not isinstance(pod,str) or not c.execute('SELECT 1 FROM material_workers WHERE mission_id=? AND pod_name=?',(MISSION,pod)).fetchone()):c.close();raise ValueError('pod not in current mission')
  transitional={'START':'STARTING','PAUSE':'PAUSING','RESUME':'RESUMING','RESTART_ONE':'RESTARTING','VALIDATE':'VALIDATING','STOP':'STOPPING'}[action];t=now();c.execute('INSERT INTO commands(command_id,mission_id,action,pod_name,requested_at,started_at,status) VALUES(?,?,?,?,?,?,?)',(cid,MISSION,action,pod,t,t,'RUNNING'));c.execute('UPDATE missions SET state=?,updated_at=? WHERE mission_id=?',(transitional,t,MISSION));event(c,'COMMAND_ACCEPTED',{'command_id':cid,'action':action,'pod_name':pod});c.commit();c.close()
@@ -149,7 +207,10 @@ def register_observation(x):
  t=now();spec={**x,'adapter':'OBSERVATION_ONLY','registered_via':'MISSION_CONTROL_V3'};c=connect();c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,title,'OBSERVATION_ONLY',x['spec_digest'],x['source_head'],x['source_tree'],None,'REGISTERED','UNKNOWN',x['logical_count'],x['material_target'],0,0,t,None,t,None,json.dumps(spec,sort_keys=True)));event(c,'MISSION_REGISTERED',{'mission_id':mid,'adapter':'OBSERVATION_ONLY'});c.commit();c.close();return {'mission_id':mid,'state':'REGISTERED','control_authority':'NONE'}
 
 def snapshot():
- c=connect();m=dict(c.execute('SELECT * FROM missions WHERE mission_id=?',(MISSION,)).fetchone());m['spec']=json.loads(m.pop('spec_json'));m['logical']=[dict(x) for x in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(MISSION,))];m['workers']=[dict(x) for x in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(MISSION,))];m['commands']=[dict(x) for x in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 30',(MISSION,))];m['events']=[dict(x) for x in c.execute('SELECT observed_at,event_type,payload_json FROM mission_events WHERE mission_id=? ORDER BY id DESC LIMIT 30',(MISSION,))];c.close();m['legacy_recorded_runs']=legacy_count();m['control_authority']='BOUNDED_MISSION_CONTROL';m['registry']=mission_summaries();return m
+ c=connect();row=c.execute('SELECT * FROM missions WHERE mission_id=?',(MISSION,)).fetchone()
+ if row is None:
+  c.close();return {'mission_id':None,'state':'NO_ACTIVE_MISSIONS','runtime_state':'NOT_STARTED','logical':[],'workers':[],'commands':[],'events':[],'registry':mission_summaries(),'material_target':0,'materialized':0,'ready':0,'logical_count':0,'legacy_recorded_runs':0,'control_authority':'NONE'}
+ m=dict(row);m['spec']=json.loads(m.pop('spec_json'));m['logical']=[dict(x) for x in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(MISSION,))];m['workers']=[dict(x) for x in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(MISSION,))];m['commands']=[dict(x) for x in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 30',(MISSION,))];m['events']=[dict(x) for x in c.execute('SELECT observed_at,event_type,payload_json FROM mission_events WHERE mission_id=? ORDER BY id DESC LIMIT 30',(MISSION,))];c.close();m['legacy_recorded_runs']=legacy_count();m['control_authority']='BOUNDED_MISSION_CONTROL';m['registry']=mission_summaries();return m
 
 
 # ---- LPCL mission process extension v1 -----------------------------------
@@ -735,7 +796,12 @@ def set_focus_mission(mid, request):
     finally:c.close()
 
 def focus_mission_id():
-    c=connect();r=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();c.close();return r['value'] if r else MISSION
+    c=connect()
+    try:
+      r=c.execute("SELECT m.mission_id FROM missions m JOIN mission_meta f ON f.value=m.mission_id WHERE f.key='focus_mission_id'").fetchone()
+      if r is None:r=c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC,mission_id LIMIT 1').fetchone()
+      return r[0] if r else None
+    finally:c.close()
 
 RECENT_PROJECTION_LOCK=threading.Lock()
 RECENT_PROJECTION_PENDING=None
@@ -1107,6 +1173,7 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
 def global_scheduler_once():
     c=connect()
     try:
+      if c.execute("SELECT 1 FROM mission_meta WHERE key='mission_dispatch_paused' AND value='1'").fetchone():return
       # Terminal state reconciliation is orthogonal to dispatch and prevents
       # historical COMPLETE missions from presenting a PAUSED driver.
       for row in c.execute("SELECT mission_id FROM missions WHERE state='COMPLETE'").fetchall():
@@ -1259,7 +1326,10 @@ class H(BaseHTTPRequestHandler):
    name,ctype=static_map[path];target=STATIC/name
    if not target.is_file():return self.json({'error':'static-not-found'},404)
    return self.send_content(target.read_bytes(),ctype)
-  if path=='/health':return self.json({'status':'ok','mission_id':MISSION,'control':'BOUNDED','authority_effect':'MISSION_SCOPED','ui':'HISTORICAL_OBSERVER_PLUS_V3_CONTROL','collector':'MULTI_SQLITE_READ_MODEL'})
+  if path=='/health':return self.json({'status':'ok','mission_id':focus_mission_id(),'mission_count':len(mission_summaries()),'control':'BOUNDED','authority_effect':'NONE','broker_schema':saas_broker.SCHEMA_ID,'collector':'MULTI_SQLITE_READ_MODEL'})
+  if path.startswith('/api/v3/saas-broker/'):
+   try:return self.json(saas_broker_api('GET',path))
+   except ValueError as e:return self.json({'error':str(e)},404)
   current=snapshot()
   compat=compat_get(path,current)
   if compat is not None:
@@ -1298,6 +1368,15 @@ class H(BaseHTTPRequestHandler):
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
+  if path.startswith('/api/v3/saas-broker/'):
+   controlled=path.endswith(('/claim','/respond','/session/attest'))
+   if controlled and not mediator_authorized(self.headers):return self.json({'error':'mediator authentication required'},403)
+   try:
+    n=int(self.headers.get('Content-Length','0'))
+    if not 2<=n<=40000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('broker JSON body')
+    return self.json(saas_broker_api('POST',path,json.loads(self.rfile.read(n))),201 if path.endswith('/requests') else 200)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
+
   if path.startswith('/api/v3/missions/') and path.endswith('/delete'):
    try:
     mid=path[len('/api/v3/missions/'):-len('/delete')].strip('/');n=int(self.headers.get('Content-Length','0'))

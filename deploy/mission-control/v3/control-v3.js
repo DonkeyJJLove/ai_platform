@@ -193,10 +193,16 @@ async function mcRefresh(){
   if(MC_REFRESHING){MC_REFRESH_PENDING=true;return}MC_REFRESHING=true;
   try{
     const [reg,src]=await Promise.all([mcget('/api/v3/missions/recent'),mcget('/api/v3/evidence-sources')]);
-    const registry=reg.missions||[];MC_FOCUS=reg.focus_mission_id||registry[0]?.mission_id||'LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3';
+    const registry=reg.missions||[];MC_FOCUS=reg.focus_mission_id||registry[0]?.mission_id||null;
     if(!MC_PINNED||!MC_SELECTED||!registry.some(x=>x.mission_id===MC_SELECTED))MC_SELECTED=MC_FOCUS;
+    if(!MC_SELECTED){
+      MC_DATA=null;MC_PINNED=false;MC_LAST_RENDER_KEY=null;
+      for(const id of ['mcMissionSelect','mcV3Cards','mcDriverState','mcPhases','mcV3Logical','mcV3Workers','mcV3Registry','mcV3Commands','mcSchemaNotice','mcLifecycleInfo','mcProgressLabel','mcPhaseLabel','mcLifecycleActions','mcV3Actions','mcCapabilityMatrix','mcCurrentPhase','mcPhaseControlResult','mcProtocolFilters','mcV3Sources','mcObjective','mcDescription','mcProtocols','mcProtocolFeed']){if(MC(id))MC(id).replaceChildren()}
+      MC('mcV3Meta').textContent='NO ACTIVE MISSIONS';MC('mcV3Authority').textContent='CONTROL: NONE';MC('mcProgressBar').style.width='0%';
+      mcRenderSupervisor((await mcget('/api/v3/saas-broker/status')).supervisor_projection);return;
+    }
     const requestedMissionId=MC_SELECTED;
-    const [s,supervisor]=await Promise.all([mcget(missionPath(requestedMissionId,'/process')),mcget('/api/v3/saas/status?mission_id='+encodeURIComponent(requestedMissionId)).catch(()=>null)]);
+    const [s,supervisor]=await Promise.all([mcget(missionPath(requestedMissionId,'/process')),mcget('/api/v3/saas-broker/status').catch(()=>null)]);
     if(requestedMissionId!==MC_SELECTED){MC_REFRESH_PENDING=true;return}
     mcRenderSupervisor(supervisor?.supervisor_projection);
     const vp=mcCaptureViewport();

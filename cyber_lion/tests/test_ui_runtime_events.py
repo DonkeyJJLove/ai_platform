@@ -22,6 +22,16 @@ def browser_event(**changes):
 
 
 class UiRuntimeEventsTests(unittest.TestCase):
+    def test_extended_error_context_is_persisted_without_raw_stack(self):
+        with closing(sqlite3.connect(':memory:')) as conn:
+            ui_runtime_events.migrate(conn)
+            event=browser_event(error_id='ea10990c-4ac8-427e-9d03-764a3ab59cba',component='LPCL_PANEL',error_class='TypeError',stack_digest='a'*64,timestamp='2026-09-15T00:00:00Z',request_id='saas-'+'b'*32,frontend_revision='c'*64)
+            ui_runtime_events.record(conn,event)
+            saved=json.loads(conn.execute('SELECT payload_json FROM ui_runtime_events').fetchone()[0])
+            for field in ('error_id','component','error_class','stack_digest','timestamp','request_id','frontend_revision'):
+                self.assertEqual(saved[field],event[field])
+            self.assertNotIn('stack',saved)
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

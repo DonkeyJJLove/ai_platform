@@ -19,6 +19,7 @@ SOURCE_MAP = {
     "mission_control_compat.py": ROOT / "tools/lion_mission_control_compat.py",
     "lion_mission_lifecycle_db.py": ROOT / "tools/lion_mission_lifecycle_db.py",
     "lion_saas_session_bridge.py": ROOT / "tools/lion_saas_session_bridge.py",
+    "lion_saas_broker.py": ROOT / "tools/lion_saas_broker.py",
     "cyber_lion/mission_control/__init__.py": ROOT / "cyber_lion/mission_control/__init__.py",
     "cyber_lion/mission_control/execution_driver.py": ROOT / "cyber_lion/mission_control/execution_driver.py",
     "cyber_lion/mission_control/execution_driver_contract.py": ROOT / "cyber_lion/mission_control/execution_driver_contract.py",

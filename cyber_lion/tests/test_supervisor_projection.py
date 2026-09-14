@@ -106,16 +106,17 @@ class SupervisorCapabilityTests(unittest.TestCase):
         self.assertIn('sesja: UNKNOWN', answer)
         self.assertIn('BRIDGE_UNAVAILABLE', answer)
 
-    def test_state_without_focus_is_unknown(self):
+    def test_state_without_focus_reads_global_session(self):
         calls = []
+        projection = supervisor_projection(bridge(), now=NOW, observed_at=NOW)
         def provider(op, args):
             calls.append((op,args))
-            return {'focus_mission_id': None} if op == 'recent' else bridge()
+            return {**bridge(), 'supervisor_projection':projection}
         self.dummy.control_provider = provider
         state = self.dummy.state()
-        self.assertEqual(calls, [('recent', {})])
-        self.assertEqual(state['supervisor_projection']['session'], 'UNKNOWN')
-        self.assertIn('BRIDGE_READ_FAILED:NO_FOCUS_MISSION', state['supervisor_projection']['unknown_reasons'])
+        self.assertEqual(calls, [('saas_status', {})])
+        self.assertIs(state['supervisor_projection'], projection)
+        self.assertEqual(state['supervisor_projection']['session'], 'BOUND')
 
     def test_state_reuses_supplied_canonical_snapshot_without_recomputing(self):
         projection = supervisor_projection(bridge(), now=NOW, observed_at=NOW)
@@ -194,7 +195,7 @@ class SupervisorBridgeProjectionTests(unittest.TestCase):
         later = '2026-09-14T14:00:00Z'
         expired = saas.bridge_status(connection, 'M2', lambda: later)
         self.assertIsNone(expired['binding'])
-        self.assertEqual(expired['session_attestation_state'], 'NOT_ATTESTED')
+        self.assertEqual(expired['session_attestation_state'], 'EXPIRED')
         self.assertEqual(expired['supervisor_projection']['session'], 'EXPIRED')
         self.assertEqual(expired['supervisor_projection']['lease']['expires_at'], '2026-09-14T13:00:00Z')
         self.assertEqual(expired['supervisor_projection'], supervisor_projection(expired, now=later, observed_at=later))
