@@ -656,14 +656,17 @@ def mission_action(mid,x,*,phase_guard=None):
       raise ValueError(type(e).__name__+':'+str(e)+((' receipt='+str(receipt.get('receipt_id'))) if receipt else ''))
 
 
-def process_snapshot(mid, *, read_only=False):
-    c=connect()
+def process_snapshot(mid, *, read_only=False, _connection=None):
+    if _connection is not None and not read_only:raise ValueError('shared snapshot must be read only')
+    c=_connection if _connection is not None else connect()
     if not read_only:
       lifecycle_sync_components(c,mid,now)
       c.commit()
-    c.execute('BEGIN')
+    if _connection is None:c.execute('BEGIN')
     m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
-    if not m:c.close();raise ValueError('mission not found')
+    if not m:
+      if _connection is None:c.close()
+      raise ValueError('mission not found')
     d=dict(m);s=c.execute('SELECT * FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();d['process']=dict(s) if s else None
     if d['process']:
       try:d['process']['protocols']=json.loads(d['process'].pop('protocols_json'))
@@ -698,7 +701,35 @@ def process_snapshot(mid, *, read_only=False):
     except sqlite3.OperationalError:d['revision_compilations']=[]
     try:d['adaptive_worker_plan']=driver_adaptive_worker_plan(c,mid,preferred_roles=('LD01','LD02','LD10','LD11'),limit=16) if int(d.get('ready') or 0)==64 else None
     except Exception:d['adaptive_worker_plan']=None
-    c.commit();c.close();return normalize_snapshot(d)
+    if _connection is None:c.commit();c.close()
+    return normalize_snapshot(d)
+
+def set_focus_mission(mid, request):
+    if type(request) is not dict or request:raise ValueError('focus request must be empty object')
+    if not isinstance(mid,str) or not mid or '/' in mid:raise ValueError('mission id')
+    c=connect()
+    try:
+      c.execute('BEGIN IMMEDIATE')
+      if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone():raise ValueError('mission not found')
+      previous=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone()
+      changed=previous is None or previous['value']!=mid
+      receipt=None
+      if changed:
+        stamp=now();rid='action-'+uuid.uuid4().hex
+        result={'previous_focus_mission_id':previous['value'] if previous else None,'focus_mission_id':mid,'authority_effect':'NONE','metadata_only':True}
+        payload={'receipt_id':rid,'mission_id':mid,'action':'FOCUS','effect_class':'CONTROL_DB_METADATA_ONLY','status':'PASS','request':{},'result':result,'created_at':stamp}
+        dg=_payload_digest(payload)
+        c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,stamp))
+        c.execute('INSERT INTO mission_events(mission_id,observed_at,event_type,payload_json) VALUES(?,?,?,?)',(mid,stamp,'FOCUS_CHANGED',json.dumps(result,sort_keys=True)))
+        c.execute('INSERT INTO mission_action_receipts VALUES(?,?,?,?,?,?,?,?,?)',(rid,mid,'FOCUS','CONTROL_DB_METADATA_ONLY','PASS','{}',json.dumps(result,sort_keys=True),dg,stamp))
+        receipt={'receipt_id':rid,'receipt_digest':dg}
+      focus=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone()['value']
+      readback=process_snapshot(focus,read_only=True,_connection=c)
+      c.commit()
+      return {'focus_mission_id':focus,'changed':changed,'authority_effect':'NONE','receipt':receipt,'readback':readback}
+    except Exception:
+      c.rollback();raise
+    finally:c.close()
 
 def focus_mission_id():
     c=connect();r=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();c.close();return r['value'] if r else MISSION
@@ -1235,6 +1266,12 @@ class H(BaseHTTPRequestHandler):
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
+  if path.startswith('/api/v3/missions/') and path.endswith('/focus'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/focus')];n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    return self.json(set_focus_mission(mid,json.loads(self.rfile.read(n))))
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path.startswith('/api/v3/missions/') and path.endswith('/phase-actions'):
    try:
     mid=path[len('/api/v3/missions/'):-len('/phase-actions')].strip('/');n=int(self.headers.get('Content-Length','0'))
