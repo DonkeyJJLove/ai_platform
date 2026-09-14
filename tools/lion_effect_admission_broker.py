@@ -1669,7 +1669,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "static/app.css": "a74f12624834fe0184ec46b3239ff2acc563af184e3ba731cf31c0b0fc989d7c",
  "static/app.js": "c052ffb1645c11a48c5287935d11d60141aed46f648d8115e050a9d6c92ef087",
  "static/control-v3.js": "7b83f6f897056fce26f4b19f2deababfc697daec9bd0b928691fe56eeb3ce9f4",
- "static/index.html": "ff7d209520a788014c71baa6afdb8fd0a7ee20aac610f04edf645c0e0a6432a6",
+ "static/index.html": "d913d55fa0fb3b45d1a18bc30f922dfc8cb5c9e8ba7d00f8ddd1d84c2f9de68f",
  "static/passive.js": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465"
 }
 MISSION_CONTROL_V3_PATH=MISSION_CONTROL_V3_ROOT/"mission_control_v3.py"
