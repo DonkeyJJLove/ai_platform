@@ -36,7 +36,9 @@ def _v3_focus_id():
  c=ro(V3_DB)
  try:
   row=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone()
-  return str(row[0]) if row and row[0] else CURRENT_ID
+  if row and row[0] and c.execute('SELECT 1 FROM missions WHERE mission_id=?',(row[0],)).fetchone():return str(row[0])
+  first=c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC,mission_id LIMIT 1').fetchone()
+  return first[0] if first else None
  except Exception:return CURRENT_ID
  finally:c.close()
 
@@ -109,9 +111,17 @@ def deleted_mission_ids():
  except sqlite3.OperationalError:return set()
  finally:c.close()
 
+def mission_registry_reset():
+ if not V3_DB.is_file():return False
+ c=ro(V3_DB)
+ try:return c.execute("SELECT 1 FROM mission_meta WHERE key='runtime_mission_reset' AND value='1'").fetchone() is not None
+ except sqlite3.OperationalError:return False
+ finally:c.close()
+
+
 def all_runs(s):
- deleted=deleted_mission_ids();focus=_v3_focus_id();rows=[current_run(s)]+v3_mission_runs();seen={r.get('run_id') for r in rows}
- for r in generic_runs():
+ deleted=deleted_mission_ids();focus=_v3_focus_id();rows=([current_run(s)] if s.get('mission_id') or (not mission_registry_reset() and s.get('state')!='NO_ACTIVE_MISSIONS') else [])+v3_mission_runs();seen={r.get('run_id') for r in rows}
+ for r in ([] if mission_registry_reset() else generic_runs()):
   if r.get('run_id') not in seen:rows.append(r);seen.add(r.get('run_id'))
  rows=[r for r in rows if r.get('run_id') not in deleted and 'legacy::'+str(r.get('run_id')) not in deleted]
  rows.sort(key=lambda r:(0 if r.get('run_id')==focus else 1,0 if str(r.get('status')).upper() in {'RUNNING','WAITING','BLOCKED','AUTHORIZED'} else 1,str(r.get('started_at') or r.get('finished_at') or '')),reverse=False)
@@ -176,7 +186,7 @@ def summary(s):
  focus_observed=focus==CURRENT_ID and observed
  readiness='READY' if focus_observed and target>0 and ready==target else ('DEGRADED' if focus_observed else 'UNKNOWN')
  reason='WORKER_OBSERVATIONS_FRESH' if fresh else ('WORKER_OBSERVATIONS_STALE' if age is not None else 'WORKER_OBSERVATIONS_MISSING')
- return {'ok':True,'error':None,'summary':sm,'readiness':{'status':readiness,'focus_mission_id':focus,'ready':int(fm.get('fresh_drones') or 0),'target':target},'fleet':{'currentness':'OBSERVED' if observed else ('STALE' if age is not None and not fresh else 'RECORDED'),'fleet_total':int(m.get('pods') or 0),'working_drones':ready if observed else None,'idle_drones':max(0,int(m.get('pods') or 0)-ready) if observed else None,'organization_count':len(org),'organizations':org,'run_ids':[CURRENT_ID],'pod_observations':[{'run_id':CURRENT_ID,'pods':m.get('drone_pods') or []}]},'run_observations':obs,'observation':{'reason':reason,'attempt_at':polled_at,'completed_at':polled_at,'success_at':observed_at,'age_seconds':age,'success_age_seconds':age,'threshold_seconds':15,'in_progress':False,'scope':'CURRENT_KUBERNETES_COLLECTOR; OTHER_MISSIONS_RECORDED','adapters':{'MISSION_PROCESS_DB':{'reason':'RECORDED'},'MULTI_SQLITE_COLLECTOR':{'reason':reason}}}}
+ return {'ok':True,'error':None,'summary':sm,'readiness':{'status':readiness,'focus_mission_id':focus,'ready':int(fm.get('fresh_drones') or 0),'target':target},'fleet':{'currentness':'OBSERVED' if observed else ('STALE' if age is not None and not fresh else 'RECORDED'),'fleet_total':int(m.get('pods') or 0),'working_drones':ready if observed else None,'idle_drones':max(0,int(m.get('pods') or 0)-ready) if observed else None,'organization_count':len(org),'organizations':org,'run_ids':[CURRENT_ID] if s.get('state')!='NO_ACTIVE_MISSIONS' else [],'pod_observations':[{'run_id':CURRENT_ID,'pods':m.get('drone_pods') or []}] if s.get('state')!='NO_ACTIVE_MISSIONS' else []},'run_observations':obs,'observation':{'reason':reason,'attempt_at':polled_at,'completed_at':polled_at,'success_at':observed_at,'age_seconds':age,'success_age_seconds':age,'threshold_seconds':15,'in_progress':False,'scope':'CURRENT_KUBERNETES_COLLECTOR; OTHER_MISSIONS_RECORDED','adapters':{'MISSION_PROCESS_DB':{'reason':'RECORDED'},'MULTI_SQLITE_COLLECTOR':{'reason':reason}}}}
 
 
 def find_run(run_id,s):

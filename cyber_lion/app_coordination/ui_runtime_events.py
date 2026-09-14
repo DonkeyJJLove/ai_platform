@@ -22,7 +22,8 @@ def migrate(connection):
 
 def record(connection, event):
     fields = {'event_id', 'event_class', 'operation', 'error_name', 'message', 'thread_id'}
-    if type(event) is not dict or set(event) != fields:
+    details = {'error_id','component','error_class','stack_digest','timestamp','request_id','frontend_revision'}
+    if type(event) is not dict or set(event) not in (fields, fields | details):
         raise ValueError('UI runtime event schema')
     if event['event_class'] != 'UI_RUNTIME_ERROR':
         raise ValueError('UI event class')
@@ -31,6 +32,12 @@ def record(connection, event):
     for key, limit in [('operation', 80), ('error_name', 80), ('message', 500), ('thread_id', 32)]:
         if not isinstance(event[key], str) or len(event[key]) > limit:
             raise ValueError('UI event field: ' + key)
+    if details <= set(event):
+        for key,limit in [('error_id',36),('component',80),('error_class',80),('stack_digest',64),('timestamp',40),('request_id',100),('frontend_revision',100)]:
+            if not isinstance(event[key],str) or len(event[key])>limit:
+                raise ValueError('UI event field: '+key)
+        if event['error_id']!=event['event_id'] or not re.fullmatch('[0-9a-f]{64}|UNAVAILABLE',event['stack_digest']):
+            raise ValueError('UI diagnostic identity/digest')
     payload = {**event, 'authority_effect': 'NONE', 'source': 'UNTRUSTED_BROWSER_REPORT'}
     encoded = json.dumps(payload, sort_keys=True, ensure_ascii=False)
     with connection:

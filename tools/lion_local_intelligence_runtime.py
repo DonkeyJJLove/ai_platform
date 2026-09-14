@@ -65,6 +65,14 @@ class ThreadStore:
                     rows=[dict(x) for x in c.execute('SELECT thread_id,title,created_at,updated_at FROM threads ORDER BY updated_at DESC LIMIT 500')];return {'threads':rows}
                 if op=='create':
                     tid=uuid.uuid4().hex;title=str(args.get('title') or 'Nowa rozmowa').strip()[:120] or 'Nowa rozmowa';t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t));c.commit();return {'thread_id':tid,'title':title,'created_at':t,'updated_at':t,'messages':[]}
+                if op=='saas_delivery_candidates':
+                    result=[]
+                    for row in c.execute("SELECT thread_id,meta_json FROM messages ORDER BY created_at DESC"):
+                        meta=json.loads(row['meta_json'] or '{}');rid=meta.get('saas_request_id')
+                        if rid and not meta.get('external_receipt_key'):
+                            if not c.execute("SELECT 1 FROM messages WHERE thread_id=? AND json_extract(meta_json,'$.external_receipt_key')=?",(row['thread_id'],'saas:'+rid)).fetchone():result.append({'thread_id':row['thread_id'],'request_id':rid,'dual_request_id':meta.get('dual_request_id')})
+                        if len(result)>=64:break
+                    return result
                 if op=='import':
                     rows=args.get('messages')
                     if type(rows) is not list or not 1<=len(rows)<=16:raise ValueError('import messages')
@@ -112,6 +120,7 @@ class ThreadStore:
                     if title=='Nowa rozmowa':title=' '.join(user.split())[:64] or title
                     c.execute('UPDATE threads SET title=?,updated_at=? WHERE thread_id=?',(title,t,tid));c.commit();return {'thread_id':tid,'title':title,'updated_at':t}
                 if op=='append_assistant_once':
+                    c.execute('BEGIN IMMEDIATE')
                     row=c.execute('SELECT title FROM threads WHERE thread_id=?',(tid,)).fetchone()
                     if row is None:raise KeyError('thread not found')
                     assistant=str(args.get('assistant') or '')[:24000];dedupe_key=str(args.get('dedupe_key') or '')[:200]
@@ -137,7 +146,12 @@ class LpclControlBridge:
         with urllib.request.urlopen(req,timeout=timeout) as res:return json.load(res)
     def _post(self,path,body,timeout=10):
         data=json.dumps(body,ensure_ascii=False).encode('utf-8');req=urllib.request.Request(self.base+path,data=data,headers={'Content-Type':'application/json','User-Agent':'LION-LPCL-PANEL/1'},method='POST')
-        with urllib.request.urlopen(req,timeout=timeout) as res:return json.load(res)
+        try:
+            with urllib.request.urlopen(req,timeout=timeout) as res:return json.load(res)
+        except urllib.error.HTTPError as error:
+            try:detail=json.loads(error.read(4096)).get('error','backend request rejected')
+            except (ValueError,AttributeError):detail='backend request rejected'
+            raise ValueError('Mission Control '+str(error.code)+': '+str(detail)[:600]) from error
     @classmethod
     def _parse_pairs(cls,text):
         lines=text.replace('\r\n','\n').replace('\r','\n').split('\n');out={};i=0
@@ -203,17 +217,16 @@ class LpclControlBridge:
             if action not in {'PAUSE','STOP'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase containment action/token')
             return self._post('/api/v3/missions/'+mid+'/phase-actions',{'phase_id':pid,'action':action,'control_token':token})
         if op=='saas_request':
+            if args.get('scope_type'):
+                return self._post('/api/v3/saas-broker/requests',args)
             mid=args.get('mission_id');question=args.get('question')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(question,str) or not question.strip() or len(question)>8000:raise ValueError('saas request')
             return self._post('/api/v3/saas/request',{'mission_id':mid,'question':question})
-        if op=='saas_status':
-            mid=args.get('mission_id')
-            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
-            return self._get('/api/v3/saas/status?mission_id='+mid)
+        if op=='saas_status':return self._get('/api/v3/saas-broker/status')
         if op=='saas_request_status':
             rid=args.get('request_id')
             if not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('saas request id')
-            return self._get('/api/v3/saas/requests/'+rid)
+            return self._get('/api/v3/saas-broker/requests/'+rid)
         if op=='saas_request_cancel':
             rid=args.get('request_id')
             if set(args)!={'request_id'} or not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('saas request id')
@@ -452,6 +465,8 @@ def main():
     b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads)
     canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start();threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop),daemon=True).start()
+    from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
+    threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
     try: serve_gateway(g,a.port)
     finally: canary_stop.set()
 if __name__=='__main__':main()
