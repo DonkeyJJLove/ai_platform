@@ -1513,7 +1513,9 @@ def e3_require(request,worker=False):
  if set(request)!=exp: raise Deny("E3_FIELD_SET")
  if request.get("mission_id")!=E3_ID: raise Deny("E3_ID_MISMATCH")
  if request.get("spec_digest")!=E3_LPCL_DIGEST: raise Deny("E3_LPCL_DIGEST_MISMATCH")
- return require_hex40(request.get("source_head"),"source_head"),require_hex40(request.get("source_tree"),"source_tree")
+ head=require_hex40(request.get("source_head"),"source_head");tree=require_hex40(request.get("source_tree"),"source_tree")
+ mission64_verify_current(head,tree)
+ return head,tree
 
 def e3_manifest():
  docs=[];labels={"lion.openai/epoch3":"true","lion.openai/spec":E3_LPCL_DIGEST[:16]}
@@ -1599,6 +1601,7 @@ def e3_component_handle(req):
  if req.get("mission_id")!=E3_ID:raise Deny("E3_ID_MISMATCH")
  if req.get("spec_digest")!=E3_LPCL_DIGEST:raise Deny("E3_LPCL_DIGEST_MISMATCH")
  head=require_hex40(req.get("source_head"),"source_head");tree=require_hex40(req.get("source_tree"),"source_tree")
+ mission64_verify_current(head,tree)
  lid=str(req.get("logical_id") or "").upper()
  row=next((x for x in E3_LOGICAL if x[0]==lid),None)
  if row is None:raise Deny("E3_LOGICAL_ID_DENIED")
@@ -1623,7 +1626,6 @@ def e3_component_handle(req):
 
 def e3_handle(req):
  op=req["operation"];head,tree=e3_require(req,worker=op=="EPOCH3_M64_RESTART_ONE")
- if op in {"EPOCH3_M64_START"}:mission64_verify_current(head,tree)
  if op=="EPOCH3_M64_PRECHECK":res={"source_head":head,"source_tree":tree,"spec":e3_spec(),"k3s":mission64_k3s_state(),"runtime":e3_read()}
  elif op=="EPOCH3_M64_START":
   mission64_start_k3s();before=e3_read()
