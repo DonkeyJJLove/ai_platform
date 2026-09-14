@@ -28,6 +28,34 @@ class DriverTests(unittest.TestCase):
     def test_illegal_complete_resume_fails(self):
         d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now);d.transition(self.c,'M1','COMPLETE',now)
         with self.assertRaises(ValueError): d.activate(self.c,'M1',now)
+    def test_complete_releases_lease_clears_cursor_and_persists_terminal_checkpoint(self):
+        d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now,owner_id='owner-A',lease_seconds=60)
+        aid=d.begin_attempt(self.c,'M1','P1',now,owner_id='owner-A');d.finish_attempt(self.c,aid,now,state='PASS',evidence={'ok':True})
+        out=d.transition(self.c,'M1','COMPLETE',now,next_action='TERMINAL_RECONCILED')
+        snap=d.snapshot(self.c,'M1')
+        self.assertEqual(snap['state'],'COMPLETE')
+        self.assertIsNone(snap['lease_owner']);self.assertIsNone(snap['lease_expires_at'])
+        self.assertIsNone(snap['current_phase']);self.assertIsNone(snap['current_attempt_id'])
+        self.assertEqual(snap['latest_checkpoint']['state'],'COMPLETE')
+        self.assertEqual(snap['checkpoint_digest'],snap['latest_checkpoint']['cursor_digest'])
+        self.assertEqual(out['checkpoint_digest'],snap['checkpoint_digest'])
+        self.assertEqual(snap['latest_attempt']['attempt_id'],aid)
+
+    def test_reconcile_complete_repairs_legacy_terminal_drift_idempotently(self):
+        d.ensure_driver(self.c,'M1',now);d.activate(self.c,'M1',now,owner_id='owner-A',lease_seconds=60)
+        aid=d.begin_attempt(self.c,'M1','P1',now,owner_id='owner-A');d.finish_attempt(self.c,aid,now,state='PASS',evidence={'ok':True})
+        d.transition(self.c,'M1','PAUSED',now,next_action='OPERATOR_RESUME')
+        first=d.reconcile_complete(self.c,'M1',now)
+        snap=d.snapshot(self.c,'M1')
+        self.assertFalse(first['idempotent']);self.assertEqual(first['previous_state'],'PAUSED')
+        self.assertEqual(snap['state'],'COMPLETE');self.assertIsNone(snap['current_phase']);self.assertIsNone(snap['current_attempt_id'])
+        self.assertIsNone(snap['lease_owner']);self.assertIsNone(snap['lease_expires_at'])
+        self.assertEqual(snap['latest_checkpoint']['state'],'COMPLETE')
+        self.assertEqual(snap['checkpoint_digest'],snap['latest_checkpoint']['cursor_digest'])
+        count=self.c.execute("SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id='M1'").fetchone()[0]
+        second=d.reconcile_complete(self.c,'M1',now)
+        self.assertTrue(second['idempotent'])
+        self.assertEqual(count,self.c.execute("SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id='M1'").fetchone()[0])
     def test_adaptive_plan_is_bounded_and_identity_preserving(self):
         self.c.execute('CREATE TABLE material_workers(mission_id TEXT,pod_name TEXT,pod_uid TEXT,logical_id TEXT,phase TEXT,ready INTEGER,restarts INTEGER,pod_ip TEXT,observed_at TEXT)')
         for i in range(64):

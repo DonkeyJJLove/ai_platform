@@ -37,6 +37,23 @@ class GlobalSchedulerTests(unittest.TestCase):
         self.assertEqual(specs[0]['gate_class'],'WAITING')
         self.assertEqual(specs[0]['retry_policy'],'NO_AUTOMATIC_RETRY')
 
+    def test_unknown_phase_resolver_is_pure_fail_closed(self):
+        resolved=g.resolve_phase_execution_spec('__LION_UNKNOWN_HANDLER_CANARY__',{})
+        self.assertEqual(resolved['handler_id'],'PHASE_HANDLER_NOT_REGISTERED')
+        self.assertEqual(resolved['effect_class'],'NONE')
+        self.assertEqual(resolved['gate_class'],'WAITING')
+        self.assertEqual(resolved['retry_policy'],'NO_AUTOMATIC_RETRY')
+        self.assertEqual(resolved['authority_class'],'NONE')
+
+    def test_known_phase_resolver_preserves_registered_handler(self):
+        configured={'KNOWN':{'handler_id':'VERIFY_KNOWN','effect_class':'CONTROL_STATE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'MISSION_CONTROL'}}
+        resolved=g.resolve_phase_execution_spec('KNOWN',configured)
+        self.assertEqual(resolved['handler_id'],'VERIFY_KNOWN')
+        self.assertEqual(resolved['effect_class'],'CONTROL_STATE')
+        self.assertEqual(resolved['gate_class'],'EVIDENCE')
+        self.assertEqual(resolved['retry_policy'],'IDEMPOTENT')
+        self.assertEqual(resolved['authority_class'],'MISSION_CONTROL')
+
     def test_waiting_run_does_not_block_active_run(self):
         for mid,state,ts in [('A','WAITING','2026-01-01T00:00:00Z'),('B','ACTIVE','2026-01-01T00:00:01Z')]:
             self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",(mid,'RUNNING',ts,'x','x',0,0,None))

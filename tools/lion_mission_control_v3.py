@@ -20,9 +20,9 @@ try:
 except ImportError:
  from tools.lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, cancel_request as saas_cancel, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 try:
- from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, adaptive_worker_plan as driver_adaptive_worker_plan
+ from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, reconcile_complete as driver_reconcile_complete, adaptive_worker_plan as driver_adaptive_worker_plan
 except ImportError:
- from execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, adaptive_worker_plan as driver_adaptive_worker_plan
+ from execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, reconcile_complete as driver_reconcile_complete, adaptive_worker_plan as driver_adaptive_worker_plan
 try:
  from cyber_lion.mission_control.dual_result_join import create_dual as dual_create, link_saas_request as dual_link_saas, record_response as dual_record_response, join_result as dual_join_result, LOCAL_PROVIDER as DUAL_LOCAL_PROVIDER, SAAS_PROVIDER as DUAL_SAAS_PROVIDER
 except ImportError:
@@ -217,6 +217,8 @@ def snapshot():
 PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL')
 PHASE_STATES=('PENDING','READY','RUNNING','WAITING','BLOCKED','PASS','FAIL','SKIPPED','COMPLETE','CANCELLED')
 LPCL_REBIND_SOURCE='EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1'
+EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
+EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_REBIND_DISTRIBUTION=(6,6,6,6,5,5,5,5,5,5,5,5)
 
@@ -295,7 +297,7 @@ def bind_lpcl_execution(mid):
         c.execute('UPDATE missions SET last_error=NULL,updated_at=? WHERE mission_id=?',(now(),mid));c.commit();return process_snapshot(mid)
       src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
       if not src:raise ValueError('lpcl source mission missing:'+source_mid)
-      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ')
+      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid,current_head=m['source_head'],current_tree=m['source_tree'])
       live_pods=runtime.get('pods') or []
       if runtime.get('state')!='RUNNING' or int(runtime.get('materialized',0) or 0)!=64 or int(runtime.get('ready',0) or 0)!=64 or int(runtime.get('unique_uid_count',0) or 0)!=64 or len(live_pods)!=64:
        raise ValueError('lpcl live material fleet not healthy')
@@ -521,10 +523,16 @@ def _send_broker_request(req):
     return value['result'],req['request_id']
 
 
-def epoch3_broker(operation,pod=None):
-    c=connect();row=c.execute('SELECT mission_id,spec_digest,source_head,source_tree FROM missions WHERE mission_id=?',(LPCL_REBIND_SOURCE,)).fetchone();c.close()
-    if not row:raise ValueError('epoch3 source mission missing')
-    req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':LPCL_REBIND_SOURCE,'source_head':row['source_head'],'source_tree':row['source_tree'],'spec_digest':row['spec_digest']}
+def epoch3_broker(operation,pod=None,source_mission_id=None,current_head=None,current_tree=None):
+    # Mission lineage and material-carrier authority are distinct identities.
+    # The explicit source mission must exist, but the privileged E3 broker
+    # remains pinned to its exact physical carrier identity/spec.
+    source_mid=str(source_mission_id or LPCL_REBIND_SOURCE).strip()
+    c=connect();source=c.execute('SELECT mission_id,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone();c.close()
+    if not source:raise ValueError('epoch3 source mission missing:'+source_mid)
+    head=str(current_head or source['source_head'] or '').strip();tree=str(current_tree or source['source_tree'] or '').strip()
+    if not _hex(head,40) or not _hex(tree,40):raise ValueError('epoch3 currentness identity')
+    req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':EPOCH3_MATERIAL_CARRIER_ID,'source_head':head,'source_tree':tree,'spec_digest':EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST}
     if pod is not None:req['pod_name']=pod
     return _send_broker_request(req)
 
@@ -1091,14 +1099,13 @@ def _phase_exec_spec(c,mid,pid):
 def _normalize_complete_driver(c,mid):
     m=c.execute('SELECT state FROM missions WHERE mission_id=?',(mid,)).fetchone()
     d=driver_snapshot(c,mid)
-    if not m or not d:return False
-    if m['state']=='COMPLETE' and d['state']!='COMPLETE':
-      # Never resume a terminal mission just to normalize the driver.  Record
-      # the terminal truth directly only from a durable mission COMPLETE row.
-      c.execute("UPDATE mission_execution_drivers SET state='COMPLETE',waiting_reason=NULL,blocking_gate=NULL,next_action='TERMINAL_RECONCILED',updated_at=? WHERE mission_id=?",(now(),mid))
-      _process_message(c,mid,'RECOVERY','GLOBAL_SCHEDULER','MISSION_CONTROL',None,{'event':'MISSION_COMPLETE_DRIVER_NORMALIZED','previous_driver_state':d['state'],'authority_effect':'CONTROL_STATE'},'INTERNAL')
-      c.commit();return True
-    return False
+    if not m or not d or m['state']!='COMPLETE':return False
+    terminal_next_action=d.get('next_action') if d.get('state')=='COMPLETE' and d.get('next_action') else 'TERMINAL_RECONCILED'
+    result=driver_reconcile_complete(c,mid,now,next_action=terminal_next_action,commit=False)
+    if result.get('idempotent'):
+      c.commit();return False
+    _process_message(c,mid,'RECOVERY','GLOBAL_SCHEDULER','MISSION_CONTROL',None,{'event':'MISSION_COMPLETE_DRIVER_NORMALIZED','previous_driver_state':result.get('previous_state'),'checkpoint_id':result.get('checkpoint_id'),'checkpoint_digest':result.get('checkpoint_digest'),'last_phase_id':result.get('last_phase_id'),'last_attempt_id':result.get('last_attempt_id'),'authority_effect':'CONTROL_STATE'},'INTERNAL')
+    c.commit();return True
 
 
 def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
@@ -1156,8 +1163,26 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
        evidence={'normalized':normalized,'rule':'MISSION_COMPLETE_IMPLIES_DRIVER_COMPLETE'}
        bad=c.execute("SELECT COUNT(*) FROM missions m JOIN mission_execution_drivers d ON d.mission_id=m.mission_id WHERE m.state='COMPLETE' AND d.state!='COMPLETE'").fetchone()[0];evidence['remaining_mismatch']=bad;ok=bad==0
       elif pid=='UNKNOWN_HANDLER_FAIL_CLOSED':
-       unknown=c.execute("SELECT COUNT(*) FROM mission_phase_execution_specs WHERE mission_id=? AND handler_id='PHASE_HANDLER_NOT_REGISTERED'",(mid,)).fetchone()[0]
-       evidence={'unknown_handler_count':unknown,'behavior':'WAITING_NO_PROGRESS'};ok=unknown>=1
+       canary_phase_id='__LION_UNKNOWN_HANDLER_CANARY__'
+       resolved=global_sched.resolve_phase_execution_spec(canary_phase_id,{})
+       expected={
+        'handler_id':'PHASE_HANDLER_NOT_REGISTERED',
+        'gate_class':'WAITING',
+        'retry_policy':'NO_AUTOMATIC_RETRY',
+        'effect_class':'NONE',
+        'authority_class':'NONE',
+       }
+       ok=all(resolved.get(k)==v for k,v in expected.items())
+       evidence={
+        'canary_phase_id':canary_phase_id,
+        'resolved_handler':resolved.get('handler_id'),
+        'gate_class':resolved.get('gate_class'),
+        'retry_policy':resolved.get('retry_policy'),
+        'effect_class':resolved.get('effect_class'),
+        'authority_class':resolved.get('authority_class'),
+        'pass':ok,
+        'behavior':'WAITING_NO_PROGRESS',
+       }
       else:return
       aid=driver_begin_attempt(c,mid,pid,now,preconditions={'handler_id':spec['handler_id']},owner_id=DRIVER_PROCESS_ID)
       driver_finish_attempt(c,aid,now,state='PASS' if ok else 'BLOCKED',evidence=evidence,detail=pid)
@@ -1167,6 +1192,16 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
       else:
        _driver_phase_result(c,mid,pid,'BLOCKED','Exact invariant not satisfied.',{'event':'PHASE_HANDLER_BLOCKED',**evidence},'VALIDATION')
        if driver_snapshot(c,mid)['state']!='BLOCKED':driver_transition(c,mid,'BLOCKED',now,blocking_gate=pid,waiting_reason='Exact invariant not satisfied',next_action='REACQUIRE',current_phase=pid)
+    finally:c.close()
+
+
+def _registered_control_plane_early_driver(mid):
+    c=connect()
+    try:
+      row=c.execute("SELECT phase_id FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
+      if not row or row['phase_id'] not in CONTROL_PLANE_EARLY_HANDLERS:return False
+      spec=_phase_exec_spec(c,mid,row['phase_id'])
+      return bool(spec and spec.get('handler_id')!='PHASE_HANDLER_NOT_REGISTERED')
     finally:c.close()
 
 
@@ -1183,7 +1218,7 @@ def global_scheduler_once():
     if not pick:return
     mid=pick['mission_id']
     if mid==SELF_HOSTING_MISSION:drive_self_hosted_once(mid)
-    elif mid==CONTROL_PLANE_MISSION:drive_control_plane_once(mid)
+    elif mid==CONTROL_PLANE_MISSION or _registered_control_plane_early_driver(mid):drive_control_plane_once(mid)
     else:
       # Generic runs with no registered executable driver remain durably
       # scheduled but cannot be promoted. Their own exact handlers must opt in.

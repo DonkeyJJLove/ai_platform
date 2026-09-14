@@ -124,6 +124,74 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(assignment['material_currentness_source'], 'EPOCH3_M64_READ')
         self.assertEqual(assignment['material_request_id'], 'live-read-request')
 
+    def test_explicit_parent_is_used_even_when_legacy_rebind_source_is_absent(self):
+        explicit_parent = 'EXPLICIT-HEALTHY-PARENT-R1'
+        self.mc.register_lpcl_mission(self.spec(explicit_parent, 'PROJECT=LION_EVOLUSION\n'))
+        c = self.mc.connect()
+        c.execute('DELETE FROM missions WHERE mission_id=?', (self.parent,))
+        c.commit(); c.close()
+        child = self.spec('EXPLICIT-PARENT-CHILD-R1', self.child_text(explicit_parent))
+        self.mc.register_lpcl_mission(child)
+        with patch.object(self.mc, '_send_broker_request', return_value=(self.runtime('explicit-parent-live'), 'explicit-parent-read')) as send:
+            out = self.mc.activate_lpcl_mission(child['mission_id'], {'lpcl_digest': child['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual((out['state'], out['materialized'], out['ready']), ('RUNNING', 64, 64))
+        request = send.call_args.args[0]
+        self.assertEqual(request['mission_id'], self.mc.EPOCH3_MATERIAL_CARRIER_ID)
+        self.assertEqual(request['spec_digest'], self.mc.EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST)
+        self.assertEqual(request['source_head'], child['source_head'])
+        self.assertEqual(request['source_tree'], child['source_tree'])
+        self.assertIn('explicit-parent-live-LD12-0', {row['pod_uid'] for row in out['workers']})
+
+    def test_nonexistent_explicit_parent_fails_closed_before_broker_request(self):
+        missing_parent = 'NONEXISTENT-PARENT-R1'
+        child = self.spec('MISSING-PARENT-CHILD-R1', self.child_text(missing_parent))
+        self.mc.register_lpcl_mission(child)
+        with patch.object(self.mc, '_send_broker_request', side_effect=AssertionError('broker must not run for nonexistent explicit parent')):
+            out = self.mc.activate_lpcl_mission(child['mission_id'], {'lpcl_digest': child['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual(out['state'], 'AUTHORIZED')
+        self.assertEqual(out['runtime_state'], 'NOT_STARTED')
+        self.assertIn('lpcl source mission missing:'+missing_parent, out['last_error'])
+
+    def test_global_scheduler_routes_any_mission_with_registered_early_handler(self):
+        mid = 'GENERIC-EARLY-HANDLER-R1'
+        spec = self.spec(mid, self.child_text(self.parent))
+        spec['phases'] = [{'id': 'EXACT_128L64M_TOPOLOGY_BIND', 'title': 'Topology'}]
+        self.mc.register_lpcl_mission(spec)
+        c = self.mc.connect()
+        c.execute("UPDATE missions SET state='RUNNING' WHERE mission_id=?", (mid,))
+        c.execute("UPDATE mission_process_specs SET authority_state='EXPLICIT_USER_ACTIVATION',current_phase='EXACT_128L64M_TOPOLOGY_BIND' WHERE mission_id=?", (mid,))
+        c.execute("UPDATE mission_phases SET status='RUNNING' WHERE mission_id=? AND phase_id='EXACT_128L64M_TOPOLOGY_BIND'", (mid,))
+        self.mc.global_sched.compile_phase_specs(c, mid, {'EXACT_128L64M_TOPOLOGY_BIND': {'handler_id':'VERIFY_128L64M_BIND','effect_class':'NONE','gate_class':'EVIDENCE','retry_policy':'IDEMPOTENT','authority_class':'NONE'}})
+        self.mc.ensure_driver(c, mid, self.mc.now, initial_state='BOOTSTRAP_PAUSED')
+        self.mc.driver_activate(c, mid, self.mc.now, next_action='GLOBAL_SCHEDULER_DISPATCH', owner_id=self.mc.DRIVER_PROCESS_ID)
+        c.close()
+        with patch.object(self.mc.global_sched, 'next_dispatch', return_value={'mission_id': mid}), patch.object(self.mc, 'drive_control_plane_once') as drive:
+            self.mc.global_scheduler_once()
+        drive.assert_called_once_with(mid)
+
+    def test_complete_mission_reconciliation_persists_terminal_driver_checkpoint(self):
+        mid='TERMINAL-RECONCILE-R1'
+        child=self.spec(mid,self.child_text(self.parent))
+        self.mc.register_lpcl_mission(child)
+        c=self.mc.connect()
+        c.execute("UPDATE missions SET state='COMPLETE',runtime_state='DRIVER_COMPLETE' WHERE mission_id=?",(mid,))
+        c.execute("UPDATE mission_process_specs SET authority_state='EXPLICIT_USER_ACTIVATION' WHERE mission_id=?",(mid,))
+        self.mc.ensure_driver(c,mid,self.mc.now,initial_state='BOOTSTRAP_PAUSED')
+        self.mc.driver_activate(c,mid,self.mc.now,owner_id='test-owner',lease_seconds=60)
+        self.mc.driver_transition(c,mid,'PAUSED',self.mc.now,next_action='OPERATOR_RESUME')
+        before=self.mc.driver_snapshot(c,mid);self.assertEqual(before['state'],'PAUSED')
+        changed=self.mc._normalize_complete_driver(c,mid);self.assertTrue(changed)
+        after=self.mc.driver_snapshot(c,mid)
+        self.assertEqual(after['state'],'COMPLETE')
+        self.assertIsNone(after['lease_owner']);self.assertIsNone(after['lease_expires_at'])
+        self.assertIsNone(after['current_phase']);self.assertIsNone(after['current_attempt_id'])
+        self.assertEqual(after['latest_checkpoint']['state'],'COMPLETE')
+        self.assertEqual(after['checkpoint_digest'],after['latest_checkpoint']['cursor_digest'])
+        count=c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0]
+        self.assertFalse(self.mc._normalize_complete_driver(c,mid))
+        self.assertEqual(count,c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0])
+        c.close()
+
     def test_restart_reconciliation_preserves_bound_child_snapshot_instead_of_rewinding_parent(self):
         child, _ = self.activate_child()
         with patch.object(self.mc, 'epoch3_broker', side_effect=AssertionError('exact persisted child must not be replaced from parent')):

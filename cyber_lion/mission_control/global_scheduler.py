@@ -124,6 +124,33 @@ def heartbeat(conn, now_fn, *, queue_depth, active_run_count, last_error=None, d
     return scheduler_snapshot(conn)
 
 
+def resolve_phase_execution_spec(phase_id, handlers, *, default_timeout=300):
+    """Pure phase-spec resolution. Unknown phases are fail-closed and effect-free."""
+    pid = str(phase_id)
+    configured = handlers.get(pid)
+    if configured is None:
+        return {
+            "handler_id": "PHASE_HANDLER_NOT_REGISTERED",
+            "handler_version": "1",
+            "effect_class": "NONE",
+            "gate_class": "WAITING",
+            "timeout_seconds": int(default_timeout),
+            "retry_policy": "NO_AUTOMATIC_RETRY",
+            "authority_class": "NONE",
+        }
+    spec = dict(configured)
+    if not spec.get("handler_id"):
+        raise ValueError("phase handler id")
+    spec.setdefault("handler_version", "1")
+    spec.setdefault("effect_class", "NONE")
+    spec.setdefault("gate_class", "NONE")
+    spec.setdefault("timeout_seconds", int(default_timeout))
+    spec.setdefault("retry_policy", "NO_AUTOMATIC_RETRY")
+    spec.setdefault("authority_class", "NONE")
+    spec["timeout_seconds"] = int(spec["timeout_seconds"])
+    return spec
+
+
 def compile_phase_specs(conn, mission_id, handlers, *, default_timeout=300):
     rows = conn.execute(
         "SELECT phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal", (mission_id,)
@@ -131,24 +158,13 @@ def compile_phase_specs(conn, mission_id, handlers, *, default_timeout=300):
     out = []
     for row in rows:
         pid = str(row["phase_id"])
-        spec = handlers.get(pid)
-        if spec is None:
-            spec = {
-                "handler_id": "PHASE_HANDLER_NOT_REGISTERED",
-                "handler_version": "1",
-                "effect_class": "NONE",
-                "gate_class": "WAITING",
-                "timeout_seconds": default_timeout,
-                "retry_policy": "NO_AUTOMATIC_RETRY",
-                "authority_class": "NONE",
-            }
+        spec = resolve_phase_execution_spec(pid, handlers, default_timeout=default_timeout)
         conn.execute(
             "INSERT INTO mission_phase_execution_specs VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(mission_id,phase_id) DO UPDATE SET handler_id=excluded.handler_id,handler_version=excluded.handler_version,effect_class=excluded.effect_class,gate_class=excluded.gate_class,timeout_seconds=excluded.timeout_seconds,retry_policy=excluded.retry_policy,authority_class=excluded.authority_class",
             (
-                mission_id, pid, spec["handler_id"], spec.get("handler_version", "1"),
-                spec.get("effect_class", "NONE"), spec.get("gate_class", "NONE"),
-                int(spec.get("timeout_seconds", default_timeout)), spec.get("retry_policy", "NO_AUTOMATIC_RETRY"),
-                spec.get("authority_class", "NONE"),
+                mission_id, pid, spec["handler_id"], spec["handler_version"],
+                spec["effect_class"], spec["gate_class"],
+                spec["timeout_seconds"], spec["retry_policy"], spec["authority_class"],
             ),
         )
         out.append({"phase_id": pid, **spec})

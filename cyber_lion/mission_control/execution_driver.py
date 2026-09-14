@@ -169,12 +169,37 @@ def _checkpoint(conn, mission_id, now_fn, cursor):
     return {"checkpoint_id":cid,"checkpoint_digest":dg}
 
 
+def _terminalize(conn, mission_id, now_fn, *, next_action="TERMINAL_RECONCILED", last_effect=None, last_effect_receipt=None, reconcile=False, commit=True):
+    row=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+    if not row: raise ValueError("driver missing")
+    old=row["state"]
+    if old != "COMPLETE" and not reconcile and not legal_driver_transition(old,"COMPLETE"):
+        raise ValueError(f"illegal driver transition {old}->COMPLETE")
+    latest=conn.execute("SELECT checkpoint_id,state,cursor_digest,created_at FROM mission_execution_checkpoints WHERE mission_id=? ORDER BY created_at DESC,rowid DESC LIMIT 1",(mission_id,)).fetchone()
+    clean=(old=="COMPLETE" and row["lease_owner"] is None and row["lease_expires_at"] is None and row["current_phase"] is None and row["current_attempt_id"] is None and row["waiting_reason"] is None and row["blocking_gate"] is None and row["next_action"]==next_action and latest is not None and latest["state"]=="COMPLETE" and row["checkpoint_digest"]==latest["cursor_digest"])
+    if clean:
+        return {"checkpoint_id":latest["checkpoint_id"],"checkpoint_digest":latest["cursor_digest"],"idempotent":True,"previous_state":old}
+    last_phase=row["current_phase"]; last_attempt=row["current_attempt_id"]; stamp=now_fn()
+    conn.execute("UPDATE mission_execution_drivers SET state='COMPLETE',lease_owner=NULL,lease_expires_at=NULL,waiting_reason=NULL,blocking_gate=NULL,next_action=?,last_effect=COALESCE(?,last_effect),last_effect_receipt=COALESCE(?,last_effect_receipt),current_phase=NULL,current_attempt_id=NULL,updated_at=? WHERE mission_id=?",
+        (next_action,last_effect,last_effect_receipt,stamp,mission_id))
+    event="DRIVER_TERMINAL_RECONCILED" if reconcile else "DRIVER_COMPLETED"
+    cp=_checkpoint(conn,mission_id,now_fn,{"state":"COMPLETE","event":event,"previous_state":old,"next_action":next_action,"last_phase_id":last_phase,"last_attempt_id":last_attempt,"lease_released":True})
+    if commit:conn.commit()
+    return {**cp,"idempotent":False,"previous_state":old,"last_phase_id":last_phase,"last_attempt_id":last_attempt}
+
+
+def reconcile_complete(conn, mission_id, now_fn, *, next_action="TERMINAL_RECONCILED", commit=True):
+    return _terminalize(conn,mission_id,now_fn,next_action=next_action,reconcile=True,commit=commit)
+
+
 def transition(conn, mission_id, new_state, now_fn, *, waiting_reason=None, blocking_gate=None, next_action=None, last_effect=None, last_effect_receipt=None, current_phase=None, commit=True):
     row=conn.execute("SELECT state FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not row: raise ValueError("driver missing")
     old=row["state"]
     if new_state not in DRIVER_STATES or not legal_driver_transition(old,new_state):
         raise ValueError(f"illegal driver transition {old}->{new_state}")
+    if new_state=="COMPLETE":
+        return _terminalize(conn,mission_id,now_fn,next_action=next_action or "TERMINAL_RECONCILED",last_effect=last_effect,last_effect_receipt=last_effect_receipt,reconcile=False,commit=commit)
     stamp=now_fn()
     conn.execute("UPDATE mission_execution_drivers SET state=?,waiting_reason=?,blocking_gate=?,next_action=?,last_effect=COALESCE(?,last_effect),last_effect_receipt=COALESCE(?,last_effect_receipt),current_phase=COALESCE(?,current_phase),updated_at=? WHERE mission_id=?",
         (new_state,waiting_reason,blocking_gate,next_action,last_effect,last_effect_receipt,current_phase,stamp,mission_id))
@@ -263,7 +288,7 @@ def snapshot(conn, mission_id):
     row=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not row:return None
     d=dict(row)
-    d["latest_checkpoint"] = dict(conn.execute("SELECT checkpoint_id,driver_generation,phase_id,attempt_id,state,cursor_digest,created_at FROM mission_execution_checkpoints WHERE mission_id=? ORDER BY created_at DESC LIMIT 1",(mission_id,)).fetchone() or {})
+    d["latest_checkpoint"] = dict(conn.execute("SELECT checkpoint_id,driver_generation,phase_id,attempt_id,state,cursor_digest,created_at FROM mission_execution_checkpoints WHERE mission_id=? ORDER BY created_at DESC,rowid DESC LIMIT 1",(mission_id,)).fetchone() or {})
     d["latest_attempt"] = dict(conn.execute("SELECT attempt_id,phase_id,driver_generation,attempt_no,state,started_at,finished_at,precondition_digest,evidence_digest,effect_receipt_digest,detail FROM mission_phase_attempts WHERE mission_id=? ORDER BY started_at DESC LIMIT 1",(mission_id,)).fetchone() or {})
     d["latest_gate"] = dict(conn.execute("SELECT observation_id,phase_id,gate_id,state,observed_digest,observed_at FROM mission_gate_observations WHERE mission_id=? ORDER BY observed_at DESC LIMIT 1",(mission_id,)).fetchone() or {})
     return d
