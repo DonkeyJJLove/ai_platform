@@ -95,6 +95,8 @@ html,body{height:100%;overflow:hidden}.layout{height:100vh;min-height:0}.app{hei
 
 
 .event-label{font:inherit;font-size:10px;padding:2px 5px;background:transparent;border:0;color:inherit;cursor:pointer}.tone-info .event-label{color:#8bcafa}.tone-good .event-label{color:#80ddb0}.tone-warn .event-label{color:#f0d376}.tone-bad .event-label{color:#f6a2b3}.mission-item{max-width:100%;overflow:hidden}.mission-item b,.mission-item span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.semantic-card h3{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.compact-fact{padding:1px 4px}.compact-fact>span[aria-hidden]{display:none}
 </style></head><body><div class="layout"><aside class="sidebar"><button class="primary thread-new" onclick="createThread()">+ Nowa rozmowa</button><h2>Misje</h2><div id="missionList" class="mission-list"></div><h2>Historia rozmów</h2><div id="threadList" class="thread-list"></div><div class="meta"><b>Control plane</b><br>Mission Control: 8766<br>LPCL intake: ACTIVE<br>AUTO · LOCAL-first<br><span id="sidebarSaas" class="ok">SaaS supervisor: sprawdzanie…</span><br><small id="sidebarSaasMeta">Hybrid required · authority NONE</small></div></aside><div class="app">
 <div class="top"><div><h1>LION CONTROL LPCL PANEL</h1><p class="subtitle">LPCL mission intake · live Mission Control · material execution · LION Local Model</p></div><div><div id="controlHealth" class="control-health">MISSION CONTROL …</div><div class="thread-title">Wątek: <b id="activeThreadTitle">—</b></div></div></div>
 <div id="cards" class="cards"></div>
@@ -149,9 +151,9 @@ function semanticDetail(key,title,fields,raw,escape){
  const state=String(raw?.status||raw?.state||raw?.event_type||raw?.protocol||title).toUpperCase();
  const tone=/FAIL|ERROR|REJECT|BLOCK/.test(state)?'bad':/PASS|COMPLETE|READY|SUCCESS/.test(state)?'good':/WAIT|PENDING|EXPIRED/.test(state)?'warn':'info';
  const event=values.some(([name])=>['Timestamp','Observed at'].includes(name));
- const badges=values.map(([name,value])=>{const inline=['State','Progress','Evidence count'].includes(name)?' '+value:'';return `<span class="compact-fact" tabindex="0" title="${escape(name+': '+value)}"><span aria-hidden="true">${value==='NOT_RECORDED'?'○':'●'}</span> ${escape(name+inline)}<span class="compact-tooltip" role="tooltip">${escape(name+': '+value)}</span></span>`}).join('');
+ const badges=values.map(([name,value])=>{const inline=['State','Progress','Evidence count'].includes(name)?' '+value:'';return `<span class="compact-fact" tabindex="0" aria-label="${escape(name+': '+value)}" title="${escape(name+': '+value)}"><span aria-hidden="true">${value==='NOT_RECORDED'?'○':'●'}</span> ${inline?escape(name+inline):escape(({Handler:'⚙','Handler version':'v',Blocker:'!',Detail:'ⓘ',Control:'⌘'})[name]||'ⓘ')}<span class="compact-tooltip" role="tooltip">${escape(name+': '+value)}</span></span>`}).join('');
  const details=`<details class="semantic-raw" data-key="raw"><summary title="Pokaż pełny rekord">${event?'⋯':'RAW'}</summary><pre>${escape(JSON.stringify(raw??{},null,2).slice(0,40000))}</pre></details>`;
- return `<article class="semantic-card ${event?'semantic-event':''} tone-${tone}" data-key="${escape(key)}">${event?`<button type="button" class="event-label" title="${escape(tip)}" onclick="const d=this.parentElement.querySelector('details');d.open=!d.open">${escape(title)}</button>`:`<h3 tabindex="0" title="${escape(tip)}">${escape(title)}</h3>`}${event?'':`<div class="compact-facts">${badges}</div>`}${details}</article>`;
+ return `<article class="semantic-card ${event?'semantic-event':''} tone-${tone}" data-key="${escape(key)}">${event?`<button type="button" class="event-label" title="${escape(title+'\n'+tip)}" onclick="const d=this.parentElement.querySelector('details');d.open=!d.open">${escape(title)}</button>`:`<h3 tabindex="0" title="${escape(title+'\n'+tip)}">${escape(title)}</h3>`}${event?'':`<div class="compact-facts">${badges}</div>`}${details}</article>`;
 }
 
 function phaseCard(phase,mission,escape){
