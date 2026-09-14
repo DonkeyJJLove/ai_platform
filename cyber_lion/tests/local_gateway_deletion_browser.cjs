@@ -60,4 +60,3 @@ try{
 finally{report.page_errors=errors;fs.writeFileSync(process.argv[3],JSON.stringify(report,null,2));await browser.close();}
 console.log(JSON.stringify(report,null,2));
 })();
-
