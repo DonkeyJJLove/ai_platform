@@ -18,6 +18,7 @@ apply_hybrid_gateway_extension(Gateway)
 from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
 apply_saas_handoff_extension(Gateway)
 from cyber_lion.app_coordination.web_research_broker import WebEvidence
+from cyber_lion.app_coordination import ui_runtime_events
 
 DRONE_ROLES={
 'MAT01':'LOCAL_REPOSITORY_CURRENTNESS','MAT02':'LOCAL_REPOSITORY_CONTENT','MAT03':'LOCAL_CLONE_INVENTORY','MAT04':'FEDERATION_CURRENTNESS',
@@ -49,7 +50,7 @@ class ThreadStore:
             CREATE TABLE IF NOT EXISTS messages(message_id TEXT PRIMARY KEY,thread_id TEXT NOT NULL,seq INTEGER NOT NULL,role TEXT NOT NULL,content TEXT NOT NULL,created_at REAL NOT NULL,meta_json TEXT NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE,UNIQUE(thread_id,seq));
             CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_thread_seq ON messages(thread_id,seq);
-            """);c.commit();c.close()
+            """);c.commit();ui_runtime_events.migrate(c);c.close()
     def _id(self,v):
         if not isinstance(v,str) or not self.ID_RE.fullmatch(v):raise ValueError('thread_id')
         return v
@@ -58,6 +59,8 @@ class ThreadStore:
         with self.lock:
             c=self._conn()
             try:
+                if op=='ui_runtime_event':
+                    return ui_runtime_events.record(c,args)
                 if op=='list':
                     rows=[dict(x) for x in c.execute('SELECT thread_id,title,created_at,updated_at FROM threads ORDER BY updated_at DESC LIMIT 500')];return {'threads':rows}
                 if op=='create':

@@ -75,10 +75,24 @@ def record_response(conn, request_id, provider, response_text, now_fn, *, transp
     if provider not in {LOCAL_PROVIDER,SAAS_PROVIDER}: raise ValueError("dual provider")
     if not isinstance(response_text,str) or not response_text.strip(): raise ValueError("dual response")
     stamp=now_fn();rid="dual-receipt-"+uuid.uuid4().hex;dg=_digest_text(response_text.strip())
-    conn.execute("INSERT OR REPLACE INTO mission_dual_receipts(receipt_id,request_id,provider,response_digest,response_text,transport,authority_effect,created_at) VALUES(?,?,?,?,?,?,?,?)",
-                 (rid,request_id,provider,dg,response_text.strip(),transport,authority_effect,stamp))
-    n=conn.execute("SELECT COUNT(DISTINCT provider) FROM mission_dual_receipts WHERE request_id=?",(request_id,)).fetchone()[0]
-    conn.execute("UPDATE mission_dual_evaluations SET state=?,updated_at=? WHERE request_id=?",("JOIN_READY" if int(n)==2 else "WAITING_RESPONSES",stamp,request_id));conn.commit()
+    # The provider's first receipt is immutable, including across concurrent
+    # ingress and process restarts. A replay must not become a new observation.
+    conn.execute("SAVEPOINT dual_response_ingress")
+    try:
+        inserted=conn.execute("INSERT INTO mission_dual_receipts(receipt_id,request_id,provider,response_digest,response_text,transport,authority_effect,created_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(request_id,provider) DO NOTHING",
+                             (rid,request_id,provider,dg,response_text.strip(),transport,authority_effect,stamp))
+        if inserted.rowcount != 1:
+            existing=conn.execute("SELECT response_digest,transport,authority_effect FROM mission_dual_receipts WHERE request_id=? AND provider=?",(request_id,provider)).fetchone()
+            identical=existing is not None and tuple(existing)==(dg,transport,authority_effect)
+            raise ValueError("dual response duplicate" if identical else "dual response conflict")
+        n=conn.execute("SELECT COUNT(DISTINCT provider) FROM mission_dual_receipts WHERE request_id=?",(request_id,)).fetchone()[0]
+        conn.execute("UPDATE mission_dual_evaluations SET state=?,updated_at=? WHERE request_id=?",("JOIN_READY" if int(n)==2 else "WAITING_RESPONSES",stamp,request_id))
+    except Exception:
+        conn.execute("ROLLBACK TO dual_response_ingress")
+        conn.execute("RELEASE dual_response_ingress")
+        raise
+    conn.execute("RELEASE dual_response_ingress")
+    conn.commit()
     return {"receipt_id":rid,"request_id":request_id,"provider":provider,"response_digest":dg,"authority_effect":authority_effect}
 
 

@@ -80,6 +80,8 @@ UI=r'''<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="vi
 
 /* Epoch3 stable viewport: document does not scroll; app/sidebar own scroll, composer stays visible. */
 html,body{height:100%;overflow:hidden}.layout{height:100vh;min-height:0}.app{height:100vh;min-height:0;overflow:auto;padding-bottom:150px}.composer{position:fixed;left:280px;right:0;bottom:0;z-index:40;box-shadow:0 -12px 28px #0009}.messages{overflow:auto}.proto-labels{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}.proto-labels span{border:1px solid #365365;border-radius:999px;padding:2px 6px;color:#a9c9d8}.proto-raw summary{cursor:pointer;color:#75bddc}.proto-raw pre{max-height:260px;overflow:auto;white-space:pre-wrap}@media(max-width:900px){.composer{left:0}.app{padding-bottom:175px}}
+
+.phase-card{min-width:0;max-width:100%;overflow-wrap:anywhere}.phase-card>div{min-width:0;flex-wrap:wrap}.phase-card b{display:block;min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word}.phase-card span{flex-shrink:0}
 </style></head><body><div class="layout"><aside class="sidebar"><button class="primary thread-new" onclick="createThread()">+ Nowa rozmowa</button><h2>Misje</h2><div id="missionList" class="mission-list"></div><h2>Historia rozmów</h2><div id="threadList" class="thread-list"></div><div class="meta"><b>Control plane</b><br>Mission Control: 8766<br>LPCL intake: ACTIVE<br>AUTO · LOCAL-first<br><span id="sidebarSaas" class="ok">SaaS supervisor: sprawdzanie…</span><br><small id="sidebarSaasMeta">Hybrid required · authority NONE</small></div></aside><div class="app">
 <div class="top"><div><h1>LION CONTROL LPCL PANEL</h1><p class="subtitle">LPCL mission intake · live Mission Control · material execution · LION Local Model</p></div><div><div id="controlHealth" class="control-health">MISSION CONTROL …</div><div class="thread-title">Wątek: <b id="activeThreadTitle">—</b></div></div></div>
 <div id="cards" class="cards"></div>
@@ -98,13 +100,93 @@ function addMsg(role,text){let d=document.createElement('div');d.className='msg 
 function boundedHistory(){return history.slice(-12).map(x=>({role:x.role,content:x.content.slice(0,3000)}))}
 function supervisorThreadId(){let t=threads.find(x=>String(x.title||'').trim().toLowerCase()==='lion saas');return t?.thread_id||activeThreadId||null}
 function adoptPendingSaas(sb){let p=sb?.pending||{};if(!p.request_id||pendingSaasPolls.has(p.request_id))return;let threadId=supervisorThreadId();if(!threadId)return;pollSaas({request_id:p.request_id,request_code:p.request_code||null,dual_request_id:p.dual_request_id||null,thread_id:threadId,adopted_from_bridge:true})}
-async function state(){if(stateRefreshing)return;stateRefreshing=true;try{let x=await(await fetch('/api/state',{cache:'no-store'})).json(),m=x.material||{},mc=x.mission_control||{},sb=x.saas_session_bridge||{},bind=sb.binding||{},pend=sb.pending||{},last=sb.last_response||{};let nextKey=JSON.stringify([x.model,x.gpu,x.rag_status,m.healthy,sb.state,sb.channel_state,sb.session_attestation_state,sb.pending_count,pend.request_id,last.receipt_digest,mc.focus?.mission_id,mc.focus?.state,x.authority_effect,pendingSaasPolls.size]);if(nextKey===stateRenderKey){adoptPendingSaas(sb);return}let vp=captureViewport();stateRenderKey=nextKey;let rows=[['MODEL',x.model],['GPU',x.gpu||'RTX 5090'],['RAG',x.rag_status],['WEB','AUTO HTTPS'],['REPOS','AUTO READ'],['SAAS',sb.state||x.saas_bridge_state||x.saas_capability||'UNKNOWN'],['HYBRID',x.hybrid_architecture_required?'REQUIRED':'UNKNOWN'],['MISSION',mc.status==='OK'?(mc.focus?.state||'OK'):'UNKNOWN'],['MAT12',(m.healthy??0)+'/12 healthy'],['AUTH',x.authority_effect]];cardsEl.innerHTML=rows.map(z=>'<div class="card"><div class="k">'+z[0]+'</div><div class="v">'+esc(z[1])+'</div></div>').join('');let sc=$('saasCards');if(sc)sc.innerHTML=[['CHANNEL',sb.channel_state||'READY_FOR_HANDOFF'],['SESSION',sb.session_attestation_state||(bind.status==='BOUND'?'BOUND':'NOT_ATTESTED')],['MODEL',bind.model_identity||'—'],['TRANSPORT',bind.transport||sb.transport||'—'],['PENDING',String(sb.pending_count??0)],['THREAD POLL',pendingSaasPolls.size?'ACTIVE '+pendingSaasPolls.size:'IDLE'],['LAST RECEIPT',last.responded_at||'—'],['AUTH',bind.authority_effect||sb.authority_effect||'NONE']].map(z=>'<div class="card"><div class="k">'+z[0]+'</div><div class="v">'+esc(z[1])+'</div></div>').join('');let d=$('saasBridgeDetail');if(d)d.textContent=(sb.channel_state||'READY_FOR_HANDOFF')+' · session '+(sb.session_attestation_state||(bind.status==='BOUND'?'BOUND':'NOT_ATTESTED'))+' · '+(sb.state||'UNKNOWN')+' · '+(bind.model_identity||'no current attested model')+' · authority NONE';let p=$('saasPending');if(p)p.textContent=pend.request_id?('Pending FIFO: '+pend.request_code+' · '+pend.request_id+(pend.dual_request_id?' · dual '+pend.dual_request_id:'')+' · expires '+pend.expires_at+' · queue '+(sb.pending_count??1)):'Brak oczekującego handoffu.';let ss=$('sidebarSaas'),sm=$('sidebarSaasMeta');if(ss)ss.textContent='SaaS channel: '+(sb.channel_state||'READY_FOR_HANDOFF')+' · session '+(sb.session_attestation_state||'NOT_ATTESTED');if(sm)sm.textContent='transport '+(bind.transport||sb.transport||'UNKNOWN')+' · pending '+(sb.pending_count??0)+' · authority NONE';adoptPendingSaas(sb);restoreViewport(vp)}catch(e){cardsEl.innerHTML='<div class="card">State unavailable</div>';let d=$('saasBridgeDetail');if(d)d.textContent='SaaS state unavailable: '+e.message}finally{stateRefreshing=false}}
+
+function patchCards(container,rows){
+  if(!container)return;
+  const retained=new Set();
+  for(const [key,value] of rows){
+    retained.add(key);let node=Array.from(container.children).find(n=>n.dataset.key===key);
+    if(!node){node=document.createElement('div');node.className='card';node.dataset.key=key;const k=document.createElement('div'),v=document.createElement('div');k.className='k';k.textContent=key;v.className='v';node.append(k,v);container.append(node)}
+    const v=node.querySelector('.v'),text=String(value??'NOT RECORDED');if(v.textContent!==text)v.textContent=text;
+  }
+  for(const node of Array.from(container.children))if(!retained.has(node.dataset.key))node.remove();
+}
+function renderSupervisor(view){
+  const v=view||{},pending=v.pending||{},lease=v.lease||{},fresh=v.freshness||{};
+  patchCards($('saasCards'),[['CHANNEL',v.channel],['SESSION',v.session],['MODEL',v.model],['TRANSPORT',v.transport],['PENDING',v.pending_count??v.pending_state],['LAST RECEIPT',v.last_receipt?.receipt_digest||v.last_receipt_state],['LEASE',lease.state?lease.state+' · '+(lease.expires_at||'NOT RECORDED'):null],['AUTHORITY',v.authority],['AUTOMATIC HOP',v.automatic_hop===true?'READY':v.automatic_hop===false?'UNAVAILABLE':'UNKNOWN'],['OBSERVATION',fresh.state],['OBSERVED AT',fresh.observed_at]]);
+  $('saasBridgeDetail').textContent=[v.schema||'PROJECTION_MISSING',...(v.unknown_reasons||[])].join(' · ');
+  $('saasPending').textContent=pending.request_id?pending.request_id+' · '+(pending.progress_state||pending.status||'NOT RECORDED'):'Pending: '+(v.pending_state||'UNKNOWN');
+  $('sidebarSaas').textContent='SaaS channel: '+(v.channel||'UNKNOWN')+' · session '+(v.session||'UNKNOWN');
+  $('sidebarSaasMeta').textContent='transport '+(v.transport||'UNKNOWN')+' · authority '+(v.authority||'UNKNOWN');
+}
+async function state(){
+  if(stateRefreshing)return;stateRefreshing=true;
+  try{
+    const response=await fetch('/api/state',{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);
+    const x=await response.json(),m=x.material||{},mc=x.mission_control||{};
+    patchCards(cardsEl,[['MODEL',x.model],['GPU',x.gpu],['RAG',x.rag_status],['WEB',x.web_capability],['REPOS',x.repository_capability],['SAAS',x.supervisor_projection?.session],['MISSION',mc.focus?.state],['MATERIAL HEALTHY',m.healthy],['AUTH',x.authority_effect]]);
+    renderSupervisor(x.supervisor_projection);adoptPendingSaas(x.saas_session_bridge);
+  }catch(e){$('saasBridgeDetail').textContent='STALE · state read failed';await reportUiRuntimeError(e,'state.refresh')}
+  finally{stateRefreshing=false}
+}
 
 async function persistSaasAssistant(threadId,requestId,text,meta={}){if(!threadId||!requestId||!text)return {inserted:false};let r=await fetch('/api/threads/'+encodeURIComponent(threadId)+'/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:text,dedupe_key:'saas:'+requestId,meta:{delivery_kind:'SAAS_RESPONSE',saas_request_id:requestId,...meta}})}),x=await r.json();if(!r.ok)throw new Error(x.error||('thread SaaS persist '+r.status));return x}
 function recoverSaasRefs(messages,threadId){let delivered=new Set(),refs=new Map();for(let m of (messages||[])){let meta=m.meta||{};if(meta.external_receipt_key&&String(meta.external_receipt_key).startsWith('saas:'))delivered.add(String(meta.external_receipt_key).slice(5));let rid=meta.saas_request_id;if(!rid&&m.role==='assistant'){let mm=String(m.content||'').match(/(?:request|Request)\s+`?(saas-[0-9a-f]{32})`?/i);if(mm)rid=mm[1]}if(rid&&!delivered.has(rid))refs.set(rid,{request_id:rid,request_code:meta.saas_request_code||null,dual_request_id:meta.dual_request_id||null,thread_id:threadId})}return [...refs.values()]}
 async function resumeThreadSaas(messages,threadId){for(let h of recoverSaasRefs(messages,threadId))pollSaas(h)}
 async function pollSaas(h){if(!h||!h.request_id)return;let key=h.request_id;if(pendingSaasPolls.has(key))return pendingSaasPolls.get(key);let task=(async()=>{let threadId=h.thread_id||activeThreadId;busyEl.textContent='SaaS handoff '+key.slice(-8)+' · oczekiwanie na realny receipt…';let deadline=Date.now()+20*60*1000;while(Date.now()<deadline){await new Promise(r=>setTimeout(r,1500));try{let r=await fetch('/api/saas/requests/'+encodeURIComponent(key),{cache:'no-store'}),x=await r.json();if(!r.ok)throw new Error(x.error||('SaaS status '+r.status));if(x.expires_at){let ex=Date.parse(x.expires_at);if(Number.isFinite(ex))deadline=Math.max(deadline,ex+5000)}if(x.status==='RESPONDED'){let meta={};try{meta=x.response_meta_json?JSON.parse(x.response_meta_json):{}}catch(e){}let model=meta.model_identity||'ChatGPT SaaS',transport=meta.transport||'CHATGPT_SENTINELX_SESSION_MEDIATED',text='';if(h.dual_request_id){let jr=await fetch('/api/dual/'+encodeURIComponent(h.dual_request_id),{cache:'no-store'}),j=await jr.json();if(!jr.ok)throw new Error(j.error||('dual state '+jr.status));if(j.state!=='JOINED'){busyEl.textContent='SaaS receipt zapisany; backend finalizuje dual join…';continue}text=j.answer||('Dual join state: '+j.state)}else{text='**SaaS supervisor · '+model+'**\n\n'+(x.response_text||'')}let saved=await persistSaasAssistant(threadId,key,text,{model_identity:model,transport,receipt_digest:x.receipt_digest||null,dual_request_id:h.dual_request_id||null});if(saved.inserted&&threadId===activeThreadId){addMsg('assistant',text);history.push({role:'assistant',content:text});history=history.slice(-16)}routeEl.textContent=(h.dual_request_id?'route: DUAL_EVALUATION_JOINED':'route: SAAS_HANDOFF')+' · receipt '+String(x.receipt_digest||'').slice(0,12);busyEl.textContent='';await refreshThreads();state();return x}if(['EXPIRED','SUPERSEDED','REJECTED'].includes(x.status)){let text='SaaS handoff '+key+' zakończony bez odpowiedzi: '+x.status;let saved=await persistSaasAssistant(threadId,key,text,{terminal_status:x.status});if(saved.inserted&&threadId===activeThreadId)addMsg('assistant',text);busyEl.textContent='';await refreshThreads();return x}busyEl.textContent='SaaS '+key.slice(-8)+' · '+x.status+' · panel śledzi request automatycznie'}catch(e){console.warn('SaaS poll',key,e)}}busyEl.textContent='SaaS '+key.slice(-8)+' nadal oczekuje; śledzenie będzie wznowione po otwarciu wątku.';return null})().finally(()=>{pendingSaasPolls.delete(key);state()});pendingSaasPolls.set(key,task);state();return task}
-async function go(question){let text=(question??qEl.value).trim();if(!text||sendEl.disabled)return;lastQuestion=text;addMsg('user',text);qEl.value='';sendEl.disabled=true;busyEl.textContent='Routing → evidence → model…';let start=performance.now();try{if(!activeThreadId)await createThread();let resp=await fetch('/api/threads/'+activeThreadId+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,output_language:langEl.value})});let x=await resp.json();if(!resp.ok)throw new Error(x.error||('HTTP '+resp.status));lastPayload=x;lastAnswer=x.answer||'';addMsg('assistant',lastAnswer||x.error);history.push({role:'user',content:text},{role:'assistant',content:lastAnswer});history=history.slice(-16);await refreshThreads();routeEl.textContent='route: '+(x.route||'')+' · '+Math.round(performance.now()-start)+' ms';evidenceEl.innerHTML=evidenceHtml(x);debugEl.textContent=JSON.stringify(x,null,2);if(!dbgEl.checked)evidenceEl.classList.remove('hide');if(x.saas_handoff)pollSaas({...x.saas_handoff,thread_id:activeThreadId})}catch(e){addMsg('assistant','Błąd: '+e.message)}finally{sendEl.disabled=false;busyEl.textContent='';state()}}
+
+function evidenceHtml(payload){
+  const x=payload&&typeof payload==='object'?payload:{};
+  const rows=v=>Array.isArray(v)?v.slice(0,100):[];
+  const section=(title,text)=>'<div class="source"><b>'+esc(title)+'</b> · '+esc(text)+'</div>';
+  let parts=['<h3>Dowody i wykonanie</h3>',section('Route',x.route||'NOT RECORDED')];
+  parts.push(section('Tools',rows(x.tool_calls).join(', ')||'NOT RECORDED'));
+  let m=x.mission_control?.focus;
+  if(m)parts.push(section('Mission Control',String(m.mission_id||'')+' · '+String(m.state||'NOT RECORDED')));
+  for(const c of rows(x.currentness))if(c)parts.push(section('Currentness',String(c.subject||'')+' · '+String(c.status||'NOT RECORDED')));
+  for(const w of [...rows(x.web_fetches),...rows(x.web_sources)]){
+    if(!w)continue;const raw=w.final_url||w.url||'';let url=null;
+    try{const parsed=new URL(raw);if(['http:','https:'].includes(parsed.protocol))url=parsed.href}catch(e){}
+    parts.push('<div class="source">'+(url?'<a target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">'+esc(w.title||url)+'</a>':esc(w.title||'Source URL unavailable'))+'</div>');
+  }
+  parts.push(section('Material receipts',rows(x.material_receipts).length));
+  return parts.join('');
+}
+async function reportUiRuntimeError(error,operation){
+  const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join(''),eventId=hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+  const event={event_id:eventId,event_class:'UI_RUNTIME_ERROR',operation:String(operation).slice(0,80),error_name:String(error?.name||'Error').slice(0,80),message:String(error?.message||error).slice(0,500),thread_id:String(activeThreadId||'').slice(0,32)};
+  window.dispatchEvent(new CustomEvent('UI_RUNTIME_ERROR',{detail:event}));
+  routeEl.textContent='UI_RUNTIME_ERROR · '+event.event_id;
+  try{const r=await fetch('/api/ui-runtime-events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)});if(!r.ok)throw new Error('event persistence HTTP '+r.status)}
+  catch(persistenceError){routeEl.textContent+=' · NOT PERSISTED';console.error('UI_RUNTIME_ERROR_NOT_PERSISTED',event.event_id)}
+  return event;
+}
+window.addEventListener('error',e=>{void reportUiRuntimeError(e.error||new Error(e.message),'window.error')});
+window.addEventListener('unhandledrejection',e=>{void reportUiRuntimeError(e.reason,'unhandledrejection')});
+async function go(question){
+  let text=(question??qEl.value).trim();if(!text||sendEl.disabled)return;
+  lastQuestion=text;sendEl.disabled=true;busyEl.textContent='Routing → evidence → model…';
+  let start=performance.now(),requestThreadId=null;
+  try{
+    if(!activeThreadId)await createThread();
+    requestThreadId=activeThreadId;addMsg('user',text);qEl.value='';
+    let resp=await fetch('/api/threads/'+requestThreadId+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,output_language:langEl.value})});
+    let x=await resp.json();if(!resp.ok)throw new Error(x.error||('HTTP '+resp.status));
+    const renderedEvidence=evidenceHtml(x);
+    if(requestThreadId===activeThreadId){
+      lastPayload=x;if(x.supervisor_projection)renderSupervisor(x.supervisor_projection);lastAnswer=x.answer||'';addMsg('assistant',lastAnswer||x.error);
+      history.push({role:'user',content:text},{role:'assistant',content:lastAnswer});history=history.slice(-16);
+      routeEl.textContent='route: '+(x.route||'')+' · '+Math.round(performance.now()-start)+' ms';
+      evidenceEl.innerHTML=renderedEvidence;debugEl.textContent=JSON.stringify(x,null,2);
+      if(!dbgEl.checked)evidenceEl.classList.remove('hide');
+    }
+    if(x.saas_handoff)void pollSaas({...x.saas_handoff,thread_id:requestThreadId});
+    await refreshThreads();
+  }catch(e){await reportUiRuntimeError(e,'chat.submit')}
+  finally{sendEl.disabled=false;busyEl.textContent='';void state()}
+}
+
 function copyLast(){if(lastAnswer)navigator.clipboard.writeText(lastAnswer)}function regenerate(){if(lastQuestion)go(lastQuestion)}function resetMessages(){messagesEl.innerHTML='<div class="msg assistant"><div class="role">LION</div><div class="md"><p>Gotowy. Wybierz wątek lub rozpocznij nowy.</p></div></div>';evidenceEl.classList.add('hide');debugEl.classList.add('hide');routeEl.textContent=''}
 async function refreshThreads(){let r=await fetch('/api/threads',{cache:'no-store'}),x=await r.json();threads=x.threads||[];threadListEl.innerHTML=threads.map(t=>'<div class="thread '+(t.thread_id===activeThreadId?'active':'')+'"><button class="thread-open" data-open="'+esc(t.thread_id)+'">'+esc(t.title)+'</button><button class="thread-icon" title="Zmień nazwę" data-rename="'+esc(t.thread_id)+'">✎</button><button class="thread-icon" title="Usuń" data-delete="'+esc(t.thread_id)+'">×</button></div>').join('');threadListEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openThread(b.dataset.open));threadListEl.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>renameThread(b.dataset.rename));threadListEl.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteThread(b.dataset.delete));if(activeThreadId){let t=threads.find(x=>x.thread_id===activeThreadId);if(t)activeThreadTitleEl.textContent=t.title}}
 async function createThread(){let r=await fetch('/api/threads',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),x=await r.json();activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';resetMessages();await refreshThreads();activeThreadTitleEl.textContent=x.title;qEl.focus()}
@@ -394,7 +476,8 @@ class Gateway:
         if len(prompt)>14500:return {'route':'SAAS_REQUIRED','answer':'CONTEXT_OVERFLOW_ESCALATE','authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':self.material_receipts() if callable(self.material_receipts) else [],'response_language':output_language}
         system=('You are the proposal-only local cognitive executor inside the required HYBRID LION_EVOLUSION architecture. '+language_rule+' LION is not MODEL_ONLY: it combines this local gpt-oss-20b-MXFP4, a bounded material evidence/execution plane, and a CHATGPT_SAAS_SUPERVISOR. The SaaS supervisor channel is currently EXTERNAL_SESSION_MEDIATED; an automatic local-to-SaaS hop is not yet materialized, so never claim such a programmatic hop exists. SaaS supervision is not effect authority. The raw model owns no sockets, Git or authority. This LION session supplies mediated read-only repositories/currentness and mediated public HTTPS through material drones. If ROUTE=PUBLIC_WEB, KNOWLEDGE_WEB or MIXED_SOURCE_WEB, web evidence was fetched now; never claim you have no web capability. For a named-domain request, prioritize WEB:UNTRUSTED_DIRECT_FETCH from that exact domain over generic search results; if direct fetch succeeded, do not say the site was inaccessible. If LIVE contains currentness, answer exactly from LIVE. If ROUTE=MISSION_CONTROL_CURRENTNESS and MISSION_CONTROL_LIVE contains a focus mission, answer from that live Mission Control evidence and never claim mission data are unavailable. RAG is loaded only when RAG_RUNTIME_STATUS=LOADED. Material drones are OS processes with authority NONE and are not independent physical failure domains. Never infer write, merge, push, delete, credential, service-admin or runtime authority. Prefer a direct, useful answer over meta-commentary. Use clean Markdown when structure helps. For latest/news requests, if WEB:UNTRUSTED_DIRECT_FETCH contains multiple headline-like items, list 5 to 8 distinct substantive headlines from that direct-domain evidence and cite each article URL when one is supplied. Treat fetched_at only as retrieval time, never as publication time. If evidence provides only a headline and URL, do not invent a publication date, article body, cause, consequence, or summary beyond what the headline itself supports. Do not claim there is no additional information when multiple headlines are present. For stable technical definitions, do not invent or volunteer exact version numbers, release dates or historical milestones unless they are grounded in supplied evidence or you are highly confident; if uncertain, omit the detail or say you are uncertain. Do not mention internal routing unless the user asks. Preserve the user language across follow-up turns. Cite source URLs/identities when present.')
         max_tokens=900 if route in {'FEDERATION_CURRENTNESS','MISSION_CONTROL_CURRENTNESS'} else (760 if route=='MIXED_SOURCE_WEB' else (680 if route in {'PUBLIC_WEB','KNOWLEDGE_WEB','LOCAL_SOURCE','REPOSITORY_CURRENTNESS'} else 520))
-        deterministic=self._mission_answer(message,mission,output_language) if route=='MISSION_CONTROL_CURRENTNESS' else (self._capability_answer(message,mission,self.state(),output_language) if route=='LION_CAPABILITY_CURRENTNESS' else (self._latest_headline_answer(fetches,message,output_language) if route=='PUBLIC_WEB' and domain and latest_intent else None))
+        capability_state=self.state() if route=='LION_CAPABILITY_CURRENTNESS' else {}
+        deterministic=self._mission_answer(message,mission,output_language) if route=='MISSION_CONTROL_CURRENTNESS' else (self._capability_answer(message,mission,capability_state,output_language) if route=='LION_CAPABILITY_CURRENTNESS' else (self._latest_headline_answer(fetches,message,output_language) if route=='PUBLIC_WEB' and domain and latest_intent else None))
         if deterministic is not None:
             raw=deterministic;tools.append('lion.evidence.render')
         else:
@@ -405,7 +488,7 @@ class Gateway:
             except Exception:pass
         recon=self.material_reconcile() if callable(self.material_reconcile) else None
         receipts=self.material_receipts() if callable(self.material_receipts) else []
-        return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language}
+        return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language,'supervisor_projection':capability_state.get('supervisor_projection')}
 
 def make_handler(g):
     class H(BaseHTTPRequestHandler):
@@ -446,6 +529,8 @@ def make_handler(g):
                 if n<0 or n>220000:raise ValueError('body size')
                 if n and 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('content type')
                 x=json.loads(self.rfile.read(n)) if n else {}
+                if path=='/api/ui-runtime-events':
+                    return self.out(self._thread('ui_runtime_event',x),201)
                 if path in {'/api/lpcl/validate','/api/lpcl/register'}:
                     if type(x) is not dict or set(x)!={'lpcl_text'}:raise ValueError('lpcl schema')
                     return self.out(self._control('validate_lpcl' if path.endswith('/validate') else 'register_lpcl',x),200 if path.endswith('/validate') else 201)

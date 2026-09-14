@@ -16,6 +16,41 @@ function mcRenderHeader(s){const mode=MC_PINNED?'PINNED':'FOLLOW_FOCUS',focus=MC
 function mcCaptureViewport(){const feed=MC('mcProtocolFeed'),active=document.activeElement;return {x:window.scrollX,y:window.scrollY,feed,feedY:feed?.scrollTop||0,active,selection:(active&&typeof active.selectionStart==='number')?[active.selectionStart,active.selectionEnd]:null}}
 function mcRestoreViewport(v){if(!v)return;const restore=()=>{if(v.feed&&document.contains(v.feed))v.feed.scrollTop=v.feedY;window.scrollTo(v.x,v.y);if(v.active&&document.contains(v.active)&&document.activeElement!==v.active){try{v.active.focus({preventScroll:true});if(v.selection&&typeof v.active.setSelectionRange==='function')v.active.setSelectionRange(v.selection[0],v.selection[1])}catch(e){}}};restore();requestAnimationFrame(restore)}
 
+// Render only the canonical backend projection; binding is never an auto-hop signal.
+function mcRenderSupervisor(projection){
+  let host=MC('mcSupervisorCards');
+  if(!host){
+    const anchor=MC('mcV3Cards');if(!anchor)return;
+    host=document.createElement('section');host.id='mcSupervisorCards';
+    host.className=anchor.className;host.setAttribute('aria-label','SaaS supervisor');
+    anchor.insertAdjacentElement('afterend',host);
+  }
+  const p=projection||{},lease=p.lease||{},freshness=p.freshness||{};
+  const fields=[
+    ['channel','SAAS CHANNEL',p.channel],['session','SESSION',p.session],
+    ['model','MODEL',p.model],['transport','TRANSPORT',p.transport],
+    ['pending','PENDING',p.pending?.request_id??p.pending_state],
+    ['last_receipt','LAST RECEIPT',p.last_receipt?.receipt_digest??p.last_receipt_state],
+    ['lease','LEASE',lease.state],['expires_at','LEASE EXPIRES',lease.expires_at],
+    ['authority','SUPERVISOR AUTHORITY',p.authority],
+    ['automatic_hop','AUTOMATIC HOP',typeof p.automatic_hop==='boolean'?String(p.automatic_hop):'UNKNOWN'],
+    ['freshness','FRESHNESS',freshness.state],['observed_at','OBSERVED AT',freshness.observed_at],
+    ['unknown_reasons','UNKNOWN REASONS',Array.isArray(p.unknown_reasons)?(p.unknown_reasons.join(' · ')||'NONE'):'PROJECTION_UNAVAILABLE'],
+  ];
+  const existing=new Map(Array.from(host.children).map(node=>[node.dataset.supervisorKey,node]));
+  for(const [key,label,value] of fields){
+    let card=existing.get(key);
+    if(!card){
+      card=document.createElement('div');card.className='card';card.dataset.supervisorKey=key;
+      const name=document.createElement('div');name.className='k';name.textContent=label;
+      const output=document.createElement('div');output.className='v';
+      card.append(name,output);host.appendChild(card);
+    }
+    const output=card.lastElementChild,text=String(value??'UNKNOWN');
+    if(output.textContent!==text)output.textContent=text;
+  }
+}
+
 async function mcCurrentMaterialAct(action,pod){
   if(MC_DATA?.mission_id!=='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3')return alert('Low-level material action is not bound to this mission.');
   if(!confirm(action+(pod?' '+pod:'')))return;
@@ -135,13 +170,14 @@ async function mcRefresh(){
     const registry=reg.missions||[];MC_FOCUS=reg.focus_mission_id||registry[0]?.mission_id||'LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3';
     if(!MC_PINNED||!MC_SELECTED||!registry.some(x=>x.mission_id===MC_SELECTED))MC_SELECTED=MC_FOCUS;
     const requestedMissionId=MC_SELECTED;
-    const s=await mcget(missionPath(requestedMissionId,'/process'));
+    const [s,supervisor]=await Promise.all([mcget(missionPath(requestedMissionId,'/process')),mcget('/api/v3/saas/status?mission_id='+encodeURIComponent(requestedMissionId)).catch(()=>null)]);
     if(requestedMissionId!==MC_SELECTED){MC_REFRESH_PENDING=true;return}
+    mcRenderSupervisor(supervisor?.supervisor_projection);
     const vp=mcCaptureViewport();
     const select=MC('mcMissionSelect');select.innerHTML=registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join('');
     select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};const rf=MC('mcReturnFocus');if(rf){rf.hidden=!MC_PINNED;rf.onclick=()=>{MC_PINNED=false;MC_SELECTED=MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()}};
     const key=mcRenderKey(s,registry,src.sources||[]);if(key!==MC_LAST_RENDER_KEY){mcRender(s,registry,src.sources||[]);MC_LAST_RENDER_KEY=key}else mcRenderHeader(s);mcRestoreViewport(vp);
-  }catch(e){MC('mcV3Authority').textContent='CONTROL UNKNOWN';MC('mcV3Meta').textContent='Mission control refresh failed: '+e.message}
+  }catch(e){mcRenderSupervisor(null);MC('mcV3Authority').textContent='CONTROL UNKNOWN';MC('mcV3Meta').textContent='Mission control refresh failed: '+e.message}
   finally{MC_REFRESHING=false;if(MC_REFRESH_PENDING){MC_REFRESH_PENDING=false;queueMicrotask(mcRefresh)}}
 }
 mcRefresh();setInterval(mcRefresh,3000);

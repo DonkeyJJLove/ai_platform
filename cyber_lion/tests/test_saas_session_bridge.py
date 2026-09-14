@@ -201,7 +201,7 @@ class PanelThreadDeliveryTests(unittest.TestCase):
         ui=gateway.UI
         self.assertIn('adoptPendingSaas',ui)
         self.assertIn('dual_request_id:p.dual_request_id',ui)
-        self.assertIn('session_attestation_state',ui)
+        self.assertIn('renderSupervisor(x.supervisor_projection)',ui)
         self.assertIn('missionPinned=false',ui)
         self.assertIn('FOLLOW_FOCUS',ui)
         self.assertIn('missionsRefreshing',ui)
