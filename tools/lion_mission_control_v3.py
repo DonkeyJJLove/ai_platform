@@ -204,9 +204,12 @@ def bind_lpcl_execution(mid):
       if m['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return None
       if m['material_target']!=64 or m['logical_count'] not in {12,128}:raise ValueError('lpcl execution adapter cardinality')
       kv=_lpcl_pairs(ps['lpcl_text'])
-      if kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')!='TRUE' or kv.get('CREATE_PARALLEL_COMPETING_EPOCH3_MISSION')!='FALSE':raise ValueError('lpcl continuation contract')
+      continuation_ok=(kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')=='TRUE' or kv.get('CONTINUE_EXISTING_EPOCH3_LINEAGE')=='TRUE')
+      if not continuation_ok or kv.get('CREATE_PARALLEL_COMPETING_EPOCH3_MISSION')!='FALSE':raise ValueError('lpcl continuation contract')
       reuse=kv.get('REUSE_EXISTING_HEALTHY_MATERIAL_FLEET','')
-      if 'ALLOWED' not in reuse:raise ValueError('lpcl material rebind not allowed')
+      legacy_reuse=kv.get('MATERIAL_REUSE_POLICY','')
+      reuse_ok=('ALLOWED' in reuse or legacy_reuse=='REUSE_EXISTING_HEALTHY_EPOCH3_M64_AFTER_EXACT_IDENTITY_READBACK')
+      if not reuse_ok:raise ValueError('lpcl material rebind not allowed')
       source_mid=_lpcl_rebind_source(kv)
       if source_mid==mid:raise ValueError('lpcl parent self-reference')
       # A rebound child owns its durable worker snapshot. Process restart must

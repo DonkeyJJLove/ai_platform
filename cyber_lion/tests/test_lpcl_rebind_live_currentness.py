@@ -87,12 +87,30 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
             + ''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1, 13))
         )
 
+    @staticmethod
+    def legacy_child_text(parent):
+        return (
+            f'PARENT_MISSION_ID={parent}\n'
+            'CONTINUE_EXISTING_EPOCH3_LINEAGE=TRUE\n'
+            'CREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE\n'
+            'MATERIAL_REUSE_POLICY=REUSE_EXISTING_HEALTHY_EPOCH3_M64_AFTER_EXACT_IDENTITY_READBACK\n'
+            + ''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1, 13))
+        )
+
     def activate_child(self, mid='LIVE-CHILD-R1', prefix='fresh-live'):
         child = self.spec(mid, self.child_text(self.parent))
         self.mc.register_lpcl_mission(child)
         with patch.object(self.mc, 'epoch3_broker', return_value=(self.runtime(prefix), 'live-read-request')):
             out = self.mc.activate_lpcl_mission(mid, {'lpcl_digest': child['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
         return child, out
+
+    def test_legacy_explicit_lineage_and_material_reuse_contract_is_accepted(self):
+        child = self.spec('LIVE-LEGACY-CONTRACT-R1', self.legacy_child_text(self.parent))
+        self.mc.register_lpcl_mission(child)
+        with patch.object(self.mc, 'epoch3_broker', return_value=(self.runtime('legacy-live'), 'legacy-live-read')):
+            out = self.mc.activate_lpcl_mission(child['mission_id'], {'lpcl_digest': child['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual((out['state'], out['materialized'], out['ready']), ('RUNNING', 64, 64))
+        self.assertIn('legacy-live-LD12-0', {row['pod_uid'] for row in out['workers']})
 
     def test_first_bind_uses_live_epoch3_read_not_stale_parent_workers(self):
         _, out = self.activate_child()
