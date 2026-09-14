@@ -12,13 +12,13 @@ from cyber_lion.mission_control.runtime_projection import normalize_snapshot, va
 from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
 from mission_control_compat import compat_get, STATIC
 try:
- from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
+ from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
 except ImportError:
- from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
+ from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
 try:
- from lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
+ from lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, cancel_request as saas_cancel, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 except ImportError:
- from tools.lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
+ from tools.lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, cancel_request as saas_cancel, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 try:
  from cyber_lion.mission_control.execution_driver import migrate as driver_migrate, ensure_driver, activate as driver_activate, heartbeat as driver_heartbeat, begin_attempt as driver_begin_attempt, finish_attempt as driver_finish_attempt, observe_gate as driver_observe_gate, snapshot as driver_snapshot, transition as driver_transition, adaptive_worker_plan as driver_adaptive_worker_plan
 except ImportError:
@@ -53,6 +53,7 @@ def import_legacy(c):
  try:lc=sqlite3.connect('file:'+str(LEGACY_DB)+'?mode=ro',uri=True);rows=lc.execute('SELECT run_id,payload FROM runs').fetchall();lc.close()
  except Exception:return
  for run_id,raw in rows:
+  if c.execute("SELECT 1 FROM mission_meta WHERE key=?",("deleted_mission:legacy::"+str(run_id),)).fetchone():continue
   try:p=json.loads(raw);mid='legacy::'+str(run_id);src=p.get('source') or {};metrics=p.get('metrics') or {};work=p.get('workload') or {};status=str(p.get('status') or 'UNKNOWN');mat=int(work.get('pods') or metrics.get('ready') or 0);ready=int(metrics.get('ready') or (mat if status=='PASS' else 0));t=now();spec_digest=hashlib.sha256(json.dumps(p,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest();c.execute('INSERT OR IGNORE INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,str(p.get('process_class') or run_id),'LEGACY_OBSERVATION:'+str(p.get('adapter_type') or 'UNKNOWN'),spec_digest,src.get('head'),src.get('tree'),p.get('namespace'),'RECORDED_'+status,str((p.get('evidence') or {}).get('class') or 'HISTORICAL'),0,mat,mat,ready,t,None,t,None,json.dumps(p,sort_keys=True,ensure_ascii=False)))
   except Exception:continue
 
@@ -760,7 +761,12 @@ def _read_recent_process_missions():
     c=connect()
     try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
     finally:c.close()
-    return [process_snapshot(mid,read_only=True)['mission_summary'] for mid in mids]
+    rows=[]
+    for mid in mids:
+      try:rows.append(process_snapshot(mid,read_only=True)['mission_summary'])
+      except ValueError as error:
+        if str(error)!='mission not found':raise
+    return rows
 # ---- end LPCL mission process extension v1 -------------------------------
 
 
@@ -1263,6 +1269,10 @@ class H(BaseHTTPRequestHandler):
   if path in {'/api/v3/missions/current','/api/v3/missions/'+MISSION}:return self.json(current)
   if path=='/api/v3/missions':return self.json({'missions':mission_summaries(),'process_missions':recent_process_missions(),'legacy_recorded_runs':legacy_count()})
   if path=='/api/v3/missions/recent':return self.json({'missions':recent_process_missions(),'focus_mission_id':focus_mission_id()})
+  if path.startswith('/api/v3/missions/') and path.endswith('/delete-preview'):
+   mid=path[len('/api/v3/missions/'):-len('/delete-preview')].strip('/');c=connect()
+   try:return self.json(mission_delete_preview(c,mid,MISSION))
+   finally:c.close()
   if path.startswith('/api/v3/missions/') and path.endswith('/process'):
    mid=path[len('/api/v3/missions/'):-len('/process')].strip('/')
    try:return self.json(process_snapshot(mid))
@@ -1288,6 +1298,17 @@ class H(BaseHTTPRequestHandler):
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
+  if path.startswith('/api/v3/missions/') and path.endswith('/delete'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/delete')].strip('/');n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n))
+    if type(x) is not dict or set(x)!={'spec_digest'} or not _hex(x['spec_digest'],64):raise ValueError('delete schema')
+    c=connect()
+    try:out=delete_mission_records(c,mid,x['spec_digest'],MISSION,now)
+    finally:c.close()
+    return self.json(out)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path.startswith('/api/v3/missions/') and path.endswith('/focus'):
    try:
     mid=path[len('/api/v3/missions/'):-len('/focus')];n=int(self.headers.get('Content-Length','0'))
@@ -1322,6 +1343,17 @@ class H(BaseHTTPRequestHandler):
     if n<2 or n>20000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
     return self.json(create_saas_handoff(json.loads(self.rfile.read(n))),201)
    except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},400)
+  if path=='/api/v3/saas/cancel':
+   try:
+    n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n))
+    if type(x) is not dict or set(x)!={'request_id'} or not _safe_id(x['request_id'],127):raise ValueError('cancel schema')
+    c=connect()
+    try:out=saas_cancel(c,x['request_id'],now)
+    finally:c.close()
+    return self.json(out)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path=='/api/v3/saas/respond':
    try:
     n=int(self.headers.get('Content-Length','0'))

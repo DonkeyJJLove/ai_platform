@@ -9,6 +9,49 @@ SCHEMA_ID = "lion.mission-control.lifecycle-db/v2"
 PRE_PROCESS_STAGE = "PRE_MISSION_PROCESS_SCHEMA"
 CURRENT_STAGE = "MISSION_PROCESS_SCHEMA_V1"
 
+
+def mission_delete_preview(conn, mission_id, protected_id):
+    row=conn.execute('SELECT mission_id,state,spec_digest FROM missions WHERE mission_id=?',(mission_id,)).fetchone()
+    if row is None:return {'mission_id':mission_id,'allowed':False,'reason':'MISSION_NOT_FOUND'}
+    reasons=[]
+    if mission_id==protected_id:reasons.append('SHARED_RUNTIME_OWNER')
+    if row['state'] not in {'COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','STOPPED','FAILED','FAIL','REGISTERED','AUTHORIZED','BLOCKED','RECORDED_PASS','RECORDED_CLEANED','RECORDED_FAIL'}:reasons.append('MISSION_STILL_ACTIVE')
+    tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if 'mission_execution_drivers' in tables:
+        driver=conn.execute('SELECT state FROM mission_execution_drivers WHERE mission_id=?',(mission_id,)).fetchone()
+        if driver and driver['state'] not in {'COMPLETE','COMPLETED','STOPPED','CANCELLED','FAILED','SUPERSEDED'}:reasons.append('DRIVER_MUST_BE_STOPPED')
+    if 'mission_execution_assignments' in tables and conn.execute("SELECT 1 FROM mission_execution_assignments WHERE mission_id=? AND state='CLAIMED' LIMIT 1",(mission_id,)).fetchone():reasons.append('WORKER_ASSIGNMENT_IN_FLIGHT')
+    if 'commands' in tables and conn.execute("SELECT 1 FROM commands WHERE mission_id=? AND status IN ('RUNNING','PENDING') LIMIT 1",(mission_id,)).fetchone():reasons.append('COMMAND_IN_FLIGHT')
+    return {'mission_id':mission_id,'spec_digest':row['spec_digest'],'state':row['state'],'allowed':not reasons,'reason':'; '.join(reasons) or 'RECORDS_ONLY_NO_RUNTIME_STOP','authority_effect':'NONE'}
+
+
+def delete_mission_records(conn, mission_id, expected_digest, protected_id, now_fn):
+    """Permanent local record deletion; never dispatches or stops external resources."""
+    conn.execute('BEGIN IMMEDIATE')
+    try:
+        preview=mission_delete_preview(conn,mission_id,protected_id)
+        if not preview['allowed']:raise ValueError(preview['reason'])
+        if preview['spec_digest']!=expected_digest:raise ValueError('MISSION_CHANGED_REFRESH_REQUIRED')
+        tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        removed={}
+        if 'mission_dual_receipts' in tables and 'mission_dual_evaluations' in tables:
+            removed['mission_dual_receipts']=conn.execute('DELETE FROM mission_dual_receipts WHERE request_id IN (SELECT request_id FROM mission_dual_evaluations WHERE mission_id=?)',(mission_id,)).rowcount
+        # Identifiers come only from the local schema and are quoted, never from request data.
+        for table in sorted(tables-{'missions','mission_meta','saas_session_bindings','sqlite_sequence'}):
+            ident='"'+table.replace('"','""')+'"'
+            columns={r[1] for r in conn.execute('PRAGMA table_info('+ident+')')}
+            if 'mission_id' in columns:removed[table]=conn.execute('DELETE FROM '+ident+' WHERE mission_id=?',(mission_id,)).rowcount
+        # A global session is independent of the deleted mission; its attestation stays intact.
+        if 'saas_session_bindings' in tables:removed['saas_session_bindings']=conn.execute("DELETE FROM saas_session_bindings WHERE mission_id=? AND binding_scope!='GLOBAL_SUPERVISOR_CHANNEL'",(mission_id,)).rowcount
+        removed['missions']=conn.execute('DELETE FROM missions WHERE mission_id=?',(mission_id,)).rowcount
+        # ID-only suppression prevents historical source import from resurrecting deleted records.
+        conn.execute('INSERT OR REPLACE INTO mission_meta(key,value,updated_at) VALUES(?,?,?)',('deleted_mission:'+mission_id,'1',now_fn()))
+        conn.execute("UPDATE mission_meta SET value=?,updated_at=? WHERE key='focus_mission_id' AND value=?",(protected_id,now_fn(),mission_id))
+        conn.commit()
+        return {'mission_id':mission_id,'deleted':True,'removed_rows':removed,'runtime_resources_changed':False,'authority_effect':'NONE'}
+    except Exception:
+        conn.rollback();raise
+
 DDL = r"""
 CREATE TABLE IF NOT EXISTS schema_migrations(
   version INTEGER PRIMARY KEY,

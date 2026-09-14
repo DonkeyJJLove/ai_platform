@@ -15,6 +15,7 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         self.td=tempfile.TemporaryDirectory();self.addCleanup(self.td.cleanup)
         self.db=Path(self.td.name)/'mc.db'
         self.c=sqlite3.connect(self.db);self.c.row_factory=sqlite3.Row
+        self.addCleanup(self.c.close)
         self.c.executescript('''
         CREATE TABLE missions(mission_id TEXT PRIMARY KEY,title TEXT,adapter TEXT,spec_digest TEXT,source_head TEXT,source_tree TEXT,namespace TEXT,state TEXT,runtime_state TEXT,logical_count INTEGER,material_target INTEGER,materialized INTEGER,ready INTEGER,created_at TEXT,authorized_at TEXT,updated_at TEXT,last_error TEXT,spec_json TEXT);
         CREATE TABLE mission_process_specs(mission_id TEXT PRIMARY KEY,title TEXT,objective TEXT,description TEXT,lpcl_digest TEXT,lpcl_text TEXT,protocols_json TEXT,authority_state TEXT,current_phase TEXT,progress REAL,created_at TEXT,updated_at TEXT);
@@ -30,6 +31,24 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         saas.migrate(self.c,lambda:T,source_head='b'*40,source_tree='c'*40)
         self.c.execute('CREATE TABLE IF NOT EXISTS mission_dual_evaluations(request_id TEXT PRIMARY KEY,saas_request_id TEXT,updated_at TEXT)')
         self.c.commit()
+
+    def test_cancellation_is_idempotent_and_removes_only_owned_pending_request(self):
+        first=saas.create_request(self.c,'M1','first',lambda:T)
+        second=saas.create_request(self.c,'M2','second',lambda:T)
+        for _ in range(2):
+            result=saas.cancel_request(self.c,first['request_id'],lambda:T)
+            self.assertEqual(result['status'],'CANCELLED')
+        self.assertEqual(saas.pending_request(self.c,lambda:T)['request_id'],second['request_id'])
+        self.assertEqual(saas.request_status(self.c,first['request_id'],lambda:T)['status'],'CANCELLED')
+
+    def test_cancellation_preserves_accepted_response_and_session(self):
+        req=saas.create_request(self.c,'M1','question',lambda:T)
+        pending=saas.pending_request(self.c,lambda:T)
+        saas.respond(self.c,req['request_id'],pending['response_token'],'answer',lambda:T,model_identity='test')
+        before=saas.request_status(self.c,req['request_id'],lambda:T)
+        self.assertEqual(saas.cancel_request(self.c,req['request_id'],lambda:T)['status'],'RESPONDED')
+        self.assertEqual(saas.request_status(self.c,req['request_id'],lambda:T),before)
+        self.assertEqual(saas.bridge_status(self.c,'M1',lambda:T)['state'],'BOUND')
 
     def test_roundtrip_binds_session_without_api_authority(self):
         req=saas.create_request(self.c,'M1','Kim jesteś?',lambda:T)
@@ -177,6 +196,22 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         self.assertIn('lion.saas.handoff.create',out['tool_calls'])
 
 class PanelThreadDeliveryTests(unittest.TestCase):
+    def test_delete_cancels_only_saved_handoffs_and_preserves_thread_on_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store=ThreadStore(Path(directory)/'threads.db')
+            first=store('create',{})['thread_id'];second=store('create',{})['thread_id']
+            for tid,rid in [(first,'owned'),(second,'other')]:
+                store('append_pair',{'thread_id':tid,'user':'question','assistant':'waiting','meta':{'saas_request_id':rid}})
+            def fail(rid):raise RuntimeError('service unavailable')
+            with self.assertRaisesRegex(RuntimeError,'service unavailable'):
+                store('delete',{'thread_id':first,'cancel_handoff':fail})
+            self.assertEqual(len(store('get',{'thread_id':first})['messages']),2)
+            cancelled=[]
+            result=store('delete',{'thread_id':first,'cancel_handoff':lambda rid:cancelled.append(rid)})
+            self.assertTrue(result['deleted']);self.assertEqual(cancelled,['owned'])
+            with self.assertRaises(KeyError):store('get',{'thread_id':first})
+            self.assertEqual(len(store('get',{'thread_id':second})['messages']),2)
+
     def test_saas_assistant_delivery_is_persistent_and_exactly_once(self):
         with tempfile.TemporaryDirectory() as td:
             store=ThreadStore(Path(td)/'threads.db')
@@ -196,11 +231,11 @@ class PanelThreadDeliveryTests(unittest.TestCase):
         self.assertIn('append_assistant_once',Path(__import__('tools.lion_local_intelligence_runtime',fromlist=['x']).__file__).read_text(encoding='utf-8'))
         self.assertIn('Restart material runtime',gateway.UI)
 
-    def test_panel_auto_adopts_mission_control_pending_and_follows_focus_by_default(self):
+    def test_panel_keeps_pending_requests_owned_by_their_thread(self):
         from cyber_lion.app_coordination import local_intelligence_gateway as gateway
         ui=gateway.UI
-        self.assertIn('adoptPendingSaas',ui)
-        self.assertIn('dual_request_id:p.dual_request_id',ui)
+        self.assertNotIn('adoptPendingSaas',ui)
+        self.assertIn('stopThreadPolling',ui)
         self.assertIn('renderSupervisor(x.supervisor_projection)',ui)
         self.assertIn('missionPinned=false',ui)
         self.assertIn('FOLLOW_FOCUS',ui)

@@ -61,6 +61,32 @@ class MissionLifecycleDbTests(unittest.TestCase):
         self.assertIn("current_phase", fields)
         self.assertIn("progress", fields)
 
+    def test_delete_records_is_exact_and_survives_legacy_reimport(self):
+        mid='legacy::legacy-vkt'
+        c=self.mc.connect();self.addCleanup(c.close)
+        preview=self.life.mission_delete_preview(c,mid,self.mc.MISSION)
+        self.assertTrue(preview['allowed'])
+        with self.assertRaisesRegex(ValueError,'MISSION_CHANGED'):
+            self.life.delete_mission_records(c,mid,'0'*64,self.mc.MISSION,self.mc.now)
+        self.assertIsNotNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
+        out=self.life.delete_mission_records(c,mid,preview['spec_digest'],self.mc.MISSION,self.mc.now)
+        self.assertFalse(out['runtime_resources_changed'])
+        self.assertIsNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
+        self.assertIsNone(c.execute('SELECT 1 FROM mission_lineage WHERE mission_id=?',(mid,)).fetchone())
+        self.assertIsNotNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(self.mc.MISSION,)).fetchone())
+        self.mc.migrate()
+        self.assertIsNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
+
+    def test_delete_protects_shared_owner_and_active_records(self):
+        c=self.mc.connect();self.addCleanup(c.close)
+        self.assertIn('SHARED_RUNTIME_OWNER',self.life.mission_delete_preview(c,self.mc.MISSION,self.mc.MISSION)['reason'])
+        mid='legacy::legacy-vkt'
+        c.execute("UPDATE missions SET state='RUNNING' WHERE mission_id=?",(mid,));c.commit()
+        preview=self.life.mission_delete_preview(c,mid,self.mc.MISSION)
+        self.assertFalse(preview['allowed'])
+        with self.assertRaisesRegex(ValueError,'MISSION_STILL_ACTIVE'):
+            self.life.delete_mission_records(c,mid,preview['spec_digest'],self.mc.MISSION,self.mc.now)
+
     def test_process_snapshot_decorates_historical_record_without_synthetic_process(self):
         out = self.mc.process_snapshot("legacy::legacy-vkt")
         self.assertIsNone(out["process"])
@@ -72,7 +98,7 @@ class MissionLifecycleDbTests(unittest.TestCase):
     def test_encoded_legacy_id_round_trips_over_http(self):
         srv = ThreadingHTTPServer(("127.0.0.1", 0), self.mc.H)
         t = threading.Thread(target=srv.serve_forever, daemon=True); t.start()
-        self.addCleanup(srv.shutdown); self.addCleanup(srv.server_close)
+        self.addCleanup(srv.server_close); self.addCleanup(srv.shutdown)
         encoded = urllib.parse.quote("legacy::legacy-vkt", safe="")
         with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_port}/api/v3/missions/{encoded}/process", timeout=3) as r:
             self.assertEqual(r.status, 200)

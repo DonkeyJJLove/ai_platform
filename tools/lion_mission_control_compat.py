@@ -102,10 +102,18 @@ def v3_receipts(run_id):
  finally:c.close()
  return out
 
+def deleted_mission_ids():
+ if not V3_DB.is_file():return set()
+ c=ro(V3_DB)
+ try:return {r[0][len('deleted_mission:'):] for r in c.execute("SELECT key FROM mission_meta WHERE key LIKE 'deleted_mission:%'")}
+ except sqlite3.OperationalError:return set()
+ finally:c.close()
+
 def all_runs(s):
- focus=_v3_focus_id();rows=[current_run(s)]+v3_mission_runs();seen={r.get('run_id') for r in rows}
+ deleted=deleted_mission_ids();focus=_v3_focus_id();rows=[current_run(s)]+v3_mission_runs();seen={r.get('run_id') for r in rows}
  for r in generic_runs():
   if r.get('run_id') not in seen:rows.append(r);seen.add(r.get('run_id'))
+ rows=[r for r in rows if r.get('run_id') not in deleted and 'legacy::'+str(r.get('run_id')) not in deleted]
  rows.sort(key=lambda r:(0 if r.get('run_id')==focus else 1,0 if str(r.get('status')).upper() in {'RUNNING','WAITING','BLOCKED','AUTHORIZED'} else 1,str(r.get('started_at') or r.get('finished_at') or '')),reverse=False)
  return rows
 

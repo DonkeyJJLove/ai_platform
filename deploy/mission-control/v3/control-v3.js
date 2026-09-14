@@ -78,6 +78,7 @@ async function mcLifecycleAct(action,payload={}){
 }
 
 async function mcActionPrompt(action){
+  if(action==='DELETE')return mcDeleteMission();
   if(action==='REDESIGN'){
     const reason=prompt('Redesign intent / reason');if(!reason)return;return mcLifecycleAct(action,{reason});
   }
@@ -101,6 +102,19 @@ async function mcActionPrompt(action){
   return mcLifecycleAct(action);
 }
 
+async function mcDeleteMission(){
+  const mid=MC_SELECTED;if(!mid)return;
+  try{
+    const preview=await mcget(missionPath(mid,'/delete-preview'));
+    if(!preview.allowed)throw new Error(preview.reason);
+    if(!confirm('Trwale usunąć misję '+mid+' i jej zapisane szczegóły?'))return;
+    const r=await fetch(missionPath(mid,'/delete'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({spec_digest:preview.spec_digest})}),x=await r.json();
+    if(!r.ok)throw new Error(x.error||('HTTP '+r.status));
+    if(MC_SELECTED===mid){MC_SELECTED=null;MC_PINNED=false;MC_LAST_RENDER_KEY=null;}
+    await mcRefresh();
+  }catch(e){alert('Nie można usunąć misji: '+e.message)}
+}
+
 function mcRenderProtocols(s){
   const rows=s.protocol_messages||[],counts={};for(const x of rows)counts[x.protocol]=(counts[x.protocol]||0)+1;
   const keys=Object.keys(counts).sort();if(MC_PROTOCOL!=='ALL'&&!counts[MC_PROTOCOL])MC_PROTOCOL='ALL';
@@ -121,6 +135,7 @@ function renderSchemaContext(s){
 
 function renderLifecycleActions(s){
   let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart material runtime')+mcbtn('VALIDATE','Validate')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
+  a+=mcbtn('DELETE','Usuń misję','danger');
   if((s.revision_compilations||[]).some(x=>String(x.state||'').includes('AWAITING_EXPLICIT_ACTIVATION')))a+=mcbtn('ACTIVATE_REVISION','Activate revision');
   const ds=s.execution_driver?.state;
   if(['ACTIVE','WAITING','BLOCKED'].includes(ds))a+=mcbtn('PAUSE','Pause driver');
@@ -185,7 +200,7 @@ async function mcRefresh(){
     if(requestedMissionId!==MC_SELECTED){MC_REFRESH_PENDING=true;return}
     mcRenderSupervisor(supervisor?.supervisor_projection);
     const vp=mcCaptureViewport();
-    const select=MC('mcMissionSelect');patchHtml(select,registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join(''));
+    const select=MC('mcMissionSelect');patchHtml(select,registry.map(x=>`<option value="${mcesc(x.mission_id)}" title="${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}">${mcesc((x.title||x.mission_id).slice(0,48))}${(x.title||x.mission_id).length>48?'…':''}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join(''));
     select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};const rf=MC('mcReturnFocus');if(rf){rf.hidden=!MC_PINNED;rf.onclick=()=>{MC_PINNED=false;MC_SELECTED=MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()}};
     const key=mcRenderKey(s,registry,src.sources||[]);if(key!==MC_LAST_RENDER_KEY){mcRender(s,registry,src.sources||[]);MC_LAST_RENDER_KEY=key}else mcRenderHeader(s);mcRestoreViewport(vp);
   }catch(e){mcRenderSupervisor(null);MC('mcV3Authority').textContent='CONTROL UNKNOWN';MC('mcV3Meta').textContent='Mission control refresh failed: '+e.message}
