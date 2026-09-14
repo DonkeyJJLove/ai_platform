@@ -43,14 +43,14 @@ function phaseCard(phase,mission,escape){
   const controls=['PAUSE','STOP'].filter(action=>phase.capabilities?.[action]?.supported===true&&typeof phase.capabilities[action].control_token==='string').map(action=>`<button type="button" data-key="${action}" data-phase-action="${action}" data-phase-id="${escape(phase.phase_id)}" data-control-token="${escape(phase.capabilities[action].control_token)}">${action} current phase driver</button>`).join('');
   return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>',`<div class="phase-actions">${controls}</div></article>`);
 }
-function workerCards(mission,escape){
+function workerCards(mission,escape,workerControl=null){
   const workers=boundedRows(mission.normalized_runtime?.fleet?.material_workers??mission.workers).map(worker=>{
     const match=row=>(worker.material_drone_id&&row.material_drone_id===worker.material_drone_id)||(worker.pod_uid&&row.pod_uid===worker.pod_uid);
     return {...worker,assignment_history:worker.assignment_history??(Array.isArray(mission.execution_assignments)?mission.execution_assignments.filter(match):null),receipt_history:worker.receipt_history??(Array.isArray(mission.execution_receipts)?mission.execution_receipts.filter(match):null)};
   });
   return workers.map((w,i)=>semanticDetail(w.pod_uid||w.uid||w.worker_id||w.pod_name||i,w.pod_name||w.name||w.worker_id||'Material worker',[
-    ['Identity',w.pod_uid??w.uid??w.worker_id],['Logical assignment',w.logical_id??w.assignment],['Runtime',w.runtime??w.process_id??w.pid],['State',w.phase??w.state],['Ready',w.ready],['Restarts',w.restarts],['Host / node',w.node_name??w.node??w.host],['Image',w.image],['Assignment history',w.assignment_history],['Receipt history',w.receipt_history],['History window','Latest 100 mission assignments / receipts; exact material_drone_id or pod_uid match'],['Control',w.capabilities?.RESTART?.reason||'INSPECTION_ONLY · no worker restart capability supplied']
-  ],{...w,schema_context:mission.schema_context},escape)).join('')||'<p class="status">No material worker records supplied.</p>';
+    ['Identity',w.pod_uid??w.uid??w.worker_id],['Logical assignment',w.logical_id??w.assignment],['Runtime',w.runtime??w.process_id??w.pid],['State',w.phase??w.state],['Ready',w.ready],['Restarts',w.restarts],['Host / node',w.node_name??w.node??w.host],['Image',w.image],['Assignment history',w.assignment_history],['Receipt history',w.receipt_history],['History window','Latest 100 mission assignments / receipts; exact material_drone_id or pod_uid match'],['Control',workerControl?'LEGACY_MISSION_RESTART_ONE':w.capabilities?.RESTART?.reason||'INSPECTION_ONLY · no worker restart capability supplied']
+  ],{...w,schema_context:mission.schema_context},escape).replace('</article>',(workerControl?workerControl(w):'')+'</article>')).join('')||'<p class="status">No material worker records supplied.</p>';
 }
 
 const $=id=>document.getElementById(id);

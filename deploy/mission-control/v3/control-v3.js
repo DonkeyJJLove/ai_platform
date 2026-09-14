@@ -161,7 +161,10 @@ function mcRender(s,registry,sources){
   patchHtml(MC('mcV3Logical'),(s.logical||[]).map(x=>`<article class="mc-ld"><b>${mcesc(x.logical_id)} · ${mcesc(x.role)}</b><div>${x.ready}/${x.material_target} ready · ${x.materialized}/${x.material_target} materialized</div><div class="bar"><i style="width:${Math.min(100,100*x.ready/Math.max(1,x.material_target))}%"></i></div>${startComponentAllowed?`<button type="button" data-start-component="${mcesc(x.logical_id)}">start component</button>`:''}</article>`).join('')||'<div class="mc-line mc-history">No logical component model was recorded for this mission/stage.</div>');
   MC('mcV3Logical').querySelectorAll('[data-start-component]').forEach(b=>b.onclick=()=>mcLifecycleAct('START_COMPONENT',{component_id:b.dataset.startComponent}));
   const role=Object.fromEntries((s.logical||[]).map(x=>[x.logical_id,x.role]));
-  patchHtml(MC('mcV3Workers'),workerCards(s,mcesc));
+  // Retain only the pre-existing exact legacy mission RESTART_ONE control.
+  const workerRestart=s.mission_id==='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'&&s.state==='RUNNING'?(worker=>typeof worker.pod_name==='string'&&worker.pod_name?`<button type="button" data-key="restart" data-restart="${mcesc(worker.pod_name)}">restart pod</button>`:''):null;
+  patchHtml(MC('mcV3Workers'),workerCards(s,mcesc,workerRestart));
+  MC('mcV3Workers').querySelectorAll('[data-restart]').forEach(b=>b.onclick=()=>mcCurrentMaterialAct('RESTART_ONE',b.dataset.restart));
 
   patchHtml(MC('mcV3Registry'),(registry||[]).map(x=>{const has=x.progress!==null&&x.progress!==undefined;const progressText=has?Number(x.progress).toFixed(1)+'%':'historical · no process progress';return `<button type="button" class="mc-reg ${x.mission_id===s.mission_id?'active':''}" data-mid="${mcesc(x.mission_id)}"><b>${x.controllable?'●':'○'} ${mcesc(x.title||x.mission_id)}</b><span>${mcesc(x.state)} · ${mcesc(progressText)}${x.current_phase?' · '+mcesc(x.current_phase):''}</span><small>${mcesc(x.objective||'Process metadata not recorded at source stage')}</small></button>`}).join(''));
   MC('mcV3Registry').querySelectorAll('[data-mid]').forEach(b=>b.onclick=()=>{MC_SELECTED=b.dataset.mid;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()});

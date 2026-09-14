@@ -590,13 +590,16 @@ def mission_action(mid,x,*,phase_guard=None):
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
         if ds['state'] not in {'ACTIVE','WAITING','BLOCKED'}:raise ValueError('driver not pausable from '+str(ds['state']))
-        result=driver_transition(c,mid,'PAUSED',now,next_action='OPERATOR_RESUME');c.close();effect='CONTROL_STATE'
+        result=driver_transition(c,mid,'PAUSED',now,next_action='OPERATOR_RESUME',commit=guarded_connection is None)
+        if guarded_connection is None:c.close()
+        effect='CONTROL_STATE'
       elif action=='STOP':
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
         if ds['state'] in {'COMPLETE','STOPPED'}:result=ds
-        else:result=driver_transition(c,mid,'STOPPED',now,next_action='EXPLICIT_RESUME_REQUIRED')
-        c.close();effect='CONTROL_STATE'
+        else:result=driver_transition(c,mid,'STOPPED',now,next_action='EXPLICIT_RESUME_REQUIRED',commit=guarded_connection is None)
+        if guarded_connection is None:c.close()
+        effect='CONTROL_STATE'
       elif action=='VALIDATE':
         c=connect();ds=driver_snapshot(c,mid);mrow=c.execute('SELECT materialized,ready FROM missions WHERE mission_id=?',(mid,)).fetchone();integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
         result={'driver':ds,'materialized':mrow['materialized'],'ready':mrow['ready'],'database_integrity':integrity,'validated':bool(ds and mrow['ready']==64 and integrity=='ok'),'authority_effect':'NONE'};c.close();effect='NONE'
@@ -642,10 +645,10 @@ def mission_action(mid,x,*,phase_guard=None):
         rollback_id=str(request.get('rollback_id') or '').strip()
         if not rollback_id:raise ValueError('rollback_id required')
         c=connect();result=lifecycle_rollback_plan(c,mid,rollback_id,now);c.close()
-      c=connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,status,request,result,now);c.close();return {'mission_id':mid,'action':action,'status':status,'effect_class':effect,'result':result,'receipt':receipt}
+      c=guarded_connection if guarded_connection is not None else connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,status,request,result,now);c.close();return {'mission_id':mid,'action':action,'status':status,'effect_class':effect,'result':result,'receipt':receipt}
     except Exception as e:
       if guarded_connection is not None:
-       try:guarded_connection.close()
+       try:guarded_connection.rollback();guarded_connection.close()
        except Exception:pass
       try:
         c=connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,'FAIL',request,{'error':type(e).__name__+':'+str(e)[:1000]},now);c.close()
@@ -655,7 +658,10 @@ def mission_action(mid,x,*,phase_guard=None):
 
 def process_snapshot(mid, *, read_only=False):
     c=connect()
-    if read_only:c.execute('BEGIN')
+    if not read_only:
+      lifecycle_sync_components(c,mid,now)
+      c.commit()
+    c.execute('BEGIN')
     m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
     if not m:c.close();raise ValueError('mission not found')
     d=dict(m);s=c.execute('SELECT * FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();d['process']=dict(s) if s else None
@@ -665,6 +671,7 @@ def process_snapshot(mid, *, read_only=False):
       d['process'].pop('lpcl_text',None)
     d['phases']=[dict(r) for r in c.execute('SELECT * FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,))]
     d['phase_execution_specs']=[dict(r) for r in c.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=? ORDER BY phase_id',(mid,))]
+    d['phase_evidence_counts']={r['phase']:r['total'] for r in c.execute("SELECT phase,COUNT(*) AS total FROM protocol_messages WHERE mission_id=? AND protocol IN ('EVIDENCE','VALIDATION','RECEIPT') GROUP BY phase",(mid,))}
     d['logical']=[dict(r) for r in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,))]
     d['workers']=[dict(r) for r in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,))]
     d['commands']=[dict(r) for r in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 40',(mid,))]
@@ -679,7 +686,6 @@ def process_snapshot(mid, *, read_only=False):
     elif d.get('adapter')==LPCL_REBIND_ADAPTER:d['control_authority']='BOUNDED_LPCL_EXECUTION_ADAPTER'
     elif mid==LPCL_REBIND_SOURCE:d['control_authority']='BOUNDED_EPOCH3_MATERIAL_ADAPTER'
     else:d['control_authority']='ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE'
-    if not read_only:lifecycle_sync_components(c,mid,now)
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
     d['execution_driver']=driver_snapshot(c,mid)
     d['scheduler']=global_sched.scheduler_snapshot(c)
@@ -1167,13 +1173,13 @@ def local_assignment_claim(x):
 
 
 def local_assignment_receipt(x):
-    required={'assignment_id','status','result','effect_receipt_digest','authority_effect'}
+    required={'assignment_id','status','result','effect_receipt_digest','authority_effect','material_drone_id','lease_generation'}
     if type(x) is not dict or set(x)!=required:raise ValueError('local assignment receipt schema')
     if x['status'] not in {'PASS','FAIL'} or x['authority_effect']!='NONE':raise ValueError('local assignment receipt status/authority')
     if type(x['result']) is not dict:raise ValueError('local assignment result')
     c=connect()
     try:
-      out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
+      out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,material_drone_id=x['material_drone_id'],lease_generation=x['lease_generation'],status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
       row=c.execute('SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
       if row:_process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'status':x['status'],'authority_effect':'NONE'},'IN')
       c.commit();return out

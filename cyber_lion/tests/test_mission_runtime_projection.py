@@ -80,6 +80,13 @@ class RuntimeProjectionTests(unittest.TestCase):
         raw['spec_json'] = '{"mission_class":"LPCL_MISSION","schema_version":"lion.mission-runtime/v1"}'
         self.assertEqual(normalize_snapshot(raw)['normalized_runtime']['identity']['mission_class'], 'LPCL_MISSION')
 
+    def test_total_evidence_survives_recent_message_window_eviction(self):
+        raw = mission()
+        raw['protocol_messages'] = []
+        raw['phase_evidence_counts'] = {'ONE': 140}
+        phase = normalize_snapshot(raw)['normalized_runtime']['phases'][0]
+        self.assertEqual((phase['evidence_count'],phase['evidence_count_scope']), (140,'PERSISTED_TOTAL'))
+
     def test_registration_rejects_incomplete_intake_and_accepts_existing_contract(self):
         valid = {'mission_id': 'new', 'title': 'New', 'objective': 'Observe', 'description': '', 'lpcl_digest': 'a'*64, 'source_head': 'b'*40, 'source_tree': 'c'*40, 'phases': [{'id': 'ONE', 'title': 'Observe'}], 'logical_count': 1, 'material_target': 0}
         validate_registration(valid)

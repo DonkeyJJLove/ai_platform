@@ -82,7 +82,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
 
     def test_duplicate_and_changed_metadata_fail_closed_after_restart(self):
         aid = self.assignment()
-        first = scheduler.record_receipt(self.conn, aid, {'ok': True}, now)
+        first = scheduler.record_internal_receipt(self.conn, aid, {'ok': True}, now)
         self.assertFalse(first['duplicate'])
         before = self.receipt_snapshot()
         self.conn.close()
@@ -96,7 +96,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
         ]:
             with self.subTest(result=result, kwargs=kwargs):
                 with self.assertRaisesRegex(ValueError, '^assignment receipt ' + reason + '$'):
-                    scheduler.record_receipt(self.conn, aid, result, now, **kwargs)
+                    scheduler.record_internal_receipt(self.conn, aid, result, now, **kwargs)
                 self.assertEqual(self.receipt_snapshot(), before)
 
     def test_concurrent_identical_and_conflicting_ingress_has_one_winner(self):
@@ -109,7 +109,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
                     try:
                         barrier.wait(timeout=5)
                         try:
-                            return ('accepted', scheduler.record_receipt(conn, aid, {'value': value}, now))
+                            return ('accepted', scheduler.record_internal_receipt(conn, aid, {'value': value}, now))
                         except ValueError as exc:
                             return ('rejected', str(exc))
                     finally:
@@ -124,7 +124,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
 
     def test_forward_migration_preserves_historical_conflicts_and_old_turns(self):
         aid = self.assignment()
-        scheduler.record_receipt(self.conn, aid, {'version': 1}, now)
+        scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
         # Reproduce existing historical rows without invoking any executor.
         self.conn.execute('INSERT INTO mission_execution_receipts VALUES(?,?,?,?,?,?,?,?,?)', ('legacy-second', aid, 'M', 'P', scheduler.digest({'version': 2}), None, 'NONE', 'FAIL', now()))
         self.conn.execute('DROP TABLE mission_scheduler_turns')
@@ -140,7 +140,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
         self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM mission_scheduler_migrations').fetchone()[0], 1)
         self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
         with self.assertRaisesRegex(ValueError, '^assignment receipt conflict$'):
-            scheduler.record_receipt(self.conn, aid, {'version': 1}, now)
+            scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
         self.assertEqual(self.receipt_snapshot(), before)
 
 

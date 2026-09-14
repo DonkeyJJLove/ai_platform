@@ -78,10 +78,10 @@ class GlobalSchedulerTests(unittest.TestCase):
     def test_duplicate_receipt_fails_closed_without_replacing_first(self):
         self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
         aid=g.create_assignment(self.c,'M','P','LD001','MD001',{'x':1},now,lease_generation=1)
-        a=g.record_receipt(self.c,aid,{'ok':True},now)
+        a=g.record_internal_receipt(self.c,aid,{'ok':True},now)
         self.assertFalse(a['duplicate'])
         with self.assertRaisesRegex(ValueError,'assignment receipt duplicate'):
-            g.record_receipt(self.c,aid,{'ok':True},now)
+            g.record_internal_receipt(self.c,aid,{'ok':True},now)
         rows=self.c.execute('SELECT receipt_id FROM mission_execution_receipts WHERE assignment_id=?',(aid,)).fetchall()
         self.assertEqual([r[0] for r in rows],[a['receipt_id']])
 

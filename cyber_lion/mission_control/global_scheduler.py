@@ -311,7 +311,26 @@ def create_assignment(conn, mission_id, phase_id, logical_drone_id, material_dro
     return aid
 
 
-def record_receipt(conn, assignment_id, result, now_fn, *, status="PASS", effect_receipt_digest=None, authority_effect="NONE"):
+def record_receipt(conn, assignment_id, result, now_fn, *, material_drone_id, lease_generation, status="PASS", effect_receipt_digest=None, authority_effect="NONE"):
+    """Worker ingress: request identity is a binding check, not authentication."""
+    if not isinstance(material_drone_id, str) or not material_drone_id:
+        raise ValueError('material identity required')
+    if type(lease_generation) is not int or lease_generation < 1:
+        raise ValueError('lease generation required')
+    if status not in {'PASS', 'FAIL'} or authority_effect != 'NONE':
+        raise ValueError('assignment receipt status/authority')
+    return _record_receipt(conn, assignment_id, result, now_fn, status=status,
+        effect_receipt_digest=effect_receipt_digest, authority_effect=authority_effect,
+        worker_binding=(material_drone_id, lease_generation))
+
+
+def record_internal_receipt(conn, assignment_id, result, now_fn, *, status="PASS", effect_receipt_digest=None, authority_effect="NONE"):
+    """Trusted in-process ledger import; never expose through worker/HTTP ingress."""
+    return _record_receipt(conn, assignment_id, result, now_fn, status=status,
+        effect_receipt_digest=effect_receipt_digest, authority_effect=authority_effect)
+
+
+def _record_receipt(conn, assignment_id, result, now_fn, *, status, effect_receipt_digest, authority_effect, worker_binding=None):
     result_digest = digest(result)
     rid = "receipt-" + uuid.uuid4().hex
     stamp = now_fn()
@@ -320,13 +339,22 @@ def record_receipt(conn, assignment_id, result, now_fn, *, status="PASS", effect
         # A no-op write serializes independent connections before the read.
         # Historical conflicting receipts remain untouched and fail closed.
         conn.execute('UPDATE mission_execution_assignments SET state=state WHERE assignment_id=?',(assignment_id,))
-        row = conn.execute("SELECT mission_id,phase_id,state FROM mission_execution_assignments WHERE assignment_id=?", (assignment_id,)).fetchone()
+        row = conn.execute("SELECT mission_id,phase_id,state,material_drone_id,lease_generation FROM mission_execution_assignments WHERE assignment_id=?", (assignment_id,)).fetchone()
         if not row:
             raise ValueError("assignment missing")
+        if worker_binding is not None:
+            material_drone_id, lease_generation = worker_binding
+            if row['material_drone_id'] != material_drone_id:
+                raise ValueError('material identity mismatch')
+            driver = conn.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?', (row['mission_id'],)).fetchone()
+            if row['lease_generation'] != lease_generation or not driver or driver['generation'] != lease_generation:
+                raise ValueError('stale assignment generation')
         existing = conn.execute("SELECT result_digest,effect_receipt_digest,authority_effect,status FROM mission_execution_receipts WHERE assignment_id=? ORDER BY observed_at,receipt_id", (assignment_id,)).fetchall()
         if existing:
             identical=len(existing)==1 and tuple(existing[0])==(result_digest,effect_receipt_digest,authority_effect,status)
             raise ValueError('assignment receipt duplicate' if identical else 'assignment receipt conflict')
+        if worker_binding is not None and row['state'] != 'CLAIMED':
+            raise ValueError('assignment not claimed')
         conn.execute(
             "INSERT INTO mission_execution_receipts VALUES(?,?,?,?,?,?,?,?,?)",
             (rid, assignment_id, row["mission_id"], row["phase_id"], result_digest, effect_receipt_digest, authority_effect, status, stamp),

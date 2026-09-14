@@ -52,7 +52,9 @@ def normalize_snapshot(snapshot):
         phase_spec = specs.get(phase['phase_id'], {})
         phase['handler_id'] = phase_spec.get('handler_id')
         phase['handler_version'] = phase_spec.get('handler_version')
-        phase['evidence_count'] = sum(1 for m in messages if m.get('phase') == phase['phase_id'] and m.get('protocol') in {'EVIDENCE', 'VALIDATION', 'RECEIPT'})
+        totals = out.get('phase_evidence_counts')
+        phase['evidence_count'] = totals.get(phase['phase_id'], 0) if isinstance(totals, dict) else sum(1 for m in messages if m.get('phase') == phase['phase_id'] and m.get('protocol') in {'EVIDENCE', 'VALIDATION', 'RECEIPT'})
+        phase['evidence_count_scope'] = 'PERSISTED_TOTAL' if isinstance(totals, dict) else 'RECENT_MESSAGE_WINDOW'
         phase['blocker'] = driver.get('blocking_gate') if driver.get('current_phase') == phase['phase_id'] else (phase.get('detail') if phase.get('status') == 'BLOCKED' else None)
         phase['capabilities'] = phase_capabilities(out, phase['phase_id'])
     current = process.get('current_phase')

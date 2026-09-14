@@ -224,7 +224,7 @@ class LpclControlBridge:
         if op=='local_assignment_claim':
             return self._post('/api/v3/local/assignments/claim',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id')})
         if op=='local_assignment_receipt':
-            return self._post('/api/v3/local/assignments/receipt',{'assignment_id':args.get('assignment_id'),'status':args.get('status'),'result':args.get('result'),'effect_receipt_digest':args.get('effect_receipt_digest'),'authority_effect':'NONE'})
+            return self._post('/api/v3/local/assignments/receipt',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id'),'lease_generation':args.get('lease_generation'),'status':args.get('status'),'result':args.get('result'),'effect_receipt_digest':args.get('effect_receipt_digest'),'authority_effect':'NONE'})
         if op=='process':
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
@@ -371,10 +371,10 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             dual_id=payload.get('dual_request_id')
             if dual_id:
                 control('dual_response',{'request_id':dual_id,'provider':'gpt-oss-20b-MXFP4','response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
-            return control('local_assignment_receipt',{'assignment_id':aid,'status':'PASS','result':result,'effect_receipt_digest':None})
+            return control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})
         except Exception as exc:
             result={'kind':'LOCAL_MODEL_INFERENCE','error':type(exc).__name__+':'+str(exc)[:600],'authority_effect':'NONE'}
-            return control('local_assignment_receipt',{'assignment_id':aid,'status':'FAIL','result':result,'effect_receipt_digest':None})
+            return control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'FAIL','result':result,'effect_receipt_digest':None})
     return None
 
 

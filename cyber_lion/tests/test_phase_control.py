@@ -4,7 +4,9 @@ import sqlite3
 import tempfile
 from pathlib import Path
 from contextlib import closing
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+import importlib
+import sys
 
 from cyber_lion.mission_control.phase_control import phase_capabilities, apply_phase_action, fence_phase_action
 
@@ -132,6 +134,65 @@ class PhaseControlTests(unittest.TestCase):
         for bad in ({**args, 'action': 'RESUME'}, {**args, 'control_token': 'bad'}, {**args, 'status': 'PASS'}):
             with self.assertRaises(ValueError):bridge('phase_action', bad)
         bridge._post.assert_not_called()
+
+    def test_real_mission_action_commits_state_checkpoint_and_receipt_together(self):
+        self._real_atomic_action(fail_receipt=False)
+
+    def test_real_mission_action_receipt_failure_rolls_back_state_and_checkpoint(self):
+        self._real_atomic_action(fail_receipt=True)
+
+    def _real_atomic_action(self, *, fail_receipt):
+        from tools import lion_mission_control_compat, lion_mission_lifecycle_db
+        from cyber_lion.mission_control import execution_driver
+        with patch.dict(sys.modules, {'mission_control_compat': lion_mission_control_compat}):
+            service = importlib.import_module('tools.lion_mission_control_v3')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'atomic.db'
+            def connect():
+                conn = sqlite3.connect(path, timeout=.2)
+                conn.row_factory = sqlite3.Row
+                return conn
+            with closing(connect()) as conn:
+                conn.executescript(lion_mission_lifecycle_db.DDL + execution_driver.DDL + '''
+                  CREATE TABLE missions(mission_id TEXT,adapter TEXT,state TEXT,source_head TEXT,source_tree TEXT);
+                  CREATE TABLE mission_process_specs(mission_id TEXT,current_phase TEXT,authority_state TEXT);
+                  CREATE TABLE mission_phases(mission_id TEXT,phase_id TEXT,status TEXT);
+                  CREATE TABLE mission_phase_execution_specs(mission_id TEXT,phase_id TEXT,handler_id TEXT);
+                ''')
+                conn.execute('INSERT INTO missions VALUES(?,?,?,?,?)', ('test','LPCL_MISSION','RUNNING','a'*40,'b'*40))
+                conn.execute('INSERT INTO mission_process_specs VALUES(?,?,?)', ('test','ONE','EXPLICIT_USER_ACTIVATION'))
+                conn.execute('INSERT INTO mission_phases VALUES(?,?,?)', ('test','ONE','RUNNING'))
+                conn.execute('INSERT INTO mission_phase_execution_specs VALUES(?,?,?)', ('test','ONE','VERIFY_PHASE_PLAN'))
+                execution_driver.ensure_driver(conn, 'test', lambda: '2026-09-14T00:00:00Z', initial_state='ACTIVE')
+                conn.execute("UPDATE mission_execution_drivers SET driver_id='driver',current_phase='ONE'")
+                conn.commit()
+            original_receipt = lion_mission_lifecycle_db.create_action_receipt
+            def checked_receipt(conn, mid, action, effect, status, request, result, now):
+                if status == 'PASS':
+                    self.assertTrue(conn.in_transaction)
+                    self.assertEqual(conn.execute('SELECT state FROM mission_execution_drivers').fetchone()[0], 'PAUSED')
+                    self.assertEqual(conn.execute('SELECT COUNT(*) FROM mission_execution_checkpoints').fetchone()[0], 1)
+                    with closing(connect()) as observer:
+                        self.assertEqual(observer.execute('SELECT state FROM mission_execution_drivers').fetchone()[0], 'ACTIVE')
+                        self.assertEqual(observer.execute('SELECT COUNT(*) FROM mission_execution_checkpoints').fetchone()[0], 0)
+                    if fail_receipt:
+                        conn.execute('INSERT INTO mission_action_receipts VALUES(?,?,?,?,?,?,?,?,?)', ('partial','test','PAUSE','CONTROL_STATE','PASS','{}','{}','d'*64,'now'))
+                        raise RuntimeError('injected receipt failure before commit')
+                return original_receipt(conn,mid,action,effect,status,request,result,now)
+            request = self.request(active())
+            with patch.object(service, 'connect', connect), patch.object(service, 'lifecycle_create_action_receipt', checked_receipt):
+                if fail_receipt:
+                    with self.assertRaisesRegex(ValueError, 'injected receipt failure'):
+                        service.mission_action('test', {'action': 'PAUSE'}, phase_guard=request)
+                else:
+                    result = service.mission_action('test', {'action': 'PAUSE'}, phase_guard=request)
+                    self.assertTrue(result['receipt']['receipt_id'])
+            with closing(connect()) as observer:
+                self.assertEqual(observer.execute('SELECT state FROM mission_execution_drivers').fetchone()[0], 'ACTIVE' if fail_receipt else 'PAUSED')
+                self.assertEqual(observer.execute('SELECT COUNT(*) FROM mission_execution_checkpoints').fetchone()[0], 0 if fail_receipt else 1)
+                self.assertEqual(observer.execute("SELECT COUNT(*) FROM mission_action_receipts WHERE status='PASS'").fetchone()[0], 0 if fail_receipt else 1)
+                self.assertEqual(observer.execute('SELECT status FROM mission_phases').fetchone()[0], 'RUNNING')
+                self.assertEqual(observer.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
 
 
 if __name__ == '__main__':

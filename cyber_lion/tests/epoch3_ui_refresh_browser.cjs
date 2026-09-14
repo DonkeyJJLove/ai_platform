@@ -6,8 +6,9 @@ const gateway=read('cyber_lion/app_coordination/local_intelligence_gateway.py').
 const report={schema:'lion.r2-ui-browser/v1',scope:'MOCKED_HEADLESS_EDGE; NO_LIVE_EFFECT',checks:{},errors:[],events:[],unexpected:[],source_hashes:{}};
 for(const p of ['cyber_lion/app_coordination/local_intelligence_gateway.py','deploy/mission-control/v3/app.js','deploy/mission-control/v3/control-v3.js','deploy/mission-control/v3/index.html'])report.source_hashes[p]=crypto.createHash('sha256').update(read(p)).digest('hex');
 const supervisor={schema:'lion.supervisor-projection/v1',channel:'READY_FOR_HANDOFF',session:'BOUND',model:'fixture supervisor',transport:'SESSION_MEDIATED',automatic_hop:false,authority:'NONE',pending_state:'NONE',pending_count:0,last_receipt_state:'NONE',freshness:{state:'FRESH'},lease:{state:'ACTIVE'},unknown_reasons:[]};
-let focus='M1',revision=1,holdMission=null,releaseHeld=null,heldReady=null,phasePosts=0;
-const missions=['M1','M2','H1'].map(mission_id=>({mission_id,title:mission_id,state:mission_id==='H1'?'SUPERSEDED':'RUNNING',runtime_state:'RUNNING',progress:25,current_phase:'P1',objective:'fixture objective'}));
+let focus='M1',revision=1,holdMission=null,releaseHeld=null,heldReady=null,phasePosts=0,workerPosts=0;
+const legacyMission='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3';
+const missions=['M1','M2','H1',legacyMission].map(mission_id=>({mission_id,title:mission_id,state:mission_id==='H1'?'SUPERSEDED':'RUNNING',runtime_state:'RUNNING',progress:25,current_phase:'P1',objective:'fixture objective'}));
 function snapshot(id){
  const historical=id==='H1',phase={phase_id:'P1',title:'Very long phase title '.repeat(12),status:'RUNNING',progress:revision,handler_id:'fixture.handler',handler_version:'1',blocker:'fixture blocker',evidence_count:1,capabilities:{INSPECT:{supported:true},PAUSE:{supported:!historical,control_token:'fixture-token',reason:historical?'HISTORICAL_PHASE':'AVAILABLE'},STOP:{supported:false,reason:'NOT_AVAILABLE'}}};
  const events=[{id:'event1',protocol:'EVIDENCE',from_id:'worker1',to_id:'control',observed_at:'2026-09-14T12:00:00Z',phase:'P1',payload:{status:'OBSERVED',revision}}];
@@ -34,6 +35,7 @@ function snapshot(id){
      const id=p.split('/').at(-2);value=snapshot(id);
      if(holdMission===id){holdMission=null;heldReady?.();await new Promise(resolve=>{releaseHeld=resolve;});}
     }
+    else if(p==='/api/v3/missions/current/actions'){assert.deepEqual(req.postDataJSON(),{action:'RESTART_ONE',pod_name:'fixture-pod'});workerPosts++;value={status:'PASS'};}
     else if(p.endsWith('/phase-actions')){const body=req.postDataJSON();assert.deepEqual(Object.keys(body).sort(),['action','control_token','phase_id']);assert.equal(body.action,'PAUSE');phasePosts++;value={receipt:{receipt_id:'control-receipt'},readback:{driver_state:'PAUSED',phase_status:'RUNNING',receipt_id:'control-receipt'}};}
     else if(p==='/api/state')value={model:'fixture',material:{},mission_control:{},supervisor_projection:supervisor};
     else if(p==='/api/v3/saas/status')value={supervisor_projection:supervisor};
@@ -93,6 +95,17 @@ function snapshot(id){
     report.checks.control_slow_poll_selection={pass:true};
    }
    const worker=mode==='gateway'?'#missionWorkers':'#mcV3Workers';assert.match(await page.locator(worker).innerText(),/assign1/);assert.match(await page.locator(worker).innerText(),/receipt1/);
+   if(mode==='control'){
+    assert.equal(await page.locator('#mcV3Workers [data-restart]').count(),0);
+    await page.locator('#mcMissionSelect').selectOption(legacyMission);
+    await page.waitForFunction(id=>MC_DATA?.mission_id===id&&!MC_REFRESHING,legacyMission);
+    assert.equal(await page.locator('#mcV3Workers [data-restart]').count(),1);
+    page.once('dialog',dialog=>dialog.accept());
+    await page.locator('#mcV3Workers [data-restart]').click();
+    await page.waitForFunction(()=>!MC_REFRESHING);
+    assert.equal(workerPosts,1);
+    report.checks.legacy_worker_restart={pass:true,only_exact_legacy_running_mission:true,callback:'mcCurrentMaterialAct',payload:{action:'RESTART_ONE',pod_name:'fixture-pod'},mocked:true};
+   }
    await page.setViewportSize({width:390,height:844});
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1);
    assert.equal(overflow,false);report.checks[mode+'_narrow_layout']={pass:true,width:390,no_page_horizontal_overflow:true};
