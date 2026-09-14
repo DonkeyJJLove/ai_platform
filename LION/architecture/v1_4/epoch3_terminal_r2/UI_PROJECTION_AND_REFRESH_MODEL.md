@@ -1,5 +1,7 @@
 # UI projection and refresh model
 
+The legacy run-list adapter reads focus metadata once per batch using its existing read connection, rather than opening a connection for every participant. Its small SQLite read batch is serialized independently of lifecycle writers. This preserves the existing legacy records while preventing simultaneous older-panel refreshes from consuming the latency budget of the normalized panel.
+
 The recent-mission list shares one in-flight normalized read batch among overlapping requests. The completed batch is immediately discarded as a reusable source; the next request starts a fresh read. A separate result copy prevents one caller mutating another's response, and a failed batch releases all waiters without poisoning the next read. This avoids both concurrent SQLite/deep-copy contention and a queue of redundant serial reads. The coordinator is independent of lifecycle writers and does not cache authority.
 
 Evidence status: source implementation at `72fbb405f5c023baa4605a53c15f1b7b96533a98`, with inventory/package reconciliation in `6724074`. This is a source description at documentation freeze. Final clean validation, exact-head CI, deployment/restart readback and merge are separately evidenced terminal gates; this document does not predict their outcome. Authority effect: NONE.
