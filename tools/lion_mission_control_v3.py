@@ -734,11 +734,18 @@ def set_focus_mission(mid, request):
 def focus_mission_id():
     c=connect();r=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();c.close();return r['value'] if r else MISSION
 
+RECENT_PROJECTION_LOCK=threading.Lock()
+
+
 def recent_process_missions():
-    c=connect()
-    try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
-    finally:c.close()
-    return [process_snapshot(mid,read_only=True)['mission_summary'] for mid in mids]
+    # Concurrent SQLite/deep-copy loops thrash the interpreter under real polling.
+    # Serialize this bounded read batch; each caller still reads fresh state.
+    # This lock is independent of lifecycle writers and never caches authority.
+    with RECENT_PROJECTION_LOCK:
+      c=connect()
+      try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
+      finally:c.close()
+      return [process_snapshot(mid,read_only=True)['mission_summary'] for mid in mids]
 # ---- end LPCL mission process extension v1 -------------------------------
 
 
