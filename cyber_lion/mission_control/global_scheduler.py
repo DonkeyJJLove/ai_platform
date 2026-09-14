@@ -64,6 +64,17 @@ CREATE INDEX IF NOT EXISTS idx_assignment_mission_state
   ON mission_execution_assignments(mission_id, state, created_at);
 CREATE INDEX IF NOT EXISTS idx_receipt_mission_phase
   ON mission_execution_receipts(mission_id, phase_id, observed_at);
+CREATE TABLE IF NOT EXISTS mission_scheduler_turns(
+  mission_id TEXT PRIMARY KEY,
+  last_dispatch_order INTEGER NOT NULL DEFAULT 0,
+  dispatch_count INTEGER NOT NULL DEFAULT 0,
+  last_dispatched_at TEXT
+);
+CREATE TABLE IF NOT EXISTS mission_scheduler_migrations(
+  version INTEGER PRIMARY KEY,
+  schema_id TEXT NOT NULL,
+  applied_at TEXT NOT NULL
+);
 """
 
 
@@ -76,15 +87,25 @@ def digest(value):
 
 
 def migrate(conn, now_fn):
+    if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']:
+        raise ValueError('scheduler database integrity before migration')
     conn.executescript(DDL)
     cols={r[1] for r in conn.execute('PRAGMA table_info(mission_execution_assignments)').fetchall()}
     if 'input_json' not in cols:
         conn.execute("ALTER TABLE mission_execution_assignments ADD COLUMN input_json TEXT NOT NULL DEFAULT '{}'")
+    turn_cols={r[1] for r in conn.execute('PRAGMA table_info(mission_scheduler_turns)')}
+    if 'last_dispatch_order' not in turn_cols:
+        conn.execute('ALTER TABLE mission_scheduler_turns ADD COLUMN last_dispatch_order INTEGER NOT NULL DEFAULT 0')
     stamp = now_fn()
     conn.execute(
         "INSERT OR IGNORE INTO mission_scheduler_state(scheduler_id,generation,state,heartbeat_at,queue_depth,active_run_count) VALUES(?,?,?,?,?,?)",
         (SCHEDULER_ID, 1, "ACTIVE", stamp, 0, 0),
     )
+    conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(1,?,?)',
+                 ('lion.scheduler-storage-reconciliation/v1',stamp))
+    if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']:
+        conn.rollback()
+        raise ValueError('scheduler database integrity after migration')
     conn.commit()
 
 
@@ -254,7 +275,26 @@ def eligible_missions(conn):
 
 
 def next_dispatch(conn, now_fn):
-    rows = eligible_missions(conn)
+    # Acquire the SQLite writer before selection: two schedulers must not
+    # choose from the same stale turn history. This records selection only;
+    # execution and its existing admission boundaries remain with the caller.
+    conn.execute('SAVEPOINT scheduler_select_turn')
+    try:
+        conn.execute('UPDATE mission_scheduler_state SET generation=generation WHERE scheduler_id=?',(SCHEDULER_ID,))
+        rows = eligible_missions(conn)
+        turns={r['mission_id']:r['last_dispatch_order'] for r in conn.execute('SELECT mission_id,last_dispatch_order FROM mission_scheduler_turns')}
+        # Stable sort retains existing ACTIVE-first order for never-dispatched
+        # ties, then rotates fairly through all eligible driver states.
+        rows.sort(key=lambda r:turns.get(r['mission_id'],0))
+        if rows:
+            order=conn.execute('SELECT COALESCE(MAX(last_dispatch_order),0)+1 FROM mission_scheduler_turns').fetchone()[0]
+            conn.execute('INSERT INTO mission_scheduler_turns(mission_id,last_dispatch_order,dispatch_count,last_dispatched_at) VALUES(?,?,1,?) ON CONFLICT(mission_id) DO UPDATE SET last_dispatch_order=excluded.last_dispatch_order,dispatch_count=mission_scheduler_turns.dispatch_count+1,last_dispatched_at=excluded.last_dispatched_at',
+                         (rows[0]['mission_id'],order,now_fn()))
+    except Exception:
+        conn.execute('ROLLBACK TO scheduler_select_turn')
+        conn.execute('RELEASE scheduler_select_turn')
+        raise
+    conn.execute('RELEASE scheduler_select_turn')
     active = sum(1 for r in rows if r["state"] == "ACTIVE")
     heartbeat(conn, now_fn, queue_depth=len(rows), active_run_count=active, dispatched=bool(rows))
     return rows[0] if rows else None
@@ -272,20 +312,31 @@ def create_assignment(conn, mission_id, phase_id, logical_drone_id, material_dro
 
 
 def record_receipt(conn, assignment_id, result, now_fn, *, status="PASS", effect_receipt_digest=None, authority_effect="NONE"):
-    row = conn.execute("SELECT mission_id,phase_id,state FROM mission_execution_assignments WHERE assignment_id=?", (assignment_id,)).fetchone()
-    if not row:
-        raise ValueError("assignment missing")
     result_digest = digest(result)
-    existing = conn.execute("SELECT receipt_id FROM mission_execution_receipts WHERE assignment_id=? AND result_digest=?", (assignment_id, result_digest)).fetchone()
-    if existing:
-        return {"receipt_id": existing["receipt_id"], "duplicate": True, "result_digest": result_digest}
     rid = "receipt-" + uuid.uuid4().hex
     stamp = now_fn()
-    conn.execute(
-        "INSERT INTO mission_execution_receipts VALUES(?,?,?,?,?,?,?,?,?)",
-        (rid, assignment_id, row["mission_id"], row["phase_id"], result_digest, effect_receipt_digest, authority_effect, status, stamp),
-    )
-    conn.execute("UPDATE mission_execution_assignments SET state=?,finished_at=? WHERE assignment_id=?", (status, stamp, assignment_id))
+    conn.execute('SAVEPOINT scheduler_receipt_ingress')
+    try:
+        # A no-op write serializes independent connections before the read.
+        # Historical conflicting receipts remain untouched and fail closed.
+        conn.execute('UPDATE mission_execution_assignments SET state=state WHERE assignment_id=?',(assignment_id,))
+        row = conn.execute("SELECT mission_id,phase_id,state FROM mission_execution_assignments WHERE assignment_id=?", (assignment_id,)).fetchone()
+        if not row:
+            raise ValueError("assignment missing")
+        existing = conn.execute("SELECT result_digest,effect_receipt_digest,authority_effect,status FROM mission_execution_receipts WHERE assignment_id=? ORDER BY observed_at,receipt_id", (assignment_id,)).fetchall()
+        if existing:
+            identical=len(existing)==1 and tuple(existing[0])==(result_digest,effect_receipt_digest,authority_effect,status)
+            raise ValueError('assignment receipt duplicate' if identical else 'assignment receipt conflict')
+        conn.execute(
+            "INSERT INTO mission_execution_receipts VALUES(?,?,?,?,?,?,?,?,?)",
+            (rid, assignment_id, row["mission_id"], row["phase_id"], result_digest, effect_receipt_digest, authority_effect, status, stamp),
+        )
+        conn.execute("UPDATE mission_execution_assignments SET state=?,finished_at=? WHERE assignment_id=?", (status, stamp, assignment_id))
+    except Exception:
+        conn.execute('ROLLBACK TO scheduler_receipt_ingress')
+        conn.execute('RELEASE scheduler_receipt_ingress')
+        raise
+    conn.execute('RELEASE scheduler_receipt_ingress')
     conn.commit()
     return {"receipt_id": rid, "duplicate": False, "result_digest": result_digest}
 

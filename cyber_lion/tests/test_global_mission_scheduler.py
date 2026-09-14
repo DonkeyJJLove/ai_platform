@@ -75,14 +75,15 @@ class GlobalSchedulerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'not ready'):
             g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
 
-    def test_receipt_is_exactly_once_for_same_result(self):
+    def test_duplicate_receipt_fails_closed_without_replacing_first(self):
         self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
         aid=g.create_assignment(self.c,'M','P','LD001','MD001',{'x':1},now,lease_generation=1)
         a=g.record_receipt(self.c,aid,{'ok':True},now)
-        b=g.record_receipt(self.c,aid,{'ok':True},now)
         self.assertFalse(a['duplicate'])
-        self.assertTrue(b['duplicate'])
-        self.assertEqual(a['receipt_id'],b['receipt_id'])
+        with self.assertRaisesRegex(ValueError,'assignment receipt duplicate'):
+            g.record_receipt(self.c,aid,{'ok':True},now)
+        rows=self.c.execute('SELECT receipt_id FROM mission_execution_receipts WHERE assignment_id=?',(aid,)).fetchall()
+        self.assertEqual([r[0] for r in rows],[a['receipt_id']])
 
 
 if __name__ == '__main__':

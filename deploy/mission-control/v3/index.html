@@ -32,11 +32,11 @@
     <div id="mcV3Actions" class="mc-actions"></div>
     <div id="mcCapabilityMatrix" class="mc-capability-matrix"></div>
     <div class="detail-grid mc-process-grid">
-      <div><h3>Mission phases</h3><div id="mcPhases"></div></div>
+      <div><h3>Mission phases</h3><div id="mcPhases"></div><div id="mcPhaseControlResult" role="status"></div></div>
       <div><h3>Protocol channels</h3><div id="mcProtocolFilters" class="mc-protocol-filters"></div><div id="mcProtocolFeed" class="mc-protocol-feed"></div></div>
     </div>
     <h3>Logical control plane</h3><div id="mcV3Logical" class="mc-logical"></div>
-    <details open><summary>Material workers</summary><div class="table-wrap"><table><thead><tr><th>Pod</th><th>Logical</th><th>Role</th><th>Phase</th><th>Ready</th><th>Restarts</th><th>UID</th><th>Control</th></tr></thead><tbody id="mcV3Workers"></tbody></table></div></details>
+    <details open data-key="material-workers"><summary>Material workers · inspection</summary><div id="mcV3Workers" class="semantic-grid"></div></details>
     <div class="detail-grid"><div><h3>Mission registry</h3><div id="mcV3Registry"></div></div><div><h3>Command / receipt ledger</h3><div id="mcV3Commands"></div></div></div>
     <h3>Evidence databases</h3><p class="hint">Source databases remain evidence carriers. Mission Control reads/indexes them; registration does not grant authority.</p><div id="mcV3Sources"></div>
   </section>
@@ -69,7 +69,7 @@
     <h2>Run detail</h2>
     <p id="detailState" role="status" class="hint"></p>
     <div id="empty">Select a run.</div>
-    <div id="detail" hidden>
+    <div id="detail" hidden><div id="runSchema"></div>
       <div class="detail-grid">
         <div><h3>Identity</h3><div id="identity" class="chip-grid"></div></div>
         <div><h3>Source</h3><div id="source" class="chip-grid"></div></div>

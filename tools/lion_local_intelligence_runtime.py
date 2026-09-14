@@ -182,6 +182,12 @@ class LpclControlBridge:
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':return self._get('/api/v3/missions/recent')
+        if op=='phase_action':
+            if type(args) is not dict or set(args)!={'mission_id','phase_id','action','control_token'}:raise ValueError('phase action schema')
+            mid=args['mission_id'];pid=args['phase_id'];action=args['action'];token=args['control_token']
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(pid,str) or not self.MID_RE.fullmatch(pid):raise ValueError('phase identity')
+            if action not in {'PAUSE','STOP'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase containment action/token')
+            return self._post('/api/v3/missions/'+mid+'/phase-actions',{'phase_id':pid,'action':action,'control_token':token})
         if op=='saas_request':
             mid=args.get('mission_id');question=args.get('question')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(question,str) or not question.strip() or len(question)>8000:raise ValueError('saas request')

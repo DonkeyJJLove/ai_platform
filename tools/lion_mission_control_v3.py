@@ -6,6 +6,8 @@ from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse,unquote,parse_qs
+from cyber_lion.mission_control.runtime_projection import normalize_snapshot, validate_registration, SCHEMA_VERSION as RUNTIME_SCHEMA_VERSION
+from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
 from mission_control_compat import compat_get, STATIC
 try:
  from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan
@@ -369,6 +371,7 @@ def _process_message(c,mid,protocol,from_id,to_id,phase,payload,direction='INTER
 def register_lpcl_mission(x):
     required={'mission_id','title','objective','description','lpcl_digest','lpcl_text','source_head','source_tree','logical_count','material_target','phases','protocols'}
     if type(x) is not dict or set(x)!=required:raise ValueError('lpcl registration schema')
+    validate_registration(x)
     mid=x['mission_id']
     if not _safe_id(mid) or mid==MISSION:raise ValueError('mission_id')
     if not isinstance(x['title'],str) or not 1<=len(x['title'])<=180:raise ValueError('title')
@@ -391,6 +394,8 @@ def register_lpcl_mission(x):
        c.close();return {'idempotent':True,'mission':process_snapshot(mid)}
       c.close();raise ValueError('mission_id already bound')
     spec={'mission_id':mid,'title':x['title'],'objective':x['objective'],'description':x['description'],'lpcl_digest':x['lpcl_digest'],'protocols':x['protocols'],'phases':x['phases'],'logical_count':x['logical_count'],'material_target':x['material_target'],'source_head':x['source_head'],'source_tree':x['source_tree']}
+    spec['schema_version']=RUNTIME_SCHEMA_VERSION
+    spec['mission_class']='LPCL_MISSION'
     c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],'LPCL_MISSION',x['lpcl_digest'],x['source_head'],x['source_tree'],None,'REGISTERED','NOT_STARTED',x['logical_count'],x['material_target'],0,0,t,None,t,None,json.dumps(spec,sort_keys=True,ensure_ascii=False)))
     c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],x['objective'],x['description'],x['lpcl_digest'],x['lpcl_text'],json.dumps(x['protocols']), 'NONE',None,0.0,t,t))
     for i,(pid,title) in enumerate(phase_rows,1):c.execute('INSERT INTO mission_phases VALUES(?,?,?,?,?,?,?,?,?,?)',(mid,pid,i,title,'PENDING',0.0,None,None,None,t))
@@ -555,13 +560,19 @@ def activate_compiled_revision(mid,revision_id,lpcl_digest):
     return {'revision_id':revision_id,'successor_mission_id':row['successor_mission_id'],'lpcl_digest':lpcl_digest,'state':'ACTIVATED','mission':result,'authority_effect':'EXPLICIT_USER_ACTIVATION'}
 
 
-def mission_action(mid,x):
+def mission_action(mid,x,*,phase_guard=None):
     if type(x) is not dict or 'action' not in x or not isinstance(x['action'],str):raise ValueError('action schema')
     action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','ACTIVATE_REVISION','AUDIT','ROLLBACK','PAUSE','RESUME','VALIDATE','STOP','DRIVER_START'}
     if action not in allowed:raise ValueError('action denied')
     request={k:v for k,v in x.items() if k!='action'}
     c=connect();row=c.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mid,)).fetchone();c.close()
     if not row:raise ValueError('mission not found')
+    guarded_connection=None
+    if phase_guard is not None:
+      if action not in {'PAUSE','STOP'} or phase_guard.get('action')!=action:raise ValueError('phase guard action mismatch')
+      guarded_connection=connect()
+      try:fence_phase_action(guarded_connection,mid,phase_guard)
+      except Exception:guarded_connection.close();raise
     effect='NONE';status='PASS';result=None
     try:
       if action=='REFRESH':
@@ -576,12 +587,12 @@ def mission_action(mid,x):
       elif action in {'RESUME','DRIVER_START'}:
         c=connect();result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE',owner_id=DRIVER_PROCESS_ID);c.close();effect='CONTROL_STATE'
       elif action=='PAUSE':
-        c=connect();ds=driver_snapshot(c,mid)
+        c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
         if ds['state'] not in {'ACTIVE','WAITING','BLOCKED'}:raise ValueError('driver not pausable from '+str(ds['state']))
         result=driver_transition(c,mid,'PAUSED',now,next_action='OPERATOR_RESUME');c.close();effect='CONTROL_STATE'
       elif action=='STOP':
-        c=connect();ds=driver_snapshot(c,mid)
+        c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
         if ds['state'] in {'COMPLETE','STOPPED'}:result=ds
         else:result=driver_transition(c,mid,'STOPPED',now,next_action='EXPLICIT_RESUME_REQUIRED')
@@ -633,13 +644,16 @@ def mission_action(mid,x):
         c=connect();result=lifecycle_rollback_plan(c,mid,rollback_id,now);c.close()
       c=connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,status,request,result,now);c.close();return {'mission_id':mid,'action':action,'status':status,'effect_class':effect,'result':result,'receipt':receipt}
     except Exception as e:
+      if guarded_connection is not None:
+       try:guarded_connection.close()
+       except Exception:pass
       try:
         c=connect();receipt=lifecycle_create_action_receipt(c,mid,action,effect,'FAIL',request,{'error':type(e).__name__+':'+str(e)[:1000]},now);c.close()
       except Exception:receipt=None
       raise ValueError(type(e).__name__+':'+str(e)+((' receipt='+str(receipt.get('receipt_id'))) if receipt else ''))
 
 
-def process_snapshot(mid):
+def process_snapshot(mid, *, read_only=False):
     c=connect();m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
     if not m:c.close();raise ValueError('mission not found')
     d=dict(m);s=c.execute('SELECT * FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();d['process']=dict(s) if s else None
@@ -648,6 +662,7 @@ def process_snapshot(mid):
       except Exception:d['process']['protocols']=[]
       d['process'].pop('lpcl_text',None)
     d['phases']=[dict(r) for r in c.execute('SELECT * FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,))]
+    d['phase_execution_specs']=[dict(r) for r in c.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=? ORDER BY phase_id',(mid,))]
     d['logical']=[dict(r) for r in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,))]
     d['workers']=[dict(r) for r in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,))]
     d['commands']=[dict(r) for r in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 40',(mid,))]
@@ -662,26 +677,29 @@ def process_snapshot(mid):
     elif d.get('adapter')==LPCL_REBIND_ADAPTER:d['control_authority']='BOUNDED_LPCL_EXECUTION_ADAPTER'
     elif mid==LPCL_REBIND_SOURCE:d['control_authority']='BOUNDED_EPOCH3_MATERIAL_ADAPTER'
     else:d['control_authority']='ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE'
-    lifecycle_sync_components(c,mid,now)
+    if not read_only:lifecycle_sync_components(c,mid,now)
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
     d['execution_driver']=driver_snapshot(c,mid)
     d['scheduler']=global_sched.scheduler_snapshot(c)
+    d['execution_assignments']=[dict(r) for r in c.execute('SELECT assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,state,lease_generation,created_at,claimed_at,finished_at FROM mission_execution_assignments WHERE mission_id=? ORDER BY created_at DESC,assignment_id LIMIT 100',(mid,))]
+    d['execution_receipts']=[dict(r) for r in c.execute('SELECT r.*,a.material_drone_id,a.logical_drone_id FROM mission_execution_receipts r JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id WHERE r.mission_id=? ORDER BY r.observed_at DESC,r.receipt_id LIMIT 100',(mid,))]
+    d['execution_history_window']={'assignments':100,'receipts':100,'order':'NEWEST_FIRST','payloads':'DIGEST_ONLY'}
     try:d['execution_assignment_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=?',(mid,)).fetchone()[0]);d['execution_receipt_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=?',(mid,)).fetchone()[0])
     except sqlite3.OperationalError:d['execution_assignment_count']=0;d['execution_receipt_count']=0
     try:d['revision_compilations']=[dict(x) for x in c.execute('SELECT revision_id,successor_mission_id,lpcl_digest,state,created_at,activated_at FROM mission_revision_compilations WHERE mission_id=? ORDER BY created_at DESC LIMIT 20',(mid,))]
     except sqlite3.OperationalError:d['revision_compilations']=[]
     try:d['adaptive_worker_plan']=driver_adaptive_worker_plan(c,mid,preferred_roles=('LD01','LD02','LD10','LD11'),limit=16) if int(d.get('ready') or 0)==64 else None
     except Exception:d['adaptive_worker_plan']=None
-    c.commit();c.close();return d
+    c.commit();c.close();return normalize_snapshot(d)
 
 def focus_mission_id():
     c=connect();r=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();c.close();return r['value'] if r else MISSION
 
 def recent_process_missions():
-    c=connect();rows=[]
-    for r in c.execute('SELECT m.mission_id,m.title,m.adapter,m.state,m.runtime_state,m.logical_count,m.material_target,m.materialized,m.ready,m.updated_at,p.objective,p.current_phase,p.progress,p.authority_state FROM missions m LEFT JOIN mission_process_specs p ON p.mission_id=m.mission_id ORDER BY m.updated_at DESC LIMIT 30'):
-      d=dict(r);d['controllable']=d['mission_id']==MISSION and d['adapter']=='MISSION64_K3S';rows.append(d)
-    c.close();return rows
+    c=connect()
+    try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
+    finally:c.close()
+    return [process_snapshot(mid,read_only=True)['mission_summary'] for mid in mids]
 # ---- end LPCL mission process extension v1 -------------------------------
 
 
@@ -1209,6 +1227,12 @@ class H(BaseHTTPRequestHandler):
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
+  if path.startswith('/api/v3/missions/') and path.endswith('/phase-actions'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/phase-actions')].strip('/');n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n));return self.json(apply_phase_action(mid,x,lambda identity:process_snapshot(identity,read_only=True),mission_action))
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path in {'/api/v3/local/assignments/claim','/api/v3/local/assignments/receipt'}:
    try:
     n=int(self.headers.get('Content-Length','0'))

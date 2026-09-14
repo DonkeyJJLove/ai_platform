@@ -11,8 +11,8 @@ function mccard(k,v){return `<div class="card"><div class="k">${mcesc(k)}</div><
 function mcbtn(a,label,cls=''){return `<button type="button" class="${cls}" data-mc-action="${mcesc(a)}">${mcesc(label)}</button>`}
 function capState(name){return MC_DATA?.capabilities?.[name]?.state||'UNAVAILABLE'}
 function missionPath(mid,suffix=''){return '/api/v3/missions/'+encodeURIComponent(mid)+suffix}
-function mcRenderKey(s,registry,sources){const p=s.process||{},d=s.execution_driver||{};return JSON.stringify({focus:MC_FOCUS,selected:MC_SELECTED,pinned:MC_PINNED,state:s.state,runtime:s.runtime_state,ready:s.ready,materialized:s.materialized,progress:p.progress,phase:p.current_phase,driver:[d.state,d.generation,d.heartbeat_at,d.current_phase,d.waiting_reason,d.blocking_gate,d.next_action,d.last_effect,d.last_effect_receipt],phases:(s.phases||[]).map(x=>[x.phase_id,x.status,x.progress,x.detail]),logical:(s.logical||[]).map(x=>[x.logical_id,x.ready,x.materialized]),workers:(s.workers||[]).map(x=>[x.pod_uid,x.ready,x.restarts]),messages:(s.protocol_messages||[]).slice(0,30).map(x=>x.id||x.payload_digest),receipts:(s.action_receipts||[]).slice(0,20).map(x=>x.receipt_digest||x.receipt_id),registry:(registry||[]).map(x=>[x.mission_id,x.state,x.progress,x.current_phase]),sources:(sources||[]).map(x=>[x.source_id||x.name,x.available,x.currentness])})}
-function mcRenderHeader(s){const mode=MC_PINNED?'PINNED':'FOLLOW_FOCUS',focus=MC_FOCUS||'UNKNOWN',last=s.updated_at||'UNKNOWN';MC('mcV3Meta').textContent=s.title+' · '+s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · VIEW '+mode+(MC_PINNED?' · focus '+focus:'')+' · mission update '+last+' · collector poll '+new Date().toISOString()}
+function mcRenderKey(s,registry,sources){const p=s.process||{},d=s.execution_driver||{};return JSON.stringify({projection:s,focus:MC_FOCUS,selected:MC_SELECTED,pinned:MC_PINNED,state:s.state,runtime:s.runtime_state,ready:s.ready,materialized:s.materialized,progress:p.progress,phase:p.current_phase,driver:[d.state,d.generation,d.heartbeat_at,d.current_phase,d.waiting_reason,d.blocking_gate,d.next_action,d.last_effect,d.last_effect_receipt],phases:(s.phases||[]).map(x=>[x.phase_id,x.status,x.progress,x.detail]),logical:(s.logical||[]).map(x=>[x.logical_id,x.ready,x.materialized]),workers:(s.workers||[]).map(x=>[x.pod_uid,x.ready,x.restarts]),messages:(s.protocol_messages||[]).slice(0,30).map(x=>x.id||x.payload_digest),receipts:(s.action_receipts||[]).slice(0,20).map(x=>x.receipt_digest||x.receipt_id),registry:(registry||[]).map(x=>[x.mission_id,x.state,x.progress,x.current_phase]),sources:(sources||[]).map(x=>[x.source_id||x.name,x.available,x.currentness])})}
+function mcRenderHeader(s){const mode=MC_PINNED?'PINNED':'FOLLOW_FOCUS',focus=MC_FOCUS||'UNKNOWN',last=s.updated_at||'UNKNOWN';MC('mcV3Meta').textContent=s.title+' · '+s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · VIEW '+mode+(MC_PINNED?' · focus '+focus:'')+' · mission update '+last+' · schema '+(s.normalized_schema_version||missingRecord(s))+' · revision '+(s.projection_revision||missingRecord(s))+' · age '+(s.updated_at?Math.max(0,Math.floor((Date.now()-Date.parse(s.updated_at))/1000))+'s':missingRecord(s))+' · collector poll '+new Date().toISOString()}
 function mcCaptureViewport(){const feed=MC('mcProtocolFeed'),active=document.activeElement;return {x:window.scrollX,y:window.scrollY,feed,feedY:feed?.scrollTop||0,active,selection:(active&&typeof active.selectionStart==='number')?[active.selectionStart,active.selectionEnd]:null}}
 function mcRestoreViewport(v){if(!v)return;const restore=()=>{if(v.feed&&document.contains(v.feed))v.feed.scrollTop=v.feedY;window.scrollTo(v.x,v.y);if(v.active&&document.contains(v.active)&&document.activeElement!==v.active){try{v.active.focus({preventScroll:true});if(v.selection&&typeof v.active.setSelectionRange==='function')v.active.setSelectionRange(v.selection[0],v.selection[1])}catch(e){}}};restore();requestAnimationFrame(restore)}
 
@@ -49,6 +49,13 @@ function mcRenderSupervisor(projection){
     const output=card.lastElementChild,text=String(value??'UNKNOWN');
     if(output.textContent!==text)output.textContent=text;
   }
+}
+
+async function mcPhaseAction(button){
+  const missionId=MC_SELECTED,payload={phase_id:button.dataset.phaseId,action:button.dataset.phaseAction,control_token:button.dataset.controlToken};button.disabled=true;
+  try{const r=await fetch(missionPath(missionId,'/phase-actions'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),result=await r.json();if(!r.ok)throw new Error(result.error||('HTTP '+r.status));patchHtml(MC('mcPhaseControlResult'),semanticDetail('phase-receipt','Phase control receipt',[['Mission',missionId],['Action',payload.action],['Receipt',result.readback?.receipt_id??result.receipt?.receipt_id],['Driver readback',result.readback?.driver_state],['Phase readback',result.readback?.phase_status]],result,mcesc));await mcRefresh()}
+  catch(error){MC('mcPhaseControlResult').textContent='CONTROL DENIED / UNAVAILABLE · '+error.message}
+  finally{button.disabled=false}
 }
 
 async function mcCurrentMaterialAct(action,pod){
@@ -97,19 +104,19 @@ async function mcActionPrompt(action){
 function mcRenderProtocols(s){
   const rows=s.protocol_messages||[],counts={};for(const x of rows)counts[x.protocol]=(counts[x.protocol]||0)+1;
   const keys=Object.keys(counts).sort();if(MC_PROTOCOL!=='ALL'&&!counts[MC_PROTOCOL])MC_PROTOCOL='ALL';
-  MC('mcProtocolFilters').innerHTML=(rows.length?`<button class="mc-proto ${MC_PROTOCOL==='ALL'?'active':''}" data-proto="ALL">ALL <b>${rows.length}</b></button>`:'')+keys.map(k=>`<button class="mc-proto ${MC_PROTOCOL===k?'active':''}" data-proto="${mcesc(k)}">${mcesc(k)} <b>${counts[k]}</b></button>`).join('');
+  patchHtml(MC('mcProtocolFilters'),(rows.length?`<button class="mc-proto ${MC_PROTOCOL==='ALL'?'active':''}" data-proto="ALL">ALL <b>${rows.length}</b></button>`:'')+keys.map(k=>`<button class="mc-proto ${MC_PROTOCOL===k?'active':''}" data-proto="${mcesc(k)}">${mcesc(k)} <b>${counts[k]}</b></button>`).join(''));
   MC('mcProtocolFilters').querySelectorAll('[data-proto]').forEach(b=>b.onclick=()=>{MC_PROTOCOL=b.dataset.proto;mcRenderProtocols(s)});
   const shown=rows.filter(x=>MC_PROTOCOL==='ALL'||x.protocol===MC_PROTOCOL).slice(0,120);
-  MC('mcProtocolFeed').innerHTML=shown.length?shown.map(x=>{const q=x.payload||{},summary=[q.event,q.status,q.action,q.gate,q.state].filter(Boolean).join(' · ')||'RECORDED';return `<article class="mc-message"><div><b>${mcesc(x.protocol)}</b> · ${mcesc(x.from_id)} → ${mcesc(x.to_id)}</div><div class="mc-message-meta">${mcesc(x.observed_at)} · phase ${mcesc(x.phase||'—')} · ${mcesc(x.direction)}</div><div class="mc-labels"><span>${mcesc(summary)}</span>${q.authority_effect?`<span>AUTH ${mcesc(q.authority_effect)}</span>`:''}</div><details class="mc-raw"><summary>RAW</summary><pre>${mcesc(JSON.stringify(q,null,2))}</pre></details></article>`}).join(''):'<div class="mc-line mc-history">No protocol messages recorded for this mission/stage.</div>';
+  patchHtml(MC('mcProtocolFeed'),shown.length?shown.map(x=>{const q=x.payload||{},summary=[q.event,q.status,q.action,q.gate,q.state].filter(Boolean).join(' · ')||'RECORDED';return `<article class="mc-message" data-key="${mcesc(x.id||x.payload_digest||[x.observed_at,x.protocol,x.from_id,x.to_id].join(':'))}"><div><b>${mcesc(x.protocol)}</b> · ${mcesc(x.from_id)} → ${mcesc(x.to_id)}</div><div class="mc-message-meta">${mcesc(x.observed_at)} · phase ${mcesc(x.phase||'—')} · ${mcesc(x.direction)}</div><div class="mc-labels"><span>${mcesc(summary)}</span>${q.authority_effect?`<span>AUTH ${mcesc(q.authority_effect)}</span>`:''}</div><details class="mc-raw"><summary>RAW</summary><pre>${mcesc(JSON.stringify(q,null,2))}</pre></details></article>`}).join(''):'<div class="mc-line mc-history">No protocol messages recorded for this mission/stage.</div>');
 }
 
 function renderSchemaContext(s){
   const sc=s.schema_context||{},gaps=sc.missing_fields||[];
-  const hist=sc.record_class==='HISTORICAL_PRE_SCHEMA';
+  const hist=String(sc.record_class||'').startsWith('HISTORICAL');
   MC('mcSchemaNotice').className='mc-schema-notice '+(hist?'historical':'current');
-  MC('mcSchemaNotice').innerHTML=`<b>${mcesc(sc.record_class||'SCHEMA UNKNOWN')}</b> · ${mcesc(sc.source_stage||'UNKNOWN STAGE')}<br>${mcesc(sc.compatibility_note||'')}`+
-    (gaps.length?`<div class="mc-gap-list"><b>Fields not recorded at source stage:</b> ${gaps.map(x=>mcesc(x.field_name)).join(' · ')}</div>`:'');
-  MC('mcLifecycleInfo').innerHTML=`<b>DB schema:</b> ${mcesc(sc.current_schema||'UNKNOWN')} · <b>lineage:</b> ${(s.lineage||[]).length} · <b>design revisions:</b> ${(s.design_revisions||[]).length} · <b>audits:</b> ${(s.audits||[]).length} · <b>rollback points:</b> ${(s.rollback_points||[]).length}`;
+  patchHtml(MC('mcSchemaNotice'),`<b>${mcesc(sc.record_class||'SCHEMA UNKNOWN')}</b> · ${mcesc(sc.source_stage||'UNKNOWN STAGE')}<br>${mcesc(sc.compatibility_note||'')}`+
+    (gaps.length?`<div class="mc-gap-list"><b>Fields not recorded at source stage:</b> ${gaps.map(x=>mcesc(x.field_name)).join(' · ')}</div>`:''));
+  patchHtml(MC('mcLifecycleInfo'),`<b>DB schema:</b> ${mcesc(s.normalized_schema_version||sc.current_schema||missingRecord(s))} · <b>lineage:</b> ${(s.lineage||[]).length} · <b>design revisions:</b> ${(s.design_revisions||[]).length} · <b>audits:</b> ${(s.audits||[]).length} · <b>rollback points:</b> ${(s.rollback_points||[]).length}`);
 }
 
 function renderLifecycleActions(s){
@@ -125,17 +132,17 @@ function renderLifecycleActions(s){
     if(['RUNNING','PAUSED','FAILED','CONVERGING'].includes(s.state))a+=`<button type="button" class="danger" data-low-action="STOP">Stop</button>`;
     if(['AUTHORIZED','STOPPED','FAILED'].includes(s.state))a+=`<button type="button" data-low-action="START">Start</button>`;
   }
-  MC('mcV3Actions').innerHTML=a;
+  patchHtml(MC('mcV3Actions'),a);
   MC('mcV3Actions').querySelectorAll('[data-mc-action]').forEach(b=>b.onclick=()=>mcActionPrompt(b.dataset.mcAction));
   MC('mcV3Actions').querySelectorAll('[data-low-action]').forEach(b=>b.onclick=()=>mcCurrentMaterialAct(b.dataset.lowAction));
-  MC('mcCapabilityMatrix').innerHTML=Object.entries(s.capabilities||{}).map(([k,v])=>`<span class="mc-cap"><b>${mcesc(k)}</b> ${mcesc(v.state)}${v.reason?' · '+mcesc(v.reason):''}</span>`).join('');
+  patchHtml(MC('mcCapabilityMatrix'),Object.entries(s.capabilities||{}).map(([k,v])=>`<span class="mc-cap"><b>${mcesc(k)}</b> ${mcesc(v.state)}${v.reason?' · '+mcesc(v.reason):''}</span>`).join(''));
 }
 
 function mcRender(s,registry,sources){
-  MC_DATA=s;const p=s.process||{},sc=s.schema_context||{};
-  MC('mcV3Authority').innerHTML='CONTROL: <b>'+mcesc(s.control_authority||'NONE')+'</b>';
+  MC_DATA=s;const n=s.normalized_runtime||{},p={...(s.process||{}),current_phase:n.runtime?.current_phase??s.process?.current_phase},sc=s.schema_context||{};
+  patchHtml(MC('mcV3Authority'),'CONTROL: <b>'+mcesc(s.control_authority||'NONE')+'</b>');
   mcRenderHeader(s);
-  const historical=sc.record_class==='HISTORICAL_PRE_SCHEMA';
+  const historical=String(sc.record_class||'').startsWith('HISTORICAL');
   MC('mcObjective').textContent=p.objective||(historical?'Not recorded: mission predates the mission-process schema.':'Objective not recorded');
   MC('mcDescription').textContent=p.description||'';
   const hasProgress=p.progress!==null&&p.progress!==undefined;
@@ -143,24 +150,25 @@ function mcRender(s,registry,sources){
   MC('mcProgressLabel').textContent=hasProgress?'Progress '+progress.toFixed(1)+'%':'Progress: NOT RECORDED AT SOURCE STAGE';
   MC('mcCurrentPhase').textContent=p.current_phase?('Current phase: '+p.current_phase):(historical?'Phase model did not exist for this record':'No active phase');
   MC('mcProgressBar').style.width=hasProgress?Math.max(0,Math.min(100,progress))+'%':'0%';
-  MC('mcV3Cards').innerHTML=[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',`${s.materialized}/${s.material_target}`],['READY',`${s.ready}/${s.material_target}`],['PROGRESS',hasProgress?progress.toFixed(1)+'%':'N/A'],['SCHEMA',sc.record_class||'UNKNOWN'],['AUTH',p.authority_state||'N/A']].map(x=>mccard(...x)).join('');
+  patchHtml(MC('mcV3Cards'),[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',`${s.materialized}/${s.material_target}`],['READY',`${s.ready}/${s.material_target}`],['PROGRESS',hasProgress?progress.toFixed(1)+'%':'N/A'],['SCHEMA',sc.record_class||'UNKNOWN'],['AUTH',p.authority_state||'N/A']].map(x=>mccard(...x)).join(''));
   renderSchemaContext(s);renderLifecycleActions(s);
   const d=s.execution_driver||{};
-  MC('mcDriverState').innerHTML=d.driver_id?`<div class="mc-driver-grid"><span><b>DRIVER</b> ${mcesc(d.state||'UNKNOWN')}</span><span><b>GEN</b> ${mcesc(d.generation)}</span><span><b>HEARTBEAT</b> ${mcesc(d.heartbeat_at||'NONE')}</span><span><b>PHASE</b> ${mcesc(d.current_phase||'—')}</span><span><b>ATTEMPT</b> ${mcesc((d.latest_attempt||{}).attempt_id||'—')}</span><span><b>WAIT</b> ${mcesc(d.waiting_reason||'—')}</span><span><b>GATE</b> ${mcesc(d.blocking_gate||'—')}</span><span><b>NEXT</b> ${mcesc(d.next_action||'—')}</span><span><b>LAST EFFECT</b> ${mcesc(d.last_effect||'—')}</span><span><b>RECEIPT</b> ${mcesc(d.last_effect_receipt||'—')}</span></div>`:'<div class="mc-line mc-history"><b>DRIVER:</b> not materialized for this mission/stage.</div>';
-  MC('mcPhases').innerHTML=(s.phases||[]).map(x=>`<article class="mc-phase"><div><b>${mcesc(x.phase_id)} · ${mcesc(x.title)}</b><span class="${['PASS','COMPLETE'].includes(x.status)?'mc-live':x.status==='FAIL'?'mc-bad':x.status==='BLOCKED'?'mc-warn':''}">${mcesc(x.status)}</span></div><div class="bar"><i style="width:${Math.max(0,Math.min(100,Number(x.progress||0)))}%"></i></div><small>${mcesc(x.detail||'')}</small></article>`).join('')||`<div class="mc-line mc-history">${historical?'No phase plan existed when this mission was recorded.':'No phase plan recorded.'}</div>`;
+  patchHtml(MC('mcDriverState'),d.driver_id?`<div class="mc-driver-grid"><span><b>DRIVER</b> ${mcesc(d.state||'UNKNOWN')}</span><span><b>GEN</b> ${mcesc(d.generation)}</span><span><b>HEARTBEAT</b> ${mcesc(d.heartbeat_at||'NONE')}</span><span><b>PHASE</b> ${mcesc(d.current_phase||'—')}</span><span><b>ATTEMPT</b> ${mcesc((d.latest_attempt||{}).attempt_id||'—')}</span><span><b>WAIT</b> ${mcesc(d.waiting_reason||'—')}</span><span><b>GATE</b> ${mcesc(d.blocking_gate||'—')}</span><span><b>NEXT</b> ${mcesc(d.next_action||'—')}</span><span><b>LAST EFFECT</b> ${mcesc(d.last_effect||'—')}</span><span><b>RECEIPT</b> ${mcesc(d.last_effect_receipt||'—')}</span></div>`:'<div class="mc-line mc-history"><b>DRIVER:</b> not materialized for this mission/stage.</div>');
+  patchHtml(MC('mcPhases'),boundedRows(s.normalized_runtime?.phases??s.phases).map(x=>phaseCard(x,s,mcesc)).join('')||'<p>'+missingRecord(s)+'</p>');
+  MC('mcPhases').querySelectorAll('[data-phase-action]').forEach(b=>b.onclick=()=>mcPhaseAction(b));
   mcRenderProtocols(s);
   const startComponentAllowed=capState('START_COMPONENT')!=='UNAVAILABLE';
-  MC('mcV3Logical').innerHTML=(s.logical||[]).map(x=>`<article class="mc-ld"><b>${mcesc(x.logical_id)} · ${mcesc(x.role)}</b><div>${x.ready}/${x.material_target} ready · ${x.materialized}/${x.material_target} materialized</div><div class="bar"><i style="width:${Math.min(100,100*x.ready/Math.max(1,x.material_target))}%"></i></div>${startComponentAllowed?`<button type="button" data-start-component="${mcesc(x.logical_id)}">start component</button>`:''}</article>`).join('')||'<div class="mc-line mc-history">No logical component model was recorded for this mission/stage.</div>';
+  patchHtml(MC('mcV3Logical'),(s.logical||[]).map(x=>`<article class="mc-ld"><b>${mcesc(x.logical_id)} · ${mcesc(x.role)}</b><div>${x.ready}/${x.material_target} ready · ${x.materialized}/${x.material_target} materialized</div><div class="bar"><i style="width:${Math.min(100,100*x.ready/Math.max(1,x.material_target))}%"></i></div>${startComponentAllowed?`<button type="button" data-start-component="${mcesc(x.logical_id)}">start component</button>`:''}</article>`).join('')||'<div class="mc-line mc-history">No logical component model was recorded for this mission/stage.</div>');
   MC('mcV3Logical').querySelectorAll('[data-start-component]').forEach(b=>b.onclick=()=>mcLifecycleAct('START_COMPONENT',{component_id:b.dataset.startComponent}));
   const role=Object.fromEntries((s.logical||[]).map(x=>[x.logical_id,x.role]));
-  MC('mcV3Workers').innerHTML=(s.workers||[]).map(x=>`<tr><td>${mcesc(x.pod_name)}</td><td>${mcesc(x.logical_id)}</td><td>${mcesc(role[x.logical_id]||'')}</td><td>${mcesc(x.phase)}</td><td class="${x.ready?'mc-live':'mc-warn'}">${x.ready?'YES':'NO'}</td><td>${mcesc(x.restarts)}</td><td>${mcesc(x.pod_uid)}</td><td>${s.mission_id==='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'&&s.state==='RUNNING'?`<button type="button" data-restart="${mcesc(x.pod_name)}">restart pod</button>`:''}</td></tr>`).join('');
-  MC('mcV3Workers').querySelectorAll('[data-restart]').forEach(b=>b.onclick=()=>mcCurrentMaterialAct('RESTART_ONE',b.dataset.restart));
-  MC('mcV3Registry').innerHTML=(registry||[]).map(x=>{const has=x.progress!==null&&x.progress!==undefined;const progressText=has?Number(x.progress).toFixed(1)+'%':'historical · no process progress';return `<button type="button" class="mc-reg ${x.mission_id===s.mission_id?'active':''}" data-mid="${mcesc(x.mission_id)}"><b>${x.controllable?'●':'○'} ${mcesc(x.title||x.mission_id)}</b><span>${mcesc(x.state)} · ${mcesc(progressText)}${x.current_phase?' · '+mcesc(x.current_phase):''}</span><small>${mcesc(x.objective||'Process metadata not recorded at source stage')}</small></button>`}).join('');
+  patchHtml(MC('mcV3Workers'),workerCards(s,mcesc));
+
+  patchHtml(MC('mcV3Registry'),(registry||[]).map(x=>{const has=x.progress!==null&&x.progress!==undefined;const progressText=has?Number(x.progress).toFixed(1)+'%':'historical · no process progress';return `<button type="button" class="mc-reg ${x.mission_id===s.mission_id?'active':''}" data-mid="${mcesc(x.mission_id)}"><b>${x.controllable?'●':'○'} ${mcesc(x.title||x.mission_id)}</b><span>${mcesc(x.state)} · ${mcesc(progressText)}${x.current_phase?' · '+mcesc(x.current_phase):''}</span><small>${mcesc(x.objective||'Process metadata not recorded at source stage')}</small></button>`}).join(''));
   MC('mcV3Registry').querySelectorAll('[data-mid]').forEach(b=>b.onclick=()=>{MC_SELECTED=b.dataset.mid;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()});
   const actionReceipts=(s.action_receipts||[]).map(x=>`<div class="mc-line">${mcesc(x.created_at)} · ${mcesc(x.action)} · <b class="${x.status==='PASS'?'mc-live':'mc-bad'}">${mcesc(x.status)}</b> · ${mcesc(x.effect_class)}</div>`).join('');
   const commands=(s.commands||[]).map(x=>`<div class="mc-line">${mcesc(x.requested_at)} · ${mcesc(x.action)} · <b class="${x.status==='PASS'?'mc-live':x.status==='FAIL'?'mc-bad':'mc-warn'}">${mcesc(x.status)}</b>${x.pod_name?' · '+mcesc(x.pod_name):''}</div>`).join('');
-  MC('mcV3Commands').innerHTML=actionReceipts+commands||'<div class="mc-line">No control receipts.</div>';
-  MC('mcV3Sources').innerHTML=(sources||[]).map(x=>`<article class="source-card"><b>${mcesc(x.source_id||x.name)}</b> · <span class="${x.available?'mc-live':'mc-bad'}">${x.available?'AVAILABLE':'MISSING'}</span><div>${mcesc(x.path)}</div><div class="tables">${mcesc(Object.entries(x.tables||{}).map(([k,v])=>k+'='+v).join(' · '))}</div><div class="tables">mode=${mcesc(x.mode)} · currentness=${mcesc(x.currentness)}</div></article>`).join('');
+  patchHtml(MC('mcV3Commands'),actionReceipts+commands||'<div class="mc-line">No control receipts.</div>');
+  patchHtml(MC('mcV3Sources'),(sources||[]).map(x=>`<article class="source-card"><b>${mcesc(x.source_id||x.name)}</b> · <span class="${x.available?'mc-live':'mc-bad'}">${x.available?'AVAILABLE':'MISSING'}</span><div>${mcesc(x.path)}</div><div class="tables">${mcesc(Object.entries(x.tables||{}).map(([k,v])=>k+'='+v).join(' · '))}</div><div class="tables">mode=${mcesc(x.mode)} · currentness=${mcesc(x.currentness)}</div></article>`).join(''));
 }
 
 async function mcRefresh(){
@@ -174,7 +182,7 @@ async function mcRefresh(){
     if(requestedMissionId!==MC_SELECTED){MC_REFRESH_PENDING=true;return}
     mcRenderSupervisor(supervisor?.supervisor_projection);
     const vp=mcCaptureViewport();
-    const select=MC('mcMissionSelect');select.innerHTML=registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join('');
+    const select=MC('mcMissionSelect');patchHtml(select,registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join(''));
     select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};const rf=MC('mcReturnFocus');if(rf){rf.hidden=!MC_PINNED;rf.onclick=()=>{MC_PINNED=false;MC_SELECTED=MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()}};
     const key=mcRenderKey(s,registry,src.sources||[]);if(key!==MC_LAST_RENDER_KEY){mcRender(s,registry,src.sources||[]);MC_LAST_RENDER_KEY=key}else mcRenderHeader(s);mcRestoreViewport(vp);
   }catch(e){mcRenderSupervisor(null);MC('mcV3Authority').textContent='CONTROL UNKNOWN';MC('mcV3Meta').textContent='Mission control refresh failed: '+e.message}
