@@ -25,6 +25,8 @@ SOURCE_MAP = {
     "cyber_lion/mission_control/dual_result_join.py": ROOT / "cyber_lion/mission_control/dual_result_join.py",
     "cyber_lion/mission_control/global_scheduler.py": ROOT / "cyber_lion/mission_control/global_scheduler.py",
     "cyber_lion/mission_control/supervisor_projection.py": ROOT / "cyber_lion/mission_control/supervisor_projection.py",
+    "cyber_lion/mission_control/runtime_projection.py": ROOT / "cyber_lion/mission_control/runtime_projection.py",
+    "cyber_lion/mission_control/phase_control.py": ROOT / "cyber_lion/mission_control/phase_control.py",
     **{"static/" + name: ROOT / "deploy/mission-control/v3" / name
        for name in ("index.html", "app.css", "app.js", "passive.js", "control-v3.js")},
 }
