@@ -1664,10 +1664,10 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "cyber_lion/mission_control/supervisor_projection.py": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80",
  "lion_mission_lifecycle_db.py": "1b2df6a3ca566d2ea1c62f2598052bff197d88eff47d9118fe418a778165565a",
  "lion_saas_session_bridge.py": "6966892b88ab0ec06d4ef1e87a3736e515b7683544bedbb229fe01f6b07c99e6",
- "mission_control_compat.py": "7cf2cae9cd7be9f79002b36a6408f6143b572c873da1630e397536c824a9d8a1",
+ "mission_control_compat.py": "f114896daaeb180b5300a4532663b228e761068680663d5114e363e91481d1e9",
  "mission_control_v3.py": "20a2bcc1e12e2afdd667b9489d1b45e623819d7be5883229c8980699554c24a7",
  "static/app.css": "07ea85990fefe57bf3ebc8fa0b9529ff00c1c7a84ba8c23749484cd90a132c21",
- "static/app.js": "fad3cc2b731aec3b81032e6ea8e497f2cd3c887078012fcf92dbe59c2c36c0a3",
+ "static/app.js": "0c495f159c660c744c11ed145e03f0adb0e61ab3a609a53797f62fe67fd16111",
  "static/control-v3.js": "df0c02c64ad6e4b2848d23bb8af846d64d2fbba43302832ec13c1ed3ecd6ee10",
  "static/index.html": "d913d55fa0fb3b45d1a18bc30f922dfc8cb5c9e8ba7d00f8ddd1d84c2f9de68f",
  "static/passive.js": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465"

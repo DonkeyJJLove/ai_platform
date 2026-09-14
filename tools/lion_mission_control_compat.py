@@ -118,16 +118,16 @@ def all_runs(s):
  return rows
 
 def _status_counts(runs):
- active={'RUNNING','STARTING','CLEANING','AUTHORIZED','PAUSED','WAITING','BLOCKED'};complete={'PASS','CLEANED','STOPPED','COMPLETE'}
+ active={'RUNNING','STARTING','CLEANING'};complete={'PASS','CLEANED','STOPPED','COMPLETE'}
  vals=[str(r.get('status')).upper() for r in runs]
- return {'recorded_active_runs':sum(v in active for v in vals),'observed_active_runs':0,'completed_runs':sum(v in complete for v in vals),'superseded_runs':sum(v=='SUPERSEDED' for v in vals),'failed_runs':sum(v in {'FAIL','FAILED','ERROR'} for v in vals),'deferred_runs':sum(v=='DEFER' for v in vals)}
+ return {'recorded_active_runs':sum(v in active for v in vals),'observed_active_runs':0,'authorized_runs':vals.count('AUTHORIZED'),'waiting_runs':vals.count('WAITING'),'blocked_runs':vals.count('BLOCKED'),'paused_runs':vals.count('PAUSED'),'registered_runs':vals.count('REGISTERED'),'completed_runs':sum(v in complete for v in vals),'superseded_runs':sum(v=='SUPERSEDED' for v in vals),'failed_runs':sum(v in {'FAIL','FAILED','ERROR'} for v in vals),'deferred_runs':sum(v=='DEFER' for v in vals)}
 
 def table_count(path,table):
  try:c=ro(path);n=c.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0];c.close();return int(n)
  except Exception:return 0
 
 def source_inventory():
- specs=[('mission_control_v3',Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')),('generic_mission_control',LEGACY_DB),('vkt_runtime_history',VKT_DB),('vkt_lpcl_final',VKT_FINAL_DB)]
+ specs=[('mission_control_v3',V3_DB),('generic_mission_control',LEGACY_DB),('vkt_runtime_history',VKT_DB),('vkt_lpcl_final',VKT_FINAL_DB)]
  out=[]
  for name,path in specs:
   d={'name':name,'path':str(path),'available':path.is_file(),'mode':'READ_ONLY_SOURCE' if name!='mission_control_v3' else 'CONTROL_STATE_RW','currentness':'LIVE' if name=='mission_control_v3' else 'HISTORICAL_EVIDENCE','tables':{}}
@@ -140,19 +140,44 @@ def source_inventory():
   out.append(d)
  return {'sources':out,'collector':'MULTI_SQLITE_READ_MODEL','source_count':len(out)}
 
+def _runtime_observation(s, polled_at):
+ # Worker observation timestamps are evidence; a fresh API read or mission edit is not.
+ stamps=[]
+ for worker in s.get('workers',[]):
+  try:stamp=datetime.fromisoformat(str(worker['observed_at']).replace('Z','+00:00')).timestamp()
+  except (KeyError,TypeError,ValueError):return None,None,False
+  stamps.append(stamp)
+ observed_at=min(stamps) if stamps else None
+ age=polled_at-observed_at if observed_at is not None else None
+ fresh=age is not None and 0<=age<=15
+ return observed_at,age,fresh
+
+
 def summary(s):
- runs=all_runs(s);counts=_status_counts(runs);focus=_v3_focus_id();cur=next((r for r in runs if r.get('run_id')==focus),None) or current_run(s);m=cur.get('metrics') or {};org={k:{'total':v,'active':(m.get('active_by_organization') or {}).get(k,0),'idle':max(0,v-(m.get('active_by_organization') or {}).get(k,0))} for k,v in (m.get('fleet_organizations') or {}).items()};events=sum(x['tables'].get('events',0) for x in source_inventory()['sources']);arts=table_count(LEGACY_DB,'artifacts');observed=cur.get('status') in {'RUNNING','WAITING','BLOCKED'} and int(m.get('pods') or 0)>0;counts['observed_active_runs']=1 if observed else 0
- sm={**counts,'active_runs':counts['recorded_active_runs'],'hosts':len({r.get('host') for r in runs if r.get('host')}),'workloads':sum(bool(r.get('workload')) for r in runs),'events':events,'artifacts':arts,'run_count':len(runs),'focus_mission_id':focus}
+ polled_at=time.time();runs=all_runs(s);counts=_status_counts(runs);focus=_v3_focus_id()
+ cur=next((r for r in runs if r.get('run_id')==focus),None) or current_run(s)
+ fleet_run=current_run(s);m=fleet_run.get('metrics') or {}
+ observed_at,age,fresh=_runtime_observation(s,polled_at)
+ observed=fresh and s.get('state')=='RUNNING' and bool(m.get('drone_pods'))
+ counts['observed_active_runs']=int(observed)
+ inventory=source_inventory()['sources']
+ live=next((x['tables'] for x in inventory if x['name']=='mission_control_v3'),{})
+ events=sum(live.get(t,0) for t in ('mission_events','protocol_messages'))
+ historical_events=sum(x['tables'].get('events',0) for x in inventory if x['name']!='mission_control_v3')
+ arts=table_count(LEGACY_DB,'artifacts')
+ sm={**counts,'active_runs':counts['recorded_active_runs'],'hosts':len({r.get('host') for r in runs if r.get('host')}),'workloads':sum(bool(r.get('workload')) for r in runs),'events':events,'historical_events':historical_events,'artifacts':arts,'run_count':len(runs),'focus_mission_id':focus}
  obs={}
  for r in runs:
-  rid=r.get('run_id');st=str(r.get('status') or 'UNKNOWN');hist=str((r.get('evidence') or {}).get('class') or '').startswith('HISTORICAL') or str(r.get('adapter_type') or '').startswith(('VKT_R3','OSS_REPOSITORY_TEST','PASSIVE_'))
-  if rid==focus:oc='OBSERVED';hb='FRESH_REPORTED' if observed and int((r.get('metrics') or {}).get('fresh_drones') or 0)>0 else 'UNKNOWN'
-  elif st=='SUPERSEDED':oc='SUPERSEDED_HISTORY';hb='NOT_APPLICABLE'
-  elif hist:oc='RECORDED_HISTORY';hb='UNKNOWN'
-  else:oc='RECORDED_PROCESS';hb='UNKNOWN'
-  obs[rid]={'recorded_status':st,'observation_status':oc,'heartbeat_status':hb}
- ready=int(m.get('fresh_drones') or 0);target=int((cur.get('workload') or {}).get('pods') or 0);readiness='READY' if observed and target>0 and ready==target else ('DEGRADED' if observed and target>0 else 'UNKNOWN')
- return {'ok':True,'error':None,'summary':sm,'readiness':{'status':readiness,'focus_mission_id':focus,'ready':ready,'target':target},'fleet':{'currentness':'OBSERVED' if observed else 'RECORDED','fleet_total':int(m.get('pods') or 0),'working_drones':ready if observed else None,'idle_drones':max(0,int(m.get('pods') or 0)-ready) if observed else None,'organization_count':len(org),'organizations':org,'run_ids':[focus] if focus else [],'pod_observations':[{'run_id':focus,'pods':m.get('drone_pods') or []}] if focus else []},'run_observations':obs,'observation':{'reason':'FOCUS_MISSION_OBSERVED' if observed else 'FOCUS_MISSION_RECORDED','attempt_at':time.time(),'completed_at':time.time(),'success_at':time.time(),'age_seconds':0,'success_age_seconds':0,'threshold_seconds':15,'in_progress':False,'adapters':{'MISSION_PROCESS_DB':{'reason':'OBSERVED' if observed else 'RECORDED'},'MULTI_SQLITE_COLLECTOR':{'reason':'OBSERVED'}}}}
+  rid=r.get('run_id');st=str(r.get('status') or 'UNKNOWN')
+  oc='OBSERVED' if rid==CURRENT_ID and observed else ('SUPERSEDED_HISTORY' if st=='SUPERSEDED' else 'RECORDED_PROCESS')
+  obs[rid]={'recorded_status':st,'observation_status':oc,'heartbeat_status':'FRESH_REPORTED' if oc=='OBSERVED' else 'UNKNOWN'}
+ org={k:{'total':v,'active':(m.get('active_by_organization') or {}).get(k,0),'idle':max(0,v-(m.get('active_by_organization') or {}).get(k,0))} for k,v in (m.get('fleet_organizations') or {}).items()}
+ ready=int(m.get('fresh_drones') or 0);fm=cur.get('metrics') or {};target=int((cur.get('workload') or {}).get('pods') or 0)
+ focus_observed=focus==CURRENT_ID and observed
+ readiness='READY' if focus_observed and target>0 and ready==target else ('DEGRADED' if focus_observed else 'UNKNOWN')
+ reason='WORKER_OBSERVATIONS_FRESH' if fresh else ('WORKER_OBSERVATIONS_STALE' if age is not None else 'WORKER_OBSERVATIONS_MISSING')
+ return {'ok':True,'error':None,'summary':sm,'readiness':{'status':readiness,'focus_mission_id':focus,'ready':int(fm.get('fresh_drones') or 0),'target':target},'fleet':{'currentness':'OBSERVED' if observed else ('STALE' if age is not None and not fresh else 'RECORDED'),'fleet_total':int(m.get('pods') or 0),'working_drones':ready if observed else None,'idle_drones':max(0,int(m.get('pods') or 0)-ready) if observed else None,'organization_count':len(org),'organizations':org,'run_ids':[CURRENT_ID],'pod_observations':[{'run_id':CURRENT_ID,'pods':m.get('drone_pods') or []}]},'run_observations':obs,'observation':{'reason':reason,'attempt_at':polled_at,'completed_at':polled_at,'success_at':observed_at,'age_seconds':age,'success_age_seconds':age,'threshold_seconds':15,'in_progress':False,'scope':'CURRENT_KUBERNETES_COLLECTOR; OTHER_MISSIONS_RECORDED','adapters':{'MISSION_PROCESS_DB':{'reason':'RECORDED'},'MULTI_SQLITE_COLLECTOR':{'reason':reason}}}}
+
 
 def find_run(run_id,s):
  for r in all_runs(s):
