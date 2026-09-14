@@ -9,4 +9,3 @@ A global binding has scope GLOBAL_SUPERVISOR_CHANNEL and authority NONE. It is i
 Current source uses CHATGPT_SENTINELX_SESSION_MEDIATED transport and operator-session plus connector-roundtrip attestation. These facts do not constitute cryptographic provider attestation. Projection code does no I/O or session mutation; older bridge status helpers still update expiry/progress and commit.
 
 Sources: tools/lion_saas_session_bridge.py; cyber_lion/mission_control/supervisor_projection.py; gateway and v3 UI consumers. Live session validity and exact request/receipt behavior require post-deployment readback; this candidate document does not renew any binding.
-

@@ -11,4 +11,3 @@ Supervisor cards and capability answers use the canonical supervisor projection.
 Acceptance must exercise unchanged polls, changing heartbeat/content, detail expansion, registry selection, route parity, response errors and console errors. Source edits and DOM fixtures do not certify a running browser deployment. Optional later choices include SSE and alternate RAW inspector layouts; preserving interaction and truthful data is required now.
 
 Sources: deploy/mission-control/v3/control-v3.js, app.js, index.html; local_intelligence_gateway.py; ui_runtime_events.py.
-

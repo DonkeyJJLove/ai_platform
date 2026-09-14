@@ -9,4 +9,3 @@ The historical closure document described an RTX 5090/Vulkan0 model runtime and 
 The recorded 2026-09-14T18:33:29Z baseline returned HTTP 200 from both browser-facing services. An HTML response alone does not prove current candidate deployment or working interaction. The R2 database snapshot at 18:45:26Z observed mission-control-v3.db and reported integrity_check=ok. Neither observation certifies all host paths.
 
 Repository audits distinguish Windows and WSL checkout carriers, nested repositories and sentinelx runtime carriers. A missing Git pointer is not a usable canonical checkout; a directory name does not establish role or authority. Final acceptance must record deployed package digests, listener identities, backend/UI behavior and restart readback on the actual hosts. Sources: live-page-baseline.json; r2-live-db.json; r2-repository-notes.md.
-
