@@ -1,0 +1,19 @@
+{
+  "schema": "lion.r10.local-tool-registry/v1",
+  "tools": [
+    "lion.rag.search",
+    "lion.currentness.read",
+    "lion.repo.search",
+    "lion.repo.read_file",
+    "lion.repo.head_tree",
+    "lion.repo.git_status",
+    "lion.repo.federation_state",
+    "lion.web.search",
+    "lion.web.fetch",
+    "lion.hash.sha256",
+    "lion.json.validate"
+  ],
+  "rag_search_runtime": "DEFERRED",
+  "write_tools": [],
+  "authority_effect": "NONE"
+}

@@ -1,11 +1,5 @@
 {
-  "schema": "lion.documentation.capability-catalog.v1",
-  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
-  "reconciliation": {
-    "process_epoch": "R23",
-    "candidate_source_observation": "5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745",
-    "rule": "Candidate evidence is source/test evidence only and does not self-promote default-branch truth, runtime deployment or authority."
-  },
+  "baseline_head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
   "capabilities": [
     {
       "authority_ceiling": "does not grow by documentation",
@@ -354,27 +348,190 @@
       ]
     },
     {
-      "authority_ceiling": "does not grow by documentation",
-      "authority_required": "external deployment authority",
+      "authority_ceiling": "NONE; model output cannot create authority",
+      "authority_required": "separate bounded LPCL/tool/runtime authority for any consequential effect",
       "capability_id": "CAP-LOCAL-MODEL",
       "consumer": "model plane",
       "consumer_repository": "DonkeyJJLove/ai_platform",
-      "contract": "source-bound",
-      "currentness": "67a4f8243aa6805e47035e572bd458f73fd0b358",
-      "description": "local model runtime/provider deployment",
+      "contract": "LION/architecture/v1_4/R10_GPU_MODEL_RUNTIME.json",
+      "currentness": "R10_LIVE_OBSERVED",
+      "description": "exact gpt-oss-20b local proposal-only runtime on RTX 5090/Vulkan0 behind LION gateway",
       "documentation_owner": "LION/architecture/v1_4/current_state.json",
       "effect_class": "NONE",
       "failure_modes": [
-        "runtime not observed"
+        "model/runtime identity drift -> no current binding",
+        "endpoint exposure must remain loopback/mediated",
+        "model output cannot self-attest authority"
+      ],
+      "negative_evidence": [],
+      "provider": "llama.cpp b10809 + LION Local Intelligence",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "ACTIVE_PROPOSAL_ONLY_GPU_MEDIATED",
+      "target_successor": null,
+      "test_evidence": [
+        "R10 held-out awareness probes",
+        "RTX GPU utilization observation"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for read-only/proposal path",
+      "capability_id": "CAP-LOCAL-INTELLIGENCE-GATEWAY",
+      "consumer": "local UI/model plane",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "contract": "cyber_lion/app_coordination/local_intelligence_gateway.py",
+      "currentness": "R10_LIVE_127.0.0.1_8780",
+      "description": "loopback proposal-only mediation for LION context, repository/currentness and web research",
+      "documentation_owner": "LION/architecture/v1_4/R10_LOCAL_INTELLIGENCE_PRE_RAG.json",
+      "effect_class": "NONE in production core; transports injected from tools runtime",
+      "failure_modes": [
+        "RAG deferred",
+        "provider unavailable -> UNKNOWN",
+        "consequential request -> authority boundary"
+      ],
+      "negative_evidence": [],
+      "provider": "Gateway",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "ACTIVE_PRE_RAG",
+      "target_successor": "RAG binding in next thread",
+      "test_evidence": [
+        "test_r10_local_intelligence",
+        "held-out probes"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE",
+      "capability_id": "CAP-PUBLIC-WEB-BROKER",
+      "consumer": "LION Local Intelligence",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "contract": "cyber_lion/app_coordination/web_research_broker.py",
+      "currentness": "R10_LIVE_CANARY_PASS",
+      "description": "mediated read-only public HTTPS search/fetch with public-IP validation and TCP pinning",
+      "documentation_owner": "LION/architecture/v1_4/R10_WEB_RESEARCH_BOUNDARY.json",
+      "effect_class": "PUBLIC_WEB_READ",
+      "failure_modes": [
+        "SSRF target denied",
+        "body fetch unavailable -> search evidence only"
+      ],
+      "negative_evidence": [],
+      "provider": "PublicWebReadBroker",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "ACTIVE_READ_ONLY",
+      "target_successor": null,
+      "test_evidence": [
+        "SSRF negative canaries",
+        "live gpt-oss web search/fetch probe"
+      ]
+    },
+    {
+      "authority_ceiling": "cannot mint authority; exact activated LPCL only",
+      "authority_required": "explicit UI activation for LPCL effects",
+      "capability_id": "CAP-LPCL-CONTROL-PANEL",
+      "consumer": "operator and proposal-only local model",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "contract": "exact LPCL digest + Mission Control API",
+      "currentness": "EPOCH3_CANDIDATE_LIVE_RUNTIME",
+      "description": "single operator surface for persistent threads, LPCL validate/register/explicit-authorize, live mission focus, phases, progress and protocol feed",
+      "documentation_owner": "LION/architecture/v1_4/EPOCH3_LOCAL_CONTROL_PANEL_STATE.json",
+      "effect_class": "NONE for model; bounded mission registration/control only after external activation",
+      "failure_modes": [
+        "stale Mission Control currentness fails closed",
+        "LPCL registration does not equal authorization",
+        "SaaS session bridge unavailable"
+      ],
+      "negative_evidence": [],
+      "provider": "LION CONTROL LPCL PANEL / tools/lion_local_intelligence_runtime.py",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "ACTIVE_127.0.0.1_8780",
+      "test_evidence": [
+        "cyber_lion.tests.test_r10_local_intelligence",
+        "canonical Edge browser canary"
+      ]
+    },
+    {
+      "authority_ceiling": "mission-scoped only; no arbitrary kubectl/shell",
+      "authority_required": "pre-existing activated mission + exact adapter envelope",
+      "capability_id": "CAP-MISSION-CONTROL-V3",
+      "consumer": "LPCL control panel and operator",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "contract": "mission-scoped exact source/spec/digest adapters",
+      "currentness": "EPOCH3_CANDIDATE_LIVE_RUNTIME",
+      "description": "historical observer plus mission registry, objectives, phases, protocol ledger, material worker state and bounded lifecycle control",
+      "documentation_owner": "LION/architecture/v1_4/EPOCH3_MISSION_CONTROL_STATE.json",
+      "effect_class": "bounded mission control",
+      "failure_modes": [
+        "unknown adapter has no control authority",
+        "historical evidence cannot become live authority",
+        "source drift denies effect"
       ],
       "negative_evidence": [
-        "R23 does not observe a local or ASTRA runtime deployment"
+        "unknown action 409",
+        "foreign pod restart 409",
+        "HTTP DELETE 405"
       ],
-      "provider": "NOT_OBSERVED",
+      "provider": "tools/lion_mission_control_v3.py + compatibility read model",
       "provider_repository": "DonkeyJJLove/ai_platform",
-      "runtime_state": "NOT_OBSERVED",
-      "target_successor": null,
-      "test_evidence": []
+      "runtime_state": "ACTIVE_127.0.0.1_8766",
+      "test_evidence": [
+        "64/64 Epoch3 material fleet",
+        "multi-SQLite read model",
+        "canonical Edge browser canary"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for read-only currentness",
+      "capability_id": "CAP-MISSION-CURRENTNESS-MATERIAL-READ",
+      "consumer": "proposal-only GPT-OSS",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "contract": "MISSION_CONTROL_CURRENTNESS",
+      "currentness": "LIVE_MISSION_CONTROL",
+      "description": "local model receives live Mission Control state through material currentness worker and validators instead of RAG/model memory",
+      "documentation_owner": "LION/architecture/v1_4/EPOCH3_LOCAL_CONTROL_PANEL_STATE.json",
+      "effect_class": "NONE",
+      "failure_modes": [
+        "Mission Control unavailable => UNKNOWN",
+        "receipt validation fail => deny result"
+      ],
+      "negative_evidence": [],
+      "provider": "MAT04 + MAT08 + MAT10",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "ACTIVE",
+      "test_evidence": [
+        "Ostatnie misje LION? -> lion.mission.currentness -> MAT04/MAT08/MAT10"
+      ]
+    },
+    {
+      "authority_ceiling": "namespace lion-epoch3-closure-r1 and allowlisted operations only",
+      "authority_required": "EXPLICIT_UI_ACTIVATION exact digest be0c4204...",
+      "capability_id": "CAP-EPOCH3-M64-MATERIAL-FLEET",
+      "consumer": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "contract": "mission_id + activated LPCL digest + exact master HEAD/TREE",
+      "currentness": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+      "description": "exact activated Epoch3 LPCL materializes 64 mission-scoped hardened Kubernetes Pods under 12 logical roles",
+      "documentation_owner": "LION/architecture/v1_4/EPOCH3_DRONE_EXECUTION_STATE.json",
+      "effect_class": "MISSION_SCOPED_K3S",
+      "failure_modes": [
+        "source drift",
+        "digest substitution",
+        "foreign pod name",
+        "namespace substitution"
+      ],
+      "negative_evidence": [],
+      "provider": "tools/lion_effect_admission_broker.py EPOCH3_M64_*",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "runtime_state": "RUNNING_64_OF_64_READY",
+      "test_evidence": [
+        "execution_digest 9b01fc231170b1e156a9e3b4b1fbb10c34ccb8086e074328d5b6f5d163789532"
+      ]
     }
-  ]
+  ],
+  "reconciliation": {
+    "candidate_source_observation": "PENDING_FINAL_CANDIDATE_SHA",
+    "process_epoch": "EPOCH3_CLOSURE",
+    "rule": "Live/deployed evidence is materialized into isolated candidate; no documentation statement self-promotes publication, merge or authority."
+  },
+  "schema": "lion.documentation.capability-catalog.v1"
 }

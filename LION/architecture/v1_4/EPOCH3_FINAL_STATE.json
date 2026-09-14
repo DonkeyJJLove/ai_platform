@@ -1,0 +1,30 @@
+{
+  "architecture_epoch": "1.4",
+  "authorized_lpcl_sha256": "be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951",
+  "branch_closure": "PENDING",
+  "carrier": "PENDING",
+  "consequential_surfaces": 273,
+  "control_plane": "LIVE_INTEGRATED",
+  "documentation": "CANDIDATE_MATERIALIZED",
+  "evolution_epoch": "EPOCH_3_CLOSURE_IN_PROGRESS",
+  "execution_digest": "9b01fc231170b1e156a9e3b4b1fbb10c34ccb8086e074328d5b6f5d163789532",
+  "federation": "PASS_CURRENTNESS_RECONCILED",
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "logical_drones": 12,
+  "material_pods": 64,
+  "material_ready": 64,
+  "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+  "production_scan": "dbf422e2d4894eae99143729c81353a3aeef1679311f26d3bb0bb45092f78278",
+  "production_sources": 328,
+  "publication": "PENDING",
+  "rag": "DEFERRED_NOT_LOADED",
+  "raw_unclassified": 6,
+  "schema": "lion.epoch3.final-state/v1",
+  "source_master": {
+    "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608"
+  },
+  "success_terminal": "NOT_YET",
+  "taxonomy_unresolved": 0,
+  "validation": "PENDING_FULL_GATE"
+}

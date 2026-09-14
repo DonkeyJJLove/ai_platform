@@ -1,0 +1,47 @@
+{
+  "schema": "lion.r10.current-evolution-state/v1",
+  "architecture_epoch": "1.4",
+  "material_epoch": "R10",
+  "repository": "DonkeyJJLove/ai_platform",
+  "base_master": {
+    "head": "c69eb0ed9b96389c06f6e434dc1189a2726a1e7c",
+    "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608"
+  },
+  "candidate_branch": "mission/r10-local-intelligence-federation-r1",
+  "candidate_head": "UNCOMMITTED_LOCAL_WORKTREE",
+  "authority_effect": "NONE",
+  "r9_authorization_lifecycle": "INTEGRATED_RECONCILED",
+  "local_intelligence": {
+    "implementation": "LOCAL_CANDIDATE",
+    "gateway": "IMPLEMENTED_NOT_STARTED_NO_EXACT_RAG_ON_MOON",
+    "target": "127.0.0.1:8780",
+    "model_runtime": "ACTIVE_GPU_ACCELERATED",
+    "model_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+    "gpu": "RTX_5090_VULKAN0_MEASURED",
+    "rag": "DEFERRED_TO_THREAD_HANDOFF_BY_OPERATOR",
+    "web_broker": "IMPLEMENTED_CANDIDATE_WITH_PINNED_PUBLIC_IP_TLS_PATH",
+    "write_authority": "NONE"
+  },
+  "branch_closure": "MANIFEST_MATERIALIZED_REMOTE_EFFECT_DEFERRED_TO_R10_R2",
+  "federation": {
+    "repositories": 10,
+    "remote_vector_drift_from_r9": "NONE_OBSERVED",
+    "local_dirty_clones": "PRESERVED"
+  },
+  "next_boundary": "FREEZE_NON_RAG_R10_CANDIDATE; FULL_VALIDATION; LOCAL_COMMIT; THEN RAG/HANDOFF; R10_R2 FOR PUBLICATION_AND_REMOTE_BRANCH_CLOSURE",
+  "production_inventory": {
+    "source_count": 328,
+    "consequential_effect_surfaces": 273,
+    "raw_unclassified_refs": 6,
+    "reconciled_unresolved_refs": 0,
+    "scan_digest": "af29233cce8b7962e2f77e8511102f16beced11042f4daf99fd5b307bdad1ff1",
+    "consequential_surface_delta_from_r9": 0,
+    "classification": "SOURCE_SET_EXPANSION_WITH_STABLE_CONSEQUENTIAL_SURFACE_SET"
+  },
+  "validation": {
+    "focused_r10_plus_r8": "52/52 PASS",
+    "full_suite": "2878 PASS / 6 SKIP",
+    "bandit": "PENDING_LOCAL_TOOL_AVAILABILITY_CHECK",
+    "full_symbol_census": "PENDING_FINAL_HEAD"
+  }
+}

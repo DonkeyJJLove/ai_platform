@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "handoff_state": "PRE_TERMINAL_PENDING_PUBLICATION_AND_CARRIER",
+  "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+  "rag_build_authorized": false,
+  "rag_state": "DEFERRED_NOT_LOADED",
+  "required_inputs": [
+    "terminal master HEAD/TREE",
+    "epoch3 final carrier digest",
+    "mission/protocol ledger summary",
+    "federation terminal vector",
+    "GitHub convergence terminal state",
+    "Mission Control + LPCL panel source provenance",
+    "full validation receipts"
+  ],
+  "schema": "lion.epoch3.rag-handoff/v1",
+  "target": "NEXT_CURRENT_RAG_BEFORE_EVOLUTION_PHASE_4"
+}

@@ -1,0 +1,105 @@
+{
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "logical_roles": [
+    {
+      "id": "LD01",
+      "material_target": 6,
+      "role": "MISSION_PLANNER"
+    },
+    {
+      "id": "LD02",
+      "material_target": 6,
+      "role": "AUTHORITY_CURRENTNESS"
+    },
+    {
+      "id": "LD03",
+      "material_target": 6,
+      "role": "FEDERATION_CURRENTNESS"
+    },
+    {
+      "id": "LD04",
+      "material_target": 6,
+      "role": "GITHUB_LINEAGE_AND_BRANCH"
+    },
+    {
+      "id": "LD05",
+      "material_target": 5,
+      "role": "ARCHITECTURE_DOCUMENTATION"
+    },
+    {
+      "id": "LD06",
+      "material_target": 5,
+      "role": "SOURCE_PROVENANCE"
+    },
+    {
+      "id": "LD07",
+      "material_target": 5,
+      "role": "LOCAL_MODEL_DELEGATION"
+    },
+    {
+      "id": "LD08",
+      "material_target": 5,
+      "role": "MATERIAL_SCHEDULER"
+    },
+    {
+      "id": "LD09",
+      "material_target": 5,
+      "role": "SECURITY_FALSIFIER"
+    },
+    {
+      "id": "LD10",
+      "material_target": 5,
+      "role": "VALIDATION"
+    },
+    {
+      "id": "LD11",
+      "material_target": 5,
+      "role": "PUBLICATION_AND_RECOVERY"
+    },
+    {
+      "id": "LD12",
+      "material_target": 5,
+      "role": "RECONCILIATION_AND_CARRIER"
+    }
+  ],
+  "material": {
+    "authority_effect": "MISSION_SCOPED_K3S",
+    "distribution": [
+      6,
+      6,
+      6,
+      6,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5
+    ],
+    "execution_digest": "9b01fc231170b1e156a9e3b4b1fbb10c34ccb8086e074328d5b6f5d163789532",
+    "logical_count": 12,
+    "manifest_sha256": "566c428d8cc99a0d66e0a0b1b6751a83a0dfc5546a128d2eafdd2577ba185f5b",
+    "material_pods": 64,
+    "material_spec_digest": "2a2ab5dd3b3aecb320929ecff732f20077610005f04eb2c7eac1759e9b7c0222",
+    "namespace": "lion-epoch3-closure-r1",
+    "physical_failure_domains_proven": 1,
+    "ready": 64,
+    "start_receipt": "57d7d794b689e669ad440ceb5d34f810b20d2e3b76010184e5c1309114c02c06",
+    "unique_uids": 64,
+    "validation_receipt": "59cdcc57a3c4c3a051e60b4b03afb7ce2a726cbd1a5fc7259f328b921314b0f3"
+  },
+  "mission_id": "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1",
+  "schema": "lion.epoch3.drone-execution-state/v1",
+  "semantics": {
+    "logical_drone_ne_material_executor": true,
+    "material_drone_ne_authority": true,
+    "pod_ne_physical_failure_domain": true
+  },
+  "windows_material_read_plane": {
+    "authority": "NONE",
+    "count": 12,
+    "purpose": "local model/repo/web/currentness mediation"
+  }
+}

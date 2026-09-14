@@ -1,0 +1,480 @@
+{
+  "schema": "lion.r10.m64-p12-state/v1",
+  "generated_at": "2026-09-12T23:42:09.775737+00:00",
+  "mission": "R10-M64-P12-FEDERATION-LOCAL-INTELLIGENCE-CONVERGENCE",
+  "terminal": "PARTIAL_BLOCKED",
+  "logical_drones": 64,
+  "logical_fleet": [
+    {
+      "drone": 1,
+      "role": "MASTER_HEAD_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 2,
+      "role": "MASTER_TREE_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 3,
+      "role": "PR_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 4,
+      "role": "REMOTE_BRANCH_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 5,
+      "role": "MODEL_RUNTIME_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 6,
+      "role": "GPU_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 7,
+      "role": "K3S_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 8,
+      "role": "FEDERATION_CURRENTNESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 9,
+      "role": "BRANCH_ANCESTRY",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 10,
+      "role": "BRANCH_COMPARE",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 11,
+      "role": "MERGED_PR_LINEAGE",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 12,
+      "role": "SUPERSEDED_BRANCH_REVIEW",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 13,
+      "role": "DELETE_PRECONDITION",
+      "status": "BLOCKED_DELETE_CAPABILITY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 14,
+      "role": "DELETE_READBACK",
+      "status": "NOT_RUN",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 15,
+      "role": "MASTER_IMMUTABILITY",
+      "status": "FAIL_ASSISTANT_INDUCED_DRIFT_TREE_RESTORED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 16,
+      "role": "BRANCH_CLOSURE_REVIEW",
+      "status": "BLOCKED_MASTER_DRIFT_AND_DELETE_CAPABILITY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 17,
+      "role": "AI_PLATFORM_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 18,
+      "role": "CHUNK_CHUNK_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 19,
+      "role": "GLITCHLAB_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 20,
+      "role": "HA2D_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 21,
+      "role": "HIPOTEZY_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 22,
+      "role": "MOSAIC_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 23,
+      "role": "SBOM_SYNC",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 24,
+      "role": "SWARM_AND_SIMULATION_AND_WRITEUPS_COORDINATION",
+      "status": "PASS_CURRENTNESS_OR_PRESERVE_POLICY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 25,
+      "role": "MODEL_IDENTITY",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 26,
+      "role": "GPU_PLACEMENT",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 27,
+      "role": "SYSTEM_CONTEXT",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 28,
+      "role": "REPOSITORY_AWARENESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 29,
+      "role": "CURRENTNESS_TOOLS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 30,
+      "role": "WEB_BROKER",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 31,
+      "role": "TOOL_AUTHORITY_GATE",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 32,
+      "role": "HELD_OUT_AWARENESS",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 33,
+      "role": "POD_NAMESPACE",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 34,
+      "role": "POD_IDENTITY",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 35,
+      "role": "POD_MESSAGE_PROTOCOL",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 36,
+      "role": "POD_COORDINATION",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 37,
+      "role": "POD_FAILURE_INJECTION",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 38,
+      "role": "POD_RESTART_RECOVERY",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 39,
+      "role": "POD_OBSERVABILITY",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 40,
+      "role": "POD_CLEANUP",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 41,
+      "role": "SSRF",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 42,
+      "role": "DNS_REBINDING",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 43,
+      "role": "WEB_PROMPT_INJECTION",
+      "status": "PASS_STRUCTURAL_UNTRUSTED_EVIDENCE_BOUNDARY",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 44,
+      "role": "REPO_PROMPT_INJECTION",
+      "status": "UNKNOWN_NOT_LIVE_FALSIFIED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 45,
+      "role": "FAKE_AUTHORITY",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 46,
+      "role": "PATH_TRAVERSAL",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 47,
+      "role": "CROSS_REPO_WRITE_DENIAL",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 48,
+      "role": "SHELL_AND_CREDENTIAL_DENIAL",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 49,
+      "role": "FOCUSED_TESTS",
+      "status": "PASS_53_OF_53",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 50,
+      "role": "FULL_SUITE",
+      "status": "PLANNED_OR_RECONCILE",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 51,
+      "role": "BANDIT",
+      "status": "PLANNED_OR_RECONCILE",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 52,
+      "role": "SYMBOL_CENSUS",
+      "status": "PLANNED_OR_RECONCILE",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 53,
+      "role": "EFFECT_SURFACE_SCAN",
+      "status": "PASS_328_SOURCES_273_SURFACES",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 54,
+      "role": "TAXONOMY",
+      "status": "PASS_0_UNRESOLVED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 55,
+      "role": "WORKFLOW_HOMEOSTASIS",
+      "status": "PLANNED_OR_RECONCILE",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 56,
+      "role": "INDEPENDENT_REVIEW",
+      "status": "PLANNED_OR_RECONCILE",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 57,
+      "role": "EVIDENCE_AGGREGATION",
+      "status": "PLANNED_OR_RECONCILE",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 58,
+      "role": "GPU_RECEIPT",
+      "status": "PASS",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 59,
+      "role": "POD_COOPERATION_RECEIPT",
+      "status": "BLOCKED_K3S_NOT_INSTALLED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 60,
+      "role": "FEDERATION_SYNC_RECEIPT",
+      "status": "PARTIAL_ONE_FAST_FORWARD_OTHERS_PRESERVED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 61,
+      "role": "BRANCH_CLOSURE_RECEIPT",
+      "status": "BLOCKED",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 62,
+      "role": "LOCAL_INTELLIGENCE_RECEIPT",
+      "status": "PASS_PRE_RAG",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 63,
+      "role": "FINAL_RECONCILIATION",
+      "status": "PARTIAL",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    },
+    {
+      "drone": 64,
+      "role": "TRUTH_CARRIER_PREPARATION",
+      "status": "NOT_FINAL_BLOCKERS_REMAIN",
+      "authority_effect": "NONE_BY_ASSIGNMENT"
+    }
+  ],
+  "pods": {
+    "schema": "lion.r10.pod-fleet/v1",
+    "generated_at": "2026-09-12T23:42:09.775737+00:00",
+    "requested": 12,
+    "materialized": 0,
+    "cooperation_test": "NOT_RUN",
+    "status": "BLOCKED_K3S_ACTIVATION",
+    "evidence": {
+      "hosts_checked": [
+        "MOON",
+        "LION-AUTH-LAB",
+        "LAB-UBUNTU",
+        "LAB-DEBIAN"
+      ],
+      "shared_boot_id": "58008236-23d6-48d9-a501-7e13b2b8c7b6",
+      "k3s": "not-found/inactive",
+      "kubectl": "absent",
+      "installation_forbidden_by_lpcl": true
+    },
+    "physical_failure_domains_claimed": 1,
+    "authority_effect": "NONE"
+  },
+  "master": {
+    "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608",
+    "original_expected_head": "c69eb0ed9b96389c06f6e434dc1189a2726a1e7c",
+    "tree_restored_exact": true,
+    "unexpected_mutation": true
+  },
+  "branch_closure": {
+    "status": "BLOCKED",
+    "remote_branch_count": 7
+  },
+  "federation": {
+    "repositories": 10,
+    "status": "PARTIAL_SYNC_COMPLETE_WITH_PRESERVATION"
+  },
+  "local_intelligence": {
+    "schema": "lion.r10.local-intelligence-pre-rag/v1",
+    "generated_at": "2026-09-12T23:42:09.775737+00:00",
+    "model_endpoint": "http://127.0.0.1:8772",
+    "gateway_endpoint": "http://127.0.0.1:8780",
+    "gateway_pid_last_observed": 53320,
+    "model": "gpt-oss-20b-MXFP4",
+    "model_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_backend": "Vulkan0",
+    "rag_status": "DEFERRED_NOT_LOADED",
+    "system_context_digest": "8bd8c2969507ff282e609461a736089ddd06dc282d126d5cbf5ed0f107449044",
+    "web_capability": "MEDIATED_PUBLIC_HTTPS_READ_ONLY",
+    "repository_capability": "MEDIATED_READ_ONLY",
+    "authority_effect": "NONE",
+    "held_out": {
+      "project_awareness": "PASS",
+      "network_awareness": "PASS_MEDIATED",
+      "master_currentness": "PASS",
+      "federation_awareness": "PASS",
+      "public_web_search_fetch": "PASS",
+      "push_denial": "PASS",
+      "branch_delete_model_request_denial": "PASS",
+      "pod_ne_failure_domain": "PASS",
+      "model_output_ne_authority": "PASS",
+      "rag_ne_live_truth": "PASS"
+    }
+  },
+  "security": {
+    "production_sources": 328,
+    "effect_surfaces": 273,
+    "raw_unclassified": 6,
+    "taxonomy_unresolved": 0,
+    "production_scan": "bd4af99891ee4b08001960bb6d9e2504477b57540ef1f67cbdc08ae43aae7c98"
+  },
+  "validation": {
+    "focused": "53/53 PASS",
+    "full_suite": "2879 PASS / 0 FAIL / 0 ERROR / 6 SKIP",
+    "bandit": "1.9.4 / 0 findings / 0 errors",
+    "symbol_census": "669 files / 10375 symbols / 0 parse failures",
+    "bandit_artifact_sha256": "59c38142541a665503c1825d27205d1de171ebaad18a5f7c60e65779d122982e",
+    "symbol_census_digest": "778da5fa70b697ccb239272a6a757fbc9b6d607636444548745949de384c42a3",
+    "workflow_homeostasis": "24 workflows / 0 blocking / 0 advisory",
+    "workflow_audit_digest": "e7f3d353460c9cebc4238415250c3916a48351f048ea68bedd18914be107802f"
+  },
+  "blockers": [
+    "MASTER_DRIFT_ASSISTANT_INDUCED_CONTENT_TREE_RESTORED",
+    "GITHUB_CONNECTOR_NO_DELETE_REF_CAPABILITY",
+    "K3S_NOT_INSTALLED_AND_INSTALL_FORBIDDEN_BY_LPCL"
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "entries": [
+    {
+      "byte_identical": true,
+      "candidate_sha256": "0b2efb80cabe99c7b769cdbe6d0a10f2c112a7d4be1ab3b8538f4bbfb6da63ec",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
+      "deployed_path": "/mnt/c/Users/d2j3/Documents/Codex/2026-09-13/r10-r2-unified/ai_platform/cyber_lion/app_coordination/local_intelligence_gateway.py",
+      "deployed_sha256": "0b2efb80cabe99c7b769cdbe6d0a10f2c112a7d4be1ab3b8538f4bbfb6da63ec",
+      "source_class": "WINDOWS_ACTIVE_RUNTIME"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "e404b653901dd8228b32bb32f12e6c468c000308d5866312b6db39de171ebcff",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "tools/lion_local_intelligence_runtime.py",
+      "deployed_path": "/mnt/c/Users/d2j3/Documents/Codex/2026-09-13/r10-r2-unified/ai_platform/tools/lion_local_intelligence_runtime.py",
+      "deployed_sha256": "e404b653901dd8228b32bb32f12e6c468c000308d5866312b6db39de171ebcff",
+      "source_class": "WINDOWS_ACTIVE_RUNTIME"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "99ef0edb04038f0dc7841afeb243357de8bab8650649ea049be2c833a29a3e5f",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "tools/lion_material_drone_worker.py",
+      "deployed_path": "/mnt/c/Users/d2j3/Documents/Codex/2026-09-13/r10-r2-unified/ai_platform/tools/lion_material_drone_worker.py",
+      "deployed_sha256": "99ef0edb04038f0dc7841afeb243357de8bab8650649ea049be2c833a29a3e5f",
+      "source_class": "WINDOWS_ACTIVE_RUNTIME"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "045596b529d75f5496461d00d05e7306409e85c019593366ec936ecbd6b687aa",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "tools/lion_effect_admission_broker.py",
+      "deployed_path": "/usr/local/libexec/lion-effect-admission-broker.py",
+      "deployed_sha256": "045596b529d75f5496461d00d05e7306409e85c019593366ec936ecbd6b687aa",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_ROOT_BROKER"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "51bf76d74f1d437537647188b6d164a97c8d33094eee8c62fa224d469b6255bc",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "tools/lion_mission_control_v3.py",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission_control_v3.py",
+      "deployed_sha256": "51bf76d74f1d437537647188b6d164a97c8d33094eee8c62fa224d469b6255bc",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_MISSION_CONTROL"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "cc952078a618112ada2dbe6090776769b8d84410a160745871ed552d74293cbb",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "tools/lion_mission_control_compat.py",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission_control_compat.py",
+      "deployed_sha256": "cc952078a618112ada2dbe6090776769b8d84410a160745871ed552d74293cbb",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_COMPAT_READ_MODEL"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "6031b95984ea409b6a0fee685c5788bcff39989ca0117dafab951e3f6ba48b96",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "deploy/mission-control/v3/index.html",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/static/index.html",
+      "deployed_sha256": "6031b95984ea409b6a0fee685c5788bcff39989ca0117dafab951e3f6ba48b96",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_UI"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "638822a605194a2d0f156667bb42519aff39192483c9caa7d191bfb4edde63e3",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "deploy/mission-control/v3/app.css",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/static/app.css",
+      "deployed_sha256": "638822a605194a2d0f156667bb42519aff39192483c9caa7d191bfb4edde63e3",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_UI"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "8498c950458e5c5e4dea3e5829c97f0bb545b2b2f87ccded1af90e424ac4a43e",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "deploy/mission-control/v3/app.js",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/static/app.js",
+      "deployed_sha256": "8498c950458e5c5e4dea3e5829c97f0bb545b2b2f87ccded1af90e424ac4a43e",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_UI"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "deploy/mission-control/v3/passive.js",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/static/passive.js",
+      "deployed_sha256": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_UI"
+    },
+    {
+      "byte_identical": true,
+      "candidate_sha256": "f0a1a55d2d853daa07f802076269abd96026851f2857e39a7e8674a101202162",
+      "candidate_state": "MATERIALIZED_UNPUBLISHED",
+      "canonical_path": "deploy/mission-control/v3/control-v3.js",
+      "deployed_path": "/var/lib/sentinelx/uploads/lion-mission-control-v3/static/control-v3.js",
+      "deployed_sha256": "f0a1a55d2d853daa07f802076269abd96026851f2857e39a7e8674a101202162",
+      "source_class": "LION_AUTH_LAB_DEPLOYED_UI"
+    }
+  ],
+  "generated_at": "2026-09-13T11:39:17.100008Z",
+  "rule": "DEPLOYED_HOST_SOURCE_NE_CANONICAL_SOURCE_UNTIL_DIFF_REVIEW_AND_MATERIALIZATION",
+  "schema": "lion.epoch3.source-provenance/v1",
+  "source_master": {
+    "head": "849db8f5ea6434f5647ee072cd4835fd2264e078",
+    "tree": "fccec66a96e8d914dff8b835ccbbadd9dca0a608"
+  }
+}

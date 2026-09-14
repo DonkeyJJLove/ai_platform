@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LION Mission Control</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>LION MISSION CONTROL</h1>
+      <p class="sub">Global process and mission observability · bounded mission control · historical evidence retained</p>
+    </div>
+    <div id="health" class="pill">connecting…</div>
+  </header>
+
+  <section id="summary" class="cards"></section>
+
+  <section class="panel mc-v3" id="missionControlV3">
+    <div class="panel-head mc-head">
+      <div><p class="cluster-kicker">MISSION CONTROL</p><h2>Mission lifecycle control</h2><p id="mcV3Meta" class="hint">Loading mission state…</p></div>
+      <div class="mc-picker"><label>Mission <select id="mcMissionSelect"></select></label><button type="button" id="mcReturnFocus" hidden>Return to focus</button><div id="mcV3Authority" class="pill">CONTROL UNKNOWN</div></div>
+    </div>
+    <div id="mcV3Cards" class="cards mc-cards"></div>
+    <article class="mc-objective"><div class="k">MISSION OBJECTIVE</div><div id="mcObjective" class="objective">—</div><div id="mcDescription" class="hint"></div></article>
+    <div id="mcSchemaNotice" class="mc-schema-notice current"></div>
+    <div id="mcLifecycleInfo" class="hint mc-lifecycle-info"></div>
+    <div id="mcDriverState" class="mc-driver-state"></div>
+    <div class="mc-progress-wrap"><div class="mc-progress-label"><b id="mcProgressLabel">Progress 0%</b><span id="mcCurrentPhase">No active phase</span></div><div class="mc-progress"><i id="mcProgressBar"></i></div></div>
+    <div id="mcV3Actions" class="mc-actions"></div>
+    <div id="mcCapabilityMatrix" class="mc-capability-matrix"></div>
+    <div class="detail-grid mc-process-grid">
+      <div><h3>Mission phases</h3><div id="mcPhases"></div></div>
+      <div><h3>Protocol channels</h3><div id="mcProtocolFilters" class="mc-protocol-filters"></div><div id="mcProtocolFeed" class="mc-protocol-feed"></div></div>
+    </div>
+    <h3>Logical control plane</h3><div id="mcV3Logical" class="mc-logical"></div>
+    <details open><summary>Material workers</summary><div class="table-wrap"><table><thead><tr><th>Pod</th><th>Logical</th><th>Role</th><th>Phase</th><th>Ready</th><th>Restarts</th><th>UID</th><th>Control</th></tr></thead><tbody id="mcV3Workers"></tbody></table></div></details>
+    <div class="detail-grid"><div><h3>Mission registry</h3><div id="mcV3Registry"></div></div><div><h3>Command / receipt ledger</h3><div id="mcV3Commands"></div></div></div>
+    <h3>Evidence databases</h3><p class="hint">Source databases remain evidence carriers. Mission Control reads/indexes them; registration does not grant authority.</p><div id="mcV3Sources"></div>
+  </section>
+
+  <section class="panel cluster-panel" id="cluster">
+    <div class="panel-head"><div><p class="cluster-kicker">CLUSTER OBSERVATORY</p><h2>Drone fleet</h2></div><label class="cluster-picker">Run <select id="clusterRun"><option value="">Follow latest fleet</option></select></label></div>
+    <p id="clusterState" role="status" class="hint">Waiting for fleet evidence…</p>
+    <div id="clusterMap"></div>
+    <p class="hint">Clickable squares represent identified pods; select one for its UID and state. Outlined count cells are aggregates, not identified pods. Grouping shows fleet membership, not network links.</p>
+    <pre id="clusterPodDetail" hidden></pre>
+    <button type="button" id="clusterDetails" class="cluster-details" hidden>Open run evidence</button>
+  </section>
+
+  <nav aria-label="Sections"><a href="#registry">Run registry</a><a href="#runDetail">Run detail</a><a href="#environment">Environment</a><a href="#recent">Recent events</a></nav>
+  <section class="panel" id="environment"><h2>Environment observation</h2><p id="currentness" class="hint">Currentness: UNKNOWN</p><p id="readiness">Readiness: UNKNOWN — no readiness evidence supplied by this API.</p><div class="detail-grid"><div><h3>Adapters</h3><div id="adapters"></div></div><div><h3>Hosts in recorded runs</h3><div id="hosts"></div></div></div></section>
+  <section class="panel" id="registry">
+    <div class="panel-head">
+      <h2>Run registry</h2>
+      <div class="filters"><label>Adapter <select id="adapter"><option value="">All adapters</option></select></label><label>Status <select id="status"><option value="">All statuses</option></select></label><label>Process class <select id="processClass"><option value="">All process classes</option></select></label></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Run ID</th><th>Process class</th><th>Adapter</th><th>Host</th><th>Runtime</th><th>Target</th><th>Phase</th><th>Started</th><th>Duration</th></tr></thead>
+        <tbody id="runs"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="runDetail">
+    <h2>Run detail</h2>
+    <p id="detailState" role="status" class="hint"></p>
+    <div id="empty">Select a run.</div>
+    <div id="detail" hidden>
+      <div class="detail-grid">
+        <div><h3>Identity</h3><div id="identity" class="chip-grid"></div></div>
+        <div><h3>Source</h3><div id="source" class="chip-grid"></div></div>
+        <div><h3>Target</h3><div id="target" class="chip-grid"></div></div>
+        <div><h3>Authority</h3><div id="authority" class="chip-grid"></div></div>
+      </div>
+      <h3>Timeline</h3><div id="timeline" class="chip-grid"></div><h3>Phases</h3><div id="phases"></div><h3>Events</h3><div id="events"></div>
+      <div class="detail-grid">
+        <div><h3>Metrics · <span id="adapterTitle">Adapter detail</span></h3><div id="metrics" class="chip-grid"></div><p class="hint">Metrics belong to this recorded run; they do not assert current environment state.</p></div>
+        <div><h3>Participants / roles</h3><div id="participants"></div></div>
+        <div><h3>Artifacts</h3><div id="artifacts"></div></div>
+        <div><h3>Receipts</h3><p class="hint">Receipt presence does not prove an effect or completed reconciliation.</p><div id="receipts"></div></div>
+      </div>
+      <h3>Cleanup</h3><div id="cleanup" class="chip-grid"></div><h3>Verification</h3><div id="verification" class="chip-grid"></div>
+      <section id="passiveDetail" class="panel" hidden aria-label="Unverified passive evidence"></section>
+      <div id="vktDetail" hidden>  <section class="panel fleet-panel">
+    <div class="panel-head">
+      <div><h2>Fleet organization</h2><p id="fleetCurrentness" class="hint">Current fleet topology is unknown.</p></div>
+      <div class="fleet-headline"><span id="workingDrones">—</span><small>working drones</small></div>
+    </div>
+    <div id="fleetOrganizations" class="org-grid"><div class="empty-state">No active fleet evidence.</div></div>
+  </section>
+
+  <section class="panel channels-panel">
+    <div class="panel-head channels-head">
+      <div><h2>Drone channels</h2><p id="channelContext" class="hint">No active channel source.</p></div>
+      <div id="channelFilters" class="channel-filters"></div>
+    </div>
+    <div id="channelFeed" class="channel-feed"><div class="empty-state">No conversation evidence.</div></div>
+  </section>
+
+</div>
+    </div>
+  </section>
+  <section class="panel" id="recent"><h2>Recent events</h2><p class="hint">Recorded events across runs; history remains after cleanup.</p><div id="recentEvents"></div></section>
+</main>
+<script src="passive.js"></script>
+<script src="app.js"></script>
+<script src="control-v3.js"></script>
+</body>
+</html>

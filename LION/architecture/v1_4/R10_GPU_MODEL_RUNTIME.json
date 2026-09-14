@@ -1,0 +1,76 @@
+{
+  "schema": "lion.r10.gpu-model-runtime/v1",
+  "observed_at": "2026-09-13T00:07:22+02:00",
+  "physical_host": "WINDOWS-MOON",
+  "physical_gpu_domains": 1,
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 5090",
+    "uuid": "GPU-bf2260b0-7c5c-89df-7571-49e6eefb6bb9",
+    "vram_total_mib": 32607,
+    "driver": "591.44",
+    "cuda_driver_api": "13.1",
+    "compute_capability": "12.0",
+    "pcie_current_generation": "5",
+    "pcie_current_width": "16",
+    "power_limit_w": 575
+  },
+  "wsl": {
+    "hosts": [
+      "MOON",
+      "LION-AUTH-LAB",
+      "LAB-UBUNTU",
+      "LAB-DEBIAN"
+    ],
+    "shared_boot_id": "58008236-23d6-48d9-a501-7e13b2b8c7b6",
+    "device": "/dev/dxg",
+    "libcuda": "/usr/lib/wsl/lib/libcuda.so.1",
+    "nvml": "/usr/lib/wsl/lib/libnvidia-ml.so.1",
+    "gpu_uuid_same_on_all": true,
+    "material_executor_independence": "NOT_PROVEN"
+  },
+  "model": {
+    "artifact": "gpt-oss-20b-MXFP4.gguf",
+    "sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+    "runtime": "llama.cpp",
+    "build": 10809,
+    "runtime_commit": "5266f24da",
+    "pid": 40308,
+    "endpoint": "http://127.0.0.1:8772",
+    "context": 4096,
+    "parallel_slots": 1,
+    "device": "Vulkan0",
+    "gpu_layers": 99,
+    "scope": "LOCAL_DEVELOPMENT_MODEL_ENDPOINT_NOT_SAAS",
+    "authority_effect": "NONE"
+  },
+  "benchmark": {
+    "prompt_tokens": 91,
+    "completion_tokens": 300,
+    "wall_seconds": 0.956463,
+    "prompt_tokens_per_second": 1097.9464781255278,
+    "generation_tokens_per_second": 348.31637378191203,
+    "vram_used_mib": 13660,
+    "vram_free_mib": 18528,
+    "gpu_utilization_max_percent": 85,
+    "gpu_utilization_avg_percent": 50.5,
+    "temperature_max_c": 36,
+    "temperature_avg_c": 29.3,
+    "power_max_w": 410.52,
+    "power_avg_w": 149.8
+  },
+  "rca": {
+    "old_claim": "GPU_NOT_OBSERVED_FROM_RELEVANT_WSL_CONTEXT",
+    "old_claim_scope": "OBSERVATION_ONLY",
+    "new_observation": "RTX5090_VISIBLE_ON_WINDOWS_AND_ALL_RELEVANT_WSL; ACTIVE_LLAMA_SERVER_BOUND_TO_VULKAN0",
+    "classification": "STALE_OR_INSUFFICIENT_GPU_OBSERVATION",
+    "primary_cause": "OBSERVATION_COMMAND_INSUFFICIENT",
+    "runtime_build_cpu_only": false
+  },
+  "security": {
+    "loopback_only": true,
+    "llama_server_cors": "*",
+    "llama_server_api_key": false,
+    "finding": "LOOPBACK_MODEL_SERVER_HAS_PERMISSIVE_CORS_AND_NO_API_KEY; DO_NOT_EXPOSE_DIRECTLY; PLACE_BEHIND_LLIP_GATEWAY",
+    "model_direct_effect_authority": "NONE"
+  }
+}
