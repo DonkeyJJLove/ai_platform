@@ -92,7 +92,14 @@ class ThreadStore:
                     if c.execute('SELECT 1 FROM threads WHERE thread_id=?',(tid,)).fetchone() is None:raise KeyError('thread not found')
                     c.execute('UPDATE threads SET title=?,updated_at=? WHERE thread_id=?',(title,time.time(),tid));c.commit();return {'thread_id':tid,'title':title}
                 if op=='delete':
-                    cur=c.execute('DELETE FROM threads WHERE thread_id=?',(tid,));c.commit();return {'thread_id':tid,'deleted':cur.rowcount==1}
+                    requests=set()
+                    for row in c.execute('SELECT meta_json FROM messages WHERE thread_id=?',(tid,)):
+                        rid=json.loads(row['meta_json'] or '{}').get('saas_request_id')
+                        if isinstance(rid,str) and rid:requests.add(rid)
+                    cancel=args.get('cancel_handoff')
+                    if requests and not callable(cancel):raise RuntimeError('handoff cancellation unavailable; thread preserved')
+                    cancelled=[cancel(rid) for rid in sorted(requests)]
+                    cur=c.execute('DELETE FROM threads WHERE thread_id=?',(tid,));c.commit();return {'thread_id':tid,'deleted':cur.rowcount==1,'handoffs':cancelled}
                 if op=='append_pair':
                     row=c.execute('SELECT title FROM threads WHERE thread_id=?',(tid,)).fetchone()
                     if row is None:raise KeyError('thread not found')
@@ -182,6 +189,13 @@ class LpclControlBridge:
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':return self._get('/api/v3/missions/recent')
+        if op in {'mission_delete_preview','mission_delete'}:
+            mid=args.get('mission_id')
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
+            if op=='mission_delete_preview':return self._get('/api/v3/missions/'+mid+'/delete-preview')
+            dg=args.get('spec_digest')
+            if not isinstance(dg,str) or not re.fullmatch('[0-9a-f]{64}',dg):raise ValueError('spec_digest')
+            return self._post('/api/v3/missions/'+mid+'/delete',{'spec_digest':dg})
         if op=='phase_action':
             if type(args) is not dict or set(args)!={'mission_id','phase_id','action','control_token'}:raise ValueError('phase action schema')
             mid=args['mission_id'];pid=args['phase_id'];action=args['action'];token=args['control_token']
@@ -200,6 +214,10 @@ class LpclControlBridge:
             rid=args.get('request_id')
             if not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('saas request id')
             return self._get('/api/v3/saas/requests/'+rid)
+        if op=='saas_request_cancel':
+            rid=args.get('request_id')
+            if set(args)!={'request_id'} or not isinstance(rid,str) or not self.MID_RE.fullmatch(rid):raise ValueError('saas request id')
+            return self._post('/api/v3/saas/cancel',{'request_id':rid})
         if op=='mission_action':
             mid=args.get('mission_id');action=args.get('action');payload=args.get('payload') or {}
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')

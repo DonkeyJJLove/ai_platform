@@ -195,6 +195,17 @@ def _dual_request_id(conn, request_id):
         return row[0]
 
 
+def cancel_request(conn, request_id, now_fn):
+    """Cancel an explicit local handoff; never alter an accepted response or binding."""
+    with conn:
+        row = conn.execute('SELECT status FROM saas_handoff_requests WHERE request_id=?', (request_id,)).fetchone()
+        if row is None:
+            return {'request_id': request_id, 'status': 'NOT_FOUND', 'cancelled': False, 'authority_effect': 'NONE'}
+        changed = conn.execute("UPDATE saas_handoff_requests SET status='CANCELLED', progress_state='CANCELLED_BY_OPERATOR' WHERE request_id=? AND status='PENDING'", (request_id,)).rowcount
+    result = request_status(conn, request_id, now_fn)
+    return {'request_id': request_id, 'status': result['status'], 'cancelled': bool(changed), 'authority_effect': 'NONE'}
+
+
 def request_status(conn, request_id, now_fn):
     stamp = now_fn(); _expire(conn, stamp); conn.commit()
     row = conn.execute("SELECT * FROM saas_handoff_requests WHERE request_id=?", (request_id,)).fetchone()
