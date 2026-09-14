@@ -2,6 +2,8 @@
 from __future__ import annotations
 import argparse,hashlib,json,os,socket,sqlite3,threading,uuid
 import time, urllib.request, urllib.error
+from concurrent.futures import Future
+from copy import deepcopy
 from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
@@ -735,17 +737,30 @@ def focus_mission_id():
     c=connect();r=c.execute("SELECT value FROM mission_meta WHERE key='focus_mission_id'").fetchone();c.close();return r['value'] if r else MISSION
 
 RECENT_PROJECTION_LOCK=threading.Lock()
+RECENT_PROJECTION_PENDING=None
 
 
 def recent_process_missions():
-    # Concurrent SQLite/deep-copy loops thrash the interpreter under real polling.
-    # Serialize this bounded read batch; each caller still reads fresh state.
-    # This lock is independent of lifecycle writers and never caches authority.
+    # Share only an in-flight read, avoiding both concurrent read thrashing and
+    # a queue of redundant batches. Completed reads are never retained as cache.
+    global RECENT_PROJECTION_PENDING
     with RECENT_PROJECTION_LOCK:
-      c=connect()
-      try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
-      finally:c.close()
-      return [process_snapshot(mid,read_only=True)['mission_summary'] for mid in mids]
+      leader=RECENT_PROJECTION_PENDING is None
+      if leader:RECENT_PROJECTION_PENDING=Future()
+      pending=RECENT_PROJECTION_PENDING
+    if leader:
+      try:pending.set_result(_read_recent_process_missions())
+      except BaseException as error:pending.set_exception(error)
+      finally:
+        with RECENT_PROJECTION_LOCK:RECENT_PROJECTION_PENDING=None
+    return deepcopy(pending.result())
+
+
+def _read_recent_process_missions():
+    c=connect()
+    try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
+    finally:c.close()
+    return [process_snapshot(mid,read_only=True)['mission_summary'] for mid in mids]
 # ---- end LPCL mission process extension v1 -------------------------------
 
 

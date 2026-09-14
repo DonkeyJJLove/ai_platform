@@ -1,4 +1,6 @@
 from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor
+import threading
 import importlib
 import io
 import json
@@ -89,6 +91,42 @@ class MissionFocusTests(unittest.TestCase):
         activate.assert_not_called()
         self.assertEqual(out['focus_mission_id'],'historical')
         self.assertEqual(out['authority_effect'],'NONE')
+
+    def test_concurrent_recent_reads_share_inflight_work_without_retaining_cache(self):
+        original=service._read_recent_process_missions
+        started=threading.Event();release=threading.Event();owner=[]
+        def held_read():
+            owner.append(threading.get_ident())
+            started.set()
+            if not release.wait(5):raise RuntimeError('test release timeout')
+            return original()
+        with patch.object(service,'_read_recent_process_missions',side_effect=held_read) as read:
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                first=pool.submit(service.recent_process_missions)
+                self.assertTrue(started.wait(2))
+                pending=service.RECENT_PROJECTION_PENDING
+                joined=threading.Barrier(8)
+                result=pending.result
+                def joined_result():
+                    if threading.get_ident()!=owner[0]:joined.wait(timeout=5)
+                    return result()
+                with patch.object(pending,'result',side_effect=joined_result):
+                    others=[pool.submit(service.recent_process_missions) for _ in range(7)]
+                    joined.wait(timeout=5);release.set()
+                    values=[f.result(timeout=5) for f in others]
+                values.append(first.result(timeout=5))
+            self.assertEqual(read.call_count,1)
+        self.assertTrue(all(value==values[0] for value in values))
+        values[0][0]['title']='client-local edit'
+        self.assertNotEqual(values[0],values[1])
+        with closing(service.connect()) as conn,conn:
+            conn.execute('UPDATE missions SET title=? WHERE mission_id=?',('fresh title','historical'))
+        self.assertEqual(next(r for r in service.recent_process_missions() if r['mission_id']=='historical')['title'],'fresh title')
+
+    def test_failed_recent_read_does_not_poison_next_read(self):
+        with patch.object(service,'_read_recent_process_missions',side_effect=ValueError('read failure')):
+            with self.assertRaisesRegex(ValueError,'read failure'):service.recent_process_missions()
+        self.assertEqual(len(service.recent_process_missions()),2)
 
 
 if __name__ == '__main__':
