@@ -1,6 +1,6 @@
 # UI projection and refresh model
 
-The recent-mission list serializes its bounded normalized read batches with an independent process-local lock. This prevents concurrent SQLite/deep-copy loops from exhausting the polling latency budget observed on the deployed host. Each request reads current data; there is no summary cache, authority cache, or lifecycle writer lock shared with this read lock.
+The recent-mission list shares one in-flight normalized read batch among overlapping requests. The completed batch is immediately discarded as a reusable source; the next request starts a fresh read. A separate result copy prevents one caller mutating another's response, and a failed batch releases all waiters without poisoning the next read. This avoids both concurrent SQLite/deep-copy contention and a queue of redundant serial reads. The coordinator is independent of lifecycle writers and does not cache authority.
 
 Evidence status: source implementation at `72fbb405f5c023baa4605a53c15f1b7b96533a98`, with inventory/package reconciliation in `6724074`. This is a source description at documentation freeze. Final clean validation, exact-head CI, deployment/restart readback and merge are separately evidenced terminal gates; this document does not predict their outcome. Authority effect: NONE.
 
