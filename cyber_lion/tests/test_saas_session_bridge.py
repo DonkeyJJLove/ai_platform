@@ -25,6 +25,8 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         self.c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,'m','o','d',dg,'x','[]','EXPLICIT_USER_ACTIVATION','HYBRID_COGNITIVE_PLANE_RECONCILIATION',30.0,T,T))
         lifecycle.migrate(self.c,lambda:T,current_mission_id=mid,source_head='b'*40,source_tree='c'*40)
         saas.migrate(self.c,lambda:T,source_head='b'*40,source_tree='c'*40)
+        self.c.execute('CREATE TABLE IF NOT EXISTS mission_dual_evaluations(request_id TEXT PRIMARY KEY,saas_request_id TEXT,updated_at TEXT)')
+        self.c.commit()
 
     def test_roundtrip_binds_session_without_api_authority(self):
         req=saas.create_request(self.c,'M1','Kim jesteś?',lambda:T)
@@ -56,6 +58,26 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         status=saas.bridge_status(self.c,'M1',lambda:T)
         self.assertEqual(status['pending_count'],2)
         self.assertEqual(status['queue_policy'],'FIFO_MULTI_PENDING')
+
+    def test_bridge_exposes_exact_dual_link_and_truthful_session_channel_state(self):
+        req=saas.create_request(self.c,'M1','dual test',lambda:T)
+        dual_id='dual-'+'3'*32
+        self.c.execute('INSERT INTO mission_dual_evaluations(request_id,saas_request_id,updated_at) VALUES(?,?,?)',(dual_id,req['request_id'],T));self.c.commit()
+        pending=saas.pending_request(self.c,lambda:T,mission_id='M1')
+        self.assertEqual(pending['dual_request_id'],dual_id)
+        status=saas.bridge_status(self.c,'M1',lambda:T)
+        self.assertEqual(status['channel_state'],'READY_FOR_HANDOFF')
+        self.assertEqual(status['session_attestation_state'],'NOT_ATTESTED')
+        self.assertEqual(status['pending']['dual_request_id'],dual_id)
+        saved=saas.request_status(self.c,req['request_id'],lambda:T)
+        self.assertEqual(saved['dual_request_id'],dual_id)
+        self.assertNotIn('response_token',saved)
+        token=self.c.execute('SELECT response_token FROM saas_handoff_requests WHERE request_id=?',(req['request_id'],)).fetchone()[0]
+        saas.respond(self.c,req['request_id'],token,'SAAS OK',lambda:T,model_identity='GPT-5.6 Sol')
+        after=saas.bridge_status(self.c,'M1',lambda:T)
+        self.assertEqual(after['session_attestation_state'],'BOUND')
+        self.assertEqual(after['last_response']['request_id'],req['request_id'])
+        self.assertIsNotNone(after['last_response']['receipt_digest'])
 
 class SaaSHandoffExtensionTests(unittest.TestCase):
     def test_explicit_saas_route_is_not_capability_answer(self):
@@ -126,6 +148,25 @@ class PanelThreadDeliveryTests(unittest.TestCase):
         self.assertIn('resumeThreadSaas',gateway.UI)
         self.assertIn('append_assistant_once',Path(__import__('tools.lion_local_intelligence_runtime',fromlist=['x']).__file__).read_text(encoding='utf-8'))
         self.assertIn('Restart material runtime',gateway.UI)
+
+    def test_panel_auto_adopts_mission_control_pending_and_follows_focus_by_default(self):
+        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
+        ui=gateway.UI
+        self.assertIn('adoptPendingSaas',ui)
+        self.assertIn('dual_request_id:p.dual_request_id',ui)
+        self.assertIn('session_attestation_state',ui)
+        self.assertIn('missionPinned=false',ui)
+        self.assertIn('FOLLOW_FOCUS',ui)
+        self.assertIn('missionsRefreshing',ui)
+
+    def test_global_control_view_has_focus_follow_refresh_guard_and_stable_render_key(self):
+        root=Path(__file__).resolve().parents[2]
+        js=(root/'deploy/mission-control/v3/control-v3.js').read_text(encoding='utf-8')
+        self.assertIn('MC_PINNED=false',js)
+        self.assertIn('MC_REFRESHING=false',js)
+        self.assertIn('mcRenderKey',js)
+        self.assertIn('FOLLOW_FOCUS',js)
+        self.assertIn('if(!MC_PINNED||!MC_SELECTED',js)
 
 
 if __name__=='__main__':unittest.main()

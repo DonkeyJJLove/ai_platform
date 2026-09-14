@@ -1,6 +1,6 @@
 const MC=id=>document.getElementById(id);
 const mcesc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let MC_SELECTED=null,MC_DATA=null,MC_PROTOCOL='ALL';
+let MC_SELECTED=null,MC_DATA=null,MC_PROTOCOL='ALL',MC_FOCUS=null,MC_PINNED=false,MC_REFRESHING=false,MC_LAST_RENDER_KEY=null;
 
 async function mcget(path){
   const r=await fetch(path,{cache:'no-store',signal:AbortSignal.timeout(10000)});
@@ -11,6 +11,8 @@ function mccard(k,v){return `<div class="card"><div class="k">${mcesc(k)}</div><
 function mcbtn(a,label,cls=''){return `<button type="button" class="${cls}" data-mc-action="${mcesc(a)}">${mcesc(label)}</button>`}
 function capState(name){return MC_DATA?.capabilities?.[name]?.state||'UNAVAILABLE'}
 function missionPath(mid,suffix=''){return '/api/v3/missions/'+encodeURIComponent(mid)+suffix}
+function mcRenderKey(s,registry,sources){const p=s.process||{},d=s.execution_driver||{};return JSON.stringify({focus:MC_FOCUS,selected:MC_SELECTED,pinned:MC_PINNED,state:s.state,runtime:s.runtime_state,ready:s.ready,materialized:s.materialized,progress:p.progress,phase:p.current_phase,driver:[d.state,d.generation,d.heartbeat_at,d.current_phase,d.waiting_reason,d.blocking_gate,d.next_action,d.last_effect,d.last_effect_receipt],phases:(s.phases||[]).map(x=>[x.phase_id,x.status,x.progress,x.detail]),logical:(s.logical||[]).map(x=>[x.logical_id,x.ready,x.materialized]),workers:(s.workers||[]).map(x=>[x.pod_uid,x.ready,x.restarts]),messages:(s.protocol_messages||[]).slice(0,30).map(x=>x.id||x.payload_digest),receipts:(s.action_receipts||[]).slice(0,20).map(x=>x.receipt_digest||x.receipt_id),registry:(registry||[]).map(x=>[x.mission_id,x.state,x.progress,x.current_phase]),sources:(sources||[]).map(x=>[x.source_id||x.name,x.available,x.currentness])})}
+function mcRenderHeader(s){const mode=MC_PINNED?'PINNED':'FOLLOW_FOCUS',focus=MC_FOCUS||'UNKNOWN',last=s.updated_at||'UNKNOWN';MC('mcV3Meta').textContent=s.title+' · '+s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · VIEW '+mode+(MC_PINNED?' · focus '+focus:'')+' · mission update '+last+' · collector poll '+new Date().toISOString()}
 
 async function mcCurrentMaterialAct(action,pod){
   if(MC_DATA?.mission_id!=='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3')return alert('Low-level material action is not bound to this mission.');
@@ -95,7 +97,7 @@ function renderLifecycleActions(s){
 function mcRender(s,registry,sources){
   MC_DATA=s;const p=s.process||{},sc=s.schema_context||{};
   MC('mcV3Authority').innerHTML='CONTROL: <b>'+mcesc(s.control_authority||'NONE')+'</b>';
-  MC('mcV3Meta').textContent=s.title+' · '+s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state;
+  mcRenderHeader(s);
   const historical=sc.record_class==='HISTORICAL_PRE_SCHEMA';
   MC('mcObjective').textContent=p.objective||(historical?'Not recorded: mission predates the mission-process schema.':'Objective not recorded');
   MC('mcDescription').textContent=p.description||'';
@@ -117,7 +119,7 @@ function mcRender(s,registry,sources){
   MC('mcV3Workers').innerHTML=(s.workers||[]).map(x=>`<tr><td>${mcesc(x.pod_name)}</td><td>${mcesc(x.logical_id)}</td><td>${mcesc(role[x.logical_id]||'')}</td><td>${mcesc(x.phase)}</td><td class="${x.ready?'mc-live':'mc-warn'}">${x.ready?'YES':'NO'}</td><td>${mcesc(x.restarts)}</td><td>${mcesc(x.pod_uid)}</td><td>${s.mission_id==='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'&&s.state==='RUNNING'?`<button type="button" data-restart="${mcesc(x.pod_name)}">restart pod</button>`:''}</td></tr>`).join('');
   MC('mcV3Workers').querySelectorAll('[data-restart]').forEach(b=>b.onclick=()=>mcCurrentMaterialAct('RESTART_ONE',b.dataset.restart));
   MC('mcV3Registry').innerHTML=(registry||[]).map(x=>{const has=x.progress!==null&&x.progress!==undefined;const progressText=has?Number(x.progress).toFixed(1)+'%':'historical · no process progress';return `<button type="button" class="mc-reg ${x.mission_id===s.mission_id?'active':''}" data-mid="${mcesc(x.mission_id)}"><b>${x.controllable?'●':'○'} ${mcesc(x.title||x.mission_id)}</b><span>${mcesc(x.state)} · ${mcesc(progressText)}${x.current_phase?' · '+mcesc(x.current_phase):''}</span><small>${mcesc(x.objective||'Process metadata not recorded at source stage')}</small></button>`}).join('');
-  MC('mcV3Registry').querySelectorAll('[data-mid]').forEach(b=>b.onclick=()=>{MC_SELECTED=b.dataset.mid;mcRefresh()});
+  MC('mcV3Registry').querySelectorAll('[data-mid]').forEach(b=>b.onclick=()=>{MC_SELECTED=b.dataset.mid;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()});
   const actionReceipts=(s.action_receipts||[]).map(x=>`<div class="mc-line">${mcesc(x.created_at)} · ${mcesc(x.action)} · <b class="${x.status==='PASS'?'mc-live':'mc-bad'}">${mcesc(x.status)}</b> · ${mcesc(x.effect_class)}</div>`).join('');
   const commands=(s.commands||[]).map(x=>`<div class="mc-line">${mcesc(x.requested_at)} · ${mcesc(x.action)} · <b class="${x.status==='PASS'?'mc-live':x.status==='FAIL'?'mc-bad':'mc-warn'}">${mcesc(x.status)}</b>${x.pod_name?' · '+mcesc(x.pod_name):''}</div>`).join('');
   MC('mcV3Commands').innerHTML=actionReceipts+commands||'<div class="mc-line">No control receipts.</div>';
@@ -125,14 +127,16 @@ function mcRender(s,registry,sources){
 }
 
 async function mcRefresh(){
+  if(MC_REFRESHING)return;MC_REFRESHING=true;
   try{
     const [reg,src]=await Promise.all([mcget('/api/v3/missions/recent'),mcget('/api/v3/evidence-sources')]);
-    const registry=reg.missions||[];
-    if(!MC_SELECTED||!registry.some(x=>x.mission_id===MC_SELECTED))MC_SELECTED=reg.focus_mission_id||registry[0]?.mission_id||'LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3';
+    const registry=reg.missions||[];MC_FOCUS=reg.focus_mission_id||registry[0]?.mission_id||'LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3';
+    if(!MC_PINNED||!MC_SELECTED||!registry.some(x=>x.mission_id===MC_SELECTED))MC_SELECTED=MC_FOCUS;
     const s=await mcget(missionPath(MC_SELECTED,'/process'));
-    MC('mcMissionSelect').innerHTML=registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}</option>`).join('');
-    MC('mcMissionSelect').value=MC_SELECTED;MC('mcMissionSelect').onchange=()=>{MC_SELECTED=MC('mcMissionSelect').value;mcRefresh()};
-    mcRender(s,registry,src.sources||[]);
+    const select=MC('mcMissionSelect');select.innerHTML=registry.map(x=>`<option value="${mcesc(x.mission_id)}">${mcesc(x.title||x.mission_id)} · ${mcesc(x.state)}${x.mission_id===MC_FOCUS?' · FOCUS':''}</option>`).join('');
+    select.value=MC_SELECTED;select.onchange=()=>{MC_SELECTED=select.value;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()};
+    const key=mcRenderKey(s,registry,src.sources||[]);if(key!==MC_LAST_RENDER_KEY){mcRender(s,registry,src.sources||[]);MC_LAST_RENDER_KEY=key}else mcRenderHeader(s);
   }catch(e){MC('mcV3Authority').textContent='CONTROL UNKNOWN';MC('mcV3Meta').textContent='Mission control refresh failed: '+e.message}
+  finally{MC_REFRESHING=false}
 }
 mcRefresh();setInterval(mcRefresh,3000);

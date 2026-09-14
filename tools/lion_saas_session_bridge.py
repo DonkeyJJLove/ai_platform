@@ -146,8 +146,25 @@ def pending_request(conn, now_fn, *, request_code=None, mission_id=None):
     out = dict(row)
     out["transport"] = TRANSPORT
     out["supervisor_role"] = "CHATGPT_SAAS_SUPERVISOR"
+    out["dual_request_id"] = _dual_request_id(conn, out["request_id"]) if "mission_dual_evaluations" in {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()} else None
     out["authority_effect"] = "NONE"
     return out
+
+
+def _dual_request_id(conn, request_id):
+    try:
+        row = conn.execute(
+            "SELECT request_id FROM mission_dual_evaluations WHERE saas_request_id=? ORDER BY updated_at DESC LIMIT 1",
+            (request_id,),
+        ).fetchone()
+    except Exception:
+        return None
+    if row is None:
+        return None
+    try:
+        return row["request_id"]
+    except Exception:
+        return row[0]
 
 
 def request_status(conn, request_id, now_fn):
@@ -157,6 +174,7 @@ def request_status(conn, request_id, now_fn):
         raise ValueError("saas request not found")
     out = dict(row)
     out.pop("response_token", None)
+    out["dual_request_id"] = _dual_request_id(conn, request_id)
     return out
 
 
@@ -171,12 +189,22 @@ def bridge_status(conn, mission_id, now_fn):
         (mission_id,),
     ).fetchone()
     pending_count = int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests WHERE mission_id=? AND status='PENDING'", (mission_id,)).fetchone()[0])
+    pending_value = dict(pending) if pending else None
+    if pending_value is not None:
+        pending_value["dual_request_id"] = _dual_request_id(conn, pending_value["request_id"])
+    last_response = conn.execute(
+        "SELECT request_id,responded_at,response_digest,receipt_digest,binding_id FROM saas_handoff_requests WHERE mission_id=? AND status='RESPONDED' ORDER BY responded_at DESC LIMIT 1",
+        (mission_id,),
+    ).fetchone()
     return {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
+        "channel_state": "READY_FOR_HANDOFF",
+        "session_attestation_state": "BOUND" if binding else "NOT_ATTESTED",
         "binding": dict(binding) if binding else None,
-        "pending": dict(pending) if pending else None,
+        "pending": pending_value,
         "pending_count": pending_count,
+        "last_response": dict(last_response) if last_response else None,
         "queue_policy": "FIFO_MULTI_PENDING",
         "transport": TRANSPORT,
         "automatic_local_to_saas_hop": False,
