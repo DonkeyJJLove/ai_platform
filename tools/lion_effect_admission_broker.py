@@ -1665,7 +1665,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "lion_mission_lifecycle_db.py": "9b2d37e1d6e3273800a31cb5417143deb117916444be1cef0c18f0339b8a915f",
  "lion_saas_session_bridge.py": "48721d123c4604c8b0870f30fe6e4945fe399e4912258391c4845b6dc1629d9a",
  "mission_control_compat.py": "67ce2f6b7f40336ca09012e7a7e414c0f2feb52fcf78947dce628427d70fd4e7",
- "mission_control_v3.py": "ea00ff6ee74065694a95ea36f2963e3503e966accabeb71fb326f2b81ae0d223",
+ "mission_control_v3.py": "56c31ed6ded6ba19ca115ef68267f1a5eb8b66c195eb0fd53c1de3c59b00cb52",
  "static/app.css": "a74f12624834fe0184ec46b3239ff2acc563af184e3ba731cf31c0b0fc989d7c",
  "static/app.js": "c052ffb1645c11a48c5287935d11d60141aed46f648d8115e050a9d6c92ef087",
  "static/control-v3.js": "7b83f6f897056fce26f4b19f2deababfc697daec9bd0b928691fe56eeb3ce9f4",
