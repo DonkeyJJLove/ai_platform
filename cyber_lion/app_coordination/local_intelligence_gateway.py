@@ -279,14 +279,16 @@ async function reportUiRuntimeError(error,operation){
 }
 window.addEventListener('error',e=>{void reportUiRuntimeError(e.error||new Error(e.message),'window.error')});
 window.addEventListener('unhandledrejection',e=>{void reportUiRuntimeError(e.reason,'unhandledrejection')});
-let activeChatController=null,chatGeneration=0;
+let activeChatController=null,chatGeneration=0,threadViewGeneration=0;
+const deletedThreadIds=new Set();
 async function go(question){
   let text=(question??qEl.value).trim();if(!text||sendEl.disabled)return;
   lastQuestion=text;sendEl.disabled=true;busyEl.textContent='Routing → evidence → model…';
   let start=performance.now(),requestThreadId=null;const generation=++chatGeneration,controller=new AbortController();activeChatController=controller;
   try{
     if(!activeThreadId)await createThread();
-    requestThreadId=activeThreadId;addMsg('user',text);qEl.value='';
+    if(generation!==chatGeneration||!activeThreadId)return;
+    requestThreadId=activeThreadId;lastQuestion=text;addMsg('user',text);qEl.value='';
     let resp=await fetch('/api/threads/'+requestThreadId+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,output_language:langEl.value}),signal:controller.signal});
     let x=await resp.json();if(generation!==chatGeneration)return;if(!resp.ok)throw new Error(x.error||('HTTP '+resp.status));
     const renderedEvidence=evidenceHtml(x);
@@ -303,16 +305,16 @@ async function go(question){
   finally{if(generation===chatGeneration){activeChatController=null;sendEl.disabled=false;if(!pendingSaasPolls.size)busyEl.textContent=''}void state()}
 }
 
-function copyLast(){if(lastAnswer)navigator.clipboard.writeText(lastAnswer)}function regenerate(){if(lastQuestion)go(lastQuestion)}function resetMessages(){patchHtml(messagesEl,'<div class="msg assistant"><div class="role">LION</div><div class="md"><p>Gotowy. Wybierz wątek lub rozpocznij nowy.</p></div></div>');evidenceEl.classList.add('hide');debugEl.classList.add('hide');routeEl.textContent=''}
+function copyLast(){if(lastAnswer)navigator.clipboard.writeText(lastAnswer)}function regenerate(){if(lastQuestion)go(lastQuestion)}function resetMessages(){lionMarkupCache.delete(messagesEl);messagesEl.replaceChildren();patchHtml(messagesEl,'<div class="msg assistant"><div class="role">LION</div><div class="md"><p>Gotowy. Wybierz wątek lub rozpocznij nowy.</p></div></div>');evidenceEl.replaceChildren();debugEl.textContent='';lionMarkupCache.delete(evidenceEl);lionMarkupCache.delete(debugEl);evidenceEl.classList.add('hide');debugEl.classList.add('hide');routeEl.textContent=''}
 async function refreshThreads(){let r=await fetch('/api/threads',{cache:'no-store'}),x=await r.json();threads=x.threads||[];patchHtml(threadListEl,threads.map(t=>'<div class="thread '+(t.thread_id===activeThreadId?'active':'')+'"><button class="thread-open" data-open="'+esc(t.thread_id)+'">'+esc(t.title)+'</button><button class="thread-icon" title="Zmień nazwę" data-rename="'+esc(t.thread_id)+'">✎</button><button class="thread-icon" title="Usuń" data-delete="'+esc(t.thread_id)+'">×</button></div>').join(''));threadListEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openThread(b.dataset.open));threadListEl.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>renameThread(b.dataset.rename));threadListEl.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteThread(b.dataset.delete));if(activeThreadId){let t=threads.find(x=>x.thread_id===activeThreadId);if(t)activeThreadTitleEl.textContent=t.title}}
-async function createThread(){let r=await fetch('/api/threads',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),x=await r.json();activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';resetMessages();await refreshThreads();activeThreadTitleEl.textContent=x.title;qEl.focus()}
-async function openThread(id){let r=await fetch('/api/threads/'+id,{cache:'no-store'});if(!r.ok)return;let x=await r.json();activeThreadId=id;history=[];resetMessages();patchHtml(messagesEl,'');for(let m of (x.messages||[])){addMsg(m.role,m.content);history.push({role:m.role,content:m.content})}if(!(x.messages||[]).length)resetMessages();activeThreadTitleEl.textContent=x.title;await refreshThreads();resumeThreadSaas(x.messages||[],id)}
+async function createThread(){const view=++threadViewGeneration;let r=await fetch('/api/threads',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));if(view!==threadViewGeneration)return;activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();await refreshThreads();if(view===threadViewGeneration){activeThreadTitleEl.textContent=x.title;qEl.focus()}}
+async function openThread(id){const view=++threadViewGeneration;let r=await fetch('/api/threads/'+encodeURIComponent(id),{cache:'no-store'});if(!r.ok)return;let x=await r.json();if(view!==threadViewGeneration||deletedThreadIds.has(id))return;activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();patchHtml(messagesEl,'');for(let m of (x.messages||[])){addMsg(m.role,m.content);history.push({role:m.role,content:m.content});if(m.role==='user')lastQuestion=m.content;if(m.role==='assistant')lastAnswer=m.content}if(!(x.messages||[]).length)resetMessages();activeThreadTitleEl.textContent=x.title;await refreshThreads();if(view===threadViewGeneration&&!deletedThreadIds.has(id))resumeThreadSaas(x.messages||[],id)}
 async function renameThread(id){let t=threads.find(x=>x.thread_id===id),name=prompt('Nowa nazwa wątku:',t?.title||'');if(!name)return;await fetch('/api/threads/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:name})});await refreshThreads()}
 async function deleteThread(id){
  const t=threads.find(x=>x.thread_id===id);if(!confirm('Usunąć rozmowę „'+(t?.title||id)+'” i anulować jej oczekujące żądania?'))return;
  try{const r=await fetch('/api/threads/'+encodeURIComponent(id),{method:'DELETE'}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));
- stopThreadPolling(id);
- if(activeThreadId===id){chatGeneration++;activeChatController?.abort();activeThreadId=null;history=[];lastQuestion='';lastAnswer='';resetMessages();activeThreadTitleEl.textContent='—';busyEl.textContent='';sendEl.disabled=false}
+ deletedThreadIds.add(id);stopThreadPolling(id);
+ if(activeThreadId===id){threadViewGeneration++;chatGeneration++;activeChatController?.abort();activeThreadId=null;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();activeThreadTitleEl.textContent='—';busyEl.textContent='';sendEl.disabled=false}
  await refreshThreads();if(!activeThreadId&&threads.length)await openThread(threads[0].thread_id);
  }catch(e){busyEl.textContent='Nie usunięto rozmowy: '+e.message}
 }
