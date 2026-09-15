@@ -61,39 +61,37 @@ class MissionLifecycleDbTests(unittest.TestCase):
         self.assertIn("current_phase", fields)
         self.assertIn("progress", fields)
 
-    def test_delete_records_is_exact_and_survives_legacy_reimport(self):
+    def test_delete_records_preserves_legacy_history(self):
         mid='legacy::legacy-vkt'
         c=self.mc.connect();self.addCleanup(c.close)
-        preview=self.life.mission_delete_preview(c,mid,self.mc.MISSION)
-        self.assertTrue(preview['allowed'])
-        with self.assertRaisesRegex(ValueError,'MISSION_CHANGED'):
-            self.life.delete_mission_records(c,mid,'0'*64,self.mc.MISSION,self.mc.now)
-        self.assertIsNotNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
-        out=self.life.delete_mission_records(c,mid,preview['spec_digest'],self.mc.MISSION,self.mc.now)
-        self.assertFalse(out['runtime_resources_changed'])
-        self.assertIsNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
-        self.assertIsNone(c.execute('SELECT 1 FROM mission_lineage WHERE mission_id=?',(mid,)).fetchone())
-        self.assertIsNotNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(self.mc.MISSION,)).fetchone())
-        self.mc.migrate()
-        self.assertIsNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
-
-    def test_delete_protects_shared_owner_and_active_records(self):
-        c=self.mc.connect();self.addCleanup(c.close)
-        self.assertIn('SHARED_RUNTIME_OWNER',self.life.mission_delete_preview(c,self.mc.MISSION,self.mc.MISSION)['reason'])
-        mid='legacy::legacy-vkt'
-        c.execute("UPDATE missions SET state='RUNNING' WHERE mission_id=?",(mid,));c.commit()
         preview=self.life.mission_delete_preview(c,mid,self.mc.MISSION)
         self.assertFalse(preview['allowed'])
-        with self.assertRaisesRegex(ValueError,'MISSION_STILL_ACTIVE'):
+        self.assertEqual(preview['reason'],'LEGACY_HISTORY_PRESERVATION_POLICY')
+        self.assertEqual(preview['lifecycle']['lifecycle_class'],'LEGACY_HISTORY')
+        with self.assertRaisesRegex(ValueError,'LEGACY_HISTORY_PRESERVATION_POLICY'):
             self.life.delete_mission_records(c,mid,preview['spec_digest'],self.mc.MISSION,self.mc.now)
+        self.assertIsNotNone(c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone())
+        self.assertIsNotNone(c.execute('SELECT 1 FROM mission_lineage WHERE mission_id=?',(mid,)).fetchone())
+
+    def test_delete_protects_shared_owner_and_current_active_records(self):
+        c=self.mc.connect();self.addCleanup(c.close)
+        self.assertIn('SHARED_RUNTIME_OWNER',self.life.mission_delete_preview(c,self.mc.MISSION,self.mc.MISSION)['reason'])
+        mid='CURRENT-ACTIVE-DELETE-TEST';t=self.mc.now()
+        c.execute('INSERT INTO missions(mission_id,title,adapter,spec_digest,source_head,source_tree,namespace,state,runtime_state,logical_count,material_target,materialized,ready,created_at,authorized_at,updated_at,last_error,spec_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,'active','LPCL_GENERIC_128L64M','9'*64,'1'*40,'2'*40,None,'RUNNING','DRIVER_ACTIVE',1,0,0,0,t,t,t,None,'{}'))
+        c.execute('INSERT INTO mission_process_specs(mission_id,title,objective,description,lpcl_digest,lpcl_text,protocols_json,authority_state,current_phase,progress,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,'active','o','d','9'*64,'x','[]','EXPLICIT_USER_ACTIVATION','P1',0.0,t,t));c.commit()
+        preview=self.life.mission_delete_preview(c,mid,self.mc.MISSION)
+        self.assertFalse(preview['allowed']);self.assertIn('MISSION_STILL_ACTIVE',preview['reason'])
 
     def test_process_snapshot_decorates_historical_record_without_synthetic_process(self):
         out = self.mc.process_snapshot("legacy::legacy-vkt")
         self.assertIsNone(out["process"])
         self.assertEqual(out["schema_context"]["record_class"], "HISTORICAL_PRE_SCHEMA")
+        self.assertEqual(out["lifecycle"]["lifecycle_class"], "LEGACY_HISTORY")
+        self.assertEqual(out["lifecycle"]["record_class"], "RECORDED_OBSERVATION")
+        self.assertFalse(out["lifecycle"]["execution_controls_allowed"])
         self.assertEqual(out["phases"], [])
         self.assertEqual(out["control_authority"], "NONE")
-        self.assertEqual(out["capabilities"]["RESTART"]["state"], "REVISION_DRAFT_ONLY")
+        self.assertEqual(out["capabilities"]["RESTART"]["state"], "DENIED_LEGACY_HISTORY_READ_ONLY")
 
     def test_encoded_legacy_id_round_trips_over_http(self):
         srv = ThreadingHTTPServer(("127.0.0.1", 0), self.mc.H)
@@ -115,20 +113,17 @@ class MissionLifecycleDbTests(unittest.TestCase):
         self.assertEqual(len(snap["audits"]), 1)
         self.assertEqual(len(snap["rollback_points"]), 1)
 
-    def test_restart_redesign_add_component_and_rollback_are_revisioned_not_fake_effects(self):
-        restart = self.mc.mission_action("legacy::legacy-vkt", {"action": "RESTART", "reason": "replay under current architecture"})
-        self.assertEqual(restart["effect_class"], "NONE")
-        self.assertEqual(restart["result"]["state"], "AWAITING_EXACT_LPCL_ACTIVATION")
-        redesign = self.mc.mission_action("legacy::legacy-vkt", {"action": "REDESIGN", "reason": "migrate legacy mission to epoch4 schema"})
-        self.assertEqual(redesign["result"]["revision_no"], 2)
-        added = self.mc.mission_action("legacy::legacy-vkt", {"action": "ADD_COMPONENT", "component": {"component_id": "SEMANTIC_SCAFFOLD", "component_class": "SIC"}})
-        self.assertEqual(added["result"]["revision_no"], 3)
-        audit = self.mc.mission_action("legacy::legacy-vkt", {"action": "AUDIT"})
-        rb = audit["result"]["rollback_point"]["rollback_id"]
-        rollback = self.mc.mission_action("legacy::legacy-vkt", {"action": "ROLLBACK", "rollback_id": rb})
-        self.assertEqual(rollback["result"]["state"], "ROLLBACK_PLAN_REQUIRES_EXACT_RUNTIME_ADAPTER")
-        snap = self.mc.process_snapshot("legacy::legacy-vkt")
-        self.assertEqual([x["action"] for x in reversed(snap["design_revisions"])], ["RESTART", "REDESIGN", "ADD_COMPONENT", "ROLLBACK"])
+    def test_legacy_history_rejects_execution_design_and_destructive_actions(self):
+        for action,payload in [
+            ('RESTART',{'reason':'replay'}),('REDESIGN',{'reason':'migrate'}),
+            ('ADD_COMPONENT',{'component':{'component_id':'X'}}),('RESUME',{}),('STOP',{}),
+        ]:
+            with self.subTest(action=action):
+                with self.assertRaisesRegex(ValueError,'LEGACY_HISTORY_READ_ONLY'):
+                    self.mc.mission_action('legacy::legacy-vkt',{'action':action,**payload})
+        snap=self.mc.process_snapshot('legacy::legacy-vkt')
+        self.assertEqual(snap['design_revisions'],[])
+        self.assertEqual(snap['capabilities']['REDESIGN']['state'],'DENIED_LEGACY_HISTORY_READ_ONLY')
 
     def test_start_component_contract_exists_but_fails_closed_without_exact_adapter(self):
         out = self.mc.mission_action(self.mc.MISSION, {"action": "START_COMPONENT", "component_id": "LD01"})
