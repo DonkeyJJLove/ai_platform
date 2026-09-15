@@ -41,9 +41,40 @@ class LpclPanelExactSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'activation'):
             bridge('activate_lpcl',{'mission_id':'EXACT-SOURCE-R1','lpcl_digest':'x'*64})
 
+
+    def test_legacy_lpcl_1_1_aliases_remain_accepted_by_authoritative_bridge(self):
+        class Broker:
+            def call(self, role, op, args):
+                self.last=(role,op,args)
+                return {'result':{'head':'a'*40,'tree':'b'*40}}
+        bridge=self.bridge();bridge.broker=Broker()
+        source=(
+            'PROJECT=LION_EVOLUSION\n'
+            'MODE=AUTONOMOUS_EXECUTE\n'
+            'CONTROL_LANGUAGE=LPCL/1.1\n'
+            'MISSION_ID=LEGACY-COMPAT-R1\n'
+            'MISSION_TITLE=Legacy compatibility\n'
+            'MISSION_OBJECTIVE=Preserve legacy intake\n'
+            'LOGICAL_DRONES=12\n'
+            'MATERIAL_FLEET_TARGET=64\n'
+            'PROTOCOLS=LPCL,AUTHORITY,CURRENTNESS,EVIDENCE,VALIDATION,RECEIPT,CONTROL\n'
+            'PHASE_01=LEGACY_VERIFY|Legacy verify\n'
+        )
+        out=bridge.validate(source)
+        self.assertTrue(out['valid'])
+        self.assertEqual(out['spec']['description'],'Preserve legacy intake')
+        self.assertEqual(out['spec']['logical_count'],12)
+        self.assertEqual(out['spec']['material_target'],64)
+        self.assertEqual(out['parsed']['control_language'],'LPCL/1.1')
+
     def test_ui_exact_source_state_machine_contract_is_present(self):
         from cyber_lion.app_coordination.local_intelligence_gateway import UI
         self.assertIn("const LPCL_REQUIRED_KEYS=['PROJECT','MODE','CONTROL_LANGUAGE','MISSION_ID','MISSION_TITLE','MISSION_OBJECTIVE','MISSION_DESCRIPTION','LOGICAL_DRONE_COUNT','MATERIAL_DRONE_COUNT','PROTOCOLS']",UI)
+        self.assertIn("const LPCL_ENVELOPE_KEYS=['PROJECT','MODE','CONTROL_LANGUAGE','MISSION_ID']",UI)
+        self.assertIn("MISSION_DESCRIPTION:['MISSION_DESCRIPTION','MISSION_OBJECTIVE']",UI)
+        self.assertIn("LOGICAL_DRONE_COUNT:['LOGICAL_DRONE_COUNT','LOGICAL_DRONES']",UI)
+        self.assertIn("MATERIAL_DRONE_COUNT:['MATERIAL_DRONE_COUNT','MATERIAL_FLEET_TARGET']",UI)
+        self.assertIn("'LPCL FRAGMENT · MISSING ENVELOPE'",UI)
         self.assertIn("body:JSON.stringify({lpcl_text:snapshot.validated_source})",UI)
         self.assertIn("$('lpclText').addEventListener('input',invalidateLpclSource)",UI)
         self.assertIn("'LPCL INPUT NOT DETECTED'",UI)

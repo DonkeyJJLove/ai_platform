@@ -357,11 +357,15 @@ async function deleteMission(){
  }catch(e){$('controlHealth').textContent='Nie można usunąć misji: '+e.message}
 }
 const LPCL_REQUIRED_KEYS=['PROJECT','MODE','CONTROL_LANGUAGE','MISSION_ID','MISSION_TITLE','MISSION_OBJECTIVE','MISSION_DESCRIPTION','LOGICAL_DRONE_COUNT','MATERIAL_DRONE_COUNT','PROTOCOLS'];
+const LPCL_ENVELOPE_KEYS=['PROJECT','MODE','CONTROL_LANGUAGE','MISSION_ID'];
+const LPCL_COMPAT_ALIASES={MISSION_DESCRIPTION:['MISSION_DESCRIPTION','MISSION_OBJECTIVE'],LOGICAL_DRONE_COUNT:['LOGICAL_DRONE_COUNT','LOGICAL_DRONES'],MATERIAL_DRONE_COUNT:['MATERIAL_DRONE_COUNT','MATERIAL_FLEET_TARGET']};
 function lpclSourceDiagnostics(source){
  source=String(source??'');const lines=source.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n'),keys=[];
  for(const line of lines){const m=line.trim().match(/^([A-Z][A-Z0-9_]*)\s*=/);if(m&&!keys.includes(m[1]))keys.push(m[1])}
- const first=lines.find(line=>line.trim())?.trim()||'',missing=LPCL_REQUIRED_KEYS.filter(key=>!keys.includes(key));
- return {input_length:source.length,first_nonempty_line:first.slice(0,180),detected_key_count:keys.length,detected_keys:keys,missing_required:missing,input_detected:source.length>=20&&missing.length===0};
+ const first=lines.find(line=>line.trim())?.trim()||'',has=key=>keys.includes(key),satisfied=key=>(LPCL_COMPAT_ALIASES[key]||[key]).some(has),missing=LPCL_REQUIRED_KEYS.filter(key=>!satisfied(key));
+ const envelope_count=LPCL_ENVELOPE_KEYS.filter(has).length,phase_key_count=keys.filter(key=>/^PHASE_[0-9]{2}(?:_|$)/.test(key)).length;
+ const fragment_detected=envelope_count===0&&phase_key_count>0,lpcl_candidate=envelope_count===LPCL_ENVELOPE_KEYS.length;
+ return {input_length:source.length,first_nonempty_line:first.slice(0,180),detected_key_count:keys.length,detected_keys:keys,missing_required:missing,envelope_key_count:envelope_count,phase_key_count,fragment_detected,lpcl_candidate,input_detected:source.length>=20&&lpcl_candidate};
 }
 async function lpclSha256(source){const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(source));return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}
 function renderLpclIntake(state,diag=lpclSourceDiagnostics($('lpclText')?.value||''),statusOverride=null){
@@ -380,7 +384,7 @@ function invalidateLpclSource(){
 }
 async function validateLpcl(){
  const source=$('lpclText').value,diag=lpclSourceDiagnostics(source);lpclValidated=null;lpclRegistered=null;
- if(!diag.input_detected){renderLpclIntake(source.trim()?'DIRTY':'EMPTY',diag,'LPCL INPUT NOT DETECTED');$('lpclPreview').textContent=JSON.stringify(diag,null,2);return}
+ if(!diag.input_detected){const label=diag.fragment_detected?'LPCL FRAGMENT · MISSING ENVELOPE':'LPCL INPUT NOT DETECTED';renderLpclIntake(source.trim()?'DIRTY':'EMPTY',diag,label);$('lpclPreview').textContent=JSON.stringify(diag,null,2);return}
  try{
   const localDigest=await lpclSha256(source);let r=await fetch('/api/lpcl/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lpcl_text:source})}),x=await r.json();if(!r.ok)throw new Error(x.error);
   if($('lpclText').value!==source)throw new Error('LPCL_SOURCE_CHANGED_DURING_VALIDATION');
