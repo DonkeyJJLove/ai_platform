@@ -15,6 +15,8 @@ from cyber_lion.contracts.phase_execution_contract import (
  preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
  COMPILER_VERSION as PHASE_CONTRACT_COMPILER_VERSION,
 )
+from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION
+from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
 from mission_control_compat import compat_get, STATIC
 try:
  from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
@@ -226,11 +228,13 @@ EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_GENERIC_ADAPTER='LPCL_GENERIC_128L64M'
-PROCESS_CONTRACT_TARGET_MISSION='LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1'
-PROCESS_CONTRACT_TARGET_PHASE='REPAIR_EXECUTION_BINDER'
+PROCESS_CONTRACT_TARGET_MISSION=GENERIC_ADAPTER_REPAIR_MISSION
 PROCESS_CAPABILITY_REGISTRY={
  'REPOSITORY_AND_RUNTIME_RECONCILIATION':(
   {'capability_id':'GENERIC_EXECUTION_BINDER_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
+ ),
+ 'MISSION_RUNTIME_RECONCILIATION':(
+  {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
  ),
 }
 MISSION_DRIVER_LOOP_INTERVAL_SECONDS=2.0
@@ -285,25 +289,8 @@ def _compile_and_store_phase_contracts(c,mid,lpcl_text,phase_rows,*,allow_curren
     kv=_lpcl_pairs(lpcl_text);language=str(kv.get('CONTROL_LANGUAGE') or 'LPCL/1.1').strip()
     phases=[{'id':row[0] if not isinstance(row,dict) else row['id']} for row in phase_rows]
     contracts=list(compile_panel_phase_contracts(kv,mid,phases,language))
-    if allow_current_migration and mid==PROCESS_CONTRACT_TARGET_MISSION:
-      migrated=[]
-      for contract in contracts:
-       if contract.phase_id==PROCESS_CONTRACT_TARGET_PHASE:
-        contract=migrated_explicit_contract(
-         mission_id=mid,phase_id=contract.phase_id,ordinal=contract.ordinal,
-         execution_class='VERIFY_THEN_REPAIR',capability_classes=('REPOSITORY_AND_RUNTIME_RECONCILIATION',),
-         effect_ceiling='BOUNDED_REPOSITORY',binding_mode='DYNAMIC',on_missing_capability='WAIT_AND_DISCOVER',
-         auto_resume=True,verify_before_mutate=True,
-         currentness_requirements=('EXACT_CURRENT_REPOSITORY','CURRENT_MISSION_RUNTIME','CURRENT_MATERIAL_BINDING'),
-         evidence_requirements=('LIVE_RUNTIME_READBACK','FOCUSED_REGRESSION','POSTCONDITION_RECONCILIATION'),
-         completion_predicates=(
-          'FRESH_LPCL_WITHOUT_PARENT=PASS','GENERIC_ADAPTER_BOUND=PASS','LOGICAL_COUNT_128=PASS',
-          'MATERIAL_READY_64=PASS','UNIQUE_MATERIAL_64=PASS','GENERIC_PHASE_COMPILER=PASS',
-          'GENERIC_PHASE_HANDLER=PASS','DURABLE_DRIVER=PASS','GLOBAL_SCHEDULER_DISPATCH=PASS',
-          'LOCAL_PLANNING_RECEIPT=PASS','FAIL_CLOSED_MISSING_CAPABILITY=PASS','RESTART_DURABILITY=PASS','DB_INTEGRITY=PASS',
-         ))
-       migrated.append(contract)
-      contracts=migrated
+    if allow_current_migration:
+      contracts=[migrated_contract_for(mid,contract.phase_id,contract.ordinal) or contract for contract in contracts]
     global_sched.store_phase_execution_contracts(c,mid,contracts,now)
     preflight=preflight_execution_contracts(contracts,PROCESS_CAPABILITY_REGISTRY)
     global_sched.store_execution_preflight(c,mid,preflight,now)
@@ -1625,6 +1612,11 @@ def _generic_execute_read_plan(c,plan):
       receipt=c.execute('SELECT * FROM mission_execution_receipts WHERE mission_id=? AND phase_id=? ORDER BY observed_at DESC LIMIT 1',(mid,pid)).fetchone()
       ok,evidence=_execution_binder_postconditions(c,mid,pid,assignment,receipt) if assignment and receipt else (False,{'missing':'planning assignment or receipt','authority_effect':'NONE'})
       evidence={'capability':capability,**evidence}
+    elif capability=='GENERIC_MISSION_CONTRACT_RECONCILIATION':
+      contract=global_sched.phase_execution_contract(c,mid,pid)
+      if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
+      ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
+      evidence={'capability':capability,'contract_digest':contract['contract_digest'],**evidence}
     else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
     global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
     global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
@@ -1650,7 +1642,7 @@ def drive_generic_once(mid):
       if not d or d['state'] not in {'ACTIVE','WAITING','BLOCKED'}:return
       row=c.execute("SELECT phase_id,title,status FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
       if not row:
-       if d['state']!='COMPLETE':driver_transition(c,mid,'COMPLETE',now,next_action='TERMINAL_RECONCILED')
+       driver_reconcile_complete(c,mid,now,next_action='TERMINAL_RECONCILED',commit=False)
        c.execute("UPDATE missions SET state='COMPLETE',runtime_state='DRIVER_COMPLETE',updated_at=? WHERE mission_id=?",(now(),mid));c.commit();return
       pid=row['phase_id'];spec=_phase_exec_spec(c,mid,pid)
       if not spec or spec.get('handler_id')!=GENERIC_PHASE_HANDLER:return
