@@ -9,7 +9,9 @@ from __future__ import annotations
 from .phase_execution_contract import PhaseExecutionContract, migrated_explicit_contract
 
 GENERIC_ADAPTER_REPAIR_MISSION = "LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1"
+POST_ASTRA_MISSION = "LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1"
 PROFILE_ID = "lion.mission-contract-profile/generic-adapter-repair-r1/v1"
+POST_ASTRA_PROFILE_ID = "lion.mission-contract-profile/post-astra-transport-closure-r1/v1"
 
 _COMMON_CURRENTNESS = (
     "CURRENT_MISSION_RUNTIME",
@@ -125,7 +127,45 @@ _PHASES = {
 }
 
 
+_POST_ASTRA_PHASES = (
+    "REACQUIRE_LIVE_STATE",
+    "REACQUIRE_PENDING_SAAS",
+    "RECONSTRUCT_TRANSPORT_PATH",
+    "IDENTIFY_AUTOMATIC_CONSUMER",
+    "TRANSPORT_CAPABILITY_CLASSIFICATION",
+    "BROKER_RUNTIME_RECONCILIATION",
+    "PANEL_TRUTH_PROJECTION",
+    "AUTONOMOUS_SAAS_TWO_QUERY_TEST",
+    "FAIL_CLOSED_TRANSPORT_GATE",
+    "MISSION_INDEPENDENCE_CHECK",
+    "FULL_SAAS_PATH_VALIDATION",
+    "RETURN_TO_LION_SCAFFOLD",
+)
+
+def _post_astra_contract(mission_id: str, phase_id: str, ordinal: int) -> PhaseExecutionContract | None:
+    if mission_id != POST_ASTRA_MISSION or phase_id not in _POST_ASTRA_PHASES:
+        return None
+    return migrated_explicit_contract(
+        mission_id=mission_id,
+        phase_id=phase_id,
+        ordinal=ordinal,
+        execution_class="VERIFY",
+        capability_classes=("MISSION_RUNTIME_RECONCILIATION",),
+        effect_ceiling="NONE",
+        binding_mode="DYNAMIC",
+        on_missing_capability="WAIT_AND_DISCOVER",
+        auto_resume=True,
+        verify_before_mutate=True,
+        currentness_requirements=("CURRENT_POST_ASTRA_MISSION", "CURRENT_SAAS_BROKER_STATE", "CURRENT_CONTROL_PLANE_RECON_EVIDENCE"),
+        evidence_requirements=("POST_ASTRA_PHASE_EVIDENCE", "DURABLE_RECEIPT"),
+        completion_predicates=("POST_ASTRA_PHASE_EVIDENCE=PASS",),
+    )
+
+
 def migrated_contract_for(mission_id: str, phase_id: str, ordinal: int) -> PhaseExecutionContract | None:
+    post=_post_astra_contract(mission_id,phase_id,ordinal)
+    if post is not None:
+        return post
     if mission_id != GENERIC_ADAPTER_REPAIR_MISSION:
         return None
     spec = _PHASES.get(phase_id)
@@ -150,3 +190,6 @@ def migrated_contract_for(mission_id: str, phase_id: str, ordinal: int) -> Phase
 
 def profile_phase_ids() -> tuple[str, ...]:
     return tuple(_PHASES)
+
+def post_astra_profile_phase_ids() -> tuple[str, ...]:
+    return _POST_ASTRA_PHASES

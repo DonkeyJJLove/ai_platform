@@ -230,12 +230,16 @@ def apply_saas_handoff_extension(cls):
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
                           f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
                           "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
-                          "Transport pozostaje EXTERNAL_SESSION_MEDIATED — panel nie udaje automatycznego przejęcia sesji ChatGPT; odpowiedź ma authority_effect=NONE.")
+                          "Transport pozostaje EXTERNAL_SESSION_MEDIATED — nie istnieje automatyczny local→SaaS hop, a odpowiedź wymaga zewnętrznego mediatora. "
+                          "Jeżeli mediator nie przejmie requestu, stan może pozostać WAITING_OPERATOR_OVERDUE; powtórzenie identycznego unresolved pytania jest wiązane przez dedupe/retry lineage zamiast mnożyć aktywną kolejkę. "
+                          "Odpowiedź ma authority_effect=NONE.")
             else:
                 answer = ("The request is queued in the controlled SaaS channel. "
                           f"Code {handoff['request_code']}; request {handoff['request_id']}. "
                           "The panel automatically follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
-                          "Transport remains EXTERNAL_SESSION_MEDIATED; no automatic ChatGPT-session ingress is claimed and authority_effect=NONE.")
+                          "Transport remains EXTERNAL_SESSION_MEDIATED: there is no automatic local-to-SaaS hop and an external mediator must claim the handoff. "
+                          "Without a mediator the request may remain WAITING_OPERATOR_OVERDUE; repeating the same unresolved question is bound through dedupe/retry lineage instead of multiplying the active queue. "
+                          "authority_effect=NONE.")
             return {
                 "route": "SAAS_HANDOFF",
                 "answer": answer,

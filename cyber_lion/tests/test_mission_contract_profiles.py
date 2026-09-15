@@ -4,9 +4,12 @@ import unittest
 
 from cyber_lion.contracts.mission_contract_profiles import (
     GENERIC_ADAPTER_REPAIR_MISSION,
+    POST_ASTRA_MISSION,
     migrated_contract_for,
     profile_phase_ids,
+    post_astra_profile_phase_ids,
 )
+from cyber_lion.contracts.phase_execution_contract import preflight_execution_contracts
 
 
 class MissionContractProfileTests(unittest.TestCase):
@@ -47,6 +50,22 @@ class MissionContractProfileTests(unittest.TestCase):
                 self.assertEqual(contract.effect_ceiling, "NONE", phase_id)
                 self.assertEqual(contract.capability_classes, ("MISSION_RUNTIME_RECONCILIATION",), phase_id)
                 self.assertEqual(contract.execution_class, "VERIFY", phase_id)
+
+
+    def test_post_astra_profile_is_exact_12_phase_read_only_closure(self):
+        phases=post_astra_profile_phase_ids()
+        self.assertEqual(len(phases),12)
+        contracts=[migrated_contract_for(POST_ASTRA_MISSION,p,i) for i,p in enumerate(phases,1)]
+        self.assertTrue(all(c is not None for c in contracts))
+        for c in contracts:
+            c.validate()
+            self.assertEqual(c.effect_ceiling,'NONE')
+            self.assertEqual(c.execution_class,'VERIFY')
+            self.assertEqual(c.capability_classes,('MISSION_RUNTIME_RECONCILIATION',))
+            self.assertEqual(c.completion_predicates,('POST_ASTRA_PHASE_EVIDENCE=PASS',))
+        pf=preflight_execution_contracts(contracts,{'MISSION_RUNTIME_RECONCILIATION':({'capability_id':'POST_ASTRA_READ_ONLY_RECON','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE'},)})
+        self.assertEqual((pf.bound_count,pf.unbound_count,pf.invalid_count,pf.mission_readiness),(12,0,0,'READY_BOUND'))
+        self.assertIsNone(migrated_contract_for('OTHER-MISSION',phases[0],1))
 
     def test_profile_is_exact_mission_scoped_and_does_not_infer_other_legacy_missions(self):
         self.assertIsNone(migrated_contract_for("UNRELATED-LEGACY-MISSION", "REPAIR_BASE_TOPOLOGY_BOOTSTRAP", 4))
