@@ -163,6 +163,16 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertTrue(features["thread_delivery_exact_once"])
         self.assertTrue(features["dual_join"])
 
+    def test_windows_observation_fingerprint_binds_loaded_semantics_and_is_stable(self):
+        from tools.lion_local_intelligence_runtime import _recon_observation_fingerprint
+        common=dict(phase='P',runtime_loaded_sha='a'*64,gateway_loaded_sha='b'*64,local={'head':'c'*40,'tree':'d'*40},github={'head':'e'*40,'tree':'f'*40},thread_identity='1'*64)
+        one,fd1=_recon_observation_fingerprint(features={'thread_delivery_exact_once':False,'dual_join':False},**common)
+        same,fd_same=_recon_observation_fingerprint(features={'thread_delivery_exact_once':False,'dual_join':False},**common)
+        changed,fd2=_recon_observation_fingerprint(features={'thread_delivery_exact_once':True,'dual_join':True},**common)
+        self.assertEqual((one,fd1),(same,fd_same))
+        self.assertNotEqual(one,changed)
+        self.assertNotEqual(fd1,fd2)
+
     def test_successor_proposal_is_artifact_only(self):
         intel={"findings":[],"claim_to_evidence":[],"root_cause_candidates":[],"unknowns":[]}
         proposal=cr._successor_proposal(intel,{"recommended_control_language":"LPCL/1.2"})

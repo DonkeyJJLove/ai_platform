@@ -457,6 +457,16 @@ def _recon_sha(path):
     except OSError:return None
 
 
+RUNTIME_LOADED_SOURCE_SHA=_recon_sha(Path(__file__).resolve())
+GATEWAY_LOADED_SOURCE_SHA=_recon_sha(Path(sys.modules[Gateway.__module__].__file__).resolve())
+
+
+def _recon_observation_fingerprint(*,phase,runtime_loaded_sha,gateway_loaded_sha,features,local,github,thread_identity):
+    feature_digest=hashlib.sha256(json.dumps(features,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    value={'phase':phase,'runtime_loaded':runtime_loaded_sha,'gateway_loaded':gateway_loaded_sha,'feature_digest':feature_digest,'local':local,'github':github,'thread':thread_identity}
+    return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest(),feature_digest
+
+
 def _recon_text(path):
     try:return Path(path).read_text(encoding='utf-8',errors='replace')
     except OSError:return ''
@@ -505,15 +515,15 @@ def control_plane_recon_observer_once(control,broker,gitprov,thread_db,repo,mode
     if not phase:return None
     contract=next((x for x in (snap.get('phase_execution_contracts') or []) if x.get('phase_id')==phase),None)
     if not contract or RECON_CAPABILITY_CLASS not in (contract.get('capability_classes') or []):return None
-    repo=Path(repo).resolve();runtime_path=Path(__file__).resolve();gateway_path=Path(sys.modules[Gateway.__module__].__file__).resolve();runtime_sha=_recon_sha(runtime_path);gateway_sha=_recon_sha(gateway_path);frontend=hashlib.sha256(UI.encode()).hexdigest()
+    repo=Path(repo).resolve();runtime_path=Path(__file__).resolve();gateway_path=Path(sys.modules[Gateway.__module__].__file__).resolve();runtime_file_sha=_recon_sha(runtime_path);gateway_file_sha=_recon_sha(gateway_path);frontend=hashlib.sha256(UI.encode()).hexdigest()
     local=gitprov('head_tree',{});status=gitprov('status',{});gh=broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result'];model=broker.call('MAT09','model_health',{})['result'];thread=_recon_thread_db(thread_db);sources=_recon_source_snapshot(repo);features=_recon_source_features(repo);saas=control('saas_status',{})
-    fingerprint=hashlib.sha256(json.dumps({'phase':phase,'runtime':runtime_sha,'gateway':gateway_sha,'local':local,'github':{'head':gh.get('head'),'tree':gh.get('tree')},'thread':thread.get('identity_digest')},sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    fingerprint,feature_digest=_recon_observation_fingerprint(phase=phase,runtime_loaded_sha=RUNTIME_LOADED_SOURCE_SHA,gateway_loaded_sha=GATEWAY_LOADED_SOURCE_SHA,features=features,local=local,github={'head':gh.get('head'),'tree':gh.get('tree')},thread_identity=thread.get('identity_digest'))
     for msg in snap.get('protocol_messages') or []:
         payload=msg.get('payload') or {}
         if msg.get('phase')==phase and payload.get('event')=='CONTROL_PLANE_WINDOWS_OBSERVATION' and payload.get('source_fingerprint')==fingerprint:return {'idempotent':True,'source_fingerprint':fingerprint}
     health=model.get('health') if isinstance(model,dict) else None;health_state=(health or {}).get('status') if isinstance(health,dict) else None
     payload={'event':'CONTROL_PLANE_WINDOWS_OBSERVATION','schema':RECON_WINDOWS_SCHEMA,'source_fingerprint':fingerprint,'snapshot':{
-      'runtime':{'pid':os.getpid(),'runtime_started_at':RUNTIME_STARTED_AT,'python_runtime':sys.version.split()[0],'argv':[str(x) for x in sys.argv],'runtime_source_sha256':runtime_sha,'gateway_source_sha256':gateway_sha,'frontend_revision':frontend,'mission_control_url':getattr(control,'base',None),'model_endpoint':model_url},
+      'runtime':{'pid':os.getpid(),'runtime_started_at':RUNTIME_STARTED_AT,'python_runtime':sys.version.split()[0],'argv':[str(x) for x in sys.argv],'runtime_source_sha256':RUNTIME_LOADED_SOURCE_SHA,'runtime_file_sha256':runtime_file_sha,'gateway_source_sha256':GATEWAY_LOADED_SOURCE_SHA,'gateway_file_sha256':gateway_file_sha,'feature_vector_digest':feature_digest,'frontend_revision':frontend,'mission_control_url':getattr(control,'base',None),'model_endpoint':model_url},
       'repo':{'local_head':local.get('head'),'local_tree':local.get('tree'),'status_count':len(status) if isinstance(status,list) else None,'github_master':{'head':gh.get('head'),'tree':gh.get('tree')}},
       'thread_db':thread,
       'model':{'endpoint':model_url,'health':health_state or model.get('status') if isinstance(model,dict) else 'UNKNOWN','model_count':len(model.get('models') or []) if isinstance(model,dict) else None,'model_ids':[x.get('id') for x in (model.get('models') or []) if isinstance(x,dict)] if isinstance(model,dict) else []},
