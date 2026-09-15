@@ -273,11 +273,19 @@ class LpclControlBridge:
             return self._post('/api/v3/missions/'+mid+'/messages',{'protocol':protocol,'from_id':from_id,'to_id':to_id,'phase':phase,'payload':payload})
         if op=='validate_lpcl':return self.validate(args.get('lpcl_text'))
         if op=='register_lpcl':
-            v=self.validate(args.get('lpcl_text'));return self._post('/api/v3/missions/register-lpcl',v['spec'])
+            source=args.get('lpcl_text');v=self.validate(source);out=self._post('/api/v3/missions/register-lpcl',v['spec'])
+            mission=out.get('mission') if isinstance(out,dict) else None
+            if not isinstance(mission,dict):raise ValueError('REGISTERED_SOURCE_DRIFT:missing mission readback')
+            backend_mid=mission.get('mission_id') or (mission.get('process') or {}).get('mission_id')
+            backend_digest=mission.get('spec_digest') or (mission.get('process') or {}).get('lpcl_digest')
+            if backend_mid!=v['spec']['mission_id'] or backend_digest!=v['lpcl_digest']:raise ValueError('REGISTERED_SOURCE_DRIFT')
+            return {**out,'registration_confirmation':{'mission_id':backend_mid,'lpcl_digest':backend_digest,'source_length':len(source),'authority_effect':'NONE'}}
         if op=='activate_lpcl':
             mid=args.get('mission_id');dg=args.get('lpcl_digest')
-            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(dg,str) or len(dg)!=64:raise ValueError('activation')
-            return self._post('/api/v3/missions/'+mid+'/activate',{'lpcl_digest':dg,'activation_event':'EXPLICIT_UI_ACTIVATION'})
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(dg,str) or not re.fullmatch('[0-9a-f]{64}',dg):raise ValueError('activation')
+            out=self._post('/api/v3/missions/'+mid+'/activate',{'lpcl_digest':dg,'activation_event':'EXPLICIT_UI_ACTIVATION'})
+            if not isinstance(out,dict) or out.get('mission_id')!=mid:raise ValueError('ACTIVATION_SOURCE_DRIFT')
+            return {**out,'activation_confirmation':{'mission_id':mid,'lpcl_digest':dg,'authority_effect':'EXPLICIT_USER_ACTIVATION'}}
         if op=='current_action':
             action=args.get('action');pod=args.get('pod_name')
             if action not in {'START','PAUSE','RESUME','VALIDATE','STOP','RESTART_ONE'}:raise ValueError('action')
