@@ -40,6 +40,7 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
             "LIVE_8780_RUNTIME","LIVE_BROKER_PROJECTION","LIVE_MISSION_CONTROL_PROJECTION","LIVE_PANEL_PROJECTION","LOCAL_PANEL_CHECKOUT",
             "LPCL12_PROCESS_CONTRACT","MISSION_CONTROL_DB","MISSION_CONTROL_SOURCE","PANEL_SOURCE","POST_RECON_BASELINE","PRE_RECON_BASELINE",
             "PRIVILEGED_BROKER_PACKAGE","RECON_EVIDENCE_SET","SAAS_SESSION_BINDINGS","THREAD_DB","THREAD_DELIVERY_SOURCE",
+            "EXACT_GITHUB_MASTER","CURRENT_BROKER_DB",
         }
         evidence={
             "API_ROUTE_MAP","AUTOMATIC_CONSUMER_EVIDENCE","BINDING_DIFF","BINDING_STATE_COUNTS","BROKER_RECEIPT_ROWS","CAPABILITY_REGISTRY_READBACK",
@@ -52,10 +53,43 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
             "RECEIPT_STATE_COUNTS","REPOSITORY_DIFF","REQUEST_COUNT_DIFF","REQUEST_STATE_COUNTS","RESPONDED_ROWS","RUNTIME_PROCESS_IDENTITY",
             "SAAS_LINK_PATH","SCHEDULER_STATE_MODEL","SCHEMA_READBACK","SESSION_STATE","SQLITE_IDENTITY","STATE_DIFF","SUCCESSOR_CAPABILITY_MATRIX",
             "SUCCESSOR_COMPLETION_CONTRACT","SUCCESSOR_LPCL_PROPOSAL_DIGEST","THREAD_RUNTIME","TRANSPORT_CLASSIFICATION","UNCERTAINTY_REGISTER","WORKTREE_STATE",
+            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK",
         }
         self.assertEqual((currentness|evidence)-set(cr.TOKEN_DOMAIN),set())
         contract={"currentness_requirements":["UNKNOWN_X"],"evidence_requirements":[]}
         self.assertEqual(cr.build_observation_plan(contract)["unsupported_tokens"],["UNKNOWN_X"])
+
+    def test_successor_lineage_resolves_exact_proposal_and_intelligence_digest(self):
+        import hashlib
+        c=self.conn()
+        c.execute("CREATE TABLE missions(mission_id TEXT PRIMARY KEY,state TEXT,spec_digest TEXT,source_head TEXT,source_tree TEXT)")
+        lpcl="MISSION_ID=SUCCESSOR\nCONTROL_LANGUAGE=LPCL/1.2\n";dg=hashlib.sha256(lpcl.encode()).hexdigest();intel_dg="a"*64
+        c.execute("INSERT INTO missions VALUES(?,?,?,?,?)",("RECON","COMPLETE","b"*64,"1"*40,"2"*40))
+        c.execute("INSERT INTO missions VALUES(?,?,?,?,?)",("SUCCESSOR","RUNNING",dg,"3"*40,"4"*40))
+        gs.put_artifact(c,"RECON","CONTROL_PLANE_INTELLIGENCE_BUNDLE",{"bundle_digest":intel_dg,"authority_effect":"NONE"},now,schema_id=cr.INTELLIGENCE_SCHEMA)
+        gs.put_artifact(c,"RECON","SUCCESSOR_REPAIR_LPCL_PROPOSAL",{"proposal_digest":dg,"lpcl_text":lpcl,"intelligence_bundle_digest":intel_dg,"authority_effect":"NONE"},now,schema_id=cr.SUCCESSOR_SCHEMA)
+        out=cr._successor_lineage_snapshot(c,"SUCCESSOR")
+        self.assertTrue(out["valid"],out);self.assertEqual(out["source_mission_id"],"RECON");self.assertEqual(out["proposal_digest"],dg);self.assertEqual(out["intelligence_bundle_digest"],intel_dg)
+        gs.put_artifact(c,"RECON","CONTROL_PLANE_INTELLIGENCE_BUNDLE",{"bundle_digest":"c"*64,"authority_effect":"NONE"},now,schema_id=cr.INTELLIGENCE_SCHEMA)
+        bad=cr._successor_lineage_snapshot(c,"SUCCESSOR")
+        self.assertFalse(bad["valid"]);self.assertEqual(bad["reason"],"PREDECESSOR_INTELLIGENCE_DIGEST_MISMATCH")
+        c.close()
+
+    def test_repair_baseline_requires_exact_registered_source_live_package_broker_and_lineage(self):
+        c=self.conn();dg="d"*64;head="1"*40;tree="2"*40
+        observations={"domains":{
+            "panel":{"runtime":{"pid":7,"runtime_source_sha256":"a"*64,"gateway_source_sha256":"b"*64},"repo":{"github_master":{"head":head,"tree":tree}}},
+            "mission_control":{"runtime_identity":{"pid":9,"source_hashes":{"mission_control_v3.py":"c"*64,"cyber_lion/mission_control/control_plane_reconnaissance.py":"e"*64}},"db":{"integrity":"ok"},"mission":{"mission_id":"SUCCESSOR","spec_digest":dg,"source_head":head,"source_tree":tree},"preflight":{},"contracts":[]},
+            "broker":{"schema_digest":"f"*64,"request_state_counts":{},"binding_state_counts":{},"responded_count":0,"receipt_count":0,"pending_count":0,"transports":[],"autonomous_transport_claimed":False},
+            "successor_lineage":{"valid":True,"proposal_digest":dg,"mission_spec_digest":dg,"intelligence_bundle_digest":"9"*64,"expected_intelligence_bundle_digest":"9"*64},
+        }}
+        contract={"completion_predicates":["REPAIR_BASELINE_FROZEN=PASS"]}
+        facts,detail=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":True});self.assertTrue(detail["successor_baseline"]["predecessor_intelligence_bound"])
+        observations["domains"]["panel"]["repo"]["github_master"]["tree"]="0"*40
+        facts,_=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":False})
+        c.close()
 
     def test_no_target_phase_name_switch_exists(self):
         source=Path(cr.__file__).read_text(encoding="utf-8")
