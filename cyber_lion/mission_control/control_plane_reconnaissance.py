@@ -116,16 +116,16 @@ _reg("panel",
     "LIVE_8780_RUNTIME","PANEL_SOURCE","LOCAL_PANEL_CHECKOUT","LIVE_PANEL_PROJECTION","GITHUB_MASTER",
     "PROCESS_IDENTITY","PACKAGE_IDENTITY","GIT_IDENTITY","HEALTH_READBACK","PROCESS_ARGUMENTS",
     "FRONTEND_REVISION","CONTROL_PROVIDER_ROUTES","MODEL_ENDPOINT","THREAD_RUNTIME","PARSER_COMPARISON",
-    "HEAD_TREE_READBACK","PACKAGE_SHA256","WORKTREE_STATE","RUNTIME_PROCESS_IDENTITY")
+    "HEAD_TREE_READBACK","PACKAGE_SHA256","WORKTREE_STATE","RUNTIME_PROCESS_IDENTITY","EXACT_GITHUB_MASTER")
 _reg("mission_control",
     "LIVE_8766_RUNTIME","MISSION_CONTROL_DB","MISSION_CONTROL_SOURCE","LIVE_8766_PACKAGE","LIVE_MISSION_CONTROL_PROJECTION",
     "API_ROUTE_MAP","DRIVER_STATE_MODEL","SCHEDULER_STATE_MODEL","PROCESS_CONTRACT_STATE","SQLITE_IDENTITY",
-    "LPCL12_COMPILER_READBACK","PREFLIGHT_READBACK","CAPABILITY_REGISTRY_READBACK")
+    "LPCL12_COMPILER_READBACK","PREFLIGHT_READBACK","CAPABILITY_REGISTRY_READBACK","EXACT_SOURCE_READBACK")
 _reg("broker",
     "BROKER_DB","BROKER_SOURCE","CURRENT_BROKER_STATE","LIVE_BROKER_PROJECTION","SAAS_SESSION_BINDINGS","PRIVILEGED_BROKER_PACKAGE",
     "SCHEMA_READBACK","REQUEST_STATE_COUNTS","BINDING_STATE_COUNTS","RECEIPT_STATE_COUNTS","CLAIM_GENERATION_READBACK",
     "TRANSPORT_CLASSIFICATION","AUTOMATIC_CONSUMER_EVIDENCE","SESSION_STATE","PENDING_REQUEST_STATE",
-    "RESPONDED_ROWS","BROKER_RECEIPT_ROWS","PROGRESS_STATE_HISTORY","MIGRATION_HISTORY")
+    "RESPONDED_ROWS","BROKER_RECEIPT_ROWS","PROGRESS_STATE_HISTORY","MIGRATION_HISTORY","CURRENT_BROKER_DB")
 _reg("thread",
     "THREAD_DB","THREAD_DELIVERY_SOURCE","DELIVERY_CANDIDATES","RECEIPT_LINKAGE","DEDUPLICATION_RULE","DELETION_BEHAVIOR")
 _reg("dual",
@@ -142,6 +142,7 @@ _reg("artifacts",
 _reg("baseline",
     "PRE_RECON_BASELINE","POST_RECON_BASELINE","STATE_DIFF","REQUEST_COUNT_DIFF","BINDING_DIFF","REPOSITORY_DIFF")
 _reg("process_language","CANONICAL_PROCESS_LANGUAGE_SOURCE","LPCL12_PROCESS_CONTRACT")
+_reg("successor_lineage","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK")
 
 SEMANTIC_VERIFY_EVIDENCE = frozenset({
     "PARSER_COMPARISON","TRANSPORT_CLASSIFICATION","FIELD_BY_FIELD_PROJECTION_COMPARISON",
@@ -268,6 +269,43 @@ def _post_astra_snapshot(conn: sqlite3.Connection) -> dict[str,Any]:
     return {"mission":dict(m) if m else None,"process":dict(p) if p else None,"driver":dict(d) if d else None,"receipt_count":rc}
 
 
+def _successor_lineage_snapshot(conn: sqlite3.Connection, mission_id: str) -> dict[str,Any]:
+    mission=conn.execute("SELECT mission_id,state,spec_digest,source_head,source_tree FROM missions WHERE mission_id=?",(mission_id,)).fetchone()
+    if mission is None:
+        return {"valid":False,"reason":"SUCCESSOR_MISSION_MISSING"}
+    matches=[]
+    for row in conn.execute("SELECT * FROM mission_artifacts WHERE artifact_type='SUCCESSOR_REPAIR_LPCL_PROPOSAL' AND authority_effect='NONE' ORDER BY updated_at,artifact_id"):
+        content=_json(row["content_json"],{})
+        text=content.get("lpcl_text")
+        proposal_digest=content.get("proposal_digest")
+        if proposal_digest!=mission["spec_digest"] or not isinstance(text,str):
+            continue
+        if hashlib.sha256(text.encode("utf-8")).hexdigest()!=mission["spec_digest"]:
+            continue
+        matches.append((row,content))
+    if len(matches)!=1:
+        return {"valid":False,"reason":"SUCCESSOR_PROPOSAL_CARDINALITY","proposal_match_count":len(matches),"mission_spec_digest":mission["spec_digest"]}
+    proposal_row,proposal=matches[0]
+    source_mid=proposal_row["mission_id"]
+    predecessor=conn.execute("SELECT mission_id,state,spec_digest,source_head,source_tree FROM missions WHERE mission_id=?",(source_mid,)).fetchone()
+    intel_row=conn.execute("SELECT * FROM mission_artifacts WHERE mission_id=? AND artifact_type='CONTROL_PLANE_INTELLIGENCE_BUNDLE' AND authority_effect='NONE' ORDER BY updated_at DESC LIMIT 1",(source_mid,)).fetchone()
+    if predecessor is None or intel_row is None:
+        return {"valid":False,"reason":"PREDECESSOR_INTELLIGENCE_MISSING","source_mission_id":source_mid}
+    intel=_json(intel_row["content_json"],{})
+    expected=proposal.get("intelligence_bundle_digest")
+    observed=intel.get("bundle_digest")
+    valid=bool(source_mid!=mission_id and predecessor["state"]=='COMPLETE' and isinstance(expected,str) and len(expected)==64 and observed==expected)
+    return {
+        "valid":valid,"reason":None if valid else "PREDECESSOR_INTELLIGENCE_DIGEST_MISMATCH",
+        "source_mission_id":source_mid,"source_mission_state":predecessor["state"],
+        "proposal_artifact_id":proposal_row["artifact_id"],"proposal_content_digest":proposal_row["content_digest"],
+        "proposal_digest":proposal.get("proposal_digest"),"mission_spec_digest":mission["spec_digest"],
+        "intelligence_artifact_id":intel_row["artifact_id"],"intelligence_content_digest":intel_row["content_digest"],
+        "intelligence_bundle_digest":observed,"expected_intelligence_bundle_digest":expected,
+        "authority_effect":"NONE",
+    }
+
+
 def _recon_history(conn: sqlite3.Connection, mission_id: str) -> dict[str,Any]:
     artifacts=sched.list_artifacts(conn,mission_id)
     receipts=[dict(r) for r in conn.execute("SELECT * FROM mission_generic_action_receipts WHERE mission_id=? ORDER BY observed_at",(mission_id,))]
@@ -358,6 +396,7 @@ def observation_generation_fingerprint(observations: dict[str,Any]) -> str | Non
         elif name=="projection": stable[name]=_stable_projection_identity(value)
         elif name in {"recon_history","artifacts"}: stable[name]=_stable_history_identity(value if name=="recon_history" else {"artifact_summaries":value},phase_id)
         elif name=="process_language": stable[name]={"source_hashes":value.get("source_hashes") or {},"canonical_lpcl_source_present":value.get("canonical_lpcl_source_present"),"lpcl12_compiler_present":value.get("lpcl12_compiler_present")}
+        elif name=="successor_lineage": stable[name]={k:value.get(k) for k in ("valid","source_mission_id","source_mission_state","proposal_digest","mission_spec_digest","intelligence_bundle_digest","expected_intelligence_bundle_digest","proposal_content_digest","intelligence_content_digest")}
         elif name=="baseline": stable[name]={"pre_digest":digest(value.get("pre")) if value.get("pre") else None,"post_core":{"mission_count":(value.get("post_core") or {}).get("mission_count"),"missions_digest":(value.get("post_core") or {}).get("missions_digest"),"broker":(value.get("post_core") or {}).get("broker")}}
         else: stable[name]=value
     return digest({"schema":"lion.recon-observation-generation-fingerprint/v1","phase_id":phase_id,"domains":stable})
@@ -419,11 +458,15 @@ def collect_observations(conn: sqlite3.Connection, mission_id: str, phase_id: st
     if "recon_history" in plan["domains"]:domains["recon_history"]=_recon_history(conn,mission_id)
     if "artifacts" in plan["domains"]:domains["artifacts"]=_recon_history(conn,mission_id)["artifact_summaries"]
     if "process_language" in plan["domains"]:domains["process_language"]=_process_language_snapshot()
+    if "successor_lineage" in plan["domains"]:domains["successor_lineage"]=_successor_lineage_snapshot(conn,mission_id)
     if "baseline" in plan["domains"]:
         pre=sched.artifact(conn,mission_id,"CONTROL_PLANE_RECON_BASELINE_PRE");domains["baseline"]={"pre":pre["content"] if pre else None,"post_core":_baseline_core(conn,mission_id)}
     missing=[]
     for domain,value in domains.items():
         if value is None:missing.append("MISSING_DOMAIN:"+domain)
+    lineage=domains.get("successor_lineage")
+    if "successor_lineage" in plan["domains"] and (not isinstance(lineage,dict) or not lineage.get("valid")):
+        missing.append("SUCCESSOR_LINEAGE_INVALID:"+str((lineage or {}).get("reason") or "UNKNOWN"))
     if "panel" in plan["domains"] and panel is None:missing.append("WINDOWS_OBSERVATION_REQUIRED")
     return {"schema":SCHEMA_ID,"plan":plan,"mission_id":mission_id,"phase_id":phase_id,"domains":domains,"authority_effect":"NONE"},sorted(set(missing))
 
@@ -466,8 +509,36 @@ def _source_features(panel: dict[str,Any]) -> dict[str,Any]:
     return (panel.get("source_features") or {}) if panel else {}
 
 
+def _source_currentness_attestation(conn: sqlite3.Connection, mission_id: str, *, registered_head: str | None, registered_tree: str | None, current_head: str | None, current_tree: str | None) -> dict[str,Any] | None:
+    if not _table(conn,"protocol_messages"):
+        return None
+    for row in conn.execute("SELECT from_id,protocol,payload_json FROM protocol_messages WHERE mission_id=? ORDER BY id DESC",(mission_id,)):
+        payload=_json(row["payload_json"],{})
+        if row["from_id"]!="BOOTSTRAP_RECONCILER" or row["protocol"]!="CURRENTNESS" or payload.get("event")!="SUCCESSOR_SOURCE_CURRENTNESS_REBOUND":
+            continue
+        if payload.get("authority_effect")!="NONE":
+            continue
+        if payload.get("registered_source_head")!=registered_head or payload.get("registered_source_tree")!=registered_tree:
+            continue
+        if payload.get("current_source_head")!=current_head or payload.get("current_source_tree")!=current_tree or payload.get("merge_commit")!=current_head:
+            continue
+        if payload.get("ancestry_verified") is not True or payload.get("changed_paths_verified") is not True or payload.get("lpcl_unchanged") is not True:
+            continue
+        repair_head=payload.get("repair_head");changed_digest=payload.get("changed_paths_digest");checks=payload.get("required_ci")
+        if not isinstance(repair_head,str) or not re.fullmatch(r"[0-9a-f]{40}",repair_head):
+            continue
+        if not isinstance(changed_digest,str) or not re.fullmatch(r"[0-9a-f]{64}",changed_digest):
+            continue
+        if not isinstance(payload.get("pr_number"),int) or payload["pr_number"]<1:
+            continue
+        if not isinstance(checks,dict) or not checks or any(v!="PASS" for v in checks.values()):
+            continue
+        return payload
+    return None
+
+
 def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], observations: dict[str,Any], *, artifacts: dict[str,Any], baseline: dict[str,Any] | None, local_analysis: dict[str,Any] | None, saas_advisory: dict[str,Any] | None) -> tuple[dict[str,bool],dict[str,Any]]:
-    d=observations.get("domains") or {};panel=d.get("panel") or {};mc=d.get("mission_control") or {};broker=d.get("broker") or {};thread=d.get("thread") or {};dual=d.get("dual") or {};post=d.get("post_astra") or {};hist=d.get("recon_history") or {};lang=d.get("process_language") or {}
+    d=observations.get("domains") or {};panel=d.get("panel") or {};mc=d.get("mission_control") or {};broker=d.get("broker") or {};thread=d.get("thread") or {};dual=d.get("dual") or {};post=d.get("post_astra") or {};hist=d.get("recon_history") or {};lang=d.get("process_language") or {};successor_lineage=d.get("successor_lineage") or {}
     features=_source_features(panel);classes=_classification(observations,baseline)
     runtime=panel.get("runtime") or {};repo=panel.get("repo") or {};model=panel.get("model") or {};sources=panel.get("sources") or {}
     pre=mc.get("preflight") or {};driver=mc.get("driver") or {};scheduler=mc.get("scheduler") or {};contracts=mc.get("contracts") or []
@@ -476,6 +547,13 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
     intel_art=artifacts.get("CONTROL_PLANE_INTELLIGENCE_BUNDLE")
     succ_art=artifacts.get("SUCCESSOR_REPAIR_LPCL_PROPOSAL")
     post_diff=artifacts.get("CONTROL_PLANE_RECON_BASELINE_POST")
+    github_master=repo.get("github_master") or {};mc_mission=mc.get("mission") or {};mc_runtime=mc.get("runtime_identity") or {};mc_db=mc.get("db") or {}
+    exact_registered_source=bool(mc_mission.get("source_head") and mc_mission.get("source_tree") and github_master.get("head")==mc_mission.get("source_head") and github_master.get("tree")==mc_mission.get("source_tree"))
+    source_currentness_attestation=None if exact_registered_source else _source_currentness_attestation(conn,mission_id,registered_head=mc_mission.get("source_head"),registered_tree=mc_mission.get("source_tree"),current_head=github_master.get("head"),current_tree=github_master.get("tree"))
+    source_currentness_bound=bool(exact_registered_source or source_currentness_attestation)
+    live_package_identified=bool((mc_runtime.get("source_hashes") or {}).get("mission_control_v3.py") and (mc_runtime.get("source_hashes") or {}).get("cyber_lion/mission_control/control_plane_reconnaissance.py"))
+    broker_db_current=bool(mc_db.get("integrity")=="ok" and broker.get("schema_digest") and broker.get("request_state_counts") is not None)
+    predecessor_intelligence_bound=bool(successor_lineage.get("valid") and successor_lineage.get("proposal_digest")==mc_mission.get("spec_digest") and successor_lineage.get("intelligence_bundle_digest")==successor_lineage.get("expected_intelligence_bundle_digest"))
     values: dict[str,bool] = {
         "PANEL_RUNTIME_IDENTITY_CAPTURED":bool(runtime.get("pid") and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
         "MISSION_CONTROL_RUNTIME_IDENTITY_CAPTURED":bool((mc.get("runtime_identity") or {}).get("pid") and (mc.get("runtime_identity") or {}).get("source_hashes")),
@@ -553,10 +631,11 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
         "NO_SESSION_EFFECT":bool(post_diff and post_diff.get("checks",{}).get("NO_SESSION_EFFECT")),
         "NO_MISSION_REPAIR_EFFECT":bool(post_diff and post_diff.get("checks",{}).get("NO_MISSION_REPAIR_EFFECT")),
         "INTELLIGENCE_READY_FOR_SUCCESSOR_MISSION":bool(post_diff and post_diff.get("checks",{}).get("INTELLIGENCE_READY_FOR_SUCCESSOR_MISSION")),
+        "REPAIR_BASELINE_FROZEN":bool(source_currentness_bound and live_package_identified and broker_db_current and predecessor_intelligence_bound and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
     }
     requested=[str(x).split("=",1)[0] for x in contract.get("completion_predicates") or []]
     facts={name:bool(values.get(name,False)) for name in requested}
-    detail={"classifications":classes,"local_analysis_summary":local_analysis,"saas_advisory":saas_advisory,"requested_predicates":requested}
+    detail={"classifications":classes,"local_analysis_summary":local_analysis,"saas_advisory":saas_advisory,"requested_predicates":requested,"successor_baseline":{"exact_registered_source":exact_registered_source,"source_currentness_bound":source_currentness_bound,"source_currentness_attestation":source_currentness_attestation,"live_package_identified":live_package_identified,"broker_db_current":broker_db_current,"predecessor_intelligence_bound":predecessor_intelligence_bound,"successor_lineage":successor_lineage}}
     return facts,detail
 
 

@@ -1664,7 +1664,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "cyber_lion/mission_control/execution_driver_contract.py": "aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821",
  "cyber_lion/mission_control/global_scheduler.py": "2eb5d955a0869878f771754e81fd0244905d4dc838f02a54e162641be8de41da",
  "cyber_lion/mission_control/mission_reconciliation.py": "7a81e7b9bbd80f811bcbc7a247f506ee2477c99d33b3cf369a4046521de383e0",
- "cyber_lion/mission_control/control_plane_reconnaissance.py": "8764a073e65197ef0b966ee71683044dcf388d32109c71ae1f231f2c249d7f46",
+ "cyber_lion/mission_control/control_plane_reconnaissance.py": "be686ddd7297c2a3232a04425e9cb642923ecfaa351f31e2d5d8a5b99e263576",
  "cyber_lion/mission_control/phase_control.py": "89372056bf7668edc473b0b0dc04433d376dca3e041499fc0b4e6a52f69c319e",
  "cyber_lion/mission_control/runtime_projection.py": "9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24",
  "cyber_lion/mission_control/supervisor_projection.py": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80",
