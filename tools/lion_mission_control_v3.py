@@ -330,6 +330,9 @@ def reconcile_phase_execution_contracts():
        except PhaseExecutionContractError as exc:
         # Existing LPCL/1.1 must remain readable; invalid declared 1.2 is recorded by registration/preflight, not promoted.
         _process_message(c,row['mission_id'],'VALIDATION','PROCESS_CONTRACT_COMPILER','MISSION_CONTROL',None,{'event':'PROCESS_CONTRACT_RECONCILIATION_BLOCKED','error':str(exc),'authority_effect':'NONE'},'INTERNAL')
+      artifact_changes=control_recon.reconcile_terminal_artifacts(c,now)
+      for change in artifact_changes:
+       _process_message(c,change['mission_id'],'RECEIPT','TERMINAL_ARTIFACT_RECONCILER','MISSION_CONTROL',None,{'event':'TERMINAL_ARTIFACT_RECONCILED','language_gap_digest':change['language_gap_digest'],'intelligence_digest':change['intelligence_digest'],'successor_digest':change['successor_digest'],'successor_proposal_digest':change['successor_proposal_digest'],'successor_contract_count':change['successor_contract_count'],'authority_effect':'NONE'},'INTERNAL')
       c.commit()
     finally:c.close()
 

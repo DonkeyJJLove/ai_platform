@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from . import global_scheduler as sched
+from cyber_lion.contracts.phase_execution_contract import compile_panel_phase_contracts, preflight_execution_contracts, PhaseExecutionContractError
 
 CAPABILITY_CLASS = "CONTROL_PLANE_RECONNAISSANCE"
 CAPABILITY_ID = "CONTROL_PLANE_RECONNAISSANCE_V1"
@@ -667,7 +668,46 @@ def ensure_saas_advisory(conn: sqlite3.Connection, mission_id: str, phase_id: st
     return {"required":True,"state":effective,"request_id":value.get("request_id"),"response_digest":value.get("response_digest"),"receipt_digest":value.get("receipt_digest"),"response_text":value.get("response_text"),"evidence_bundle_digest":evidence_digest,"authority_effect":"NONE"}
 
 
-def _language_gap_artifact(classifications: dict[str,Any], local_analysis: dict[str,Any] | None, saas: dict[str,Any] | None) -> dict[str,Any]:
+def _classification_quality(key: str, value: dict[str,Any] | None) -> int:
+    value=value or {}
+    if key=="parser_semantic_drift": return 2 if value.get("classification") not in {None,"INCOMPLETE"} and value.get("identified") else 0
+    if key=="initial_capability_preflight": return 2 if value.get("captured") else 0
+    if key=="saas_transport": return 2 if value.get("classification") in {"SESSION_MEDIATED_MANUAL","AUTONOMOUS_CLAIM_PRESENT"} else 0
+    if key=="projection": return 2 if value.get("classification") in {"MATCH","DRIFT"} else 0
+    if key=="broker_receipts": return 2 if value.get("classification") in {"COMPLETE","LEGACY_OR_NON_BROKER_RECEIPTS_PRESENT"} else 0
+    if key=="post_astra": return 2 if value.get("classification") in {"FAIL_CLOSED_WAIT","OBSERVED"} else 0
+    return 1 if value else 0
+
+
+def historical_classifications(conn: sqlite3.Connection, mission_id: str, baseline: dict[str,Any] | None) -> tuple[dict[str,Any],dict[str,list[str]]]:
+    merged: dict[str,Any]={}; sources: dict[str,list[str]]={}
+    for art in sched.list_artifacts(conn,mission_id):
+        if art["artifact_type"]!="RECON_EVIDENCE_BUNDLE": continue
+        observations=(art["content"] or {}).get("observations") or {}; domains=observations.get("domains") or {}
+        classes=_classification(observations,baseline)
+        eligible=set()
+        if all(x in domains and domains.get(x) for x in ("panel","mission_control","process_language")): eligible.add("parser_semantic_drift")
+        if isinstance((baseline or {}).get("preflight"),dict): eligible.add("initial_capability_preflight")
+        if domains.get("broker"): eligible.update(("saas_transport","broker_receipts"))
+        if domains.get("projection"): eligible.add("projection")
+        if domains.get("post_astra"): eligible.add("post_astra")
+        for key in eligible:
+            candidate=classes.get(key)
+            if _classification_quality(key,candidate)>_classification_quality(key,merged.get(key)):
+                merged[key]=candidate;sources[key]=[art["content_digest"]]
+            elif candidate==merged.get(key) and candidate is not None:
+                sources.setdefault(key,[]).append(art["content_digest"])
+    return merged,sources
+
+
+def _merge_classifications(current: dict[str,Any], historical: dict[str,Any]) -> dict[str,Any]:
+    out=dict(current or {})
+    for key,value in (historical or {}).items():
+        if _classification_quality(key,value)>_classification_quality(key,out.get(key)): out[key]=value
+    return out
+
+
+def _language_gap_artifact(classifications: dict[str,Any], local_analysis: dict[str,Any] | None, saas: dict[str,Any] | None, *, classification_sources: dict[str,list[str]] | None=None) -> dict[str,Any]:
     findings=[
         {"gap":"MULTI_CARRIER_CURRENTNESS","classification":"LPCL_1_2_PROFILE_EXTENSION","evidence":"revision_coherence"},
         {"gap":"LIVE_CAPABILITY_PREFLIGHT","classification":"IMPLEMENTATION_DEFECT","evidence":"initial_capability_preflight"},
@@ -675,7 +715,7 @@ def _language_gap_artifact(classifications: dict[str,Any], local_analysis: dict[
         {"gap":"CROSS_MISSION_EVIDENCE","classification":"LPCL_1_2_PROFILE_EXTENSION","evidence":"post_astra"},
         {"gap":"SUCCESSOR_ARTIFACT","classification":"LPCL_1_2_PROFILE_EXTENSION","evidence":"artifact_contract"},
     ]
-    return {"schema":LANGUAGE_GAP_SCHEMA,"findings":findings,"implementation_gaps":[x for x in findings if x["classification"]=="IMPLEMENTATION_DEFECT"],"language_limitations":[x for x in findings if x["classification"]=="LPCL_LANGUAGE_LIMITATION"],"decision":"LPCL/1.2_PROFILE_EXTENSION" if not any(x["classification"]=="LPCL_LANGUAGE_LIMITATION" for x in findings) else "LPCL/1.3_CANDIDATE","recommended_control_language":"LPCL/1.2","counterexamples":["MULTILINE_COMPLETION_PREDICATE_COLLIDES_WITH_TOP_LEVEL_KEY_GRAMMAR","LPCL_PANEL_VALIDATION_REGISTRATION_SOURCE_DRIFT","VALID_CONTRACTS_WITH_ZERO_RUNTIME_CAPABILITY_BINDINGS"],"local_analysis":local_analysis,"saas_advisory_state":(saas or {}).get("state","NOT_REQUESTED"),"classifications":classifications,"authority_effect":"NONE"}
+    return {"schema":LANGUAGE_GAP_SCHEMA,"findings":findings,"implementation_gaps":[x for x in findings if x["classification"]=="IMPLEMENTATION_DEFECT"],"language_limitations":[x for x in findings if x["classification"]=="LPCL_LANGUAGE_LIMITATION"],"decision":"LPCL/1.2_PROFILE_EXTENSION" if not any(x["classification"]=="LPCL_LANGUAGE_LIMITATION" for x in findings) else "LPCL/1.3_CANDIDATE","recommended_control_language":"LPCL/1.2","counterexamples":["MULTILINE_COMPLETION_PREDICATE_COLLIDES_WITH_TOP_LEVEL_KEY_GRAMMAR","LPCL_PANEL_VALIDATION_REGISTRATION_SOURCE_DRIFT","VALID_CONTRACTS_WITH_ZERO_RUNTIME_CAPABILITY_BINDINGS"],"local_analysis":local_analysis,"saas_advisory_state":(saas or {}).get("state","NOT_REQUESTED"),"classifications":classifications,"classification_sources":classification_sources or {},"classification_scope":"MISSION_WIDE_DURABLE_EVIDENCE","authority_effect":"NONE"}
 
 
 def _cross_model_sets(conn: sqlite3.Connection, mission_id: str, analyses: dict[str,dict[str,Any]]) -> tuple[list[dict[str,Any]],list[dict[str,Any]]]:
@@ -726,17 +766,81 @@ def _intelligence_bundle(conn: sqlite3.Connection, mission_id: str, language_gap
     return body
 
 
+def _generated_lpcl_pairs(text: str) -> dict[str,str]:
+    pairs={}
+    for raw in str(text or "").replace("\r\n","\n").replace("\r","\n").split("\n"):
+        line=raw.strip()
+        if not line or line.startswith("#"): continue
+        key,sep,value=line.partition("=")
+        if not sep or not key or key in pairs: raise ValueError("generated successor LPCL is not strict inline KEY=VALUE")
+        pairs[key.strip()]=value.strip()
+    return pairs
+
+
+def _successor_phase_profiles() -> tuple[dict[str,Any],...]:
+    return (
+        {"id":"FREEZE_REPAIR_BASELINE","title":"Freeze Repair Baseline","execution":"OBSERVE","capability":"CONTROL_PLANE_RECONNAISSANCE","effect":"NONE","currentness":"EXACT_GITHUB_MASTER,LIVE_8766_PACKAGE,LIVE_8780_RUNTIME,CURRENT_BROKER_DB","evidence":"EXACT_SOURCE_READBACK,CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK","completion":["REPAIR_BASELINE_FROZEN=PASS"]},
+        {"id":"CONVERGE_CONTROL_PLANE_REVISIONS","title":"Converge Control Plane Revisions","execution":"VERIFY_THEN_REPAIR","capability":"REPOSITORY_CANDIDATE_PREPARE","effect":"BOUNDED_REPOSITORY","currentness":"EXACT_GITHUB_MASTER,LIVE_8766_PACKAGE,LIVE_8780_RUNTIME","evidence":"EXACT_SOURCE_READBACK,REVISION_CONVERGENCE_EVIDENCE,RESTART_DURABILITY","completion":["RUNTIME_REVISIONS_CONVERGED=PASS"]},
+        {"id":"UNIFY_LPCL_PREFLIGHT_WITH_RUNTIME_REGISTRY","title":"Unify LPCL Preflight With Runtime Registry","execution":"VERIFY_THEN_REPAIR","capability":"CONTROL_PLANE_REPAIR","effect":"BOUNDED_REPOSITORY","currentness":"LIVE_8766_PACKAGE,LIVE_8780_RUNTIME,CURRENT_CAPABILITY_REGISTRY","evidence":"PREFLIGHT_RUNTIME_REGISTRY_READBACK,BROWSER_ACCEPTANCE","completion":["PREFLIGHT_RUNTIME_BINDING_VISIBLE=PASS"]},
+        {"id":"REPAIR_OR_FORMALIZE_SAAS_CONSUMER","title":"Repair Or Formalize SaaS Consumer","execution":"VERIFY_THEN_REPAIR","capability":"CONTROL_PLANE_REPAIR,BROKER_RECONCILIATION","effect":"BOUNDED_REPOSITORY","currentness":"CURRENT_BROKER_DB,CURRENT_SAAS_SESSION_STATE,LIVE_8780_RUNTIME","evidence":"BROKER_TRANSPORT_READBACK,AUTOMATIC_CONSUMER_EVIDENCE,TRUTHFUL_MEDIATION_EVIDENCE","completion":["BROKER_TRANSPORT_TRUTHFUL=PASS"]},
+        {"id":"RECONCILE_BROKER_RECEIPTS","title":"Reconcile Broker Receipts","execution":"VERIFY_THEN_REPAIR","capability":"BROKER_RECONCILIATION","effect":"BOUNDED_LOCAL","currentness":"CURRENT_BROKER_DB,CURRENT_BROKER_RECEIPT_LINEAGE","evidence":"BROKER_RECEIPT_LINEAGE,LEGACY_RECEIPT_CLASSIFICATION,RECONCILIATION_RECEIPT","completion":["BROKER_RECEIPT_LINEAGE_RECONCILED=PASS"]},
+        {"id":"REPAIR_PANEL_TRUTH_PROJECTION","title":"Repair Panel Truth Projection","execution":"VERIFY_THEN_REPAIR","capability":"CONTROL_PLANE_REPAIR","effect":"BOUNDED_REPOSITORY","currentness":"LIVE_8780_RUNTIME,LIVE_8766_PACKAGE,CURRENT_BROKER_DB","evidence":"FIELD_BY_FIELD_PROJECTION_COMPARISON,BROWSER_ACCEPTANCE,EXACT_SOURCE_READBACK","completion":["PANEL_TRUTH_PROJECTION_REPAIRED=PASS"]},
+        {"id":"BACKWARD_COMPATIBILITY_ACCEPTANCE","title":"Backward Compatibility Acceptance","execution":"VALIDATE","capability":"PANEL_ACCEPTANCE","effect":"NONE","currentness":"LIVE_8780_RUNTIME,LIVE_8766_PACKAGE","evidence":"LPCL_1_1_VALIDATION,LPCL_1_2_VALIDATION,BROWSER_ACCEPTANCE","completion":["LEGACY_LPCL_1_1_COMPATIBLE=PASS","LPCL_1_2_COMPATIBLE=PASS"]},
+        {"id":"TERMINAL_VALIDATION","title":"Terminal Validation","execution":"VALIDATE","capability":"CONTROL_PLANE_RECONNAISSANCE","effect":"NONE","currentness":"EXACT_GITHUB_MASTER,LIVE_8766_PACKAGE,LIVE_8780_RUNTIME,CURRENT_BROKER_DB","evidence":"EXACT_SOURCE_READBACK,RESTART_DURABILITY,BACKWARD_COMPATIBILITY,BROKER_TRANSPORT_READBACK","completion":["RUNTIME_REVISIONS_CONVERGED=PASS","PREFLIGHT_RUNTIME_BINDING_VISIBLE=PASS","BROKER_TRANSPORT_TRUTHFUL=PASS","LEGACY_LPCL_1_1_COMPATIBLE=PASS","LPCL_1_2_COMPATIBLE=PASS","SUCCESSOR_TERMINAL_VALIDATION=PASS"]},
+    )
+
+
 def _successor_proposal(intel: dict[str,Any], language_gap: dict[str,Any] | None) -> dict[str,Any]:
     language=(language_gap or {}).get("recommended_control_language") or "LPCL/1.2"
-    phases=[
-        "FREEZE_REPAIR_BASELINE","CONVERGE_CONTROL_PLANE_REVISIONS","UNIFY_LPCL_PREFLIGHT_WITH_RUNTIME_REGISTRY",
-        "REPAIR_OR_FORMALIZE_SAAS_CONSUMER","RECONCILE_BROKER_RECEIPTS","REPAIR_PANEL_TRUTH_PROJECTION",
-        "BACKWARD_COMPATIBILITY_ACCEPTANCE","TERMINAL_VALIDATION",
+    if language!="LPCL/1.2": raise ValueError("successor generator currently requires LPCL/1.2")
+    mission_id="LION-CONTROL-PLANE-PANEL-BROKER-REPAIR-SUCCESSOR-R1"
+    profiles=_successor_phase_profiles()
+    lines=[
+        "RUN="+mission_id,
+        "PROJECT=LION_EVOLUSION",
+        "MODE=AUTONOMOUS_EXECUTE",
+        "CONTROL_LANGUAGE="+language,
+        "MISSION_ID="+mission_id,
+        "MISSION_TITLE=LION Control Plane Panel and Broker Repair",
+        "MISSION_OBJECTIVE=Repair evidence-confirmed control-plane defects from CONTROL_PLANE_INTELLIGENCE_BUNDLE",
+        "MISSION_DESCRIPTION=Proposal only. Requires explicit registration and authorization after operator review.",
+        "LOGICAL_DRONE_COUNT=128",
+        "MATERIAL_DRONE_COUNT=64",
+        "PROTOCOLS=LPCL,AUTHORITY,CURRENTNESS,ASSIGNMENT,HEARTBEAT,EVIDENCE,VALIDATION,RECEIPT,RECOVERY,GITHUB,HUMAN,CONTROL",
     ]
-    lines=["RUN=LION-CONTROL-PLANE-PANEL-BROKER-REPAIR-SUCCESSOR-R1","PROJECT=LION_EVOLUSION","MODE=AUTONOMOUS_EXECUTE",f"CONTROL_LANGUAGE={language}","MISSION_ID=LION-CONTROL-PLANE-PANEL-BROKER-REPAIR-SUCCESSOR-R1","MISSION_TITLE=LION Control Plane Panel and Broker Repair","MISSION_OBJECTIVE=Repair evidence-confirmed control-plane defects from CONTROL_PLANE_INTELLIGENCE_BUNDLE","MISSION_DESCRIPTION=Proposal only. Requires explicit registration and authorization after operator review.","LOGICAL_DRONE_COUNT=128","MATERIAL_DRONE_COUNT=64","PROTOCOLS=LPCL,AUTHORITY,CURRENTNESS,ASSIGNMENT,HEARTBEAT,EVIDENCE,VALIDATION,RECEIPT,RECOVERY,GITHUB,HUMAN,CONTROL"]
-    for i,pid in enumerate(phases,1):lines.append(f"PHASE_{i:02d}={pid}|{pid.replace('_',' ').title()}")
-    text="\n".join(lines)+"\n";dg=hashlib.sha256(text.encode()).hexdigest()
-    return {"schema":SUCCESSOR_SCHEMA,"recommended_control_language":language,"repair_scope":"LION CONTROL LPCL PANEL + Mission Control currentness + SaaS broker/consumer truth","required_capabilities":["CONTROL_PLANE_REPAIR","REPOSITORY_CANDIDATE_PREPARE","BROKER_RECONCILIATION","PANEL_ACCEPTANCE"],"authority_requirements":["EXPLICIT_USER_ACTIVATION","BOUNDED_EFFECT_ADMISSION"],"currentness_requirements":["EXACT_GITHUB_MASTER","LIVE_8766_PACKAGE","LIVE_8780_RUNTIME","CURRENT_BROKER_DB"],"evidence_requirements":["EXACT_SOURCE_READBACK","BROWSER_ACCEPTANCE","BROKER_ROUNDTRIP_OR_TRUTHFUL_MEDIATION","RESTART_DURABILITY","BACKWARD_COMPATIBILITY"],"completion_predicates":["RUNTIME_REVISIONS_CONVERGED=PASS","PREFLIGHT_RUNTIME_BINDING_VISIBLE=PASS","BROKER_TRANSPORT_TRUTHFUL=PASS","LEGACY_LPCL_1_1_COMPATIBLE=PASS","LPCL_1_2_COMPATIBLE=PASS"],"backward_compatibility_requirements":["LPCL/1.1","LPCL/1.2","existing broker requests","existing threads","completed missions"],"lpcl_text":text,"proposal_digest":dg,"intelligence_bundle_digest":digest(intel),"registered":False,"authorized":False,"authority_effect":"NONE"}
+    phases=[]
+    for i,spec in enumerate(profiles,1):
+        prefix=f"PHASE_{i:02d}";phases.append({"id":spec["id"],"title":spec["title"]})
+        lines.extend([
+            f"{prefix}={spec['id']}|{spec['title']}",
+            f"{prefix}_EXECUTION_CLASS={spec['execution']}",
+            f"{prefix}_CAPABILITY_CLASS={spec['capability']}",
+            f"{prefix}_EFFECT_CEILING={spec['effect']}",
+            f"{prefix}_BINDING_MODE=DYNAMIC",
+            f"{prefix}_ON_MISSING_CAPABILITY=WAIT_AND_DISCOVER",
+            f"{prefix}_AUTO_RESUME=TRUE",
+            f"{prefix}_VERIFY_BEFORE_MUTATE=TRUE",
+            f"{prefix}_CURRENTNESS={spec['currentness']}",
+            f"{prefix}_EVIDENCE={spec['evidence']}",
+        ])
+        for j,predicate in enumerate(spec["completion"],1): lines.append(f"{prefix}_COMPLETION_{j:02d}={predicate}")
+    text="\n".join(lines)+"\n";pairs=_generated_lpcl_pairs(text)
+    contracts=compile_panel_phase_contracts(pairs,mission_id,phases,language)
+    empty_preflight=preflight_execution_contracts(contracts,{})
+    validation={"valid":True,"control_language":language,"contract_count":len(contracts),"contract_digests":[c.contract_digest for c in contracts],"compiler_versions":sorted({c.compiler_version for c in contracts}),"preflight_without_runtime_registry":empty_preflight.as_dict(),"validation_digest":digest([c.as_dict() for c in contracts])}
+    dg=hashlib.sha256(text.encode()).hexdigest();required_capabilities=sorted({cap for spec in profiles for cap in spec["capability"].split(",")})
+    return {
+        "schema":SUCCESSOR_SCHEMA,"recommended_control_language":language,
+        "repair_scope":"LION CONTROL LPCL PANEL + Mission Control currentness + SaaS broker/consumer truth",
+        "required_capabilities":required_capabilities,
+        "authority_requirements":["EXPLICIT_USER_ACTIVATION","BOUNDED_EFFECT_ADMISSION"],
+        "currentness_requirements":["EXACT_GITHUB_MASTER","LIVE_8766_PACKAGE","LIVE_8780_RUNTIME","CURRENT_BROKER_DB"],
+        "evidence_requirements":["EXACT_SOURCE_READBACK","BROWSER_ACCEPTANCE","BROKER_ROUNDTRIP_OR_TRUTHFUL_MEDIATION","RESTART_DURABILITY","BACKWARD_COMPATIBILITY"],
+        "completion_predicates":["RUNTIME_REVISIONS_CONVERGED=PASS","PREFLIGHT_RUNTIME_BINDING_VISIBLE=PASS","BROKER_TRANSPORT_TRUTHFUL=PASS","LEGACY_LPCL_1_1_COMPATIBLE=PASS","LPCL_1_2_COMPATIBLE=PASS","SUCCESSOR_TERMINAL_VALIDATION=PASS"],
+        "backward_compatibility_requirements":["LPCL/1.1","LPCL/1.2","existing broker requests","existing threads","completed missions"],
+        "lpcl_text":text,"proposal_digest":dg,"intelligence_bundle_digest":intel.get("bundle_digest") or digest(intel),"validation":validation,
+        "registered":False,"authorized":False,"authority_effect":"NONE",
+    }
 
 
 def _post_baseline(conn: sqlite3.Connection, mission_id: str, baseline: dict[str,Any] | None, current_panel: dict[str,Any] | None, intelligence: dict[str,Any] | None) -> dict[str,Any]:
@@ -758,7 +862,8 @@ def _post_baseline(conn: sqlite3.Connection, mission_id: str, baseline: dict[str
 def synthesize_artifacts(conn: sqlite3.Connection, mission_id: str, contract: dict[str,Any], observations: dict[str,Any], classifications: dict[str,Any], local_analysis: dict[str,Any] | None, saas: dict[str,Any] | None, now_fn) -> dict[str,Any]:
     evidence=set(contract.get("evidence_requirements") or []);currentness=set(contract.get("currentness_requirements") or [])
     if "LANGUAGE_GAP_MATRIX" in evidence:
-        content=_language_gap_artifact(classifications,local_analysis,saas);sched.put_artifact(conn,mission_id,"LANGUAGE_GAP_MATRIX",content,now_fn,phase_id=contract["phase_id"],schema_id=LANGUAGE_GAP_SCHEMA)
+        baseline=sched.artifact(conn,mission_id,"CONTROL_PLANE_RECON_BASELINE_PRE");historical,sources=historical_classifications(conn,mission_id,(baseline or {}).get("content"));merged=_merge_classifications(classifications,historical)
+        content=_language_gap_artifact(merged,local_analysis,saas,classification_sources=sources);sched.put_artifact(conn,mission_id,"LANGUAGE_GAP_MATRIX",content,now_fn,phase_id=contract["phase_id"],schema_id=LANGUAGE_GAP_SCHEMA)
     language_art=sched.artifact(conn,mission_id,"LANGUAGE_GAP_MATRIX",phase_id=None)
     # phase-scoped artifact lookup fallback
     if not language_art:
@@ -838,6 +943,31 @@ def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, cont
         return {"state":"WAITING","gate":"EVIDENCE_INCOMPLETE","reason":"Completion predicates remain UNKNOWN: "+",".join(missing_facts),"evidence":summary}
     release_material_leases(conn,mission_id,phase_id,now_fn)
     return {"state":"PASS","evidence":summary}
+
+
+def reconcile_terminal_artifacts(conn: sqlite3.Connection, now_fn) -> list[dict[str,Any]]:
+    changed=[]
+    rows=conn.execute("SELECT DISTINCT c.mission_id FROM mission_phase_execution_contracts c JOIN missions m ON m.mission_id=c.mission_id JOIN mission_execution_drivers d ON d.mission_id=c.mission_id WHERE c.capability_classes_json LIKE '%CONTROL_PLANE_RECONNAISSANCE%' AND m.state='COMPLETE' AND d.state='COMPLETE' ORDER BY c.mission_id").fetchall()
+    for row in rows:
+        mission_id=row[0]
+        phases=conn.execute("SELECT phase_id,status FROM mission_phases WHERE mission_id=? ORDER BY ordinal",(mission_id,)).fetchall()
+        if not phases or any(r["status"]!="PASS" for r in phases): continue
+        artifacts=sched.list_artifacts(conn,mission_id);language_rows=[a for a in artifacts if a["artifact_type"]=="LANGUAGE_GAP_MATRIX"]
+        if not language_rows: continue
+        language_old=language_rows[-1];intel_old=sched.artifact(conn,mission_id,"CONTROL_PLANE_INTELLIGENCE_BUNDLE");successor_old=sched.artifact(conn,mission_id,"SUCCESSOR_REPAIR_LPCL_PROPOSAL");baseline=sched.artifact(conn,mission_id,"CONTROL_PLANE_RECON_BASELINE_PRE")
+        historical,sources=historical_classifications(conn,mission_id,(baseline or {}).get("content"));old_content=language_old["content"] or {};merged=_merge_classifications(old_content.get("classifications") or {},historical)
+        # Generate and validate the complete artifact set before writing any revision.
+        language_new=_language_gap_artifact(merged,old_content.get("local_analysis"),{"state":old_content.get("saas_advisory_state","NOT_REQUESTED")},classification_sources=sources)
+        generated_at=((intel_old or {}).get("content") or {}).get("generated_at") or now_fn();intel_new=_intelligence_bundle(conn,mission_id,language_new,generated_at=generated_at);successor_new=_successor_proposal(intel_new,language_new)
+        lang_digest=digest(language_new);intel_digest=digest(intel_new);successor_digest=digest(successor_new)
+        old_digests=((language_old or {}).get("content_digest"),(intel_old or {}).get("content_digest"),(successor_old or {}).get("content_digest"))
+        new_digests=(lang_digest,intel_digest,successor_digest)
+        if old_digests==new_digests: continue
+        lang_row=sched.put_artifact(conn,mission_id,"LANGUAGE_GAP_MATRIX",language_new,now_fn,phase_id=language_old["phase_id"],schema_id=LANGUAGE_GAP_SCHEMA)
+        intel_row=sched.put_artifact(conn,mission_id,"CONTROL_PLANE_INTELLIGENCE_BUNDLE",intel_new,now_fn,schema_id=INTELLIGENCE_SCHEMA)
+        successor_row=sched.put_artifact(conn,mission_id,"SUCCESSOR_REPAIR_LPCL_PROPOSAL",successor_new,now_fn,schema_id=SUCCESSOR_SCHEMA)
+        changed.append({"mission_id":mission_id,"language_gap_revision":lang_row["revision"],"language_gap_digest":lang_row["content_digest"],"intelligence_revision":intel_row["revision"],"intelligence_digest":intel_row["content_digest"],"successor_revision":successor_row["revision"],"successor_digest":successor_row["content_digest"],"successor_proposal_digest":successor_new["proposal_digest"],"successor_contract_count":successor_new["validation"]["contract_count"],"authority_effect":"NONE"})
+    return changed
 
 
 def late_saas_reconcile(conn: sqlite3.Connection, now_fn, *, request_status) -> list[dict[str,Any]]:

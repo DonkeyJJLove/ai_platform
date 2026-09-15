@@ -193,11 +193,33 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertNotEqual(one,diff_mc)
         self.assertNotEqual(one,diff_lang)
 
-    def test_successor_proposal_is_artifact_only(self):
-        intel={"findings":[],"claim_to_evidence":[],"root_cause_candidates":[],"unknowns":[]}
+    def test_successor_proposal_is_artifact_only_and_self_validating_lpcl12(self):
+        intel={"findings":[],"claim_to_evidence":[],"root_cause_candidates":[],"unknowns":[],"bundle_digest":"f"*64}
         proposal=cr._successor_proposal(intel,{"recommended_control_language":"LPCL/1.2"})
         self.assertFalse(proposal["registered"]);self.assertFalse(proposal["authorized"])
         self.assertIn("CONTROL_LANGUAGE=LPCL/1.2",proposal["lpcl_text"]);self.assertEqual(proposal["proposal_digest"],__import__('hashlib').sha256(proposal["lpcl_text"].encode()).hexdigest())
+        self.assertTrue(proposal["validation"]["valid"]);self.assertEqual(proposal["validation"]["contract_count"],8)
+        self.assertEqual(proposal["intelligence_bundle_digest"],"f"*64)
+        self.assertEqual(set(proposal["required_capabilities"]),{"CONTROL_PLANE_RECONNAISSANCE","CONTROL_PLANE_REPAIR","REPOSITORY_CANDIDATE_PREPARE","BROKER_RECONCILIATION","PANEL_ACCEPTANCE"})
+        pairs=cr._generated_lpcl_pairs(proposal["lpcl_text"]);phases=[{"id":spec["id"]} for spec in cr._successor_phase_profiles()]
+        contracts=cr.compile_panel_phase_contracts(pairs,pairs["MISSION_ID"],phases,pairs["CONTROL_LANGUAGE"])
+        self.assertEqual(len(contracts),8);self.assertTrue(all(c.contract_source=="DECLARED" for c in contracts))
+
+    def test_historical_classifications_prefer_complete_parser_evidence(self):
+        c=self.conn();baseline={"preflight":{"invalid_count":0,"bound_count":0,"unbound_count":16}}
+        incomplete={"schema":cr.EVIDENCE_BUNDLE_SCHEMA,"observations":{"phase_id":"P0","domains":{"process_language":{"source_hashes":{"cyber_lion/process_language/lpcl.py":"1"*64}}}},"authority_effect":"NONE"}
+        gs.put_artifact(c,"M","RECON_EVIDENCE_BUNDLE",incomplete,now,phase_id="P0",schema_id=cr.EVIDENCE_BUNDLE_SCHEMA)
+        complete_obs={"phase_id":"P1","domains":{"panel":{"source_features":{"lpcl_parser_sha256":"2"*64}},"mission_control":{"runtime_identity":{"parser_sha256":"3"*64}},"process_language":{"source_hashes":{"cyber_lion/process_language/lpcl.py":"4"*64}}}}
+        complete={"schema":cr.EVIDENCE_BUNDLE_SCHEMA,"observations":complete_obs,"authority_effect":"NONE"}
+        gs.put_artifact(c,"M","RECON_EVIDENCE_BUNDLE",complete,now,phase_id="P1",schema_id=cr.EVIDENCE_BUNDLE_SCHEMA)
+        merged,sources=cr.historical_classifications(c,"M",baseline)
+        self.assertEqual(merged["parser_semantic_drift"]["classification"],"MULTIPLE_IMPLEMENTATIONS_WITH_CANONICAL_COMPILER")
+        self.assertTrue(merged["parser_semantic_drift"]["identified"])
+        self.assertEqual(merged["initial_capability_preflight"]["classification"],"VALID_BUT_UNBOUND")
+        self.assertTrue(sources["parser_semantic_drift"])
+        local={"parser_semantic_drift":{"identified":False,"classification":"INCOMPLETE"}}
+        self.assertEqual(cr._merge_classifications(local,merged)["parser_semantic_drift"]["classification"],"MULTIPLE_IMPLEMENTATIONS_WITH_CANONICAL_COMPILER")
+        c.close()
 
 
 if __name__=='__main__':unittest.main()
