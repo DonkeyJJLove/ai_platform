@@ -225,11 +225,12 @@ def _mc_snapshot(conn: sqlite3.Connection, mission_id: str, phase_id: str) -> di
     root=_root();mission=conn.execute("SELECT * FROM missions WHERE mission_id=?",(mission_id,)).fetchone();process=conn.execute("SELECT * FROM mission_process_specs WHERE mission_id=?",(mission_id,)).fetchone();driver=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone();scheduler=conn.execute("SELECT * FROM mission_scheduler_state WHERE scheduler_id='GLOBAL_MISSION_SCHEDULER_V1'").fetchone();turn=conn.execute("SELECT * FROM mission_scheduler_turns WHERE mission_id=?",(mission_id,)).fetchone();pre=conn.execute("SELECT * FROM mission_execution_preflights WHERE mission_id=?",(mission_id,)).fetchone()
     contracts=[dict(r) for r in conn.execute("SELECT phase_id,contract_source,execution_class,capability_classes_json,effect_ceiling,binding_mode,contract_digest FROM mission_phase_execution_contracts WHERE mission_id=? ORDER BY ordinal",(mission_id,))]
     bindings=[dict(r) for r in conn.execute("SELECT * FROM mission_phase_capability_bindings WHERE mission_id=? ORDER BY phase_id,capability_class",(mission_id,))]
-    paths=["tools/lion_mission_control_v3.py","cyber_lion/mission_control/global_scheduler.py","cyber_lion/contracts/phase_execution_contract.py","cyber_lion/mission_control/control_plane_reconnaissance.py"]
-    hashes={rel:_sha_file(root/rel) for rel in paths if (root/rel).is_file()}
-    source=(root/"tools/lion_mission_control_v3.py").read_text(encoding="utf-8",errors="replace") if (root/"tools/lion_mission_control_v3.py").is_file() else ""
+    carrier=(root/"mission_control_v3.py") if (root/"mission_control_v3.py").is_file() else (root/"tools/lion_mission_control_v3.py")
+    source_files={"mission_control_v3.py":carrier,"cyber_lion/mission_control/global_scheduler.py":root/"cyber_lion/mission_control/global_scheduler.py","cyber_lion/contracts/phase_execution_contract.py":root/"cyber_lion/contracts/phase_execution_contract.py","cyber_lion/mission_control/control_plane_reconnaissance.py":root/"cyber_lion/mission_control/control_plane_reconnaissance.py","cyber_lion/process_language/lpcl.py":root/"cyber_lion/process_language/lpcl.py"}
+    hashes={rel:_sha_file(path) for rel,path in source_files.items() if path.is_file()}
+    source=carrier.read_text(encoding="utf-8",errors="replace") if carrier.is_file() else ""
     api_routes=sorted(set(re.findall(r"['\"](/api/v3/[^'\"]+)",source)))[:200]
-    parser_match=re.search(r"def _lpcl_pairs\(.*?\n(?=\ndef )",source,re.S)
+    parser_match=re.search(r"(?ms)^def _lpcl_pairs\(.*?(?=^def |\Z)",source)
     return {
         "runtime_identity":{"pid":os.getpid(),"root":str(root),"source_hashes":hashes,"parser_sha256":hashlib.sha256((parser_match.group(0) if parser_match else "").encode()).hexdigest()},
         "db":{"path":str(Path(conn.execute("PRAGMA database_list").fetchone()[2])),"integrity":conn.execute("PRAGMA integrity_check").fetchone()[0],"schema_version":conn.execute("PRAGMA schema_version").fetchone()[0],"page_count":conn.execute("PRAGMA page_count").fetchone()[0]},
@@ -277,7 +278,7 @@ def _recon_history(conn: sqlite3.Connection, mission_id: str) -> dict[str,Any]:
 def _process_language_snapshot() -> dict[str,Any]:
     root=_root();paths=["cyber_lion/process_language/lpcl.py","cyber_lion/contracts/phase_execution_contract.py","LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md"]
     hashes={rel:_sha_file(root/rel) for rel in paths if (root/rel).is_file()}
-    return {"source_hashes":hashes,"lpcl12_compiler_present":bool(hashes.get("cyber_lion/contracts/phase_execution_contract.py")),"process_contract_doc_present":bool(hashes.get("LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md"))}
+    return {"source_hashes":hashes,"canonical_lpcl_source_present":bool(hashes.get("cyber_lion/process_language/lpcl.py")),"lpcl12_compiler_present":bool(hashes.get("cyber_lion/contracts/phase_execution_contract.py")),"process_contract_doc_present":bool(hashes.get("LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md"))}
 
 
 def _baseline_core(conn: sqlite3.Connection, mission_id: str) -> dict[str,Any]:
@@ -303,18 +304,72 @@ def _panel_snapshot(conn: sqlite3.Connection, mission_id: str, phase_id: str) ->
 
 def _panel_fingerprint_from_snapshot(phase_id: str, panel: dict[str,Any] | None) -> str | None:
     if not isinstance(panel,dict): return None
-    runtime=panel.get("runtime") or {}; repo=panel.get("repo") or {}; thread=panel.get("thread_db") or {}; github=repo.get("github_master") or {}
-    value={"phase":phase_id,"runtime":runtime.get("runtime_source_sha256"),"gateway":runtime.get("gateway_source_sha256"),"local":{"head":repo.get("local_head"),"tree":repo.get("local_tree")},"github":{"head":github.get("head"),"tree":github.get("tree")},"thread":thread.get("identity_digest")}
-    required=(value["runtime"],value["gateway"],value["local"]["head"],value["local"]["tree"],value["github"]["head"],value["github"]["tree"],value["thread"])
+    runtime=panel.get("runtime") or {}; repo=panel.get("repo") or {}; thread=panel.get("thread_db") or {}; github=repo.get("github_master") or {}; features=panel.get("source_features") or {}
+    feature_digest=runtime.get("feature_vector_digest") or (digest(features) if features else None)
+    value={"phase":phase_id,"runtime_loaded":runtime.get("runtime_source_sha256"),"gateway_loaded":runtime.get("gateway_source_sha256"),"feature_digest":feature_digest,"local":{"head":repo.get("local_head"),"tree":repo.get("local_tree")},"github":{"head":github.get("head"),"tree":github.get("tree")},"thread":thread.get("identity_digest")}
+    required=(value["runtime_loaded"],value["gateway_loaded"],value["local"]["head"],value["local"]["tree"],value["github"]["head"],value["github"]["tree"],value["thread"])
     if any(not isinstance(x,str) or not x for x in required): return None
-    return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+    return digest(value)
 
 
-def _bundle_source_fingerprint(phase_id: str, content: dict[str,Any]) -> str | None:
+def _stable_mc_identity(value: dict[str,Any]) -> dict[str,Any]:
+    runtime=value.get("runtime_identity") or {}; db=value.get("db") or {}; mission=value.get("mission") or {}; pre=value.get("preflight") or {}
+    return {
+        "source_hashes":runtime.get("source_hashes") or {},"parser_sha256":runtime.get("parser_sha256"),
+        "db":{"schema_version":db.get("schema_version")},
+        "mission":{"mission_id":mission.get("mission_id"),"spec_digest":mission.get("spec_digest"),"source_head":mission.get("source_head"),"source_tree":mission.get("source_tree"),"adapter":mission.get("adapter")},
+        "preflight_digest":digest(pre) if pre else None,
+        "contract_digests":sorted(str(x.get("contract_digest")) for x in (value.get("contracts") or []) if x.get("contract_digest")),
+        "binding_digests":sorted(str(x.get("binding_digest")) for x in (value.get("bindings") or []) if x.get("binding_digest")),
+    }
+
+
+def _stable_broker_identity(value: dict[str,Any]) -> dict[str,Any]:
+    binding=value.get("active_binding") or {}
+    return {"schema_digest":value.get("schema_digest"),"request_state_counts":value.get("request_state_counts") or {},"binding_state_counts":value.get("binding_state_counts") or {},"receipt_count":value.get("receipt_count"),"responded_count":value.get("responded_count"),"pending_count":value.get("pending_count"),"max_claim_generation":value.get("max_claim_generation"),"transports":value.get("transports") or [],"autonomous_transport_claimed":value.get("autonomous_transport_claimed"),"active_binding":{"binding_id":binding.get("binding_id"),"mission_id":binding.get("mission_id"),"transport":binding.get("transport"),"status":binding.get("status"),"binding_scope":binding.get("binding_scope"),"authority_effect":binding.get("authority_effect")}}
+
+
+def _stable_projection_identity(value: dict[str,Any]) -> dict[str,Any]:
+    panel=value.get("panel") or {}; mc=value.get("mission_control") or {}; broker=value.get("broker") or {}
+    pending=panel.get("pending") or {}; lease=panel.get("lease") or {}; receipt=panel.get("last_receipt") or {}; mission=mc.get("mission") or {}; process=mc.get("process") or {}
+    return {"panel":{"channel":panel.get("channel"),"session":panel.get("session"),"transport":panel.get("transport"),"pending_count":panel.get("pending_count"),"pending_state":panel.get("pending_state"),"automatic_hop":panel.get("automatic_hop"),"authority":panel.get("authority"),"lease_state":lease.get("state"),"pending_request_id":pending.get("request_id"),"last_receipt_digest":receipt.get("receipt_digest")},"broker":_stable_broker_identity(broker),"mission_control":{"mission_id":mission.get("mission_id"),"state":mission.get("state"),"runtime_state":mission.get("runtime_state"),"spec_digest":mission.get("spec_digest"),"current_phase":process.get("current_phase"),"progress":process.get("progress")}}
+
+
+def _stable_history_identity(value: dict[str,Any], phase_id: str) -> dict[str,Any]:
+    arts=[{"artifact_type":x.get("artifact_type"),"phase_id":x.get("phase_id"),"content_digest":x.get("content_digest"),"revision":x.get("revision")} for x in (value.get("artifact_summaries") or []) if x.get("phase_id")!=phase_id]
+    receipts=[{"phase_id":x.get("phase_id"),"action_ir_digest":x.get("action_ir_digest"),"evidence_digest":x.get("evidence_digest"),"status":x.get("status")} for x in (value.get("action_receipts") or []) if x.get("phase_id")!=phase_id]
+    return {"artifacts":arts,"action_receipts":receipts}
+
+
+def observation_generation_fingerprint(observations: dict[str,Any]) -> str | None:
+    if not isinstance(observations,dict): return None
+    phase_id=str(observations.get("phase_id") or ""); domains=observations.get("domains") or {}; stable={}
+    for name in sorted(domains):
+        value=domains.get(name)
+        if value is None: stable[name]=None
+        elif name=="panel": stable[name]=_panel_fingerprint_from_snapshot(phase_id,value)
+        elif name=="mission_control": stable[name]=_stable_mc_identity(value)
+        elif name=="broker": stable[name]=_stable_broker_identity(value)
+        elif name=="thread": stable[name]={"identity_digest":value.get("identity_digest"),"schema_version":value.get("schema_version"),"integrity":value.get("integrity")}
+        elif name=="dual": stable[name]={"available":value.get("available"),"evaluation_count":value.get("evaluation_count"),"receipt_count":value.get("receipt_count"),"state_counts":value.get("state_counts") or {}}
+        elif name=="post_astra":
+            m=value.get("mission") or {}; d=value.get("driver") or {}; stable[name]={"mission":{"mission_id":m.get("mission_id"),"state":m.get("state"),"runtime_state":m.get("runtime_state"),"spec_digest":m.get("spec_digest")},"driver":{"state":d.get("state"),"current_phase":d.get("current_phase"),"blocking_gate":d.get("blocking_gate"),"next_action":d.get("next_action")},"receipt_count":value.get("receipt_count")}
+        elif name=="projection": stable[name]=_stable_projection_identity(value)
+        elif name in {"recon_history","artifacts"}: stable[name]=_stable_history_identity(value if name=="recon_history" else {"artifact_summaries":value},phase_id)
+        elif name=="process_language": stable[name]={"source_hashes":value.get("source_hashes") or {},"canonical_lpcl_source_present":value.get("canonical_lpcl_source_present"),"lpcl12_compiler_present":value.get("lpcl12_compiler_present")}
+        elif name=="baseline": stable[name]={"pre_digest":digest(value.get("pre")) if value.get("pre") else None,"post_core":{"mission_count":(value.get("post_core") or {}).get("mission_count"),"missions_digest":(value.get("post_core") or {}).get("missions_digest"),"broker":(value.get("post_core") or {}).get("broker")}}
+        else: stable[name]=value
+    return digest({"schema":"lion.recon-observation-generation-fingerprint/v1","phase_id":phase_id,"domains":stable})
+
+
+def _bundle_observation_fingerprint(phase_id: str, content: dict[str,Any]) -> str | None:
+    explicit=content.get("observation_fingerprint")
+    if isinstance(explicit,str) and len(explicit)==64:return explicit
+    # Backward-compatible generations used Windows source_fingerprint only.
     explicit=content.get("source_fingerprint")
     if isinstance(explicit,str) and len(explicit)==64:return explicit
-    panel=(((content.get("observations") or {}).get("domains") or {}).get("panel"))
-    return _panel_fingerprint_from_snapshot(phase_id,panel)
+    observations=content.get("observations") or {}
+    return observation_generation_fingerprint(observations) or _panel_fingerprint_from_snapshot(phase_id,((observations.get("domains") or {}).get("panel")))
 
 
 def _record_bundle_generation(conn: sqlite3.Connection, mission_id: str, phase_id: str, artifact: dict[str,Any], now_fn) -> dict[str,Any]:
@@ -324,21 +379,24 @@ def _record_bundle_generation(conn: sqlite3.Connection, mission_id: str, phase_i
         if current["evidence_bundle_digest"]==artifact["content_digest"]:return current
     raw_generation=int(content.get("reacquisition_generation") or 0); generation=max(1,raw_generation)
     if generations:generation=max(generation,int(generations[-1]["generation"])+1)
-    fp=_bundle_source_fingerprint(phase_id,content); trigger=str(content.get("reacquisition_trigger") or ("LEGACY_FROZEN_BUNDLE_IMPORT" if raw_generation==0 else "INITIAL_BOUNDED_OBSERVATION"))
+    fp=_bundle_observation_fingerprint(phase_id,content); trigger=str(content.get("reacquisition_trigger") or ("LEGACY_FROZEN_BUNDLE_IMPORT" if raw_generation==0 else "INITIAL_BOUNDED_OBSERVATION"))
     return sched.record_recon_evidence_generation(conn,mission_id,phase_id,generation,fp,artifact["content_digest"],content,trigger,now_fn)
 
 
-def evidence_reacquisition_request(conn: sqlite3.Connection, mission_id: str, phase_id: str, existing_bundle: dict[str,Any], *, require_parked: bool=True) -> dict[str,Any] | None:
+def evidence_reacquisition_request(conn: sqlite3.Connection, mission_id: str, phase_id: str, existing_bundle: dict[str,Any], contract: dict[str,Any], *, db_path: Path, require_parked: bool=True) -> dict[str,Any] | None:
     driver=conn.execute("SELECT state,blocking_gate,generation FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
     if not driver:return None
     if require_parked and (driver["state"] not in {"WAITING","BLOCKED"} or driver["blocking_gate"]!="EVIDENCE_INCOMPLETE"):return None
-    latest=_latest_windows_observation(conn,mission_id,phase_id)
-    if not latest:return None
-    latest_fp=latest.get("source_fingerprint"); current_fp=_bundle_source_fingerprint(phase_id,existing_bundle.get("content") or {})
-    if not isinstance(latest_fp,str) or len(latest_fp)!=64 or not current_fp or latest_fp==current_fp:return None
-    if str(latest.get("protocol_observed_at") or "") <= str(existing_bundle.get("updated_at") or existing_bundle.get("created_at") or ""):return None
-    generations=sched.recon_evidence_generations(conn,mission_id,phase_id); next_generation=max([int(x["generation"]) for x in generations] or [1])+1
-    return {"mission_id":mission_id,"phase_id":phase_id,"current_source_fingerprint":current_fp,"new_source_fingerprint":latest_fp,"new_observed_at":latest.get("protocol_observed_at"),"next_generation":next_generation,"driver_generation":int(driver["generation"]),"trigger":"NEW_BOUNDED_OBSERVATION_AFTER_EVIDENCE_INCOMPLETE","authority_effect":"NONE"}
+    ro=open_read_only(db_path)
+    try:fresh,missing=collect_observations(ro,mission_id,phase_id,contract,db_path=db_path)
+    finally:ro.close()
+    if missing:return None
+    latest_fp=observation_generation_fingerprint(fresh); current_fp=_bundle_observation_fingerprint(phase_id,existing_bundle.get("content") or {})
+    if not latest_fp or not current_fp or latest_fp==current_fp:return None
+    generations=sched.recon_evidence_generations(conn,mission_id,phase_id)
+    if any(x.get("source_fingerprint")==latest_fp for x in generations):return None
+    next_generation=max([int(x["generation"]) for x in generations] or [1])+1
+    return {"mission_id":mission_id,"phase_id":phase_id,"current_observation_fingerprint":current_fp,"new_observation_fingerprint":latest_fp,"next_generation":next_generation,"driver_generation":int(driver["generation"]),"trigger":"NEW_BOUNDED_OBSERVATION_AFTER_EVIDENCE_INCOMPLETE","authority_effect":"NONE"}
 
 
 def collect_observations(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], *, db_path: Path) -> tuple[dict[str,Any],list[str]]:
@@ -730,7 +788,7 @@ def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, cont
     existing_bundle=sched.artifact(conn,mission_id,"RECON_EVIDENCE_BUNDLE",phase_id=phase_id)
     if existing_bundle:
         _record_bundle_generation(conn,mission_id,phase_id,existing_bundle,now_fn)
-        reacquire=evidence_reacquisition_request(conn,mission_id,phase_id,existing_bundle,require_parked=not allow_reacquire)
+        reacquire=evidence_reacquisition_request(conn,mission_id,phase_id,existing_bundle,contract,db_path=db_path,require_parked=not allow_reacquire)
         if reacquire and not allow_reacquire:
             return {"state":"REACQUIRE_REQUIRED","gate":"EVIDENCE_REACQUISITION_REQUIRED","reason":"A newer bounded observation is available after EVIDENCE_INCOMPLETE","reacquisition":reacquire,"evidence":{"evidence_bundle_digest":existing_bundle["content_digest"],"reacquisition":reacquire,"authority_effect":"NONE"}}
         if reacquire and allow_reacquire:
@@ -739,10 +797,13 @@ def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, cont
             finally:ro.close()
             if missing:
                 return {"state":"WAITING","gate":"EVIDENCE_INCOMPLETE","reason":"Missing bounded observation after reacquisition: "+",".join(missing),"evidence":{"missing_observations":missing,"reacquisition":reacquire,"authority_effect":"NONE"}}
-            enrich_pre_baseline(conn,mission_id,observations,now_fn); model_view=_model_view(observations)
-            bundle_content={"schema":EVIDENCE_BUNDLE_SCHEMA,"mission_id":mission_id,"phase_id":phase_id,"contract_digest":contract["contract_digest"],"observation_plan":plan,"observations":observations,"model_view":model_view,"source_fingerprint":reacquire["new_source_fingerprint"],"reacquisition_generation":int(reacquire["next_generation"]),"reacquisition_trigger":reacquire["trigger"],"authority_effect":"NONE"}
+            fresh_fp=observation_generation_fingerprint(observations)
+            if fresh_fp!=reacquire.get("new_observation_fingerprint"):
+                return {"state":"WAITING","gate":"EVIDENCE_INCOMPLETE","reason":"Bounded observations changed during reacquisition","evidence":{"expected_observation_fingerprint":reacquire.get("new_observation_fingerprint"),"observed_observation_fingerprint":fresh_fp,"authority_effect":"NONE"}}
+            enrich_pre_baseline(conn,mission_id,observations,now_fn); model_view=_model_view(observations); latest=_latest_windows_observation(conn,mission_id,phase_id); source_fp=(latest or {}).get("source_fingerprint") or _panel_fingerprint_from_snapshot(phase_id,((observations.get("domains") or {}).get("panel")))
+            bundle_content={"schema":EVIDENCE_BUNDLE_SCHEMA,"mission_id":mission_id,"phase_id":phase_id,"contract_digest":contract["contract_digest"],"observation_plan":plan,"observations":observations,"model_view":model_view,"source_fingerprint":source_fp,"observation_fingerprint":fresh_fp,"reacquisition_generation":int(reacquire["next_generation"]),"reacquisition_trigger":reacquire["trigger"],"authority_effect":"NONE"}
             bundle_art=sched.put_artifact(conn,mission_id,"RECON_EVIDENCE_BUNDLE",bundle_content,now_fn,phase_id=phase_id,schema_id=EVIDENCE_BUNDLE_SCHEMA); bundle_digest=bundle_art["content_digest"]
-            sched.record_recon_evidence_generation(conn,mission_id,phase_id,int(reacquire["next_generation"]),reacquire["new_source_fingerprint"],bundle_digest,bundle_content,reacquire["trigger"],now_fn)
+            sched.record_recon_evidence_generation(conn,mission_id,phase_id,int(reacquire["next_generation"]),fresh_fp,bundle_digest,bundle_content,reacquire["trigger"],now_fn)
         else:
             bundle_art=existing_bundle;bundle_content=existing_bundle["content"];observations=bundle_content["observations"];model_view=bundle_content["model_view"];bundle_digest=existing_bundle["content_digest"]
     else:
@@ -751,10 +812,10 @@ def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, cont
         finally:ro.close()
         if missing:
             return {"state":"WAITING","gate":"EVIDENCE_INCOMPLETE","reason":"Missing bounded observation: "+",".join(missing),"evidence":{"missing_observations":missing,"material_lease_count":len(leases),"authority_effect":"NONE"}}
-        enrich_pre_baseline(conn,mission_id,observations,now_fn); model_view=_model_view(observations); latest=_latest_windows_observation(conn,mission_id,phase_id); source_fp=(latest or {}).get("source_fingerprint") or _panel_fingerprint_from_snapshot(phase_id,((observations.get("domains") or {}).get("panel")))
-        bundle_content={"schema":EVIDENCE_BUNDLE_SCHEMA,"mission_id":mission_id,"phase_id":phase_id,"contract_digest":contract["contract_digest"],"observation_plan":plan,"observations":observations,"model_view":model_view,"source_fingerprint":source_fp,"reacquisition_generation":1,"reacquisition_trigger":"INITIAL_BOUNDED_OBSERVATION","authority_effect":"NONE"}
+        enrich_pre_baseline(conn,mission_id,observations,now_fn); model_view=_model_view(observations); latest=_latest_windows_observation(conn,mission_id,phase_id); source_fp=(latest or {}).get("source_fingerprint") or _panel_fingerprint_from_snapshot(phase_id,((observations.get("domains") or {}).get("panel"))); observation_fp=observation_generation_fingerprint(observations)
+        bundle_content={"schema":EVIDENCE_BUNDLE_SCHEMA,"mission_id":mission_id,"phase_id":phase_id,"contract_digest":contract["contract_digest"],"observation_plan":plan,"observations":observations,"model_view":model_view,"source_fingerprint":source_fp,"observation_fingerprint":observation_fp,"reacquisition_generation":1,"reacquisition_trigger":"INITIAL_BOUNDED_OBSERVATION","authority_effect":"NONE"}
         bundle_art=sched.put_artifact(conn,mission_id,"RECON_EVIDENCE_BUNDLE",bundle_content,now_fn,phase_id=phase_id,schema_id=EVIDENCE_BUNDLE_SCHEMA);bundle_digest=bundle_art["content_digest"]
-        sched.record_recon_evidence_generation(conn,mission_id,phase_id,1,source_fp,bundle_digest,bundle_content,"INITIAL_BOUNDED_OBSERVATION",now_fn)
+        sched.record_recon_evidence_generation(conn,mission_id,phase_id,1,observation_fp,bundle_digest,bundle_content,"INITIAL_BOUNDED_OBSERVATION",now_fn)
     trajectories=ensure_local_trajectories(conn,mission_id,phase_id,contract,bundle_digest,model_view,driver_generation,now_fn)
     if trajectories["required"] and not trajectories["complete"]:
         return {"state":"WAITING","gate":"LOCAL_RECON_TRAJECTORIES","reason":"Waiting for independent LOCAL reconnaissance trajectories","evidence":{"evidence_bundle_digest":bundle_digest,"trajectory_states":trajectories.get("states"),"material_lease_count":len(leases),"authority_effect":"NONE"}}
@@ -769,7 +830,7 @@ def execute_phase(conn: sqlite3.Connection, mission_id: str, phase_id: str, cont
     try:facts,detail=derive_facts(ro,mission_id,phase_id,contract,observations,artifacts=artifacts,baseline=(baseline or {}).get("content"),local_analysis=local_analysis,saas_advisory=saas)
     finally:ro.close()
     checks={k:"PASS" if v else "UNKNOWN" for k,v in facts.items()};missing_facts=[k for k,v in facts.items() if not v]
-    summary={"evidence_bundle_artifact_id":bundle_art["artifact_id"],"evidence_bundle_digest":bundle_digest,"evidence_generation":int(bundle_content.get("reacquisition_generation") or 1),"source_fingerprint":_bundle_source_fingerprint(phase_id,bundle_content),"facts":facts,"checks":checks,"material_lease_count":len(leases),"material_ids":[x["material_drone_id"] for x in leases],"local_trajectories":trajectories,"saas_advisory":{"state":saas.get("state"),"request_id":saas.get("request_id"),"receipt_digest":saas.get("receipt_digest"),"authority_effect":"NONE"},"classification_digest":digest(detail.get("classifications")),"authority_effect":"NONE"}
+    summary={"evidence_bundle_artifact_id":bundle_art["artifact_id"],"evidence_bundle_digest":bundle_digest,"evidence_generation":int(bundle_content.get("reacquisition_generation") or 1),"source_fingerprint":bundle_content.get("source_fingerprint"),"observation_fingerprint":_bundle_observation_fingerprint(phase_id,bundle_content),"facts":facts,"checks":checks,"material_lease_count":len(leases),"material_ids":[x["material_drone_id"] for x in leases],"local_trajectories":trajectories,"saas_advisory":{"state":saas.get("state"),"request_id":saas.get("request_id"),"receipt_digest":saas.get("receipt_digest"),"authority_effect":"NONE"},"classification_digest":digest(detail.get("classifications")),"authority_effect":"NONE"}
     # Keep the evidence bundle immutable once its digest is used by LOCAL/SaaS.
     # The bounded reconciliation result is a separate phase summary artifact.
     sched.put_artifact(conn,mission_id,"RECON_PHASE_SUMMARY",{"schema":"lion.control-plane-recon-phase-summary/v1","evidence_bundle_digest":bundle_digest,"summary":summary,"authority_effect":"NONE"},now_fn,phase_id=phase_id,schema_id="lion.control-plane-recon-phase-summary/v1")

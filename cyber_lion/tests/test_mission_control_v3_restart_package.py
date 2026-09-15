@@ -23,6 +23,7 @@ SOURCE_MAP = {
     "cyber_lion/contracts/mission_contract_profiles.py": ROOT / "cyber_lion/contracts/mission_contract_profiles.py",
     "cyber_lion/contracts/phase_execution_contract.py": ROOT / "cyber_lion/contracts/phase_execution_contract.py",
     "cyber_lion/contracts/action_ir.py": ROOT / "cyber_lion/contracts/action_ir.py",
+    "cyber_lion/process_language/lpcl.py": ROOT / "cyber_lion/process_language/lpcl.py",
     "cyber_lion/mission_control/__init__.py": ROOT / "cyber_lion/mission_control/__init__.py",
     "cyber_lion/mission_control/execution_driver.py": ROOT / "cyber_lion/mission_control/execution_driver.py",
     "cyber_lion/mission_control/execution_driver_contract.py": ROOT / "cyber_lion/mission_control/execution_driver_contract.py",
@@ -88,6 +89,14 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
                 with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/contracts/action_ir.py$'):
                     broker.mission_control_v3_package_identity()
 
+
+    def test_missing_canonical_lpcl_source_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);self.materialize(root)
+            (root/'cyber_lion/process_language/lpcl.py').unlink()
+            with patch.object(broker,'MISSION_CONTROL_V3_ROOT',root):
+                with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/process_language/lpcl.py$'):
+                    broker.mission_control_v3_package_identity()
 
     def test_missing_phase_execution_contract_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:

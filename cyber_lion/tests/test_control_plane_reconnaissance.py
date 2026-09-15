@@ -82,26 +82,31 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertEqual({r[0] for r in c.execute("SELECT DISTINCT state FROM mission_recon_material_leases")},{"RELEASED"})
         c.close()
 
-    def test_newer_windows_fingerprint_opens_explicit_evidence_reacquisition_generation(self):
+    def test_new_composite_observation_opens_explicit_evidence_reacquisition_generation(self):
+        from unittest.mock import patch
         c=self.conn()
         c.execute("CREATE TABLE mission_execution_drivers(mission_id TEXT PRIMARY KEY,state TEXT,blocking_gate TEXT,generation INTEGER)")
         c.execute("INSERT INTO mission_execution_drivers VALUES('M','WAITING','EVIDENCE_INCOMPLETE',7)")
-        c.execute("CREATE TABLE protocol_messages(id INTEGER PRIMARY KEY AUTOINCREMENT,mission_id TEXT,observed_at TEXT,protocol TEXT,from_id TEXT,to_id TEXT,phase TEXT,direction TEXT,payload_json TEXT,payload_digest TEXT)")
-        panel_old={"runtime":{"runtime_source_sha256":"a"*64,"gateway_source_sha256":"b"*64},"repo":{"local_head":"1"*40,"local_tree":"2"*40,"github_master":{"head":"3"*40,"tree":"4"*40}},"thread_db":{"identity_digest":"c"*64}}
-        old_fp=cr._panel_fingerprint_from_snapshot('P',panel_old)
-        content={"schema":cr.EVIDENCE_BUNDLE_SCHEMA,"mission_id":"M","phase_id":"P","observations":{"domains":{"panel":panel_old}},"model_view":{},"reacquisition_generation":1,"source_fingerprint":old_fp,"authority_effect":"NONE"}
+        panel={"runtime":{"runtime_source_sha256":"a"*64,"gateway_source_sha256":"b"*64,"feature_vector_digest":"c"*64},"repo":{"local_head":"1"*40,"local_tree":"2"*40,"github_master":{"head":"3"*40,"tree":"4"*40}},"thread_db":{"identity_digest":"d"*64,"schema_version":6,"integrity":"ok"},"source_features":{"x":True}}
+        mc={"runtime_identity":{"source_hashes":{"mission_control_v3.py":"e"*64},"parser_sha256":"f"*64},"db":{"schema_version":40},"mission":{"mission_id":"M","spec_digest":"5"*64,"source_head":"6"*40,"source_tree":"7"*40,"adapter":"A"},"preflight":{"bound_count":1},"contracts":[{"contract_digest":"8"*64}],"bindings":[{"binding_digest":"9"*64}]}
+        lang={"source_hashes":{"cyber_lion/process_language/lpcl.py":"a1"*32,"cyber_lion/contracts/phase_execution_contract.py":"b1"*32},"canonical_lpcl_source_present":True,"lpcl12_compiler_present":True}
+        old_obs={"phase_id":"P","domains":{"panel":panel,"mission_control":mc,"process_language":lang}}
+        old_fp=cr.observation_generation_fingerprint(old_obs)
+        content={"schema":cr.EVIDENCE_BUNDLE_SCHEMA,"mission_id":"M","phase_id":"P","observations":old_obs,"model_view":{},"reacquisition_generation":1,"observation_fingerprint":old_fp,"authority_effect":"NONE"}
         art=gs.put_artifact(c,'M','RECON_EVIDENCE_BUNDLE',content,now,phase_id='P',schema_id=cr.EVIDENCE_BUNDLE_SCHEMA)
         cr._record_bundle_generation(c,'M','P',art,now)
-        panel_new={**panel_old,"runtime":{"runtime_source_sha256":"d"*64,"gateway_source_sha256":"b"*64}}
-        new_fp=cr._panel_fingerprint_from_snapshot('P',panel_new)
-        payload={"event":cr.WINDOWS_OBSERVATION_EVENT,"schema":cr.WINDOWS_OBSERVATION_SCHEMA,"source_fingerprint":new_fp,"snapshot":panel_new,"authority_effect":"NONE"}
-        c.execute("INSERT INTO protocol_messages(mission_id,observed_at,protocol,from_id,to_id,phase,direction,payload_json,payload_digest) VALUES(?,?,?,?,?,?,?,?,?)",('M','2026-09-15T12:00:01Z','EVIDENCE','LPCL_PANEL','MISSION_EXECUTION_DRIVER','P','IN',json.dumps(payload,sort_keys=True),'e'*64));c.commit()
-        req=cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'))
-        self.assertIsNotNone(req);self.assertEqual(req['next_generation'],2);self.assertEqual(req['current_source_fingerprint'],old_fp);self.assertEqual(req['new_source_fingerprint'],new_fp)
-        c.execute("UPDATE mission_execution_drivers SET state='ACTIVE',blocking_gate=NULL,generation=8 WHERE mission_id='M'");c.commit()
-        active_req=cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'),require_parked=False)
-        self.assertIsNotNone(active_req);self.assertEqual(active_req['new_source_fingerprint'],new_fp)
-        self.assertIsNone(cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P')))
+        new_obs=json.loads(json.dumps(old_obs));new_obs["domains"]["mission_control"]["runtime_identity"]["parser_sha256"]="c1"*32
+        new_fp=cr.observation_generation_fingerprint(new_obs)
+        contract={"currentness_requirements":[],"evidence_requirements":[]}
+        with tempfile.TemporaryDirectory() as td:
+            db=Path(td)/'source.db';sqlite3.connect(db).close()
+            with patch.object(cr,'collect_observations',return_value=(new_obs,[])):
+                req=cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'),contract,db_path=db)
+                self.assertIsNotNone(req);self.assertEqual(req['next_generation'],2);self.assertEqual(req['current_observation_fingerprint'],old_fp);self.assertEqual(req['new_observation_fingerprint'],new_fp)
+                c.execute("UPDATE mission_execution_drivers SET state='ACTIVE',blocking_gate=NULL,generation=8 WHERE mission_id='M'");c.commit()
+                active_req=cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'),contract,db_path=db,require_parked=False)
+                self.assertIsNotNone(active_req);self.assertEqual(active_req['new_observation_fingerprint'],new_fp)
+                self.assertIsNone(cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'),contract,db_path=db))
         gens=gs.recon_evidence_generations(c,'M','P');self.assertEqual(len(gens),1);self.assertEqual(gens[0]['evidence_bundle_digest'],art['content_digest'])
         c.close()
 
@@ -172,6 +177,21 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertEqual((one,fd1),(same,fd_same))
         self.assertNotEqual(one,changed)
         self.assertNotEqual(fd1,fd2)
+
+    def test_composite_observation_fingerprint_tracks_semantic_domains_not_heartbeat_noise(self):
+        panel={"runtime":{"runtime_source_sha256":"a"*64,"gateway_source_sha256":"b"*64,"feature_vector_digest":"c"*64},"repo":{"local_head":"d"*40,"local_tree":"e"*40,"github_master":{"head":"f"*40,"tree":"1"*40}},"thread_db":{"identity_digest":"2"*64},"source_features":{"x":True}}
+        mc={"runtime_identity":{"source_hashes":{"mission_control_v3.py":"3"*64},"parser_sha256":"4"*64},"db":{"schema_version":40},"mission":{"mission_id":"M","spec_digest":"5"*64,"source_head":"6"*40,"source_tree":"7"*40,"adapter":"A"},"preflight":{"bound_count":1},"contracts":[{"contract_digest":"8"*64}],"bindings":[{"binding_digest":"9"*64}],"driver":{"heartbeat_at":"t1"},"scheduler":{"heartbeat_at":"t1"}}
+        lang={"source_hashes":{"cyber_lion/process_language/lpcl.py":"a1"*32,"cyber_lion/contracts/phase_execution_contract.py":"b1"*32},"canonical_lpcl_source_present":True,"lpcl12_compiler_present":True}
+        one=cr.observation_generation_fingerprint({"phase_id":"P","domains":{"panel":panel,"mission_control":mc,"process_language":lang}})
+        noisy=json.loads(json.dumps(mc));noisy["driver"]["heartbeat_at"]="t2";noisy["scheduler"]["heartbeat_at"]="t2"
+        same=cr.observation_generation_fingerprint({"phase_id":"P","domains":{"panel":panel,"mission_control":noisy,"process_language":lang}})
+        changed=json.loads(json.dumps(mc));changed["runtime_identity"]["parser_sha256"]="c1"*32
+        diff_mc=cr.observation_generation_fingerprint({"phase_id":"P","domains":{"panel":panel,"mission_control":changed,"process_language":lang}})
+        changed_lang=json.loads(json.dumps(lang));changed_lang["source_hashes"]["cyber_lion/process_language/lpcl.py"]="d1"*32
+        diff_lang=cr.observation_generation_fingerprint({"phase_id":"P","domains":{"panel":panel,"mission_control":mc,"process_language":changed_lang}})
+        self.assertEqual(one,same)
+        self.assertNotEqual(one,diff_mc)
+        self.assertNotEqual(one,diff_lang)
 
     def test_successor_proposal_is_artifact_only(self):
         intel={"findings":[],"claim_to_evidence":[],"root_cause_candidates":[],"unknowns":[]}
