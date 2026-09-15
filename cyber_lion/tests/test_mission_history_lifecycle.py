@@ -28,7 +28,7 @@ class MissionHistoryLifecycleTests(unittest.TestCase):
   try:return self.life.normalize_epoch3_terminal_lifecycle(c,target_1_mission_id=self.t1,target_1_expected_spec_digest=self.mc.EPOCH3_LIFECYCLE_TARGET_1_DIGEST,target_2_mission_id=self.t2,target_2_expected_spec_digest=self.mc.EPOCH3_LIFECYCLE_TARGET_2_DIGEST,successor_mission_id=self.s,expected_current_head=head or self.head,expected_current_tree=self.tree,now_fn=self.mc.now)
   finally:c.close()
  def test_protocol_extensions_are_canonical(self):
-  e={'LIFECYCLE','HISTORY','LINEAGE'};self.assertTrue(e<=set(self.mc.PROTOCOLS));self.assertTrue(e<=set(self.local.LpclControlBridge.ALLOWED_PROTOCOLS))
+  e={'LIFECYCLE','HISTORY','LINEAGE','TRANSPORT','BROKER','MEDIATOR','THREAD'};self.assertTrue(e<=set(self.mc.PROTOCOLS));self.assertTrue(e<=set(self.local.LpclControlBridge.ALLOWED_PROTOCOLS))
  def test_vkt_is_preserved_legacy_history(self):
   c=self.mc.connect();x=self.life.mission_lifecycle_classification(c,'legacy::vkt-r3-live');p=self.life.mission_delete_preview(c,'legacy::vkt-r3-live',self.mc.MISSION);c.close();self.assertEqual(x['lifecycle_class'],'LEGACY_HISTORY');self.assertFalse(x['operational']);self.assertFalse(p['allowed']);self.assertEqual(p['reason'],'LEGACY_HISTORY_PRESERVATION_POLICY')
  def test_normalization_is_truth_preserving_and_idempotent(self):

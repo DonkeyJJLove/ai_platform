@@ -10,6 +10,7 @@ from .phase_execution_contract import PhaseExecutionContract, migrated_explicit_
 
 GENERIC_ADAPTER_REPAIR_MISSION = "LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1"
 POST_ASTRA_MISSION = "LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1"
+SAAS_AUTOMATIC_MEDIATOR_MISSION = "LION-SAAS-AUTOMATIC-MEDIATOR-REAL-ROUNDTRIP-R1"
 PROFILE_ID = "lion.mission-contract-profile/generic-adapter-repair-r1/v1"
 POST_ASTRA_PROFILE_ID = "lion.mission-contract-profile/post-astra-transport-closure-r1/v1"
 
@@ -162,7 +163,65 @@ def _post_astra_contract(mission_id: str, phase_id: str, ordinal: int) -> PhaseE
     )
 
 
+
+_SAAS_AUTOMATIC_MEDIATOR_PHASES = (
+    "REACQUIRE_CANONICAL_SOURCE",
+    "RECONSTRUCT_CURRENT_FAILURE",
+    "DISCOVER_SUPPORTED_AUTOMATIC_TRANSPORTS",
+    "CHATGPT_AUTOMATIC_INGRESS_FALSIFICATION",
+    "TRANSPORT_DECISION_GATE",
+    "MEDIATOR_PROTOCOL_CONTRACT",
+    "SECRET_AND_IDENTITY_BOUNDARY",
+    "IMPLEMENT_AUTOMATIC_MEDIATOR",
+    "IMPLEMENT_MEDIATOR_SERVICE",
+    "BROKER_CLAIM_AND_IDEMPOTENCY_HARDENING",
+    "IMPLEMENT_PROVIDER_ADAPTER",
+    "IMPLEMENT_PROVIDER_FAILURE_MODEL",
+    "RESPONSE_RECEIPT_BINDING",
+    "THREAD_DELIVERY_RECONCILIATION",
+    "PANEL_TRANSPORT_PROJECTION",
+    "FOCUSED_UNIT_TESTS",
+    "SECURITY_NEGATIVE_TESTS",
+    "RESTART_DURABILITY_TEST",
+    "FULL_LOCAL_REGRESSION",
+    "STATIC_SECURITY_AND_SYMBOL_CENSUS",
+    "PRODUCTION_EFFECT_RECONCILIATION",
+    "TRUTH_CARRIER_REBIND",
+    "PUBLISH_PR_AND_EXACT_HEAD_CI",
+    "MERGE_AND_POST_MERGE_CI",
+    "DEPLOY_8766_AND_MEDIATOR",
+    "DEPLOY_8780_PANEL_RUNTIME",
+    "REAL_UNATTENDED_PRIMARY_ACCEPTANCE",
+    "DUPLICATE_AND_RESTART_ACCEPTANCE",
+    "FAILURE_INJECTION_ACCEPTANCE",
+    "LIFECYCLE_R2_CURRENTNESS_RECONCILIATION",
+    "TERMINAL_RECONCILIATION",
+    "RETURN_TO_LION_SCAFFOLD",
+)
+
+def _saas_automatic_mediator_contract(mission_id: str, phase_id: str, ordinal: int) -> PhaseExecutionContract | None:
+    if mission_id != SAAS_AUTOMATIC_MEDIATOR_MISSION or phase_id not in _SAAS_AUTOMATIC_MEDIATOR_PHASES:
+        return None
+    return migrated_explicit_contract(
+        mission_id=mission_id,
+        phase_id=phase_id,
+        ordinal=ordinal,
+        execution_class="VERIFY",
+        capability_classes=("MISSION_RUNTIME_RECONCILIATION",),
+        effect_ceiling="NONE",
+        binding_mode="DYNAMIC",
+        on_missing_capability="WAIT_AND_DISCOVER",
+        auto_resume=True,
+        verify_before_mutate=True,
+        currentness_requirements=("EXACT_CURRENT_REPOSITORY", "CURRENT_MISSION_RUNTIME", "CURRENT_SAAS_BROKER_STATE"),
+        evidence_requirements=("SAAS_MEDIATOR_PHASE_EVIDENCE", "DURABLE_RECEIPT"),
+        completion_predicates=("SAAS_MEDIATOR_PHASE_EVIDENCE=PASS",),
+    )
+
 def migrated_contract_for(mission_id: str, phase_id: str, ordinal: int) -> PhaseExecutionContract | None:
+    mediator=_saas_automatic_mediator_contract(mission_id,phase_id,ordinal)
+    if mediator is not None:
+        return mediator
     post=_post_astra_contract(mission_id,phase_id,ordinal)
     if post is not None:
         return post
@@ -193,3 +252,6 @@ def profile_phase_ids() -> tuple[str, ...]:
 
 def post_astra_profile_phase_ids() -> tuple[str, ...]:
     return _POST_ASTRA_PHASES
+
+def saas_automatic_mediator_profile_phase_ids() -> tuple[str, ...]:
+    return _SAAS_AUTOMATIC_MEDIATOR_PHASES

@@ -139,7 +139,7 @@ class LpclControlBridge:
     """Loopback-only LPCL intake/control bridge. It never grants model authority."""
     KEY_RE=re.compile(r'^([A-Z][A-Z0-9_]*)\s*=\s*(.*)$')
     MID_RE=re.compile(r'^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')
-    ALLOWED_PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL','LIFECYCLE','HISTORY','LINEAGE')
+    ALLOWED_PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL','LIFECYCLE','HISTORY','LINEAGE','TRANSPORT','BROKER','MEDIATOR','THREAD')
     def __init__(self,broker,base='http://127.0.0.1:8766'):
         self.broker=broker;self.base=base.rstrip('/')
     def _get(self,path,timeout=8):
