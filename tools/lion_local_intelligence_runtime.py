@@ -139,7 +139,7 @@ class LpclControlBridge:
     """Loopback-only LPCL intake/control bridge. It never grants model authority."""
     KEY_RE=re.compile(r'^([A-Z][A-Z0-9_]*)\s*=\s*(.*)$')
     MID_RE=re.compile(r'^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')
-    ALLOWED_PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL')
+    ALLOWED_PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL','LIFECYCLE','HISTORY','LINEAGE')
     def __init__(self,broker,base='http://127.0.0.1:8766'):
         self.broker=broker;self.base=base.rstrip('/')
     def _get(self,path,timeout=8):
@@ -218,7 +218,10 @@ class LpclControlBridge:
         return {'valid':True,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'capability_registry_state':registry_state,'capability_registry_digest':registry_snapshot.get('registry_digest') if isinstance(registry_snapshot,dict) else None,'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
     def __call__(self,op,args):
         args=args or {}
-        if op=='recent':return self._get('/api/v3/missions/recent')
+        if op=='recent':
+            view=str(args.get('view') or 'operational').lower()
+            if view not in {'operational','history','all'}:raise ValueError('mission view')
+            return self._get('/api/v3/missions/recent?view='+view)
         if op=='capability_registry':return self._get('/api/v3/capabilities/process-contracts')
         if op in {'mission_delete_preview','mission_delete'}:
             mid=args.get('mission_id')

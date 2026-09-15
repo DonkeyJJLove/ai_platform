@@ -51,7 +51,8 @@ class MissionFocusTests(unittest.TestCase):
                 self.assertEqual(out['readback']['mission_id'],mid)
                 self.assertEqual(out['authority_effect'],'NONE')
                 self.assertTrue(out['changed'])
-                self.assertEqual(service.focus_mission_id(),mid)
+                self.assertEqual(service.focus_mission_id('history' if mid=='historical' else 'operational'),mid)
+                if mid=='historical':self.assertEqual(service.focus_mission_id(),service.MISSION)
                 self.assertEqual(self.protected_state(),before)
                 receipt_id=out['receipt']['receipt_id']
                 self.assertTrue(any(r['receipt_id']==receipt_id for r in out['readback']['action_receipts']))
@@ -95,16 +96,16 @@ class MissionFocusTests(unittest.TestCase):
     def test_concurrent_recent_reads_share_inflight_work_without_retaining_cache(self):
         original=service._read_recent_process_missions
         started=threading.Event();release=threading.Event();owner=[]
-        def held_read():
+        def held_read(view='operational'):
             owner.append(threading.get_ident())
             started.set()
             if not release.wait(5):raise RuntimeError('test release timeout')
-            return original()
+            return original(view)
         with patch.object(service,'_read_recent_process_missions',side_effect=held_read) as read:
             with ThreadPoolExecutor(max_workers=8) as pool:
                 first=pool.submit(service.recent_process_missions)
                 self.assertTrue(started.wait(2))
-                pending=service.RECENT_PROJECTION_PENDING
+                pending=service.RECENT_PROJECTION_PENDING['operational']
                 joined=threading.Barrier(8)
                 result=pending.result
                 def joined_result():
@@ -121,12 +122,13 @@ class MissionFocusTests(unittest.TestCase):
         self.assertNotEqual(values[0],values[1])
         with closing(service.connect()) as conn,conn:
             conn.execute('UPDATE missions SET title=? WHERE mission_id=?',('fresh title','historical'))
-        self.assertEqual(next(r for r in service.recent_process_missions() if r['mission_id']=='historical')['title'],'fresh title')
+        self.assertEqual(next(r for r in service.recent_process_missions('history') if r['mission_id']=='historical')['title'],'fresh title')
 
     def test_failed_recent_read_does_not_poison_next_read(self):
         with patch.object(service,'_read_recent_process_missions',side_effect=ValueError('read failure')):
             with self.assertRaisesRegex(ValueError,'read failure'):service.recent_process_missions()
-        self.assertEqual(len(service.recent_process_missions()),2)
+        self.assertEqual(len(service.recent_process_missions()),1)
+        self.assertEqual(len(service.recent_process_missions('all')),2)
 
 
 if __name__ == '__main__':

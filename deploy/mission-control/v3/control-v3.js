@@ -1,6 +1,6 @@
 const MC=id=>document.getElementById(id);
 const mcesc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let MC_SELECTED=null,MC_DATA=null,MC_PROTOCOL='ALL',MC_FOCUS=null,MC_PINNED=false,MC_REFRESHING=false,MC_REFRESH_PENDING=false,MC_LAST_RENDER_KEY=null,MC_LAST_HEARTBEAT_SIGNATURE=null,MC_HEARTBEAT_TIMER=null;
+let MC_SELECTED=null,MC_DATA=null,MC_PROTOCOL='ALL',MC_FOCUS=null,MC_PINNED=false,MC_VIEW='operational',MC_REFRESHING=false,MC_REFRESH_PENDING=false,MC_LAST_RENDER_KEY=null,MC_LAST_HEARTBEAT_SIGNATURE=null,MC_HEARTBEAT_TIMER=null;
 
 async function mcget(path){
   const r=await fetch(path,{cache:'no-store',signal:AbortSignal.timeout(10000)});
@@ -13,7 +13,7 @@ function capState(name){return MC_DATA?.capabilities?.[name]?.state||'UNAVAILABL
 function missionPath(mid,suffix=''){return '/api/v3/missions/'+encodeURIComponent(mid)+suffix}
 function mcRenderKey(s,registry,sources){
   const p=s.process||{},d=s.execution_driver||{},sc=s.schema_context||{},dc=s.driver_controls||{};
-  return JSON.stringify({focus:MC_FOCUS,selected:MC_SELECTED,pinned:MC_PINNED,
+  return JSON.stringify({focus:MC_FOCUS,selected:MC_SELECTED,pinned:MC_PINNED,view:MC_VIEW,lifecycle:s.lifecycle,
     mission:[s.mission_id,s.title,s.state,s.runtime_state,s.adapter,s.ready,s.materialized,s.material_target,s.logical_count,s.updated_at,s.control_authority],
     process:[p.objective,p.description,p.progress,p.current_phase,p.authority_state],schema:[sc.record_class,sc.current_schema,sc.source_stage,sc.compatibility_note],
     driver:[d.state,d.generation,d.current_phase,d.waiting_reason,d.blocking_gate,d.next_action,d.last_effect,d.last_effect_receipt],
@@ -23,7 +23,7 @@ function mcRenderKey(s,registry,sources){
     receipts:(s.action_receipts||[]).slice(0,20).map(x=>x.receipt_digest||x.receipt_id),caps:Object.entries(s.capabilities||{}).sort().map(([k,v])=>[k,v.state,v.reason]),
     registry:(registry||[]).map(x=>[x.mission_id,x.state,x.progress,x.current_phase]),sources:(sources||[]).map(x=>[x.source_id||x.name,x.available,x.currentness])});
 }
-function mcRenderHeader(s){const mode=MC_PINNED?'PINNED':'FOLLOW_FOCUS',focus=MC_FOCUS||'UNKNOWN',last=s.updated_at||'UNKNOWN';MC('mcV3Meta').textContent=s.title+' · '+s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · VIEW '+mode+(MC_PINNED?' · focus '+focus:'')+' · mission update '+last+' · schema '+(s.normalized_schema_version||missingRecord(s))+' · revision '+(s.projection_revision||missingRecord(s))+' · age '+(s.updated_at?Math.max(0,Math.floor((Date.now()-Date.parse(s.updated_at))/1000))+'s':missingRecord(s))+' · collector poll '+new Date().toISOString()}
+function mcRenderHeader(s){const mode=MC_PINNED?'PINNED':'FOLLOW_FOCUS',focus=MC_FOCUS||'UNKNOWN',last=s.updated_at||'UNKNOWN',lc=s.lifecycle?.lifecycle_class||'UNKNOWN';MC('mcV3Meta').textContent=s.title+' · '+s.mission_id+' · state '+s.state+' · lifecycle '+lc+' · runtime '+s.runtime_state+' · VIEW '+mode+' / '+MC_VIEW.toUpperCase()+(MC_PINNED?' · focus '+focus:'')+' · mission update '+last+' · schema '+(s.normalized_schema_version||missingRecord(s))+' · revision '+(s.projection_revision||missingRecord(s))+' · age '+(s.updated_at?Math.max(0,Math.floor((Date.now()-Date.parse(s.updated_at))/1000))+'s':missingRecord(s))+' · collector poll '+new Date().toISOString()}
 function mcAgeText(ms){if(ms===null||ms===undefined||!Number.isFinite(Number(ms)))return 'unknown';const s=Math.max(0,Number(ms))/1000;if(s<60)return s.toFixed(s<10?1:0)+'s';const m=Math.floor(s/60),r=Math.floor(s%60);return m+'m '+r+'s'}
 function mcSince(iso){if(!iso)return 'unknown';const ms=Date.now()-Date.parse(iso);return mcAgeText(ms)}
 function mcProgressClass(l){const m={EXECUTING:'live-executing',WAITING_HEALTHY:'live-waiting',BLOCKED_HEALTHY:'live-blocked',IDLE_HEALTHY:'live-waiting',PAUSED:'live-paused',STALE:'live-stale',DISCONNECTED:'live-disconnected',COMPLETE:'live-complete',FAILED:'live-stale'};return m[l?.state]||'live-stale'}
@@ -160,23 +160,30 @@ function renderSchemaContext(s){
 }
 
 function renderLifecycleActions(s){
-  let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('RESTART','Restart material runtime')+mcbtn('VALIDATE','Validate')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan');
-  a+=mcbtn('DELETE','Usuń misję','danger');
-  if((s.revision_compilations||[]).some(x=>String(x.state||'').includes('AWAITING_EXPLICIT_ACTIVATION')))a+=mcbtn('ACTIVATE_REVISION','Activate revision');
-  const controls=s.driver_controls||{},order=[['REACQUIRE_CAPABILITIES','Recheck capability','mc-action-primary'],['PAUSE_AUTO_RESUME','Pause auto-resume',''],['PAUSE','Pause driver',''],['RESUME','Resume driver','mc-action-primary'],['STOP','Stop driver','danger']];
-  for(const [name,fallback,cls] of order){const c=controls[name];if(c?.supported)a+=mcbtn(name,c.label||fallback,cls)}
-  if(s.mission_id==='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'){
-    if(s.state==='RUNNING')a+=`<button type="button" data-low-action="PAUSE">Pause</button><button type="button" data-low-action="VALIDATE">Validate fleet</button>`;
-    if(s.state==='PAUSED')a+=`<button type="button" data-low-action="RESUME">Resume</button>`;
-    if(['RUNNING','PAUSED','FAILED','CONVERGING'].includes(s.state))a+=`<button type="button" class="danger" data-low-action="STOP">Stop</button>`;
-    if(['AUTHORIZED','STOPPED','FAILED'].includes(s.state))a+=`<button type="button" data-low-action="START">Start</button>`;
+  const lc=s.lifecycle||{},readOnly=lc.lifecycle_class==='LEGACY_HISTORY'||lc.lifecycle_class==='SUPERSEDED'||lc.execution_controls_allowed===false;
+  let a=mcbtn('REFRESH','Refresh')+mcbtn('AUDIT','Audit')+mcbtn('VALIDATE','Validate');
+  if(readOnly){
+    const label=lc.lifecycle_class==='LEGACY_HISTORY'?'LEGACY HISTORY · READ ONLY':'SUPERSEDED · READ ONLY';
+    a+=`<span class="mc-cap"><b>${mcesc(label)}</b> · ${mcesc(lc.history_reason||'historical record')}</span>`;
+  }else{
+    a+=mcbtn('RESTART','Restart material runtime')+mcbtn('REDESIGN','Redesign')+mcbtn('ADD_COMPONENT','Add component')+mcbtn('ROLLBACK','Rollback plan')+mcbtn('DELETE','Usuń misję','danger');
+    if((s.revision_compilations||[]).some(x=>String(x.state||'').includes('AWAITING_EXPLICIT_ACTIVATION')))a+=mcbtn('ACTIVATE_REVISION','Activate revision');
+    const controls=s.driver_controls||{},order=[['REACQUIRE_CAPABILITIES','Recheck capability','mc-action-primary'],['PAUSE_AUTO_RESUME','Pause auto-resume',''],['PAUSE','Pause driver',''],['RESUME','Resume driver','mc-action-primary'],['STOP','Stop driver','danger']];
+    for(const [name,fallback,cls] of order){const c=controls[name];if(c?.supported)a+=mcbtn(name,c.label||fallback,cls)}
+    if(s.mission_id==='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3'){
+      if(s.state==='RUNNING')a+=`<button type="button" data-low-action="PAUSE">Pause</button><button type="button" data-low-action="VALIDATE">Validate fleet</button>`;
+      if(s.state==='PAUSED')a+=`<button type="button" data-low-action="RESUME">Resume</button>`;
+      if(['RUNNING','PAUSED','FAILED','CONVERGING'].includes(s.state))a+=`<button type="button" class="danger" data-low-action="STOP">Stop</button>`;
+      if(['AUTHORIZED','STOPPED','FAILED'].includes(s.state))a+=`<button type="button" data-low-action="START">Start</button>`;
+    }
   }
   patchHtml(MC('mcV3Actions'),a);
   MC('mcV3Actions').querySelectorAll('[data-mc-action]').forEach(b=>b.onclick=()=>mcActionPrompt(b.dataset.mcAction));
   MC('mcV3Actions').querySelectorAll('[data-low-action]').forEach(b=>b.onclick=()=>mcCurrentMaterialAct(b.dataset.lowAction));
-  const controlCaps=Object.entries(controls).map(([k,v])=>`<span class="mc-cap"><b>${mcesc(k)}</b> ${v.supported?'SUPPORTED':'UNAVAILABLE'}${v.reason?' · '+mcesc(v.reason):''}</span>`).join('');
+  const controlCaps=Object.entries(s.driver_controls||{}).map(([k,v])=>`<span class="mc-cap"><b>${mcesc(k)}</b> ${v.supported?'SUPPORTED':'UNAVAILABLE'}${v.reason?' · '+mcesc(v.reason):''}</span>`).join('');
   patchHtml(MC('mcCapabilityMatrix'),Object.entries(s.capabilities||{}).map(([k,v])=>`<span class="mc-cap"><b>${mcesc(k)}</b> ${mcesc(v.state)}${v.reason?' · '+mcesc(v.reason):''}</span>`).join('')+controlCaps);
 }
+
 function mcRender(s,registry,sources){
   MC_DATA=s;const n=s.normalized_runtime||{},p={...(s.process||{}),current_phase:n.runtime?.current_phase??s.process?.current_phase},sc=s.schema_context||{};
   patchHtml(MC('mcV3Authority'),'CONTROL: <b>'+mcesc(s.control_authority||'NONE')+'</b>');
@@ -206,7 +213,7 @@ function mcRender(s,registry,sources){
   patchHtml(MC('mcV3Workers'),workerCards(s,mcesc,workerRestart));
   MC('mcV3Workers').querySelectorAll('[data-restart]').forEach(b=>b.onclick=()=>mcCurrentMaterialAct('RESTART_ONE',b.dataset.restart));
 
-  patchHtml(MC('mcV3Registry'),(registry||[]).map(x=>{const has=x.progress!==null&&x.progress!==undefined;const progressText=has?Number(x.progress).toFixed(1)+'%':'historical · no process progress';return `<button type="button" class="mc-reg ${x.mission_id===s.mission_id?'active':''}" data-mid="${mcesc(x.mission_id)}"><b>${x.controllable?'●':'○'} ${mcesc(x.title||x.mission_id)}</b><span>${mcesc(x.state)} · ${mcesc(progressText)}${x.current_phase?' · '+mcesc(x.current_phase):''}</span><small>${mcesc(x.objective||'Process metadata not recorded at source stage')}</small></button>`}).join(''));
+  patchHtml(MC('mcV3Registry'),(registry||[]).map(x=>{const has=x.progress!==null&&x.progress!==undefined;const progressText=has?Number(x.progress).toFixed(1)+'%':'historical · no process progress',badge=x.lifecycle_class==='LEGACY_HISTORY'?'LEGACY HISTORY':x.lifecycle_class==='SUPERSEDED'?'SUPERSEDED':x.lifecycle_class||'CURRENT';return `<button type="button" class="mc-reg ${x.mission_id===s.mission_id?'active':''}" data-mid="${mcesc(x.mission_id)}"><b>${x.controllable?'●':'○'} ${mcesc(x.title||x.mission_id)}</b><span>${mcesc(badge)} · ${mcesc(x.state)} · ${mcesc(progressText)}${x.current_phase?' · '+mcesc(x.current_phase):''}</span><small>${mcesc(x.objective||'Process metadata not recorded at source stage')}</small></button>`}).join(''));
   MC('mcV3Registry').querySelectorAll('[data-mid]').forEach(b=>b.onclick=()=>{MC_SELECTED=b.dataset.mid;MC_PINNED=MC_SELECTED!==MC_FOCUS;MC_LAST_RENDER_KEY=null;mcRefresh()});
   const actionReceipts=(s.action_receipts||[]).map(x=>`<div class="mc-line">${mcesc(x.created_at)} · ${mcesc(x.action)} · <b class="${x.status==='PASS'?'mc-live':'mc-bad'}">${mcesc(x.status)}</b> · ${mcesc(x.effect_class)}</div>`).join('');
   const commands=(s.commands||[]).map(x=>`<div class="mc-line">${mcesc(x.requested_at)} · ${mcesc(x.action)} · <b class="${x.status==='PASS'?'mc-live':x.status==='FAIL'?'mc-bad':'mc-warn'}">${mcesc(x.status)}</b>${x.pod_name?' · '+mcesc(x.pod_name):''}</div>`).join('');
@@ -217,8 +224,8 @@ function mcRender(s,registry,sources){
 async function mcRefresh(){
   if(MC_REFRESHING){MC_REFRESH_PENDING=true;return}MC_REFRESHING=true;
   try{
-    const [reg,src]=await Promise.all([mcget('/api/v3/missions/recent'),mcget('/api/v3/evidence-sources')]);
-    const registry=reg.missions||[];MC_FOCUS=reg.focus_mission_id||registry[0]?.mission_id||null;
+    const [reg,src]=await Promise.all([mcget('/api/v3/missions/recent?view='+encodeURIComponent(MC_VIEW)),mcget('/api/v3/evidence-sources')]);
+    const registry=reg.missions||[];MC_FOCUS=reg.focus_mission_id||registry[0]?.mission_id||null;const ht=MC('mcHistoryToggle');if(ht){ht.textContent=MC_VIEW==='history'?'Operational':'History / Legacy';ht.onclick=()=>{MC_VIEW=MC_VIEW==='history'?'operational':'history';MC_PINNED=false;MC_SELECTED=null;MC_LAST_RENDER_KEY=null;mcRefresh()}};
     if(!MC_PINNED||!MC_SELECTED||!registry.some(x=>x.mission_id===MC_SELECTED))MC_SELECTED=MC_FOCUS;
     if(!MC_SELECTED){
       MC_DATA=null;MC_PINNED=false;MC_LAST_RENDER_KEY=null;

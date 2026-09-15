@@ -21,9 +21,9 @@ from cyber_lion.mission_control import control_plane_reconnaissance as control_r
 from cyber_lion.contracts.action_ir import CanonicalActionIR
 from mission_control_compat import compat_get, STATIC
 try:
- from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
+ from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records, mission_lifecycle_classification, normalize_epoch3_terminal_lifecycle
 except ImportError:
- from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
+ from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records, mission_lifecycle_classification, normalize_epoch3_terminal_lifecycle
 try:
  from lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, cancel_request as saas_cancel, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 except ImportError:
@@ -226,8 +226,15 @@ def snapshot():
 
 
 # ---- LPCL mission process extension v1 -----------------------------------
-PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL')
+PROTOCOLS=('LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL','LIFECYCLE','HISTORY','LINEAGE')
 PHASE_STATES=('PENDING','READY','RUNNING','WAITING','BLOCKED','PASS','FAIL','SKIPPED','COMPLETE','CANCELLED')
+EPOCH3_LIFECYCLE_TASK='LION-EPOCH3-MISSION-LIFECYCLE-NORMALIZATION-LEGACY-HISTORY-AND-EPOCH4-SCOPE-EXTRACTION-R2'
+EPOCH3_LIFECYCLE_TASK_DIGEST='67a90c3826fa3f4f45bcad54685f15d2a53da3d09cd01bf2434a83718c6f094c'
+EPOCH3_LIFECYCLE_TARGET_1='LION-EPOCH3-FULL-CONTROL-PLANE-PANEL-AND-AUTONOMOUS-RUN-DISPATCHER-128L64M-R1'
+EPOCH3_LIFECYCLE_TARGET_1_DIGEST='d974b7562bfae99c7a061c1e38494ef3208e79d088630ac52b46ce8b53de39c0'
+EPOCH3_LIFECYCLE_TARGET_2='EPOCH3-GLOBAL-UPGRADE-AUTHORITY-SYNC-EVERYWHERE-R1'
+EPOCH3_LIFECYCLE_TARGET_2_DIGEST='cfe4ddd9f24588a4a91d06a2a36eecbc17acf6cc87c690570949fabdb3e4fc8e'
+EPOCH3_LIFECYCLE_SUCCESSOR='LION-CONTROL-PLANE-PANEL-BROKER-REPAIR-SUCCESSOR-R1'
 LPCL_REBIND_SOURCE='EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1'
 EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
@@ -767,8 +774,10 @@ def mission_action(mid,x,*,phase_guard=None):
     action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','ACTIVATE_REVISION','AUDIT','ROLLBACK','PAUSE','PAUSE_AUTO_RESUME','REACQUIRE_CAPABILITIES','RESUME','VALIDATE','STOP','DRIVER_START'}
     if action not in allowed:raise ValueError('action denied')
     request={k:v for k,v in x.items() if k!='action'}
-    c=connect();row=c.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mid,)).fetchone();c.close()
+    c=connect();row=c.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mid,)).fetchone();classification=mission_lifecycle_classification(c,mid) if row else None;c.close()
     if not row:raise ValueError('mission not found')
+    if classification['lifecycle_class']=='LEGACY_HISTORY' and action not in {'REFRESH','AUDIT','VALIDATE'}:raise ValueError('LEGACY_HISTORY_READ_ONLY')
+    if (classification['lifecycle_class']=='SUPERSEDED' or mid in {EPOCH3_LIFECYCLE_TARGET_1,EPOCH3_LIFECYCLE_TARGET_2}) and action not in {'REFRESH','AUDIT','VALIDATE'}:raise ValueError('MISSION_SUPERSEDED_READ_ONLY' if classification['lifecycle_class']=='SUPERSEDED' else 'EPOCH3_TARGET_PENDING_SUPERSESSION_READ_ONLY')
     guarded_connection=None
     if phase_guard is not None:
       if action not in {'PAUSE','STOP'} or phase_guard.get('action')!=action:raise ValueError('phase guard action mismatch')
@@ -1059,45 +1068,80 @@ def set_focus_mission(mid, request):
       c.rollback();raise
     finally:c.close()
 
-def focus_mission_id():
-    c=connect()
+def _view_name(value):
+    view=str(value or 'operational').lower()
+    if view not in {'operational','history','all'}:raise ValueError('mission view')
+    return view
+
+
+def _classification_matches_view(classification, view):
+    if view=='all':return True
+    if view=='operational':return bool(classification.get('operational'))
+    return bool(classification.get('historical'))
+
+
+def focus_mission_id(view='operational'):
+    view=_view_name(view);c=connect()
     try:
       r=c.execute("SELECT m.mission_id FROM missions m JOIN mission_meta f ON f.value=m.mission_id WHERE f.key='focus_mission_id'").fetchone()
-      if r is None:r=c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC,mission_id LIMIT 1').fetchone()
-      return r[0] if r else None
+      if r is not None:
+        try:
+          if _classification_matches_view(mission_lifecycle_classification(c,r[0]),view):return r[0]
+        except ValueError:pass
+      for candidate in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC,mission_id'):
+        try:
+          if _classification_matches_view(mission_lifecycle_classification(c,candidate['mission_id']),view):return candidate['mission_id']
+        except ValueError:continue
+      return None
     finally:c.close()
 
 RECENT_PROJECTION_LOCK=threading.Lock()
-RECENT_PROJECTION_PENDING=None
+RECENT_PROJECTION_PENDING={}
 
 
-def recent_process_missions():
-    # Share only an in-flight read, avoiding both concurrent read thrashing and
-    # a queue of redundant batches. Completed reads are never retained as cache.
+def recent_process_missions(view='operational'):
+    view=_view_name(view)
     global RECENT_PROJECTION_PENDING
     with RECENT_PROJECTION_LOCK:
-      leader=RECENT_PROJECTION_PENDING is None
-      if leader:RECENT_PROJECTION_PENDING=Future()
-      pending=RECENT_PROJECTION_PENDING
+      leader=view not in RECENT_PROJECTION_PENDING
+      if leader:RECENT_PROJECTION_PENDING[view]=Future()
+      pending=RECENT_PROJECTION_PENDING[view]
     if leader:
-      try:pending.set_result(_read_recent_process_missions())
+      try:pending.set_result(_read_recent_process_missions(view))
       except BaseException as error:pending.set_exception(error)
       finally:
-        with RECENT_PROJECTION_LOCK:RECENT_PROJECTION_PENDING=None
+        with RECENT_PROJECTION_LOCK:RECENT_PROJECTION_PENDING.pop(view,None)
     return deepcopy(pending.result())
 
 
-def _read_recent_process_missions():
-    c=connect()
-    try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 30')]
+def _read_recent_process_missions(view='operational'):
+    view=_view_name(view);c=connect()
+    try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 60')]
     finally:c.close()
     rows=[]
     for mid in mids:
-      try:rows.append(process_snapshot(mid,read_only=True)['mission_summary'])
+      try:
+        snap=process_snapshot(mid,read_only=True);classification=snap.get('lifecycle') or {}
+        if not _classification_matches_view(classification,view):continue
+        summary=dict(snap['mission_summary']);summary.update({k:classification.get(k) for k in ('lifecycle_class','record_class','operational','historical','legacy','execution_controls_allowed','history_reason')});rows.append(summary)
       except ValueError as error:
         if str(error)!='mission not found':raise
     return rows
+
+
+def execute_epoch3_lifecycle_normalization(x):
+    if type(x) is not dict or set(x)!={'task_mission_id','task_lpcl_digest','source_head','source_tree'}:raise ValueError('lifecycle normalization schema')
+    if x['task_mission_id']!=EPOCH3_LIFECYCLE_TASK or x['task_lpcl_digest']!=EPOCH3_LIFECYCLE_TASK_DIGEST:raise ValueError('lifecycle normalization authority identity')
+    if not _hex(x['source_head'],40) or not _hex(x['source_tree'],40):raise ValueError('source identity')
+    c=connect()
+    try:
+      task=c.execute('SELECT state,spec_digest FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TASK,)).fetchone();process=c.execute('SELECT authority_state FROM mission_process_specs WHERE mission_id=?',(EPOCH3_LIFECYCLE_TASK,)).fetchone()
+      if task is None or task['spec_digest']!=EPOCH3_LIFECYCLE_TASK_DIGEST or task['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or process is None or process['authority_state']!='EXPLICIT_USER_ACTIVATION':raise ValueError('lifecycle task not explicitly activated')
+      return normalize_epoch3_terminal_lifecycle(c,target_1_mission_id=EPOCH3_LIFECYCLE_TARGET_1,target_1_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_1_DIGEST,target_2_mission_id=EPOCH3_LIFECYCLE_TARGET_2,target_2_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_2_DIGEST,successor_mission_id=EPOCH3_LIFECYCLE_SUCCESSOR,expected_current_head=x['source_head'],expected_current_tree=x['source_tree'],now_fn=now)
+    finally:c.close()
+
 # ---- end LPCL mission process extension v1 -------------------------------
+
 
 
 
@@ -1975,7 +2019,10 @@ class H(BaseHTTPRequestHandler):
    return self.send_content(body,ctype,code)
   if path in {'/api/v3/missions/current','/api/v3/missions/'+MISSION}:return self.json(current)
   if path=='/api/v3/missions':return self.json({'missions':mission_summaries(),'process_missions':recent_process_missions(),'legacy_recorded_runs':legacy_count()})
-  if path=='/api/v3/missions/recent':return self.json({'missions':recent_process_missions(),'focus_mission_id':focus_mission_id()})
+  if path=='/api/v3/missions/recent':
+   try:
+    q=parse_qs(urlparse(self.path).query);view=_view_name((q.get('view') or ['operational'])[0]);return self.json({'missions':recent_process_missions(view),'focus_mission_id':focus_mission_id(view),'view':view})
+   except ValueError as e:return self.json({'error':str(e)},400)
   if path=='/api/v3/capabilities/process-contracts':return self.json(process_capability_registry_snapshot())
   if path.startswith('/api/v3/missions/') and path.endswith('/delete-preview'):
    mid=path[len('/api/v3/missions/'):-len('/delete-preview')].strip('/');c=connect()
@@ -2076,6 +2123,12 @@ class H(BaseHTTPRequestHandler):
     n=int(self.headers.get('Content-Length','0'))
     if n<2 or n>40000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
     return self.json(respond_saas_handoff(json.loads(self.rfile.read(n))),200)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
+  if path=='/api/v3/lifecycle/normalize-epoch3':
+   try:
+    n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>8192 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    return self.json(execute_epoch3_lifecycle_normalization(json.loads(self.rfile.read(n))),200)
    except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path.startswith('/api/v3/missions/') and path.endswith('/actions') and path!='/api/v3/missions/current/actions':
    try:

@@ -10,20 +10,64 @@ PRE_PROCESS_STAGE = "PRE_MISSION_PROCESS_SCHEMA"
 CURRENT_STAGE = "MISSION_PROCESS_SCHEMA_V1"
 
 
+def mission_lifecycle_classification(conn, mission_id):
+    """Derive lifecycle semantics from recorded state without granting authority."""
+    row=conn.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mission_id,)).fetchone()
+    if row is None:raise ValueError('mission not found')
+    process=conn.execute('SELECT authority_state FROM mission_process_specs WHERE mission_id=?',(mission_id,)).fetchone()
+    tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    driver=conn.execute('SELECT state FROM mission_execution_drivers WHERE mission_id=?',(mission_id,)).fetchone() if 'mission_execution_drivers' in tables else None
+    adapter=str(row['adapter'] or '')
+    state=str(row['state'] or 'UNKNOWN').upper()
+    authority=str(process['authority_state'] if process else '')
+    driver_state=str(driver['state'] if driver else '')
+    has_process=process is not None
+    profile=_source_profile(row,has_process)
+    legacy=adapter.startswith('LEGACY_OBSERVATION:')
+    superseded=state=='SUPERSEDED' or authority.upper().startswith('SUPERSEDED')
+    current_authority=authority in {'EXPLICIT_USER_ACTIVATION','EXPLICIT_EXACT_DIGEST_ACTIVATION'}
+    active_driver=driver_state in {'ACTIVE','WAITING','BLOCKED'}
+    terminal_state=state in {'COMPLETE','COMPLETED','STOPPED','FAILED','FAIL','CANCELLED'}
+    if legacy:
+        lifecycle_class='LEGACY_HISTORY';record_class='RECORDED_OBSERVATION';reason='LEGACY_OBSERVATION_SOURCE_STAGE'
+    elif superseded:
+        lifecycle_class='SUPERSEDED';record_class=profile['record_class'];reason='MISSION_OR_PROCESS_AUTHORITY_SUPERSEDED'
+    elif current_authority and active_driver:
+        lifecycle_class='CURRENT_EXECUTABLE';record_class=profile['record_class'];reason='CURRENT_AUTHORITY_AND_ACTIVE_DRIVER'
+    elif terminal_state:
+        lifecycle_class='CURRENT_TERMINAL';record_class=profile['record_class'];reason='CURRENT_TERMINAL_RECORDED_STATE'
+    elif state in {'REGISTERED','AUTHORIZED','RUNNING','WAITING','BLOCKED','PAUSED','CONVERGING'}:
+        lifecycle_class='CURRENT_NONEXECUTING';record_class=profile['record_class'];reason='CURRENT_RECORD_WITHOUT_ACTIVE_EXECUTION_PROOF'
+    else:
+        lifecycle_class='UNKNOWN';record_class=profile['record_class'];reason='LIFECYCLE_COMBINATION_UNKNOWN'
+    historical=lifecycle_class in {'LEGACY_HISTORY','SUPERSEDED'} or record_class=='RECORDED_OBSERVATION'
+    operational=lifecycle_class in {'CURRENT_EXECUTABLE','CURRENT_NONEXECUTING','CURRENT_TERMINAL'}
+    return {
+        'mission_id':mission_id,'lifecycle_class':lifecycle_class,'record_class':record_class,
+        'operational':operational,'historical':historical,'legacy':legacy,
+        'execution_controls_allowed':operational and not legacy and not superseded,
+        'history_reason':reason,'authority_state':authority or None,'driver_state':driver_state or None,
+        'recorded_state':row['state'],'adapter':row['adapter'],'authority_effect':'NONE',
+    }
+
+
 def mission_delete_preview(conn, mission_id, protected_id):
     row=conn.execute('SELECT mission_id,state,spec_digest FROM missions WHERE mission_id=?',(mission_id,)).fetchone()
     if row is None:return {'mission_id':mission_id,'allowed':False,'reason':'MISSION_NOT_FOUND'}
+    lifecycle=mission_lifecycle_classification(conn,mission_id)
     reasons=[]
     if mission_id==protected_id:reasons.append('SHARED_RUNTIME_OWNER')
-    if row['state'] not in {'COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','STOPPED','FAILED','FAIL','REGISTERED','AUTHORIZED','BLOCKED','RECORDED_PASS','RECORDED_CLEANED','RECORDED_FAIL'}:reasons.append('MISSION_STILL_ACTIVE')
+    if lifecycle['lifecycle_class']=='LEGACY_HISTORY':
+        reasons.append('LEGACY_HISTORY_PRESERVATION_POLICY')
+    elif row['state'] not in {'COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','STOPPED','FAILED','FAIL','REGISTERED','AUTHORIZED','BLOCKED','RECORDED_PASS','RECORDED_CLEANED','RECORDED_FAIL'}:
+        reasons.append('MISSION_STILL_ACTIVE')
     tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     if 'mission_execution_drivers' in tables:
         driver=conn.execute('SELECT state FROM mission_execution_drivers WHERE mission_id=?',(mission_id,)).fetchone()
         if driver and driver['state'] not in {'COMPLETE','COMPLETED','STOPPED','CANCELLED','FAILED','SUPERSEDED'}:reasons.append('DRIVER_MUST_BE_STOPPED')
     if 'mission_execution_assignments' in tables and conn.execute("SELECT 1 FROM mission_execution_assignments WHERE mission_id=? AND state='CLAIMED' LIMIT 1",(mission_id,)).fetchone():reasons.append('WORKER_ASSIGNMENT_IN_FLIGHT')
     if 'commands' in tables and conn.execute("SELECT 1 FROM commands WHERE mission_id=? AND status IN ('RUNNING','PENDING') LIMIT 1",(mission_id,)).fetchone():reasons.append('COMMAND_IN_FLIGHT')
-    return {'mission_id':mission_id,'spec_digest':row['spec_digest'],'state':row['state'],'allowed':not reasons,'reason':'; '.join(reasons) or 'RECORDS_ONLY_NO_RUNTIME_STOP','authority_effect':'NONE'}
-
+    return {'mission_id':mission_id,'spec_digest':row['spec_digest'],'state':row['state'],'allowed':not reasons,'reason':'; '.join(reasons) or 'RECORDS_ONLY_NO_RUNTIME_STOP','lifecycle':lifecycle,'authority_effect':'NONE'}
 
 def delete_mission_records(conn, mission_id, expected_digest, protected_id, now_fn):
     """Permanent local record deletion; never dispatches or stops external resources."""
@@ -243,16 +287,35 @@ def capabilities(conn, mission_id, *, current_mission_id, rebound_adapter="LPCL_
     row = conn.execute("SELECT adapter,state FROM missions WHERE mission_id=?", (mission_id,)).fetchone()
     if row is None:
         raise ValueError("mission not found")
+    classification=mission_lifecycle_classification(conn,mission_id)
     adapter = str(row["adapter"] or "")
-    historical = adapter.startswith("LEGACY_OBSERVATION:")
+    historical = classification['lifecycle_class']=='LEGACY_HISTORY'
+    superseded = classification['lifecycle_class']=='SUPERSEDED'
+    if historical or superseded:
+        denied='DENIED_LEGACY_HISTORY_READ_ONLY' if historical else 'DENIED_SUPERSEDED_READ_ONLY'
+        reason='Historical records are read-only and do not carry current execution authority.' if historical else 'Superseded missions are read-only execution history.'
+        return {
+            "REFRESH": {"state": "SUPPORTED", "effect": "HISTORICAL_SOURCE_REINDEX" if historical else "READ_ONLY_CURRENTNESS"},
+            "AUDIT": {"state": "SUPPORTED", "effect": "CONTROL_DB_METADATA_ONLY"},
+            "VALIDATE": {"state": "SUPPORTED", "effect": "NONE"},
+            "RESTART": {"state": denied, "effect": "NONE", "reason": reason},
+            "PAUSE": {"state": denied, "effect": "NONE", "reason": reason},
+            "RESUME": {"state": denied, "effect": "NONE", "reason": reason},
+            "STOP": {"state": denied, "effect": "NONE", "reason": reason},
+            "START_COMPONENT": {"state": denied, "effect": "NONE", "reason": reason},
+            "ADD_COMPONENT": {"state": denied, "effect": "NONE", "reason": reason},
+            "REDESIGN": {"state": denied, "effect": "NONE", "reason": reason},
+            "ACTIVATE_REVISION": {"state": denied, "effect": "NONE", "reason": reason},
+            "ROLLBACK": {"state": denied, "effect": "NONE", "reason": reason},
+        }
     current = mission_id == current_mission_id and adapter == "MISSION64_K3S"
     epoch3 = mission_id == "EPOCH3-CLOSURE-DOCS-FEDERATION-GITHUB-R1"
     rebound = adapter == rebound_adapter
     driver_capable = rebound
     return {
-        "REFRESH": {"state": "SUPPORTED", "effect": "READ_ONLY_CURRENTNESS" if not historical else "HISTORICAL_SOURCE_REINDEX"},
+        "REFRESH": {"state": "SUPPORTED", "effect": "READ_ONLY_CURRENTNESS"},
         "AUDIT": {"state": "SUPPORTED", "effect": "CONTROL_DB_METADATA_ONLY"},
-        "RESTART": {"state": "SUPPORTED_BOUNDED_EFFECT" if (current or epoch3 or rebound) else ("REVISION_DRAFT_ONLY" if historical else "ADAPTER_REQUIRED"), "effect": "MATERIAL" if (current or epoch3 or rebound) else "NONE"},
+        "RESTART": {"state": "SUPPORTED_BOUNDED_EFFECT" if (current or epoch3 or rebound) else "ADAPTER_REQUIRED", "effect": "MATERIAL" if (current or epoch3 or rebound) else "NONE"},
         "PAUSE": {"state": "SUPPORTED_DRIVER_CONTROL" if driver_capable else "ADAPTER_REQUIRED", "effect": "CONTROL_STATE" if driver_capable else "NONE"},
         "RESUME": {"state": "SUPPORTED_DRIVER_CONTROL" if driver_capable else "ADAPTER_REQUIRED", "effect": "CONTROL_STATE" if driver_capable else "NONE"},
         "VALIDATE": {"state": "SUPPORTED", "effect": "NONE"},
@@ -263,7 +326,6 @@ def capabilities(conn, mission_id, *, current_mission_id, rebound_adapter="LPCL_
         "ACTIVATE_REVISION": {"state": "EXPLICIT_EXACT_DIGEST_ACTIVATION_REQUIRED", "effect": "CONTROL_STATE"},
         "ROLLBACK": {"state": "CONTROL_PLANE_PLAN_SUPPORTED", "effect": "NONE", "reason": "Material rollback requires an exact rollback point plus bounded runtime adapter; metadata rollback is represented as a new revision, never database time-travel."},
     }
-
 
 def sync_components(conn, mission_id, now_fn):
     stamp = now_fn()
@@ -329,6 +391,75 @@ def create_action_receipt(conn, mission_id, action, effect_class, status, reques
     return {"receipt_id": rid, "receipt_digest": dg}
 
 
+def _normalization_receipt(conn, mission_id, before, after, successor_mission_id, source_head, source_tree, reason, now_fn):
+    stamp=now_fn();rid='action-'+uuid.uuid4().hex
+    result={'before':before,'after':after,'successor_mission_id':successor_mission_id,'source_head':source_head,'source_tree':source_tree,'normalization_reason':reason,'timestamp':stamp,'authority_effect':'CONTROL_STATE'}
+    request={'operation':'EPOCH3_TERMINAL_LIFECYCLE_NORMALIZATION','successor_mission_id':successor_mission_id,'source_head':source_head,'source_tree':source_tree}
+    payload={'receipt_id':rid,'mission_id':mission_id,'action':'EPOCH3_LIFECYCLE_NORMALIZE','effect_class':'CONTROL_STATE','status':'PASS','request':request,'result':result,'created_at':stamp}
+    dg=_digest(payload)
+    conn.execute('INSERT INTO mission_action_receipts VALUES(?,?,?,?,?,?,?,?,?)',(rid,mission_id,'EPOCH3_LIFECYCLE_NORMALIZE','CONTROL_STATE','PASS',_canon(request),_canon(result),dg,stamp))
+    return {'receipt_id':rid,'receipt_digest':dg,'mission_id':mission_id,'result':result}
+
+
+def normalize_epoch3_terminal_lifecycle(conn, *, target_1_mission_id, target_1_expected_spec_digest, target_2_mission_id, target_2_expected_spec_digest, successor_mission_id, expected_current_head, expected_current_tree, now_fn):
+    """Atomically supersede two obsolete Epoch-3 execution lineages; never mutates legacy observations."""
+    conn.execute('BEGIN IMMEDIATE')
+    try:
+        integrity=conn.execute('PRAGMA integrity_check').fetchone()[0]
+        if integrity!='ok':raise ValueError('DATABASE_INTEGRITY_NOT_OK')
+        successor=conn.execute('SELECT state,runtime_state FROM missions WHERE mission_id=?',(successor_mission_id,)).fetchone()
+        if successor is None or successor['state']!='COMPLETE' or successor['runtime_state']!='DRIVER_COMPLETE':raise ValueError('SUCCESSOR_NOT_COMPLETE')
+        sdriver=conn.execute('SELECT state FROM mission_execution_drivers WHERE mission_id=?',(successor_mission_id,)).fetchone()
+        if sdriver is None or sdriver['state']!='COMPLETE':raise ValueError('SUCCESSOR_DRIVER_NOT_COMPLETE')
+        currentness=False
+        for row in conn.execute("SELECT payload_json FROM protocol_messages WHERE mission_id=? AND protocol='CURRENTNESS' ORDER BY id DESC LIMIT 80",(successor_mission_id,)):
+            try:payload=json.loads(row['payload_json'])
+            except Exception:continue
+            if payload.get('event')=='SUCCESSOR_SOURCE_CURRENTNESS_REBOUND' and payload.get('current_source_head')==expected_current_head and payload.get('current_source_tree')==expected_current_tree and payload.get('ancestry_verified') is True:
+                currentness=True;break
+        if not currentness:raise ValueError('SUCCESSOR_SOURCE_CURRENTNESS_NOT_EXACT')
+        targets=((target_1_mission_id,target_1_expected_spec_digest),(target_2_mission_id,target_2_expected_spec_digest))
+        rows={}
+        for mid,digest in targets:
+            m=conn.execute('SELECT mission_id,state,runtime_state,spec_digest,last_error FROM missions WHERE mission_id=?',(mid,)).fetchone()
+            if m is None:raise ValueError('TARGET_NOT_FOUND:'+mid)
+            if m['spec_digest']!=digest:raise ValueError('SPEC_DIGEST_DRIFT:'+mid)
+            rows[mid]=m
+            if conn.execute("SELECT 1 FROM mission_execution_assignments WHERE mission_id=? AND state='CLAIMED' LIMIT 1",(mid,)).fetchone():raise ValueError('CLAIMED_ASSIGNMENT:'+mid)
+            if conn.execute("SELECT 1 FROM commands WHERE mission_id=? AND status IN ('RUNNING','PENDING') LIMIT 1",(mid,)).fetchone():raise ValueError('COMMAND_IN_FLIGHT:'+mid)
+            if conn.execute("SELECT 1 FROM mission_recon_material_leases WHERE mission_id=? AND state='ACTIVE' LIMIT 1",(mid,)).fetchone():raise ValueError('ACTIVE_RECON_LEASE:'+mid)
+            if conn.execute("SELECT 1 FROM mission_phase_attempts WHERE mission_id=? AND state='RUNNING' LIMIT 1",(mid,)).fetchone():raise ValueError('RUNNING_PHASE_ATTEMPT:'+mid)
+        d1=conn.execute('SELECT * FROM mission_execution_drivers WHERE mission_id=?',(target_1_mission_id,)).fetchone()
+        if d1 is None or d1['state'] not in {'STOPPED','SUPERSEDED'}:raise ValueError('TARGET1_DRIVER_NOT_TERMINAL')
+        d2=conn.execute('SELECT * FROM mission_execution_drivers WHERE mission_id=?',(target_2_mission_id,)).fetchone()
+        if d2 is not None:raise ValueError('TARGET2_DRIVER_MUST_BE_ABSENT')
+        p1=conn.execute('SELECT authority_state,current_phase,progress FROM mission_process_specs WHERE mission_id=?',(target_1_mission_id,)).fetchone()
+        p2=conn.execute('SELECT authority_state,current_phase,progress FROM mission_process_specs WHERE mission_id=?',(target_2_mission_id,)).fetchone()
+        if p1 is None or p2 is None:raise ValueError('TARGET_PROCESS_SPEC_MISSING')
+        already=(rows[target_1_mission_id]['state']=='SUPERSEDED' and str(p1['authority_state']).startswith('SUPERSEDED') and d1['state']=='SUPERSEDED' and rows[target_2_mission_id]['state']=='SUPERSEDED' and str(p2['authority_state']).startswith('SUPERSEDED'))
+        if already:
+            receipts=[dict(r) for r in conn.execute("SELECT receipt_id,mission_id,receipt_digest,created_at FROM mission_action_receipts WHERE mission_id IN (?,?) AND action='EPOCH3_LIFECYCLE_NORMALIZE' ORDER BY created_at",(target_1_mission_id,target_2_mission_id))]
+            conn.rollback();return {'already_normalized':True,'receipts':receipts,'authority_effect':'NONE'}
+        if rows[target_1_mission_id]['state']!='WAITING' or d1['state']!='STOPPED':raise ValueError('TARGET1_PRECONDITION_DRIFT')
+        if str(p2['authority_state'])!='SUPERSEDED_BY_EXACT_LPCL' or rows[target_2_mission_id]['state']!='RUNNING':raise ValueError('TARGET2_PRECONDITION_DRIFT')
+        stamp=now_fn()
+        before1={'state':rows[target_1_mission_id]['state'],'runtime_state':rows[target_1_mission_id]['runtime_state'],'authority_state':p1['authority_state'],'driver_state':d1['state'],'progress':p1['progress'],'current_phase':p1['current_phase']}
+        conn.execute('UPDATE missions SET state=?,runtime_state=?,updated_at=? WHERE mission_id=?',('SUPERSEDED','SUPERSEDED_BY:'+successor_mission_id,stamp,target_1_mission_id))
+        conn.execute('UPDATE mission_process_specs SET authority_state=?,current_phase=NULL,updated_at=? WHERE mission_id=?',('SUPERSEDED_BY_CURRENT_CONTROL_PLANE',stamp,target_1_mission_id))
+        conn.execute("UPDATE mission_execution_drivers SET state='SUPERSEDED',lease_owner=NULL,lease_expires_at=NULL,current_phase=NULL,current_attempt_id=NULL,waiting_reason=?,blocking_gate=NULL,next_action='NONE_SUPERSEDED',updated_at=? WHERE mission_id=?",('SUPERSEDED_BY_CURRENT_CONTROL_PLANE_FIXED_POINT',stamp,target_1_mission_id))
+        after1={'state':'SUPERSEDED','runtime_state':'SUPERSEDED_BY:'+successor_mission_id,'authority_state':'SUPERSEDED_BY_CURRENT_CONTROL_PLANE','driver_state':'SUPERSEDED','progress':p1['progress'],'current_phase':None}
+        r1=_normalization_receipt(conn,target_1_mission_id,before1,after1,successor_mission_id,expected_current_head,expected_current_tree,'NEWER_CANONICAL_CONTROL_PLANE_FIXED_POINT',now_fn)
+        before2={'state':rows[target_2_mission_id]['state'],'runtime_state':rows[target_2_mission_id]['runtime_state'],'authority_state':p2['authority_state'],'driver_state':None,'progress':p2['progress'],'current_phase':p2['current_phase'],'last_error':rows[target_2_mission_id]['last_error']}
+        conn.execute('UPDATE missions SET state=?,runtime_state=?,updated_at=? WHERE mission_id=?',('SUPERSEDED','HISTORICAL_SUPERSEDED',stamp,target_2_mission_id))
+        conn.execute('UPDATE mission_process_specs SET current_phase=NULL,updated_at=? WHERE mission_id=?',(stamp,target_2_mission_id))
+        after2={'state':'SUPERSEDED','runtime_state':'HISTORICAL_SUPERSEDED','authority_state':p2['authority_state'],'driver_state':None,'progress':p2['progress'],'current_phase':None,'last_error':rows[target_2_mission_id]['last_error']}
+        r2=_normalization_receipt(conn,target_2_mission_id,before2,after2,successor_mission_id,expected_current_head,expected_current_tree,'PROCESS_AUTHORITY_ALREADY_SUPERSEDED_AND_DRIVER_ABSENT',now_fn)
+        conn.commit()
+        return {'already_normalized':False,'target_1':after1,'target_2':after2,'receipts':[r1,r2],'authority_effect':'CONTROL_STATE'}
+    except Exception:
+        conn.rollback();raise
+
+
 def rollback_plan(conn, mission_id, rollback_id, now_fn):
     row = conn.execute("SELECT * FROM mission_rollback_points WHERE rollback_id=? AND mission_id=?", (rollback_id, mission_id)).fetchone()
     if row is None:
@@ -340,6 +471,7 @@ def rollback_plan(conn, mission_id, rollback_id, now_fn):
 def decorate_snapshot(conn, snapshot, *, current_mission_id, rebound_adapter="LPCL_REBOUND_EPOCH3_64"):
     mid = snapshot["mission_id"]
     snapshot["schema_context"] = schema_context(conn, mid)
+    snapshot["lifecycle"] = mission_lifecycle_classification(conn, mid)
     snapshot["lineage"] = [dict(x) for x in conn.execute("SELECT * FROM mission_lineage WHERE mission_id=? OR parent_mission_id=? ORDER BY revision", (mid, mid))]
     snapshot["components"] = [dict(x) for x in conn.execute("SELECT mission_id,component_id,component_class,desired_state,observed_state,adapter,authority_class,spec_json,updated_at FROM mission_components WHERE mission_id=? ORDER BY component_id", (mid,))]
     for item in snapshot["components"]:
