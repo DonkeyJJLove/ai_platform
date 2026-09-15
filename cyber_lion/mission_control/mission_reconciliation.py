@@ -251,6 +251,7 @@ def evaluate_completion_predicates(
         "SAAS_AUTOMATIC_HOP_NOT_CLAIMED": not autonomous_claim,
         "POST_ASTRA_PHASE_EVIDENCE": protocol_event("POST_ASTRA_PHASE_EVIDENCE_PASS", from_id="POST_ASTRA_CLOSURE_ORCHESTRATOR", phase=phase_id),
         "SAAS_MEDIATOR_PHASE_EVIDENCE": protocol_event("SAAS_MEDIATOR_PHASE_EVIDENCE_PASS", from_id="SAAS_MEDIATOR_MISSION_ORCHESTRATOR", phase=phase_id),
+        "FIREFOX_MEDIATOR_PHASE_EVIDENCE": protocol_event("FIREFOX_MEDIATOR_PHASE_EVIDENCE_PASS", from_id="FIREFOX_MEDIATOR_MISSION_ORCHESTRATOR", phase=phase_id),
         "RUNTIME_REVISIONS_CONVERGED": runtime_revision_evidence is not None,
         "PREFLIGHT_RUNTIME_BINDING_VISIBLE": preflight_binding_evidence is not None,
         "BROKER_TRANSPORT_TRUTHFUL": _exists_table(conn, "saas_handoff_requests") and not autonomous_claim,
