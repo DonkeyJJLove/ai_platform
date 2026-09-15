@@ -23,10 +23,6 @@ def _exists_table(conn: sqlite3.Connection, name: str) -> bool:
     return conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone() is not None
 
 
-def _count(conn: sqlite3.Connection, sql: str, args: tuple[Any, ...] = ()) -> int:
-    return int(conn.execute(sql, args).fetchone()[0])
-
-
 def _json(value: str | None, default: Any) -> Any:
     try:
         return json.loads(value or "")
@@ -137,10 +133,8 @@ def evaluate_completion_predicates(
     facts["action_ir_summary"] = {"count": len(air_rows), "phase_ids": [x["phase_id"] for x in air_rows], "read_only_boundary": air_ok}
 
     def protocol_event(event: str, *, from_id: str | None = None, phase: str | None = None) -> bool:
-        sql = "SELECT from_id,phase,payload_json FROM protocol_messages WHERE mission_id=?"
-        args: list[Any] = [mission_id]
-        if phase is not None: sql += " AND phase=?"; args.append(phase)
-        for row in conn.execute(sql, tuple(args)):
+        for row in conn.execute("SELECT from_id,phase,payload_json FROM protocol_messages WHERE mission_id=?", (mission_id,)):
+            if phase is not None and row["phase"] != phase: continue
             if from_id is not None and row["from_id"] != from_id: continue
             if _json(row["payload_json"], {}).get("event") == event: return True
         return False
@@ -148,13 +142,13 @@ def evaluate_completion_predicates(
     current_ordinal = next((int(r["ordinal"]) for r in phase_rows if process and r["phase_id"] == process["current_phase"]), 0)
     passed = [r for r in phase_rows if r["status"] in {"PASS", "COMPLETE", "SKIPPED"}]
     non_topology_assignments = conn.execute("SELECT assignment_id,phase_id,material_drone_id,state FROM mission_execution_assignments WHERE mission_id=? AND phase_id!='__TOPOLOGY__'", (mission_id,)).fetchall()
-    local_receipt_count = _count(conn, "SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND status='PASS' AND authority_effect='NONE'", (mission_id,))
+    local_receipt_count = int(conn.execute("SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND status='PASS' AND authority_effect='NONE'", (mission_id,)).fetchone()[0])
     restart = _restart_backup_evidence(db_path, mission_id)
     facts["restart"] = restart
 
     post = conn.execute("SELECT * FROM missions WHERE mission_id=?", (POST_ASTRA_MISSION,)).fetchone()
     post_driver = conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?", (POST_ASTRA_MISSION,)).fetchone()
-    post_receipts = _count(conn, "SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND status='PASS'", (POST_ASTRA_MISSION,))
+    post_receipts = int(conn.execute("SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND status='PASS'", (POST_ASTRA_MISSION,)).fetchone()[0])
     responded_session = False
     autonomous_claim = False
     if _exists_table(conn, "saas_handoff_requests"):
@@ -185,7 +179,7 @@ def evaluate_completion_predicates(
         "NO_RAW_MODEL_TO_SHELL": air_ok,
         "DRIVER_PRESENT": driver is not None,
         "DRIVER_GENERATION_POSITIVE": bool(driver and int(driver["generation"]) > 0),
-        "DRIVER_CHECKPOINT_PRESENT": _count(conn, "SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?", (mission_id,)) > 0,
+        "DRIVER_CHECKPOINT_PRESENT": int(conn.execute("SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?", (mission_id,)).fetchone()[0]) > 0,
         "DRIVER_CURRENT_PHASE_TRACKED": bool(driver and process and driver["current_phase"] == process["current_phase"]),
         "WAITING_LEASE_RELEASED": bool(driver and (driver["state"] != "WAITING" or (driver["lease_owner"] is None and driver["lease_expires_at"] is None))),
         "SCHEDULER_ACTIVE": bool(scheduler and scheduler["state"] == "ACTIVE" and scheduler["heartbeat_at"]),
@@ -195,12 +189,12 @@ def evaluate_completion_predicates(
         "LOCAL_DELEGATION_PROVEN": bool(non_topology_assignments) and local_receipt_count > 0,
         "MATERIAL_DELEGATION_PROVEN": len(topology) == 128 and len(material) == 64,
         "DYNAMIC_CAPABILITY_BINDING_PROVEN": len(bindings) > 0,
-        "SAAS_BROKER_AVAILABLE": _exists_table(conn, "saas_handoff_requests") and _count(conn, "SELECT COUNT(*) FROM saas_handoff_requests") > 0,
+        "SAAS_BROKER_AVAILABLE": _exists_table(conn, "saas_handoff_requests") and int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests").fetchone()[0]) > 0,
         "SAAS_TRANSPORT_TRUTHFUL": responded_session and not autonomous_claim,
         "RESTART_BACKUP_PRESENT": restart is not None,
         "DRIVER_SURVIVED_RESTART": restart is not None and driver is not None,
-        "NO_DUPLICATE_PHASE3_PLANNING": _count(conn, "SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'", (mission_id,)) == 1,
-        "NO_DUPLICATE_PHASE3_ACTION_RECEIPT": _count(conn, "SELECT COUNT(*) FROM mission_generic_action_receipts WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'", (mission_id,)) == 1,
+        "NO_DUPLICATE_PHASE3_PLANNING": int(conn.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'", (mission_id,)).fetchone()[0]) == 1,
+        "NO_DUPLICATE_PHASE3_ACTION_RECEIPT": int(conn.execute("SELECT COUNT(*) FROM mission_generic_action_receipts WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'", (mission_id,)).fetchone()[0]) == 1,
         "PANEL_REGISTRATION_PROVEN": protocol_event("MISSION_REGISTERED", from_id="LPCL_PANEL"),
         "OPERATOR_ACTIVATION_PROVEN": protocol_event("MISSION_AUTHORIZED", from_id="OPERATOR"),
         "AUTONOMOUS_MULTI_PHASE_TRANSITION_PROVEN": len(passed) >= 3 and current_ordinal >= 4,
