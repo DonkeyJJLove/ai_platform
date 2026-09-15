@@ -272,5 +272,51 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(currentness['material_currentness_source'], 'EPOCH3_M64_READ')
 
 
+    def test_generic_effect_evidence_executor_advances_first_two_phases_without_duplicate_planning(self):
+        import sqlite3, json
+        from cyber_lion.contracts.action_ir import CanonicalActionIR
+        mid='GENERIC-EFFECT-EVIDENCE-R1'
+        spec=self.spec(mid,'PROJECT=LION_EVOLUSION\n')
+        spec['logical_count']=128
+        spec['phases']=[
+            {'id':'REPRODUCE_BIND_FAILURE','title':'Reproduce bind failure'},
+            {'id':'SEPARATE_NEW_AND_CONTINUATION_LINEAGE','title':'Separate fresh lineage'},
+            {'id':'REPAIR_EXECUTION_BINDER','title':'Repair executor'},
+        ]
+        self.mc.register_lpcl_mission(spec)
+        # Exact historical snapshot used by the read-only evidence capability.
+        backup_dir=self.mc.DB.parent/'backups'/'fixture-bind-failure';backup_dir.mkdir(parents=True,exist_ok=True)
+        bp=backup_dir/'mission-control-v3.db';bc=sqlite3.connect(bp)
+        bc.execute('CREATE TABLE missions(mission_id TEXT PRIMARY KEY,state TEXT,runtime_state TEXT,materialized INTEGER,ready INTEGER,last_error TEXT,updated_at TEXT)')
+        bc.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?)',(mid,'AUTHORIZED','NOT_STARTED',0,0,'LPCL_EXECUTION_BIND:ValueError:lpcl continuation contract',self.mc.now()))
+        bc.commit();bc.close()
+        with patch.object(self.mc,'epoch3_broker',return_value=(self.runtime('generic-evidence'),'read-1')):
+            out=self.mc.activate_lpcl_mission(mid,{'lpcl_digest':spec['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual((out['adapter'],out['materialized'],out['ready']),('LPCL_GENERIC_128L64M',64,64))
+        # Phase 1 planning assignment, then legacy digest-only receipt (no retained payload).
+        self.mc.drive_generic_once(mid)
+        c=self.mc.connect();a=c.execute("SELECT * FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPRODUCE_BIND_FAILURE' AND phase_id!='__TOPOLOGY__'",(mid,)).fetchone();gen=c.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(mid,)).fetchone()[0]
+        self.mc.global_sched.claim_assignment(c,a['assignment_id'],self.mc.now,expected_material_drone_id='MD025')
+        r1=self.mc.global_sched.record_receipt(c,a['assignment_id'],{'kind':'LOCAL_MODEL_INFERENCE','response_text':'legacy plan not retained','authority_effect':'NONE'},self.mc.now,material_drone_id='MD025',lease_generation=gen,status='PASS',authority_effect='NONE');c.close()
+        self.mc.drive_generic_once(mid)
+        c=self.mc.connect();p1=c.execute("SELECT * FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id='REPRODUCE_BIND_FAILURE'",(mid,)).fetchone();phase1=c.execute("SELECT status FROM mission_phases WHERE mission_id=? AND phase_id='REPRODUCE_BIND_FAILURE'",(mid,)).fetchone()[0]
+        self.assertEqual(p1['planning_payload_state'],'LEGACY_DIGEST_ONLY');self.assertEqual(p1['state'],'PASS');self.assertEqual(phase1,'PASS')
+        CanonicalActionIR.from_json(p1['action_ir_json']).validate()
+        self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPRODUCE_BIND_FAILURE'",(mid,)).fetchone()[0],1)
+        self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_generic_action_receipts WHERE plan_id=?",(p1['plan_id'],)).fetchone()[0],1);c.close()
+        # Phase 2 plans again; this time the bounded planning payload is retained.
+        self.mc.drive_generic_once(mid)
+        c=self.mc.connect();a2=c.execute("SELECT * FROM mission_execution_assignments WHERE mission_id=? AND phase_id='SEPARATE_NEW_AND_CONTINUATION_LINEAGE'",(mid,)).fetchone();gen2=c.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(mid,)).fetchone()[0]
+        self.mc.global_sched.claim_assignment(c,a2['assignment_id'],self.mc.now,expected_material_drone_id='MD025')
+        result2={'kind':'LOCAL_MODEL_INFERENCE','response_text':'proposal only','authority_effect':'NONE'}
+        r2=self.mc.global_sched.record_receipt(c,a2['assignment_id'],result2,self.mc.now,material_drone_id='MD025',lease_generation=gen2,status='PASS',authority_effect='NONE')
+        self.mc.global_sched.store_assignment_payload(c,a2['assignment_id'],r2['receipt_id'],result2,self.mc.now);c.close()
+        self.mc.drive_generic_once(mid)
+        c=self.mc.connect();p2=c.execute("SELECT * FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id='SEPARATE_NEW_AND_CONTINUATION_LINEAGE'",(mid,)).fetchone();phase2=c.execute("SELECT status FROM mission_phases WHERE mission_id=? AND phase_id='SEPARATE_NEW_AND_CONTINUATION_LINEAGE'",(mid,)).fetchone()[0];proc=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()[0]
+        self.assertEqual(p2['planning_payload_state'],'RETAINED');self.assertEqual(p2['state'],'PASS');self.assertEqual(phase2,'PASS');self.assertEqual(proc,'REPAIR_EXECUTION_BINDER')
+        CanonicalActionIR.from_json(p2['action_ir_json']).validate()
+        self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_generic_action_receipts WHERE plan_id=?",(p2['plan_id'],)).fetchone()[0],1);c.close()
+
+
 if __name__ == '__main__':
     unittest.main()

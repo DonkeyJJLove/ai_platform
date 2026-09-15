@@ -797,7 +797,11 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d['scheduler']=global_sched.scheduler_snapshot(c)
     d['execution_assignments']=[dict(r) for r in c.execute('SELECT assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,state,lease_generation,created_at,claimed_at,finished_at FROM mission_execution_assignments WHERE mission_id=? ORDER BY created_at DESC,assignment_id LIMIT 100',(mid,))]
     d['execution_receipts']=[dict(r) for r in c.execute('SELECT r.*,a.material_drone_id,a.logical_drone_id FROM mission_execution_receipts r JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id WHERE r.mission_id=? ORDER BY r.observed_at DESC,r.receipt_id LIMIT 100',(mid,))]
-    d['execution_history_window']={'assignments':100,'receipts':100,'order':'NEWEST_FIRST','payloads':'DIGEST_ONLY'}
+    d['execution_history_window']={'assignments':100,'receipts':100,'order':'NEWEST_FIRST','payloads':'DIGEST_PLUS_BOUNDED_RESULT_STORE'}
+    try:d['generic_phase_plans']=[dict(r) for r in c.execute('SELECT * FROM mission_generic_phase_plans WHERE mission_id=? ORDER BY created_at,plan_id',(mid,))]
+    except sqlite3.OperationalError:d['generic_phase_plans']=[]
+    try:d['generic_action_receipts']=[dict(r) for r in c.execute('SELECT * FROM mission_generic_action_receipts WHERE mission_id=? ORDER BY observed_at,receipt_id',(mid,))]
+    except sqlite3.OperationalError:d['generic_action_receipts']=[]
     try:d['execution_assignment_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=?',(mid,)).fetchone()[0]);d['execution_receipt_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=?',(mid,)).fetchone()[0])
     except sqlite3.OperationalError:d['execution_assignment_count']=0;d['execution_receipt_count']=0
     try:d['revision_compilations']=[dict(x) for x in c.execute('SELECT revision_id,successor_mission_id,lpcl_digest,state,created_at,activated_at FROM mission_revision_compilations WHERE mission_id=? ORDER BY created_at DESC LIMIT 20',(mid,))]
@@ -1251,6 +1255,134 @@ def _generic_wait(c,mid,pid,*,gate,reason,next_action,status='WAITING',detail=No
     c.commit();return True
 
 
+
+GENERIC_BOUNDED_CAPABILITIES={
+ 'REPRODUCE_BIND_FAILURE':'MISSION_HISTORY_READ',
+ 'SEPARATE_NEW_AND_CONTINUATION_LINEAGE':'MISSION_STATE_READ',
+}
+
+
+def _file_sha256(path):
+    h=hashlib.sha256()
+    with open(path,'rb') as f:
+      while True:
+       b=f.read(1024*1024)
+       if not b:break
+       h.update(b)
+    return h.hexdigest()
+
+
+def _find_historical_bind_failure(mid):
+    root=DB.parent/'backups';candidates=[]
+    if root.is_dir():
+      for p in root.glob('**/*.db'):
+       try:candidates.append((p.stat().st_mtime,p))
+       except OSError:pass
+    for _,path in sorted(candidates,reverse=True)[:192]:
+      try:
+       rc=sqlite3.connect('file:'+str(path)+'?mode=ro',uri=True);rc.row_factory=sqlite3.Row
+       integrity=rc.execute('PRAGMA integrity_check').fetchone()[0]
+       row=rc.execute('SELECT mission_id,state,runtime_state,materialized,ready,last_error,updated_at FROM missions WHERE mission_id=?',(mid,)).fetchone()
+       rc.close()
+       if integrity=='ok' and row and 'lpcl continuation contract' in str(row['last_error'] or ''):
+        return {'path':str(path),'sha256':_file_sha256(path),'integrity':integrity,'record':dict(row)}
+      except Exception:continue
+    return None
+
+
+def _generic_action_ir(mid,pid,capability,target,currentness_requirements,evidence_requirements):
+    action_id='generic:'+hashlib.sha256((mid+'|'+pid+'|'+capability).encode()).hexdigest()[:40]
+    return {
+      'schema_version':'1.0.0','action_id':action_id,'kind':'filesystem.read',
+      'intent_ref':mid+':'+pid,'mission_ref':mid,'autonomy_ref':'GENERIC_LPCL_PHASE',
+      'bean_ref':'GENERIC_EFFECT_EVIDENCE_EXECUTOR',
+      'target':{'host':'LION-AUTH-LAB','environment':'MISSION_CONTROL_V3','runtime':'SQLITE_READ_ONLY'},
+      'authority_request':{'domain':'mission_control','capability':capability,'grant_ref':None},
+      'boundary':{'shell':False,'network':'DENY','filesystem_read':[str(target)],'filesystem_write':[],
+                  'process_children':[],'timeout_ms':10000,'max_processes':1,'memory_limit_bytes':67108864},
+      'preconditions':list(currentness_requirements),'expected_effects':['READ_ONLY_EVIDENCE'],
+      'forbidden_effects':['FILESYSTEM_WRITE','PROCESS_EXEC','NETWORK_WRITE','AUTHORITY_MUTATION'],
+      'observation':{'observer_class':'deterministic_independent','required_events':list(evidence_requirements)},
+      'reconciliation':{'mode':'EXACT','receipt':'REQUIRED'},
+    }
+
+
+def _generic_plan_definition(c,mid,pid,assignment,receipt):
+    payload=global_sched.assignment_payload(c,assignment['assignment_id'])
+    payload_state='RETAINED' if payload else 'LEGACY_DIGEST_ONLY'
+    deps=[receipt['receipt_id']]
+    if pid=='REPRODUCE_BIND_FAILURE':
+      hist=_find_historical_bind_failure(mid)
+      if not hist:return None
+      capability='MISSION_HISTORY_READ';target=hist['path'];operation='READ_HISTORICAL_BIND_FAILURE'
+      required={'mission_id':mid,'error_fragment':'lpcl continuation contract','backup_sha256':hist['sha256']}
+      expected={'state':'AUTHORIZED','runtime_state':'NOT_STARTED','bind_error':'lpcl continuation contract'}
+      currentness=['HISTORICAL_SNAPSHOT_SHA256_BOUND','MISSION_ID_MATCH']
+      evidence=['SQLITE_INTEGRITY_OK','HISTORICAL_BIND_FAILURE_MATCH']
+    elif pid=='SEPARATE_NEW_AND_CONTINUATION_LINEAGE':
+      capability='MISSION_STATE_READ';target=str(DB);operation='VERIFY_FRESH_LINEAGE_SEPARATION'
+      required={'mission_id':mid,'expected_adapter':LPCL_GENERIC_ADAPTER}
+      expected={'fresh_mission':True,'continuation_required':False,'parent_required':False}
+      currentness=['LIVE_DB_INTEGRITY_OK','CURRENT_MISSION_RECORD']
+      evidence=['GENERIC_ADAPTER_ACTIVE','NO_CONTINUATION_FLAGS','NO_PARENT_REQUIRED']
+    else:return None
+    air=_generic_action_ir(mid,pid,capability,target,currentness,evidence)
+    return {
+      'mission_id':mid,'phase_id':pid,'planning_assignment_id':assignment['assignment_id'],
+      'planning_receipt_id':receipt['receipt_id'],'planning_result_digest':receipt['result_digest'],
+      'planning_payload_state':payload_state,'state':'CAPABILITY_RESOLUTION','capability':capability,
+      'target':target,'operation':operation,'required_inputs':required,'expected_output':expected,
+      'authority_class':'NONE','currentness_requirements':currentness,'evidence_requirements':evidence,
+      'rollback_class':'NONE','dependencies':deps,'action_ir':air,'action_ir_digest':global_sched.digest(air),
+      'executor_id':'MISSION_CONTROL_READ_ONLY_EVIDENCE',
+    }
+
+
+def _generic_execute_read_plan(c,plan):
+    capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id']
+    if plan['authority_class']!='NONE':
+      global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_AUTHORITY',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
+      return {'state':'WAITING_AUTHORITY','gate':'AUTHORITY_REQUIRED','reason':'Explicit admitted authority is required'}
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
+    if capability=='MISSION_HISTORY_READ':
+      try:
+       expected=json.loads(plan['required_inputs_json']);path=Path(plan['target'])
+       if not path.is_file() or _file_sha256(path)!=expected['backup_sha256']:
+        return {'state':'WAITING_CURRENTNESS','gate':'CURRENTNESS_REQUIRED','reason':'Historical evidence file identity changed'}
+       rc=sqlite3.connect('file:'+str(path)+'?mode=ro',uri=True);rc.row_factory=sqlite3.Row
+       integrity=rc.execute('PRAGMA integrity_check').fetchone()[0]
+       row=rc.execute('SELECT state,runtime_state,materialized,ready,last_error,updated_at FROM missions WHERE mission_id=?',(mid,)).fetchone();rc.close()
+       ok=bool(integrity=='ok' and row and row['state']=='AUTHORIZED' and row['runtime_state']=='NOT_STARTED' and 'lpcl continuation contract' in str(row['last_error'] or ''))
+       evidence={'capability':capability,'source_path':str(path),'source_sha256':expected['backup_sha256'],'sqlite_integrity':integrity,
+                 'mission_id':mid,'historical_record':dict(row) if row else None,'bind_failure_match':ok,'authority_effect':'NONE'}
+      except Exception as exc:
+       return {'state':'WAITING_CURRENTNESS','gate':'CURRENTNESS_REQUIRED','reason':type(exc).__name__+':'+str(exc)[:500]}
+    elif capability=='MISSION_STATE_READ':
+      integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
+      m=c.execute('SELECT adapter,state,runtime_state,materialized,ready,source_head,source_tree FROM missions WHERE mission_id=?',(mid,)).fetchone()
+      ps=c.execute('SELECT lpcl_text FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();kv=_lpcl_pairs(ps['lpcl_text'] if ps else '')
+      continuation=any(k in kv for k in ('CONTINUE_EXISTING_EPOCH3_MISSION','CONTINUE_EXISTING_EPOCH3_LINEAGE','PARENT_MISSION_ID'))
+      ok=bool(integrity=='ok' and m and m['adapter']==LPCL_GENERIC_ADAPTER and not continuation)
+      evidence={'capability':capability,'sqlite_integrity':integrity,'mission_id':mid,'adapter':m['adapter'] if m else None,
+                'state':m['state'] if m else None,'runtime_state':m['runtime_state'] if m else None,
+                'materialized':m['materialized'] if m else None,'ready':m['ready'] if m else None,
+                'continuation_keys_present':sorted(k for k in ('CONTINUE_EXISTING_EPOCH3_MISSION','CONTINUE_EXISTING_EPOCH3_LINEAGE','PARENT_MISSION_ID') if k in kv),
+                'fresh_mission_separation':ok,'authority_effect':'NONE'}
+    else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'VALIDATING',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE',evidence=evidence)
+    if not ok:
+      global_sched.update_generic_plan_state(c,plan['plan_id'],'BLOCKED',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE',evidence=evidence)
+      return {'state':'BLOCKED','gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','reason':'Independent read-only evidence did not satisfy the phase completion contract','evidence':evidence}
+    receipt=global_sched.record_generic_action_receipt(c,plan['plan_id'],now,status='PASS',evidence=evidence,authority_effect='NONE')
+    return {'state':'PASS','receipt':receipt,'evidence':evidence}
+
+
+def _generic_existing_action_receipt(c,plan_id):
+    row=c.execute('SELECT * FROM mission_generic_action_receipts WHERE plan_id=?',(plan_id,)).fetchone()
+    return dict(row) if row else None
+
 def drive_generic_once(mid):
     c=connect()
     try:
@@ -1289,8 +1421,33 @@ def drive_generic_once(mid):
        return
       receipt=c.execute('SELECT receipt_id,result_digest,status,observed_at FROM mission_execution_receipts WHERE assignment_id=? ORDER BY observed_at DESC,receipt_id DESC LIMIT 1',(assignment['assignment_id'],)).fetchone()
       if astate=='PASS' and receipt:
-       changed=_generic_wait(c,mid,pid,gate='GENERIC_PHASE_EFFECT_EXECUTOR_REQUIRED',reason='LOCAL planning receipt observed; an admitted effect/evidence executor is required before phase completion',next_action='WAIT_FOR_EFFECT_EXECUTOR',detail='LOCAL planning receipt observed. Phase remains open: effect/evidence executor is not registered.')
-       if changed:_process_message(c,mid,'RECEIPT','GLOBAL_SCHEDULER','MISSION_CONTROL',pid,{'event':'GENERIC_PHASE_LOCAL_PLAN_RECEIVED','assignment_id':assignment['assignment_id'],'receipt_id':receipt['receipt_id'],'result_digest':receipt['result_digest'],'authority_effect':'NONE'},'INTERNAL');c.commit()
+       planrow=c.execute('SELECT * FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()
+       if planrow is None:
+        definition=_generic_plan_definition(c,mid,pid,assignment,receipt)
+        if definition is None:
+         changed=_generic_wait(c,mid,pid,gate='CAPABILITY_NOT_AVAILABLE',reason='No bounded capability is registered for this generic phase',next_action='WAIT_FOR_CAPABILITY',detail='LOCAL planning receipt observed. No bounded effect/evidence capability is registered for this phase.')
+         if changed:_process_message(c,mid,'CONTROL','GLOBAL_SCHEDULER','MISSION_CONTROL',pid,{'event':'GENERIC_PHASE_CAPABILITY_UNAVAILABLE','assignment_id':assignment['assignment_id'],'receipt_id':receipt['receipt_id'],'authority_effect':'NONE'},'INTERNAL');c.commit()
+         return
+        planrow=global_sched.put_generic_phase_plan(c,now_fn=now,**definition)
+        _process_message(c,mid,'ASSIGNMENT','GLOBAL_SCHEDULER','GENERIC_EFFECT_EVIDENCE_EXECUTOR',pid,{'event':'GENERIC_ACTION_IR_MATERIALIZED','plan_id':planrow['plan_id'],'capability':planrow['capability'],'operation':planrow['operation'],'action_ir_digest':planrow['action_ir_digest'],'planning_receipt_id':receipt['receipt_id'],'planning_payload_state':planrow['planning_payload_state'],'authority_effect':'NONE'},'INTERNAL');c.commit()
+       else:planrow=dict(planrow)
+       action_receipt=_generic_existing_action_receipt(c,planrow['plan_id'])
+       if action_receipt and action_receipt.get('status')=='PASS':
+        evidence=json.loads(planrow['evidence_json'] or '{}')
+        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',{'event':'GENERIC_PHASE_EXECUTION_PASS','plan_id':planrow['plan_id'],'action_receipt_id':action_receipt['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':action_receipt['evidence_digest'],'authority_effect':'NONE',**evidence},'VALIDATION')
+        if current and driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
+        return
+       result=_generic_execute_read_plan(c,planrow)
+       if result['state']=='PASS':
+        ar=result['receipt']
+        _process_message(c,mid,'EVIDENCE','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_ACTION_EVIDENCE_OBSERVED','plan_id':planrow['plan_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE'},'INTERNAL')
+        _process_message(c,mid,'RECEIPT','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_ACTION_RECEIPT','plan_id':planrow['plan_id'],'receipt_id':ar['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE'},'INTERNAL');c.commit()
+        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',{'event':'GENERIC_PHASE_EXECUTION_PASS','plan_id':planrow['plan_id'],'action_receipt_id':ar['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE',**result['evidence']},'VALIDATION')
+        if current and driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
+        return
+       gate=result.get('gate') or ('AUTHORITY_REQUIRED' if result['state']=='WAITING_AUTHORITY' else 'CURRENTNESS_REQUIRED' if result['state']=='WAITING_CURRENTNESS' else 'GENERIC_EXECUTION_BLOCKED')
+       changed=_generic_wait(c,mid,pid,gate=gate,reason=result.get('reason') or 'Generic executor waiting',next_action='WAIT_FOR_'+gate,status='BLOCKED' if result['state'] in {'BLOCKED','FAILED'} else 'WAITING',detail=result.get('reason') or 'Generic executor waiting')
+       if changed:_process_message(c,mid,'CONTROL','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_EXECUTOR_WAIT','plan_id':planrow['plan_id'],'state':result['state'],'gate':gate,'authority_effect':'NONE'},'INTERNAL');c.commit()
        return
       if astate=='FAIL':
        changed=_generic_wait(c,mid,pid,gate='GENERIC_PHASE_LOCAL_PLAN_FAILED',reason='LOCAL proposal worker failed; no automatic effect retry',next_action='REPLAN_OR_OPERATOR_REVIEW',status='BLOCKED',detail='LOCAL proposal worker failed; generic phase blocked without effect.')
@@ -1453,8 +1610,10 @@ def local_assignment_receipt(x):
     c=connect()
     try:
       out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,material_drone_id=x['material_drone_id'],lease_generation=x['lease_generation'],status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
+      payload_store=global_sched.store_assignment_payload(c,x['assignment_id'],out['receipt_id'],x['result'],now)
       row=c.execute('SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
-      if row:_process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'status':x['status'],'authority_effect':'NONE'},'IN')
+      if row:_process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'payload_retained':True,'status':x['status'],'authority_effect':'NONE'},'IN')
+      out['payload_store']=payload_store
       c.commit();return out
     finally:c.close()
 

@@ -70,6 +70,55 @@ CREATE TABLE IF NOT EXISTS mission_scheduler_turns(
   dispatch_count INTEGER NOT NULL DEFAULT 0,
   last_dispatched_at TEXT
 );
+CREATE TABLE IF NOT EXISTS mission_assignment_payloads(
+  assignment_id TEXT PRIMARY KEY,
+  receipt_id TEXT NOT NULL,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  result_digest TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS mission_generic_phase_plans(
+  plan_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  planning_assignment_id TEXT NOT NULL,
+  planning_receipt_id TEXT NOT NULL,
+  planning_result_digest TEXT NOT NULL,
+  planning_payload_state TEXT NOT NULL,
+  state TEXT NOT NULL,
+  capability TEXT NOT NULL,
+  target TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  required_inputs_json TEXT NOT NULL,
+  expected_output_json TEXT NOT NULL,
+  authority_class TEXT NOT NULL,
+  currentness_requirements_json TEXT NOT NULL,
+  evidence_requirements_json TEXT NOT NULL,
+  rollback_class TEXT NOT NULL,
+  dependencies_json TEXT NOT NULL,
+  action_ir_json TEXT NOT NULL,
+  action_ir_digest TEXT NOT NULL,
+  executor_id TEXT,
+  evidence_json TEXT,
+  evidence_digest TEXT,
+  effect_receipt_digest TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(mission_id,phase_id)
+);
+CREATE TABLE IF NOT EXISTS mission_generic_action_receipts(
+  receipt_id TEXT PRIMARY KEY,
+  plan_id TEXT NOT NULL UNIQUE,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  action_ir_digest TEXT NOT NULL,
+  evidence_digest TEXT NOT NULL,
+  authority_effect TEXT NOT NULL,
+  status TEXT NOT NULL,
+  observed_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS mission_scheduler_migrations(
   version INTEGER PRIMARY KEY,
   schema_id TEXT NOT NULL,
@@ -103,6 +152,8 @@ def migrate(conn, now_fn):
     )
     conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(1,?,?)',
                  ('lion.scheduler-storage-reconciliation/v1',stamp))
+    conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(2,?,?)',
+                 ('lion.generic-effect-evidence-executor/v1',stamp))
     if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']:
         conn.rollback()
         raise ValueError('scheduler database integrity after migration')
@@ -417,3 +468,99 @@ def claim_assignment(conn, assignment_id, now_fn, *, expected_material_drone_id=
     stamp=now_fn();cur=conn.execute("UPDATE mission_execution_assignments SET state='CLAIMED',claimed_at=? WHERE assignment_id=? AND state='READY'",(stamp,assignment_id))
     if cur.rowcount!=1:raise ValueError("assignment claim race")
     conn.commit();out=dict(row);out['state']='CLAIMED';out['claimed_at']=stamp;return out
+
+
+GENERIC_EXECUTOR_STATES = frozenset({
+    "PLANNING","CAPABILITY_RESOLUTION","WAITING_AUTHORITY","WAITING_CURRENTNESS",
+    "READY_TO_EXECUTE","EXECUTING","VALIDATING","PASS","BLOCKED","FAILED",
+})
+
+
+def store_assignment_payload(conn, assignment_id, receipt_id, result, now_fn, *, max_bytes=131072):
+    """Persist a bounded model/result payload after its immutable receipt exists."""
+    if type(result) is not dict:
+        raise ValueError("assignment payload result")
+    raw=_canon(result)
+    if len(raw.encode("utf-8")) > int(max_bytes):
+        raise ValueError("assignment payload too large")
+    assignment=conn.execute("SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+    receipt=conn.execute("SELECT receipt_id,result_digest FROM mission_execution_receipts WHERE assignment_id=? AND receipt_id=?",(assignment_id,receipt_id)).fetchone()
+    if not assignment or not receipt:
+        raise ValueError("assignment payload receipt missing")
+    dg=digest(result)
+    if dg != receipt["result_digest"]:
+        raise ValueError("assignment payload digest mismatch")
+    existing=conn.execute("SELECT receipt_id,result_digest,result_json FROM mission_assignment_payloads WHERE assignment_id=?",(assignment_id,)).fetchone()
+    if existing:
+        if (existing["receipt_id"],existing["result_digest"],existing["result_json"]) != (receipt_id,dg,raw):
+            raise ValueError("assignment payload conflict")
+        return {"assignment_id":assignment_id,"receipt_id":receipt_id,"result_digest":dg,"idempotent":True}
+    conn.execute("INSERT INTO mission_assignment_payloads VALUES(?,?,?,?,?,?,?)",
+        (assignment_id,receipt_id,assignment["mission_id"],assignment["phase_id"],dg,raw,now_fn()))
+    conn.commit()
+    return {"assignment_id":assignment_id,"receipt_id":receipt_id,"result_digest":dg,"idempotent":False}
+
+
+def assignment_payload(conn, assignment_id):
+    row=conn.execute("SELECT * FROM mission_assignment_payloads WHERE assignment_id=?",(assignment_id,)).fetchone()
+    if not row:return None
+    out=dict(row)
+    try:out["result"]=json.loads(out.pop("result_json"))
+    except Exception:out["result"]={}
+    return out
+
+
+def put_generic_phase_plan(conn, *, mission_id, phase_id, planning_assignment_id, planning_receipt_id,
+                           planning_result_digest, planning_payload_state, state, capability, target, operation,
+                           required_inputs, expected_output, authority_class, currentness_requirements,
+                           evidence_requirements, rollback_class, dependencies, action_ir, action_ir_digest,
+                           now_fn, executor_id=None):
+    if state not in GENERIC_EXECUTOR_STATES:raise ValueError("generic executor state")
+    if planning_payload_state not in {"RETAINED","LEGACY_DIGEST_ONLY"}:raise ValueError("planning payload state")
+    if type(required_inputs) is not dict or type(expected_output) is not dict:raise ValueError("generic plan io")
+    if type(currentness_requirements) is not list or type(evidence_requirements) is not list or type(dependencies) is not list:raise ValueError("generic plan requirements")
+    if type(action_ir) is not dict:raise ValueError("generic action ir")
+    air=_canon(action_ir)
+    if digest(action_ir)!=action_ir_digest:raise ValueError("generic action ir digest")
+    stamp=now_fn();plan_id="generic-plan-"+hashlib.sha256((mission_id+"|"+phase_id).encode()).hexdigest()[:32]
+    existing=conn.execute("SELECT * FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id=?",(mission_id,phase_id)).fetchone()
+    values=(plan_id,mission_id,phase_id,planning_assignment_id,planning_receipt_id,planning_result_digest,planning_payload_state,state,capability,target,operation,_canon(required_inputs),_canon(expected_output),authority_class,_canon(currentness_requirements),_canon(evidence_requirements),rollback_class,_canon(dependencies),air,action_ir_digest,executor_id,None,None,None,stamp,stamp)
+    if existing:
+        immutable=("planning_assignment_id","planning_receipt_id","planning_result_digest","capability","target","operation","authority_class","rollback_class","action_ir_digest")
+        expected={"planning_assignment_id":planning_assignment_id,"planning_receipt_id":planning_receipt_id,"planning_result_digest":planning_result_digest,"capability":capability,"target":target,"operation":operation,"authority_class":authority_class,"rollback_class":rollback_class,"action_ir_digest":action_ir_digest}
+        if any(existing[k]!=expected[k] for k in immutable):raise ValueError("generic plan immutable conflict")
+        return dict(existing)
+    conn.execute("INSERT INTO mission_generic_phase_plans VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",values)
+    conn.commit();return dict(conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone())
+
+
+def update_generic_plan_state(conn, plan_id, state, now_fn, *, executor_id=None, evidence=None, effect_receipt_digest=None):
+    if state not in GENERIC_EXECUTOR_STATES:raise ValueError("generic executor state")
+    row=conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone()
+    if not row:raise ValueError("generic plan missing")
+    evidence_json=None;evidence_digest=None
+    if evidence is not None:
+        if type(evidence) is not dict:raise ValueError("generic evidence")
+        evidence_json=_canon(evidence);evidence_digest=digest(evidence)
+    conn.execute("UPDATE mission_generic_phase_plans SET state=?,executor_id=COALESCE(?,executor_id),evidence_json=COALESCE(?,evidence_json),evidence_digest=COALESCE(?,evidence_digest),effect_receipt_digest=COALESCE(?,effect_receipt_digest),updated_at=? WHERE plan_id=?",
+        (state,executor_id,evidence_json,evidence_digest,effect_receipt_digest,now_fn(),plan_id))
+    conn.commit();return dict(conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone())
+
+
+def record_generic_action_receipt(conn, plan_id, now_fn, *, status, evidence, authority_effect="NONE"):
+    if status not in {"PASS","FAIL"} or authority_effect!="NONE":raise ValueError("generic action receipt status/authority")
+    plan=conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone()
+    if not plan:raise ValueError("generic plan missing")
+    if type(evidence) is not dict:raise ValueError("generic action evidence")
+    ed=digest(evidence)
+    existing=conn.execute("SELECT * FROM mission_generic_action_receipts WHERE plan_id=?",(plan_id,)).fetchone()
+    if existing:
+        if (existing["action_ir_digest"],existing["evidence_digest"],existing["authority_effect"],existing["status"]) != (plan["action_ir_digest"],ed,authority_effect,status):
+            raise ValueError("generic action receipt conflict")
+        raise ValueError("generic action receipt duplicate")
+    rid="generic-receipt-"+uuid.uuid4().hex;stamp=now_fn()
+    conn.execute("INSERT INTO mission_generic_action_receipts VALUES(?,?,?,?,?,?,?,?,?)",
+        (rid,plan_id,plan["mission_id"],plan["phase_id"],plan["action_ir_digest"],ed,authority_effect,status,stamp))
+    conn.execute("UPDATE mission_generic_phase_plans SET state=?,evidence_json=?,evidence_digest=?,effect_receipt_digest=?,updated_at=? WHERE plan_id=?",
+        ("PASS" if status=="PASS" else "FAILED",_canon(evidence),ed,rid,stamp,plan_id))
+    conn.commit();return {"receipt_id":rid,"plan_id":plan_id,"evidence_digest":ed,"status":status}

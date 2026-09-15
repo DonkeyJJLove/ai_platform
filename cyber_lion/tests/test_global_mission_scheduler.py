@@ -112,5 +112,25 @@ class GlobalSchedulerTests(unittest.TestCase):
         self.assertEqual([r[0] for r in rows],[a['receipt_id']])
 
 
+    def test_assignment_payload_is_digest_bound_and_generic_action_receipt_is_exactly_once(self):
+        self.c.execute("ALTER TABLE mission_execution_drivers ADD COLUMN generation INTEGER NOT NULL DEFAULT 1")
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
+        self.c.execute("INSERT INTO mission_execution_drivers(mission_id,state,heartbeat_at,current_phase,generation) VALUES(?,?,?,?,?)",('M','ACTIVE',now(),'P',1))
+        aid=g.create_assignment(self.c,'M','P','LD001','MD025',{'kind':'LOCAL_MODEL_INFERENCE'},now,lease_generation=1)
+        g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD025')
+        result={'kind':'LOCAL_MODEL_INFERENCE','response_text':'bounded plan','authority_effect':'NONE'}
+        rec=g.record_receipt(self.c,aid,result,now,material_drone_id='MD025',lease_generation=1,status='PASS',authority_effect='NONE')
+        stored=g.store_assignment_payload(self.c,aid,rec['receipt_id'],result,now)
+        self.assertFalse(stored['idempotent']);self.assertEqual(g.assignment_payload(self.c,aid)['result'],result)
+        stored2=g.store_assignment_payload(self.c,aid,rec['receipt_id'],result,now);self.assertTrue(stored2['idempotent'])
+        action_ir={'schema_version':'1.0.0','action_id':'a','kind':'filesystem.read','intent_ref':'i','mission_ref':'M','autonomy_ref':'A','bean_ref':'B','target':{'host':'H','environment':'E','runtime':'R'},'authority_request':{'domain':'mission_control','capability':'READ','grant_ref':None},'boundary':{'shell':False,'network':'DENY','filesystem_read':['/tmp/x'],'filesystem_write':[],'process_children':[],'timeout_ms':1000,'max_processes':1,'memory_limit_bytes':1048576},'preconditions':['CURRENT'],'expected_effects':['READ_ONLY_EVIDENCE'],'forbidden_effects':['WRITE'],'observation':{'observer_class':'deterministic_independent','required_events':['READBACK']},'reconciliation':{'mode':'EXACT','receipt':'REQUIRED'}}
+        plan=g.put_generic_phase_plan(self.c,mission_id='M',phase_id='P',planning_assignment_id=aid,planning_receipt_id=rec['receipt_id'],planning_result_digest=rec['result_digest'],planning_payload_state='RETAINED',state='CAPABILITY_RESOLUTION',capability='READ',target='/tmp/x',operation='READ',required_inputs={},expected_output={},authority_class='NONE',currentness_requirements=['CURRENT'],evidence_requirements=['READBACK'],rollback_class='NONE',dependencies=[rec['receipt_id']],action_ir=action_ir,action_ir_digest=g.digest(action_ir),now_fn=now,executor_id='TEST')
+        evidence={'ok':True}
+        out=g.record_generic_action_receipt(self.c,plan['plan_id'],now,status='PASS',evidence=evidence,authority_effect='NONE')
+        self.assertEqual(out['status'],'PASS')
+        with self.assertRaisesRegex(ValueError,'generic action receipt duplicate'):
+            g.record_generic_action_receipt(self.c,plan['plan_id'],now,status='PASS',evidence=evidence,authority_effect='NONE')
+
+
 if __name__ == '__main__':
     unittest.main()
