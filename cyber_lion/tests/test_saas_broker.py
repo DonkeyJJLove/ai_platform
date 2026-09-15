@@ -75,6 +75,40 @@ class CognitiveBrokerTests(unittest.TestCase):
         self.assertEqual(broker.bridge_status(self.conn, None, self.now)['state'], 'BOUND')
         self.assertEqual(broker.request_status(self.conn, claim['request_id'], self.now)['receipt_digest'], first['receipt']['receipt_digest'])
 
+    def test_same_live_thread_question_is_deduplicated_without_fanout(self):
+        first=self.request()
+        second=self.request()
+        self.assertEqual(second['request_id'],first['request_id'])
+        self.assertTrue(second['deduplicated'])
+        rows=self.conn.execute("SELECT request_id,status FROM saas_handoff_requests").fetchall()
+        self.assertEqual([(r['request_id'],r['status']) for r in rows],[(first['request_id'],'WAITING_SUPERVISOR')])
+
+    def test_overdue_same_thread_question_creates_one_retry_and_supersedes_predecessor(self):
+        first=self.request(ttl_seconds=1)
+        self.stamp='2026-09-15T00:00:02Z'
+        retry=self.request(ttl_seconds=30)
+        self.assertNotEqual(retry['request_id'],first['request_id'])
+        self.assertEqual(retry['retry_of_request_id'],first['request_id'])
+        rows={r['request_id']:(r['status'],r['progress_state']) for r in self.conn.execute("SELECT request_id,status,progress_state FROM saas_handoff_requests")}
+        self.assertEqual(rows[first['request_id']],('SUPERSEDED','SUPERSEDED_BY_RETRY'))
+        self.assertEqual(rows[retry['request_id']][0],'WAITING_SUPERVISOR')
+        status=broker.bridge_status(self.conn,None,self.now);self.assertEqual(status['pending_count'],1);self.assertEqual(status['duplicate_policy'],'EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE')
+
+    def test_distinct_thread_questions_remain_independent_fifo_handoffs(self):
+        first=self.request()
+        second=broker.create_request(self.conn,None,'Different question',self.now,scope_type='THREAD',thread_id='a'*32)
+        self.assertNotEqual(first['request_id'],second['request_id'])
+        self.assertEqual(broker.bridge_status(self.conn,None,self.now)['pending_count'],2)
+
+    def test_terminal_mission_advisory_is_preserved_but_removed_from_active_queue(self):
+        self.conn.execute("CREATE TABLE missions(mission_id TEXT PRIMARY KEY,state TEXT NOT NULL)")
+        self.conn.execute("INSERT INTO missions VALUES('M-TERM','RUNNING')")
+        request=broker.create_request(self.conn,'M-TERM','advisory',self.now,scope_type='MISSION')
+        self.conn.execute("UPDATE missions SET state='COMPLETE' WHERE mission_id='M-TERM'");self.conn.commit()
+        self.assertEqual(len(broker.broker_pending(self.conn,self.now)['requests']),0)
+        saved=broker.request_status(self.conn,request['request_id'],self.now)
+        self.assertEqual((saved['status'],saved['progress_state']),('SUPERSEDED','SUPERSEDED_TERMINAL_MISSION'))
+
     def test_control_plane_and_authority_boundary(self):
         request = broker.create_request(self.conn, None, 'Question', self.now, scope_type='CONTROL_PLANE')
         self.assertEqual(request['scope_id'], 'GLOBAL_SUPERVISOR_CHANNEL')

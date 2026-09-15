@@ -141,6 +141,39 @@ def _mission_binding(conn, mission_id):
     return mission, process
 
 
+def _active_request_rows(conn, scope_type, scope_id, question_digest):
+    return conn.execute(
+        "SELECT * FROM saas_handoff_requests WHERE scope_type=? AND scope_id=? AND question_digest=? "
+        "AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED') "
+        "ORDER BY created_at,request_id",
+        (scope_type, scope_id, question_digest),
+    ).fetchall()
+
+
+def _public_created_request(row, *, deduplicated=False):
+    return {
+        "request_id": row["request_id"],
+        "request_code": row["request_code"],
+        "mission_id": row["mission_id"],
+        "lpcl_digest": row["lpcl_digest"],
+        "scope_type": row["scope_type"],
+        "scope_id": row["scope_id"],
+        "thread_id": row["thread_id"],
+        "created_at": row["created_at"],
+        "deadline_at": row["expires_at"],
+        "question_digest": row["question_digest"],
+        "status": row["status"],
+        "state": row["status"],
+        "progress_state": row["progress_state"],
+        "expires_at": row["expires_at"],
+        "retry_of_request_id": row["retry_of_request_id"],
+        "transport": row["transport"] or TRANSPORT,
+        "operator_trigger": "LION SaaS",
+        "deduplicated": bool(deduplicated),
+        "authority_effect": "NONE",
+    }
+
+
 def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope_type=None, thread_id=None, scope_id=None, authority_effect="NONE"):
     if type(ttl_seconds) is not int or not 1 <= ttl_seconds <= 86400:
         raise ValueError('request deadline')
@@ -158,43 +191,66 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
         if scope_type=='THREAD' and (not isinstance(thread_id,str) or len(thread_id)!=32 or any(c not in '0123456789abcdef' for c in thread_id)):raise ValueError('thread_id')
         if scope_type=='CONTROL_PLANE' and (mission_id is not None or thread_id is not None):raise ValueError('control-plane context')
         if scope_type=='MISSION' and not mission_id:raise ValueError('mission_id required for mission scope')
-        if mission_id is not None and conn.execute('SELECT 1 FROM missions WHERE mission_id=?',(mission_id,)).fetchone() is None:raise ValueError('mission context not found')
+        if mission_id is not None:
+            mission=conn.execute('SELECT state FROM missions WHERE mission_id=?',(mission_id,)).fetchone()
+            if mission is None:raise ValueError('mission context not found')
+            if scope_type=='MISSION' and str(mission['state']).upper() in {'COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','FAILED','FAIL','STOPPED'}:
+                raise ValueError('mission context terminal')
         expected=thread_id if scope_type=='THREAD' else mission_id if scope_type=='MISSION' else 'GLOBAL_SUPERVISOR_CHANNEL'
         if scope_id is not None and scope_id!=expected:raise ValueError('scope_id mismatch')
         scope_id=expected;lpcl_digest=None
     stamp = now_fn()
-    # Queue semantics: multiple independent handoffs may coexist for one mission.
-    # The panel polls exact request_id, while operator mediation consumes the oldest pending
-    # request (FIFO). Never destroy a still-pending answer merely because a newer query arrived.
+    question = question.strip()
+    qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
+    retry_of = None
+    if not legacy:
+        # Reconcile time/session/terminal-mission state before deciding whether
+        # a new handoff is semantically independent or a retry of an existing one.
+        _expire(conn, stamp)
+        same=list(_active_request_rows(conn,scope_type,scope_id,qdigest))
+        if same:
+            live=[r for r in same if r['status']!='WAITING_OPERATOR_OVERDUE']
+            if live:
+                # Prefer a claimed request, then the oldest stable request. Collapse
+                # stale duplicate siblings without invalidating the canonical poll id.
+                canonical=next((r for r in live if r['status']=='CLAIMED'),live[0])
+                for row in same:
+                    if row['request_id']==canonical['request_id'] or row['status']=='CLAIMED':continue
+                    conn.execute("UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_DUPLICATE',claim_expires_at=NULL WHERE request_id=?",(row['request_id'],))
+                conn.commit()
+                refreshed=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(canonical['request_id'],)).fetchone()
+                return _public_created_request(refreshed,deduplicated=True)
+            # The same unresolved semantic request already timed out waiting for
+            # mediation. Preserve its history, collapse all stale siblings and
+            # create one explicit retry linked to the latest predecessor.
+            retry_of=same[-1]['request_id']
+            conn.executemany(
+                "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_BY_RETRY',claim_expires_at=NULL WHERE request_id=?",
+                [(r['request_id'],) for r in same],
+            )
     request_id = "saas-" + uuid.uuid4().hex
     request_code = secrets.token_hex(4).upper()
     token = secrets.token_hex(32)
-    question = question.strip()
-    qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
     expires = _future(stamp, ttl_seconds)
     conn.execute(
-        "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at,progress_state,scope_type,scope_id,thread_id,transport,authority_effect) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (request_id, mission_id, lpcl_digest, request_code, token, question, qdigest, "PENDING" if legacy else "WAITING_SUPERVISOR", stamp, expires, "WAITING_OPERATOR" if legacy else "WAITING_SUPERVISOR",scope_type,scope_id,thread_id,TRANSPORT,"NONE"),
+        "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at,progress_state,retry_of_request_id,scope_type,scope_id,thread_id,transport,authority_effect) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (request_id, mission_id, lpcl_digest, request_code, token, question, qdigest, "PENDING" if legacy else "WAITING_SUPERVISOR", stamp, expires, "WAITING_OPERATOR" if legacy else "WAITING_SUPERVISOR",retry_of,scope_type,scope_id,thread_id,TRANSPORT,"NONE"),
     )
     conn.commit()
-    return {
-        "request_id": request_id,
-        "request_code": request_code,
-        "mission_id": mission_id,
-        "lpcl_digest": lpcl_digest,
-        "scope_type":scope_type,"scope_id":scope_id,"thread_id":thread_id,"created_at":stamp,"deadline_at":expires,
-        "question_digest": qdigest,
-        "status": "PENDING" if legacy else "WAITING_SUPERVISOR",
-        "state": "PENDING" if legacy else "WAITING_SUPERVISOR",
-        "progress_state":"WAITING_OPERATOR" if legacy else "WAITING_SUPERVISOR",
-        "expires_at": expires,
-        "transport": TRANSPORT,
-        "operator_trigger": "LION SaaS",
-        "authority_effect": "NONE",
-    }
+    row=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(request_id,)).fetchone()
+    return _public_created_request(row)
 
 
 def _expire(conn, now_value):
+    # A mission-scoped advisory cannot outlive its mission as an actionable
+    # pending handoff. Preserve the row, but terminalize it as historical.
+    tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+    if 'missions' in tables:
+        conn.execute(
+            "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_TERMINAL_MISSION',claim_expires_at=NULL "
+            "WHERE scope_type='MISSION' AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED') "
+            "AND mission_id IN (SELECT mission_id FROM missions WHERE UPPER(state) IN ('COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','FAILED','FAIL','STOPPED'))"
+        )
     # Request deadlines are advisory progress deadlines, not destructive TTLs.
     # A handoff remains answerable until it is explicitly responded/rejected/superseded.
     conn.execute(
@@ -317,6 +373,8 @@ def bridge_status(conn, mission_id, now_fn):
         "pending_count": pending_count,
         "last_response": dict(last_response) if last_response else None,
         "queue_policy": "FIFO_MULTI_PENDING",
+        "duplicate_policy": "EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE",
+        "terminal_mission_pending_policy": "SUPERSEDE_PRESERVE_HISTORY",
         "transport": TRANSPORT,
         "automatic_local_to_saas_hop": False,
         "operator_mediation_required": True,

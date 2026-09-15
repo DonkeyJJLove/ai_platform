@@ -249,6 +249,7 @@ def evaluate_completion_predicates(
         "POST_ASTRA_FAIL_CLOSED_CAPABILITY_GATE": bool(post_driver and post_driver["blocking_gate"] == "CAPABILITY_NOT_AVAILABLE"),
         "SAAS_SESSION_MEDIATED_RECEIPT_EXISTS": responded_session,
         "SAAS_AUTOMATIC_HOP_NOT_CLAIMED": not autonomous_claim,
+        "POST_ASTRA_PHASE_EVIDENCE": protocol_event("POST_ASTRA_PHASE_EVIDENCE_PASS", from_id="POST_ASTRA_CLOSURE_ORCHESTRATOR", phase=phase_id),
         "RUNTIME_REVISIONS_CONVERGED": runtime_revision_evidence is not None,
         "PREFLIGHT_RUNTIME_BINDING_VISIBLE": preflight_binding_evidence is not None,
         "BROKER_TRANSPORT_TRUTHFUL": _exists_table(conn, "saas_handoff_requests") and not autonomous_claim,
