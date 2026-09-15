@@ -1656,6 +1656,13 @@ def _generic_execute_read_plan(c,plan):
       def _recon_saas_status(request_id):
        return saas_broker.request_status(c,request_id,now)
       recon_result=control_recon.execute_phase(c,mid,pid,contract,db_path=DB,driver_generation=int((driver or {}).get('generation') or 1),now_fn=now,create_saas_request=_create_recon_saas,saas_request_status=_recon_saas_status)
+      if recon_result.get('state')=='REACQUIRE_REQUIRED':
+       current=driver_snapshot(c,mid)
+       if not current or current.get('state') not in {'WAITING','BLOCKED'}:
+        return {'state':'WAITING','gate':'EVIDENCE_REACQUISITION_REQUIRED','reason':'Evidence reacquisition requires a parked driver','evidence':recon_result.get('evidence') or {'authority_effect':'NONE'}}
+       activated=driver_activate(c,mid,now,next_action='REACQUIRE_EVIDENCE',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       _process_message(c,mid,'CURRENTNESS','GLOBAL_SCHEDULER','GENERIC_EFFECT_EVIDENCE_EXECUTOR',pid,{'event':'RECON_EVIDENCE_REACQUISITION_OPENED','previous_driver_generation':int(current.get('generation') or 0),'driver_generation':int(activated.get('generation') or 0),'reacquisition':recon_result.get('reacquisition'),'authority_effect':'NONE'},'INTERNAL');c.commit()
+       recon_result=control_recon.execute_phase(c,mid,pid,contract,db_path=DB,driver_generation=int(activated.get('generation') or 1),now_fn=now,create_saas_request=_create_recon_saas,saas_request_status=_recon_saas_status,allow_reacquire=True)
       if recon_result.get('state')!='PASS':
        global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id=executor_id,evidence=recon_result.get('evidence') or {'authority_effect':'NONE'})
        return recon_result

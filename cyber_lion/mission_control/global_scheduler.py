@@ -216,6 +216,21 @@ CREATE TABLE IF NOT EXISTS mission_recon_saas_advisories(
   updated_at TEXT NOT NULL,
   UNIQUE(mission_id,phase_id,evidence_bundle_digest,advisory_role)
 );
+CREATE TABLE IF NOT EXISTS mission_recon_evidence_generations(
+  generation_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  generation INTEGER NOT NULL,
+  source_fingerprint TEXT,
+  evidence_bundle_digest TEXT NOT NULL,
+  content_json TEXT NOT NULL,
+  trigger TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  UNIQUE(mission_id,phase_id,generation),
+  UNIQUE(mission_id,phase_id,source_fingerprint)
+);
+CREATE INDEX IF NOT EXISTS idx_recon_evidence_generation
+  ON mission_recon_evidence_generations(mission_id,phase_id,generation);
 CREATE TABLE IF NOT EXISTS mission_scheduler_migrations(
   version INTEGER PRIMARY KEY,
   schema_id TEXT NOT NULL,
@@ -255,6 +270,8 @@ def migrate(conn, now_fn):
                  ('lion.process-contract-plane/v1',stamp))
     conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(4,?,?)',
                  ('lion.control-plane-reconnaissance/v1',stamp))
+    conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(5,?,?)',
+                 ('lion.recon-evidence-reacquisition/v1',stamp))
     if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']:
         conn.rollback()
         raise ValueError('scheduler database integrity after migration')
@@ -299,6 +316,40 @@ def list_artifacts(conn, mission_id):
     out=[]
     for row in conn.execute('SELECT * FROM mission_artifacts WHERE mission_id=? ORDER BY created_at,artifact_id',(mission_id,)):
         value=dict(row);value['content']=json.loads(value['content_json'] or '{}');out.append(value)
+    return out
+
+def record_recon_evidence_generation(conn, mission_id, phase_id, generation, source_fingerprint, evidence_bundle_digest, content, trigger, now_fn):
+    if type(generation) is not int or generation < 1:
+        raise ValueError('recon evidence generation')
+    if source_fingerprint is not None and (not isinstance(source_fingerprint,str) or len(source_fingerprint)!=64 or any(ch not in '0123456789abcdef' for ch in source_fingerprint)):
+        raise ValueError('recon source fingerprint')
+    if not isinstance(evidence_bundle_digest,str) or len(evidence_bundle_digest)!=64:
+        raise ValueError('recon evidence digest')
+    if type(content) is not dict or not isinstance(trigger,str) or not trigger:
+        raise ValueError('recon evidence generation content')
+    raw=_canon(content); stamp=now_fn()
+    bygen=conn.execute('SELECT * FROM mission_recon_evidence_generations WHERE mission_id=? AND phase_id=? AND generation=?',(mission_id,phase_id,generation)).fetchone()
+    if bygen:
+        value=dict(bygen)
+        if (value['source_fingerprint'],value['evidence_bundle_digest'],value['content_json'],value['trigger']) != (source_fingerprint,evidence_bundle_digest,raw,trigger):
+            raise ValueError('recon evidence generation conflict')
+        return value
+    if source_fingerprint is not None:
+        byfp=conn.execute('SELECT * FROM mission_recon_evidence_generations WHERE mission_id=? AND phase_id=? AND source_fingerprint=?',(mission_id,phase_id,source_fingerprint)).fetchone()
+        if byfp:
+            value=dict(byfp)
+            if value['evidence_bundle_digest']!=evidence_bundle_digest or value['content_json']!=raw:
+                raise ValueError('recon evidence fingerprint conflict')
+            return value
+    gid='recon-evidence-'+hashlib.sha256(f'{mission_id}|{phase_id}|{generation}|{source_fingerprint or "NONE"}'.encode()).hexdigest()[:32]
+    conn.execute('INSERT INTO mission_recon_evidence_generations VALUES(?,?,?,?,?,?,?,?,?)',(gid,mission_id,phase_id,generation,source_fingerprint,evidence_bundle_digest,raw,trigger,stamp))
+    conn.commit(); return dict(conn.execute('SELECT * FROM mission_recon_evidence_generations WHERE generation_id=?',(gid,)).fetchone())
+
+
+def recon_evidence_generations(conn, mission_id, phase_id):
+    out=[]
+    for row in conn.execute('SELECT * FROM mission_recon_evidence_generations WHERE mission_id=? AND phase_id=? ORDER BY generation',(mission_id,phase_id)):
+        value=dict(row); value['content']=json.loads(value['content_json'] or '{}'); out.append(value)
     return out
 
 

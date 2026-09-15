@@ -23,7 +23,8 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         c=self.conn()
         migrations=[tuple(r) for r in c.execute("SELECT version,schema_id FROM mission_scheduler_migrations ORDER BY version")]
         self.assertIn((4,"lion.control-plane-reconnaissance/v1"),migrations)
-        for name in ("mission_artifacts","mission_recon_material_leases","mission_recon_trajectories","mission_recon_saas_advisories"):
+        self.assertIn((5,"lion.recon-evidence-reacquisition/v1"),migrations)
+        for name in ("mission_artifacts","mission_recon_material_leases","mission_recon_trajectories","mission_recon_saas_advisories","mission_recon_evidence_generations"):
             self.assertTrue(c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(name,)).fetchone())
         first=gs.put_artifact(c,"M","A",{"x":1},now,phase_id="P")
         same=gs.put_artifact(c,"M","A",{"x":1},now,phase_id="P")
@@ -81,6 +82,29 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertEqual({r[0] for r in c.execute("SELECT DISTINCT state FROM mission_recon_material_leases")},{"RELEASED"})
         c.close()
 
+    def test_newer_windows_fingerprint_opens_explicit_evidence_reacquisition_generation(self):
+        c=self.conn()
+        c.execute("CREATE TABLE mission_execution_drivers(mission_id TEXT PRIMARY KEY,state TEXT,blocking_gate TEXT,generation INTEGER)")
+        c.execute("INSERT INTO mission_execution_drivers VALUES('M','WAITING','EVIDENCE_INCOMPLETE',7)")
+        c.execute("CREATE TABLE protocol_messages(id INTEGER PRIMARY KEY AUTOINCREMENT,mission_id TEXT,observed_at TEXT,protocol TEXT,from_id TEXT,to_id TEXT,phase TEXT,direction TEXT,payload_json TEXT,payload_digest TEXT)")
+        panel_old={"runtime":{"runtime_source_sha256":"a"*64,"gateway_source_sha256":"b"*64},"repo":{"local_head":"1"*40,"local_tree":"2"*40,"github_master":{"head":"3"*40,"tree":"4"*40}},"thread_db":{"identity_digest":"c"*64}}
+        old_fp=cr._panel_fingerprint_from_snapshot('P',panel_old)
+        content={"schema":cr.EVIDENCE_BUNDLE_SCHEMA,"mission_id":"M","phase_id":"P","observations":{"domains":{"panel":panel_old}},"model_view":{},"reacquisition_generation":1,"source_fingerprint":old_fp,"authority_effect":"NONE"}
+        art=gs.put_artifact(c,'M','RECON_EVIDENCE_BUNDLE',content,now,phase_id='P',schema_id=cr.EVIDENCE_BUNDLE_SCHEMA)
+        cr._record_bundle_generation(c,'M','P',art,now)
+        panel_new={**panel_old,"runtime":{"runtime_source_sha256":"d"*64,"gateway_source_sha256":"b"*64}}
+        new_fp=cr._panel_fingerprint_from_snapshot('P',panel_new)
+        payload={"event":cr.WINDOWS_OBSERVATION_EVENT,"schema":cr.WINDOWS_OBSERVATION_SCHEMA,"source_fingerprint":new_fp,"snapshot":panel_new,"authority_effect":"NONE"}
+        c.execute("INSERT INTO protocol_messages(mission_id,observed_at,protocol,from_id,to_id,phase,direction,payload_json,payload_digest) VALUES(?,?,?,?,?,?,?,?,?)",('M','2026-09-15T12:00:01Z','EVIDENCE','LPCL_PANEL','MISSION_EXECUTION_DRIVER','P','IN',json.dumps(payload,sort_keys=True),'e'*64));c.commit()
+        req=cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'))
+        self.assertIsNotNone(req);self.assertEqual(req['next_generation'],2);self.assertEqual(req['current_source_fingerprint'],old_fp);self.assertEqual(req['new_source_fingerprint'],new_fp)
+        c.execute("UPDATE mission_execution_drivers SET state='ACTIVE',blocking_gate=NULL,generation=8 WHERE mission_id='M'");c.commit()
+        active_req=cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P'),require_parked=False)
+        self.assertIsNotNone(active_req);self.assertEqual(active_req['new_source_fingerprint'],new_fp)
+        self.assertIsNone(cr.evidence_reacquisition_request(c,'M','P',gs.artifact(c,'M','RECON_EVIDENCE_BUNDLE',phase_id='P')))
+        gens=gs.recon_evidence_generations(c,'M','P');self.assertEqual(len(gens),1);self.assertEqual(gens[0]['evidence_bundle_digest'],art['content_digest'])
+        c.close()
+
     def test_three_local_trajectories_are_idempotent_and_distinct(self):
         c=self.conn()
         c.execute("CREATE TABLE mission_execution_drivers(mission_id TEXT PRIMARY KEY,generation INTEGER NOT NULL)")
@@ -131,6 +155,13 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         }
         ir=CanonicalActionIR.from_mapping(value)
         parsed=ir.as_dict();self.assertFalse(parsed['boundary']['shell']);self.assertEqual(parsed['boundary']['network'],'READ_ONLY_PINNED');self.assertEqual(parsed['boundary']['filesystem_write'],[])
+
+    def test_thread_delivery_exact_once_source_feature_detector_matches_mapping_syntax(self):
+        from tools.lion_local_intelligence_runtime import _recon_source_features
+        root=Path(__file__).resolve().parents[2]
+        features=_recon_source_features(root)
+        self.assertTrue(features["thread_delivery_exact_once"])
+        self.assertTrue(features["dual_join"])
 
     def test_successor_proposal_is_artifact_only(self):
         intel={"findings":[],"claim_to_evidence":[],"root_cause_candidates":[],"unknowns":[]}

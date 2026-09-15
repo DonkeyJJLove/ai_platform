@@ -479,18 +479,19 @@ def _recon_source_snapshot(repo):
 
 
 def _recon_source_features(repo):
-    repo=Path(repo).resolve();gateway=_recon_text(repo/'cyber_lion/app_coordination/local_intelligence_gateway.py');delivery=_recon_text(repo/'cyber_lion/app_coordination/saas_thread_delivery.py');ext=_recon_text(repo/'cyber_lion/app_coordination/saas_handoff_extension.py');broker=_recon_text(repo/'tools/lion_saas_broker.py')
+    repo=Path(repo).resolve();gateway=_recon_text(repo/'cyber_lion/app_coordination/local_intelligence_gateway.py');delivery=_recon_text(repo/'cyber_lion/app_coordination/saas_thread_delivery.py');ext=_recon_text(repo/'cyber_lion/app_coordination/saas_handoff_extension.py');broker=_recon_text(repo/'tools/lion_saas_broker.py');dual_join_source=_recon_text(repo/'cyber_lion/mission_control/dual_result_join.py')
     try:parser=inspect.getsource(LpclControlBridge._parse_pairs)
     except Exception:parser=''
     return {
       'lpcl_parser_sha256':hashlib.sha256(parser.encode()).hexdigest(),
       'panel_exact_source_state_machine':all(x in gateway for x in ('validated_source','REGISTERED_SOURCE_DRIFT','ACTIVATION_DIGEST_DRIFT')),
       'panel_backward_compatibility':all(x in Path(__file__).read_text(encoding='utf-8',errors='replace') for x in ('LOGICAL_DRONES','MATERIAL_FLEET_TARGET')),
-      'thread_delivery_exact_once':"append_assistant_once" in delivery and "dedupe_key='saas:'" in delivery,
+      'thread_delivery_exact_once':bool("append_assistant_once" in delivery and re.search(r"[\"']dedupe_key[\"']\s*:\s*[\"']saas:",delivery)),
       'thread_request_linkage':'saas_request_id' in delivery and 'thread_id' in delivery,
       'thread_delivery_receipt_gate':'receipt_digest' in delivery and "status')!='RESPONDED'" in delivery,
       'thread_delete_safety':'concurrently deleted conversation' in delivery,
-      'dual_create':'dual_create' in ext,'dual_local_result':'dual_response' in ext,'dual_saas_link':'dual_link_saas' in ext,'dual_join':'dual_result' in ext,
+      'dual_create':'dual_create' in ext,'dual_local_result':'dual_response' in ext,'dual_saas_link':'dual_link_saas' in ext,
+      'dual_join':bool('dual_result' in gateway and 'dual_result' in delivery and 'JOINED' in dual_join_source),
       'broker_request_state_machine':'saas_handoff_requests' in broker and 'WAITING_SUPERVISOR' in broker,
       'broker_claim_fencing':'claim_generation' in broker and 'claim_expires_at' in broker,
       'broker_session_binding':'saas_session_bindings' in broker,
