@@ -14,7 +14,7 @@ class PermissionPolicyReclassificationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.root,cls.inv,cls.tax=current();cls.mappings,cls.policy,cls.closure,cls.carrier,cls.report=materialize_policy_v2_readiness(inventory=cls.inv,taxonomy_report=cls.tax,repo_root=cls.root)
     def test_current_inventory_and_taxonomy_remain_exact(self):
-        self.assertEqual(self.inv.scan_digest,"d38b3e40cc0240f82d03f539f6704f08e250880e716296e77bea48ef4596461b");self.assertFalse(self.tax.unresolved_refs);self.assertEqual(len(self.inv.surfaces),336)
+        self.assertEqual(self.inv.scan_digest,"7e86ec4123540bf7f3e6bf5b82ef0129831f72e74821e09d37ee4babccd81c55");self.assertFalse(self.tax.unresolved_refs);self.assertEqual(len(self.inv.surfaces),338)
     def test_permission_boundary_matrix_is_exact(self):
         by={x.attack_id:x for x in self.mappings};self.assertEqual(set(by),set(PRE_EFFECT)|set(REHOMED))
         for a in PRE_EFFECT:self.assertEqual(by[a].classification,"PRE_EFFECT_GUARD");self.assertEqual(by[a].effect_boundary_relation,"BEFORE_SURFACE_EFFECT")
@@ -26,7 +26,7 @@ class PermissionPolicyReclassificationTests(unittest.TestCase):
         self.assertEqual(len(self.closure),7);self.assertTrue(all(x.status=="MEDIATED" for x in self.closure));self.assertEqual(self.report.seven_mediated_count,7);self.assertEqual(self.report.unresolved_security_requirement_keys,("STALE_AUTHORITY_SOURCE","UNTRUSTED_PERMISSION"));self.assertEqual(self.report.global_status,"UNKNOWN")
     def test_global_carrier_remains_fail_closed(self):
         self.assertEqual(self.report.unknown_outside_seven_count, len(self.inv.surfaces)-7)
-        counts={s:sum(x.status==s for x in self.carrier.surface_statuses) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")};self.assertEqual(counts,{"MEDIATED":7,"PARTIAL":0,"UNMEDIATED":0,"UNKNOWN":329});self.assertEqual(self.carrier.global_status,"UNKNOWN")
+        counts={s:sum(x.status==s for x in self.carrier.surface_statuses) for s in ("MEDIATED","PARTIAL","UNMEDIATED","UNKNOWN")};self.assertEqual(counts,{"MEDIATED":7,"PARTIAL":0,"UNMEDIATED":0,"UNKNOWN":331});self.assertEqual(self.carrier.global_status,"UNKNOWN")
     def test_no_new_bypass_evidence_is_invented_for_rehomed_requirements(self):
         for x in self.policy.security_requirements:self.assertEqual(x.evidence_state,"CONTROL_FLOW_OBSERVED_EVIDENCE_REQUIRED")
     def test_next_minimal_plan_requires_boundary_refactor_not_live_probe(self):
