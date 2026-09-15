@@ -83,6 +83,9 @@ class LpclPanelExactSourceTests(unittest.TestCase):
         self.assertIn('id="lpclRegisterButton"',UI)
         self.assertIn('id="lpclActivateButton"',UI)
         self.assertNotIn("body:JSON.stringify({lpcl_text:$('lpclText').value})",UI)
+        self.assertIn("VALID · WAITING FOR CAPABILITIES",UI)
+        self.assertIn("VALID · EXECUTION READY",UI)
+        self.assertIn("Activation will start this mission parked until matching capabilities become available.",UI)
 
 
 if __name__=='__main__':unittest.main()

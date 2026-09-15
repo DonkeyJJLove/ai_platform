@@ -10,9 +10,9 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from dataclasses import dataclass
-import argparse,hashlib,json,os,threading,time,urllib.request,uuid,sqlite3,re
+import argparse,hashlib,json,os,threading,time,urllib.request,urllib.error,uuid,sqlite3,re,sys,inspect
 from datetime import datetime,timezone
-from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway
+from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway,UI
 from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
 apply_hybrid_gateway_extension(Gateway)
 from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
@@ -199,16 +199,27 @@ class LpclControlBridge:
         if not phases:raise ValueError('no phases')
         try:
             contracts=compile_panel_phase_contracts(kv,mid,phases,kv['CONTROL_LANGUAGE'])
-            preflight=preflight_execution_contracts(contracts,{})
+            try:
+                registry_snapshot=self._get('/api/v3/capabilities/process-contracts')
+                runtime_registry=registry_snapshot.get('capabilities') if isinstance(registry_snapshot,dict) else None
+                if not isinstance(runtime_registry,dict):raise ValueError('runtime capability registry malformed')
+                registry_state='LIVE_RUNTIME_REGISTRY'
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+                # Backward compatibility with older Mission Control: language
+                # validation remains available, but readiness is fail-safe UNBOUND.
+                registry_snapshot={'schema':'UNAVAILABLE_LEGACY_MISSION_CONTROL','capabilities':{},'authority_effect':'NONE'}
+                runtime_registry={};registry_state='UNAVAILABLE_FALLBACK_EMPTY'
+            preflight=preflight_execution_contracts(contracts,runtime_registry)
         except PhaseExecutionContractError as exc:
             raise ValueError('LPCL_PHASE_EXECUTION_CONTRACT:'+str(exc)) from exc
         cur=self.broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result']
         dg=hashlib.sha256(text.encode('utf-8')).hexdigest()
         spec={'mission_id':mid,'title':kv['MISSION_TITLE'][:180],'objective':kv['MISSION_OBJECTIVE'][:4000],'description':kv['MISSION_DESCRIPTION'][:8000],'lpcl_digest':dg,'lpcl_text':text,'source_head':cur['head'],'source_tree':cur['tree'],'logical_count':logical,'material_target':material,'phases':phases,'protocols':prot}
-        return {'valid':True,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
+        return {'valid':True,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'capability_registry_state':registry_state,'capability_registry_digest':registry_snapshot.get('registry_digest') if isinstance(registry_snapshot,dict) else None,'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':return self._get('/api/v3/missions/recent')
+        if op=='capability_registry':return self._get('/api/v3/capabilities/process-contracts')
         if op in {'mission_delete_preview','mission_delete'}:
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
@@ -412,7 +423,7 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not 1<=max_tokens<=2048:raise ValueError('local assignment max_tokens')
             answer=str(modelprov(messages,max_tokens)).strip()
             if not answer:raise ValueError('empty local model result')
-            result={'kind':'LOCAL_MODEL_INFERENCE','model':'gpt-oss-20b-MXFP4','response_text':answer,'response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'authority_effect':'NONE'}
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':'gpt-oss-20b-MXFP4','response_text':answer,'response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'authority_effect':'NONE'}
             dual_id=payload.get('dual_request_id')
             if dual_id:
                 control('dual_response',{'request_id':dual_id,'provider':'gpt-oss-20b-MXFP4','response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
@@ -428,6 +439,96 @@ def local_assignment_worker_loop(control,modelprov,stop_event,material_drone_id=
         try:local_assignment_worker_once(control,modelprov,material_drone_id=material_drone_id)
         except Exception:pass
         stop_event.wait(1)
+
+RUNTIME_STARTED_AT=datetime.now(timezone.utc).isoformat()
+RECON_CAPABILITY_CLASS='CONTROL_PLANE_RECONNAISSANCE'
+RECON_WINDOWS_SCHEMA='lion.control-plane-windows-observation/v1'
+
+
+def _recon_sha(path):
+    try:
+        h=hashlib.sha256()
+        with Path(path).open('rb') as f:
+            while True:
+                b=f.read(1024*1024)
+                if not b:break
+                h.update(b)
+        return h.hexdigest()
+    except OSError:return None
+
+
+def _recon_text(path):
+    try:return Path(path).read_text(encoding='utf-8',errors='replace')
+    except OSError:return ''
+
+
+def _recon_thread_db(path):
+    path=Path(path)
+    try:
+        uri='file:'+path.as_posix()+'?mode=ro';c=sqlite3.connect(uri,uri=True);integrity=c.execute('PRAGMA integrity_check').fetchone()[0];schema=c.execute('PRAGMA schema_version').fetchone()[0];threads=c.execute('SELECT COUNT(*) FROM threads').fetchone()[0];messages=c.execute('SELECT COUNT(*) FROM messages').fetchone()[0];c.close();value={'path':str(path),'integrity':integrity,'schema_version':schema,'thread_count':threads,'message_count':messages,'size_bytes':path.stat().st_size};value['identity_digest']=hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest();return value
+    except Exception as exc:return {'path':str(path),'integrity':'UNKNOWN','error_class':type(exc).__name__,'identity_digest':None}
+
+
+def _recon_source_snapshot(repo):
+    repo=Path(repo).resolve();rels=(
+      'tools/lion_local_intelligence_runtime.py','cyber_lion/app_coordination/local_intelligence_gateway.py','tools/lion_saas_broker.py',
+      'cyber_lion/app_coordination/saas_thread_delivery.py','cyber_lion/app_coordination/saas_handoff_extension.py',
+      'cyber_lion/process_language/lpcl.py','cyber_lion/contracts/phase_execution_contract.py','tools/lion_mission_control_v3.py',
+    )
+    return {rel:_recon_sha(repo/rel) for rel in rels if (repo/rel).is_file()}
+
+
+def _recon_source_features(repo):
+    repo=Path(repo).resolve();gateway=_recon_text(repo/'cyber_lion/app_coordination/local_intelligence_gateway.py');delivery=_recon_text(repo/'cyber_lion/app_coordination/saas_thread_delivery.py');ext=_recon_text(repo/'cyber_lion/app_coordination/saas_handoff_extension.py');broker=_recon_text(repo/'tools/lion_saas_broker.py')
+    try:parser=inspect.getsource(LpclControlBridge._parse_pairs)
+    except Exception:parser=''
+    return {
+      'lpcl_parser_sha256':hashlib.sha256(parser.encode()).hexdigest(),
+      'panel_exact_source_state_machine':all(x in gateway for x in ('validated_source','REGISTERED_SOURCE_DRIFT','ACTIVATION_DIGEST_DRIFT')),
+      'panel_backward_compatibility':all(x in Path(__file__).read_text(encoding='utf-8',errors='replace') for x in ('LOGICAL_DRONES','MATERIAL_FLEET_TARGET')),
+      'thread_delivery_exact_once':"append_assistant_once" in delivery and "dedupe_key='saas:'" in delivery,
+      'thread_request_linkage':'saas_request_id' in delivery and 'thread_id' in delivery,
+      'thread_delivery_receipt_gate':'receipt_digest' in delivery and "status')!='RESPONDED'" in delivery,
+      'thread_delete_safety':'concurrently deleted conversation' in delivery,
+      'dual_create':'dual_create' in ext,'dual_local_result':'dual_response' in ext,'dual_saas_link':'dual_link_saas' in ext,'dual_join':'dual_result' in ext,
+      'broker_request_state_machine':'saas_handoff_requests' in broker and 'WAITING_SUPERVISOR' in broker,
+      'broker_claim_fencing':'claim_generation' in broker and 'claim_expires_at' in broker,
+      'broker_session_binding':'saas_session_bindings' in broker,
+    }
+
+
+def control_plane_recon_observer_once(control,broker,gitprov,thread_db,repo,model_url):
+    recent=control('recent',{});mid=recent.get('focus_mission_id')
+    if not mid:return None
+    snap=control('process',{'mission_id':mid});phase=(snap.get('process') or {}).get('current_phase')
+    if not phase:return None
+    contract=next((x for x in (snap.get('phase_execution_contracts') or []) if x.get('phase_id')==phase),None)
+    if not contract or RECON_CAPABILITY_CLASS not in (contract.get('capability_classes') or []):return None
+    repo=Path(repo).resolve();runtime_path=Path(__file__).resolve();gateway_path=Path(sys.modules[Gateway.__module__].__file__).resolve();runtime_sha=_recon_sha(runtime_path);gateway_sha=_recon_sha(gateway_path);frontend=hashlib.sha256(UI.encode()).hexdigest()
+    local=gitprov('head_tree',{});status=gitprov('status',{});gh=broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result'];model=broker.call('MAT09','model_health',{})['result'];thread=_recon_thread_db(thread_db);sources=_recon_source_snapshot(repo);features=_recon_source_features(repo);saas=control('saas_status',{})
+    fingerprint=hashlib.sha256(json.dumps({'phase':phase,'runtime':runtime_sha,'gateway':gateway_sha,'local':local,'github':{'head':gh.get('head'),'tree':gh.get('tree')},'thread':thread.get('identity_digest')},sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    for msg in snap.get('protocol_messages') or []:
+        payload=msg.get('payload') or {}
+        if msg.get('phase')==phase and payload.get('event')=='CONTROL_PLANE_WINDOWS_OBSERVATION' and payload.get('source_fingerprint')==fingerprint:return {'idempotent':True,'source_fingerprint':fingerprint}
+    health=model.get('health') if isinstance(model,dict) else None;health_state=(health or {}).get('status') if isinstance(health,dict) else None
+    payload={'event':'CONTROL_PLANE_WINDOWS_OBSERVATION','schema':RECON_WINDOWS_SCHEMA,'source_fingerprint':fingerprint,'snapshot':{
+      'runtime':{'pid':os.getpid(),'runtime_started_at':RUNTIME_STARTED_AT,'python_runtime':sys.version.split()[0],'argv':[str(x) for x in sys.argv],'runtime_source_sha256':runtime_sha,'gateway_source_sha256':gateway_sha,'frontend_revision':frontend,'mission_control_url':getattr(control,'base',None),'model_endpoint':model_url},
+      'repo':{'local_head':local.get('head'),'local_tree':local.get('tree'),'status_count':len(status) if isinstance(status,list) else None,'github_master':{'head':gh.get('head'),'tree':gh.get('tree')}},
+      'thread_db':thread,
+      'model':{'endpoint':model_url,'health':health_state or model.get('status') if isinstance(model,dict) else 'UNKNOWN','model_count':len(model.get('models') or []) if isinstance(model,dict) else None,'model_ids':[x.get('id') for x in (model.get('models') or []) if isinstance(x,dict)] if isinstance(model,dict) else []},
+      'sources':sources,'source_features':features,
+      'provider_graph':['MAT01_LOCAL_REPOSITORY_CURRENTNESS','MAT02_LOCAL_REPOSITORY_CONTENT','MAT04_FEDERATION_CURRENTNESS','MAT09_MODEL_GPU_OBSERVER','MISSION_CONTROL_8766','THREAD_DB'],
+      'saas_projection':(saas.get('supervisor_projection') if isinstance(saas,dict) else None) or saas,
+    },'authority_effect':'NONE'}
+    return control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':payload})
+
+
+def control_plane_recon_observer_loop(control,broker,gitprov,thread_db,repo,model_url,stop_event):
+    while not stop_event.is_set():
+        try:control_plane_recon_observer_once(control,broker,gitprov,thread_db,repo,model_url)
+        except Exception:pass
+        stop_event.wait(2)
+
 
 def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
     """Windows-side LOCAL canary producer for the self-hosting gate.
@@ -478,7 +579,10 @@ def main():
     if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
     b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads)
-    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start();threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop),daemon=True).start()
+    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
+    for material_id in ('MD025','MD026','MD027'):
+        threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
+    threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
     from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
     threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
     try: serve_gateway(g,a.port)

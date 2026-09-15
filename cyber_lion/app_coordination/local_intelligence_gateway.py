@@ -390,7 +390,9 @@ async function validateLpcl(){
   if($('lpclText').value!==source)throw new Error('LPCL_SOURCE_CHANGED_DURING_VALIDATION');
   if(x.lpcl_digest!==localDigest||x.spec?.lpcl_digest!==localDigest||x.spec?.lpcl_text!==source)throw new Error('VALIDATION_DIGEST_DRIFT');
   lpclValidated=Object.freeze({response:x,validated_source:source,validated_digest:localDigest,validated_mission_id:x.spec.mission_id,validated_at:new Date().toISOString(),validated_length:source.length});
-  renderLpclIntake('VALIDATED',diag);$('lpclPreview').textContent=JSON.stringify({mission_id:x.spec.mission_id,title:x.spec.title,objective:x.spec.objective,digest:localDigest,validated_at:lpclValidated.validated_at,validated_length:source.length,source:x.source_currentness,logical:x.spec.logical_count,material:x.spec.material_target,phases:x.spec.phases,protocols:x.spec.protocols},null,2)
+  const pf=x.execution_preflight||{},waiting=Number(pf.invalid_count||0)===0&&Number(pf.unbound_count||0)>0,ready=Number(pf.invalid_count||0)===0&&Number(pf.unbound_count||0)===0;
+  renderLpclIntake('VALIDATED',diag,waiting?'VALID · WAITING FOR CAPABILITIES':ready?'VALID · EXECUTION READY':null);
+  $('lpclPreview').textContent=JSON.stringify({mission_id:x.spec.mission_id,title:x.spec.title,objective:x.spec.objective,digest:localDigest,validated_at:lpclValidated.validated_at,validated_length:source.length,source:x.source_currentness,logical:x.spec.logical_count,material:x.spec.material_target,phases:x.spec.phases,protocols:x.spec.protocols,execution_preflight:{mission_readiness:pf.mission_readiness,phase_count:pf.phase_count,contract_count:pf.contract_count,bound_count:pf.bound_count,unbound_count:pf.unbound_count,invalid_count:pf.invalid_count,capability_closure:pf.capability_closure},activation_notice:waiting?'Activation will start this mission parked until matching capabilities become available.':'Execution contracts are currently bindable.'},null,2)
  }catch(e){lpclValidated=null;lpclRegistered=null;renderLpclIntake('DIRTY',diag,'INVALID');$('lpclPreview').textContent=String(e)}
 }
 async function registerLpcl(){

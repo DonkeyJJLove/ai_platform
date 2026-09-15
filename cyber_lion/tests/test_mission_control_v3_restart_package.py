@@ -22,12 +22,14 @@ SOURCE_MAP = {
     "lion_saas_broker.py": ROOT / "tools/lion_saas_broker.py",
     "cyber_lion/contracts/mission_contract_profiles.py": ROOT / "cyber_lion/contracts/mission_contract_profiles.py",
     "cyber_lion/contracts/phase_execution_contract.py": ROOT / "cyber_lion/contracts/phase_execution_contract.py",
+    "cyber_lion/contracts/action_ir.py": ROOT / "cyber_lion/contracts/action_ir.py",
     "cyber_lion/mission_control/__init__.py": ROOT / "cyber_lion/mission_control/__init__.py",
     "cyber_lion/mission_control/execution_driver.py": ROOT / "cyber_lion/mission_control/execution_driver.py",
     "cyber_lion/mission_control/execution_driver_contract.py": ROOT / "cyber_lion/mission_control/execution_driver_contract.py",
     "cyber_lion/mission_control/dual_result_join.py": ROOT / "cyber_lion/mission_control/dual_result_join.py",
     "cyber_lion/mission_control/global_scheduler.py": ROOT / "cyber_lion/mission_control/global_scheduler.py",
     "cyber_lion/mission_control/mission_reconciliation.py": ROOT / "cyber_lion/mission_control/mission_reconciliation.py",
+    "cyber_lion/mission_control/control_plane_reconnaissance.py": ROOT / "cyber_lion/mission_control/control_plane_reconnaissance.py",
     "cyber_lion/mission_control/supervisor_projection.py": ROOT / "cyber_lion/mission_control/supervisor_projection.py",
     "cyber_lion/mission_control/runtime_projection.py": ROOT / "cyber_lion/mission_control/runtime_projection.py",
     "cyber_lion/mission_control/phase_control.py": ROOT / "cyber_lion/mission_control/phase_control.py",
@@ -78,6 +80,15 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
                 ):
                     broker.mission_control_v3_package_identity()
 
+    def test_missing_action_ir_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);self.materialize(root)
+            (root/'cyber_lion/contracts/action_ir.py').unlink()
+            with patch.object(broker,'MISSION_CONTROL_V3_ROOT',root):
+                with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/contracts/action_ir.py$'):
+                    broker.mission_control_v3_package_identity()
+
+
     def test_missing_phase_execution_contract_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td)
@@ -103,6 +114,15 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             with patch.object(broker,'MISSION_CONTROL_V3_ROOT',root):
                 with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/mission_control/mission_reconciliation.py$'):
                     broker.mission_control_v3_package_identity()
+
+    def test_missing_control_plane_reconnaissance_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);self.materialize(root)
+            (root/'cyber_lion/mission_control/control_plane_reconnaissance.py').unlink()
+            with patch.object(broker,'MISSION_CONTROL_V3_ROOT',root):
+                with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/mission_control/control_plane_reconnaissance.py$'):
+                    broker.mission_control_v3_package_identity()
+
 
     def test_drifted_dual_result_join_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:

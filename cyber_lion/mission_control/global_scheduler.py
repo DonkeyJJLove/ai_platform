@@ -159,6 +159,63 @@ CREATE TABLE IF NOT EXISTS mission_generic_action_receipts(
   status TEXT NOT NULL,
   observed_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS mission_artifacts(
+  artifact_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT,
+  artifact_type TEXT NOT NULL,
+  schema_id TEXT NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 1,
+  content_digest TEXT NOT NULL,
+  content_json TEXT NOT NULL,
+  authority_effect TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(mission_id,artifact_type,phase_id)
+);
+CREATE INDEX IF NOT EXISTS idx_mission_artifacts_type
+  ON mission_artifacts(mission_id,artifact_type,updated_at);
+CREATE TABLE IF NOT EXISTS mission_recon_material_leases(
+  lease_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  logical_drone_id TEXT NOT NULL,
+  material_drone_id TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  execution_mode TEXT NOT NULL,
+  state TEXT NOT NULL,
+  acquired_at TEXT NOT NULL,
+  released_at TEXT,
+  UNIQUE(mission_id,phase_id,material_drone_id)
+);
+CREATE TABLE IF NOT EXISTS mission_recon_trajectories(
+  trajectory_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  trajectory_role TEXT NOT NULL,
+  evidence_bundle_digest TEXT NOT NULL,
+  assignment_id TEXT,
+  result_digest TEXT,
+  response_digest TEXT,
+  state TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(mission_id,phase_id,trajectory_role,evidence_bundle_digest)
+);
+CREATE TABLE IF NOT EXISTS mission_recon_saas_advisories(
+  advisory_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  evidence_bundle_digest TEXT NOT NULL,
+  advisory_role TEXT NOT NULL,
+  request_id TEXT,
+  state TEXT NOT NULL,
+  response_digest TEXT,
+  receipt_digest TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(mission_id,phase_id,evidence_bundle_digest,advisory_role)
+);
 CREATE TABLE IF NOT EXISTS mission_scheduler_migrations(
   version INTEGER PRIMARY KEY,
   schema_id TEXT NOT NULL,
@@ -196,10 +253,53 @@ def migrate(conn, now_fn):
                  ('lion.generic-effect-evidence-executor/v1',stamp))
     conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(3,?,?)',
                  ('lion.process-contract-plane/v1',stamp))
+    conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(4,?,?)',
+                 ('lion.control-plane-reconnaissance/v1',stamp))
     if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']:
         conn.rollback()
         raise ValueError('scheduler database integrity after migration')
     conn.commit()
+
+
+
+def put_artifact(conn, mission_id, artifact_type, content, now_fn, *, phase_id=None, schema_id='lion.mission-artifact/v1', authority_effect='NONE'):
+    if authority_effect != 'NONE':
+        raise ValueError('mission artifacts are non-authoritative')
+    if not isinstance(mission_id,str) or not mission_id or not isinstance(artifact_type,str) or not artifact_type:
+        raise ValueError('artifact identity')
+    raw=_canon(content);dg=hashlib.sha256(raw.encode('utf-8')).hexdigest();stamp=now_fn()
+    row=conn.execute('SELECT * FROM mission_artifacts WHERE mission_id=? AND artifact_type=? AND phase_id IS ?',
+                     (mission_id,artifact_type,phase_id)).fetchone()
+    if row:
+        value=dict(row)
+        if value['content_digest']==dg:
+            return value
+        revision=int(value['revision'])+1
+        conn.execute('UPDATE mission_artifacts SET schema_id=?,revision=?,content_digest=?,content_json=?,authority_effect=?,updated_at=? WHERE artifact_id=?',
+                     (schema_id,revision,dg,raw,authority_effect,stamp,value['artifact_id']))
+        conn.commit()
+        return dict(conn.execute('SELECT * FROM mission_artifacts WHERE artifact_id=?',(value['artifact_id'],)).fetchone())
+    artifact_id='artifact-'+uuid.uuid4().hex
+    conn.execute('INSERT INTO mission_artifacts VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                 (artifact_id,mission_id,phase_id,artifact_type,schema_id,1,dg,raw,authority_effect,stamp,stamp))
+    conn.commit()
+    return dict(conn.execute('SELECT * FROM mission_artifacts WHERE artifact_id=?',(artifact_id,)).fetchone())
+
+
+def artifact(conn, mission_id, artifact_type, *, phase_id=None):
+    row=conn.execute('SELECT * FROM mission_artifacts WHERE mission_id=? AND artifact_type=? AND phase_id IS ?',
+                     (mission_id,artifact_type,phase_id)).fetchone()
+    if not row:return None
+    value=dict(row)
+    value['content']=json.loads(value['content_json'] or '{}')
+    return value
+
+
+def list_artifacts(conn, mission_id):
+    out=[]
+    for row in conn.execute('SELECT * FROM mission_artifacts WHERE mission_id=? ORDER BY created_at,artifact_id',(mission_id,)):
+        value=dict(row);value['content']=json.loads(value['content_json'] or '{}');out.append(value)
+    return out
 
 
 def scheduler_snapshot(conn):
