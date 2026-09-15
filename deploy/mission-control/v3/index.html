@@ -29,7 +29,9 @@
     <div id="mcSchemaNotice" class="mc-schema-notice current"></div>
     <div id="mcLifecycleInfo" class="hint mc-lifecycle-info"></div>
     <div id="mcDriverState" class="mc-driver-state"></div>
-    <div class="mc-progress-wrap"><div class="mc-progress-label"><b id="mcProgressLabel">Progress 0%</b><span id="mcCurrentPhase">No active phase</span></div><div class="mc-progress"><i id="mcProgressBar"></i></div></div>
+    <div id="mcLivenessCards" class="mc-liveness-grid" aria-live="polite"></div>
+    <div id="mcWaitingDetail" class="mc-waiting-detail" hidden></div>
+    <div class="mc-progress-wrap" id="mcProgressWrap"><div class="mc-progress-label"><b id="mcProgressLabel">Progress 0%</b><span id="mcCurrentPhase">No active phase</span></div><div id="mcProgressTrack" class="mc-progress"><i id="mcProgressBar"></i></div><div id="mcLivenessLine" class="mc-liveness-line">LIVENESS UNKNOWN</div></div>
     <div id="mcV3Actions" class="mc-actions"></div>
     <div id="mcCapabilityMatrix" class="mc-capability-matrix"></div>
     <div class="detail-grid mc-process-grid">

@@ -221,6 +221,10 @@ EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_GENERIC_ADAPTER='LPCL_GENERIC_128L64M'
+MISSION_DRIVER_LOOP_INTERVAL_SECONDS=2.0
+LIVENESS_FRESH_MULTIPLIER=3
+LIVENESS_STALE_MULTIPLIER=10
+CAPABILITY_RECHECK_BLOCKERS=frozenset({'CAPABILITY_NOT_AVAILABLE','CURRENTNESS_REQUIRED','EXECUTOR_NOT_AVAILABLE','EXTERNAL_DEPENDENCY_WAIT'})
 LPCL_REBIND_DISTRIBUTION=(6,6,6,6,5,5,5,5,5,5,5,5)
 
 
@@ -664,7 +668,7 @@ def activate_compiled_revision(mid,revision_id,lpcl_digest):
 
 def mission_action(mid,x,*,phase_guard=None):
     if type(x) is not dict or 'action' not in x or not isinstance(x['action'],str):raise ValueError('action schema')
-    action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','ACTIVATE_REVISION','AUDIT','ROLLBACK','PAUSE','RESUME','VALIDATE','STOP','DRIVER_START'}
+    action=x['action'].upper();allowed={'REFRESH','RESTART','START_COMPONENT','ADD_COMPONENT','REDESIGN','ACTIVATE_REVISION','AUDIT','ROLLBACK','PAUSE','PAUSE_AUTO_RESUME','REACQUIRE_CAPABILITIES','RESUME','VALIDATE','STOP','DRIVER_START'}
     if action not in allowed:raise ValueError('action denied')
     request={k:v for k,v in x.items() if k!='action'}
     c=connect();row=c.execute('SELECT mission_id,adapter,state FROM missions WHERE mission_id=?',(mid,)).fetchone();c.close()
@@ -687,14 +691,31 @@ def mission_action(mid,x,*,phase_guard=None):
       elif action=='AUDIT':
         c=connect();result=lifecycle_create_audit(c,mid,now);c.close()
       elif action in {'RESUME','DRIVER_START'}:
-        c=connect();result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE',owner_id=DRIVER_PROCESS_ID);c.close();effect='CONTROL_STATE'
+        c=connect();ds=driver_snapshot(c,mid)
+        if not ds:raise ValueError('driver missing')
+        if action=='RESUME' and ds['state'] not in {'BOOTSTRAP_PAUSED','PAUSED','STOPPED','FAILED'}:raise ValueError('driver not resumable from '+str(ds['state']))
+        result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE',owner_id=DRIVER_PROCESS_ID);c.close();effect='CONTROL_STATE'
       elif action=='PAUSE':
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
-        if ds['state'] not in {'ACTIVE','WAITING','BLOCKED'}:raise ValueError('driver not pausable from '+str(ds['state']))
-        result=driver_transition(c,mid,'PAUSED',now,next_action='OPERATOR_RESUME',commit=guarded_connection is None)
+        if ds['state'] not in {'ACTIVE','BLOCKED'}:raise ValueError('driver not pausable from '+str(ds['state'])+'; WAITING requires PAUSE_AUTO_RESUME')
+        result=driver_transition(c,mid,'PAUSED',now,next_action='OPERATOR_RESUME',current_phase=ds.get('current_phase'),commit=guarded_connection is None)
         if guarded_connection is None:c.close()
         effect='CONTROL_STATE'
+      elif action=='PAUSE_AUTO_RESUME':
+        c=connect();ds=driver_snapshot(c,mid)
+        if not ds or ds['state']!='WAITING':raise ValueError('pause auto-resume requires WAITING driver')
+        result=driver_transition(c,mid,'PAUSED',now,next_action='OPERATOR_RESUME',current_phase=ds.get('current_phase'));c.close();effect='CONTROL_STATE'
+      elif action=='REACQUIRE_CAPABILITIES':
+        c=connect();ds=driver_snapshot(c,mid)
+        if not ds or ds['state'] not in {'WAITING','BLOCKED'}:c.close();raise ValueError('capability recheck requires WAITING/BLOCKED driver')
+        gate=str(ds.get('blocking_gate') or '')
+        if gate not in CAPABILITY_RECHECK_BLOCKERS:c.close();raise ValueError('blocking gate is not capability-recheckable: '+gate)
+        pid=ds.get('current_phase');before_assign=int(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id=? AND phase_id!='__TOPOLOGY__'",(mid,pid)).fetchone()[0]);before_receipts=int(c.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()[0]);before_plans=int(c.execute('SELECT COUNT(*) FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()[0]);_process_message(c,mid,'CONTROL','OPERATOR','GLOBAL_SCHEDULER',pid,{'event':'CAPABILITY_RECHECK_REQUESTED','blocking_gate':gate,'authority_effect':'CONTROL_STATE'},'IN');c.commit();c.close()
+        drive_generic_once(mid)
+        c=connect();after=driver_snapshot(c,mid);after_assign=int(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id=? AND phase_id!='__TOPOLOGY__'",(mid,pid)).fetchone()[0]);after_receipts=int(c.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()[0]);after_plans=int(c.execute('SELECT COUNT(*) FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()[0]);still=bool(after and after.get('state') in {'WAITING','BLOCKED'} and after.get('blocking_gate')==gate);_process_message(c,mid,'CONTROL','GLOBAL_SCHEDULER','OPERATOR',pid,{'event':'CAPABILITY_RECHECK_RESULT','state':after.get('state') if after else None,'blocking_gate':after.get('blocking_gate') if after else None,'next_action':after.get('next_action') if after else None,'still_unavailable':still,'authority_effect':'CONTROL_STATE'},'OUT');c.commit();c.close()
+        if after_assign!=before_assign or after_receipts!=before_receipts:raise ValueError('capability recheck duplicated planning work')
+        result={'driver':after,'phase_id':pid,'still_unavailable':still,'planning_assignments_delta':after_assign-before_assign,'planning_receipts_delta':after_receipts-before_receipts,'action_ir_delta':after_plans-before_plans};effect='CONTROL_STATE'
       elif action=='STOP':
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
@@ -758,6 +779,95 @@ def mission_action(mid,x,*,phase_guard=None):
       raise ValueError(type(e).__name__+':'+str(e)+((' receipt='+str(receipt.get('receipt_id'))) if receipt else ''))
 
 
+def _parse_utc(value):
+    if not value:return None
+    try:
+      dt=datetime.fromisoformat(str(value).replace('Z','+00:00'))
+      if dt.tzinfo is None:dt=dt.replace(tzinfo=timezone.utc)
+      return dt.astimezone(timezone.utc)
+    except Exception:return None
+
+
+def _age_ms(value,observed_dt):
+    dt=_parse_utc(value)
+    if dt is None:return None
+    return max(0,int((observed_dt-dt).total_seconds()*1000))
+
+
+def _heartbeat_freshness(age_ms,interval_ms):
+    if age_ms is None:return 'UNKNOWN'
+    if age_ms<=int(interval_ms*LIVENESS_FRESH_MULTIPLIER):return 'FRESH'
+    if age_ms<=int(interval_ms*LIVENESS_STALE_MULTIPLIER):return 'AGING'
+    return 'STALE'
+
+
+def _derive_liveness_state(*,mission_state,driver_state,blocking_gate,current_phase,scheduler_age_ms,driver_age_ms,interval_ms):
+    stale=int(interval_ms*LIVENESS_STALE_MULTIPLIER)
+    if mission_state=='COMPLETE' or driver_state=='COMPLETE':return ('COMPLETE','Mission and driver are terminal.')
+    if mission_state=='FAILED' or driver_state=='FAILED':return ('FAILED','Mission or driver is failed.')
+    if driver_state in {'PAUSED','BOOTSTRAP_PAUSED','STOPPED'}:return ('PAUSED','Driver is operator-contained and will not auto-resume.')
+    if scheduler_age_ms is None or scheduler_age_ms>stale:return ('STALE','Global scheduler heartbeat is stale or unavailable.')
+    if driver_state=='ACTIVE':
+      if driver_age_ms is None or driver_age_ms>stale:return ('STALE','Active driver heartbeat is stale or unavailable.')
+      if current_phase:return ('EXECUTING','Scheduler and active driver heartbeats are fresh.')
+      return ('IDLE_HEALTHY','Scheduler and driver are live but no executable phase is active.')
+    if driver_state=='WAITING':
+      return ('WAITING_HEALTHY','Control plane is live and the driver is intentionally waiting on an explicit gate.' if blocking_gate else 'Control plane is live and the driver is waiting.')
+    if driver_state=='BLOCKED':
+      return ('BLOCKED_HEALTHY','Control plane is live and the driver is blocked on an explicit gate.' if blocking_gate else 'Control plane is live and the driver is blocked.')
+    return ('IDLE_HEALTHY','Control plane heartbeat is fresh; no active execution is observed.')
+
+
+def _project_driver_controls(driver):
+    d=driver or {};state=str(d.get('state') or 'UNKNOWN');gate=str(d.get('blocking_gate') or '')
+    def item(supported,reason,label,effect='CONTROL_STATE'):
+      return {'supported':bool(supported),'reason':None if supported else reason,'label':label,'effect':effect}
+    recheck=state in {'WAITING','BLOCKED'} and gate in CAPABILITY_RECHECK_BLOCKERS
+    return {
+      'REACQUIRE_CAPABILITIES':item(recheck,'Available only for WAITING/BLOCKED drivers on a re-evaluable dependency gate.','Recheck capability'),
+      'PAUSE_AUTO_RESUME':item(state=='WAITING','Available only while the driver is WAITING.','Pause auto-resume'),
+      'PAUSE':item(state in {'ACTIVE','BLOCKED'},'WAITING uses Pause auto-resume; Resume is reserved for explicit PAUSED states.','Pause driver'),
+      'RESUME':item(state in {'BOOTSTRAP_PAUSED','PAUSED','STOPPED','FAILED'},'Driver is not explicitly paused/stopped/failed.','Resume driver'),
+      'STOP':item(bool(state and state not in {'COMPLETE','STOPPED','UNKNOWN'}),'Driver is already terminal/stopped or unavailable.','Stop driver'),
+    }
+
+
+def _project_mission_liveness(c,mid,mission,process,driver,scheduler):
+    observed_dt=datetime.now(timezone.utc);observed_at=observed_dt.isoformat().replace('+00:00','Z')
+    interval_ms=int(MISSION_DRIVER_LOOP_INTERVAL_SECONDS*1000)
+    dh=(driver or {}).get('heartbeat_at');sh=(scheduler or {}).get('heartbeat_at')
+    da=_age_ms(dh,observed_dt);sa=_age_ms(sh,observed_dt)
+    scheduler_freshness=_heartbeat_freshness(sa,interval_ms);driver_freshness=_heartbeat_freshness(da,interval_ms)
+    state,reason=_derive_liveness_state(mission_state=str((mission or {}).get('state') or 'UNKNOWN'),driver_state=str((driver or {}).get('state') or 'UNKNOWN'),blocking_gate=(driver or {}).get('blocking_gate'),current_phase=(process or {}).get('current_phase'),scheduler_age_ms=sa,driver_age_ms=da,interval_ms=interval_ms)
+    def one(sql):
+      try:
+       r=c.execute(sql,(mid,)).fetchone();return r[0] if r and r[0] else None
+      except sqlite3.OperationalError:return None
+    last_assignment=one("SELECT MAX(created_at) FROM mission_execution_assignments WHERE mission_id=? AND phase_id!='__TOPOLOGY__'")
+    last_receipt=one('SELECT MAX(observed_at) FROM mission_execution_receipts WHERE mission_id=?')
+    last_event=one('SELECT MAX(observed_at) FROM protocol_messages WHERE mission_id=?')
+    last_phase=one('SELECT MAX(updated_at) FROM mission_phases WHERE mission_id=?')
+    current_phase=(process or {}).get('current_phase')
+    wait_started=None
+    if current_phase:
+      try:
+       r=c.execute("SELECT updated_at FROM mission_phases WHERE mission_id=? AND phase_id=? AND status IN ('WAITING','BLOCKED')",(mid,current_phase)).fetchone();wait_started=r[0] if r else None
+      except sqlite3.OperationalError:pass
+    ages=[x for x in (sa,da) if x is not None]
+    freshness='STALE' if state=='STALE' else ('AGING' if scheduler_freshness=='AGING' or (state=='EXECUTING' and driver_freshness=='AGING') else 'FRESH')
+    return {
+      'state':state,'reason':reason,'observed_at':observed_at,
+      'driver_heartbeat_at':dh,'driver_heartbeat_age_ms':da,'driver_heartbeat_freshness':driver_freshness,
+      'scheduler_heartbeat_at':sh,'scheduler_heartbeat_age_ms':sa,'scheduler_heartbeat_freshness':scheduler_freshness,
+      'heartbeat_interval_ms':interval_ms,'freshness':freshness,
+      'last_assignment_at':last_assignment,'last_receipt_at':last_receipt,'last_event_at':last_event,
+      'last_phase_transition_at':last_phase,'last_progress_change_at':(process or {}).get('updated_at'),
+      'wait_started_at':wait_started,'auto_resume_armed':str((driver or {}).get('state') or '') in {'WAITING','BLOCKED'},
+      'blocking_gate':(driver or {}).get('blocking_gate'),'next_action':(driver or {}).get('next_action'),
+      'current_phase':current_phase,'source_revision':None,
+    }
+
+
 def process_snapshot(mid, *, read_only=False, _connection=None):
     if _connection is not None and not read_only:raise ValueError('shared snapshot must be read only')
     c=_connection if _connection is not None else connect()
@@ -808,8 +918,12 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     except sqlite3.OperationalError:d['revision_compilations']=[]
     try:d['adaptive_worker_plan']=driver_adaptive_worker_plan(c,mid,preferred_roles=('LD01','LD02','LD10','LD11'),limit=16) if int(d.get('ready') or 0)==64 else None
     except Exception:d['adaptive_worker_plan']=None
-    if _connection is None:c.commit();c.close()
-    return normalize_snapshot(d)
+    liveness=_project_mission_liveness(c,mid,d,d.get('process') or {},d.get('execution_driver') or {},d.get('scheduler') or {})
+    controls=_project_driver_controls(d.get('execution_driver'))
+    if _connection is None:c.commit()
+    out=normalize_snapshot(d);liveness['source_revision']=out.get('projection_revision');out['liveness']=liveness;out['driver_controls']=controls
+    if _connection is None:c.close()
+    return out
 
 def set_focus_mission(mid, request):
     if type(request) is not dict or request:raise ValueError('focus request must be empty object')
@@ -1505,7 +1619,7 @@ def mission_driver_loop():
        try:
         c=connect();global_sched.heartbeat(c,now,queue_depth=len(global_sched.eligible_missions(c)),active_run_count=sum(1 for x in global_sched.eligible_missions(c) if x['state']=='ACTIVE'),last_error=type(exc).__name__+':'+str(exc)[:900]);c.close()
        except Exception:pass
-      DRIVER_STOP.wait(2)
+      DRIVER_STOP.wait(MISSION_DRIVER_LOOP_INTERVAL_SECONDS)
 
 
 def create_dual_evaluation(x):

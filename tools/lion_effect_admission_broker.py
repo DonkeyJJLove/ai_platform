@@ -1666,11 +1666,11 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "lion_saas_broker.py": "54a75841e3ecfbde7634729dba1d936b1ea94213c38f79439cafbc44ceaf5992",
  "lion_saas_session_bridge.py": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7",
  "mission_control_compat.py": "f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0",
- "mission_control_v3.py": "5d5fe0d401354aade9c49299c005c6650ab344c8887d3d18ee531204cf88ba69",
- "static/app.css": "07ea85990fefe57bf3ebc8fa0b9529ff00c1c7a84ba8c23749484cd90a132c21",
+ "mission_control_v3.py": "a277e4fa5fab38e7d76ab650e3a583d97bb3ffdf5eedeb9df32e7233b66f1603",
+ "static/app.css": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c",
  "static/app.js": "0c495f159c660c744c11ed145e03f0adb0e61ab3a609a53797f62fe67fd16111",
- "static/control-v3.js": "f7e256c6f4901f93a5ab2e27bb95a270bb54785aac216cba4084e823f91889cb",
- "static/index.html": "d913d55fa0fb3b45d1a18bc30f922dfc8cb5c9e8ba7d00f8ddd1d84c2f9de68f",
+ "static/control-v3.js": "1bca57d14a502181c7d6c5b4d38244024528ba03a224b98d7be21e14e397158f",
+ "static/index.html": "440bd4465bc528ab8f19e5ec23d0709679124a30b3a96da9890526c528e5a9b6",
  "static/passive.js": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465"
 }
 MISSION_CONTROL_V3_PATH=MISSION_CONTROL_V3_ROOT/"mission_control_v3.py"

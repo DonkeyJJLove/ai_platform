@@ -318,5 +318,67 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_generic_action_receipts WHERE plan_id=?",(p2['plan_id'],)).fetchone()[0],1);c.close()
 
 
+    def _make_waiting_generic(self, mid='WAITING-CONTROLS-R1'):
+        spec=self.spec(mid,'PROJECT=LION_EVOLUSION\n');spec['logical_count']=128;spec['phases']=[{'id':'GENERIC_STEP','title':'Generic step'}]
+        self.mc.register_lpcl_mission(spec)
+        with patch.object(self.mc,'epoch3_broker',return_value=(self.runtime('waiting-controls'),'waiting-controls-read')):
+            self.mc.activate_lpcl_mission(mid,{'lpcl_digest':spec['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        self.mc.drive_generic_once(mid)
+        c=self.mc.connect();a=c.execute("SELECT * FROM mission_execution_assignments WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone();gen=c.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(mid,)).fetchone()[0]
+        self.mc.global_sched.claim_assignment(c,a['assignment_id'],self.mc.now,expected_material_drone_id='MD025')
+        result={'kind':'LOCAL_MODEL_INFERENCE','response_text':'proposal only','authority_effect':'NONE'}
+        rec=self.mc.global_sched.record_receipt(c,a['assignment_id'],result,self.mc.now,material_drone_id='MD025',lease_generation=gen,status='PASS',authority_effect='NONE')
+        self.mc.global_sched.store_assignment_payload(c,a['assignment_id'],rec['receipt_id'],result,self.mc.now)
+        self.mc.global_sched.heartbeat(c,self.mc.now,queue_depth=1,active_run_count=0)
+        c.close();self.mc.drive_generic_once(mid)
+        return mid
+
+    def test_waiting_driver_controls_and_liveness_are_backend_projected(self):
+        mid=self._make_waiting_generic()
+        snap=self.mc.process_snapshot(mid)
+        self.assertEqual(snap['execution_driver']['state'],'WAITING')
+        self.assertEqual(snap['execution_driver']['blocking_gate'],'CAPABILITY_NOT_AVAILABLE')
+        self.assertEqual(snap['liveness']['state'],'WAITING_HEALTHY')
+        self.assertTrue(snap['liveness']['auto_resume_armed'])
+        self.assertTrue(snap['driver_controls']['REACQUIRE_CAPABILITIES']['supported'])
+        self.assertTrue(snap['driver_controls']['PAUSE_AUTO_RESUME']['supported'])
+        self.assertFalse(snap['driver_controls']['PAUSE']['supported'])
+        self.assertFalse(snap['driver_controls']['RESUME']['supported'])
+        self.assertTrue(snap['driver_controls']['STOP']['supported'])
+
+    def test_reacquire_capabilities_rechecks_without_duplicate_planning(self):
+        mid=self._make_waiting_generic('WAITING-RECHECK-R1')
+        c=self.mc.connect();before=(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone()[0],c.execute("SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone()[0],c.execute("SELECT COUNT(*) FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone()[0]);c.close()
+        out=self.mc.mission_action(mid,{'action':'REACQUIRE_CAPABILITIES'})
+        self.assertTrue(out['result']['still_unavailable'])
+        self.assertEqual((out['result']['planning_assignments_delta'],out['result']['planning_receipts_delta'],out['result']['action_ir_delta']),(0,0,0))
+        c=self.mc.connect();after=(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone()[0],c.execute("SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone()[0],c.execute("SELECT COUNT(*) FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id='GENERIC_STEP'",(mid,)).fetchone()[0]);events=[json.loads(r[0]).get('event') for r in c.execute("SELECT payload_json FROM protocol_messages WHERE mission_id=? AND protocol='CONTROL' ORDER BY id",(mid,)).fetchall()];c.close()
+        self.assertEqual(before,after);self.assertIn('CAPABILITY_RECHECK_REQUESTED',events);self.assertIn('CAPABILITY_RECHECK_RESULT',events)
+        snap=self.mc.process_snapshot(mid);self.assertEqual(snap['execution_driver']['state'],'WAITING');self.assertEqual(snap['process']['progress'],0.0)
+        self.assertTrue(any(x['action']=='REACQUIRE_CAPABILITIES' and x['status']=='PASS' for x in snap['action_receipts']))
+
+    def test_pause_auto_resume_is_the_only_path_that_makes_waiting_resumable(self):
+        mid=self._make_waiting_generic('WAITING-PAUSE-R1')
+        before=self.mc.process_snapshot(mid);self.assertFalse(before['driver_controls']['RESUME']['supported'])
+        self.mc.mission_action(mid,{'action':'PAUSE_AUTO_RESUME'})
+        paused=self.mc.process_snapshot(mid);self.assertEqual(paused['execution_driver']['state'],'PAUSED');self.assertFalse(paused['liveness']['auto_resume_armed']);self.assertTrue(paused['driver_controls']['RESUME']['supported']);self.assertFalse(paused['driver_controls']['PAUSE_AUTO_RESUME']['supported'])
+        self.mc.mission_action(mid,{'action':'RESUME'})
+        resumed=self.mc.process_snapshot(mid);self.assertEqual(resumed['execution_driver']['state'],'ACTIVE');self.assertFalse(resumed['driver_controls']['RESUME']['supported'])
+
+    def test_liveness_stale_is_derived_from_scheduler_cadence_not_progress(self):
+        interval=int(self.mc.MISSION_DRIVER_LOOP_INTERVAL_SECONDS*1000)
+        state,reason=self.mc._derive_liveness_state(mission_state='RUNNING',driver_state='WAITING',blocking_gate='CAPABILITY_NOT_AVAILABLE',current_phase='P',scheduler_age_ms=interval*self.mc.LIVENESS_STALE_MULTIPLIER+1,driver_age_ms=None,interval_ms=interval)
+        self.assertEqual(state,'STALE');self.assertIn('scheduler',reason.lower())
+        state2,_=self.mc._derive_liveness_state(mission_state='RUNNING',driver_state='WAITING',blocking_gate='CAPABILITY_NOT_AVAILABLE',current_phase='P',scheduler_age_ms=interval,driver_age_ms=interval*100,interval_ms=interval)
+        self.assertEqual(state2,'WAITING_HEALTHY')
+
+    def test_waiting_mission_is_redispatched_without_manual_resume(self):
+        mid=self._make_waiting_generic('WAITING-AUTO-REEVAL-R1')
+        with patch.object(self.mc.global_sched,'next_dispatch',return_value={'mission_id':mid}), patch.object(self.mc,'drive_generic_once') as drive:
+            self.mc.global_scheduler_once()
+        drive.assert_called_once_with(mid)
+        self.assertEqual(self.mc.process_snapshot(mid)['execution_driver']['state'],'WAITING')
+
+
 if __name__ == '__main__':
     unittest.main()
