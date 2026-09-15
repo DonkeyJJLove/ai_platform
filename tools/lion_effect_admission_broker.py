@@ -1654,12 +1654,17 @@ def e3_handle(req):
 
 MISSION_CONTROL_V3_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3")
 MISSION_CONTROL_V3_REQUIRED_SHA256={
+ "cyber_lion/contracts/mission_contract_profiles.py": "329fec47de45633572bfdd8a79c84cd5ab91fc7b62ebe8be67f401219fb8e58c",
  "cyber_lion/contracts/phase_execution_contract.py": "e7d4df04b0205178e538d95df1e5b86af6ea294c87e37e5c7343dbe66552e458",
+ "cyber_lion/contracts/action_ir.py": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8",
+ "cyber_lion/process_language/lpcl.py": "355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91",
  "cyber_lion/mission_control/__init__.py": "8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c",
  "cyber_lion/mission_control/dual_result_join.py": "7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f",
  "cyber_lion/mission_control/execution_driver.py": "b666feb64277895b1861ab341caae1aa0acc09d463e396c75e5aa8797746dd5f",
  "cyber_lion/mission_control/execution_driver_contract.py": "aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821",
- "cyber_lion/mission_control/global_scheduler.py": "21e403ba1614bfa63d9ea75b82d25c375c6280188a030fbf0835bac7c95a99b8",
+ "cyber_lion/mission_control/global_scheduler.py": "2eb5d955a0869878f771754e81fd0244905d4dc838f02a54e162641be8de41da",
+ "cyber_lion/mission_control/mission_reconciliation.py": "496aa332d58810498f37fee2aefdcc8a0f09346b4503152078e75bcffa09273e",
+ "cyber_lion/mission_control/control_plane_reconnaissance.py": "8764a073e65197ef0b966ee71683044dcf388d32109c71ae1f231f2c249d7f46",
  "cyber_lion/mission_control/phase_control.py": "89372056bf7668edc473b0b0dc04433d376dca3e041499fc0b4e6a52f69c319e",
  "cyber_lion/mission_control/runtime_projection.py": "9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24",
  "cyber_lion/mission_control/supervisor_projection.py": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80",
@@ -1667,7 +1672,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "lion_saas_broker.py": "54a75841e3ecfbde7634729dba1d936b1ea94213c38f79439cafbc44ceaf5992",
  "lion_saas_session_bridge.py": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7",
  "mission_control_compat.py": "f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0",
- "mission_control_v3.py": "0fa686449c9e1b443627055ae333a9fae8be4106f84bbe875b429d8ca4489833",
+ "mission_control_v3.py": "510cc5301a3207188309d07714f6aa94992e7db16d5bf28ed3b50ad7d64e9816",
  "static/app.css": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c",
  "static/app.js": "0c495f159c660c744c11ed145e03f0adb0e61ab3a609a53797f62fe67fd16111",
  "static/control-v3.js": "1bca57d14a502181c7d6c5b4d38244024528ba03a224b98d7be21e14e397158f",

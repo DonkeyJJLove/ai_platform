@@ -143,6 +143,18 @@ PHASE_01_COMPLETION_01=RUNTIME_CURRENT=PASS
         self.assertEqual(out['phase_execution_contracts'][0]['execution_class'],'VERIFY')
         self.assertEqual(out['execution_preflight']['mission_readiness'],'WAITING_FOR_CAPABILITIES')
 
+    def test_lpcl_1_2_preflight_uses_live_runtime_capability_registry_when_available(self):
+        class Broker:
+            def call(self,*args,**kwargs):return {'result':{'head':'a'*40,'tree':'b'*40}}
+        bridge=LpclControlBridge(Broker())
+        original_get=bridge._get
+        bridge._get=lambda path,timeout=8: {'schema':'lion.process-capability-registry/v1','capabilities':{'CONTROL_PLANE_RECONNAISSANCE':[{'capability_id':'CONTROL_PLANE_RECONNAISSANCE_V1','executor_id':'X','effect_ceiling':'NONE','mode':'READ_ONLY_RECON'}]},'registry_digest':'d'*64,'authority_effect':'NONE'} if path=='/api/v3/capabilities/process-contracts' else original_get(path,timeout)
+        text='PROJECT=LION_EVOLUSION\nMODE=AUTONOMOUS_EXECUTE\nCONTROL_LANGUAGE=LPCL/1.2\nMISSION_ID=TEST-V12-LIVE-REGISTRY-R1\nMISSION_TITLE=Runtime-aware preflight\nMISSION_OBJECTIVE=Verify runtime registry\nMISSION_DESCRIPTION=Verify runtime registry\nLOGICAL_DRONE_COUNT=128\nMATERIAL_DRONE_COUNT=64\nPROTOCOLS=LPCL,AUTHORITY,CURRENTNESS\nPHASE_01=VERIFY_RUNTIME|Verify runtime\nPHASE_01_EXECUTION_CLASS=VERIFY\nPHASE_01_CAPABILITY_CLASS=CONTROL_PLANE_RECONNAISSANCE\nPHASE_01_EFFECT_CEILING=NONE\nPHASE_01_BINDING_MODE=DYNAMIC\nPHASE_01_ON_MISSING_CAPABILITY=WAIT_AND_DISCOVER\nPHASE_01_AUTO_RESUME=TRUE\nPHASE_01_VERIFY_BEFORE_MUTATE=TRUE\nPHASE_01_CURRENTNESS=LIVE_8780_RUNTIME\nPHASE_01_EVIDENCE=PROCESS_IDENTITY\nPHASE_01_COMPLETION_01=PANEL_RUNTIME_IDENTITY_CAPTURED=PASS\n'
+        out=bridge.validate(text)
+        self.assertEqual(out['capability_registry_state'],'LIVE_RUNTIME_REGISTRY')
+        self.assertEqual(out['capability_registry_digest'],'d'*64)
+        self.assertEqual((out['execution_preflight']['bound_count'],out['execution_preflight']['unbound_count'],out['execution_preflight']['mission_readiness']),(1,0,'READY_BOUND'))
+
     def test_lpcl_1_2_intent_only_is_rejected_at_intake(self):
         class Broker:
             def call(self,*args,**kwargs):return {'result':{'head':'a'*40,'tree':'b'*40}}

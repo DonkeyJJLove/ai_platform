@@ -435,6 +435,56 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'",(mid,)).fetchone()[0],assign_count)
         self.assertEqual(action_receipts,1);self.assertEqual(binding[0]['capability_id'],'GENERIC_EXECUTION_BINDER_RECONCILIATION');self.assertEqual(plan['state'],'PASS');c.close()
 
+    def test_phase4_runtime_reconciliation_accepts_exact_128l64m_topology(self):
+        from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
+        mid=self.mc.PROCESS_CONTRACT_TARGET_MISSION
+        spec=self.spec(mid,'CONTROL_LANGUAGE=LPCL/1.1\nPROJECT=LION_EVOLUSION\n');spec['logical_count']=128
+        phase_ids=('REPRODUCE_BIND_FAILURE','SEPARATE_NEW_AND_CONTINUATION_LINEAGE','REPAIR_EXECUTION_BINDER','REPAIR_BASE_TOPOLOGY_BOOTSTRAP','IMPLEMENT_GENERIC_PHASE_COMPILER','IMPLEMENT_GENERIC_PHASE_HANDLER','MATERIALIZE_DRIVER','GLOBAL_SCHEDULER_ACCEPTANCE','DYNAMIC_DELEGATION_ACCEPTANCE','RESTART_DURABILITY','REAL_PANEL_MISSION_ACCEPTANCE','RETRY_POST_ASTRA_SAAS_MISSION')
+        spec['phases']=[{'id':pid,'title':pid} for pid in phase_ids]
+        self.mc.register_lpcl_mission(spec)
+        with patch.object(self.mc,'epoch3_broker',return_value=(self.runtime('phase4-topology'),'phase4-read')):
+            self.mc.activate_lpcl_mission(mid,{'lpcl_digest':spec['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        self.mc.reconcile_phase_execution_contracts();c=self.mc.connect();contract=self.mc.global_sched.phase_execution_contract(c,mid,'REPAIR_BASE_TOPOLOGY_BOOTSTRAP')
+        ok,evidence=evaluate_completion_predicates(c,mid,'REPAIR_BASE_TOPOLOGY_BOOTSTRAP',contract['completion_predicates'],db_path=self.mc.DB);c.close()
+        self.assertTrue(ok,evidence)
+        self.assertEqual(set(evidence['checks'].values()),{'PASS'})
+        self.assertEqual(evidence['logical_count'],128);self.assertEqual(evidence['material_count'],64);self.assertEqual(evidence['topology_assignment_count'],128)
+
+    def test_generic_terminal_reconciliation_closes_waiting_driver_idempotently(self):
+        mid=self._make_waiting_generic('GENERIC-TERMINAL-RECONCILE-R1')
+        c=self.mc.connect()
+        c.execute("UPDATE mission_phases SET status='PASS',progress=100,finished_at=?,updated_at=? WHERE mission_id=?",(self.mc.now(),self.mc.now(),mid))
+        c.execute("UPDATE mission_process_specs SET current_phase=NULL,progress=100,updated_at=? WHERE mission_id=?",(self.mc.now(),mid))
+        before_cp=c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0]
+        c.commit();c.close()
+        self.mc.drive_generic_once(mid)
+        snap=self.mc.process_snapshot(mid);d=snap['execution_driver']
+        self.assertEqual((snap['state'],snap['runtime_state'],snap['process']['progress']),('COMPLETE','DRIVER_COMPLETE',100.0))
+        self.assertIsNone(snap['process']['current_phase'])
+        self.assertEqual(d['state'],'COMPLETE');self.assertIsNone(d['current_phase']);self.assertIsNone(d['current_attempt_id'])
+        self.assertIsNone(d['lease_owner']);self.assertIsNone(d['lease_expires_at']);self.assertIsNone(d['waiting_reason']);self.assertIsNone(d['blocking_gate'])
+        self.assertEqual(d['next_action'],'TERMINAL_RECONCILED')
+        c=self.mc.connect();after_cp=c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0];c.close()
+        self.assertGreater(after_cp,before_cp)
+        for _ in range(3):self.mc.drive_generic_once(mid)
+        c=self.mc.connect();self.assertEqual(c.execute('SELECT COUNT(*) FROM mission_execution_checkpoints WHERE mission_id=?',(mid,)).fetchone()[0],after_cp);c.close()
+
+    def test_known_repair_mission_migrates_all_remaining_legacy_phase_contracts(self):
+        mid=self.mc.PROCESS_CONTRACT_TARGET_MISSION
+        spec=self.spec(mid,'CONTROL_LANGUAGE=LPCL/1.1\nPROJECT=LION_EVOLUSION\n')
+        spec['logical_count']=128
+        phase_ids=('REPRODUCE_BIND_FAILURE','SEPARATE_NEW_AND_CONTINUATION_LINEAGE','REPAIR_EXECUTION_BINDER','REPAIR_BASE_TOPOLOGY_BOOTSTRAP','IMPLEMENT_GENERIC_PHASE_COMPILER','IMPLEMENT_GENERIC_PHASE_HANDLER','MATERIALIZE_DRIVER','GLOBAL_SCHEDULER_ACCEPTANCE','DYNAMIC_DELEGATION_ACCEPTANCE','RESTART_DURABILITY','REAL_PANEL_MISSION_ACCEPTANCE','RETRY_POST_ASTRA_SAAS_MISSION')
+        spec['phases']=[{'id':pid,'title':pid} for pid in phase_ids]
+        self.mc.register_lpcl_mission(spec);self.mc.reconcile_phase_execution_contracts()
+        c=self.mc.connect();rows={r['phase_id']:self.mc.global_sched.phase_execution_contract(c,mid,r['phase_id']) for r in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=?',(mid,))};c.close()
+        self.assertEqual(rows['REPRODUCE_BIND_FAILURE']['contract_source'],'LEGACY_INFERRED_SAFE')
+        self.assertEqual(rows['SEPARATE_NEW_AND_CONTINUATION_LINEAGE']['contract_source'],'LEGACY_INFERRED_SAFE')
+        for pid in phase_ids[2:]:self.assertEqual(rows[pid]['contract_source'],'MIGRATED_EXPLICIT',pid)
+        for pid in phase_ids[3:]:
+            self.assertEqual(rows[pid]['capability_classes'],['MISSION_RUNTIME_RECONCILIATION'],pid)
+            self.assertEqual(rows[pid]['effect_ceiling'],'NONE',pid)
+            self.assertTrue(rows[pid]['completion_predicates'],pid)
+
     def test_server_rejects_lpcl_1_2_with_intent_only_phase(self):
         mid='LPCL-1_2-MISSING-CONTRACT-R1';text='CONTROL_LANGUAGE=LPCL/1.2\nPROJECT=LION_EVOLUSION\n'
         spec=self.spec(mid,text);spec['logical_count']=128;spec['phases']=[{'id':'INTENT_ONLY','title':'Intent only'}]

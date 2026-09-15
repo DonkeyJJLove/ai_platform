@@ -15,6 +15,10 @@ from cyber_lion.contracts.phase_execution_contract import (
  preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
  COMPILER_VERSION as PHASE_CONTRACT_COMPILER_VERSION,
 )
+from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION
+from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
+from cyber_lion.mission_control import control_plane_reconnaissance as control_recon
+from cyber_lion.contracts.action_ir import CanonicalActionIR
 from mission_control_compat import compat_get, STATIC
 try:
  from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
@@ -131,6 +135,9 @@ def migrate():
  saas_migrate(c,now,source_head=HEAD,source_tree=TREE)
  driver_migrate(c,now,source_head=HEAD,source_tree=TREE)
  global_sched.migrate(c,now)
+ # Capture the pre-capability execution preflight before startup reconciliation
+ # recomputes it against the current capability registry.
+ control_recon.capture_pre_recon_baselines(c,now)
  c.commit();c.close()
 
 def broker(op,pod=None):
@@ -226,13 +233,32 @@ EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_GENERIC_ADAPTER='LPCL_GENERIC_128L64M'
-PROCESS_CONTRACT_TARGET_MISSION='LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1'
-PROCESS_CONTRACT_TARGET_PHASE='REPAIR_EXECUTION_BINDER'
+PROCESS_CONTRACT_TARGET_MISSION=GENERIC_ADAPTER_REPAIR_MISSION
 PROCESS_CAPABILITY_REGISTRY={
  'REPOSITORY_AND_RUNTIME_RECONCILIATION':(
   {'capability_id':'GENERIC_EXECUTION_BINDER_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
  ),
+ 'MISSION_RUNTIME_RECONCILIATION':(
+  {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
+ ),
+ 'CONTROL_PLANE_RECONNAISSANCE':(
+  {'capability_id':'CONTROL_PLANE_RECONNAISSANCE_V1','executor_id':'MISSION_CONTROL_CONTROL_PLANE_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_RECON'},
+ ),
 }
+def process_capability_registry_snapshot():
+    capabilities={}
+    for cls,rows in sorted(PROCESS_CAPABILITY_REGISTRY.items()):
+      capabilities[cls]=[{
+        'capability_id':str(item.get('capability_id')),
+        'executor_id':str(item.get('executor_id')) if item.get('executor_id') is not None else None,
+        'effect_ceiling':str(item.get('effect_ceiling') or 'NONE'),
+        'mode':str(item.get('mode') or 'UNKNOWN'),
+      } for item in rows]
+    value={'schema':'lion.process-capability-registry/v1','capabilities':capabilities,'authority_effect':'NONE'}
+    value['registry_digest']=hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    return value
+
+
 MISSION_DRIVER_LOOP_INTERVAL_SECONDS=2.0
 LIVENESS_FRESH_MULTIPLIER=3
 LIVENESS_STALE_MULTIPLIER=10
@@ -285,25 +311,8 @@ def _compile_and_store_phase_contracts(c,mid,lpcl_text,phase_rows,*,allow_curren
     kv=_lpcl_pairs(lpcl_text);language=str(kv.get('CONTROL_LANGUAGE') or 'LPCL/1.1').strip()
     phases=[{'id':row[0] if not isinstance(row,dict) else row['id']} for row in phase_rows]
     contracts=list(compile_panel_phase_contracts(kv,mid,phases,language))
-    if allow_current_migration and mid==PROCESS_CONTRACT_TARGET_MISSION:
-      migrated=[]
-      for contract in contracts:
-       if contract.phase_id==PROCESS_CONTRACT_TARGET_PHASE:
-        contract=migrated_explicit_contract(
-         mission_id=mid,phase_id=contract.phase_id,ordinal=contract.ordinal,
-         execution_class='VERIFY_THEN_REPAIR',capability_classes=('REPOSITORY_AND_RUNTIME_RECONCILIATION',),
-         effect_ceiling='BOUNDED_REPOSITORY',binding_mode='DYNAMIC',on_missing_capability='WAIT_AND_DISCOVER',
-         auto_resume=True,verify_before_mutate=True,
-         currentness_requirements=('EXACT_CURRENT_REPOSITORY','CURRENT_MISSION_RUNTIME','CURRENT_MATERIAL_BINDING'),
-         evidence_requirements=('LIVE_RUNTIME_READBACK','FOCUSED_REGRESSION','POSTCONDITION_RECONCILIATION'),
-         completion_predicates=(
-          'FRESH_LPCL_WITHOUT_PARENT=PASS','GENERIC_ADAPTER_BOUND=PASS','LOGICAL_COUNT_128=PASS',
-          'MATERIAL_READY_64=PASS','UNIQUE_MATERIAL_64=PASS','GENERIC_PHASE_COMPILER=PASS',
-          'GENERIC_PHASE_HANDLER=PASS','DURABLE_DRIVER=PASS','GLOBAL_SCHEDULER_DISPATCH=PASS',
-          'LOCAL_PLANNING_RECEIPT=PASS','FAIL_CLOSED_MISSING_CAPABILITY=PASS','RESTART_DURABILITY=PASS','DB_INTEGRITY=PASS',
-         ))
-       migrated.append(contract)
-      contracts=migrated
+    if allow_current_migration:
+      contracts=[migrated_contract_for(mid,contract.phase_id,contract.ordinal) or contract for contract in contracts]
     global_sched.store_phase_execution_contracts(c,mid,contracts,now)
     preflight=preflight_execution_contracts(contracts,PROCESS_CAPABILITY_REGISTRY)
     global_sched.store_execution_preflight(c,mid,preflight,now)
@@ -321,6 +330,9 @@ def reconcile_phase_execution_contracts():
        except PhaseExecutionContractError as exc:
         # Existing LPCL/1.1 must remain readable; invalid declared 1.2 is recorded by registration/preflight, not promoted.
         _process_message(c,row['mission_id'],'VALIDATION','PROCESS_CONTRACT_COMPILER','MISSION_CONTROL',None,{'event':'PROCESS_CONTRACT_RECONCILIATION_BLOCKED','error':str(exc),'authority_effect':'NONE'},'INTERNAL')
+      artifact_changes=control_recon.reconcile_terminal_artifacts(c,now)
+      for change in artifact_changes:
+       _process_message(c,change['mission_id'],'RECEIPT','TERMINAL_ARTIFACT_RECONCILER','MISSION_CONTROL',None,{'event':'TERMINAL_ARTIFACT_RECONCILED','language_gap_digest':change['language_gap_digest'],'intelligence_digest':change['intelligence_digest'],'successor_digest':change['successor_digest'],'successor_proposal_digest':change['successor_proposal_digest'],'successor_contract_count':change['successor_contract_count'],'authority_effect':'NONE'},'INTERNAL')
       c.commit()
     finally:c.close()
 
@@ -987,6 +999,14 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     except sqlite3.OperationalError:d['generic_phase_plans']=[]
     try:d['generic_action_receipts']=[dict(r) for r in c.execute('SELECT * FROM mission_generic_action_receipts WHERE mission_id=? ORDER BY observed_at,receipt_id',(mid,))]
     except sqlite3.OperationalError:d['generic_action_receipts']=[]
+    try:d['mission_artifacts']=[{k:v for k,v in art.items() if k!='content_json' and k!='content'} for art in global_sched.list_artifacts(c,mid)]
+    except sqlite3.OperationalError:d['mission_artifacts']=[]
+    try:d['recon_material_leases']=[dict(r) for r in c.execute('SELECT * FROM mission_recon_material_leases WHERE mission_id=? ORDER BY acquired_at,material_drone_id',(mid,))]
+    except sqlite3.OperationalError:d['recon_material_leases']=[]
+    try:d['recon_trajectories']=[dict(r) for r in c.execute('SELECT * FROM mission_recon_trajectories WHERE mission_id=? ORDER BY created_at,trajectory_role',(mid,))]
+    except sqlite3.OperationalError:d['recon_trajectories']=[]
+    try:d['recon_saas_advisories']=[dict(r) for r in c.execute('SELECT * FROM mission_recon_saas_advisories WHERE mission_id=? ORDER BY created_at,advisory_id',(mid,))]
+    except sqlite3.OperationalError:d['recon_saas_advisories']=[]
     try:d['execution_assignment_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=?',(mid,)).fetchone()[0]);d['execution_receipt_count']=int(c.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=?',(mid,)).fetchone()[0])
     except sqlite3.OperationalError:d['execution_assignment_count']=0;d['execution_receipt_count']=0
     try:d['revision_compilations']=[dict(x) for x in c.execute('SELECT revision_id,successor_mission_id,lpcl_digest,state,created_at,activated_at FROM mission_revision_compilations WHERE mission_id=? ORDER BY created_at DESC LIMIT 20',(mid,))]
@@ -1481,19 +1501,22 @@ def _find_historical_bind_failure(mid):
 
 def _generic_action_ir(mid,pid,capability,target,currentness_requirements,evidence_requirements):
     action_id='generic:'+hashlib.sha256((mid+'|'+pid+'|'+capability).encode()).hexdigest()[:40]
-    return {
-      'schema_version':'1.0.0','action_id':action_id,'kind':'filesystem.read',
+    recon=(capability==control_recon.CAPABILITY_ID)
+    air={
+      'schema_version':'1.0.0','action_id':action_id,'kind':'repository.observe' if recon else 'filesystem.read',
       'intent_ref':mid+':'+pid,'mission_ref':mid,'autonomy_ref':'GENERIC_LPCL_PHASE',
-      'bean_ref':'GENERIC_EFFECT_EVIDENCE_EXECUTOR',
-      'target':{'host':'LION-AUTH-LAB','environment':'MISSION_CONTROL_V3','runtime':'SQLITE_READ_ONLY'},
+      'bean_ref':'CONTROL_PLANE_RECONNAISSANCE' if recon else 'GENERIC_EFFECT_EVIDENCE_EXECUTOR',
+      'target':{'host':'LION-AUTH-LAB','environment':'MISSION_CONTROL_V3','runtime':'CONTROL_PLANE_RECON' if recon else 'SQLITE_READ_ONLY'},
       'authority_request':{'domain':'mission_control','capability':capability,'grant_ref':None},
-      'boundary':{'shell':False,'network':'DENY','filesystem_read':[str(target)],'filesystem_write':[],
-                  'process_children':[],'timeout_ms':10000,'max_processes':1,'memory_limit_bytes':67108864},
+      'boundary':{'shell':False,'network':'READ_ONLY_PINNED' if recon else 'DENY','filesystem_read':[str(target)],'filesystem_write':[],
+                  'process_children':[],'timeout_ms':60000 if recon else 10000,'max_processes':1,'memory_limit_bytes':134217728 if recon else 67108864},
       'preconditions':list(currentness_requirements),'expected_effects':['READ_ONLY_EVIDENCE'],
-      'forbidden_effects':['FILESYSTEM_WRITE','PROCESS_EXEC','NETWORK_WRITE','AUTHORITY_MUTATION'],
+      'forbidden_effects':['FILESYSTEM_WRITE','PROCESS_EXEC','NETWORK_WRITE','AUTHORITY_MUTATION','REPOSITORY_WRITE','BROKER_RESPONSE_INJECTION'],
       'observation':{'observer_class':'deterministic_independent','required_events':list(evidence_requirements)},
       'reconciliation':{'mode':'EXACT','receipt':'REQUIRED'},
     }
+    CanonicalActionIR.from_mapping(air)
+    return air
 
 
 
@@ -1557,6 +1580,7 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
     payload=global_sched.assignment_payload(c,assignment['assignment_id'])
     payload_state='RETAINED' if payload else 'LEGACY_DIGEST_ONLY'
     deps=[receipt['receipt_id']]
+    executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE'
     if pid=='REPRODUCE_BIND_FAILURE':
       hist=_find_historical_bind_failure(mid)
       if not hist:return None
@@ -1574,7 +1598,8 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
     else:
       contract,bound=_phase_contract_capability(c,mid,pid)
       if not contract or not bound:return None
-      capability=bound['capability_id'];target=str(DB);operation='RECONCILE_PHASE_COMPLETION_POSTCONDITIONS'
+      capability=bound['capability_id'];target=str(DB);executor_id=bound.get('executor_id') or executor_id
+      operation='CONTROL_PLANE_RECONNAISSANCE' if capability==control_recon.CAPABILITY_ID else 'RECONCILE_PHASE_COMPLETION_POSTCONDITIONS'
       required={'mission_id':mid,'phase_id':pid,'contract_digest':contract['contract_digest'],'capability_class':bound['capability_class']}
       expected={'completion_predicates':contract['completion_predicates'],'verify_before_mutate':bool(contract['verify_before_mutate'])}
       currentness=list(contract['currentness_requirements']);evidence=list(contract['evidence_requirements'])
@@ -1586,16 +1611,16 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
       'target':target,'operation':operation,'required_inputs':required,'expected_output':expected,
       'authority_class':'NONE','currentness_requirements':currentness,'evidence_requirements':evidence,
       'rollback_class':'NONE','dependencies':deps,'action_ir':air,'action_ir_digest':global_sched.digest(air),
-      'executor_id':'MISSION_CONTROL_READ_ONLY_EVIDENCE',
+      'executor_id':executor_id,
     }
 
 
 def _generic_execute_read_plan(c,plan):
-    capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id']
+    capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id'];executor_id=plan.get('executor_id') or 'MISSION_CONTROL_READ_ONLY_EVIDENCE'
     if plan['authority_class']!='NONE':
-      global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_AUTHORITY',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
+      global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_AUTHORITY',now,executor_id=executor_id)
       return {'state':'WAITING_AUTHORITY','gate':'AUTHORITY_REQUIRED','reason':'Explicit admitted authority is required'}
-    global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id=executor_id)
     if capability=='MISSION_HISTORY_READ':
       try:
        expected=json.loads(plan['required_inputs_json']);path=Path(plan['target'])
@@ -1625,12 +1650,37 @@ def _generic_execute_read_plan(c,plan):
       receipt=c.execute('SELECT * FROM mission_execution_receipts WHERE mission_id=? AND phase_id=? ORDER BY observed_at DESC LIMIT 1',(mid,pid)).fetchone()
       ok,evidence=_execution_binder_postconditions(c,mid,pid,assignment,receipt) if assignment and receipt else (False,{'missing':'planning assignment or receipt','authority_effect':'NONE'})
       evidence={'capability':capability,**evidence}
+    elif capability==control_recon.CAPABILITY_ID:
+      contract=global_sched.phase_execution_contract(c,mid,pid)
+      if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
+      driver=driver_snapshot(c,mid)
+      def _create_recon_saas(mission_id,question):
+       return saas_broker.create_request(c,mission_id,question,now,scope_type='MISSION',scope_id=mission_id,authority_effect='NONE')
+      def _recon_saas_status(request_id):
+       return saas_broker.request_status(c,request_id,now)
+      recon_result=control_recon.execute_phase(c,mid,pid,contract,db_path=DB,driver_generation=int((driver or {}).get('generation') or 1),now_fn=now,create_saas_request=_create_recon_saas,saas_request_status=_recon_saas_status)
+      if recon_result.get('state')=='REACQUIRE_REQUIRED':
+       current=driver_snapshot(c,mid)
+       if not current or current.get('state') not in {'WAITING','BLOCKED'}:
+        return {'state':'WAITING','gate':'EVIDENCE_REACQUISITION_REQUIRED','reason':'Evidence reacquisition requires a parked driver','evidence':recon_result.get('evidence') or {'authority_effect':'NONE'}}
+       activated=driver_activate(c,mid,now,next_action='REACQUIRE_EVIDENCE',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       _process_message(c,mid,'CURRENTNESS','GLOBAL_SCHEDULER','GENERIC_EFFECT_EVIDENCE_EXECUTOR',pid,{'event':'RECON_EVIDENCE_REACQUISITION_OPENED','previous_driver_generation':int(current.get('generation') or 0),'driver_generation':int(activated.get('generation') or 0),'reacquisition':recon_result.get('reacquisition'),'authority_effect':'NONE'},'INTERNAL');c.commit()
+       recon_result=control_recon.execute_phase(c,mid,pid,contract,db_path=DB,driver_generation=int(activated.get('generation') or 1),now_fn=now,create_saas_request=_create_recon_saas,saas_request_status=_recon_saas_status,allow_reacquire=True)
+      if recon_result.get('state')!='PASS':
+       global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id=executor_id,evidence=recon_result.get('evidence') or {'authority_effect':'NONE'})
+       return recon_result
+      ok=True;evidence={'capability':capability,**(recon_result.get('evidence') or {})}
+    elif capability=='GENERIC_MISSION_CONTRACT_RECONCILIATION':
+      contract=global_sched.phase_execution_contract(c,mid,pid)
+      if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
+      ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
+      evidence={'capability':capability,'contract_digest':contract['contract_digest'],**evidence}
     else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
-    global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
-    global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
-    global_sched.update_generic_plan_state(c,plan['plan_id'],'VALIDATING',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE',evidence=evidence)
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id=executor_id)
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id=executor_id)
+    global_sched.update_generic_plan_state(c,plan['plan_id'],'VALIDATING',now,executor_id=executor_id,evidence=evidence)
     if not ok:
-      global_sched.update_generic_plan_state(c,plan['plan_id'],'BLOCKED',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE',evidence=evidence)
+      global_sched.update_generic_plan_state(c,plan['plan_id'],'BLOCKED',now,executor_id=executor_id,evidence=evidence)
       return {'state':'BLOCKED','gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','reason':'Independent read-only evidence did not satisfy the phase completion contract','evidence':evidence}
     receipt=global_sched.record_generic_action_receipt(c,plan['plan_id'],now,status='PASS',evidence=evidence,authority_effect='NONE')
     return {'state':'PASS','receipt':receipt,'evidence':evidence}
@@ -1650,7 +1700,7 @@ def drive_generic_once(mid):
       if not d or d['state'] not in {'ACTIVE','WAITING','BLOCKED'}:return
       row=c.execute("SELECT phase_id,title,status FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
       if not row:
-       if d['state']!='COMPLETE':driver_transition(c,mid,'COMPLETE',now,next_action='TERMINAL_RECONCILED')
+       driver_reconcile_complete(c,mid,now,next_action='TERMINAL_RECONCILED',commit=False)
        c.execute("UPDATE missions SET state='COMPLETE',runtime_state='DRIVER_COMPLETE',updated_at=? WHERE mission_id=?",(now(),mid));c.commit();return
       pid=row['phase_id'];spec=_phase_exec_spec(c,mid,pid)
       if not spec or spec.get('handler_id')!=GENERIC_PHASE_HANDLER:return
@@ -1722,7 +1772,19 @@ def _registered_control_plane_early_driver(mid):
     finally:c.close()
 
 
+def reconcile_control_plane_late_saas():
+    c=connect()
+    try:
+      changes=control_recon.late_saas_reconcile(c,now,request_status=lambda rid:saas_broker.request_status(c,rid,now))
+      for item in changes:
+       _process_message(c,item['mission_id'],'EVIDENCE','CHATGPT_SAAS_SUPERVISOR','MISSION_CONTROL',item['phase_id'],{'event':'RECON_LATE_SAAS_RECEIPT','request_id':item['request_id'],'response_digest':item.get('response_digest'),'receipt_digest':item.get('receipt_digest'),'authority_effect':'NONE'},'INTERNAL')
+      if changes:c.commit()
+    finally:c.close()
+
+
 def global_scheduler_once():
+    try:reconcile_control_plane_late_saas()
+    except Exception:pass
     c=connect()
     try:
       if c.execute("SELECT 1 FROM mission_meta WHERE key='mission_dispatch_paused' AND value='1'").fetchone():return
@@ -1902,6 +1964,7 @@ class H(BaseHTTPRequestHandler):
   if path in {'/api/v3/missions/current','/api/v3/missions/'+MISSION}:return self.json(current)
   if path=='/api/v3/missions':return self.json({'missions':mission_summaries(),'process_missions':recent_process_missions(),'legacy_recorded_runs':legacy_count()})
   if path=='/api/v3/missions/recent':return self.json({'missions':recent_process_missions(),'focus_mission_id':focus_mission_id()})
+  if path=='/api/v3/capabilities/process-contracts':return self.json(process_capability_registry_snapshot())
   if path.startswith('/api/v3/missions/') and path.endswith('/delete-preview'):
    mid=path[len('/api/v3/missions/'):-len('/delete-preview')].strip('/');c=connect()
    try:return self.json(mission_delete_preview(c,mid,MISSION))
