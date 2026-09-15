@@ -86,7 +86,16 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         contract={"completion_predicates":["REPAIR_BASELINE_FROZEN=PASS"]}
         facts,detail=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
         self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":True});self.assertTrue(detail["successor_baseline"]["predecessor_intelligence_bound"])
-        observations["domains"]["panel"]["repo"]["github_master"]["tree"]="0"*40
+        observations["domains"]["panel"]["repo"]["github_master"]={"head":"5"*40,"tree":"6"*40}
+        facts,_=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":False})
+        c.execute("CREATE TABLE protocol_messages(id INTEGER PRIMARY KEY AUTOINCREMENT,mission_id TEXT,protocol TEXT,from_id TEXT,payload_json TEXT)")
+        att={"event":"SUCCESSOR_SOURCE_CURRENTNESS_REBOUND","registered_source_head":head,"registered_source_tree":tree,"current_source_head":"5"*40,"current_source_tree":"6"*40,"merge_commit":"5"*40,"repair_head":"7"*40,"pr_number":345,"ancestry_verified":True,"changed_paths_verified":True,"changed_paths_digest":"8"*64,"lpcl_unchanged":True,"required_ci":{"CORE":"PASS","BANDIT":"PASS","SYMBOL_CENSUS":"PASS"},"authority_effect":"NONE"}
+        c.execute("INSERT INTO protocol_messages(mission_id,protocol,from_id,payload_json) VALUES(?,?,?,?)",("SUCCESSOR","CURRENTNESS","BOOTSTRAP_RECONCILER",json.dumps(att)))
+        c.commit()
+        facts,detail=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":True});self.assertTrue(detail["successor_baseline"]["source_currentness_bound"]);self.assertFalse(detail["successor_baseline"]["exact_registered_source"])
+        c.execute("UPDATE protocol_messages SET payload_json=?",(json.dumps({**att,"current_source_tree":"9"*40}),));c.commit()
         facts,_=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
         self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":False})
         c.close()

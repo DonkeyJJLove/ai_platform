@@ -509,6 +509,34 @@ def _source_features(panel: dict[str,Any]) -> dict[str,Any]:
     return (panel.get("source_features") or {}) if panel else {}
 
 
+def _source_currentness_attestation(conn: sqlite3.Connection, mission_id: str, *, registered_head: str | None, registered_tree: str | None, current_head: str | None, current_tree: str | None) -> dict[str,Any] | None:
+    if not _table(conn,"protocol_messages"):
+        return None
+    for row in conn.execute("SELECT from_id,protocol,payload_json FROM protocol_messages WHERE mission_id=? ORDER BY id DESC",(mission_id,)):
+        payload=_json(row["payload_json"],{})
+        if row["from_id"]!="BOOTSTRAP_RECONCILER" or row["protocol"]!="CURRENTNESS" or payload.get("event")!="SUCCESSOR_SOURCE_CURRENTNESS_REBOUND":
+            continue
+        if payload.get("authority_effect")!="NONE":
+            continue
+        if payload.get("registered_source_head")!=registered_head or payload.get("registered_source_tree")!=registered_tree:
+            continue
+        if payload.get("current_source_head")!=current_head or payload.get("current_source_tree")!=current_tree or payload.get("merge_commit")!=current_head:
+            continue
+        if payload.get("ancestry_verified") is not True or payload.get("changed_paths_verified") is not True or payload.get("lpcl_unchanged") is not True:
+            continue
+        repair_head=payload.get("repair_head");changed_digest=payload.get("changed_paths_digest");checks=payload.get("required_ci")
+        if not isinstance(repair_head,str) or not re.fullmatch(r"[0-9a-f]{40}",repair_head):
+            continue
+        if not isinstance(changed_digest,str) or not re.fullmatch(r"[0-9a-f]{64}",changed_digest):
+            continue
+        if not isinstance(payload.get("pr_number"),int) or payload["pr_number"]<1:
+            continue
+        if not isinstance(checks,dict) or not checks or any(v!="PASS" for v in checks.values()):
+            continue
+        return payload
+    return None
+
+
 def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], observations: dict[str,Any], *, artifacts: dict[str,Any], baseline: dict[str,Any] | None, local_analysis: dict[str,Any] | None, saas_advisory: dict[str,Any] | None) -> tuple[dict[str,bool],dict[str,Any]]:
     d=observations.get("domains") or {};panel=d.get("panel") or {};mc=d.get("mission_control") or {};broker=d.get("broker") or {};thread=d.get("thread") or {};dual=d.get("dual") or {};post=d.get("post_astra") or {};hist=d.get("recon_history") or {};lang=d.get("process_language") or {};successor_lineage=d.get("successor_lineage") or {}
     features=_source_features(panel);classes=_classification(observations,baseline)
@@ -521,6 +549,8 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
     post_diff=artifacts.get("CONTROL_PLANE_RECON_BASELINE_POST")
     github_master=repo.get("github_master") or {};mc_mission=mc.get("mission") or {};mc_runtime=mc.get("runtime_identity") or {};mc_db=mc.get("db") or {}
     exact_registered_source=bool(mc_mission.get("source_head") and mc_mission.get("source_tree") and github_master.get("head")==mc_mission.get("source_head") and github_master.get("tree")==mc_mission.get("source_tree"))
+    source_currentness_attestation=None if exact_registered_source else _source_currentness_attestation(conn,mission_id,registered_head=mc_mission.get("source_head"),registered_tree=mc_mission.get("source_tree"),current_head=github_master.get("head"),current_tree=github_master.get("tree"))
+    source_currentness_bound=bool(exact_registered_source or source_currentness_attestation)
     live_package_identified=bool((mc_runtime.get("source_hashes") or {}).get("mission_control_v3.py") and (mc_runtime.get("source_hashes") or {}).get("cyber_lion/mission_control/control_plane_reconnaissance.py"))
     broker_db_current=bool(mc_db.get("integrity")=="ok" and broker.get("schema_digest") and broker.get("request_state_counts") is not None)
     predecessor_intelligence_bound=bool(successor_lineage.get("valid") and successor_lineage.get("proposal_digest")==mc_mission.get("spec_digest") and successor_lineage.get("intelligence_bundle_digest")==successor_lineage.get("expected_intelligence_bundle_digest"))
@@ -601,11 +631,11 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
         "NO_SESSION_EFFECT":bool(post_diff and post_diff.get("checks",{}).get("NO_SESSION_EFFECT")),
         "NO_MISSION_REPAIR_EFFECT":bool(post_diff and post_diff.get("checks",{}).get("NO_MISSION_REPAIR_EFFECT")),
         "INTELLIGENCE_READY_FOR_SUCCESSOR_MISSION":bool(post_diff and post_diff.get("checks",{}).get("INTELLIGENCE_READY_FOR_SUCCESSOR_MISSION")),
-        "REPAIR_BASELINE_FROZEN":bool(exact_registered_source and live_package_identified and broker_db_current and predecessor_intelligence_bound and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
+        "REPAIR_BASELINE_FROZEN":bool(source_currentness_bound and live_package_identified and broker_db_current and predecessor_intelligence_bound and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
     }
     requested=[str(x).split("=",1)[0] for x in contract.get("completion_predicates") or []]
     facts={name:bool(values.get(name,False)) for name in requested}
-    detail={"classifications":classes,"local_analysis_summary":local_analysis,"saas_advisory":saas_advisory,"requested_predicates":requested,"successor_baseline":{"exact_registered_source":exact_registered_source,"live_package_identified":live_package_identified,"broker_db_current":broker_db_current,"predecessor_intelligence_bound":predecessor_intelligence_bound,"successor_lineage":successor_lineage}}
+    detail={"classifications":classes,"local_analysis_summary":local_analysis,"saas_advisory":saas_advisory,"requested_predicates":requested,"successor_baseline":{"exact_registered_source":exact_registered_source,"source_currentness_bound":source_currentness_bound,"source_currentness_attestation":source_currentness_attestation,"live_package_identified":live_package_identified,"broker_db_current":broker_db_current,"predecessor_intelligence_bound":predecessor_intelligence_bound,"successor_lineage":successor_lineage}}
     return facts,detail
 
 
