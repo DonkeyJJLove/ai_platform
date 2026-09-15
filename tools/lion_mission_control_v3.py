@@ -15,7 +15,7 @@ from cyber_lion.contracts.phase_execution_contract import (
  preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
  COMPILER_VERSION as PHASE_CONTRACT_COMPILER_VERSION,
 )
-from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION, SAAS_AUTOMATIC_MEDIATOR_MISSION
+from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION, SAAS_AUTOMATIC_MEDIATOR_MISSION, FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
 from cyber_lion.mission_control import control_plane_reconnaissance as control_recon
 from cyber_lion.contracts.action_ir import CanonicalActionIR
@@ -592,7 +592,7 @@ def register_lpcl_mission(x):
     c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],'LPCL_MISSION',x['lpcl_digest'],x['source_head'],x['source_tree'],None,'REGISTERED','NOT_STARTED',x['logical_count'],x['material_target'],0,0,t,None,t,None,json.dumps(spec,sort_keys=True,ensure_ascii=False)))
     c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],x['objective'],x['description'],x['lpcl_digest'],x['lpcl_text'],json.dumps(x['protocols']), 'NONE',None,0.0,t,t))
     for i,(pid,title) in enumerate(phase_rows,1):c.execute('INSERT INTO mission_phases VALUES(?,?,?,?,?,?,?,?,?,?)',(mid,pid,i,title,'PENDING',0.0,None,None,None,t))
-    contracts,preflight=_compile_and_store_phase_contracts(c,mid,x['lpcl_text'],[{'id':pid} for pid,_ in phase_rows],allow_current_migration=(mid==SAAS_AUTOMATIC_MEDIATOR_MISSION))
+    contracts,preflight=_compile_and_store_phase_contracts(c,mid,x['lpcl_text'],[{'id':pid} for pid,_ in phase_rows],allow_current_migration=(mid in {SAAS_AUTOMATIC_MEDIATOR_MISSION,FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION}))
     _process_message(c,mid,'LPCL','LPCL_PANEL','MISSION_CONTROL',None,{'event':'MISSION_REGISTERED','lpcl_digest':x['lpcl_digest'],'phase_count':len(phase_rows),'phase_contract_schema':PHASE_CONTRACT_SCHEMA,'phase_contract_compiler':PHASE_CONTRACT_COMPILER_VERSION,'preflight':preflight.as_dict()},'IN')
     c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,t))
     c.commit();c.close();return {'idempotent':False,'mission':process_snapshot(mid)}

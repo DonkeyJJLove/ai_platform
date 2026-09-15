@@ -11,6 +11,7 @@ from .phase_execution_contract import PhaseExecutionContract, migrated_explicit_
 GENERIC_ADAPTER_REPAIR_MISSION = "LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1"
 POST_ASTRA_MISSION = "LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1"
 SAAS_AUTOMATIC_MEDIATOR_MISSION = "LION-SAAS-AUTOMATIC-MEDIATOR-REAL-ROUNDTRIP-R1"
+FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION = "LION-FIREFOX-DEVELOPER-CHATGPT-PROJECT-MEDIATOR-BROKER-AND-MISSION-CLOSURE-R1"
 PROFILE_ID = "lion.mission-contract-profile/generic-adapter-repair-r1/v1"
 POST_ASTRA_PROFILE_ID = "lion.mission-contract-profile/post-astra-transport-closure-r1/v1"
 
@@ -218,7 +219,90 @@ def _saas_automatic_mediator_contract(mission_id: str, phase_id: str, ordinal: i
         completion_predicates=("SAAS_MEDIATOR_PHASE_EVIDENCE=PASS",),
     )
 
+
+_FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_PHASES = (
+    "REACQUIRE_CANONICAL_SOURCE",
+    "REACQUIRE_TRANSPORT_LINEAGE",
+    "PRESERVE_PARENT_EVIDENCE",
+    "SUCCESSOR_LINEAGE_CONTRACT",
+    "DISCOVER_FIREFOX_DEVELOPER",
+    "DISCOVER_NODE_RUNTIME",
+    "DISCOVER_GECKODRIVER",
+    "MATERIALIZE_NODE_PACKAGE",
+    "DEDICATED_FIREFOX_PROFILE",
+    "MEDIATOR_IDENTITY_KEYPAIR",
+    "BROKER_MEDIATOR_AUTH_CONTRACT",
+    "LOCAL_MEDIATOR_CONTROL_CONTRACT",
+    "FIREFOX_VISIBLE_LAUNCHER",
+    "PANEL_MEDIATOR_CONTROLS",
+    "HUMAN_LOGIN_GATE",
+    "PROJECT_BINDING_GATE",
+    "MEDIATOR_CHAT_BINDING_GATE",
+    "DOM_PROFILE_DISCOVERY",
+    "DOM_DRIFT_FAIL_CLOSED",
+    "REQUEST_ENVELOPE_CONTRACT",
+    "CLAIM_LEASE_AND_HEARTBEAT",
+    "EXACTLY_ONCE_SEND_JOURNAL",
+    "COMPOSER_SEND_PATH",
+    "RESPONSE_COMPLETION_DETECTION",
+    "RESPONSE_EXTRACTION",
+    "BROKER_RECEIPT_BINDING",
+    "THREAD_DELIVERY_RECONCILIATION",
+    "PANEL_TRANSPORT_PROJECTION",
+    "FOCUSED_PYTHON_TESTS",
+    "FOCUSED_NODE_TESTS",
+    "SECURITY_NEGATIVE_TESTS",
+    "LOCAL_RESTART_DURABILITY",
+    "FULL_LOCAL_REGRESSION",
+    "NODE_DEPENDENCY_AND_STATIC_VALIDATION",
+    "BANDIT_AND_FULL_SYMBOL_CENSUS",
+    "PRODUCTION_EFFECT_RECONCILIATION",
+    "PACKAGE_AND_TRUTH_CARRIER_REBIND",
+    "PUBLISH_TASK_BRANCH",
+    "OPEN_PR_AND_EXACT_HEAD_CI",
+    "MERGE_CURRENTNESS_GATE",
+    "POST_MERGE_MASTER_CI",
+    "DEPLOY_MISSION_CONTROL_BROKER",
+    "DEPLOY_8780_MEDIATOR_MANAGER",
+    "DEPLOY_FIREFOX_MEDIATOR_APP",
+    "LIVE_PAIRING",
+    "LIVE_PROJECT_AND_CHAT_READBACK",
+    "PRIMARY_REAL_ROUNDTRIP",
+    "DUPLICATE_LIVE_FALSIFICATION",
+    "MEDIATOR_RESTART_LIVE_FALSIFICATION",
+    "PANEL_RESTART_LIVE_FALSIFICATION",
+    "HUMAN_GATE_FAILURE_FALSIFICATION",
+    "SUPERSEDE_BLOCKED_PARENT",
+    "POST_ASTRA_INVARIANT",
+    "TRANSPORT_LINEAGE_RECONCILIATION",
+    "LIVE_QUEUE_RECONCILIATION",
+    "INDEPENDENT_TERMINAL_RECONCILIATION",
+    "RETURN_TO_LION_SCAFFOLD",
+)
+
+def _firefox_project_mediator_successor_contract(mission_id: str, phase_id: str, ordinal: int) -> PhaseExecutionContract | None:
+    if mission_id != FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION or phase_id not in _FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_PHASES:
+        return None
+    return migrated_explicit_contract(
+        mission_id=mission_id,
+        phase_id=phase_id,
+        ordinal=ordinal,
+        execution_class="VERIFY",
+        capability_classes=("MISSION_RUNTIME_RECONCILIATION",),
+        effect_ceiling="NONE",
+        binding_mode="DYNAMIC",
+        on_missing_capability="WAIT_AND_DISCOVER",
+        auto_resume=True,
+        verify_before_mutate=True,
+        currentness_requirements=("EXACT_CURRENT_REPOSITORY", "CURRENT_MISSION_RUNTIME", "CURRENT_SAAS_BROKER_STATE"),
+        evidence_requirements=("FIREFOX_MEDIATOR_PHASE_EVIDENCE", "DURABLE_RECEIPT"),
+        completion_predicates=("FIREFOX_MEDIATOR_PHASE_EVIDENCE=PASS",),
+    )
+
 def migrated_contract_for(mission_id: str, phase_id: str, ordinal: int) -> PhaseExecutionContract | None:
+    firefox=_firefox_project_mediator_successor_contract(mission_id,phase_id,ordinal)
+    if firefox is not None:
+        return firefox
     mediator=_saas_automatic_mediator_contract(mission_id,phase_id,ordinal)
     if mediator is not None:
         return mediator
@@ -255,3 +339,6 @@ def post_astra_profile_phase_ids() -> tuple[str, ...]:
 
 def saas_automatic_mediator_profile_phase_ids() -> tuple[str, ...]:
     return _SAAS_AUTOMATIC_MEDIATOR_PHASES
+
+def firefox_project_mediator_successor_profile_phase_ids() -> tuple[str, ...]:
+    return _FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_PHASES
