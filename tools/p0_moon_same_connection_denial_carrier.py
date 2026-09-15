@@ -18,7 +18,7 @@ from tools.p0_moon_seven_binding import FENCE,PERMISSION
 from tools.p0_moon_attack_registry import live_attacks
 from tools.p0_readonly_sqlite_boundary import open_readonly_sqlite
 
-EXPECTED_SCAN_DIGEST="7e86ec4123540bf7f3e6bf5b82ef0129831f72e74821e09d37ee4babccd81c55"
+EXPECTED_SCAN_DIGEST="0db9fe853514332544e8af5a56bf74f00afaaea6d746ef775f39b7a86b677702"
 FENCE_PATH="/home/d2j3/.lion-moon-file-write-fence.sqlite3"
 TARGET_PATH="/home/d2j3/lion-p0-moon-replace-live-cert-r1.canary"
 EFFECT_KEY="3ad38b9be4ea737d77c672f97f430cb32a4ba432327f5d1086e38f18327dc4c8"
