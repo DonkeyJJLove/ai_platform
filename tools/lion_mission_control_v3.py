@@ -1129,6 +1129,31 @@ def _read_recent_process_missions(view='operational'):
     return rows
 
 
+def _epoch3_lifecycle_backup(c,source_head,source_tree):
+    integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
+    if integrity!='ok':raise ValueError('DATABASE_INTEGRITY_NOT_OK')
+    stamp=now().replace(':','').replace('-','').replace('.','_')
+    root=DB.parent/'backups';root.mkdir(parents=True,exist_ok=True)
+    path=root/('epoch3-lifecycle-r2-pre-'+stamp+'.db')
+    if path.exists():raise ValueError('BACKUP_PATH_EXISTS')
+    out=sqlite3.connect(path)
+    try:
+      c.backup(out)
+      backup_integrity=out.execute('PRAGMA integrity_check').fetchone()[0]
+    finally:out.close()
+    if backup_integrity!='ok':
+      try:path.unlink()
+      except OSError:pass
+      raise ValueError('BACKUP_INTEGRITY_NOT_OK')
+    sha=hashlib.sha256(path.read_bytes()).hexdigest()
+    state={'path':str(path),'sha256':sha,'size':path.stat().st_size,'integrity':backup_integrity,'source_head':source_head,'source_tree':source_tree,'authority_effect':'NONE'}
+    rid='rollback-'+uuid.uuid4().hex;state_digest=_payload_digest(state)
+    c.execute('INSERT INTO mission_rollback_points VALUES(?,?,?,?,?,?,?,?)',(rid,EPOCH3_LIFECYCLE_TASK,'SQLITE_CONSISTENT_BACKUP',json.dumps(state,sort_keys=True),state_digest,0,'RESTORE_REQUIRES_EXPLICIT_SEPARATE_AUTHORITY',now()))
+    receipt=lifecycle_create_action_receipt(c,EPOCH3_LIFECYCLE_TASK,'PRE_NORMALIZATION_DATABASE_BACKUP','NONE','PASS',{'source_head':source_head,'source_tree':source_tree},state,now)
+    c.commit()
+    return {'rollback_id':rid,'state_digest':state_digest,'receipt':receipt,**state}
+
+
 def execute_epoch3_lifecycle_normalization(x):
     if type(x) is not dict or set(x)!={'task_mission_id','task_lpcl_digest','source_head','source_tree'}:raise ValueError('lifecycle normalization schema')
     if x['task_mission_id']!=EPOCH3_LIFECYCLE_TASK or x['task_lpcl_digest']!=EPOCH3_LIFECYCLE_TASK_DIGEST:raise ValueError('lifecycle normalization authority identity')
@@ -1137,7 +1162,11 @@ def execute_epoch3_lifecycle_normalization(x):
     try:
       task=c.execute('SELECT state,spec_digest FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TASK,)).fetchone();process=c.execute('SELECT authority_state FROM mission_process_specs WHERE mission_id=?',(EPOCH3_LIFECYCLE_TASK,)).fetchone()
       if task is None or task['spec_digest']!=EPOCH3_LIFECYCLE_TASK_DIGEST or task['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or process is None or process['authority_state']!='EXPLICIT_USER_ACTIVATION':raise ValueError('lifecycle task not explicitly activated')
-      return normalize_epoch3_terminal_lifecycle(c,target_1_mission_id=EPOCH3_LIFECYCLE_TARGET_1,target_1_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_1_DIGEST,target_2_mission_id=EPOCH3_LIFECYCLE_TARGET_2,target_2_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_2_DIGEST,successor_mission_id=EPOCH3_LIFECYCLE_SUCCESSOR,expected_current_head=x['source_head'],expected_current_tree=x['source_tree'],now_fn=now)
+      t1=c.execute('SELECT state FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TARGET_1,)).fetchone();t2=c.execute('SELECT state FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TARGET_2,)).fetchone()
+      already=bool(t1 and t2 and t1['state']=='SUPERSEDED' and t2['state']=='SUPERSEDED')
+      backup=None if already else _epoch3_lifecycle_backup(c,x['source_head'],x['source_tree'])
+      result=normalize_epoch3_terminal_lifecycle(c,target_1_mission_id=EPOCH3_LIFECYCLE_TARGET_1,target_1_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_1_DIGEST,target_2_mission_id=EPOCH3_LIFECYCLE_TARGET_2,target_2_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_2_DIGEST,successor_mission_id=EPOCH3_LIFECYCLE_SUCCESSOR,expected_current_head=x['source_head'],expected_current_tree=x['source_tree'],now_fn=now)
+      return {**result,'backup':backup}
     finally:c.close()
 
 # ---- end LPCL mission process extension v1 -------------------------------
