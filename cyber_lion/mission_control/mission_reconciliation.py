@@ -63,6 +63,12 @@ def _restart_backup_evidence(db_path: Path, mission_id: str) -> dict[str, Any] |
     return None
 
 
+def _lpcl11_probe() -> bool:
+    contracts = compile_panel_phase_contracts({}, "SYNTHETIC-LEGACY-MISSION", [{"id": "SYNTHETIC_PHASE"}], "LPCL/1.1")
+    pf = preflight_execution_contracts(contracts, {})
+    return len(contracts) == 1 and pf.invalid_count == 0 and contracts[0].contract_source == "LEGACY_INFERRED_SAFE"
+
+
 def _lpcl12_probe() -> bool:
     pairs = {
         "PHASE_01_EXECUTION_CLASS": "VERIFY",
@@ -139,6 +145,43 @@ def evaluate_completion_predicates(
             if _json(row["payload_json"], {}).get("event") == event: return True
         return False
 
+    def bootstrap_evidence(event: str) -> dict[str, Any] | None:
+        for row in conn.execute("SELECT from_id,payload_json FROM protocol_messages WHERE mission_id=? ORDER BY id DESC", (mission_id,)):
+            payload = _json(row["payload_json"], {})
+            if row["from_id"] != "BOOTSTRAP_RECONCILER" or payload.get("event") != event:
+                continue
+            expected_head = mission["source_head"] if mission is not None else None
+            expected_tree = mission["source_tree"] if mission is not None else None
+            if expected_head and payload.get("source_head") != expected_head:
+                continue
+            if expected_tree and payload.get("source_tree") not in {None, expected_tree}:
+                continue
+            return payload
+        return None
+
+    runtime_revision_evidence = bootstrap_evidence("SUCCESSOR_RUNTIME_REVISIONS_CONVERGED")
+    preflight_binding_evidence = bootstrap_evidence("SUCCESSOR_PREFLIGHT_RUNTIME_BINDING_VISIBLE")
+    panel_projection_evidence = bootstrap_evidence("SUCCESSOR_PANEL_TRUTH_PROJECTION_REPAIRED")
+    broker_reconciliation_evidence = bootstrap_evidence("SUCCESSOR_BROKER_RECEIPT_LINEAGE_RECONCILED")
+
+    broker_missing_receipts = broker_orphan_receipts = 0
+    if _exists_table(conn, "saas_handoff_requests") and _exists_table(conn, "saas_broker_receipts"):
+        broker_missing_receipts = int(conn.execute(
+            "SELECT COUNT(*) FROM saas_handoff_requests r LEFT JOIN saas_broker_receipts b ON b.request_id=r.request_id "
+            "WHERE r.status='RESPONDED' AND (r.receipt_digest IS NULL OR b.request_id IS NULL OR b.receipt_digest!=r.receipt_digest)"
+        ).fetchone()[0])
+        broker_orphan_receipts = int(conn.execute(
+            "SELECT COUNT(*) FROM saas_broker_receipts b LEFT JOIN saas_handoff_requests r ON r.request_id=b.request_id WHERE r.request_id IS NULL"
+        ).fetchone()[0])
+    facts["successor_bootstrap_evidence"] = {
+        "runtime_revisions": runtime_revision_evidence,
+        "preflight_binding": preflight_binding_evidence,
+        "panel_projection": panel_projection_evidence,
+        "broker_reconciliation": broker_reconciliation_evidence,
+        "broker_missing_receipts": broker_missing_receipts,
+        "broker_orphan_receipts": broker_orphan_receipts,
+    }
+
     current_ordinal = next((int(r["ordinal"]) for r in phase_rows if process and r["phase_id"] == process["current_phase"]), 0)
     passed = [r for r in phase_rows if r["status"] in {"PASS", "COMPLETE", "SKIPPED"}]
     non_topology_assignments = conn.execute("SELECT assignment_id,phase_id,material_drone_id,state FROM mission_execution_assignments WHERE mission_id=? AND phase_id!='__TOPOLOGY__'", (mission_id,)).fetchall()
@@ -206,7 +249,23 @@ def evaluate_completion_predicates(
         "POST_ASTRA_FAIL_CLOSED_CAPABILITY_GATE": bool(post_driver and post_driver["blocking_gate"] == "CAPABILITY_NOT_AVAILABLE"),
         "SAAS_SESSION_MEDIATED_RECEIPT_EXISTS": responded_session,
         "SAAS_AUTOMATIC_HOP_NOT_CLAIMED": not autonomous_claim,
+        "RUNTIME_REVISIONS_CONVERGED": runtime_revision_evidence is not None,
+        "PREFLIGHT_RUNTIME_BINDING_VISIBLE": preflight_binding_evidence is not None,
+        "BROKER_TRANSPORT_TRUTHFUL": _exists_table(conn, "saas_handoff_requests") and not autonomous_claim,
+        "BROKER_RECEIPT_LINEAGE_RECONCILED": (broker_missing_receipts == 0 and broker_orphan_receipts == 0) or broker_reconciliation_evidence is not None,
+        "PANEL_TRUTH_PROJECTION_REPAIRED": panel_projection_evidence is not None,
+        "LEGACY_LPCL_1_1_COMPATIBLE": _lpcl11_probe(),
+        "LPCL_1_2_COMPATIBLE": _lpcl12_probe(),
     }
+    values["SUCCESSOR_TERMINAL_VALIDATION"] = all(values.get(k, False) for k in (
+        "RUNTIME_REVISIONS_CONVERGED",
+        "PREFLIGHT_RUNTIME_BINDING_VISIBLE",
+        "BROKER_TRANSPORT_TRUTHFUL",
+        "BROKER_RECEIPT_LINEAGE_RECONCILED",
+        "PANEL_TRUTH_PROJECTION_REPAIRED",
+        "LEGACY_LPCL_1_1_COMPATIBLE",
+        "LPCL_1_2_COMPATIBLE",
+    ))
 
     for name in names:
         checks[name] = bool(values.get(name, False))
