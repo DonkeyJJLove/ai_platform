@@ -53,7 +53,7 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
             "RECEIPT_STATE_COUNTS","REPOSITORY_DIFF","REQUEST_COUNT_DIFF","REQUEST_STATE_COUNTS","RESPONDED_ROWS","RUNTIME_PROCESS_IDENTITY",
             "SAAS_LINK_PATH","SCHEDULER_STATE_MODEL","SCHEMA_READBACK","SESSION_STATE","SQLITE_IDENTITY","STATE_DIFF","SUCCESSOR_CAPABILITY_MATRIX",
             "SUCCESSOR_COMPLETION_CONTRACT","SUCCESSOR_LPCL_PROPOSAL_DIGEST","THREAD_RUNTIME","TRANSPORT_CLASSIFICATION","UNCERTAINTY_REGISTER","WORKTREE_STATE",
-            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK",
+            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK",
         }
         self.assertEqual((currentness|evidence)-set(cr.TOKEN_DOMAIN),set())
         contract={"currentness_requirements":["UNKNOWN_X"],"evidence_requirements":[]}
@@ -99,6 +99,56 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         facts,_=cr.derive_facts(c,"SUCCESSOR","FREEZE_REPAIR_BASELINE",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
         self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":False})
         c.close()
+
+    def test_terminal_validation_requires_current_exact_evidence_prior_passes_and_truthful_transport(self):
+        c=self.conn();mid="SUCCESSOR";registered_head="1"*40;registered_tree="2"*40;current_head="3"*40;current_tree="4"*40;spec="d"*64;recon_sha="e"*64;pre_digest="f"*64
+        c.executescript("""
+        CREATE TABLE protocol_messages(id INTEGER PRIMARY KEY AUTOINCREMENT,mission_id TEXT,protocol TEXT,from_id TEXT,payload_json TEXT);
+        CREATE TABLE mission_phases(mission_id TEXT,phase_id TEXT,ordinal INTEGER,status TEXT);
+        CREATE TABLE saas_handoff_requests(request_id TEXT PRIMARY KEY,status TEXT,receipt_digest TEXT);
+        CREATE TABLE saas_broker_receipts(request_id TEXT PRIMARY KEY,receipt_digest TEXT);
+        """)
+        for ordinal in range(1,8):c.execute("INSERT INTO mission_phases VALUES(?,?,?,?)",(mid,f"P{ordinal}",ordinal,"PASS"))
+        c.execute("INSERT INTO mission_phases VALUES(?,?,?,?)",(mid,"TERMINAL_VALIDATION",8,"RUNNING"))
+        c.execute("INSERT INTO saas_handoff_requests VALUES('R','RESPONDED',?)",("a"*64,));c.execute("INSERT INTO saas_broker_receipts VALUES('R',?)",("a"*64,))
+        currentness={"event":"SUCCESSOR_SOURCE_CURRENTNESS_REBOUND","registered_source_head":registered_head,"registered_source_tree":registered_tree,"current_source_head":current_head,"current_source_tree":current_tree,"merge_commit":current_head,"repair_head":"5"*40,"pr_number":346,"ancestry_verified":True,"changed_paths_verified":True,"changed_paths_digest":"6"*64,"lpcl_unchanged":True,"required_ci":{"CORE":"PASS","BANDIT":"PASS"},"authority_effect":"NONE"}
+        runtime={"event":"SUCCESSOR_RUNTIME_REVISIONS_CONVERGED","source_head":registered_head,"source_tree":registered_tree,"current_source_head":current_head,"current_source_tree":current_tree,"live_recon_sha256":recon_sha,"restart_durability":"PASS","service_state":"active","db_integrity":"ok","live_package_digest":"7"*64,"deployment_control_receipt":"8"*64,"authority_effect":"NONE"}
+        preflight={"event":"SUCCESSOR_PREFLIGHT_RUNTIME_BINDING_VISIBLE","source_head":registered_head,"source_tree":registered_tree,"current_source_head":current_head,"current_source_tree":current_tree,"lpcl_digest":spec,"preflight_digest":pre_digest,"bound_count":8,"unbound_count":0,"invalid_count":0,"mission_readiness":"READY_BOUND","phase_count":8,"contract_count":8,"panel_acceptance":"PASS","capability_registry_digest":"9"*64,"authority_effect":"NONE"}
+        panel={"event":"SUCCESSOR_PANEL_TRUTH_PROJECTION_REPAIRED","source_head":registered_head,"source_tree":registered_tree,"current_source_head":current_head,"current_source_tree":current_tree,"field_by_field_projection_comparison":"PASS","browser_acceptance":"PASS","exact_source_readback":"PASS","lpcl_digest":spec,"comparison_digest":"b"*64,"authority_effect":"NONE"}
+        for protocol,payload in (("CURRENTNESS",currentness),("CURRENTNESS",runtime),("VALIDATION",preflight),("VALIDATION",panel)):
+            c.execute("INSERT INTO protocol_messages(mission_id,protocol,from_id,payload_json) VALUES(?,?,?,?)",(mid,protocol,"BOOTSTRAP_RECONCILER",json.dumps(payload)))
+        c.commit()
+        observations={"domains":{
+            "panel":{"runtime":{"pid":7,"runtime_source_sha256":"c"*64,"gateway_source_sha256":"d"*64},"repo":{"github_master":{"head":current_head,"tree":current_tree}}},
+            "mission_control":{"runtime_identity":{"pid":9,"source_hashes":{"mission_control_v3.py":"c"*64,"cyber_lion/mission_control/control_plane_reconnaissance.py":recon_sha}},"db":{"integrity":"ok"},"mission":{"mission_id":mid,"spec_digest":spec,"source_head":registered_head,"source_tree":registered_tree},"preflight":{"preflight_digest":pre_digest,"bound_count":8,"unbound_count":0,"invalid_count":0,"mission_readiness":"READY_BOUND"},"contracts":[]},
+            "broker":{"schema_digest":"f"*64,"request_state_counts":{"RESPONDED":1},"binding_state_counts":{},"responded_count":1,"receipt_count":1,"pending_count":0,"transports":["CHATGPT_SENTINELX_SESSION_MEDIATED"],"autonomous_transport_claimed":False},
+            "process_language":{"source_hashes":{"cyber_lion/process_language/lpcl.py":"a"*64,"cyber_lion/contracts/phase_execution_contract.py":"b"*64},"canonical_lpcl_source_present":True,"lpcl12_compiler_present":True},
+        }}
+        names=["RUNTIME_REVISIONS_CONVERGED","PREFLIGHT_RUNTIME_BINDING_VISIBLE","BROKER_TRANSPORT_TRUTHFUL","LEGACY_LPCL_1_1_COMPATIBLE","LPCL_1_2_COMPATIBLE","SUCCESSOR_TERMINAL_VALIDATION"]
+        contract={"completion_predicates":[x+"=PASS" for x in names]}
+        facts,detail=cr.derive_facts(c,mid,"TERMINAL_VALIDATION",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(set(facts.values()),{True},detail);self.assertTrue(detail["successor_terminal"]["prior_phases_pass"]);self.assertEqual(detail["successor_terminal"]["broker_receipt_lineage"],{"missing":0,"orphan":0})
+        # Stale runtime evidence for another current tree must fail current terminal convergence.
+        stale={**runtime,"current_source_tree":"0"*40};c.execute("UPDATE protocol_messages SET payload_json=? WHERE id=2",(json.dumps(stale),));c.commit()
+        facts,_=cr.derive_facts(c,mid,"TERMINAL_VALIDATION",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertFalse(facts["RUNTIME_REVISIONS_CONVERGED"]);self.assertFalse(facts["SUCCESSOR_TERMINAL_VALIDATION"])
+        c.execute("UPDATE protocol_messages SET payload_json=? WHERE id=2",(json.dumps(runtime),));c.commit()
+        # Any autonomous transport claim fails the truthful transport predicate.
+        observations["domains"]["broker"]["autonomous_transport_claimed"]=True;observations["domains"]["broker"]["transports"].append("AUTONOMOUS_PROVIDER")
+        facts,_=cr.derive_facts(c,mid,"TERMINAL_VALIDATION",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertFalse(facts["BROKER_TRANSPORT_TRUTHFUL"]);self.assertFalse(facts["SUCCESSOR_TERMINAL_VALIDATION"])
+        observations["domains"]["broker"]["autonomous_transport_claimed"]=False;observations["domains"]["broker"]["transports"]=["CHATGPT_SENTINELX_SESSION_MEDIATED"]
+        # Prior phase regression must fail only the aggregate terminal predicate.
+        c.execute("UPDATE mission_phases SET status='BLOCKED' WHERE phase_id='P7'");c.commit()
+        facts,detail=cr.derive_facts(c,mid,"TERMINAL_VALIDATION",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertTrue(all(facts[x] for x in names[:-1]),facts);self.assertFalse(facts["SUCCESSOR_TERMINAL_VALIDATION"]);self.assertFalse(detail["successor_terminal"]["prior_phases_pass"])
+        c.close()
+
+    def test_terminal_recipe_vocabulary_is_fully_materialized(self):
+        contract={"currentness_requirements":["EXACT_GITHUB_MASTER","LIVE_8766_PACKAGE","LIVE_8780_RUNTIME","CURRENT_BROKER_DB"],"evidence_requirements":["EXACT_SOURCE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK"]}
+        plan=cr.build_observation_plan(contract)
+        self.assertEqual(plan["unsupported_tokens"],[])
+        self.assertEqual(set(plan["domains"]),{"panel","mission_control","broker","process_language"})
 
     def test_no_target_phase_name_switch_exists(self):
         source=Path(cr.__file__).read_text(encoding="utf-8")

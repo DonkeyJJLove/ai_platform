@@ -120,12 +120,12 @@ _reg("panel",
 _reg("mission_control",
     "LIVE_8766_RUNTIME","MISSION_CONTROL_DB","MISSION_CONTROL_SOURCE","LIVE_8766_PACKAGE","LIVE_MISSION_CONTROL_PROJECTION",
     "API_ROUTE_MAP","DRIVER_STATE_MODEL","SCHEDULER_STATE_MODEL","PROCESS_CONTRACT_STATE","SQLITE_IDENTITY",
-    "LPCL12_COMPILER_READBACK","PREFLIGHT_READBACK","CAPABILITY_REGISTRY_READBACK","EXACT_SOURCE_READBACK")
+    "LPCL12_COMPILER_READBACK","PREFLIGHT_READBACK","CAPABILITY_REGISTRY_READBACK","EXACT_SOURCE_READBACK","RESTART_DURABILITY")
 _reg("broker",
     "BROKER_DB","BROKER_SOURCE","CURRENT_BROKER_STATE","LIVE_BROKER_PROJECTION","SAAS_SESSION_BINDINGS","PRIVILEGED_BROKER_PACKAGE",
     "SCHEMA_READBACK","REQUEST_STATE_COUNTS","BINDING_STATE_COUNTS","RECEIPT_STATE_COUNTS","CLAIM_GENERATION_READBACK",
     "TRANSPORT_CLASSIFICATION","AUTOMATIC_CONSUMER_EVIDENCE","SESSION_STATE","PENDING_REQUEST_STATE",
-    "RESPONDED_ROWS","BROKER_RECEIPT_ROWS","PROGRESS_STATE_HISTORY","MIGRATION_HISTORY","CURRENT_BROKER_DB")
+    "RESPONDED_ROWS","BROKER_RECEIPT_ROWS","PROGRESS_STATE_HISTORY","MIGRATION_HISTORY","CURRENT_BROKER_DB","BROKER_TRANSPORT_READBACK")
 _reg("thread",
     "THREAD_DB","THREAD_DELIVERY_SOURCE","DELIVERY_CANDIDATES","RECEIPT_LINKAGE","DEDUPLICATION_RULE","DELETION_BEHAVIOR")
 _reg("dual",
@@ -141,7 +141,7 @@ _reg("artifacts",
     "SUCCESSOR_LPCL_PROPOSAL_DIGEST","SUCCESSOR_CAPABILITY_MATRIX","SUCCESSOR_COMPLETION_CONTRACT")
 _reg("baseline",
     "PRE_RECON_BASELINE","POST_RECON_BASELINE","STATE_DIFF","REQUEST_COUNT_DIFF","BINDING_DIFF","REPOSITORY_DIFF")
-_reg("process_language","CANONICAL_PROCESS_LANGUAGE_SOURCE","LPCL12_PROCESS_CONTRACT")
+_reg("process_language","CANONICAL_PROCESS_LANGUAGE_SOURCE","LPCL12_PROCESS_CONTRACT","BACKWARD_COMPATIBILITY")
 _reg("successor_lineage","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK")
 
 SEMANTIC_VERIFY_EVIDENCE = frozenset({
@@ -537,6 +537,115 @@ def _source_currentness_attestation(conn: sqlite3.Connection, mission_id: str, *
     return None
 
 
+def _lpcl11_compat_probe() -> bool:
+    try:
+        contracts=compile_panel_phase_contracts({},"SYNTHETIC-LEGACY-MISSION",[{"id":"SYNTHETIC_PHASE"}],"LPCL/1.1")
+        pf=preflight_execution_contracts(contracts,{})
+        return len(contracts)==1 and pf.invalid_count==0 and contracts[0].contract_source=="LEGACY_INFERRED_SAFE"
+    except (PhaseExecutionContractError,ValueError,TypeError):
+        return False
+
+
+def _lpcl12_compat_probe() -> bool:
+    pairs={
+        "PHASE_01_EXECUTION_CLASS":"VERIFY",
+        "PHASE_01_CAPABILITY_CLASS":"MISSION_RUNTIME_RECONCILIATION",
+        "PHASE_01_EFFECT_CEILING":"NONE",
+        "PHASE_01_BINDING_MODE":"DYNAMIC",
+        "PHASE_01_ON_MISSING_CAPABILITY":"WAIT_AND_DISCOVER",
+        "PHASE_01_AUTO_RESUME":"TRUE",
+        "PHASE_01_VERIFY_BEFORE_MUTATE":"TRUE",
+        "PHASE_01_CURRENTNESS":"CURRENT_MISSION_RUNTIME",
+        "PHASE_01_EVIDENCE":"LIVE_RUNTIME_READBACK",
+        "PHASE_01_COMPLETION_01":"SYNTHETIC=PASS",
+    }
+    try:
+        contracts=compile_panel_phase_contracts(pairs,"SYNTHETIC-MISSION",[{"id":"SYNTHETIC_PHASE"}],"LPCL/1.2")
+        pf=preflight_execution_contracts(contracts,{})
+        return len(contracts)==1 and pf.invalid_count==0 and pf.unbound_count==1
+    except (PhaseExecutionContractError,ValueError,TypeError):
+        return False
+
+
+def _bootstrap_reconciler_evidence(conn: sqlite3.Connection, mission_id: str, event: str, *, registered_head: str | None, registered_tree: str | None, current_head: str | None, current_tree: str | None) -> dict[str,Any] | None:
+    if not _table(conn,"protocol_messages"):
+        return None
+    for row in conn.execute("SELECT from_id,protocol,payload_json FROM protocol_messages WHERE mission_id=? ORDER BY id DESC",(mission_id,)):
+        payload=_json(row["payload_json"],{})
+        if row["from_id"]!="BOOTSTRAP_RECONCILER" or payload.get("event")!=event or payload.get("authority_effect")!="NONE":
+            continue
+        if payload.get("source_head")!=registered_head or payload.get("source_tree")!=registered_tree:
+            continue
+        if payload.get("current_source_head")!=current_head or payload.get("current_source_tree")!=current_tree:
+            continue
+        return payload
+    return None
+
+
+def _runtime_revision_terminal_evidence(conn: sqlite3.Connection, mission_id: str, *, mission: dict[str,Any], github_master: dict[str,Any], runtime_identity: dict[str,Any], db_identity: dict[str,Any], source_currentness_bound: bool) -> dict[str,Any] | None:
+    payload=_bootstrap_reconciler_evidence(conn,mission_id,"SUCCESSOR_RUNTIME_REVISIONS_CONVERGED",registered_head=mission.get("source_head"),registered_tree=mission.get("source_tree"),current_head=github_master.get("head"),current_tree=github_master.get("tree"))
+    if not payload or not source_currentness_bound:
+        return None
+    hashes=runtime_identity.get("source_hashes") or {};recon_sha=hashes.get("cyber_lion/mission_control/control_plane_reconnaissance.py")
+    if payload.get("live_recon_sha256")!=recon_sha or not isinstance(recon_sha,str) or not re.fullmatch(r"[0-9a-f]{64}",recon_sha):
+        return None
+    if payload.get("restart_durability")!="PASS" or payload.get("service_state")!="active" or payload.get("db_integrity")!="ok" or db_identity.get("integrity")!="ok":
+        return None
+    if not isinstance(payload.get("live_package_digest"),str) or not re.fullmatch(r"[0-9a-f]{64}",payload["live_package_digest"]):
+        return None
+    if not isinstance(payload.get("deployment_control_receipt"),str) or not re.fullmatch(r"[0-9a-f]{64}",payload["deployment_control_receipt"]):
+        return None
+    return payload
+
+
+def _preflight_binding_terminal_evidence(conn: sqlite3.Connection, mission_id: str, *, mission: dict[str,Any], github_master: dict[str,Any], preflight: dict[str,Any], source_currentness_bound: bool) -> dict[str,Any] | None:
+    payload=_bootstrap_reconciler_evidence(conn,mission_id,"SUCCESSOR_PREFLIGHT_RUNTIME_BINDING_VISIBLE",registered_head=mission.get("source_head"),registered_tree=mission.get("source_tree"),current_head=github_master.get("head"),current_tree=github_master.get("tree"))
+    if not payload or not source_currentness_bound:
+        return None
+    if payload.get("lpcl_digest")!=mission.get("spec_digest") or payload.get("preflight_digest")!=preflight.get("preflight_digest"):
+        return None
+    expected=(int(preflight.get("bound_count") or 0),int(preflight.get("unbound_count") or 0),int(preflight.get("invalid_count") or 0),str(preflight.get("mission_readiness") or ""))
+    observed=(int(payload.get("bound_count") or 0),int(payload.get("unbound_count") or 0),int(payload.get("invalid_count") or 0),str(payload.get("mission_readiness") or ""))
+    if expected!=(8,0,0,"READY_BOUND") or observed!=expected or int(payload.get("phase_count") or 0)!=8 or int(payload.get("contract_count") or 0)!=8:
+        return None
+    if payload.get("panel_acceptance")!="PASS" or not isinstance(payload.get("capability_registry_digest"),str) or not re.fullmatch(r"[0-9a-f]{64}",payload["capability_registry_digest"]):
+        return None
+    return payload
+
+
+def _panel_projection_terminal_evidence(conn: sqlite3.Connection, mission_id: str, *, mission: dict[str,Any], github_master: dict[str,Any]) -> dict[str,Any] | None:
+    payload=_bootstrap_reconciler_evidence(conn,mission_id,"SUCCESSOR_PANEL_TRUTH_PROJECTION_REPAIRED",registered_head=mission.get("source_head"),registered_tree=mission.get("source_tree"),current_head=github_master.get("head"),current_tree=github_master.get("tree"))
+    if not payload:
+        return None
+    if payload.get("field_by_field_projection_comparison")!="PASS" or payload.get("browser_acceptance")!="PASS" or payload.get("exact_source_readback")!="PASS":
+        return None
+    if payload.get("lpcl_digest")!=mission.get("spec_digest"):
+        return None
+    if not isinstance(payload.get("comparison_digest"),str) or not re.fullmatch(r"[0-9a-f]{64}",payload["comparison_digest"]):
+        return None
+    return payload
+
+
+def _broker_receipt_lineage_current(conn: sqlite3.Connection) -> tuple[bool,dict[str,int]]:
+    if not (_table(conn,"saas_handoff_requests") and _table(conn,"saas_broker_receipts")):
+        return False,{"missing":-1,"orphan":-1}
+    missing=int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests r LEFT JOIN saas_broker_receipts b ON b.request_id=r.request_id WHERE r.status='RESPONDED' AND (r.receipt_digest IS NULL OR b.request_id IS NULL OR b.receipt_digest!=r.receipt_digest)").fetchone()[0])
+    orphan=int(conn.execute("SELECT COUNT(*) FROM saas_broker_receipts b LEFT JOIN saas_handoff_requests r ON r.request_id=b.request_id WHERE r.request_id IS NULL").fetchone()[0])
+    return missing==0 and orphan==0,{"missing":missing,"orphan":orphan}
+
+
+def _prior_successor_phases_pass(conn: sqlite3.Connection, mission_id: str, terminal_phase: str) -> tuple[bool,dict[str,str]]:
+    if not _table(conn,"mission_phases"):
+        return False,{}
+    rows=conn.execute("SELECT ordinal,phase_id,status FROM mission_phases WHERE mission_id=? ORDER BY ordinal",(mission_id,)).fetchall()
+    status={str(r["phase_id"]):str(r["status"]) for r in rows}
+    terminal=next((r for r in rows if r["phase_id"]==terminal_phase),None)
+    if terminal is None:
+        return False,status
+    prior=[r for r in rows if int(r["ordinal"])<int(terminal["ordinal"])]
+    return len(prior)==7 and all(str(r["status"])=="PASS" for r in prior),status
+
+
 def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], observations: dict[str,Any], *, artifacts: dict[str,Any], baseline: dict[str,Any] | None, local_analysis: dict[str,Any] | None, saas_advisory: dict[str,Any] | None) -> tuple[dict[str,bool],dict[str,Any]]:
     d=observations.get("domains") or {};panel=d.get("panel") or {};mc=d.get("mission_control") or {};broker=d.get("broker") or {};thread=d.get("thread") or {};dual=d.get("dual") or {};post=d.get("post_astra") or {};hist=d.get("recon_history") or {};lang=d.get("process_language") or {};successor_lineage=d.get("successor_lineage") or {}
     features=_source_features(panel);classes=_classification(observations,baseline)
@@ -554,6 +663,28 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
     live_package_identified=bool((mc_runtime.get("source_hashes") or {}).get("mission_control_v3.py") and (mc_runtime.get("source_hashes") or {}).get("cyber_lion/mission_control/control_plane_reconnaissance.py"))
     broker_db_current=bool(mc_db.get("integrity")=="ok" and broker.get("schema_digest") and broker.get("request_state_counts") is not None)
     predecessor_intelligence_bound=bool(successor_lineage.get("valid") and successor_lineage.get("proposal_digest")==mc_mission.get("spec_digest") and successor_lineage.get("intelligence_bundle_digest")==successor_lineage.get("expected_intelligence_bundle_digest"))
+    runtime_revision_evidence=_runtime_revision_terminal_evidence(conn,mission_id,mission=mc_mission,github_master=github_master,runtime_identity=mc_runtime,db_identity=mc_db,source_currentness_bound=source_currentness_bound)
+    preflight_binding_evidence=_preflight_binding_terminal_evidence(conn,mission_id,mission=mc_mission,github_master=github_master,preflight=pre,source_currentness_bound=source_currentness_bound)
+    panel_projection_evidence=_panel_projection_terminal_evidence(conn,mission_id,mission=mc_mission,github_master=github_master)
+    broker_transports=list(broker.get("transports") or [])
+    broker_transport_truthful=bool(broker.get("schema_digest") and broker.get("autonomous_transport_claimed") is False and broker_transports and all(str(x)=="CHATGPT_SENTINELX_SESSION_MEDIATED" for x in broker_transports))
+    broker_receipt_lineage_ok,broker_receipt_counts=_broker_receipt_lineage_current(conn)
+    legacy_lpcl_11_compatible=_lpcl11_compat_probe()
+    lpcl_12_compatible=_lpcl12_compat_probe()
+    prior_phases_pass,prior_phase_status=_prior_successor_phases_pass(conn,mission_id,phase_id)
+    terminal_validation=all((
+        source_currentness_bound,
+        runtime_revision_evidence is not None,
+        preflight_binding_evidence is not None,
+        broker_transport_truthful,
+        broker_receipt_lineage_ok,
+        panel_projection_evidence is not None,
+        legacy_lpcl_11_compatible,
+        lpcl_12_compatible,
+        prior_phases_pass,
+        mc_db.get("integrity")=="ok",
+        bool(runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
+    ))
     values: dict[str,bool] = {
         "PANEL_RUNTIME_IDENTITY_CAPTURED":bool(runtime.get("pid") and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
         "MISSION_CONTROL_RUNTIME_IDENTITY_CAPTURED":bool((mc.get("runtime_identity") or {}).get("pid") and (mc.get("runtime_identity") or {}).get("source_hashes")),
@@ -632,10 +763,18 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
         "NO_MISSION_REPAIR_EFFECT":bool(post_diff and post_diff.get("checks",{}).get("NO_MISSION_REPAIR_EFFECT")),
         "INTELLIGENCE_READY_FOR_SUCCESSOR_MISSION":bool(post_diff and post_diff.get("checks",{}).get("INTELLIGENCE_READY_FOR_SUCCESSOR_MISSION")),
         "REPAIR_BASELINE_FROZEN":bool(source_currentness_bound and live_package_identified and broker_db_current and predecessor_intelligence_bound and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
+        "RUNTIME_REVISIONS_CONVERGED":runtime_revision_evidence is not None,
+        "PREFLIGHT_RUNTIME_BINDING_VISIBLE":preflight_binding_evidence is not None,
+        "BROKER_TRANSPORT_TRUTHFUL":broker_transport_truthful,
+        "BROKER_RECEIPT_LINEAGE_RECONCILED":broker_receipt_lineage_ok,
+        "PANEL_TRUTH_PROJECTION_REPAIRED":panel_projection_evidence is not None,
+        "LEGACY_LPCL_1_1_COMPATIBLE":legacy_lpcl_11_compatible,
+        "LPCL_1_2_COMPATIBLE":lpcl_12_compatible,
+        "SUCCESSOR_TERMINAL_VALIDATION":terminal_validation,
     }
     requested=[str(x).split("=",1)[0] for x in contract.get("completion_predicates") or []]
     facts={name:bool(values.get(name,False)) for name in requested}
-    detail={"classifications":classes,"local_analysis_summary":local_analysis,"saas_advisory":saas_advisory,"requested_predicates":requested,"successor_baseline":{"exact_registered_source":exact_registered_source,"source_currentness_bound":source_currentness_bound,"source_currentness_attestation":source_currentness_attestation,"live_package_identified":live_package_identified,"broker_db_current":broker_db_current,"predecessor_intelligence_bound":predecessor_intelligence_bound,"successor_lineage":successor_lineage}}
+    detail={"classifications":classes,"local_analysis_summary":local_analysis,"saas_advisory":saas_advisory,"requested_predicates":requested,"successor_baseline":{"exact_registered_source":exact_registered_source,"source_currentness_bound":source_currentness_bound,"source_currentness_attestation":source_currentness_attestation,"live_package_identified":live_package_identified,"broker_db_current":broker_db_current,"predecessor_intelligence_bound":predecessor_intelligence_bound,"successor_lineage":successor_lineage},"successor_terminal":{"runtime_revision_evidence":runtime_revision_evidence,"preflight_binding_evidence":preflight_binding_evidence,"panel_projection_evidence":panel_projection_evidence,"broker_transport_truthful":broker_transport_truthful,"broker_receipt_lineage":broker_receipt_counts,"legacy_lpcl_1_1_compatible":legacy_lpcl_11_compatible,"lpcl_1_2_compatible":lpcl_12_compatible,"prior_phases_pass":prior_phases_pass,"prior_phase_status":prior_phase_status,"terminal_validation":terminal_validation}}
     return facts,detail
 
 
