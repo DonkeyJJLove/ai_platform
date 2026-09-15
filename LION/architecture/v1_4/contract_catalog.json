@@ -91,6 +91,26 @@
       ]
     },
     {
+      "contract_id": "phase-execution-contract",
+      "canonical_path": "cyber_lion/contracts/phase_execution_contract.py",
+      "schema_or_runtime_type": "Python contract + lion.phase-execution-contract/v1",
+      "version": "1.0.0",
+      "owner": "Process Contract Plane",
+      "invariants": [
+        "phase intent is not execution contract",
+        "capability binding is not authority",
+        "effect ceiling is not authority grant",
+        "planning is not execution binding",
+        "completion requires independent reconciliation",
+        "VERIFY_THEN_REPAIR verifies current postconditions before mutation"
+      ],
+      "compatibility_status": "LPCL_1_2_CURRENT_LPCL_1_1_LEGACY_INFERRED_SAFE_NON_AUTHORITATIVE",
+      "tests": [
+        "test_phase_execution_contract.PhaseExecutionContractTests",
+        "test_lpcl_rebind_live_currentness.LpclRebindLiveCurrentnessTests"
+      ]
+    },
+    {
       "contract_id": "process-action-boundary",
       "canonical_path": "cyber_lion/contracts/process_action.py",
       "schema_or_runtime_type": "Python contracts",

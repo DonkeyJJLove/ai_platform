@@ -43,13 +43,15 @@ def validate(repository,rag_root):
     rag_base=(repo/"LION"/"rag").resolve(strict=True)
     if not root.is_relative_to(rag_base):raise RagValidationError("RAG root outside LION/rag")
     files=sorted(root.glob("*.md"))
-    if len(files)!=32:raise RagValidationError("exact 32 markdown containers required")
+    if not 1 <= len(files) <= 40:raise RagValidationError("attachment budget exceeded")
     mt=(root/"05_PACKAGE_MANIFEST.md").read_text(encoding="utf-8"); mm=MANIFEST.search(mt)
     if not mm:raise RagValidationError("manifest unavailable")
     manifest=json.loads(mm.group(1)); profile=manifest.get("profile_id"); release=manifest.get("release_id")
     if profile!="LION-RAG32/1" or type(release) is not str or not release:raise RagValidationError("profile/release")
     expected=manifest.get("attachment_files")
     if type(expected) is not list or sorted(expected)!=sorted(p.name for p in files):raise RagValidationError("manifest fileset")
+    if manifest.get("attachment_limit")!=40:raise RagValidationError("attachment limit")
+    if manifest.get("reserved_slots") != 40-len(files):raise RagValidationError("reserved slot budget")
     for p in files:
         head=p.read_text(encoding="utf-8").split("LION_RECORD_BEGIN",1)[0]
         if f"PROFILE_ID={profile}" not in head or f"RELEASE_ID={release}" not in head:raise RagValidationError("mixed release: "+p.name)

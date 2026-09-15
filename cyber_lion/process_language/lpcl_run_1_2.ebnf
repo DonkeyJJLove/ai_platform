@@ -1,0 +1,57 @@
+(* LPCL canonical RUN/PHASE authoring surface v1.2 process-contract profile.
+   This syntax is non-effectful and must compile to CanonicalProcessIR plus
+   FleetMissionIR plus PhaseExecutionContract before any process semantics are consumed. *)
+
+document        = { blank | comment }, block, { block | blank | comment }, "END", newline ;
+block           = field, "=", [ inline-value ], newline, { value-line } ;
+field           = upper, { upper | digit | "_" } ;
+inline-value    = value-char, { value-char } ;
+value-line      = ? non-empty UTF-8 line that is not a field assignment, comment or END ?, newline ;
+comment         = [ whitespace ], "#", { ? any UTF-8 character except newline ? }, newline ;
+blank           = [ whitespace ], newline ;
+upper           = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+                | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;
+digit           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+whitespace      = " " | "\t" ;
+value-char      = ? any UTF-8 character except newline ? ;
+newline         = "\n" ;
+
+(* Normative semantic requirements are intentionally outside lexical EBNF.
+
+   Required global controls remain compatible with v1.1 except:
+   LPCL_VERSION=1.2
+
+   Numbered phases remain contiguous PHASE_0..PHASE_N and retain the v1.1
+   transition/evidence/currentness/authority/replay fields.
+
+   In addition every phase requires one PhaseExecutionContract declaration:
+   EXECUTION_CLASS
+   CAPABILITY_CLASS
+   EFFECT_CEILING
+   BINDING_MODE
+   ON_MISSING_CAPABILITY
+   AUTO_RESUME
+   VERIFY_BEFORE_MUTATE
+   CURRENTNESS_CONTRACT
+   EVIDENCE_CONTRACT
+   COMPLETION=<PREDICATE>=<EXPECTED>
+
+   COMPLETION is written inline because a value line of the form KEY=VALUE
+   is lexically a new field assignment.
+
+   Execution class vocabulary:
+   OBSERVE | VERIFY | COGNITIVE | VERIFY_THEN_REPAIR | MUTATE | VALIDATE | CONTROL
+
+   Binding mode:
+   STATIC | DYNAMIC
+
+   Missing capability policy:
+   FAIL | WAIT | WAIT_AND_DISCOVER | ESCALATE
+
+   Effect ceiling:
+   NONE | CONTROL_STATE | BOUNDED_LOCAL | BOUNDED_REPOSITORY | BOUNDED_MATERIAL
+
+   The contract is non-authoritative. Effect ceiling is a ceiling, not a
+   grant. Capability binding remains distinct from Action IR, authority,
+   runtime admission, effect and completion reconciliation.
+*)

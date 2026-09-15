@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from cyber_lion.contracts.process_ir import CanonicalProcessIR
+from cyber_lion.contracts.phase_execution_contract import PhaseExecutionContract
 from cyber_lion.process_language.canonical_run import (
     CanonicalRunCompilation,
     CanonicalRunError,
@@ -21,6 +22,7 @@ from cyber_lion.process_language.lpcl import LPCLParseError, parse_lpcl
 SURFACE_CLASSES = frozenset({
     "LPCL_1_0_STRICT",
     "LPCL_1_1_CANONICAL_RUN",
+    "LPCL_1_2_CANONICAL_RUN",
     "LEGACY_RUN_DATA",
     "UNREPRESENTABLE",
 })
@@ -39,6 +41,7 @@ class ProcessSourceInterpretation:
     fleet_mission_ir: FleetMissionIR | None
     legacy: LegacyRunResult | None
     process_candidate: bool
+    phase_execution_contracts: tuple[PhaseExecutionContract, ...] = ()
     authority_effect: str = "NONE"
     runtime_effect: str = "NONE"
     execution_effect: str = "NONE"
@@ -48,14 +51,16 @@ class ProcessSourceInterpretation:
             raise ProcessSourceInterpretationError("surface_class invalid")
         if (self.authority_effect, self.runtime_effect, self.execution_effect) != ("NONE", "NONE", "NONE"):
             raise ProcessSourceInterpretationError("process source interpretation must remain non-effectful")
-        if self.surface_class == "LPCL_1_1_CANONICAL_RUN":
+        if self.surface_class in {"LPCL_1_1_CANONICAL_RUN", "LPCL_1_2_CANONICAL_RUN"}:
             if self.process_ir is None or self.fleet_mission_ir is None or not self.process_candidate:
-                raise ProcessSourceInterpretationError("LPCL 1.1 requires ProcessIR and FleetMissionIR candidate")
+                raise ProcessSourceInterpretationError("canonical RUN requires ProcessIR and FleetMissionIR candidate")
+            if self.surface_class == "LPCL_1_2_CANONICAL_RUN" and not self.phase_execution_contracts:
+                raise ProcessSourceInterpretationError("LPCL 1.2 requires PhaseExecutionContracts")
         elif self.surface_class == "LPCL_1_0_STRICT":
-            if self.process_ir is None or self.fleet_mission_ir is not None or not self.process_candidate:
+            if self.process_ir is None or self.fleet_mission_ir is not None or not self.process_candidate or self.phase_execution_contracts:
                 raise ProcessSourceInterpretationError("LPCL 1.0 requires ProcessIR-only compatibility candidate")
         else:
-            if self.process_ir is not None or self.fleet_mission_ir is not None or self.process_candidate:
+            if self.process_ir is not None or self.fleet_mission_ir is not None or self.process_candidate or self.phase_execution_contracts:
                 raise ProcessSourceInterpretationError("legacy/unrepresentable source cannot be a process candidate")
         return self
 
@@ -111,15 +116,20 @@ def interpret_process_source(text: str) -> ProcessSourceInterpretation:
     if _looks_like_versioned_run(text):
         _validate_v11_profile(text)
         try:
+            ast=parse_canonical_run(text)
+            version=_one(ast.globals.get("LPCL_VERSION"), "LPCL_VERSION")
             compiled: CanonicalRunCompilation = compile_canonical_run(text)
         except CanonicalRunError as exc:
             raise ProcessSourceInterpretationError(str(exc)) from exc
+        if version not in {"1.1","1.2"}:
+            raise ProcessSourceInterpretationError("LPCL_VERSION mismatch")
         return ProcessSourceInterpretation(
-            surface_class="LPCL_1_1_CANONICAL_RUN",
+            surface_class="LPCL_1_2_CANONICAL_RUN" if version=="1.2" else "LPCL_1_1_CANONICAL_RUN",
             process_ir=compiled.process_ir,
             fleet_mission_ir=compiled.fleet_mission_ir,
             legacy=None,
             process_candidate=True,
+            phase_execution_contracts=compiled.phase_execution_contracts,
         ).validate()
 
     legacy = LegacyRunAdapter().parse(text)

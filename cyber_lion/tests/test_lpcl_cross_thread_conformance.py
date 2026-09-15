@@ -111,5 +111,18 @@ class LPCLCrossThreadConformanceTests(unittest.TestCase):
         self.assertEqual(compiled.fleet_mission_ir.authority_effect, "NONE")
 
 
+    def test_lpcl_1_2_compiles_phase_execution_contract_without_changing_process_ir_authority(self):
+        v12 = BASE.replace('LPCL_VERSION=\n1.1', 'LPCL_VERSION=\n1.2').replace(
+            'EVIDENCE_REQUIREMENTS=\nevidence:repository',
+            'EVIDENCE_REQUIREMENTS=\nevidence:repository\n\nEXECUTION_CLASS=\nVERIFY\n\nCAPABILITY_CLASS=\nREPOSITORY_OBSERVE\n\nEFFECT_CEILING=\nNONE\n\nBINDING_MODE=\nDYNAMIC\n\nON_MISSING_CAPABILITY=\nWAIT_AND_DISCOVER\n\nAUTO_RESUME=\nTRUE\n\nVERIFY_BEFORE_MUTATE=\nTRUE\n\nCURRENTNESS_CONTRACT=\nMASTER_CURRENT\n\nEVIDENCE_CONTRACT=\nREPOSITORY_EVIDENCE\n\nCOMPLETION=REPOSITORY_CURRENT=PASS'
+        )
+        compiled=compile_canonical_run(v12)
+        self.assertEqual(len(compiled.phase_execution_contracts),1)
+        contract=compiled.phase_execution_contracts[0]
+        self.assertEqual((contract.execution_class,contract.effect_ceiling,contract.contract_source),('VERIFY','NONE','DECLARED'))
+        self.assertEqual(compiled.fleet_mission_ir.authority_effect,'NONE')
+
+
+
 if __name__ == "__main__":
     unittest.main()

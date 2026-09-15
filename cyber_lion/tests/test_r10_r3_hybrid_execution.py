@@ -90,6 +90,91 @@ class ParserNormalizationTests(unittest.TestCase):
         self.assertEqual(spec['phases'], [{'id': 'CURRENTNESS_REACQUIRE', 'title': 'Currentness Reacquire'}])
 
 
+    def test_lpcl_1_2_intake_returns_phase_contract_preflight(self):
+        class Broker:
+            def call(self,*args,**kwargs):return {'result':{'head':'a'*40,'tree':'b'*40}}
+        bridge=LpclControlBridge(Broker())
+        text='''PROJECT=
+LION_EVOLUSION
+MODE=
+AUTONOMOUS_EXECUTE
+CONTROL_LANGUAGE=
+LPCL/1.2
+MISSION_ID=
+TEST-V12-R1
+MISSION_TITLE=
+Test v12
+MISSION_OBJECTIVE=
+Verify
+MISSION_DESCRIPTION=
+Verify phase contract
+LOGICAL_DRONE_COUNT=
+128
+MATERIAL_DRONE_COUNT=
+64
+PROTOCOLS=
+LPCL
+AUTHORITY
+CURRENTNESS
+PHASE_01=
+VERIFY_RUNTIME|Verify runtime
+PHASE_01_EXECUTION_CLASS=
+VERIFY
+PHASE_01_CAPABILITY_CLASS=
+RUNTIME_OBSERVE
+PHASE_01_EFFECT_CEILING=
+NONE
+PHASE_01_BINDING_MODE=
+DYNAMIC
+PHASE_01_ON_MISSING_CAPABILITY=
+WAIT_AND_DISCOVER
+PHASE_01_AUTO_RESUME=
+TRUE
+PHASE_01_VERIFY_BEFORE_MUTATE=
+TRUE
+PHASE_01_CURRENTNESS=
+CURRENT_MISSION_RUNTIME
+PHASE_01_EVIDENCE=
+LIVE_RUNTIME_READBACK
+PHASE_01_COMPLETION_01=RUNTIME_CURRENT=PASS
+'''
+        out=bridge.validate(text)
+        self.assertTrue(out['valid']);self.assertEqual(out['parsed']['control_language'],'LPCL/1.2')
+        self.assertEqual(out['phase_execution_contracts'][0]['execution_class'],'VERIFY')
+        self.assertEqual(out['execution_preflight']['mission_readiness'],'WAITING_FOR_CAPABILITIES')
+
+    def test_lpcl_1_2_intent_only_is_rejected_at_intake(self):
+        class Broker:
+            def call(self,*args,**kwargs):return {'result':{'head':'a'*40,'tree':'b'*40}}
+        bridge=LpclControlBridge(Broker())
+        text='''PROJECT=
+LION_EVOLUSION
+MODE=
+AUTONOMOUS_EXECUTE
+CONTROL_LANGUAGE=
+LPCL/1.2
+MISSION_ID=
+TEST-V12-BAD
+MISSION_TITLE=
+Bad
+MISSION_OBJECTIVE=
+Bad
+MISSION_DESCRIPTION=
+Bad
+LOGICAL_DRONE_COUNT=
+128
+MATERIAL_DRONE_COUNT=
+64
+PROTOCOLS=
+LPCL
+PHASE_01=
+INTENT_ONLY|Intent only
+'''
+        with self.assertRaisesRegex(ValueError,'LPCL_PHASE_EXECUTION_CONTRACT'):
+            bridge.validate(text)
+
+
+
 class MissionRebindTests(unittest.TestCase):
     @staticmethod
     def live_runtime(uid_prefix='live'):

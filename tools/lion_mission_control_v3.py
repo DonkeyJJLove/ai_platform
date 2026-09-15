@@ -10,6 +10,11 @@ from pathlib import Path
 from urllib.parse import urlparse,unquote,parse_qs
 from cyber_lion.mission_control.runtime_projection import normalize_snapshot, validate_registration, SCHEMA_VERSION as RUNTIME_SCHEMA_VERSION
 from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
+from cyber_lion.contracts.phase_execution_contract import (
+ PhaseExecutionContract, PhaseExecutionContractError, compile_panel_phase_contracts,
+ preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
+ COMPILER_VERSION as PHASE_CONTRACT_COMPILER_VERSION,
+)
 from mission_control_compat import compat_get, STATIC
 try:
  from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records
@@ -221,6 +226,13 @@ EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_GENERIC_ADAPTER='LPCL_GENERIC_128L64M'
+PROCESS_CONTRACT_TARGET_MISSION='LION-GENERIC-LPCL-MISSION-EXECUTION-ADAPTER-REPAIR-R1'
+PROCESS_CONTRACT_TARGET_PHASE='REPAIR_EXECUTION_BINDER'
+PROCESS_CAPABILITY_REGISTRY={
+ 'REPOSITORY_AND_RUNTIME_RECONCILIATION':(
+  {'capability_id':'GENERIC_EXECUTION_BINDER_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
+ ),
+}
 MISSION_DRIVER_LOOP_INTERVAL_SECONDS=2.0
 LIVENESS_FRESH_MULTIPLIER=3
 LIVENESS_STALE_MULTIPLIER=10
@@ -266,6 +278,62 @@ def _lpcl_pairs(text):
 def _lpcl_rebind_source(kv):
     parent=str(kv.get('PARENT_MISSION_ID') or '').strip()
     return parent if parent else LPCL_REBIND_SOURCE
+
+
+
+def _compile_and_store_phase_contracts(c,mid,lpcl_text,phase_rows,*,allow_current_migration=True):
+    kv=_lpcl_pairs(lpcl_text);language=str(kv.get('CONTROL_LANGUAGE') or 'LPCL/1.1').strip()
+    phases=[{'id':row[0] if not isinstance(row,dict) else row['id']} for row in phase_rows]
+    contracts=list(compile_panel_phase_contracts(kv,mid,phases,language))
+    if allow_current_migration and mid==PROCESS_CONTRACT_TARGET_MISSION:
+      migrated=[]
+      for contract in contracts:
+       if contract.phase_id==PROCESS_CONTRACT_TARGET_PHASE:
+        contract=migrated_explicit_contract(
+         mission_id=mid,phase_id=contract.phase_id,ordinal=contract.ordinal,
+         execution_class='VERIFY_THEN_REPAIR',capability_classes=('REPOSITORY_AND_RUNTIME_RECONCILIATION',),
+         effect_ceiling='BOUNDED_REPOSITORY',binding_mode='DYNAMIC',on_missing_capability='WAIT_AND_DISCOVER',
+         auto_resume=True,verify_before_mutate=True,
+         currentness_requirements=('EXACT_CURRENT_REPOSITORY','CURRENT_MISSION_RUNTIME','CURRENT_MATERIAL_BINDING'),
+         evidence_requirements=('LIVE_RUNTIME_READBACK','FOCUSED_REGRESSION','POSTCONDITION_RECONCILIATION'),
+         completion_predicates=(
+          'FRESH_LPCL_WITHOUT_PARENT=PASS','GENERIC_ADAPTER_BOUND=PASS','LOGICAL_COUNT_128=PASS',
+          'MATERIAL_READY_64=PASS','UNIQUE_MATERIAL_64=PASS','GENERIC_PHASE_COMPILER=PASS',
+          'GENERIC_PHASE_HANDLER=PASS','DURABLE_DRIVER=PASS','GLOBAL_SCHEDULER_DISPATCH=PASS',
+          'LOCAL_PLANNING_RECEIPT=PASS','FAIL_CLOSED_MISSING_CAPABILITY=PASS','RESTART_DURABILITY=PASS','DB_INTEGRITY=PASS',
+         ))
+       migrated.append(contract)
+      contracts=migrated
+    global_sched.store_phase_execution_contracts(c,mid,contracts,now)
+    preflight=preflight_execution_contracts(contracts,PROCESS_CAPABILITY_REGISTRY)
+    global_sched.store_execution_preflight(c,mid,preflight,now)
+    return contracts,preflight
+
+
+def reconcile_phase_execution_contracts():
+    c=connect()
+    try:
+      rows=c.execute("SELECT mission_id,lpcl_text FROM mission_process_specs WHERE lpcl_text IS NOT NULL AND lpcl_text!=''").fetchall()
+      for row in rows:
+       phase_rows=[{'id':r['phase_id']} for r in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(row['mission_id'],)).fetchall()]
+       if not phase_rows:continue
+       try:_compile_and_store_phase_contracts(c,row['mission_id'],row['lpcl_text'],phase_rows)
+       except PhaseExecutionContractError as exc:
+        # Existing LPCL/1.1 must remain readable; invalid declared 1.2 is recorded by registration/preflight, not promoted.
+        _process_message(c,row['mission_id'],'VALIDATION','PROCESS_CONTRACT_COMPILER','MISSION_CONTROL',None,{'event':'PROCESS_CONTRACT_RECONCILIATION_BLOCKED','error':str(exc),'authority_effect':'NONE'},'INTERNAL')
+      c.commit()
+    finally:c.close()
+
+
+def _phase_contract_capability(c,mid,pid):
+    contract=global_sched.phase_execution_contract(c,mid,pid)
+    if not contract:return None,None
+    for cls in contract.get('capability_classes',[]):
+      candidates=PROCESS_CAPABILITY_REGISTRY.get(cls,())
+      if not candidates:continue
+      capability=dict(candidates[0]);binding=global_sched.bind_phase_capability(c,mid,pid,cls,capability,now)
+      return contract,{**capability,'binding':binding,'capability_class':cls}
+    return contract,None
 
 
 def bind_lpcl_execution(mid):
@@ -493,7 +561,8 @@ def register_lpcl_mission(x):
     c.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],'LPCL_MISSION',x['lpcl_digest'],x['source_head'],x['source_tree'],None,'REGISTERED','NOT_STARTED',x['logical_count'],x['material_target'],0,0,t,None,t,None,json.dumps(spec,sort_keys=True,ensure_ascii=False)))
     c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(mid,x['title'],x['objective'],x['description'],x['lpcl_digest'],x['lpcl_text'],json.dumps(x['protocols']), 'NONE',None,0.0,t,t))
     for i,(pid,title) in enumerate(phase_rows,1):c.execute('INSERT INTO mission_phases VALUES(?,?,?,?,?,?,?,?,?,?)',(mid,pid,i,title,'PENDING',0.0,None,None,None,t))
-    _process_message(c,mid,'LPCL','LPCL_PANEL','MISSION_CONTROL',None,{'event':'MISSION_REGISTERED','lpcl_digest':x['lpcl_digest'],'phase_count':len(phase_rows)},'IN')
+    contracts,preflight=_compile_and_store_phase_contracts(c,mid,x['lpcl_text'],[{'id':pid} for pid,_ in phase_rows],allow_current_migration=False)
+    _process_message(c,mid,'LPCL','LPCL_PANEL','MISSION_CONTROL',None,{'event':'MISSION_REGISTERED','lpcl_digest':x['lpcl_digest'],'phase_count':len(phase_rows),'phase_contract_schema':PHASE_CONTRACT_SCHEMA,'phase_contract_compiler':PHASE_CONTRACT_COMPILER_VERSION,'preflight':preflight.as_dict()},'IN')
     c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,t))
     c.commit();c.close();return {'idempotent':False,'mission':process_snapshot(mid)}
 
@@ -503,6 +572,9 @@ def activate_lpcl_mission(mid,x):
     if not m: c.close();raise ValueError('mission not found')
     if m['spec_digest']!=x['lpcl_digest']:c.close();raise ValueError('activation digest drift')
     if m['state'] not in {'REGISTERED','AUTHORIZED'}:c.close();raise ValueError('activation state')
+    preflight=global_sched.execution_preflight(c,mid)
+    if preflight is None:raise ValueError('phase execution preflight missing')
+    if preflight.get('mission_readiness')=='INVALID':raise ValueError('phase execution preflight invalid')
     t=now();c.execute('UPDATE missions SET state=?,authorized_at=?,updated_at=? WHERE mission_id=?',('AUTHORIZED',t,t,mid));c.execute('UPDATE mission_process_specs SET authority_state=?,updated_at=? WHERE mission_id=?',('EXPLICIT_USER_ACTIVATION',t,mid))
     _process_message(c,mid,'AUTHORITY','OPERATOR','MISSION_CONTROL',None,{'event':'MISSION_AUTHORIZED','lpcl_digest':x['lpcl_digest']},'IN')
     c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,t))
@@ -886,6 +958,9 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
       d['process'].pop('lpcl_text',None)
     d['phases']=[dict(r) for r in c.execute('SELECT * FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,))]
     d['phase_execution_specs']=[dict(r) for r in c.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=? ORDER BY phase_id',(mid,))]
+    d['phase_execution_contracts']=[global_sched.phase_execution_contract(c,mid,r['phase_id']) for r in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,)).fetchall() if global_sched.phase_execution_contract(c,mid,r['phase_id'])]
+    d['phase_capability_bindings']=global_sched.phase_capability_bindings(c,mid)
+    d['execution_preflight']=global_sched.execution_preflight(c,mid)
     d['phase_evidence_counts']={r['phase']:r['total'] for r in c.execute("SELECT phase,COUNT(*) AS total FROM protocol_messages WHERE mission_id=? AND protocol IN ('EVIDENCE','VALIDATION','RECEIPT') GROUP BY phase",(mid,))}
     d['logical']=[dict(r) for r in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,))]
     d['workers']=[dict(r) for r in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,))]
@@ -1421,6 +1496,63 @@ def _generic_action_ir(mid,pid,capability,target,currentness_requirements,eviden
     }
 
 
+
+def _find_restart_durability_evidence(mid,pid,assignment_id,receipt_id):
+    root=DB.parent/'backups';current=connect()
+    try:
+      cur_a=current.execute('SELECT input_digest,state FROM mission_execution_assignments WHERE assignment_id=? AND mission_id=? AND phase_id=?',(assignment_id,mid,pid)).fetchone()
+      cur_r=current.execute('SELECT result_digest,status,authority_effect FROM mission_execution_receipts WHERE receipt_id=? AND assignment_id=?',(receipt_id,assignment_id)).fetchone()
+    finally:current.close()
+    if not cur_a or not cur_r:return None
+    candidates=[]
+    if root.is_dir():
+      for path in root.glob('**/*.db'):
+       try:candidates.append((path.stat().st_mtime,path))
+       except OSError:pass
+    for _,path in sorted(candidates,reverse=True)[:256]:
+      try:
+       rc=sqlite3.connect('file:'+str(path)+'?mode=ro',uri=True);rc.row_factory=sqlite3.Row
+       integrity=rc.execute('PRAGMA integrity_check').fetchone()[0]
+       a=rc.execute('SELECT input_digest,state FROM mission_execution_assignments WHERE assignment_id=? AND mission_id=? AND phase_id=?',(assignment_id,mid,pid)).fetchone()
+       r=rc.execute('SELECT result_digest,status,authority_effect FROM mission_execution_receipts WHERE receipt_id=? AND assignment_id=?',(receipt_id,assignment_id)).fetchone();rc.close()
+       if integrity=='ok' and a and r and a['input_digest']==cur_a['input_digest'] and r['result_digest']==cur_r['result_digest'] and r['status']==cur_r['status'] and r['authority_effect']==cur_r['authority_effect']:
+        return {'backup_path':str(path),'backup_sha256':_file_sha256(path),'backup_integrity':integrity,'assignment_id':assignment_id,'receipt_id':receipt_id,'assignment_input_digest':a['input_digest'],'receipt_result_digest':r['result_digest'],'durable_across_snapshot_boundary':True}
+      except Exception:continue
+    return None
+
+
+def _execution_binder_postconditions(c,mid,pid,assignment,receipt):
+    ps=c.execute('SELECT lpcl_text FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();kv=_lpcl_pairs(ps['lpcl_text'] if ps else '')
+    m=c.execute('SELECT adapter,state,runtime_state,logical_count,materialized,ready FROM missions WHERE mission_id=?',(mid,)).fetchone()
+    logical_count=c.execute('SELECT COUNT(*) FROM logical_drones WHERE mission_id=?',(mid,)).fetchone()[0]
+    material_rows=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=?',(mid,)).fetchall()
+    unique_material=len({r['pod_uid'] for r in material_rows if r['pod_uid']})
+    specs=c.execute('SELECT phase_id,handler_id FROM mission_phase_execution_specs WHERE mission_id=?',(mid,)).fetchall()
+    generic_specs=[r for r in specs if r['handler_id']==GENERIC_PHASE_HANDLER]
+    driver=driver_snapshot(c,mid);sched=global_sched.scheduler_snapshot(c)
+    local_receipt=bool(receipt and receipt['status']=='PASS' and receipt['authority_effect']=='NONE')
+    fail_closed=bool(c.execute("SELECT 1 FROM protocol_messages WHERE mission_id=? AND phase=? AND protocol='CONTROL' AND payload_json LIKE '%GENERIC_PHASE_CAPABILITY_UNAVAILABLE%' LIMIT 1",(mid,pid)).fetchone())
+    restart=_find_restart_durability_evidence(mid,pid,assignment['assignment_id'],receipt['receipt_id']) if receipt else None
+    fresh_no_parent=not any(k in kv for k in ('CONTINUE_EXISTING_EPOCH3_MISSION','CONTINUE_EXISTING_EPOCH3_LINEAGE','PARENT_MISSION_ID'))
+    checks={
+      'FRESH_LPCL_WITHOUT_PARENT':fresh_no_parent,
+      'GENERIC_ADAPTER_BOUND':bool(m and m['adapter']==LPCL_GENERIC_ADAPTER),
+      'LOGICAL_COUNT_128':bool(m and int(m['logical_count'])==128 and logical_count==128),
+      'MATERIAL_READY_64':bool(m and int(m['materialized'])==64 and int(m['ready'])==64 and len(material_rows)==64 and all(int(r['ready'])==1 for r in material_rows)),
+      'UNIQUE_MATERIAL_64':unique_material==64,
+      'GENERIC_PHASE_COMPILER':len(specs)==c.execute('SELECT COUNT(*) FROM mission_phases WHERE mission_id=?',(mid,)).fetchone()[0],
+      'GENERIC_PHASE_HANDLER':len(generic_specs)>=1 and any(r['phase_id']==pid for r in generic_specs),
+      'DURABLE_DRIVER':bool(driver and driver.get('state') in {'ACTIVE','WAITING','BLOCKED','PAUSED'}),
+      'GLOBAL_SCHEDULER_DISPATCH':bool(sched and sched.get('state')=='ACTIVE' and sched.get('heartbeat_at')),
+      'LOCAL_PLANNING_RECEIPT':local_receipt,
+      'FAIL_CLOSED_MISSING_CAPABILITY':fail_closed,
+      'RESTART_DURABILITY':bool(restart),
+      'DB_INTEGRITY':c.execute('PRAGMA integrity_check').fetchone()[0]=='ok',
+    }
+    evidence={'checks':{k:'PASS' if v else 'FAIL' for k,v in checks.items()},'restart_durability':restart,'adapter':m['adapter'] if m else None,'mission_state':m['state'] if m else None,'runtime_state':m['runtime_state'] if m else None,'logical_count':logical_count,'material_count':len(material_rows),'unique_material_count':unique_material,'generic_spec_count':len(generic_specs),'driver_state':driver.get('state') if driver else None,'scheduler':sched,'assignment_id':assignment['assignment_id'],'planning_receipt_id':receipt['receipt_id'] if receipt else None,'authority_effect':'NONE'}
+    return all(checks.values()),evidence
+
+
 def _generic_plan_definition(c,mid,pid,assignment,receipt):
     payload=global_sched.assignment_payload(c,assignment['assignment_id'])
     payload_state='RETAINED' if payload else 'LEGACY_DIGEST_ONLY'
@@ -1439,7 +1571,13 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
       expected={'fresh_mission':True,'continuation_required':False,'parent_required':False}
       currentness=['LIVE_DB_INTEGRITY_OK','CURRENT_MISSION_RECORD']
       evidence=['GENERIC_ADAPTER_ACTIVE','NO_CONTINUATION_FLAGS','NO_PARENT_REQUIRED']
-    else:return None
+    else:
+      contract,bound=_phase_contract_capability(c,mid,pid)
+      if not contract or not bound:return None
+      capability=bound['capability_id'];target=str(DB);operation='RECONCILE_PHASE_COMPLETION_POSTCONDITIONS'
+      required={'mission_id':mid,'phase_id':pid,'contract_digest':contract['contract_digest'],'capability_class':bound['capability_class']}
+      expected={'completion_predicates':contract['completion_predicates'],'verify_before_mutate':bool(contract['verify_before_mutate'])}
+      currentness=list(contract['currentness_requirements']);evidence=list(contract['evidence_requirements'])
     air=_generic_action_ir(mid,pid,capability,target,currentness,evidence)
     return {
       'mission_id':mid,'phase_id':pid,'planning_assignment_id':assignment['assignment_id'],
@@ -1482,6 +1620,11 @@ def _generic_execute_read_plan(c,plan):
                 'materialized':m['materialized'] if m else None,'ready':m['ready'] if m else None,
                 'continuation_keys_present':sorted(k for k in ('CONTINUE_EXISTING_EPOCH3_MISSION','CONTINUE_EXISTING_EPOCH3_LINEAGE','PARENT_MISSION_ID') if k in kv),
                 'fresh_mission_separation':ok,'authority_effect':'NONE'}
+    elif capability=='GENERIC_EXECUTION_BINDER_RECONCILIATION':
+      assignment=c.execute("SELECT assignment_id,state FROM mission_execution_assignments WHERE mission_id=? AND phase_id=? AND phase_id!='__TOPOLOGY__' ORDER BY created_at DESC LIMIT 1",(mid,pid)).fetchone()
+      receipt=c.execute('SELECT * FROM mission_execution_receipts WHERE mission_id=? AND phase_id=? ORDER BY observed_at DESC LIMIT 1',(mid,pid)).fetchone()
+      ok,evidence=_execution_binder_postconditions(c,mid,pid,assignment,receipt) if assignment and receipt else (False,{'missing':'planning assignment or receipt','authority_effect':'NONE'})
+      evidence={'capability':capability,**evidence}
     else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
     global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
     global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id='MISSION_CONTROL_READ_ONLY_EVIDENCE')
@@ -1904,7 +2047,7 @@ class H(BaseHTTPRequestHandler):
  def do_DELETE(self):self.json({'error':'method denied'},405)
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
+ ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
  for lp in (a.listen_state,a.legacy_listen_state):
   q=Path(lp);q.parent.mkdir(parents=True,exist_ok=True);tmp=q.with_name(q.name+'.tmp-'+uuid.uuid4().hex[:8]);tmp.write_text(json.dumps(loc,sort_keys=True),encoding='utf-8');os.replace(tmp,q)
  print(json.dumps(loc),flush=True)

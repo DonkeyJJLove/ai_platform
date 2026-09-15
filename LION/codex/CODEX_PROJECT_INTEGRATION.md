@@ -27,6 +27,9 @@ EFFECT_RECEIPT != OBSERVED_EFFECT
 OBSERVED_EFFECT != RECONCILIATION
 LOGICAL_DRONE != MATERIAL_EXECUTOR
 RAG != LIVE_TRUTH
+PHASE_INTENT != PHASE_EXECUTION_CONTRACT
+PHASE_EXECUTION_CONTRACT != CAPABILITY_BINDING
+CAPABILITY_BINDING != AUTHORITY
 ```
 
 ## Miejsce Codex w architekturze LION
@@ -46,6 +49,10 @@ Git / PR / CI / host / runtime / Mission Control
 CURRENTNESS BASIS
         ↓
 PROCESS / DEPENDENCY DAG
+        ↓
+PHASE EXECUTION CONTRACT + PREFLIGHT
+        ↓
+DYNAMIC CAPABILITY BINDING
         ↓
 CANDIDATE MATERIALIZATION
         ↓
@@ -77,6 +84,9 @@ LION/rag/<current-release>/02_ROUTING_AND_SOURCE_MAP.md
 
 LION/codex/README.md
 LION/codex/CODEX_RUNBOOK.md
+
+# if scope includes LPCL / MISSION_CONTROL / PHASE / SCHEDULER / CAPABILITY / EXECUTION:
+LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md
 ```
 
 Następnie Codex dobiera wyłącznie rekordy RAG potrzebne do konkretnej misji. Niepełny rekord oznacza `PARTIAL_READ` lub `UNKNOWN` dla zależnej decyzji. Pełne wczytanie całego archiwum bez potrzeby jest błędem procesu, ponieważ zwiększa ryzyko wymieszania epok, historycznych promptów i starych currentness claims.
@@ -571,3 +581,6 @@ R10-R1 nie publikuje nowych SHA i nie zamyka zdalnych branch refs. Exact branch-
 ## Epoch 3 LPCL/Mission Control integration
 
 The operator-facing entry point is `LION CONTROL LPCL PANEL` (`127.0.0.1:8780`). LPCL is validated and registered first; registration has authority `NONE`. Only explicit authorization of the exact LPCL text becomes the external activation event. `LION MISSION CONTROL` (`127.0.0.1:8766`) records focus, objective, phases, progress and typed protocol messages and exposes bounded mission adapters. The local GPT-OSS remains proposal-only and receives live mission state through the material read path `MAT04 -> MAT08/MAT10`; RAG remains non-live evidence and is currently deferred.
+## Codex i Process Contract Plane
+
+Jeżeli zakres zawiera LPCL, Mission Control, fazy, scheduler, capability, execution lub completion, `LION_PROCESS_CONTRACT_PLANE.md` jest obowiązkowym semantic ownerem. Codex oddziela lexical parse od semantic compile i sprawdza Mission Execution Preflight przed aktywacją. `VERIFY_BEFORE_REPAIR` wymaga najpierw bieżącego postcondition readbacku; stary model plan nie jest powodem do ponownej mutacji, jeśli completion predicates są już spełnione. Capability binding jest dynamiczny i nie jest authority.

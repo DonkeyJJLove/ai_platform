@@ -141,6 +141,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
         self.assertEqual(migrations, [
             (1, 'lion.scheduler-storage-reconciliation/v1'),
             (2, 'lion.generic-effect-evidence-executor/v1'),
+            (3, 'lion.process-contract-plane/v1'),
         ])
         self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
         with self.assertRaisesRegex(ValueError, '^assignment receipt conflict$'):

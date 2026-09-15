@@ -204,3 +204,13 @@ This placement does not create a second PDP, runtime-admission engine or effect 
 ## 12. Bootstrap rule
 
 The v1.1 constitution cannot authorize its own creation. Until merged and independently reconciled, this document and the associated implementation are candidate material only.
+
+## 13. LPCL 1.2 Process Contract amendment
+
+LPCL/1.2 jest addytywnym profilem nad v1.1. Zaktualizowany canonical chain brzmi:
+
+```text
+LPCL surface → AST/ProcessIR → PhaseExecutionContract → capability binding → Fleet/role routing → ActionIntent/ActionIR → existing authority/runtime chain → evidence → completion reconciliation
+```
+
+V1.1 pozostaje legalny i nie jest przepisywany; brak jawnego kontraktu materializuje `LEGACY_INFERRED_SAFE` z effect ceiling `NONE`. V1.2 wymaga execution contractu każdej fazy. `PhaseExecutionContract` nie jest ActionIntent, authority ani effect. Canonical semantic owner i pełne invariants: `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md`; authoring profile: `LPCL_V1_2_PROCESS_CONTRACTS.md`.

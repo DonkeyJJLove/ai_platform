@@ -92,6 +92,15 @@
       ]
     },
     {
+      "concept": "process_contract_plane",
+      "primary": "LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md",
+      "secondary": [
+        "cyber_lion/contracts/phase_execution_contract.py",
+        "docs/architecture/process-language/LPCL_V1_2_PROCESS_CONTRACTS.md",
+        "cyber_lion/process_language/lpcl_run_1_2.ebnf"
+      ]
+    },
+    {
       "concept": "authority",
       "primary": "cyber_lion/enterprise/authority_source.py",
       "secondary": [

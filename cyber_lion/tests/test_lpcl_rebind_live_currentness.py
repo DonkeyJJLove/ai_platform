@@ -380,5 +380,68 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(self.mc.process_snapshot(mid)['execution_driver']['state'],'WAITING')
 
 
+    def test_process_contract_plane_migrates_phase3_binds_capability_and_reconciles_without_replanning(self):
+        import sqlite3
+        mid=self.mc.PROCESS_CONTRACT_TARGET_MISSION
+        spec=self.spec(mid,'CONTROL_LANGUAGE=LPCL/1.1\nPROJECT=LION_EVOLUSION\n')
+        spec['logical_count']=128
+        spec['phases']=[
+            {'id':'REPRODUCE_BIND_FAILURE','title':'Reproduce'},
+            {'id':'SEPARATE_NEW_AND_CONTINUATION_LINEAGE','title':'Separate'},
+            {'id':'REPAIR_EXECUTION_BINDER','title':'Repair binder'},
+            {'id':'REPAIR_BASE_TOPOLOGY_BOOTSTRAP','title':'Topology'},
+        ]
+        self.mc.register_lpcl_mission(spec)
+        with patch.object(self.mc,'epoch3_broker',return_value=(self.runtime('pcp'),'pcp-read')):
+            self.mc.activate_lpcl_mission(mid,{'lpcl_digest':spec['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        # Recompile contracts with the explicit migration for the known counterexample.
+        self.mc.reconcile_phase_execution_contracts()
+        c=self.mc.connect();contract=self.mc.global_sched.phase_execution_contract(c,mid,'REPAIR_EXECUTION_BINDER');pre=self.mc.global_sched.execution_preflight(c,mid)
+        self.assertEqual(contract['contract_source'],'MIGRATED_EXPLICIT')
+        self.assertEqual(contract['execution_class'],'VERIFY_THEN_REPAIR')
+        self.assertEqual(contract['capability_classes'],['REPOSITORY_AND_RUNTIME_RECONCILIATION'])
+        self.assertIn(pre['mission_readiness'],{'VALID_WITH_DYNAMIC_BINDING','READY_BOUND'})
+        c.close()
+        # Close phases 1/2 through the already proven bounded read-only path.
+        backup_dir=self.mc.DB.parent/'backups'/'fixture-bind-failure-pcp';backup_dir.mkdir(parents=True,exist_ok=True)
+        bp=backup_dir/'mission-control-v3.db';bc=sqlite3.connect(bp)
+        bc.execute('CREATE TABLE missions(mission_id TEXT PRIMARY KEY,state TEXT,runtime_state TEXT,materialized INTEGER,ready INTEGER,last_error TEXT,updated_at TEXT)')
+        bc.execute('INSERT INTO missions VALUES(?,?,?,?,?,?,?)',(mid,'AUTHORIZED','NOT_STARTED',0,0,'LPCL_EXECUTION_BIND:ValueError:lpcl continuation contract',self.mc.now()));bc.commit();bc.close()
+        for phase in ('REPRODUCE_BIND_FAILURE','SEPARATE_NEW_AND_CONTINUATION_LINEAGE'):
+            self.mc.drive_generic_once(mid)
+            c=self.mc.connect();a=c.execute('SELECT * FROM mission_execution_assignments WHERE mission_id=? AND phase_id=?',(mid,phase)).fetchone();gen=c.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(mid,)).fetchone()[0]
+            self.mc.global_sched.claim_assignment(c,a['assignment_id'],self.mc.now,expected_material_drone_id='MD025')
+            result={'kind':'LOCAL_MODEL_INFERENCE','response_text':'proposal-only','authority_effect':'NONE'}
+            rr=self.mc.global_sched.record_receipt(c,a['assignment_id'],result,self.mc.now,material_drone_id='MD025',lease_generation=gen,status='PASS',authority_effect='NONE')
+            self.mc.global_sched.store_assignment_payload(c,a['assignment_id'],rr['receipt_id'],result,self.mc.now);c.close();self.mc.drive_generic_once(mid)
+        # Phase 3 first observes the missing-capability state with the registry intentionally absent.
+        saved=self.mc.PROCESS_CAPABILITY_REGISTRY
+        self.mc.PROCESS_CAPABILITY_REGISTRY={}
+        try:
+            self.mc.drive_generic_once(mid)
+            c=self.mc.connect();a=c.execute("SELECT * FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'",(mid,)).fetchone();gen=c.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(mid,)).fetchone()[0]
+            self.mc.global_sched.claim_assignment(c,a['assignment_id'],self.mc.now,expected_material_drone_id='MD025')
+            result={'kind':'LOCAL_MODEL_INFERENCE','response_text':'binder proposal only','authority_effect':'NONE'}
+            rr=self.mc.global_sched.record_receipt(c,a['assignment_id'],result,self.mc.now,material_drone_id='MD025',lease_generation=gen,status='PASS',authority_effect='NONE')
+            self.mc.global_sched.store_assignment_payload(c,a['assignment_id'],rr['receipt_id'],result,self.mc.now);c.close();self.mc.drive_generic_once(mid)
+        finally:self.mc.PROCESS_CAPABILITY_REGISTRY=saved
+        c=self.mc.connect();d=self.mc.driver_snapshot(c,mid);self.assertEqual(d['blocking_gate'],'CAPABILITY_NOT_AVAILABLE');assign_count=c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'",(mid,)).fetchone()[0]
+        # Create an exact pre-restart snapshot carrying the same assignment/receipt as restart durability evidence.
+        rbdir=self.mc.DB.parent/'backups'/'pcp-pre-restart';rbdir.mkdir(parents=True,exist_ok=True);rb=sqlite3.connect(rbdir/'mission-control-v3.db');c.backup(rb);rb.close();c.close()
+        # Capability appears. No Resume and no second planning assignment.
+        self.mc.drive_generic_once(mid)
+        c=self.mc.connect();phase3=c.execute("SELECT status FROM mission_phases WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'",(mid,)).fetchone()[0];proc=c.execute('SELECT current_phase,progress FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();binding=self.mc.global_sched.phase_capability_bindings(c,mid,'REPAIR_EXECUTION_BINDER');plan=c.execute("SELECT * FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'",(mid,)).fetchone();action_receipts=c.execute('SELECT COUNT(*) FROM mission_generic_action_receipts WHERE plan_id=?',(plan['plan_id'],)).fetchone()[0]
+        self.assertEqual(phase3,'PASS');self.assertEqual(proc['current_phase'],'REPAIR_BASE_TOPOLOGY_BOOTSTRAP');self.assertAlmostEqual(proc['progress'],75.0)  # 3/4 in this compact fixture
+        self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='REPAIR_EXECUTION_BINDER'",(mid,)).fetchone()[0],assign_count)
+        self.assertEqual(action_receipts,1);self.assertEqual(binding[0]['capability_id'],'GENERIC_EXECUTION_BINDER_RECONCILIATION');self.assertEqual(plan['state'],'PASS');c.close()
+
+    def test_server_rejects_lpcl_1_2_with_intent_only_phase(self):
+        mid='LPCL-1_2-MISSING-CONTRACT-R1';text='CONTROL_LANGUAGE=LPCL/1.2\nPROJECT=LION_EVOLUSION\n'
+        spec=self.spec(mid,text);spec['logical_count']=128;spec['phases']=[{'id':'INTENT_ONLY','title':'Intent only'}]
+        with self.assertRaisesRegex(Exception,'missing execution contract fields'):
+            self.mc.register_lpcl_mission(spec)
+
+
+
 if __name__ == '__main__':
     unittest.main()

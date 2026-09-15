@@ -1,12 +1,15 @@
 from pathlib import Path
-import hashlib,tempfile,unittest,subprocess,sys,json
+import hashlib,tempfile,unittest,subprocess,sys,json,os
 from tools.lion_rag_artifact_currentness import classify
 ROOT=Path(__file__).resolve().parents[2]
 R1=ROOT/'LION/rag/lion_project_rag32_v1_4_r1'
 class RagArtifactCurrentnessTests(unittest.TestCase):
- def manifest(self):return hashlib.sha256((R1/'05_PACKAGE_MANIFEST.md').read_bytes()).hexdigest()
+ def git_blob(self,path):
+  env=os.environ.copy();env.update({'GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'safe.directory','GIT_CONFIG_VALUE_0':str(ROOT)})
+  return subprocess.run(['git','show','HEAD:'+path],cwd=ROOT,env=env,capture_output=True,check=True).stdout
+ def manifest(self):return hashlib.sha256(self.git_blob('LION/rag/lion_project_rag32_v1_4_r1/05_PACKAGE_MANIFEST.md')).hexdigest()
  def test_exact_bound_repository_artifact_is_current(self):
-  v=classify(ROOT,R1,expected_release='lion-rag32-v1.4-r1',expected_manifest_sha256=self.manifest());self.assertEqual(v['status'],'PASS');self.assertEqual(v['currentness'],'EXACT_BOUND_CURRENT');self.assertEqual((v['authority_effect'],v['runtime_effect']),('NONE','NONE'))
+  v=classify(ROOT,R1,expected_release='lion-rag32-v1.4-r1',expected_manifest_sha256=self.manifest());self.assertEqual(v['status'],'PASS');self.assertEqual(v['currentness'],'EXACT_BOUND_CURRENT');self.assertEqual((v['authority_effect'],v['runtime_effect'],v['artifact_byte_source']),('NONE','NONE','EXACT_GIT_HEAD_BLOBS'))
  def test_validated_unbound_never_becomes_current(self):
   v=classify(ROOT,R1);self.assertEqual(v['currentness'],'VALIDATED_UNBOUND')
  def test_wrong_release_is_stale_not_current(self):
