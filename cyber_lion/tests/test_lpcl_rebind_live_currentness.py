@@ -450,6 +450,28 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         self.assertEqual(set(evidence['checks'].values()),{'PASS'})
         self.assertEqual(evidence['logical_count'],128);self.assertEqual(evidence['material_count'],64);self.assertEqual(evidence['topology_assignment_count'],128)
 
+    def test_successor_capability_package_closes_generated_proposal_preflight_without_widening_effects(self):
+        from cyber_lion.mission_control import control_plane_reconnaissance as cr
+        proposal=cr._successor_proposal({"findings":[],"claim_to_evidence":[],"root_cause_candidates":[],"unknowns":[],"bundle_digest":"f"*64},{"recommended_control_language":"LPCL/1.2"})
+        pairs=cr._generated_lpcl_pairs(proposal["lpcl_text"]);phases=[{"id":spec["id"]} for spec in cr._successor_phase_profiles()]
+        contracts=self.mc.compile_panel_phase_contracts(pairs,pairs["MISSION_ID"],phases,pairs["CONTROL_LANGUAGE"])
+        pf=self.mc.preflight_execution_contracts(contracts,self.mc.PROCESS_CAPABILITY_REGISTRY)
+        self.assertEqual((pf.contract_count,pf.bound_count,pf.unbound_count,pf.invalid_count,pf.mission_readiness),(8,8,0,0,'READY_BOUND'))
+        for cls in ('REPOSITORY_CANDIDATE_PREPARE','CONTROL_PLANE_REPAIR','BROKER_RECONCILIATION','PANEL_ACCEPTANCE'):
+            rows=self.mc.PROCESS_CAPABILITY_REGISTRY[cls]
+            self.assertEqual(rows[0]['capability_id'],'GENERIC_MISSION_CONTRACT_RECONCILIATION')
+            self.assertEqual(rows[0]['executor_id'],'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER')
+            self.assertEqual(rows[0]['effect_ceiling'],'NONE')
+
+    def test_successor_reconciler_requires_exact_bootstrap_evidence_for_revision_convergence(self):
+        from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
+        mid='SUCCESSOR-BOOTSTRAP-EVIDENCE-R1';spec=self.spec(mid,'PROJECT=LION_EVOLUSION\n');self.mc.register_lpcl_mission(spec)
+        c=self.mc.connect();ok,evidence=evaluate_completion_predicates(c,mid,'CURRENTNESS_REACQUIRE',['RUNTIME_REVISIONS_CONVERGED=PASS'],db_path=self.mc.DB);c.close()
+        self.assertFalse(ok,evidence)
+        self.mc.post_protocol_message(mid,{'protocol':'EVIDENCE','from_id':'BOOTSTRAP_RECONCILER','to_id':'MISSION_CONTROL','phase':'CURRENTNESS_REACQUIRE','payload':{'event':'SUCCESSOR_RUNTIME_REVISIONS_CONVERGED','source_head':'a'*40,'source_tree':'b'*40,'authority_effect':'NONE'}})
+        c=self.mc.connect();ok,evidence=evaluate_completion_predicates(c,mid,'CURRENTNESS_REACQUIRE',['RUNTIME_REVISIONS_CONVERGED=PASS'],db_path=self.mc.DB);c.close()
+        self.assertTrue(ok,evidence)
+
     def test_generic_terminal_reconciliation_closes_waiting_driver_idempotently(self):
         mid=self._make_waiting_generic('GENERIC-TERMINAL-RECONCILE-R1')
         c=self.mc.connect()
