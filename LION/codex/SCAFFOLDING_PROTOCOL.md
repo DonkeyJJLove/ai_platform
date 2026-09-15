@@ -25,3 +25,7 @@ gl!tch   [ ] [ ]
 ```
 
 Możliwe odczyty obejmują odbicie, różnicę wielkości liter lub przypadkową zbieżność. Żaden nie jest stwierdzony przez samo podobieństwo. Raport powinien oddzielać surowy tekst, obserwowane cechy, hipotezy, testy i UNKNOWN. Dla pytania o rzeczywisty system potrzebny jest dowód spoza tego grafu.
+
+## Scaffold → process contract
+
+Scaffolding może odkrywać phase intent, ale nie jest kontraktem wykonawczym. Nowo generowany LPCL przeznaczony do wykonania powinien używać LPCL/1.2 i dla każdej fazy deklarować execution class, capability class, effect ceiling, binding/missing-capability policy, auto-resume, currentness/evidence oraz completion predicates. Jeżeli generator celowo emituje LPCL/1.1, musi oznaczać tryb zgodności; runtime skompiluje go jako `LEGACY_INFERRED_SAFE` z effect ceiling `NONE`. Nie generuj wykonywalnej fazy jako intent-only. Szczegóły: `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md`.

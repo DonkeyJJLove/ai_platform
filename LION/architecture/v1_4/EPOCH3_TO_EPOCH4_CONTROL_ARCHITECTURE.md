@@ -15,3 +15,13 @@ The first Epoch 4 optimization track may then introduce semantic compilation wit
 ### Entry gates
 
 Epoch 4 may be declared only after: the four historical mission 404 defects are eliminated; schema-aware absence is visible; lifecycle actions and their fail-closed capability states are visible; current/recovery missions have a coherent execution binding; Mission Control DB migration is validated; control-plane rollback evidence exists; `127.0.0.1:8780` is actually listening and integrated rather than only documented as a target; the exact candidate passes the repository suite and effect-inventory validation; and the exact GitHub head/CI/publication state is reconciled. Until then the system remains in Epoch 3 closure.
+
+### Process Contract Plane
+
+Closure Epoch 3 ujawnił brakującą warstwę między phase intent a runtime binding. Epoch 4 control topology włącza Process Contract Plane jako non-authoritative semantic plane:
+
+```text
+LPCL → PhaseExecutionContract → capability discovery/binding → execution spec → Action IR → authority/admission → effect → evidence → completion reconciliation
+```
+
+Contract określa execution class, capability classes, effect ceiling, currentness/evidence/completion oraz missing-capability policy. Binding pozostaje dynamiczny; zmiana executora nie zmienia semantyki fazy. Szczegóły: `LION_PROCESS_CONTRACT_PLANE.md`.

@@ -12,13 +12,17 @@ import re
 from typing import Mapping
 
 from cyber_lion.contracts.process_ir import CanonicalProcessIR, ProcessIRContractError
+from cyber_lion.contracts.phase_execution_contract import (
+    PhaseExecutionContract, PhaseExecutionContractError, compile_canonical_run_phase_contract,
+)
 from cyber_lion.process_language.fleet_mission import (
     FleetMissionContractError,
     FleetMissionIR,
     FleetRoleSpec,
 )
 
-CANONICAL_SURFACE_VERSION = "1.1"
+CANONICAL_SURFACE_VERSION = "1.2"
+SUPPORTED_SURFACE_VERSIONS = frozenset({"1.1", "1.2"})
 MISSION_CLASSES = frozenset({
     "LOGICAL_FLEET_MISSION",
     "LOCAL_FLEET_MISSION",
@@ -49,8 +53,13 @@ REQUIRED_PHASE_KEYS = frozenset({
     "EXPECTED_POSTCONDITIONS", "REPLAY_POLICY", "IDEMPOTENCY_CLASS",
     "RETRY_MAX_ATTEMPTS", "RETRY_ON_EXHAUSTED",
 })
+PHASE_EXECUTION_CONTRACT_KEYS = frozenset({
+    "EXECUTION_CLASS", "CAPABILITY_CLASS", "EFFECT_CEILING", "BINDING_MODE",
+    "ON_MISSING_CAPABILITY", "AUTO_RESUME", "VERIFY_BEFORE_MUTATE",
+    "CURRENTNESS_CONTRACT", "EVIDENCE_CONTRACT", "COMPLETION",
+})
 PHASE_CONTROL_KEYS = frozenset({
-    *REQUIRED_PHASE_KEYS,
+    *REQUIRED_PHASE_KEYS, *PHASE_EXECUTION_CONTRACT_KEYS,
     "DEPENDENCIES", "GUARDS", "READ_SCOPES", "WRITE_SCOPES",
     "AUTHORITY_BUDGETS", "CURRENTNESS_SUBJECTS", "REPLAY_DOMAIN",
     "RECONCILIATION_GROUP", "TRIGGER", "ON_PASS", "ON_FAIL",
@@ -60,7 +69,8 @@ PHASE_CONTROL_KEYS = frozenset({
 CONTROL_PREFIXES = (
     "LPCL_", "MISSION_", "SCOPE_", "TRANSITION_", "OPERATOR", "ROLE",
     "EVIDENCE_", "CURRENTNESS_", "AUTHORITY_", "EXPECTED_", "REPLAY_",
-    "RETRY_", "ON_", "PARENT_PROCESS_", "MAX_WIP",
+    "RETRY_", "ON_", "PARENT_PROCESS_", "MAX_WIP", "EXECUTION_",
+    "CAPABILITY_", "EFFECT_", "BINDING_", "AUTO_", "VERIFY_", "COMPLETION",
 )
 
 
@@ -92,6 +102,7 @@ class CanonicalRunCompilation:
     surface: CanonicalRunAST
     process_ir: CanonicalProcessIR
     fleet_mission_ir: FleetMissionIR
+    phase_execution_contracts: tuple[PhaseExecutionContract, ...] = ()
 
 
 def _one(mapping: Mapping[str, tuple[str, ...]], key: str) -> str:
@@ -232,7 +243,7 @@ def parse_canonical_run(text: str) -> CanonicalRunAST:
 
     if _one(globals_out, "PROCESS_LANGUAGE") != "LPCL":
         raise CanonicalRunError("PROCESS_LANGUAGE must be LPCL")
-    if _one(globals_out, "LPCL_VERSION") != CANONICAL_SURFACE_VERSION:
+    if _one(globals_out, "LPCL_VERSION") not in SUPPORTED_SURFACE_VERSIONS:
         raise CanonicalRunError("LPCL_VERSION mismatch")
     if _one(globals_out, "MISSION_CLASS") not in MISSION_CLASSES:
         raise CanonicalRunError("MISSION_CLASS invalid")
@@ -307,6 +318,20 @@ def compile_canonical_run(text: str) -> CanonicalRunCompilation:
     role_ids = {role.role_id for role in roles}
     role_domains = {role.role_id: role.execution_domain for role in roles}
     fleet_class = _one(ast.globals, "MISSION_CLASS").removesuffix("_FLEET_MISSION")
+    lpcl_version = _one(ast.globals, "LPCL_VERSION")
+    try:
+        phase_execution_contracts = tuple(
+            compile_canonical_run_phase_contract(
+                mission_id=_one(ast.globals, "MISSION_ID"),
+                phase_id=phase.name,
+                ordinal=phase.index + 1,
+                fields=phase.fields,
+                lpcl_version=lpcl_version,
+            )
+            for phase in ast.phases
+        )
+    except PhaseExecutionContractError as exc:
+        raise CanonicalRunError(str(exc)) from exc
 
     phase_states = {f"PHASE_{phase.index}" for phase in ast.phases}
     state_targets = set(phase_states) | {"DONE"}
@@ -483,4 +508,5 @@ def compile_canonical_run(text: str) -> CanonicalRunCompilation:
         surface=ast,
         process_ir=process_ir,
         fleet_mission_ir=fleet,
+        phase_execution_contracts=phase_execution_contracts,
     )

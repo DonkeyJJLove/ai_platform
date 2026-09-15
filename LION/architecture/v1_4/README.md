@@ -141,3 +141,18 @@ Current local-candidate truth is described by `current_state.json`; Git lineage 
 The current local unpublished lineage is documented by `R5_CURRENT_EVOLUTION_STATE.md`. The informational Git spine is the v3 snapshot in `GIT_LOGICAL_TREE.json`; runtime, RAG and repository nodes remain separate evidence planes. R4 is an exact verified 145-record rebased knowledge candidate, while R5 is built only after final carrier-last truth because code/workflow evolution continued after R4.
 
 E02 now contains an external APP_SESSION verifier boundary but no installed external verifier or durable replay/sequence provider. Mission Control remains on stale runtime source; an effect-free exact-master source-rebind package is prepared but not applied. Workflow homeostasis v2 has zero blocking defects in critical evidence workflows and routes all remaining findings to self-hosted-runtime/external-write family review rather than blanket mutation.
+
+## Process Contract Plane — LPCL/1.2
+
+Kanoniczny owner semantyki między intencją fazy a wykonaniem znajduje się w [`LION_PROCESS_CONTRACT_PLANE.md`](LION_PROCESS_CONTRACT_PLANE.md). Warstwa wprowadza `lion.phase-execution-contract/v1`, Mission Execution Preflight i dynamiczne capability binding bez nadawania authority.
+
+```text
+PHASE_INTENT
+!= PHASE_EXECUTION_CONTRACT
+!= CAPABILITY_BINDING
+!= ACTION_IR
+!= EFFECT
+!= COMPLETION
+```
+
+LPCL/1.1 zachowuje zgodność jako `LEGACY_INFERRED_SAFE`; LPCL/1.2 wymaga jawnego execution contractu dla każdej wykonywalnej fazy. `VERIFY_BEFORE_REPAIR` oznacza, że fazy naprawcze najpierw reconciliują bieżące postconditions, a mutację materializują dopiero dla niespełnionego inwariantu.

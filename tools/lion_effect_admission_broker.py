@@ -1654,11 +1654,12 @@ def e3_handle(req):
 
 MISSION_CONTROL_V3_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3")
 MISSION_CONTROL_V3_REQUIRED_SHA256={
+ "cyber_lion/contracts/phase_execution_contract.py": "e7d4df04b0205178e538d95df1e5b86af6ea294c87e37e5c7343dbe66552e458",
  "cyber_lion/mission_control/__init__.py": "8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c",
  "cyber_lion/mission_control/dual_result_join.py": "7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f",
- "cyber_lion/mission_control/execution_driver.py": "409a9a5a19f900ca4e042634dbebb9776d4dbd03c9e4a02a41ef319f35dcbc65",
+ "cyber_lion/mission_control/execution_driver.py": "b666feb64277895b1861ab341caae1aa0acc09d463e396c75e5aa8797746dd5f",
  "cyber_lion/mission_control/execution_driver_contract.py": "aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821",
- "cyber_lion/mission_control/global_scheduler.py": "a0f80231ea8d10de1a6942985e7716175070bc7e4772e48d81182da6cdcf0858",
+ "cyber_lion/mission_control/global_scheduler.py": "21e403ba1614bfa63d9ea75b82d25c375c6280188a030fbf0835bac7c95a99b8",
  "cyber_lion/mission_control/phase_control.py": "89372056bf7668edc473b0b0dc04433d376dca3e041499fc0b4e6a52f69c319e",
  "cyber_lion/mission_control/runtime_projection.py": "9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24",
  "cyber_lion/mission_control/supervisor_projection.py": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80",
@@ -1666,11 +1667,11 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
  "lion_saas_broker.py": "54a75841e3ecfbde7634729dba1d936b1ea94213c38f79439cafbc44ceaf5992",
  "lion_saas_session_bridge.py": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7",
  "mission_control_compat.py": "f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0",
- "mission_control_v3.py": "788c6832ad1fd9716bb9db69ed9ab66b20dd058b958449af8fd1e6c7f3c075de",
- "static/app.css": "07ea85990fefe57bf3ebc8fa0b9529ff00c1c7a84ba8c23749484cd90a132c21",
+ "mission_control_v3.py": "0fa686449c9e1b443627055ae333a9fae8be4106f84bbe875b429d8ca4489833",
+ "static/app.css": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c",
  "static/app.js": "0c495f159c660c744c11ed145e03f0adb0e61ab3a609a53797f62fe67fd16111",
- "static/control-v3.js": "f7e256c6f4901f93a5ab2e27bb95a270bb54785aac216cba4084e823f91889cb",
- "static/index.html": "d913d55fa0fb3b45d1a18bc30f922dfc8cb5c9e8ba7d00f8ddd1d84c2f9de68f",
+ "static/control-v3.js": "1bca57d14a502181c7d6c5b4d38244024528ba03a224b98d7be21e14e397158f",
+ "static/index.html": "440bd4465bc528ab8f19e5ec23d0709679124a30b3a96da9890526c528e5a9b6",
  "static/passive.js": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465"
 }
 MISSION_CONTROL_V3_PATH=MISSION_CONTROL_V3_ROOT/"mission_control_v3.py"

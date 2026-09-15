@@ -33,6 +33,46 @@ CREATE TABLE IF NOT EXISTS mission_phase_execution_specs(
   authority_class TEXT NOT NULL,
   PRIMARY KEY(mission_id, phase_id)
 );
+CREATE TABLE IF NOT EXISTS mission_phase_execution_contracts(
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  ordinal INTEGER NOT NULL,
+  contract_version TEXT NOT NULL,
+  execution_class TEXT NOT NULL,
+  capability_classes_json TEXT NOT NULL,
+  effect_ceiling TEXT NOT NULL,
+  binding_mode TEXT NOT NULL,
+  on_missing_capability TEXT NOT NULL,
+  auto_resume INTEGER NOT NULL,
+  verify_before_mutate INTEGER NOT NULL,
+  currentness_requirements_json TEXT NOT NULL,
+  evidence_requirements_json TEXT NOT NULL,
+  completion_predicates_json TEXT NOT NULL,
+  contract_source TEXT NOT NULL,
+  contract_digest TEXT NOT NULL,
+  compiler_version TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(mission_id, phase_id)
+);
+CREATE TABLE IF NOT EXISTS mission_execution_preflights(
+  mission_id TEXT PRIMARY KEY,
+  preflight_json TEXT NOT NULL,
+  preflight_digest TEXT NOT NULL,
+  generated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS mission_phase_capability_bindings(
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  capability_class TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  state TEXT NOT NULL,
+  executor_id TEXT,
+  binding_digest TEXT NOT NULL,
+  bound_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(mission_id, phase_id, capability_class)
+);
 CREATE TABLE IF NOT EXISTS mission_execution_assignments(
   assignment_id TEXT PRIMARY KEY,
   mission_id TEXT NOT NULL,
@@ -70,6 +110,55 @@ CREATE TABLE IF NOT EXISTS mission_scheduler_turns(
   dispatch_count INTEGER NOT NULL DEFAULT 0,
   last_dispatched_at TEXT
 );
+CREATE TABLE IF NOT EXISTS mission_assignment_payloads(
+  assignment_id TEXT PRIMARY KEY,
+  receipt_id TEXT NOT NULL,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  result_digest TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS mission_generic_phase_plans(
+  plan_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  planning_assignment_id TEXT NOT NULL,
+  planning_receipt_id TEXT NOT NULL,
+  planning_result_digest TEXT NOT NULL,
+  planning_payload_state TEXT NOT NULL,
+  state TEXT NOT NULL,
+  capability TEXT NOT NULL,
+  target TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  required_inputs_json TEXT NOT NULL,
+  expected_output_json TEXT NOT NULL,
+  authority_class TEXT NOT NULL,
+  currentness_requirements_json TEXT NOT NULL,
+  evidence_requirements_json TEXT NOT NULL,
+  rollback_class TEXT NOT NULL,
+  dependencies_json TEXT NOT NULL,
+  action_ir_json TEXT NOT NULL,
+  action_ir_digest TEXT NOT NULL,
+  executor_id TEXT,
+  evidence_json TEXT,
+  evidence_digest TEXT,
+  effect_receipt_digest TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(mission_id,phase_id)
+);
+CREATE TABLE IF NOT EXISTS mission_generic_action_receipts(
+  receipt_id TEXT PRIMARY KEY,
+  plan_id TEXT NOT NULL UNIQUE,
+  mission_id TEXT NOT NULL,
+  phase_id TEXT NOT NULL,
+  action_ir_digest TEXT NOT NULL,
+  evidence_digest TEXT NOT NULL,
+  authority_effect TEXT NOT NULL,
+  status TEXT NOT NULL,
+  observed_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS mission_scheduler_migrations(
   version INTEGER PRIMARY KEY,
   schema_id TEXT NOT NULL,
@@ -103,6 +192,10 @@ def migrate(conn, now_fn):
     )
     conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(1,?,?)',
                  ('lion.scheduler-storage-reconciliation/v1',stamp))
+    conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(2,?,?)',
+                 ('lion.generic-effect-evidence-executor/v1',stamp))
+    conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(3,?,?)',
+                 ('lion.process-contract-plane/v1',stamp))
     if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']:
         conn.rollback()
         raise ValueError('scheduler database integrity after migration')
@@ -124,6 +217,100 @@ def heartbeat(conn, now_fn, *, queue_depth, active_run_count, last_error=None, d
     return scheduler_snapshot(conn)
 
 
+
+def store_phase_execution_contracts(conn, mission_id, contracts, now_fn):
+    """Persist semantic contracts independently from runtime execution specs."""
+    stamp=now_fn();out=[]
+    for contract in contracts:
+        value=contract.as_dict()
+        if value['mission_id']!=mission_id:raise ValueError('phase contract mission mismatch')
+        conn.execute(
+            """INSERT INTO mission_phase_execution_contracts(
+            mission_id,phase_id,ordinal,contract_version,execution_class,capability_classes_json,effect_ceiling,binding_mode,
+            on_missing_capability,auto_resume,verify_before_mutate,currentness_requirements_json,evidence_requirements_json,
+            completion_predicates_json,contract_source,contract_digest,compiler_version,created_at,updated_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(mission_id,phase_id) DO UPDATE SET
+            ordinal=excluded.ordinal,contract_version=excluded.contract_version,execution_class=excluded.execution_class,
+            capability_classes_json=excluded.capability_classes_json,effect_ceiling=excluded.effect_ceiling,binding_mode=excluded.binding_mode,
+            on_missing_capability=excluded.on_missing_capability,auto_resume=excluded.auto_resume,verify_before_mutate=excluded.verify_before_mutate,
+            currentness_requirements_json=excluded.currentness_requirements_json,evidence_requirements_json=excluded.evidence_requirements_json,
+            completion_predicates_json=excluded.completion_predicates_json,contract_source=excluded.contract_source,
+            contract_digest=excluded.contract_digest,compiler_version=excluded.compiler_version,updated_at=excluded.updated_at""",
+            (mission_id,value['phase_id'],value['ordinal'],value['contract_version'],value['execution_class'],_canon(value['capability_classes']),
+             value['effect_ceiling'],value['binding_mode'],value['on_missing_capability'],1 if value['auto_resume'] else 0,
+             1 if value['verify_before_mutate'] else 0,_canon(value['currentness_requirements']),_canon(value['evidence_requirements']),
+             _canon(value['completion_predicates']),value['contract_source'],value['contract_digest'],value['compiler_version'],stamp,stamp))
+        out.append(value)
+    conn.commit();return out
+
+
+def phase_execution_contract(conn, mission_id, phase_id):
+    row=conn.execute('SELECT * FROM mission_phase_execution_contracts WHERE mission_id=? AND phase_id=?',(mission_id,phase_id)).fetchone()
+    if not row:return None
+    value=dict(row)
+    for key in ('capability_classes_json','currentness_requirements_json','evidence_requirements_json','completion_predicates_json'):
+        value[key.removesuffix('_json')]=json.loads(value.pop(key) or '[]')
+    value['auto_resume']=bool(value['auto_resume']);value['verify_before_mutate']=bool(value['verify_before_mutate'])
+    return value
+
+
+def store_execution_preflight(conn, mission_id, preflight, now_fn):
+    value=preflight.as_dict() if hasattr(preflight,'as_dict') else dict(preflight)
+    digest_value=str(value.get('preflight_digest') or digest({k:v for k,v in value.items() if k!='preflight_digest'}))
+    stamp=now_fn();conn.execute(
+        "INSERT INTO mission_execution_preflights VALUES(?,?,?,?) ON CONFLICT(mission_id) DO UPDATE SET preflight_json=excluded.preflight_json,preflight_digest=excluded.preflight_digest,generated_at=excluded.generated_at",
+        (mission_id,_canon(value),digest_value,stamp));conn.commit();return value
+
+
+def execution_preflight(conn, mission_id):
+    row=conn.execute('SELECT preflight_json FROM mission_execution_preflights WHERE mission_id=?',(mission_id,)).fetchone()
+    return json.loads(row[0]) if row else None
+
+
+def bind_phase_capability(conn, mission_id, phase_id, capability_class, capability, now_fn):
+    cid=str(capability['capability_id']);executor=str(capability.get('executor_id') or '') or None
+    payload={'mission_id':mission_id,'phase_id':phase_id,'capability_class':capability_class,'capability_id':cid,'executor_id':executor,'effect_ceiling':capability.get('effect_ceiling')}
+    dg=digest(payload);stamp=now_fn()
+    conn.execute("""INSERT INTO mission_phase_capability_bindings VALUES(?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(mission_id,phase_id,capability_class) DO UPDATE SET capability_id=excluded.capability_id,state=excluded.state,executor_id=excluded.executor_id,binding_digest=excluded.binding_digest,updated_at=excluded.updated_at""",
+        (mission_id,phase_id,capability_class,cid,'BOUND',executor,dg,stamp,stamp));conn.commit()
+    return {**payload,'state':'BOUND','binding_digest':dg,'bound_at':stamp}
+
+
+def phase_capability_bindings(conn, mission_id, phase_id=None):
+    if phase_id is None:rows=conn.execute('SELECT * FROM mission_phase_capability_bindings WHERE mission_id=? ORDER BY phase_id,capability_class',(mission_id,)).fetchall()
+    else:rows=conn.execute('SELECT * FROM mission_phase_capability_bindings WHERE mission_id=? AND phase_id=? ORDER BY capability_class',(mission_id,phase_id)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def resolve_phase_execution_spec(phase_id, handlers, *, default_timeout=300):
+    """Pure phase-spec resolution. Unknown phases are fail-closed and effect-free."""
+    pid = str(phase_id)
+    configured = handlers.get(pid)
+    if configured is None:
+        return {
+            "handler_id": "PHASE_HANDLER_NOT_REGISTERED",
+            "handler_version": "1",
+            "effect_class": "NONE",
+            "gate_class": "WAITING",
+            "timeout_seconds": int(default_timeout),
+            "retry_policy": "NO_AUTOMATIC_RETRY",
+            "authority_class": "NONE",
+        }
+    spec = dict(configured)
+    if not spec.get("handler_id"):
+        raise ValueError("phase handler id")
+    spec.setdefault("handler_version", "1")
+    spec.setdefault("effect_class", "NONE")
+    spec.setdefault("gate_class", "NONE")
+    spec.setdefault("timeout_seconds", int(default_timeout))
+    spec.setdefault("retry_policy", "NO_AUTOMATIC_RETRY")
+    spec.setdefault("authority_class", "NONE")
+    spec["timeout_seconds"] = int(spec["timeout_seconds"])
+    return spec
+
+
 def compile_phase_specs(conn, mission_id, handlers, *, default_timeout=300):
     rows = conn.execute(
         "SELECT phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal", (mission_id,)
@@ -131,24 +318,13 @@ def compile_phase_specs(conn, mission_id, handlers, *, default_timeout=300):
     out = []
     for row in rows:
         pid = str(row["phase_id"])
-        spec = handlers.get(pid)
-        if spec is None:
-            spec = {
-                "handler_id": "PHASE_HANDLER_NOT_REGISTERED",
-                "handler_version": "1",
-                "effect_class": "NONE",
-                "gate_class": "WAITING",
-                "timeout_seconds": default_timeout,
-                "retry_policy": "NO_AUTOMATIC_RETRY",
-                "authority_class": "NONE",
-            }
+        spec = resolve_phase_execution_spec(pid, handlers, default_timeout=default_timeout)
         conn.execute(
             "INSERT INTO mission_phase_execution_specs VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(mission_id,phase_id) DO UPDATE SET handler_id=excluded.handler_id,handler_version=excluded.handler_version,effect_class=excluded.effect_class,gate_class=excluded.gate_class,timeout_seconds=excluded.timeout_seconds,retry_policy=excluded.retry_policy,authority_class=excluded.authority_class",
             (
-                mission_id, pid, spec["handler_id"], spec.get("handler_version", "1"),
-                spec.get("effect_class", "NONE"), spec.get("gate_class", "NONE"),
-                int(spec.get("timeout_seconds", default_timeout)), spec.get("retry_policy", "NO_AUTOMATIC_RETRY"),
-                spec.get("authority_class", "NONE"),
+                mission_id, pid, spec["handler_id"], spec["handler_version"],
+                spec["effect_class"], spec["gate_class"],
+                spec["timeout_seconds"], spec["retry_policy"], spec["authority_class"],
             ),
         )
         out.append({"phase_id": pid, **spec})
@@ -216,7 +392,15 @@ def parse_128l64m_topology(lpcl_text):
     return cohorts
 
 
-def bind_128l64m(conn, mission_id, lpcl_text, workers, now_fn):
+def default_128l64m_topology_text(role_prefix="GENERIC_EXECUTION_POOL"):
+    lines=[]
+    for i in range(1,17):
+        la=(i-1)*8+1;lb=i*8;ma=(i-1)*4+1;mb=i*4
+        lines.extend([f"COHORT_{i:02d}=LD{la:03d}-LD{lb:03d}",f"ROLE={role_prefix}_{i:02d}",f"MATERIAL=MD{ma:03d}-MD{mb:03d}"])
+    return "\n".join(lines)+"\n"
+
+
+def bind_128l64m(conn, mission_id, lpcl_text, workers, now_fn, *, adapter="LPCL_REBOUND_EPOCH3_128L64M", runtime_state="REBOUND_EXISTING_HEALTHY_FLEET_128L64M"):
     cohorts = parse_128l64m_topology(lpcl_text)
     if len(workers) != 64:
         raise ValueError("material worker count must be 64")
@@ -252,8 +436,8 @@ def bind_128l64m(conn, mission_id, lpcl_text, workers, now_fn):
                 (assignment_id, mission_id, "__TOPOLOGY__", lid, material_id, input_digest, _canon({"pod_uid":pod_uid}), "BOUND", 1, stamp, stamp, stamp),
             )
     conn.execute(
-        "UPDATE missions SET adapter='LPCL_REBOUND_EPOCH3_128L64M',state='RUNNING',runtime_state='REBOUND_EXISTING_HEALTHY_FLEET_128L64M',materialized=64,ready=64,updated_at=?,last_error=NULL WHERE mission_id=?",
-        (stamp, mission_id),
+        "UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=64,ready=64,updated_at=?,last_error=NULL WHERE mission_id=?",
+        (str(adapter),str(runtime_state),stamp,mission_id),
     )
     conn.commit()
     return {
@@ -393,3 +577,99 @@ def claim_assignment(conn, assignment_id, now_fn, *, expected_material_drone_id=
     stamp=now_fn();cur=conn.execute("UPDATE mission_execution_assignments SET state='CLAIMED',claimed_at=? WHERE assignment_id=? AND state='READY'",(stamp,assignment_id))
     if cur.rowcount!=1:raise ValueError("assignment claim race")
     conn.commit();out=dict(row);out['state']='CLAIMED';out['claimed_at']=stamp;return out
+
+
+GENERIC_EXECUTOR_STATES = frozenset({
+    "PLANNING","CAPABILITY_RESOLUTION","WAITING_AUTHORITY","WAITING_CURRENTNESS",
+    "READY_TO_EXECUTE","EXECUTING","VALIDATING","PASS","BLOCKED","FAILED",
+})
+
+
+def store_assignment_payload(conn, assignment_id, receipt_id, result, now_fn, *, max_bytes=131072):
+    """Persist a bounded model/result payload after its immutable receipt exists."""
+    if type(result) is not dict:
+        raise ValueError("assignment payload result")
+    raw=_canon(result)
+    if len(raw.encode("utf-8")) > int(max_bytes):
+        raise ValueError("assignment payload too large")
+    assignment=conn.execute("SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+    receipt=conn.execute("SELECT receipt_id,result_digest FROM mission_execution_receipts WHERE assignment_id=? AND receipt_id=?",(assignment_id,receipt_id)).fetchone()
+    if not assignment or not receipt:
+        raise ValueError("assignment payload receipt missing")
+    dg=digest(result)
+    if dg != receipt["result_digest"]:
+        raise ValueError("assignment payload digest mismatch")
+    existing=conn.execute("SELECT receipt_id,result_digest,result_json FROM mission_assignment_payloads WHERE assignment_id=?",(assignment_id,)).fetchone()
+    if existing:
+        if (existing["receipt_id"],existing["result_digest"],existing["result_json"]) != (receipt_id,dg,raw):
+            raise ValueError("assignment payload conflict")
+        return {"assignment_id":assignment_id,"receipt_id":receipt_id,"result_digest":dg,"idempotent":True}
+    conn.execute("INSERT INTO mission_assignment_payloads VALUES(?,?,?,?,?,?,?)",
+        (assignment_id,receipt_id,assignment["mission_id"],assignment["phase_id"],dg,raw,now_fn()))
+    conn.commit()
+    return {"assignment_id":assignment_id,"receipt_id":receipt_id,"result_digest":dg,"idempotent":False}
+
+
+def assignment_payload(conn, assignment_id):
+    row=conn.execute("SELECT * FROM mission_assignment_payloads WHERE assignment_id=?",(assignment_id,)).fetchone()
+    if not row:return None
+    out=dict(row)
+    try:out["result"]=json.loads(out.pop("result_json"))
+    except Exception:out["result"]={}
+    return out
+
+
+def put_generic_phase_plan(conn, *, mission_id, phase_id, planning_assignment_id, planning_receipt_id,
+                           planning_result_digest, planning_payload_state, state, capability, target, operation,
+                           required_inputs, expected_output, authority_class, currentness_requirements,
+                           evidence_requirements, rollback_class, dependencies, action_ir, action_ir_digest,
+                           now_fn, executor_id=None):
+    if state not in GENERIC_EXECUTOR_STATES:raise ValueError("generic executor state")
+    if planning_payload_state not in {"RETAINED","LEGACY_DIGEST_ONLY"}:raise ValueError("planning payload state")
+    if type(required_inputs) is not dict or type(expected_output) is not dict:raise ValueError("generic plan io")
+    if type(currentness_requirements) is not list or type(evidence_requirements) is not list or type(dependencies) is not list:raise ValueError("generic plan requirements")
+    if type(action_ir) is not dict:raise ValueError("generic action ir")
+    air=_canon(action_ir)
+    if digest(action_ir)!=action_ir_digest:raise ValueError("generic action ir digest")
+    stamp=now_fn();plan_id="generic-plan-"+hashlib.sha256((mission_id+"|"+phase_id).encode()).hexdigest()[:32]
+    existing=conn.execute("SELECT * FROM mission_generic_phase_plans WHERE mission_id=? AND phase_id=?",(mission_id,phase_id)).fetchone()
+    values=(plan_id,mission_id,phase_id,planning_assignment_id,planning_receipt_id,planning_result_digest,planning_payload_state,state,capability,target,operation,_canon(required_inputs),_canon(expected_output),authority_class,_canon(currentness_requirements),_canon(evidence_requirements),rollback_class,_canon(dependencies),air,action_ir_digest,executor_id,None,None,None,stamp,stamp)
+    if existing:
+        immutable=("planning_assignment_id","planning_receipt_id","planning_result_digest","capability","target","operation","authority_class","rollback_class","action_ir_digest")
+        expected={"planning_assignment_id":planning_assignment_id,"planning_receipt_id":planning_receipt_id,"planning_result_digest":planning_result_digest,"capability":capability,"target":target,"operation":operation,"authority_class":authority_class,"rollback_class":rollback_class,"action_ir_digest":action_ir_digest}
+        if any(existing[k]!=expected[k] for k in immutable):raise ValueError("generic plan immutable conflict")
+        return dict(existing)
+    conn.execute("INSERT INTO mission_generic_phase_plans VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",values)
+    conn.commit();return dict(conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone())
+
+
+def update_generic_plan_state(conn, plan_id, state, now_fn, *, executor_id=None, evidence=None, effect_receipt_digest=None):
+    if state not in GENERIC_EXECUTOR_STATES:raise ValueError("generic executor state")
+    row=conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone()
+    if not row:raise ValueError("generic plan missing")
+    evidence_json=None;evidence_digest=None
+    if evidence is not None:
+        if type(evidence) is not dict:raise ValueError("generic evidence")
+        evidence_json=_canon(evidence);evidence_digest=digest(evidence)
+    conn.execute("UPDATE mission_generic_phase_plans SET state=?,executor_id=COALESCE(?,executor_id),evidence_json=COALESCE(?,evidence_json),evidence_digest=COALESCE(?,evidence_digest),effect_receipt_digest=COALESCE(?,effect_receipt_digest),updated_at=? WHERE plan_id=?",
+        (state,executor_id,evidence_json,evidence_digest,effect_receipt_digest,now_fn(),plan_id))
+    conn.commit();return dict(conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone())
+
+
+def record_generic_action_receipt(conn, plan_id, now_fn, *, status, evidence, authority_effect="NONE"):
+    if status not in {"PASS","FAIL"} or authority_effect!="NONE":raise ValueError("generic action receipt status/authority")
+    plan=conn.execute("SELECT * FROM mission_generic_phase_plans WHERE plan_id=?",(plan_id,)).fetchone()
+    if not plan:raise ValueError("generic plan missing")
+    if type(evidence) is not dict:raise ValueError("generic action evidence")
+    ed=digest(evidence)
+    existing=conn.execute("SELECT * FROM mission_generic_action_receipts WHERE plan_id=?",(plan_id,)).fetchone()
+    if existing:
+        if (existing["action_ir_digest"],existing["evidence_digest"],existing["authority_effect"],existing["status"]) != (plan["action_ir_digest"],ed,authority_effect,status):
+            raise ValueError("generic action receipt conflict")
+        raise ValueError("generic action receipt duplicate")
+    rid="generic-receipt-"+uuid.uuid4().hex;stamp=now_fn()
+    conn.execute("INSERT INTO mission_generic_action_receipts VALUES(?,?,?,?,?,?,?,?,?)",
+        (rid,plan_id,plan["mission_id"],plan["phase_id"],plan["action_ir_digest"],ed,authority_effect,status,stamp))
+    conn.execute("UPDATE mission_generic_phase_plans SET state=?,evidence_json=?,evidence_digest=?,effect_receipt_digest=?,updated_at=? WHERE plan_id=?",
+        ("PASS" if status=="PASS" else "FAILED",_canon(evidence),ed,rid,stamp,plan_id))
+    conn.commit();return {"receipt_id":rid,"plan_id":plan_id,"evidence_digest":ed,"status":status}

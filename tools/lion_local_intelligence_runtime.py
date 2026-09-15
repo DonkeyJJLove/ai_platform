@@ -19,6 +19,7 @@ from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handof
 apply_saas_handoff_extension(Gateway)
 from cyber_lion.app_coordination.web_research_broker import WebEvidence
 from cyber_lion.app_coordination import ui_runtime_events
+from cyber_lion.contracts.phase_execution_contract import compile_panel_phase_contracts, preflight_execution_contracts, PhaseExecutionContractError
 
 DRONE_ROLES={
 'MAT01':'LOCAL_REPOSITORY_CURRENTNESS','MAT02':'LOCAL_REPOSITORY_CONTENT','MAT03':'LOCAL_CLONE_INVENTORY','MAT04':'FEDERATION_CURRENTNESS',
@@ -180,7 +181,7 @@ class LpclControlBridge:
         required=('PROJECT','MODE','CONTROL_LANGUAGE','MISSION_ID','MISSION_TITLE','MISSION_OBJECTIVE','MISSION_DESCRIPTION','LOGICAL_DRONE_COUNT','MATERIAL_DRONE_COUNT','PROTOCOLS')
         missing=[k for k in required if not kv.get(k)]
         if missing:raise ValueError('LPCL_MISSING_REQUIRED:'+','.join(missing))
-        if kv['PROJECT']!='LION_EVOLUSION' or kv['MODE']!='AUTONOMOUS_EXECUTE' or kv['CONTROL_LANGUAGE']!='LPCL/1.1':raise ValueError('lpcl envelope')
+        if kv['PROJECT']!='LION_EVOLUSION' or kv['MODE']!='AUTONOMOUS_EXECUTE' or kv['CONTROL_LANGUAGE'] not in {'LPCL/1.1','LPCL/1.2'}:raise ValueError('lpcl envelope')
         mid=kv['MISSION_ID']
         if not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
         logical=int(kv['LOGICAL_DRONE_COUNT']);material=int(kv['MATERIAL_DRONE_COUNT'])
@@ -196,10 +197,15 @@ class LpclControlBridge:
             if not self.MID_RE.fullmatch(pid) or not title:raise ValueError('LPCL_PHASE_INVALID:'+key)
             phases.append({'id':pid,'title':title[:180]})
         if not phases:raise ValueError('no phases')
+        try:
+            contracts=compile_panel_phase_contracts(kv,mid,phases,kv['CONTROL_LANGUAGE'])
+            preflight=preflight_execution_contracts(contracts,{})
+        except PhaseExecutionContractError as exc:
+            raise ValueError('LPCL_PHASE_EXECUTION_CONTRACT:'+str(exc)) from exc
         cur=self.broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result']
         dg=hashlib.sha256(text.encode('utf-8')).hexdigest()
         spec={'mission_id':mid,'title':kv['MISSION_TITLE'][:180],'objective':kv['MISSION_OBJECTIVE'][:4000],'description':kv['MISSION_DESCRIPTION'][:8000],'lpcl_digest':dg,'lpcl_text':text,'source_head':cur['head'],'source_tree':cur['tree'],'logical_count':logical,'material_target':material,'phases':phases,'protocols':prot}
-        return {'valid':True,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
+        return {'valid':True,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':return self._get('/api/v3/missions/recent')

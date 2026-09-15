@@ -98,3 +98,7 @@ Instancję LIVE_STATE zapisuj poza statycznymi instrukcjami. Rozwiąż wszystkie
 Przeprowadź self-evaluation z istniejących case IDs. Sukces dotyczy tylko zleconego terminalnego stanu. Dokumentacyjna zmiana sama nie wymaga retestu produkcyjnego runtime; automatyczne wymagane PR CI trzeba jednak odczytać do końca. Nie uruchamiaj hostowych scenariuszy tylko po to, aby odhaczyć eval.
 
 Dla analizy bez obserwacji Git zapisuj master=null oraz jawny unknown zamiast wymyślać SHA. Pole dependency_graph zawiera DAG; sprawdzaj unikalność węzłów, końce krawędzi, brak cykli i zakończenie poprzedników pierwszego kroku. Graf TIGER może zawierać pętle hipotez, ale wykonawczy DAG zależności wymaga ich rozstrzygnięcia. Schema validity nie dowodzi prawdziwości krawędzi.
+
+## Process Contract preflight
+
+Dla LPCL/1.2 lub zmiany semantyki fazy odczytaj `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md`. Przed aktywacją wymagaj semantic compile do `PhaseExecutionContract[]` oraz `lion.mission-execution-preflight/v1`. `INVALID` blokuje aktywację; `VALID_UNBOUND_WAITING` jest dozwolone wyłącznie przy jawnej dynamic binding/missing-capability policy. Dla `VERIFY_THEN_REPAIR` najpierw sprawdź completion predicates; już spełnione postconditions zamykaj read-only reconciliation zamiast powtarzać naprawę.

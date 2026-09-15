@@ -137,7 +137,12 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
         scheduler.migrate(self.conn, now)
         self.assertEqual(self.receipt_snapshot(), before)
         self.assertEqual(tuple(self.conn.execute('SELECT dispatch_count,last_dispatched_at,last_dispatch_order FROM mission_scheduler_turns').fetchone()), (9, now(), 0))
-        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM mission_scheduler_migrations').fetchone()[0], 1)
+        migrations=[tuple(r) for r in self.conn.execute('SELECT version,schema_id FROM mission_scheduler_migrations ORDER BY version')]
+        self.assertEqual(migrations, [
+            (1, 'lion.scheduler-storage-reconciliation/v1'),
+            (2, 'lion.generic-effect-evidence-executor/v1'),
+            (3, 'lion.process-contract-plane/v1'),
+        ])
         self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
         with self.assertRaisesRegex(ValueError, '^assignment receipt conflict$'):
             scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)

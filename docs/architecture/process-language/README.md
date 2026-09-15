@@ -44,3 +44,9 @@ Konstytucja, model floty i zamrożenie projektu w plikach `LPCL_LANGUAGE_CONSTIT
 `LPCL_FLEET_MISSION_MODEL.md`, `LPCL_V1_1_DESIGN_FREEZE.md` dokumentują zakres kandydata
 #309; ich stare HEAD/statusy nie są dowodem bieżącego master ani runtime.
 Integrację i aktualność potwierdzają dokładne Git/CI, a nie etykieta w dokumencie.
+
+## LPCL 1.2
+
+`LPCL_V1_2_PROCESS_CONTRACTS.md` opisuje addytywny phase execution contract. Kanoniczny semantic owner całej warstwy to `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md`. Implementacja: `cyber_lion/contracts/phase_execution_contract.py`; runtime persistence rozdziela `mission_phase_execution_contracts`, `mission_phase_capability_bindings` i `mission_phase_execution_specs`.
+
+Gramatyka lexical surface LPCL/1.2: `cyber_lion/process_language/lpcl_run_1_2.ebnf`; semantic requirements pozostają w `LPCL_V1_2_PROCESS_CONTRACTS.md` i Process Contract Plane.
