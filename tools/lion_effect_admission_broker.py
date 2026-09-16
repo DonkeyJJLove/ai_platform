@@ -1673,7 +1673,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
     'lion_saas_broker.py': 'b5f97c65aaa928b84b5601cbc002574bede0744f64d9d6fe915ae8a269a1c0f9',
     'lion_saas_session_bridge.py': '4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7',
     'mission_control_compat.py': 'f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0',
-    'mission_control_v3.py': 'e6ebc1b286c038ce3638718be830f3de0026efd7ac7d6b27da019ae992fb681a',
+    'mission_control_v3.py': 'fb061e31e372e15daa6cc1a83b8cbb0f9bdf7a720345abe4575c6432f9b05f22',
     'static/app.css': '0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c',
     'static/app.js': '0c495f159c660c744c11ed145e03f0adb0e61ab3a609a53797f62fe67fd16111',
     'static/control-v3.js': 'e7aaa6c32251df70079eb6af838e6c541f0835928d90ce06376cc22fe9041de0',
