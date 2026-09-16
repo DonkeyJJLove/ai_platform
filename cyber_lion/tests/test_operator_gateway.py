@@ -54,37 +54,27 @@ class OperatorGatewayTests(unittest.TestCase):
         self.req('/v1/commands',self.command('stop','STOP_SCOPE'))
         code,out=self.req('/v1/commands',self.command('resume','RESUME_SCOPE',{'latch':'ALL'}));self.assertEqual(code,201)
         self.assertEqual(out['execution_state'],'WAITING_DRIVER_SERVICE');self.assertEqual(out['observation_state'],'PARTIAL')
-
-
     def test_sentinelx_proxy_has_distinct_identity_and_limited_grant(self):
         code,who=self.req('/v1/participants',proxy=True);self.assertEqual(code,200);self.assertEqual(who['participant']['principal_id'],'OPERATOR_SENTINELX_PROXY')
         code,out=self.req('/v1/commands',self.command('proxystop','STOP_SCOPE'),proxy=True);self.assertEqual(code,201);self.assertEqual(out['principal_id'],'OPERATOR_SENTINELX_PROXY')
         self.assertEqual(out['result']['control']['control_owner'],'AUTONOMOUS')
         code,denied=self.req('/v1/commands',self.command('proxyresume','RESUME_SCOPE',{'latch':'ALL'}),proxy=True);self.assertEqual(code,409);self.assertIn('not granted',denied['error'])
-
     def test_revoked_proxy_grant_denies_still_valid_transport_key(self):
         c=self.runtime.connect();operator_control.revoke_active_grants(c,operator_control.SENTINELX_PROXY_PRINCIPAL,now);c.close()
         code,out=self.req('/v1/commands',self.command('afterrevoke','STOP_SCOPE'),proxy=True);self.assertEqual(code,409);self.assertIn('not granted',out['error'])
-
-
     def test_panel_transport_requires_human_pairing_for_primary_command(self):
         code,out=self.req('/v1/commands',self.command('panel-unpaired','STOP_SCOPE'),panel=True);self.assertEqual(code,403)
         code,paired=self.req('/v1/session/pair',{'pairing_code':'z'*64},panel=True);self.assertEqual(code,201);self.assertTrue(paired['paired']);token=paired['session_token']
         code,out=self.req('/v1/commands',self.command('panel-paired','STOP_SCOPE'),panel=True,session=token);self.assertEqual(code,201);self.assertEqual(out['principal_id'],'OPERATOR_PRIMARY')
         code,status=self.req('/v1/session',panel=True,session=token);self.assertEqual(code,200);self.assertTrue(status['paired'])
-
-
     def test_expired_proxy_grant_does_not_reauthorize_via_transport(self):
         c=self.runtime.connect();operator_control.revoke_active_grants(c,operator_control.SENTINELX_PROXY_PRINCIPAL,now)
         c.execute("INSERT INTO operator_grants(grant_id,principal_id,mission_scope,actions_json,issued_at,expires_at,revoked_at) VALUES(?,?,?,?,?,?,NULL)",('expired',operator_control.SENTINELX_PROXY_PRINCIPAL,'*',json.dumps(['STOP_SCOPE']),'1999-01-01T00:00:00Z','2000-01-01T00:00:00Z'));c.commit();c.close()
         code,out=self.req('/v1/commands',self.command('expired-stop','STOP_SCOPE'),proxy=True);self.assertEqual(code,409);self.assertIn('not granted',out['error'])
-
     def test_proxy_mission_scope_denies_foreign_mission(self):
         c=self.runtime.connect();c.execute("INSERT INTO missions VALUES('M2','RUNNING')");operator_control.revoke_active_grants(c,operator_control.SENTINELX_PROXY_PRINCIPAL,now);operator_control.ensure_operator_proxy(c,now,mission_scope='M1',actions={'REQUEST_STATUS','STOP_SCOPE'});c.close()
         foreign={'command_id':'foreign','mission_id':'M2','action':'STOP_SCOPE','target':'mission:M2','payload':{}}
         code,out=self.req('/v1/commands',foreign,proxy=True);self.assertEqual(code,409);self.assertIn('not granted',out['error'])
-
-
     def test_revoked_panel_session_loses_private_read_and_write(self):
         code,paired=self.req('/v1/session/pair',{'pairing_code':'z'*64},panel=True);self.assertEqual(code,201);token=paired['session_token']
         self.assertEqual(self.req('/v1/state?mission_id=M1',panel=True,session=token)[0],200)

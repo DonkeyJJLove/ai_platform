@@ -45,7 +45,6 @@ def main():
         for elapsed,error,state in pool.map(lambda i:one_command(db,i),range(COMMANDS)):
             lat.append(elapsed)
             if error:errors.append(error)
-    # High-priority containment admission while telemetry is still active.
     c=connect(db);state=operator_control.control_state(c,'LOAD-M',utc);stop={'command_id':'priority-stop','mission_id':'LOAD-M','action':'STOP_SCOPE','target':'mission:LOAD-M','payload':{},'expected_revision':state['control_epoch']};t=time.perf_counter();stopout=operator_control.apply_command(c,stop,utc);stop_latency=time.perf_counter()-t;c.close()
     thread.join()
     burst={};event_writer(db,BURST_DURATION,BURST_RATE,'BURST',burst)

@@ -25,6 +25,7 @@ SOURCE_MAP = {
     "lion_operator_client.py": ROOT / "tools/lion_operator_client.py",
     "lion_operator_provision.py": ROOT / "tools/lion_operator_provision.py",
     "lion_operator_containment_helper.py": ROOT / "tools/lion_operator_containment_helper.py",
+    "systemd/lion-operator-control.service": ROOT / "deploy/systemd/lion-operator-control.service",
     "cyber_lion/contracts/operator_intervention.py": ROOT / "cyber_lion/contracts/operator_intervention.py",
     "cyber_lion/mission_control/operator_control.py": ROOT / "cyber_lion/mission_control/operator_control.py",
     "cyber_lion/contracts/mission_contract_profiles.py": ROOT / "cyber_lion/contracts/mission_contract_profiles.py",
@@ -96,7 +97,6 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
                 with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/contracts/action_ir.py$'):
                     broker.mission_control_v3_package_identity()
 
-
     def test_missing_canonical_lpcl_source_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td);self.materialize(root)
@@ -113,7 +113,6 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             with patch.object(broker,'MISSION_CONTROL_V3_ROOT',root):
                 with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/contracts/phase_execution_contract.py$'):
                     broker.mission_control_v3_package_identity()
-
 
     def test_missing_mission_contract_profile_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
@@ -138,7 +137,6 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             with patch.object(broker,'MISSION_CONTROL_V3_ROOT',root):
                 with self.assertRaisesRegex(broker.Deny,'^MISSION_CONTROL_V3_PACKAGE_MISSING:cyber_lion/mission_control/control_plane_reconnaissance.py$'):
                     broker.mission_control_v3_package_identity()
-
 
     def test_drifted_dual_result_join_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
