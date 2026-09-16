@@ -310,10 +310,16 @@ def rebind_ready_assignments(conn,mission_id,now_fn,*,authority_owner=AUTONOMOUS
     if generation is None:
         driver=_driver_row(conn,mission_id);generation=int(driver["generation"]) if driver and "generation" in driver.keys() else None
     if generation is None:return {"rebound_ready":0}
-    sets=["lease_generation=?"];args=[int(generation)]
-    if "control_epoch" in cols:sets.append("control_epoch=?");args.append(int(state["control_epoch"]))
-    if "dispatch_authority" in cols:sets.append("dispatch_authority=?");args.append(authority_owner)
-    args.append(mission_id);cur=conn.execute("UPDATE mission_execution_assignments SET "+','.join(sets)+" WHERE mission_id=? AND state='READY'",tuple(args));return {"rebound_ready":int(cur.rowcount)}
+    has_epoch="control_epoch" in cols;has_authority="dispatch_authority" in cols
+    if has_epoch and has_authority:
+        cur=conn.execute("UPDATE mission_execution_assignments SET lease_generation=?,control_epoch=?,dispatch_authority=? WHERE mission_id=? AND state='READY'",(int(generation),int(state["control_epoch"]),authority_owner,mission_id))
+    elif has_epoch:
+        cur=conn.execute("UPDATE mission_execution_assignments SET lease_generation=?,control_epoch=? WHERE mission_id=? AND state='READY'",(int(generation),int(state["control_epoch"]),mission_id))
+    elif has_authority:
+        cur=conn.execute("UPDATE mission_execution_assignments SET lease_generation=?,dispatch_authority=? WHERE mission_id=? AND state='READY'",(int(generation),authority_owner,mission_id))
+    else:
+        cur=conn.execute("UPDATE mission_execution_assignments SET lease_generation=? WHERE mission_id=? AND state='READY'",(int(generation),mission_id))
+    return {"rebound_ready":int(cur.rowcount)}
 
 def _release_assignment_handoff(conn,mission_id,now_fn,*,principal_id,generation,control_epoch):
     if "mission_execution_assignments" not in _tables(conn):return {"rebound_ready":0,"cancelled_ready":0,"cancel_requested":0}
@@ -494,12 +500,11 @@ def apply_command(conn,value,now_fn,*,principal_id=PRIMARY_OPERATOR):
             else:
                 conn.execute("UPDATE mission_execution_assignments SET state='CANCELLED',finished_at=COALESCE(finished_at,?) WHERE assignment_id=?",(now_fn(),assignment_id));conn.execute("UPDATE mission_execution_assignments SET lease_generation=? WHERE mission_id=? AND state='READY' AND assignment_id<>?",(generation,cmd.mission_id,assignment_id));new_id="assignment-"+uuid.uuid4().hex
             if new_id is not None:
-                cols={r[1] for r in conn.execute("PRAGMA table_info(mission_execution_assignments)")};values={"assignment_id":new_id,"mission_id":cmd.mission_id,"phase_id":old["phase_id"],"logical_drone_id":old["logical_drone_id"],"material_drone_id":material,"input_digest":old["input_digest"],"input_json":old["input_json"],"state":"READY","lease_generation":generation,"created_at":now_fn(),"claimed_at":None,"finished_at":None}
-                if "control_epoch" in cols:values["control_epoch"]=int(current["control_epoch"])
-                if "context_revision" in cols:values["context_revision"]=int(current["context_revision"])
-                if "plan_revision" in cols:values["plan_revision"]=int(current["plan_revision"])
-                if "dispatch_authority" in cols:values["dispatch_authority"]=principal_id
-                names=list(values);conn.execute("INSERT INTO mission_execution_assignments("+",".join(names)+") VALUES("+",".join("?" for _ in names)+")",tuple(values[n] for n in names));result={"previous_assignment_id":assignment_id,"assignment_id":new_id,"material_drone_id":material,"state":"READY","control_epoch":current["control_epoch"],"driver_fence":fence,"lease_generation":generation}
+                cols={r[1] for r in conn.execute("PRAGMA table_info(mission_execution_assignments)")}
+                required={"control_epoch","context_revision","plan_revision","dispatch_authority"}
+                if not required.issubset(cols):raise ValueError("operator assignment schema unavailable")
+                conn.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,control_epoch,context_revision,plan_revision,dispatch_authority,created_at,claimed_at,finished_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(new_id,cmd.mission_id,old["phase_id"],old["logical_drone_id"],material,old["input_digest"],old["input_json"],"READY",generation,int(current["control_epoch"]),int(current["context_revision"]),int(current["plan_revision"]),principal_id,now_fn(),None,None))
+                result={"previous_assignment_id":assignment_id,"assignment_id":new_id,"material_drone_id":material,"state":"READY","control_epoch":current["control_epoch"],"driver_fence":fence,"lease_generation":generation}
         else:raise ValueError("operator action not implemented")
         final_state=ensure_control_state(conn,cmd.mission_id,now_fn);execution_state="APPLIED";observation_state="CONTROL_STATE_OBSERVED" if cmd.action in CONTROL_ACTIONS else "PERSISTED";completed_at=now_fn()
         if cmd.action in {"PAUSE_SCOPE","STOP_SCOPE","TAKE_CONTROL"} and int((result.get("assignments") or {}).get("cancel_requested") or 0)>0:execution_state="CONTAINMENT_PENDING";observation_state="PARTIAL";completed_at=None
