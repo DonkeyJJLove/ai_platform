@@ -8,10 +8,17 @@ from datetime import datetime, timedelta, timezone
 
 from cyber_lion.mission_control.supervisor_projection import supervisor_projection
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 SCHEMA_ID = "lion.saas-broker/v1"
-TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"
+TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"  # legacy/manual compatibility
 ATTESTATION_CLASS = "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP"
+FIREFOX_TRANSPORT = "CHATGPT_FIREFOX_PROJECT_MEDIATED"
+FIREFOX_ATTESTATION_CLASS = "FIREFOX_UI_PROJECT_BOUND_OBSERVATION"
+MEDIATOR_HEARTBEAT_TTL_SECONDS = 45
+SUPPORTED_TRANSPORT_ATTESTATIONS = {
+    TRANSPORT: ATTESTATION_CLASS,
+    FIREFOX_TRANSPORT: FIREFOX_ATTESTATION_CLASS,
+}
 
 DDL = r"""
 CREATE TABLE IF NOT EXISTS saas_session_bindings(
@@ -62,6 +69,28 @@ CREATE TABLE IF NOT EXISTS saas_handoff_requests(
   claim_expires_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_saas_request_mission ON saas_handoff_requests(mission_id,status,created_at);
+CREATE TABLE IF NOT EXISTS saas_mediator_heartbeats(
+  mediator_id TEXT PRIMARY KEY,
+  transport TEXT NOT NULL,
+  state TEXT NOT NULL,
+  project_title TEXT,
+  chat_title TEXT,
+  browser TEXT,
+  observed_at TEXT NOT NULL,
+  details_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS saas_transport_transitions(
+  transition_id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  from_transport TEXT NOT NULL,
+  to_transport TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  transitioned_at TEXT NOT NULL,
+  authority_effect TEXT NOT NULL,
+  transition_digest TEXT NOT NULL UNIQUE
+);
+CREATE TRIGGER IF NOT EXISTS saas_transport_transition_immutable BEFORE UPDATE ON saas_transport_transitions
+BEGIN SELECT RAISE(ABORT,'immutable SaaS transport transition'); END;
 """
 
 
@@ -150,6 +179,64 @@ def _active_request_rows(conn, scope_type, scope_id, question_digest):
     ).fetchall()
 
 
+MEDIATOR_STATES = {"STARTING","LOGIN_REQUIRED","PROJECT_BINDING_REQUIRED","CHAT_BINDING_REQUIRED","READY","DEGRADED","STOPPED"}
+
+
+def _promote_waiting_to_firefox(conn, stamp):
+    rows=conn.execute("SELECT request_id,transport FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE') AND COALESCE(transport,?)=? ORDER BY created_at,request_id",(TRANSPORT,TRANSPORT)).fetchall()
+    promoted=[]
+    for row in rows:
+        payload={"request_id":row['request_id'],"from_transport":row['transport'] or TRANSPORT,"to_transport":FIREFOX_TRANSPORT,"reason":"READY_FIREFOX_MEDIATOR_ADOPTION","transitioned_at":stamp,"authority_effect":"NONE"}
+        dg=_digest(payload);tid='saas-transition-'+dg[:32]
+        conn.execute("INSERT OR IGNORE INTO saas_transport_transitions(transition_id,request_id,from_transport,to_transport,reason,transitioned_at,authority_effect,transition_digest) VALUES(?,?,?,?,?,?,?,?)",(tid,payload['request_id'],payload['from_transport'],payload['to_transport'],payload['reason'],stamp,'NONE',dg))
+        conn.execute("UPDATE saas_handoff_requests SET transport=?,progress_state='WAITING_BROWSER_MEDIATOR' WHERE request_id=? AND status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE')",(FIREFOX_TRANSPORT,row['request_id']))
+        promoted.append(row['request_id'])
+    return promoted
+
+
+def record_mediator_heartbeat(conn, payload, now_fn):
+    if type(payload) is not dict or set(payload) != {"mediator_id","transport","state","project_title","chat_title","browser","authority_effect"}:
+        raise ValueError("mediator heartbeat schema")
+    if payload.get("authority_effect") != "NONE":
+        raise ValueError("mediator authority")
+    mediator_id=payload.get("mediator_id");transport=payload.get("transport");state=payload.get("state")
+    if not isinstance(mediator_id,str) or not mediator_id or len(mediator_id)>96:raise ValueError("mediator_id")
+    if transport != FIREFOX_TRANSPORT:raise ValueError("mediator transport")
+    if state not in MEDIATOR_STATES:raise ValueError("mediator state")
+    for key in ("project_title","chat_title","browser"):
+        value=payload.get(key)
+        if value is not None and (not isinstance(value,str) or len(value)>240):raise ValueError("mediator "+key)
+    stamp=now_fn();details={"authority_effect":"NONE","transport":transport,"state":state}
+    conn.execute(
+        "INSERT INTO saas_mediator_heartbeats(mediator_id,transport,state,project_title,chat_title,browser,observed_at,details_json) VALUES(?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(mediator_id) DO UPDATE SET transport=excluded.transport,state=excluded.state,project_title=excluded.project_title,chat_title=excluded.chat_title,browser=excluded.browser,observed_at=excluded.observed_at,details_json=excluded.details_json",
+        (mediator_id,transport,state,payload.get("project_title"),payload.get("chat_title"),payload.get("browser"),stamp,_canon(details)),
+    )
+    promoted=_promote_waiting_to_firefox(conn,stamp) if state=="READY" else []
+    conn.commit();return {**payload,"observed_at":stamp,"fresh":True,"promoted_request_ids":promoted}
+
+
+def _current_mediator(conn, stamp):
+    row=conn.execute("SELECT * FROM saas_mediator_heartbeats ORDER BY observed_at DESC LIMIT 1").fetchone()
+    if row is None:return None
+    out=dict(row);age=(_parse_ts(stamp)-_parse_ts(out["observed_at"])).total_seconds();out["heartbeat_age_seconds"]=max(0.0,round(age,3));out["fresh"]=0<=age<=MEDIATOR_HEARTBEAT_TTL_SECONDS
+    if not out["fresh"]:out["state"]="STALE"
+    try:out["details"]=json.loads(out.pop("details_json"))
+    except Exception:out["details"]={}
+    return out
+
+
+def _preferred_transport(conn, stamp):
+    mediator=_current_mediator(conn,stamp)
+    return FIREFOX_TRANSPORT if mediator and mediator.get("fresh") and mediator.get("state")=="READY" else TRANSPORT
+
+
+def _attestation_for_transport(transport):
+    value=SUPPORTED_TRANSPORT_ATTESTATIONS.get(transport)
+    if value is None:raise ValueError("unsupported transport")
+    return value
+
+
 def _public_created_request(row, *, deduplicated=False):
     return {
         "request_id": row["request_id"],
@@ -203,11 +290,24 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
     question = question.strip()
     qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
     retry_of = None
+    target_transport = TRANSPORT if legacy else _preferred_transport(conn, stamp)
     if not legacy:
         # Reconcile time/session/terminal-mission state before deciding whether
         # a new handoff is semantically independent or a retry of an existing one.
         _expire(conn, stamp)
-        same=list(_active_request_rows(conn,scope_type,scope_id,qdigest))
+        same_all=list(_active_request_rows(conn,scope_type,scope_id,qdigest))
+        foreign=[r for r in same_all if (r['transport'] or TRANSPORT)!=target_transport]
+        claimed_foreign=next((r for r in foreign if r['status']=='CLAIMED'),None)
+        if claimed_foreign:
+            # Never fan out while an older transport already owns a live claim.
+            return _public_created_request(claimed_foreign,deduplicated=True)
+        if foreign:
+            retry_of=foreign[-1]['request_id']
+            conn.executemany(
+                "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_TRANSPORT_MIGRATION',claim_expires_at=NULL WHERE request_id=?",
+                [(r['request_id'],) for r in foreign],
+            )
+        same=[r for r in same_all if (r['transport'] or TRANSPORT)==target_transport]
         if same:
             live=[r for r in same if r['status']!='WAITING_OPERATOR_OVERDUE']
             if live:
@@ -234,7 +334,7 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
     expires = _future(stamp, ttl_seconds)
     conn.execute(
         "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at,progress_state,retry_of_request_id,scope_type,scope_id,thread_id,transport,authority_effect) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (request_id, mission_id, lpcl_digest, request_code, token, question, qdigest, "PENDING" if legacy else "WAITING_SUPERVISOR", stamp, expires, "WAITING_OPERATOR" if legacy else "WAITING_SUPERVISOR",retry_of,scope_type,scope_id,thread_id,TRANSPORT,"NONE"),
+        (request_id, mission_id, lpcl_digest, request_code, token, question, qdigest, "PENDING" if legacy else "WAITING_SUPERVISOR", stamp, expires, "WAITING_OPERATOR" if legacy else "WAITING_SUPERVISOR",retry_of,scope_type,scope_id,thread_id,target_transport,"NONE"),
     )
     conn.commit()
     row=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(request_id,)).fetchone()
@@ -279,7 +379,7 @@ def pending_request(conn, now_fn, *, request_code=None, mission_id=None):
     if row is None:
         return None
     out = dict(row)
-    out["transport"] = TRANSPORT
+    out["transport"] = out.get("transport") or TRANSPORT
     out["supervisor_role"] = "CHATGPT_SAAS_SUPERVISOR"
     out["dual_request_id"] = _dual_request_id(conn, out["request_id"]) if "mission_dual_evaluations" in {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()} else None
     out["authority_effect"] = "NONE"
@@ -358,15 +458,18 @@ def bridge_status(conn, mission_id, now_fn):
         "SELECT request_id,responded_at,response_digest,receipt_digest,binding_id FROM saas_handoff_requests WHERE (? IS NULL OR mission_id=?) AND status='RESPONDED' ORDER BY responded_at DESC LIMIT 1",
         (mission_id,mission_id),
     ).fetchone()
+    mediator=_current_mediator(conn,stamp)
+    browser_ready=bool(mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport")==FIREFOX_TRANSPORT)
+    target_transport=FIREFOX_TRANSPORT if browser_ready else TRANSPORT
     out = {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
-        "channel_state": "READY_FOR_HANDOFF",
+        "channel_state": "BROWSER_MEDIATOR_READY" if browser_ready else ("WAITING_BROWSER_MEDIATOR" if mediator else "READY_FOR_HANDOFF"),
         "session_attestation_state": "BOUND" if binding else ("EXPIRED" if last_binding and last_binding['status']=='EXPIRED' else "NOT_ATTESTED"),
         "session_scope": "GLOBAL_SUPERVISOR_CHANNEL",
         "schema": SCHEMA_ID,
         "schema_version": SCHEMA_VERSION,
-        "automatic_hop": "UNAVAILABLE",
+        "automatic_hop": "AVAILABLE" if browser_ready else "UNAVAILABLE",
         "binding": dict(binding) if binding else None,
         "last_binding": dict(last_binding) if last_binding else None,
         "pending": pending_value,
@@ -375,9 +478,10 @@ def bridge_status(conn, mission_id, now_fn):
         "queue_policy": "FIFO_MULTI_PENDING",
         "duplicate_policy": "EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE",
         "terminal_mission_pending_policy": "SUPERSEDE_PRESERVE_HISTORY",
-        "transport": TRANSPORT,
-        "automatic_local_to_saas_hop": False,
-        "operator_mediation_required": True,
+        "transport": target_transport,
+        "automatic_local_to_saas_hop": browser_ready,
+        "operator_mediation_required": not browser_ready,
+        "mediator": mediator,
         "cryptographic_provider_attestation": False,
         "authority_effect": "NONE",
     }
@@ -406,7 +510,10 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
     if row["lpcl_digest"]:
         mission, process = _mission_binding(conn, row["mission_id"])
         if mission["spec_digest"] != row["lpcl_digest"]:raise ValueError("saas lpcl digest drift")
-    if transport!=TRANSPORT or attestation_class!=ATTESTATION_CLASS:raise ValueError("session transport/attestation")
+    row_transport=row["transport"] or TRANSPORT
+    expected_attestation=_attestation_for_transport(row_transport)
+    if transport!=row_transport or attestation_class!=expected_attestation:raise ValueError("request transport/attestation")
+    supervisor_role="CHATGPT_FIREFOX_PROJECT_MEDIATOR" if transport==FIREFOX_TRANSPORT else "CHATGPT_SAAS_SUPERVISOR"
     answer = answer.strip()
     rdigest = hashlib.sha256(answer.encode("utf-8")).hexdigest()
     binding_id = "saas-binding-" + uuid.uuid4().hex
@@ -415,7 +522,7 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
         "binding_id": binding_id,
         "mission_id": row["mission_id"],
         "lpcl_digest": row["lpcl_digest"],
-        "supervisor_role": "CHATGPT_SAAS_SUPERVISOR",
+        "supervisor_role": supervisor_role,
         "model_identity": model_identity.strip(),
         "transport": transport,
         "attestation_class": attestation_class,
@@ -436,7 +543,7 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
     )
     conn.execute(
         "INSERT INTO saas_session_bindings(binding_id,mission_id,lpcl_digest,supervisor_role,model_identity,transport,attestation_class,authority_effect,status,created_at,bound_at,expires_at,last_request_id,attestation_json,attestation_digest,binding_scope) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (binding_id,row["mission_id"],row["lpcl_digest"],"CHATGPT_SAAS_SUPERVISOR",model_identity.strip(),transport,attestation_class,"NONE","BOUND",stamp,stamp,expires,request_id,_canon(attestation),adigest,"GLOBAL_SUPERVISOR_CHANNEL"),
+        (binding_id,row["mission_id"],row["lpcl_digest"],supervisor_role,model_identity.strip(),transport,attestation_class,"NONE","BOUND",stamp,stamp,expires,request_id,_canon(attestation),adigest,"GLOBAL_SUPERVISOR_CHANNEL"),
     )
     meta = {"model_identity": model_identity.strip(), "transport": transport, "attestation_class": attestation_class, "authority_effect": "NONE", "binding_scope": "GLOBAL_SUPERVISOR_CHANNEL"}
     receipt = {
@@ -466,7 +573,7 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
 WAITING_STATES=('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED')
 
 
-def claim(conn,request_id,now_fn,*,lease_seconds=120):
+def claim(conn,request_id,now_fn,*,lease_seconds=300):
     if type(lease_seconds) is not int or not 1<=lease_seconds<=300:raise ValueError('claim lease')
     conn.execute('BEGIN IMMEDIATE')
     try:

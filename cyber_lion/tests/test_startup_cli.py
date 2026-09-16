@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from cyber_lion.startup_agent.cli import main, run_cycle
-from cyber_lion.startup_agent.models import StartupModelError
+from cyber_lion.startup_agent.models import Experiment, StartupModelError
 
 
 VALID = {
@@ -137,8 +137,24 @@ class StartupCliTests(unittest.TestCase):
     def test_build_local_refuses_approval_required_plan(self):
         external = json.loads(json.dumps(VALID))
         external["local_build_gate_event_id"] = "test:cli:local-build-gate"
-        with self.assertRaises(StartupModelError):
-            run_cycle(external, build_local=True)
+        approval_required = Experiment(
+            "h1-distill-smoke",
+            "h1",
+            "problem_smoke_test",
+            "Does an external smoke test produce qualified intent?",
+            0.82,
+            24.0,
+            0.12,
+            "external_write",
+            "qualified intent rate vs control",
+            "Stop if uplift remains below threshold.",
+        )
+        with patch(
+            "cyber_lion.startup_agent.engine.StartupEvolutionAgent.choose_experiment",
+            return_value=approval_required,
+        ):
+            with self.assertRaises(StartupModelError):
+                run_cycle(external, build_local=True)
 
     def test_cli_returns_error_code_for_bad_input(self):
         with tempfile.TemporaryDirectory() as tmp:

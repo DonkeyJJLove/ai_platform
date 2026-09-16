@@ -18,6 +18,9 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         compat = importlib.import_module('lion_mission_control_compat')
         sys.modules['mission_control_compat'] = compat
         self.mc = importlib.import_module('lion_mission_control_v3')
+        self.old_current_master_resolver = self.mc.CURRENT_MASTER_IDENTITY_RESOLVER
+        self.mc.CURRENT_MASTER_IDENTITY_RESOLVER = lambda: ('f'*40, 'e'*40)
+        self.addCleanup(lambda: setattr(self.mc, 'CURRENT_MASTER_IDENTITY_RESOLVER', self.old_current_master_resolver))
         self.td = tempfile.TemporaryDirectory()
         self.addCleanup(self.td.cleanup)
         self.old_db, self.old_legacy = self.mc.DB, self.mc.LEGACY_DB
@@ -132,14 +135,17 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         c.commit(); c.close()
         child = self.spec('EXPLICIT-PARENT-CHILD-R1', self.child_text(explicit_parent))
         self.mc.register_lpcl_mission(child)
-        with patch.object(self.mc, '_send_broker_request', return_value=(self.runtime('explicit-parent-live'), 'explicit-parent-read')) as send:
+        runtime_head='d'*40;runtime_tree='e'*40
+        with patch.object(self.mc, '_current_master_identity', return_value=(runtime_head,runtime_tree)), patch.object(self.mc, '_send_broker_request', return_value=(self.runtime('explicit-parent-live'), 'explicit-parent-read')) as send:
             out = self.mc.activate_lpcl_mission(child['mission_id'], {'lpcl_digest': child['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
         self.assertEqual((out['state'], out['materialized'], out['ready']), ('RUNNING', 64, 64))
         request = send.call_args.args[0]
         self.assertEqual(request['mission_id'], self.mc.EPOCH3_MATERIAL_CARRIER_ID)
         self.assertEqual(request['spec_digest'], self.mc.EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST)
-        self.assertEqual(request['source_head'], child['source_head'])
-        self.assertEqual(request['source_tree'], child['source_tree'])
+        self.assertEqual(request['source_head'], runtime_head)
+        self.assertEqual(request['source_tree'], runtime_tree)
+        self.assertEqual(out['source_head'], child['source_head'])
+        self.assertEqual(out['source_tree'], child['source_tree'])
         self.assertIn('explicit-parent-live-LD12-0', {row['pod_uid'] for row in out['workers']})
 
     def test_fresh_128l64m_mission_binds_without_epoch3_parent_and_compiles_generic_phases(self):
@@ -259,7 +265,8 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         victim = c.execute('SELECT pod_name FROM material_workers WHERE mission_id=? ORDER BY pod_name LIMIT 1', (child['mission_id'],)).fetchone()[0]
         c.execute('DELETE FROM material_workers WHERE mission_id=? AND pod_name=?', (child['mission_id'], victim))
         c.commit(); c.close()
-        with patch.object(self.mc, 'epoch3_broker', return_value=(self.runtime('reacquired-live'), 'reacquire-request')):
+        runtime_head='f'*40;runtime_tree='1'*40
+        with patch.object(self.mc, '_current_master_identity', return_value=(runtime_head,runtime_tree)), patch.object(self.mc, 'epoch3_broker', return_value=(self.runtime('reacquired-live'), 'reacquire-request')):
             out = self.mc.bind_lpcl_execution(child['mission_id'])
         uids = {row['pod_uid'] for row in out['workers']}
         self.assertIn('reacquired-live-LD12-0', uids)
@@ -269,7 +276,11 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
             msg['payload'] for msg in out['protocol_messages']
             if msg['protocol'] == 'CURRENTNESS' and msg['payload'].get('material_request_id') == 'reacquire-request'
         )
-        self.assertEqual(currentness['material_currentness_source'], 'EPOCH3_M64_READ')
+        self.assertEqual(currentness['material_currentness_source'], 'GITHUB_MASTER_PLUS_EPOCH3_M64_READ')
+        self.assertEqual(currentness['registered_source_head'], child['source_head'])
+        self.assertEqual(currentness['registered_source_tree'], child['source_tree'])
+        self.assertEqual(currentness['runtime_source_head'], runtime_head)
+        self.assertEqual(currentness['runtime_source_tree'], runtime_tree)
 
 
     def test_generic_effect_evidence_executor_advances_first_two_phases_without_duplicate_planning(self):

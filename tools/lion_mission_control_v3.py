@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse,hashlib,json,os,socket,sqlite3,threading,uuid
+import argparse,hashlib,json,os,socket,sqlite3,threading,uuid,subprocess,sys,tempfile,shutil
 import time, urllib.request, urllib.error
 from concurrent.futures import Future
 from copy import deepcopy
@@ -53,6 +53,22 @@ LOGICAL=(('LD01','MISSION_PLANNER',6),('LD02','AUTHORITY_CURRENTNESS',6),('LD03'
 ACTIONS={'START':'MISSION64_START','PAUSE':'MISSION64_PAUSE','RESUME':'MISSION64_RESUME','RESTART_ONE':'MISSION64_RESTART_ONE','VALIDATE':'MISSION64_VALIDATE','STOP':'MISSION64_STOP'}
 LOCK=threading.Lock();STOP_EVENT=threading.Event()
 
+FIREFOX_RELAY_IPC=DB.parent/'firefox-mediator-ipc'
+FIREFOX_RELAY_STATE=DB.parent/'firefox-mediator-relay'
+FIREFOX_RELAY_KEY=DB.parent/'saas-mediator.key'
+
+def _start_firefox_broker_relay(port):
+    relay=Path(__file__).with_name('lion_firefox_broker_relay.py')
+    if not relay.is_file():
+        return None
+    FIREFOX_RELAY_IPC.mkdir(parents=True,exist_ok=True)
+    for name in ('inbox','outbox','journal','receipts','archive'):
+        q=FIREFOX_RELAY_IPC/name;q.mkdir(parents=True,exist_ok=True);os.chmod(q,0o777)
+    os.chmod(FIREFOX_RELAY_IPC,0o777)
+    FIREFOX_RELAY_STATE.mkdir(parents=True,exist_ok=True)
+    return subprocess.Popen([sys.executable,str(relay),'--broker',f'http://127.0.0.1:{int(port)}','--key-file',str(FIREFOX_RELAY_KEY),'--state-dir',str(FIREFOX_RELAY_STATE),'--ipc-dir',str(FIREFOX_RELAY_IPC)],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,close_fds=True)
+
+
 try:
  import lion_saas_broker as saas_broker
 except ModuleNotFoundError:
@@ -70,6 +86,8 @@ def saas_broker_api(method,path,payload=None):
   if method=='POST' and tail=='/requests':
    if type(x) is not dict or not {'scope_type','question','authority_effect'}<=set(x) or set(x)-{'scope_type','scope_id','thread_id','mission_id','question','authority_effect'}:raise ValueError('broker request schema')
    return saas_broker.create_request(c,x.get('mission_id'),x['question'],now,scope_type=x['scope_type'],scope_id=x.get('scope_id'),thread_id=x.get('thread_id'),authority_effect=x['authority_effect'])
+  if method=='POST' and tail=='/mediator/heartbeat':
+   return saas_broker.record_mediator_heartbeat(c,x,now)
   if method=='POST' and tail=='/session/attest':
    if set(x)!={'request_id','receipt_digest'}:raise ValueError('attestation receipt schema')
    row=saas_broker.request_status(c,x['request_id'],now);status=saas_broker.bridge_status(c,None,now);binding=status.get('binding')
@@ -367,6 +385,27 @@ def _phase_contract_capability(c,mid,pid):
     return contract,None
 
 
+CURRENT_MASTER_IDENTITY_RESOLVER=None
+
+def _current_master_identity():
+    if callable(CURRENT_MASTER_IDENTITY_RESOLVER):
+      head,tree=CURRENT_MASTER_IDENTITY_RESOLVER()
+      if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('injected master currentness malformed')
+      return head,tree
+    td=Path(tempfile.mkdtemp(prefix='lion-mc-current-master-'))
+    try:
+      subprocess.run(['/usr/bin/git','init',str(td)],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,check=True,timeout=30)
+      subprocess.run(['/usr/bin/git','-C',str(td),'remote','add','origin','https://github.com/DonkeyJJLove/ai_platform.git'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,check=True,timeout=30)
+      subprocess.run(['/usr/bin/git','-C',str(td),'fetch','--no-tags','--depth=1','origin','refs/heads/master'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,check=True,timeout=180)
+      head=subprocess.run(['/usr/bin/git','-C',str(td),'rev-parse','FETCH_HEAD'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,check=True,timeout=30).stdout.strip()
+      tree=subprocess.run(['/usr/bin/git','-C',str(td),'rev-parse','FETCH_HEAD^{tree}'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,check=True,timeout=30).stdout.strip()
+      if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('git master currentness malformed')
+      return head,tree
+    except Exception as exc:
+      raise RuntimeError('github master currentness unavailable:'+type(exc).__name__) from exc
+    finally:shutil.rmtree(td,ignore_errors=True)
+
+
 def bind_lpcl_execution(mid):
     c=connect()
     try:
@@ -412,7 +451,8 @@ def bind_lpcl_execution(mid):
       if continuation_ok:
        src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
        if not src:raise ValueError('lpcl source mission missing:'+source_mid)
-      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid,current_head=m['source_head'],current_tree=m['source_tree'])
+      current_head,current_tree=_current_master_identity()
+      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid,current_head=current_head,current_tree=current_tree)
       live_pods=runtime.get('pods') or []
       if runtime.get('state')!='RUNNING' or int(runtime.get('materialized',0) or 0)!=64 or int(runtime.get('ready',0) or 0)!=64 or int(runtime.get('unique_uid_count',0) or 0)!=64 or len(live_pods)!=64:
        raise ValueError('lpcl live material fleet not healthy')
@@ -491,7 +531,7 @@ def bind_lpcl_execution(mid):
       uid_digest=_payload_digest({'uids':new_uids})
       changed=old_uids!=new_uids
       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','MATERIAL_FLEET',current,{'event':'EXISTING_HEALTHY_FLEET_REBOUND','source_mission_id':source_mid,'worker_count':64,'unique_uid_count':64,'worker_uid_digest':uid_digest,'previous_binding_changed':changed,'binding_class':'CONTROL_PLANE_REBIND','material_currentness_source':'EPOCH3_M64_READ','material_request_id':material_request_id,'pod_role_environment_rewritten':False,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
-      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','source_head':m['source_head'],'source_tree':m['source_tree'],'material_ready':64,'material_target':64,'parent_mission_id':source_mid,'material_currentness_source':'EPOCH3_M64_READ','material_request_id':material_request_id},'INTERNAL')
+      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','registered_source_head':m['source_head'],'registered_source_tree':m['source_tree'],'runtime_source_head':current_head,'runtime_source_tree':current_tree,'material_ready':64,'material_target':64,'parent_mission_id':source_mid,'material_currentness_source':'GITHUB_MASTER_PLUS_EPOCH3_M64_READ','material_request_id':material_request_id},'INTERNAL')
       _process_message(c,mid,'RECEIPT','MISSION_CONTROL','OPERATOR',current,{'event':'LPCL_EXECUTION_ADAPTER_BOUND','adapter':LPCL_REBIND_ADAPTER,'source_mission_id':source_mid,'lpcl_digest':m['spec_digest'],'worker_uid_digest':uid_digest,'parent_preserved':keep_parent},'OUT')
       ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
       c.commit()
@@ -2054,7 +2094,7 @@ class H(BaseHTTPRequestHandler):
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
   if path.startswith('/api/v3/saas-broker/'):
-   controlled=path.endswith(('/claim','/respond','/session/attest'))
+   controlled=path.endswith(('/claim','/respond','/session/attest','/mediator/heartbeat'))
    if controlled and not mediator_authorized(self.headers):return self.json({'error':'mediator authentication required'},403)
    try:
     n=int(self.headers.get('Content-Length','0'))
@@ -2175,10 +2215,15 @@ class H(BaseHTTPRequestHandler):
  def do_DELETE(self):self.json({'error':'method denied'},405)
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
+ ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);relay=_start_firefox_broker_relay(a.port);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
  for lp in (a.listen_state,a.legacy_listen_state):
   q=Path(lp);q.parent.mkdir(parents=True,exist_ok=True);tmp=q.with_name(q.name+'.tmp-'+uuid.uuid4().hex[:8]);tmp.write_text(json.dumps(loc,sort_keys=True),encoding='utf-8');os.replace(tmp,q)
  print(json.dumps(loc),flush=True)
  try:srv.serve_forever()
- finally:STOP_EVENT.set();DRIVER_STOP.set();srv.server_close()
+ finally:
+  STOP_EVENT.set();DRIVER_STOP.set();srv.server_close()
+  if relay is not None and relay.poll() is None:
+   relay.terminate()
+   try:relay.wait(timeout=5)
+   except subprocess.TimeoutExpired:relay.kill()
 if __name__=='__main__':main()

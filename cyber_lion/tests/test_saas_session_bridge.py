@@ -159,6 +159,17 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         self.assertIn('automatycznie',out['answer'])
         self.assertIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
 
+    def test_explicit_saas_route_reports_firefox_mediator_when_request_is_browser_bound(self):
+        class Dummy:
+            def _route(self,m):return ('LOCAL','x')
+            def state(self):return {'status':'ok'}
+            def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'LOCAL','answer':'local'}
+        apply_saas_handoff_extension(Dummy)
+        d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'FIRE1234','request_id':'saas-'+'f'*32,'transport':'CHATGPT_FIREFOX_PROJECT_MEDIATED','authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
+        out=d.chat('SaaS: gotów?',output_language='pl')
+        self.assertIn('CHATGPT_FIREFOX_PROJECT_MEDIATED',out['answer'])
+        self.assertNotIn('nie istnieje automatyczny local',out['answer'])
+
     def test_capability_answer_reports_bound_session(self):
         class Dummy:
             @staticmethod

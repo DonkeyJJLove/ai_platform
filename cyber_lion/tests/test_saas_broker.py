@@ -117,6 +117,94 @@ class CognitiveBrokerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             broker.create_request(self.conn, None, 'Question', self.now, scope_type='MISSION')
 
+    def _firefox_heartbeat(self, state='READY'):
+        return broker.record_mediator_heartbeat(self.conn,{
+            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':state,
+            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
+            'browser':'Firefox Developer Edition','authority_effect':'NONE'},self.now)
+
+
+    def test_ready_heartbeat_promotes_existing_manual_request_in_place_with_immutable_transition(self):
+        request=self.request()
+        self.assertEqual(request['transport'],broker.TRANSPORT)
+        heartbeat={
+            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':'READY',
+            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
+            'browser':'Firefox Developer Edition','authority_effect':'NONE',
+        }
+        out=broker.record_mediator_heartbeat(self.conn,heartbeat,self.now)
+        self.assertEqual(out['promoted_request_ids'],[request['request_id']])
+        saved=broker.request_status(self.conn,request['request_id'],self.now)
+        self.assertEqual(saved['request_id'],request['request_id'])
+        self.assertEqual(saved['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(saved['progress_state'],'WAITING_BROWSER_MEDIATOR')
+        row=self.conn.execute('SELECT * FROM saas_transport_transitions WHERE request_id=?',(request['request_id'],)).fetchone()
+        self.assertEqual((row['from_transport'],row['to_transport'],row['authority_effect']),(broker.TRANSPORT,broker.FIREFOX_TRANSPORT,'NONE'))
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.conn.execute("UPDATE saas_transport_transitions SET reason='tampered' WHERE request_id=?",(request['request_id'],))
+        self.conn.rollback()
+
+    def test_ready_heartbeat_never_relabels_claimed_manual_request(self):
+        request=self.request();claim=broker.claim(self.conn,request['request_id'],self.now)
+        heartbeat={
+            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':'READY',
+            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
+            'browser':'Firefox Developer Edition','authority_effect':'NONE',
+        }
+        out=broker.record_mediator_heartbeat(self.conn,heartbeat,self.now)
+        self.assertEqual(out['promoted_request_ids'],[])
+        saved=broker.request_status(self.conn,request['request_id'],self.now)
+        self.assertEqual(saved['status'],'CLAIMED')
+        self.assertEqual(saved['transport'],broker.TRANSPORT)
+
+    def test_ready_firefox_mediator_switches_transport_and_real_response_binding(self):
+        self._firefox_heartbeat()
+        status=broker.bridge_status(self.conn,None,self.now)
+        self.assertTrue(status['automatic_local_to_saas_hop'])
+        self.assertFalse(status['operator_mediation_required'])
+        self.assertEqual(status['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(status['mediator']['state'],'READY')
+        request=self.request()
+        self.assertEqual(request['transport'],broker.FIREFOX_TRANSPORT)
+        claim=broker.claim(self.conn,request['request_id'],self.now)
+        result=broker.respond(self.conn,claim['request_id'],claim['response_token'],'Connected through Firefox',self.now,
+            model_identity='ChatGPT UI / LION_EVOLUSION',transport=broker.FIREFOX_TRANSPORT,
+            attestation_class=broker.FIREFOX_ATTESTATION_CLASS,claim_generation=claim['claim_generation'])
+        self.assertEqual(result['binding']['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(result['binding']['supervisor_role'],'CHATGPT_FIREFOX_PROJECT_MEDIATOR')
+
+    def test_transport_migration_preserves_exact_pending_request_id_without_fanout(self):
+        old=self.request()
+        self.assertEqual(old['transport'],broker.TRANSPORT)
+        self._firefox_heartbeat()
+        saved=broker.request_status(self.conn,old['request_id'],self.now)
+        self.assertEqual(saved['request_id'],old['request_id'])
+        self.assertEqual(saved['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(saved['progress_state'],'WAITING_BROWSER_MEDIATOR')
+        same=self.request()
+        self.assertEqual(same['request_id'],old['request_id'])
+        self.assertTrue(same['deduplicated'])
+        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_handoff_requests').fetchone()[0],1)
+        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_transport_transitions WHERE request_id=?',(old['request_id'],)).fetchone()[0],1)
+
+    def test_stale_firefox_heartbeat_fails_back_to_manual_transport(self):
+        self._firefox_heartbeat()
+        self.stamp='2026-09-15T00:00:46Z'
+        status=broker.bridge_status(self.conn,None,self.now)
+        self.assertFalse(status['automatic_local_to_saas_hop'])
+        self.assertEqual(status['transport'],broker.TRANSPORT)
+        self.assertEqual(status['mediator']['state'],'STALE')
+        request=self.request()
+        self.assertEqual(request['transport'],broker.TRANSPORT)
+
+    def test_firefox_request_rejects_wrong_attestation_class(self):
+        self._firefox_heartbeat()
+        claim=broker.claim(self.conn,self.request()['request_id'],self.now)
+        with self.assertRaisesRegex(ValueError,'transport/attestation'):
+            broker.respond(self.conn,claim['request_id'],claim['response_token'],'answer',self.now,
+                model_identity='ChatGPT UI',transport=broker.FIREFOX_TRANSPORT,
+                attestation_class=broker.ATTESTATION_CLASS,claim_generation=claim['claim_generation'])
+
     def test_browser_independent_delivery_survives_restart_without_duplicates(self):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'threads.db'
