@@ -223,7 +223,7 @@ class MissionRebindTests(unittest.TestCase):
         text = 'CONTINUE_EXISTING_EPOCH3_MISSION=TRUE\nCREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE\nREUSE_EXISTING_HEALTHY_MATERIAL_FLEET=ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND\n' + ''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1, 13))
         new = spec('EPOCH3-CLOSURE-HYBRID-SAAS-RECOVERY-R1', text)
         mc.register_lpcl_mission(new)
-        with patch.object(mc, 'epoch3_broker', return_value=(self.live_runtime(), 'live-read-rid')):
+        with patch.object(mc, '_current_master_identity', return_value=('f'*40,'e'*40)), patch.object(mc, 'epoch3_broker', return_value=(self.live_runtime(), 'live-read-rid')):
             out = mc.activate_lpcl_mission(new['mission_id'], {'lpcl_digest': new['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
         self.assertEqual((out['state'], out['materialized'], out['ready']), ('RUNNING', 64, 64))
         self.assertEqual(out['process']['current_phase'], 'CURRENTNESS_REACQUIRE')
@@ -253,7 +253,7 @@ class MissionRebindTests(unittest.TestCase):
         c.execute("UPDATE missions SET state='RUNNING',runtime_state='RUNNING',materialized=64,ready=64 WHERE mission_id=?",(parent,));c.execute("UPDATE mission_process_specs SET authority_state='EXPLICIT_USER_ACTIVATION' WHERE mission_id=?",(parent,));c.commit();c.close()
         text='CONTINUE_EXISTING_EPOCH3_MISSION=TRUE\nCREATE_PARALLEL_COMPETING_EPOCH3_MISSION=FALSE\nREUSE_EXISTING_HEALTHY_MATERIAL_FLEET=ALLOWED_AFTER_EXACT_IDENTITY_AND_MISSION_REBIND\n'+''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1,13))
         child=spec('CHILD-SELFHOST-R1',text);mc.register_lpcl_mission(child)
-        with patch.object(mc,'epoch3_broker',return_value=(self.live_runtime(), 'live-read-rid')):
+        with patch.object(mc,'_current_master_identity',return_value=('f'*40,'e'*40)), patch.object(mc,'epoch3_broker',return_value=(self.live_runtime(), 'live-read-rid')):
             mc.activate_lpcl_mission(child['mission_id'],{'lpcl_digest':child['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
         c=mc.connect();mc._process_message(c,child['mission_id'],'RECEIPT','MISSION_EXECUTION_DRIVER','MISSION_CONTROL','SELF_HOSTING_TAKEOVER',{'event':'SELF_HOSTING_TAKEOVER_COMPLETE','uids_equal':True,'child_uid_count':64},'INTERNAL');c.execute("UPDATE missions SET state='SUPERSEDED',runtime_state=? WHERE mission_id=?",('REBOUND_TO:'+child['mission_id'],parent));c.commit();c.close()
         with patch.object(mc,'epoch3_broker',side_effect=AssertionError('healthy rebound must not reread or clone parent')):

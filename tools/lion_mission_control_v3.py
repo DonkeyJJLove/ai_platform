@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse,hashlib,json,os,socket,sqlite3,threading,uuid,subprocess,sys
+import argparse,hashlib,json,os,socket,sqlite3,threading,uuid,subprocess,sys,tempfile,shutil
 import time, urllib.request, urllib.error
 from concurrent.futures import Future
 from copy import deepcopy
@@ -385,16 +385,25 @@ def _phase_contract_capability(c,mid,pid):
     return contract,None
 
 
+CURRENT_MASTER_IDENTITY_RESOLVER=None
+
 def _current_master_identity():
-    req=urllib.request.Request('https://api.github.com/repos/DonkeyJJLove/ai_platform/branches/master',headers={'User-Agent':'LION-Mission-Control-Currentness/1'})
+    if callable(CURRENT_MASTER_IDENTITY_RESOLVER):
+      head,tree=CURRENT_MASTER_IDENTITY_RESOLVER()
+      if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('injected master currentness malformed')
+      return head,tree
+    td=Path(tempfile.mkdtemp(prefix='lion-mc-current-master-'))
     try:
-      with urllib.request.urlopen(req,timeout=20) as response:data=json.loads(response.read().decode('utf-8'))
+      subprocess.run(['/usr/bin/git','init',str(td)],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,check=True,timeout=30)
+      subprocess.run(['/usr/bin/git','-C',str(td),'remote','add','origin','https://github.com/DonkeyJJLove/ai_platform.git'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,check=True,timeout=30)
+      subprocess.run(['/usr/bin/git','-C',str(td),'fetch','--no-tags','--depth=1','origin','refs/heads/master'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,check=True,timeout=180)
+      head=subprocess.run(['/usr/bin/git','-C',str(td),'rev-parse','FETCH_HEAD'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,check=True,timeout=30).stdout.strip()
+      tree=subprocess.run(['/usr/bin/git','-C',str(td),'rev-parse','FETCH_HEAD^{tree}'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,check=True,timeout=30).stdout.strip()
+      if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('git master currentness malformed')
+      return head,tree
     except Exception as exc:
       raise RuntimeError('github master currentness unavailable:'+type(exc).__name__) from exc
-    commit=data.get('commit') or {};head=str(commit.get('sha') or '')
-    tree=str(((commit.get('commit') or {}).get('tree') or {}).get('sha') or '')
-    if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('github master currentness malformed')
-    return head,tree
+    finally:shutil.rmtree(td,ignore_errors=True)
 
 
 def bind_lpcl_execution(mid):

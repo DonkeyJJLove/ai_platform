@@ -18,6 +18,9 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         compat = importlib.import_module('lion_mission_control_compat')
         sys.modules['mission_control_compat'] = compat
         self.mc = importlib.import_module('lion_mission_control_v3')
+        self.old_current_master_resolver = self.mc.CURRENT_MASTER_IDENTITY_RESOLVER
+        self.mc.CURRENT_MASTER_IDENTITY_RESOLVER = lambda: ('f'*40, 'e'*40)
+        self.addCleanup(lambda: setattr(self.mc, 'CURRENT_MASTER_IDENTITY_RESOLVER', self.old_current_master_resolver))
         self.td = tempfile.TemporaryDirectory()
         self.addCleanup(self.td.cleanup)
         self.old_db, self.old_legacy = self.mc.DB, self.mc.LEGACY_DB
