@@ -21,6 +21,7 @@ def proc_identity(pid:int):
     exe=os.readlink(root/'exe')
     cmd=(root/'cmdline').read_bytes();cmd_sha=hashlib.sha256(cmd).hexdigest()
     stat=(root/'stat').read_text(encoding='utf-8',errors='strict')
+    # comm may contain spaces/parentheses; fields after final ')' start with state.
     tail=stat.rsplit(')',1)[1].strip().split();starttime=tail[19]
     return {'pid':pid,'exe':exe,'cmdline_sha256':cmd_sha,'proc_starttime':starttime}
 

@@ -52,6 +52,7 @@ class OperatorPanelSecurityTests(unittest.TestCase):
         session,csrf=self.bootstrap();body={'command_id':'c1','mission_id':'M1','action':'TAKE_CONTROL','target':'mission:M1','payload':{}}
         status,_,_=self.raw('POST','/api/operator/commands',body,{'Cookie':session});self.assertEqual(status,403)
         status,_,_=self.raw('POST','/api/operator/commands',body,{'Cookie':session,'X-LION-CSRF':csrf,'Origin':'https://evil.example'});self.assertEqual(status,403)
+        # Valid browser session and CSRF still do not confer OPERATOR_PRIMARY before explicit pairing.
         status,_,_=self.raw('POST','/api/operator/commands',body,{'Cookie':session,'X-LION-CSRF':csrf,'Origin':f'http://127.0.0.1:{self.port}'});self.assertEqual(status,403)
         status,_,paired=self.raw('POST','/api/operator/pair',{'pairing_code':'local-human-code'},{'Cookie':session,'X-LION-CSRF':csrf,'Origin':f'http://127.0.0.1:{self.port}'});self.assertEqual(status,201);self.assertTrue(json.loads(paired)['paired']);self.assertNotIn(b'gateway-session',paired)
         status,_,raw=self.raw('POST','/api/operator/commands',body,{'Cookie':session,'X-LION-CSRF':csrf,'Origin':f'http://127.0.0.1:{self.port}'});self.assertEqual(status,201);self.assertEqual(json.loads(raw)['command_id'],'c1');self.assertEqual(len(self.g.commands),1)

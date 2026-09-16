@@ -152,6 +152,7 @@ class Runtime:
             payload['driver_resume']={"execution_state":execution,"observation_state":observation,"detail":detail,"observed_at":now()}
             c.execute('UPDATE operator_commands SET execution_state=?,observation_state=?,result_json=? WHERE command_id=?',
                       (execution,observation,json.dumps(payload,sort_keys=True,separators=(',',':')),command_id))
+            # Public follow-up event; the immutable admission receipt remains unchanged.
             raw={"command_id":command_id,"execution_state":execution,"observation_state":observation,"detail":detail}
             c.execute('INSERT INTO operator_events(mission_id,command_id,event_type,payload_json,payload_digest,observed_at) VALUES(?,?,?,?,?,?)',
                       (mission_id,command_id,'OPERATOR_COMMAND_EXECUTION_UPDATE',json.dumps(raw,sort_keys=True,separators=(',',':')),operator_control.digest(raw),now()))

@@ -9,6 +9,7 @@ from cyber_lion.mission_control import global_scheduler as scheduler
 
 
 def now():
+    # Equal timestamps must not prevent fair rotation.
     return '2026-09-14T12:00:00Z'
 
 
@@ -52,62 +53,104 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
         self.add_mission('C', 'BLOCKED')
         self.add_mission('D', 'PAUSED')
         self.assertEqual(scheduler.next_dispatch(self.conn, now)['mission_id'], 'B')
-        self.conn.close(); self.conn = self.connect(); scheduler.migrate(self.conn, now)
+        self.conn.close()
+        self.conn = self.connect()
+        scheduler.migrate(self.conn, now)
         observed = [scheduler.next_dispatch(self.conn, now)['mission_id'] for _ in range(5)]
         self.assertEqual(observed, ['A', 'C', 'B', 'A', 'C'])
         self.assertEqual([r[0] for r in self.conn.execute('SELECT dispatch_count FROM mission_scheduler_turns ORDER BY mission_id')], [2, 2, 2])
 
     def test_two_connections_select_distinct_next_turns(self):
-        self.add_mission('A', 'ACTIVE'); self.add_mission('B', 'ACTIVE'); barrier = threading.Barrier(2)
+        self.add_mission('A', 'ACTIVE')
+        self.add_mission('B', 'ACTIVE')
+        barrier = threading.Barrier(2)
         def choose():
             conn = self.connect()
-            try: barrier.wait(timeout=5); return scheduler.next_dispatch(conn, now)['mission_id']
-            finally: conn.close()
+            try:
+                barrier.wait(timeout=5)
+                return scheduler.next_dispatch(conn, now)['mission_id']
+            finally:
+                conn.close()
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
             results = [f.result(timeout=15) for f in [pool.submit(choose), pool.submit(choose)]]
         self.assertEqual(set(results), {'A', 'B'})
 
     def test_no_eligible_mission_does_not_create_turn(self):
-        self.add_mission('P', 'PAUSED'); self.assertIsNone(scheduler.next_dispatch(self.conn, now)); self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM mission_scheduler_turns').fetchone()[0], 0)
+        self.add_mission('P', 'PAUSED')
+        self.assertIsNone(scheduler.next_dispatch(self.conn, now))
+        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM mission_scheduler_turns').fetchone()[0], 0)
 
     def test_duplicate_and_changed_metadata_fail_closed_after_restart(self):
-        aid = self.assignment(); first = scheduler.record_internal_receipt(self.conn, aid, {'ok': True}, now); self.assertFalse(first['duplicate']); before = self.receipt_snapshot(); self.conn.close(); self.conn = self.connect()
+        aid = self.assignment()
+        first = scheduler.record_internal_receipt(self.conn, aid, {'ok': True}, now)
+        self.assertFalse(first['duplicate'])
+        before = self.receipt_snapshot()
+        self.conn.close()
+        self.conn = self.connect()
         for result, kwargs, reason in [
-            ({'ok': True}, {}, 'duplicate'), ({'ok': False}, {}, 'conflict'), ({'ok': True}, {'status': 'FAIL'}, 'conflict'),
-            ({'ok': True}, {'authority_effect': 'CHANGED'}, 'conflict'), ({'ok': True}, {'effect_receipt_digest': 'changed'}, 'conflict')]:
+            ({'ok': True}, {}, 'duplicate'),
+            ({'ok': False}, {}, 'conflict'),
+            ({'ok': True}, {'status': 'FAIL'}, 'conflict'),
+            ({'ok': True}, {'authority_effect': 'CHANGED'}, 'conflict'),
+            ({'ok': True}, {'effect_receipt_digest': 'changed'}, 'conflict'),
+        ]:
             with self.subTest(result=result, kwargs=kwargs):
-                with self.assertRaisesRegex(ValueError, '^assignment receipt ' + reason + '$'): scheduler.record_internal_receipt(self.conn, aid, result, now, **kwargs)
+                with self.assertRaisesRegex(ValueError, '^assignment receipt ' + reason + '$'):
+                    scheduler.record_internal_receipt(self.conn, aid, result, now, **kwargs)
                 self.assertEqual(self.receipt_snapshot(), before)
 
     def test_concurrent_identical_and_conflicting_ingress_has_one_winner(self):
         for same in (True, False):
             with self.subTest(identical=same):
-                aid = scheduler.create_assignment(self.conn, 'M' + str(same), 'P', 'LD001', 'MD001', {}, now, lease_generation=1); barrier = threading.Barrier(2)
+                aid = scheduler.create_assignment(self.conn, 'M' + str(same), 'P', 'LD001', 'MD001', {}, now, lease_generation=1)
+                barrier = threading.Barrier(2)
                 def record(value):
                     conn = self.connect()
                     try:
                         barrier.wait(timeout=5)
-                        try: return ('accepted', scheduler.record_internal_receipt(conn, aid, {'value': value}, now))
-                        except ValueError as exc: return ('rejected', str(exc))
-                    finally: conn.close()
+                        try:
+                            return ('accepted', scheduler.record_internal_receipt(conn, aid, {'value': value}, now))
+                        except ValueError as exc:
+                            return ('rejected', str(exc))
+                    finally:
+                        conn.close()
                 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-                    results = [f.result(timeout=15) for f in [pool.submit(record, 1), pool.submit(record, 1 if same else 2)]]
+                    futures = [pool.submit(record, 1), pool.submit(record, 1 if same else 2)]
+                    results = [f.result(timeout=15) for f in futures]
                 self.assertEqual(sorted(r[0] for r in results), ['accepted', 'rejected'])
                 rejected = next(r[1] for r in results if r[0] == 'rejected')
                 self.assertEqual(rejected, 'assignment receipt ' + ('duplicate' if same else 'conflict'))
                 self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM mission_execution_receipts WHERE assignment_id=?', (aid,)).fetchone()[0], 1)
 
     def test_forward_migration_preserves_historical_conflicts_and_old_turns(self):
-        aid = self.assignment(); scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
+        aid = self.assignment()
+        scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
+        # Reproduce existing historical rows without invoking any executor.
         self.conn.execute('INSERT INTO mission_execution_receipts VALUES(?,?,?,?,?,?,?,?,?)', ('legacy-second', aid, 'M', 'P', scheduler.digest({'version': 2}), None, 'NONE', 'FAIL', now()))
-        self.conn.execute('DROP TABLE mission_scheduler_turns'); self.conn.execute('CREATE TABLE mission_scheduler_turns(mission_id TEXT PRIMARY KEY,last_dispatched_at TEXT,dispatch_count INTEGER NOT NULL DEFAULT 0)'); self.conn.execute('INSERT INTO mission_scheduler_turns VALUES(?,?,?)', ('M', now(), 9)); self.conn.commit()
-        before = self.receipt_snapshot(); self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok'); scheduler.migrate(self.conn, now); scheduler.migrate(self.conn, now); self.assertEqual(self.receipt_snapshot(), before)
+        self.conn.execute('DROP TABLE mission_scheduler_turns')
+        self.conn.execute('CREATE TABLE mission_scheduler_turns(mission_id TEXT PRIMARY KEY,last_dispatched_at TEXT,dispatch_count INTEGER NOT NULL DEFAULT 0)')
+        self.conn.execute('INSERT INTO mission_scheduler_turns VALUES(?,?,?)', ('M', now(), 9))
+        self.conn.commit()
+        before = self.receipt_snapshot()
+        self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+        scheduler.migrate(self.conn, now)
+        scheduler.migrate(self.conn, now)
+        self.assertEqual(self.receipt_snapshot(), before)
         self.assertEqual(tuple(self.conn.execute('SELECT dispatch_count,last_dispatched_at,last_dispatch_order FROM mission_scheduler_turns').fetchone()), (9, now(), 0))
         migrations=[tuple(r) for r in self.conn.execute('SELECT version,schema_id FROM mission_scheduler_migrations ORDER BY version')]
-        self.assertEqual(migrations, [(1,'lion.scheduler-storage-reconciliation/v1'),(2,'lion.generic-effect-evidence-executor/v1'),(3,'lion.process-contract-plane/v1'),(4,'lion.control-plane-reconnaissance/v1'),(5,'lion.recon-evidence-reacquisition/v1'),(6,'lion.operator-stale-result-evidence/v1')])
+        self.assertEqual(migrations, [
+            (1, 'lion.scheduler-storage-reconciliation/v1'),
+            (2, 'lion.generic-effect-evidence-executor/v1'),
+            (3, 'lion.process-contract-plane/v1'),
+            (4, 'lion.control-plane-reconnaissance/v1'),
+            (5, 'lion.recon-evidence-reacquisition/v1'),
+            (6, 'lion.operator-stale-result-evidence/v1'),
+        ])
         self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
-        with self.assertRaisesRegex(ValueError, '^assignment receipt conflict$'): scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
+        with self.assertRaisesRegex(ValueError, '^assignment receipt conflict$'):
+            scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
         self.assertEqual(self.receipt_snapshot(), before)
 
 
-if __name__ == '__main__': unittest.main()
+if __name__ == '__main__':
+    unittest.main()
