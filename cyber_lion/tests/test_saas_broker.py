@@ -123,6 +123,40 @@ class CognitiveBrokerTests(unittest.TestCase):
             'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
             'browser':'Firefox Developer Edition','authority_effect':'NONE'},self.now)
 
+
+    def test_ready_heartbeat_promotes_existing_manual_request_in_place_with_immutable_transition(self):
+        request=self.request()
+        self.assertEqual(request['transport'],broker.TRANSPORT)
+        heartbeat={
+            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':'READY',
+            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
+            'browser':'Firefox Developer Edition','authority_effect':'NONE',
+        }
+        out=broker.record_mediator_heartbeat(self.conn,heartbeat,self.now)
+        self.assertEqual(out['promoted_request_ids'],[request['request_id']])
+        saved=broker.request_status(self.conn,request['request_id'],self.now)
+        self.assertEqual(saved['request_id'],request['request_id'])
+        self.assertEqual(saved['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(saved['progress_state'],'WAITING_BROWSER_MEDIATOR')
+        row=self.conn.execute('SELECT * FROM saas_transport_transitions WHERE request_id=?',(request['request_id'],)).fetchone()
+        self.assertEqual((row['from_transport'],row['to_transport'],row['authority_effect']),(broker.TRANSPORT,broker.FIREFOX_TRANSPORT,'NONE'))
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.conn.execute("UPDATE saas_transport_transitions SET reason='tampered' WHERE request_id=?",(request['request_id'],))
+        self.conn.rollback()
+
+    def test_ready_heartbeat_never_relabels_claimed_manual_request(self):
+        request=self.request();claim=broker.claim(self.conn,request['request_id'],self.now)
+        heartbeat={
+            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':'READY',
+            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
+            'browser':'Firefox Developer Edition','authority_effect':'NONE',
+        }
+        out=broker.record_mediator_heartbeat(self.conn,heartbeat,self.now)
+        self.assertEqual(out['promoted_request_ids'],[])
+        saved=broker.request_status(self.conn,request['request_id'],self.now)
+        self.assertEqual(saved['status'],'CLAIMED')
+        self.assertEqual(saved['transport'],broker.TRANSPORT)
+
     def test_ready_firefox_mediator_switches_transport_and_real_response_binding(self):
         self._firefox_heartbeat()
         status=broker.bridge_status(self.conn,None,self.now)
@@ -139,16 +173,19 @@ class CognitiveBrokerTests(unittest.TestCase):
         self.assertEqual(result['binding']['transport'],broker.FIREFOX_TRANSPORT)
         self.assertEqual(result['binding']['supervisor_role'],'CHATGPT_FIREFOX_PROJECT_MEDIATOR')
 
-    def test_transport_migration_supersedes_old_manual_pending(self):
+    def test_transport_migration_preserves_exact_pending_request_id_without_fanout(self):
         old=self.request()
         self.assertEqual(old['transport'],broker.TRANSPORT)
         self._firefox_heartbeat()
-        new=self.request()
-        self.assertNotEqual(old['request_id'],new['request_id'])
-        self.assertEqual(new['transport'],broker.FIREFOX_TRANSPORT)
-        self.assertEqual(new['retry_of_request_id'],old['request_id'])
         saved=broker.request_status(self.conn,old['request_id'],self.now)
-        self.assertEqual((saved['status'],saved['progress_state']),('SUPERSEDED','SUPERSEDED_TRANSPORT_MIGRATION'))
+        self.assertEqual(saved['request_id'],old['request_id'])
+        self.assertEqual(saved['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(saved['progress_state'],'WAITING_BROWSER_MEDIATOR')
+        same=self.request()
+        self.assertEqual(same['request_id'],old['request_id'])
+        self.assertTrue(same['deduplicated'])
+        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_handoff_requests').fetchone()[0],1)
+        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_transport_transitions WHERE request_id=?',(old['request_id'],)).fetchone()[0],1)
 
     def test_stale_firefox_heartbeat_fails_back_to_manual_transport(self):
         self._firefox_heartbeat()

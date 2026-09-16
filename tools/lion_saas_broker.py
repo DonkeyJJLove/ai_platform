@@ -79,6 +79,18 @@ CREATE TABLE IF NOT EXISTS saas_mediator_heartbeats(
   observed_at TEXT NOT NULL,
   details_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS saas_transport_transitions(
+  transition_id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  from_transport TEXT NOT NULL,
+  to_transport TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  transitioned_at TEXT NOT NULL,
+  authority_effect TEXT NOT NULL,
+  transition_digest TEXT NOT NULL UNIQUE
+);
+CREATE TRIGGER IF NOT EXISTS saas_transport_transition_immutable BEFORE UPDATE ON saas_transport_transitions
+BEGIN SELECT RAISE(ABORT,'immutable SaaS transport transition'); END;
 """
 
 
@@ -170,6 +182,18 @@ def _active_request_rows(conn, scope_type, scope_id, question_digest):
 MEDIATOR_STATES = {"STARTING","LOGIN_REQUIRED","PROJECT_BINDING_REQUIRED","CHAT_BINDING_REQUIRED","READY","DEGRADED","STOPPED"}
 
 
+def _promote_waiting_to_firefox(conn, stamp):
+    rows=conn.execute("SELECT request_id,transport FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE') AND COALESCE(transport,?)=? ORDER BY created_at,request_id",(TRANSPORT,TRANSPORT)).fetchall()
+    promoted=[]
+    for row in rows:
+        payload={"request_id":row['request_id'],"from_transport":row['transport'] or TRANSPORT,"to_transport":FIREFOX_TRANSPORT,"reason":"READY_FIREFOX_MEDIATOR_ADOPTION","transitioned_at":stamp,"authority_effect":"NONE"}
+        dg=_digest(payload);tid='saas-transition-'+dg[:32]
+        conn.execute("INSERT OR IGNORE INTO saas_transport_transitions(transition_id,request_id,from_transport,to_transport,reason,transitioned_at,authority_effect,transition_digest) VALUES(?,?,?,?,?,?,?,?)",(tid,payload['request_id'],payload['from_transport'],payload['to_transport'],payload['reason'],stamp,'NONE',dg))
+        conn.execute("UPDATE saas_handoff_requests SET transport=?,progress_state='WAITING_BROWSER_MEDIATOR' WHERE request_id=? AND status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE')",(FIREFOX_TRANSPORT,row['request_id']))
+        promoted.append(row['request_id'])
+    return promoted
+
+
 def record_mediator_heartbeat(conn, payload, now_fn):
     if type(payload) is not dict or set(payload) != {"mediator_id","transport","state","project_title","chat_title","browser","authority_effect"}:
         raise ValueError("mediator heartbeat schema")
@@ -188,7 +212,8 @@ def record_mediator_heartbeat(conn, payload, now_fn):
         "ON CONFLICT(mediator_id) DO UPDATE SET transport=excluded.transport,state=excluded.state,project_title=excluded.project_title,chat_title=excluded.chat_title,browser=excluded.browser,observed_at=excluded.observed_at,details_json=excluded.details_json",
         (mediator_id,transport,state,payload.get("project_title"),payload.get("chat_title"),payload.get("browser"),stamp,_canon(details)),
     )
-    conn.commit();return {**payload,"observed_at":stamp,"fresh":True}
+    promoted=_promote_waiting_to_firefox(conn,stamp) if state=="READY" else []
+    conn.commit();return {**payload,"observed_at":stamp,"fresh":True,"promoted_request_ids":promoted}
 
 
 def _current_mediator(conn, stamp):
