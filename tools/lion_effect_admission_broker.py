@@ -1750,16 +1750,36 @@ def operator_intervention_require_envelope(request:dict[str,Any])->tuple[str,str
  return head,tree
 
 
-def _atomic_copy_file(src:Path,dst:Path,mode:int|None=None)->None:
+def _atomic_copy_file(src:Path,dst:Path,mode:int|None=None,owner:tuple[int,int]|None=None)->None:
  dst.parent.mkdir(parents=True,exist_ok=True)
  fd,tmpname=tempfile.mkstemp(prefix="."+dst.name+".",suffix=".tmp",dir=str(dst.parent));tmp=Path(tmpname)
  try:
   with src.open("rb") as inp,os.fdopen(fd,"wb") as out:
    shutil.copyfileobj(inp,out);out.flush();os.fsync(out.fileno())
   os.chmod(tmp,mode if mode is not None else (src.stat().st_mode & 0o777))
+  if owner is not None and os.geteuid()==0:os.chown(tmp,owner[0],owner[1])
   os.replace(tmp,dst)
  finally:
   if tmp.exists():tmp.unlink()
+
+
+def _live_package_owner()->tuple[int,int]:
+ st=MISSION_CONTROL_V3_ROOT.stat();return st.st_uid,st.st_gid
+
+
+def _ensure_live_package_parent(dst:Path)->tuple[int,int]:
+ root=MISSION_CONTROL_V3_ROOT
+ try:rel=dst.parent.relative_to(root)
+ except ValueError as exc:raise Deny("LIVE_PACKAGE_PATH_ESCAPE") from exc
+ owner=_live_package_owner();current=root
+ for part in rel.parts:
+  current=current/part;current.mkdir(exist_ok=True);os.chmod(current,0o755)
+  if os.geteuid()==0:os.chown(current,owner[0],owner[1])
+ return owner
+
+
+def _live_package_copy(src:Path,dst:Path)->None:
+ owner=_ensure_live_package_parent(dst);_atomic_copy_file(src,dst,owner=owner)
 
 
 def _systemctl_exact(*args:str,check:bool=True)->subprocess.CompletedProcess[bytes]:
@@ -1843,7 +1863,7 @@ def operator_intervention_deploy(request:dict[str,Any])->dict[str,Any]:
  operator_unit_enabled=_systemctl_exact("is-enabled","--quiet",OPERATOR_CONTROL_UNIT,check=False).returncode==0
  rollback_errors=[]
  try:
-  for name in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256):_atomic_copy_file(OPERATOR_INTERVENTION_STAGE_ROOT/name,MISSION_CONTROL_V3_ROOT/name)
+  for name in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256):_live_package_copy(OPERATOR_INTERVENTION_STAGE_ROOT/name,MISSION_CONTROL_V3_ROOT/name)
   live_identity=mission_control_v3_package_identity()
   _atomic_copy_file(MISSION_CONTROL_V3_ROOT/OPERATOR_CONTROL_UNIT_PACKAGE_REL,OPERATOR_CONTROL_UNIT_PATH,0o644)
   drop_src=backup/"new-mission-control-dropin";drop_src.write_bytes(MISSION_CONTROL_V3_DROPIN_TEXT.encode());_atomic_copy_file(drop_src,MISSION_CONTROL_V3_DROPIN,0o644)
@@ -1866,7 +1886,10 @@ def operator_intervention_deploy(request:dict[str,Any])->dict[str,Any]:
   try:_systemctl_exact("disable","--now",OPERATOR_CONTROL_UNIT,check=False)
   except Exception as rb:rollback_errors.append(type(rb).__name__+":"+str(rb))
   for name,existed in package_existed.items():
-   try:_restore_optional(backup/"package"/name,MISSION_CONTROL_V3_ROOT/name,existed)
+   try:
+    target=MISSION_CONTROL_V3_ROOT/name
+    if existed:_live_package_copy(backup/"package"/name,target)
+    elif target.exists():target.unlink()
    except Exception as rb:rollback_errors.append(name+":"+type(rb).__name__)
   try:_restore_optional(backup/"systemd"/MISSION_CONTROL_V3_DROPIN.name,MISSION_CONTROL_V3_DROPIN,dropin_existed)
   except Exception as rb:rollback_errors.append("mission-dropin:"+type(rb).__name__)

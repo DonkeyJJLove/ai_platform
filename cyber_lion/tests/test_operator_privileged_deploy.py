@@ -73,6 +73,7 @@ class OperatorPrivilegedDeployTests(unittest.TestCase):
             self.assertTrue(out['installed']);self.assertEqual(out['db_integrity'],'ok')
             self.assertEqual((live/'mission_control_v3.py').read_text(),'NEW_MC\n')
             self.assertEqual(unit.read_text(),'NEW_UNIT\n')
+            self.assertEqual((live/'systemd').stat().st_mode & 0o777,0o755)
             self.assertIn(('enable',broker.OPERATOR_CONTROL_UNIT),calls)
             self.assertIn(('restart',broker.OPERATOR_CONTROL_UNIT),calls)
             self.assertIn(('restart',broker.MISSION_CONTROL_V3_UNIT),calls)
