@@ -1,0 +1,72 @@
+name: LION Operator Transactional Deploy Finalize Once
+
+on:
+  push:
+    branches: ["mission/operator-intervention-r1"]
+    paths:
+      - ".github/workflows/operator-transactional-deploy-once.yml"
+      - ".lion/operator-transactional-deploy.patch.gz.b64"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lion-operator-transactional-deploy-once
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify and apply exact patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          base64 -d .lion/operator-transactional-deploy.patch.gz.b64 | gzip -dc > /tmp/operator-transactional-deploy.patch
+          printf '%s  %s\n' '81a20f01a6220fed44d0cd0378340515325272b8021ee74b46ad7dfdb43076b3' '/tmp/operator-transactional-deploy.patch' | sha256sum -c -
+          git apply --check /tmp/operator-transactional-deploy.patch
+          git apply /tmp/operator-transactional-deploy.patch
+          rm -f .lion/operator-transactional-deploy.patch.gz.b64 .github/workflows/operator-transactional-deploy-once.yml
+
+      - name: Compile and run bounded deployment regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/lion_effect_admission_broker.py cyber_lion/tests/test_operator_privileged_deploy.py cyber_lion/tests/test_mission_control_v3_restart_package.py
+          python3 -m unittest \
+            cyber_lion.tests.test_operator_control \
+            cyber_lion.tests.test_operator_gateway \
+            cyber_lion.tests.test_operator_full_sat \
+            cyber_lion.tests.test_operator_backpressure \
+            cyber_lion.tests.test_operator_capability_registry \
+            cyber_lion.tests.test_operator_client \
+            cyber_lion.tests.test_operator_containment_helper \
+            cyber_lion.tests.test_operator_effect_boundary \
+            cyber_lion.tests.test_operator_panel_security \
+            cyber_lion.tests.test_operator_worker_delivery \
+            cyber_lion.tests.test_local_assignment_worker \
+            cyber_lion.tests.test_scheduler_storage_reconciliation \
+            cyber_lion.tests.test_operator_provision \
+            cyber_lion.tests.test_operator_privileged_deploy \
+            cyber_lion.tests.test_mission_control_v3_restart_package
+          git diff --check
+
+      - name: Commit exact finalized tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e .lion/operator-transactional-deploy.patch.gz.b64
+          test ! -e .github/workflows/operator-transactional-deploy-once.yml
+          git config user.name 'LION Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'LION: add branch-fixed transactional operator deployment'
+          git push origin HEAD:mission/operator-intervention-r1
