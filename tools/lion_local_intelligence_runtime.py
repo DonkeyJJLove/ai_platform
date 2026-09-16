@@ -12,7 +12,6 @@ if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from dataclasses import dataclass
 import argparse,hashlib,json,os,threading,time,urllib.request,urllib.error,urllib.parse,uuid,sqlite3,re,sys,inspect
 from datetime import datetime,timezone
-from cyber_lion.mission_control import global_scheduler as mission_scheduler
 from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway,UI
 from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
 apply_hybrid_gateway_extension(Gateway)
@@ -29,6 +28,13 @@ DRONE_ROLES={
 
 def canon(v):return json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False,default=str).encode('utf-8')
 def digest(v):return hashlib.sha256(canon(v)).hexdigest()
+def _assignment_lease_valid(assignment,observed_at):
+    expires=(assignment or {}).get('lease_expires_at') if isinstance(assignment,dict) else None
+    if not expires:return False
+    now_dt=datetime.fromisoformat(str(observed_at).replace('Z','+00:00'));exp_dt=datetime.fromisoformat(str(expires).replace('Z','+00:00'))
+    if now_dt.tzinfo is None:now_dt=now_dt.replace(tzinfo=timezone.utc)
+    if exp_dt.tzinfo is None:exp_dt=exp_dt.replace(tzinfo=timezone.utc)
+    return now_dt<exp_dt
 def atomic_json(path,value):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True);tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(value,sort_keys=True,ensure_ascii=False),encoding='utf-8');os.replace(tmp,path)
 def _json_request(url,*,body=None,timeout=8):
@@ -492,7 +498,7 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             max_tokens=int(payload.get('max_tokens') or 384)
             if not 1<=max_tokens<=2048:raise ValueError('local assignment max_tokens')
             observed=datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
-            if not mission_scheduler.assignment_lease_valid(claimed,observed):raise ValueError('local assignment lease expired before effect')
+            if not _assignment_lease_valid(claimed,observed):raise ValueError('local assignment lease expired before effect')
             answer=str(modelprov(messages,max_tokens)).strip()
             if not answer:raise ValueError('empty local model result')
             result={'kind':'LOCAL_MODEL_INFERENCE','model':'gpt-oss-20b-MXFP4','response_text':answer,'response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
