@@ -1,0 +1,122 @@
+name: LION Operator Intervention Finalize Once
+
+on:
+  push:
+    branches: ["mission/operator-intervention-r1"]
+    paths:
+      - ".lion/operator-large.patch.gz.b64"
+      - ".github/workflows/operator-finalize-once.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lion-operator-finalize-once
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact trigger revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = "mission/operator-intervention-r1"
+
+      - name: Reconstruct and verify exact patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d .lion/operator-large.patch.gz.b64 | gzip -dc > /tmp/operator-large.patch
+          printf '%s  %s\n' '2d4ca94c082194a4382ff01b21e6583200106ff64b16cc428363389bcc7779ea' '/tmp/operator-large.patch' | sha256sum -c -
+          git apply --check /tmp/operator-large.patch
+          git apply /tmp/operator-large.patch
+
+      - name: Recompute exact Mission Control package manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .lion/operator-large.patch.gz.b64 .github/workflows/operator-finalize-once.yml
+          python3 - <<'PY'
+          import hashlib
+          import re
+          from pathlib import Path
+          from cyber_lion.tests import test_mission_control_v3_restart_package as package_test
+
+          observed = {
+              name: hashlib.sha256(source.read_bytes()).hexdigest()
+              for name, source in package_test.SOURCE_MAP.items()
+          }
+          broker = Path('tools/lion_effect_admission_broker.py')
+          text = broker.read_text(encoding='utf-8')
+          replacement = 'MISSION_CONTROL_V3_REQUIRED_SHA256=' + repr(dict(sorted(observed.items())))
+          updated, count = re.subn(
+              r'^MISSION_CONTROL_V3_REQUIRED_SHA256=.*$',
+              replacement,
+              text,
+              count=1,
+              flags=re.MULTILINE,
+          )
+          if count != 1:
+              raise SystemExit('manifest replacement cardinality')
+          broker.write_text(updated, encoding='utf-8')
+          print('PACKAGE_FILES', len(observed))
+          print('MISSION_CONTROL_V3_SHA256', observed['mission_control_v3.py'])
+          PY
+
+      - name: Compile operator control integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            cyber_lion/contracts/operator_intervention.py \
+            cyber_lion/mission_control/operator_control.py \
+            cyber_lion/mission_control/global_scheduler.py \
+            cyber_lion/app_coordination/local_intelligence_gateway.py \
+            tools/lion_local_intelligence_runtime.py \
+            tools/lion_mission_control_v3.py \
+            tools/lion_operator_gateway.py \
+            tools/lion_operator_client.py \
+            tools/lion_operator_containment_helper.py \
+            tools/lion_operator_provision.py
+
+      - name: Run operator regression gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest \
+            cyber_lion.tests.test_operator_control \
+            cyber_lion.tests.test_operator_gateway \
+            cyber_lion.tests.test_operator_full_sat \
+            cyber_lion.tests.test_operator_backpressure \
+            cyber_lion.tests.test_operator_capability_registry \
+            cyber_lion.tests.test_operator_client \
+            cyber_lion.tests.test_operator_containment_helper \
+            cyber_lion.tests.test_operator_effect_boundary \
+            cyber_lion.tests.test_operator_panel_security \
+            cyber_lion.tests.test_operator_worker_delivery \
+            cyber_lion.tests.test_local_assignment_worker \
+            cyber_lion.tests.test_scheduler_storage_reconciliation \
+            cyber_lion.tests.test_mission_control_v3_restart_package
+
+      - name: Commit exact finalized tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test ! -e .lion/operator-large.patch.gz.b64
+          test ! -e .github/workflows/operator-finalize-once.yml
+          git config user.name 'LION Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'LION: finalize operator intervention integration'
+          git push origin HEAD:mission/operator-intervention-r1
