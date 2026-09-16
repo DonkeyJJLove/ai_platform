@@ -412,7 +412,9 @@ def bind_lpcl_execution(mid):
       if continuation_ok:
        src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
        if not src:raise ValueError('lpcl source mission missing:'+source_mid)
-      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid,current_head=m['source_head'],current_tree=m['source_tree'])
+      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid)
+      execution_currentness=runtime.get('_execution_currentness') or {}
+      execution_head=execution_currentness.get('source_head');execution_tree=execution_currentness.get('source_tree');currentness_request_id=execution_currentness.get('currentness_request_id')
       live_pods=runtime.get('pods') or []
       if runtime.get('state')!='RUNNING' or int(runtime.get('materialized',0) or 0)!=64 or int(runtime.get('ready',0) or 0)!=64 or int(runtime.get('unique_uid_count',0) or 0)!=64 or len(live_pods)!=64:
        raise ValueError('lpcl live material fleet not healthy')
@@ -420,6 +422,8 @@ def bind_lpcl_execution(mid):
       for pod in live_pods:
        workers.append({'pod_name':pod.get('name'),'pod_uid':pod.get('uid'),'logical_id':str(pod.get('logical_drone') or '').upper(),'phase':pod.get('phase'),'ready':1 if pod.get('ready') else 0,'restarts':int(pod.get('restarts',0) or 0),'pod_ip':pod.get('pod_ip')})
       if len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl live material fleet identity')
+      if _hex(str(execution_head or ''),40) and _hex(str(execution_tree or ''),40):
+       _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL_CURRENTNESS_RECONCILER','LD02',None,{'event':'EXECUTION_CURRENTNESS_REACQUIRED','registered_source_head':m['source_head'],'registered_source_tree':m['source_tree'],'execution_source_head':execution_head,'execution_source_tree':execution_tree,'currentness_request_id':currentness_request_id,'material_request_id':material_request_id,'authority_effect':'NONE'},'INTERNAL')
       if int(m['logical_count'])==128:
        fresh=not continuation_ok
        has_explicit_topology=any(__import__('re').fullmatch(r'COHORT_[0-9]{2}',k) for k in kv)
@@ -654,6 +658,15 @@ def _send_broker_request(req):
     return value['result'],req['request_id']
 
 
+def execution_currentness_broker():
+    req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':'MISSION64_CURRENTNESS_READ'}
+    result,request_id=_send_broker_request(req)
+    head=str(result.get('source_head') or '').strip();tree=str(result.get('source_tree') or '').strip()
+    if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('execution currentness identity malformed')
+    if result.get('authority_effect')!='NONE':raise RuntimeError('execution currentness authority effect')
+    return head,tree,request_id
+
+
 def epoch3_broker(operation,pod=None,source_mission_id=None,current_head=None,current_tree=None):
     # Logical lineage and material-carrier authority are distinct identities.
     # Continuations validate their explicit logical parent. Fresh missions may
@@ -667,11 +680,18 @@ def epoch3_broker(operation,pod=None,source_mission_id=None,current_head=None,cu
      source_mid=LPCL_REBIND_SOURCE
      c=connect();source=c.execute('SELECT mission_id,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone();c.close()
      if not source:raise ValueError('epoch3 source mission missing:'+source_mid)
-    head=str(current_head or (source['source_head'] if source else '') or '').strip();tree=str(current_tree or (source['source_tree'] if source else '') or '').strip()
+    currentness_request_id=None
+    if current_head is None or current_tree is None:
+     head,tree,currentness_request_id=execution_currentness_broker()
+    else:
+     head=str(current_head or '').strip();tree=str(current_tree or '').strip()
     if not _hex(head,40) or not _hex(tree,40):raise ValueError('epoch3 currentness identity')
     req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':EPOCH3_MATERIAL_CARRIER_ID,'source_head':head,'source_tree':tree,'spec_digest':EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST}
     if pod is not None:req['pod_name']=pod
-    return _send_broker_request(req)
+    result,request_id=_send_broker_request(req)
+    if isinstance(result,dict):
+     result=dict(result);result['_execution_currentness']={'source_head':head,'source_tree':tree,'currentness_request_id':currentness_request_id,'authority_effect':'NONE'}
+    return result,request_id
 
 
 def epoch3_component_broker(operation,logical_id):

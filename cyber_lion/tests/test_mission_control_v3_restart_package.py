@@ -59,6 +59,30 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             broker.MISSION_CONTROL_V3_REQUIRED_SHA256["mission_control_v3.py"],
         )
 
+    def test_current_master_read_is_read_only_and_rejects_caller_supplied_identity(self):
+        class User:
+            pw_uid = 995
+        request={
+            'schema_version':broker.SCHEMA,
+            'request_id':'a'*64,
+            'operation':'MISSION64_CURRENTNESS_READ',
+        }
+        with patch.object(broker,'peer_uid',return_value=995), \
+             patch.object(broker.os,'getuid',return_value=0), \
+             patch.object(broker.socket,'gethostname',return_value=broker.EXPECTED_HOST), \
+             patch.object(broker.pwd,'getpwnam',return_value=User()), \
+             patch.object(broker,'mission64_git_identity',return_value=('b'*40,'c'*40)):
+            out=broker.handle(dict(request))
+            self.assertEqual(out['source_head'],'b'*40)
+            self.assertEqual(out['source_tree'],'c'*40)
+            self.assertEqual(out['currentness_source'],'GITHUB_MASTER_READ')
+            self.assertEqual(out['authority_effect'],'NONE')
+            self.assertEqual(out['repository'],broker.MISSION64_MASTER_REPO)
+            self.assertEqual(out['branch'],broker.MISSION64_MASTER_BRANCH)
+            bad={**request,'source_head':'d'*40,'source_tree':'e'*40}
+            with self.assertRaisesRegex(broker.Deny,'MISSION64_CURRENTNESS_FIELD_SET'):
+                broker.handle(bad)
+
     def test_complete_exact_package_is_accepted(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

@@ -1825,6 +1825,7 @@ def handle(
                 "PREPARE_SCALE64",
                 "RUN_SCALE64",
                 "READ_EVIDENCE",
+                "MISSION64_CURRENTNESS_READ",
                 "MISSION64_PRECHECK",
                 "MISSION64_START",
                 "MISSION64_READ",
@@ -1845,6 +1846,19 @@ def handle(
                 "EPOCH3_M64_VALIDATE_LOGICAL",
             ],
             "mission64": mission64_spec(),
+        }
+
+    if operation == "MISSION64_CURRENTNESS_READ":
+        if set(request) != {"schema_version", "request_id", "operation"}:
+            raise Deny("MISSION64_CURRENTNESS_FIELD_SET")
+        head,tree=mission64_git_identity()
+        return {
+            "source_head":head,
+            "source_tree":tree,
+            "repository":MISSION64_MASTER_REPO,
+            "branch":MISSION64_MASTER_BRANCH,
+            "currentness_source":"GITHUB_MASTER_READ",
+            "authority_effect":"NONE",
         }
 
     if operation == "PRECHECK_SCALE64":
