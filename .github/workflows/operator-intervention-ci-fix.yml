@@ -26,6 +26,20 @@ jobs:
           git apply --check .github/operator-intervention/ci-fix.patch
           git apply .github/operator-intervention/ci-fix.patch
           git diff --check
+      - name: Bind exact restart-package hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path=Path('tools/lion_effect_admission_broker.py')
+          text=path.read_text(encoding='utf-8')
+          old='7ed9c6da9f5aa73f1079aae3581c8fdc6666be00982ec2d5f817eba0382ec337'
+          new='e6d609f709f8ca5c5adbe0f4699fb704867d55066794219d5ebd75f5b893af86'
+          if text.count(old)!=1:
+              raise SystemExit('OPERATOR_CONTROL_MANIFEST_BINDING_DRIFT')
+          path.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Verify runtime layering boundary
         shell: bash
         run: |
