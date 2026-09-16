@@ -1,0 +1,86 @@
+name: LION Operator Bandit Fix Finalize Once
+
+on:
+  push:
+    branches: ["mission/operator-intervention-r1"]
+    paths:
+      - ".github/workflows/operator-bandit-fix-once.yml"
+      - ".lion/operator-bandit-fix.patch.gz.b64"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lion-operator-bandit-fix-once
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify and apply exact Bandit fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          base64 -d .lion/operator-bandit-fix.patch.gz.b64 | gzip -dc > /tmp/operator-bandit-fix.patch
+          printf '%s  %s\n' '61b0d8b0b32bbc5eb0df85c8a05117257e85a9f1d3b5ea175baf511b1248327e' '/tmp/operator-bandit-fix.patch' | sha256sum -c -
+          git apply --check /tmp/operator-bandit-fix.patch
+          git apply /tmp/operator-bandit-fix.patch
+          rm -f .lion/operator-bandit-fix.patch.gz.b64 .github/workflows/operator-bandit-fix-once.yml
+
+      - name: Compile and run operator regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile cyber_lion/mission_control/operator_control.py tools/lion_effect_admission_broker.py
+          python3 -m unittest \
+            cyber_lion.tests.test_operator_control \
+            cyber_lion.tests.test_operator_gateway \
+            cyber_lion.tests.test_operator_full_sat \
+            cyber_lion.tests.test_operator_backpressure \
+            cyber_lion.tests.test_operator_capability_registry \
+            cyber_lion.tests.test_operator_client \
+            cyber_lion.tests.test_operator_containment_helper \
+            cyber_lion.tests.test_operator_effect_boundary \
+            cyber_lion.tests.test_operator_panel_security \
+            cyber_lion.tests.test_operator_worker_delivery \
+            cyber_lion.tests.test_local_assignment_worker \
+            cyber_lion.tests.test_scheduler_storage_reconciliation \
+            cyber_lion.tests.test_operator_provision \
+            cyber_lion.tests.test_operator_privileged_deploy \
+            cyber_lion.tests.test_mission_control_v3_restart_package
+          git diff --check
+
+      - name: Reproduce Bandit PR gate exactly
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check bandit==1.9.4
+          bandit --recursive cyber_lion --exclude cyber_lion/tests --severity-level medium --confidence-level medium --format json --output /tmp/lion-bandit.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/lion-bandit.json',encoding='utf-8'))
+          results=data.get('results') or []
+          print('BANDIT_RESULTS',len(results))
+          if results:raise SystemExit(1)
+          PY
+
+      - name: Commit exact finalized tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e .lion/operator-bandit-fix.patch.gz.b64
+          test ! -e .github/workflows/operator-bandit-fix-once.yml
+          git config user.name 'LION Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'LION: eliminate dynamic SQL in operator control'
+          git push origin HEAD:mission/operator-intervention-r1
