@@ -20,6 +20,7 @@ SOURCE_MAP = {
     "lion_mission_lifecycle_db.py": ROOT / "tools/lion_mission_lifecycle_db.py",
     "lion_saas_session_bridge.py": ROOT / "tools/lion_saas_session_bridge.py",
     "lion_saas_broker.py": ROOT / "tools/lion_saas_broker.py",
+    "lion_firefox_broker_relay.py": ROOT / "tools/lion_firefox_broker_relay.py",
     "cyber_lion/contracts/mission_contract_profiles.py": ROOT / "cyber_lion/contracts/mission_contract_profiles.py",
     "cyber_lion/contracts/phase_execution_contract.py": ROOT / "cyber_lion/contracts/phase_execution_contract.py",
     "cyber_lion/contracts/action_ir.py": ROOT / "cyber_lion/contracts/action_ir.py",
