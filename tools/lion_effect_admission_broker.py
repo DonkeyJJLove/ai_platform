@@ -1670,7 +1670,7 @@ MISSION_CONTROL_V3_REQUIRED_SHA256={
     'cyber_lion/process_language/lpcl.py': '355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91',
     'lion_firefox_broker_relay.py': 'ed8e49f86cb158bb834d4607a5d23536d0e91ce33a1e125cd1a297c911f0c3c1',
     'lion_mission_lifecycle_db.py': '0ca42b937a21c498e9016e3f255ee796b30268ccff3dea642a468e293814a35a',
-    'lion_saas_broker.py': 'b5f97c65aaa928b84b5601cbc002574bede0744f64d9d6fe915ae8a269a1c0f9',
+    'lion_saas_broker.py': '11c77071f16356adee0f8ab059136dff81d463cc32fd3277f7231ae4abcc03bd',
     'lion_saas_session_bridge.py': '4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7',
     'mission_control_compat.py': 'f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0',
     'mission_control_v3.py': 'fb061e31e372e15daa6cc1a83b8cbb0f9bdf7a720345abe4575c6432f9b05f22',
