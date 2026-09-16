@@ -506,9 +506,26 @@ def parse_128l64m_topology(lpcl_text):
                 while i < len(lines) and not lines[i]:
                     i += 1
                 value = lines[i] if i < len(lines) else ""
-            logical = _parse_range(value, "LD")
-            role = None
+            # LPCL/1.1 successor tasks may use the compact, semantic surface
+            # `COHORT_01=LD001-LD008 | ROLE_NAME`. Preserve that role while
+            # deriving the exact 2:1 material slice from the canonical cohort
+            # ordinal. The legacy explicit ROLE=/MATERIAL= form remains valid
+            # and is not relaxed.
+            range_value, separator, inline_role = value.partition("|")
+            range_value = range_value.strip()
+            inline_role = inline_role.strip() if separator else ""
+            logical = _parse_range(range_value, "LD")
+            role = inline_role or None
             material = None
+            if inline_role:
+                suffix = key[len("COHORT_"):]
+                if len(suffix) != 2 or not suffix.isdigit():
+                    raise ValueError("invalid compact cohort key")
+                cohort_index = int(suffix)
+                if not 1 <= cohort_index <= 16:
+                    raise ValueError("compact cohort ordinal out of range")
+                first_material = (cohort_index - 1) * 4 + 1
+                material = tuple(f"MD{x:03d}" for x in range(first_material, first_material + 4))
             j = i + 1
             while j < len(lines) and not lines[j].startswith("COHORT_"):
                 if lines[j] == "ROLE=" or lines[j].startswith("ROLE="):

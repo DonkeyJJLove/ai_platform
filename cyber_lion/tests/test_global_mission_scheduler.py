@@ -73,6 +73,42 @@ class GlobalSchedulerTests(unittest.TestCase):
         row=self.c.execute("SELECT adapter,runtime_state FROM missions WHERE mission_id='G'").fetchone()
         self.assertEqual(tuple(row),('LPCL_GENERIC_128L64M','GENERIC_SHARED_HEALTHY_FLEET_128L64M'))
 
+    def test_compact_semantic_128l64m_topology_preserves_roles_and_derives_material_slices(self):
+        lines=[]
+        for i in range(1,17):
+            a=(i-1)*8+1;b=i*8
+            lines.append(f'COHORT_{i:02d}=LD{a:03d}-LD{b:03d} | ROLE_{i:02d}')
+        cohorts=g.parse_128l64m_topology('\n'.join(lines))
+        self.assertEqual(len(cohorts),16)
+        self.assertEqual(cohorts[0][1],[f'LD{i:03d}' for i in range(1,9)] if isinstance(cohorts[0][1],list) else tuple(f'LD{i:03d}' for i in range(1,9)))
+        self.assertEqual(cohorts[0][2],'ROLE_01')
+        self.assertEqual(cohorts[0][3],tuple(f'MD{i:03d}' for i in range(1,5)))
+        self.assertEqual(cohorts[-1][2],'ROLE_16')
+        self.assertEqual(cohorts[-1][3],tuple(f'MD{i:03d}' for i in range(61,65)))
+
+    def test_compact_semantic_128l64m_binding_is_two_to_one(self):
+        text='\n'.join(
+            f'COHORT_{i:02d}=LD{((i-1)*8+1):03d}-LD{(i*8):03d} | ROLE_{i:02d}'
+            for i in range(1,17)
+        )
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('C','AUTHORIZED',now(),'LPCL_MISSION','NOT_STARTED',0,0,'x'))
+        workers=[{'pod_name':f'p{i:02d}','pod_uid':f'uid-{i:02d}','phase':'Running','ready':1,'restarts':0,'pod_ip':f'10.0.0.{i+1}'} for i in range(64)]
+        out=g.bind_128l64m(self.c,'C',text,workers,now)
+        self.assertEqual((out['logical_count'],out['material_count'],out['assignments']),(128,64,128))
+        roles={r['role'] for r in self.c.execute("SELECT role FROM logical_drones WHERE mission_id='C'")}
+        self.assertEqual(roles,{f'ROLE_{i:02d}' for i in range(1,17)})
+        counts=[r[0] for r in self.c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id='C' GROUP BY material_drone_id")]
+        self.assertEqual(counts,[2]*64)
+
+    def test_compact_semantic_topology_rejects_out_of_range_cohort_key(self):
+        lines=[]
+        for i in range(1,16):
+            a=(i-1)*8+1;b=i*8
+            lines.append(f'COHORT_{i:02d}=LD{a:03d}-LD{b:03d} | ROLE_{i:02d}')
+        lines.append('COHORT_17=LD121-LD128 | ROLE_17')
+        with self.assertRaisesRegex(ValueError,'compact cohort ordinal out of range'):
+            g.parse_128l64m_topology('\n'.join(lines))
+
     def test_128l64m_binding_is_two_to_one_and_uid_exact(self):
         lp=[]
         for i in range(1,17):
