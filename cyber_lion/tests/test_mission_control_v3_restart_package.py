@@ -25,6 +25,7 @@ SOURCE_MAP = {
     "lion_operator_client.py": ROOT / "tools/lion_operator_client.py",
     "lion_operator_provision.py": ROOT / "tools/lion_operator_provision.py",
     "lion_operator_containment_helper.py": ROOT / "tools/lion_operator_containment_helper.py",
+    "systemd/lion-operator-control.service": ROOT / "deploy/systemd/lion-operator-control.service",
     "cyber_lion/contracts/operator_intervention.py": ROOT / "cyber_lion/contracts/operator_intervention.py",
     "cyber_lion/mission_control/operator_control.py": ROOT / "cyber_lion/mission_control/operator_control.py",
     "cyber_lion/contracts/mission_contract_profiles.py": ROOT / "cyber_lion/contracts/mission_contract_profiles.py",
