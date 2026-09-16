@@ -4,6 +4,7 @@ on:
   push:
     branches: ["mission/operator-intervention-r1"]
     paths:
+      - ".lion/operator-runtime.patch.gz.b64"
       - ".lion/operator-large.patch.gz.b64"
       - ".github/workflows/operator-finalize-once.yml"
 
@@ -31,7 +32,16 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$GITHUB_REF_NAME" = "mission/operator-intervention-r1"
 
-      - name: Reconstruct and verify exact patch
+      - name: Reconstruct and verify exact runtime patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d .lion/operator-runtime.patch.gz.b64 | gzip -dc > /tmp/operator-runtime.patch
+          printf '%s  %s\n' '8a4434e01c71946cc6b2df8e695744e3e1eccac2f51f8c3de9c23b41b07541ec' '/tmp/operator-runtime.patch' | sha256sum -c -
+          git apply --check /tmp/operator-runtime.patch
+          git apply /tmp/operator-runtime.patch
+
+      - name: Reconstruct and verify exact gateway and Mission Control patch
         shell: bash
         run: |
           set -euo pipefail
@@ -44,7 +54,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .lion/operator-large.patch.gz.b64 .github/workflows/operator-finalize-once.yml
+          rm -f .lion/operator-runtime.patch.gz.b64 .lion/operator-large.patch.gz.b64 .github/workflows/operator-finalize-once.yml
           python3 - <<'PY'
           import hashlib
           import re
@@ -113,6 +123,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --check
+          test ! -e .lion/operator-runtime.patch.gz.b64
           test ! -e .lion/operator-large.patch.gz.b64
           test ! -e .github/workflows/operator-finalize-once.yml
           git config user.name 'LION Automation'
