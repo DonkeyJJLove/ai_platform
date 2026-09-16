@@ -202,6 +202,9 @@ class MissionRebindTests(unittest.TestCase):
         compat = importlib.import_module('lion_mission_control_compat')
         sys.modules['mission_control_compat'] = compat
         mc = importlib.import_module('lion_mission_control_v3')
+        old_current_master_resolver = mc.CURRENT_MASTER_IDENTITY_RESOLVER
+        mc.CURRENT_MASTER_IDENTITY_RESOLVER = lambda: ('f'*40, 'e'*40)
+        self.addCleanup(lambda: setattr(mc, 'CURRENT_MASTER_IDENTITY_RESOLVER', old_current_master_resolver))
         td = tempfile.TemporaryDirectory(); self.addCleanup(td.cleanup)
         old_db, old_legacy = mc.DB, mc.LEGACY_DB
         self.addCleanup(lambda: setattr(mc, 'DB', old_db)); self.addCleanup(lambda: setattr(mc, 'LEGACY_DB', old_legacy))
@@ -236,6 +239,9 @@ class MissionRebindTests(unittest.TestCase):
         if str(tools) not in sys.path: sys.path.insert(0, str(tools))
         compat = importlib.import_module('lion_mission_control_compat'); sys.modules['mission_control_compat'] = compat
         mc = importlib.import_module('lion_mission_control_v3')
+        old_current_master_resolver = mc.CURRENT_MASTER_IDENTITY_RESOLVER
+        mc.CURRENT_MASTER_IDENTITY_RESOLVER = lambda: ('f'*40, 'e'*40)
+        self.addCleanup(lambda: setattr(mc, 'CURRENT_MASTER_IDENTITY_RESOLVER', old_current_master_resolver))
         td = tempfile.TemporaryDirectory(); self.addCleanup(td.cleanup)
         old_db, old_legacy = mc.DB, mc.LEGACY_DB
         self.addCleanup(lambda: setattr(mc, 'DB', old_db)); self.addCleanup(lambda: setattr(mc, 'LEGACY_DB', old_legacy))
