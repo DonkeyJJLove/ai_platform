@@ -117,6 +117,57 @@ class CognitiveBrokerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             broker.create_request(self.conn, None, 'Question', self.now, scope_type='MISSION')
 
+    def _firefox_heartbeat(self, state='READY'):
+        return broker.record_mediator_heartbeat(self.conn,{
+            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':state,
+            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
+            'browser':'Firefox Developer Edition','authority_effect':'NONE'},self.now)
+
+    def test_ready_firefox_mediator_switches_transport_and_real_response_binding(self):
+        self._firefox_heartbeat()
+        status=broker.bridge_status(self.conn,None,self.now)
+        self.assertTrue(status['automatic_local_to_saas_hop'])
+        self.assertFalse(status['operator_mediation_required'])
+        self.assertEqual(status['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(status['mediator']['state'],'READY')
+        request=self.request()
+        self.assertEqual(request['transport'],broker.FIREFOX_TRANSPORT)
+        claim=broker.claim(self.conn,request['request_id'],self.now)
+        result=broker.respond(self.conn,claim['request_id'],claim['response_token'],'Connected through Firefox',self.now,
+            model_identity='ChatGPT UI / LION_EVOLUSION',transport=broker.FIREFOX_TRANSPORT,
+            attestation_class=broker.FIREFOX_ATTESTATION_CLASS,claim_generation=claim['claim_generation'])
+        self.assertEqual(result['binding']['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(result['binding']['supervisor_role'],'CHATGPT_FIREFOX_PROJECT_MEDIATOR')
+
+    def test_transport_migration_supersedes_old_manual_pending(self):
+        old=self.request()
+        self.assertEqual(old['transport'],broker.TRANSPORT)
+        self._firefox_heartbeat()
+        new=self.request()
+        self.assertNotEqual(old['request_id'],new['request_id'])
+        self.assertEqual(new['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(new['retry_of_request_id'],old['request_id'])
+        saved=broker.request_status(self.conn,old['request_id'],self.now)
+        self.assertEqual((saved['status'],saved['progress_state']),('SUPERSEDED','SUPERSEDED_TRANSPORT_MIGRATION'))
+
+    def test_stale_firefox_heartbeat_fails_back_to_manual_transport(self):
+        self._firefox_heartbeat()
+        self.stamp='2026-09-15T00:00:46Z'
+        status=broker.bridge_status(self.conn,None,self.now)
+        self.assertFalse(status['automatic_local_to_saas_hop'])
+        self.assertEqual(status['transport'],broker.TRANSPORT)
+        self.assertEqual(status['mediator']['state'],'STALE')
+        request=self.request()
+        self.assertEqual(request['transport'],broker.TRANSPORT)
+
+    def test_firefox_request_rejects_wrong_attestation_class(self):
+        self._firefox_heartbeat()
+        claim=broker.claim(self.conn,self.request()['request_id'],self.now)
+        with self.assertRaisesRegex(ValueError,'transport/attestation'):
+            broker.respond(self.conn,claim['request_id'],claim['response_token'],'answer',self.now,
+                model_identity='ChatGPT UI',transport=broker.FIREFOX_TRANSPORT,
+                attestation_class=broker.ATTESTATION_CLASS,claim_generation=claim['claim_generation'])
+
     def test_browser_independent_delivery_survives_restart_without_duplicates(self):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'threads.db'

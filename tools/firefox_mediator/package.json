@@ -1,0 +1,8 @@
+{
+  "name": "lion-firefox-project-mediator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {"start": "node mediator.js", "check": "node --check mediator.js"},
+  "dependencies": {"selenium-webdriver": "4.49.0"}
+}
