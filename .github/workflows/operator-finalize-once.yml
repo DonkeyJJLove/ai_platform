@@ -57,13 +57,13 @@ jobs:
           }
           broker = Path('tools/lion_effect_admission_broker.py')
           text = broker.read_text(encoding='utf-8')
-          replacement = 'MISSION_CONTROL_V3_REQUIRED_SHA256=' + repr(dict(sorted(observed.items())))
+          replacement = 'MISSION_CONTROL_V3_REQUIRED_SHA256=' + repr(dict(sorted(observed.items()))) + '\n'
           updated, count = re.subn(
-              r'^MISSION_CONTROL_V3_REQUIRED_SHA256=.*$',
+              r'^MISSION_CONTROL_V3_REQUIRED_SHA256=.*?(?=^MISSION_CONTROL_V3_PATH=)',
               replacement,
               text,
               count=1,
-              flags=re.MULTILINE,
+              flags=re.MULTILINE | re.DOTALL,
           )
           if count != 1:
               raise SystemExit('manifest replacement cardinality')
@@ -81,6 +81,7 @@ jobs:
             cyber_lion/mission_control/operator_control.py \
             cyber_lion/mission_control/global_scheduler.py \
             cyber_lion/app_coordination/local_intelligence_gateway.py \
+            tools/lion_effect_admission_broker.py \
             tools/lion_local_intelligence_runtime.py \
             tools/lion_mission_control_v3.py \
             tools/lion_operator_gateway.py \
