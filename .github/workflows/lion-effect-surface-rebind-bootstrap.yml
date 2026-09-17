@@ -1,4 +1,4 @@
-name: LION Effect Surface Rebind Bootstrap
+name: LION Effect Surface Rebind Diagnostic
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
       - repair/effect-surface-rebind-bootstrap-r1
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  materialize-exact-rebind:
+  diagnose-exact-rebind:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -126,19 +126,54 @@ jobs:
           git add -A
           git diff --cached --check
           test "$(git write-tree)" = "5d50ff152cb5c148df75fd24d3c8abc0b7910e26"
-          git config user.name "LION Repair Bot"
-          git config user.email "lion-repair@users.noreply.github.com"
+          git config user.name "LION Diagnostic Bot"
+          git config user.email "lion-diagnostic@users.noreply.github.com"
           git commit -m "LION: rebind current effect-surface attestation"
           test "$(git rev-parse HEAD^{tree})" = "5d50ff152cb5c148df75fd24d3c8abc0b7910e26"
           test -z "$(git status --porcelain)"
 
-      - name: Run Cyber-Lion full suite
-        run: python -m unittest discover -s cyber_lion/tests -p 'test_*.py' -v
-
-      - name: Push exact repair branch
+      - name: Diagnose Cyber-Lion full suite
         shell: bash
         run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD^{tree})" = "5d50ff152cb5c148df75fd24d3c8abc0b7910e26"
-          test -z "$(git status --porcelain)"
-          git push origin HEAD:refs/heads/repair/effect-surface-census-rebind-r1
+          set -uo pipefail
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse HEAD^{tree})"
+          echo "STATUS=$(test -z "$(git status --porcelain)" && echo CLEAN || echo DIRTY)"
+          python -VV
+          python - <<'PY'
+          import os, platform, sqlite3, sys
+          print("SYS_EXECUTABLE=" + sys.executable)
+          print("SYS_VERSION=" + sys.version.replace("\n", " "))
+          print("PLATFORM=" + platform.platform())
+          print("SQLITE_VERSION=" + sqlite3.sqlite_version)
+          for key in ("RUNNER_OS", "RUNNER_ARCH", "ImageOS", "ImageVersion", "CI", "GITHUB_ACTIONS"):
+              print(f"ENV_{key}={os.environ.get(key, '')}")
+          PY
+          git --version
+          LOG="$RUNNER_TEMP/lion-full-suite.log"
+          python -m unittest discover -s cyber_lion/tests -p 'test_*.py' -v >"$LOG" 2>&1
+          RC=$?
+          echo "UNITTEST_RC=$RC"
+          python - "$LOG" <<'PY'
+          import re, sys
+          from pathlib import Path
+          text = Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace")
+          lines = text.splitlines()
+          print("--- SUMMARY ---")
+          for line in lines:
+              if re.match(r"^(Ran \d+ tests|FAILED \(|OK(?: \(|$)|FAIL: |ERROR: )", line):
+                  print(line)
+          print("--- FAILURE_BLOCKS ---")
+          sep = "=" * 70
+          blocks = 0
+          for part in text.split(sep):
+              stripped = part.strip()
+              if stripped.startswith("FAIL: ") or stripped.startswith("ERROR: "):
+                  blocks += 1
+                  print(sep)
+                  print(stripped[-12000:])
+          if blocks == 0 and "FAILED (" in text:
+              print(text[-20000:])
+          print("--- END ---")
+          PY
+          exit "$RC"
