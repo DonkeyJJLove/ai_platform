@@ -1,0 +1,71 @@
+name: LION LPCL Direct Supervisor Publisher R1
+on:
+  push:
+    branches: [bootstrap/lion-lpcl-direct-supervisor-r1]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cd734adc9d457702fb418b36a59f4607f147ce44
+          fetch-depth: 0
+      - name: Verify exact master substrate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "cd734adc9d457702fb418b36a59f4607f147ce44"
+          test "$(git rev-parse HEAD^{tree})" = "947c1af8e90cdc8fce054c21a8255b6e2222fc43"
+          test "$(git status --porcelain)" = ""
+      - name: Materialize exact candidate tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS 'https://drop.pensa.ar/f/eXDPYY_UnSTCp/lion-lpcl-direct-master-final.patch.gz' -o /tmp/lion.patch.gz
+          echo '6f0bbb2e6dc9f858078fa2132f0273ee0d1cfc5ace84e2d560e5fe1cb02b7d34  /tmp/lion.patch.gz' | sha256sum -c -
+          gzip -dc /tmp/lion.patch.gz > /tmp/lion.patch
+          echo '9e3fe0992b374ec16133d349a6b4d7086b23008fd451ef07c26d445d3092fa71  /tmp/lion.patch' | sha256sum -c -
+          git apply --index --whitespace=error /tmp/lion.patch
+          test "$(git write-tree)" = "1aad394f9f00411241d057913eaf1fe0522e9c85"
+      - name: Commit exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'LION Direct Cutover'
+          git config user.email 'lion-direct@users.noreply.github.com'
+          git commit -m 'LION: browserless LPCL direct supervisor candidate'
+          test "$(git rev-parse HEAD^)" = "cd734adc9d457702fb418b36a59f4607f147ce44"
+          test "$(git rev-parse HEAD^{tree})" = "1aad394f9f00411241d057913eaf1fe0522e9c85"
+          test "$(git status --porcelain)" = ""
+      - name: Focused architecture gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/lion_direct_supervisor_bridge.py tools/lion_saas_broker.py tools/lion_mission_control_v3.py tools/lion_local_intelligence_runtime.py cyber_lion/app_coordination/hybrid_gateway_extension.py cyber_lion/app_coordination/saas_handoff_extension.py cyber_lion/mission_control/supervisor_projection.py
+          GITHUB_ACTIONS=true python3 -m unittest -q cyber_lion.tests.test_truth_plane_reconciliation
+          python3 -m unittest -q cyber_lion.tests.test_direct_supervisor_bridge_r1 cyber_lion.tests.test_panel_channel_context_r2 cyber_lion.tests.test_thread_binding_direct_supervisor_r1 cyber_lion.tests.test_windows_control_plane_supervisor_source cyber_lion.tests.test_mission_control_v3_restart_package cyber_lion.tests.test_saas_broker cyber_lion.tests.test_saas_session_bridge cyber_lion.tests.test_supervisor_projection cyber_lion.tests.test_p0_surface_closure_campaign cyber_lion.tests.test_p0_moon_seven_closure_readiness cyber_lion.tests.test_p0_moon_permission_policy_reclassification cyber_lion.tests.test_host_authority_separation
+      - name: Full Cyber-Lion suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s cyber_lion/tests -p 'test_*.py' -v
+      - name: Verify target branch remains absent and master unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/master | cut -f1)" = "cd734adc9d457702fb418b36a59f4607f147ce44"
+          if git ls-remote --exit-code --heads origin refs/heads/mission/lpcl-panel-direct-supervisor-r1 >/tmp/target-ref; then
+            echo TARGET_BRANCH_ALREADY_EXISTS
+            cat /tmp/target-ref
+            exit 1
+          fi
+      - name: Push exact candidate branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^{tree})" = "1aad394f9f00411241d057913eaf1fe0522e9c85"
+          git push origin HEAD:refs/heads/mission/lpcl-panel-direct-supervisor-r1
+          echo "PUBLISHED_HEAD=$(git rev-parse HEAD)"
+          echo "PUBLISHED_TREE=$(git rev-parse HEAD^{tree})"
