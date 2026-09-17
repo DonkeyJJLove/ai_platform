@@ -57,23 +57,34 @@ def _patch_ui() -> None:
         ),
         (
             'Jawne polecenie <code>Na SaaS: &lt;pytanie&gt;</code> tworzy request brokera. Gdy widoczny Firefox Developer jest zalogowany, przypięty do projektu <code>LION_EVOLUSION</code> i mediator ma świeży heartbeat READY, nowe requesty używają transportu <code>CHATGPT_FIREFOX_PROJECT_MEDIATED</code>. Bez świeżego mediatora system pozostaje fail-closed w trybie zewnętrznej mediacji manualnej.',
-            'Kanał <code>SENTINELX · SaaS</code> nie uruchamia przeglądarki. Firefox Developer jest transportem opcjonalnym i może wejść do puli dopiero po jawnym <code>Browser relay: WŁĄCZ</code>; <code>WYŁĄCZ</code> natychmiast publikuje stan DISABLED, więc broker wraca do ścieżki SentinelX.',
+            'Kanał <code>SAAS · SentinelX default</code> nie uruchamia przeglądarki. Firefox Developer jest transportem opcjonalnym i może wejść do puli dopiero po jawnym <code>Browser relay: WŁĄCZ</code>; <code>WYŁĄCZ</code> natychmiast publikuje stan DISABLED, więc broker wraca do ścieżki SentinelX.',
         ),
         (
             '<select id="composerRoute" title="Kanał odpowiedzi"><option value="AUTO">Auto</option><option value="LOCAL">LOCAL</option><option value="SAAS">SAAS</option><option value="DUAL">DUAL</option></select><select id="lang"',
-            '<select id="composerRoute" title="Jawny kanał odpowiedzi"><option value="AUTO">AUTO · LOCAL first</option><option value="LOCAL">LOCAL</option><option value="SAAS">SENTINELX · SaaS</option><option value="DUAL">DUAL · LOCAL + SENTINELX</option></select><span id="chatContext" class="status">CHAT CONTEXT · thread — · focus mission — · channel AUTO</span><select id="lang"',
+            '<select id="composerRoute" title="Jawny kanał odpowiedzi"><option value="AUTO">AUTO · LOCAL first</option><option value="LOCAL">LOCAL</option><option value="SAAS">SAAS · SentinelX default</option><option value="DUAL">DUAL · LOCAL + SaaS</option></select><span id="chatContext" class="status">CHAT CONTEXT · thread — · mission — · channel AUTO</span><select id="lang"',
         ),
     )
     ui = module.UI
     for old, new in replacements:
         ui = ui.replace(old, new)
 
+    # Guard Mission Control polling from restoring a stale viewport after a new
+    # chat turn changed the operator's scroll intent.
+    if "lionViewportEpoch" not in ui:
+        ui = ui.replace("function captureViewport(){let app=", "let lionViewportEpoch=0;function captureViewport(){let app=")
+        ui = ui.replace(
+            "return {app,appScroll:app?.scrollTop||0,proto,protoScroll:proto?.scrollTop||0,active,selection:",
+            "return {epoch:lionViewportEpoch,app,appScroll:app?.scrollTop||0,proto,protoScroll:proto?.scrollTop||0,active,selection:",
+        )
+        ui = ui.replace("function restoreViewport(v){if(!v)return;", "function restoreViewport(v){if(!v||v.epoch!==lionViewportEpoch)return;")
+
     # A new assistant turn should reveal the beginning of the answer, not jump
     # to its tail. Thread replay is silent so opening history does not animate
-    # through every message.
+    # through every message. Incrementing lionViewportEpoch invalidates stale
+    # mission-refresh snapshots that would otherwise pull the view backwards.
     ui = ui.replace(
         "function addMsg(role,text){let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class=\"role\">'+(role==='user'?'TY':'LION')+'</div><div class=\"md\">'+md(text)+'</div>');messagesEl.appendChild(d);d.scrollIntoView({behavior:'smooth',block:'end'})}",
-        "function addMsg(role,text,opts={}){let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class=\"role\">'+(role==='user'?'TY':'LION')+'</div><div class=\"md\">'+md(text)+'</div>');messagesEl.appendChild(d);if(opts.scroll!==false)requestAnimationFrame(()=>{try{d.scrollIntoView({behavior:'smooth',block:role==='assistant'?'start':'end'})}catch(_){}})}",
+        "function addMsg(role,text,opts={}){lionViewportEpoch++;let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class=\"role\">'+(role==='user'?'TY':'LION')+'</div><div class=\"md\">'+md(text)+'</div>');messagesEl.appendChild(d);if(opts.scroll!==false)requestAnimationFrame(()=>{try{d.scrollIntoView({behavior:'smooth',block:role==='assistant'?'start':'end'})}catch(_){}})}",
     )
     ui = ui.replace(
         "addMsg(m.role,m.content);history.push({role:m.role,content:m.content});",
@@ -88,14 +99,18 @@ def _patch_ui() -> None:
         "threads=(x.threads||[]).slice().sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0));patchHtml(threadListEl,",
     )
 
-    context_js = r'''function composerChannelLabel(){let value=$('composerRoute')?.value||'AUTO';return ({AUTO:'AUTO · LOCAL-FIRST',LOCAL:'LOCAL',SAAS:'SENTINELX · SaaS',DUAL:'DUAL · LOCAL + SENTINELX'})[value]||value}
-function renderChatContext(){let el=$('chatContext');if(!el)return;let tid=activeThreadId?String(activeThreadId).slice(0,8):'—',focus=missionFocusId||'NO_FOCUS',inspection=(selectedMissionId&&selectedMissionId!==missionFocusId)?' · inspecting '+selectedMissionId:'';el.textContent='CHAT CONTEXT · thread '+tid+' · focus mission '+focus+' · channel '+composerChannelLabel()+inspection}
+    context_js = r'''function composerChannelLabel(){let value=$('composerRoute')?.value||'AUTO';return ({AUTO:'AUTO · LOCAL-FIRST',LOCAL:'LOCAL',SAAS:'SAAS · SentinelX default',DUAL:'DUAL · LOCAL + SaaS'})[value]||value}
+function renderChatContext(){let el=$('chatContext');if(!el)return;let tid=activeThreadId?String(activeThreadId).slice(0,8):'—',bound=lastPayload?.thread_context||{},mission=bound.mission_id||missionFocusId||'NO_FOCUS',binding=bound.binding_state||'VIEW_FOCUS',inspection=(selectedMissionId&&selectedMissionId!==missionFocusId)?' · inspecting '+selectedMissionId:'';el.textContent='CHAT CONTEXT · thread '+tid+' · mission '+mission+' · '+binding+' · channel '+composerChannelLabel()+inspection}
 '''
     if "function composerChannelLabel()" not in ui:
         ui = ui.replace("async function state(){", context_js + "async function state(){renderChatContext();")
     ui = ui.replace(
         "missionFocusId=x.focus_mission_id||missions[0]?.mission_id||null;",
         "missionFocusId=x.focus_mission_id||missions[0]?.mission_id||null;renderChatContext();",
+    )
+    ui = ui.replace(
+        "lastPayload=x;if(x.supervisor_projection)",
+        "lastPayload=x;renderChatContext();if(x.supervisor_projection)",
     )
     ui = ui.replace(
         "qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});async function boot(){",
@@ -109,6 +124,20 @@ function renderChatContext(){let el=$('chatContext');if(!el)return;let tid=activ
         "activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
         "activeThreadId=id;renderChatContext();history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
     )
+
+    # Operator controls previously looked clickable while the 8767 operator
+    # session was unpaired. Gate only the effect/control buttons, keep Pair,
+    # Unpair and Refresh usable, and state the reason directly in the panel.
+    operator_guard_js = r'''let operatorSessionPaired=false;
+function setOperatorControlAvailability(paired){document.querySelectorAll('#operatorPanel button').forEach(button=>{const action=button.getAttribute('onclick')||'';if(action.startsWith('operatorSend')||action.startsWith('operatorControl'))button.disabled=!paired})}
+const lionRefreshOperatorCore=refreshOperator;
+refreshOperator=async function(){const mid=selectedMissionId||missionFocusId;if(!mid){operatorSessionPaired=false;setOperatorControlAvailability(false);$('operatorPairState').textContent='UNPAIRED · NO MISSION';$('operatorResult').textContent='Operator control: wybierz aktywną misję.';return}try{const session=await operatorApi('/api/operator/session');operatorSessionPaired=!!session.paired;$('operatorPairState').textContent=operatorSessionPaired?'PAIRED · OPERATOR_PRIMARY':'UNPAIRED · CONTROLS DISABLED';setOperatorControlAvailability(operatorSessionPaired);if(!operatorSessionPaired){$('operatorResult').textContent='Operator control: najpierw Sparuj operatora; sterowanie misją jest jawnie zablokowane.';return}return await lionRefreshOperatorCore()}catch(e){operatorSessionPaired=false;setOperatorControlAvailability(false);$('operatorPairState').textContent='OPERATOR SESSION UNKNOWN';$('operatorResult').textContent='Operator control: '+e.message}}
+const lionOperatorSubmitCore=operatorSubmit;
+operatorSubmit=async function(action,payload={},target=null){if(!operatorSessionPaired)throw new Error('Operator nie jest sparowany — użyj przycisku Sparuj przed wysłaniem komendy.');return lionOperatorSubmitCore(action,payload,target)};
+setOperatorControlAvailability(false);
+'''
+    if "operatorSessionPaired=false" not in ui:
+        ui = ui.replace("function toggleDebug(){", operator_guard_js + "function toggleDebug(){")
 
     module.UI = ui
 
