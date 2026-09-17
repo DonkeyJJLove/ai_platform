@@ -49,6 +49,16 @@ class WindowsControlPlaneSupervisorSourceTests(unittest.TestCase):
         self.assertNotIn('--operator-pairing-key-file', t)
         self.assertNotIn('operator-pairing.key', t)
 
+    def test_operator_gateway_health_is_observed_not_assumed(self):
+        t = self.text
+        self.assertIn('function Test-OperatorControl', t)
+        self.assertIn("$OperatorControlUrl + '/v1/participants'", t)
+        self.assertIn("return [int]$_.Exception.Response.StatusCode -eq 403", t)
+        self.assertIn("throw 'OPERATOR_CONTROL_8767_UNAVAILABLE'", t)
+        self.assertIn('$operatorControl=[bool](Test-OperatorControl)', t)
+        self.assertIn('operator_control_8767=$operatorControl', t)
+        self.assertNotIn('operator_control_8767=$true', t)
+
     def test_panel_health_precedes_optional_browser_manager_in_one_pass(self):
         t = self.text
         start = t.index('function One-Pass')
