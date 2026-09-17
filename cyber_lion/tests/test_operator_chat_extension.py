@@ -119,6 +119,8 @@ qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefau
             def do_DELETE(self):pass
         mod.make_handler=lambda g:B
         key='cyber_lion.app_coordination.local_intelligence_gateway';old=sys.modules.get(key);sys.modules[key]=mod
+        import cyber_lion.app_coordination as package
+        old_attr=getattr(package,'local_intelligence_gateway',None);package.local_intelligence_gateway=mod
         try:
             class G:
                 def state(self):return {}
@@ -130,6 +132,10 @@ qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefau
             self.assertIn("sort((a,b)=>(b.created_at||0)-(a.created_at||0))",mod.UI)
             self.assertIn('/operator-chat',mod.UI)
         finally:
+            if old_attr is None:
+                try:delattr(package,'local_intelligence_gateway')
+                except AttributeError:pass
+            else:package.local_intelligence_gateway=old_attr
             if old is None:sys.modules.pop(key,None)
             else:sys.modules[key]=old
 
