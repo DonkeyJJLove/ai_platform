@@ -147,10 +147,23 @@ function Ensure-Panel([hashtable]$RepoIdentity) {
     if (-not (Wait-Http ($PanelUrl + '/') 30)) { throw 'PANEL_START_TIMEOUT' }
     return [int]$proc.Id
 }
+function Stop-LegacyFirefoxMediators {
+    # Previous generations autonomously called Start-Process firefox.exe even
+    # with an empty broker inbox. They are incompatible with the explicit
+    # browser relay policy and must not coexist with the 8790 manager.
+    $legacy=@(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+        $_.Name -eq 'powershell.exe' -and $_.CommandLine -and $_.CommandLine -match 'open_session_mediator\.ps1'
+    })
+    foreach($old in $legacy){
+        Stop-Process -Id $old.ProcessId -Force -ErrorAction SilentlyContinue
+        Write-Log ('FIREFOX_LEGACY_AUTO_OPENER_STOP pid=' + $old.ProcessId)
+    }
+}
 function Ensure-FirefoxMediatorManager {
     # The supervisor owns the control manager only. A healthy manager is valid
     # while relay state is DISABLED; the browser itself is not a supervised
     # always-on dependency.
+    Stop-LegacyFirefoxMediators
     $p=Process-For-Port 8790
     if ($p) {
         if ([IO.Path]::GetFullPath($p.ExecutablePath) -ne [IO.Path]::GetFullPath($FirefoxMediatorNode)) { throw 'PORT_8790_FOREIGN_PROCESS' }
