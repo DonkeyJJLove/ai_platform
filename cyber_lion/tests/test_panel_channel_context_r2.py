@@ -49,6 +49,40 @@ class PanelChannelContextR2Tests(unittest.TestCase):
         finally:
             gateway.UI = original
 
+    def test_explicit_local_route_cannot_be_upgraded_to_dual_by_content_heuristic(self):
+        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
+
+        class Dummy:
+            def __init__(self):
+                self.control_provider = None
+
+            def _route(self, message):
+                return "MODEL_ONLY", "base"
+
+            def state(self):
+                return {}
+
+            def chat(self, message, use_web=False, history=None, output_language="auto"):
+                return {"route": "MODEL_ONLY", "answer": "LOCAL:" + message, "tool_calls": [], "material_receipts": []}
+
+        original_ui = gateway.UI
+        try:
+            hybrid_gateway_extension.apply_hybrid_gateway_extension(Dummy)
+            apply_saas_handoff_extension(Dummy)
+            dummy = Dummy()
+            route_token = ROUTE_CONTEXT.set("LOCAL")
+            try:
+                message = "Porównaj SaaS i model lokalny: odpowiedz wyłącznie lokalnie"
+                self.assertEqual(dummy._route(message)[0], "MODEL_ONLY")
+                out = dummy.chat(message, output_language="pl")
+            finally:
+                ROUTE_CONTEXT.reset(route_token)
+            self.assertEqual(out["route"], "MODEL_ONLY")
+            self.assertNotIn("saas_handoff", out)
+            self.assertEqual(out["thread_context"]["composer_route"], "LOCAL")
+        finally:
+            gateway.UI = original_ui
+
     def test_thread_context_is_attested_and_thread_scoped_saas_carries_mission_context(self):
         class Dummy:
             def __init__(self):
