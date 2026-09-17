@@ -158,13 +158,63 @@ def apply_saas_handoff_extension(cls):
             return answer
         return original_capability(message, mission, state, output_language) if callable(original_capability) else None
 
+    def thread_context(self):
+        """Return and durably attest the UI thread -> Mission Control focus relation.
+
+        The relation is cognition/context only (authority NONE). It is emitted as a
+        THREAD protocol message only when thread, mission or explicit composer route
+        changes, so the operator can audit which mission supplied context to a turn.
+        """
+        tid=THREAD_CONTEXT.get();composer_route=ROUTE_CONTEXT.get()
+        context={"thread_id":tid,"mission_id":None,"composer_route":composer_route,"binding_state":"UNBOUND","authority_effect":"NONE"}
+        if not callable(getattr(self,"control_provider",None)):
+            return context
+        try:
+            recent=self.control_provider("recent",{})
+            mission_id=recent.get("focus_mission_id") if isinstance(recent,dict) else None
+            context["mission_id"]=mission_id
+            if not tid or not mission_id:
+                return context
+            rows=recent.get("missions") or []
+            focus=next((row for row in rows if row.get("mission_id")==mission_id),{})
+            phase=focus.get("current_phase") or (focus.get("mission_summary") or {}).get("current_phase")
+            key=(mission_id,composer_route)
+            cache=getattr(self,"_lion_thread_context_bindings",None)
+            if not isinstance(cache,dict):
+                cache={};setattr(self,"_lion_thread_context_bindings",cache)
+            if cache.get(tid)!=key:
+                self.control_provider("post_message",{
+                    "mission_id":mission_id,
+                    "protocol":"THREAD",
+                    "from_id":"LPCL_PANEL",
+                    "to_id":"OPERATOR_PRIMARY",
+                    "phase":phase,
+                    "payload":{
+                        "event":"THREAD_CONTEXT_BOUND",
+                        "thread_id":tid,
+                        "mission_id":mission_id,
+                        "composer_route":composer_route,
+                        "scope":"COGNITIVE_CONTEXT_ONLY",
+                        "authority_effect":"NONE",
+                    },
+                })
+                cache[tid]=key
+            context["binding_state"]="BOUND_TO_FOCUS_MISSION"
+            context["phase"]=phase
+            return context
+        except Exception as exc:
+            context["binding_state"]="UNKNOWN"
+            context["error_class"]=type(exc).__name__
+            return context
+
     def chat(self, message, use_web=False, history=None, output_language="auto"):
+        context=thread_context(self)
+        mission_id=context.get("mission_id")
         if isinstance(message, str) and _dual_saas_local(message):
             if not callable(getattr(self, "control_provider", None)):
-                return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
-            recent = self.control_provider("recent", {})
-            mission_id = recent.get("focus_mission_id")
-
+                out=original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+                if isinstance(out,dict):out["thread_context"]=context
+                return out
             try:
                 if not mission_id:raise ValueError("no optional mission context")
                 mission_snapshot = self.control_provider("process", {"mission_id": mission_id})
@@ -191,14 +241,16 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE"})
+            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":saas_prompt,"authority_effect":"NONE"})
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:co|kim|czy|jak|zapytaj|porównaj|porownaj|zadaj)\b", message.lower())))
-            local_label = "### LOCAL · gpt-oss-20b-MXFP4\n" if polish else "### LOCAL · gpt-oss-20b-MXFP4\n"
+            local_label = "### LOCAL · gpt-oss-20b-MXFP4\n"
+            transport=handoff.get("transport") or "UNKNOWN"
             wait_label = ("\n\n### CHATGPT_SAAS_SUPERVISOR\nOdpowiedź SaaS została zlecona jako niezależna trajektoria. "
-                          f"Request `{handoff['request_id']}`, dual `{dual.get('request_id') or 'LEGACY_COMPAT'}`, kod `{handoff['request_code']}`. Panel czeka na receipt; końcowy wynik zostanie złączony dopiero po receipt obu modeli.")
+                          f"Request `{handoff['request_id']}`, dual `{dual.get('request_id') or 'LEGACY_COMPAT'}`, kod `{handoff['request_code']}`, transport `{transport}`, misja `{mission_id or 'NONE'}`. "
+                          "Panel czeka na receipt; końcowy wynik zostanie złączony dopiero po receipt obu modeli.")
             answer = local_label + str(local.get("answer") or "") + wait_label
             return {
                 "route": "DUAL_EVALUATION_LIVE",
@@ -217,27 +269,35 @@ def apply_saas_handoff_extension(cls):
                 "independent_questions": True,
                 "dual_evaluation": dual,
                 "saas_handoff": handoff,
+                "thread_context":context,
                 "response_language": output_language,
             }
         if isinstance(message, str) and _explicit_saas(message):
             if not callable(getattr(self, "control_provider", None)):
                 raise ValueError("SaaS handoff control provider unavailable")
-            mission_id = None
             question = _question(message)
-            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE"})
+            scope_type="THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE"
+            handoff_args={"scope_type":scope_type,"thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":question,"authority_effect":"NONE"}
+            if scope_type=="CONTROL_PLANE":
+                handoff_args.pop("thread_id",None)
+                # CONTROL_PLANE forbids a mission_id; the context remains visible
+                # in thread_context but is not falsely encoded as broker scope.
+                handoff_args.pop("mission_id",None)
+            handoff = self.control_provider("saas_request", handoff_args)
+            transport=handoff.get("transport") or "UNKNOWN"
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
-            firefox_transport=handoff.get('transport')=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
+            firefox_transport=transport=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
             if polish:
-                transport_text=("Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty Firefox mediator przejmie request automatycznie i po realnej odpowiedzi ChatGPT zwróci receipt do tego samego wątku. " if firefox_transport else "Transport pozostaje EXTERNAL_SESSION_MEDIATED — automatyczny browser mediator nie jest obecnie READY, więc odpowiedź wymaga zewnętrznego mediatora. ")
+                transport_text=("Firefox UI został jawnie włączony i broker wybrał CHATGPT_FIREFOX_PROJECT_MEDIATED. " if firefox_transport else f"Broker wybrał transport {transport}; Firefox nie jest automatycznie uruchamiany. ")
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
-                          f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
+                          f"Kod {handoff['request_code']}; request {handoff['request_id']}; misja kontekstowa {mission_id or 'NONE'}. "
                           "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
                           +transport_text+
                           "Powtórzenie identycznego unresolved pytania jest wiązane przez dedupe/retry lineage zamiast mnożyć aktywną kolejkę. Odpowiedź ma authority_effect=NONE.")
             else:
-                transport_text=("Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned Firefox mediator will claim the request automatically and return a real ChatGPT receipt to the same thread. " if firefox_transport else "Transport remains EXTERNAL_SESSION_MEDIATED: the automatic browser mediator is not READY, so an external mediator is still required. ")
+                transport_text=("Firefox UI was explicitly enabled and the broker selected CHATGPT_FIREFOX_PROJECT_MEDIATED. " if firefox_transport else f"The broker selected transport {transport}; Firefox is not launched automatically. ")
                 answer = ("The request is queued in the controlled SaaS channel. "
-                          f"Code {handoff['request_code']}; request {handoff['request_id']}. "
+                          f"Code {handoff['request_code']}; request {handoff['request_id']}; contextual mission {mission_id or 'NONE'}. "
                           "The panel follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
                           +transport_text+
                           "Repeating the same unresolved question is bound through dedupe/retry lineage instead of multiplying the active queue. authority_effect=NONE.")
@@ -250,9 +310,12 @@ def apply_saas_handoff_extension(cls):
                 "tool_calls": ["lion.saas.handoff.create"],
                 "material_receipts": [],
                 "saas_handoff": handoff,
+                "thread_context":context,
                 "response_language": output_language,
             }
-        return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+        out=original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+        if isinstance(out,dict):out["thread_context"]=context
+        return out
 
     cls._route = route
     cls._capability_answer = staticmethod(capability_answer)
