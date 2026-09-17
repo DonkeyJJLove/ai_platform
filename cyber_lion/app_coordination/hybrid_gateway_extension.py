@@ -118,11 +118,11 @@ function renderChatContext(){let el=$('chatContext');if(!el)return;let tid=activ
     )
     ui = ui.replace(
         "activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
-        "activeThreadId=x.thread_id;renderChatContext();history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
+        "activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;renderChatContext();resetMessages();",
     )
     ui = ui.replace(
         "activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
-        "activeThreadId=id;renderChatContext();history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
+        "activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;renderChatContext();resetMessages();",
     )
 
     # Operator controls previously looked clickable while the 8767 operator
@@ -134,6 +134,8 @@ const lionRefreshOperatorCore=refreshOperator;
 refreshOperator=async function(){const mid=selectedMissionId||missionFocusId;if(!mid){operatorSessionPaired=false;setOperatorControlAvailability(false);$('operatorPairState').textContent='UNPAIRED · NO MISSION';$('operatorResult').textContent='Operator control: wybierz aktywną misję.';return}try{const session=await operatorApi('/api/operator/session');operatorSessionPaired=!!session.paired;$('operatorPairState').textContent=operatorSessionPaired?'PAIRED · OPERATOR_PRIMARY':'UNPAIRED · CONTROLS DISABLED';setOperatorControlAvailability(operatorSessionPaired);if(!operatorSessionPaired){$('operatorResult').textContent='Operator control: najpierw Sparuj operatora; sterowanie misją jest jawnie zablokowane.';return}return await lionRefreshOperatorCore()}catch(e){operatorSessionPaired=false;setOperatorControlAvailability(false);$('operatorPairState').textContent='OPERATOR SESSION UNKNOWN';$('operatorResult').textContent='Operator control: '+e.message}}
 const lionOperatorSubmitCore=operatorSubmit;
 operatorSubmit=async function(action,payload={},target=null){if(!operatorSessionPaired)throw new Error('Operator nie jest sparowany — użyj przycisku Sparuj przed wysłaniem komendy.');return lionOperatorSubmitCore(action,payload,target)};
+const lionOperatorUnpairCore=operatorUnpair;
+operatorUnpair=async function(){try{return await lionOperatorUnpairCore()}finally{operatorSessionPaired=false;setOperatorControlAvailability(false)}};
 setOperatorControlAvailability(false);
 '''
     if "operatorSessionPaired=false" not in ui:
