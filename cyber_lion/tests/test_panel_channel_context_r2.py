@@ -39,8 +39,12 @@ class PanelChannelContextR2Tests(unittest.TestCase):
             self.assertIn("block:role==='assistant'?'start':'end'", ui)
             self.assertIn("addMsg(m.role,m.content,{scroll:false})", ui)
             self.assertIn("sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0))", ui)
+            self.assertIn("activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;renderChatContext();", ui)
+            self.assertIn("activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;renderChatContext();", ui)
             self.assertIn("UNPAIRED · CONTROLS DISABLED", ui)
             self.assertIn("setOperatorControlAvailability(false)", ui)
+            self.assertIn("const lionOperatorUnpairCore=operatorUnpair", ui)
+            self.assertIn("operatorUnpair=async function(){try{return await lionOperatorUnpairCore()}finally{operatorSessionPaired=false;setOperatorControlAvailability(false)}}", ui)
             self.assertIn("Browser relay: WŁĄCZ", ui)
         finally:
             gateway.UI = original
