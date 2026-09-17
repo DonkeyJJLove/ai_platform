@@ -136,6 +136,7 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
+          set +e
           echo "HEAD=$(git rev-parse HEAD)"
           echo "TREE=$(git rev-parse HEAD^{tree})"
           echo "STATUS=$(test -z "$(git status --porcelain)" && echo CLEAN || echo DIRTY)"
