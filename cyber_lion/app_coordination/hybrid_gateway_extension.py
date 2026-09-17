@@ -182,3 +182,5 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
     gateway_cls.chat = chat
     gateway_cls._lion_hybrid_extension = True
     _patch_ui()
+    from cyber_lion.app_coordination.operator_chat_extension import apply_operator_chat_extension
+    apply_operator_chat_extension(gateway_cls)
