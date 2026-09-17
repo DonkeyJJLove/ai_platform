@@ -241,7 +241,15 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":saas_prompt,"authority_effect":"NONE"})
+            if durable_dual:
+                handoff_args={"mission_id":mission_id,"question":saas_prompt}
+            else:
+                scope_type="THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE"
+                handoff_args={"scope_type":scope_type,"thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":saas_prompt,"authority_effect":"NONE"}
+                if scope_type=="CONTROL_PLANE":
+                    handoff_args.pop("thread_id",None)
+                    handoff_args.pop("mission_id",None)
+            handoff = self.control_provider("saas_request",handoff_args)
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
