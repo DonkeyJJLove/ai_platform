@@ -41,8 +41,18 @@ def _call_name(node:ast.Call)->str:
 def _literal(node):
     return node.value if isinstance(node,ast.Constant) and isinstance(node.value,str) else None
 
-def _surface(path:str,line:int,call:str,effect_class:str)->ConsequentialEffectSurface:
-    ref=f"{path}:{line}:{call}"
+def _statically_mutating_sql(node:ast.AST)->bool:
+    literal=_literal(node)
+    if literal is not None:return bool(_MUTATING_SQL.search(literal))
+    if not isinstance(node,ast.JoinedStr):return False
+    prefix=[]
+    for part in node.values:
+        if isinstance(part,ast.Constant) and isinstance(part.value,str):prefix.append(part.value)
+        else:break
+    return bool(prefix) and bool(_MUTATING_SQL.search("".join(prefix)))
+
+def _surface(path:str,line:int,call:str,effect_class:str,site_suffix:str="")->ConsequentialEffectSurface:
+    ref=f"{path}:{line}:{call}{site_suffix}"
     provider=path.replace("/",".")
     if effect_class.startswith("external.network") or effect_class in {"repository_ref.delete","workflow.external_effect"}:
         target="external"; authority="external_write"
@@ -87,10 +97,15 @@ def _canonical_order(values,boundary:str):
     except (KeyboardInterrupt,SystemExit):raise
     except BaseException as exc:_raise_traversal(boundary+":ordering",exc)
 
+def _site_suffix(seen:dict[str,int],base:str,node:ast.AST)->str:
+    occurrence=seen.get(base,0);seen[base]=occurrence+1
+    if occurrence==0:return ""
+    return f":col-{getattr(node,'col_offset',0)}-{getattr(node,'end_col_offset',0)}:occ-{occurrence+1}"
+
 class EffectSurfaceScanner:
     def scan(self,*,repository:str,revision:str,tree_digest:str,sources:Mapping[str,str])->EffectSurfaceInventory:
         if not isinstance(sources,Mapping) or not sources:raise CompleteMediationError("exact source mapping required")
-        surfaces=[];unclassified=[];scan_items=[]
+        surfaces=[];unclassified=[];scan_items=[];surface_sites={};unclassified_sites={}
         paths=tuple(sources.keys())
         if any(type(path) is not str for path in paths):raise CompleteMediationError("source mapping must use exact text paths")
         for path in _canonical_order(paths,"source-path-group"):
@@ -115,7 +130,7 @@ class EffectSurfaceScanner:
                             if upper in {"POST", "PUT", "PATCH", "DELETE"}: effect = f"external.network.{upper.lower()}"
                         else:
                             _validate_dynamic_target(method_node,f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method")
-                            unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method")
+                            base=f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-http-method";unclassified.append(base+_site_suffix(unclassified_sites,base,node))
                     if effect is None and name in _CALL_CLASSES:effect=_CALL_CLASSES[name]
                     elif short in {"write_text","write_bytes"}:effect="filesystem.write"
                     elif short in {"urlopen"}:effect="external.network"
@@ -126,10 +141,10 @@ class EffectSurfaceScanner:
                         dbish = bool(re.search(r"(?:^|\.)(?:c|cur|conn|connection|cursor|db|_conn)$", receiver))
                         if dbish:
                             sql_node=node.args[0];sql=_literal(sql_node)
-                            if sql is not None and _MUTATING_SQL.search(sql):effect="persistent_state.write"
+                            if _statically_mutating_sql(sql_node):effect="persistent_state.write"
                             elif sql is None:
                                 _validate_dynamic_target(sql_node,f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
-                                unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql")
+                                base=f"{path}:{getattr(node,'lineno',0)}:{name}:dynamic-sql";unclassified.append(base+_site_suffix(unclassified_sites,base,node))
                     elif short in {"unlink","rmdir"}:
                         receiver=name.rsplit(".",1)[0] if "." in name else ""
                         if re.search(r"(?:path|file|target|temp|source|destination|artifact|receipt|registry|manifest)$", receiver, re.I):
@@ -142,8 +157,10 @@ class EffectSurfaceScanner:
                         mode=_literal(node.args[1]) if len(node.args)>1 else next((_literal(k.value) for k in node.keywords if k.arg=="mode"),None)
                         if mode and any(x in mode for x in "wax+"):effect="filesystem.write"
                     elif _SUSPICIOUS_TOKENS.search(name) and any(x in name.lower() for x in ("backend.","provider.","transport.","client.")):
-                        unclassified.append(f"{path}:{getattr(node,'lineno',0)}:{name}")
-                    if effect:surfaces.append(_surface(path,getattr(node,"lineno",0),name,effect))
+                        base=f"{path}:{getattr(node,'lineno',0)}:{name}";unclassified.append(base+_site_suffix(unclassified_sites,base,node))
+                    if effect:
+                        line=getattr(node,"lineno",0);base=f"{path}:{line}:{name}"
+                        surfaces.append(_surface(path,line,name,effect,_site_suffix(surface_sites,base,node)))
             elif path.endswith((".yml",".yaml")) and path.startswith(".github/workflows/"):
                 lines = source.splitlines()
                 for i,line in enumerate(lines,1):

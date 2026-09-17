@@ -236,18 +236,25 @@ class PanelThreadDeliveryTests(unittest.TestCase):
             self.assertEqual(len(snap['messages']),3)
             self.assertEqual(snap['messages'][-1]['meta']['external_receipt_key'],'saas:'+'saas-'+'1'*32)
 
-    def test_panel_ui_recovers_pending_saas_requests_after_thread_reopen(self):
-        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
-        self.assertIn('resumeThreadSaas',gateway.UI)
-        self.assertIn('append_assistant_once',Path(__import__('tools.lion_local_intelligence_runtime',fromlist=['x']).__file__).read_text(encoding='utf-8'))
-        self.assertIn('Restart material runtime',gateway.UI)
-
-    def test_panel_keeps_pending_requests_owned_by_their_thread(self):
+    def test_panel_thread_reopen_recovers_shared_operator_bus_by_correlation(self):
         from cyber_lion.app_coordination import local_intelligence_gateway as gateway
         ui=gateway.UI
+        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",ui)
+        self.assertIn('correlation_id',Path(__import__('tools.lion_operator_client',fromlist=['x']).__file__).read_text(encoding='utf-8'))
+        self.assertIn('activeThreadContext=x.context||null',ui)
+        self.assertIn('await refreshActiveBus(false)',ui)
+        self.assertNotIn('resumeThreadSaas',ui)
+        self.assertIn('Restart material runtime',ui)
+
+    def test_panel_keeps_bus_messages_owned_by_exact_thread_correlation(self):
+        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
+        ui=gateway.UI
+        source=Path(gateway.__file__).read_text(encoding='utf-8')
         self.assertNotIn('adoptPendingSaas',ui)
-        self.assertIn('stopThreadPolling',ui)
-        self.assertIn('renderSupervisor(x.supervisor_projection)',ui)
+        self.assertNotIn('stopThreadPolling',ui)
+        self.assertNotIn('renderSupervisor(x.supervisor_projection)',ui)
+        self.assertIn("m.get('correlation_id')==tid",source)
+        self.assertIn("'correlation_id':tid",source)
         self.assertIn('missionPinned=false',ui)
         self.assertIn('FOLLOW_FOCUS',ui)
         self.assertIn('missionsRefreshing',ui)

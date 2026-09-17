@@ -40,6 +40,7 @@ try:
  from cyber_lion.mission_control import global_scheduler as global_sched
 except ImportError:
  import global_scheduler as global_sched
+from cyber_lion.mission_control import operator_control
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -153,6 +154,7 @@ def migrate():
  saas_migrate(c,now,source_head=HEAD,source_tree=TREE)
  driver_migrate(c,now,source_head=HEAD,source_tree=TREE)
  global_sched.migrate(c,now)
+ operator_control.migrate(c,now)
  # Capture the pre-capability execution preflight before startup reconciliation
  # recomputes it against the current capability registry.
  control_recon.capture_pre_recon_baselines(c,now)
@@ -204,6 +206,7 @@ def command(action,pod=None):
  cid=uuid.uuid4().hex;c=connect();row=c.execute('SELECT state FROM missions WHERE mission_id=?',(MISSION,)).fetchone()
  if row is None:c.close();raise ValueError('no active mission')
  state=row['state'];allowed={'START':{'AUTHORIZED','STOPPED','FAILED'},'PAUSE':{'RUNNING'},'RESUME':{'PAUSED'},'RESTART_ONE':{'RUNNING'},'VALIDATE':{'RUNNING'},'STOP':{'RUNNING','PAUSED','FAILED','STARTING','CONVERGING'}}
+ if action in {'START','RESUME','RESTART_ONE'} and not operator_control.autonomy_allowed(c,MISSION):c.close();raise ValueError('operator control fence prevents material expansion')
  if state not in allowed[action]:c.close();raise ValueError('action denied from state '+state)
  if action=='RESTART_ONE' and (not isinstance(pod,str) or not c.execute('SELECT 1 FROM material_workers WHERE mission_id=? AND pod_name=?',(MISSION,pod)).fetchone()):c.close();raise ValueError('pod not in current mission')
  transitional={'START':'STARTING','PAUSE':'PAUSING','RESUME':'RESUMING','RESTART_ONE':'RESTARTING','VALIDATE':'VALIDATING','STOP':'STOPPING'}[action];t=now();c.execute('INSERT INTO commands(command_id,mission_id,action,pod_name,requested_at,started_at,status) VALUES(?,?,?,?,?,?,?)',(cid,MISSION,action,pod,t,t,'RUNNING'));c.execute('UPDATE missions SET state=?,updated_at=? WHERE mission_id=?',(transitional,t,MISSION));event(c,'COMMAND_ACCEPTED',{'command_id':cid,'action':action,'pod_name':pod});c.commit();c.close()
@@ -280,6 +283,13 @@ PROCESS_CAPABILITY_REGISTRY={
  ),
  'PANEL_ACCEPTANCE':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_ACCEPTANCE'},
+ ),
+ 'OPERATOR_INTERVENTION':(
+  {'capability_id':'OPERATOR_CONTROL_R1','executor_id':'LION_OPERATOR_CONTROL_GATEWAY','effect_ceiling':'MISSION_SCOPED_CONTROL_STATE','mode':'AUTHENTICATED_FENCED_INTERVENTION'},
+ ),
+ 'OPERATOR_CONTAINMENT':(
+  {'capability_id':'OPERATOR_CONTAINMENT_R1','executor_id':'LION_OPERATOR_CONTROL_GATEWAY','effect_ceiling':'MISSION_SCOPED_CONTAINMENT','mode':'LATCH_FENCE_AND_CHECKPOINT'},
+  {'capability_id':'OPERATOR_EMERGENCY_CONTAINMENT_R1','executor_id':'LION_OPERATOR_CONTAINMENT_HELPER','effect_ceiling':'PREPROVISIONED_PROCESS_STOP','mode':'EXACT_INVENTORY_ONLY'},
  ),
 }
 def process_capability_registry_snapshot():
@@ -413,6 +423,7 @@ def bind_lpcl_execution(mid):
       ps=c.execute('SELECT lpcl_text,authority_state,current_phase,progress FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
       if not m or not ps:return None
       if m['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return None
+      if not operator_control.autonomy_allowed(c,mid):return process_snapshot(mid)
       if m['material_target']!=64 or m['logical_count'] not in {12,128}:raise ValueError('lpcl execution adapter cardinality')
       kv=_lpcl_pairs(ps['lpcl_text'])
       continuation_ok=(kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')=='TRUE' or kv.get('CONTINUE_EXISTING_EPOCH3_LINEAGE')=='TRUE')
@@ -542,7 +553,7 @@ def bind_lpcl_execution(mid):
 def reconcile_lpcl_execution_bindings():
     c=connect()
     try:
-      rows=[r['mission_id'] for r in c.execute("SELECT m.mission_id FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE p.authority_state='EXPLICIT_USER_ACTIVATION' AND m.state IN ('AUTHORIZED','RUNNING','WAITING','BLOCKED') AND m.adapter IN ('LPCL_MISSION','LPCL_REBOUND_EPOCH3_64','LPCL_GENERIC_128L64M') ORDER BY m.updated_at DESC").fetchall()]
+      rows=[r['mission_id'] for r in c.execute("SELECT m.mission_id FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE p.authority_state='EXPLICIT_USER_ACTIVATION' AND m.state IN ('AUTHORIZED','RUNNING','WAITING','BLOCKED') AND m.adapter IN ('LPCL_MISSION','LPCL_REBOUND_EPOCH3_64','LPCL_GENERIC_128L64M') ORDER BY m.updated_at DESC").fetchall() if operator_control.autonomy_allowed(c,r['mission_id'])]
     finally:c.close()
     for mid in rows:
       try:bind_lpcl_execution(mid)
@@ -836,10 +847,14 @@ def mission_action(mid,x,*,phase_guard=None):
       elif action=='AUDIT':
         c=connect();result=lifecycle_create_audit(c,mid,now);c.close()
       elif action in {'RESUME','DRIVER_START'}:
-        c=connect();ds=driver_snapshot(c,mid)
+        c=connect()
+        if not operator_control.autonomy_allowed(c,mid):c.close();raise ValueError('operator control fence prevents autonomous resume')
+        ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
         if action=='RESUME' and ds['state'] not in {'BOOTSTRAP_PAUSED','PAUSED','STOPPED','FAILED'}:raise ValueError('driver not resumable from '+str(ds['state']))
-        result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE',owner_id=DRIVER_PROCESS_ID);c.close();effect='CONTROL_STATE'
+        result=driver_activate(c,mid,now,next_action='SELECT_NEXT_PHASE',owner_id=DRIVER_PROCESS_ID)
+        operator_control.rebind_ready_assignments(c,mid,now,authority_owner=operator_control.AUTONOMOUS_OWNER,generation=int(result.get('generation') or 1))
+        c.commit();c.close();effect='CONTROL_STATE'
       elif action=='PAUSE':
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
         if not ds:raise ValueError('driver missing')
@@ -872,6 +887,8 @@ def mission_action(mid,x,*,phase_guard=None):
         c=connect();ds=driver_snapshot(c,mid);mrow=c.execute('SELECT materialized,ready FROM missions WHERE mission_id=?',(mid,)).fetchone();integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
         result={'driver':ds,'materialized':mrow['materialized'],'ready':mrow['ready'],'database_integrity':integrity,'validated':bool(ds and mrow['ready']==64 and integrity=='ok'),'authority_effect':'NONE'};c.close();effect='NONE'
       elif action=='RESTART':
+        c=connect();allowed_by_operator=operator_control.autonomy_allowed(c,mid);c.close()
+        if not allowed_by_operator:raise ValueError('operator control fence prevents material restart')
         if mid==MISSION:
           effect='BOUNDED_MATERIAL';with_lock=LOCK
           with with_lock:
@@ -889,6 +906,8 @@ def mission_action(mid,x,*,phase_guard=None):
         else:
           c=connect();result=lifecycle_create_design_revision(c,mid,'RESTART',request or {'reason':'operator requested restart/replay'},now,state='AWAITING_EXACT_LPCL_ACTIVATION');c.close()
       elif action=='START_COMPONENT':
+        c=connect();allowed_by_operator=operator_control.autonomy_allowed(c,mid);c.close()
+        if not allowed_by_operator:raise ValueError('operator control fence prevents component start')
         component=str(request.get('component_id') or '').strip().upper()
         if not component:raise ValueError('component_id required')
         c=connect();exists=c.execute('SELECT 1 FROM mission_components WHERE mission_id=? AND UPPER(component_id)=?',(mid,component)).fetchone();auth=c.execute('SELECT p.authority_state,m.adapter FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE m.mission_id=?',(mid,)).fetchone();c.close()
@@ -1053,7 +1072,8 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
     d['execution_driver']=driver_snapshot(c,mid)
     d['scheduler']=global_sched.scheduler_snapshot(c)
-    d['execution_assignments']=[dict(r) for r in c.execute('SELECT assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,state,lease_generation,created_at,claimed_at,finished_at FROM mission_execution_assignments WHERE mission_id=? ORDER BY created_at DESC,assignment_id LIMIT 100',(mid,))]
+    operator_projection=operator_control.mission_snapshot(c,mid,now)
+    d['execution_assignments']=[dict(r) for r in c.execute('SELECT assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,state,lease_generation,control_epoch,context_revision,plan_revision,dispatch_authority,created_at,claimed_at,finished_at FROM mission_execution_assignments WHERE mission_id=? ORDER BY created_at DESC,assignment_id LIMIT 100',(mid,))]
     d['execution_receipts']=[dict(r) for r in c.execute('SELECT r.*,a.material_drone_id,a.logical_drone_id FROM mission_execution_receipts r JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id WHERE r.mission_id=? ORDER BY r.observed_at DESC,r.receipt_id LIMIT 100',(mid,))]
     d['execution_history_window']={'assignments':100,'receipts':100,'order':'NEWEST_FIRST','payloads':'DIGEST_PLUS_BOUNDED_RESULT_STORE'}
     try:d['generic_phase_plans']=[dict(r) for r in c.execute('SELECT * FROM mission_generic_phase_plans WHERE mission_id=? ORDER BY created_at,plan_id',(mid,))]
@@ -1077,7 +1097,9 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     liveness=_project_mission_liveness(c,mid,d,d.get('process') or {},d.get('execution_driver') or {},d.get('scheduler') or {})
     controls=_project_driver_controls(d.get('execution_driver'))
     if _connection is None:c.commit()
-    out=normalize_snapshot(d);liveness['source_revision']=out.get('projection_revision');out['liveness']=liveness;out['driver_controls']=controls
+    out=normalize_snapshot(d);liveness['source_revision']=out.get('projection_revision');out['liveness']=liveness;out['driver_controls']=controls;out['operator_control']=operator_projection
+    if (operator_projection.get('control') or {}).get('control_owner')==operator_control.PRIMARY_OPERATOR:
+      out['control_authority']='OPERATOR_PRIMARY_CONTROL'
     if _connection is None:c.close()
     return out
 
@@ -1454,6 +1476,7 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
       m=c.execute('SELECT state,ready,materialized FROM missions WHERE mission_id=?',(mid,)).fetchone()
       ps=c.execute('SELECT authority_state,current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
       if not m or not ps or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return
+      if not operator_control.autonomy_allowed(c,mid):return
       d=driver_snapshot(c,mid)
       if not d:return
       if d['state']=='BOOTSTRAP_PAUSED':
@@ -1713,6 +1736,15 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
 
 def _generic_execute_read_plan(c,plan):
     capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id'];executor_id=plan.get('executor_id') or 'MISSION_CONTROL_READ_ONLY_EVIDENCE'
+    control=operator_control.control_state(c,mid,None)
+    if control is not None and not operator_control.autonomy_allowed(c,mid):
+      evidence={'gate':'OPERATOR_CONTROL_FENCE','control_epoch':control['control_epoch'],'control_owner':control['control_owner'],'pause_latch':control['pause_latch'],'stop_latch':control['stop_latch'],'authority_effect':'NONE'}
+      global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_AUTHORITY',now,executor_id=executor_id,evidence=evidence)
+      return {'state':'WAITING_AUTHORITY','gate':'OPERATOR_CONTROL_FENCE','reason':'Operator control fence prevents autonomous executor admission','evidence':evidence}
+    if operator_control.is_capability_revoked(c,mid,capability):
+      evidence={'gate':'OPERATOR_CAPABILITY_REVOKED','capability':capability,'control_epoch':(control or {}).get('control_epoch'),'authority_effect':'NONE'}
+      global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_AUTHORITY',now,executor_id=executor_id,evidence=evidence)
+      return {'state':'WAITING_AUTHORITY','gate':'OPERATOR_CAPABILITY_REVOKED','reason':'Capability revoked by operator','evidence':evidence}
     if plan['authority_class']!='NONE':
       global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_AUTHORITY',now,executor_id=executor_id)
       return {'state':'WAITING_AUTHORITY','gate':'AUTHORITY_REQUIRED','reason':'Explicit admitted authority is required'}
@@ -2010,10 +2042,23 @@ def local_assignment_list(mission_id=None,limit=16):
     finally:c.close()
 
 
+def _decode_revision(row):
+    if not row:return None
+    value=dict(row)
+    try:value['content']=json.loads(value.pop('content_json'))
+    except Exception:value['content']=None
+    return value
+
+
 def local_assignment_claim(x):
     if type(x) is not dict or set(x)!={'assignment_id','material_drone_id'}:raise ValueError('local assignment claim schema')
     c=connect()
-    try:return global_sched.claim_assignment(c,x['assignment_id'],now,expected_material_drone_id=x['material_drone_id'])
+    try:
+      out=global_sched.claim_assignment(c,x['assignment_id'],now,expected_material_drone_id=x['material_drone_id'])
+      ctx=operator_control.assignment_context(c,out['mission_id'],out['material_drone_id'],out['logical_drone_id'])
+      out['operator_control']=ctx.get('control');out['operator_context']=_decode_revision(ctx.get('context'));out['operator_plan']=_decode_revision(ctx.get('plan'))
+      out['operator_messages']=[{k:m.get(k) for k in ('message_id','from_participant','target','kind','content','context_revision','plan_revision','created_at')} for m in ctx.get('messages',[])]
+      return out
     finally:c.close()
 
 
@@ -2026,6 +2071,8 @@ def local_assignment_receipt(x):
     try:
       out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,material_drone_id=x['material_drone_id'],lease_generation=x['lease_generation'],status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
       payload_store=global_sched.store_assignment_payload(c,x['assignment_id'],out['receipt_id'],x['result'],now)
+      operator_application=operator_control.note_assignment_application(c,x['assignment_id'],x['result'],now)
+      out['operator_application']=operator_application
       row=c.execute('SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
       if row:_process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'payload_retained':True,'status':x['status'],'authority_effect':'NONE'},'IN')
       out['payload_store']=payload_store
