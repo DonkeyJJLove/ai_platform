@@ -1,4 +1,4 @@
-name: LION Effect Surface Rebind Closure Diagnostic
+name: LION Effect Surface Rebind Publisher
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
       - repair/effect-surface-rebind-bootstrap-r1
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose-exact-rebind-closure:
+  publish-exact-rebind-closure:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -171,57 +171,29 @@ jobs:
 
           git add -A
           git diff --cached --check
-          echo "FINAL_WRITE_TREE=$(git write-tree)"
-          git config user.name "LION Diagnostic Bot"
-          git config user.email "lion-diagnostic@users.noreply.github.com"
-          git commit -m "LION: close effect-surface rebind truth currentness"
-          echo "FINAL_COMMIT=$(git rev-parse HEAD)"
-          echo "FINAL_TREE=$(git rev-parse HEAD^{tree})"
+          test "$(git write-tree)" = "f7ea29c7626010c8433a37d73ce16a2a9abc9229"
+          git config user.name "LION Repair Bot"
+          git config user.email "lion-repair@users.noreply.github.com"
+          git commit -m "LION: close effect-surface census currentness rebind"
+          test "$(git rev-parse HEAD^{tree})" = "f7ea29c7626010c8433a37d73ce16a2a9abc9229"
+          test "$(git rev-parse HEAD^)" = "7623a06e9ac0ad39b66c83410947f5f05e4334ff"
           test -z "$(git status --porcelain)"
 
-      - name: Diagnose Cyber-Lion full suite
+      - name: Run Cyber-Lion full suite
         shell: bash
         run: |
-          set -uo pipefail
-          set +e
-          echo "HEAD=$(git rev-parse HEAD)"
-          echo "TREE=$(git rev-parse HEAD^{tree})"
-          echo "STATUS=$(test -z "$(git status --porcelain)" && echo CLEAN || echo DIRTY)"
-          python -VV
-          python - <<'PY'
-          import os, platform, sqlite3, sys
-          print("SYS_EXECUTABLE=" + sys.executable)
-          print("SYS_VERSION=" + sys.version.replace("\n", " "))
-          print("PLATFORM=" + platform.platform())
-          print("SQLITE_VERSION=" + sqlite3.sqlite_version)
-          for key in ("RUNNER_OS", "RUNNER_ARCH", "ImageOS", "ImageVersion", "CI", "GITHUB_ACTIONS"):
-              print(f"ENV_{key}={os.environ.get(key, '')}")
-          PY
-          git --version
-          LOG="$RUNNER_TEMP/lion-full-suite.log"
-          python -m unittest discover -s cyber_lion/tests -p 'test_*.py' -v >"$LOG" 2>&1
-          RC=$?
-          echo "UNITTEST_RC=$RC"
-          python - "$LOG" <<'PY'
-          import re, sys
-          from pathlib import Path
-          text = Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace")
-          lines = text.splitlines()
-          print("--- SUMMARY ---")
-          for line in lines:
-              if re.match(r"^(Ran \d+ tests|FAILED \(|OK(?: \(|$)|FAIL: |ERROR: )", line):
-                  print(line)
-          print("--- FAILURE_BLOCKS ---")
-          sep = "=" * 70
-          blocks = 0
-          for part in text.split(sep):
-              stripped = part.strip()
-              if stripped.startswith("FAIL: ") or stripped.startswith("ERROR: "):
-                  blocks += 1
-                  print(sep)
-                  print(stripped[-12000:])
-          if blocks == 0 and "FAILED (" in text:
-              print(text[-20000:])
-          print("--- END ---")
-          PY
-          exit "$RC"
+          set -euo pipefail
+          test "$(git rev-parse HEAD^{tree})" = "f7ea29c7626010c8433a37d73ce16a2a9abc9229"
+          test -z "$(git status --porcelain)"
+          python -m unittest discover -s cyber_lion/tests -p 'test_*.py' -v
+
+      - name: Push exact repair branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^{tree})" = "f7ea29c7626010c8433a37d73ce16a2a9abc9229"
+          test "$(git rev-parse HEAD^)" = "7623a06e9ac0ad39b66c83410947f5f05e4334ff"
+          test -z "$(git status --porcelain)"
+          REMOTE_HEAD="$(git ls-remote --heads origin refs/heads/repair/effect-surface-census-rebind-r1 | awk '{print $1}')"
+          test "$REMOTE_HEAD" = "7623a06e9ac0ad39b66c83410947f5f05e4334ff"
+          git push origin HEAD:refs/heads/repair/effect-surface-census-rebind-r1
