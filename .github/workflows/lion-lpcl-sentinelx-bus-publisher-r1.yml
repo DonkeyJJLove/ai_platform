@@ -26,9 +26,9 @@ jobs:
           curl -fsS 'https://drop.pensa.ar/f/o72ZN99dTDvhG/lion-lpcl-sentinelx-bus-final-publish.patch.gz' -o /tmp/lion-bus.patch.gz
           echo 'ba968858bc0d706643d4b26e2c09740ef21ae549d737968cd9eac10426a9835e  /tmp/lion-bus.patch.gz' | sha256sum -c -
           gzip -dc /tmp/lion-bus.patch.gz > /tmp/lion-bus.patch
-          echo 'c7bf6a2805a1b74ec581fe2e87451118755f671134622aff05d6b29c1f9ba790  /tmp/lion-bus.patch' | sha256sum -c -
+          echo 'c7bf04207966931650e7ebe7cb023a4e950fbf6b3edb082b5d2e24026332a9ff  /tmp/lion-bus.patch' | sha256sum -c -
           git apply --index --whitespace=error /tmp/lion-bus.patch
-          test "$(git write-tree)" = "e2a58e8f6cf025f99bc29d21607db17799bd040a"
+          test "$(git write-tree)" = "e2a58e8f6cf0ef14707a74947029d4e1776a8872"
       - name: Reject abandoned API and browser-mediated production path
         shell: bash
         run: |
@@ -49,7 +49,7 @@ jobs:
           git config user.email 'lion-operator-bus@users.noreply.github.com'
           git commit -m 'LION: route LPCL panel through shared SentinelX operator bus'
           test "$(git rev-parse HEAD^)" = "cd734adc9d457702fb418b36a59f4607f147ce44"
-          test "$(git rev-parse HEAD^{tree})" = "e2a58e8f6cf025f99bc29d21607db17799bd040a"
+          test "$(git rev-parse HEAD^{tree})" = "e2a58e8f6cf0ef14707a74947029d4e1776a8872"
           test "$(git status --porcelain)" = ""
       - name: Focused shared-bus gates
         shell: bash
@@ -105,7 +105,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^{tree})" = "e2a58e8f6cf025f99bc29d21607db17799bd040a"
+          test "$(git rev-parse HEAD^{tree})" = "e2a58e8f6cf0ef14707a74947029d4e1776a8872"
           git push origin HEAD:refs/heads/mission/lpcl-panel-sentinelx-operator-bus-r1
           echo "PUBLISHED_HEAD=$(git rev-parse HEAD)"
           echo "PUBLISHED_TREE=$(git rev-parse HEAD^{tree})"
