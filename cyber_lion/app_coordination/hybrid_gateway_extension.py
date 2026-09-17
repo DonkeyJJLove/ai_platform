@@ -191,6 +191,15 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
         base = original_route(self, message)
         if base[0] == "AUTHORITY_BOUNDARY":
             return base
+        # Explicit composer LOCAL is a hard routing constraint. It must win over
+        # content heuristics that would otherwise recognize words such as SaaS +
+        # local and synthesize a DUAL_EVALUATION route.
+        try:
+            from cyber_lion.app_coordination.saas_handoff_extension import ROUTE_CONTEXT
+            if ROUTE_CONTEXT.get() == "LOCAL":
+                return base
+        except Exception:
+            pass
         dual = (
             ("saas" in low or "chatgpt" in low)
             and ("lokal" in low or "local" in low)
