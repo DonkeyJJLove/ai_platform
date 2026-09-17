@@ -56,6 +56,19 @@ function Read-FirefoxMediatorState {
         return $null
     }
 }
+function Test-OperatorControl {
+    try {
+        $r=Invoke-WebRequest -UseBasicParsing -Uri ($OperatorControlUrl + '/v1/participants') -TimeoutSec 5
+        return $r.StatusCode -eq 200
+    } catch {
+        try {
+            # An unauthenticated 403 is the expected healthy fail-closed surface.
+            return [int]$_.Exception.Response.StatusCode -eq 403
+        } catch {
+            return $false
+        }
+    }
+}
 function Assert-RepoClean {
     if (-not (Test-Path -LiteralPath $Repo)) { throw 'PANEL_REPO_MISSING' }
     $status = @(& $Git -C $Repo status --porcelain)
@@ -133,6 +146,7 @@ function Ensure-MissionControl {
     return $false
 }
 function Ensure-Panel([hashtable]$RepoIdentity) {
+    if (-not (Test-OperatorControl)) { throw 'OPERATOR_CONTROL_8767_UNAVAILABLE' }
     $p=Process-For-Port 8780
     if ($p) {
         if ([IO.Path]::GetFullPath($p.ExecutablePath) -ne [IO.Path]::GetFullPath($Python)) { throw 'PORT_8780_FOREIGN_PROCESS' }
@@ -188,6 +202,7 @@ function Ensure-FirefoxMediatorManager {
 }
 function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int]$MatHealthy,[int]$FirefoxMediatorPid) {
     $mc = [bool](Listener 8766)
+    $operatorControl=[bool](Test-OperatorControl)
     $mediator=Read-FirefoxMediatorState
     $mediatorState=if($mediator){[string]$mediator.state}else{'UNKNOWN'}
     $browserRelayActive=$mediatorState -in @('STARTING','READY','DEGRADED','LOGIN_REQUIRED','PROJECT_BINDING_REQUIRED')
@@ -207,7 +222,7 @@ function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int
         model_8772=$true
         panel_8780=$true
         firefox_mediator_8790=$true
-        operator_control_8767=$true
+        operator_control_8767=$operatorControl
         authority_effect='LOCAL_RUNTIME_SUPERVISION'
     }
     $tmp=$SupervisorState+'.tmp'
@@ -222,7 +237,7 @@ function One-Pass {
     $panelPid=Ensure-Panel $repoIdentity
     $firefoxMediatorPid=Ensure-FirefoxMediatorManager
     Write-State $repoIdentity $modelPid $panelPid $mat $firefoxMediatorPid
-    Write-Log ('READY model=' + $modelPid + ' panel=' + $panelPid + ' firefox_manager=' + $firefoxMediatorPid + ' mat=12 head=' + $repoIdentity.head + ' mc8766=' + [bool](Listener 8766))
+    Write-Log ('READY model=' + $modelPid + ' panel=' + $panelPid + ' firefox_manager=' + $firefoxMediatorPid + ' mat=12 head=' + $RepoIdentity.head + ' mc8766=' + [bool](Listener 8766))
 }
 
 if ($Once) {
