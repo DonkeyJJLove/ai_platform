@@ -1,8 +1,8 @@
 """R10-R3 hybrid cognitive-plane extension for the canonical local gateway.
 
-The extension is applied by the user-level runtime.  Keeping it separate from the
+The extension is applied by the user-level runtime. Keeping it separate from the
 large gateway/UI carrier makes provider semantics explicit and independently
-reviewable.  It adds no authority and never pretends an external SaaS session was
+reviewable. It adds no authority and never pretends an external SaaS session was
 called when only a handoff envelope was created.
 """
 from __future__ import annotations
@@ -25,21 +25,91 @@ def _dual_question(message: str) -> str:
 
 
 def _patch_ui() -> None:
+    """Patch the legacy carrier without turning the browser into transport policy.
+
+    The panel must make three different things visible instead of conflating them:
+    the cognitive channel selected for a turn, the Mission Control focus supplying
+    live mission context, and the optional Firefox UI mediator. Firefox stays an
+    operator-triggered transport and is never implied by AUTO or SAAS selection.
+    """
     from cyber_lion.app_coordination import local_intelligence_gateway as module
 
     replacements = (
         (
             'AUTO · LOCAL-first<br><span class="saas-unavailable">SaaS supervisor: unavailable</span><br><small>RAG: deferred · authority NONE</small>',
-            'HYBRID · LOCAL + SaaS supervisor<br><span class="ok">SaaS supervisor: EXTERNAL_SESSION_MEDIATED</span><br><small>automatic SaaS hop: not materialized · RAG: deferred · authority NONE</small>',
+            'HYBRID · LOCAL + SaaS supervisor<br><span class="ok">SaaS supervisor: SENTINELX session mediated</span><br><small>browser transport: explicit opt-in · RAG: deferred · authority NONE</small>',
+        ),
+        (
+            'AUTO · LOCAL-first<br><span id="sidebarSaas" class="ok">SaaS supervisor: sprawdzanie…</span><br><small id="sidebarSaasMeta">Hybrid required · authority NONE</small>',
+            'AUTO · LOCAL-first · browser opt-in<br><span id="sidebarSaas" class="ok">SaaS supervisor: sprawdzanie…</span><br><small id="sidebarSaasMeta">SentinelX default transport · authority NONE</small>',
         ),
         (
             '<div class="k">LOCAL COGNITIVE EXECUTOR</div><h2>LION Local Model</h2><p class="status">Proposal-only GPT‑OSS · live Mission Control/repo/web evidence through material drones · authority NONE</p>',
-            '<div class="k">HYBRID COGNITIVE PLANE</div><h2>LION Local + SaaS Supervisor</h2><p class="status">LOCAL gpt-oss-20b-MXFP4 proposal-only · REMOTE CHATGPT_SAAS_SUPERVISOR via EXTERNAL_SESSION_MEDIATED · automatic hop not materialized · authority NONE</p>',
+            '<div class="k">HYBRID COGNITIVE PLANE</div><h2>LION Local + SaaS Supervisor</h2><p class="status">LOCAL gpt-oss-20b-MXFP4 proposal-only · REMOTE CHATGPT_SAAS_SUPERVISOR through controlled mediation · browser transport requires explicit operator activation · authority NONE</p>',
+        ),
+        (
+            '<p class="status">Brokered Firefox-project mediation · exact request tracking · authority NONE</p>',
+            '<p class="status">SentinelX session mediation is the default SaaS path · Firefox UI mediation is explicit opt-in · exact request tracking · authority NONE</p>',
+        ),
+        (
+            '<button onclick="firefoxMediatorControl(\'/control/open\')">Otwórz Firefox Mediator</button><button onclick="firefoxMediatorControl(\'/control/pin-current\')">Przypnij bieżący projekt i chat</button><button onclick="firefoxMediatorControl(\'/control/relay/on\')">Relay ON</button><button onclick="firefoxMediatorControl(\'/control/relay/off\')">Relay OFF</button>',
+            '<button onclick="firefoxMediatorControl(\'/control/open\')">Browser: otwórz ręcznie</button><button onclick="firefoxMediatorControl(\'/control/pin-current\')">Browser: przypnij chat</button><button onclick="firefoxMediatorControl(\'/control/relay/on\')">Browser relay: WŁĄCZ</button><button onclick="firefoxMediatorControl(\'/control/relay/off\')">Browser relay: WYŁĄCZ</button>',
+        ),
+        (
+            'Jawne polecenie <code>Na SaaS: &lt;pytanie&gt;</code> tworzy request brokera. Gdy widoczny Firefox Developer jest zalogowany, przypięty do projektu <code>LION_EVOLUSION</code> i mediator ma świeży heartbeat READY, nowe requesty używają transportu <code>CHATGPT_FIREFOX_PROJECT_MEDIATED</code>. Bez świeżego mediatora system pozostaje fail-closed w trybie zewnętrznej mediacji manualnej.',
+            'Kanał <code>SENTINELX · SaaS</code> nie uruchamia przeglądarki. Firefox Developer jest transportem opcjonalnym i może wejść do puli dopiero po jawnym <code>Browser relay: WŁĄCZ</code>; <code>WYŁĄCZ</code> natychmiast publikuje stan DISABLED, więc broker wraca do ścieżki SentinelX.',
+        ),
+        (
+            '<select id="composerRoute" title="Kanał odpowiedzi"><option value="AUTO">Auto</option><option value="LOCAL">LOCAL</option><option value="SAAS">SAAS</option><option value="DUAL">DUAL</option></select><select id="lang"',
+            '<select id="composerRoute" title="Jawny kanał odpowiedzi"><option value="AUTO">AUTO · LOCAL first</option><option value="LOCAL">LOCAL</option><option value="SAAS">SENTINELX · SaaS</option><option value="DUAL">DUAL · LOCAL + SENTINELX</option></select><span id="chatContext" class="status">CHAT CONTEXT · thread — · focus mission — · channel AUTO</span><select id="lang"',
         ),
     )
     ui = module.UI
     for old, new in replacements:
         ui = ui.replace(old, new)
+
+    # A new assistant turn should reveal the beginning of the answer, not jump
+    # to its tail. Thread replay is silent so opening history does not animate
+    # through every message.
+    ui = ui.replace(
+        "function addMsg(role,text){let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class=\"role\">'+(role==='user'?'TY':'LION')+'</div><div class=\"md\">'+md(text)+'</div>');messagesEl.appendChild(d);d.scrollIntoView({behavior:'smooth',block:'end'})}",
+        "function addMsg(role,text,opts={}){let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class=\"role\">'+(role==='user'?'TY':'LION')+'</div><div class=\"md\">'+md(text)+'</div>');messagesEl.appendChild(d);if(opts.scroll!==false)requestAnimationFrame(()=>{try{d.scrollIntoView({behavior:'smooth',block:role==='assistant'?'start':'end'})}catch(_){}})}",
+    )
+    ui = ui.replace(
+        "addMsg(m.role,m.content);history.push({role:m.role,content:m.content});",
+        "addMsg(m.role,m.content,{scroll:false});history.push({role:m.role,content:m.content});",
+    )
+
+    # Conversation navigation remains stable while a thread receives turns or
+    # asynchronous SaaS receipts. Recency still exists in backend metadata but
+    # no longer reorders the operator's sidebar under the pointer.
+    ui = ui.replace(
+        "threads=x.threads||[];patchHtml(threadListEl,",
+        "threads=(x.threads||[]).slice().sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0));patchHtml(threadListEl,",
+    )
+
+    context_js = r'''function composerChannelLabel(){let value=$('composerRoute')?.value||'AUTO';return ({AUTO:'AUTO · LOCAL-FIRST',LOCAL:'LOCAL',SAAS:'SENTINELX · SaaS',DUAL:'DUAL · LOCAL + SENTINELX'})[value]||value}
+function renderChatContext(){let el=$('chatContext');if(!el)return;let tid=activeThreadId?String(activeThreadId).slice(0,8):'—',focus=missionFocusId||'NO_FOCUS',inspection=(selectedMissionId&&selectedMissionId!==missionFocusId)?' · inspecting '+selectedMissionId:'';el.textContent='CHAT CONTEXT · thread '+tid+' · focus mission '+focus+' · channel '+composerChannelLabel()+inspection}
+'''
+    if "function composerChannelLabel()" not in ui:
+        ui = ui.replace("async function state(){", context_js + "async function state(){renderChatContext();")
+    ui = ui.replace(
+        "missionFocusId=x.focus_mission_id||missions[0]?.mission_id||null;",
+        "missionFocusId=x.focus_mission_id||missions[0]?.mission_id||null;renderChatContext();",
+    )
+    ui = ui.replace(
+        "qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});async function boot(){",
+        "qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});$('composerRoute').addEventListener('change',renderChatContext);async function boot(){renderChatContext();",
+    )
+    ui = ui.replace(
+        "activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
+        "activeThreadId=x.thread_id;renderChatContext();history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
+    )
+    ui = ui.replace(
+        "activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
+        "activeThreadId=id;renderChatContext();history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();",
+    )
+
     module.UI = ui
 
 
