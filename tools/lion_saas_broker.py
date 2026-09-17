@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS saas_handoff_requests(
   provider TEXT,
   provider_conversation_id TEXT,
   provider_response_id TEXT,
+  failure_class TEXT,
+  failed_at TEXT,
   authority_effect TEXT NOT NULL DEFAULT 'NONE',
   claim_generation INTEGER NOT NULL DEFAULT 0,
   claim_expires_at TEXT
@@ -163,7 +165,7 @@ def migrate(conn, now_fn, *, source_head, source_tree):
                 conn.execute('DROP TABLE '+table)
                 conn.execute('ALTER TABLE '+table+'_nullable RENAME TO '+table)
     conn.executescript(DDL)
-    for name,ddl in [('scope_type',"TEXT NOT NULL DEFAULT 'MISSION'"),('scope_id','TEXT'),('thread_id','TEXT'),('transport','TEXT'),('control_transport','TEXT'),('inference_transport','TEXT'),('provider','TEXT'),('provider_conversation_id','TEXT'),('provider_response_id','TEXT'),('authority_effect',"TEXT NOT NULL DEFAULT 'NONE'"),('claim_generation','INTEGER NOT NULL DEFAULT 0'),('claim_expires_at','TEXT')]:
+    for name,ddl in [('scope_type',"TEXT NOT NULL DEFAULT 'MISSION'"),('scope_id','TEXT'),('thread_id','TEXT'),('transport','TEXT'),('control_transport','TEXT'),('inference_transport','TEXT'),('provider','TEXT'),('provider_conversation_id','TEXT'),('provider_response_id','TEXT'),('failure_class','TEXT'),('failed_at','TEXT'),('authority_effect',"TEXT NOT NULL DEFAULT 'NONE'"),('claim_generation','INTEGER NOT NULL DEFAULT 0'),('claim_expires_at','TEXT')]:
         _ensure_column(conn,'saas_handoff_requests',name,ddl)
     conn.execute("UPDATE saas_handoff_requests SET scope_id=mission_id WHERE scope_id IS NULL AND scope_type='MISSION'")
     conn.execute('UPDATE saas_handoff_requests SET transport=? WHERE transport IS NULL',(TRANSPORT,))
@@ -461,6 +463,24 @@ def cancel_request(conn, request_id, now_fn):
         changed = conn.execute("UPDATE saas_handoff_requests SET status='CANCELLED', progress_state='CANCELLED_BY_OPERATOR' WHERE request_id=? AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED')", (request_id,)).rowcount
     result = request_status(conn, request_id, now_fn)
     return {'request_id': request_id, 'status': result['status'], 'cancelled': bool(changed), 'authority_effect': 'NONE'}
+
+
+def fail_request(conn,request_id,response_token,claim_generation,failure_class,now_fn):
+    if not isinstance(failure_class,str) or not failure_class or len(failure_class)>160:raise ValueError("failure class")
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        stamp=now_fn();_expire(conn,stamp);row=conn.execute("SELECT * FROM saas_handoff_requests WHERE request_id=?",(request_id,)).fetchone()
+        if row is None:raise ValueError("saas request not found")
+        if row["status"]!="CLAIMED":raise ValueError("saas request not claimed")
+        if type(claim_generation) is not int or claim_generation!=row["claim_generation"]:raise ValueError("stale claim generation")
+        if not isinstance(response_token,str) or not secrets.compare_digest(response_token,row["response_token"]):raise ValueError("saas response token")
+        transport=row["inference_transport"] or row["transport"] or TRANSPORT
+        if transport!=DIRECT_TRANSPORT:raise ValueError("provider failure only valid for direct transport")
+        conn.execute("UPDATE saas_handoff_requests SET status='FAILED',progress_state='PROVIDER_FAILED',failure_class=?,failed_at=?,claim_expires_at=NULL WHERE request_id=?",(failure_class,stamp,request_id))
+        conn.commit()
+        return {"request_id":request_id,"status":"FAILED","state":"FAILED","progress_state":"PROVIDER_FAILED","failure_class":failure_class,"failed_at":stamp,"authority_effect":"NONE"}
+    except Exception:
+        conn.rollback();raise
 
 
 def request_status(conn, request_id, now_fn):

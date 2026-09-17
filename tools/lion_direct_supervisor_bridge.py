@@ -18,6 +18,7 @@ MAX_OUTPUT_TOKENS=2048
 MAX_INFLIGHT=1
 REQUEST_TIMEOUT=120
 RETRY_MAX=0
+DELIVERY_RETRY_MAX=2
 ALLOWED_PROVIDER_HOSTS={'api.openai.com'}
 
 def utcnow():return datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
@@ -66,8 +67,11 @@ CREATE TABLE IF NOT EXISTS provider_conversations(
 CREATE TABLE IF NOT EXISTS provider_attempts(
   request_id TEXT PRIMARY KEY, claim_generation INTEGER NOT NULL, binding_key TEXT NOT NULL,
   started_at TEXT NOT NULL, completed_at TEXT, provider_response_id TEXT,
-  state TEXT NOT NULL, error_class TEXT, authority_effect TEXT NOT NULL);
-""");c.commit();c.close()
+  state TEXT NOT NULL, error_class TEXT, delivery_failures INTEGER NOT NULL DEFAULT 0, authority_effect TEXT NOT NULL);
+""");
+            cols={r[1] for r in c.execute('PRAGMA table_info(provider_attempts)')}
+            if 'delivery_failures' not in cols:c.execute('ALTER TABLE provider_attempts ADD COLUMN delivery_failures INTEGER NOT NULL DEFAULT 0')
+            c.commit();c.close()
     def key(self,row):return row.get('thread_id') or f"{row.get('scope_type')}:{row.get('scope_id') or 'GLOBAL'}"
     def get(self,key):
         with self.lock:
@@ -86,13 +90,16 @@ CREATE TABLE IF NOT EXISTS provider_attempts(
             c=self._conn();old=c.execute('SELECT * FROM provider_attempts WHERE request_id=?',(rid,)).fetchone()
             if old:
                 c.execute("UPDATE provider_attempts SET claim_generation=?,state=CASE WHEN state='COMPLETED' THEN state ELSE 'STARTED' END,error_class=NULL WHERE request_id=?",(generation,rid));c.commit();out=dict(c.execute('SELECT * FROM provider_attempts WHERE request_id=?',(rid,)).fetchone());c.close();return out
-            c.execute('INSERT INTO provider_attempts VALUES(?,?,?,?,?,?,?,?,?)',(rid,generation,key,utcnow(),None,None,'STARTED',None,'NONE'));c.commit();out=dict(c.execute('SELECT * FROM provider_attempts WHERE request_id=?',(rid,)).fetchone());c.close();return out
+            c.execute('INSERT INTO provider_attempts(request_id,claim_generation,binding_key,started_at,completed_at,provider_response_id,state,error_class,delivery_failures,authority_effect) VALUES(?,?,?,?,?,?,?,?,?,?)',(rid,generation,key,utcnow(),None,None,'STARTED',None,0,'NONE'));c.commit();out=dict(c.execute('SELECT * FROM provider_attempts WHERE request_id=?',(rid,)).fetchone());c.close();return out
     def finish_attempt(self,rid,response_id):
         with self.lock:
             c=self._conn();c.execute("UPDATE provider_attempts SET state='COMPLETED',completed_at=?,provider_response_id=? WHERE request_id=?",(utcnow(),response_id,rid));c.execute('UPDATE provider_conversations SET updated_at=?,last_response_id=? WHERE binding_key=(SELECT binding_key FROM provider_attempts WHERE request_id=?)',(utcnow(),response_id,rid));c.commit();c.close()
     def fail_attempt(self,rid,error_class):
         with self.lock:
             c=self._conn();c.execute("UPDATE provider_attempts SET state='FAILED',completed_at=?,error_class=? WHERE request_id=?",(utcnow(),str(error_class)[:160],rid));c.commit();c.close()
+    def record_delivery_failure(self,rid):
+        with self.lock:
+            c=self._conn();c.execute('UPDATE provider_attempts SET delivery_failures=delivery_failures+1 WHERE request_id=?',(rid,));c.commit();row=c.execute('SELECT delivery_failures FROM provider_attempts WHERE request_id=?',(rid,)).fetchone();c.close();return int(row[0]) if row else 0
     def snapshot(self):
         with self.lock:
             c=self._conn();n=c.execute("SELECT COUNT(*) FROM provider_conversations WHERE state='BOUND'").fetchone()[0];last=c.execute('SELECT provider,model_id,conversation_id_digest,last_response_id,updated_at,state FROM provider_conversations ORDER BY updated_at DESC LIMIT 1').fetchone();c.close();return {'bound_conversations':n,'last':dict(last) if last else None}
@@ -128,9 +135,13 @@ class Bridge:
         row=next((r for r in pending if (r.get('inference_transport') or r.get('transport'))==DIRECT_TRANSPORT and r.get('status') in WAITING),None)
         if not row:return False
         rid=row['request_id'];claim=self.broker_json(f'/api/v3/saas-broker/requests/{rid}/claim','POST',{})
-        key,cid=self.conversation(row);generation=int(claim['claim_generation']);attempt=self.store.prepare_attempt(rid,generation,key)
+        key=self.store.key(row);generation=int(claim['claim_generation']);attempt=self.store.prepare_attempt(rid,generation,key)
         self.last_request=rid
+        if attempt.get('state')=='COMPLETED' and int(attempt.get('delivery_failures') or 0)>=DELIVERY_RETRY_MAX:
+            out=self.broker_json(f'/api/v3/saas-broker/requests/{rid}/fail','POST',{'response_token':claim['response_token'],'claim_generation':generation,'failure_class':'BROKER_DELIVERY_EXHAUSTED'})
+            self.last_error='BROKER_DELIVERY_EXHAUSTED';return out
         try:
+            cid=self.conversation(row)[1]
             response_key='lion-response-'+rid
             if attempt.get('state')=='COMPLETED' and attempt.get('provider_response_id'):
                 response=self.provider_json('/responses/'+urllib.parse.quote(attempt['provider_response_id'],safe=''),None,REQUEST_TIMEOUT,method='GET')
@@ -139,10 +150,16 @@ class Bridge:
             response_id=response.get('id')
             if not isinstance(response_id,str) or not response_id:raise RuntimeError('provider response id missing')
             answer=output_text(response);self.store.finish_attempt(rid,response_id)
+        except Exception as exc:
+            failure_class=type(exc).__name__;self.store.fail_attempt(rid,failure_class)
+            try:self.broker_json(f'/api/v3/saas-broker/requests/{rid}/fail','POST',{'response_token':claim['response_token'],'claim_generation':generation,'failure_class':failure_class})
+            except Exception as fail_exc:self.last_error=failure_class+':'+str(exc)[:300]+';FAILURE_PERSIST:'+type(fail_exc).__name__;raise
+            self.last_error=failure_class+':'+str(exc)[:500];return self.broker_json(f'/api/v3/saas-broker/requests/{rid}')
+        try:
             result=self.broker_json(f'/api/v3/saas-broker/requests/{rid}/respond','POST',{'response_token':claim['response_token'],'claim_generation':generation,'answer':answer,'model_identity':self.model,'transport':DIRECT_TRANSPORT,'attestation_class':DIRECT_ATTESTATION,'provider':PROVIDER,'provider_conversation_id':cid,'provider_response_id':response_id},30)
             self.last_error=None;return result
         except Exception as exc:
-            self.store.fail_attempt(rid,type(exc).__name__);self.last_error=type(exc).__name__+':'+str(exc)[:500];raise
+            failures=self.store.record_delivery_failure(rid);self.last_error='BROKER_DELIVERY:'+type(exc).__name__+':count='+str(failures)+':'+str(exc)[:320];raise
     def loop(self):
         last_hb=0.0
         while not self.stop.is_set():
@@ -151,7 +168,7 @@ class Bridge:
                 if self.api_key:self.process_one()
             except Exception as exc:self.last_error=type(exc).__name__+':'+str(exc)[:500]
             self.stop.wait(self.interval)
-    def status(self):return {'schema':'lion.direct-supervisor-bridge/v1','bridge_id':BRIDGE_ID,'state':self.state if not self.last_error else 'DEGRADED','credential_state':self.credential_state,'provider':PROVIDER,'model_id':self.model if self.api_key else None,'control_transport':CONTROL_TRANSPORT,'inference_transport':DIRECT_TRANSPORT,'max_inflight':MAX_INFLIGHT,'request_timeout_seconds':REQUEST_TIMEOUT,'max_input_size':MAX_INPUT_SIZE,'max_output_tokens':MAX_OUTPUT_TOKENS,'retry_max':RETRY_MAX,'provider_host':urllib.parse.urlparse(self.api_base).hostname,'last_request_id':self.last_request,'last_error':self.last_error,'conversations':self.store.snapshot(),'authority_effect':'NONE'}
+    def status(self):return {'schema':'lion.direct-supervisor-bridge/v1','bridge_id':BRIDGE_ID,'state':self.state if not self.last_error else 'DEGRADED','credential_state':self.credential_state,'provider':PROVIDER,'model_id':self.model if self.api_key else None,'control_transport':CONTROL_TRANSPORT,'inference_transport':DIRECT_TRANSPORT,'max_inflight':MAX_INFLIGHT,'request_timeout_seconds':REQUEST_TIMEOUT,'max_input_size':MAX_INPUT_SIZE,'max_output_tokens':MAX_OUTPUT_TOKENS,'retry_max':RETRY_MAX,'delivery_retry_max':DELIVERY_RETRY_MAX,'provider_host':urllib.parse.urlparse(self.api_base).hostname,'last_request_id':self.last_request,'last_error':self.last_error,'conversations':self.store.snapshot(),'authority_effect':'NONE'}
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--broker',default='http://127.0.0.1:8766');ap.add_argument('--mediator-key-file',default='/var/lib/sentinelx/uploads/lion-mission-control-v3/saas-mediator.key');ap.add_argument('--state-db',default='/var/lib/sentinelx/uploads/lion-mission-control-v3/direct-supervisor-bridge.db');ap.add_argument('--api-base',default=os.environ.get('OPENAI_BASE_URL','https://api.openai.com/v1'));ap.add_argument('--model',default=os.environ.get('LION_OPENAI_MODEL',DEFAULT_MODEL));ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8768);ap.add_argument('--interval',type=float,default=0.5);a=ap.parse_args()

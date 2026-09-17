@@ -106,6 +106,9 @@ def saas_broker_api(method,path,payload=None):
    if action=='cancel':
     if x:raise ValueError('cancel schema')
     return saas_broker.cancel_request(c,rid,now)
+   if action=='fail':
+    if type(x) is not dict or set(x)!={'response_token','claim_generation','failure_class'}:raise ValueError('failure schema')
+    return saas_broker.fail_request(c,rid,x['response_token'],x['claim_generation'],x['failure_class'],now)
    if action=='respond':
     if type(x) is not dict or not {'response_token','claim_generation','answer','model_identity','transport','attestation_class'}<=set(x) or set(x)-{'response_token','claim_generation','answer','model_identity','transport','attestation_class','provider','provider_conversation_id','provider_response_id'}:raise ValueError('response schema')
     row=c.execute('SELECT claim_generation FROM saas_handoff_requests WHERE request_id=?',(rid,)).fetchone()
@@ -2143,7 +2146,7 @@ class H(BaseHTTPRequestHandler):
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
   if path.startswith('/api/v3/saas-broker/'):
-   controlled=path.endswith(('/claim','/respond','/session/attest','/mediator/heartbeat','/direct/heartbeat'))
+   controlled=path.endswith(('/claim','/respond','/fail','/session/attest','/mediator/heartbeat','/direct/heartbeat'))
    if controlled and not mediator_authorized(self.headers):return self.json({'error':'mediator authentication required'},403)
    try:
     n=int(self.headers.get('Content-Length','0'))

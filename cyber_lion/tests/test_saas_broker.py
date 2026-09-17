@@ -63,6 +63,24 @@ class CognitiveBrokerTests(unittest.TestCase):
         self.assertFalse(self.conn.in_transaction)
         self.answer(claim)
 
+    def test_expired_failure_claim_is_rejected_without_prior_status_poll(self):
+        request=self.request();claim=broker.claim(self.conn,request['request_id'],self.now,lease_seconds=1);self.stamp='2026-09-15T00:00:02Z'
+        with self.assertRaisesRegex(ValueError,'not claimed'):
+            broker.fail_request(self.conn,request['request_id'],claim['response_token'],claim['claim_generation'],'ProviderError',self.now)
+        saved=broker.request_status(self.conn,request['request_id'],self.now);self.assertEqual(saved['status'],'WAITING_PROVIDER');self.assertIsNone(saved['failure_class'])
+
+    def test_direct_failure_is_claim_fenced_and_terminal(self):
+        request=self.request();claim=broker.claim(self.conn,request['request_id'],self.now,lease_seconds=1)
+        with self.assertRaisesRegex(ValueError,'response token'):
+            broker.fail_request(self.conn,request['request_id'],'bad',claim['claim_generation'],'ProviderError',self.now)
+        self.assertEqual(broker.request_status(self.conn,request['request_id'],self.now)['status'],'CLAIMED')
+        self.stamp='2026-09-15T00:00:02Z';broker.request_status(self.conn,request['request_id'],self.now);fresh=broker.claim(self.conn,request['request_id'],self.now)
+        with self.assertRaisesRegex(ValueError,'stale claim generation'):
+            broker.fail_request(self.conn,request['request_id'],fresh['response_token'],claim['claim_generation'],'ProviderError',self.now)
+        out=broker.fail_request(self.conn,request['request_id'],fresh['response_token'],fresh['claim_generation'],'ProviderError',self.now)
+        self.assertEqual((out['status'],out['progress_state']),('FAILED','PROVIDER_FAILED'));self.assertEqual(broker.broker_pending(self.conn,self.now)['requests'],[])
+        saved=broker.request_status(self.conn,request['request_id'],self.now);self.assertEqual(saved['failure_class'],'ProviderError');self.assertIsNotNone(saved['failed_at'])
+
     def test_session_expiry_preserves_pending_request_and_old_receipt(self):
         claim = broker.claim(self.conn, self.request()['request_id'], self.now)
         first = self.answer(claim, lease_seconds=1)

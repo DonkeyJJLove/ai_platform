@@ -6,7 +6,7 @@ from tools.lion_direct_supervisor_bridge import Bridge,DIRECT_TRANSPORT,DIRECT_A
 
 class DirectBridgeHarness(Bridge):
     def __init__(self,conn,key_file,state_db,clock):
-        self.conn=conn;self.clock=clock;self.provider_calls=[];self.conversation_calls=0;self.response_calls=0
+        self.conn=conn;self.clock=clock;self.provider_calls=[];self.conversation_calls=0;self.response_calls=0;self.fail_provider=False;self.fail_broker_respond=False
         super().__init__('http://127.0.0.1:8766',key_file,state_db,'TEST_KEY_NOT_SENT','https://api.openai.com/v1','gpt-5.6-sol',0.2)
     def broker_json(self,path,method='GET',body=None,timeout=15):
         if path=='/api/v3/saas-broker/pending':return broker.broker_pending(self.conn,self.clock)
@@ -16,7 +16,10 @@ class DirectBridgeHarness(Bridge):
             rid,*rest=tail.split('/')
             if not rest:return broker.request_status(self.conn,rid,self.clock)
             if rest[0]=='claim':return broker.claim(self.conn,rid,self.clock)
-            if rest[0]=='respond':return broker.respond(self.conn,rid,body['response_token'],body['answer'],self.clock,model_identity=body['model_identity'],transport=body['transport'],attestation_class=body['attestation_class'],claim_generation=body['claim_generation'],provider=body.get('provider'),provider_conversation_id=body.get('provider_conversation_id'),provider_response_id=body.get('provider_response_id'))
+            if rest[0]=='fail':return broker.fail_request(self.conn,rid,body['response_token'],body['claim_generation'],body['failure_class'],self.clock)
+            if rest[0]=='respond':
+                if self.fail_broker_respond:raise RuntimeError('simulated broker delivery failure')
+                return broker.respond(self.conn,rid,body['response_token'],body['answer'],self.clock,model_identity=body['model_identity'],transport=body['transport'],attestation_class=body['attestation_class'],claim_generation=body['claim_generation'],provider=body.get('provider'),provider_conversation_id=body.get('provider_conversation_id'),provider_response_id=body.get('provider_response_id'))
         raise AssertionError((path,method,body))
     def provider_json(self,path,body=None,timeout=120,request_key=None,method='POST'):
         self.provider_calls.append((path,body))
@@ -26,6 +29,7 @@ class DirectBridgeHarness(Bridge):
             rid=path.rsplit('/',1)[-1];return {'id':rid,'status':'completed','output':[{'type':'message','role':'assistant','content':[{'type':'output_text','text':'recovered-answer'}]}]}
         if path=='/responses':
             self.response_calls+=1
+            if self.fail_provider:raise RuntimeError('simulated provider failure')
             return {'id':f'resp-test-{self.response_calls:03d}','status':'completed','conversation':{'id':body['conversation']},'output':[{'type':'message','role':'assistant','content':[{'type':'output_text','text':f'answer-{self.response_calls}'}]}]}
         raise AssertionError(path)
 
@@ -68,6 +72,29 @@ class DirectSupervisorBridgeR1Tests(unittest.TestCase):
     def test_absent_credential_never_claims(self):
         blocked=DirectBridgeHarness(self.conn,self.key,self.root/'blocked.db',self.clock);blocked.api_key=''
         req=self.request();self.assertFalse(blocked.process_one());self.assertEqual(broker.request_status(self.conn,req['request_id'],self.clock)['status'],'WAITING_PROVIDER');self.assertEqual(blocked.status()['credential_state'],'ABSENT')
+    def test_provider_failure_is_terminal_with_retry_max_zero(self):
+        req=self.request('provider-failure');self.bridge.fail_provider=True
+        out=self.bridge.process_one();self.assertEqual((out['status'],out['progress_state']),('FAILED','PROVIDER_FAILED'));self.assertEqual(out['failure_class'],'RuntimeError');self.assertEqual(self.bridge.response_calls,1)
+        saved=broker.request_status(self.conn,req['request_id'],self.clock);self.assertEqual(saved['status'],'FAILED');self.assertEqual(saved['failure_class'],'RuntimeError');self.assertEqual(broker.broker_pending(self.conn,self.clock)['requests'],[])
+        self.now+=timedelta(seconds=601);self.assertFalse(self.bridge.process_one());self.assertEqual(self.bridge.response_calls,1)
+    def test_broker_delivery_failure_recovers_stored_provider_response_without_second_inference(self):
+        req=self.request('delivery-recovery');self.bridge.fail_broker_respond=True
+        with self.assertRaisesRegex(RuntimeError,'broker delivery failure'):self.bridge.process_one()
+        self.assertEqual(self.bridge.response_calls,1);self.assertEqual(broker.request_status(self.conn,req['request_id'],self.clock)['status'],'CLAIMED')
+        attempt=self.bridge.store.get(self.bridge.store.key({'thread_id':'1'*32,'scope_type':'THREAD','scope_id':'1'*32}))
+        self.bridge.fail_broker_respond=False;self.now+=timedelta(seconds=301);broker.request_status(self.conn,req['request_id'],self.clock)
+        out=self.bridge.process_one();self.assertEqual(out['status'],'RESPONDED');self.assertEqual(self.bridge.response_calls,1);self.assertEqual(broker.request_status(self.conn,req['request_id'],self.clock)['provider_response_id'],'resp-test-001')
+    def test_broker_delivery_retry_is_bounded_and_terminal_after_two_failures(self):
+        req=self.request('delivery-exhaustion');self.bridge.fail_broker_respond=True
+        with self.assertRaisesRegex(RuntimeError,'broker delivery failure'):self.bridge.process_one()
+        self.assertEqual(self.bridge.response_calls,1)
+        self.now+=timedelta(seconds=301);broker.request_status(self.conn,req['request_id'],self.clock)
+        with self.assertRaisesRegex(RuntimeError,'broker delivery failure'):self.bridge.process_one()
+        calls_after_second=len(self.bridge.provider_calls);self.assertEqual(self.bridge.response_calls,1)
+        self.now+=timedelta(seconds=301);broker.request_status(self.conn,req['request_id'],self.clock)
+        out=self.bridge.process_one();self.assertEqual((out['status'],out['progress_state']),('FAILED','PROVIDER_FAILED'));self.assertEqual(out['failure_class'],'BROKER_DELIVERY_EXHAUSTED');self.assertEqual(len(self.bridge.provider_calls),calls_after_second);self.assertEqual(self.bridge.response_calls,1)
+        self.assertEqual(broker.broker_pending(self.conn,self.clock)['requests'],[])
+        self.assertEqual(self.bridge.status()['delivery_retry_max'],2)
     def test_claim_expiry_fences_stale_generation(self):
         req=self.request();claim1=broker.claim(self.conn,req['request_id'],self.clock,lease_seconds=1);self.now+=timedelta(seconds=2);broker.request_status(self.conn,req['request_id'],self.clock);claim2=broker.claim(self.conn,req['request_id'],self.clock,lease_seconds=30);self.assertGreater(claim2['claim_generation'],claim1['claim_generation'])
         with self.assertRaises(ValueError):broker.respond(self.conn,req['request_id'],claim1['response_token'],'stale',self.clock,model_identity='gpt-5.6-sol',transport=DIRECT_TRANSPORT,attestation_class=DIRECT_ATTESTATION,claim_generation=claim1['claim_generation'],provider=PROVIDER,provider_conversation_id='conv',provider_response_id='resp-old')
