@@ -221,14 +221,16 @@ def _begin_operator_request(gateway, thread_id: str, mission_id: str, target: st
 
 def _update_request(gateway, client_request_id: str, **fields):
     allowed = {"operator_message_id", "state", "receipt_digest"}
-    values = {k: v for k, v in fields.items() if k in allowed}
-    if not values:
+    if set(fields) - allowed:
+        raise ValueError("request update fields")
+    if not fields:
         return
-    values["updated_at"] = time.time()
     conn = _connect(gateway)
     try:
-        sql = "UPDATE thread_operator_requests SET " + ",".join(k + "=?" for k in values) + " WHERE client_request_id=?"
-        conn.execute(sql, (*values.values(), client_request_id))
+        conn.execute(
+            "UPDATE thread_operator_requests SET operator_message_id=COALESCE(?,operator_message_id),state=COALESCE(?,state),receipt_digest=COALESCE(?,receipt_digest),updated_at=? WHERE client_request_id=?",
+            (fields.get("operator_message_id"), fields.get("state"), fields.get("receipt_digest"), time.time(), client_request_id),
+        )
         conn.commit()
     finally:
         conn.close()
