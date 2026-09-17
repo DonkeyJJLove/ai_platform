@@ -2,7 +2,7 @@
 from __future__ import annotations
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from hashlib import sha256
-import json,re
+import json,re,secrets,threading,time
 from html.parser import HTMLParser
 from urllib.parse import urljoin,urlsplit,unquote,parse_qs
 from .lion_context_provider import build_lion_context
@@ -101,6 +101,7 @@ html,body{height:100%;overflow:hidden}.layout{height:100vh;min-height:0}.app{hei
 <div class="top"><div><h1>LION CONTROL LPCL PANEL</h1><p class="subtitle">LPCL mission intake · live Mission Control · material execution · LION Local Model</p></div><div><div id="controlHealth" class="control-health">MISSION CONTROL …</div><div class="thread-title">Wątek: <b id="activeThreadTitle">—</b></div></div></div>
 <div id="cards" class="cards"></div>
 <section class="control-panel"><div class="top"><div><div class="k">FOCUS MISSION</div><h2 id="missionTitle">—</h2><div id="missionMeta" class="status"></div></div><button onclick="refreshMissions()">Odśwież misje</button></div><div id="missionObjective" class="mission-objective">Cel misji niezaładowany.</div><div id="missionDescription" class="status"></div><div class="mission-progress-head"><b id="missionProgressLabel">Postęp 0%</b><span id="missionPhaseLabel">Brak aktywnej fazy</span></div><div class="mission-progress"><i id="missionProgressBar"></i></div><div id="missionActions" class="row"></div><div class="control-grid"><div><h3>Fazy procesu autonomicznego</h3><div id="missionPhases" class="phase-grid"></div><div id="phaseControlResult" role="status"></div></div><div><h3>Komunikacja dronów · protokoły</h3><div id="protoFilters" class="protocol-filters"></div><div id="protoFeed" class="protocol-feed"></div></div></div></section>
+<section class="control-panel" id="operatorPanel"><div class="top"><div><div class="k">HUMAN OPERATOR CONTROL</div><h2>OPERATOR_PRIMARY</h2><p class="status">Rozmowa z rojem i nadrzędne sterowanie misją · control lane niezależny od inferencji</p></div><button type="button" onclick="refreshOperator()">Odśwież operatora</button></div><div class="row"><label>Parowanie operatora <input id="operatorPairing" type="password" autocomplete="off" placeholder="jednorazowy kod lokalny"></label><button type="button" onclick="operatorPair()">Sparuj</button><button type="button" onclick="operatorUnpair()">Rozłącz</button><span id="operatorPairState" class="status">UNPAIRED</span></div><div id="operatorCards" class="cards"></div><div class="row"><label>Tryb <select id="operatorMode"><option value="MESSAGE">Rozmowa</option><option value="AMEND_CONTEXT">Korekta kontekstu</option><option value="AMEND_PLAN">Korekta planu</option></select></label><label>Adresat <select id="operatorTarget"></select></label></div><textarea id="operatorText" class="lpcl-box" style="min-height:90px" placeholder="Napisz do misji lub drona…"></textarea><div class="row"><button type="button" class="primary" onclick="operatorSend()">Wyślij</button><button type="button" onclick="operatorControl('PAUSE_SCOPE')">Wstrzymaj</button><button type="button" class="danger" onclick="operatorControl('STOP_SCOPE')">Zatrzymaj</button><button type="button" onclick="operatorControl('TAKE_CONTROL')">Przejmij sterowanie</button><button type="button" onclick="operatorControl('RELEASE_CONTROL')">Oddaj sterowanie</button><button type="button" onclick="operatorControl('RESUME_SCOPE',{latch:'ALL'})">Wznów</button></div><div id="operatorResult" class="status">Operator control: oczekiwanie na stan.</div><h3>Zdarzenia operatora</h3><div id="operatorFeed" class="protocol-feed"></div></section>
 <section class="control-panel"><h2>Mission evidence</h2><div id="missionSchema" class="semantic-grid"></div><h3>Material workers</h3><div id="missionWorkers" class="semantic-grid"></div><h3>Environment / hosts</h3><div id="missionEnvironment" class="semantic-grid"></div><h3>Recent events</h3><div id="missionEvents" class="semantic-events"></div></section>
 <section class="control-panel"><div class="top"><div><div class="k">LION CONTROL LANGUAGE</div><h2>LPCL mission intake</h2><p class="status">Wklejenie i walidacja nie wykonują efektów. Rejestracja używa wyłącznie zamrożonego, zwalidowanego źródła. Dopiero jawne Autoryzuj jest activation event dla dokładnego digestu.</p></div><div id="lpclStatus" class="pill">BRAK LPCL</div></div><div id="lpclDiagnostics" class="cards"></div><div class="lpcl-grid"><div><textarea id="lpclText" class="lpcl-box" placeholder="Wklej LPCL/1.2…"></textarea><div class="row"><button id="lpclValidateButton" onclick="validateLpcl()">Waliduj LPCL</button><button id="lpclRegisterButton" class="primary" onclick="registerLpcl()" disabled>Zarejestruj misję</button><button id="lpclActivateButton" onclick="activateLpcl()" disabled>Autoryzuj dokładny LPCL</button></div></div><pre id="lpclPreview" class="lpcl-preview">Brak zwalidowanego LPCL.</pre></div></section>
 <section class="control-panel" id="saasBridgePanel"><div class="top"><div><div class="k">REMOTE COGNITIVE SUPERVISOR</div><h2>CHATGPT_SAAS_SUPERVISOR</h2><p class="status">Brokered Firefox-project mediation · exact request tracking · authority NONE</p></div><button onclick="state()">Odśwież kanał</button></div><div class="cards" id="saasCards"></div><div id="saasBridgeDetail" class="status">Stan powiązania SaaS niezaładowany.</div><div id="saasPending" class="status"></div><div class="row"><button onclick="firefoxMediatorControl('/control/open')">Otwórz Firefox Mediator</button><button onclick="firefoxMediatorControl('/control/pin-current')">Przypnij bieżący projekt i chat</button><button onclick="firefoxMediatorControl('/control/relay/on')">Relay ON</button><button onclick="firefoxMediatorControl('/control/relay/off')">Relay OFF</button><span id="firefoxMediatorState" class="status">Firefox mediator: UNKNOWN</span></div><p class="status">Jawne polecenie <code>Na SaaS: &lt;pytanie&gt;</code> tworzy request brokera. Gdy widoczny Firefox Developer jest zalogowany, przypięty do projektu <code>LION_EVOLUSION</code> i mediator ma świeży heartbeat READY, nowe requesty używają transportu <code>CHATGPT_FIREFOX_PROJECT_MEDIATED</code>. Bez świeżego mediatora system pozostaje fail-closed w trybie zewnętrznej mediacji manualnej.</p></section><section class="control-panel"><div class="k">LOCAL COGNITIVE EXECUTOR</div><h2>LION Local Model</h2><p class="status">Proposal-only GPT‑OSS · live Mission Control/repo/web evidence through material drones · authority NONE</p></section>
@@ -422,9 +423,33 @@ async function activateLpcl(){
  const confirmation=x.activation_confirmation||{};if(confirmation.mission_id!==registered.mission_id||confirmation.lpcl_digest!==registered.lpcl_digest){renderLpclIntake('REGISTERED',lpclSourceDiagnostics(registered.validated_source),'ACTIVATION_DIGEST_DRIFT');return}
  renderLpclIntake('AUTHORIZED',lpclSourceDiagnostics(registered.validated_source));$('lpclPreview').textContent=JSON.stringify({mission_id:x.mission_id,state:x.state,runtime_state:x.runtime_state,authorized_digest:confirmation.lpcl_digest,error:x.last_error||null,driver:x.execution_driver||null},null,2);selectedMissionId=registered.mission_id;await refreshMissions()
 }
+const OPERATOR_CSRF='__OPERATOR_CSRF__';let operatorProjection=null;let operatorStream=null;let operatorCursor=0;let operatorStreamMission=null;
+function operatorTargets(){
+ const mid=selectedMissionId||missionFocusId;if(!mid)return [];
+ const out=[['mission:'+mid,'Cała misja'],['swarm:'+mid,'Rój misji'],['group:architecture','Grupa architecture'],['group:security','Grupa security'],['group:runtime','Grupa runtime'],['operator:primary','Operator']];
+ for(const x of (missionData?.logical||[])){const id=x.logical_id||x.id;if(id)out.push(['drone:'+id,'Dron '+id])}
+ const seen=new Set();return out.filter(([id])=>!seen.has(id)&&seen.add(id));
+}
+function renderOperatorTargets(){const el=$('operatorTarget');if(!el)return;const prior=el.value;patchHtml(el,operatorTargets().map(([id,label])=>`<option value="${esc(id)}">${esc(label)}</option>`).join(''));if([...el.options].some(o=>o.value===prior))el.value=prior}
+function renderOperatorEvents(events){const feed=$('operatorFeed');if(!feed)return;patchHtml(feed,(events||[]).slice(-120).reverse().map(e=>`<article class="mc-message" data-key="${esc(e.event_id)}"><div><b>${esc(e.event_type)}</b> · ${esc(e.command_id||'—')}</div><div class="mc-message-meta">${esc(e.observed_at)} · event ${esc(e.event_id)}</div><details class="mc-raw"><summary>RAW</summary><pre>${esc(JSON.stringify(e.payload||{},null,2))}</pre></details></article>`).join('')||'<div class="status">Brak zdarzeń operatora.</div>')}
+async function operatorApi(path,options={}){const r=await fetch(path,{cache:'no-store',...options});const x=await r.json().catch(()=>({}));if(!r.ok)throw new Error(x.error||('HTTP '+r.status));return x}
+async function operatorPair(){const code=$('operatorPairing').value.trim();try{const body=code?{pairing_code:code}:{};const x=await operatorApi('/api/operator/pair',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify(body)});$('operatorPairing').value='';$('operatorPairState').textContent=x.paired?'PAIRED · OPERATOR_PRIMARY':'UNPAIRED';await refreshOperator()}catch(e){$('operatorPairState').textContent='PAIR DENIED · '+e.message}}
+async function operatorUnpair(){try{await operatorApi('/api/operator/unpair',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:'{}'});if(operatorStream){operatorStream.close();operatorStream=null;operatorStreamMission=null}$('operatorPairState').textContent='UNPAIRED';operatorProjection=null;$('operatorResult').textContent='Operator control: sesja rozłączona'}catch(e){$('operatorResult').textContent='UNPAIR DENIED · '+e.message}}
+async function refreshOperator(){
+ const mid=selectedMissionId||missionFocusId;if(!mid||!$('operatorPanel'))return;
+ try{const [x,session]=await Promise.all([operatorApi('/api/operator/state?mission_id='+encodeURIComponent(mid)),operatorApi('/api/operator/session')]);operatorProjection=x;const c=x.control||{};$('operatorPairState').textContent=session.paired?'PAIRED · OPERATOR_PRIMARY':'UNPAIRED';const caps=x.control_capabilities||{};patchCards($('operatorCards'),[['OWNER',c.control_owner],['EPOCH',c.control_epoch],['PAUSE',c.pause_latch?'LATCHED':'OPEN'],['STOP',c.stop_latch?'LATCHED':'OPEN'],['CONTEXT',c.context_revision],['PLAN',c.plan_revision],['NEW EFFECTS',caps.block_new_admissions],['IN-FLIGHT CANCEL',caps.cancel_inflight],['OFFLINE WORKER',caps.remote_unreachable_worker]]);renderOperatorTargets();$('operatorResult').textContent='Operator control · '+(c.control_owner||'UNKNOWN')+' · epoch '+(c.control_epoch??'—');const ev=await operatorApi('/api/operator/events?mission_id='+encodeURIComponent(mid)+'&after=0&limit=120');operatorCursor=ev.next_cursor||operatorCursor;renderOperatorEvents(ev.events||[]);startOperatorStream(mid)}catch(e){$('operatorResult').textContent='Operator control: '+e.message}
+}
+function startOperatorStream(mid){if(operatorStream&&operatorStreamMission===mid)return;if(operatorStream)operatorStream.close();operatorStreamMission=mid;operatorStream=new EventSource('/api/operator/stream?mission_id='+encodeURIComponent(mid)+'&after='+encodeURIComponent(operatorCursor));operatorStream.onmessage=e=>{try{const x=JSON.parse(e.data);operatorCursor=Math.max(operatorCursor,Number(e.lastEventId||x.event_id||0));refreshOperator().catch(()=>{})}catch(_){}};operatorStream.onerror=()=>{}}
+function operatorCommandId(){return 'operator-'+(crypto.randomUUID?crypto.randomUUID().replaceAll('-',''):String(Date.now())+Math.random().toString(16).slice(2))}
+async function operatorSubmit(action,payload={},target=null){
+ const mid=selectedMissionId||missionFocusId;if(!mid)throw new Error('Brak wybranej misji');const body={command_id:operatorCommandId(),mission_id:mid,action,target:target||('mission:'+mid),payload};if(operatorProjection?.control?.control_epoch!==undefined&&['PAUSE_SCOPE','STOP_SCOPE','TAKE_CONTROL','RELEASE_CONTROL','RESUME_SCOPE','REASSIGN','CANCEL_ASSIGNMENT','REVOKE_CAPABILITY','AMEND_PLAN','APPROVE_PROPOSAL'].includes(action))body.expected_revision=Number(operatorProjection.control.control_epoch);
+ const x=await operatorApi('/api/operator/commands',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify(body)});$('operatorResult').textContent=action+' · '+(x.admission_state||'ACCEPTED')+' · '+(x.execution_state||'UNKNOWN')+' · '+(x.observation_state||'UNKNOWN')+' · '+String(x.receipt_digest||x.receipt?.receipt_digest||'').slice(0,16);await refreshOperator();return x
+}
+async function operatorSend(){const mode=$('operatorMode').value,text=$('operatorText').value.trim(),target=$('operatorTarget').value;if(!text)return;try{let payload={content:text};await operatorSubmit(mode,payload,target);$('operatorText').value=''}catch(e){$('operatorResult').textContent='DENIED · '+e.message}}
+async function operatorControl(action,payload={}){try{if(['STOP_SCOPE','TAKE_CONTROL'].includes(action)&&!confirm(action+' dla '+(selectedMissionId||missionFocusId)+'?'))return;await operatorSubmit(action,payload,'mission:'+(selectedMissionId||missionFocusId))}catch(e){$('operatorResult').textContent='DENIED · '+e.message}}
 function toggleDebug(){debugEl.classList.toggle('hide',!dbgEl.checked)}
 $('lpclText').addEventListener('input',invalidateLpclSource);renderLpclIntake('EMPTY',lpclSourceDiagnostics(''));
-qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});async function boot(){await Promise.allSettled([refreshThreads(),refreshMissions(),state(),refreshFirefoxMediator()]);if(!threads.length){try{let legacy=JSON.parse(localStorage.getItem('lion_r10_history')||'[]');if(Array.isArray(legacy)&&legacy.length){let r=await fetch('/api/threads/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:legacy.slice(-16)})});if(r.ok){localStorage.removeItem('lion_r10_history');await refreshThreads()}}}catch(e){}}if(threads.length)await openThread(threads[0].thread_id);else await createThread();await state()}boot().catch(e=>{let h=$('controlHealth');if(h)h.textContent='BOOT DEGRADED · '+e.message});setInterval(()=>{Promise.allSettled([state(),refreshMissions(),refreshFirefoxMediator()])},5000);
+qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});async function boot(){await Promise.allSettled([refreshThreads(),refreshMissions(),state(),refreshFirefoxMediator()]);if(!threads.length){try{let legacy=JSON.parse(localStorage.getItem('lion_r10_history')||'[]');if(Array.isArray(legacy)&&legacy.length){let r=await fetch('/api/threads/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:legacy.slice(-16)})});if(r.ok){localStorage.removeItem('lion_r10_history');await refreshThreads()}}}catch(e){}}if(threads.length)await openThread(threads[0].thread_id);else await createThread();await state()}boot().catch(e=>{let h=$('controlHealth');if(h)h.textContent='BOOT DEGRADED · '+e.message});setInterval(()=>{Promise.allSettled([state(),refreshMissions(),refreshFirefoxMediator(),refreshOperator()])},5000);
 
 for(const event of ['pointerover','focusin'])document.addEventListener(event,e=>{const n=e.target.closest?.('.card,.mission-item,.mc-reg,.mission-objective,.mc-objective .objective,select');if(n)n.title=n.tagName==='SELECT'?n.selectedOptions[0]?.title||n.selectedOptions[0]?.textContent||'':n.textContent.trim()});
 </script></body></html>'''
@@ -434,11 +459,11 @@ class _DeferredRag:
     def search(self,*a,**k):return ()
 
 class Gateway:
-    def __init__(self,repo,rag,rag_sha,release,model_url,model_sha,provider,currentness_provider,git_provider,web=None,content_provider=None,source_provider=None,mission_provider=None,control_provider=None,material_begin=None,material_receipts=None,material_state=None,material_reconcile=None,thread_provider=None):
+    def __init__(self,repo,rag,rag_sha,release,model_url,model_sha,provider,currentness_provider,git_provider,web=None,content_provider=None,source_provider=None,mission_provider=None,control_provider=None,material_begin=None,material_receipts=None,material_state=None,material_reconcile=None,thread_provider=None,operator_provider=None):
         if not callable(provider) or not callable(currentness_provider) or not callable(git_provider):raise ValueError('explicit providers required')
         self.repo=RepositoryReader(repo,git_provider,content_provider);self.rag=RagIndex(rag,rag_sha,release) if rag else _DeferredRag();self.ctx=build_lion_context(repo)
         self.rag_status='LOADED' if rag else 'DEFERRED_NOT_LOADED';self.model=model_url.rstrip('/');self.model_sha=model_sha;self.web=web or PublicWebReadBroker();self.provider=provider;self.currentness_provider=currentness_provider;self.source_provider=source_provider
-        self.material_begin=material_begin;self.material_receipts=material_receipts;self.material_state=material_state;self.material_reconcile=material_reconcile;self.thread_provider=thread_provider;self.mission_provider=mission_provider;self.control_provider=control_provider
+        self.material_begin=material_begin;self.material_receipts=material_receipts;self.material_state=material_state;self.material_reconcile=material_reconcile;self.thread_provider=thread_provider;self.mission_provider=mission_provider;self.control_provider=control_provider;self.operator_provider=operator_provider
     def state(self):
         mat=self.material_state() if callable(self.material_state) else {'requested':0,'healthy':0,'rows':[],'authority_effect':'NONE'}
         mission={'status':'UNKNOWN','focus_mission_id':None,'mission_count':0}
@@ -446,7 +471,11 @@ class Gateway:
             try:
                 r=self.control_provider('recent',{});rows=r.get('missions',[]);fid=r.get('focus_mission_id');focus=next((x for x in rows if x.get('mission_id')==fid),None);mission={'status':'OK','focus_mission_id':fid,'mission_count':len(rows),'focus':focus}
             except Exception as e:mission={'status':'UNKNOWN','focus_mission_id':None,'mission_count':0,'error':type(e).__name__}
-        return {'status':'ok','product':'LION CONTROL LPCL PANEL','local_model_product':'LION Local Model','model':'gpt-oss-20b-MXFP4','model_sha256':self.model_sha,'gpu':'NVIDIA GeForce RTX 5090 / Vulkan0','system_context_digest':self.ctx.digest,'rag_status':self.rag_status,'rag_release':self.rag.release_id,'rag_sha256':self.rag.sha256,'web_capability':'MEDIATED_PUBLIC_HTTPS_READ_ONLY_AUTO','repository_capability':'MEDIATED_READ_ONLY_AUTO','mission_control':mission,'material':mat,'runtime_role':'HYBRID_LOCAL_MATERIAL_SAAS_COORDINATOR','hybrid_architecture_required':True,'local_cognitive_executor':'gpt-oss-20b-MXFP4','saas_supervisor_role':'CHATGPT_SAAS_SUPERVISOR','saas_capability':'AVAILABLE_EXTERNAL_SESSION_MEDIATED','saas_bridge_state':'EXTERNAL_SESSION_MEDIATED','automatic_saas_hop_available':False,'saas_supervisor_is_effect_authority':False,'effects_require_current_lpcl_and_bounded_executor':True,'execution_policy':'HYBRID_LOCAL_MATERIAL_SAAS_REQUIRED','tool_authority':'NONE','authority_effect':'NONE'}
+        operator={'status':'UNAVAILABLE'}
+        if callable(self.operator_provider):
+            try:operator={'status':'AVAILABLE',**self.operator_provider('participants',{})}
+            except Exception as e:operator={'status':'UNKNOWN','error':type(e).__name__}
+        return {'status':'ok','product':'LION CONTROL LPCL PANEL','local_model_product':'LION Local Model','model':'gpt-oss-20b-MXFP4','model_sha256':self.model_sha,'gpu':'NVIDIA GeForce RTX 5090 / Vulkan0','system_context_digest':self.ctx.digest,'rag_status':self.rag_status,'rag_release':self.rag.release_id,'rag_sha256':self.rag.sha256,'web_capability':'MEDIATED_PUBLIC_HTTPS_READ_ONLY_AUTO','repository_capability':'MEDIATED_READ_ONLY_AUTO','mission_control':mission,'material':mat,'runtime_role':'HYBRID_LOCAL_MATERIAL_SAAS_COORDINATOR','hybrid_architecture_required':True,'local_cognitive_executor':'gpt-oss-20b-MXFP4','saas_supervisor_role':'CHATGPT_SAAS_SUPERVISOR','saas_capability':'AVAILABLE_EXTERNAL_SESSION_MEDIATED','saas_bridge_state':'EXTERNAL_SESSION_MEDIATED','automatic_saas_hop_available':False,'saas_supervisor_is_effect_authority':False,'effects_require_current_lpcl_and_bounded_executor':True,'execution_policy':'HYBRID_LOCAL_MATERIAL_SAAS_REQUIRED','tool_authority':'NONE','operator_control':operator,'authority_effect':'NONE'}
     def _route(self,message):
         low=message.lower()
         if any(x in low for x in SENSITIVE):return 'AUTHORITY_BOUNDARY','consequential/security/authority class is not local-model eligible'
@@ -714,6 +743,11 @@ class Gateway:
         return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language,'supervisor_projection':capability_state.get('supervisor_projection')}
 
 def make_handler(g):
+    operator_sessions={};operator_sessions_lock=threading.Lock()
+    def new_operator_session():
+        sid=secrets.token_urlsafe(32);csrf=secrets.token_urlsafe(32);expires=time.time()+8*3600
+        with operator_sessions_lock:operator_sessions[sid]={'csrf':csrf,'expires':expires,'gateway_session':None,'paired':False}
+        return sid,csrf
     class H(BaseHTTPRequestHandler):
         server_version='LIONLocalModel/3'
         def log_message(self,*a):return
@@ -725,14 +759,76 @@ def make_handler(g):
         def _control(self,op,args=None):
             if not callable(g.control_provider):raise RuntimeError('mission control unavailable')
             return g.control_provider(op,args or {})
+        def _operator(self,op,args=None):
+            if not callable(g.operator_provider):raise RuntimeError('operator control unavailable')
+            return g.operator_provider(op,args or {})
+        def _operator_session(self,mutating=False,require_paired=False):
+            host=(self.headers.get('Host') or '').split(':',1)[0].strip('[]').lower()
+            if host not in {'127.0.0.1','localhost','::1'}:raise PermissionError('operator host denied')
+            cookies={}
+            for part in (self.headers.get('Cookie') or '').split(';'):
+                if '=' in part:
+                    k,v=part.strip().split('=',1);cookies[k]=v
+            sid=cookies.get('lion_operator_session')
+            with operator_sessions_lock:
+                session=operator_sessions.get(sid)
+                if session and session['expires']<=time.time():operator_sessions.pop(sid,None);session=None
+            if not session:raise PermissionError('operator browser session required')
+            if require_paired and not session.get('gateway_session'):raise PermissionError('operator pairing required')
+            if mutating:
+                supplied=self.headers.get('X-LION-CSRF')
+                if not isinstance(supplied,str) or not secrets.compare_digest(supplied,session['csrf']):raise PermissionError('operator csrf denied')
+                origin=self.headers.get('Origin')
+                if origin:
+                    try:o=urlsplit(origin)
+                    except Exception:raise PermissionError('operator origin denied')
+                    if o.scheme not in {'http','https'} or (o.hostname or '').lower() not in {'127.0.0.1','localhost','::1'}:raise PermissionError('operator origin denied')
+            return session
+        def _operator_stream(self,mission_id,after):
+            browser_session=self._operator_session(False,True)
+            try:cursor=max(int(after),int(self.headers.get('Last-Event-ID') or 0))
+            except Exception:cursor=int(after)
+            self.send_response(200);self.send_header('Content-Type','text/event-stream; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Connection','keep-alive');self.end_headers()
+            deadline=time.time()+25;last_keepalive=0
+            try:
+                while time.time()<deadline:
+                    batch=self._operator('events',{'mission_id':mission_id,'after':cursor,'limit':100,'session_token':browser_session.get('gateway_session')})
+                    for event in batch.get('events') or []:
+                        eid=int(event.get('event_id') or 0);raw=json.dumps(event,ensure_ascii=False,separators=(',',':'))
+                        self.wfile.write(('id: '+str(eid)+'\nevent: message\ndata: '+raw+'\n\n').encode('utf-8'));self.wfile.flush();cursor=max(cursor,eid)
+                    if time.time()-last_keepalive>5:self.wfile.write(b': keepalive\n\n');self.wfile.flush();last_keepalive=time.time()
+                    time.sleep(.5)
+            except (BrokenPipeError,ConnectionResetError,OSError):pass
         def do_GET(self):
             path=unquote(self.path.split('?',1)[0])
             if path=='/favicon.ico':
                 self.send_response(204);self.send_header('Cache-Control','public, max-age=3600');self.end_headers();return
             if path=='/':
-                b=UI.replace("__FRONTEND_REVISION__",sha256(UI.encode()).hexdigest()).encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(b);return
+                sid,csrf=new_operator_session();b=UI.replace("__FRONTEND_REVISION__",sha256(UI.encode()).hexdigest()).replace('__OPERATOR_CSRF__',csrf).encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.send_header('Set-Cookie','lion_operator_session='+sid+'; Path=/; HttpOnly; SameSite=Strict');self.end_headers();self.wfile.write(b);return
             if path=='/health':return self.out({'status':'ok','authority_effect':'NONE'})
             if path=='/api/state':return self.out(g.state())
+            if path.startswith('/api/operator/'):
+                try:
+                    browser_session=self._operator_session(False);q=parse_qs(urlsplit(self.path).query)
+                    if path=='/api/operator/session':
+                        token=browser_session.get('gateway_session')
+                        if not token:return self.out({'paired':False,'principal_id':None,'authority_effect':'NONE'})
+                        try:status=self._operator('session',{'session_token':token});return self.out({'paired':bool(status.get('paired')),'principal_id':status.get('principal_id'),'authority_effect':'NONE'})
+                        except Exception:
+                            with operator_sessions_lock:browser_session['gateway_session']=None;browser_session['paired']=False
+                            return self.out({'paired':False,'principal_id':None,'authority_effect':'NONE'})
+                    if not browser_session.get('gateway_session'):raise PermissionError('operator pairing required')
+                    if path=='/api/operator/state':return self.out(self._operator('state',{'mission_id':(q.get('mission_id') or [None])[0],'session_token':browser_session.get('gateway_session')}))
+                    if path=='/api/operator/participants':return self.out(self._operator('participants',{'session_token':browser_session.get('gateway_session')}))
+                    if path=='/api/operator/events':return self.out(self._operator('events',{'mission_id':(q.get('mission_id') or [None])[0],'after':int((q.get('after') or ['0'])[0]),'limit':int((q.get('limit') or ['200'])[0]),'session_token':browser_session.get('gateway_session')}))
+                    if path=='/api/operator/stream':
+                        mid=(q.get('mission_id') or [None])[0]
+                        if not mid:raise ValueError('mission_id')
+                        return self._operator_stream(mid,int((q.get('after') or ['0'])[0]))
+                    if path.startswith('/api/operator/commands/'):return self.out(self._operator('command_status',{'command_id':path[len('/api/operator/commands/'):],'__session_token':browser_session.get('gateway_session')}))
+                    return self.out({'error':'not found'},404)
+                except PermissionError as e:return self.out({'error':str(e)},403)
+                except Exception as e:return self.out({'error':type(e).__name__+':'+str(e)},400)
             if path=='/api/missions/recent':
                 q=parse_qs(urlsplit(self.path).query);view=(q.get('view') or ['operational'])[0]
                 return self.out(self._control('recent',{'view':view}))
@@ -757,6 +853,28 @@ def make_handler(g):
                 if n<0 or n>220000:raise ValueError('body size')
                 if n and 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('content type')
                 x=json.loads(self.rfile.read(n)) if n else {}
+                if path=='/api/operator/pair':
+                    try:browser_session=self._operator_session(True,False)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    if type(x) is not dict or set(x)-{'pairing_code'}:raise ValueError('pair schema')
+                    paired=self._operator('pair',x);token=paired.pop('session_token',None)
+                    if not token:raise RuntimeError('pairing session token missing')
+                    with operator_sessions_lock:browser_session['gateway_session']=token;browser_session['paired']=True
+                    return self.out(paired,201)
+                if path=='/api/operator/unpair':
+                    try:browser_session=self._operator_session(True,True)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    token=browser_session.get('gateway_session');out=self._operator('unpair',{'session_token':token})
+                    with operator_sessions_lock:browser_session['gateway_session']=None;browser_session['paired']=False
+                    return self.out(out)
+                if path=='/api/operator/commands':
+                    try:browser_session=self._operator_session(True,True)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    return self.out(self._operator('command',{**x,'__session_token':browser_session['gateway_session']}),201)
+                if path=='/api/operator/events/ack':
+                    try:browser_session=self._operator_session(True,True)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    return self.out(self._operator('ack',{**x,'__session_token':browser_session['gateway_session']}))
                 if path=='/api/ui-runtime-events':
                     return self.out(self._thread('ui_runtime_event',x),201)
                 if path.startswith('/api/missions/') and path.endswith('/delete'):
@@ -789,6 +907,18 @@ def make_handler(g):
                 if path=='/api/threads/import':
                     if type(x) is not dict or set(x)!={'messages'}:raise ValueError('thread import schema')
                     return self.out(self._thread('import',x),201)
+                if path.startswith('/api/threads/') and path.endswith('/context'):
+                    tid=path[len('/api/threads/'):-len('/context')].rstrip('/')
+                    if type(x) is not dict or set(x)-{'mission_id','channel','provider'}:raise ValueError('thread context schema')
+                    bind=dict(x);mid=bind.get('mission_id');phase=None;binding_state='MISSION_UNBOUND'
+                    if mid:
+                        snap=self._control('process',{'mission_id':mid});phase=(snap.get('process') or {}).get('current_phase') or snap.get('current_phase')
+                        state=str(snap.get('state') or (snap.get('process') or {}).get('state') or '').upper()
+                        binding_state='MISSION_TERMINAL_CONTEXT' if state in {'COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','FAILED','FAIL','STOPPED'} else 'MISSION_BOUND'
+                    out=self._thread('bind_context',{'thread_id':tid,'mission_id':mid,'mission_phase_snapshot':phase,'channel':bind.get('channel') or 'AUTO','provider':bind.get('provider'),'binding_state':binding_state})
+                    if out.get('mission_id') and callable(g.control_provider):
+                        g.control_provider('post_message',{'mission_id':out['mission_id'],'protocol':'THREAD','from_id':'LPCL_PANEL','to_id':'OPERATOR_PRIMARY','phase':out.get('mission_phase_snapshot'),'payload':{'event':'THREAD_CONTEXT_BOUND','thread_id':tid,'mission_id':out['mission_id'],'channel':out['channel'],'provider':out.get('provider'),'binding_revision':out['binding_revision'],'authority_effect':'NONE'}})
+                    return self.out(out,201)
                 if path.startswith('/api/threads/') and path.endswith('/assistant'):
                     tid=path[len('/api/threads/'):-len('/assistant')].rstrip('/')
                     if type(x) is not dict or set(x)!={'content','dedupe_key','meta'} or not isinstance(x.get('content'),str) or not isinstance(x.get('meta'),dict):raise ValueError('thread assistant append schema')
@@ -797,12 +927,13 @@ def make_handler(g):
                     tid=path[len('/api/threads/'):-len('/chat')].rstrip('/')
                     if type(x) is not dict or set(x)-{'message','output_language','route'} or not isinstance(x.get('message'),str):raise ValueError('thread chat schema')
                     t=self._thread('get',{'thread_id':tid});history=[{'role':m['role'],'content':m['content']} for m in t.get('messages',[])][-12:]
-                    from .saas_handoff_extension import THREAD_CONTEXT,ROUTE_CONTEXT
+                    from .saas_handoff_extension import THREAD_CONTEXT,ROUTE_CONTEXT,THREAD_BINDING_CONTEXT
                     route=x.get('route','AUTO')
-                    if route not in {'AUTO','LOCAL','SAAS','DUAL'}:raise ValueError('composer route')
-                    thread_token=THREAD_CONTEXT.set(tid);route_token=ROUTE_CONTEXT.set(route)
+                    if route not in {'AUTO','LOCAL','SAAS_DIRECT','DUAL','LEGACY_BROWSER'}:raise ValueError('composer route')
+                    binding={k:t.get(k) for k in ('mission_id','mission_phase_snapshot','channel','provider','binding_revision','binding_state')}
+                    thread_token=THREAD_CONTEXT.set(tid);route_token=ROUTE_CONTEXT.set(route);binding_token=THREAD_BINDING_CONTEXT.set(binding)
                     try:out=g.chat(x['message'],history=history,output_language=x.get('output_language','auto'))
-                    finally:THREAD_CONTEXT.reset(thread_token);ROUTE_CONTEXT.reset(route_token)
+                    finally:THREAD_CONTEXT.reset(thread_token);ROUTE_CONTEXT.reset(route_token);THREAD_BINDING_CONTEXT.reset(binding_token)
                     handoff=out.get('saas_handoff') if isinstance(out.get('saas_handoff'),dict) else {}
                     try:
                         saved=self._thread('append_pair',{'thread_id':tid,'user':x['message'],'assistant':out.get('answer',''),'meta':{'route':out.get('route'),'tool_calls':out.get('tool_calls',[]),'material_receipt_count':len(out.get('material_receipts',[])),'saas_request_id':handoff.get('request_id'),'saas_request_code':handoff.get('request_code'),'dual_request_id':handoff.get('dual_request_id')}})

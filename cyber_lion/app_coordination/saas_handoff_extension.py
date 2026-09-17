@@ -8,6 +8,10 @@ from cyber_lion.mission_control.supervisor_projection import supervisor_projecti
 
 THREAD_CONTEXT=ContextVar('lion_saas_thread',default=None)
 ROUTE_CONTEXT=ContextVar('lion_composer_route',default='AUTO')
+THREAD_BINDING_CONTEXT=ContextVar('lion_thread_binding',default=None)
+DIRECT_TRANSPORT='OPENAI_RESPONSES_API_MEDIATED'
+FIREFOX_TRANSPORT='CHATGPT_FIREFOX_PROJECT_MEDIATED'
+CONTROL_TRANSPORT='SENTINELX_OPERATOR_CONTROL'
 
 _APPLIED = "_lion_saas_handoff_extension_v1"
 
@@ -22,7 +26,7 @@ def _supervisor_status_question(message):
 
 def _explicit_saas(message: str) -> bool:
     if ROUTE_CONTEXT.get()=="LOCAL":return False
-    if ROUTE_CONTEXT.get()=="SAAS":return True
+    if ROUTE_CONTEXT.get() in {"SAAS","SAAS_DIRECT","LEGACY_BROWSER"}:return True
     low = message.lower()
     if "saas" not in low:
         return False
@@ -36,7 +40,7 @@ def _explicit_saas(message: str) -> bool:
 
 
 def _dual_saas_local(message: str) -> bool:
-    if ROUTE_CONTEXT.get() in {"LOCAL","SAAS"}:return False
+    if ROUTE_CONTEXT.get() in {"LOCAL","SAAS","SAAS_DIRECT","LEGACY_BROWSER"}:return False
     if ROUTE_CONTEXT.get()=="DUAL":return True
     low = message.lower()
     marked = bool(re.search(r"(?is)(?:^|\n)\s*(?:#+\s*)?local\s*:.*(?:^|\n)\s*(?:#+\s*)?saas\s*:", message))
@@ -144,7 +148,7 @@ def apply_saas_handoff_extension(cls):
             answer = (
                 f"{labels[0]} SaaS: {projection.get('channel', 'UNKNOWN')}; {labels[1]}: {projection.get('session', 'UNKNOWN')}; "
                 f"{labels[2]}: {projection.get('model', 'UNKNOWN')}. "
-                f"Transport: {projection.get('transport', 'UNKNOWN')}; "
+                f"Control: {projection.get('control_transport', 'UNKNOWN')}; inference: {projection.get('inference_transport', projection.get('transport', 'UNKNOWN'))}; provider: {projection.get('provider', 'UNKNOWN')}; "
                 f"{labels[3]}: {lease.get('state', 'UNKNOWN')} ({lease.get('expires_at') or 'UNKNOWN'}); "
                 f"{labels[4]}: {freshness.get('state', 'UNKNOWN')}. "
                 f"Pending: {pending.get('request_id') or projection.get('pending_state', 'UNKNOWN')}; last_receipt: {receipt.get('receipt_digest') or projection.get('last_receipt_state', 'UNKNOWN')}. "
@@ -158,13 +162,28 @@ def apply_saas_handoff_extension(cls):
             return answer
         return original_capability(message, mission, state, output_language) if callable(original_capability) else None
 
+    def thread_context(self):
+        tid=THREAD_CONTEXT.get();route=ROUTE_CONTEXT.get();binding=THREAD_BINDING_CONTEXT.get()
+        if not isinstance(binding,dict):binding={}
+        context={"thread_id":tid,"mission_id":binding.get("mission_id"),"phase":binding.get("mission_phase_snapshot"),"composer_route":route,"channel":binding.get("channel") or route,"provider":binding.get("provider"),"binding_revision":binding.get("binding_revision",0),"binding_state":binding.get("binding_state") or "MISSION_UNBOUND","authority_effect":"NONE"}
+        mid=context.get("mission_id")
+        if mid and callable(getattr(self,"control_provider",None)):
+            try:
+                snap=self.control_provider("process",{"mission_id":mid});current=(snap.get("process") or {}).get("current_phase") or snap.get("current_phase");state=str(snap.get("state") or (snap.get("process") or {}).get("state") or "").upper();context["current_phase"]=current
+                if state in {"COMPLETE","COMPLETED","SUPERSEDED","CANCELLED","FAILED","FAIL","STOPPED"}:context["binding_state"]="MISSION_TERMINAL_CONTEXT"
+                elif context.get("phase") and current and context["phase"]!=current:context["binding_state"]="MISSION_BINDING_STALE"
+                else:context["binding_state"]="MISSION_BOUND"
+            except Exception:context["binding_state"]="MISSION_BINDING_STALE"
+        return context
+
     def chat(self, message, use_web=False, history=None, output_language="auto"):
+        context=thread_context(self)
+        mission_id=context.get("mission_id")
         if isinstance(message, str) and _dual_saas_local(message):
             if not callable(getattr(self, "control_provider", None)):
-                return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
-            recent = self.control_provider("recent", {})
-            mission_id = recent.get("focus_mission_id")
-
+                out=original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+                if isinstance(out,dict):out["thread_context"]=context
+                return out
             try:
                 if not mission_id:raise ValueError("no optional mission context")
                 mission_snapshot = self.control_provider("process", {"mission_id": mission_id})
@@ -191,14 +210,24 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE"})
+            if durable_dual:
+                handoff_args={"scope_type":"THREAD","thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":saas_prompt,"authority_effect":"NONE","control_transport":CONTROL_TRANSPORT,"inference_transport":DIRECT_TRANSPORT,"provider":"OPENAI"}
+            else:
+                scope_type="THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE"
+                handoff_args={"scope_type":scope_type,"thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":saas_prompt,"authority_effect":"NONE","control_transport":CONTROL_TRANSPORT,"inference_transport":DIRECT_TRANSPORT,"provider":"OPENAI"}
+                if scope_type=="CONTROL_PLANE":
+                    handoff_args.pop("thread_id",None)
+                    handoff_args.pop("mission_id",None)
+            handoff = self.control_provider("saas_request",handoff_args)
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:co|kim|czy|jak|zapytaj|porównaj|porownaj|zadaj)\b", message.lower())))
-            local_label = "### LOCAL · gpt-oss-20b-MXFP4\n" if polish else "### LOCAL · gpt-oss-20b-MXFP4\n"
+            local_label = "### LOCAL · gpt-oss-20b-MXFP4\n"
+            transport=handoff.get("transport") or "UNKNOWN"
             wait_label = ("\n\n### CHATGPT_SAAS_SUPERVISOR\nOdpowiedź SaaS została zlecona jako niezależna trajektoria. "
-                          f"Request `{handoff['request_id']}`, dual `{dual.get('request_id') or 'LEGACY_COMPAT'}`, kod `{handoff['request_code']}`. Panel czeka na receipt; końcowy wynik zostanie złączony dopiero po receipt obu modeli.")
+                          f"Request `{handoff['request_id']}`, dual `{dual.get('request_id') or 'LEGACY_COMPAT'}`, kod `{handoff['request_code']}`, transport `{transport}`, misja `{mission_id or 'NONE'}`. "
+                          "Panel czeka na receipt; końcowy wynik zostanie złączony dopiero po receipt obu modeli.")
             answer = local_label + str(local.get("answer") or "") + wait_label
             return {
                 "route": "DUAL_EVALUATION_LIVE",
@@ -217,27 +246,37 @@ def apply_saas_handoff_extension(cls):
                 "independent_questions": True,
                 "dual_evaluation": dual,
                 "saas_handoff": handoff,
+                "thread_context":context,
                 "response_language": output_language,
             }
         if isinstance(message, str) and _explicit_saas(message):
             if not callable(getattr(self, "control_provider", None)):
                 raise ValueError("SaaS handoff control provider unavailable")
-            mission_id = None
             question = _question(message)
-            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE"})
+            scope_type="THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE"
+            chosen_transport=FIREFOX_TRANSPORT if ROUTE_CONTEXT.get()=="LEGACY_BROWSER" else DIRECT_TRANSPORT
+            chosen_provider="CHATGPT_UI" if chosen_transport==FIREFOX_TRANSPORT else "OPENAI"
+            handoff_args={"scope_type":scope_type,"thread_id":THREAD_CONTEXT.get(),"mission_id":mission_id,"question":question,"authority_effect":"NONE","control_transport":CONTROL_TRANSPORT,"inference_transport":chosen_transport,"provider":chosen_provider}
+            if scope_type=="CONTROL_PLANE":
+                handoff_args.pop("thread_id",None)
+                # CONTROL_PLANE forbids a mission_id; the context remains visible
+                # in thread_context but is not falsely encoded as broker scope.
+                handoff_args.pop("mission_id",None)
+            handoff = self.control_provider("saas_request", handoff_args)
+            transport=handoff.get("transport") or "UNKNOWN"
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
-            firefox_transport=handoff.get('transport')=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
+            firefox_transport=transport==FIREFOX_TRANSPORT
             if polish:
-                transport_text=("Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty Firefox mediator przejmie request automatycznie i po realnej odpowiedzi ChatGPT zwróci receipt do tego samego wątku. " if firefox_transport else "Transport pozostaje EXTERNAL_SESSION_MEDIATED — automatyczny browser mediator nie jest obecnie READY, więc odpowiedź wymaga zewnętrznego mediatora. ")
+                transport_text=("Firefox UI został jawnie włączony i broker wybrał CHATGPT_FIREFOX_PROJECT_MEDIATED. " if firefox_transport else f"Broker wybrał transport {transport}; Firefox nie jest automatycznie uruchamiany. ")
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
-                          f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
+                          f"Kod {handoff['request_code']}; request {handoff['request_id']}; misja kontekstowa {mission_id or 'NONE'}. "
                           "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
                           +transport_text+
                           "Powtórzenie identycznego unresolved pytania jest wiązane przez dedupe/retry lineage zamiast mnożyć aktywną kolejkę. Odpowiedź ma authority_effect=NONE.")
             else:
-                transport_text=("Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned Firefox mediator will claim the request automatically and return a real ChatGPT receipt to the same thread. " if firefox_transport else "Transport remains EXTERNAL_SESSION_MEDIATED: the automatic browser mediator is not READY, so an external mediator is still required. ")
+                transport_text=("Firefox UI was explicitly enabled and the broker selected CHATGPT_FIREFOX_PROJECT_MEDIATED. " if firefox_transport else f"The broker selected transport {transport}; Firefox is not launched automatically. ")
                 answer = ("The request is queued in the controlled SaaS channel. "
-                          f"Code {handoff['request_code']}; request {handoff['request_id']}. "
+                          f"Code {handoff['request_code']}; request {handoff['request_id']}; contextual mission {mission_id or 'NONE'}. "
                           "The panel follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
                           +transport_text+
                           "Repeating the same unresolved question is bound through dedupe/retry lineage instead of multiplying the active queue. authority_effect=NONE.")
@@ -250,9 +289,12 @@ def apply_saas_handoff_extension(cls):
                 "tool_calls": ["lion.saas.handoff.create"],
                 "material_receipts": [],
                 "saas_handoff": handoff,
+                "thread_context":context,
                 "response_language": output_language,
             }
-        return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+        out=original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+        if isinstance(out,dict):out["thread_context"]=context
+        return out
 
     cls._route = route
     cls._capability_answer = staticmethod(capability_answer)

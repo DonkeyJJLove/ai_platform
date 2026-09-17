@@ -25,12 +25,12 @@ class CognitiveBrokerTests(unittest.TestCase):
         return broker.create_request(self.conn, None, 'Connectivity test', self.now, scope_type='THREAD', thread_id='a'*32, **options)
 
     def answer(self, claim, **options):
-        return broker.respond(self.conn, claim['request_id'], claim['response_token'], 'Connected', self.now, model_identity='UNIT_TEST_MEDIATOR', claim_generation=claim['claim_generation'], **options)
+        options.setdefault('transport',broker.DIRECT_TRANSPORT);options.setdefault('attestation_class',broker.DIRECT_ATTESTATION_CLASS);options.setdefault('provider',broker.DIRECT_PROVIDER);options.setdefault('provider_conversation_id','conv-unit');options.setdefault('provider_response_id','resp-unit-'+claim['request_id'][-6:]);return broker.respond(self.conn, claim['request_id'], claim['response_token'], 'Connected', self.now, model_identity='gpt-5.6-sol', claim_generation=claim['claim_generation'], **options)
 
     def test_zero_mission_roundtrip_and_redacted_reads(self):
         request = self.request()
         self.assertIsNone(request['mission_id'])
-        self.assertEqual(request['status'], 'WAITING_SUPERVISOR')
+        self.assertEqual(request['status'], 'WAITING_PROVIDER')
         self.assertNotIn('response_token', broker.broker_pending(self.conn, self.now)['requests'][0])
         claim = broker.claim(self.conn, request['request_id'], self.now)
         self.assertNotIn('response_token', broker.request_status(self.conn, request['request_id'], self.now))
@@ -50,7 +50,7 @@ class CognitiveBrokerTests(unittest.TestCase):
         request = self.request(ttl_seconds=1)
         first = broker.claim(self.conn, request['request_id'], self.now, lease_seconds=1)
         self.stamp = '2026-09-15T00:00:02Z'
-        self.assertEqual(broker.request_status(self.conn, request['request_id'], self.now)['status'], 'WAITING_OPERATOR_OVERDUE')
+        self.assertEqual(broker.request_status(self.conn, request['request_id'], self.now)['status'], 'WAITING_PROVIDER_OVERDUE')
         second = broker.claim(self.conn, request['request_id'], self.now)
         with self.assertRaises(ValueError):
             self.answer(first)
@@ -69,7 +69,7 @@ class CognitiveBrokerTests(unittest.TestCase):
         pending = self.request(ttl_seconds=1)
         self.stamp = '2026-09-15T00:00:02Z'
         self.assertEqual(broker.bridge_status(self.conn, None, self.now)['session_attestation_state'], 'EXPIRED')
-        self.assertEqual(broker.request_status(self.conn, pending['request_id'], self.now)['status'], 'WAITING_OPERATOR_OVERDUE')
+        self.assertEqual(broker.request_status(self.conn, pending['request_id'], self.now)['status'], 'WAITING_PROVIDER_OVERDUE')
         second = self.answer(broker.claim(self.conn, pending['request_id'], self.now))
         self.assertNotEqual(first['binding']['binding_id'], second['binding']['binding_id'])
         self.assertEqual(broker.bridge_status(self.conn, None, self.now)['state'], 'BOUND')
@@ -81,7 +81,7 @@ class CognitiveBrokerTests(unittest.TestCase):
         self.assertEqual(second['request_id'],first['request_id'])
         self.assertTrue(second['deduplicated'])
         rows=self.conn.execute("SELECT request_id,status FROM saas_handoff_requests").fetchall()
-        self.assertEqual([(r['request_id'],r['status']) for r in rows],[(first['request_id'],'WAITING_SUPERVISOR')])
+        self.assertEqual([(r['request_id'],r['status']) for r in rows],[(first['request_id'],'WAITING_PROVIDER')])
 
     def test_overdue_same_thread_question_creates_one_retry_and_supersedes_predecessor(self):
         first=self.request(ttl_seconds=1)
@@ -91,7 +91,7 @@ class CognitiveBrokerTests(unittest.TestCase):
         self.assertEqual(retry['retry_of_request_id'],first['request_id'])
         rows={r['request_id']:(r['status'],r['progress_state']) for r in self.conn.execute("SELECT request_id,status,progress_state FROM saas_handoff_requests")}
         self.assertEqual(rows[first['request_id']],('SUPERSEDED','SUPERSEDED_BY_RETRY'))
-        self.assertEqual(rows[retry['request_id']][0],'WAITING_SUPERVISOR')
+        self.assertEqual(rows[retry['request_id']][0],'WAITING_PROVIDER')
         status=broker.bridge_status(self.conn,None,self.now);self.assertEqual(status['pending_count'],1);self.assertEqual(status['duplicate_policy'],'EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE')
 
     def test_distinct_thread_questions_remain_independent_fifo_handoffs(self):
@@ -124,86 +124,50 @@ class CognitiveBrokerTests(unittest.TestCase):
             'browser':'Firefox Developer Edition','authority_effect':'NONE'},self.now)
 
 
-    def test_ready_heartbeat_promotes_existing_manual_request_in_place_with_immutable_transition(self):
-        request=self.request()
-        self.assertEqual(request['transport'],broker.TRANSPORT)
-        heartbeat={
-            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':'READY',
-            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
-            'browser':'Firefox Developer Edition','authority_effect':'NONE',
-        }
-        out=broker.record_mediator_heartbeat(self.conn,heartbeat,self.now)
-        self.assertEqual(out['promoted_request_ids'],[request['request_id']])
+    def test_ready_heartbeat_does_not_relabel_direct_request(self):
+        request=self.request();self.assertEqual(request['inference_transport'],broker.DIRECT_TRANSPORT)
+        out=self._firefox_heartbeat();self.assertEqual(out['promoted_request_ids'],[])
         saved=broker.request_status(self.conn,request['request_id'],self.now)
-        self.assertEqual(saved['request_id'],request['request_id'])
-        self.assertEqual(saved['transport'],broker.FIREFOX_TRANSPORT)
-        self.assertEqual(saved['progress_state'],'WAITING_BROWSER_MEDIATOR')
-        row=self.conn.execute('SELECT * FROM saas_transport_transitions WHERE request_id=?',(request['request_id'],)).fetchone()
-        self.assertEqual((row['from_transport'],row['to_transport'],row['authority_effect']),(broker.TRANSPORT,broker.FIREFOX_TRANSPORT,'NONE'))
-        with self.assertRaises(sqlite3.IntegrityError):
-            self.conn.execute("UPDATE saas_transport_transitions SET reason='tampered' WHERE request_id=?",(request['request_id'],))
-        self.conn.rollback()
+        self.assertEqual(saved['inference_transport'],broker.DIRECT_TRANSPORT)
+        self.assertEqual(saved['status'],'WAITING_PROVIDER')
+        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_transport_transitions').fetchone()[0],0)
 
-    def test_ready_heartbeat_never_relabels_claimed_manual_request(self):
-        request=self.request();claim=broker.claim(self.conn,request['request_id'],self.now)
-        heartbeat={
-            'mediator_id':'LION_FIREFOX_MEDIATOR_R1','transport':broker.FIREFOX_TRANSPORT,'state':'READY',
-            'project_title':'LION_EVOLUSION','chat_title':'[LION MEDIATOR] SaaS Control Channel',
-            'browser':'Firefox Developer Edition','authority_effect':'NONE',
-        }
-        out=broker.record_mediator_heartbeat(self.conn,heartbeat,self.now)
-        self.assertEqual(out['promoted_request_ids'],[])
+    def test_ready_heartbeat_never_relabels_claimed_direct_request(self):
+        request=self.request();broker.claim(self.conn,request['request_id'],self.now);self._firefox_heartbeat()
         saved=broker.request_status(self.conn,request['request_id'],self.now)
-        self.assertEqual(saved['status'],'CLAIMED')
-        self.assertEqual(saved['transport'],broker.TRANSPORT)
+        self.assertEqual(saved['status'],'CLAIMED');self.assertEqual(saved['inference_transport'],broker.DIRECT_TRANSPORT)
 
-    def test_ready_firefox_mediator_switches_transport_and_real_response_binding(self):
+    def test_firefox_transport_requires_explicit_request(self):
         self._firefox_heartbeat()
         status=broker.bridge_status(self.conn,None,self.now)
-        self.assertTrue(status['automatic_local_to_saas_hop'])
-        self.assertFalse(status['operator_mediation_required'])
-        self.assertEqual(status['transport'],broker.FIREFOX_TRANSPORT)
-        self.assertEqual(status['mediator']['state'],'READY')
-        request=self.request()
-        self.assertEqual(request['transport'],broker.FIREFOX_TRANSPORT)
+        self.assertEqual(status['inference_transport'],broker.DIRECT_TRANSPORT)
+        self.assertTrue(status['browser_ready']);self.assertFalse(status['automatic_local_to_saas_hop'])
+        request=broker.create_request(self.conn,None,'browser explicit',self.now,scope_type='THREAD',thread_id='b'*32,inference_transport=broker.FIREFOX_TRANSPORT,provider=broker.FIREFOX_PROVIDER)
+        self.assertEqual(request['status'],'WAITING_BROWSER_MEDIATOR');self.assertEqual(request['inference_transport'],broker.FIREFOX_TRANSPORT)
         claim=broker.claim(self.conn,request['request_id'],self.now)
-        result=broker.respond(self.conn,claim['request_id'],claim['response_token'],'Connected through Firefox',self.now,
-            model_identity='ChatGPT UI / LION_EVOLUSION',transport=broker.FIREFOX_TRANSPORT,
-            attestation_class=broker.FIREFOX_ATTESTATION_CLASS,claim_generation=claim['claim_generation'])
+        result=broker.respond(self.conn,claim['request_id'],claim['response_token'],'Connected through Firefox',self.now,model_identity='ChatGPT UI / LION_EVOLUSION',transport=broker.FIREFOX_TRANSPORT,attestation_class=broker.FIREFOX_ATTESTATION_CLASS,claim_generation=claim['claim_generation'],provider=broker.FIREFOX_PROVIDER)
         self.assertEqual(result['binding']['transport'],broker.FIREFOX_TRANSPORT)
-        self.assertEqual(result['binding']['supervisor_role'],'CHATGPT_FIREFOX_PROJECT_MEDIATOR')
 
-    def test_transport_migration_preserves_exact_pending_request_id_without_fanout(self):
-        old=self.request()
-        self.assertEqual(old['transport'],broker.TRANSPORT)
-        self._firefox_heartbeat()
-        saved=broker.request_status(self.conn,old['request_id'],self.now)
-        self.assertEqual(saved['request_id'],old['request_id'])
-        self.assertEqual(saved['transport'],broker.FIREFOX_TRANSPORT)
-        self.assertEqual(saved['progress_state'],'WAITING_BROWSER_MEDIATOR')
-        same=self.request()
-        self.assertEqual(same['request_id'],old['request_id'])
-        self.assertTrue(same['deduplicated'])
-        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_handoff_requests').fetchone()[0],1)
-        self.assertEqual(self.conn.execute('SELECT COUNT(*) FROM saas_transport_transitions WHERE request_id=?',(old['request_id'],)).fetchone()[0],1)
+    def test_explicit_browser_request_does_not_mutate_existing_direct_request(self):
+        direct=self.request()
+        browser=broker.create_request(self.conn,None,'Connectivity test',self.now,scope_type='THREAD',thread_id='a'*32,inference_transport=broker.FIREFOX_TRANSPORT,provider=broker.FIREFOX_PROVIDER)
+        self.assertNotEqual(browser['request_id'],direct['request_id'])
+        old=broker.request_status(self.conn,direct['request_id'],self.now)
+        self.assertEqual(old['status'],'SUPERSEDED');self.assertEqual(old['progress_state'],'SUPERSEDED_EXPLICIT_TRANSPORT_CHANGE')
+        self.assertEqual(browser['inference_transport'],broker.FIREFOX_TRANSPORT)
+        tr=self.conn.execute('SELECT from_transport,to_transport,reason,authority_effect FROM saas_transport_transitions WHERE request_id=?',(direct['request_id'],)).fetchone();self.assertEqual(tuple(tr),(broker.DIRECT_TRANSPORT,broker.FIREFOX_TRANSPORT,'EXPLICIT_REQUEST_TRANSPORT_CHANGE','NONE'))
 
-    def test_stale_firefox_heartbeat_fails_back_to_manual_transport(self):
-        self._firefox_heartbeat()
-        self.stamp='2026-09-15T00:00:46Z'
+    def test_stale_firefox_heartbeat_does_not_change_direct_transport(self):
+        self._firefox_heartbeat();self.stamp='2026-09-15T00:00:46Z'
         status=broker.bridge_status(self.conn,None,self.now)
-        self.assertFalse(status['automatic_local_to_saas_hop'])
-        self.assertEqual(status['transport'],broker.TRANSPORT)
-        self.assertEqual(status['mediator']['state'],'STALE')
-        request=self.request()
-        self.assertEqual(request['transport'],broker.TRANSPORT)
+        self.assertEqual(status['inference_transport'],broker.DIRECT_TRANSPORT);self.assertEqual(status['browser_mediator']['state'],'STALE')
+        request=self.request();self.assertEqual(request['inference_transport'],broker.DIRECT_TRANSPORT)
 
     def test_firefox_request_rejects_wrong_attestation_class(self):
-        self._firefox_heartbeat()
-        claim=broker.claim(self.conn,self.request()['request_id'],self.now)
+        request=broker.create_request(self.conn,None,'browser explicit',self.now,scope_type='THREAD',thread_id='c'*32,inference_transport=broker.FIREFOX_TRANSPORT,provider=broker.FIREFOX_PROVIDER)
+        claim=broker.claim(self.conn,request['request_id'],self.now)
         with self.assertRaisesRegex(ValueError,'transport/attestation'):
-            broker.respond(self.conn,claim['request_id'],claim['response_token'],'answer',self.now,
-                model_identity='ChatGPT UI',transport=broker.FIREFOX_TRANSPORT,
-                attestation_class=broker.ATTESTATION_CLASS,claim_generation=claim['claim_generation'])
+            broker.respond(self.conn,claim['request_id'],claim['response_token'],'answer',self.now,model_identity='ChatGPT UI',transport=broker.FIREFOX_TRANSPORT,attestation_class=broker.ATTESTATION_CLASS,claim_generation=claim['claim_generation'],provider=broker.FIREFOX_PROVIDER)
 
     def test_browser_independent_delivery_survives_restart_without_duplicates(self):
         with tempfile.TemporaryDirectory() as directory:

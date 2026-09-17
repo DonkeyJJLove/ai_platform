@@ -1,0 +1,29 @@
+[Unit]
+Description=LION Direct OpenAI Responses Supervisor Bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sentinelx
+Group=sentinelx
+WorkingDirectory=/var/lib/sentinelx/uploads/lion-mission-control-v3
+Environment=PYTHONPATH=/var/lib/sentinelx/uploads/lion-mission-control-v3
+EnvironmentFile=-/etc/lion/direct-supervisor.env
+ExecStart=/usr/bin/python3 /var/lib/sentinelx/uploads/lion-mission-control-v3/lion_direct_supervisor_bridge.py --host 127.0.0.1 --port 8768 --broker http://127.0.0.1:8766 --mediator-key-file /var/lib/sentinelx/uploads/lion-mission-control-v3/saas-mediator.key --state-db /var/lib/sentinelx/uploads/lion-mission-control-v3/direct-supervisor-bridge.db
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictNamespaces=true
+ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control-v3
+
+[Install]
+WantedBy=multi-user.target

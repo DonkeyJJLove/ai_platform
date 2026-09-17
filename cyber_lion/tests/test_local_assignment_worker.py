@@ -4,7 +4,7 @@ from tools.lion_local_intelligence_runtime import local_assignment_worker_once
 class LocalAssignmentWorkerTests(unittest.TestCase):
     def test_worker_claims_executes_dual_and_receipts_without_browser(self):
         calls=[]
-        row={"assignment_id":"assignment-1","material_drone_id":"MD025","lease_generation":7,"input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],\"max_tokens\":64,\"dual_request_id\":\"dual-11111111111111111111111111111111\"}"}
+        row={"assignment_id":"assignment-1","material_drone_id":"MD025","lease_generation":7,"lease_expires_at":"2099-01-01T00:00:00Z","input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],\"max_tokens\":64,\"dual_request_id\":\"dual-11111111111111111111111111111111\"}"}
         def control(op,args):
             calls.append((op,args))
             if op=="local_assignments":return {"assignments":[row]}
@@ -21,6 +21,22 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
         self.assertEqual(receipt["lease_generation"],7)
         self.assertEqual(receipt["result"]["response_text"],"LOCAL OK")
         self.assertEqual(receipt["result"]["authority_effect"],"NONE")
+
+    def test_expired_local_assignment_lease_blocks_provider_effect(self):
+        calls=[];provider=[]
+        row={"assignment_id":"expired-1","material_drone_id":"MD025","lease_generation":3,"lease_expires_at":"2000-01-01T00:00:00Z","input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}]}"}
+        def control(op,args):
+            calls.append((op,args))
+            if op=='local_assignments':return {'assignments':[row]}
+            if op=='local_assignment_claim':return dict(row,state='CLAIMED')
+            if op=='local_assignment_receipt':return {'receipt_id':'expired-receipt'}
+            raise AssertionError(op)
+        def model(*a):provider.append(a);return 'MUST NOT RUN'
+        out=local_assignment_worker_once(control,model,material_drone_id='MD025')
+        self.assertEqual(out['receipt_id'],'expired-receipt')
+        self.assertEqual(provider,[])
+        self.assertEqual(calls[-1][1]['status'],'FAIL')
+        self.assertIn('lease expired',calls[-1][1]['result']['error'])
 
     def test_worker_ignores_assignment_for_other_material_identity(self):
         def control(op,args):

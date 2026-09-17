@@ -55,10 +55,13 @@ def supervisor_projection(bridge, *, now, observed_at=None, max_age_seconds=120)
             reasons.append("BOUND_CURRENTNESS_UNVERIFIED")
     channel = source.get("channel_state") or "UNKNOWN"
     model = binding.get("model_identity") or "UNKNOWN"
-    transport = binding.get("transport") or source.get("transport") or "UNKNOWN"
+    inference_transport = binding.get("inference_transport") or source.get("inference_transport") or binding.get("transport") or source.get("transport") or "UNKNOWN"
+    control_transport = binding.get("control_transport") or source.get("control_transport") or "UNKNOWN"
+    provider = binding.get("provider") or source.get("provider") or "UNKNOWN"
+    transport = inference_transport
     hop = source.get("automatic_local_to_saas_hop")
     hop = hop if isinstance(hop, bool) else None
-    for key, value in (("CHANNEL", channel), ("MODEL", model), ("TRANSPORT", transport), ("SESSION", session)):
+    for key, value in (("CHANNEL", channel), ("MODEL", model), ("INFERENCE_TRANSPORT", inference_transport), ("CONTROL_TRANSPORT", control_transport), ("PROVIDER", provider), ("SESSION", session)):
         if value == "UNKNOWN":
             reasons.append(key + "_UNKNOWN")
     if hop is None:
@@ -73,12 +76,12 @@ def supervisor_projection(bridge, *, now, observed_at=None, max_age_seconds=120)
     return {
         "schema": "lion.supervisor-projection/v1",
         "channel": channel, "session": session, "reported_session": reported_session,
-        "model": model, "transport": transport,
+        "model": model, "transport": transport, "control_transport": control_transport, "inference_transport": inference_transport, "provider": provider,
         "mission_id": source.get("mission_id"),
         "session_scope": source.get("session_scope") or binding.get("binding_scope"),
-        "pending": _record(source.get("pending"), ("request_id", "request_code", "status", "progress_state", "created_at", "expires_at", "dual_request_id")),
+        "pending": _record(source.get("pending"), ("request_id", "request_code", "status", "progress_state", "created_at", "expires_at", "dual_request_id", "control_transport", "inference_transport", "provider")),
         "pending_count": pending_count, "pending_state": pending_state, "last_receipt_state": receipt_state,
-        "last_receipt": _record(source.get("last_response"), ("request_id", "responded_at", "response_digest", "receipt_digest", "binding_id")),
+        "last_receipt": _record(source.get("last_response"), ("request_id", "responded_at", "response_digest", "receipt_digest", "binding_id", "provider", "provider_response_id")),
         "lease": {"state": lease, "expires_at": expiry},
         "authority": "NONE", "reported_authority": source.get("authority_effect") or binding.get("authority_effect") or "UNKNOWN",
         "automatic_hop": hop,

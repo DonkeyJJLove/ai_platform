@@ -8,15 +8,21 @@ from datetime import datetime, timedelta, timezone
 
 from cyber_lion.mission_control.supervisor_projection import supervisor_projection
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 SCHEMA_ID = "lion.saas-broker/v1"
-TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"  # legacy/manual compatibility
+TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"  # read-only legacy/manual compatibility
 ATTESTATION_CLASS = "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP"
+CONTROL_TRANSPORT = "SENTINELX_OPERATOR_CONTROL"
+DIRECT_TRANSPORT = "OPENAI_RESPONSES_API_MEDIATED"
+DIRECT_ATTESTATION_CLASS = "OPENAI_RESPONSES_API_RECEIPT"
+DIRECT_PROVIDER = "OPENAI"
 FIREFOX_TRANSPORT = "CHATGPT_FIREFOX_PROJECT_MEDIATED"
 FIREFOX_ATTESTATION_CLASS = "FIREFOX_UI_PROJECT_BOUND_OBSERVATION"
+FIREFOX_PROVIDER = "CHATGPT_UI"
 MEDIATOR_HEARTBEAT_TTL_SECONDS = 45
 SUPPORTED_TRANSPORT_ATTESTATIONS = {
     TRANSPORT: ATTESTATION_CLASS,
+    DIRECT_TRANSPORT: DIRECT_ATTESTATION_CLASS,
     FIREFOX_TRANSPORT: FIREFOX_ATTESTATION_CLASS,
 }
 
@@ -64,11 +70,25 @@ CREATE TABLE IF NOT EXISTS saas_handoff_requests(
   scope_id TEXT,
   thread_id TEXT,
   transport TEXT,
+  control_transport TEXT,
+  inference_transport TEXT,
+  provider TEXT,
+  provider_conversation_id TEXT,
+  provider_response_id TEXT,
   authority_effect TEXT NOT NULL DEFAULT 'NONE',
   claim_generation INTEGER NOT NULL DEFAULT 0,
   claim_expires_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_saas_request_mission ON saas_handoff_requests(mission_id,status,created_at);
+CREATE TABLE IF NOT EXISTS saas_direct_bridge_heartbeats(
+  bridge_id TEXT PRIMARY KEY,
+  state TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  model_id TEXT,
+  credential_state TEXT NOT NULL,
+  observed_at TEXT NOT NULL,
+  details_json TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS saas_mediator_heartbeats(
   mediator_id TEXT PRIMARY KEY,
   transport TEXT NOT NULL,
@@ -110,6 +130,15 @@ def _future(stamp, seconds):
     return (_parse_ts(stamp) + timedelta(seconds=int(seconds))).astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _record_transport_transition(conn,row,to_transport,reason,stamp):
+    from_transport=row['inference_transport'] or row['transport'] or TRANSPORT
+    if from_transport==to_transport:return None
+    value={"request_id":row["request_id"],"from_transport":from_transport,"to_transport":to_transport,"reason":reason,"transitioned_at":stamp,"authority_effect":"NONE"}
+    tdigest=_digest(value);tid="saas-transition-"+tdigest[:32]
+    conn.execute("INSERT OR IGNORE INTO saas_transport_transitions(transition_id,request_id,from_transport,to_transport,reason,transitioned_at,authority_effect,transition_digest) VALUES(?,?,?,?,?,?,?,?)",(tid,row['request_id'],from_transport,to_transport,reason,stamp,'NONE',tdigest))
+    return tdigest
+
+
 def _columns(conn, table):
     return {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
 
@@ -134,10 +163,11 @@ def migrate(conn, now_fn, *, source_head, source_tree):
                 conn.execute('DROP TABLE '+table)
                 conn.execute('ALTER TABLE '+table+'_nullable RENAME TO '+table)
     conn.executescript(DDL)
-    for name,ddl in [('scope_type',"TEXT NOT NULL DEFAULT 'MISSION'"),('scope_id','TEXT'),('thread_id','TEXT'),('transport','TEXT'),('authority_effect',"TEXT NOT NULL DEFAULT 'NONE'"),('claim_generation','INTEGER NOT NULL DEFAULT 0'),('claim_expires_at','TEXT')]:
+    for name,ddl in [('scope_type',"TEXT NOT NULL DEFAULT 'MISSION'"),('scope_id','TEXT'),('thread_id','TEXT'),('transport','TEXT'),('control_transport','TEXT'),('inference_transport','TEXT'),('provider','TEXT'),('provider_conversation_id','TEXT'),('provider_response_id','TEXT'),('authority_effect',"TEXT NOT NULL DEFAULT 'NONE'"),('claim_generation','INTEGER NOT NULL DEFAULT 0'),('claim_expires_at','TEXT')]:
         _ensure_column(conn,'saas_handoff_requests',name,ddl)
     conn.execute("UPDATE saas_handoff_requests SET scope_id=mission_id WHERE scope_id IS NULL AND scope_type='MISSION'")
     conn.execute('UPDATE saas_handoff_requests SET transport=? WHERE transport IS NULL',(TRANSPORT,))
+    conn.execute('UPDATE saas_handoff_requests SET inference_transport=transport WHERE inference_transport IS NULL')
     conn.executescript("""CREATE TABLE IF NOT EXISTS saas_broker_receipts(
         request_id TEXT PRIMARY KEY, receipt_digest TEXT NOT NULL UNIQUE,
         receipt_json TEXT NOT NULL, created_at TEXT NOT NULL);
@@ -173,25 +203,13 @@ def _mission_binding(conn, mission_id):
 def _active_request_rows(conn, scope_type, scope_id, question_digest):
     return conn.execute(
         "SELECT * FROM saas_handoff_requests WHERE scope_type=? AND scope_id=? AND question_digest=? "
-        "AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED') "
+        "AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED') "
         "ORDER BY created_at,request_id",
         (scope_type, scope_id, question_digest),
     ).fetchall()
 
 
 MEDIATOR_STATES = {"STARTING","LOGIN_REQUIRED","PROJECT_BINDING_REQUIRED","CHAT_BINDING_REQUIRED","READY","DEGRADED","STOPPED"}
-
-
-def _promote_waiting_to_firefox(conn, stamp):
-    rows=conn.execute("SELECT request_id,transport FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE') AND COALESCE(transport,?)=? ORDER BY created_at,request_id",(TRANSPORT,TRANSPORT)).fetchall()
-    promoted=[]
-    for row in rows:
-        payload={"request_id":row['request_id'],"from_transport":row['transport'] or TRANSPORT,"to_transport":FIREFOX_TRANSPORT,"reason":"READY_FIREFOX_MEDIATOR_ADOPTION","transitioned_at":stamp,"authority_effect":"NONE"}
-        dg=_digest(payload);tid='saas-transition-'+dg[:32]
-        conn.execute("INSERT OR IGNORE INTO saas_transport_transitions(transition_id,request_id,from_transport,to_transport,reason,transitioned_at,authority_effect,transition_digest) VALUES(?,?,?,?,?,?,?,?)",(tid,payload['request_id'],payload['from_transport'],payload['to_transport'],payload['reason'],stamp,'NONE',dg))
-        conn.execute("UPDATE saas_handoff_requests SET transport=?,progress_state='WAITING_BROWSER_MEDIATOR' WHERE request_id=? AND status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE')",(FIREFOX_TRANSPORT,row['request_id']))
-        promoted.append(row['request_id'])
-    return promoted
 
 
 def record_mediator_heartbeat(conn, payload, now_fn):
@@ -212,8 +230,7 @@ def record_mediator_heartbeat(conn, payload, now_fn):
         "ON CONFLICT(mediator_id) DO UPDATE SET transport=excluded.transport,state=excluded.state,project_title=excluded.project_title,chat_title=excluded.chat_title,browser=excluded.browser,observed_at=excluded.observed_at,details_json=excluded.details_json",
         (mediator_id,transport,state,payload.get("project_title"),payload.get("chat_title"),payload.get("browser"),stamp,_canon(details)),
     )
-    promoted=_promote_waiting_to_firefox(conn,stamp) if state=="READY" else []
-    conn.commit();return {**payload,"observed_at":stamp,"fresh":True,"promoted_request_ids":promoted}
+    conn.commit();return {**payload,"observed_at":stamp,"fresh":True,"promoted_request_ids":[]}
 
 
 def _current_mediator(conn, stamp):
@@ -226,9 +243,25 @@ def _current_mediator(conn, stamp):
     return out
 
 
-def _preferred_transport(conn, stamp):
-    mediator=_current_mediator(conn,stamp)
-    return FIREFOX_TRANSPORT if mediator and mediator.get("fresh") and mediator.get("state")=="READY" else TRANSPORT
+def _current_direct_bridge(conn, stamp):
+    row=conn.execute("SELECT * FROM saas_direct_bridge_heartbeats ORDER BY observed_at DESC LIMIT 1").fetchone()
+    if row is None:return None
+    out=dict(row);age=(_parse_ts(stamp)-_parse_ts(out["observed_at"])).total_seconds();out["heartbeat_age_seconds"]=max(0.0,round(age,3));out["fresh"]=0<=age<=45
+    if not out["fresh"]:out["state"]="STALE"
+    try:out["details"]=json.loads(out.pop("details_json"))
+    except Exception:out["details"]={}
+    return out
+
+
+def record_direct_bridge_heartbeat(conn,payload,now_fn):
+    required={"bridge_id","state","provider","model_id","credential_state","authority_effect"}
+    if type(payload) is not dict or set(payload)!=required:raise ValueError("direct bridge heartbeat schema")
+    if payload.get("authority_effect")!="NONE" or payload.get("provider")!=DIRECT_PROVIDER:raise ValueError("direct bridge authority/provider")
+    if payload.get("state") not in {"READY","BLOCKED_CREDENTIAL","DEGRADED","STOPPED"}:raise ValueError("direct bridge state")
+    if payload.get("credential_state") not in {"PRESENT","ABSENT","INVALID","UNKNOWN"}:raise ValueError("credential state")
+    stamp=now_fn();details={"authority_effect":"NONE","control_transport":CONTROL_TRANSPORT,"inference_transport":DIRECT_TRANSPORT}
+    conn.execute("INSERT INTO saas_direct_bridge_heartbeats(bridge_id,state,provider,model_id,credential_state,observed_at,details_json) VALUES(?,?,?,?,?,?,?) ON CONFLICT(bridge_id) DO UPDATE SET state=excluded.state,provider=excluded.provider,model_id=excluded.model_id,credential_state=excluded.credential_state,observed_at=excluded.observed_at,details_json=excluded.details_json",(payload['bridge_id'],payload['state'],payload['provider'],payload.get('model_id'),payload['credential_state'],stamp,_canon(details)))
+    conn.commit();return {**payload,"observed_at":stamp,"fresh":True}
 
 
 def _attestation_for_transport(transport):
@@ -255,13 +288,18 @@ def _public_created_request(row, *, deduplicated=False):
         "expires_at": row["expires_at"],
         "retry_of_request_id": row["retry_of_request_id"],
         "transport": row["transport"] or TRANSPORT,
+        "control_transport": row["control_transport"] or CONTROL_TRANSPORT,
+        "inference_transport": row["inference_transport"] or row["transport"] or TRANSPORT,
+        "provider": row["provider"],
+        "provider_conversation_id": row["provider_conversation_id"],
+        "provider_response_id": row["provider_response_id"],
         "operator_trigger": "LION SaaS",
         "deduplicated": bool(deduplicated),
         "authority_effect": "NONE",
     }
 
 
-def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope_type=None, thread_id=None, scope_id=None, authority_effect="NONE"):
+def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope_type=None, thread_id=None, scope_id=None, authority_effect="NONE", inference_transport=None, provider=None, control_transport=CONTROL_TRANSPORT):
     if type(ttl_seconds) is not int or not 1 <= ttl_seconds <= 86400:
         raise ValueError('request deadline')
     if thread_id is not None and (not isinstance(thread_id,str) or len(thread_id)!=32 or any(c not in '0123456789abcdef' for c in thread_id)):
@@ -290,26 +328,38 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
     question = question.strip()
     qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
     retry_of = None
-    target_transport = TRANSPORT if legacy else _preferred_transport(conn, stamp)
+    if legacy:
+        target_transport=TRANSPORT;provider=None;control_transport=None;initial_status="PENDING";progress_state="WAITING_OPERATOR"
+    else:
+        target_transport=inference_transport or DIRECT_TRANSPORT
+        if target_transport not in {DIRECT_TRANSPORT,FIREFOX_TRANSPORT}:raise ValueError("inference transport")
+        expected_provider=DIRECT_PROVIDER if target_transport==DIRECT_TRANSPORT else FIREFOX_PROVIDER
+        if provider is not None and provider!=expected_provider:raise ValueError("provider mismatch")
+        provider=expected_provider
+        if control_transport!=CONTROL_TRANSPORT:raise ValueError("control transport")
+        initial_status="WAITING_PROVIDER" if target_transport==DIRECT_TRANSPORT else "WAITING_BROWSER_MEDIATOR"
+        progress_state=initial_status
     if not legacy:
         # Reconcile time/session/terminal-mission state before deciding whether
         # a new handoff is semantically independent or a retry of an existing one.
         _expire(conn, stamp)
         same_all=list(_active_request_rows(conn,scope_type,scope_id,qdigest))
-        foreign=[r for r in same_all if (r['transport'] or TRANSPORT)!=target_transport]
+        foreign=[r for r in same_all if (r['inference_transport'] or r['transport'] or TRANSPORT)!=target_transport]
         claimed_foreign=next((r for r in foreign if r['status']=='CLAIMED'),None)
         if claimed_foreign:
             # Never fan out while an older transport already owns a live claim.
             return _public_created_request(claimed_foreign,deduplicated=True)
         if foreign:
             retry_of=foreign[-1]['request_id']
+            for prior in foreign:_record_transport_transition(conn,prior,target_transport,"EXPLICIT_REQUEST_TRANSPORT_CHANGE",stamp)
             conn.executemany(
-                "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_TRANSPORT_MIGRATION',claim_expires_at=NULL WHERE request_id=?",
+                "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_EXPLICIT_TRANSPORT_CHANGE',claim_expires_at=NULL WHERE request_id=?",
                 [(r['request_id'],) for r in foreign],
             )
-        same=[r for r in same_all if (r['transport'] or TRANSPORT)==target_transport]
+        same=[r for r in same_all if (r['inference_transport'] or r['transport'] or TRANSPORT)==target_transport]
         if same:
-            live=[r for r in same if r['status']!='WAITING_OPERATOR_OVERDUE']
+            overdue={'WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_OVERDUE'}
+            live=[r for r in same if r['status'] not in overdue]
             if live:
                 # Prefer a claimed request, then the oldest stable request. Collapse
                 # stale duplicate siblings without invalidating the canonical poll id.
@@ -333,8 +383,8 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
     token = secrets.token_hex(32)
     expires = _future(stamp, ttl_seconds)
     conn.execute(
-        "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at,progress_state,retry_of_request_id,scope_type,scope_id,thread_id,transport,authority_effect) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (request_id, mission_id, lpcl_digest, request_code, token, question, qdigest, "PENDING" if legacy else "WAITING_SUPERVISOR", stamp, expires, "WAITING_OPERATOR" if legacy else "WAITING_SUPERVISOR",retry_of,scope_type,scope_id,thread_id,target_transport,"NONE"),
+        "INSERT INTO saas_handoff_requests(request_id,mission_id,lpcl_digest,request_code,response_token,question,question_digest,status,created_at,expires_at,progress_state,retry_of_request_id,scope_type,scope_id,thread_id,transport,control_transport,inference_transport,provider,authority_effect) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (request_id, mission_id, lpcl_digest, request_code, token, question, qdigest, initial_status, stamp, expires, progress_state,retry_of,scope_type,scope_id,thread_id,target_transport,control_transport,target_transport,provider,"NONE"),
     )
     conn.commit()
     row=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(request_id,)).fetchone()
@@ -348,7 +398,7 @@ def _expire(conn, now_value):
     if 'missions' in tables:
         conn.execute(
             "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_TERMINAL_MISSION',claim_expires_at=NULL "
-            "WHERE scope_type='MISSION' AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED') "
+            "WHERE scope_type='MISSION' AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED') "
             "AND mission_id IN (SELECT mission_id FROM missions WHERE UPPER(state) IN ('COMPLETE','COMPLETED','SUPERSEDED','CANCELLED','FAILED','FAIL','STOPPED'))"
         )
     # Request deadlines are advisory progress deadlines, not destructive TTLs.
@@ -359,8 +409,8 @@ def _expire(conn, now_value):
         "WHERE status='PENDING' AND expires_at<=?",
         (now_value, now_value),
     )
-    conn.execute("UPDATE saas_handoff_requests SET status='WAITING_SUPERVISOR',progress_state='WAITING_SUPERVISOR',claim_expires_at=NULL WHERE status='CLAIMED' AND claim_expires_at<=?",(now_value,))
-    conn.execute("UPDATE saas_handoff_requests SET status='WAITING_OPERATOR_OVERDUE',progress_state='WAITING_OPERATOR_OVERDUE',deadline_elapsed_at=COALESCE(deadline_elapsed_at,?) WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR') AND expires_at<=?",(now_value,now_value))
+    conn.execute("UPDATE saas_handoff_requests SET status=CASE WHEN inference_transport=? THEN 'WAITING_PROVIDER' WHEN inference_transport=? THEN 'WAITING_BROWSER_MEDIATOR' ELSE 'WAITING_SUPERVISOR' END,progress_state=CASE WHEN inference_transport=? THEN 'WAITING_PROVIDER' WHEN inference_transport=? THEN 'WAITING_BROWSER_MEDIATOR' ELSE 'WAITING_SUPERVISOR' END,claim_expires_at=NULL WHERE status='CLAIMED' AND claim_expires_at<=?",(DIRECT_TRANSPORT,FIREFOX_TRANSPORT,DIRECT_TRANSPORT,FIREFOX_TRANSPORT,now_value))
+    conn.execute("UPDATE saas_handoff_requests SET status=CASE WHEN inference_transport=? THEN 'WAITING_PROVIDER_OVERDUE' WHEN inference_transport=? THEN 'WAITING_BROWSER_OVERDUE' ELSE 'WAITING_OPERATOR_OVERDUE' END,progress_state=CASE WHEN inference_transport=? THEN 'WAITING_PROVIDER_OVERDUE' WHEN inference_transport=? THEN 'WAITING_BROWSER_OVERDUE' ELSE 'WAITING_OPERATOR_OVERDUE' END,deadline_elapsed_at=COALESCE(deadline_elapsed_at,?) WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_PROVIDER','WAITING_BROWSER_MEDIATOR') AND expires_at<=?",(DIRECT_TRANSPORT,FIREFOX_TRANSPORT,DIRECT_TRANSPORT,FIREFOX_TRANSPORT,now_value,now_value))
     # Session attestation is an independent freshness lease and may truthfully expire.
     conn.execute("UPDATE saas_session_bindings SET status='EXPIRED' WHERE status='BOUND' AND expires_at<=?", (now_value,))
 
@@ -408,7 +458,7 @@ def cancel_request(conn, request_id, now_fn):
         row = conn.execute('SELECT status FROM saas_handoff_requests WHERE request_id=?', (request_id,)).fetchone()
         if row is None:
             return {'request_id': request_id, 'status': 'NOT_FOUND', 'cancelled': False, 'authority_effect': 'NONE'}
-        changed = conn.execute("UPDATE saas_handoff_requests SET status='CANCELLED', progress_state='CANCELLED_BY_OPERATOR' WHERE request_id=? AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED')", (request_id,)).rowcount
+        changed = conn.execute("UPDATE saas_handoff_requests SET status='CANCELLED', progress_state='CANCELLED_BY_OPERATOR' WHERE request_id=? AND status IN ('PENDING','CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED')", (request_id,)).rowcount
     result = request_status(conn, request_id, now_fn)
     return {'request_id': request_id, 'status': result['status'], 'cancelled': bool(changed), 'authority_effect': 'NONE'}
 
@@ -447,10 +497,10 @@ def bridge_status(conn, mission_id, now_fn):
             "ORDER BY bound_at DESC LIMIT 1", (mission_id,),
         ).fetchone()
     pending = conn.execute(
-        "SELECT request_id,request_code,status,created_at,expires_at,question_digest,progress_state,deadline_elapsed_at,retry_of_request_id FROM saas_handoff_requests WHERE (? IS NULL OR mission_id=?) AND status IN ('PENDING','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED') ORDER BY created_at ASC LIMIT 1",
+        "SELECT request_id,request_code,status,created_at,expires_at,question_digest,progress_state,deadline_elapsed_at,retry_of_request_id FROM saas_handoff_requests WHERE (? IS NULL OR mission_id=?) AND status IN ('PENDING','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED') ORDER BY created_at ASC LIMIT 1",
         (mission_id,mission_id),
     ).fetchone()
-    pending_count = int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests WHERE (? IS NULL OR mission_id=?) AND status IN ('PENDING','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED')", (mission_id,mission_id)).fetchone()[0])
+    pending_count = int(conn.execute("SELECT COUNT(*) FROM saas_handoff_requests WHERE (? IS NULL OR mission_id=?) AND status IN ('PENDING','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED')", (mission_id,mission_id)).fetchone()[0])
     pending_value = dict(pending) if pending else None
     if pending_value is not None:
         pending_value["dual_request_id"] = _dual_request_id(conn, pending_value["request_id"])
@@ -460,16 +510,18 @@ def bridge_status(conn, mission_id, now_fn):
     ).fetchone()
     mediator=_current_mediator(conn,stamp)
     browser_ready=bool(mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport")==FIREFOX_TRANSPORT)
-    target_transport=FIREFOX_TRANSPORT if browser_ready else TRANSPORT
+    direct_bridge=_current_direct_bridge(conn,stamp)
+    direct_ready=bool(direct_bridge and direct_bridge.get("fresh") and direct_bridge.get("state")=="READY" and direct_bridge.get("credential_state")=="PRESENT")
+    target_transport=DIRECT_TRANSPORT
     out = {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
-        "channel_state": "BROWSER_MEDIATOR_READY" if browser_ready else ("WAITING_BROWSER_MEDIATOR" if mediator else "READY_FOR_HANDOFF"),
+        "channel_state": "DIRECT_PROVIDER_READY" if direct_ready else ("BLOCKED_CREDENTIAL" if direct_bridge and direct_bridge.get("credential_state")=="ABSENT" else "WAITING_DIRECT_PROVIDER"),
         "session_attestation_state": "BOUND" if binding else ("EXPIRED" if last_binding and last_binding['status']=='EXPIRED' else "NOT_ATTESTED"),
         "session_scope": "GLOBAL_SUPERVISOR_CHANNEL",
         "schema": SCHEMA_ID,
         "schema_version": SCHEMA_VERSION,
-        "automatic_hop": "AVAILABLE" if browser_ready else "UNAVAILABLE",
+        "automatic_hop": "AVAILABLE" if direct_ready else "UNAVAILABLE",
         "binding": dict(binding) if binding else None,
         "last_binding": dict(last_binding) if last_binding else None,
         "pending": pending_value,
@@ -479,8 +531,14 @@ def bridge_status(conn, mission_id, now_fn):
         "duplicate_policy": "EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE",
         "terminal_mission_pending_policy": "SUPERSEDE_PRESERVE_HISTORY",
         "transport": target_transport,
-        "automatic_local_to_saas_hop": browser_ready,
-        "operator_mediation_required": not browser_ready,
+        "automatic_local_to_saas_hop": direct_ready,
+        "operator_mediation_required": False,
+        "direct_bridge": direct_bridge,
+        "browser_mediator": mediator,
+        "browser_ready": browser_ready,
+        "control_transport": CONTROL_TRANSPORT,
+        "inference_transport": DIRECT_TRANSPORT,
+        "provider": DIRECT_PROVIDER,
         "mediator": mediator,
         "cryptographic_provider_attestation": False,
         "authority_effect": "NONE",
@@ -489,7 +547,7 @@ def bridge_status(conn, mission_id, now_fn):
     return out
 
 
-def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_identity, transport=TRANSPORT, attestation_class=ATTESTATION_CLASS, lease_seconds=7200, claim_generation=None):
+def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_identity, transport=TRANSPORT, attestation_class=ATTESTATION_CLASS, lease_seconds=7200, claim_generation=None, provider=None, provider_conversation_id=None, provider_response_id=None):
     if type(lease_seconds) is not int or not 1 <= lease_seconds <= 86400:
         raise ValueError('session lease')
     if not isinstance(answer, str) or not answer.strip() or len(answer) > 24000:
@@ -513,7 +571,10 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
     row_transport=row["transport"] or TRANSPORT
     expected_attestation=_attestation_for_transport(row_transport)
     if transport!=row_transport or attestation_class!=expected_attestation:raise ValueError("request transport/attestation")
-    supervisor_role="CHATGPT_FIREFOX_PROJECT_MEDIATOR" if transport==FIREFOX_TRANSPORT else "CHATGPT_SAAS_SUPERVISOR"
+    supervisor_role="CHATGPT_FIREFOX_PROJECT_MEDIATOR" if transport==FIREFOX_TRANSPORT else "OPENAI_RESPONSES_SUPERVISOR" if transport==DIRECT_TRANSPORT else "CHATGPT_SAAS_SUPERVISOR"
+    expected_provider=DIRECT_PROVIDER if transport==DIRECT_TRANSPORT else FIREFOX_PROVIDER if transport==FIREFOX_TRANSPORT else None
+    if provider is not None and expected_provider is not None and provider!=expected_provider:raise ValueError("provider mismatch")
+    provider=provider or expected_provider
     answer = answer.strip()
     rdigest = hashlib.sha256(answer.encode("utf-8")).hexdigest()
     binding_id = "saas-binding-" + uuid.uuid4().hex
@@ -525,6 +586,11 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
         "supervisor_role": supervisor_role,
         "model_identity": model_identity.strip(),
         "transport": transport,
+        "control_transport": row["control_transport"] or CONTROL_TRANSPORT,
+        "inference_transport": row["inference_transport"] or transport,
+        "provider": provider,
+        "provider_conversation_id": provider_conversation_id,
+        "provider_response_id": provider_response_id,
         "attestation_class": attestation_class,
         "authority_effect": "NONE",
         "request_id": request_id,
@@ -545,12 +611,12 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
         "INSERT INTO saas_session_bindings(binding_id,mission_id,lpcl_digest,supervisor_role,model_identity,transport,attestation_class,authority_effect,status,created_at,bound_at,expires_at,last_request_id,attestation_json,attestation_digest,binding_scope) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (binding_id,row["mission_id"],row["lpcl_digest"],supervisor_role,model_identity.strip(),transport,attestation_class,"NONE","BOUND",stamp,stamp,expires,request_id,_canon(attestation),adigest,"GLOBAL_SUPERVISOR_CHANNEL"),
     )
-    meta = {"model_identity": model_identity.strip(), "transport": transport, "attestation_class": attestation_class, "authority_effect": "NONE", "binding_scope": "GLOBAL_SUPERVISOR_CHANNEL"}
+    meta = {"model_identity": model_identity.strip(), "transport": transport, "control_transport":row["control_transport"] or CONTROL_TRANSPORT,"inference_transport":row["inference_transport"] or transport,"provider":provider,"provider_conversation_id":provider_conversation_id,"provider_response_id":provider_response_id,"attestation_class": attestation_class, "authority_effect": "NONE", "binding_scope": "GLOBAL_SUPERVISOR_CHANNEL"}
     receipt = {
         "request_id": request_id,
         "request_code": row["request_code"],
         "scope_type":row["scope_type"],"scope_id":row["scope_id"],"thread_id":row["thread_id"],
-        "model_identity":model_identity.strip(),"transport":transport,
+        "model_identity":model_identity.strip(),"transport":transport,"control_transport":row["control_transport"] or CONTROL_TRANSPORT,"inference_transport":row["inference_transport"] or transport,"provider":provider,"provider_conversation_id":provider_conversation_id,"provider_response_id":provider_response_id,
         "mission_id": row["mission_id"],
         "lpcl_digest": row["lpcl_digest"],
         "question_digest": row["question_digest"],
@@ -563,14 +629,14 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
     receipt_digest = _digest(receipt)
     conn.execute("INSERT INTO saas_broker_receipts VALUES(?,?,?,?)",(request_id,receipt_digest,_canon(receipt),stamp))
     conn.execute(
-        "UPDATE saas_handoff_requests SET status='RESPONDED',progress_state='RECEIPT_BOUND',responded_at=?,response_text=?,response_digest=?,binding_id=?,response_meta_json=?,receipt_digest=? WHERE request_id=?",
-        (stamp,answer,rdigest,binding_id,_canon(meta),receipt_digest,request_id),
+        "UPDATE saas_handoff_requests SET status='RESPONDED',progress_state='RECEIPT_BOUND',responded_at=?,response_text=?,response_digest=?,binding_id=?,response_meta_json=?,receipt_digest=?,provider=?,provider_conversation_id=?,provider_response_id=? WHERE request_id=?",
+        (stamp,answer,rdigest,binding_id,_canon(meta),receipt_digest,provider,provider_conversation_id,provider_response_id,request_id),
     )
     conn.commit()
     return {"status":"RESPONDED","answer":answer,"binding":attestation,"receipt":{**receipt,"receipt_digest":receipt_digest}}
 
 
-WAITING_STATES=('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED')
+WAITING_STATES=('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED')
 
 
 def claim(conn,request_id,now_fn,*,lease_seconds=300):
@@ -579,7 +645,7 @@ def claim(conn,request_id,now_fn,*,lease_seconds=300):
     try:
         stamp=now_fn();_expire(conn,stamp)
         row=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(request_id,)).fetchone()
-        if row is None or row['status'] not in {'WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','QUEUED'}:raise ValueError('request not claimable')
+        if row is None or row['status'] not in {'WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','QUEUED'}:raise ValueError('request not claimable')
         token=secrets.token_hex(32);generation=row['claim_generation']+1;expires=_future(stamp,lease_seconds)
         conn.execute("UPDATE saas_handoff_requests SET status='CLAIMED',progress_state='CLAIMED',response_token=?,claim_generation=?,claim_expires_at=? WHERE request_id=?",(token,generation,expires,request_id))
         conn.commit()
@@ -590,7 +656,7 @@ def claim(conn,request_id,now_fn,*,lease_seconds=300):
 
 def broker_pending(conn,now_fn):
     _expire(conn,now_fn());conn.commit()
-    rows=conn.execute("SELECT request_id FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','CLAIMED') ORDER BY created_at,request_id LIMIT 100").fetchall()
+    rows=conn.execute("SELECT request_id FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE','WAITING_PROVIDER','WAITING_PROVIDER_OVERDUE','WAITING_BROWSER_MEDIATOR','WAITING_BROWSER_OVERDUE','CLAIMED') ORDER BY created_at,request_id LIMIT 100").fetchall()
     return {'requests':[request_status(conn,r[0],now_fn) for r in rows],'authority_effect':'NONE'}
 
 

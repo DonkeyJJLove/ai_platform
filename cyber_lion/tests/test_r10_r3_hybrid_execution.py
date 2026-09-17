@@ -56,7 +56,7 @@ class HybridGatewayTests(unittest.TestCase):
         apply_hybrid_gateway_extension(ExtendedGateway)
         g = ExtendedGateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: 'local', self.cur, self.git)
         self.assertEqual(g._route('Co to LION')[0], 'SYSTEM_CONTEXT')
-        self.assertEqual(g.state()['saas_supervisor']['transport'], 'EXTERNAL_SESSION_MEDIATED')
+        self.assertEqual(g.state()['saas_supervisor']['transport'], 'OPENAI_RESPONSES_API_MEDIATED')
         self.assertFalse(g.state()['saas_supervisor']['automatic_hop_materialized'])
 
     def test_dual_evaluation_never_fakes_saas_answer(self):

@@ -132,7 +132,7 @@ class SaaSSessionBridgeTests(unittest.TestCase):
         pending=saas.pending_request(self.c,lambda:T,mission_id='M1')
         self.assertEqual(pending['dual_request_id'],dual_id)
         status=saas.bridge_status(self.c,'M1',lambda:T)
-        self.assertEqual(status['channel_state'],'READY_FOR_HANDOFF')
+        self.assertEqual(status['channel_state'],'WAITING_DIRECT_PROVIDER')
         self.assertEqual(status['session_attestation_state'],'NOT_ATTESTED')
         self.assertEqual(status['pending']['dual_request_id'],dual_id)
         saved=saas.request_status(self.c,req['request_id'],lambda:T)
@@ -152,12 +152,13 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
             def state(self):return {'status':'ok'}
             def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'LOCAL','answer':'local'}
         apply_saas_handoff_extension(Dummy)
-        d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'ABCD1234','request_id':'saas-'+'1'*32,'authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
+        d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'ABCD1234','request_id':'saas-'+'1'*32,'transport':'OPENAI_RESPONSES_API_MEDIATED','authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
         self.assertEqual(d._route('No to wykonaj na SaaS zapytanie: Kim jesteś?')[0],'SAAS_HANDOFF')
         out=d.chat('No to wykonaj na SaaS zapytanie: Kim jesteś?',output_language='pl')
         self.assertEqual(out['route'],'SAAS_HANDOFF')
         self.assertIn('automatycznie',out['answer'])
-        self.assertIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
+        self.assertIn('OPENAI_RESPONSES_API_MEDIATED',out['answer'])
+        self.assertIn('Firefox nie jest automatycznie uruchamiany',out['answer'])
 
     def test_explicit_saas_route_reports_firefox_mediator_when_request_is_browser_bound(self):
         class Dummy:
@@ -175,13 +176,13 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
             @staticmethod
             def _capability_answer(message,mission,state,output_language):return 'fallback'
             def _route(self,m):return ('LION_CAPABILITY_CURRENTNESS','x')
-            def state(self):return {'saas_session_bridge':{'state':'BOUND','binding':{'model_identity':'GPT-5.6 Sol','transport':'CHATGPT_SENTINELX_SESSION_MEDIATED','expires_at':'2026-09-13T16:00:00Z','authority_effect':'NONE'}}}
+            def state(self):return {'saas_session_bridge':{'state':'BOUND','binding':{'model_identity':'GPT-5.6 Sol','transport':'OPENAI_RESPONSES_API_MEDIATED','expires_at':'2026-09-13T16:00:00Z','authority_effect':'NONE'}}}
             def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'LOCAL','answer':'local'}
         apply_saas_handoff_extension(Dummy)
         d=Dummy();d.control_provider=None
         answer=d._capability_answer('Masz łączność z SaaS?',{},d.state(),'pl')
         self.assertIn('GPT-5.6 Sol',answer)
-        self.assertIn('CHATGPT_SENTINELX_SESSION_MEDIATED',answer)
+        self.assertIn('OPENAI_RESPONSES_API_MEDIATED',answer)
         self.assertIn('authority_effect=NONE',answer)
 
     def test_dual_evaluation_dispatches_local_and_live_saas_handoff(self):

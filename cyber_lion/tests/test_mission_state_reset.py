@@ -69,7 +69,7 @@ class MissionResetTests(unittest.TestCase):
                     claim=request(prefix+'/claim',{},True)
                     self.assertNotIn('response_token',request(prefix))
                     answer={k:claim[k] for k in ('response_token','claim_generation')}
-                    answer.update(answer='Connected',model_identity='UNIT_TEST_MEDIATOR',transport=mc.saas_broker.TRANSPORT,attestation_class=mc.saas_broker.ATTESTATION_CLASS)
+                    answer.update(answer='Connected',model_identity='gpt-5.6-sol',transport=mc.saas_broker.DIRECT_TRANSPORT,attestation_class=mc.saas_broker.DIRECT_ATTESTATION_CLASS,provider=mc.saas_broker.DIRECT_PROVIDER,provider_conversation_id='conv-reset-test',provider_response_id='resp-reset-test')
                     self.assertEqual(request(prefix+'/respond',answer,True)['status'],'RESPONDED')
                     with self.assertRaises(urllib.error.HTTPError) as duplicate:request(prefix+'/respond',answer,True)
                     self.assertEqual(duplicate.exception.code,409)
