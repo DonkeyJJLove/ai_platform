@@ -1,4 +1,4 @@
-name: LION Effect Surface Rebind Diagnostic
+name: LION Effect Surface Rebind Closure Diagnostic
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  diagnose-exact-rebind:
+  diagnose-exact-rebind-closure:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -32,7 +32,7 @@ jobs:
           test "$(git rev-parse HEAD^{tree})" = "b71bfe10fb9acc20a29071ff1c8b286461f239fd"
           test -z "$(git status --porcelain)"
 
-      - name: Materialize exact current-state rebind
+      - name: Materialize exact current-state rebind and truth closure
         shell: bash
         run: |
           set -euo pipefail
@@ -100,7 +100,7 @@ jobs:
               for old, new in pairs:
                   replace_once(path, old, new)
 
-          expected = {
+          effect_paths = {
               "cyber_lion/tests/test_host_authority_separation.py",
               "cyber_lion/tests/test_p0_moon_permission_policy_reclassification.py",
               "cyber_lion/tests/test_p0_moon_readonly_observer_falsification_runtime.py",
@@ -119,17 +119,64 @@ jobs:
               "tools/p0_surface_closure_campaign.py",
           }
           changed = set(subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines())
-          if changed != expected:
-              raise SystemExit(f"changed-file set mismatch: expected={sorted(expected)} actual={sorted(changed)}")
+          if changed != effect_paths:
+              raise SystemExit(f"effect changed-file set mismatch: expected={sorted(effect_paths)} actual={sorted(changed)}")
           PY
 
           git add -A
           git diff --cached --check
           test "$(git write-tree)" = "5d50ff152cb5c148df75fd24d3c8abc0b7910e26"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          old_digest = "e600fd15112eb27b4c47e83eca2ee2ae0eca4c2ca1efc884376b9a7b22d3fdbd"
+          new_digest = "39a01e70efc2cc87e2db0ccd0d296a8cc7ac70d3db363eb7967d444d53e47dc4"
+          carriers = {
+              "LION/architecture/canonical-state-v1-3-candidate.json",
+              "cyber_lion/registry/repositories.json",
+          }
+          for path in sorted(carriers):
+              p = Path(path)
+              text = p.read_text(encoding="utf-8")
+              count = text.count(old_digest)
+              if count != 1:
+                  raise SystemExit(f"carrier replacement cardinality {path}: {count}")
+              p.write_text(text.replace(old_digest, new_digest, 1), encoding="utf-8")
+
+          effect_paths = {
+              "cyber_lion/tests/test_host_authority_separation.py",
+              "cyber_lion/tests/test_p0_moon_permission_policy_reclassification.py",
+              "cyber_lion/tests/test_p0_moon_readonly_observer_falsification_runtime.py",
+              "cyber_lion/tests/test_p0_moon_runner_attested_execution_bridge.py",
+              "cyber_lion/tests/test_p0_moon_same_connection_denial_carrier.py",
+              "cyber_lion/tests/test_p0_moon_seven_binding_chain.py",
+              "cyber_lion/tests/test_p0_moon_seven_closure_readiness.py",
+              "cyber_lion/tests/test_p0_surface_closure_campaign.py",
+              "tools/p0_moon_attack_policy_v2_contract.py",
+              "tools/p0_moon_attested_adjudication.py",
+              "tools/p0_moon_permission_policy_reclassification.py",
+              "tools/p0_moon_readonly_observer_falsification.py",
+              "tools/p0_moon_same_connection_denial_carrier.py",
+              "tools/p0_moon_seven_binding.py",
+              "tools/p0_moon_seven_closure_readiness.py",
+              "tools/p0_surface_closure_campaign.py",
+          }
+          expected = effect_paths | carriers
+          changed = set(subprocess.check_output(["git", "diff", "--name-only", "HEAD"], text=True).splitlines())
+          if changed != expected:
+              raise SystemExit(f"closure changed-file set mismatch: expected={sorted(expected)} actual={sorted(changed)}")
+          PY
+
+          git add -A
+          git diff --cached --check
+          echo "FINAL_WRITE_TREE=$(git write-tree)"
           git config user.name "LION Diagnostic Bot"
           git config user.email "lion-diagnostic@users.noreply.github.com"
-          git commit -m "LION: rebind current effect-surface attestation"
-          test "$(git rev-parse HEAD^{tree})" = "5d50ff152cb5c148df75fd24d3c8abc0b7910e26"
+          git commit -m "LION: close effect-surface rebind truth currentness"
+          echo "FINAL_COMMIT=$(git rev-parse HEAD)"
+          echo "FINAL_TREE=$(git rev-parse HEAD^{tree})"
           test -z "$(git status --porcelain)"
 
       - name: Diagnose Cyber-Lion full suite
