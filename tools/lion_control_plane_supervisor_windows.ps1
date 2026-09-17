@@ -3,7 +3,8 @@ param(
     [string]$Repo = 'C:\Users\d2j3\Documents\Codex\2026-09-14\files-pasted-by-the-user-role\work\lion-r2-panel-runtime',
     [string]$Runtime = 'C:\Users\d2j3\Documents\Codex\2026-09-13\r10-r2-unified\runtime',
     [string]$Python = 'C:\Users\d2j3\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\python.exe',
-    [string]$ModelRoot = 'C:\Users\d2j3\Documents\Codex\2026-09-10\napraw\outputs\moon-native'
+    [string]$ModelRoot = 'C:\Users\d2j3\Documents\Codex\2026-09-10\napraw\outputs\moon-native',
+    [string]$OperatorPanelProxyKey = 'C:\Users\d2j3\AppData\Local\LION\secrets\operator-panel-proxy.key'
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -15,6 +16,7 @@ $ModelFile = Join-Path $ModelRoot 'models\gpt-oss-20b-MXFP4.gguf'
 $ExpectedModelSha = '27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901'
 $ModelUrl = 'http://127.0.0.1:8772'
 $MissionControlUrl = 'http://127.0.0.1:8766'
+$OperatorControlUrl = 'http://127.0.0.1:8767'
 $PanelUrl = 'http://127.0.0.1:8780'
 $FirefoxMediatorUrl = 'http://127.0.0.1:8790/status'
 $FirefoxMediatorApp = Join-Path $Runtime 'firefox-mediator-app'
@@ -135,15 +137,17 @@ function Ensure-Panel([hashtable]$RepoIdentity) {
     if ($p) {
         if ([IO.Path]::GetFullPath($p.ExecutablePath) -ne [IO.Path]::GetFullPath($Python)) { throw 'PORT_8780_FOREIGN_PROCESS' }
         if ($p.CommandLine -notmatch 'lion_local_intelligence_runtime\.py' -or $p.CommandLine -notmatch [regex]::Escape($Repo)) { throw 'PORT_8780_WRONG_RUNTIME' }
+        if ($p.CommandLine -notmatch '--operator-panel-proxy-key-file' -or $p.CommandLine -notmatch [regex]::Escape($OperatorPanelProxyKey)) { throw 'PORT_8780_OPERATOR_BINDING_MISSING' }
         if (-not (Wait-Http ($PanelUrl + '/') 5)) { throw 'PANEL_8780_UNHEALTHY' }
         return [int]$p.ProcessId
     }
+    if (-not (Test-Path -LiteralPath $OperatorPanelProxyKey)) { throw 'OPERATOR_PANEL_PROXY_KEY_MISSING' }
     $stamp=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')
     $out=Join-Path $Runtime ('supervised8780-' + $stamp + '.out.log')
     $err=Join-Path $Runtime ('supervised8780-' + $stamp + '.err.log')
-    $args=@((Join-Path $Repo 'tools\lion_local_intelligence_runtime.py'),'--repo',$Repo,'--model',$ModelUrl,'--model-sha',$ExpectedModelSha,'--port','8780','--material-runtime-dir',$MatRuntime,'--thread-db',$ThreadDb,'--mission-control-url',$MissionControlUrl)
+    $args=@((Join-Path $Repo 'tools\lion_local_intelligence_runtime.py'),'--repo',$Repo,'--model',$ModelUrl,'--model-sha',$ExpectedModelSha,'--port','8780','--material-runtime-dir',$MatRuntime,'--thread-db',$ThreadDb,'--mission-control-url',$MissionControlUrl,'--operator-control-url',$OperatorControlUrl,'--operator-panel-proxy-key-file',$OperatorPanelProxyKey)
     $proc=Start-Process -FilePath $Python -ArgumentList $args -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err -PassThru
-    Write-Log ('PANEL_START pid=' + $proc.Id + ' head=' + $RepoIdentity.head)
+    Write-Log ('PANEL_START pid=' + $proc.Id + ' head=' + $RepoIdentity.head + ' operator_control=8767')
     if (-not (Wait-Http ($PanelUrl + '/') 30)) { throw 'PANEL_START_TIMEOUT' }
     return [int]$proc.Id
 }
@@ -203,6 +207,7 @@ function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int
         model_8772=$true
         panel_8780=$true
         firefox_mediator_8790=$true
+        operator_control_8767=$true
         authority_effect='LOCAL_RUNTIME_SUPERVISION'
     }
     $tmp=$SupervisorState+'.tmp'
