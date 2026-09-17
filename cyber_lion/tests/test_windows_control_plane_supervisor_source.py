@@ -38,6 +38,17 @@ class WindowsControlPlaneSupervisorSourceTests(unittest.TestCase):
         port = t.index('$p=Process-For-Port 8790', ensure)
         self.assertLess(call, port)
 
+    def test_8780_is_bound_to_authenticated_operator_proxy_without_pairing_secret_in_process_args(self):
+        t = self.text
+        self.assertIn("$OperatorControlUrl = 'http://127.0.0.1:8767'", t)
+        self.assertIn("[string]$OperatorPanelProxyKey = 'C:\\Users\\d2j3\\AppData\\Local\\LION\\secrets\\operator-panel-proxy.key'", t)
+        self.assertIn("'--operator-control-url',$OperatorControlUrl", t)
+        self.assertIn("'--operator-panel-proxy-key-file',$OperatorPanelProxyKey", t)
+        self.assertIn("throw 'OPERATOR_PANEL_PROXY_KEY_MISSING'", t)
+        self.assertIn("throw 'PORT_8780_OPERATOR_BINDING_MISSING'", t)
+        self.assertNotIn('--operator-pairing-key-file', t)
+        self.assertNotIn('operator-pairing.key', t)
+
     def test_panel_health_precedes_optional_browser_manager_in_one_pass(self):
         t = self.text
         start = t.index('function One-Pass')
