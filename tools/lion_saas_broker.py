@@ -14,10 +14,13 @@ TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"  # legacy/manual compatibility
 ATTESTATION_CLASS = "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP"
 FIREFOX_TRANSPORT = "CHATGPT_FIREFOX_PROJECT_MEDIATED"
 FIREFOX_ATTESTATION_CLASS = "FIREFOX_UI_PROJECT_BOUND_OBSERVATION"
+SECURE_MCP_TRANSPORT = "CHATGPT_OPENAI_SECURE_MCP_TUNNEL"
+SECURE_MCP_ATTESTATION_CLASS = "OPENAI_SECURE_MCP_TUNNEL_TOOL_ROUNDTRIP"
 MEDIATOR_HEARTBEAT_TTL_SECONDS = 45
 SUPPORTED_TRANSPORT_ATTESTATIONS = {
     TRANSPORT: ATTESTATION_CLASS,
     FIREFOX_TRANSPORT: FIREFOX_ATTESTATION_CLASS,
+    SECURE_MCP_TRANSPORT: SECURE_MCP_ATTESTATION_CLASS,
 }
 
 DDL = r"""
@@ -182,16 +185,26 @@ def _active_request_rows(conn, scope_type, scope_id, question_digest):
 MEDIATOR_STATES = {"STARTING","LOGIN_REQUIRED","PROJECT_BINDING_REQUIRED","CHAT_BINDING_REQUIRED","READY","DEGRADED","STOPPED"}
 
 
-def _promote_waiting_to_firefox(conn, stamp):
+def _promote_waiting_to_transport(conn, stamp, target_transport, reason, progress_state):
+    if target_transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:raise ValueError("promotion transport")
     rows=conn.execute("SELECT request_id,transport FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE') AND COALESCE(transport,?)=? ORDER BY created_at,request_id",(TRANSPORT,TRANSPORT)).fetchall()
     promoted=[]
     for row in rows:
-        payload={"request_id":row['request_id'],"from_transport":row['transport'] or TRANSPORT,"to_transport":FIREFOX_TRANSPORT,"reason":"READY_FIREFOX_MEDIATOR_ADOPTION","transitioned_at":stamp,"authority_effect":"NONE"}
+        payload={"request_id":row['request_id'],"from_transport":row['transport'] or TRANSPORT,"to_transport":target_transport,"reason":reason,"transitioned_at":stamp,"authority_effect":"NONE"}
         dg=_digest(payload);tid='saas-transition-'+dg[:32]
         conn.execute("INSERT OR IGNORE INTO saas_transport_transitions(transition_id,request_id,from_transport,to_transport,reason,transitioned_at,authority_effect,transition_digest) VALUES(?,?,?,?,?,?,?,?)",(tid,payload['request_id'],payload['from_transport'],payload['to_transport'],payload['reason'],stamp,'NONE',dg))
-        conn.execute("UPDATE saas_handoff_requests SET transport=?,progress_state='WAITING_BROWSER_MEDIATOR' WHERE request_id=? AND status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE')",(FIREFOX_TRANSPORT,row['request_id']))
+        conn.execute("UPDATE saas_handoff_requests SET transport=?,progress_state=? WHERE request_id=? AND status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE')",(target_transport,progress_state,row['request_id']))
         promoted.append(row['request_id'])
     return promoted
+
+def _promote_waiting_to_firefox(conn, stamp):
+    return _promote_waiting_to_transport(conn,stamp,FIREFOX_TRANSPORT,"READY_FIREFOX_MEDIATOR_ADOPTION","WAITING_BROWSER_MEDIATOR")
+
+def _promote_waiting_to_secure_mcp(conn, stamp):
+    return _promote_waiting_to_transport(
+        conn,stamp,SECURE_MCP_TRANSPORT,
+        "READY_SECURE_MCP_MEDIATOR_ADOPTION","WAITING_SECURE_MCP"
+    )
 
 
 def record_mediator_heartbeat(conn, payload, now_fn):
@@ -201,7 +214,7 @@ def record_mediator_heartbeat(conn, payload, now_fn):
         raise ValueError("mediator authority")
     mediator_id=payload.get("mediator_id");transport=payload.get("transport");state=payload.get("state")
     if not isinstance(mediator_id,str) or not mediator_id or len(mediator_id)>96:raise ValueError("mediator_id")
-    if transport != FIREFOX_TRANSPORT:raise ValueError("mediator transport")
+    if transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:raise ValueError("mediator transport")
     if state not in MEDIATOR_STATES:raise ValueError("mediator state")
     for key in ("project_title","chat_title","browser"):
         value=payload.get(key)
@@ -212,7 +225,7 @@ def record_mediator_heartbeat(conn, payload, now_fn):
         "ON CONFLICT(mediator_id) DO UPDATE SET transport=excluded.transport,state=excluded.state,project_title=excluded.project_title,chat_title=excluded.chat_title,browser=excluded.browser,observed_at=excluded.observed_at,details_json=excluded.details_json",
         (mediator_id,transport,state,payload.get("project_title"),payload.get("chat_title"),payload.get("browser"),stamp,_canon(details)),
     )
-    promoted=_promote_waiting_to_firefox(conn,stamp) if state=="READY" else []
+    promoted=(_promote_waiting_to_firefox(conn,stamp) if transport==FIREFOX_TRANSPORT else _promote_waiting_to_secure_mcp(conn,stamp)) if state=="READY" else []
     conn.commit();return {**payload,"observed_at":stamp,"fresh":True,"promoted_request_ids":promoted}
 
 
@@ -228,7 +241,9 @@ def _current_mediator(conn, stamp):
 
 def _preferred_transport(conn, stamp):
     mediator=_current_mediator(conn,stamp)
-    return FIREFOX_TRANSPORT if mediator and mediator.get("fresh") and mediator.get("state")=="READY" else TRANSPORT
+    if mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport") in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:
+        return mediator["transport"]
+    return TRANSPORT
 
 
 def _attestation_for_transport(transport):
@@ -261,7 +276,7 @@ def _public_created_request(row, *, deduplicated=False):
     }
 
 
-def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope_type=None, thread_id=None, scope_id=None, authority_effect="NONE"):
+def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope_type=None, thread_id=None, scope_id=None, authority_effect="NONE", transport=None):
     if type(ttl_seconds) is not int or not 1 <= ttl_seconds <= 86400:
         raise ValueError('request deadline')
     if thread_id is not None and (not isinstance(thread_id,str) or len(thread_id)!=32 or any(c not in '0123456789abcdef' for c in thread_id)):
@@ -290,7 +305,9 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
     question = question.strip()
     qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
     retry_of = None
-    target_transport = TRANSPORT if legacy else _preferred_transport(conn, stamp)
+    if transport is not None and transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:
+        raise ValueError('explicit transport')
+    target_transport = TRANSPORT if legacy else (transport or _preferred_transport(conn, stamp))
     if not legacy:
         # Reconcile time/session/terminal-mission state before deciding whether
         # a new handoff is semantically independent or a retry of an existing one.
@@ -459,12 +476,15 @@ def bridge_status(conn, mission_id, now_fn):
         (mission_id,mission_id),
     ).fetchone()
     mediator=_current_mediator(conn,stamp)
-    browser_ready=bool(mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport")==FIREFOX_TRANSPORT)
-    target_transport=FIREFOX_TRANSPORT if browser_ready else TRANSPORT
+    mediator_ready=bool(mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport") in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT})
+    browser_ready=bool(mediator_ready and mediator.get("transport")==FIREFOX_TRANSPORT)
+    secure_mcp_ready=bool(mediator_ready and mediator.get("transport")==SECURE_MCP_TRANSPORT)
+    target_transport=mediator.get("transport") if mediator_ready else TRANSPORT
+    channel_state="SECURE_MCP_READY" if secure_mcp_ready else ("BROWSER_MEDIATOR_READY" if browser_ready else ("WAITING_MEDIATOR" if mediator else "READY_FOR_HANDOFF"))
     out = {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
-        "channel_state": "BROWSER_MEDIATOR_READY" if browser_ready else ("WAITING_BROWSER_MEDIATOR" if mediator else "READY_FOR_HANDOFF"),
+        "channel_state": channel_state,
         "session_attestation_state": "BOUND" if binding else ("EXPIRED" if last_binding and last_binding['status']=='EXPIRED' else "NOT_ATTESTED"),
         "session_scope": "GLOBAL_SUPERVISOR_CHANNEL",
         "schema": SCHEMA_ID,
@@ -481,6 +501,7 @@ def bridge_status(conn, mission_id, now_fn):
         "transport": target_transport,
         "automatic_local_to_saas_hop": browser_ready,
         "operator_mediation_required": not browser_ready,
+        "secure_mcp_ready": secure_mcp_ready,
         "mediator": mediator,
         "cryptographic_provider_attestation": False,
         "authority_effect": "NONE",

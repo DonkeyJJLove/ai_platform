@@ -1,37 +1,287 @@
 "use strict";
-const fs=require("fs"), path=require("path"), http=require("http"), crypto=require("crypto");
-const {Builder,By,Key,until}=require("selenium-webdriver");
-const firefox=require("selenium-webdriver/firefox");
-const IPC=path.resolve(process.env.LION_FIREFOX_MEDIATOR_IPC || "\\\\wsl.localhost\\LION-AUTH-LAB\\var\\lib\\sentinelx\\uploads\\lion-mission-control-v3\\firefox-mediator-ipc");
-const PROFILE=path.resolve(process.env.LION_FIREFOX_PROFILE || "C:\\Users\\d2j3\\Documents\\Codex\\2026-09-13\\r10-r2-unified\\runtime\\firefox-mediator-profile");
-const FIREFOX=process.env.LION_FIREFOX_BINARY || "C:\\Program Files\\Firefox Developer Edition\\firefox.exe";
-const EXPECTED_PROJECT=process.env.LION_FIREFOX_PROJECT || "LION_EVOLUSION";
-const EXPECTED_CHAT=process.env.LION_FIREFOX_CHAT || "[LION MEDIATOR] SaaS Control Channel";
-const TRANSPORT="CHATGPT_FIREFOX_PROJECT_MEDIATED";
-const MEDIATOR_ID="LION_FIREFOX_MEDIATOR_R1";
-const dirs={inbox:path.join(IPC,"inbox"),outbox:path.join(IPC,"outbox"),journal:path.join(IPC,"journal"),receipts:path.join(IPC,"receipts")};
-for(const d of [IPC,PROFILE,...Object.values(dirs)])fs.mkdirSync(d,{recursive:true});
-function atomicJson(file,value){const tmp=file+".tmp";fs.writeFileSync(tmp,JSON.stringify(value,null,2),"utf8");fs.renameSync(tmp,file)}
-function readJson(file,def=null){try{return JSON.parse(fs.readFileSync(file,"utf8"))}catch{return def}}
-function status(state,extra={}){atomicJson(path.join(IPC,"mediator-status.json"),{mediator_id:MEDIATOR_ID,transport:TRANSPORT,state,project_title:extra.project_title??null,chat_title:extra.chat_title??null,browser:"Firefox Developer Edition",authority_effect:"NONE",observed_at:new Date().toISOString(),...extra})}
-function journalFile(id){return path.join(dirs.journal,id+".json")}
-function writeJournal(id,state,extra={}){const prev=readJson(journalFile(id),{});atomicJson(journalFile(id),{...prev,request_id:id,state,updated_at:new Date().toISOString(),...extra})}
-let driver=null,binding=readJson(path.join(IPC,"binding.json"),null),relayEnabled=true;
-async function visible(elements){for(const e of elements){try{if(await e.isDisplayed())return e}catch{}}return null}
-async function findComposer(){for(const sel of ["#prompt-textarea","textarea","div[contenteditable='true'][data-lexical-editor='true']","div[contenteditable='true']"]){const e=await visible(await driver.findElements(By.css(sel)));if(e)return e}return null}
-async function assistantTexts(){let rows=[];for(const sel of ["[data-message-author-role='assistant']","article[data-testid^='conversation-turn']"]){for(const e of await driver.findElements(By.css(sel))){try{if(await e.isDisplayed()){const t=(await e.getText()).trim();if(t)rows.push(t)}}catch{}}if(rows.length)break}return rows}
-async function userTexts(){let rows=[];for(const e of await driver.findElements(By.css("[data-message-author-role='user']"))){try{if(await e.isDisplayed()){const t=(await e.getText()).trim();if(t)rows.push(t)}}catch{}}return rows}
-async function bodyText(){try{return await driver.findElement(By.css("body")).getText()}catch{return ""}}
-async function currentIdentity(){return {url:await driver.getCurrentUrl(),title:await driver.getTitle(),body:await bodyText(),composer:!!(await findComposer())}}
-function chatIdentityVerified(id){return !!id && id.body.includes(EXPECTED_PROJECT) && (id.body.includes(EXPECTED_CHAT)||String(id.title||"").includes(EXPECTED_CHAT))}
-async function ensureDriver(){if(driver)return;status("STARTING");let opts=new firefox.Options().setBinary(FIREFOX);opts.addArguments("-profile",PROFILE,"-no-remote");driver=await new Builder().forBrowser("firefox").setFirefoxOptions(opts).build();await driver.manage().setTimeouts({implicit:0,pageLoad:60000,script:30000});if(binding?.chat_url)await driver.get(binding.chat_url);else await driver.get("https://chatgpt.com/");}
-async function updateHumanState(){const id=await currentIdentity();if(!id.composer){status("LOGIN_REQUIRED",{current_url:id.url});return false}if(!binding){status("PROJECT_BINDING_REQUIRED",{current_url:id.url});return false}if(!id.url.startsWith(binding.chat_url.split("?")[0])){try{await driver.get(binding.chat_url)}catch{};return false}const current=await currentIdentity();if(!chatIdentityVerified(current)){status("DEGRADED",{reason:"PROJECT_OR_CHAT_IDENTITY_MISMATCH",current_url:current.url});return false}status("READY",{project_title:binding.project_title,chat_title:binding.chat_title,current_url:current.url});return true}
-async function processWork(file){const work=readJson(file);if(!work||work.transport!==TRANSPORT||!relayEnabled)return;const id=work.request_id,j=readJson(journalFile(id),{});if(j.state==="OUTBOX_WRITTEN")return;await driver.get(binding.chat_url);const beforeNow=await assistantTexts();const beforeCount=Number.isInteger(j.before_assistant_count)?j.before_assistant_count:beforeNow.length;writeJournal(id,j.state||"CLAIMED",{question_digest:work.question_digest,claim_generation:work.claim_generation,before_assistant_count:beforeCount});
- if(["SEND_TRIGGERED","USER_MESSAGE_OBSERVED","ASSISTANT_MESSAGE_OBSERVED"].includes(j.state)){/* recovery: never resend */}
- else {const comp=await findComposer();if(!comp)throw new Error("COMPOSER_NOT_FOUND");writeJournal(id,"NAVIGATED",{before_assistant_count:beforeCount});await comp.click();try{await comp.sendKeys(Key.CONTROL,"a",Key.BACK_SPACE)}catch{};await comp.sendKeys(work.question);writeJournal(id,"COMPOSER_WRITTEN");let sent=false;for(const sel of ["button[data-testid='send-button']","button[aria-label*='Send']","button[aria-label*='Wyślij']"]){const b=await visible(await driver.findElements(By.css(sel)));if(b){await b.click();sent=true;break}}if(!sent)await comp.sendKeys(Key.ENTER);writeJournal(id,"SEND_TRIGGERED");}
- const deadline=Date.now()+180000;let answer="",stable="",stableSince=0;while(Date.now()<deadline){const users=await userTexts();if(users.some(x=>x.includes(work.question.slice(0,Math.min(80,work.question.length)))))writeJournal(id,"USER_MESSAGE_OBSERVED");const after=await assistantTexts();if(after.length>beforeCount){const candidate=after[after.length-1].trim();if(candidate&&candidate===stable){if(!stableSince)stableSince=Date.now();if(Date.now()-stableSince>1800){answer=candidate;break}}else{stable=candidate;stableSince=Date.now()}}await new Promise(r=>setTimeout(r,500))}if(!answer)throw new Error("ASSISTANT_RESPONSE_TIMEOUT");writeJournal(id,"ASSISTANT_MESSAGE_OBSERVED",{response_sha256:crypto.createHash("sha256").update(answer).digest("hex")});atomicJson(path.join(dirs.outbox,id+".json"),{request_id:id,claim_generation:work.claim_generation,answer,model_identity:"ChatGPT UI / project "+binding.project_title,transport:TRANSPORT,authority_effect:"NONE"});writeJournal(id,"OUTBOX_WRITTEN");}
-async function tick(){await ensureDriver();if(!(await updateHumanState()))return;if(!relayEnabled)return;const files=fs.readdirSync(dirs.inbox).filter(x=>x.endsWith(".json")).sort();for(const name of files){await processWork(path.join(dirs.inbox,name));break}}
-const server=http.createServer(async(req,res)=>{res.setHeader("Access-Control-Allow-Origin","http://127.0.0.1:8780");res.setHeader("Access-Control-Allow-Headers","content-type");res.setHeader("Access-Control-Allow-Methods","GET,POST,OPTIONS");if(req.method==="OPTIONS"){res.writeHead(204);return res.end()}if(req.url==="/status"){res.setHeader("content-type","application/json");return res.end(JSON.stringify(readJson(path.join(IPC,"mediator-status.json"),{})))}if(req.method==="POST"&&req.url==="/control/open"){await ensureDriver();res.setHeader("content-type","application/json");return res.end(JSON.stringify({ok:true,status:readJson(path.join(IPC,"mediator-status.json"),{})}))}if(req.method==="POST"&&req.url==="/control/pin-current"){await ensureDriver();const id=await currentIdentity();let u;try{u=new URL(id.url)}catch{};if(!id.composer||!chatIdentityVerified(id)||!u||u.hostname!=="chatgpt.com"||!u.pathname.includes("/c/")){res.writeHead(409);return res.end(JSON.stringify({error:"exact project/chat/composer not verified"}))}binding={project_title:EXPECTED_PROJECT,chat_title:EXPECTED_CHAT,project_url:id.url,chat_url:id.url,bound_at:new Date().toISOString()};atomicJson(path.join(IPC,"binding.json"),binding);status("READY",{project_title:EXPECTED_PROJECT,chat_title:EXPECTED_CHAT,current_url:id.url});return res.end(JSON.stringify({ok:true,binding}))}if(req.method==="POST"&&req.url==="/control/relay/on"){relayEnabled=true;return res.end('{"ok":true}')}if(req.method==="POST"&&req.url==="/control/relay/off"){relayEnabled=false;return res.end('{"ok":true}')}res.writeHead(404);res.end('{"error":"not found"}')});
-server.listen(8790,"127.0.0.1",()=>console.log("LION_FIREFOX_MEDIATOR_MANAGER 127.0.0.1:8790"));
-(async()=>{while(true){try{await tick()}catch(e){status("DEGRADED",{reason:String(e.message||e).slice(0,300)});console.error(new Date().toISOString(),e)}await new Promise(r=>setTimeout(r,700))}})();
-process.on("SIGINT",async()=>{status("STOPPED");try{if(driver)await driver.quit()}finally{process.exit(0)}});
+
+const fs = require("fs");
+const path = require("path");
+const http = require("http");
+const crypto = require("crypto");
+const { spawn } = require("child_process");
+
+const HERE = __dirname;
+const HOST = process.env.LION_FIREFOX_MANAGER_HOST || "127.0.0.1";
+const PORT = Number(process.env.LION_FIREFOX_MANAGER_PORT || "8790");
+const IPC =
+  process.env.LION_FIREFOX_MEDIATOR_IPC ||
+  "\\\\wsl.localhost\\LION-AUTH-LAB\\var\\lib\\sentinelx\\uploads\\lion-mission-control-v3\\firefox-mediator-ipc";
+const PROJECT_HOME_URL =
+  process.env.LION_FIREFOX_PROJECT_HOME_URL ||
+  "https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/project";
+const PROJECT_TITLE = process.env.LION_FIREFOX_PROJECT || "LION_EVOLUSION";
+const POWERSHELL =
+  process.env.LION_POWERSHELL ||
+  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
+const WORKER_SCRIPT =
+  process.env.LION_UIA_MEDIATOR_SCRIPT ||
+  path.resolve(HERE, "..", "firefox-mediator-app-open-session", "open_session_mediator.ps1");
+
+const STATUS_FILE = path.join(IPC, "mediator-status.json");
+const THREADS_DIR = path.join(IPC, "mission-threads");
+const WORKER_STDOUT = path.join(HERE, "uia-worker.stdout.log");
+const WORKER_STDERR = path.join(HERE, "uia-worker.stderr.log");
+const THREAD_POLICY = "ONE_CHAT_PER_MISSION_WITH_TERMINAL_ROLLOVER";
+
+let child = null;
+let shuttingDown = false;
+let restartTimer = null;
+
+function now() {
+  return new Date().toISOString();
+}
+
+function safeJsonFile(file, def = null) {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8").replace(/^\uFEFF/, ""));
+  } catch {
+    return def;
+  }
+}
+
+function atomicJson(file, value) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = file + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(value, null, 2), "utf8");
+  fs.renameSync(tmp, file);
+}
+
+function missionKey(payload) {
+  const mission = String(payload?.mission_id || "").trim();
+  if (mission) return "mission:" + mission;
+  const st = String(payload?.scope_type || "").trim();
+  const si = String(payload?.scope_id || "").trim();
+  if (st && si) return "scope:" + st + ":" + si;
+  const thread = String(payload?.thread_id || "").trim();
+  if (thread) return "lion-thread:" + thread;
+  return null;
+}
+
+function missionStatePath(payload) {
+  const key = missionKey(payload);
+  if (!key) return null;
+  const digest = crypto.createHash("sha256").update(key).digest("hex");
+  return path.join(THREADS_DIR, digest + ".json");
+}
+
+function listThreads() {
+  try {
+    if (!fs.existsSync(THREADS_DIR)) return [];
+    return fs
+      .readdirSync(THREADS_DIR)
+      .filter((x) => x.endsWith(".json"))
+      .sort()
+      .map((name) => safeJsonFile(path.join(THREADS_DIR, name), null))
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function startWorker() {
+  if (shuttingDown || child) return;
+  fs.mkdirSync(HERE, { recursive: true });
+  const out = fs.openSync(WORKER_STDOUT, "a");
+  const err = fs.openSync(WORKER_STDERR, "a");
+
+  child = spawn(
+    POWERSHELL,
+    [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      WORKER_SCRIPT,
+      "-Ipc",
+      IPC,
+      "-ProjectHomeUrl",
+      PROJECT_HOME_URL,
+      "-ProjectTitle",
+      PROJECT_TITLE,
+    ],
+    {
+      windowsHide: true,
+      detached: false,
+      stdio: ["ignore", out, err],
+    }
+  );
+
+  const pid = child.pid;
+  child.once("exit", (code, signal) => {
+    child = null;
+    if (!shuttingDown) {
+      restartTimer = setTimeout(() => {
+        restartTimer = null;
+        startWorker();
+      }, 1000);
+    }
+  });
+  child.once("error", () => {
+    child = null;
+    if (!shuttingDown && !restartTimer) {
+      restartTimer = setTimeout(() => {
+        restartTimer = null;
+        startWorker();
+      }, 1000);
+    }
+  });
+  return pid;
+}
+
+function stopWorker() {
+  if (restartTimer) {
+    clearTimeout(restartTimer);
+    restartTimer = null;
+  }
+  const c = child;
+  child = null;
+  if (c) {
+    try {
+      c.kill();
+    } catch {}
+  }
+}
+
+function json(res, status, value) {
+  const body = JSON.stringify(value);
+  res.writeHead(status, {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": Buffer.byteLength(body),
+    "cache-control": "no-store",
+  });
+  res.end(body);
+}
+
+async function readBody(req) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  if (!chunks.length) return {};
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    return {};
+  }
+}
+
+async function route(req, res) {
+  const u = new URL(req.url, `http://${HOST}:${PORT}`);
+
+  if (req.method === "GET" && u.pathname === "/health") {
+    return json(res, 200, {
+      ok: true,
+      service: "lion-firefox-uia-node-manager",
+      node_pid: process.pid,
+      worker_pid: child?.pid || null,
+      worker_alive: !!child,
+      project: PROJECT_TITLE,
+      thread_policy: THREAD_POLICY,
+    });
+  }
+
+  if (req.method === "GET" && u.pathname === "/status") {
+    return json(res, 200, {
+      manager: {
+        node_pid: process.pid,
+        worker_pid: child?.pid || null,
+        worker_alive: !!child,
+        worker_script: WORKER_SCRIPT,
+        project: PROJECT_TITLE,
+        thread_policy: THREAD_POLICY,
+        observed_at: now(),
+      },
+      mediator: safeJsonFile(STATUS_FILE, {}),
+    });
+  }
+
+  if (req.method === "GET" && u.pathname === "/threads") {
+    return json(res, 200, {
+      schema: "lion.firefox-mediator.thread-index/v3",
+      thread_policy: THREAD_POLICY,
+      missions: listThreads(),
+    });
+  }
+
+  if (req.method === "POST" && u.pathname === "/control/open") {
+    if (!child) startWorker();
+    return json(res, 200, {
+      ok: true,
+      worker_pid: child?.pid || null,
+      mediator: safeJsonFile(STATUS_FILE, {}),
+    });
+  }
+
+  if (req.method === "POST" && u.pathname === "/control/worker/restart") {
+    stopWorker();
+    const pid = startWorker();
+    return json(res, 200, { ok: true, worker_pid: pid || child?.pid || null });
+  }
+
+  if (req.method === "POST" && u.pathname === "/control/rollover") {
+    const payload = await readBody(req);
+    const file = missionStatePath(payload);
+    if (!file) return json(res, 400, { error: "mission identity required" });
+    const state = safeJsonFile(file, null);
+    if (!state) return json(res, 404, { error: "mission thread not found" });
+
+    const generation = Number(state.generation || 0);
+    for (const t of Array.isArray(state.threads) ? state.threads : []) {
+      if (Number(t.generation || 0) === generation && t.state === "ACTIVE") {
+        t.state = "CLOSED";
+        t.close_reason = "OPERATOR_REQUESTED_ROLLOVER";
+        t.closed_at = now();
+        t.updated_at = t.closed_at;
+      }
+    }
+    state.active_conversation_url = null;
+    state.state = "ROLLOVER_REQUIRED";
+    state.updated_at = now();
+    atomicJson(file, state);
+    return json(res, 200, {
+      ok: true,
+      mission_key: state.mission_key,
+      generation,
+      next_request_creates_successor: true,
+    });
+  }
+
+  return json(res, 404, { error: "not_found" });
+}
+
+startWorker();
+
+const server = http.createServer((req, res) => {
+  route(req, res).catch((err) =>
+    json(res, 500, { error: "internal_error", detail: String(err?.message || err) })
+  );
+});
+
+server.listen(PORT, HOST, () => {
+  console.log(
+    JSON.stringify({
+      event: "lion.firefox-uia-node-manager.started",
+      at: now(),
+      host: HOST,
+      port: PORT,
+      node_pid: process.pid,
+      worker_pid: child?.pid || null,
+      project: PROJECT_TITLE,
+      thread_policy: THREAD_POLICY,
+    })
+  );
+});
+
+async function shutdown() {
+  shuttingDown = true;
+  stopWorker();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 1500).unref();
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

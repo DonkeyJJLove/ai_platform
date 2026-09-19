@@ -1,0 +1,13 @@
+{
+  "schema": "lion.t03-workspace-boundary/v1",
+  "task_id": "LION-E4-T03-EXPOSE-ISOLATED-RW-WORKSPACE-R1",
+  "candidate_path": "/srv/lion-e4-candidate-r1",
+  "candidate_access": "rw",
+  "source_path": "/opt/lion/operator-intervention-r1",
+  "source_access": "r",
+  "base_head": "cd734adc9d457702fb418b36a59f4607f147ce44",
+  "base_tree": "947c1af8e90cdc8fce054c21a8255b6e2222fc43",
+  "push": "DISABLED",
+  "authority_effect": "BOUNDED_REPOSITORY_CANDIDATE_ONLY",
+  "runtime_effect": "NONE"
+}

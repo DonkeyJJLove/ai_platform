@@ -10,7 +10,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from dataclasses import dataclass
-import argparse,hashlib,json,os,threading,time,urllib.request,urllib.error,uuid,sqlite3,re,sys,inspect
+import argparse,hashlib,json,os,threading,time,urllib.request,urllib.error,urllib.parse,uuid,sqlite3,re,sys,inspect
 from datetime import datetime,timezone
 from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway,UI
 from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
@@ -28,6 +28,13 @@ DRONE_ROLES={
 
 def canon(v):return json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False,default=str).encode('utf-8')
 def digest(v):return hashlib.sha256(canon(v)).hexdigest()
+def _assignment_lease_valid(assignment,observed_at):
+    expires=(assignment or {}).get('lease_expires_at') if isinstance(assignment,dict) else None
+    if not expires:return False
+    now_dt=datetime.fromisoformat(str(observed_at).replace('Z','+00:00'));exp_dt=datetime.fromisoformat(str(expires).replace('Z','+00:00'))
+    if now_dt.tzinfo is None:now_dt=now_dt.replace(tzinfo=timezone.utc)
+    if exp_dt.tzinfo is None:exp_dt=exp_dt.replace(tzinfo=timezone.utc)
+    return now_dt<exp_dt
 def atomic_json(path,value):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True);tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(value,sort_keys=True,ensure_ascii=False),encoding='utf-8');os.replace(tmp,path)
 def _json_request(url,*,body=None,timeout=8):
@@ -40,6 +47,7 @@ def _json_request(url,*,body=None,timeout=8):
 class ThreadStore:
     """Persistent local conversation store. Not exposed as model authority."""
     ID_RE=re.compile(r"^[0-9a-f]{32}$")
+    BUS_TARGET_RE=re.compile(r"^(?:mission|drone|swarm|group|operator):[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$")
     def __init__(self,path):
         self.path=Path(path).resolve();self.path.parent.mkdir(parents=True,exist_ok=True);self.lock=threading.RLock();self._init()
     def _conn(self):
@@ -49,6 +57,7 @@ class ThreadStore:
             c=self._conn();c.executescript("""
             CREATE TABLE IF NOT EXISTS threads(thread_id TEXT PRIMARY KEY,title TEXT NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL);
             CREATE TABLE IF NOT EXISTS messages(message_id TEXT PRIMARY KEY,thread_id TEXT NOT NULL,seq INTEGER NOT NULL,role TEXT NOT NULL,content TEXT NOT NULL,created_at REAL NOT NULL,meta_json TEXT NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE,UNIQUE(thread_id,seq));
+            CREATE TABLE IF NOT EXISTS thread_bindings(thread_id TEXT PRIMARY KEY,mission_id TEXT,target TEXT NOT NULL,channel TEXT NOT NULL,binding_revision INTEGER NOT NULL,binding_state TEXT NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE);
             CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_thread_seq ON messages(thread_id,seq);
             """);c.commit();ui_runtime_events.migrate(c);c.close()
@@ -63,9 +72,12 @@ class ThreadStore:
                 if op=='ui_runtime_event':
                     return ui_runtime_events.record(c,args)
                 if op=='list':
-                    rows=[dict(x) for x in c.execute('SELECT thread_id,title,created_at,updated_at FROM threads ORDER BY updated_at DESC LIMIT 500')];return {'threads':rows}
+                    rows=[]
+                    for x in c.execute('SELECT t.thread_id,t.title,t.created_at,t.updated_at,b.mission_id,b.target,b.channel,b.binding_revision,b.binding_state FROM threads t LEFT JOIN thread_bindings b ON b.thread_id=t.thread_id ORDER BY t.created_at DESC LIMIT 500'):
+                        d=dict(x);d['context']={'mission_id':d.pop('mission_id'),'target':d.pop('target'),'channel':d.pop('channel'),'binding_revision':d.pop('binding_revision'),'binding_state':d.pop('binding_state')} if d.get('channel') else None;rows.append(d)
+                    return {'threads':rows}
                 if op=='create':
-                    tid=uuid.uuid4().hex;title=str(args.get('title') or 'Nowa rozmowa').strip()[:120] or 'Nowa rozmowa';t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t));c.commit();return {'thread_id':tid,'title':title,'created_at':t,'updated_at':t,'messages':[]}
+                    tid=uuid.uuid4().hex;title=str(args.get('title') or 'Nowa rozmowa').strip()[:120] or 'Nowa rozmowa';t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t));c.commit();return {'thread_id':tid,'title':title,'created_at':t,'updated_at':t,'messages':[],'context':None}
                 if op=='saas_delivery_candidates':
                     result=[]
                     for row in c.execute("SELECT thread_id,meta_json FROM messages ORDER BY created_at DESC"):
@@ -94,7 +106,19 @@ class ThreadStore:
                     msgs=[]
                     for m in c.execute('SELECT message_id,seq,role,content,created_at,meta_json FROM messages WHERE thread_id=? ORDER BY seq',(tid,)):
                         d=dict(m);d['meta']=json.loads(d.pop('meta_json') or '{}');msgs.append(d)
-                    return {**dict(row),'messages':msgs}
+                    binding=c.execute('SELECT mission_id,target,channel,binding_revision,binding_state,created_at,updated_at FROM thread_bindings WHERE thread_id=?',(tid,)).fetchone()
+                    return {**dict(row),'messages':msgs,'context':dict(binding) if binding else None}
+                if op=='bind':
+                    if c.execute('SELECT 1 FROM threads WHERE thread_id=?',(tid,)).fetchone() is None:raise KeyError('thread not found')
+                    mid=str(args.get('mission_id') or '').strip();target=str(args.get('target') or ('mission:'+mid)).strip()
+                    if not mid or len(mid)>128 or not self.BUS_TARGET_RE.fullmatch(target):raise ValueError('thread binding')
+                    if target.startswith('mission:') and target!='mission:'+mid:raise ValueError('thread target mission mismatch')
+                    prior=c.execute('SELECT binding_revision FROM thread_bindings WHERE thread_id=?',(tid,)).fetchone();revision=int(prior['binding_revision'] if prior else 0)+1;t=time.time()
+                    c.execute("INSERT INTO thread_bindings(thread_id,mission_id,target,channel,binding_revision,binding_state,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(thread_id) DO UPDATE SET mission_id=excluded.mission_id,target=excluded.target,channel=excluded.channel,binding_revision=excluded.binding_revision,binding_state=excluded.binding_state,updated_at=excluded.updated_at",(tid,mid,target,'LION_BUS',revision,'MISSION_BOUND',t,t));c.commit();return {'thread_id':tid,'mission_id':mid,'target':target,'channel':'LION_BUS','binding_revision':revision,'binding_state':'MISSION_BOUND'}
+                if op=='unbind':
+                    if c.execute('SELECT 1 FROM threads WHERE thread_id=?',(tid,)).fetchone() is None:raise KeyError('thread not found')
+                    prior=c.execute('SELECT binding_revision FROM thread_bindings WHERE thread_id=?',(tid,)).fetchone();revision=int(prior['binding_revision'] if prior else 0)+1;t=time.time()
+                    c.execute("INSERT INTO thread_bindings(thread_id,mission_id,target,channel,binding_revision,binding_state,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(thread_id) DO UPDATE SET mission_id=NULL,target='',channel=excluded.channel,binding_revision=excluded.binding_revision,binding_state=excluded.binding_state,updated_at=excluded.updated_at",(tid,None,'','LION_BUS',revision,'MISSION_UNBOUND',t,t));c.commit();return {'thread_id':tid,'mission_id':None,'target':'','channel':'LION_BUS','binding_revision':revision,'binding_state':'MISSION_UNBOUND'}
                 if op=='rename':
                     title=str(args.get('title') or '').strip()[:120]
                     if not title:raise ValueError('title')
@@ -276,6 +300,22 @@ class LpclControlBridge:
             return self._post('/api/v3/local/assignments/claim',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id')})
         if op=='local_assignment_receipt':
             return self._post('/api/v3/local/assignments/receipt',{'assignment_id':args.get('assignment_id'),'material_drone_id':args.get('material_drone_id'),'lease_generation':args.get('lease_generation'),'status':args.get('status'),'result':args.get('result'),'effect_receipt_digest':args.get('effect_receipt_digest'),'authority_effect':'NONE'})
+        if op=='model_call_intent':
+            return self._post('/api/v3/model-calls',args)
+        if op=='model_call_transition':
+            model_call_id=args.get('model_call_id');payload={k:v for k,v in args.items() if k!='model_call_id'}
+            if not isinstance(model_call_id,str) or not self.MID_RE.fullmatch(model_call_id):raise ValueError('model_call_id')
+            return self._post('/api/v3/model-calls/'+model_call_id+'/transition',payload)
+        if op=='model_call_get':
+            model_call_id=args.get('model_call_id')
+            if not isinstance(model_call_id,str) or not self.MID_RE.fullmatch(model_call_id):raise ValueError('model_call_id')
+            return self._get('/api/v3/model-calls/'+model_call_id)
+        if op=='model_call_list':
+            q=[]
+            if isinstance(args.get('mission_id'),str):q.append(('mission_id',args['mission_id']))
+            if isinstance(args.get('assignment_id'),str):q.append(('assignment_id',args['assignment_id']))
+            q.append(('limit',str(int(args.get('limit',200)))))
+            return self._get('/api/v3/model-calls?'+urllib.parse.urlencode(q))
         if op=='process':
             mid=args.get('mission_id')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid):raise ValueError('mission_id')
@@ -309,6 +349,62 @@ class LpclControlBridge:
                 body['pod_name']=pod
             return self._post('/api/v3/missions/current/actions',body,timeout=240)
         raise ValueError('control operation denied')
+
+def _read_operator_local_secret(path):
+    p=Path(path).resolve();raw=p.read_bytes()
+    if os.name!='nt' or p.suffix.lower()!='.dpapi':
+        value=raw.decode('utf-8').strip()
+        if len(value)<64:raise ValueError('operator local secret malformed')
+        return value
+    import ctypes
+    from ctypes import wintypes
+    class DATA_BLOB(ctypes.Structure):
+        _fields_=[('cbData',wintypes.DWORD),('pbData',ctypes.POINTER(ctypes.c_byte))]
+    buf=ctypes.create_string_buffer(raw);src=DATA_BLOB(len(raw),ctypes.cast(buf,ctypes.POINTER(ctypes.c_byte)));dst=DATA_BLOB()
+    crypt32=ctypes.windll.crypt32;kernel32=ctypes.windll.kernel32
+    if not crypt32.CryptUnprotectData(ctypes.byref(src),None,None,None,None,0,ctypes.byref(dst)):
+        raise OSError(ctypes.get_last_error(),'DPAPI CryptUnprotectData failed')
+    try:value=ctypes.string_at(dst.pbData,dst.cbData).decode('utf-8').strip()
+    finally:kernel32.LocalFree(dst.pbData)
+    if len(value)<64:raise ValueError('operator local secret malformed')
+    return value
+
+
+class OperatorControlBridge:
+    """Bounded 8780 transport proxy; human authority requires a gateway session."""
+    def __init__(self,base,key_file,pairing_file=None):
+        self.base=str(base).rstrip('/');self.key=_read_operator_local_secret(key_file);self.pairing_file=str(pairing_file) if pairing_file else None
+        if len(self.key)<64:raise ValueError('operator panel proxy key unavailable')
+    def _request(self,path,body=None,timeout=8,session_token=None):
+        data=None;headers={'Accept':'application/json','User-Agent':'LION-8780-Operator-Proxy/1','X-LION-Panel-Proxy-Key':self.key};method='GET'
+        if session_token:headers['X-LION-Operator-Session']=session_token
+        if body is not None:data=json.dumps(body,ensure_ascii=False,separators=(',',':')).encode();headers['Content-Type']='application/json';method='POST'
+        req=urllib.request.Request(self.base+path,data=data,headers=headers,method=method)
+        try:
+            with urllib.request.urlopen(req,timeout=timeout) as res:return json.load(res)
+        except urllib.error.HTTPError as error:
+            try:detail=json.loads(error.read(4096)).get('error','operator gateway rejected')
+            except Exception:detail='operator gateway rejected'
+            raise ValueError('Operator Control '+str(error.code)+': '+str(detail)[:600]) from error
+    def __call__(self,op,args):
+        args=dict(args or {})
+        if op=='pair':
+            pairing_code=args.get('pairing_code') or (_read_operator_local_secret(self.pairing_file) if self.pairing_file else None)
+            if not pairing_code:raise ValueError('operator pairing code unavailable')
+            return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+        if op=='session':return self._request('/v1/session',session_token=args.get('session_token'))
+        if op=='unpair':return self._request('/v1/session/revoke',{},10,session_token=args.get('session_token'))
+        if op=='state':
+            mid=args.get('mission_id');return self._request('/v1/state?'+urllib.parse.urlencode({'mission_id':mid}),session_token=args.get('session_token'))
+        if op=='participants':return self._request('/v1/participants',session_token=args.get('session_token'))
+        if op=='events':
+            return self._request('/v1/events?'+urllib.parse.urlencode({'mission_id':args.get('mission_id'),'after':int(args.get('after',0)),'limit':int(args.get('limit',200))}),session_token=args.get('session_token'))
+        session_token=args.pop('__session_token',None)
+        if op=='command':return self._request('/v1/commands',args,15,session_token=session_token)
+        if op=='command_status':return self._request('/v1/commands/'+urllib.parse.quote(str(args.get('command_id')),safe=''),session_token=session_token)
+        if op=='ack':return self._request('/v1/events/ack',args,session_token=session_token)
+        raise ValueError('operator operation denied')
+
 
 class MaterialDroneBroker:
     def __init__(self,runtime_dir):
@@ -417,22 +513,60 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
         aid=row.get('assignment_id')
         try:claimed=control('local_assignment_claim',{'assignment_id':aid,'material_drone_id':material_drone_id})
         except Exception:continue
+        model_call_id=None;model_state=None
         try:
             payload=json.loads(claimed.get('input_json') or '{}')
             if payload.get('kind')!='LOCAL_MODEL_INFERENCE':raise ValueError('unsupported local assignment kind')
             messages=payload.get('messages')
             if not isinstance(messages,list) or not messages:raise ValueError('local assignment messages')
+            messages=[dict(m) for m in messages if isinstance(m,dict) and m.get('role') in {'system','user','assistant'} and isinstance(m.get('content'),str)]
+            op_context=claimed.get('operator_context') or {};op_plan=claimed.get('operator_plan') or {};op_messages=claimed.get('operator_messages') or []
+            operator_parts=[]
+            if op_context.get('content') is not None:operator_parts.append('CONTEXT REVISION '+str(op_context.get('revision'))+': '+json.dumps(op_context.get('content'),ensure_ascii=False,sort_keys=True))
+            if op_plan.get('content') is not None:operator_parts.append('PLAN REVISION '+str(op_plan.get('revision'))+': '+json.dumps(op_plan.get('content'),ensure_ascii=False,sort_keys=True))
+            for item in op_messages[:64]:
+                if isinstance(item,dict) and isinstance(item.get('content'),str):operator_parts.append('MESSAGE '+str(item.get('message_id'))+' -> '+str(item.get('target'))+': '+item['content'])
+            if operator_parts:
+                operator_guidance='Authenticated OPERATOR_PRIMARY mission guidance follows. It may change reasoning/context inside the already authorized mission scope, but it is not shell/tool authority and must not be reinterpreted as permission for external effects.'+chr(10)+chr(10).join(operator_parts)
+                messages=[{'role':'system','content':operator_guidance}]+messages
             max_tokens=int(payload.get('max_tokens') or 384)
             if not 1<=max_tokens<=2048:raise ValueError('local assignment max_tokens')
-            answer=str(modelprov(messages,max_tokens)).strip()
-            if not answer:raise ValueError('empty local model result')
-            result={'kind':'LOCAL_MODEL_INFERENCE','model':'gpt-oss-20b-MXFP4','response_text':answer,'response_digest':hashlib.sha256(answer.encode('utf-8')).hexdigest(),'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'authority_effect':'NONE'}
+            observed=datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
+            if not _assignment_lease_valid(claimed,observed):raise ValueError('local assignment lease expired before effect')
+            provider='LION_LOCAL_MODEL';declared_model='gpt-oss-20b-MXFP4';transport='LOCAL'
+            candidate_set_digest=digest({'candidates':[{'provider':provider,'model':declared_model,'transport':transport}]})
+            model_call_id='modelcall-'+hashlib.sha256(canon({'assignment_id':aid,'lease_generation':claimed.get('lease_generation'),'provider':provider,'transport':transport})).hexdigest()[:32]
+            revisions=[int(op_context.get('revision') or 0),int(op_plan.get('revision') or 0)]
+            revisions.extend(int(m.get('context_revision') or 0) for m in op_messages if isinstance(m,dict))
+            context_revision=max(revisions or [0])
+            intent={'model_call_id':model_call_id,'mission_id':claimed.get('mission_id'),'phase_id':claimed.get('phase_id'),'task_id':str(payload.get('task_id') or ('assignment:'+str(aid))),'assignment_id':aid,'logical_drone_id':claimed.get('logical_drone_id'),'material_worker_id':claimed.get('material_drone_id'),'requested_capability':str(payload.get('model_capability') or 'LOCAL_MODEL_INFERENCE'),'provider':provider,'model_requested':str(payload.get('model') or declared_model),'model_declared':None,'model_attested':None,'transport':transport,'selection_reason':'LOCAL_ASSIGNMENT_BOUND_TO_MATERIAL_WORKER','candidate_set_digest':candidate_set_digest,'context_revision':context_revision,'input_digest':digest(messages),'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'}
+            control('model_call_intent',intent);model_state='INTENT_DURABLE'
+            transition_base={'result_digest':None,'model_declared':None,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'}
+            control('model_call_transition',{'model_call_id':model_call_id,'state':'SEND_ATTEMPT',**transition_base});model_state='SEND_ATTEMPT'
+            try:
+                raw_answer=modelprov(messages,max_tokens)
+            except Exception:
+                try:control('model_call_transition',{'model_call_id':model_call_id,'state':'SEND_UNKNOWN',**transition_base});model_state='SEND_UNKNOWN'
+                except Exception:pass
+                raise
+            answer=str(raw_answer).strip();answer_digest=hashlib.sha256(answer.encode('utf-8')).hexdigest()
+            control('model_call_transition',{'model_call_id':model_call_id,'state':'SEND_CONFIRMED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='SEND_CONFIRMED'
+            if not answer:
+                control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='FAILED'
+                raise ValueError('empty local model result')
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
             dual_id=payload.get('dual_request_id')
-            if dual_id:
-                control('dual_response',{'request_id':dual_id,'provider':'gpt-oss-20b-MXFP4','response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
-            return control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})
+            if dual_id:control('dual_response',{'request_id':dual_id,'provider':declared_model,'response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
+            receipt=control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})
+            control('model_call_transition',{'model_call_id':model_call_id,'state':'RESPONSE_RECONCILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='RESPONSE_RECONCILED'
+            return receipt
         except Exception as exc:
-            result={'kind':'LOCAL_MODEL_INFERENCE','error':type(exc).__name__+':'+str(exc)[:600],'authority_effect':'NONE'}
+            if model_call_id and model_state in {'INTENT_DURABLE','SEND_CONFIRMED'}:
+                try:
+                    fail_digest=hashlib.sha256((type(exc).__name__+':'+str(exc)[:600]).encode('utf-8')).hexdigest()
+                    control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':fail_digest,'model_declared':None,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'})
+                except Exception:pass
+            result={'kind':'LOCAL_MODEL_INFERENCE','model_call_id':model_call_id,'model_call_state':model_state,'error':type(exc).__name__+':'+str(exc)[:600],'authority_effect':'NONE'}
             return control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'FAIL','result':result,'effect_receipt_digest':None})
     return None
 
@@ -589,10 +723,12 @@ def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
         stop_event.wait(5)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--operator-control-url',default='http://127.0.0.1:8767');p.add_argument('--operator-key-file');p.add_argument('--operator-panel-proxy-key-file');p.add_argument('--operator-pairing-key-file');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');a=p.parse_args()
     if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
     b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
-    g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads)
+    operator_key_file=a.operator_panel_proxy_key_file or a.operator_key_file
+    operator=OperatorControlBridge(a.operator_control_url,operator_key_file,a.operator_pairing_key_file) if operator_key_file else None
+    g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads,operator_provider=operator)
     canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
     for material_id in ('MD025','MD026','MD027'):
         threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()

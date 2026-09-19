@@ -2,6 +2,7 @@ import subprocess
 import unittest
 from pathlib import Path
 from cyber_lion.architecture_projection.extractor import ArchitectureProjectionExtractor, available_projection_names
+from cyber_lion.tests.architecture_projection_candidate import clean_git_repo, staged_sources, staged_tree
 
 
 def observed_checkout_tree(repo_root: Path) -> str:
@@ -96,11 +97,11 @@ class ArchitectureProjectionExtractorTests(unittest.TestCase):
                 if node.fact_class == "CANONICAL_FACT":
                     self.assertEqual(len(node.source_digest), 64)
 
-    def test_all_ten_named_projections_build_from_exact_real_checkout_tree(self):
+    def test_all_ten_named_projections_build_from_exact_staged_candidate_tree(self):
         repo_root = Path(__file__).resolve().parents[2]
-        canonical_tree = observed_checkout_tree(repo_root)
-        extractor = ArchitectureProjectionExtractor(source_tree_sha=canonical_tree, source_root=repo_root)
-        self.assertEqual(extractor.observed_source_tree_sha, canonical_tree)
+        canonical_tree = staged_tree(repo_root)
+        extractor = ArchitectureProjectionExtractor(source_tree_sha=canonical_tree, source_files=staged_sources(repo_root))
+        self.assertIsNone(extractor.observed_source_tree_sha)
         for name in available_projection_names():
             model = extractor.named_projection(name)
             self.assertTrue(model.nodes, name)
@@ -113,11 +114,10 @@ class ArchitectureProjectionExtractorTests(unittest.TestCase):
                     self.assertEqual(len(node.source_digest), 64)
 
     def test_real_checkout_tree_mismatch_fails_closed(self):
-        repo_root = Path(__file__).resolve().parents[2]
-        actual_tree = observed_checkout_tree(repo_root)
-        mismatched_tree = ("0" * 40) if actual_tree != ("0" * 40) else ("1" * 40)
-        with self.assertRaisesRegex(ValueError, "source tree mismatch"):
-            ArchitectureProjectionExtractor(source_tree_sha=mismatched_tree, source_root=repo_root)
+        with clean_git_repo() as (repo_root, actual_tree):
+            mismatched_tree = ("0" * 40) if actual_tree != ("0" * 40) else ("1" * 40)
+            with self.assertRaisesRegex(ValueError, "source tree mismatch"):
+                ArchitectureProjectionExtractor(source_tree_sha=mismatched_tree, source_root=repo_root)
 
     def test_nonexistent_source_and_required_token_fail_closed(self):
         extractor = ArchitectureProjectionExtractor(source_tree_sha="d" * 40, source_files={"real.py": "class Real: pass\n"})

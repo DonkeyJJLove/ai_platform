@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lion.model-call/v1",
+  "title": "LION Model Call",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "model_call_id",
+    "mission_id",
+    "phase_id",
+    "task_id",
+    "assignment_id",
+    "logical_drone_id",
+    "material_worker_id",
+    "requested_capability",
+    "provider",
+    "transport",
+    "selection_reason",
+    "candidate_set_digest",
+    "context_revision",
+    "state",
+    "authority_effect"
+  ],
+  "properties": {
+    "schema": {
+      "const": "lion.model-call/v1"
+    },
+    "model_call_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mission_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "phase_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assignment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "logical_drone_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "material_worker_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "requested_capability": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_requested": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model_declared": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model_attested": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "transport": {
+      "enum": [
+        "LOCAL",
+        "CHATGPT_OPENAI_SECURE_MCP_TUNNEL",
+        "CHATGPT_FIREFOX_PROJECT_MEDIATED"
+      ]
+    },
+    "selection_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_set_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "context_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "result_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "downstream_consumer": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "state": {
+      "enum": [
+        "INTENT_DURABLE",
+        "SEND_ATTEMPT",
+        "SEND_UNKNOWN",
+        "SEND_CONFIRMED",
+        "RESPONSE_RECONCILED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "authority_effect": {
+      "const": "NONE"
+    }
+  }
+}

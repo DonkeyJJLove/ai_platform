@@ -1,0 +1,34 @@
+{
+  "schema": "lion.t03-selected-delta-manifest/v1",
+  "task_id": "LION-E4-ISOLATED-CONSOLIDATION-CANDIDATE-R1",
+  "selected": [
+    "PR359 shared operator bus as communication baseline",
+    "PR356/359 operator control and fencing semantics",
+    "PR348 lifecycle backup semantics",
+    "PR353 execution currentness separation",
+    "PR357 behavioral requirements as tests",
+    "PR358 retained UI/model-route requirements",
+    "R3 Firefox transport only as optional model capability",
+    "Model-call ledger and provenance diagnostics",
+    "Crash-safe intent/unknown/reconcile browser outbox"
+  ],
+  "deferred": [
+    "swarm PR7 dependency maintenance"
+  ],
+  "unresolved": [],
+  "authority_effect": "BOUNDED_REPOSITORY_CANDIDATE_ONLY",
+  "runtime_effect": "NONE",
+  "resolved_side_artifacts": [
+    {
+      "source": ".lion-operator-bus-panel.service",
+      "disposition": "SUPERSEDED_BY_VERSIONED_SUPERVISOR",
+      "evidence": [
+        "unit ExecStart points to tools/lion_operator_bus_panel.py, absent from source repository",
+        "selected PR359 tools/lion_control_plane_supervisor_windows.ps1 owns port 8780",
+        "selected supervisor requires lion_local_intelligence_runtime.py and LION_BUS",
+        "selected supervisor enforces PORT_8790_MUST_BE_ABSENT_IN_NORMAL_READY_PATH"
+      ],
+      "authority_effect": "NONE"
+    }
+  ]
+}

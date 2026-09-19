@@ -1,0 +1,142 @@
+{
+  "schema": "lion.t03-source-coverage/v1",
+  "task_id": "LION-E4-ISOLATED-CONSOLIDATION-CANDIDATE-R1",
+  "base": {
+    "head": "cd734adc9d457702fb418b36a59f4607f147ce44",
+    "tree": "947c1af8e90cdc8fce054c21a8255b6e2222fc43"
+  },
+  "authority_effect": "BOUNDED_REPOSITORY_CANDIDATE_ONLY",
+  "runtime_effect": "NONE",
+  "communication_owner": "PR359_SHARED_OPERATOR_BUS",
+  "control_owner": "PR356_PR359_OPERATOR_CONTROL_CORE",
+  "model_plane_owner": "T03_TYPED_MODEL_CALL_PLUS_OPTIONAL_R3_TRANSPORTS",
+  "sources": [
+    {
+      "id": "PR348",
+      "head": "478c787419ae3a0644182ff895be069243ddf521",
+      "selected": [
+        "lifecycle transactional SQLite backup",
+        "backup integrity/hash/rollback evidence",
+        "idempotent already-superseded path"
+      ],
+      "tests": [
+        "test_mission_history_lifecycle.py"
+      ],
+      "disposition": "RECONSTRUCT_SEMANTICS"
+    },
+    {
+      "id": "PR353",
+      "head": "68d377823a8f542ed1b3e86f73e698d7f22b8301",
+      "selected": [
+        "registered source != execution currentness",
+        "bounded currentness read",
+        "caller cannot substitute currentness"
+      ],
+      "tests": [
+        "test_lpcl_rebind_live_currentness.py",
+        "test_mission_control_v3_restart_package.py"
+      ],
+      "disposition": "RECONSTRUCT_SEMANTICS"
+    },
+    {
+      "id": "PR356",
+      "head": "669868c9f68ab248801d7a7c0c824234b1703b35",
+      "selected": [
+        "operator identities/grants",
+        "control_epoch fencing",
+        "pause/stop/take control",
+        "lease/stale-result semantics"
+      ],
+      "tests": [
+        "test_operator_control.py",
+        "test_operator_gateway.py",
+        "test_operator_effect_boundary.py",
+        "test_operator_worker_delivery.py",
+        "test_operator_full_sat.py"
+      ],
+      "disposition": "BEHAVIOR_OWNER_WITH_PR359_SUCCESSOR_BLOBS"
+    },
+    {
+      "id": "PR357",
+      "head": "2eea89e0dcaadac39a87c3b3a7e6c78e5b01ed70",
+      "selected": [
+        "persistent thread-mission-target binding",
+        "target isolation",
+        "idempotent client identity",
+        "correlated response replay"
+      ],
+      "tests": [
+        "test_operator_chat_extension.py"
+      ],
+      "disposition": "BEHAVIORAL_EQUIVALENCE_REQUIREMENTS_ONLY"
+    },
+    {
+      "id": "PR358",
+      "head": "3c280b497bba2536097b2d628758adb1aa86b47e",
+      "selected": [
+        "visible communication context",
+        "pairing gating",
+        "stable replay/scroll",
+        "explicit browser/model opt-in",
+        "model route diagnostics"
+      ],
+      "tests": [
+        "test_panel_channel_context_r2.py",
+        "test_windows_control_plane_supervisor_source.py"
+      ],
+      "disposition": "PARTIAL_PORT_BUS_FIRST"
+    },
+    {
+      "id": "PR359",
+      "head": "7232ff69760a5dc111f8b0ba8d6db623d308d3d7",
+      "selected": [
+        "shared operator bus",
+        "correlation_id/causation_id",
+        "thread binding",
+        "normal-ready without 8790",
+        "operator control successor"
+      ],
+      "tests": [
+        "test_lpcl_panel_operator_bus_r1.py",
+        "test_operator_bus_panel_r1.py",
+        "test_saas_session_bridge.py"
+      ],
+      "disposition": "SEMANTIC_BASELINE"
+    },
+    {
+      "id": "R3_LOCAL",
+      "head": "5bdd888c466e3e6bbb0ba713201e59be77113c06",
+      "selected": [
+        "explicit model transport pin",
+        "one project conversation per declared scope",
+        "rate-limit fail closed",
+        "irregular pacing",
+        "idle no browser touch"
+      ],
+      "tests": [
+        "test_firefox_node_mission_threads.py",
+        "test_firefox_scheduler_policy.py",
+        "test_saas_explicit_transport.py"
+      ],
+      "disposition": "OPTIONAL_MODEL_TRANSPORT_WITH_OUTBOX_REPAIR"
+    },
+    {
+      "id": "LOCAL_BUS_SERVICE",
+      "selected": [
+        ".lion-operator-bus-panel.service"
+      ],
+      "disposition": "SUPERSEDED_BY_VERSIONED_WINDOWS_SUPERVISOR; source artifact retained as evidence only"
+    },
+    {
+      "id": "SWARM7",
+      "head": "bc2a4f62a2fc2165f954567bed89f03ba2a66882",
+      "disposition": "DEFERRED_E4_SUPPLY_CHAIN_MAINTENANCE"
+    }
+  ],
+  "exclusions": [
+    "No canonical-state/truth/scan/package pin copied before non-carrier sources stabilize",
+    "No normal human communication through AUTO/LOCAL/SAAS/DUAL provider selector",
+    "No exactly-once claim for current browser send path",
+    "No live deploy/service/mission/model/browser effect"
+  ]
+}

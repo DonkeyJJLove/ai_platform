@@ -4,6 +4,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from cyber_lion.architecture_projection.full_architecture import build_full_architecture_model
+from cyber_lion.tests.architecture_projection_candidate import staged_sources, staged_tree
 from cyber_lion.architecture_projection.full_plantuml import (
     serialize_flow_atlas_plantuml,
     serialize_full_architecture_plantuml,
@@ -28,7 +29,7 @@ class FullArchitecturePlantUMLTests(unittest.TestCase):
     def _projection(self):
         repo_root = Path(__file__).resolve().parents[2]
         architecture = build_full_architecture_model(
-            source_tree_sha=observed_tree(repo_root), source_root=repo_root
+            source_tree_sha=staged_tree(repo_root), source_files=staged_sources(repo_root)
         )
         return build_visual_projection(architecture)
 
