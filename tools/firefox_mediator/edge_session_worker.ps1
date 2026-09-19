@@ -138,7 +138,7 @@ function Find-VisibleProjectDocument([System.Windows.Automation.AutomationElemen
   try {$all=Get-All $Window} catch {return $null}
   for($i=0;$i -lt $all.Count;$i++){
     $doc=$all.Item($i)
-    if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document -or $doc.Current.IsOffscreen){continue}
+    if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document){continue}
     $name=[string]$doc.Current.Name
     if($name -notlike "*$ProjectTitle*"){continue}
     try {$docAll=Get-All $doc} catch {continue}
@@ -226,7 +226,7 @@ function Ensure-Conversation([string]$Url){
     try {$all=Get-All $window} catch {continue}
     for($i=0;$i -lt $all.Count;$i++){
       $doc=$all.Item($i)
-      if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document -or $doc.Current.IsOffscreen){continue}
+      if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document){continue}
       try {$docAll=Get-All $doc} catch {continue}
       $prompt=Find-Prompt $docAll
       if($prompt){

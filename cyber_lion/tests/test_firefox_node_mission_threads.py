@@ -55,6 +55,7 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('Ensure-Minimized',t)
         self.assertIn("window_state='MINIMIZED'",t)
         self.assertIn('visible_window_count=0',t)
+        self.assertNotIn('Document -or $doc.Current.IsOffscreen',t)
 
     def test_uia_persists_one_conversation_per_mission_scope(self):
         t=self.uia
