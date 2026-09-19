@@ -255,6 +255,25 @@ async function route(req, res) {
 
 startWorker();
 
+const MANAGER_STATUS_FILE = path.join(IPC, "node-manager-status.json");
+function writeManagerStatus() {
+  try {
+    atomicJson(MANAGER_STATUS_FILE, {
+      schema: "lion.firefox-node-manager.status/v1",
+      observed_at: now(),
+      node_pid: process.pid,
+      worker_pid: child?.pid || null,
+      worker_alive: !!child,
+      project: PROJECT_TITLE,
+      thread_policy: THREAD_POLICY,
+      authority_effect: "NONE",
+    });
+  } catch {}
+}
+writeManagerStatus();
+const managerStatusTimer = setInterval(writeManagerStatus, 5000);
+managerStatusTimer.unref();
+
 const server = http.createServer((req, res) => {
   route(req, res).catch((err) =>
     json(res, 500, { error: "internal_error", detail: String(err?.message || err) })
