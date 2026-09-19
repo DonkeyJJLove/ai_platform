@@ -25,10 +25,14 @@ async function verifyProject(){
   currentUrl=page.url();
   const prompt=page.locator("#prompt-textarea");
   const ok=await prompt.count().catch(()=>0);
+  const title=await page.title().catch(()=>"");
+  const bodyText=(await page.locator("body").innerText().catch(()=>"")).slice(0,2000);
+  const challenge=/just a moment|checking your browser|verify you are human|security verification/i.test(title+"\n"+bodyText);
+  const loginSurface=/log in|sign up|zaloguj|zarejestruj/i.test(bodyText);
   authenticated=!!ok && !/auth|login/i.test(currentUrl);
   projectVerified=authenticated && currentUrl.includes("chatgpt.com/");
-  state=projectVerified?"READY":"LOGIN_REQUIRED";
-  status({current_url:currentUrl});
+  state=projectVerified?"READY":challenge?"DEGRADED":loginSurface?"LOGIN_REQUIRED":"PROJECT_BINDING_REQUIRED";
+  status({current_url:currentUrl,page_title:title,prompt_present:!!ok,cloudflare_challenge:challenge,login_surface:loginSurface});
   return projectVerified;
 }
 async function ensureConversation(w){
