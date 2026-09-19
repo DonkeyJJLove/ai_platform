@@ -51,5 +51,8 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         claim=RELAY.index('if state=="READY":claim_new',loop)
         self.assertLess(loop,claim)
         self.assertIn('if sf.exists():return',RELAY)
+        self.assertIn('queue_wakeup(a.ipc_dir',RELAY)
+        self.assertIn('wakeup_evidence(a.ipc_dir,rid)',RELAY)
+        self.assertIn('SAAS_DISPATCH_PENDING',RELAY)
 
 if __name__=="__main__":unittest.main()

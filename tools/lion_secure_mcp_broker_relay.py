@@ -93,6 +93,15 @@ def queue_wakeup(ipc,row,turn_id):
       "authority_effect":"NONE"}
     atomic(Path(ipc)/"inbox"/(row["request_id"]+".json"),work,0o644)
 
+def wakeup_evidence(ipc,rid):
+    base=Path(ipc)
+    names=(
+      base/'inbox'/(rid+'.json'),base/'outbox'/(rid+'.json'),base/'receipts'/(rid+'.json'),
+      base/'journal'/(rid+'.json'),base/'archive'/(rid+'.work.json'),base/'archive'/(rid+'.answer.json'),
+      base/'quarantine'/(rid+'.sent-no-retry.json'),base/'quarantine'/(rid+'.rate-limited-no-retry.json'),
+    )
+    return any(p.exists() for p in names)
+
 def claim_new(a,key,token,state_dir):
     pending=http(a.broker,"/api/v3/saas-broker/pending").get("requests") or []
     row=next((x for x in pending if x.get("transport")==SECURE and x.get("status") in WAITING),None)
@@ -110,11 +119,15 @@ def claim_new(a,key,token,state_dir):
       "created_at":now(),"last_observed_at":now(),"state":"SAAS_DISPATCH_PENDING",
       "claim":claim,"response_digest":None,"broker_receipt_digest":None,
       "delivery_identity":"saas:"+rid,"reconciliation_state":"OPEN"}
-    atomic(sf,rec);queue_wakeup(a,{**row,"claim_generation":claim["claim_generation"]},turn["turn_id"])
+    atomic(sf,rec);queue_wakeup(a.ipc_dir,{**row,"claim_generation":claim["claim_generation"]},turn["turn_id"])
     rec["state"]="SAAS_ACTIVE";rec["last_observed_at"]=now();atomic(sf,rec)
 
 def reconcile(a,key,token,sf,rec):
     rid=rec["request_id"];bs=http(a.broker,f"/api/v3/saas-broker/requests/{rid}")
+    if rec.get("state")=="SAAS_DISPATCH_PENDING" and rec.get("turn_id"):
+        if not wakeup_evidence(a.ipc_dir,rid):
+            queue_wakeup(a.ipc_dir,{**bs,"claim_generation":rec.get("claim_generation")},rec["turn_id"])
+        rec["state"]="SAAS_ACTIVE";rec["last_observed_at"]=now();atomic(sf,rec)
     if bs.get("status")=="RESPONDED":
         rec.update(state="BROKER_RESPONDED",broker_receipt_digest=bs.get("receipt_digest"),last_observed_at=now())
     elif rec.get("turn_id"):
