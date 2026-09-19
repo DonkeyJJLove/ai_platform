@@ -714,6 +714,46 @@ function Note-MissionTurn([object]$Work){
   return $state
 }
 
+function Note-MissionTurnByKey([string]$MissionKey,[string]$RequestId){
+  if([string]::IsNullOrWhiteSpace($MissionKey) -or [string]::IsNullOrWhiteSpace($RequestId)){return $null}
+  $path=Join-Path $MissionThreads "$((Get-Sha256Text $MissionKey)).json"
+  $state=Read-Json $path
+  if(-not $state){return $null}
+  if([string]$state.last_completed_request_id -eq $RequestId){return $state}
+  $state.total_turn_count=[int]$state.total_turn_count+1
+  $state.last_completed_request_id=$RequestId
+  $state.last_completed_at=(Get-Date).ToUniversalTime().ToString('o')
+  $gen=[int]$state.generation
+  foreach($t in @($state.threads)){
+    if([int]$t.generation -eq $gen -and [string]$t.state -eq 'ACTIVE'){
+      $t.turn_count=[int]$t.turn_count+1
+      $t.updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    }
+  }
+  $state.updated_at=(Get-Date).ToUniversalTime().ToString('o')
+  Write-AtomicJson $path $state
+  return $state
+}
+
+function Reconcile-TerminalJournals {
+  foreach($file in @(Get-ChildItem -File -Filter '*.json' $Journal)){
+    $j=Read-Json $file.FullName
+    if(-not $j -or [string]$j.state -ne 'SEND_CONFIRMED'){continue}
+    $rid=[string]$j.request_id
+    if([string]::IsNullOrWhiteSpace($rid)){continue}
+    $receipt=Read-Json (Join-Path $Receipts "$rid.json")
+    if(-not $receipt -or [string]$receipt.status -ne 'RESPONDED' -or [string]::IsNullOrWhiteSpace([string]$receipt.receipt_digest)){continue}
+    $state=Note-MissionTurnByKey ([string]$j.mission_key) $rid
+    $value=[ordered]@{}
+    foreach($p in $j.PSObject.Properties){$value[$p.Name]=$p.Value}
+    $value.state='RECEIPT_CONFIRMED'
+    $value.receipt_digest=[string]$receipt.receipt_digest
+    $value.response_source='BROKER_RECEIPT'
+    $value.updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    Write-AtomicJson $file.FullName $value
+  }
+}
+
 function Open-BoundConversation([System.Windows.Automation.AutomationElement]$Window,[string]$Url){
   $existing=Ensure-Conversation $Url
   if($existing){return $existing}
@@ -764,7 +804,7 @@ function Process-One {
   $rid=[string]$work.request_id
   $jpath=Join-Path $Journal "$rid.json"
   $j=Read-Json $jpath
-  if($j -and $j.state -eq 'OUTBOX_WRITTEN'){return}
+  if($j -and $j.state -in @('OUTBOX_WRITTEN','RECEIPT_CONFIRMED')){return}
 
   $missionKey=Get-MissionKey $work
   $missionState=Get-MissionState $work
@@ -1037,7 +1077,21 @@ function Process-One {
   }
   $deadline=(Get-Date).AddMinutes(3)
   $stable='';$stableAt=$null
+  $receiptPath=Join-Path $Receipts "$rid.json"
   while([string]::IsNullOrWhiteSpace($answer) -and (Get-Date) -lt $deadline){
+    $receipt=Read-Json $receiptPath
+    if($receipt -and [string]$receipt.status -eq 'RESPONDED' -and -not [string]::IsNullOrWhiteSpace([string]$receipt.receipt_digest)){
+      $missionState=Note-MissionTurn $work
+      Write-AtomicJson $jpath ([ordered]@{
+        request_id=$rid;state='RECEIPT_CONFIRMED';claim_generation=$work.claim_generation
+        mission_key=$missionKey;mission_id=$work.mission_id
+        conversation_url=$conversation.Url;generation=$missionState.generation
+        receipt_digest=[string]$receipt.receipt_digest
+        response_source='BROKER_RECEIPT';retry_policy='RECONCILE_FIRST_NO_BLIND_RETRY'
+        updated_at=(Get-Date).ToUniversalTime().ToString('o')
+      })
+      return
+    }
     Start-Sleep -Milliseconds 700
     try {$docAll=Get-All $conversation.Root} catch {continue}
     if(Test-RateLimitInDocument $conversation.Root){
@@ -1110,6 +1164,7 @@ while($true){
       $null=Refresh-Readiness
       $LastReadinessProbe=Get-Date
     }
+    Reconcile-TerminalJournals
     Process-One
   } catch { Write-Status 'DEGRADED' @{reason=$_.Exception.Message;new_thread_policy=$ThreadPolicy} }
   if($Once){break}

@@ -192,6 +192,7 @@ def reconcile(a,key,token,sf,rec):
         check=http(a.broker,f"/api/v3/saas-broker/requests/{rid}")
         if check.get("status")=="RESPONDED" and check.get("receipt_digest"):
             rec.update(state="RECONCILED",reconciliation_state="BROKER_RECEIPT_BOUND")
+            write_terminal_wakeup_receipt(a.ipc_dir,rec)
             try:(Path(a.ipc_dir)/"inbox"/(rid+".json")).unlink()
             except FileNotFoundError:pass
     atomic(sf,rec)

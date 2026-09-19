@@ -56,6 +56,13 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn("window_state='MINIMIZED'",t)
         self.assertIn('visible_window_count=0',t)
         self.assertNotIn('Document -or $doc.Current.IsOffscreen',t)
+        self.assertIn("'RECEIPT_CONFIRMED'",t)
+        self.assertIn("response_source='BROKER_RECEIPT'",t)
+        self.assertIn('$receiptPath=Join-Path $Receipts "$rid.json"',t)
+        self.assertIn('function Reconcile-TerminalJournals',t)
+        self.assertIn('Note-MissionTurnByKey',t)
+        self.assertIn("[string]$j.state -ne 'SEND_CONFIRMED'",t)
+        self.assertIn('Reconcile-TerminalJournals',t)
 
     def test_uia_persists_one_conversation_per_mission_scope(self):
         t=self.uia
