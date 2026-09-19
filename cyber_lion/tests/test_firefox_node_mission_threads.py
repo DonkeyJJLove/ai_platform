@@ -34,18 +34,16 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('/T',t)
         self.assertIn('/F',t)
 
-    def test_background_driver_is_headless_persistent_and_windowless(self):
+    def test_background_driver_owns_single_minimized_edge_bridge(self):
         t=self.background
-        self.assertIn('launchPersistentContext',t)
-        self.assertIn('channel:"msedge"',t)
-        self.assertIn('headless:true',t)
+        self.assertIn('execution_bridge:"MINIMIZED_EDGE_UIA"',t)
         self.assertIn('saas-background-profile-r1',t)
+        self.assertIn('--start-minimized',t)
+        self.assertIn('--force-renderer-accessibility',t)
+        self.assertIn('edge_session_worker.ps1',t)
         self.assertIn('visible_window_count:0',t)
         self.assertIn('driver_mode:"NODE_BACKGROUND"',t)
-        self.assertIn('INTENT_DURABLE',t)
-        self.assertIn('SEND_CONFIRMED',t)
-        self.assertNotIn('SendKeys',t)
-        self.assertNotIn('SetFocus',t)
+        self.assertIn('taskkill.exe',t)
 
     def test_uia_persists_one_conversation_per_mission_scope(self):
         t=self.uia
