@@ -156,7 +156,7 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
 
     def test_conversation_bound_recovery_resumes_send_not_response_wait(self):
         t=self.uia
-        start=t.index("elseif($j -and $j.state -eq 'CONVERSATION_BOUND'")
+        start=t.index("if($j -and $j.state -eq 'CONVERSATION_BOUND'")
         end=t.index("elseif($j -and $j.conversation_url)",start)
         block=t[start:end]
         self.assertIn('Wait-SendBudget $work',block)

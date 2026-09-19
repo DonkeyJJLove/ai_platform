@@ -823,6 +823,47 @@ function Process-One {
     # Re-entering normal preparation is therefore safe.
     $j=$null
   }
+  if($j -and $j.state -eq 'CONVERSATION_BOUND' -and $j.conversation_url){
+    $conversation=Open-BoundConversationAny ([string]$j.conversation_url)
+    if(-not $conversation){throw 'RECOVERY_CONVERSATION_NOT_OPEN'}
+    $beforeAssistantDigest=[string]$j.before_assistant_digest
+    if(Test-RateLimitInDocument $conversation.Root){
+      Set-RateLimitBackoff 'BOUND_CONVERSATION_RATE_LIMIT'
+      return
+    }
+    Wait-SendBudget $work
+    $beforeQuestionCount=Get-QuestionOccurrenceCount $conversation.Root ([string]$work.question)
+    Write-AtomicJson $jpath ([ordered]@{
+      request_id=$rid;state='INTENT_DURABLE';claim_generation=$work.claim_generation
+      mission_key=$missionKey;mission_id=$work.mission_id
+      conversation_url=$conversation.Url;generation=$missionState.generation
+      before_assistant_digest=$beforeAssistantDigest;before_question_count=$beforeQuestionCount
+      question_digest=$work.question_digest;reused_conversation=$true
+      updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    })
+    Set-Prompt $conversation.Prompt ([string]$work.question)
+    Start-Sleep -Milliseconds 250
+    $docAll=Get-All $conversation.Root;$prompt=Find-Prompt $docAll
+    Write-AtomicJson $jpath ([ordered]@{
+      request_id=$rid;state='SEND_ATTEMPT';claim_generation=$work.claim_generation
+      mission_key=$missionKey;mission_id=$work.mission_id
+      conversation_url=$conversation.Url;generation=$missionState.generation
+      before_assistant_digest=$beforeAssistantDigest;before_question_count=$beforeQuestionCount
+      question_digest=$work.question_digest;reused_conversation=$true
+      updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    })
+    Send-Prompt $prompt $docAll
+    Write-AtomicJson $jpath ([ordered]@{
+      request_id=$rid;state='SEND_CONFIRMED';claim_generation=$work.claim_generation
+      mission_key=$missionKey;mission_id=$work.mission_id
+      conversation_url=$conversation.Url;generation=$missionState.generation
+      before_assistant_digest=$beforeAssistantDigest;before_question_count=$beforeQuestionCount
+      question_digest=$work.question_digest;reused_conversation=$true
+      updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    })
+    Note-Send $work
+    $j=Read-Json $jpath
+  }
   if($j -and $j.state -eq 'SEND_ATTEMPT'){
     $beforeAssistantDigest=[string]$j.before_assistant_digest
     if(-not [string]::IsNullOrWhiteSpace([string]$j.conversation_url)){
@@ -886,47 +927,6 @@ function Process-One {
       Write-AtomicJson $jpath $updated
       $j=Read-Json $jpath
     }
-  }
-  elseif($j -and $j.state -eq 'CONVERSATION_BOUND' -and $j.conversation_url){
-    $conversation=Open-BoundConversationAny ([string]$j.conversation_url)
-    if(-not $conversation){throw 'RECOVERY_CONVERSATION_NOT_OPEN'}
-    $beforeAssistantDigest=[string]$j.before_assistant_digest
-    if(Test-RateLimitInDocument $conversation.Root){
-      Set-RateLimitBackoff 'BOUND_CONVERSATION_RATE_LIMIT'
-      return
-    }
-    Wait-SendBudget $work
-    $beforeQuestionCount=Get-QuestionOccurrenceCount $conversation.Root ([string]$work.question)
-    Write-AtomicJson $jpath ([ordered]@{
-      request_id=$rid;state='INTENT_DURABLE';claim_generation=$work.claim_generation
-      mission_key=$missionKey;mission_id=$work.mission_id
-      conversation_url=$conversation.Url;generation=$missionState.generation
-      before_assistant_digest=$beforeAssistantDigest;before_question_count=$beforeQuestionCount
-      question_digest=$work.question_digest;reused_conversation=$true
-      updated_at=(Get-Date).ToUniversalTime().ToString('o')
-    })
-    Set-Prompt $conversation.Prompt ([string]$work.question)
-    Start-Sleep -Milliseconds 250
-    $docAll=Get-All $conversation.Root;$prompt=Find-Prompt $docAll
-    Write-AtomicJson $jpath ([ordered]@{
-      request_id=$rid;state='SEND_ATTEMPT';claim_generation=$work.claim_generation
-      mission_key=$missionKey;mission_id=$work.mission_id
-      conversation_url=$conversation.Url;generation=$missionState.generation
-      before_assistant_digest=$beforeAssistantDigest;before_question_count=$beforeQuestionCount
-      question_digest=$work.question_digest;reused_conversation=$true
-      updated_at=(Get-Date).ToUniversalTime().ToString('o')
-    })
-    Send-Prompt $prompt $docAll
-    Write-AtomicJson $jpath ([ordered]@{
-      request_id=$rid;state='SEND_CONFIRMED';claim_generation=$work.claim_generation
-      mission_key=$missionKey;mission_id=$work.mission_id
-      conversation_url=$conversation.Url;generation=$missionState.generation
-      before_assistant_digest=$beforeAssistantDigest;before_question_count=$beforeQuestionCount
-      question_digest=$work.question_digest;reused_conversation=$true
-      updated_at=(Get-Date).ToUniversalTime().ToString('o')
-    })
-    Note-Send $work
-    $j=Read-Json $jpath
   }
   elseif($j -and $j.conversation_url){
     $conversation=Open-BoundConversationAny ([string]$j.conversation_url)
