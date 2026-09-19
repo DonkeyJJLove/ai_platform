@@ -68,8 +68,8 @@ function Normalize-Url([string]$Url){
   return ((([string]$Url) -replace '^https?://','').Split('?')[0]).TrimEnd('/')
 }
 
-function Get-FirefoxProcess([int]$Pid){
-  try { return Get-CimInstance Win32_Process -Filter ("ProcessId="+$Pid) -ErrorAction Stop } catch { return $null }
+function Get-FirefoxProcess([int]$ProcessId){
+  try { return Get-CimInstance Win32_Process -Filter ("ProcessId="+$ProcessId) -ErrorAction Stop } catch { return $null }
 }
 
 function Test-InteractiveFirefoxWindow([System.Windows.Automation.AutomationElement]$Window){

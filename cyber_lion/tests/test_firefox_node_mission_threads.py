@@ -106,6 +106,8 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('Refresh-Readiness',t)
         self.assertIn('$LastReadinessProbe',t)
         self.assertIn('PROJECT_SURFACE_NOT_VERIFIED',t)
+        self.assertIn('Get-FirefoxProcess([int]$ProcessId)',t)
+        self.assertNotIn('Get-FirefoxProcess([int]$Pid)',t)
 
     def test_no_browser_credential_export_primitives(self):
         low=(self.node+'\n'+self.uia).lower()
