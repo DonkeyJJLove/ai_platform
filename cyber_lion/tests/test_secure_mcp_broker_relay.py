@@ -35,6 +35,9 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertNotIn('mediator-status.json',RELAY)
         self.assertIn('driver_ready(a.ipc_dir)',RELAY)
         self.assertNotIn('driver_ready(a.ipc)',RELAY)
+        self.assertIn('CLOCK_SKEW_TOLERANCE_SECONDS=5',RELAY)
+        self.assertIn('-CLOCK_SKEW_TOLERANCE_SECONDS<=manager_age<=ttl',RELAY)
+        self.assertIn('-CLOCK_SKEW_TOLERANCE_SECONDS<=driver_age<=ttl',RELAY)
 
     def test_node_manager_writes_fresh_background_status(self):
         self.assertIn('node-manager-status.json',NODE)

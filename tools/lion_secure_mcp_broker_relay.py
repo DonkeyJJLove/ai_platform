@@ -9,6 +9,7 @@ WAKEUP_TRANSPORT="CHATGPT_FIREFOX_PROJECT_MEDIATED"
 ATTEST="OPENAI_SECURE_MCP_TUNNEL_TOOL_ROUNDTRIP"
 WAITING={"WAITING_SUPERVISOR","WAITING_OPERATOR_OVERDUE","QUEUED"}
 FINAL={"RECONCILED","SUPERSEDED","FAILED"}
+CLOCK_SKEW_TOLERANCE_SECONDS=5
 
 def now(): return datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
 def ts(v): return datetime.fromisoformat(str(v).replace("Z","+00:00"))
@@ -44,10 +45,10 @@ def driver_ready(ipc,ttl=20):
         driver_age=(datetime.now(timezone.utc)-ts(driver["observed_at"])).total_seconds()
     except Exception:return False,{"manager":manager,"driver":driver}
     ready=bool(
-      manager.get("driver_mode")=="NODE_BACKGROUND" and manager.get("background_driver_alive") is True and 0<=manager_age<=ttl and
+      manager.get("driver_mode")=="NODE_BACKGROUND" and manager.get("background_driver_alive") is True and -CLOCK_SKEW_TOLERANCE_SECONDS<=manager_age<=ttl and
       driver.get("driver_mode")=="NODE_BACKGROUND" and driver.get("state")=="READY" and
       driver.get("background") is True and driver.get("visible_window_count")==0 and
-      driver.get("authenticated") is True and driver.get("project_verified") is True and 0<=driver_age<=ttl
+      driver.get("authenticated") is True and driver.get("project_verified") is True and -CLOCK_SKEW_TOLERANCE_SECONDS<=driver_age<=ttl
     )
     return ready,{"manager":manager,"driver":driver,"manager_age":manager_age,"driver_age":driver_age}
 
