@@ -112,6 +112,17 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('Get-FirefoxProcess([int]$ProcessId)',t)
         self.assertNotIn('Get-FirefoxProcess([int]$Pid)',t)
 
+    def test_conversation_bound_recovery_resumes_send_not_response_wait(self):
+        t=self.uia
+        start=t.index("elseif($j -and $j.state -eq 'CONVERSATION_BOUND'")
+        end=t.index("elseif($j -and $j.conversation_url)",start)
+        block=t[start:end]
+        self.assertIn('Wait-SendBudget $work',block)
+        self.assertIn("state='INTENT_DURABLE'",block)
+        self.assertIn("state='SEND_ATTEMPT'",block)
+        self.assertIn('Send-Prompt $prompt $docAll',block)
+        self.assertIn("state='SEND_CONFIRMED'",block)
+
     def test_no_browser_credential_export_primitives(self):
         low=(self.node+'\n'+self.uia).lower()
         for forbidden in (

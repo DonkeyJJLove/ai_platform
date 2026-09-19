@@ -28,6 +28,7 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('worker_alive',RELAY)
         self.assertIn('mediator.get("state")=="READY"',RELAY)
         self.assertIn('mediator.get("project_verified") is True',RELAY)
+        self.assertNotIn('mediator_age<=ttl',RELAY)
         self.assertIn('driver_ready(a.ipc_dir)',RELAY)
         self.assertNotIn('driver_ready(a.ipc)',RELAY)
 

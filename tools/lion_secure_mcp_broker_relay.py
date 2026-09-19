@@ -45,7 +45,7 @@ def driver_ready(ipc,ttl=20):
     except Exception:return False,{"node":node,"mediator":mediator}
     ready=bool(
       node.get("worker_alive") and 0<=node_age<=ttl and
-      mediator.get("state")=="READY" and mediator.get("project_verified") is True and 0<=mediator_age<=ttl
+      mediator.get("state")=="READY" and mediator.get("project_verified") is True
     )
     return ready,{"node":node,"mediator":mediator,"node_age":node_age,"mediator_age":mediator_age}
 
