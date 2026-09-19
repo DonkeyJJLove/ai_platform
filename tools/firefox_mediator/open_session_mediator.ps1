@@ -163,7 +163,7 @@ function Find-ProjectHome {
 }
 
 function Refresh-Readiness {
-  $projectHome=Find-ProjectHome
+  $projectHome=Ensure-ProjectHome
   if($projectHome){
     Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='EXISTING_AUTHENTICATED_FIREFOX';project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
     return $true

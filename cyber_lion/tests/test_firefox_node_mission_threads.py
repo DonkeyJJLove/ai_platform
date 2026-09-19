@@ -104,6 +104,7 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('TARGET_URL_PRESENT_NOT_READY',t)
         self.assertIn('for($attempt=1;$attempt -le 3;$attempt++)',t)
         self.assertIn('Refresh-Readiness',t)
+        self.assertIn('$projectHome=Ensure-ProjectHome',t)
         self.assertIn('$LastReadinessProbe',t)
         self.assertIn('PROJECT_SURFACE_NOT_VERIFIED',t)
         self.assertIn('Get-FirefoxProcess([int]$ProcessId)',t)
