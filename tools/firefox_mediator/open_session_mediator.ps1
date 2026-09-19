@@ -530,7 +530,11 @@ function Test-PreviousReceiptReady([object]$Work){
   if([string]::IsNullOrWhiteSpace($previous)){return $true}
   $receipt=Read-Json (Join-Path $Receipts "$previous.json")
   if(-not $receipt){return $false}
-  return ([string]$receipt.status -eq 'RESPONDED' -and -not [string]::IsNullOrWhiteSpace([string]$receipt.receipt_digest))
+  if([string]$receipt.status -eq 'RESPONDED'){
+    return (-not [string]::IsNullOrWhiteSpace([string]$receipt.receipt_digest))
+  }
+  if(([string]$receipt.status -in @('SUPERSEDED','CANCELLED')) -and $receipt.terminal_without_response -eq $true){return $true}
+  return $false
 }
 
 function Wait-SendBudget([object]$Work){

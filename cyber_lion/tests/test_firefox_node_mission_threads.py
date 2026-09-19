@@ -107,6 +107,8 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('$projectHome=Ensure-ProjectHome',t)
         self.assertIn('$LastReadinessProbe',t)
         self.assertIn('PROJECT_SURFACE_NOT_VERIFIED',t)
+        self.assertIn("@('SUPERSEDED','CANCELLED')",t)
+        self.assertIn('terminal_without_response',t)
         self.assertIn('Get-FirefoxProcess([int]$ProcessId)',t)
         self.assertNotIn('Get-FirefoxProcess([int]$Pid)',t)
 

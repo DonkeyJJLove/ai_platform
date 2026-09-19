@@ -100,6 +100,15 @@ def queue_wakeup(ipc,row,turn_id):
       "authority_effect":"NONE"}
     atomic(Path(ipc)/"inbox"/(row["request_id"]+".json"),work,0o644)
 
+def write_terminal_wakeup_receipt(ipc,rec):
+    rid=rec.get("request_id");state=rec.get("state")
+    if not rid or state not in {"SUPERSEDED","FAILED"}:return
+    status="SUPERSEDED" if state=="SUPERSEDED" else "FAILED"
+    atomic(Path(ipc)/"receipts"/(rid+".json"),{
+      "request_id":rid,"status":status,"terminal_without_response":True,
+      "reason":rec.get("reconciliation_state"),"authority_effect":"NONE"
+    },0o644)
+
 def wakeup_evidence(ipc,rid):
     base=Path(ipc)
     names=(
@@ -110,6 +119,9 @@ def wakeup_evidence(ipc,rid):
     return any(p.exists() for p in names)
 
 def claim_new(a,key,token,state_dir):
+    for existing in state_dir.glob("saas-*.json"):
+        rec=load(existing)
+        if isinstance(rec,dict) and rec.get("state") not in FINAL:return
     pending=http(a.broker,"/api/v3/saas-broker/pending").get("requests") or []
     row=next((x for x in pending if x.get("transport")==SECURE and x.get("status") in WAITING),None)
     if not row:return
@@ -193,7 +205,11 @@ def main():
             if time.time()-last_hb>=10:hb(a,key,state);last_hb=time.time()
             for sf in sorted(state_dir.glob("saas-*.json")):
                 rec=load(sf)
-                if isinstance(rec,dict) and rec.get("state") not in FINAL:reconcile(a,key,token,sf,rec)
+                if not isinstance(rec,dict):continue
+                if rec.get("state") in FINAL:
+                    write_terminal_wakeup_receipt(a.ipc_dir,rec)
+                    continue
+                reconcile(a,key,token,sf,rec)
             if state=="READY":claim_new(a,key,token,state_dir)
             atomic(state_dir/"relay-status.json",{"schema":"lion.secure-mcp-broker-relay.status/v1",
               "status":state,"observed_at":now(),"broker":a.broker,"ingress":a.ingress,

@@ -62,5 +62,8 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('/claim","POST",{}',RELAY)
         self.assertIn('BROKER_TERMINAL_',RELAY)
         self.assertIn('(Path(a.ipc_dir)/"inbox"/(rid+".json")).unlink()',RELAY)
+        self.assertIn('write_terminal_wakeup_receipt',RELAY)
+        self.assertIn('terminal_without_response',RELAY)
+        self.assertIn('if isinstance(rec,dict) and rec.get("state") not in FINAL:return',RELAY)
 
 if __name__=="__main__":unittest.main()
