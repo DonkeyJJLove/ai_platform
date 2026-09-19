@@ -1,0 +1,27 @@
+[Unit]
+Description=LION Operator Control Gateway
+After=local-fs.target
+
+[Service]
+Type=simple
+User=sentinelx
+Group=sentinelx
+WorkingDirectory=/var/lib/sentinelx/uploads/lion-mission-control-v3
+Environment=PYTHONPATH=/var/lib/sentinelx/uploads/lion-mission-control-v3
+ExecStart=/usr/bin/python3 /var/lib/sentinelx/uploads/lion-mission-control-v3/lion_operator_gateway.py --host 127.0.0.1 --port 8767 --db /var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db --key-file /var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key --proxy-key-file /var/lib/sentinelx/uploads/lion-mission-control-v3/operator-sentinelx-proxy.key --panel-proxy-key-file /var/lib/sentinelx/uploads/lion-mission-control-v3/operator-panel-proxy.key --pairing-key-file /var/lib/sentinelx/uploads/lion-mission-control-v3/operator-pairing.key --epoch-floor /var/lib/sentinelx/uploads/lion-operator-control/operator-epoch-floors.json --mission-control-url http://127.0.0.1:8766
+Restart=on-failure
+RestartSec=1
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictNamespaces=true
+ReadWritePaths=/var/lib/sentinelx/uploads/lion-mission-control-v3 /var/lib/sentinelx/uploads/lion-operator-control
+
+[Install]
+WantedBy=multi-user.target

@@ -6,7 +6,7 @@ from pathlib import Path
 from tools import lion_mission_lifecycle_db as lifecycle
 from tools import lion_saas_session_bridge as saas
 from tools.lion_local_intelligence_runtime import ThreadStore
-from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
+from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension, ROUTE_CONTEXT
 
 T='2026-09-13T15:10:00Z'
 
@@ -153,6 +153,8 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
             def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'LOCAL','answer':'local'}
         apply_saas_handoff_extension(Dummy)
         d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'ABCD1234','request_id':'saas-'+'1'*32,'authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
+        self.assertEqual(d._route('No to wykonaj na SaaS zapytanie: Kim jesteś?')[0],'LOCAL')
+        token=ROUTE_CONTEXT.set('SAAS');self.addCleanup(lambda: ROUTE_CONTEXT.reset(token))
         self.assertEqual(d._route('No to wykonaj na SaaS zapytanie: Kim jesteś?')[0],'SAAS_HANDOFF')
         out=d.chat('No to wykonaj na SaaS zapytanie: Kim jesteś?',output_language='pl')
         self.assertEqual(out['route'],'SAAS_HANDOFF')
@@ -166,6 +168,7 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
             def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'LOCAL','answer':'local'}
         apply_saas_handoff_extension(Dummy)
         d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'FIRE1234','request_id':'saas-'+'f'*32,'transport':'CHATGPT_FIREFOX_PROJECT_MEDIATED','authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
+        token=ROUTE_CONTEXT.set('SAAS');self.addCleanup(lambda: ROUTE_CONTEXT.reset(token))
         out=d.chat('SaaS: gotów?',output_language='pl')
         self.assertIn('CHATGPT_FIREFOX_PROJECT_MEDIATED',out['answer'])
         self.assertNotIn('nie istnieje automatyczny local',out['answer'])
@@ -199,6 +202,8 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
             raise AssertionError(op)
         d.control_provider=control
         q='Zapytaj model SaaS i model lokalny o to samo pytanie: Co to LION'
+        self.assertEqual(d._route(q)[0],'MODEL_ONLY')
+        token=ROUTE_CONTEXT.set('DUAL');self.addCleanup(lambda: ROUTE_CONTEXT.reset(token))
         self.assertEqual(d._route(q)[0],'DUAL_EVALUATION_LIVE')
         out=d.chat(q,output_language='pl')
         self.assertEqual(out['route'],'DUAL_EVALUATION_LIVE')
@@ -236,18 +241,25 @@ class PanelThreadDeliveryTests(unittest.TestCase):
             self.assertEqual(len(snap['messages']),3)
             self.assertEqual(snap['messages'][-1]['meta']['external_receipt_key'],'saas:'+'saas-'+'1'*32)
 
-    def test_panel_ui_recovers_pending_saas_requests_after_thread_reopen(self):
-        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
-        self.assertIn('resumeThreadSaas',gateway.UI)
-        self.assertIn('append_assistant_once',Path(__import__('tools.lion_local_intelligence_runtime',fromlist=['x']).__file__).read_text(encoding='utf-8'))
-        self.assertIn('Restart material runtime',gateway.UI)
-
-    def test_panel_keeps_pending_requests_owned_by_their_thread(self):
+    def test_panel_thread_reopen_recovers_shared_operator_bus_by_correlation(self):
         from cyber_lion.app_coordination import local_intelligence_gateway as gateway
         ui=gateway.UI
+        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",ui)
+        self.assertIn('correlation_id',Path(__import__('tools.lion_operator_client',fromlist=['x']).__file__).read_text(encoding='utf-8'))
+        self.assertIn('activeThreadContext=x.context||null',ui)
+        self.assertIn('await refreshActiveBus(false)',ui)
+        self.assertNotIn('resumeThreadSaas',ui)
+        self.assertIn('Restart material runtime',ui)
+
+    def test_panel_keeps_bus_messages_owned_by_exact_thread_correlation(self):
+        from cyber_lion.app_coordination import local_intelligence_gateway as gateway
+        ui=gateway.UI
+        source=Path(gateway.__file__).read_text(encoding='utf-8')
         self.assertNotIn('adoptPendingSaas',ui)
-        self.assertIn('stopThreadPolling',ui)
-        self.assertIn('renderSupervisor(x.supervisor_projection)',ui)
+        self.assertNotIn('stopThreadPolling',ui)
+        self.assertNotIn('renderSupervisor(x.supervisor_projection)',ui)
+        self.assertIn("m.get('correlation_id')==tid",source)
+        self.assertIn("'correlation_id':tid",source)
         self.assertIn('missionPinned=false',ui)
         self.assertIn('FOLLOW_FOCUS',ui)
         self.assertIn('missionsRefreshing',ui)

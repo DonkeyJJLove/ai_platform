@@ -21,28 +21,14 @@ def _supervisor_status_question(message):
 
 
 def _explicit_saas(message: str) -> bool:
-    if ROUTE_CONTEXT.get()=="LOCAL":return False
-    if ROUTE_CONTEXT.get()=="SAAS":return True
-    low = message.lower()
-    if "saas" not in low:
-        return False
-    # Preserve explicit dual-evaluation requests for the existing hybrid route.
-    if ("lokaln" in low or "local model" in low or "model lokal" in low) and any(x in low for x in ("to samo", "same question", "porówn", "porown", "i model")):
-        return False
-    return any(token in low for token in (
-        "na saas", "do saas", "wykonaj na saas", "wyślij do saas", "wyslij do saas",
-        "handoff", "saas supervisor", "saas:", "saas ->", "zapytaj saas"
-    ))
+    # Epoch 4: provider selection is explicit model-plane state, never inferred
+    # from natural-language content in the normal operator communication path.
+    return ROUTE_CONTEXT.get()=="SAAS"
 
 
 def _dual_saas_local(message: str) -> bool:
-    if ROUTE_CONTEXT.get() in {"LOCAL","SAAS"}:return False
-    if ROUTE_CONTEXT.get()=="DUAL":return True
-    low = message.lower()
-    marked = bool(re.search(r"(?is)(?:^|\n)\s*(?:#+\s*)?local\s*:.*(?:^|\n)\s*(?:#+\s*)?saas\s*:", message))
-    return marked or (("saas" in low or "chatgpt" in low)
-            and ("lokal" in low or "local" in low)
-            and any(x in low for x in ("to samo", "same question", "porówn", "porown", "compare", "zapytaj", "zadaj", "ask", "dwa różne", "dwa rozne", "różne pytania", "rozne pytania")))
+    # DUAL is also an explicit model-plane request; AUTO cannot infer it.
+    return ROUTE_CONTEXT.get()=="DUAL"
 
 
 def _dual_question(message: str) -> str:
@@ -191,7 +177,7 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE"})
+            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
@@ -224,7 +210,7 @@ def apply_saas_handoff_extension(cls):
                 raise ValueError("SaaS handoff control provider unavailable")
             mission_id = None
             question = _question(message)
-            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE"})
+            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
             firefox_transport=handoff.get('transport')=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
             if polish:

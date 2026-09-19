@@ -25,22 +25,8 @@ def _dual_question(message: str) -> str:
 
 
 def _patch_ui() -> None:
-    from cyber_lion.app_coordination import local_intelligence_gateway as module
-
-    replacements = (
-        (
-            'AUTO · LOCAL-first<br><span class="saas-unavailable">SaaS supervisor: unavailable</span><br><small>RAG: deferred · authority NONE</small>',
-            'HYBRID · LOCAL + SaaS supervisor<br><span class="ok">SaaS supervisor: EXTERNAL_SESSION_MEDIATED</span><br><small>automatic SaaS hop: not materialized · RAG: deferred · authority NONE</small>',
-        ),
-        (
-            '<div class="k">LOCAL COGNITIVE EXECUTOR</div><h2>LION Local Model</h2><p class="status">Proposal-only GPT‑OSS · live Mission Control/repo/web evidence through material drones · authority NONE</p>',
-            '<div class="k">HYBRID COGNITIVE PLANE</div><h2>LION Local + SaaS Supervisor</h2><p class="status">LOCAL gpt-oss-20b-MXFP4 proposal-only · REMOTE CHATGPT_SAAS_SUPERVISOR via EXTERNAL_SESSION_MEDIATED · automatic hop not materialized · authority NONE</p>',
-        ),
-    )
-    ui = module.UI
-    for old, new in replacements:
-        ui = ui.replace(old, new)
-    module.UI = ui
+    """Legacy hybrid backend compatibility must never rewrite the LPCL LION BUS UI."""
+    return
 
 
 def apply_hybrid_gateway_extension(gateway_cls) -> None:

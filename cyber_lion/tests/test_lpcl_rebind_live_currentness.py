@@ -135,18 +135,55 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         c.commit(); c.close()
         child = self.spec('EXPLICIT-PARENT-CHILD-R1', self.child_text(explicit_parent))
         self.mc.register_lpcl_mission(child)
-        runtime_head='d'*40;runtime_tree='e'*40
-        with patch.object(self.mc, '_current_master_identity', return_value=(runtime_head,runtime_tree)), patch.object(self.mc, '_send_broker_request', return_value=(self.runtime('explicit-parent-live'), 'explicit-parent-read')) as send:
+        seen=[]
+        def send_request(request):
+            seen.append(dict(request))
+            if request['operation']=='MISSION64_CURRENTNESS_READ':
+                return ({'source_head':child['source_head'],'source_tree':child['source_tree'],'repository':'https://github.com/DonkeyJJLove/ai_platform.git','branch':'master','currentness_source':'GITHUB_MASTER_READ','authority_effect':'NONE'},request['request_id'])
+            if request['operation']=='EPOCH3_M64_READ':
+                return (self.runtime('explicit-parent-live'),'explicit-parent-read')
+            raise AssertionError(request['operation'])
+        with patch.object(self.mc, '_send_broker_request', side_effect=send_request):
             out = self.mc.activate_lpcl_mission(child['mission_id'], {'lpcl_digest': child['lpcl_digest'], 'activation_event': 'EXPLICIT_UI_ACTIVATION'})
         self.assertEqual((out['state'], out['materialized'], out['ready']), ('RUNNING', 64, 64))
-        request = send.call_args.args[0]
+        request = next(x for x in seen if x['operation']=='EPOCH3_M64_READ')
         self.assertEqual(request['mission_id'], self.mc.EPOCH3_MATERIAL_CARRIER_ID)
         self.assertEqual(request['spec_digest'], self.mc.EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST)
-        self.assertEqual(request['source_head'], runtime_head)
-        self.assertEqual(request['source_tree'], runtime_tree)
-        self.assertEqual(out['source_head'], child['source_head'])
-        self.assertEqual(out['source_tree'], child['source_tree'])
+        self.assertEqual(request['source_head'], child['source_head'])
+        self.assertEqual(request['source_tree'], child['source_tree'])
         self.assertIn('explicit-parent-live-LD12-0', {row['pod_uid'] for row in out['workers']})
+
+    def test_registered_source_identity_is_preserved_while_execution_currentness_reacquires_live_master(self):
+        mid='FRESH-CURRENTNESS-DECOUPLE-R1'
+        text='PROJECT=LION_EVOLUSION\n'
+        fresh=self.spec(mid,text);fresh['logical_count']=128;fresh['phases']=[{'id':'GENERIC_STEP','title':'Generic step'}]
+        self.mc.register_lpcl_mission(fresh)
+        current_head='c'*40;current_tree='d'*40;seen=[]
+        def send(req):
+            seen.append(dict(req))
+            if req['operation']=='MISSION64_CURRENTNESS_READ':
+                self.assertEqual(set(req),{'schema_version','request_id','operation'})
+                return ({'source_head':current_head,'source_tree':current_tree,'repository':'https://github.com/DonkeyJJLove/ai_platform.git','branch':'master','currentness_source':'GITHUB_MASTER_READ','authority_effect':'NONE'},req['request_id'])
+            if req['operation']=='EPOCH3_M64_READ':
+                self.assertEqual((req['source_head'],req['source_tree']),(current_head,current_tree))
+                return (self.runtime('decoupled-live'),req['request_id'])
+            raise AssertionError(req['operation'])
+        with patch.object(self.mc,'_send_broker_request',side_effect=send):
+            out=self.mc.activate_lpcl_mission(mid,{'lpcl_digest':fresh['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual((out['state'],out['materialized'],out['ready']),('RUNNING',64,64))
+        c=self.mc.connect();m=c.execute('SELECT source_head,source_tree FROM missions WHERE mission_id=?',(mid,)).fetchone()
+        self.assertEqual((m['source_head'],m['source_tree']),('a'*40,'b'*40))
+        ev=[]
+        for row in c.execute("SELECT from_id,protocol,payload_json FROM protocol_messages WHERE mission_id=?",(mid,)):
+            payload=json.loads(row['payload_json'])
+            if payload.get('event')=='EXECUTION_CURRENTNESS_REACQUIRED':ev.append((row,payload))
+        c.close();self.assertEqual(len(ev),1)
+        row,payload=ev[0]
+        self.assertEqual((row['from_id'],row['protocol']),('MISSION_CONTROL_CURRENTNESS_RECONCILER','CURRENTNESS'))
+        self.assertEqual((payload['registered_source_head'],payload['registered_source_tree']),('a'*40,'b'*40))
+        self.assertEqual((payload['execution_source_head'],payload['execution_source_tree']),(current_head,current_tree))
+        self.assertEqual(payload['authority_effect'],'NONE')
+        self.assertEqual([x['operation'] for x in seen],['MISSION64_CURRENTNESS_READ','EPOCH3_M64_READ'])
 
     def test_fresh_128l64m_mission_binds_without_epoch3_parent_and_compiles_generic_phases(self):
         mid='FRESH-GENERIC-128L64M-R1'
@@ -265,8 +302,7 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
         victim = c.execute('SELECT pod_name FROM material_workers WHERE mission_id=? ORDER BY pod_name LIMIT 1', (child['mission_id'],)).fetchone()[0]
         c.execute('DELETE FROM material_workers WHERE mission_id=? AND pod_name=?', (child['mission_id'], victim))
         c.commit(); c.close()
-        runtime_head='f'*40;runtime_tree='1'*40
-        with patch.object(self.mc, '_current_master_identity', return_value=(runtime_head,runtime_tree)), patch.object(self.mc, 'epoch3_broker', return_value=(self.runtime('reacquired-live'), 'reacquire-request')):
+        with patch.object(self.mc, 'epoch3_broker', return_value=(self.runtime('reacquired-live'), 'reacquire-request')):
             out = self.mc.bind_lpcl_execution(child['mission_id'])
         uids = {row['pod_uid'] for row in out['workers']}
         self.assertIn('reacquired-live-LD12-0', uids)
@@ -276,11 +312,7 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
             msg['payload'] for msg in out['protocol_messages']
             if msg['protocol'] == 'CURRENTNESS' and msg['payload'].get('material_request_id') == 'reacquire-request'
         )
-        self.assertEqual(currentness['material_currentness_source'], 'GITHUB_MASTER_PLUS_EPOCH3_M64_READ')
-        self.assertEqual(currentness['registered_source_head'], child['source_head'])
-        self.assertEqual(currentness['registered_source_tree'], child['source_tree'])
-        self.assertEqual(currentness['runtime_source_head'], runtime_head)
-        self.assertEqual(currentness['runtime_source_tree'], runtime_tree)
+        self.assertEqual(currentness['material_currentness_source'], 'EPOCH3_M64_READ')
 
 
     def test_generic_effect_evidence_executor_advances_first_two_phases_without_duplicate_planning(self):

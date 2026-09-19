@@ -2,7 +2,7 @@
 from __future__ import annotations
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from hashlib import sha256
-import json,re
+import json,re,secrets,threading,time,uuid
 from html.parser import HTMLParser
 from urllib.parse import urljoin,urlsplit,unquote,parse_qs
 from .lion_context_provider import build_lion_context
@@ -72,7 +72,7 @@ def _page_evidence(fetch_row,domain,limit=24):
 UI=r'''<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="frontend-revision" content="__FRONTEND_REVISION__"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LION CONTROL LPCL PANEL</title>
 <style>
 :root{color-scheme:dark;--bg:#091018;--panel:#0c1620;--panel2:#101c27;--line:#294052;--text:#e8f0f6;--muted:#8da6b8;--accent:#2d8693;--user:#173344;--assistant:#0d1923;--ok:#75d7a5;--warn:#e6c56a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 Inter,Segoe UI,system-ui,sans-serif}.app{max-width:1220px;margin:auto;padding:24px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.top h1{margin:.1rem 0;font-size:26px}.subtitle{color:var(--muted);margin:0 0 14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}.k{color:#80a9bd;font-size:10px;letter-spacing:.07em}.v{font-weight:650;font-size:13px;overflow-wrap:anywhere}.chat{border:1px solid var(--line);border-radius:14px;background:var(--panel);min-height:420px;display:flex;flex-direction:column;overflow:hidden}.messages{padding:18px;display:flex;flex-direction:column;gap:14px;min-height:320px}.msg{max-width:92%;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.msg.user{align-self:flex-end;background:var(--user);max-width:80%}.msg.assistant{align-self:flex-start;background:var(--assistant);width:min(920px,95%)}.role{font-size:11px;color:var(--muted);margin-bottom:6px}.composer{border-top:1px solid var(--line);padding:12px;background:#0b151e;position:sticky;bottom:0}.composer textarea{width:100%;resize:vertical;min-height:74px;max-height:220px;background:#071019;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}button,select{background:#15303d;color:var(--text);border:1px solid #35576a;border-radius:8px;padding:8px 12px}button.primary{background:var(--accent);border-color:var(--accent)}button:disabled{opacity:.5}.grow{flex:1}.status{color:var(--muted);font-size:12px}.evidence{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px}.evidence h3{margin:0 0 8px;font-size:14px}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:11px;color:#b9cfdb}.source{padding:7px 0;border-top:1px solid #1b2b37;font-size:12px}.source a{color:#7fc6e3}.hide{display:none}.md p{margin:.55em 0}.md h1,.md h2,.md h3{margin:.9em 0 .4em}.md h1{font-size:1.45em}.md h2{font-size:1.25em}.md h3{font-size:1.1em}.md code{background:#172633;padding:.1em .35em;border-radius:4px}.md pre{overflow:auto;background:#071019;border:1px solid #263d4d;padding:11px;border-radius:8px}.md pre code{background:transparent;padding:0}.md table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:13px}.md th,.md td{border:1px solid #365063;padding:7px 8px;text-align:left;vertical-align:top}.md th{background:#132433}.md ul,.md ol{padding-left:1.4em}.md blockquote{border-left:3px solid #3e738a;padding-left:10px;color:#b7cad4}.toolbar{display:flex;gap:6px;margin-top:8px}.debug{white-space:pre-wrap;max-height:420px;overflow:auto;background:#050b10;border:1px solid var(--line);padding:10px;border-radius:8px;font:12px/1.45 Consolas,monospace}.ok{color:var(--ok)}.warn{color:var(--warn)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 Inter,Segoe UI,system-ui,sans-serif}.app{max-width:1220px;margin:auto;padding:24px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.top h1{margin:.1rem 0;font-size:26px}.subtitle{color:var(--muted);margin:0 0 14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}.k{color:#80a9bd;font-size:10px;letter-spacing:.07em}.v{font-weight:650;font-size:13px;overflow-wrap:anywhere}.chat{border:1px solid var(--line);border-radius:14px;background:var(--panel);min-height:420px;display:flex;flex-direction:column;overflow:hidden}.messages{padding:18px;display:flex;flex-direction:column;gap:14px;min-height:320px}.msg{max-width:92%;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.msg.user{align-self:flex-end;background:var(--user);max-width:80%}.msg.assistant{align-self:flex-start;background:var(--assistant);width:min(920px,95%)}.role{font-size:11px;color:var(--muted);margin-bottom:6px}.composer{border-top:1px solid var(--line);padding:12px;background:#0b151e;position:sticky;bottom:0}.composer textarea{width:100%;resize:vertical;min-height:74px;max-height:220px;background:#071019;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}button,select,input{background:#15303d;color:var(--text);border:1px solid #35576a;border-radius:8px;padding:8px 12px}button.primary{background:var(--accent);border-color:var(--accent)}button:disabled{opacity:.5}.grow{flex:1}.status{color:var(--muted);font-size:12px}.evidence{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px}.evidence h3{margin:0 0 8px;font-size:14px}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:11px;color:#b9cfdb}.source{padding:7px 0;border-top:1px solid #1b2b37;font-size:12px}.source a{color:#7fc6e3}.hide{display:none}.md p{margin:.55em 0}.md h1,.md h2,.md h3{margin:.9em 0 .4em}.md h1{font-size:1.45em}.md h2{font-size:1.25em}.md h3{font-size:1.1em}.md code{background:#172633;padding:.1em .35em;border-radius:4px}.md pre{overflow:auto;background:#071019;border:1px solid #263d4d;padding:11px;border-radius:8px}.md pre code{background:transparent;padding:0}.md table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:13px}.md th,.md td{border:1px solid #365063;padding:7px 8px;text-align:left;vertical-align:top}.md th{background:#132433}.md ul,.md ol{padding-left:1.4em}.md blockquote{border-left:3px solid #3e738a;padding-left:10px;color:#b7cad4}.toolbar{display:flex;gap:6px;margin-top:8px}.debug{white-space:pre-wrap;max-height:420px;overflow:auto;background:#050b10;border:1px solid var(--line);padding:10px;border-radius:8px;font:12px/1.45 Consolas,monospace}.ok{color:var(--ok)}.warn{color:var(--warn)}
 
 .layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}.sidebar{border-right:1px solid var(--line);background:#071018;padding:14px;position:sticky;top:0;height:100vh;overflow:auto}.sidebar h2{font-size:15px;margin:12px 0}.thread-new{width:100%;margin-bottom:12px}.thread-list{display:flex;flex-direction:column;gap:5px}.thread{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px;align-items:center;border:1px solid transparent;border-radius:8px;padding:4px}.thread.active{background:#102331;border-color:#2f5a70}.thread-open{background:none;border:0;color:var(--text);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px;cursor:pointer}.thread-icon{background:none;border:0;color:#9db2bf;padding:4px 6px;cursor:pointer}.sidebar .meta{font-size:11px;color:var(--muted);border-top:1px solid var(--line);margin-top:16px;padding-top:12px}.saas-unavailable{color:var(--warn)}.app{max-width:none!important}.thread-title{font-size:12px;color:var(--muted)}@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line);max-height:280px}}
 
@@ -97,22 +97,23 @@ html,body{height:100%;overflow:hidden}.layout{height:100vh;min-height:0}.app{hei
 .event-label{font:inherit;font-size:10px;padding:2px 5px;background:transparent;border:0;color:inherit;cursor:pointer}.tone-info .event-label{color:#8bcafa}.tone-good .event-label{color:#80ddb0}.tone-warn .event-label{color:#f0d376}.tone-bad .event-label{color:#f6a2b3}.mission-item{max-width:100%;overflow:hidden}.mission-item b,.mission-item span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .semantic-card h3{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.compact-fact{padding:1px 4px}.compact-fact>span[aria-hidden]{display:none}
-</style></head><body><div class="layout"><aside class="sidebar"><button class="primary thread-new" onclick="createThread()">+ Nowa rozmowa</button><h2>Misje <button id="missionHistoryToggle" type="button" onclick="toggleMissionView()">History / Legacy</button></h2><div id="missionList" class="mission-list"></div><h2>Historia rozmów</h2><div id="threadList" class="thread-list"></div><div class="meta"><b>Control plane</b><br>Mission Control: 8766<br>LPCL intake: ACTIVE<br>AUTO · LOCAL-first<br><span id="sidebarSaas" class="ok">SaaS supervisor: sprawdzanie…</span><br><small id="sidebarSaasMeta">Hybrid required · authority NONE</small></div></aside><div class="app">
-<div class="top"><div><h1>LION CONTROL LPCL PANEL</h1><p class="subtitle">LPCL mission intake · live Mission Control · material execution · LION Local Model</p></div><div><div id="controlHealth" class="control-health">MISSION CONTROL …</div><div class="thread-title">Wątek: <b id="activeThreadTitle">—</b></div></div></div>
+</style></head><body><div class="layout"><aside class="sidebar"><button class="primary thread-new" onclick="createThread()">+ Nowa rozmowa</button><h2>Misje <button id="missionHistoryToggle" type="button" onclick="toggleMissionView()">History / Legacy</button></h2><div id="missionList" class="mission-list"></div><h2>Historia rozmów</h2><div id="threadList" class="thread-list"></div><div class="meta"><b>Control plane</b><br>Mission Control: 8766<br>Operator Gateway: 8767<br>LPCL intake: ACTIVE<br><span class="ok">LION BUS · SENTINELX CONTROL</span><br><small>Shared operator ledger · authority bounded by operator grant</small></div></aside><div class="app">
+<div class="top"><div><h1>LION CONTROL LPCL PANEL</h1><p class="subtitle">LPCL mission intake · shared LION operator bus · SentinelX participation · material execution</p></div><div><div id="controlHealth" class="control-health">MISSION CONTROL …</div><div class="thread-title">Wątek: <b id="activeThreadTitle">—</b></div><div id="threadContextHeader" class="status">LION BUS · MISSION UNBOUND</div></div></div>
 <div id="cards" class="cards"></div>
 <section class="control-panel"><div class="top"><div><div class="k">FOCUS MISSION</div><h2 id="missionTitle">—</h2><div id="missionMeta" class="status"></div></div><button onclick="refreshMissions()">Odśwież misje</button></div><div id="missionObjective" class="mission-objective">Cel misji niezaładowany.</div><div id="missionDescription" class="status"></div><div class="mission-progress-head"><b id="missionProgressLabel">Postęp 0%</b><span id="missionPhaseLabel">Brak aktywnej fazy</span></div><div class="mission-progress"><i id="missionProgressBar"></i></div><div id="missionActions" class="row"></div><div class="control-grid"><div><h3>Fazy procesu autonomicznego</h3><div id="missionPhases" class="phase-grid"></div><div id="phaseControlResult" role="status"></div></div><div><h3>Komunikacja dronów · protokoły</h3><div id="protoFilters" class="protocol-filters"></div><div id="protoFeed" class="protocol-feed"></div></div></div></section>
+<section class="control-panel" id="operatorPanel"><div class="top"><div><div class="k">HUMAN OPERATOR CONTROL</div><h2>OPERATOR_PRIMARY</h2><p class="status">Rozmowa z rojem i nadrzędne sterowanie misją · control lane niezależny od inferencji</p></div><button type="button" onclick="refreshOperator()">Odśwież operatora</button></div><div class="row"><label>Parowanie operatora <input id="operatorPairing" type="password" autocomplete="off" placeholder="jednorazowy kod lokalny"></label><button type="button" onclick="operatorPair()">Sparuj</button><button type="button" onclick="operatorUnpair()">Rozłącz</button><span id="operatorPairState" class="status">UNPAIRED</span></div><div id="operatorCards" class="cards"></div><div class="row"><label>Tryb <select id="operatorMode" data-operator-control disabled><option value="MESSAGE">Rozmowa</option><option value="AMEND_CONTEXT">Korekta kontekstu</option><option value="AMEND_PLAN">Korekta planu</option></select></label><label>Adresat <select id="operatorTarget" data-operator-control disabled></select></label></div><textarea id="operatorText" data-operator-control disabled class="lpcl-box" style="min-height:90px" placeholder="Napisz do misji lub drona…"></textarea><div class="row"><button type="button" class="primary" data-operator-control disabled onclick="operatorSend()">Wyślij</button><button type="button" data-operator-control disabled onclick="operatorControl('PAUSE_SCOPE')">Wstrzymaj</button><button type="button" class="danger" data-operator-control disabled onclick="operatorControl('STOP_SCOPE')">Zatrzymaj</button><button type="button" data-operator-control disabled onclick="operatorControl('TAKE_CONTROL')">Przejmij sterowanie</button><button type="button" data-operator-control disabled onclick="operatorControl('RELEASE_CONTROL')">Oddaj sterowanie</button><button type="button" data-operator-control disabled onclick="operatorControl('RESUME_SCOPE',{latch:'ALL'})">Wznów</button></div><div id="operatorResult" class="status">Operator control: oczekiwanie na stan.</div><h3>Zdarzenia operatora</h3><div id="operatorFeed" class="protocol-feed"></div></section>
 <section class="control-panel"><h2>Mission evidence</h2><div id="missionSchema" class="semantic-grid"></div><h3>Material workers</h3><div id="missionWorkers" class="semantic-grid"></div><h3>Environment / hosts</h3><div id="missionEnvironment" class="semantic-grid"></div><h3>Recent events</h3><div id="missionEvents" class="semantic-events"></div></section>
 <section class="control-panel"><div class="top"><div><div class="k">LION CONTROL LANGUAGE</div><h2>LPCL mission intake</h2><p class="status">Wklejenie i walidacja nie wykonują efektów. Rejestracja używa wyłącznie zamrożonego, zwalidowanego źródła. Dopiero jawne Autoryzuj jest activation event dla dokładnego digestu.</p></div><div id="lpclStatus" class="pill">BRAK LPCL</div></div><div id="lpclDiagnostics" class="cards"></div><div class="lpcl-grid"><div><textarea id="lpclText" class="lpcl-box" placeholder="Wklej LPCL/1.2…"></textarea><div class="row"><button id="lpclValidateButton" onclick="validateLpcl()">Waliduj LPCL</button><button id="lpclRegisterButton" class="primary" onclick="registerLpcl()" disabled>Zarejestruj misję</button><button id="lpclActivateButton" onclick="activateLpcl()" disabled>Autoryzuj dokładny LPCL</button></div></div><pre id="lpclPreview" class="lpcl-preview">Brak zwalidowanego LPCL.</pre></div></section>
-<section class="control-panel" id="saasBridgePanel"><div class="top"><div><div class="k">REMOTE COGNITIVE SUPERVISOR</div><h2>CHATGPT_SAAS_SUPERVISOR</h2><p class="status">Brokered Firefox-project mediation · exact request tracking · authority NONE</p></div><button onclick="state()">Odśwież kanał</button></div><div class="cards" id="saasCards"></div><div id="saasBridgeDetail" class="status">Stan powiązania SaaS niezaładowany.</div><div id="saasPending" class="status"></div><div class="row"><button onclick="firefoxMediatorControl('/control/open')">Otwórz Firefox Mediator</button><button onclick="firefoxMediatorControl('/control/pin-current')">Przypnij bieżący projekt i chat</button><button onclick="firefoxMediatorControl('/control/relay/on')">Relay ON</button><button onclick="firefoxMediatorControl('/control/relay/off')">Relay OFF</button><span id="firefoxMediatorState" class="status">Firefox mediator: UNKNOWN</span></div><p class="status">Jawne polecenie <code>Na SaaS: &lt;pytanie&gt;</code> tworzy request brokera. Gdy widoczny Firefox Developer jest zalogowany, przypięty do projektu <code>LION_EVOLUSION</code> i mediator ma świeży heartbeat READY, nowe requesty używają transportu <code>CHATGPT_FIREFOX_PROJECT_MEDIATED</code>. Bez świeżego mediatora system pozostaje fail-closed w trybie zewnętrznej mediacji manualnej.</p></section><section class="control-panel"><div class="k">LOCAL COGNITIVE EXECUTOR</div><h2>LION Local Model</h2><p class="status">Proposal-only GPT‑OSS · live Mission Control/repo/web evidence through material drones · authority NONE</p></section>
-<div class="chat"><div id="messages" class="messages"><div class="msg assistant"><div class="role">LION</div><div class="md"><p>Gotowy. Pytaj o projekt LION, repozytoria, bieżące informacje z sieci albo zwykłe zagadnienia. Źródła i routing dobiorę automatycznie.</p></div></div></div>
-<div class="composer"><textarea id="q" placeholder="Napisz wiadomość…  (Ctrl+Enter = wyślij)"></textarea><div class="row"><button id="send" class="primary" onclick="go()">Wyślij</button><select id="composerRoute" title="Kanał odpowiedzi"><option value="AUTO">Auto</option><option value="LOCAL">LOCAL</option><option value="SAAS">SAAS</option><option value="DUAL">DUAL</option></select><select id="lang" title="Język odpowiedzi"><option value="auto">Język: Auto</option><option value="pl">Polski</option><option value="en">English</option></select><button onclick="copyLast()">Kopiuj odpowiedź</button><button onclick="regenerate()">Regeneruj</button><label class="status"><input id="dbg" type="checkbox" onchange="toggleDebug()"> debug</label><span id="route" class="status grow"></span><span id="busy" class="status"></span></div></div></div>
+<section class="control-panel" id="lionBusPanel"><div class="top"><div><div class="k">SHARED OPERATOR MESSAGE PLANE</div><h2>LION BUS · SENTINELX</h2><p class="status">8780 i ten ChatGPT operator uczestniczą w tym samym <code>operator_messages</code> ledgerze przez 8767. Brak browser mediation i brak provider API.</p></div><button type="button" onclick="refreshActiveBus(false)">Odśwież bus</button></div><div id="busCards" class="cards"></div><div id="busStatus" class="status">Wybierz wątek i przypnij misję.</div></section><section class="control-panel" id="modelCallPanel"><div class="top"><div><div class="k">MODEL PLANE DIAGNOSTICS</div><h2>Model Calls</h2><p class="status">Read-only provenance: który worker pyta który model, przez jaki transport i dlaczego. Model output nie jest authority.</p></div></div><div id="modelCallCards" class="cards"></div><div id="modelCallFeed" class="semantic-grid"></div></section><section class="control-panel"><div class="k">LOCAL COGNITIVE EXECUTOR</div><h2>LION Local Model</h2><p class="status">Proposal-only GPT‑OSS · live Mission Control/repo/web evidence through material drones · authority NONE</p></section>
+<div class="chat"><div id="messages" class="messages"><div class="msg assistant"><div class="role">LION BUS</div><div class="md"><p>Wątek nie jest jeszcze przypięty do misji. Wybierz misję i użyj „Bind mission”.</p></div></div></div>
+<div class="composer"><textarea id="q" placeholder="Wiadomość do LION BUS…  (Ctrl+Enter = wyślij)"></textarea><div class="row"><button id="send" class="primary" onclick="go()">Wyślij do busu</button><span class="chip">LION BUS</span><input id="busTarget" class="grow" placeholder="target, np. mission:M1 albo drone:MD025"><button type="button" onclick="bindActiveThread()">Bind mission</button><button type="button" onclick="unbindActiveThread()">Unbind</button><button onclick="copyLast()">Kopiuj ostatnią odpowiedź</button><label class="status"><input id="dbg" type="checkbox" onchange="toggleDebug()"> debug</label><span id="route" class="status grow"></span><span id="busy" class="status"></span></div></div></div>
 <div id="evidence" class="evidence hide"></div><pre id="debug" class="debug hide"></pre>
 </div></div><script>
 /* Reconcile observed markup in place. User-owned disclosure/input state is retained. */
 const lionMarkupCache=new WeakMap();
 function lionNodeKey(node){
   if(node.nodeType!==1)return null;
-  for(const key of ['id','data-key','data-mid','data-run','data-pod','data-mc-action','data-low-action','data-proto','data-p','data-channel','data-open','data-start-component','data-restart'])if(node.hasAttribute(key))return node.tagName+':'+key+':'+node.getAttribute(key);
+  for(const key of ['id','data-key','data-message-id','data-mid','data-run','data-pod','data-mc-action','data-low-action','data-proto','data-p','data-channel','data-open','data-start-component','data-restart'])if(node.hasAttribute(key))return node.tagName+':'+key+':'+node.getAttribute(key);
   return null;
 }
 function patchHtml(root,markup){
@@ -171,14 +172,12 @@ function workerCards(mission,escape){
   ],{...w,schema_context:mission.schema_context},escape)).join('')||'<p class="status">No material worker records supplied.</p>';
 }
 
-let history=[];let lastQuestion='';let lastAnswer='';let lastPayload=null;let activeThreadId=null;let threads=[];let missions=[];let selectedMissionId=null;let missionFocusId=null;let missionPinned=false;let missionView='operational';let missionData=null;let protoFilter='ALL';let lpclValidated=null;let lpclRegistered=null;let lpclSourceState='EMPTY';let pendingSaasPolls=new Map();let stateRefreshing=false;let missionsRefreshing=false;let missionsRefreshPending=false;let stateRenderKey=null;let missionRenderKey=null;let missionListRenderKey=null;let missionProcessGeneration=0;
-const $=id=>document.getElementById(id);const cardsEl=$('cards'),messagesEl=$('messages'),qEl=$('q'),sendEl=$('send'),langEl=$('lang'),routeEl=$('route'),busyEl=$('busy'),evidenceEl=$('evidence'),debugEl=$('debug'),dbgEl=$('dbg'),threadListEl=$('threadList'),activeThreadTitleEl=$('activeThreadTitle'),missionListEl=$('missionList');function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function captureViewport(){let app=document.querySelector('.app'),proto=$('protoFeed'),active=document.activeElement;return {app,appScroll:app?.scrollTop||0,proto,protoScroll:proto?.scrollTop||0,active,selection:(active&&typeof active.selectionStart==='number')?[active.selectionStart,active.selectionEnd]:null}}function restoreViewport(v){if(!v)return;let restore=()=>{if(v.app&&document.contains(v.app))v.app.scrollTop=v.appScroll;if(v.proto&&document.contains(v.proto))v.proto.scrollTop=v.protoScroll;if(v.active&&document.contains(v.active)&&document.activeElement!==v.active){try{v.active.focus({preventScroll:true});if(v.selection&&typeof v.active.setSelectionRange==='function')v.active.setSelectionRange(v.selection[0],v.selection[1])}catch(e){}}};restore();requestAnimationFrame(restore)}
+let history=[];let lastQuestion='';let lastAnswer='';let lastPayload=null;let activeThreadId=null;let activeThreadContext=null;let busMessages=[];let busRenderKey='';let busRefreshInFlight=false;let threads=[];let missions=[];let selectedMissionId=null;let missionFocusId=null;let missionPinned=false;let missionView='operational';let missionData=null;let protoFilter='ALL';let lpclValidated=null;let lpclRegistered=null;let lpclSourceState='EMPTY';let stateRefreshing=false;let missionsRefreshing=false;let missionsRefreshPending=false;let stateRenderKey=null;let missionRenderKey=null;let missionListRenderKey=null;let missionProcessGeneration=0;
+const $=id=>document.getElementById(id);const cardsEl=$('cards'),messagesEl=$('messages'),qEl=$('q'),sendEl=$('send'),routeEl=$('route'),busyEl=$('busy'),evidenceEl=$('evidence'),debugEl=$('debug'),dbgEl=$('dbg'),threadListEl=$('threadList'),activeThreadTitleEl=$('activeThreadTitle'),missionListEl=$('missionList');function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function captureViewport(){let app=document.querySelector('.app'),proto=$('protoFeed'),active=document.activeElement;return {app,appScroll:app?.scrollTop||0,proto,protoScroll:proto?.scrollTop||0,active,selection:(active&&typeof active.selectionStart==='number')?[active.selectionStart,active.selectionEnd]:null}}function restoreViewport(v){if(!v)return;let restore=()=>{if(v.app&&document.contains(v.app))v.app.scrollTop=v.appScroll;if(v.proto&&document.contains(v.proto))v.proto.scrollTop=v.protoScroll;if(v.active&&document.contains(v.active)&&document.activeElement!==v.active){try{v.active.focus({preventScroll:true});if(v.selection&&typeof v.active.setSelectionRange==='function')v.active.setSelectionRange(v.selection[0],v.selection[1])}catch(e){}}};restore();requestAnimationFrame(restore)}
 function inlineMd(s){s=esc(s);s=s.replace(/`([^`]+)`/g,'<code>$1</code>');s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');s=s.replace(/\*([^*]+)\*/g,'<em>$1</em>');s=s.replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');s=s.replace(/(^|\s)(https:\/\/[^\s<]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');return s}
 function md(src){let lines=String(src||'').replace(/\r/g,'').split('\n'),out=[],i=0,inCode=false,code=[];while(i<lines.length){let l=lines[i];if(l.trim().startsWith('```')){if(!inCode){inCode=true;code=[]}else{out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');inCode=false}i++;continue}if(inCode){code.push(l);i++;continue}if(l.includes('|')&&i+1<lines.length&&/^\s*\|?\s*:?-+/.test(lines[i+1])){let rows=[];rows.push(l);i+=2;while(i<lines.length&&lines[i].includes('|')&&lines[i].trim()){rows.push(lines[i++])}let cells=r=>r.replace(/^\s*\||\|\s*$/g,'').split('|').map(x=>x.trim());let head=cells(rows[0]);out.push('<table><thead><tr>'+head.map(x=>'<th>'+inlineMd(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1).map(r=>'<tr>'+cells(r).map(x=>'<td>'+inlineMd(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>');continue}if(/^###\s+/.test(l))out.push('<h3>'+inlineMd(l.replace(/^###\s+/,''))+'</h3>');else if(/^##\s+/.test(l))out.push('<h2>'+inlineMd(l.replace(/^##\s+/,''))+'</h2>');else if(/^#\s+/.test(l))out.push('<h1>'+inlineMd(l.replace(/^#\s+/,''))+'</h1>');else if(/^>\s?/.test(l))out.push('<blockquote>'+inlineMd(l.replace(/^>\s?/,''))+'</blockquote>');else if(/^[-*]\s+/.test(l)){let xs=[];while(i<lines.length&&/^[-*]\s+/.test(lines[i]))xs.push('<li>'+inlineMd(lines[i++].replace(/^[-*]\s+/,''))+'</li>');out.push('<ul>'+xs.join('')+'</ul>');continue}else if(/^\d+\.\s+/.test(l)){let xs=[];while(i<lines.length&&/^\d+\.\s+/.test(lines[i]))xs.push('<li>'+inlineMd(lines[i++].replace(/^\d+\.\s+/,''))+'</li>');out.push('<ol>'+xs.join('')+'</ol>');continue}else if(l.trim())out.push('<p>'+inlineMd(l)+'</p>');i++}if(inCode)out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');return out.join('')}
-function addMsg(role,text){let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class="role">'+(role==='user'?'TY':'LION')+'</div><div class="md">'+md(text)+'</div>');messagesEl.appendChild(d);d.scrollIntoView({behavior:'smooth',block:'end'})}
+function addMsg(role,text,label=null,follow=false){let d=document.createElement('div');d.className='msg '+role;patchHtml(d,'<div class="role">'+esc(label||(role==='user'?'OPERATOR':'LION'))+'</div><div class="md">'+md(text)+'</div>');messagesEl.appendChild(d);if(follow)d.scrollIntoView({behavior:'smooth',block:'start'})}
 function boundedHistory(){return history.slice(-12).map(x=>({role:x.role,content:x.content.slice(0,3000)}))}
-function supervisorThreadId(){let t=threads.find(x=>String(x.title||'').trim().toLowerCase()==='lion saas');return t?.thread_id||activeThreadId||null}
-// Pending handoffs are resumed only from their owning thread messages, never from global FIFO.
 
 function patchCards(container,rows){
   if(!container)return;
@@ -190,76 +189,24 @@ function patchCards(container,rows){
   }
   for(const node of Array.from(container.children))if(!retained.has(node.dataset.key))node.remove();
 }
-function renderSupervisor(view){
-  const v=view||{},pending=v.pending||{},lease=v.lease||{},fresh=v.freshness||{};
-  patchCards($('saasCards'),[['CHANNEL',v.channel],['SESSION',v.session],['MODEL',v.model],['TRANSPORT',v.transport],['PENDING',v.pending_count??v.pending_state],['LAST RECEIPT',v.last_receipt?.receipt_digest||v.last_receipt_state],['LEASE',lease.state?lease.state+' · '+(lease.expires_at||'NOT RECORDED'):null],['AUTHORITY',v.authority],['AUTOMATIC HOP',v.automatic_hop===true?'READY':v.automatic_hop===false?'UNAVAILABLE':'UNKNOWN'],['OBSERVATION',fresh.state],['OBSERVED AT',fresh.observed_at]]);
-  $('saasBridgeDetail').textContent=[v.schema||'PROJECTION_MISSING',...(v.unknown_reasons||[])].join(' · ');
-  $('saasPending').textContent=pending.request_id?pending.request_id+' · '+(pending.progress_state||pending.status||'NOT RECORDED'):'Pending: '+(v.pending_state||'UNKNOWN');
-  $('sidebarSaas').textContent='SaaS channel: '+(v.channel||'UNKNOWN')+' · session '+(v.session||'UNKNOWN');
-  $('sidebarSaasMeta').textContent='transport '+(v.transport||'UNKNOWN')+' · authority '+(v.authority||'UNKNOWN');
+function renderModelCalls(value){
+  const x=value||{},calls=boundedRows(x.calls||[]),cards=$('modelCallCards'),feed=$('modelCallFeed');
+  patchCards(cards,[['STATE',x.status||'UNKNOWN'],['CALLS',calls.length],['ACTIVE',calls.filter(c=>!['RESPONSE_RECONCILED','FAILED','CANCELLED'].includes(c.state)).length],['AUTH','NONE']]);
+  const html=calls.map((c,i)=>semanticDetail(c.model_call_id||i,c.model_call_id||'Model call',[
+    ['State',c.state],['Mission',c.mission_id],['Phase',c.phase_id],['Task',c.task_id],['Assignment',c.assignment_id],['Logical drone',c.logical_drone_id],['Material worker',c.material_worker_id],['Requested capability',c.requested_capability],['Provider',c.provider],['Requested model',c.model_requested],['Declared model',c.model_declared],['Attested model',c.model_attested],['Transport',c.transport],['Selection reason',c.selection_reason],['Context revision',c.context_revision],['Result digest',c.result_digest],['Consumer',c.downstream_consumer],['Authority',c.authority_effect]
+  ],c,esc)).join('');
+  patchHtml(feed,html||'<p class="status">No model-call records for focused mission.</p>');
 }
-async function refreshFirefoxMediator(){
-  const el=$('firefoxMediatorState');if(!el)return;
-  try{const r=await fetch('http://127.0.0.1:8790/status',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const x=await r.json();el.textContent='Firefox mediator: '+(x.state||'UNKNOWN')+(x.project_title?' · '+x.project_title:'')+(x.chat_title?' · '+x.chat_title:'');el.className='status '+(x.state==='READY'?'ok':'warn')}
-  catch(e){el.textContent='Firefox mediator: OFFLINE';el.className='status warn'}
-}
-async function firefoxMediatorControl(path){
-  const el=$('firefoxMediatorState');try{const r=await fetch('http://127.0.0.1:8790'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const x=await r.json().catch(()=>({}));if(!r.ok)throw new Error(x.error||('HTTP '+r.status));await refreshFirefoxMediator()}catch(e){if(el){el.textContent='Firefox mediator: '+e.message;el.className='status warn'}}
-}
-
 async function state(){
   if(stateRefreshing)return;stateRefreshing=true;
   try{
     const response=await fetch('/api/state',{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);
-    const x=await response.json(),m=x.material||{},mc=x.mission_control||{};
-    patchCards(cardsEl,[['MODEL',x.model],['GPU',x.gpu],['RAG',x.rag_status],['WEB',x.web_capability],['REPOS',x.repository_capability],['SAAS',x.supervisor_projection?.session],['MISSION',mc.focus?.state],['MATERIAL HEALTHY',m.healthy],['AUTH',x.authority_effect]]);
-    renderSupervisor(x.supervisor_projection);
-  }catch(e){$('saasBridgeDetail').textContent='STALE · state read failed';await reportUiRuntimeError(e,'state.refresh')}
-  finally{stateRefreshing=false;void refreshFirefoxMediator()}
+    const x=await response.json(),m=x.material||{},mc=x.mission_control||{},modelCalls=x.model_calls||{status:'UNKNOWN',calls:[]};
+    patchCards(cardsEl,[['MODEL',x.model],['GPU',x.gpu],['RAG',x.rag_status],['WEB',x.web_capability],['REPOS',x.repository_capability],['BUS','OPERATOR_MESSAGES@8767'],['MISSION',mc.focus?.state],['MATERIAL HEALTHY',m.healthy],['AUTH',x.authority_effect]]);
+    renderModelCalls(modelCalls);
+  }catch(e){let h=$('controlHealth');if(h)h.textContent='STATE DEGRADED · '+e.message;await reportUiRuntimeError(e,'state.refresh')}
+  finally{stateRefreshing=false}
 }
-
-async function persistSaasAssistant(threadId,requestId,text,meta={}){if(!threadId||!requestId||!text)return {inserted:false};let r=await fetch('/api/threads/'+encodeURIComponent(threadId)+'/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:text,dedupe_key:'saas:'+requestId,meta:{delivery_kind:'SAAS_RESPONSE',saas_request_id:requestId,...meta}})}),x=await r.json();if(!r.ok)throw new Error(x.error||('thread SaaS persist '+r.status));return x}
-function recoverSaasRefs(messages,threadId){let delivered=new Set(),refs=new Map();for(let m of (messages||[])){let meta=m.meta||{};if(meta.external_receipt_key&&String(meta.external_receipt_key).startsWith('saas:'))delivered.add(String(meta.external_receipt_key).slice(5));let rid=meta.saas_request_id;if(!rid&&m.role==='assistant'){let mm=String(m.content||'').match(/(?:request|Request)\s+`?(saas-[0-9a-f]{32})`?/i);if(mm)rid=mm[1]}if(rid&&!delivered.has(rid))refs.set(rid,{request_id:rid,request_code:meta.saas_request_code||null,dual_request_id:meta.dual_request_id||null,thread_id:threadId})}return [...refs.values()]}
-async function resumeThreadSaas(messages,threadId){for(let h of recoverSaasRefs(messages,threadId))pollSaas(h)}
-function handoffBusy(threadId,text){if(threadId===activeThreadId)busyEl.textContent=text}
-function stopThreadPolling(threadId){for(const value of pendingSaasPolls.values())if(value.threadId===threadId)value.controller.abort();if(threadId===activeThreadId)busyEl.textContent=''}
-async function pollSaas(h){
- if(!h?.request_id||!h.thread_id)return;
- const key=h.request_id,threadId=h.thread_id;
- if(pendingSaasPolls.has(key))return pendingSaasPolls.get(key).promise;
- const controller=new AbortController(),entry={threadId,controller,promise:null};
- pendingSaasPolls.set(key,entry);
- entry.promise=(async()=>{
-  handoffBusy(threadId,'SAAS · WAITING');
-  const deadline=Date.now()+20*60*1000;
-  while(Date.now()<deadline&&!controller.signal.aborted){
-   await new Promise(resolve=>{const done=()=>{clearTimeout(timer);controller.signal.removeEventListener('abort',done);resolve()};const timer=setTimeout(done,1500);controller.signal.addEventListener('abort',done,{once:true})});
-   if(controller.signal.aborted)return;
-   try{
-    const r=await fetch('/api/saas/requests/'+encodeURIComponent(key),{cache:'no-store',signal:controller.signal}),x=await r.json();
-    if(r.status===404)return;
-    if(!r.ok)throw new Error(x.error||('SaaS status '+r.status));
-    if(controller.signal.aborted)return;
-    if(x.status==='RESPONDED'){
-     let meta={};try{meta=JSON.parse(x.response_meta_json||'{}')}catch{}
-     const model=meta.model_identity||'ChatGPT SaaS',transport=meta.transport||'CHATGPT_SENTINELX_SESSION_MEDIATED';let text='';
-     if(h.dual_request_id){const jr=await fetch('/api/dual/'+encodeURIComponent(h.dual_request_id),{signal:controller.signal}),j=await jr.json();if(!jr.ok)throw new Error(j.error);if(j.state!=='JOINED'){handoffBusy(threadId,'Odpowiedź SaaS odebrana; oczekiwanie na połączenie wyników');continue}text=j.answer||('Dual join state: '+j.state)}
-     else text='**SaaS supervisor · '+model+'**\n\n'+(x.response_text||'');
-     if(controller.signal.aborted)return;
-     const tr=await fetch('/api/threads/'+encodeURIComponent(threadId),{cache:'no-store',signal:controller.signal});if(tr.status===404)return;if(!tr.ok)throw new Error('thread delivery read');const thread=await tr.json();
-     const delivered=(thread.messages||[]).find(m=>m.meta?.external_receipt_key==='saas:'+key);
-     if(!delivered){handoffBusy(threadId,'SAAS · RESPONDED · zapis do rozmowy');continue}
-     if(!controller.signal.aborted&&threadId===activeThreadId&&!renderedSaasReceipts.has(key)){renderedSaasReceipts.add(key);addMsg('assistant',delivered.content);history.push({role:'assistant',content:delivered.content});history=history.slice(-16);lastAnswer=delivered.content;routeEl.textContent='SAAS · RESPONDED'}
-     await refreshThreads();return x;
-    }
-    if(['CANCELLED','FAILED','EXPIRED','SUPERSEDED','REJECTED'].includes(x.status))return x;
-    handoffBusy(threadId,x.progress_state==='WAITING_OPERATOR_OVERDUE'?'SAAS · WAITING OVERDUE':'SAAS · WAITING');
-   }catch(e){if(controller.signal.aborted)return;handoffBusy(threadId,'SaaS · nie udało się odczytać stanu; ponawiam')}
-  }
- })().finally(()=>{if(pendingSaasPolls.get(key)===entry)pendingSaasPolls.delete(key);handoffBusy(threadId,'');void state()});
- return entry.promise;
-}
-
 
 function evidenceHtml(payload){
   const x=payload&&typeof payload==='object'?payload:{};
@@ -282,7 +229,7 @@ async function reportUiRuntimeError(error,operation){
   const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
   const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join(''),eventId=hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
   let stackDigest='UNAVAILABLE';try{const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(error?.stack||error?.message||error)));stackDigest=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}catch{}
-  const event={event_id:eventId,error_id:eventId,component:'LPCL_PANEL',error_class:String(error?.name||'Error').slice(0,80),stack_digest:stackDigest,timestamp:new Date().toISOString(),request_id:String([...pendingSaasPolls.entries()].find(([,v])=>v.threadId===activeThreadId)?.[0]||''),frontend_revision:document.querySelector('meta[name=frontend-revision]')?.content||'UNKNOWN',event_class:'UI_RUNTIME_ERROR',operation:String(operation).slice(0,80),error_name:String(error?.name||'Error').slice(0,80),message:String(error?.message||error).slice(0,500),thread_id:String(activeThreadId||'').slice(0,32)};
+  const event={event_id:eventId,error_id:eventId,component:'LPCL_PANEL',error_class:String(error?.name||'Error').slice(0,80),stack_digest:stackDigest,timestamp:new Date().toISOString(),request_id:'',frontend_revision:document.querySelector('meta[name=frontend-revision]')?.content||'UNKNOWN',event_class:'UI_RUNTIME_ERROR',operation:String(operation).slice(0,80),error_name:String(error?.name||'Error').slice(0,80),message:String(error?.message||error).slice(0,500),thread_id:String(activeThreadId||'').slice(0,32)};
   window.dispatchEvent(new CustomEvent('UI_RUNTIME_ERROR',{detail:event}));
   routeEl.textContent='UI_RUNTIME_ERROR · '+event.event_id;
   try{const r=await fetch('/api/ui-runtime-events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)});if(!r.ok)throw new Error('event persistence HTTP '+r.status)}
@@ -293,41 +240,36 @@ window.addEventListener('error',e=>{void reportUiRuntimeError(e.error||new Error
 window.addEventListener('unhandledrejection',e=>{void reportUiRuntimeError(e.reason,'unhandledrejection')});
 let activeChatController=null,chatGeneration=0,threadViewGeneration=0;
 const deletedThreadIds=new Set();
-const renderedSaasReceipts=new Set();
+async function bindActiveThread(){
+ if(!activeThreadId)await createThread();const mid=selectedMissionId||missionFocusId;if(!mid)throw new Error('Wybierz misję');const target=($('busTarget')?.value||'').trim()||('mission:'+mid);
+ const r=await fetch('/api/threads/'+encodeURIComponent(activeThreadId)+'/context',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify({action:'BIND',mission_id:mid,target})}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));activeThreadContext=x;renderThreadContext();await refreshActiveBus(false);await refreshThreads();return x
+}
+async function unbindActiveThread(){if(!activeThreadId)return;const r=await fetch('/api/threads/'+encodeURIComponent(activeThreadId)+'/context',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify({action:'UNBIND'})}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));activeThreadContext=x;busMessages=[];busRenderKey='';renderThreadContext();renderBusProjection({messages:[],message_deliveries:[],context:x},false);await refreshThreads()}
+function renderThreadContext(){const c=activeThreadContext||{};const h=$('threadContextHeader');if(h)h.textContent='LION BUS · THREAD '+String(activeThreadId||'—').slice(0,12)+' · '+(c.binding_state||'MISSION_UNBOUND')+' · MISSION '+(c.mission_id||'—')+' · TARGET '+(c.target||'—')+' · REV '+(c.binding_revision??'—');if($('busTarget'))$('busTarget').value=c.target||''}
+function renderBusProjection(x,follow){
+ const rows=Array.isArray(x?.messages)?x.messages:[],deliveries=Array.isArray(x?.message_deliveries)?x.message_deliveries:[];activeThreadContext=x?.context||activeThreadContext;renderThreadContext();
+ const key=JSON.stringify(rows.map(m=>[m.message_id,m.state,m.applied_at,m.content_digest]));if(key===busRenderKey){renderBusStatus(x);return}const oldIds=new Set(busMessages.map(m=>m.message_id)),nearBottom=messagesEl.scrollHeight-messagesEl.scrollTop-messagesEl.clientHeight<140,priorScroll=messagesEl.scrollTop;busMessages=rows;busRenderKey=key;
+ if(!rows.length){patchHtml(messagesEl,'<div class="msg assistant"><div class="role">LION BUS</div><div class="md"><p>Brak wiadomości w tym wątku. Wiadomości pojawią się tu po zapisie do wspólnego operator ledgeru.</p></div></div>')}else{patchHtml(messagesEl,rows.map(m=>{const mine=String(m.from_participant||'').startsWith('operator'),role=mine?'user':'assistant',ds=deliveries.filter(d=>d.message_id===m.message_id).map(d=>d.recipient+':'+d.delivery_state).join(' · '),label=[m.from_participant,m.kind,m.state,ds].filter(Boolean).join(' · ');return '<div class="msg '+role+'" data-message-id="'+esc(m.message_id)+'"><div class="role">'+esc(label)+'</div><div class="md">'+md(m.content)+'</div></div>'}).join(''))}
+ if(follow&&nearBottom){const fresh=rows.find(m=>!oldIds.has(m.message_id));if(fresh){const node=messagesEl.querySelector('[data-message-id="'+CSS.escape(fresh.message_id)+'"]');node?.scrollIntoView({behavior:'smooth',block:'start'})}}else messagesEl.scrollTop=priorScroll;
+ const own=[...rows].reverse().find(m=>String(m.from_participant||'').startsWith('operator'));const reply=[...rows].reverse().find(m=>!String(m.from_participant||'').startsWith('operator'));if(own)lastQuestion=own.content||'';if(reply)lastAnswer=reply.content||'';renderBusStatus(x)
+}
+function renderBusStatus(x){const c=x?.context||activeThreadContext||{},control=x?.control||{},cards=$('busCards');if(cards)patchCards(cards,[['MISSION',c.mission_id],['TARGET',c.target],['BINDING',c.binding_state],['REVISION',c.binding_revision],['OWNER',control.control_owner],['EPOCH',control.control_epoch],['MESSAGES',(x?.messages||[]).length],['AUTH','OPERATOR GRANT']]);const st=$('busStatus');if(st)st.textContent=c.mission_id?'LION BUS · '+c.mission_id+' · '+(c.target||'—')+' · '+((x?.messages||[]).length)+' messages':'MISSION UNBOUND'}
+async function refreshActiveBus(follow=false){if(!activeThreadId||busRefreshInFlight)return;busRefreshInFlight=true;try{const tr=await fetch('/api/threads/'+encodeURIComponent(activeThreadId),{cache:'no-store'});if(!tr.ok)return;const thread=await tr.json();activeThreadContext=thread.context||null;renderThreadContext();if(!activeThreadContext||activeThreadContext.binding_state!=='MISSION_BOUND'){renderBusProjection({messages:[],message_deliveries:[],context:activeThreadContext},false);return}const r=await fetch('/api/threads/'+encodeURIComponent(activeThreadId)+'/bus',{cache:'no-store'}),x=await r.json();if(r.status===403){routeEl.textContent='LION BUS · PAIR OPERATOR';return}if(!r.ok)throw new Error(x.error||('HTTP '+r.status));renderBusProjection(x,follow)}catch(e){routeEl.textContent='LION BUS · '+e.message}finally{busRefreshInFlight=false}}
 async function go(question){
-  let text=(question??qEl.value).trim();if(!text||sendEl.disabled)return;
-  lastQuestion=text;sendEl.disabled=true;busyEl.textContent='Routing → evidence → model…';
-  let start=performance.now(),requestThreadId=null;const generation=++chatGeneration,controller=new AbortController();activeChatController=controller;
-  try{
-    if(!activeThreadId)await createThread();
-    if(generation!==chatGeneration||!activeThreadId)return;
-    requestThreadId=activeThreadId;lastQuestion=text;addMsg('user',text);qEl.value='';
-    let resp=await fetch('/api/threads/'+requestThreadId+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,output_language:langEl.value,route:$('composerRoute').value}),signal:controller.signal});
-    let x=await resp.json();if(generation!==chatGeneration)return;if(!resp.ok)throw new Error(x.error||('HTTP '+resp.status));
-    const renderedEvidence=evidenceHtml(x);
-    if(requestThreadId===activeThreadId){
-      lastPayload=x;if(x.supervisor_projection)renderSupervisor(x.supervisor_projection);lastAnswer=x.answer||'';addMsg('assistant',lastAnswer||x.error);
-      history.push({role:'user',content:text},{role:'assistant',content:lastAnswer});history=history.slice(-16);
-      routeEl.textContent='route: '+(x.route||'')+' · '+Math.round(performance.now()-start)+' ms';
-      patchHtml(evidenceEl,renderedEvidence);debugEl.textContent=JSON.stringify(x,null,2);
-      if(!dbgEl.checked)evidenceEl.classList.remove('hide');
-    }
-    if(x.saas_handoff)void pollSaas({...x.saas_handoff,thread_id:requestThreadId});
-    await refreshThreads();
-  }catch(e){if(!controller.signal.aborted&&generation===chatGeneration)await reportUiRuntimeError(e,'chat.submit')}
-  finally{if(generation===chatGeneration){activeChatController=null;sendEl.disabled=false;if(!pendingSaasPolls.size)busyEl.textContent=''}void state()}
+ let text=(question??qEl.value).trim();if(!text||sendEl.disabled)return;const clientId=(crypto.randomUUID?crypto.randomUUID().replaceAll('-',''):Array.from(crypto.getRandomValues(new Uint8Array(16))).map(x=>x.toString(16).padStart(2,'0')).join(''));sendEl.disabled=true;busyEl.textContent='LION BUS · PERSIST';
+ try{if(!activeThreadId)await createThread();const t=await fetch('/api/threads/'+encodeURIComponent(activeThreadId),{cache:'no-store'}),thread=await t.json();activeThreadContext=thread.context||null;if(!activeThreadContext||activeThreadContext.binding_state!=='MISSION_BOUND')throw new Error('Najpierw Bind mission');lastQuestion=text;const r=await fetch('/api/threads/'+encodeURIComponent(activeThreadId)+'/bus',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify({content:text,client_id:clientId})}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));qEl.value='';routeEl.textContent='LION BUS · '+(x.command?.execution_state||'PERSISTED')+' · '+String(x.command?.receipt_digest||x.command?.receipt?.receipt_digest||'').slice(0,16);await refreshActiveBus(true)}catch(e){await reportUiRuntimeError(e,'bus.submit')}finally{sendEl.disabled=false;busyEl.textContent=''}
 }
 
-function copyLast(){if(lastAnswer)navigator.clipboard.writeText(lastAnswer)}function regenerate(){if(lastQuestion)go(lastQuestion)}function resetMessages(){lionMarkupCache.delete(messagesEl);messagesEl.replaceChildren();patchHtml(messagesEl,'<div class="msg assistant"><div class="role">LION</div><div class="md"><p>Gotowy. Wybierz wątek lub rozpocznij nowy.</p></div></div>');evidenceEl.replaceChildren();debugEl.textContent='';lionMarkupCache.delete(evidenceEl);lionMarkupCache.delete(debugEl);evidenceEl.classList.add('hide');debugEl.classList.add('hide');routeEl.textContent=''}
+function copyLast(){if(lastAnswer)navigator.clipboard.writeText(lastAnswer)}function regenerate(){if(lastQuestion)go(lastQuestion)}function resetMessages(){lionMarkupCache.delete(messagesEl);messagesEl.replaceChildren();patchHtml(messagesEl,'<div class="msg assistant"><div class="role">LION BUS</div><div class="md"><p>Wybierz wątek, przypnij misję i sparuj operatora.</p></div></div>');evidenceEl.replaceChildren();debugEl.textContent='';lionMarkupCache.delete(evidenceEl);lionMarkupCache.delete(debugEl);evidenceEl.classList.add('hide');debugEl.classList.add('hide');routeEl.textContent=''}
 async function refreshThreads(){let r=await fetch('/api/threads',{cache:'no-store'}),x=await r.json();threads=x.threads||[];patchHtml(threadListEl,threads.map(t=>'<div class="thread '+(t.thread_id===activeThreadId?'active':'')+'"><button class="thread-open" data-open="'+esc(t.thread_id)+'">'+esc(t.title)+'</button><button class="thread-icon" title="Zmień nazwę" data-rename="'+esc(t.thread_id)+'">✎</button><button class="thread-icon" title="Usuń" data-delete="'+esc(t.thread_id)+'">×</button></div>').join(''));threadListEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openThread(b.dataset.open));threadListEl.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>renameThread(b.dataset.rename));threadListEl.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteThread(b.dataset.delete));if(activeThreadId){let t=threads.find(x=>x.thread_id===activeThreadId);if(t)activeThreadTitleEl.textContent=t.title}}
-async function createThread(){const view=++threadViewGeneration;let r=await fetch('/api/threads',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));if(view!==threadViewGeneration)return;activeThreadId=x.thread_id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();await refreshThreads();if(view===threadViewGeneration){activeThreadTitleEl.textContent=x.title;qEl.focus()}}
-async function openThread(id){const view=++threadViewGeneration;let r=await fetch('/api/threads/'+encodeURIComponent(id),{cache:'no-store'});if(!r.ok)return;let x=await r.json();if(view!==threadViewGeneration||deletedThreadIds.has(id))return;activeThreadId=id;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();patchHtml(messagesEl,'');renderedSaasReceipts.clear();for(let m of (x.messages||[])){if(m.meta?.external_receipt_key?.startsWith('saas:'))renderedSaasReceipts.add(m.meta.external_receipt_key.slice(5));addMsg(m.role,m.content);history.push({role:m.role,content:m.content});if(m.role==='user')lastQuestion=m.content;if(m.role==='assistant')lastAnswer=m.content}if(!(x.messages||[]).length)resetMessages();activeThreadTitleEl.textContent=x.title;await refreshThreads();if(view===threadViewGeneration&&!deletedThreadIds.has(id))resumeThreadSaas(x.messages||[],id)}
+async function createThread(){const view=++threadViewGeneration;let r=await fetch('/api/threads',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));if(view!==threadViewGeneration)return;activeThreadId=x.thread_id;activeThreadContext=null;busMessages=[];busRenderKey='';history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();await refreshThreads();if(view===threadViewGeneration){activeThreadTitleEl.textContent=x.title;qEl.focus()}}
+async function openThread(id){const view=++threadViewGeneration;let r=await fetch('/api/threads/'+encodeURIComponent(id),{cache:'no-store'});if(!r.ok)return;let x=await r.json();if(view!==threadViewGeneration||deletedThreadIds.has(id))return;activeThreadId=id;activeThreadContext=x.context||null;busMessages=[];busRenderKey='';history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();activeThreadTitleEl.textContent=x.title;renderThreadContext();await refreshThreads();if(view===threadViewGeneration&&!deletedThreadIds.has(id))await refreshActiveBus(false)}
 async function renameThread(id){let t=threads.find(x=>x.thread_id===id),name=prompt('Nowa nazwa wątku:',t?.title||'');if(!name)return;await fetch('/api/threads/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:name})});await refreshThreads()}
 async function deleteThread(id){
  const t=threads.find(x=>x.thread_id===id);if(!confirm('Usunąć rozmowę „'+(t?.title||id)+'” i anulować jej oczekujące żądania?'))return;
  try{const r=await fetch('/api/threads/'+encodeURIComponent(id),{method:'DELETE'}),x=await r.json();if(!r.ok)throw new Error(x.error||('HTTP '+r.status));
- deletedThreadIds.add(id);stopThreadPolling(id);
- if(activeThreadId===id){threadViewGeneration++;chatGeneration++;activeChatController?.abort();activeThreadId=null;history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();activeThreadTitleEl.textContent='—';busyEl.textContent='';sendEl.disabled=false}
+ deletedThreadIds.add(id);
+ if(activeThreadId===id){threadViewGeneration++;chatGeneration++;activeChatController?.abort();activeThreadId=null;activeThreadContext=null;busMessages=[];busRenderKey='';history=[];lastQuestion='';lastAnswer='';lastPayload=null;resetMessages();activeThreadTitleEl.textContent='—';busyEl.textContent='';sendEl.disabled=false}
  await refreshThreads();if(!activeThreadId&&threads.length)await openThread(threads[0].thread_id);
  }catch(e){busyEl.textContent='Nie usunięto rozmowy: '+e.message}
 }
@@ -422,9 +364,35 @@ async function activateLpcl(){
  const confirmation=x.activation_confirmation||{};if(confirmation.mission_id!==registered.mission_id||confirmation.lpcl_digest!==registered.lpcl_digest){renderLpclIntake('REGISTERED',lpclSourceDiagnostics(registered.validated_source),'ACTIVATION_DIGEST_DRIFT');return}
  renderLpclIntake('AUTHORIZED',lpclSourceDiagnostics(registered.validated_source));$('lpclPreview').textContent=JSON.stringify({mission_id:x.mission_id,state:x.state,runtime_state:x.runtime_state,authorized_digest:confirmation.lpcl_digest,error:x.last_error||null,driver:x.execution_driver||null},null,2);selectedMissionId=registered.mission_id;await refreshMissions()
 }
+const OPERATOR_CSRF='__OPERATOR_CSRF__';let operatorProjection=null;let operatorStream=null;let operatorCursor=0;let operatorStreamMission=null;let operatorSessionPaired=false;
+function setOperatorControlAvailability(enabled){operatorSessionPaired=!!enabled;document.querySelectorAll('[data-operator-control]').forEach(el=>{el.disabled=!operatorSessionPaired})}
+function operatorTargets(){
+ const mid=selectedMissionId||missionFocusId;if(!mid)return [];
+ const out=[['mission:'+mid,'Cała misja'],['swarm:'+mid,'Rój misji'],['group:architecture','Grupa architecture'],['group:security','Grupa security'],['group:runtime','Grupa runtime'],['operator:primary','Operator']];
+ for(const x of (missionData?.logical||[])){const id=x.logical_id||x.id;if(id)out.push(['drone:'+id,'Dron '+id])}
+ const seen=new Set();return out.filter(([id])=>!seen.has(id)&&seen.add(id));
+}
+function renderOperatorTargets(){const el=$('operatorTarget');if(!el)return;const prior=el.value;patchHtml(el,operatorTargets().map(([id,label])=>`<option value="${esc(id)}">${esc(label)}</option>`).join(''));if([...el.options].some(o=>o.value===prior))el.value=prior}
+function renderOperatorEvents(events){const feed=$('operatorFeed');if(!feed)return;patchHtml(feed,(events||[]).slice(-120).reverse().map(e=>`<article class="mc-message" data-key="${esc(e.event_id)}"><div><b>${esc(e.event_type)}</b> · ${esc(e.command_id||'—')}</div><div class="mc-message-meta">${esc(e.observed_at)} · event ${esc(e.event_id)}</div><details class="mc-raw"><summary>RAW</summary><pre>${esc(JSON.stringify(e.payload||{},null,2))}</pre></details></article>`).join('')||'<div class="status">Brak zdarzeń operatora.</div>')}
+async function operatorApi(path,options={}){const r=await fetch(path,{cache:'no-store',...options});const x=await r.json().catch(()=>({}));if(!r.ok)throw new Error(x.error||('HTTP '+r.status));return x}
+async function operatorPair(){const code=$('operatorPairing').value.trim();try{const body=code?{pairing_code:code}:{};const x=await operatorApi('/api/operator/pair',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify(body)});$('operatorPairing').value='';setOperatorControlAvailability(!!x.paired);$('operatorPairState').textContent=x.paired?'PAIRED · OPERATOR_PRIMARY':'UNPAIRED';await refreshOperator();await refreshActiveBus(false)}catch(e){setOperatorControlAvailability(false);$('operatorPairState').textContent='PAIR DENIED · '+e.message}}
+async function operatorUnpair(){try{await operatorApi('/api/operator/unpair',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:'{}'});if(operatorStream){operatorStream.close();operatorStream=null;operatorStreamMission=null}setOperatorControlAvailability(false);$('operatorPairState').textContent='UNPAIRED';operatorProjection=null;$('operatorResult').textContent='Operator control: sesja rozłączona';routeEl.textContent='LION BUS · PAIR OPERATOR'}catch(e){setOperatorControlAvailability(false);$('operatorResult').textContent='UNPAIR DENIED · '+e.message}}
+async function refreshOperator(){
+ const mid=selectedMissionId||missionFocusId;if(!mid||!$('operatorPanel'))return;
+ try{const [x,session]=await Promise.all([operatorApi('/api/operator/state?mission_id='+encodeURIComponent(mid)),operatorApi('/api/operator/session')]);operatorProjection=x;const c=x.control||{};setOperatorControlAvailability(!!session.paired);$('operatorPairState').textContent=session.paired?'PAIRED · OPERATOR_PRIMARY':'UNPAIRED';const caps=x.control_capabilities||{};patchCards($('operatorCards'),[['OWNER',c.control_owner],['EPOCH',c.control_epoch],['PAUSE',c.pause_latch?'LATCHED':'OPEN'],['STOP',c.stop_latch?'LATCHED':'OPEN'],['CONTEXT',c.context_revision],['PLAN',c.plan_revision],['NEW EFFECTS',caps.block_new_admissions],['IN-FLIGHT CANCEL',caps.cancel_inflight],['OFFLINE WORKER',caps.remote_unreachable_worker]]);renderOperatorTargets();$('operatorResult').textContent='Operator control · '+(c.control_owner||'UNKNOWN')+' · epoch '+(c.control_epoch??'—');const ev=await operatorApi('/api/operator/events?mission_id='+encodeURIComponent(mid)+'&after=0&limit=120');operatorCursor=ev.next_cursor||operatorCursor;renderOperatorEvents(ev.events||[]);startOperatorStream(mid)}catch(e){setOperatorControlAvailability(false);$('operatorResult').textContent='Operator control: '+e.message}
+}
+function startOperatorStream(mid){if(operatorStream&&operatorStreamMission===mid)return;if(operatorStream)operatorStream.close();operatorStreamMission=mid;operatorStream=new EventSource('/api/operator/stream?mission_id='+encodeURIComponent(mid)+'&after='+encodeURIComponent(operatorCursor));operatorStream.onmessage=e=>{try{const x=JSON.parse(e.data);operatorCursor=Math.max(operatorCursor,Number(e.lastEventId||x.event_id||0));refreshOperator().catch(()=>{})}catch(_){}};operatorStream.onerror=()=>{}}
+function operatorCommandId(){return 'operator-'+(crypto.randomUUID?crypto.randomUUID().replaceAll('-',''):String(Date.now())+Math.random().toString(16).slice(2))}
+async function operatorSubmit(action,payload={},target=null){
+ if(!operatorSessionPaired)throw new Error('Operator session not paired');
+ const mid=selectedMissionId||missionFocusId;if(!mid)throw new Error('Brak wybranej misji');const body={command_id:operatorCommandId(),mission_id:mid,action,target:target||('mission:'+mid),payload};if(operatorProjection?.control?.control_epoch!==undefined&&['PAUSE_SCOPE','STOP_SCOPE','TAKE_CONTROL','RELEASE_CONTROL','RESUME_SCOPE','REASSIGN','CANCEL_ASSIGNMENT','REVOKE_CAPABILITY','AMEND_PLAN','APPROVE_PROPOSAL'].includes(action))body.expected_revision=Number(operatorProjection.control.control_epoch);
+ const x=await operatorApi('/api/operator/commands',{method:'POST',headers:{'Content-Type':'application/json','X-LION-CSRF':OPERATOR_CSRF},body:JSON.stringify(body)});$('operatorResult').textContent=action+' · '+(x.admission_state||'ACCEPTED')+' · '+(x.execution_state||'UNKNOWN')+' · '+(x.observation_state||'UNKNOWN')+' · '+String(x.receipt_digest||x.receipt?.receipt_digest||'').slice(0,16);await refreshOperator();return x
+}
+async function operatorSend(){const mode=$('operatorMode').value,text=$('operatorText').value.trim(),target=$('operatorTarget').value;if(!text)return;try{let payload={content:text};await operatorSubmit(mode,payload,target);$('operatorText').value=''}catch(e){$('operatorResult').textContent='DENIED · '+e.message}}
+async function operatorControl(action,payload={}){try{if(['STOP_SCOPE','TAKE_CONTROL'].includes(action)&&!confirm(action+' dla '+(selectedMissionId||missionFocusId)+'?'))return;await operatorSubmit(action,payload,'mission:'+(selectedMissionId||missionFocusId))}catch(e){$('operatorResult').textContent='DENIED · '+e.message}}
 function toggleDebug(){debugEl.classList.toggle('hide',!dbgEl.checked)}
 $('lpclText').addEventListener('input',invalidateLpclSource);renderLpclIntake('EMPTY',lpclSourceDiagnostics(''));
-qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});async function boot(){await Promise.allSettled([refreshThreads(),refreshMissions(),state(),refreshFirefoxMediator()]);if(!threads.length){try{let legacy=JSON.parse(localStorage.getItem('lion_r10_history')||'[]');if(Array.isArray(legacy)&&legacy.length){let r=await fetch('/api/threads/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:legacy.slice(-16)})});if(r.ok){localStorage.removeItem('lion_r10_history');await refreshThreads()}}}catch(e){}}if(threads.length)await openThread(threads[0].thread_id);else await createThread();await state()}boot().catch(e=>{let h=$('controlHealth');if(h)h.textContent='BOOT DEGRADED · '+e.message});setInterval(()=>{Promise.allSettled([state(),refreshMissions(),refreshFirefoxMediator()])},5000);
+qEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();go()}});async function boot(){await Promise.allSettled([refreshThreads(),refreshMissions(),state(),refreshOperator()]);if(!threads.length){try{let legacy=JSON.parse(localStorage.getItem('lion_r10_history')||'[]');if(Array.isArray(legacy)&&legacy.length){let r=await fetch('/api/threads/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:legacy.slice(-16)})});if(r.ok){localStorage.removeItem('lion_r10_history');await refreshThreads()}}}catch(e){}}if(threads.length)await openThread(threads[0].thread_id);else await createThread();await state()}boot().catch(e=>{let h=$('controlHealth');if(h)h.textContent='BOOT DEGRADED · '+e.message});setInterval(()=>{Promise.allSettled([state(),refreshMissions(),refreshOperator()])},5000);setInterval(()=>{void refreshActiveBus(true)},1500);
 
 for(const event of ['pointerover','focusin'])document.addEventListener(event,e=>{const n=e.target.closest?.('.card,.mission-item,.mc-reg,.mission-objective,.mc-objective .objective,select');if(n)n.title=n.tagName==='SELECT'?n.selectedOptions[0]?.title||n.selectedOptions[0]?.textContent||'':n.textContent.trim()});
 </script></body></html>'''
@@ -434,11 +402,11 @@ class _DeferredRag:
     def search(self,*a,**k):return ()
 
 class Gateway:
-    def __init__(self,repo,rag,rag_sha,release,model_url,model_sha,provider,currentness_provider,git_provider,web=None,content_provider=None,source_provider=None,mission_provider=None,control_provider=None,material_begin=None,material_receipts=None,material_state=None,material_reconcile=None,thread_provider=None):
+    def __init__(self,repo,rag,rag_sha,release,model_url,model_sha,provider,currentness_provider,git_provider,web=None,content_provider=None,source_provider=None,mission_provider=None,control_provider=None,material_begin=None,material_receipts=None,material_state=None,material_reconcile=None,thread_provider=None,operator_provider=None):
         if not callable(provider) or not callable(currentness_provider) or not callable(git_provider):raise ValueError('explicit providers required')
         self.repo=RepositoryReader(repo,git_provider,content_provider);self.rag=RagIndex(rag,rag_sha,release) if rag else _DeferredRag();self.ctx=build_lion_context(repo)
         self.rag_status='LOADED' if rag else 'DEFERRED_NOT_LOADED';self.model=model_url.rstrip('/');self.model_sha=model_sha;self.web=web or PublicWebReadBroker();self.provider=provider;self.currentness_provider=currentness_provider;self.source_provider=source_provider
-        self.material_begin=material_begin;self.material_receipts=material_receipts;self.material_state=material_state;self.material_reconcile=material_reconcile;self.thread_provider=thread_provider;self.mission_provider=mission_provider;self.control_provider=control_provider
+        self.material_begin=material_begin;self.material_receipts=material_receipts;self.material_state=material_state;self.material_reconcile=material_reconcile;self.thread_provider=thread_provider;self.mission_provider=mission_provider;self.control_provider=control_provider;self.operator_provider=operator_provider
     def state(self):
         mat=self.material_state() if callable(self.material_state) else {'requested':0,'healthy':0,'rows':[],'authority_effect':'NONE'}
         mission={'status':'UNKNOWN','focus_mission_id':None,'mission_count':0}
@@ -446,7 +414,16 @@ class Gateway:
             try:
                 r=self.control_provider('recent',{});rows=r.get('missions',[]);fid=r.get('focus_mission_id');focus=next((x for x in rows if x.get('mission_id')==fid),None);mission={'status':'OK','focus_mission_id':fid,'mission_count':len(rows),'focus':focus}
             except Exception as e:mission={'status':'UNKNOWN','focus_mission_id':None,'mission_count':0,'error':type(e).__name__}
-        return {'status':'ok','product':'LION CONTROL LPCL PANEL','local_model_product':'LION Local Model','model':'gpt-oss-20b-MXFP4','model_sha256':self.model_sha,'gpu':'NVIDIA GeForce RTX 5090 / Vulkan0','system_context_digest':self.ctx.digest,'rag_status':self.rag_status,'rag_release':self.rag.release_id,'rag_sha256':self.rag.sha256,'web_capability':'MEDIATED_PUBLIC_HTTPS_READ_ONLY_AUTO','repository_capability':'MEDIATED_READ_ONLY_AUTO','mission_control':mission,'material':mat,'runtime_role':'HYBRID_LOCAL_MATERIAL_SAAS_COORDINATOR','hybrid_architecture_required':True,'local_cognitive_executor':'gpt-oss-20b-MXFP4','saas_supervisor_role':'CHATGPT_SAAS_SUPERVISOR','saas_capability':'AVAILABLE_EXTERNAL_SESSION_MEDIATED','saas_bridge_state':'EXTERNAL_SESSION_MEDIATED','automatic_saas_hop_available':False,'saas_supervisor_is_effect_authority':False,'effects_require_current_lpcl_and_bounded_executor':True,'execution_policy':'HYBRID_LOCAL_MATERIAL_SAAS_REQUIRED','tool_authority':'NONE','authority_effect':'NONE'}
+        model_calls={'status':'UNAVAILABLE','calls':[],'authority_effect':'NONE'}
+        if callable(self.control_provider) and mission.get('focus_mission_id'):
+            try:
+                r=self.control_provider('model_call_list',{'mission_id':mission['focus_mission_id'],'limit':50});model_calls={'status':'OK','calls':r.get('calls',[]),'authority_effect':'NONE'}
+            except Exception as e:model_calls={'status':'UNKNOWN','calls':[],'error':type(e).__name__,'authority_effect':'NONE'}
+        operator={'status':'UNAVAILABLE'}
+        if callable(self.operator_provider):
+            try:operator={'status':'AVAILABLE',**self.operator_provider('participants',{})}
+            except Exception as e:operator={'status':'UNKNOWN','error':type(e).__name__}
+        return {'status':'ok','product':'LION CONTROL LPCL PANEL','local_model_product':'LION Local Model','model':'gpt-oss-20b-MXFP4','model_sha256':self.model_sha,'gpu':'NVIDIA GeForce RTX 5090 / Vulkan0','system_context_digest':self.ctx.digest,'rag_status':self.rag_status,'rag_release':self.rag.release_id,'rag_sha256':self.rag.sha256,'web_capability':'MEDIATED_PUBLIC_HTTPS_READ_ONLY_AUTO','repository_capability':'MEDIATED_READ_ONLY_AUTO','mission_control':mission,'material':mat,'runtime_role':'HYBRID_LOCAL_MATERIAL_SAAS_COORDINATOR','hybrid_architecture_required':True,'local_cognitive_executor':'gpt-oss-20b-MXFP4','saas_supervisor_role':'CHATGPT_SAAS_SUPERVISOR','saas_capability':'AVAILABLE_EXTERNAL_SESSION_MEDIATED','saas_bridge_state':'EXTERNAL_SESSION_MEDIATED','automatic_saas_hop_available':False,'saas_supervisor_is_effect_authority':False,'effects_require_current_lpcl_and_bounded_executor':True,'execution_policy':'HYBRID_LOCAL_MATERIAL_SAAS_REQUIRED','tool_authority':'NONE','operator_control':operator,'model_calls':model_calls,'authority_effect':'NONE'}
     def _route(self,message):
         low=message.lower()
         if any(x in low for x in SENSITIVE):return 'AUTHORITY_BOUNDARY','consequential/security/authority class is not local-model eligible'
@@ -714,6 +691,11 @@ class Gateway:
         return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language,'supervisor_projection':capability_state.get('supervisor_projection')}
 
 def make_handler(g):
+    operator_sessions={};operator_sessions_lock=threading.Lock()
+    def new_operator_session():
+        sid=secrets.token_urlsafe(32);csrf=secrets.token_urlsafe(32);expires=time.time()+8*3600
+        with operator_sessions_lock:operator_sessions[sid]={'csrf':csrf,'expires':expires,'gateway_session':None,'paired':False}
+        return sid,csrf
     class H(BaseHTTPRequestHandler):
         server_version='LIONLocalModel/3'
         def log_message(self,*a):return
@@ -725,14 +707,76 @@ def make_handler(g):
         def _control(self,op,args=None):
             if not callable(g.control_provider):raise RuntimeError('mission control unavailable')
             return g.control_provider(op,args or {})
+        def _operator(self,op,args=None):
+            if not callable(g.operator_provider):raise RuntimeError('operator control unavailable')
+            return g.operator_provider(op,args or {})
+        def _operator_session(self,mutating=False,require_paired=False):
+            host=(self.headers.get('Host') or '').split(':',1)[0].strip('[]').lower()
+            if host not in {'127.0.0.1','localhost','::1'}:raise PermissionError('operator host denied')
+            cookies={}
+            for part in (self.headers.get('Cookie') or '').split(';'):
+                if '=' in part:
+                    k,v=part.strip().split('=',1);cookies[k]=v
+            sid=cookies.get('lion_operator_session')
+            with operator_sessions_lock:
+                session=operator_sessions.get(sid)
+                if session and session['expires']<=time.time():operator_sessions.pop(sid,None);session=None
+            if not session:raise PermissionError('operator browser session required')
+            if require_paired and not session.get('gateway_session'):raise PermissionError('operator pairing required')
+            if mutating:
+                supplied=self.headers.get('X-LION-CSRF')
+                if not isinstance(supplied,str) or not secrets.compare_digest(supplied,session['csrf']):raise PermissionError('operator csrf denied')
+                origin=self.headers.get('Origin')
+                if origin:
+                    try:o=urlsplit(origin)
+                    except Exception:raise PermissionError('operator origin denied')
+                    if o.scheme not in {'http','https'} or (o.hostname or '').lower() not in {'127.0.0.1','localhost','::1'}:raise PermissionError('operator origin denied')
+            return session
+        def _operator_stream(self,mission_id,after):
+            browser_session=self._operator_session(False,True)
+            try:cursor=max(int(after),int(self.headers.get('Last-Event-ID') or 0))
+            except Exception:cursor=int(after)
+            self.send_response(200);self.send_header('Content-Type','text/event-stream; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Connection','keep-alive');self.end_headers()
+            deadline=time.time()+25;last_keepalive=0
+            try:
+                while time.time()<deadline:
+                    batch=self._operator('events',{'mission_id':mission_id,'after':cursor,'limit':100,'session_token':browser_session.get('gateway_session')})
+                    for event in batch.get('events') or []:
+                        eid=int(event.get('event_id') or 0);raw=json.dumps(event,ensure_ascii=False,separators=(',',':'))
+                        self.wfile.write(('id: '+str(eid)+'\nevent: message\ndata: '+raw+'\n\n').encode('utf-8'));self.wfile.flush();cursor=max(cursor,eid)
+                    if time.time()-last_keepalive>5:self.wfile.write(b': keepalive\n\n');self.wfile.flush();last_keepalive=time.time()
+                    time.sleep(.5)
+            except (BrokenPipeError,ConnectionResetError,OSError):pass
         def do_GET(self):
             path=unquote(self.path.split('?',1)[0])
             if path=='/favicon.ico':
                 self.send_response(204);self.send_header('Cache-Control','public, max-age=3600');self.end_headers();return
             if path=='/':
-                b=UI.replace("__FRONTEND_REVISION__",sha256(UI.encode()).hexdigest()).encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(b);return
+                sid,csrf=new_operator_session();b=UI.replace("__FRONTEND_REVISION__",sha256(UI.encode()).hexdigest()).replace('__OPERATOR_CSRF__',csrf).encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.send_header('Set-Cookie','lion_operator_session='+sid+'; Path=/; HttpOnly; SameSite=Strict');self.end_headers();self.wfile.write(b);return
             if path=='/health':return self.out({'status':'ok','authority_effect':'NONE'})
             if path=='/api/state':return self.out(g.state())
+            if path.startswith('/api/operator/'):
+                try:
+                    browser_session=self._operator_session(False);q=parse_qs(urlsplit(self.path).query)
+                    if path=='/api/operator/session':
+                        token=browser_session.get('gateway_session')
+                        if not token:return self.out({'paired':False,'principal_id':None,'authority_effect':'NONE'})
+                        try:status=self._operator('session',{'session_token':token});return self.out({'paired':bool(status.get('paired')),'principal_id':status.get('principal_id'),'authority_effect':'NONE'})
+                        except Exception:
+                            with operator_sessions_lock:browser_session['gateway_session']=None;browser_session['paired']=False
+                            return self.out({'paired':False,'principal_id':None,'authority_effect':'NONE'})
+                    if not browser_session.get('gateway_session'):raise PermissionError('operator pairing required')
+                    if path=='/api/operator/state':return self.out(self._operator('state',{'mission_id':(q.get('mission_id') or [None])[0],'session_token':browser_session.get('gateway_session')}))
+                    if path=='/api/operator/participants':return self.out(self._operator('participants',{'session_token':browser_session.get('gateway_session')}))
+                    if path=='/api/operator/events':return self.out(self._operator('events',{'mission_id':(q.get('mission_id') or [None])[0],'after':int((q.get('after') or ['0'])[0]),'limit':int((q.get('limit') or ['200'])[0]),'session_token':browser_session.get('gateway_session')}))
+                    if path=='/api/operator/stream':
+                        mid=(q.get('mission_id') or [None])[0]
+                        if not mid:raise ValueError('mission_id')
+                        return self._operator_stream(mid,int((q.get('after') or ['0'])[0]))
+                    if path.startswith('/api/operator/commands/'):return self.out(self._operator('command_status',{'command_id':path[len('/api/operator/commands/'):],'__session_token':browser_session.get('gateway_session')}))
+                    return self.out({'error':'not found'},404)
+                except PermissionError as e:return self.out({'error':str(e)},403)
+                except Exception as e:return self.out({'error':type(e).__name__+':'+str(e)},400)
             if path=='/api/missions/recent':
                 q=parse_qs(urlsplit(self.path).query);view=(q.get('view') or ['operational'])[0]
                 return self.out(self._control('recent',{'view':view}))
@@ -746,6 +790,17 @@ def make_handler(g):
             if path.startswith('/api/missions/') and path.endswith('/process'):
                 mid=path[len('/api/missions/'):-len('/process')].strip('/');return self.out(self._control('process',{'mission_id':mid}))
             if path=='/api/threads':return self.out(self._thread('list'))
+            if path.startswith('/api/threads/') and path.endswith('/bus'):
+                tid=path[len('/api/threads/'):-len('/bus')].rstrip('/')
+                try:
+                    browser_session=self._operator_session(False,True);thread=self._thread('get',{'thread_id':tid});context=thread.get('context') or {}
+                    if context.get('binding_state')!='MISSION_BOUND' or not context.get('mission_id'):
+                        return self.out({'thread_id':tid,'context':context or None,'messages':[],'message_deliveries':[],'control':None,'authority_effect':'NONE'})
+                    state=self._operator('state',{'mission_id':context['mission_id'],'session_token':browser_session.get('gateway_session')});messages=[m for m in (state.get('messages') or []) if m.get('correlation_id')==tid];messages.sort(key=lambda m:(m.get('created_at') or '',m.get('message_id') or ''));ids={m.get('message_id') for m in messages};deliveries=[d for d in (state.get('message_deliveries') or []) if d.get('message_id') in ids]
+                    return self.out({'thread_id':tid,'context':context,'messages':messages,'message_deliveries':deliveries,'control':state.get('control'),'operator':state.get('operator'),'operator_proxy':state.get('operator_proxy'),'authority_effect':'NONE'})
+                except PermissionError as e:return self.out({'error':str(e)},403)
+                except KeyError:return self.out({'error':'thread not found'},404)
+                except Exception as e:return self.out({'error':type(e).__name__+':'+str(e)},400)
             if path.startswith('/api/threads/'):
                 tid=path[len('/api/threads/'):]
                 try:return self.out(self._thread('get',{'thread_id':tid}))
@@ -757,6 +812,28 @@ def make_handler(g):
                 if n<0 or n>220000:raise ValueError('body size')
                 if n and 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('content type')
                 x=json.loads(self.rfile.read(n)) if n else {}
+                if path=='/api/operator/pair':
+                    try:browser_session=self._operator_session(True,False)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    if type(x) is not dict or set(x)-{'pairing_code'}:raise ValueError('pair schema')
+                    paired=self._operator('pair',x);token=paired.pop('session_token',None)
+                    if not token:raise RuntimeError('pairing session token missing')
+                    with operator_sessions_lock:browser_session['gateway_session']=token;browser_session['paired']=True
+                    return self.out(paired,201)
+                if path=='/api/operator/unpair':
+                    try:browser_session=self._operator_session(True,True)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    token=browser_session.get('gateway_session');out=self._operator('unpair',{'session_token':token})
+                    with operator_sessions_lock:browser_session['gateway_session']=None;browser_session['paired']=False
+                    return self.out(out)
+                if path=='/api/operator/commands':
+                    try:browser_session=self._operator_session(True,True)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    return self.out(self._operator('command',{**x,'__session_token':browser_session['gateway_session']}),201)
+                if path=='/api/operator/events/ack':
+                    try:browser_session=self._operator_session(True,True)
+                    except PermissionError as e:return self.out({'error':str(e)},403)
+                    return self.out(self._operator('ack',{**x,'__session_token':browser_session['gateway_session']}))
                 if path=='/api/ui-runtime-events':
                     return self.out(self._thread('ui_runtime_event',x),201)
                 if path.startswith('/api/missions/') and path.endswith('/delete'):
@@ -789,27 +866,31 @@ def make_handler(g):
                 if path=='/api/threads/import':
                     if type(x) is not dict or set(x)!={'messages'}:raise ValueError('thread import schema')
                     return self.out(self._thread('import',x),201)
+                if path.startswith('/api/threads/') and path.endswith('/context'):
+                    tid=path[len('/api/threads/'):-len('/context')].rstrip('/');self._operator_session(True,False)
+                    if type(x) is not dict or x.get('action') not in {'BIND','UNBIND'} or set(x)-{'action','mission_id','target'}:raise ValueError('thread context schema')
+                    if x['action']=='UNBIND':return self.out(self._thread('unbind',{'thread_id':tid}))
+                    mid=x.get('mission_id');target=x.get('target') or ('mission:'+str(mid or ''))
+                    if not isinstance(mid,str) or not mid:raise ValueError('mission_id')
+                    snap=self._control('process',{'mission_id':mid});process=snap.get('process') if isinstance(snap,dict) else None
+                    if not isinstance(process,dict) or process.get('mission_id')!=mid:raise ValueError('mission binding currentness')
+                    return self.out(self._thread('bind',{'thread_id':tid,'mission_id':mid,'target':target}))
+                if path.startswith('/api/threads/') and path.endswith('/bus'):
+                    tid=path[len('/api/threads/'):-len('/bus')].rstrip('/');browser_session=self._operator_session(True,True)
+                    if type(x) is not dict or set(x)-{'content','client_id'} or not isinstance(x.get('content'),str) or not x['content'].strip():raise ValueError('bus message schema')
+                    client_id=x.get('client_id') or uuid.uuid4().hex
+                    if not isinstance(client_id,str) or not re.fullmatch(r'[0-9a-f]{32}',client_id):raise ValueError('bus client_id')
+                    thread=self._thread('get',{'thread_id':tid});context=thread.get('context') or {}
+                    if context.get('binding_state')!='MISSION_BOUND' or not context.get('mission_id') or not context.get('target'):raise ValueError('thread mission binding required')
+                    command_id='panel-'+sha256((tid+'|'+client_id).encode()).hexdigest()[:32]
+                    command={'command_id':command_id,'mission_id':context['mission_id'],'action':'MESSAGE','target':context['target'],'payload':{'content':x['content'].strip()[:16000]},'correlation_id':tid}
+                    out=self._operator('command',{**command,'__session_token':browser_session.get('gateway_session')});return self.out({'thread_id':tid,'context':context,'command':out,'authority_effect':'NONE'},201)
                 if path.startswith('/api/threads/') and path.endswith('/assistant'):
                     tid=path[len('/api/threads/'):-len('/assistant')].rstrip('/')
                     if type(x) is not dict or set(x)!={'content','dedupe_key','meta'} or not isinstance(x.get('content'),str) or not isinstance(x.get('meta'),dict):raise ValueError('thread assistant append schema')
                     return self.out(self._thread('append_assistant_once',{'thread_id':tid,'assistant':x['content'],'dedupe_key':x['dedupe_key'],'meta':x['meta']}),201)
                 if path.startswith('/api/threads/') and path.endswith('/chat'):
-                    tid=path[len('/api/threads/'):-len('/chat')].rstrip('/')
-                    if type(x) is not dict or set(x)-{'message','output_language','route'} or not isinstance(x.get('message'),str):raise ValueError('thread chat schema')
-                    t=self._thread('get',{'thread_id':tid});history=[{'role':m['role'],'content':m['content']} for m in t.get('messages',[])][-12:]
-                    from .saas_handoff_extension import THREAD_CONTEXT,ROUTE_CONTEXT
-                    route=x.get('route','AUTO')
-                    if route not in {'AUTO','LOCAL','SAAS','DUAL'}:raise ValueError('composer route')
-                    thread_token=THREAD_CONTEXT.set(tid);route_token=ROUTE_CONTEXT.set(route)
-                    try:out=g.chat(x['message'],history=history,output_language=x.get('output_language','auto'))
-                    finally:THREAD_CONTEXT.reset(thread_token);ROUTE_CONTEXT.reset(route_token)
-                    handoff=out.get('saas_handoff') if isinstance(out.get('saas_handoff'),dict) else {}
-                    try:
-                        saved=self._thread('append_pair',{'thread_id':tid,'user':x['message'],'assistant':out.get('answer',''),'meta':{'route':out.get('route'),'tool_calls':out.get('tool_calls',[]),'material_receipt_count':len(out.get('material_receipts',[])),'saas_request_id':handoff.get('request_id'),'saas_request_code':handoff.get('request_code'),'dual_request_id':handoff.get('dual_request_id')}})
-                    except KeyError:
-                        if handoff.get('request_id'):self._control('saas_request_cancel',{'request_id':handoff['request_id']})
-                        raise
-                    return self.out({**out,'thread_id':tid,'thread_title':saved['title']})
+                    return self.out({'error':'SUPERSEDED_BY_LION_BUS','authority_effect':'NONE'},410)
                 if path not in {'/api/chat','/v1/chat/completions'}:return self.out({'error':'not found'},404)
                 if path=='/api/chat':
                     allowed={'message','history','output_language'}

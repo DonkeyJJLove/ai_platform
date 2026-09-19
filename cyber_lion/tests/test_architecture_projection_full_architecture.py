@@ -7,6 +7,7 @@ from cyber_lion.architecture_projection.full_architecture import (
     _require_source_symbol,
     build_full_architecture_model,
 )
+from cyber_lion.tests.architecture_projection_candidate import clean_git_repo, staged_sources, staged_tree
 
 
 def observed_tree(repo_root: Path) -> str:
@@ -24,9 +25,9 @@ def observed_tree(repo_root: Path) -> str:
 class FullArchitectureProjectionTests(unittest.TestCase):
     def test_exact_canonical_tree_binding_and_determinism(self):
         repo_root = Path(__file__).resolve().parents[2]
-        tree = observed_tree(repo_root)
-        first = build_full_architecture_model(source_tree_sha=tree, source_root=repo_root)
-        second = build_full_architecture_model(source_tree_sha=tree, source_root=repo_root)
+        tree = staged_tree(repo_root); sources=staged_sources(repo_root)
+        first = build_full_architecture_model(source_tree_sha=tree, source_files=sources)
+        second = build_full_architecture_model(source_tree_sha=tree, source_files=sources)
         self.assertEqual(first, second)
         self.assertEqual(first.digest(), second.digest())
         self.assertEqual(first.source_tree_sha, tree)
@@ -34,15 +35,14 @@ class FullArchitectureProjectionTests(unittest.TestCase):
         self.assertEqual(len(first.flows), 9)
 
     def test_wrong_source_tree_fails_closed(self):
-        repo_root = Path(__file__).resolve().parents[2]
-        actual = observed_tree(repo_root)
-        wrong = "0" * 40 if actual != "0" * 40 else "1" * 40
-        with self.assertRaisesRegex(ValueError, "source tree mismatch"):
-            build_full_architecture_model(source_tree_sha=wrong, source_root=repo_root)
+        with clean_git_repo() as (repo_root, actual):
+            wrong = "0" * 40 if actual != "0" * 40 else "1" * 40
+            with self.assertRaisesRegex(ValueError, "source tree mismatch"):
+                build_full_architecture_model(source_tree_sha=wrong, source_root=repo_root)
 
     def test_all_non_target_nodes_have_source_provenance(self):
         repo_root = Path(__file__).resolve().parents[2]
-        model = build_full_architecture_model(source_tree_sha=observed_tree(repo_root), source_root=repo_root)
+        model = build_full_architecture_model(source_tree_sha=staged_tree(repo_root), source_files=staged_sources(repo_root))
         for element in model.elements:
             if element.status.status == "TARGET_ONLY":
                 self.assertTrue(element.target_ref)
@@ -65,7 +65,7 @@ class FullArchitectureProjectionTests(unittest.TestCase):
 
     def test_model_remains_derived_non_authoritative(self):
         repo_root = Path(__file__).resolve().parents[2]
-        model = build_full_architecture_model(source_tree_sha=observed_tree(repo_root), source_root=repo_root)
+        model = build_full_architecture_model(source_tree_sha=staged_tree(repo_root), source_files=staged_sources(repo_root))
         self.assertTrue(model.derived_only)
         self.assertEqual(model.authority_effect, "NONE")
         self.assertEqual(model.runtime_evidence, "NONE")

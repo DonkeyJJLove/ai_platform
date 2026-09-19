@@ -122,8 +122,8 @@ def _require_source_symbol(extractor: ArchitectureProjectionExtractor, *, path: 
         raise ValueError(f"architecture source contract missing: {path}:{symbol}")
 
 
-def build_full_architecture_model(*, source_tree_sha: str, source_root: str | Path | None = None) -> FullArchitectureModel:
-    extractor = ArchitectureProjectionExtractor(source_tree_sha=source_tree_sha, source_root=source_root)
+def build_full_architecture_model(*, source_tree_sha: str, source_root: str | Path | None = None, source_files: dict[str, str] | None = None) -> FullArchitectureModel:
+    extractor = ArchitectureProjectionExtractor(source_tree_sha=source_tree_sha, source_root=source_root, source_files=source_files)
     elements: list[ArchitectureElement] = []
     for element_id, layer, label, status, path, symbol, evidence_class in _ELEMENT_SPECS:
         text = extractor._source(path)

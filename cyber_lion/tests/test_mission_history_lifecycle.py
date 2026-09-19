@@ -47,7 +47,10 @@ class MissionHistoryLifecycleTests(unittest.TestCase):
    self.assertIn('History / Legacy',src);self.assertIn('lifecycle_class',src);self.assertIn('LEGACY_HISTORY',src);self.assertIn('SUPERSEDED',src)
   self.assertIn("execution_controls_allowed===false",mc);self.assertIn("execution_controls_allowed===false",panel)
 
- def test_dedicated_endpoint_requires_exact_activated_task(self):
-  x={'task_mission_id':self.mc.EPOCH3_LIFECYCLE_TASK,'task_lpcl_digest':self.mc.EPOCH3_LIFECYCLE_TASK_DIGEST,'source_head':self.head,'source_tree':self.tree};self.assertFalse(self.mc.execute_epoch3_lifecycle_normalization(x)['already_normalized']);c=self.mc.connect();c.execute("UPDATE mission_process_specs SET authority_state='NONE' WHERE mission_id=?",(self.mc.EPOCH3_LIFECYCLE_TASK,));c.commit();c.close();self.assertRaisesRegex(ValueError,'not explicitly activated',self.mc.execute_epoch3_lifecycle_normalization,x)
+ def test_dedicated_endpoint_requires_exact_activated_task_and_creates_one_backup(self):
+  x={'task_mission_id':self.mc.EPOCH3_LIFECYCLE_TASK,'task_lpcl_digest':self.mc.EPOCH3_LIFECYCLE_TASK_DIGEST,'source_head':self.head,'source_tree':self.tree}
+  first=self.mc.execute_epoch3_lifecycle_normalization(x);self.assertFalse(first['already_normalized']);self.assertEqual(first['backup']['integrity'],'ok');self.assertEqual(len(first['backup']['sha256']),64);self.assertTrue(Path(first['backup']['path']).is_file())
+  c=self.mc.connect();bcount=c.execute("SELECT COUNT(*) FROM mission_rollback_points WHERE mission_id=? AND rollback_class='SQLITE_CONSISTENT_BACKUP'",(self.mc.EPOCH3_LIFECYCLE_TASK,)).fetchone()[0];rcount=c.execute("SELECT COUNT(*) FROM mission_action_receipts WHERE mission_id=? AND action='PRE_NORMALIZATION_DATABASE_BACKUP'",(self.mc.EPOCH3_LIFECYCLE_TASK,)).fetchone()[0];c.close();self.assertEqual((bcount,rcount),(1,1))
+  replay=self.mc.execute_epoch3_lifecycle_normalization(x);self.assertTrue(replay['already_normalized']);self.assertIsNone(replay['backup']);c=self.mc.connect();self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_rollback_points WHERE mission_id=? AND rollback_class='SQLITE_CONSISTENT_BACKUP'",(self.mc.EPOCH3_LIFECYCLE_TASK,)).fetchone()[0],1);c.execute("UPDATE mission_process_specs SET authority_state='NONE' WHERE mission_id=?",(self.mc.EPOCH3_LIFECYCLE_TASK,));c.commit();c.close();self.assertRaisesRegex(ValueError,'not explicitly activated',self.mc.execute_epoch3_lifecycle_normalization,x)
 
 if __name__=='__main__':unittest.main()

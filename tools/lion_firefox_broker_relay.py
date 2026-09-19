@@ -86,7 +86,7 @@ def main():
         rid=row['request_id'];claim=http_json(a.broker,f'/api/v3/saas-broker/requests/{rid}/claim','POST',{},key)
         secret={'request_id':rid,'response_token':claim['response_token'],'claim_generation':claim['claim_generation'],'claim_expires_at':claim.get('claim_expires_at'),'question':claim['question'],'question_digest':claim['question_digest']}
         atomic_json(claims/(rid+'.json'),secret)
-        work={'schema':'lion.firefox-mediator-work/v1','request_id':rid,'question':claim['question'],'question_digest':claim['question_digest'],'claim_generation':claim['claim_generation'],'thread_id':row.get('thread_id'),'scope_type':row.get('scope_type'),'scope_id':row.get('scope_id'),'transport':FIREFOX_TRANSPORT,'authority_effect':'NONE'}
+        work={'schema':'lion.firefox-mediator-work/v2','request_id':rid,'question':claim['question'],'question_digest':claim['question_digest'],'claim_generation':claim['claim_generation'],'mission_id':row.get('mission_id'),'thread_id':row.get('thread_id'),'scope_type':row.get('scope_type'),'scope_id':row.get('scope_id'),'transport':FIREFOX_TRANSPORT,'thread_policy':'ONE_CHAT_PER_MISSION_WITH_TERMINAL_ROLLOVER','authority_effect':'NONE'}
         atomic_json(inbox/(rid+'.json'),work,0o644)
     last_hb=0.0
     while True:
