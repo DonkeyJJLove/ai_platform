@@ -60,5 +60,7 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('SAAS_DISPATCH_PENDING',RELAY)
         self.assertIn('if bs.get("status")!="CLAIMED"',RELAY)
         self.assertIn('/claim","POST",{}',RELAY)
+        self.assertIn('BROKER_TERMINAL_',RELAY)
+        self.assertIn('(Path(a.ipc_dir)/"inbox"/(rid+".json")).unlink()',RELAY)
 
 if __name__=="__main__":unittest.main()

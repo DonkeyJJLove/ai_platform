@@ -131,6 +131,12 @@ def claim_new(a,key,token,state_dir):
 
 def reconcile(a,key,token,sf,rec):
     rid=rec["request_id"];bs=http(a.broker,f"/api/v3/saas-broker/requests/{rid}")
+    if bs.get("status") in {"SUPERSEDED","CANCELLED","FAILED","REJECTED"}:
+        rec.update(state="SUPERSEDED" if bs.get("status") in {"SUPERSEDED","CANCELLED"} else "FAILED",
+                   reconciliation_state="BROKER_TERMINAL_"+str(bs.get("status")),last_observed_at=now())
+        try:(Path(a.ipc_dir)/"inbox"/(rid+".json")).unlink()
+        except FileNotFoundError:pass
+        atomic(sf,rec);return
     if rec.get("state")=="SAAS_DISPATCH_PENDING" and rec.get("turn_id"):
         if not wakeup_evidence(a.ipc_dir,rid):
             queue_wakeup(a.ipc_dir,{**bs,"claim_generation":rec.get("claim_generation")},rec["turn_id"])
