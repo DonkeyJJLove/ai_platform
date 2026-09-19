@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SECURE="CHATGPT_OPENAI_SECURE_MCP_TUNNEL"
+WAKEUP_TRANSPORT="CHATGPT_FIREFOX_PROJECT_MEDIATED"
 ATTEST="OPENAI_SECURE_MCP_TUNNEL_TOOL_ROUNDTRIP"
 WAITING={"WAITING_SUPERVISOR","WAITING_OPERATOR_OVERDUE","QUEUED"}
 FINAL={"RECONCILED","SUPERSEDED","FAILED"}
@@ -89,7 +90,7 @@ def queue_wakeup(ipc,row,turn_id):
       "question":q,"question_digest":sha(q),"claim_generation":row["claim_generation"],
       "mission_id":row.get("mission_id"),"thread_id":row.get("thread_id"),
       "scope_type":row.get("scope_type"),"scope_id":row.get("scope_id"),
-      "transport":SECURE,"thread_policy":"ONE_CHAT_PER_MISSION_WITH_TERMINAL_ROLLOVER",
+      "transport":WAKEUP_TRANSPORT,"thread_policy":"ONE_CHAT_PER_MISSION_WITH_TERMINAL_ROLLOVER",
       "authority_effect":"NONE"}
     atomic(Path(ipc)/"inbox"/(row["request_id"]+".json"),work,0o644)
 

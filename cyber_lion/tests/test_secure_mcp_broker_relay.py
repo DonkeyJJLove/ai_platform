@@ -19,6 +19,8 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('lion_get_turn',RELAY)
         self.assertIn('lion_complete_turn',RELAY)
         self.assertIn('OPENAI_SECURE_MCP_TUNNEL_TOOL_ROUNDTRIP',RELAY)
+        self.assertIn('WAKEUP_TRANSPORT="CHATGPT_FIREFOX_PROJECT_MEDIATED"',RELAY)
+        self.assertIn('"transport":WAKEUP_TRANSPORT',RELAY)
 
     def test_ready_requires_ingress_and_node_driver(self):
         self.assertIn('state="READY" if ingress_ready(a.ingress,token) and ok_driver else "DEGRADED"',RELAY)
