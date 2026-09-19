@@ -27,6 +27,12 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('legacy_uia_worker_disabled',t)
         self.assertNotIn('startWorker();',t)
         self.assertNotIn('lion-firefox-uia-node-manager',t)
+        self.assertIn('backgroundGeneration',t)
+        self.assertIn('suppressBackgroundRestart',t)
+        self.assertIn('scheduleBackgroundRestart',t)
+        self.assertIn('taskkill.exe',t)
+        self.assertIn('/T',t)
+        self.assertIn('/F',t)
 
     def test_background_driver_is_headless_persistent_and_windowless(self):
         t=self.background

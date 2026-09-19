@@ -4,7 +4,7 @@ const fs=require("fs");
 const path=require("path");
 const http=require("http");
 const crypto=require("crypto");
-const {spawn}=require("child_process");
+const {spawn,spawnSync}=require("child_process");
 
 const HERE=__dirname;
 const HOST=process.env.LION_FIREFOX_MANAGER_HOST||"127.0.0.1";
@@ -29,6 +29,8 @@ let backgroundChild=null;
 let bootstrapChild=null;
 let shuttingDown=false;
 let restartTimer=null;
+let backgroundGeneration=0;
+let suppressBackgroundRestart=false;
 
 const now=()=>new Date().toISOString();
 function safeJson(file,def=null){try{return JSON.parse(fs.readFileSync(file,"utf8").replace(/^\uFEFF/,""))}catch{return def}}
@@ -37,21 +39,41 @@ function missionKey(payload){const m=String(payload?.mission_id||"").trim();if(m
 function missionStatePath(payload){const k=missionKey(payload);return k?path.join(THREADS_DIR,crypto.createHash("sha256").update(k).digest("hex")+".json"):null}
 function listThreads(){try{return fs.existsSync(THREADS_DIR)?fs.readdirSync(THREADS_DIR).filter(x=>x.endsWith(".json")).sort().map(x=>safeJson(path.join(THREADS_DIR,x))).filter(Boolean):[]}catch{return[]}}
 
+function scheduleBackgroundRestart(generation){
+  if(shuttingDown||suppressBackgroundRestart||restartTimer||generation!==backgroundGeneration)return;
+  restartTimer=setTimeout(()=>{
+    restartTimer=null;
+    if(!shuttingDown&&!suppressBackgroundRestart&&generation===backgroundGeneration&&!backgroundChild)startBackground();
+  },2000);
+}
 function startBackground(){
   if(shuttingDown||backgroundChild)return backgroundChild?.pid||null;
-  backgroundChild=spawn(process.execPath,[BACKGROUND_SCRIPT],{
+  suppressBackgroundRestart=false;
+  const generation=++backgroundGeneration;
+  const c=spawn(process.execPath,[BACKGROUND_SCRIPT],{
     windowsHide:true,detached:false,stdio:["ignore","ignore","ignore"],
+    cwd:HERE,
     env:{...process.env,LION_FIREFOX_MEDIATOR_IPC:IPC,LION_FIREFOX_PROJECT_HOME_URL:PROJECT_HOME_URL,LION_FIREFOX_PROJECT:PROJECT_TITLE}
   });
-  const pid=backgroundChild.pid;
-  backgroundChild.once("exit",()=>{backgroundChild=null;if(!shuttingDown){restartTimer=setTimeout(()=>{restartTimer=null;startBackground()},2000)}});
-  backgroundChild.once("error",()=>{backgroundChild=null;if(!shuttingDown&&!restartTimer){restartTimer=setTimeout(()=>{restartTimer=null;startBackground()},2000)}});
-  return pid;
+  backgroundChild=c;
+  c.once("exit",()=>{
+    if(backgroundChild===c)backgroundChild=null;
+    scheduleBackgroundRestart(generation);
+  });
+  c.once("error",()=>{
+    if(backgroundChild===c)backgroundChild=null;
+    scheduleBackgroundRestart(generation);
+  });
+  return c.pid;
 }
 function stopBackground(){
+  suppressBackgroundRestart=true;
+  backgroundGeneration++;
   if(restartTimer){clearTimeout(restartTimer);restartTimer=null}
   const c=backgroundChild;backgroundChild=null;
-  if(c){try{c.kill()}catch{}}
+  if(c&&c.pid){
+    try{spawnSync("taskkill.exe",["/PID",String(c.pid),"/T","/F"],{windowsHide:true,stdio:"ignore",cwd:"C:\\Windows\\System32"})}catch{}
+  }
 }
 function startBootstrap(){
   if(bootstrapChild)return bootstrapChild.pid;
