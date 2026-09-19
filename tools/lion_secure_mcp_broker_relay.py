@@ -104,12 +104,17 @@ def queue_wakeup(ipc,row,turn_id):
 
 def write_terminal_wakeup_receipt(ipc,rec):
     rid=rec.get("request_id");state=rec.get("state")
-    if not rid or state not in {"SUPERSEDED","FAILED"}:return
-    status="SUPERSEDED" if state=="SUPERSEDED" else "FAILED"
-    atomic(Path(ipc)/"receipts"/(rid+".json"),{
-      "request_id":rid,"status":status,"terminal_without_response":True,
-      "reason":rec.get("reconciliation_state"),"authority_effect":"NONE"
-    },0o644)
+    if not rid or state not in FINAL:return
+    if state=="RECONCILED":
+        digest=rec.get("broker_receipt_digest")
+        if not digest:return
+        payload={"request_id":rid,"status":"RESPONDED","receipt_digest":digest,
+                 "authority_effect":"NONE"}
+    else:
+        status="SUPERSEDED" if state=="SUPERSEDED" else "FAILED"
+        payload={"request_id":rid,"status":status,"terminal_without_response":True,
+                 "reason":rec.get("reconciliation_state"),"authority_effect":"NONE"}
+    atomic(Path(ipc)/"receipts"/(rid+".json"),payload,0o644)
 
 def wakeup_evidence(ipc,rid):
     base=Path(ipc)

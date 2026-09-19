@@ -6,6 +6,7 @@ NODE=ROOT/'tools/firefox_mediator/mediator.js'
 UIA=ROOT/'tools/firefox_mediator/open_session_mediator.ps1'
 RELAY=ROOT/'tools/lion_firefox_broker_relay.py'
 BACKGROUND=ROOT/'tools/firefox_mediator/background_driver.cjs'
+EDGE_UIA=ROOT/'tools/firefox_mediator/edge_session_worker.ps1'
 
 class FirefoxNodeMissionThreadTests(unittest.TestCase):
     @classmethod
@@ -14,6 +15,7 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         cls.uia=UIA.read_text(encoding='utf-8')
         cls.relay=RELAY.read_text(encoding='utf-8')
         cls.background=BACKGROUND.read_text(encoding='utf-8')
+        cls.edge_uia=EDGE_UIA.read_text(encoding='utf-8')
 
     def test_node_normal_path_is_native_background_and_uia_is_manual_only(self):
         t=self.node
@@ -44,6 +46,15 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('visible_window_count:0',t)
         self.assertIn('driver_mode:"NODE_BACKGROUND"',t)
         self.assertIn('taskkill.exe',t)
+
+    def test_minimized_edge_readiness_accepts_bound_project_conversation(self):
+        t=self.edge_uia
+        self.assertIn("$projectPrefix=($target -replace '/project$','')",t)
+        self.assertIn('$norm -like "$projectPrefix/c/*"',t)
+        self.assertIn("'PROJECT_CONVERSATION'",t)
+        self.assertIn('Ensure-Minimized',t)
+        self.assertIn("window_state='MINIMIZED'",t)
+        self.assertIn('visible_window_count=0',t)
 
     def test_uia_persists_one_conversation_per_mission_scope(self):
         t=self.uia

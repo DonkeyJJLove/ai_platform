@@ -160,13 +160,17 @@ function Find-ProjectTargetWindow {
 
 function Find-ProjectHome {
   $target=Normalize-Url $ProjectHomeUrl
+  $projectPrefix=($target -replace '/project$','')
   foreach($window in @(Get-FirefoxRoots)){
     try {$windowAll=Get-All $window} catch {continue}
     $url=Get-Url $windowAll
-    if((Normalize-Url $url) -ne $target){continue}
+    $norm=Normalize-Url $url
+    $isProjectSurface=($norm -eq $target -or $norm -like "$projectPrefix/c/*")
+    if(-not $isProjectSurface){continue}
     $doc=Find-VisibleProjectDocument $window
     if(-not $doc){continue}
     $doc | Add-Member -NotePropertyName Url -NotePropertyValue $url -Force
+    $doc | Add-Member -NotePropertyName Surface -NotePropertyValue ($(if($norm -eq $target){'PROJECT_HOME'}else{'PROJECT_CONVERSATION'})) -Force
     return $doc
   }
   return $null
