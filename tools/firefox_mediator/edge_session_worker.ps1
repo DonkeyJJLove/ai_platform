@@ -158,6 +158,20 @@ function Find-ProjectTargetWindow {
   return $null
 }
 
+function Find-ProjectSurfaceWindow {
+  $target=Normalize-Url $ProjectHomeUrl
+  $projectPrefix=($target -replace '/project$','')
+  foreach($window in @(Get-FirefoxRoots)){
+    try {$windowAll=Get-All $window} catch {continue}
+    $url=Get-Url $windowAll
+    $norm=Normalize-Url $url
+    if($norm -eq $target -or $norm -like "$projectPrefix/c/*"){
+      return [pscustomobject]@{Window=$window;Url=$url;All=$windowAll}
+    }
+  }
+  return $null
+}
+
 function Find-ProjectHome {
   $target=Normalize-Url $ProjectHomeUrl
   $projectPrefix=($target -replace '/project$','')
@@ -188,13 +202,30 @@ function Refresh-Readiness {
 }
 
 function Ensure-ProjectHome {
-  $deadline=(Get-Date).AddSeconds(30)
+  $started=Get-Date
+  $deadline=$started.AddSeconds(30)
+  $recoveryAttempted=$false
   while((Get-Date) -lt $deadline){
     $projectHome=Find-ProjectHome
     if($projectHome){
       if(-not (Ensure-Minimized $projectHome.Window)){Write-Status 'DEGRADED' @{reason='EDGE_MINIMIZE_FAILED';project_verified=$false};return $null}
       Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='DEDICATED_MINIMIZED_EDGE';window_state='MINIMIZED';visible_window_count=0;project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
       return $projectHome
+    }
+    if(-not $recoveryAttempted -and ((Get-Date)-$started).TotalSeconds -ge 5){
+      $surface=Find-ProjectSurfaceWindow
+      if($surface -and -not (Generation-InProgress $surface.All)){
+        try {
+          Navigate-ToUrl $surface.Window $ProjectHomeUrl
+          $recoveryAttempted=$true
+          Write-Status 'RECOVERING' @{reason='PROMPTLESS_PROJECT_SURFACE_NAVIGATE_HOME';previous_url=$surface.Url;project_home_url=$ProjectHomeUrl;project_verified=$false;new_thread_policy=$ThreadPolicy}
+          Start-Sleep -Milliseconds 1000
+          continue
+        } catch {
+          Write-Status 'DEGRADED' @{reason='PROJECT_HOME_RECOVERY_NAVIGATION_FAILED';error=$_.Exception.Message;project_verified=$false;new_thread_policy=$ThreadPolicy}
+          return $null
+        }
+      }
     }
     Start-Sleep -Milliseconds 500
   }

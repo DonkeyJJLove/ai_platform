@@ -54,9 +54,11 @@ class ExplicitTransportRoutingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.create('NOT_A_TRANSPORT')
 
-    def test_project_handoff_source_pins_firefox(self):
+    def test_project_handoff_source_pins_secure_mcp_broker_transport(self):
         src=(Path(__file__).resolve().parents[2]/'cyber_lion/app_coordination/saas_handoff_extension.py').read_text(encoding='utf-8')
-        self.assertIn('"transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"',src)
+        self.assertIn("SECURE_MCP_TRANSPORT='CHATGPT_OPENAI_SECURE_MCP_TUNNEL'",src)
+        self.assertIn('"transport":SECURE_MCP_TRANSPORT',src)
+        self.assertNotIn('effective_transport="CHATGPT_OPENAI_SECURE_MCP_TUNNEL" if secure_mcp_ready else broker_reported_transport',src)
 
     def test_api_contract_accepts_transport_field(self):
         src=(Path(__file__).resolve().parents[2]/'tools/lion_mission_control_v3.py').read_text(encoding='utf-8')

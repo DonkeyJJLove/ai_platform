@@ -63,6 +63,10 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('Note-MissionTurnByKey',t)
         self.assertIn("[string]$j.state -ne 'SEND_CONFIRMED'",t)
         self.assertIn('Reconcile-TerminalJournals',t)
+        self.assertIn('function Find-ProjectSurfaceWindow',t)
+        self.assertIn("reason='PROMPTLESS_PROJECT_SURFACE_NAVIGATE_HOME'",t)
+        self.assertIn('-not (Generation-InProgress $surface.All)',t)
+        self.assertIn('Navigate-ToUrl $surface.Window $ProjectHomeUrl',t)
 
     def test_uia_persists_one_conversation_per_mission_scope(self):
         t=self.uia

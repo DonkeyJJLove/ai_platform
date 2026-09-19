@@ -8,6 +8,7 @@ from cyber_lion.mission_control.supervisor_projection import supervisor_projecti
 
 THREAD_CONTEXT=ContextVar('lion_saas_thread',default=None)
 ROUTE_CONTEXT=ContextVar('lion_composer_route',default='AUTO')
+SECURE_MCP_TRANSPORT='CHATGPT_OPENAI_SECURE_MCP_TUNNEL'
 
 _APPLIED = "_lion_saas_handoff_extension_v1"
 
@@ -177,7 +178,7 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
+            handoff = self.control_provider("saas_request", {"scope_type":"MISSION","mission_id":mission_id,"question":saas_prompt,"authority_effect":"NONE","transport":SECURE_MCP_TRANSPORT} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE","transport":SECURE_MCP_TRANSPORT})
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
@@ -210,18 +211,30 @@ def apply_saas_handoff_extension(cls):
                 raise ValueError("SaaS handoff control provider unavailable")
             mission_id = None
             question = _question(message)
-            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
+            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE","transport":SECURE_MCP_TRANSPORT})
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
-            firefox_transport=handoff.get('transport')=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
+            effective_transport=handoff.get('transport')
+            secure_transport=effective_transport=='CHATGPT_OPENAI_SECURE_MCP_TUNNEL'
+            firefox_transport=effective_transport=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
             if polish:
-                transport_text=("Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty Firefox mediator przejmie request automatycznie i po realnej odpowiedzi ChatGPT zwróci receipt do tego samego wątku. " if firefox_transport else "Transport pozostaje EXTERNAL_SESSION_MEDIATED — automatyczny browser mediator nie jest obecnie READY, więc odpowiedź wymaga zewnętrznego mediatora. ")
+                if secure_transport:
+                    transport_text="Transport CHATGPT_OPENAI_SECURE_MCP_TUNNEL: request trafia do Secure MCP relay, który używa Node background wakeup i zwraca realny receipt do tego samego wątku. "
+                elif firefox_transport:
+                    transport_text="Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty browser mediator przejmie request automatycznie i zwróci realny receipt do tego samego wątku. "
+                else:
+                    transport_text="Transport pozostaje EXTERNAL_SESSION_MEDIATED — automatyczny mediator nie jest obecnie READY, więc odpowiedź wymaga zewnętrznego mediatora. "
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
                           f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
                           "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
                           +transport_text+
                           "Powtórzenie identycznego unresolved pytania jest wiązane przez dedupe/retry lineage zamiast mnożyć aktywną kolejkę. Odpowiedź ma authority_effect=NONE.")
             else:
-                transport_text=("Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned Firefox mediator will claim the request automatically and return a real ChatGPT receipt to the same thread. " if firefox_transport else "Transport remains EXTERNAL_SESSION_MEDIATED: the automatic browser mediator is not READY, so an external mediator is still required. ")
+                if secure_transport:
+                    transport_text="Transport is CHATGPT_OPENAI_SECURE_MCP_TUNNEL: the Secure MCP relay uses the Node background wakeup path and returns the real ChatGPT receipt to the same thread. "
+                elif firefox_transport:
+                    transport_text="Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned browser mediator will claim the request automatically and return the real ChatGPT receipt to the same thread. "
+                else:
+                    transport_text="Transport remains EXTERNAL_SESSION_MEDIATED: no automatic mediator is currently READY, so an external mediator is still required. "
                 answer = ("The request is queued in the controlled SaaS channel. "
                           f"Code {handoff['request_code']}; request {handoff['request_id']}. "
                           "The panel follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
