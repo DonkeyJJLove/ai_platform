@@ -298,6 +298,7 @@ PROCESS_CAPABILITY_REGISTRY={
  'CONTROL_PLANE_REPAIR':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'VERIFY_BEFORE_REPAIR_RECONCILIATION'},
  ),
+
  'BROKER_RECONCILIATION':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'VERIFY_BEFORE_REPAIR_RECONCILIATION'},
  ),
@@ -598,6 +599,7 @@ def process_migrate(c):
     );
     ''')
     t=now()
+
     objective='Validate the integrated LION control plane: 12 logical roles, 64 material Kubernetes Pods, lifecycle control, execution validation, receipts and Mission Control observability.'
     desc='R4 preflight mission used to prove bounded Mission Control lifecycle and material execution before the next evolution phase.'
     c.execute('INSERT OR IGNORE INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
@@ -754,7 +756,50 @@ def apply_runtime_for(c,mid,r):
     state=str(r.get('state') or 'UNKNOWN');mat=int(r.get('materialized',0) or 0);ready=int(r.get('ready',0) or 0);t=now();row=c.execute('SELECT state FROM missions WHERE mission_id=?',(mid,)).fetchone();cur=row['state'] if row else 'UNKNOWN'
     if state=='RUNNING':life='RUNNING'
     elif state=='PAUSED':life='PAUSED'
-    elif state in {'ABSENT','K3S_NOT_RUNNING'}:life='STOPPED' if cur
+    elif state in {'ABSENT','K3S_NOT_RUNNING'}:life='STOPPED' if cur not in {'AUTHORIZED'} else cur
+    elif state=='CONVERGING':life='CONVERGING'
+    else:life=cur
+    c.execute('UPDATE missions SET state=?,runtime_state=?,materialized=?,ready=?,updated_at=? WHERE mission_id=?',(life,state,mat,ready,t,mid));c.execute('DELETE FROM material_workers WHERE mission_id=?',(mid,));by={}
+    for pod in r.get('pods',[]) or []:
+      lid=str(pod.get('logical_drone') or '').upper();by.setdefault(lid,[0,0]);by[lid][0]+=1;by[lid][1]+=1 if pod.get('ready') else 0
+      c.execute('INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)',(mid,pod.get('name'),pod.get('uid'),lid,pod.get('phase'),1 if pod.get('ready') else 0,int(pod.get('restarts',0) or 0),pod.get('pod_ip'),t))
+    for logical in c.execute('SELECT logical_id FROM logical_drones WHERE mission_id=?',(mid,)).fetchall():
+      vals=by.get(str(logical['logical_id']).upper(),[0,0]);c.execute('UPDATE logical_drones SET materialized=?,ready=? WHERE mission_id=? AND logical_id=?',(vals[0],vals[1],mid,logical['logical_id']))
+    lifecycle_sync_components(c,mid,now)
+
+
+def refresh_legacy(mid):
+    if not mid.startswith('legacy::'):raise ValueError('not legacy mission')
+    run_id=mid[len('legacy::'):]
+    if not LEGACY_DB.is_file():raise ValueError('legacy source unavailable')
+    lc=sqlite3.connect('file:'+str(LEGACY_DB)+'?mode=ro',uri=True);row=lc.execute('SELECT payload FROM runs WHERE run_id=?',(run_id,)).fetchone();lc.close()
+    if not row:raise ValueError('legacy source record unavailable')
+    payload=json.loads(row[0]);src=payload.get('source') or {};metrics=payload.get('metrics') or {};work=payload.get('workload') or {};status=str(payload.get('status') or 'UNKNOWN');mat=int(work.get('pods') or metrics.get('ready') or 0);ready=int(metrics.get('ready') or (mat if status=='PASS' else 0));runtime=str((payload.get('evidence') or {}).get('class') or 'HISTORICAL_IMPORTED_EVIDENCE');t=now();dg=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest();c=connect();c.execute('UPDATE missions SET state=?,runtime_state=?,material_target=?,materialized=?,ready=?,source_head=?,source_tree=?,spec_digest=?,spec_json=?,updated_at=?,last_error=NULL WHERE mission_id=?',('RECORDED_'+status,runtime,mat,mat,ready,src.get('head'),src.get('tree'),dg,json.dumps(payload,sort_keys=True,ensure_ascii=False),t,mid));c.commit();c.close();return {'mission_id':mid,'source':'generic_mission_control','recorded_status':status,'materialized':mat,'ready':ready,'effect':'READ_ONLY_REINDEX'}
+
+
+def _replace_lpcl_key(text,key,value):
+    import re
+    pat=re.compile(r'^'+re.escape(key)+r'=.*$',re.MULTILINE)
+    line=f'{key}={value}'
+    return pat.sub(line,text,count=1) if pat.search(text) else text.rstrip()+'\n'+line+'\n'
+
+
+def compile_design_revision(mid,revision_id):
+    c=connect()
+    try:
+      rev=c.execute('SELECT revision_id,mission_id,revision_no,action,state,request_json,request_digest FROM mission_design_revisions WHERE revision_id=? AND mission_id=?',(revision_id,mid)).fetchone()
+      ps=c.execute('SELECT lpcl_text FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+      m=c.execute('SELECT source_head,source_tree FROM missions WHERE mission_id=?',(mid,)).fetchone()
+      if not rev or not ps or not ps['lpcl_text'] or not m:raise ValueError('revision compilation source missing')
+      existing=c.execute('SELECT * FROM mission_revision_compilations WHERE revision_id=?',(revision_id,)).fetchone()
+      if existing:return dict(existing)
+      suffix=f"-REV{int(rev['revision_no']):02d}"
+      successor=(mid+suffix)[:127]
+      if successor==mid or len(mid+suffix)>127:
+       successor=(mid[:110]+'-R'+hashlib.sha256((mid+suffix).encode()).hexdigest()[:12])
+      text=str(ps['lpcl_text'])
+      text=_replace_lpcl_key(text,'MISSION_ID',successor)
+      text=_replace_lpcl_key(text,'RUN','THE-BEAN-FACTORY-LION-EVOLUTION-V1_4-DESIGN-REVISION-'+hashlib.sha256(successor.encode()).hexdigest()[:16].upper())
       text=_replace_lpcl_key(text,'PARENT_MISSION_ID',mid)
       text=_replace_lpcl_key(text,'MISSION_RELATION','DESIGN_REVISION_SUCCESSOR')
       text=_replace_lpcl_key(text,'REVISION_SOURCE_ID',revision_id)
@@ -855,6 +900,7 @@ def mission_action(mid,x,*,phase_guard=None):
         result={'driver':after,'phase_id':pid,'still_unavailable':still,'planning_assignments_delta':after_assign-before_assign,'planning_receipts_delta':after_receipts-before_receipts,'action_ir_delta':after_plans-before_plans};effect='CONTROL_STATE'
       elif action=='STOP':
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
+
         if not ds:raise ValueError('driver missing')
         if ds['state'] in {'COMPLETE','STOPPED'}:result=ds
         else:result=driver_transition(c,mid,'STOPPED',now,next_action='EXPLICIT_RESUME_REQUIRED',commit=guarded_connection is None)
@@ -1155,6 +1201,7 @@ def recent_process_missions(view='operational'):
 
 def _read_recent_process_missions(view='operational'):
     view=_view_name(view);c=connect()
+
     try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 60')]
     finally:c.close()
     rows=[]
@@ -1455,6 +1502,7 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
       if not m or not ps or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return
       if not operator_control.autonomy_allowed(c,mid):return
       d=driver_snapshot(c,mid)
+
       if not d:return
       if d['state']=='BOOTSTRAP_PAUSED':
        d=driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
@@ -1544,7 +1592,17 @@ def _registered_generic_driver(mid):
       row=c.execute("SELECT phase_id FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
       if not row:return False
       spec=_phase_exec_spec(c,mid,row['phase_id'])
-      return bool(spec and
+      return bool(spec and spec.get('handler_id')==GENERIC_PHASE_HANDLER)
+    finally:c.close()
+
+
+def _generic_wait(c,mid,pid,*,gate,reason,next_action,status='WAITING',detail=None):
+    d=driver_snapshot(c,mid)
+    target_state='BLOCKED' if status=='BLOCKED' else 'WAITING'
+    if d and d.get('state')==target_state and d.get('blocking_gate')==gate and d.get('next_action')==next_action and d.get('current_phase')==pid and d.get('lease_owner') is None:
+     return False
+    if detail is not None:
+     c.execute('UPDATE mission_phases SET status=?,detail=?,updated_at=? WHERE mission_id=? AND phase_id=?',(status,str(detail)[:4000],now(),mid,pid))
     driver_transition(c,mid,target_state,now,blocking_gate=gate,waiting_reason=reason,next_action=next_action,current_phase=pid,commit=False)
     c.execute('UPDATE mission_execution_drivers SET lease_owner=NULL,lease_expires_at=NULL WHERE mission_id=?',(mid,))
     c.commit();return True
@@ -1745,6 +1803,7 @@ def _generic_execute_read_plan(c,plan):
       receipt=c.execute('SELECT * FROM mission_execution_receipts WHERE mission_id=? AND phase_id=? ORDER BY observed_at DESC LIMIT 1',(mid,pid)).fetchone()
       ok,evidence=_execution_binder_postconditions(c,mid,pid,assignment,receipt) if assignment and receipt else (False,{'missing':'planning assignment or receipt','authority_effect':'NONE'})
       evidence={'capability':capability,**evidence}
+
     elif capability==control_recon.CAPABILITY_ID:
       contract=global_sched.phase_execution_contract(c,mid,pid)
       if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
@@ -2045,6 +2104,7 @@ def local_assignment_receipt(x):
       out['payload_store']=payload_store
       c.commit();return out
     finally:c.close()
+
 
 UI=r'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LION Mission Control</title><style>:root{color-scheme:dark;--b:#080d12;--p:#111820;--l:#293744;--t:#edf5fa;--m:#91a7b7;--g:#55d99d;--y:#e5bd68;--r:#ff7580}*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--t);font:14px/1.45 Inter,Segoe UI,system-ui}.app{max-width:1500px;margin:auto;padding:18px}h1{margin:0;font-size:24px}.sub{color:var(--m)}.top{display:flex;justify-content:space-between;gap:12px}.pill,.card,.panel{border:1px solid var(--l);background:var(--p);border-radius:10px}.pill{padding:8px 12px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}.card{padding:10px}.k{font-size:10px;color:#7fa7bb}.v{font-size:18px;font-weight:700}.grid{display:grid;grid-template-columns:1.35fr .65fr;gap:10px}.panel{padding:14px;margin-bottom:10px}.logical{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ld{border:1px solid var(--l);border-radius:8px;padding:9px}.bar{height:7px;background:#22303a;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g)}button{background:#173743;color:white;border:1px solid #3c6575;border-radius:7px;padding:8px 12px;margin:2px}button.danger{border-color:#7a3d45;background:#3a2025}.workers{max-height:440px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px;border-bottom:1px solid #202c35;text-align:left}.ok{color:var(--g)}.warn{color:var(--y)}.bad{color:var(--r)}.cmd{font-family:Consolas,monospace;font-size:11px}.legacy{color:var(--m)}@media(max-width:950px){.grid{grid-template-columns:1fr}.logical{grid-template-columns:1fr 1fr}}</style></head><body><div class="app"><div class="top"><div><h1>LION MISSION CONTROL</h1><div class="sub">Mission registry · bounded control · live material execution · receipts</div></div><div id="authority" class="pill">loading</div></div><div id="cards" class="cards"></div><div class="grid"><div><div class="panel"><h2 id="title"></h2><div id="meta" class="sub"></div><div id="actions"></div><h3>Logical control plane · 12 drones</h3><div id="logical" class="logical"></div></div><div class="panel"><h3>Material plane · 64 Kubernetes Pods</h3><div class="workers"><table><thead><tr><th>Pod</th><th>Logical</th><th>Phase</th><th>Ready</th><th>Restarts</th><th>UID</th><th></th></tr></thead><tbody id="workers"></tbody></table></div></div></div><div><div class="panel"><h3>Mission registry</h3><div id="registry"></div></div><div class="panel"><h3>Command / receipt ledger</h3><div id="commands"></div></div><div class="panel"><h3>Mission events</h3><div id="events"></div></div><div class="panel legacy"><b>Legacy recorded runs:</b> <span id="legacy"></span><br>Legacy history remains evidence, not live state.</div></div></div></div><script>const $=x=>document.getElementById(x);let S=null;function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function get(){let r=await fetch('/api/v3/missions/current',{cache:'no-store'});S=await r.json();render()}function btn(a,label,cls=''){return '<button class="'+cls+'" onclick="act(\''+a+'\')">'+label+'</button>'}async function act(a,pod){if(!confirm(a+(pod?' '+pod:'')))return;let r=await fetch('/api/v3/missions/current/actions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:a,...(pod?{pod_name:pod}:{})})});let x=await r.json();if(!r.ok)alert(x.error||'control failed');await get()}function render(){let s=S;$('authority').innerHTML='CONTROL: <b>'+esc(s.control_authority)+'</b>';$('title').textContent=s.title;$('meta').textContent=s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · spec '+s.spec_digest.slice(0,16);let cs=[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',s.materialized+'/'+s.material_target],['READY',s.ready+'/'+s.material_target],['SOURCE',s.source_head.slice(0,8)],['LEGACY',s.legacy_recorded_runs]];$('cards').innerHTML=cs.map(x=>'<div class="card"><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>').join('');let a='';if(['AUTHORIZED','STOPPED','FAILED'].includes(s.state))a+=btn('START','Start mission');if(s.state==='RUNNING'){a+=btn('PAUSE','Pause');a+=btn('VALIDATE','Validate fleet');}if(s.state==='PAUSED')a+=btn('RESUME','Resume');if(['RUNNING','PAUSED','FAILED','CONVERGING'].includes(s.state))a+=btn('STOP','Stop','danger');$('actions').innerHTML=a;$('logical').innerHTML=s.logical.map(x=>'<div class="ld"><b>'+x.logical_id+' · '+esc(x.role)+'</b><div>'+x.ready+'/'+x.material_target+' ready</div><div class="bar"><i style="width:'+(100*x.ready/Math.max(1,x.material_target))+'%"></i></div></div>').join('');$('workers').innerHTML=s.workers.map(x=>'<tr><td>'+esc(x.pod_name)+'</td><td>'+esc(x.logical_id)+'</td><td>'+esc(x.phase)+'</td><td class="'+(x.ready?'ok':'warn')+'">'+(x.ready?'YES':'NO')+'</td><td>'+x.restarts+'</td><td>'+esc((x.pod_uid||'').slice(0,12))+'</td><td>'+(s.state==='RUNNING'?'<button onclick="act(\'RESTART_ONE\',\''+esc(x.pod_name)+'\')">restart</button>':'')+'</td></tr>').join('');$('registry').innerHTML=(s.registry||[]).map(x=>'<div class="cmd">'+(x.controllable?'● ':'○ ')+esc(x.mission_id)+' · '+esc(x.state)+' · '+esc(x.adapter)+'</div>').join('');$('commands').innerHTML=s.commands.map(x=>'<div class="cmd">'+esc(x.requested_at)+' '+esc(x.action)+' <b class="'+(x.status==='PASS'?'ok':x.status==='FAIL'?'bad':'warn')+'">'+x.status+'</b>'+(x.pod_name?' '+esc(x.pod_name):'')+'</div>').join('')||'none';$('events').innerHTML=s.events.map(x=>'<div class="cmd">'+esc(x.observed_at)+' '+esc(x.event_type)+'</div>').join('')||'none';$('legacy').textContent=s.legacy_recorded_runs}get();setInterval(get,3000)</script></body></html>'''
 
