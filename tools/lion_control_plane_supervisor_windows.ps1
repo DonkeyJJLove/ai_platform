@@ -158,21 +158,16 @@ function Ensure-Panel([hashtable]$RepoIdentity) {
     if (-not (Wait-Http ($PanelUrl + '/') 30)) { throw 'PANEL_START_TIMEOUT' }
     return [int]$proc.Id
 }
-function Retire-LionBrowserPath {
-    $legacy=@(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-        $_.CommandLine -and (
-            ($_.Name -eq 'powershell.exe' -and $_.CommandLine -match 'open_session_mediator\.ps1') -or
-            ($_.Name -eq 'node.exe' -and $_.CommandLine -match 'firefox-mediator-app' -and $_.CommandLine -match 'mediator\.js')
-        )
-    })
-    foreach($old in $legacy){
-        Stop-Process -Id $old.ProcessId -Force -ErrorAction SilentlyContinue
-        Write-Log ('LEGACY_BROWSER_PATH_STOP pid=' + $old.ProcessId)
+function Observe-OptionalFirefoxTransport {
+    $p=Process-For-Port 8790
+    if (-not $p) { return $false }
+    if ($p.Name -eq 'node.exe' -and $p.CommandLine -and $p.CommandLine -match 'firefox-mediator-app' -and $p.CommandLine -match 'mediator\.js') {
+        return $true
     }
-    Start-Sleep -Milliseconds 250
-    if (Listener 8790) { throw 'PORT_8790_MUST_BE_ABSENT_IN_NORMAL_READY_PATH' }
+    Write-Log ('WARN PORT_8790_PRESENT_BUT_NOT_LION_MEDIATOR pid=' + $p.ProcessId)
+    return $false
 }
-function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int]$MatHealthy) {
+function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int]$MatHealthy,[bool]$FirefoxTransportActive) {
     $mc=[bool](Listener 8766)
     $operatorControl=[bool](Test-OperatorControl)
     $state=[ordered]@{
@@ -188,7 +183,8 @@ function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int
         model_8772=$true
         panel_8780=$true
         legacy_browser_8790=$false
-        browser_relay_active=$false
+        browser_relay_active=$FirefoxTransportActive
+        optional_model_transport_8790=$FirefoxTransportActive
         message_transport='LION_OPERATOR_MESSAGES'
         control_transport='SENTINELX_OPERATOR_CONTROL'
         panel_channel='LION_BUS'
@@ -200,14 +196,15 @@ function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int
 }
 function One-Pass {
     $repoIdentity=Assert-RepoClean
-    Retire-LionBrowserPath
+    $firefoxTransportActive=Observe-OptionalFirefoxTransport
     $modelPid=Ensure-Model
     $mat=Ensure-MatFleet
     $null=Ensure-MissionControl
     if (-not (Test-OperatorControl)) { throw 'OPERATOR_CONTROL_8767_UNAVAILABLE' }
     $panelPid=Ensure-Panel $repoIdentity
-    Write-State $repoIdentity $modelPid $panelPid $mat
-    Write-Log ('READY model=' + $modelPid + ' panel=' + $panelPid + ' bus=LION_OPERATOR_MESSAGES operator8767=READY browser8790=ABSENT mat=12 head=' + $repoIdentity.head)
+    Write-State $repoIdentity $modelPid $panelPid $mat $firefoxTransportActive
+    $firefoxState=if($firefoxTransportActive){'OPTIONAL_ACTIVE'}else{'ABSENT'}
+    Write-Log ('READY model=' + $modelPid + ' panel=' + $panelPid + ' bus=LION_OPERATOR_MESSAGES operator8767=READY browser8790=' + $firefoxState + ' mat=12 head=' + $repoIdentity.head)
 }
 
 if ($Once) {

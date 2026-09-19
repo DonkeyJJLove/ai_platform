@@ -57,7 +57,10 @@ class Epoch4CommunicationModelControlArchitectureTests(unittest.TestCase):
         self.assertIn("self.control_provider('model_call_list'",self.gateway)
 
     def test_normal_ready_path_does_not_depend_on_firefox_manager(self):
-        self.assertIn('PORT_8790_MUST_BE_ABSENT_IN_NORMAL_READY_PATH',self.supervisor)
+        self.assertNotIn('PORT_8790_MUST_BE_ABSENT_IN_NORMAL_READY_PATH',self.supervisor)
+        self.assertNotIn('Retire-LionBrowserPath',self.supervisor)
+        self.assertIn('Observe-OptionalFirefoxTransport',self.supervisor)
+        self.assertIn('optional_model_transport_8790=$FirefoxTransportActive',self.supervisor)
         self.assertIn("panel_channel='LION_BUS'",self.supervisor)
         self.assertIn("message_transport='LION_OPERATOR_MESSAGES'",self.supervisor)
 

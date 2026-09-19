@@ -53,17 +53,21 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn("message_transport='LION_OPERATOR_MESSAGES'",t)
         self.assertIn("control_transport='SENTINELX_OPERATOR_CONTROL'",t)
         self.assertIn("panel_channel='LION_BUS'",t)
-        self.assertIn("if (Listener 8790) { throw 'PORT_8790_MUST_BE_ABSENT_IN_NORMAL_READY_PATH' }",t)
+        self.assertNotIn('PORT_8790_MUST_BE_ABSENT_IN_NORMAL_READY_PATH',t)
+        self.assertIn('Observe-OptionalFirefoxTransport',t)
+        self.assertIn('optional_model_transport_8790=$FirefoxTransportActive',t)
         self.assertIn("--operator-panel-proxy-key-file",t)
         self.assertIn("--operator-pairing-key-file",t)
         self.assertIn("OPERATOR_PAIRING_KEY_MISSING",t)
         self.assertIn("$OperatorControlUrl = 'http://127.0.0.1:8767'",t)
 
-    def test_browser_retirement_is_scoped_to_lion_legacy_processes(self):
+    def test_optional_browser_transport_is_observed_not_managed(self):
         t=self.supervisor
-        self.assertIn("open_session_mediator\\.ps1",t)
+        self.assertIn('Process-For-Port 8790',t)
         self.assertIn("firefox-mediator-app",t)
-        self.assertIn("mediator\\.js",t)
+        self.assertIn(r"mediator\.js",t)
         self.assertNotIn("Stop-Process -Name firefox",t)
+        self.assertNotIn("Stop-Process -Id $old.ProcessId",t)
+        self.assertNotIn("Retire-LionBrowserPath",t)
 
 if __name__=='__main__':unittest.main()
