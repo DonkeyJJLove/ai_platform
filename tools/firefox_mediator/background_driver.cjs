@@ -20,7 +20,7 @@ function write(){
 }
 function killTree(p){if(!p?.pid)return;try{spawnSync("taskkill.exe",["/PID",String(p.pid),"/T","/F"],{windowsHide:true,stdio:"ignore",cwd:"C:/Windows/System32"})}catch{}}
 function launch(){
- edge=spawn(EDGE,[`--user-data-dir=${PROFILE}`,"--start-minimized","--no-first-run","--no-default-browser-check","--disable-session-crashed-bubble","--hide-crash-restore-bubble","--force-renderer-accessibility",PROJECT],{windowsHide:true,stdio:"ignore",cwd:"C:/Windows/System32"});
+ edge=spawn(EDGE,[`--user-data-dir=${PROFILE}`,"--start-minimized","--no-first-run","--no-default-browser-check","--disable-session-crashed-bubble","--hide-crash-restore-bubble","--force-renderer-accessibility","--disable-backgrounding-occluded-windows","--disable-renderer-backgrounding","--disable-background-timer-throttling",PROJECT],{windowsHide:true,stdio:"ignore",cwd:"C:/Windows/System32"});
  worker=spawn(PS,["-NoProfile","-ExecutionPolicy","Bypass","-File",WORKER,"-Ipc",IPC,"-ProjectHomeUrl",PROJECT,"-ProjectTitle","LION_EVOLUSION"],{windowsHide:true,stdio:"ignore",cwd:"C:/Windows/System32"});
  const fail=()=>{if(stopping)return;write();setTimeout(()=>{if(!stopping){killTree(worker);killTree(edge);launch()}},3000)};
  edge.once("exit",fail);worker.once("exit",fail);edge.once("error",fail);worker.once("error",fail);
