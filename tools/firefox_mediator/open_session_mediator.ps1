@@ -162,6 +162,16 @@ function Find-ProjectHome {
   return $null
 }
 
+function Refresh-Readiness {
+  $projectHome=Find-ProjectHome
+  if($projectHome){
+    Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='EXISTING_AUTHENTICATED_FIREFOX';project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
+    return $true
+  }
+  Write-Status 'PROJECT_BINDING_REQUIRED' @{reason='PROJECT_SURFACE_NOT_VERIFIED';project_home_url=$ProjectHomeUrl;new_thread_policy=$ThreadPolicy;project_verified=$false}
+  return $false
+}
+
 function Ensure-ProjectHome {
   $projectHome=Find-ProjectHome
   if(-not $projectHome){
@@ -1077,8 +1087,15 @@ function Process-One {
   })
 }
 
+$LastReadinessProbe=[DateTime]::MinValue
 while($true){
-  try { Process-One } catch { Write-Status 'DEGRADED' @{reason=$_.Exception.Message;new_thread_policy=$ThreadPolicy} }
+  try {
+    if(((Get-Date)-$LastReadinessProbe).TotalSeconds -ge 10){
+      $null=Refresh-Readiness
+      $LastReadinessProbe=Get-Date
+    }
+    Process-One
+  } catch { Write-Status 'DEGRADED' @{reason=$_.Exception.Message;new_thread_policy=$ThreadPolicy} }
   if($Once){break}
   Start-Sleep -Milliseconds ([Math]::Max(250,$IntervalMs))
 }

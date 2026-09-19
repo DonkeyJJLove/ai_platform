@@ -103,6 +103,9 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertIn('Find-ProjectTargetWindow',t)
         self.assertIn('TARGET_URL_PRESENT_NOT_READY',t)
         self.assertIn('for($attempt=1;$attempt -le 3;$attempt++)',t)
+        self.assertIn('Refresh-Readiness',t)
+        self.assertIn('$LastReadinessProbe',t)
+        self.assertIn('PROJECT_SURFACE_NOT_VERIFIED',t)
 
     def test_no_browser_credential_export_primitives(self):
         low=(self.node+'\n'+self.uia).lower()
