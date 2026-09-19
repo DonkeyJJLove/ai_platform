@@ -31,8 +31,16 @@ foreach($d in @($Ipc,$Inbox,$Outbox,$Journal,$Receipts,$MissionThreads)){ New-It
 function Write-AtomicJson([string]$Path,[object]$Value){
   $tmp = "$Path.tmp"
   $json=$Value | ConvertTo-Json -Depth 12
-  [System.IO.File]::WriteAllText($tmp,$json,(New-Object System.Text.UTF8Encoding($false)))
-  Move-Item -Force $tmp $Path
+  for($attempt=1;$attempt -le 3;$attempt++){
+    try {
+      [System.IO.File]::WriteAllText($tmp,$json,(New-Object System.Text.UTF8Encoding($false)))
+      Move-Item -Force $tmp $Path
+      return
+    } catch {
+      if($attempt -ge 3){throw}
+      Start-Sleep -Milliseconds (100*$attempt)
+    }
+  }
 }
 
 function Read-Json([string]$Path){
@@ -60,13 +68,26 @@ function Normalize-Url([string]$Url){
   return ((([string]$Url) -replace '^https?://','').Split('?')[0]).TrimEnd('/')
 }
 
+function Get-FirefoxProcess([int]$Pid){
+  try { return Get-CimInstance Win32_Process -Filter ("ProcessId="+$Pid) -ErrorAction Stop } catch { return $null }
+}
+
+function Test-InteractiveFirefoxWindow([System.Windows.Automation.AutomationElement]$Window){
+  if(-not $Window -or $Window.Current.ClassName -ne 'MozillaWindowClass' -or $Window.Current.ProcessId -le 0){return $false}
+  $p=Get-FirefoxProcess ([int]$Window.Current.ProcessId)
+  if(-not $p){return $false}
+  $cmd=[string]$p.CommandLine
+  if($cmd -match '(?i)--marionette|-headless|-no-remote|rust_mozprofile'){return $false}
+  return $true
+}
+
 function Get-FirefoxRoots {
   $desktop=[System.Windows.Automation.AutomationElement]::RootElement
   $wins=$desktop.FindAll([System.Windows.Automation.TreeScope]::Children,[System.Windows.Automation.Condition]::TrueCondition)
   $out=@()
   for($i=0;$i -lt $wins.Count;$i++){
     $w=$wins.Item($i)
-    if($w.Current.ClassName -eq 'MozillaWindowClass' -and $w.Current.ProcessId -gt 0){ $out += $w }
+    if(Test-InteractiveFirefoxWindow $w){ $out += $w }
   }
   return $out
 }
@@ -117,6 +138,16 @@ function Find-VisibleProjectDocument([System.Windows.Automation.AutomationElemen
   return $null
 }
 
+function Find-ProjectTargetWindow {
+  $target=Normalize-Url $ProjectHomeUrl
+  foreach($window in @(Get-FirefoxRoots)){
+    try {$windowAll=Get-All $window} catch {continue}
+    $url=Get-Url $windowAll
+    if((Normalize-Url $url) -eq $target){return [pscustomobject]@{Window=$window;Url=$url}}
+  }
+  return $null
+}
+
 function Find-ProjectHome {
   $target=Normalize-Url $ProjectHomeUrl
   foreach($window in @(Get-FirefoxRoots)){
@@ -133,6 +164,21 @@ function Find-ProjectHome {
 
 function Ensure-ProjectHome {
   $projectHome=Find-ProjectHome
+  if(-not $projectHome){
+    $existingTarget=Find-ProjectTargetWindow
+    if($existingTarget){
+      $existingDeadline=(Get-Date).AddSeconds(30)
+      while((Get-Date) -lt $existingDeadline){
+        Start-Sleep -Milliseconds 500
+        $projectHome=Find-ProjectHome
+        if($projectHome){break}
+      }
+      if(-not $projectHome){
+        Write-Status 'PROJECT_BINDING_REQUIRED' @{reason='TARGET_URL_PRESENT_NOT_READY';project_home_url=$ProjectHomeUrl;new_thread_policy=$ThreadPolicy;project_verified=$false}
+        return $null
+      }
+    }
+  }
   if(-not $projectHome){
     if(-not (Test-Path $Firefox)){throw 'FIREFOX_EXECUTABLE_NOT_FOUND'}
     $before=@(Get-FirefoxRoots)

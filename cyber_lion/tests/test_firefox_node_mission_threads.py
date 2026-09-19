@@ -96,6 +96,14 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         self.assertNotIn('response_token',work)
         self.assertNotIn('saas-mediator.key',work)
 
+    def test_worker_filters_automation_firefox_instances_and_avoids_window_fanout(self):
+        t=self.uia
+        self.assertIn('Test-InteractiveFirefoxWindow',t)
+        self.assertIn('--marionette|-headless|-no-remote|rust_mozprofile',t)
+        self.assertIn('Find-ProjectTargetWindow',t)
+        self.assertIn('TARGET_URL_PRESENT_NOT_READY',t)
+        self.assertIn('for($attempt=1;$attempt -le 3;$attempt++)',t)
+
     def test_no_browser_credential_export_primitives(self):
         low=(self.node+'\n'+self.uia).lower()
         for forbidden in (

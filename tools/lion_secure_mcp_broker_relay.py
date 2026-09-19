@@ -38,10 +38,16 @@ def http(base,path,method="GET",body=None,headers=None,timeout=15):
         raw=e.read().decode("utf-8","replace");raise RuntimeError(f"HTTP {e.code} {raw[:500]}") from e
 
 def driver_ready(ipc,ttl=20):
-    s=load(Path(ipc)/"node-manager-status.json") or {}
-    try: age=(datetime.now(timezone.utc)-ts(s["observed_at"])).total_seconds()
-    except Exception:return False,s
-    return bool(s.get("worker_alive") and 0<=age<=ttl),s
+    base=Path(ipc);node=load(base/"node-manager-status.json") or {};mediator=load(base/"mediator-status.json") or {}
+    try:
+        node_age=(datetime.now(timezone.utc)-ts(node["observed_at"])).total_seconds()
+        mediator_age=(datetime.now(timezone.utc)-ts(mediator["observed_at"])).total_seconds()
+    except Exception:return False,{"node":node,"mediator":mediator}
+    ready=bool(
+      node.get("worker_alive") and 0<=node_age<=ttl and
+      mediator.get("state")=="READY" and mediator.get("project_verified") is True and 0<=mediator_age<=ttl
+    )
+    return ready,{"node":node,"mediator":mediator,"node_age":node_age,"mediator_age":mediator_age}
 
 def ingress_ready(base,token):
     try:return bool(http(base,"/health",headers={"X-LION-Token":token},timeout=3).get("ok"))
@@ -139,6 +145,10 @@ def reconcile(a,key,token,sf,rec):
                 rec.update(state="FAILED",error="completed turn missing response text")
             else:
                 rec.update(state="TURN_COMPLETED",response_digest=sha(answer))
+                if bs.get("status")!="CLAIMED":
+                    fresh=http(a.broker,f"/api/v3/saas-broker/requests/{rid}/claim","POST",{}, {"X-LION-Mediator-Key":key})
+                    rec["claim"]=fresh;rec["claim_generation"]=fresh["claim_generation"];rec["claim_expires_at"]=fresh.get("claim_expires_at")
+                    atomic(sf,rec)
                 c=rec["claim"]
                 result=http(a.broker,f"/api/v3/saas-broker/requests/{rid}/respond","POST",{
                   "response_token":c["response_token"],"claim_generation":c["claim_generation"],

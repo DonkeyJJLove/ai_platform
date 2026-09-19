@@ -26,6 +26,8 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('state="READY" if ingress_ready(a.ingress,token) and ok_driver else "DEGRADED"',RELAY)
         self.assertIn('node-manager-status.json',RELAY)
         self.assertIn('worker_alive',RELAY)
+        self.assertIn('mediator.get("state")=="READY"',RELAY)
+        self.assertIn('mediator.get("project_verified") is True',RELAY)
         self.assertIn('driver_ready(a.ipc_dir)',RELAY)
         self.assertNotIn('driver_ready(a.ipc)',RELAY)
 
@@ -56,5 +58,7 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('queue_wakeup(a.ipc_dir',RELAY)
         self.assertIn('wakeup_evidence(a.ipc_dir,rid)',RELAY)
         self.assertIn('SAAS_DISPATCH_PENDING',RELAY)
+        self.assertIn('if bs.get("status")!="CLAIMED"',RELAY)
+        self.assertIn('/claim","POST",{}',RELAY)
 
 if __name__=="__main__":unittest.main()
