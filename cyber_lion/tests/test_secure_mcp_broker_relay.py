@@ -14,7 +14,7 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('"turn_request_hash":turn.get("request_hash")',RELAY)
 
     def test_wakeup_is_separate_from_secure_mcp_completion(self):
-        self.assertIn('wakeup_driver":"FIREFOX_NODE_PROJECT_MANAGER"',RELAY)
+        self.assertIn('wakeup_driver":"NODEJS_BACKGROUND_SAAS_SESSION_DRIVER"',RELAY)
         self.assertIn('Use LION-MCP-R2.',RELAY)
         self.assertIn('lion_get_turn',RELAY)
         self.assertIn('lion_complete_turn',RELAY)
@@ -25,17 +25,23 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
     def test_ready_requires_ingress_and_node_driver(self):
         self.assertIn('state="READY" if ingress_ready(a.ingress,token) and ok_driver else "DEGRADED"',RELAY)
         self.assertIn('node-manager-status.json',RELAY)
-        self.assertIn('worker_alive',RELAY)
-        self.assertIn('mediator.get("state")=="READY"',RELAY)
-        self.assertIn('mediator.get("project_verified") is True',RELAY)
-        self.assertNotIn('mediator_age<=ttl',RELAY)
+        self.assertIn('node-background-driver-status.json',RELAY)
+        self.assertIn('manager.get("driver_mode")=="NODE_BACKGROUND"',RELAY)
+        self.assertIn('manager.get("background_driver_alive") is True',RELAY)
+        self.assertIn('driver.get("state")=="READY"',RELAY)
+        self.assertIn('driver.get("visible_window_count")==0',RELAY)
+        self.assertIn('driver.get("authenticated") is True',RELAY)
+        self.assertIn('driver.get("project_verified") is True',RELAY)
+        self.assertNotIn('mediator-status.json',RELAY)
         self.assertIn('driver_ready(a.ipc_dir)',RELAY)
         self.assertNotIn('driver_ready(a.ipc)',RELAY)
 
-    def test_node_manager_writes_fresh_status(self):
+    def test_node_manager_writes_fresh_background_status(self):
         self.assertIn('node-manager-status.json',NODE)
-        self.assertIn('setInterval(writeManagerStatus, 5000)',NODE)
-        self.assertIn('worker_alive: !!child',NODE)
+        self.assertIn('setInterval(writeManagerStatus,5000)',NODE)
+        self.assertIn('background_driver_alive:!!backgroundChild',NODE)
+        self.assertIn('driver_mode:"NODE_BACKGROUND"',NODE)
+        self.assertIn('bootstrap_alive:!!bootstrapChild',NODE)
 
     def test_mission_control_supervises_secure_relay_child(self):
         self.assertIn("def _start_secure_mcp_broker_relay(port):",MISSION)

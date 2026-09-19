@@ -5,6 +5,7 @@ ROOT=Path(__file__).resolve().parents[2]
 NODE=ROOT/'tools/firefox_mediator/mediator.js'
 UIA=ROOT/'tools/firefox_mediator/open_session_mediator.ps1'
 RELAY=ROOT/'tools/lion_firefox_broker_relay.py'
+BACKGROUND=ROOT/'tools/firefox_mediator/background_driver.cjs'
 
 class FirefoxNodeMissionThreadTests(unittest.TestCase):
     @classmethod
@@ -12,15 +13,33 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         cls.node=NODE.read_text(encoding='utf-8')
         cls.uia=UIA.read_text(encoding='utf-8')
         cls.relay=RELAY.read_text(encoding='utf-8')
+        cls.background=BACKGROUND.read_text(encoding='utf-8')
 
-    def test_node_is_background_manager_for_existing_session_uia_worker(self):
+    def test_node_normal_path_is_native_background_and_uia_is_manual_only(self):
         t=self.node
-        self.assertIn('lion-firefox-uia-node-manager',t)
-        self.assertIn('open_session_mediator.ps1',t)
-        self.assertIn('ONE_CHAT_PER_MISSION_WITH_TERMINAL_ROLLOVER',t)
-        self.assertIn('/control/worker/restart',t)
-        self.assertIn('/control/rollover',t)
-        self.assertNotIn('selenium-webdriver',t)
+        self.assertIn('lion-node-saas-background-manager',t)
+        self.assertIn('background_driver.cjs',t)
+        self.assertIn('startBackground()',t)
+        self.assertIn('driver_mode:"NODE_BACKGROUND"',t)
+        self.assertIn('/control/bootstrap/start',t)
+        self.assertIn('operator_action_required:true',t)
+        self.assertIn('legacy_normal_open_disabled',t)
+        self.assertIn('legacy_uia_worker_disabled',t)
+        self.assertNotIn('startWorker();',t)
+        self.assertNotIn('lion-firefox-uia-node-manager',t)
+
+    def test_background_driver_is_headless_persistent_and_windowless(self):
+        t=self.background
+        self.assertIn('launchPersistentContext',t)
+        self.assertIn('channel:"msedge"',t)
+        self.assertIn('headless:true',t)
+        self.assertIn('saas-background-profile-r1',t)
+        self.assertIn('visible_window_count:0',t)
+        self.assertIn('driver_mode:"NODE_BACKGROUND"',t)
+        self.assertIn('INTENT_DURABLE',t)
+        self.assertIn('SEND_CONFIRMED',t)
+        self.assertNotIn('SendKeys',t)
+        self.assertNotIn('SetFocus',t)
 
     def test_uia_persists_one_conversation_per_mission_scope(self):
         t=self.uia

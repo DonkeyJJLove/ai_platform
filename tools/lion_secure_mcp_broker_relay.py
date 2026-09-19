@@ -38,16 +38,18 @@ def http(base,path,method="GET",body=None,headers=None,timeout=15):
         raw=e.read().decode("utf-8","replace");raise RuntimeError(f"HTTP {e.code} {raw[:500]}") from e
 
 def driver_ready(ipc,ttl=20):
-    base=Path(ipc);node=load(base/"node-manager-status.json") or {};mediator=load(base/"mediator-status.json") or {}
+    base=Path(ipc);manager=load(base/"node-manager-status.json") or {};driver=load(base/"node-background-driver-status.json") or {}
     try:
-        node_age=(datetime.now(timezone.utc)-ts(node["observed_at"])).total_seconds()
-        mediator_age=(datetime.now(timezone.utc)-ts(mediator["observed_at"])).total_seconds()
-    except Exception:return False,{"node":node,"mediator":mediator}
+        manager_age=(datetime.now(timezone.utc)-ts(manager["observed_at"])).total_seconds()
+        driver_age=(datetime.now(timezone.utc)-ts(driver["observed_at"])).total_seconds()
+    except Exception:return False,{"manager":manager,"driver":driver}
     ready=bool(
-      node.get("worker_alive") and 0<=node_age<=ttl and
-      mediator.get("state")=="READY" and mediator.get("project_verified") is True
+      manager.get("driver_mode")=="NODE_BACKGROUND" and manager.get("background_driver_alive") is True and 0<=manager_age<=ttl and
+      driver.get("driver_mode")=="NODE_BACKGROUND" and driver.get("state")=="READY" and
+      driver.get("background") is True and driver.get("visible_window_count")==0 and
+      driver.get("authenticated") is True and driver.get("project_verified") is True and 0<=driver_age<=ttl
     )
-    return ready,{"node":node,"mediator":mediator,"node_age":node_age,"mediator_age":mediator_age}
+    return ready,{"manager":manager,"driver":driver,"manager_age":manager_age,"driver_age":driver_age}
 
 def ingress_ready(base,token):
     try:return bool(http(base,"/health",headers={"X-LION-Token":token},timeout=3).get("ok"))
@@ -185,6 +187,8 @@ def reconcile(a,key,token,sf,rec):
         check=http(a.broker,f"/api/v3/saas-broker/requests/{rid}")
         if check.get("status")=="RESPONDED" and check.get("receipt_digest"):
             rec.update(state="RECONCILED",reconciliation_state="BROKER_RECEIPT_BOUND")
+            try:(Path(a.ipc_dir)/"inbox"/(rid+".json")).unlink()
+            except FileNotFoundError:pass
     atomic(sf,rec)
 
 def main():
@@ -213,7 +217,7 @@ def main():
             if state=="READY":claim_new(a,key,token,state_dir)
             atomic(state_dir/"relay-status.json",{"schema":"lion.secure-mcp-broker-relay.status/v1",
               "status":state,"observed_at":now(),"broker":a.broker,"ingress":a.ingress,
-              "wakeup_driver":"FIREFOX_NODE_PROJECT_MANAGER","authority_effect":"NONE"},0o644)
+              "wakeup_driver":"NODEJS_BACKGROUND_SAAS_SESSION_DRIVER","authority_effect":"NONE"},0o644)
         except Exception as exc:
             atomic(state_dir/"relay-status.json",{"schema":"lion.secure-mcp-broker-relay.status/v1",
               "status":"DEGRADED","observed_at":now(),"error":type(exc).__name__+":"+str(exc)[:400],
