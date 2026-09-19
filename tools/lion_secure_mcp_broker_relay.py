@@ -158,7 +158,7 @@ def main():
     if len(key)<64 or len(token)<32:raise SystemExit("relay credentials unavailable")
     state_dir=Path(a.state_dir);state_dir.mkdir(parents=True,exist_ok=True);last_hb=0.0
     while True:
-        ok_driver,_=driver_ready(a.ipc);state="READY" if ingress_ready(a.ingress,token) and ok_driver else "DEGRADED"
+        ok_driver,_=driver_ready(a.ipc_dir);state="READY" if ingress_ready(a.ingress,token) and ok_driver else "DEGRADED"
         try:
             if time.time()-last_hb>=10:hb(a,key,state);last_hb=time.time()
             for sf in sorted(state_dir.glob("saas-*.json")):

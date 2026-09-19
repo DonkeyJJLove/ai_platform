@@ -24,6 +24,8 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('state="READY" if ingress_ready(a.ingress,token) and ok_driver else "DEGRADED"',RELAY)
         self.assertIn('node-manager-status.json',RELAY)
         self.assertIn('worker_alive',RELAY)
+        self.assertIn('driver_ready(a.ipc_dir)',RELAY)
+        self.assertNotIn('driver_ready(a.ipc)',RELAY)
 
     def test_node_manager_writes_fresh_status(self):
         self.assertIn('node-manager-status.json',NODE)
