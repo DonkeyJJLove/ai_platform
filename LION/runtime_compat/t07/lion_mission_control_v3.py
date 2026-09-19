@@ -41,7 +41,6 @@ try:
 except ImportError:
  import global_scheduler as global_sched
 from cyber_lion.mission_control import operator_control
-from cyber_lion.mission_control import model_calls as model_call_ledger
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -176,7 +175,6 @@ def migrate():
  driver_migrate(c,now,source_head=HEAD,source_tree=TREE)
  global_sched.migrate(c,now)
  operator_control.migrate(c,now)
- model_call_ledger.migrate(c,now)
  # Capture the pre-capability execution preflight before startup reconciliation
  # recomputes it against the current capability registry.
  control_recon.capture_pre_recon_baselines(c,now)
@@ -300,6 +298,7 @@ PROCESS_CAPABILITY_REGISTRY={
  'CONTROL_PLANE_REPAIR':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'VERIFY_BEFORE_REPAIR_RECONCILIATION'},
  ),
+
  'BROKER_RECONCILIATION':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'VERIFY_BEFORE_REPAIR_RECONCILIATION'},
  ),
@@ -484,9 +483,8 @@ def bind_lpcl_execution(mid):
       if continuation_ok:
        src=c.execute('SELECT mission_id,state,runtime_state,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone()
        if not src:raise ValueError('lpcl source mission missing:'+source_mid)
-      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid)
-      execution_currentness=runtime.get('_execution_currentness') or {}
-      execution_head=execution_currentness.get('source_head');execution_tree=execution_currentness.get('source_tree');currentness_request_id=execution_currentness.get('currentness_request_id')
+      current_head,current_tree=_current_master_identity()
+      runtime,material_request_id=epoch3_broker('EPOCH3_M64_READ',source_mission_id=source_mid,current_head=current_head,current_tree=current_tree)
       live_pods=runtime.get('pods') or []
       if runtime.get('state')!='RUNNING' or int(runtime.get('materialized',0) or 0)!=64 or int(runtime.get('ready',0) or 0)!=64 or int(runtime.get('unique_uid_count',0) or 0)!=64 or len(live_pods)!=64:
        raise ValueError('lpcl live material fleet not healthy')
@@ -494,8 +492,6 @@ def bind_lpcl_execution(mid):
       for pod in live_pods:
        workers.append({'pod_name':pod.get('name'),'pod_uid':pod.get('uid'),'logical_id':str(pod.get('logical_drone') or '').upper(),'phase':pod.get('phase'),'ready':1 if pod.get('ready') else 0,'restarts':int(pod.get('restarts',0) or 0),'pod_ip':pod.get('pod_ip')})
       if len({r['pod_uid'] for r in workers if r['pod_uid']})!=64 or any(int(r['ready'])!=1 for r in workers):raise ValueError('lpcl live material fleet identity')
-      if _hex(str(execution_head or ''),40) and _hex(str(execution_tree or ''),40):
-       _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL_CURRENTNESS_RECONCILER','LD02',None,{'event':'EXECUTION_CURRENTNESS_REACQUIRED','registered_source_head':m['source_head'],'registered_source_tree':m['source_tree'],'execution_source_head':execution_head,'execution_source_tree':execution_tree,'currentness_request_id':currentness_request_id,'material_request_id':material_request_id,'authority_effect':'NONE'},'INTERNAL')
       if int(m['logical_count'])==128:
        fresh=not continuation_ok
        has_explicit_topology=any(__import__('re').fullmatch(r'COHORT_[0-9]{2}',k) for k in kv)
@@ -567,7 +563,7 @@ def bind_lpcl_execution(mid):
       uid_digest=_payload_digest({'uids':new_uids})
       changed=old_uids!=new_uids
       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','MATERIAL_FLEET',current,{'event':'EXISTING_HEALTHY_FLEET_REBOUND','source_mission_id':source_mid,'worker_count':64,'unique_uid_count':64,'worker_uid_digest':uid_digest,'previous_binding_changed':changed,'binding_class':'CONTROL_PLANE_REBIND','material_currentness_source':'EPOCH3_M64_READ','material_request_id':material_request_id,'pod_role_environment_rewritten':False,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
-      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','registered_source_head':m['source_head'],'registered_source_tree':m['source_tree'],'runtime_source_head':execution_head,'runtime_source_tree':execution_tree,'material_ready':64,'material_target':64,'parent_mission_id':source_mid,'material_currentness_source':('GITHUB_MASTER_PLUS_EPOCH3_M64_READ' if _hex(str(execution_head or ''),40) and _hex(str(execution_tree or ''),40) else 'EPOCH3_M64_READ'),'material_request_id':material_request_id},'INTERNAL')
+      _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','registered_source_head':m['source_head'],'registered_source_tree':m['source_tree'],'runtime_source_head':current_head,'runtime_source_tree':current_tree,'material_ready':64,'material_target':64,'parent_mission_id':source_mid,'material_currentness_source':'GITHUB_MASTER_PLUS_EPOCH3_M64_READ','material_request_id':material_request_id},'INTERNAL')
       _process_message(c,mid,'RECEIPT','MISSION_CONTROL','OPERATOR',current,{'event':'LPCL_EXECUTION_ADAPTER_BOUND','adapter':LPCL_REBIND_ADAPTER,'source_mission_id':source_mid,'lpcl_digest':m['spec_digest'],'worker_uid_digest':uid_digest,'parent_preserved':keep_parent},'OUT')
       ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
       c.commit()
@@ -603,6 +599,7 @@ def process_migrate(c):
     );
     ''')
     t=now()
+
     objective='Validate the integrated LION control plane: 12 logical roles, 64 material Kubernetes Pods, lifecycle control, execution validation, receipts and Mission Control observability.'
     desc='R4 preflight mission used to prove bounded Mission Control lifecycle and material execution before the next evolution phase.'
     c.execute('INSERT OR IGNORE INTO mission_process_specs VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
@@ -730,19 +727,10 @@ def _send_broker_request(req):
     return value['result'],req['request_id']
 
 
-def execution_currentness_broker():
-    req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':'MISSION64_CURRENTNESS_READ'}
-    result,request_id=_send_broker_request(req)
-    head=str(result.get('source_head') or '').strip();tree=str(result.get('source_tree') or '').strip()
-    if not _hex(head,40) or not _hex(tree,40):raise RuntimeError('execution currentness identity malformed')
-    if result.get('authority_effect')!='NONE':raise RuntimeError('execution currentness authority effect')
-    return head,tree,request_id
-
-
 def epoch3_broker(operation,pod=None,source_mission_id=None,current_head=None,current_tree=None):
     # Logical lineage and material-carrier authority are distinct identities.
-    # Registered source lineage remains historical; execution currentness is
-    # reacquired independently immediately before material binding/effect.
+    # Continuations validate their explicit logical parent. Fresh missions may
+    # acquire the same bounded shared carrier without inventing a parent.
     source=None
     if source_mission_id is not None:
      source_mid=str(source_mission_id).strip()
@@ -752,18 +740,11 @@ def epoch3_broker(operation,pod=None,source_mission_id=None,current_head=None,cu
      source_mid=LPCL_REBIND_SOURCE
      c=connect();source=c.execute('SELECT mission_id,source_head,source_tree FROM missions WHERE mission_id=?',(source_mid,)).fetchone();c.close()
      if not source:raise ValueError('epoch3 source mission missing:'+source_mid)
-    currentness_request_id=None
-    if current_head is None or current_tree is None:
-     head,tree,currentness_request_id=execution_currentness_broker()
-    else:
-     head=str(current_head or '').strip();tree=str(current_tree or '').strip()
+    head=str(current_head or (source['source_head'] if source else '') or '').strip();tree=str(current_tree or (source['source_tree'] if source else '') or '').strip()
     if not _hex(head,40) or not _hex(tree,40):raise ValueError('epoch3 currentness identity')
     req={'schema_version':'1.0.0','request_id':hashlib.sha256(os.urandom(32)).hexdigest(),'operation':operation,'mission_id':EPOCH3_MATERIAL_CARRIER_ID,'source_head':head,'source_tree':tree,'spec_digest':EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST}
     if pod is not None:req['pod_name']=pod
-    result,request_id=_send_broker_request(req)
-    if isinstance(result,dict):
-     result=dict(result);result['_execution_currentness']={'source_head':head,'source_tree':tree,'currentness_request_id':currentness_request_id,'authority_effect':'NONE'}
-    return result,request_id
+    return _send_broker_request(req)
 
 
 def epoch3_component_broker(operation,logical_id):
@@ -919,6 +900,7 @@ def mission_action(mid,x,*,phase_guard=None):
         result={'driver':after,'phase_id':pid,'still_unavailable':still,'planning_assignments_delta':after_assign-before_assign,'planning_receipts_delta':after_receipts-before_receipts,'action_ir_delta':after_plans-before_plans};effect='CONTROL_STATE'
       elif action=='STOP':
         c=guarded_connection if guarded_connection is not None else connect();ds=driver_snapshot(c,mid)
+
         if not ds:raise ValueError('driver missing')
         if ds['state'] in {'COMPLETE','STOPPED'}:result=ds
         else:result=driver_transition(c,mid,'STOPPED',now,next_action='EXPLICIT_RESUME_REQUIRED',commit=guarded_connection is None)
@@ -1219,6 +1201,7 @@ def recent_process_missions(view='operational'):
 
 def _read_recent_process_missions(view='operational'):
     view=_view_name(view);c=connect()
+
     try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 60')]
     finally:c.close()
     rows=[]
@@ -1232,31 +1215,6 @@ def _read_recent_process_missions(view='operational'):
     return rows
 
 
-def _epoch3_lifecycle_backup(c,source_head,source_tree):
-    integrity=c.execute('PRAGMA integrity_check').fetchone()[0]
-    if integrity!='ok':raise ValueError('DATABASE_INTEGRITY_NOT_OK')
-    stamp=now().replace(':','').replace('-','').replace('.','_')
-    root=DB.parent/'backups';root.mkdir(parents=True,exist_ok=True)
-    path=root/('epoch3-lifecycle-r2-pre-'+stamp+'.db')
-    if path.exists():raise ValueError('BACKUP_PATH_EXISTS')
-    out=sqlite3.connect(path)
-    try:
-      c.backup(out)
-      backup_integrity=out.execute('PRAGMA integrity_check').fetchone()[0]
-    finally:out.close()
-    if backup_integrity!='ok':
-      try:path.unlink()
-      except OSError:pass
-      raise ValueError('BACKUP_INTEGRITY_NOT_OK')
-    sha=hashlib.sha256(path.read_bytes()).hexdigest()
-    state={'path':str(path),'sha256':sha,'size':path.stat().st_size,'integrity':backup_integrity,'source_head':source_head,'source_tree':source_tree,'authority_effect':'NONE'}
-    rid='rollback-'+uuid.uuid4().hex;state_digest=_payload_digest(state)
-    c.execute('INSERT INTO mission_rollback_points VALUES(?,?,?,?,?,?,?,?)',(rid,EPOCH3_LIFECYCLE_TASK,'SQLITE_CONSISTENT_BACKUP',json.dumps(state,sort_keys=True),state_digest,0,'RESTORE_REQUIRES_EXPLICIT_SEPARATE_AUTHORITY',now()))
-    receipt=lifecycle_create_action_receipt(c,EPOCH3_LIFECYCLE_TASK,'PRE_NORMALIZATION_DATABASE_BACKUP','NONE','PASS',{'source_head':source_head,'source_tree':source_tree},state,now)
-    c.commit()
-    return {'rollback_id':rid,'state_digest':state_digest,'receipt':receipt,**state}
-
-
 def execute_epoch3_lifecycle_normalization(x):
     if type(x) is not dict or set(x)!={'task_mission_id','task_lpcl_digest','source_head','source_tree'}:raise ValueError('lifecycle normalization schema')
     if x['task_mission_id']!=EPOCH3_LIFECYCLE_TASK or x['task_lpcl_digest']!=EPOCH3_LIFECYCLE_TASK_DIGEST:raise ValueError('lifecycle normalization authority identity')
@@ -1265,11 +1223,7 @@ def execute_epoch3_lifecycle_normalization(x):
     try:
       task=c.execute('SELECT state,spec_digest FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TASK,)).fetchone();process=c.execute('SELECT authority_state FROM mission_process_specs WHERE mission_id=?',(EPOCH3_LIFECYCLE_TASK,)).fetchone()
       if task is None or task['spec_digest']!=EPOCH3_LIFECYCLE_TASK_DIGEST or task['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or process is None or process['authority_state']!='EXPLICIT_USER_ACTIVATION':raise ValueError('lifecycle task not explicitly activated')
-      t1=c.execute('SELECT state FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TARGET_1,)).fetchone();t2=c.execute('SELECT state FROM missions WHERE mission_id=?',(EPOCH3_LIFECYCLE_TARGET_2,)).fetchone()
-      already=bool(t1 and t2 and t1['state']=='SUPERSEDED' and t2['state']=='SUPERSEDED')
-      backup=None if already else _epoch3_lifecycle_backup(c,x['source_head'],x['source_tree'])
-      result=normalize_epoch3_terminal_lifecycle(c,target_1_mission_id=EPOCH3_LIFECYCLE_TARGET_1,target_1_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_1_DIGEST,target_2_mission_id=EPOCH3_LIFECYCLE_TARGET_2,target_2_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_2_DIGEST,successor_mission_id=EPOCH3_LIFECYCLE_SUCCESSOR,expected_current_head=x['source_head'],expected_current_tree=x['source_tree'],now_fn=now)
-      return {**result,'backup':backup}
+      return normalize_epoch3_terminal_lifecycle(c,target_1_mission_id=EPOCH3_LIFECYCLE_TARGET_1,target_1_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_1_DIGEST,target_2_mission_id=EPOCH3_LIFECYCLE_TARGET_2,target_2_expected_spec_digest=EPOCH3_LIFECYCLE_TARGET_2_DIGEST,successor_mission_id=EPOCH3_LIFECYCLE_SUCCESSOR,expected_current_head=x['source_head'],expected_current_tree=x['source_tree'],now_fn=now)
     finally:c.close()
 
 # ---- end LPCL mission process extension v1 -------------------------------
@@ -1548,6 +1502,7 @@ def drive_control_plane_once(mid=CONTROL_PLANE_MISSION):
       if not m or not ps or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return
       if not operator_control.autonomy_allowed(c,mid):return
       d=driver_snapshot(c,mid)
+
       if not d:return
       if d['state']=='BOOTSTRAP_PAUSED':
        d=driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
@@ -1848,6 +1803,7 @@ def _generic_execute_read_plan(c,plan):
       receipt=c.execute('SELECT * FROM mission_execution_receipts WHERE mission_id=? AND phase_id=? ORDER BY observed_at DESC LIMIT 1',(mid,pid)).fetchone()
       ok,evidence=_execution_binder_postconditions(c,mid,pid,assignment,receipt) if assignment and receipt else (False,{'missing':'planning assignment or receipt','authority_effect':'NONE'})
       evidence={'capability':capability,**evidence}
+
     elif capability==control_recon.CAPABILITY_ID:
       contract=global_sched.phase_execution_contract(c,mid,pid)
       if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
@@ -2149,49 +2105,6 @@ def local_assignment_receipt(x):
       c.commit();return out
     finally:c.close()
 
-def model_call_intent(x):
-    if type(x) is not dict:raise ValueError('model call intent schema')
-    c=connect()
-    try:
-      aid=x.get('assignment_id')
-      row=c.execute('SELECT mission_id,phase_id,logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE assignment_id=?',(aid,)).fetchone()
-      if row is None:raise ValueError('model call assignment missing')
-      expected=(row['mission_id'],row['phase_id'],row['logical_drone_id'],row['material_drone_id'])
-      observed=(x.get('mission_id'),x.get('phase_id'),x.get('logical_drone_id'),x.get('material_worker_id'))
-      if expected!=observed:raise ValueError('model call assignment identity mismatch')
-      out=model_call_ledger.create_intent(c,x,now)
-      _process_message(c,row['mission_id'],'ASSIGNMENT','LOCAL_ASSIGNMENT_WORKER','MODEL_PLANE',row['phase_id'],{'event':'MODEL_CALL_INTENT_DURABLE','model_call_id':out['model_call_id'],'assignment_id':aid,'transport':out['transport'],'provider':out['provider'],'requested_capability':out['requested_capability'],'authority_effect':'NONE'},'INTERNAL')
-      c.commit();return out
-    finally:c.close()
-
-
-def model_call_transition(model_call_id,x):
-    c=connect()
-    try:
-      before=model_call_ledger.get_call(c,model_call_id)
-      if before is None:raise ValueError('model call not found')
-      out=model_call_ledger.transition(c,model_call_id,x,now)
-      if out['state']!=before['state']:
-       _process_message(c,out['mission_id'],'EVIDENCE','MODEL_PLANE','MISSION_CONTROL',out['phase_id'],{'event':'MODEL_CALL_STATE','model_call_id':model_call_id,'from_state':before['state'],'to_state':out['state'],'assignment_id':out['assignment_id'],'result_digest':out.get('result_digest'),'provider':out['provider'],'transport':out['transport'],'authority_effect':'NONE'},'INTERNAL')
-       c.commit()
-      return out
-    finally:c.close()
-
-
-def model_call_list(mission_id=None,assignment_id=None,limit=200):
-    c=connect()
-    try:return {'schema':'lion.model-call-list/v1','calls':model_call_ledger.list_calls(c,mission_id=mission_id,assignment_id=assignment_id,limit=limit),'authority_effect':'NONE'}
-    finally:c.close()
-
-
-def model_call_get(model_call_id):
-    c=connect()
-    try:
-      out=model_call_ledger.get_call(c,model_call_id)
-      if out is None:raise ValueError('model call not found')
-      return out
-    finally:c.close()
-
 
 UI=r'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LION Mission Control</title><style>:root{color-scheme:dark;--b:#080d12;--p:#111820;--l:#293744;--t:#edf5fa;--m:#91a7b7;--g:#55d99d;--y:#e5bd68;--r:#ff7580}*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--t);font:14px/1.45 Inter,Segoe UI,system-ui}.app{max-width:1500px;margin:auto;padding:18px}h1{margin:0;font-size:24px}.sub{color:var(--m)}.top{display:flex;justify-content:space-between;gap:12px}.pill,.card,.panel{border:1px solid var(--l);background:var(--p);border-radius:10px}.pill{padding:8px 12px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}.card{padding:10px}.k{font-size:10px;color:#7fa7bb}.v{font-size:18px;font-weight:700}.grid{display:grid;grid-template-columns:1.35fr .65fr;gap:10px}.panel{padding:14px;margin-bottom:10px}.logical{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ld{border:1px solid var(--l);border-radius:8px;padding:9px}.bar{height:7px;background:#22303a;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g)}button{background:#173743;color:white;border:1px solid #3c6575;border-radius:7px;padding:8px 12px;margin:2px}button.danger{border-color:#7a3d45;background:#3a2025}.workers{max-height:440px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px;border-bottom:1px solid #202c35;text-align:left}.ok{color:var(--g)}.warn{color:var(--y)}.bad{color:var(--r)}.cmd{font-family:Consolas,monospace;font-size:11px}.legacy{color:var(--m)}@media(max-width:950px){.grid{grid-template-columns:1fr}.logical{grid-template-columns:1fr 1fr}}</style></head><body><div class="app"><div class="top"><div><h1>LION MISSION CONTROL</h1><div class="sub">Mission registry · bounded control · live material execution · receipts</div></div><div id="authority" class="pill">loading</div></div><div id="cards" class="cards"></div><div class="grid"><div><div class="panel"><h2 id="title"></h2><div id="meta" class="sub"></div><div id="actions"></div><h3>Logical control plane · 12 drones</h3><div id="logical" class="logical"></div></div><div class="panel"><h3>Material plane · 64 Kubernetes Pods</h3><div class="workers"><table><thead><tr><th>Pod</th><th>Logical</th><th>Phase</th><th>Ready</th><th>Restarts</th><th>UID</th><th></th></tr></thead><tbody id="workers"></tbody></table></div></div></div><div><div class="panel"><h3>Mission registry</h3><div id="registry"></div></div><div class="panel"><h3>Command / receipt ledger</h3><div id="commands"></div></div><div class="panel"><h3>Mission events</h3><div id="events"></div></div><div class="panel legacy"><b>Legacy recorded runs:</b> <span id="legacy"></span><br>Legacy history remains evidence, not live state.</div></div></div></div><script>const $=x=>document.getElementById(x);let S=null;function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function get(){let r=await fetch('/api/v3/missions/current',{cache:'no-store'});S=await r.json();render()}function btn(a,label,cls=''){return '<button class="'+cls+'" onclick="act(\''+a+'\')">'+label+'</button>'}async function act(a,pod){if(!confirm(a+(pod?' '+pod:'')))return;let r=await fetch('/api/v3/missions/current/actions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:a,...(pod?{pod_name:pod}:{})})});let x=await r.json();if(!r.ok)alert(x.error||'control failed');await get()}function render(){let s=S;$('authority').innerHTML='CONTROL: <b>'+esc(s.control_authority)+'</b>';$('title').textContent=s.title;$('meta').textContent=s.mission_id+' · state '+s.state+' · runtime '+s.runtime_state+' · spec '+s.spec_digest.slice(0,16);let cs=[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',s.materialized+'/'+s.material_target],['READY',s.ready+'/'+s.material_target],['SOURCE',s.source_head.slice(0,8)],['LEGACY',s.legacy_recorded_runs]];$('cards').innerHTML=cs.map(x=>'<div class="card"><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>').join('');let a='';if(['AUTHORIZED','STOPPED','FAILED'].includes(s.state))a+=btn('START','Start mission');if(s.state==='RUNNING'){a+=btn('PAUSE','Pause');a+=btn('VALIDATE','Validate fleet');}if(s.state==='PAUSED')a+=btn('RESUME','Resume');if(['RUNNING','PAUSED','FAILED','CONVERGING'].includes(s.state))a+=btn('STOP','Stop','danger');$('actions').innerHTML=a;$('logical').innerHTML=s.logical.map(x=>'<div class="ld"><b>'+x.logical_id+' · '+esc(x.role)+'</b><div>'+x.ready+'/'+x.material_target+' ready</div><div class="bar"><i style="width:'+(100*x.ready/Math.max(1,x.material_target))+'%"></i></div></div>').join('');$('workers').innerHTML=s.workers.map(x=>'<tr><td>'+esc(x.pod_name)+'</td><td>'+esc(x.logical_id)+'</td><td>'+esc(x.phase)+'</td><td class="'+(x.ready?'ok':'warn')+'">'+(x.ready?'YES':'NO')+'</td><td>'+x.restarts+'</td><td>'+esc((x.pod_uid||'').slice(0,12))+'</td><td>'+(s.state==='RUNNING'?'<button onclick="act(\'RESTART_ONE\',\''+esc(x.pod_name)+'\')">restart</button>':'')+'</td></tr>').join('');$('registry').innerHTML=(s.registry||[]).map(x=>'<div class="cmd">'+(x.controllable?'● ':'○ ')+esc(x.mission_id)+' · '+esc(x.state)+' · '+esc(x.adapter)+'</div>').join('');$('commands').innerHTML=s.commands.map(x=>'<div class="cmd">'+esc(x.requested_at)+' '+esc(x.action)+' <b class="'+(x.status==='PASS'?'ok':x.status==='FAIL'?'bad':'warn')+'">'+x.status+'</b>'+(x.pod_name?' '+esc(x.pod_name):'')+'</div>').join('')||'none';$('events').innerHTML=s.events.map(x=>'<div class="cmd">'+esc(x.observed_at)+' '+esc(x.event_type)+'</div>').join('')||'none';$('legacy').textContent=s.legacy_recorded_runs}get();setInterval(get,3000)</script></body></html>'''
 
@@ -2251,12 +2164,6 @@ class H(BaseHTTPRequestHandler):
    except ValueError as e:return self.json({'error':str(e)},404)
   if path=='/api/v3/local/assignments':
    q=parse_qs(urlparse(self.path).query);mid=(q.get('mission_id') or [None])[0];limit=int((q.get('limit') or ['16'])[0]);return self.json(local_assignment_list(mid,limit))
-  if path=='/api/v3/model-calls':
-   q=parse_qs(urlparse(self.path).query);mid=(q.get('mission_id') or [None])[0];aid=(q.get('assignment_id') or [None])[0];limit=int((q.get('limit') or ['200'])[0]);return self.json(model_call_list(mid,aid,limit))
-  if path.startswith('/api/v3/model-calls/'):
-   model_call_id=path[len('/api/v3/model-calls/'):].strip('/')
-   try:return self.json(model_call_get(model_call_id))
-   except ValueError as e:return self.json({'error':str(e)},404)
   return self.json({'error':'not found'},404)
  def do_POST(self):
   path=unquote(urlparse(self.path).path)
@@ -2297,15 +2204,6 @@ class H(BaseHTTPRequestHandler):
     n=int(self.headers.get('Content-Length','0'))
     if n<2 or n>100000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
     x=json.loads(self.rfile.read(n));out=local_assignment_claim(x) if path.endswith('/claim') else local_assignment_receipt(x);return self.json(out)
-   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
-  if path=='/api/v3/model-calls' or (path.startswith('/api/v3/model-calls/') and path.endswith('/transition')):
-   try:
-    n=int(self.headers.get('Content-Length','0'))
-    if n<2 or n>100000 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
-    x=json.loads(self.rfile.read(n))
-    if path=='/api/v3/model-calls':return self.json(model_call_intent(x),201)
-    model_call_id=path[len('/api/v3/model-calls/'):-len('/transition')].strip('/')
-    return self.json(model_call_transition(model_call_id,x),200)
    except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path in {'/api/v3/dual/create','/api/v3/dual/link-saas','/api/v3/dual/response'}:
    try:

@@ -17,8 +17,8 @@ Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Windows.Forms
 
 $Transport = 'CHATGPT_FIREFOX_PROJECT_MEDIATED'
-$MediatorId = 'LION_FIREFOX_OPEN_SESSION_MEDIATOR_R2'
-$Firefox = 'C:\Program Files\Firefox Developer Edition\firefox.exe'
+$MediatorId = 'LION_EDGE_MINIMIZED_SESSION_MEDIATOR_R1'
+$ProfileNeedle = 'C:/Users/d2j3/AppData/Local/LION/saas-background-profile-r1'
 $Inbox = Join-Path $Ipc 'inbox'
 $Outbox = Join-Path $Ipc 'outbox'
 $Journal = Join-Path $Ipc 'journal'
@@ -55,7 +55,7 @@ function Write-Status([string]$State,[hashtable]$Extra=@{}){
     state=$State
     project_title=$ProjectTitle
     chat_title='MISSION_SCOPED_THREAD'
-    browser='Firefox Developer Edition / existing authenticated session'
+    browser='Microsoft Edge / dedicated minimized authenticated session'
     authority_effect='NONE'
     observed_at=(Get-Date).ToUniversalTime().ToString('o')
   }
@@ -73,11 +73,12 @@ function Get-FirefoxProcess([int]$ProcessId){
 }
 
 function Test-InteractiveFirefoxWindow([System.Windows.Automation.AutomationElement]$Window){
-  if(-not $Window -or $Window.Current.ClassName -ne 'MozillaWindowClass' -or $Window.Current.ProcessId -le 0){return $false}
+  if(-not $Window -or $Window.Current.ClassName -notlike 'Chrome_WidgetWin*' -or $Window.Current.ProcessId -le 0){return $false}
   $p=Get-FirefoxProcess ([int]$Window.Current.ProcessId)
-  if(-not $p){return $false}
-  $cmd=[string]$p.CommandLine
-  if($cmd -match '(?i)--marionette|-headless|-no-remote|rust_mozprofile'){return $false}
+  if(-not $p -or [string]$p.Name -ne 'msedge.exe'){return $false}
+  $cmd=(([string]$p.CommandLine) -replace '\\','/')
+  if($cmd -notlike "*$ProfileNeedle*"){return $false}
+  if($cmd -match '(?i)--headless'){return $false}
   return $true
 }
 
@@ -96,10 +97,19 @@ function Get-All([System.Windows.Automation.AutomationElement]$Root){
   return ,$Root.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)
 }
 
+function Ensure-Minimized([System.Windows.Automation.AutomationElement]$Window){
+  if(-not $Window){return $false}
+  $wp=$null
+  if(-not $Window.TryGetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern,[ref]$wp)){return $false}
+  try {$wp.SetWindowVisualState([System.Windows.Automation.WindowVisualState]::Minimized)} catch {return $false}
+  Start-Sleep -Milliseconds 100
+  return ($wp.Current.WindowVisualState -eq [System.Windows.Automation.WindowVisualState]::Minimized)
+}
+
 function Get-Url([System.Windows.Automation.AutomationElementCollection]$All){
   for($i=0;$i -lt $All.Count;$i++){
     $e=$All.Item($i)
-    if($e.Current.AutomationId -eq 'urlbar-input'){
+    if($e.Current.AutomationId -eq 'view_1021'){
       $vp=$null
       if($e.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern,[ref]$vp)){ return [string]$vp.Current.Value }
     }
@@ -128,7 +138,7 @@ function Find-VisibleProjectDocument([System.Windows.Automation.AutomationElemen
   try {$all=Get-All $Window} catch {return $null}
   for($i=0;$i -lt $all.Count;$i++){
     $doc=$all.Item($i)
-    if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document -or $doc.Current.IsOffscreen){continue}
+    if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document){continue}
     $name=[string]$doc.Current.Name
     if($name -notlike "*$ProjectTitle*"){continue}
     try {$docAll=Get-All $doc} catch {continue}
@@ -150,13 +160,17 @@ function Find-ProjectTargetWindow {
 
 function Find-ProjectHome {
   $target=Normalize-Url $ProjectHomeUrl
+  $projectPrefix=($target -replace '/project$','')
   foreach($window in @(Get-FirefoxRoots)){
     try {$windowAll=Get-All $window} catch {continue}
     $url=Get-Url $windowAll
-    if((Normalize-Url $url) -ne $target){continue}
+    $norm=Normalize-Url $url
+    $isProjectSurface=($norm -eq $target -or $norm -like "$projectPrefix/c/*")
+    if(-not $isProjectSurface){continue}
     $doc=Find-VisibleProjectDocument $window
     if(-not $doc){continue}
     $doc | Add-Member -NotePropertyName Url -NotePropertyValue $url -Force
+    $doc | Add-Member -NotePropertyName Surface -NotePropertyValue ($(if($norm -eq $target){'PROJECT_HOME'}else{'PROJECT_CONVERSATION'})) -Force
     return $doc
   }
   return $null
@@ -165,7 +179,8 @@ function Find-ProjectHome {
 function Refresh-Readiness {
   $projectHome=Ensure-ProjectHome
   if($projectHome){
-    Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='EXISTING_AUTHENTICATED_FIREFOX';project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
+    if(-not (Ensure-Minimized $projectHome.Window)){Write-Status 'DEGRADED' @{reason='EDGE_MINIMIZE_FAILED';project_verified=$false};return $false}
+    Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='DEDICATED_MINIMIZED_EDGE';window_state='MINIMIZED';visible_window_count=0;project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
     return $true
   }
   Write-Status 'PROJECT_BINDING_REQUIRED' @{reason='PROJECT_SURFACE_NOT_VERIFIED';project_home_url=$ProjectHomeUrl;new_thread_policy=$ThreadPolicy;project_verified=$false}
@@ -173,62 +188,18 @@ function Refresh-Readiness {
 }
 
 function Ensure-ProjectHome {
-  $projectHome=Find-ProjectHome
-  if(-not $projectHome){
-    $existingTarget=Find-ProjectTargetWindow
-    if($existingTarget){
-      $existingDeadline=(Get-Date).AddSeconds(30)
-      while((Get-Date) -lt $existingDeadline){
-        Start-Sleep -Milliseconds 500
-        $projectHome=Find-ProjectHome
-        if($projectHome){break}
-      }
-      if(-not $projectHome){
-        Write-Status 'PROJECT_BINDING_REQUIRED' @{reason='TARGET_URL_PRESENT_NOT_READY';project_home_url=$ProjectHomeUrl;new_thread_policy=$ThreadPolicy;project_verified=$false}
-        return $null
-      }
+  $deadline=(Get-Date).AddSeconds(30)
+  while((Get-Date) -lt $deadline){
+    $projectHome=Find-ProjectHome
+    if($projectHome){
+      if(-not (Ensure-Minimized $projectHome.Window)){Write-Status 'DEGRADED' @{reason='EDGE_MINIMIZE_FAILED';project_verified=$false};return $null}
+      Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='DEDICATED_MINIMIZED_EDGE';window_state='MINIMIZED';visible_window_count=0;project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
+      return $projectHome
     }
+    Start-Sleep -Milliseconds 500
   }
-  if(-not $projectHome){
-    if(-not (Test-Path $Firefox)){throw 'FIREFOX_EXECUTABLE_NOT_FOUND'}
-    $before=@(Get-FirefoxRoots)
-    $opened=$false
-    if($before.Count -gt 0){
-      $ids=@($before | ForEach-Object { $_.GetRuntimeId() -join ',' })
-      try {
-        $before[0].SetFocus()
-        [System.Windows.Forms.SendKeys]::SendWait('^n')
-        $newWindow=$null
-        $newDeadline=(Get-Date).AddSeconds(8)
-        while((Get-Date) -lt $newDeadline -and -not $newWindow){
-          Start-Sleep -Milliseconds 300
-          foreach($candidate in @(Get-FirefoxRoots)){
-            $cid=$candidate.GetRuntimeId() -join ','
-            if($ids -notcontains $cid){$newWindow=$candidate;break}
-          }
-        }
-        if($newWindow){
-          Navigate-ToUrl $newWindow $ProjectHomeUrl
-          $opened=$true
-        }
-      } catch {}
-    }
-    if(-not $opened){
-      Start-Process -FilePath $Firefox -ArgumentList @('-new-window',$ProjectHomeUrl) | Out-Null
-    }
-    $deadline=(Get-Date).AddSeconds(20)
-    while((Get-Date) -lt $deadline){
-      Start-Sleep -Milliseconds 500
-      $projectHome=Find-ProjectHome
-      if($projectHome){break}
-    }
-  }
-  if(-not $projectHome){
-    Write-Status 'PROJECT_BINDING_REQUIRED' @{project_home_url=$ProjectHomeUrl;new_thread_policy=$ThreadPolicy;project_verified=$false}
-    return $null
-  }
-  Write-Status 'READY' @{current_url=$projectHome.Url;document_name=$projectHome.DocumentName;session_mode='EXISTING_AUTHENTICATED_FIREFOX';project_verified=$true;chat_verified=$true;project_home_verified=$true;new_thread_policy=$ThreadPolicy}
-  return $projectHome
+  Write-Status 'PROJECT_BINDING_REQUIRED' @{reason='DEDICATED_EDGE_PROJECT_SURFACE_NOT_READY';project_home_url=$ProjectHomeUrl;new_thread_policy=$ThreadPolicy;project_verified=$false}
+  return $null
 }
 
 function Navigate-ToUrl([System.Windows.Automation.AutomationElement]$Window,[string]$Url){
@@ -237,7 +208,7 @@ function Navigate-ToUrl([System.Windows.Automation.AutomationElement]$Window,[st
   $bar=$null
   for($i=0;$i -lt $all.Count;$i++){
     $e=$all.Item($i)
-    if($e.Current.AutomationId -eq 'urlbar-input'){$bar=$e;break}
+    if($e.Current.AutomationId -eq 'view_1021'){$bar=$e;break}
   }
   if(-not $bar){throw 'URLBAR_NOT_FOUND'}
   $vp=$null
@@ -255,7 +226,7 @@ function Ensure-Conversation([string]$Url){
     try {$all=Get-All $window} catch {continue}
     for($i=0;$i -lt $all.Count;$i++){
       $doc=$all.Item($i)
-      if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document -or $doc.Current.IsOffscreen){continue}
+      if($doc.Current.ControlType -ne [System.Windows.Automation.ControlType]::Document){continue}
       try {$docAll=Get-All $doc} catch {continue}
       $prompt=Find-Prompt $docAll
       if($prompt){
@@ -743,6 +714,46 @@ function Note-MissionTurn([object]$Work){
   return $state
 }
 
+function Note-MissionTurnByKey([string]$MissionKey,[string]$RequestId){
+  if([string]::IsNullOrWhiteSpace($MissionKey) -or [string]::IsNullOrWhiteSpace($RequestId)){return $null}
+  $path=Join-Path $MissionThreads "$((Get-Sha256Text $MissionKey)).json"
+  $state=Read-Json $path
+  if(-not $state){return $null}
+  if([string]$state.last_completed_request_id -eq $RequestId){return $state}
+  $state.total_turn_count=[int]$state.total_turn_count+1
+  $state.last_completed_request_id=$RequestId
+  $state.last_completed_at=(Get-Date).ToUniversalTime().ToString('o')
+  $gen=[int]$state.generation
+  foreach($t in @($state.threads)){
+    if([int]$t.generation -eq $gen -and [string]$t.state -eq 'ACTIVE'){
+      $t.turn_count=[int]$t.turn_count+1
+      $t.updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    }
+  }
+  $state.updated_at=(Get-Date).ToUniversalTime().ToString('o')
+  Write-AtomicJson $path $state
+  return $state
+}
+
+function Reconcile-TerminalJournals {
+  foreach($file in @(Get-ChildItem -File -Filter '*.json' $Journal)){
+    $j=Read-Json $file.FullName
+    if(-not $j -or [string]$j.state -ne 'SEND_CONFIRMED'){continue}
+    $rid=[string]$j.request_id
+    if([string]::IsNullOrWhiteSpace($rid)){continue}
+    $receipt=Read-Json (Join-Path $Receipts "$rid.json")
+    if(-not $receipt -or [string]$receipt.status -ne 'RESPONDED' -or [string]::IsNullOrWhiteSpace([string]$receipt.receipt_digest)){continue}
+    $state=Note-MissionTurnByKey ([string]$j.mission_key) $rid
+    $value=[ordered]@{}
+    foreach($p in $j.PSObject.Properties){$value[$p.Name]=$p.Value}
+    $value.state='RECEIPT_CONFIRMED'
+    $value.receipt_digest=[string]$receipt.receipt_digest
+    $value.response_source='BROKER_RECEIPT'
+    $value.updated_at=(Get-Date).ToUniversalTime().ToString('o')
+    Write-AtomicJson $file.FullName $value
+  }
+}
+
 function Open-BoundConversation([System.Windows.Automation.AutomationElement]$Window,[string]$Url){
   $existing=Ensure-Conversation $Url
   if($existing){return $existing}
@@ -793,7 +804,7 @@ function Process-One {
   $rid=[string]$work.request_id
   $jpath=Join-Path $Journal "$rid.json"
   $j=Read-Json $jpath
-  if($j -and $j.state -eq 'OUTBOX_WRITTEN'){return}
+  if($j -and $j.state -in @('OUTBOX_WRITTEN','RECEIPT_CONFIRMED')){return}
 
   $missionKey=Get-MissionKey $work
   $missionState=Get-MissionState $work
@@ -1066,7 +1077,21 @@ function Process-One {
   }
   $deadline=(Get-Date).AddMinutes(3)
   $stable='';$stableAt=$null
+  $receiptPath=Join-Path $Receipts "$rid.json"
   while([string]::IsNullOrWhiteSpace($answer) -and (Get-Date) -lt $deadline){
+    $receipt=Read-Json $receiptPath
+    if($receipt -and [string]$receipt.status -eq 'RESPONDED' -and -not [string]::IsNullOrWhiteSpace([string]$receipt.receipt_digest)){
+      $missionState=Note-MissionTurn $work
+      Write-AtomicJson $jpath ([ordered]@{
+        request_id=$rid;state='RECEIPT_CONFIRMED';claim_generation=$work.claim_generation
+        mission_key=$missionKey;mission_id=$work.mission_id
+        conversation_url=$conversation.Url;generation=$missionState.generation
+        receipt_digest=[string]$receipt.receipt_digest
+        response_source='BROKER_RECEIPT';retry_policy='RECONCILE_FIRST_NO_BLIND_RETRY'
+        updated_at=(Get-Date).ToUniversalTime().ToString('o')
+      })
+      return
+    }
     Start-Sleep -Milliseconds 700
     try {$docAll=Get-All $conversation.Root} catch {continue}
     if(Test-RateLimitInDocument $conversation.Root){
@@ -1106,7 +1131,7 @@ function Process-One {
     request_id=$rid
     claim_generation=$work.claim_generation
     answer=$answer
-    model_identity='ChatGPT UI / existing authenticated Firefox / LION_EVOLUSION'
+    model_identity='ChatGPT UI / dedicated minimized Edge / LION_EVOLUSION'
     transport=$Transport
     authority_effect='NONE'
     project_title=$ProjectTitle
@@ -1139,6 +1164,7 @@ while($true){
       $null=Refresh-Readiness
       $LastReadinessProbe=Get-Date
     }
+    Reconcile-TerminalJournals
     Process-One
   } catch { Write-Status 'DEGRADED' @{reason=$_.Exception.Message;new_thread_policy=$ThreadPolicy} }
   if($Once){break}
