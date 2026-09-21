@@ -77,7 +77,7 @@ class ThreadStore{
     return this.requestBinding(request_id);
   }
   requestBinding(requestId){return this.db.prepare('SELECT * FROM saas_request_bindings WHERE request_id=?').get(requestId)||null;}
-  pendingBindings(){return this.db.prepare("SELECT * FROM saas_request_bindings WHERE state NOT IN ('RECONCILED','CANCELLED','ORPHANED_THREAD','FAILED_CLOSED') ORDER BY created_at,request_id").all();}
+  pendingBindings(){return this.db.prepare("SELECT * FROM saas_request_bindings WHERE state NOT IN ('RECONCILED','CANCELLED','FAILED_CLOSED') ORDER BY created_at,request_id").all();}
   updateRequestState(requestId,state){this.db.prepare('UPDATE saas_request_bindings SET state=? WHERE request_id=?').run(state,requestId);return this.requestBinding(requestId);}
   bindTurn({request_id,turn_id,turn_request_hash=null,state='PENDING'}){const p=this.db.prepare('SELECT * FROM turn_bindings WHERE request_id=?').get(request_id);if(p){if(p.turn_id!==turn_id)throw new Error('TURN_BINDING_CONFLICT');return p;}const stamp=nowIso();this.db.prepare('INSERT INTO turn_bindings(turn_id,request_id,turn_request_hash,state,created_at,updated_at) VALUES(?,?,?,?,?,?)').run(turn_id,request_id,turn_request_hash,state,stamp,stamp);return this.turnForRequest(request_id);}
   turnForRequest(requestId){return this.db.prepare('SELECT * FROM turn_bindings WHERE request_id=?').get(requestId)||null;}
