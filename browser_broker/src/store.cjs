@@ -1,6 +1,6 @@
 'use strict';
 const {DatabaseSync}=require('node:sqlite');
-const {envelope,hash,conversation}=require('./contract.cjs');
+const {envelope,hash,conversation,scopeKey}=require('./contract.cjs');
 const ACTIVE=['QUEUED','DISPATCHING','AWAITING_RESULT','SEND_UNKNOWN'];
 class Store{
  constructor(file,projectUrl,now=Date.now){
@@ -11,6 +11,7 @@ class Store{
  }
  tx(fn){this.db.exec('BEGIN IMMEDIATE');try{const r=fn();this.db.exec('COMMIT');return r}catch(e){this.db.exec('ROLLBACK');throw e}}
  stopped(){return this.db.prepare("SELECT value FROM settings WHERE key='stopped'").get().value==='true'}
+ stopRevision(){return this.db.prepare("SELECT COALESCE(MAX(seq),0) AS revision FROM events WHERE state='STOPPED'").get().revision}
  rememberConversation(url){const valid=conversation(url,this.projectUrl);this.db.prepare("INSERT INTO settings VALUES ('conversation',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(valid)}
  restoreConversation(){const value=this.db.prepare("SELECT value FROM settings WHERE key='conversation'").get()?.value;try{return conversation(value,this.projectUrl)}catch{return this.projectUrl}}
  handoffs(){return this.db.prepare('SELECT payload FROM handoffs ORDER BY rowid').all().map(r=>JSON.parse(r.payload))}
@@ -24,15 +25,15 @@ class Store{
   // Existing exact envelopes remain idempotent even after their original deadline.
   const old=value?.request_id?this.row(value.request_id):null;
   if(old){if(JSON.stringify(Object.keys(value).sort())!==JSON.stringify(Object.keys(old.envelope).sort())||Object.keys(old.envelope).some(k=>value[k]!==old.envelope[k]))throw Error('BINDING_CONFLICT');return old}
-  const v=envelope(value,this.projectUrl,this.now()),payload=JSON.stringify(v),digest=hash(payload);
+  const v=envelope(value,this.projectUrl,this.now()),payload=JSON.stringify(v),digest=hash(payload),scope=scopeKey(v);
   return this.tx(()=>{
    if(this.stopped())throw Error('STOPPED');
    const existing=this.rows();
    if(existing.length>=18)throw Error('TASK_BUDGET_EXHAUSTED');
-   if(existing.some(r=>ACTIVE.includes(r.state)&&r.mission_id!==v.mission_id))throw Error('MISSION_LIMIT');
-   if(existing.filter(r=>r.mission_id===v.mission_id).length>=6)throw Error('TURN_LIMIT');
-   if(existing.some(r=>r.mission_id===v.mission_id&&(r.envelope.conversation_url!==v.conversation_url||r.envelope.panel_thread_id!==v.panel_thread_id)))throw Error('MISSION_BINDING_CONFLICT');
-   this.db.prepare('INSERT INTO wakes(request_id,mission_id,turn_id,payload,digest,state,updated_at) VALUES (?,?,?,?,?,?,?)').run(v.request_id,v.mission_id,v.turn_id,payload,digest,'QUEUED',this.now());this.record(v.request_id,'QUEUED');return this.row(v.request_id);
+   if(existing.some(r=>ACTIVE.includes(r.state)&&r.mission_id!==scope))throw Error('MISSION_LIMIT');
+   if(existing.filter(r=>r.mission_id===scope).length>=6)throw Error('TURN_LIMIT');
+   if(existing.some(r=>r.mission_id===scope&&(r.envelope.conversation_url!==v.conversation_url||r.envelope.panel_thread_id!==v.panel_thread_id)))throw Error('MISSION_BINDING_CONFLICT');
+   this.db.prepare('INSERT INTO wakes(request_id,mission_id,turn_id,payload,digest,state,updated_at) VALUES (?,?,?,?,?,?,?)').run(v.request_id,scope,v.turn_id,payload,digest,'QUEUED',this.now());this.record(v.request_id,'QUEUED');return this.row(v.request_id);
   });
  }
  claim(requestId=null){return this.tx(()=>{

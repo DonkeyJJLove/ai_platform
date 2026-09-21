@@ -64,7 +64,9 @@ The task digest must match the R19 authorization. IDs refer to an already-create
 MCP turn; no raw prompt or arbitrary executable code is accepted by this API.
 Conversation URLs must belong to the configured ChatGPT project and match the
 currently displayed conversation. Mission/thread/conversation bindings cannot be
-changed by resubmitting a request. Only active `LION-R19-*` missions with
+changed by resubmitting a request. For normal chat, `mission_id` is explicitly
+null and admission requires the locally bound THREAD scope with authority NONE.
+For mission mode, only active `LION-R19-*` missions with
 `READY_BOUND` preflight pass the main-process admission check. This check constrains
 transport. The corresponding broker request must also have a matching mission
 and thread, an unexpired deadline and an active unclaimed state. A claimed envelope
@@ -75,17 +77,56 @@ This is not a replacement for the task's runtime authority lifecycle.
 
 SQLite WAL/FULL stores intent before dispatch. A crashed DISPATCHING request
 becomes SEND_UNKNOWN. It cannot be resent automatically. One active external
-send holds the queue until readback. Six turns per mission and eighteen total
+send holds the queue until readback. Six turns per mission or bound thread and eighteen total
 accepted envelopes bound this candidate's database. Restart or resume does not
 reset those counters. Deadlines are capped at twenty minutes.
 
 The browser sends a bounded get-turn/complete-turn prompt. It does not execute
 SentinelX mutations or orchestrate the material fleet in this feasibility stage.
-Only authenticated ingress readback can produce RESULT_OBSERVED. The Node relay
-then submits that exact answer to the existing Mission Control respond endpoint
+Only authenticated ingress readback can produce RESULT_OBSERVED. In mission
+producer mode, the Node relay then submits that exact answer to the existing Mission Control respond endpoint
 and independently checks the response digest and receipt in a fresh GET before
 RECONCILED. This is broker receipt reconciliation, not proof of panel delivery.
 No relay is activated by installing or opening this candidate.
+
+## Connect normal panel chat (THREAD consumer)
+
+Normal panel chat creates a THREAD request with `mission_id: null`. The existing
+panel path already creates the ingress turn. `src/thread-consumer.cjs` consumes
+that existing turn; it neither claims the broker request nor creates a second
+turn nor writes an upstream response. The mission producer described below is
+not the adapter for these ordinary chat requests.
+
+1. Close the previous candidate window and run this checkout's ISE launcher.
+2. In the right view, open a concrete conversation inside the LION project where
+   LION-MCP-R2 is available. Leave its message composer empty. A project landing
+   page is not a conversation.
+3. Use **LION > Połącz rozmowę SaaS z wątkiem panelu** and select the matching
+   panel thread. If it has no queued question yet, send one panel question first
+   so the thread can be selected; that initial question is not replayed.
+4. If prompted, select the existing **local ingress service credential file**
+   (`secure-mcp-ingress.token`). This is not a ChatGPT session token or OpenAI API
+   key. The app validates access to authenticated `/v1/state` before saving only
+   the file path. It does not extract login data or generate a replacement key.
+5. After the connection confirmation, send **one new question** from the left
+   panel with CHATGPT selected. Only new ingress events after this binding are
+   eligible. Observe the actual question/answer on SaaS, MCP completion and the
+   answer's delivery back to the same panel thread.
+
+Binding persists the exact thread and conversation. Restart keeps the queue
+stopped and requires native resume; it does not replay events from downtime.
+The consumer only reads local service endpoints. It checks the exact request,
+turn hash, thread, cognitive authority, deadline and any observed claim lease
+before dispatch. The existing producer remains responsible for delivering the
+MCP result to Mission Control and the panel. RECONCILED means an independently
+matching upstream response digest and receipt, not verified panel rendering.
+An expired producer claim blocks dispatch; this adapter does not silently renew
+it. Missing service access, unavailable MCP tools or competing legacy senders
+remain deployment prerequisites, not successful handshakes.
+
+Do not enable two senders for the same scope. Historical unknown sends stay
+unresolved until independently reconciled; this candidate does not retry them.
+The bounded fixture tests prove the consumer contract, not a native SaaS roundtrip.
 
 ## Scoped Node relay candidate
 

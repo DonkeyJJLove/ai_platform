@@ -1,5 +1,46 @@
 # R19 checkpoint — implementation candidate, live gate unresolved
 
+## THREAD transport diagnosis, 2026-09-21 21:15–21:17 UTC
+
+The screenshot's queued request suffix a44dc3a4ea3b36fd resolves to
+`saas-8710f6c7d63d49f2a44dc3a4ea3b36fd`, thread
+`8e96590f60024748b2533958bf7c00f4`, scope THREAD, mission_id null, authority NONE.
+Its existing ingress turn is `turn_5d86dd8c-939d-49fe-9698-e3395b550676`, hash
+`33dc414ff45da385cc0d76c47276caf000e3df171808bcce2b90d6accd85b9b3`.
+Independent Mission Control and MCP/ingress reads showed WAITING_SUPERVISOR /
+PENDING, response null, and no receipt. The request was created at 21:05:42 UTC
+and expires at 21:20:42 UTC; these are timestamped observations, not a claim
+that it remains eligible. No historical turn was completed or replayed.
+
+The screenshot's visible answer has LOCAL_MODEL_DIRECT provenance. Its claim
+to be GPT-4 is not model identification. The current provider dropdown and that
+older answer alone cannot prove an automatic fallback for this queued request.
+Focus-mission status reported zero pending while the global pending endpoint
+contained THREAD requests; the two observations have different scopes.
+
+The old background driver's recorded bridge is MINIMIZED_EDGE_UIA, with stale
+DEGRADED state and SEND_UNKNOWN_RECONCILE_REQUIRED. It does not identify the new
+embedded browser. No relay state file for the exact latest request was found.
+The previous R19 fix2 producer accepts only configured R19 missions, so it
+cannot consume this ordinary THREAD request. That adapter selection was wrong.
+
+The new ThreadConsumer reads existing ingress events after an explicit native
+thread/conversation binding. It does not claim requests, create duplicate turns,
+or POST answers. The original producer retains the response/receipt path. A
+native menu validates local service access and an empty SaaS composer before
+resuming; STOP during configuration prevents a late resume. No ChatGPT login
+credential is exported. Thirty-seven local tests pass with real SQLite and fake
+upstream/browser adapters, including normal THREAD roundtrip, identity mismatch,
+claim rollover, STOP, historical-event exclusion and response digest mismatch.
+
+This is source correction, not a deployed repair. Windows producer source and
+same-thread delivery remain unverified; the SentinelX MOON host is WSL and its
+allowlist does not expose native Windows execution. No policy change or alternate
+interpreter was used. The existing service credential, actual project conversation
+with MCP tools, exclusive sender ownership and native roundtrip remain live gates.
+The earlier fix2 CI (3257 tests, two skips) applies only to its old commit; current
+candidate CI must be reacquired. Earlier checkpoints follow unchanged.
+
 ## Continuation after native startup, 2026-09-21
 
 The operator's fix1 output reports Electron PID 38800 on Windows. Their screenshot
