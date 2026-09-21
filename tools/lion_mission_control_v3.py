@@ -560,15 +560,24 @@ def bind_lpcl_execution(mid):
       if not keep_parent and source_mid==LPCL_REBIND_SOURCE:
        c.execute('UPDATE missions SET state=?,runtime_state=?,updated_at=? WHERE mission_id=?',('SUPERSEDED','REBOUND_TO:'+mid,t,source_mid))
        c.execute('UPDATE mission_process_specs SET current_phase=NULL,authority_state=?,updated_at=? WHERE mission_id=?',('SUPERSEDED_BY_EXACT_LPCL',t,source_mid))
-      # lineage is metadata only; authority remains exact LPCL.
+      # Lineage is metadata only; authority remains exact LPCL. A fresh mission
+      # is its own lineage root and has no parent.
+      lineage_root=source_mid or mid
+      lineage_parent=source_mid
+      lineage_relation='COMPLEMENTARY_CONTROL_PLANE_REPAIR_CHILD' if source_mid else 'FRESH_SHARED_MATERIAL_BINDING'
+      lineage_epoch='EPOCH3_CLOSURE' if source_mid else 'CURRENT'
       try:
-       c.execute("INSERT INTO mission_lineage(mission_id,root_mission_id,parent_mission_id,revision,relation,source_epoch,source_stage,source_schema,created_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(mission_id) DO UPDATE SET parent_mission_id=excluded.parent_mission_id,relation=excluded.relation",(mid,source_mid,source_mid,1,'COMPLEMENTARY_CONTROL_PLANE_REPAIR_CHILD','EPOCH3_CLOSURE','MISSION_PROCESS_SCHEMA_V1','lion.mission-process/v1',t))
+       c.execute("INSERT INTO mission_lineage(mission_id,root_mission_id,parent_mission_id,revision,relation,source_epoch,source_stage,source_schema,created_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(mission_id) DO UPDATE SET root_mission_id=excluded.root_mission_id,parent_mission_id=excluded.parent_mission_id,relation=excluded.relation",(mid,lineage_root,lineage_parent,1,lineage_relation,lineage_epoch,'MISSION_PROCESS_SCHEMA_V1','lion.mission-process/v1',t))
       except sqlite3.OperationalError:pass
       uid_digest=_payload_digest({'uids':new_uids})
       changed=old_uids!=new_uids
       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','MATERIAL_FLEET',current,{'event':'EXISTING_HEALTHY_FLEET_REBOUND','source_mission_id':source_mid,'worker_count':64,'unique_uid_count':64,'worker_uid_digest':uid_digest,'previous_binding_changed':changed,'binding_class':'CONTROL_PLANE_REBIND','material_currentness_source':'EPOCH3_M64_READ','material_request_id':material_request_id,'pod_role_environment_rewritten':False,'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
       _process_message(c,mid,'CURRENTNESS','MISSION_CONTROL','LD02',current,{'event':'CURRENTNESS_REACQUIRED','registered_source_head':m['source_head'],'registered_source_tree':m['source_tree'],'runtime_source_head':execution_head,'runtime_source_tree':execution_tree,'material_ready':64,'material_target':64,'parent_mission_id':source_mid,'material_currentness_source':('GITHUB_MASTER_PLUS_EPOCH3_M64_READ' if _hex(str(execution_head or ''),40) and _hex(str(execution_tree or ''),40) else 'EPOCH3_M64_READ'),'material_request_id':material_request_id},'INTERNAL')
       _process_message(c,mid,'RECEIPT','MISSION_CONTROL','OPERATOR',current,{'event':'LPCL_EXECUTION_ADAPTER_BOUND','adapter':LPCL_REBIND_ADAPTER,'source_mission_id':source_mid,'lpcl_digest':m['spec_digest'],'worker_uid_digest':uid_digest,'parent_preserved':keep_parent},'OUT')
+      if fresh_ok:
+       generic={'handler_id':'GENERIC_LPCL_PHASE','effect_class':'NONE','gate_class':'COGNITIVE_PLAN','retry_policy':'IDEMPOTENT','authority_class':'NONE'}
+       handlers={prow['phase_id']:generic for prow in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=?',(mid,)).fetchall()}
+       global_sched.compile_phase_specs(c,mid,handlers)
       ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
       c.commit()
     finally:c.close()

@@ -1,0 +1,79 @@
+{
+  "schema": "lion.r19.currentness-observation/v1",
+  "observed_at": "2026-09-21T14:26:32.097Z",
+  "base_head": "da4dbd7b27b4833c0debddf839e003f2ce170d5c",
+  "mcp_ingress": {
+    "host": "MOON_WSL",
+    "path": "/opt/lion/lion-turn-ingress-node-r2/server.mjs",
+    "size_bytes": 15606,
+    "version": "0.2.0",
+    "process_observation": {
+      "ok": true,
+      "output": "MainPID=211\nExecStart={ path=/usr/bin/node ; argv[]=/usr/bin/node /opt/lion/lion-turn-ingress-node-r2/server.mjs ; ignore_errors=no ; start_time=[Sun 2026-09-20 19:37:31 CEST] ; stop_time=[n/a] ; pid=211 ; code=(null) ; status=0/0 }\nActiveState=active\nFragmentPath=/etc/systemd/system/lion-turn-ingress-node-r2.service",
+      "duration": 0.01,
+      "returncode": 0
+    },
+    "source_sha256": "30a5f727005302729c841d56fa21a63062be13e6ef5512957d1ce2f62542ecea"
+  },
+  "broker": {
+    "host": "LION-AUTH-LAB",
+    "state": "WAITING_MEDIATOR",
+    "automatic_hop": false,
+    "pending_count": 0,
+    "observation": {
+      "schema": "lion.supervisor-projection/v1",
+      "channel": "WAITING_MEDIATOR",
+      "session": "BOUND",
+      "reported_session": "BOUND",
+      "model": "ChatGPT SaaS / LION-MCP-R2 / durable turn completion",
+      "transport": "CHATGPT_OPENAI_SECURE_MCP_TUNNEL",
+      "mission_id": null,
+      "session_scope": "GLOBAL_SUPERVISOR_CHANNEL",
+      "pending": null,
+      "pending_count": 0,
+      "pending_state": "NONE",
+      "last_receipt_state": "PRESENT",
+      "last_receipt": {
+        "request_id": "saas-7133b9f64bba4ed2ad8a7026cc8d9837",
+        "responded_at": "2026-09-21T12:36:47.668839Z",
+        "response_digest": "00d5388a773d4db821b93b52f19d12d4fb411552a76292108b11c1a709f8c48f",
+        "receipt_digest": "74227715bf18988798d36ee1c680d3109d669a5d1554b2659d857b8f3b232b04",
+        "binding_id": "saas-binding-fee664ca7cf84e75a1078a1079093986"
+      },
+      "lease": {
+        "state": "ACTIVE",
+        "expires_at": "2026-09-21T14:36:47.668839Z"
+      },
+      "authority": "NONE",
+      "reported_authority": "NONE",
+      "automatic_hop": false,
+      "freshness": {
+        "state": "FRESH",
+        "observed_at": "2026-09-21T14:10:37.557544Z",
+        "evaluated_at": "2026-09-21T14:10:37.557544Z"
+      },
+      "unknown_reasons": []
+    }
+  },
+  "docker": {
+    "host": "LION-AUTH-LAB",
+    "read_result": "SOCKET_PERMISSION_DENIED",
+    "sudo_result": "PASSWORD_REQUIRED",
+    "MOON": "CLI_NOT_FOUND",
+    "LAB_UBUNTU": "CLI_NOT_FOUND"
+  },
+  "windows_panel": {
+    "port": 8780,
+    "via_MOON_WSL_loopback": "CONNECTION_REFUSED",
+    "via_observed_gateway": "TIMEOUT",
+    "direct_windows_status": "NOT_REACQUIRED"
+  },
+  "embedded_browser": {
+    "runtime": "Electron 44.4.3 candidate",
+    "native_rendering": "NOT_TESTED",
+    "authentication": "NOT_TESTED",
+    "mcp_session": "NOT_TESTED",
+    "native_display_available_in_executor": false
+  },
+  "production_changes": []
+}

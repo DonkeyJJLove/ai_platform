@@ -1,0 +1,12 @@
+{
+  "schema": "lion.user-authorization-record/v1",
+  "task_id": "LION-R19-INTEGRATED-BROWSER-BROKER-SEMANTIC-FLEET-E2E-R1",
+  "task_sha256": "908c81f467d245ac212540f47e5914b6cb114561e6970f83d80fc88618680512",
+  "task_encoding": "UTF-8; original CRLF bytes",
+  "source": "EXPLICIT_USER_MESSAGE",
+  "user_statement": "AUTORYZUJĘ WYKONANIE",
+  "recorded_at": "2026-09-21T14:15:10.439950+00:00",
+  "task_status": "AUTHORIZED_WITH_TASK_BOUNDARIES",
+  "runtime_activation": "NOT_PERFORMED",
+  "sentinel_policy_change_authorized": false
+}

@@ -1,0 +1,10 @@
+{
+  "name": "lion-r19-browser-broker",
+  "version": "19.0.0-candidate.1",
+  "private": true,
+  "description": "LION broker-owned persistent browser feasibility and durable wake queue",
+  "main": "src/main.cjs",
+  "scripts": {"start": "electron .", "test": "node --test test/*.test.cjs", "check": "node --check src/main.cjs && node --check src/store.cjs && node --check src/engine.cjs && node --check src/http.cjs"},
+  "engines": {"node": ">=22.13.0"},
+  "dependencies": {"electron": "44.4.3", "express": "5.2.1"}
+}
