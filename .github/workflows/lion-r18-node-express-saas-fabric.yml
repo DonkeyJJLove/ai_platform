@@ -70,6 +70,31 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
+      - name: Compute exact legacy production scan currentness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          from cyber_lion.enterprise.complete_mediation import EffectSurfaceScanner
+          from cyber_lion.enterprise.host_authority_separation import _production_path
+          raw=subprocess.run(['git','ls-files','-z'],check=True,stdout=subprocess.PIPE).stdout
+          sources={}
+          for item in raw.split(b'\0'):
+              if not item:
+                  continue
+              rel=item.decode()
+              if _production_path(rel):
+                  sources[rel]=Path(rel).read_text(encoding='utf-8')
+          head=subprocess.run(['git','rev-parse','HEAD'],check=True,capture_output=True,text=True).stdout.strip()
+          tree=subprocess.run(['git','rev-parse','HEAD^{tree}'],check=True,capture_output=True,text=True).stdout.strip()
+          inv=EffectSurfaceScanner().scan(repository='DonkeyJJLove/ai_platform',revision=head,tree_digest=tree,sources=sources)
+          print('R18_PRODUCTION_SCAN_DIGEST='+inv.scan_digest)
+          print('R18_PRODUCTION_SOURCE_COUNT='+str(len(sources)))
+          print('R18_EFFECT_SURFACE_COUNT='+str(len(inv.surfaces)))
+          print('R18_UNCLASSIFIED_COUNT='+str(len(inv.unclassified_refs)))
+          PY
       - name: Compile changed Mission Control source
         run: python -m py_compile tools/lion_mission_control_v3.py cyber_lion/tests/test_secure_mcp_broker_relay.py
       - name: Parse Windows Node-panel supervisor
