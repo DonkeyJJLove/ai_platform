@@ -1,5 +1,14 @@
 # Harness ewolucji LION
 
+## Runtime boundary
+
+```text
+CODEX_PROJECT_HARNESS != LION_RUNTIME
+```
+
+Codex is repository/development harness context, not an R17.4 panel, model executor or MCP-completion runtime. For runtime routing and currentness use [`../architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](../architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md).
+
+
 Warstwa repozytoryjna do odtwarzania znaczenia, przygotowania zmian i sprawdzania procesu. Authority effect: NONE. Runtime effect: NONE. Nie jest nowym executorem, PDP ani runtime admission.
 
 | Płaszczyzna | Pytanie | Właściciel |
