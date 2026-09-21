@@ -1,5 +1,8 @@
 # Dokumentacja architektury LION — v1.4
 
+> **R17.4 runtime routing notice (2026-09-21):** for `8780`, Node.js/Express, SaaS/ChatGPT durable handoff, MCP, browser/UIA retirement and layered readiness, use [`../R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](../R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md) as the human-facing semantic owner. The supplied R17.4 live acceptance and the executable source currently published on `master` are not the same Git identity.
+
+
 > **Generation 8 / R4 local entry (2026-09-12T12:10:33.768699Z)** — validated source `c572a3ec74ac58f20414f81fcb51d0c586f4df01` / `0ec64acce259300c28a031ea9bfcd56d18a4d691`; 307 production sources, 268 effect surfaces, 0 unresolved taxonomy, 2709-test suite green, 23 workflows, E02 trust/source-rebind/Git-generator/failure-domain candidates materialized. Final documentation and truth descendants must be reacquired after this commit. See [`R4_CURRENT_EVOLUTION_STATE.md`](R4_CURRENT_EVOLUTION_STATE.md) and [`GIT_LOGICAL_TREE.json`](GIT_LOGICAL_TREE.json).
 
 
