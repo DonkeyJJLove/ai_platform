@@ -14,6 +14,8 @@ const {TurnReconciler}=require('./turn-reconciler');
 const {RelevanceEngine}=require('./relevance-engine');
 const {buildContextEnvelope}=require('./context-envelope');
 const {ReadinessProbe}=require('./readiness');
+const {WorkspaceTrigger}=require('./workspace-trigger');
+const {WakeDispatcher}=require('./wake-dispatcher');
 const {sha256,id,canonicalJson}=require('./canonical');
 
 function argvMap(argv){const out={};for(let i=2;i<argv.length;i++){if(!argv[i].startsWith('--'))continue;const k=argv[i].slice(2);const v=argv[i+1]&&!argv[i+1].startsWith('--')?argv[++i]:true;out[k]=v;}return out;}
@@ -27,13 +29,16 @@ function createRuntime(options={}){
   let readiness;
   const router=options.router||new ProviderRouter({registry,readiness:()=>readiness?.snapshot?.()||{}});
   const relay=options.relay||new SecureMcpRelay({store,missionControl:mc,ingressBase:config.ingressBase,tunnelBase:config.mcpTransportBase,ingressToken:config.ingressToken,journalDir:config.journalDir});
+  const trigger=options.trigger||new WorkspaceTrigger({channelId:options.workspaceChannelId,tokenProvider:options.workspaceTokenProvider});
+  const wakeDispatcher=options.wakeDispatcher||new WakeDispatcher({store,missionControl:mc,relay,trigger});
   const delivery=options.delivery||new SaasDelivery({store});
-  const reconciler=options.reconciler||new TurnReconciler({store,missionControl:mc,relay,delivery});
+  const reconciler=options.reconciler||new TurnReconciler({store,missionControl:mc,relay,delivery,wakeDispatcher});
   readiness=options.readiness||new ReadinessProbe({missionControl:mc,operatorControl:operator,localModel:local,relay,panelRuntime:'NODE_EXPRESS_R18',externalConsumerReady:()=>false});
   const app=express();app.disable('x-powered-by');app.use(express.json({limit:'256kb'}));app.use(express.static(path.resolve(__dirname,'../static')));
   app.get('/health',(req,res)=>res.json({ok:true,status:'ok',runtime:'NODE_EXPRESS_R18',port:config.port,browser_automation:'DISABLED_BY_POLICY',authority_effect:'NONE'}));
-  app.get('/api/state',async(req,res)=>{const state=await readiness.probe();res.json({...state,providers:registry.list(),semantic_context_entropy_metrics:'AVAILABLE_PER_CONTEXT',model_internal_latent_state:'UNOBSERVABLE',latent_proxy_state:'OBSERVABLE_DERIVED_STATE'});});
+  app.get('/api/state',async(req,res)=>{const state=await readiness.probe();res.json({...state,saas_trigger_configured:trigger.configured(),saas_trigger_activation:'REQUIRES_LIVE_PROOF',default_route:'SAAS_FIRST',providers:registry.list(),semantic_context_entropy_metrics:'AVAILABLE_PER_CONTEXT',model_internal_latent_state:'UNOBSERVABLE',latent_proxy_state:'OBSERVABLE_DERIVED_STATE'});});
   app.get('/api/debug/fabric',(req,res)=>res.json({...store.debugState(),readiness:readiness.snapshot(),authority_effect:'NONE'}));
+  app.get('/api/requests/:request_id/wake',(req,res)=>res.json(store.wakeState(req.params.request_id)||{state:'NOT_ENROLLED'}));
   app.get('/api/threads',(req,res)=>res.json({threads:store.listThreads()}));
   app.post('/api/threads',(req,res)=>{try{res.status(201).json(store.createThread(req.body?.title));}catch(e){statusError(res,e);}});
   app.get('/api/threads/:thread_id',(req,res)=>{try{res.json(store.getThread(req.params.thread_id));}catch(e){statusError(res,e);}});
@@ -54,17 +59,20 @@ function createRuntime(options={}){
         store.bindRequest({thread_id:threadId,request_id:requestId,request_hash:requestHash,provider_id:'LOCAL_MODEL',context_digest:env.context_digest,question:message,context_json:canonicalJson(env),state:'PENDING'});store.appendUserOnce(threadId,message,'local-user:'+requestId,{provider_id:'LOCAL_MODEL',request_id:requestId,context_digest:env.context_digest,authority_effect:'NONE'});
         const result=await local.complete({contextEnvelope:env,message});const saved=store.appendAssistantOnce(threadId,result.text,'local:'+requestId,{provider_id:'LOCAL_MODEL',request_id:requestId,context_digest:env.context_digest,response_digest:result.response_digest,authority_effect:'NONE'});store.markDelivery({request_id:requestId,thread_id:threadId,state:'DELIVERED',message_id:saved.message_id,dedupe_key:'local:'+requestId});store.markReconciliation(requestId,'RECONCILED','direct local model response appended to exact originating thread');return res.json({request_id:requestId,provider_id:'LOCAL_MODEL',thread_id:threadId,message_id:saved.message_id,context_digest:env.context_digest,response_digest:result.response_digest,state:'RECONCILED',authority_effect:'NONE'});
       }
-      const broker=await mc.createSaasRequest({thread_id:threadId,question:message});const requestId=broker.request_id;if(!requestId)throw new Error('BROKER_REQUEST_ID_MISSING');
-      const env=buildContextEnvelope({thread,requestId,intent:message,relevance:rel,messages:thread.messages,sources:sourceItems(req.body||{}),observations:req.body?.observations||[],currentness:req.body?.currentness||{},providerRequirements:{provider_id:'CHATGPT_SAAS',transport:'MCP',completion_owner:'ACTIVE_CHATGPT_SAAS_SESSION'},selectedProvider:'CHATGPT_SAAS'}),requestHash=sha256(canonicalJson({thread_id:threadId,request_id:requestId,message,context_digest:env.context_digest,provider_id:'CHATGPT_SAAS'}));
-      const binding=store.bindRequest({thread_id:threadId,request_id:requestId,request_hash:requestHash,provider_id:'CHATGPT_SAAS',context_digest:env.context_digest,question:message,context_json:canonicalJson(env),state:'CREATED'});store.appendUserOnce(threadId,message,'saas-user:'+requestId,{provider_id:'CHATGPT_SAAS',saas_request_id:requestId,context_digest:env.context_digest,authority_effect:'NONE'});
+      const missionId=req.body?.mission_id||null;
+      let missionContext=null;
+      if(missionId){const mission=await mc.missionProcess(missionId);if(mission.mission_id!==missionId||!['RUNNING','AUTHORIZED'].includes(mission.state))throw new Error('MISSION_NOT_ACTIVE');missionContext={mission_id:missionId,source_head:mission.source_head||null,source_tree:mission.source_tree||null,logical_count:mission.logical_count??null,material_target:mission.material_target??null,ready:mission.ready??null,current_phase:mission.current_phase||null,execution_preflight:mission.execution_preflight||null,authority_effect:'NONE'};}
+      const broker=await mc.createSaasRequest({thread_id:threadId,question:message,mission_id:missionId});const requestId=broker.request_id;if(!requestId)throw new Error('BROKER_REQUEST_ID_MISSING');
+      const env=buildContextEnvelope({thread,requestId,intent:message,relevance:rel,messages:thread.messages,sources:sourceItems(req.body||{}),observations:req.body?.observations||[],currentness:req.body?.currentness||{},providerRequirements:{provider_id:'CHATGPT_SAAS',transport:'MCP',completion_owner:'CHATGPT_SAAS_SUPERVISOR',mission_id:missionId,mission_context:missionContext},selectedProvider:'CHATGPT_SAAS'}),requestHash=sha256(canonicalJson({thread_id:threadId,request_id:requestId,message,context_digest:env.context_digest,provider_id:'CHATGPT_SAAS'}));
+      const binding=store.bindRequest({thread_id:threadId,request_id:requestId,request_hash:requestHash,provider_id:'CHATGPT_SAAS',context_digest:env.context_digest,question:message,context_json:canonicalJson(env),state:'CREATED',mission_id:missionId,wake_requested:true});store.appendUserOnce(threadId,message,'saas-user:'+requestId,{provider_id:'CHATGPT_SAAS',saas_request_id:requestId,context_digest:env.context_digest,authority_effect:'NONE'});
       let turn=null,state='PENDING';if(await relay.ready()){try{turn=await relay.dispatch({binding,question:message,contextEnvelope:env});state='WAITING_FOR_SAAS_CONSUMER';}catch(e){store.markReconciliation(requestId,'SEND_UNKNOWN','turn dispatch outcome unknown: '+e.message);state='SEND_UNKNOWN';}}else store.updateRequestState(requestId,'PENDING');
-      return res.status(202).json({request_id:requestId,turn_id:turn?.turn_id||null,thread_id:threadId,provider_id:'CHATGPT_SAAS',state,context_digest:env.context_digest,activation_owner:'ACTIVE_CHATGPT_SAAS_SESSION',chatgpt_host_triggered_autonomous_inference:'NOT_MATERIALIZED',authority_effect:'NONE'});
+      return res.status(202).json({request_id:requestId,turn_id:turn?.turn_id||null,thread_id:threadId,provider_id:'CHATGPT_SAAS',state,context_digest:env.context_digest,activation_owner:'CHATGPT_SAAS_SUPERVISOR',trigger_state:trigger.configured()?'QUEUED':'NOT_CONFIGURED',chatgpt_host_triggered_autonomous_inference:'REQUIRES_LIVE_PROOF',authority_effect:'NONE'});
     }catch(e){statusError(res,e);}
   });
-  return {app,config,store,registry,router,local,mc,operator,relay,delivery,reconciler,readiness};
+  return {app,config,store,registry,router,local,mc,operator,relay,delivery,reconciler,readiness,trigger,wakeDispatcher};
 }
 function main(){
-  const a=argvMap(process.argv),runtime=createRuntime({port:a.port,host:a.host,threadDb:a['thread-db'],modelBase:a.model,missionControlBase:a['mission-control-url'],operatorControlBase:a['operator-control-url'],ingressBase:a['turn-ingress-url'],mcpTransportBase:a['mcp-transport-url'],journalDir:a['relay-state-dir'],mediatorKeyFile:a['mediator-key-file'],ingressTokenFile:a['ingress-token-file']});
+  const a=argvMap(process.argv),runtime=createRuntime({port:a.port,host:a.host,threadDb:a['thread-db'],modelBase:a.model,missionControlBase:a['mission-control-url'],operatorControlBase:a['operator-control-url'],ingressBase:a['turn-ingress-url'],mcpTransportBase:a['mcp-transport-url'],journalDir:a['relay-state-dir'],mediatorKeyFile:a['mediator-key-file'],ingressTokenFile:a['ingress-token-file'],workspaceChannelId:process.env.LION_WORKSPACE_AGENT_CHANNEL,workspaceTokenProvider:process.env.LION_WORKSPACE_AGENT_TOKEN?()=>process.env.LION_WORKSPACE_AGENT_TOKEN:undefined});
   runtime.reconciler.start();const server=runtime.app.listen(runtime.config.port,runtime.config.host,()=>console.log(JSON.stringify({status:'LISTENING',runtime:'NODE_EXPRESS_R18',host:runtime.config.host,port:runtime.config.port,pid:process.pid,browser_automation:'DISABLED_BY_POLICY',authority_effect:'NONE'})));
   const stop=()=>{runtime.reconciler.stop();server.close(()=>{runtime.store.close();process.exit(0)});};process.on('SIGINT',stop);process.on('SIGTERM',stop);
 }

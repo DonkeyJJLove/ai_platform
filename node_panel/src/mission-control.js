@@ -7,7 +7,7 @@ class MissionControlClient{
   async ready(){try{const v=await this.request(this.base,'/api/v3/saas-broker/status',{timeoutMs:1500});return Boolean(v&&typeof v==='object');}catch{return false;}}
   async recentMissions(view='operational'){return this.request(this.base,'/api/v3/missions/recent?view='+encodeURIComponent(view));}
   async missionProcess(id){return this.request(this.base,'/api/v3/missions/'+encodeURIComponent(id)+'/process');}
-  async createSaasRequest({thread_id,question,transport='CHATGPT_OPENAI_SECURE_MCP_TUNNEL'}){return this.request(this.base,'/api/v3/saas-broker/requests',{method:'POST',body:{scope_type:'THREAD',scope_id:thread_id,thread_id,question,authority_effect:'NONE',transport}});}
+  async createSaasRequest({thread_id,question,mission_id=null,transport='CHATGPT_OPENAI_SECURE_MCP_TUNNEL'}){return this.request(this.base,'/api/v3/saas-broker/requests',{method:'POST',body:{scope_type:'THREAD',scope_id:thread_id,thread_id,mission_id,question,authority_effect:'NONE',transport}});}
   async requestStatus(requestId){return this.request(this.base,'/api/v3/saas-broker/requests/'+encodeURIComponent(requestId));}
   async cancelRequest(requestId){return this.request(this.base,'/api/v3/saas-broker/requests/'+encodeURIComponent(requestId)+'/cancel',{method:'POST',body:{},headers:this._mediatorHeaders()});}
   async claimRequest(requestId){return this.request(this.base,'/api/v3/saas-broker/requests/'+encodeURIComponent(requestId)+'/claim',{method:'POST',body:{},headers:this._mediatorHeaders()});}

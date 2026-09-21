@@ -18,6 +18,8 @@ class ThreadStore{
     `);
     const columns=this.db.prepare('PRAGMA table_info(threads)').all().map(x=>x.name);
     if(!columns.includes('deleted_at'))this.db.exec('ALTER TABLE threads ADD COLUMN deleted_at REAL');
+    const requestColumns=this.db.prepare('PRAGMA table_info(saas_request_bindings)').all().map(x=>x.name);
+    if(requestColumns.length&&!requestColumns.includes('mission_id'))this.db.exec('ALTER TABLE saas_request_bindings ADD COLUMN mission_id TEXT');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS message_dedupe(
         thread_id TEXT NOT NULL,dedupe_key TEXT NOT NULL,message_id TEXT NOT NULL,
@@ -26,7 +28,7 @@ class ThreadStore{
       );
       CREATE TABLE IF NOT EXISTS saas_request_bindings(
         request_id TEXT PRIMARY KEY,thread_id TEXT NOT NULL,request_hash TEXT NOT NULL,provider_id TEXT NOT NULL,
-        context_digest TEXT,question TEXT,context_json TEXT,created_at TEXT NOT NULL,state TEXT NOT NULL,
+        context_digest TEXT,question TEXT,context_json TEXT,created_at TEXT NOT NULL,state TEXT NOT NULL,mission_id TEXT,
         FOREIGN KEY(thread_id) REFERENCES threads(thread_id)
       );
       CREATE INDEX IF NOT EXISTS idx_saas_request_thread ON saas_request_bindings(thread_id,state);
@@ -44,6 +46,12 @@ class ThreadStore{
       );
       CREATE TABLE IF NOT EXISTS reconciliation_state(
         request_id TEXT PRIMARY KEY,state TEXT NOT NULL,detail TEXT,updated_at TEXT NOT NULL,
+        FOREIGN KEY(request_id) REFERENCES saas_request_bindings(request_id)
+      );
+      CREATE TABLE IF NOT EXISTS saas_wake_outbox(
+        request_id TEXT PRIMARY KEY,state TEXT NOT NULL,event_json TEXT,result_json TEXT,
+        attempts INTEGER NOT NULL DEFAULT 0,next_attempt_at INTEGER NOT NULL DEFAULT 0,
+        lease_owner TEXT,lease_until INTEGER NOT NULL DEFAULT 0,last_error TEXT,updated_at INTEGER NOT NULL,
         FOREIGN KEY(request_id) REFERENCES saas_request_bindings(request_id)
       );
       CREATE TABLE IF NOT EXISTS turn_claims(
@@ -70,10 +78,13 @@ class ThreadStore{
   }
   appendUserOnce(threadId,content,dedupeKey,meta={}){return this._appendOnce(threadId,'user',String(content).slice(0,8000),dedupeKey,meta);}
   appendAssistantOnce(threadId,content,dedupeKey,meta={}){return this._appendOnce(threadId,'assistant',String(content).slice(0,24000),dedupeKey,meta);}
-  bindRequest({thread_id,request_id,request_hash,provider_id,context_digest=null,question=null,context_json=null,state='CREATED'}){
+  bindRequest({thread_id,request_id,request_hash,provider_id,context_digest=null,question=null,context_json=null,state='CREATED',mission_id=null,wake_requested=false}){
     if(!this._threadExists(thread_id))throw Object.assign(new Error('THREAD_NOT_FOUND'),{status:404});
-    const prior=this.db.prepare('SELECT * FROM saas_request_bindings WHERE request_id=?').get(request_id);if(prior){if(prior.thread_id!==thread_id||prior.request_hash!==request_hash||prior.provider_id!==provider_id)throw new Error('REQUEST_BINDING_CONFLICT');return prior;}
-    this.db.prepare('INSERT INTO saas_request_bindings(request_id,thread_id,request_hash,provider_id,context_digest,question,context_json,created_at,state) VALUES(?,?,?,?,?,?,?,?,?)').run(request_id,thread_id,request_hash,provider_id,context_digest,question,context_json,nowIso(),state);
+    const prior=this.db.prepare('SELECT * FROM saas_request_bindings WHERE request_id=?').get(request_id);if(prior){if(prior.thread_id!==thread_id||prior.request_hash!==request_hash||prior.provider_id!==provider_id||(prior.mission_id||null)!==mission_id)throw new Error('REQUEST_BINDING_CONFLICT');return prior;}
+    this._tx(()=>{
+      this.db.prepare('INSERT INTO saas_request_bindings(request_id,thread_id,request_hash,provider_id,context_digest,question,context_json,created_at,state,mission_id) VALUES(?,?,?,?,?,?,?,?,?,?)').run(request_id,thread_id,request_hash,provider_id,context_digest,question,context_json,nowIso(),state,mission_id);
+      if(wake_requested&&provider_id==='CHATGPT_SAAS')this.db.prepare("INSERT INTO saas_wake_outbox(request_id,state,updated_at) VALUES(?,'PENDING',?)").run(request_id,Date.now());
+    });
     return this.requestBinding(request_id);
   }
   requestBinding(requestId){return this.db.prepare('SELECT * FROM saas_request_bindings WHERE request_id=?').get(requestId)||null;}
@@ -91,6 +102,7 @@ class ThreadStore{
       if(prior&&Date.parse(prior.lease_expiry)>now){if(prior.consumer_id===consumer_id&&prior.lease_id===lease_id)return {...prior,idempotent:true};throw new Error('ALREADY_CLAIMED');}
       const epoch=Number(prior?.claim_epoch||0)+1;this.db.prepare(`INSERT INTO turn_claims(turn_id,consumer_id,lease_id,lease_expiry,claim_epoch,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(turn_id) DO UPDATE SET consumer_id=excluded.consumer_id,lease_id=excluded.lease_id,lease_expiry=excluded.lease_expiry,claim_epoch=excluded.claim_epoch,updated_at=excluded.updated_at`).run(turn_id,consumer_id,lease_id,lease_expiry,epoch,nowIso());return {...this.db.prepare('SELECT * FROM turn_claims WHERE turn_id=?').get(turn_id),idempotent:false};});
   }
+  wakeState(requestId){return this.db.prepare('SELECT state,attempts,last_error FROM saas_wake_outbox WHERE request_id=?').get(requestId)||null;}
   debugState(){return {requests:this.db.prepare('SELECT * FROM saas_request_bindings ORDER BY created_at').all(),turns:this.db.prepare('SELECT * FROM turn_bindings ORDER BY created_at').all(),receipts:this.db.prepare('SELECT * FROM receipt_bindings ORDER BY observed_at').all(),deliveries:this.db.prepare('SELECT * FROM delivery_state ORDER BY updated_at').all(),reconciliation:this.db.prepare('SELECT * FROM reconciliation_state ORDER BY updated_at').all()};}
 }
 module.exports={ThreadStore};
