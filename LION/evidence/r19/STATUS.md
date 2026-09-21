@@ -70,3 +70,12 @@ checks do not apply to a later head. The optional local full-suite run was
 interrupted without a terminal result and is not claimed as PASS. The focused
 truth/currentness suite ran 50 tests with two live-evidence cases explicitly
 skipped; the exact candidate subject was separately recomputed from Git leaves.
+
+The first R19 Core run completed 3,257 tests and found three package-identity
+failures: the reviewed Mission Control port changed its bytes, while the restart
+package manifest still pinned the previous source. Only the corresponding
+mission_control_v3.py manifest entry was regenerated from the actual reviewed
+file (SHA-256 7f40ff2b950e9beace598bbfaec064e3edf70c36ca6fe68cd331b97841a0db87).
+The manifest validator and all drift/missing-file checks are unchanged. The
+12 restart-package tests plus 10 hybrid-execution tests pass after this fix.
+The subsequent exact-head CI result must still be read; no prior run is reused.
