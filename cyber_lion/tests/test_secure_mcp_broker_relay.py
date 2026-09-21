@@ -43,11 +43,12 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('driver_mode:"NODE_BACKGROUND"',NODE)
         self.assertIn('bootstrap_alive:!!bootstrapChild',NODE)
 
-    def test_mission_control_supervises_secure_relay_child(self):
+    def test_legacy_secure_relay_is_quarantined_by_default(self):
         self.assertIn("def _start_secure_mcp_broker_relay(port):",MISSION)
-        self.assertIn("relay=_start_secure_mcp_broker_relay(a.port)",MISSION)
-        self.assertIn("secure-mcp-ingress.token",MISSION)
-        self.assertIn("secure-mcp-relay",MISSION)
+        self.assertIn("--enable-legacy-browser-secure-relay",MISSION)
+        self.assertIn("relay=_start_secure_mcp_broker_relay(a.port) if a.enable_legacy_browser_secure_relay else None",MISSION)
+        self.assertIn("'browser_automation':'DISABLED_BY_POLICY'",MISSION)
+        self.assertIn("'legacy_secure_relay':'QUARANTINED_UNLESS_EXPLICIT_FLAG'",MISSION)
 
     def test_browser_work_item_does_not_carry_secrets(self):
         start=RELAY.index('work={"schema":"lion.firefox-mediator-work/v2"')
