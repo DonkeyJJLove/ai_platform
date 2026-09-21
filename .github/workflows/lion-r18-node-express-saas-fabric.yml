@@ -1,0 +1,87 @@
+name: LION R18 Node Express SaaS Fabric
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'node_panel/**'
+      - 'tools/lion_control_plane_supervisor_windows.ps1'
+      - 'tools/lion_mission_control_v3.py'
+      - 'cyber_lion/tests/test_secure_mcp_broker_relay.py'
+      - 'LION/architecture/R17_4_EXECUTABLE_PROVENANCE_GAP.md'
+      - 'LION/architecture/R18_*.md'
+      - '.github/workflows/lion-r18-node-express-saas-fabric.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-r18-node-express-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  node-fabric:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify exact PR head
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "TREE=$(git rev-parse HEAD^{tree})"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install bounded Node dependencies
+        working-directory: node_panel
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Parse Node runtime
+        working-directory: node_panel
+        run: npm run check
+      - name: Run R18 T01-T36 and integration harness
+        working-directory: node_panel
+        run: npm run test:all
+      - name: Static forbidden runtime dependency scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -RniE 'background_driver|edge_session_worker|Playwright|playwright|msedge|mediator\.js|codex\.exe|OPENAI_API_KEY|api\.openai\.com' node_panel/src
+          grep -n 'node_panel\\src\\server.js' tools/lion_control_plane_supervisor_windows.ps1
+          ! grep -n 'lion_local_intelligence_runtime\.py' tools/lion_control_plane_supervisor_windows.ps1
+
+  python-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Compile changed Mission Control source
+        run: python -m py_compile tools/lion_mission_control_v3.py cyber_lion/tests/test_secure_mcp_broker_relay.py
+      - name: Verify legacy browser relay is quarantined
+        run: python -m unittest cyber_lion.tests.test_secure_mcp_broker_relay -v
+      - name: Verify source/document traceability files exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f LION/architecture/R18_NODE_EXPRESS_SAAS_FABRIC.md
+          test -f LION/architecture/R18_PROVIDER_CONTRACT.md
+          test -f LION/architecture/R18_RELEVANCE_ENGINE.md
+          test -f LION/architecture/R18_DURABLE_TURN_STATE_MACHINE.md
+          test -f LION/architecture/R18_CHATGPT_SAAS_CONSUMER_PROTOCOL.md
+          grep -R 'SOURCE_REF:' LION/architecture/R18_*.md
+          grep -R 'TEST_REF:' LION/architecture/R18_*.md
