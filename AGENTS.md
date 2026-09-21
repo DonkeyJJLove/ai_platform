@@ -1,5 +1,8 @@
 # LION_EVOLUSION — wejście do projektu
 
+R17_4_RUNTIME_SEMANTIC_OWNER: read [LION/architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md](LION/architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md) first for questions about 8780, Node/Express, ChatGPT routing, SaaS broker, MCP, browser automation or the R17.4 runtime. It distinguishes the supplied proven live R17.4 state from the currently published GitHub master, which still contains older Python/browser executable paths. Do not infer automatic ChatGPT model execution from MCP transport readiness.
+
+
 RAG_BOOTSTRAP: read `LION/rag/RAG_BOOTSTRAP.json`; select the newest verified locally available release. The embedded R1 path is historical fallback, not live currentness. CODEX_HARNESS: [LION/codex/](LION/codex/README.md).
 Przy znaczącej pracy czytaj kolejno RAG `00_START_HERE.md`, `03_STATE_AND_CONTINUATION.md`, `02_ROUTING_AND_SOURCE_MAP.md`; wybierz ograniczony zestaw pełnych rekordów po source_id i virtual_path. Niepełny rekord oznacza PARTIAL_READ/UNKNOWN dla zależnych decyzji. Nie wczytuj całego archiwum bez potrzeby.
 
