@@ -7,8 +7,14 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test test/*.test.js",
-    "check": "node --check src/server.js && node --check src/thread-store.js && node --check src/provider-router.js && node --check src/turn-reconciler.js"
+    "check": "node --check src/server.js && node --check src/thread-store.js && node --check src/provider-router.js && node --check src/turn-reconciler.js",
+    "test:integration": "node --test test/integration.test.js",
+    "test:all": "node --test test/*.test.js"
   },
-  "engines": {"node": ">=20"},
-  "dependencies": {"express": "^5.1.0"}
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
