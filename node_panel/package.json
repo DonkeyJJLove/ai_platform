@@ -1,0 +1,14 @@
+{
+  "name": "lion-r18-node-panel",
+  "version": "18.0.0-r1",
+  "private": true,
+  "description": "LION R18 Node.js/Express panel and durable SaaS fabric",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js",
+    "check": "node --check src/server.js && node --check src/thread-store.js && node --check src/provider-router.js && node --check src/turn-reconciler.js"
+  },
+  "engines": {"node": ">=20"},
+  "dependencies": {"express": "^5.1.0"}
+}
