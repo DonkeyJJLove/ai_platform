@@ -72,6 +72,16 @@ jobs:
           python-version: '3.11'
       - name: Compile changed Mission Control source
         run: python -m py_compile tools/lion_mission_control_v3.py cyber_lion/tests/test_secure_mcp_broker_relay.py
+      - name: Parse Windows Node-panel supervisor
+        shell: pwsh
+        run: |
+          $tokens=$null
+          $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'tools/lion_control_plane_supervisor_windows.ps1'),[ref]$tokens,[ref]$errors) | Out-Null
+          if ($errors.Count -ne 0) {
+            $errors | Format-List | Out-String | Write-Error
+            exit 1
+          }
       - name: Verify legacy browser relay is quarantined
         run: python -m unittest cyber_lion.tests.test_secure_mcp_broker_relay -v
       - name: Verify source/document traceability files exist
