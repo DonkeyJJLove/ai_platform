@@ -19,7 +19,10 @@ been claimed to be authenticated based on process existence.
 
 Open `Start-LION-Browser-ISE.ps1` in this directory and press F5. It installs the
 locked dependencies in this checkout if necessary and launches a visible native
-window. Login and MFA are completed by the operator inside the SaaS view. The
+window. The launcher explicitly runs the pinned Electron package's official
+installer: Electron 44 downloads its executable separately from `npm ci`. It
+checks the installer exit code, `dist/electron.exe` and the binary version before
+launching. Dependencies already matching the pinned versions are reused. Login and MFA are completed by the operator inside the SaaS view. The
 queue starts stopped. No old relay inbox is imported and no SaaS request is sent
 merely by starting the program or checking status. Close the window to stop it.
 No autostart task or production service is created.
