@@ -1,5 +1,10 @@
 # LION — hosty, środowiska wykonawcze i laboratoria
 
+## R17.4 runtime port addendum
+
+The supplied R17.4 live acceptance supersedes older runtime-routing prose for that accepted deployment: `8780=Node.js+Express panel/orchestration`, `8772=local model`, `8766=Mission Control/SaaS broker`, `8767=operator control`, `8791=durable Turn Ingress`, `8792=MCP transport`, with `BROWSER_AUTOMATION=DISABLED_BY_POLICY`. MCP transport readiness is not model-execution readiness. Full provenance and the unresolved GitHub-source divergence are documented in [`../LION/architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](../LION/architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md).
+
+
 **Stan obserwacji:** 2026-08-28  
 **Baseline repozytorium:** `master@7adb0de8036e98f346d7ecac113876157c2abebf`  
 **Status dokumentu:** inventory / documentation only — ten dokument nie nadaje authority i nie jest źródłem currentness przy wykonywaniu efektu.
