@@ -19,6 +19,7 @@ class Engine{
    if(!(await this.browser.ready(next.envelope)))return;
    const before=await this.getTurn(next.envelope.turn_id);
    if(!matches(next.envelope,before)||before.status!=='PENDING'){this.store.transition(next.request_id,['QUEUED'],'FAILED','TURN_NOT_PENDING_OR_IDENTITY_MISMATCH');return}
+   if(!(await this.admit(next.envelope)))return;
    if(this.store.stopped())return;
    const job=this.store.claim(next.request_id);if(!job)return;
    try{

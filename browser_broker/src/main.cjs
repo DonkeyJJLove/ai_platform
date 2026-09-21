@@ -2,7 +2,7 @@
 const {app,BaseWindow,WebContentsView,Menu,dialog}=require('electron');
 const fs=require('node:fs');const path=require('node:path');const {randomBytes}=require('node:crypto');
 const {Store}=require('./store.cjs');const {Engine}=require('./engine.cjs');
-const {EmbeddedBrowser}=require('./browser.cjs');const {createHttp}=require('./http.cjs');const {webPreferences}=require('./contract.cjs');
+const {EmbeddedBrowser}=require('./browser.cjs');const {createHttp}=require('./http.cjs');const {webPreferences,brokerAllows}=require('./contract.cjs');
 const PROJECT=process.env.LION_PROJECT_URL||'https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/project';
 const PANEL=process.env.LION_PANEL_URL||'http://127.0.0.1:8780';
 const MC='http://127.0.0.1:8766';
@@ -52,7 +52,9 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    if(!v.mission_id.startsWith('LION-R19-'))return false;
    const r=await fetch(MC+'/api/v3/missions/'+encodeURIComponent(v.mission_id)+'/process',{signal:AbortSignal.timeout(5000),redirect:'error'});
    if(!r.ok)return false;const m=await r.json();
-   return m.mission_id===v.mission_id&&['RUNNING','AUTHORIZED'].includes(m.state)&&m.execution_preflight?.mission_readiness==='READY_BOUND';
+   if(!(m.mission_id===v.mission_id&&['RUNNING','AUTHORIZED'].includes(m.state)&&m.execution_preflight?.mission_readiness==='READY_BOUND'))return false;
+   const request=await fetch(MC+'/api/v3/saas/requests/'+encodeURIComponent(v.request_id),{signal:AbortSignal.timeout(5000),redirect:'error'});
+   return request.ok&&brokerAllows(v,await request.json());
   };
   engine=new Engine({store,browser,getTurn,admit});
   server=createHttp({store,token,status:()=>({browser:browser.state,ingress_credential_present:!!ingressToken,transport_error:engine.lastError})}).listen(8793,'127.0.0.1');

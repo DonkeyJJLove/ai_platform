@@ -59,7 +59,10 @@ Conversation URLs must belong to the configured ChatGPT project and match the
 currently displayed conversation. Mission/thread/conversation bindings cannot be
 changed by resubmitting a request. Only active `LION-R19-*` missions with
 `READY_BOUND` preflight pass the main-process admission check. This check constrains
-transport; it is not a replacement for the task's runtime authority lifecycle.
+transport. The corresponding broker request must also have a matching mission
+and thread, an unexpired deadline and an active unclaimed state. MCP PENDING
+alone is insufficient: an old turn may belong to a cancelled broker request.
+This is not a replacement for the task's runtime authority lifecycle.
 
 SQLite WAL/FULL stores intent before dispatch. A crashed DISPATCHING request
 becomes SEND_UNKNOWN. It cannot be resent automatically. One active external

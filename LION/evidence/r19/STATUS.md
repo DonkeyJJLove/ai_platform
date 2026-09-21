@@ -21,7 +21,7 @@ Its 10 hybrid-execution tests pass locally. No host activation was performed.
 
 The new `browser_broker` component contains a visible Electron WebContentsView,
 persistent isolated profile, Express control boundary, durable SQLite queue,
-MCP turn readback, no-blind-retry handling and STOP. Fourteen tests using real
+MCP turn readback, no-blind-retry handling and STOP. Sixteen tests using real
 SQLite and local HTTP with fake browser/provider adapters pass. These are local
 contract tests, not SaaS or native-rendering evidence. Production still uses the
 previous deployment; the new component is not wired into the old relay inbox.
@@ -49,3 +49,24 @@ After feasibility passes, connect the upstream panel/relay adapter, reconcile
 receipts into the same thread, then bind the local model and two-worker Docker
 canary under the approved task limits. Those dependent phases remain unfinished.
 Do not merge/deploy this candidate as a completed fleet or complete R19 mission.
+
+Follow-up observations at 14:38–14:40 UTC: the current broker binding expired at
+14:36:47 UTC; status is now UNBOUND/EXPIRED and automatic_hop remains unavailable.
+Read-only MCP lion_next_turn returned turn_ed62e0cb-c3e9-4d4c-95d0-e8b4a2f46c16
+as PENDING, with request hash
+569e943baea50c6775551cfb1dc50a7d53f048b9a4f49b4f71b40b21c6a01c1d.
+The same identity/hash exists in the MOON ingress data/turns.jsonl prefix read
+(the file read was truncated; it is not a full queue census). The corresponding
+Mission Control request saas-a8f909a16d1d487b9423b5dd729ae6f3 is CANCELLED_BY_OPERATOR.
+This is a cancellation propagation gap, not an authorized pending user request.
+The candidate therefore rechecks the broker request's active state, exact scope
+and deadline before dispatch, including after asynchronous ingress readback.
+No historical request was completed, deleted or replayed. Matching stored turn
+identity supports the ingress association; it does not prove tunnel topology alone.
+
+The first publication is draft PR #367. Its Bandit and Full Symbol Census checks
+passed; Core was still running when this follow-up source change began. Those
+checks do not apply to a later head. The optional local full-suite run was
+interrupted without a terminal result and is not claimed as PASS. The focused
+truth/currentness suite ran 50 tests with two live-evidence cases explicitly
+skipped; the exact candidate subject was separately recomputed from Git leaves.

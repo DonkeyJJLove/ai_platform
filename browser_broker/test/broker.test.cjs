@@ -23,3 +23,16 @@ test('expiry during readback cannot dispatch an unverified next request',async t
  const e=new Engine({store,admit:async()=>true,browser:{ready:async()=>true,send:async()=>sends++},getTurn:async()=>{store.now=()=>v.deadline_at+1;return turn(v)}});
  await e.tick();assert.equal(sends,0);assert.equal(store.row(v.request_id).state,'TIMED_OUT');assert.equal(store.row(later.request_id).state,'QUEUED');assert.equal(store.row(later.request_id).sends,0);
 });
+test('broker cancellation, foreign scope, expired deadline and other consumer claim reject dispatch',()=>{
+ const {brokerAllows}=require('../src/contract.cjs');const v=make();const request={request_id:v.request_id,mission_id:v.mission_id,thread_id:v.panel_thread_id,status:'WAITING_SUPERVISOR',deadline_at:new Date(v.deadline_at).toISOString()};
+ assert.equal(brokerAllows(v,request),true);
+ for(const status of ['CANCELLED','COMPLETED','CLAIMED','WAITING_OPERATOR_OVERDUE','SUPERSEDED'])assert.equal(brokerAllows(v,{...request,status}),false);
+ assert.equal(brokerAllows(v,{...request,mission_id:'other'}),false);
+ assert.equal(brokerAllows(v,{...request,thread_id:'other'}),false);
+ assert.equal(brokerAllows(v,{...request,deadline_at:new Date(Date.now()-1).toISOString()}),false);
+});
+test('cancellation while ingress is read prevents external send',async t=>{
+ const {store}=setup(t);const v=make();store.enqueue(v);let allowed=true,sends=0;
+ const e=new Engine({store,admit:async()=>allowed,browser:{ready:async()=>true,send:async()=>sends++},getTurn:async()=>{allowed=false;return turn(v)}});
+ await e.tick();assert.equal(sends,0);assert.equal(store.row(v.request_id).sends,0);
+});
