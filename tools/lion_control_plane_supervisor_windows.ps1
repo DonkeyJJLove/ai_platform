@@ -3,6 +3,9 @@ param(
     [string]$Repo = 'C:\Users\d2j3\Documents\Codex\2026-09-14\files-pasted-by-the-user-role\work\lion-r2-panel-runtime',
     [string]$Runtime = 'C:\Users\d2j3\Documents\Codex\2026-09-13\r10-r2-unified\runtime',
     [string]$Python = 'C:\Users\d2j3\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\python.exe',
+    [string]$Node = 'node.exe',
+    [string]$MediatorKeyFile = '',
+    [string]$IngressTokenFile = '',
     [string]$ModelRoot = 'C:\Users\d2j3\Documents\Codex\2026-09-10\napraw\outputs\moon-native',
     [string]$OperatorPanelProxyKey = 'C:\Users\d2j3\AppData\Local\LION\secrets\operator-panel-proxy.key',
     [string]$OperatorPairingKey = 'C:\Users\d2j3\AppData\Local\LION\secrets\operator-pairing.key'
@@ -137,37 +140,31 @@ function Ensure-MissionControl {
     return $false
 }
 function Ensure-Panel([hashtable]$RepoIdentity) {
-    if (-not (Test-OperatorControl)) { throw 'OPERATOR_CONTROL_8767_UNAVAILABLE' }
+    $nodeCommand=Get-Command $Node -ErrorAction Stop
+    $nodeExe=[IO.Path]::GetFullPath($nodeCommand.Source)
+    $major=[int]((& $nodeExe --version).Trim().TrimStart('v').Split('.')[0])
+    if ($major -lt 22) { throw 'NODE_22_REQUIRED_FOR_BUILTIN_SQLITE' }
+    $serverPath=Join-Path $Repo 'node_panel\src\server.js'
+    if (-not (Test-Path -LiteralPath $serverPath)) { throw 'NODE_PANEL_SERVER_MISSING' }
     $p=Process-For-Port 8780
     if ($p) {
-        if ([IO.Path]::GetFullPath($p.ExecutablePath) -ne [IO.Path]::GetFullPath($Python)) { throw 'PORT_8780_FOREIGN_PROCESS' }
-        if ($p.CommandLine -notmatch 'lion_local_intelligence_runtime\.py' -or $p.CommandLine -notmatch [regex]::Escape($Repo)) { throw 'PORT_8780_WRONG_RUNTIME' }
-        if ($p.CommandLine -notmatch '--operator-panel-proxy-key-file' -or $p.CommandLine -notmatch [regex]::Escape($OperatorPanelProxyKey)) { throw 'PORT_8780_OPERATOR_BINDING_MISSING' }
-        if ($p.CommandLine -notmatch '--operator-pairing-key-file' -or $p.CommandLine -notmatch [regex]::Escape($OperatorPairingKey)) { throw 'PORT_8780_OPERATOR_PAIRING_BINDING_MISSING' }
-        if (-not (Wait-Http ($PanelUrl + '/') 5)) { throw 'PANEL_8780_UNHEALTHY' }
+        if ([IO.Path]::GetFullPath($p.ExecutablePath) -ne $nodeExe) { throw 'PORT_8780_FOREIGN_PROCESS' }
+        if ($p.CommandLine -notmatch 'node_panel[\\/]src[\\/]server\.js' -or $p.CommandLine -notmatch [regex]::Escape($Repo)) { throw 'PORT_8780_WRONG_RUNTIME' }
+        if (-not (Wait-Http ($PanelUrl + '/health') 5)) { throw 'PANEL_8780_UNHEALTHY' }
         return [int]$p.ProcessId
     }
-    if (-not (Test-Path -LiteralPath $OperatorPanelProxyKey)) { throw 'OPERATOR_PANEL_PROXY_KEY_MISSING' }
-    if (-not (Test-Path -LiteralPath $OperatorPairingKey)) { throw 'OPERATOR_PAIRING_KEY_MISSING' }
     $stamp=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')
     $out=Join-Path $Runtime ('supervised8780-' + $stamp + '.out.log')
     $err=Join-Path $Runtime ('supervised8780-' + $stamp + '.err.log')
-    $args=@((Join-Path $Repo 'tools\lion_local_intelligence_runtime.py'),'--repo',$Repo,'--model',$ModelUrl,'--model-sha',$ExpectedModelSha,'--port','8780','--material-runtime-dir',$MatRuntime,'--thread-db',$ThreadDb,'--mission-control-url',$MissionControlUrl,'--operator-control-url',$OperatorControlUrl,'--operator-panel-proxy-key-file',$OperatorPanelProxyKey,'--operator-pairing-key-file',$OperatorPairingKey)
-    $proc=Start-Process -FilePath $Python -ArgumentList $args -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err -PassThru
-    Write-Log ('PANEL_START pid=' + $proc.Id + ' head=' + $RepoIdentity.head + ' operator_control=8767')
-    if (-not (Wait-Http ($PanelUrl + '/') 30)) { throw 'PANEL_START_TIMEOUT' }
+    $args=@($serverPath,'--host','127.0.0.1','--port','8780','--thread-db',$ThreadDb,'--model',$ModelUrl,'--mission-control-url',$MissionControlUrl,'--operator-control-url',$OperatorControlUrl,'--turn-ingress-url','http://127.0.0.1:8791','--mcp-transport-url','http://127.0.0.1:8792','--relay-state-dir',(Join-Path $Runtime 'secure-mcp-relay-node'))
+    if ($MediatorKeyFile -and (Test-Path -LiteralPath $MediatorKeyFile)) { $args += @('--mediator-key-file',$MediatorKeyFile) }
+    if ($IngressTokenFile -and (Test-Path -LiteralPath $IngressTokenFile)) { $args += @('--ingress-token-file',$IngressTokenFile) }
+    $proc=Start-Process -FilePath $nodeExe -ArgumentList $args -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err -PassThru
+    Write-Log ('PANEL_START runtime=NODE_EXPRESS_R18 pid=' + $proc.Id + ' head=' + $RepoIdentity.head + ' operator_control_independent=8767')
+    if (-not (Wait-Http ($PanelUrl + '/health') 30)) { throw 'PANEL_START_TIMEOUT' }
     return [int]$proc.Id
 }
-function Observe-OptionalFirefoxTransport {
-    $p=Process-For-Port 8790
-    if (-not $p) { return $false }
-    if ($p.Name -eq 'node.exe' -and $p.CommandLine -and $p.CommandLine -match 'firefox-mediator-app' -and $p.CommandLine -match 'mediator\.js') {
-        return $true
-    }
-    Write-Log ('WARN PORT_8790_PRESENT_BUT_NOT_LION_MEDIATOR pid=' + $p.ProcessId)
-    return $false
-}
-function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int]$MatHealthy,[bool]$FirefoxTransportActive) {
+function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int]$MatHealthy) {
     $mc=[bool](Listener 8766)
     $operatorControl=[bool](Test-OperatorControl)
     $state=[ordered]@{
@@ -182,9 +179,11 @@ function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int
         operator_control_8767=$operatorControl
         model_8772=$true
         panel_8780=$true
-        legacy_browser_8790=$false
-        browser_relay_active=$FirefoxTransportActive
-        optional_model_transport_8790=$FirefoxTransportActive
+        panel_runtime='NODE_EXPRESS_R18'
+        browser_automation='DISABLED_BY_POLICY'
+        browser_relay_active=$false
+        optional_model_transport_8790=$false
+        chatgpt_autonomous_execution_ready=$false
         message_transport='LION_OPERATOR_MESSAGES'
         control_transport='SENTINELX_OPERATOR_CONTROL'
         panel_channel='LION_BUS'
@@ -196,15 +195,13 @@ function Write-State([hashtable]$RepoIdentity,[int]$ModelPid,[int]$PanelPid,[int
 }
 function One-Pass {
     $repoIdentity=Assert-RepoClean
-    $firefoxTransportActive=Observe-OptionalFirefoxTransport
     $modelPid=Ensure-Model
     $mat=Ensure-MatFleet
     $null=Ensure-MissionControl
-    if (-not (Test-OperatorControl)) { throw 'OPERATOR_CONTROL_8767_UNAVAILABLE' }
     $panelPid=Ensure-Panel $repoIdentity
-    Write-State $repoIdentity $modelPid $panelPid $mat $firefoxTransportActive
-    $firefoxState=if($firefoxTransportActive){'OPTIONAL_ACTIVE'}else{'ABSENT'}
-    Write-Log ('READY model=' + $modelPid + ' panel=' + $panelPid + ' bus=LION_OPERATOR_MESSAGES operator8767=READY browser8790=' + $firefoxState + ' mat=12 head=' + $repoIdentity.head)
+    Write-State $repoIdentity $modelPid $panelPid $mat
+    $operatorState=if(Test-OperatorControl){'READY'}else{'DEGRADED'}
+    Write-Log ('READY model=' + $modelPid + ' panel=' + $panelPid + ' runtime=NODE_EXPRESS_R18 operator8767=' + $operatorState + ' browser_automation=DISABLED_BY_POLICY mat=12 head=' + $RepoIdentity.head)
 }
 
 if ($Once) {
