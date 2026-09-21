@@ -11,7 +11,7 @@ function createHttp({store,token,status}){
   if(given.length!==expected.length||!timingSafeEqual(given,expected))return res.status(401).json({error:'CONTROL_AUTH_REQUIRED'});next();
  });
  app.use(express.json({limit:'16kb',strict:true}));
- app.get('/v1/status',(req,res)=>res.json({schema:'lion.browser-broker.status/v1',...status(),stopped:store.stopped(),wakes:store.rows().map(r=>({request_id:r.request_id,state:r.state,sends:r.sends,reason:r.reason})),model_identity:'UNKNOWN',live_e2e:'NOT_PROVEN'}));
+ app.get('/v1/status',async(req,res)=>res.json({schema:'lion.browser-broker.status/v1',...await status(),stopped:store.stopped(),wakes:store.rows().map(r=>({request_id:r.request_id,state:r.state,sends:r.sends,reason:r.reason})),model_identity:'UNKNOWN',live_e2e:'NOT_PROVEN'}));
  app.post('/v1/wakes',(req,res)=>{try{const r=store.enqueue(req.body);res.status(202).json({request_id:r.request_id,state:r.state,meaning:'LOCAL_QUEUE_ACCEPTANCE_ONLY'})}catch(e){res.status(409).json({error:/^[A-Z_]+$/.test(e.message)?e.message:'ENQUEUE_REJECTED'})}});
  app.post('/v1/stop',(req,res)=>{store.stop();res.json({stopped:true,external_cancellation:'NOT_GUARANTEED_READBACK_REQUIRED'})});
  app.use((error,req,res,next)=>res.status(400).json({error:'INVALID_BODY'}));

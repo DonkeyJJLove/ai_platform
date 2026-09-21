@@ -2,3 +2,4 @@
 LION/evidence/r19/TASK.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # Windows PowerShell ISE launcher intentionally uses CRLF and a UTF-8 BOM.
 browser_broker/Start-LION-Browser-ISE.ps1 -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+browser_broker/Test-LION-Browser-ISE.ps1 -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

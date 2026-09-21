@@ -1,5 +1,42 @@
 # R19 checkpoint — implementation candidate, live gate unresolved
 
+## Continuation after native startup, 2026-09-21
+
+The operator's fix1 output reports Electron PID 38800 on Windows. Their screenshot
+shows the broker-owned panel and ChatGPT views with the signed-in account and
+LION_EVOLUSION project. This is evidence of native rendering and visible login;
+it does not demonstrate MCP use, receipt delivery or restart persistence. The
+operator reports the requested checks already done. No diagnostic JSON was
+available in this workspace or resolved by the targeted Library search, so its
+specific contents are not inferred.
+
+Fresh observations at 20:40 UTC still show UNBOUND/EXPIRED, automatic_hop
+UNAVAILABLE and no pending request. MOON's ingress service is active at PID 211
+with ExecStart `/usr/bin/node /opt/lion/lion-turn-ingress-node-r2/server.mjs`.
+Its Windows PowerShell command remains unavailable through the observed SentinelX
+allowlist. No policy change or alternate-interpreter workaround was attempted.
+
+The next candidate adds a Node relay using the existing claim/turn/respond
+contracts. It accepts a claimed request only with an exact generation and live
+lease. SQLite journals claim and turn creation before their effects. Ambiguous
+mutations require reconciliation; a lost respond ACK is resolved with GET rather
+than a repeated POST. New requests must match an explicitly configured R19
+mission, thread and actual conversation, READY_BOUND preflight, and process-start
+cutoff. It does not import the historical queue or create authority. No relay is
+enabled without configuration and native resume. The existing five-minute claim
+lease can block longer inference; renewal is not fabricated.
+
+The same validated project conversation is now persisted and restored. Startup
+produces a diagnostic report; the new ISE read-only script prints current status
+with real host, entrypoint and SHA256, without credential values. Twenty-seven
+local tests pass using SQLite and fake upstream/browser adapters, including
+claim rollover, cancellation, STOP, lost acknowledgements and receipt mismatch.
+They do not prove a real model response. Broker RECONCILED is explicitly distinct
+from same-thread panel DELIVERED. This change is candidate source only; Windows
+installation, native MCP feasibility, panel E2E and Docker canary remain open.
+
+The sections below preserve the earlier checkpoint chronology.
+
 The exact uploaded TASK was authorized by an explicit user message. Its original
 UTF-8 CRLF bytes and SHA-256 are preserved alongside a separate activation record.
 This is developer-session authorization, not a fabricated Mission Control UI event.

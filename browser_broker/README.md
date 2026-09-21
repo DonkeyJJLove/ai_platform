@@ -34,8 +34,12 @@ existing ingress credential file. That service credential is not a ChatGPT
 session token. It is never printed or exposed to a renderer. Browser login uses
 the browser's own profile. `LION_BROWSER_DATA` selects a dedicated local profile.
 
-Use the native LION menu to inspect state, resume after login, or STOP. The status
-menu writes `diagnostic-r19.json` in the local profile, without credential values.
+Use the native LION menu to inspect state, resume after login, or STOP. Startup and
+the status menu write `diagnostic-r19.json` in the local profile, without credential
+values. `Test-LION-Browser-ISE.ps1` reads current broker status and displays it in
+ISE; it never resumes the queue. Reports include the real host, entrypoint path
+and entrypoint SHA256, plus separate local and upstream observations. A health
+response alone does not prove a service credential is valid.
 Composer visibility is reported separately from MCP and end-to-end verification. The menu
 is owned by the main process. Remote web pages receive no IPC bridge. Authentication
 flows needing popups may fail because popups are denied in this initial candidate;
@@ -53,7 +57,7 @@ directory. Do not share it through a web server, repository or worker volume.
 
 ```
 request_id, mission_id, panel_thread_id, turn_id, turn_request_hash,
-conversation_url, task_sha256, deadline_at
+conversation_url, task_sha256, deadline_at, claim_generation (optional)
 ```
 
 The task digest must match the R19 authorization. IDs refer to an already-created
@@ -63,7 +67,9 @@ currently displayed conversation. Mission/thread/conversation bindings cannot be
 changed by resubmitting a request. Only active `LION-R19-*` missions with
 `READY_BOUND` preflight pass the main-process admission check. This check constrains
 transport. The corresponding broker request must also have a matching mission
-and thread, an unexpired deadline and an active unclaimed state. MCP PENDING
+and thread, an unexpired deadline and an active unclaimed state. A claimed envelope
+additionally requires the exact positive claim generation and a live upstream
+claim lease. Omitting the generation cannot authorize a claimed request. MCP PENDING
 alone is insufficient: an old turn may belong to a cancelled broker request.
 This is not a replacement for the task's runtime authority lifecycle.
 
@@ -75,10 +81,46 @@ reset those counters. Deadlines are capped at twenty minutes.
 
 The browser sends a bounded get-turn/complete-turn prompt. It does not execute
 SentinelX mutations or orchestrate the material fleet in this feasibility stage.
-Only authenticated ingress readback can produce RESULT_OBSERVED; that is not
-RECONCILED or DELIVERED. The existing broker receipt/panel delivery path still
-needs an explicit integration adapter and live validation. No incoming queue
-adapter is connected automatically to the production relay in this candidate.
+Only authenticated ingress readback can produce RESULT_OBSERVED. The Node relay
+then submits that exact answer to the existing Mission Control respond endpoint
+and independently checks the response digest and receipt in a fresh GET before
+RECONCILED. This is broker receipt reconciliation, not proof of panel delivery.
+No relay is activated by installing or opening this candidate.
+
+## Scoped Node relay candidate
+
+`src/relay.cjs` runs inside the browser owner's Node main process. It uses the
+existing `/api/v3/saas-broker` and ingress REST contracts. It does not launch the
+old Python/Firefox/hidden-browser driver or a model API client. To configure a
+controlled test, the operator supplies existing local service credential file
+paths in `LION_INGRESS_TOKEN_FILE` and `LION_MEDIATOR_KEY_FILE`, and sets
+`LION_R19_RELAY_SCOPE_FILE` to a JSON file with `mission_id`, `thread_id`,
+`conversation_url`, and `task_sha256` matching the authorized R19 task. IDs must
+come from the real mission and panel thread; the URL must be the actual project
+conversation. These service credentials are unrelated to ChatGPT login cookies.
+
+The queue must be resumed through the native menu. The relay only selects new
+requests created after its process started, in that exact mission/thread, with
+READY_BOUND mission preflight. It does not import old inboxes. A maximum of six
+requests per mission and eighteen recorded handoffs bounds the durable journal.
+Claim and turn creation intent is persisted before their respective POST. An
+ambiguous claim/creation needs operator reconciliation; it is never replayed.
+A lost respond acknowledgement is reconciled using the response digest and
+receipt GET, with no repeated POST. Expired or replaced claims block dispatch and
+delivery; this candidate does not silently renew the existing five-minute claim.
+The queue may therefore require reconciliation for a longer inference.
+
+Claim response tokens are kept only in the broker's private SQLite journal and
+removed after receipt reconciliation. They never enter the page, prompt, HTTP
+status or diagnostic report. Protect the complete profile, including WAL files.
+STOP prevents further mutations; readback can still reconcile a response already
+accepted upstream. A validated conversation is saved on navigation and restored
+on startup, without restoring send permission or navigating to an auth URL.
+
+Before enabling this adapter in production, complete native MCP/login/restart
+feasibility and replace the legacy relay under a controlled deployment. Do not
+run both consumers for the same scope. Windows configuration, panel receipt
+consumption and actual SaaS inference still require live verification.
 
 STOP prevents future sends, cancels unsent rows, and preserves uncertain external
 work for readback. A request already delivered to SaaS cannot be guaranteed to

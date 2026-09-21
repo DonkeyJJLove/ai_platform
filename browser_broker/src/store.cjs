@@ -1,15 +1,20 @@
 'use strict';
 const {DatabaseSync}=require('node:sqlite');
-const {envelope,hash}=require('./contract.cjs');
+const {envelope,hash,conversation}=require('./contract.cjs');
 const ACTIVE=['QUEUED','DISPATCHING','AWAITING_RESULT','SEND_UNKNOWN'];
 class Store{
  constructor(file,projectUrl,now=Date.now){
   this.projectUrl=projectUrl;this.now=now;this.db=new DatabaseSync(file);
   this.db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=3000; CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY,value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS wakes (request_id TEXT PRIMARY KEY, mission_id TEXT NOT NULL, turn_id TEXT NOT NULL UNIQUE, payload TEXT NOT NULL, digest TEXT NOT NULL, state TEXT NOT NULL, sends INTEGER NOT NULL DEFAULT 0, reason TEXT, updated_at INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS events (seq INTEGER PRIMARY KEY AUTOINCREMENT,request_id TEXT,state TEXT NOT NULL,reason TEXT,at INTEGER NOT NULL)");
   this.db.prepare("INSERT OR IGNORE INTO settings VALUES ('stopped','true')").run();
+  this.db.exec('CREATE TABLE IF NOT EXISTS handoffs (request_id TEXT PRIMARY KEY,payload TEXT NOT NULL)');
  }
  tx(fn){this.db.exec('BEGIN IMMEDIATE');try{const r=fn();this.db.exec('COMMIT');return r}catch(e){this.db.exec('ROLLBACK');throw e}}
  stopped(){return this.db.prepare("SELECT value FROM settings WHERE key='stopped'").get().value==='true'}
+ rememberConversation(url){const valid=conversation(url,this.projectUrl);this.db.prepare("INSERT INTO settings VALUES ('conversation',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(valid)}
+ restoreConversation(){const value=this.db.prepare("SELECT value FROM settings WHERE key='conversation'").get()?.value;try{return conversation(value,this.projectUrl)}catch{return this.projectUrl}}
+ handoffs(){return this.db.prepare('SELECT payload FROM handoffs ORDER BY rowid').all().map(r=>JSON.parse(r.payload))}
+ saveHandoff(record){this.db.prepare('INSERT INTO handoffs VALUES (?,?) ON CONFLICT(request_id) DO UPDATE SET payload=excluded.payload').run(record.request_id,JSON.stringify(record))}
  record(id,state,reason=null){this.db.prepare('INSERT INTO events(request_id,state,reason,at) VALUES (?,?,?,?)').run(id,state,reason,this.now())}
  row(id){const r=this.db.prepare('SELECT * FROM wakes WHERE request_id=?').get(id);return r?{...r,envelope:JSON.parse(r.payload)}:null}
  rows(){return this.db.prepare('SELECT request_id FROM wakes ORDER BY rowid').all().map(r=>this.row(r.request_id))}
