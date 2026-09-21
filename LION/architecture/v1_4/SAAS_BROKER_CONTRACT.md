@@ -1,5 +1,10 @@
 # Cognitive SaaS broker
 
+## R17.4 transport reconciliation
+
+For the supplied R17.4 accepted runtime, older mediator/provider descriptions in this document are subordinate to [`../R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](../R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md). MCP is durable transport/tooling, not a ChatGPT inference API. Durable turn creation or dispatch does not prove autonomous ChatGPT execution. The accepted path is Node/Express 8780 -> broker -> durable relay -> Turn Ingress 8791 -> MCP transport 8792 -> an external ChatGPT session may consume/complete -> receipt reconciliation -> exactly-once same-thread delivery. `BROWSER_AUTOMATION=DISABLED_BY_POLICY` for that runtime. The audited GitHub `master` still contains browser-mediated executable source, so the source/runtime divergence remains explicit.
+
+
 The canonical implementation is `tools/lion_saas_broker.py`, schema
 `lion.saas-broker/v1`, migration version 6. The former
 `lion_saas_session_bridge.py` only re-exports compatibility functions.
