@@ -1,5 +1,10 @@
 # LION — punkt wejścia do dokumentacji projektu
 
+## R17.4 runtime semantic owner
+
+For R17.4 runtime questions involving `8780`, Node.js/Express, the SaaS broker, durable turns, MCP, ChatGPT handoff, readiness or browser retirement, start with [`architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md). That document records rather than hides the divergence between the supplied live R17.4 runtime and the executable source currently published on `master`.
+
+
 LION jest architekturą związaną z dowodami i rozdzielającą authority, która zarządza ewolucją wspomaganą przez AI: od obserwacji i propozycji, przez autoryzację, runtime admission i ograniczone efekty, po niezależną obserwację i rekonsyliację. Dokumentacja, sama obecność kodu oraz sukces CI nie nadają authority i nie dowodzą wdrożenia.
 
 ## Bieżąca dokumentacja v1.4
