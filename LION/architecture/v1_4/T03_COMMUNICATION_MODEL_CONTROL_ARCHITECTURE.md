@@ -1,5 +1,8 @@
 # LION Epoch 4 — Communication / Model / Control Architecture
 
+> **R17.4 supersession notice:** this T03 document remains source-lineage evidence for the executable GitHub `master`, including browser-mediated transport classes. It is **not** current routing guidance for the supplied R17.4 live runtime. R17.4 uses Node.js/Express on 8780, treats MCP as a transport boundary, and records `BROWSER_AUTOMATION=DISABLED_BY_POLICY`. See [`../R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](../R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md).
+
+
 TASK: `LION-E4-T03-FINAL-VERIFICATION-AND-CANDIDATE-IDENTITY-R1`
 
 Status: candidate source architecture. Authority effect: `NONE` for communication and model cognition; control authority remains independently mediated.
