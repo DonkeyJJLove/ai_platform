@@ -1,10 +1,11 @@
 'use strict';
-const {TASK,conversation,brokerAllows,matches,hash}=require('./contract.cjs');
+const {TASK,brokerAllows,matches,hash}=require('./contract.cjs');
+const {boundConversation}=require('./conversation.cjs');
 const TRANSPORT='CHATGPT_OPENAI_SECURE_MCP_TUNNEL';
 class ThreadConsumer{
  constructor({store,scope,mc,ingress,now=Date.now}){
   if(scope?.mode!=='THREAD_CONSUMER'||scope.task_sha256!==TASK||scope.mission_id!==null||!/^[A-Za-z0-9_-]{1,160}$/.test(scope.thread_id))throw Error('THREAD_SCOPE_REQUIRED');
-  this.scope={...scope,conversation_url:conversation(scope.conversation_url,store.projectUrl)};
+  this.scope={...scope,conversation_url:boundConversation(scope,store.projectUrl)};
   Object.assign(this,{store,mc,ingress,now});this.cursor=null;this.running=false;this.state='STOPPED';this.lastError=null;
  }
  async prime(){

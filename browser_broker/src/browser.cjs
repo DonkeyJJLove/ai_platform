@@ -1,5 +1,6 @@
 'use strict';
 const {conversation}=require('./contract.cjs');
+const {conversationReport}=require('./conversation.cjs');
 // Versioned UI adapter, not a provider-supported API. UI drift stops dispatch.
 const observeScript=`(() => {
  const p=document.querySelector('#prompt-textarea[contenteditable="true"]');
@@ -9,6 +10,7 @@ const observeScript=`(() => {
 })()`;
 class EmbeddedBrowser{
  constructor(contents,projectUrl){this.contents=contents;this.projectUrl=projectUrl;this.state='AUTH_OR_BINDING_REQUIRED'}
+ bindingReport(){return conversationReport(this.contents.isDestroyed()?'':this.contents.getURL(),this.projectUrl)}
  async inspect(){
   if(this.contents.isDestroyed())return {state:'RENDERER_UNAVAILABLE'};
   try{

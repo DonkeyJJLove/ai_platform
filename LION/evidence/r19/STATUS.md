@@ -1,5 +1,38 @@
 # R19 checkpoint — implementation candidate, live gate unresolved
 
+## Conversation binding correction after fix3
+
+The new operator screenshot shows a concrete conversation in LION_EVOLUSION
+alongside the native error asking to open a concrete project conversation. The
+exact URL is not visible. This localizes the failure to conversation validation
+before pending-request lookup, credential selection and dispatch. It does not
+establish an expired login, a missing token, or the exact rejected URL variant.
+
+Source review found that conversation() required the complete configured project
+prefix including its slug. Local reproduction rejects both a direct /c/<id>
+address and a project-scoped address with the same stable project ID but a
+changed/absent display slug. The replacement distinguishes stable project ID
+from display slug and recognizes direct conversation addresses. For direct
+addresses, project membership requires an explicit native operator confirmation
+bound to the exact conversation and configured project; both THREAD and mission
+consumers enforce it. A foreign project identity remains rejected.
+
+Binding errors now include a specific reason and the actual address with query
+values/fragments/authentication data excluded. The native address menu and local
+binding-error-r19.json expose the same observation. This removes the prior
+misleading instruction and permits evidence-based diagnosis if another route
+format appears. Unknown query/fragment routes remain explicit failures.
+
+Forty-three local tests pass, including generated browser fill/click URL guards,
+navigation between fill and send, stable project identity, unscoped conversation
+confirmation, cross-project rejection and credential-free diagnostics. These
+are fixtures, not actual Windows or SaaS evidence. Earlier CI belongs to fix3;
+new exact-head CI is required. The host registry still exposes four Linux/WSL
+hosts. MOON's allowlist still has no PowerShell/native desktop execution path.
+No SentinelX policy, live service, login session, old queued turn or fleet was
+modified. The screenshot's fleet transcript is not used as fresh runtime proof.
+Native binding, MCP response and same-thread panel delivery remain unverified.
+
 ## THREAD transport diagnosis, 2026-09-21 21:15–21:17 UTC
 
 The screenshot's queued request suffix a44dc3a4ea3b36fd resolves to

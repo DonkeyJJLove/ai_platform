@@ -62,8 +62,11 @@ conversation_url, task_sha256, deadline_at, claim_generation (optional)
 
 The task digest must match the R19 authorization. IDs refer to an already-created
 MCP turn; no raw prompt or arbitrary executable code is accepted by this API.
-Conversation URLs must belong to the configured ChatGPT project and match the
-currently displayed conversation. Mission/thread/conversation bindings cannot be
+Conversation URLs must match the currently displayed conversation. Project
+routes compare the stable project ID; a different display slug does not create
+a different project. Direct `/c/<id>` routes do not encode project membership
+and require native operator confirmation bound to that exact URL and configured
+project before a consumer can start. Mission/thread/conversation bindings cannot be
 changed by resubmitting a request. For normal chat, `mission_id` is explicitly
 null and admission requires the locally bound THREAD scope with authority NONE.
 For mission mode, only active `LION-R19-*` missions with
@@ -102,7 +105,9 @@ not the adapter for these ordinary chat requests.
    LION-MCP-R2 is available. Leave its message composer empty. A project landing
    page is not a conversation.
 3. Use **LION > Połącz rozmowę SaaS z wątkiem panelu** and select the matching
-   panel thread. If it has no queued question yet, send one panel question first
+   panel thread. For a direct `/c/` address, the same dialog asks you to confirm
+   that the visible conversation belongs to LION_EVOLUSION; the URL alone cannot
+   establish that. If it has no queued question yet, send one panel question first
    so the thread can be selected; that initial question is not replayed.
 4. If prompted, select the existing **local ingress service credential file**
    (`secure-mcp-ingress.token`). This is not a ChatGPT session token or OpenAI API
@@ -166,6 +171,29 @@ consumption and actual SaaS inference still require live verification.
 STOP prevents future sends, cancels unsent rows, and preserves uncertain external
 work for readback. A request already delivered to SaaS cannot be guaranteed to
 stop remotely. This limitation is exposed in the API, not hidden by CANCELLED.
+
+## Conversation address diagnostics (fix4)
+
+The previous validator required one exact project URL prefix, including its
+human-readable slug. It rejected direct conversation routes and a matching
+project ID with a different or absent slug. The current parser separates URL
+identity from project membership. It retains exact conversation binding and
+rejects a different project ID, other origins, credentials in the URL and
+unreviewed query/fragment routes. It does not turn a generic ChatGPT conversation
+into a verified project conversation automatically.
+
+**LION > Adres rozmowy SaaS** shows the current route and expected project.
+Binding failures display a specific reason and the actual address without query
+values, fragments or authentication data, and save `binding-error-r19.json` in
+the same profile. The general diagnostic report includes the same observation.
+The screenshot did not expose its actual URL; it establishes a binding-stage
+failure, not which route variant caused that failure. Native behavior remains
+to be observed after installing this correction.
+
+To update an existing installation, close its window, copy the archive's
+`browser_broker` contents over the existing application directory, then start
+its ISE launcher. Preserve the existing `node_modules` and user profile. This
+reuses the already installed pinned dependencies and browser login profile.
 
 ## Verification and next gate
 

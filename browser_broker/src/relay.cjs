@@ -1,5 +1,6 @@
 'use strict';
-const {TASK,hash,conversation,matches,brokerAllows}=require('./contract.cjs');
+const {TASK,hash,matches,brokerAllows}=require('./contract.cjs');
+const {boundConversation}=require('./conversation.cjs');
 const TRANSPORT='CHATGPT_OPENAI_SECURE_MCP_TUNNEL';
 const TERMINAL=new Set(['RECONCILED','CANCELLED']);
 
@@ -8,7 +9,7 @@ const TERMINAL=new Set(['RECONCILED','CANCELLED']);
 class Relay{
  constructor({store,browser,mc,ingress,scope,now=Date.now}){
   if(!scope||!/^LION-R19-[A-Za-z0-9_-]+$/.test(scope.mission_id)||!/^[A-Za-z0-9_-]{1,160}$/.test(scope.thread_id))throw Error('RELAY_SCOPE_REQUIRED');
-  this.scope={...scope,conversation_url:conversation(scope.conversation_url,store.projectUrl)};
+  this.scope={...scope,conversation_url:boundConversation(scope,store.projectUrl)};
   this.store=store;this.browser=browser;this.mc=mc;this.ingress=ingress;this.now=now;
   this.since=now();this.running=false;this.state='STOPPED';this.lastError=null;
   // A restarted process never blindly repeats an interrupted external mutation.

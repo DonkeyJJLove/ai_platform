@@ -1,14 +1,8 @@
 'use strict';
 const {createHash}=require('node:crypto');
+const {conversation}=require('./conversation.cjs');
 const TASK='908c81f467d245ac212540f47e5914b6cb114561e6970f83d80fc88618680512';
 const hash=x=>createHash('sha256').update(x).digest('hex');
-function conversation(value,projectUrl){
- const p=new URL(projectUrl),u=new URL(value);
- if(p.origin!=='https://chatgpt.com'||!/^\/g\/g-p-[a-zA-Z0-9-]+\/project$/.test(p.pathname))throw Error('INVALID_PROJECT');
- const prefix=p.pathname.replace(/\/project$/,'/c/');
- if(u.origin!==p.origin||u.username||u.password||u.search||u.hash||!u.pathname.startsWith(prefix)||!/^[a-zA-Z0-9-]+$/.test(u.pathname.slice(prefix.length)))throw Error('INVALID_CONVERSATION');
- return u.href;
-}
 function envelope(v,projectUrl,now=Date.now()){
  const keys=['request_id','mission_id','panel_thread_id','turn_id','turn_request_hash','conversation_url','task_sha256','deadline_at','claim_generation'];
  if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error('INVALID_ENVELOPE');

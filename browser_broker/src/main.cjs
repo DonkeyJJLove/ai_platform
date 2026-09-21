@@ -4,13 +4,14 @@ const fs=require('node:fs');const path=require('node:path');const {randomBytes}=
 const {Store}=require('./store.cjs');const {Engine}=require('./engine.cjs');
 const {Relay}=require('./relay.cjs');
 const {ThreadConsumer}=require('./thread-consumer.cjs');
+const {projectInfo,conversationInfo}=require('./conversation.cjs');
 const {EmbeddedBrowser}=require('./browser.cjs');const {createHttp}=require('./http.cjs');const {webPreferences,brokerAllows}=require('./contract.cjs');
 const PROJECT=process.env.LION_PROJECT_URL||'https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/project';
 const PANEL=process.env.LION_PANEL_URL||'http://127.0.0.1:8780';
 const MC=process.env.LION_MISSION_CONTROL_URL||'http://127.0.0.1:8766';
 const INGRESS=process.env.LION_INGRESS_URL||'http://127.0.0.1:8791';
 for(const raw of [PANEL,INGRESS,MC]){const u=new URL(raw);if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||u.username||u.password||u.pathname!=='/'||u.search||u.hash)throw Error('LOOPBACK_SERVICE_REQUIRED')}
-if(new URL(PROJECT).origin!=='https://chatgpt.com'||!/^\/g\/g-p-[\w-]+\/project$/.test(new URL(PROJECT).pathname))throw Error('PROJECT_REQUIRED');
+projectInfo(PROJECT);
 if(process.env.LION_BROWSER_DATA)app.setPath('userData',path.resolve(process.env.LION_BROWSER_DATA));
 app.enableSandbox();
 if(!app.requestSingleInstanceLock()){app.quit()}else{
@@ -61,6 +62,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   const admit=async v=>{
    if(v.mission_id===null)return relay instanceof ThreadConsumer&&relay.admits(v);
    if(!v.mission_id.startsWith('LION-R19-'))return false;
+   if(conversationInfo(v.conversation_url,PROJECT).project_membership==='OPERATOR_CONFIRMATION_REQUIRED'&&!(relay?.scope.conversation_url===v.conversation_url&&relay.scope.thread_id===v.panel_thread_id&&relay.scope.mission_id===v.mission_id))return false;
    const r=await fetch(MC+'/api/v3/missions/'+encodeURIComponent(v.mission_id)+'/process',{signal:AbortSignal.timeout(5000),redirect:'error'});
    if(!r.ok)return false;const m=await r.json();
    if(!(m.mission_id===v.mission_id&&['RUNNING','AUTHORIZED'].includes(m.state)&&m.execution_preflight?.mission_readiness==='READY_BOUND'))return false;
@@ -73,7 +75,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   if(relayScope&&(!ingressToken||(relayScope.mode!=='THREAD_CONSUMER'&&!mediatorKey)||relayScope.task_sha256!==require('./contract.cjs').TASK))throw Error('RELAY_CONFIGURATION_REQUIRED');
   let relay=relayScope?(relayScope.mode==='THREAD_CONSUMER'?new ThreadConsumer({store,mc,ingress,scope:relayScope}):new Relay({store,browser,mc,ingress,scope:relayScope})):null;
   const source={host:require('node:os').hostname(),entrypoint:__filename,sha256:require('./contract.cjs').hash(fs.readFileSync(__filename))};
-  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},browser:await browser.inspect(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
+  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
   const diagnose=async()=>{
    const probe=async fn=>{try{return await fn()}catch{return {state:'UNREACHABLE_OR_UNAUTHORIZED'}}};
    const [local,broker,health]=await Promise.all([status(),probe(()=>mc('/api/v3/saas/status')),probe(()=>ingress('/health'))]);
@@ -85,12 +87,14 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    store.stop();
    const stopRevision=store.stopRevision();
    try{
-    const conversationUrl=require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT);
+    const location=conversationInfo(saas.webContents.getURL(),PROJECT),conversationUrl=location.url;
+    const needsProjectConfirmation=location.project_membership==='OPERATOR_CONFIRMATION_REQUIRED';
     const pending=await mc('/api/v3/saas-broker/pending');
     const choices=[...new Map((pending.requests||[]).filter(r=>r.scope_type==='THREAD'&&r.mission_id===null&&r.scope_id===r.thread_id&&r.authority_effect==='NONE'&&r.transport==='CHATGPT_OPENAI_SECURE_MCP_TUNNEL').map(r=>[r.thread_id,r])).values()].slice(-8);
     if(!choices.length)throw Error('PANEL_THREAD_REQUIRED');
-    const selection=await dialog.showMessageBox(win,{type:'question',message:'Wybierz wątek panelu dla nowych pytań do tej rozmowy SaaS.',detail:'Istniejące i przeterminowane pytania nie zostaną ponownie wysłane.',buttons:[...choices.map(r=>String(r.question).slice(0,45)+' · '+r.thread_id.slice(-8)),'Anuluj'],cancelId:choices.length,noLink:true});
+    const selection=await dialog.showMessageBox(win,{type:'question',message:'Wybierz wątek panelu dla nowych pytań do tej rozmowy SaaS.',detail:'Rozmowa SaaS: '+conversationUrl+'\nIstniejące i przeterminowane pytania nie zostaną ponownie wysłane.',...(needsProjectConfirmation?{checkboxLabel:'Potwierdzam: rozmowa po prawej należy do projektu LION_EVOLUSION',checkboxChecked:false}:{}),buttons:[...choices.map(r=>String(r.question).slice(0,45)+' · '+r.thread_id.slice(-8)),'Anuluj'],cancelId:choices.length,noLink:true});
     if(selection.response===choices.length)return;
+    if(needsProjectConfirmation&&!selection.checkboxChecked)throw Error('PROJECT_CONFIRMATION_REQUIRED');
     if(!ingressToken){
      const picked=await dialog.showOpenDialog(win,{title:'Wskaż istniejący plik dostępu do lokalnego ingress MCP (secure-mcp-ingress.token)',properties:['openFile']});
      if(picked.canceled||!picked.filePaths[0])return;
@@ -100,6 +104,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
      ingressTokenFile=picked.filePaths[0];ingressToken=pickedToken;
     }
     const scope={mode:'THREAD_CONSUMER',mission_id:null,thread_id:choices[selection.response].thread_id,conversation_url:conversationUrl,task_sha256:require('./contract.cjs').TASK};
+    if(needsProjectConfirmation)scope.project_confirmation={method:'NATIVE_OPERATOR',project_url:PROJECT,conversation_url:conversationUrl};
     const candidate=new ThreadConsumer({store,mc,ingress,scope});await candidate.prime();
     if(!await browser.ready({conversation_url:conversationUrl}))throw Error('SAAS_COMPOSER_REQUIRED');
     if(closing||store.stopRevision()!==stopRevision)return;
@@ -107,14 +112,18 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
     relay=candidate;store.resume();await diagnose();
     await dialog.showMessageBox(win,{message:'Połączono dla nowych pytań.',detail:'Wyślij jedno nowe pytanie z panelu po lewej. Odpowiedź jest oczekiwana przez rzeczywistą turę MCP; model i pełne dostarczenie nie są jeszcze potwierdzone.'});
    }catch(e){
-    const known={INVALID_CONVERSATION:'Otwórz po prawej konkretną rozmowę w projekcie LION, potem wybierz połączenie ponownie.',PANEL_THREAD_REQUIRED:'Brak wątku panelu w kolejce. Wyślij jedno pytanie z wybranym CHATGPT, potem powiąż wątek.',SAAS_COMPOSER_REQUIRED:'Pole wiadomości SaaS nie jest gotowe lub zawiera tekst.'};
-    dialog.showErrorBox('Połączenie LION',known[e.message]||'Nie udało się zweryfikować usług lokalnych lub pliku dostępu. Kolejka pozostaje zatrzymana.');
+    if(!closing)store.stop();
+    const known={INVALID_CONVERSATION:'Widok nie ma prawidłowego adresu rozmowy ChatGPT.',PROJECT_LANDING_PAGE:'Otwarta jest strona projektu. Wybierz konkretną rozmowę.',PROJECT_ID_MISMATCH:'Identyfikator projektu w adresie rozmowy różni się od skonfigurowanego projektu.',CONVERSATION_ROUTE_UNSUPPORTED:'Nie rozpoznano formatu adresu rozmowy. Adres jest podany poniżej.',CONVERSATION_PARAMETERS_UNSUPPORTED:'Adres zawiera parametry lub fragment. Ich znaczenie wymaga sprawdzenia przed powiązaniem.',PROJECT_CONFIRMATION_REQUIRED:'Adres /c/ nie określa projektu. Zaznacz potwierdzenie projektu przy wyborze wątku.',PANEL_THREAD_REQUIRED:'Brak wątku panelu w kolejce. Wyślij jedno pytanie z wybranym CHATGPT, potem powiąż wątek.',SAAS_COMPOSER_REQUIRED:'Pole wiadomości SaaS nie jest gotowe lub zawiera tekst.'};
+    const report=browser.bindingReport(),reason=/^[A-Z_0-9]+$/.test(e.message)?e.message:'BINDING_FAILED';
+    try{fs.writeFileSync(path.join(dir,'binding-error-r19.json'),JSON.stringify({observed_at:new Date().toISOString(),reason,conversation:report},null,2)+'\n',{mode:0o600})}catch{}
+    dialog.showErrorBox('Połączenie LION',(known[e.message]||'Nie udało się zweryfikować usług lokalnych lub pliku dostępu.')+'\n\nKod: '+reason+'\nAdres (bez parametrów): '+report.address+'\nProjekt: '+PROJECT+'\nKolejka pozostaje zatrzymana.');
    }
   };
   server=createHttp({store,token,status}).listen(8793,'127.0.0.1');
   server.on('error',()=>{store.stop();dialog.showErrorBox('LION Broker','Nie można uruchomić portu 8793. Broker pozostaje zatrzymany.');app.quit()});
   Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'LION',submenu:[
    {label:'Połącz rozmowę SaaS z wątkiem panelu',click:bindThread},
+   {label:'Adres rozmowy SaaS',click:async()=>{await dialog.showMessageBox(win,{message:'Adres i rozpoznanie rozmowy SaaS',detail:JSON.stringify(browser.bindingReport(),null,2)})}},
    {label:'Stan / diagnostyka',click:async()=>{
     const output=path.join(dir,'diagnostic-r19.json');
     try{const report=await diagnose();await dialog.showMessageBox(win,{message:JSON.stringify(report,null,2),detail:'Raport: '+output})}
