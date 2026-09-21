@@ -26,10 +26,10 @@ function createRuntime(options={}){
   const store=options.store||new ThreadStore(config.threadDb),registry=options.registry||new ProviderRegistry(),local=options.local||new LocalModelClient({base:config.modelBase}),mc=options.missionControl||new MissionControlClient({base:config.missionControlBase,mediatorKey:config.mediatorKey}),operator=options.operatorControl||new OperatorControlClient({base:config.operatorControlBase}),relevance=options.relevance||new RelevanceEngine();
   let readiness;
   const router=options.router||new ProviderRouter({registry,readiness:()=>readiness?.snapshot?.()||{}});
-  const relay=options.relay||new SecureMcpRelay({store,missionControl:mc,ingressBase:config.ingressBase,ingressToken:config.ingressToken,journalDir:config.journalDir});
+  const relay=options.relay||new SecureMcpRelay({store,missionControl:mc,ingressBase:config.ingressBase,tunnelBase:config.mcpTransportBase,ingressToken:config.ingressToken,journalDir:config.journalDir});
   const delivery=options.delivery||new SaasDelivery({store});
   const reconciler=options.reconciler||new TurnReconciler({store,missionControl:mc,relay,delivery});
-  readiness=options.readiness||new ReadinessProbe({missionControl:mc,operatorControl:operator,localModel:local,relay,mcpTransportBase:config.mcpTransportBase,panelRuntime:'NODE_EXPRESS_R18',externalConsumerReady:()=>false});
+  readiness=options.readiness||new ReadinessProbe({missionControl:mc,operatorControl:operator,localModel:local,relay,panelRuntime:'NODE_EXPRESS_R18',externalConsumerReady:()=>false});
   const app=express();app.disable('x-powered-by');app.use(express.json({limit:'256kb'}));app.use(express.static(path.resolve(__dirname,'../static')));
   app.get('/health',(req,res)=>res.json({ok:true,status:'ok',runtime:'NODE_EXPRESS_R18',port:config.port,browser_automation:'DISABLED_BY_POLICY',authority_effect:'NONE'}));
   app.get('/api/state',async(req,res)=>{const state=await readiness.probe();res.json({...state,providers:registry.list(),semantic_context_entropy_metrics:'AVAILABLE_PER_CONTEXT',model_internal_latent_state:'UNOBSERVABLE',latent_proxy_state:'OBSERVABLE_DERIVED_STATE'});});
