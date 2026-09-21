@@ -1,5 +1,10 @@
 # LION / ai_platform
 
+## R17.4 runtime architecture reconciliation
+
+The canonical human-facing owner for 8780 / Node.js+Express / SaaS / MCP / browser-retirement semantics is [`LION/architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](LION/architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md). It records an important currentness split: the supplied R17.4 live acceptance is Node/Express and browserless, while the audited GitHub `master` still contains the older Python 8780 and browser-mediated executable lineage. Do not collapse those evidence planes.
+
+
 **Eksperymentalna platforma nadzorowanej autonomii Human–AI do budowy, koordynacji i kontrolowanego wykonywania złożonych procesów przez agentów i roje.**
 
 `ai_platform` jest repozytorium, w którym rozwijany jest **LION** — control plane i zestaw kontraktów wykonawczych oddzielających probabilistyczne rozumowanie agentów od deterministycznej autoryzacji, wykonania, obserwacji i rekonsyliacji skutków.
