@@ -1,5 +1,10 @@
 # Codex w LION — kontrakt integracji, obsługi i autonomicznej ewolucji
 
+## R17.4 Codex boundary
+
+For the runtime accepted as R17.4, `CODEX_PROJECT_HARNESS != LION_RUNTIME`. Codex project integration supports repository work and semantic/process tooling only. It does not establish a Codex CLI, App Server or model executor as a required runtime component, and it does not own 8780 execution, ChatGPT execution, MCP completion or authority. See [`../architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md`](../architecture/R17_4_RUNTIME_ARCHITECTURE_RECONCILIATION.md).
+
+
 ```text
 DOCUMENT_ID=LION-CODEX-PROJECT-INTEGRATION
 DOCUMENT_VERSION=1.0
