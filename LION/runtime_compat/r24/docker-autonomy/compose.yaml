@@ -1,0 +1,324 @@
+x-worker-env: &worker-env
+  LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+  LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+  LION_WORKER_IDENTITY_FILE: /identity/current.json
+  PYTHONPATH: /src
+
+x-worker-labels: &worker-labels
+  LION_ROLE: MATERIAL_EXECUTOR
+  LION_WORKER_PROFILE: LION_MATERIAL_EXECUTOR_V2
+  LION_MODEL: gpt-oss-20b-MXFP4
+  LION_AUTHORITY_EFFECT: NONE
+  LION_AUTHORITY_CEILING: NONE
+  LION_MATERIAL_EXECUTOR_INDEPENDENCE: NOT_PROVEN_SHARED_MOON_DOMAIN
+
+x-worker-common: &worker-common
+  image: lion-r20-worker:r1
+  entrypoint: ["python3", "/runtime/worker.py"]
+  restart: unless-stopped
+  read_only: true
+  cap_drop: ["ALL"]
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 128
+  mem_limit: 512m
+  cpus: 0.50
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=32m
+  volumes:
+    - ./source:/src:ro
+    - ./worker.py:/runtime/worker.py:ro
+    - ./identity.json:/identity/current.json:ro
+    - ./status:/status:rw
+    - ./gate:/gate:rw
+
+services:
+  worker-01:
+    <<: *worker-common
+    container_name: lion-r24-md001
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD001
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD001
+  worker-02:
+    <<: *worker-common
+    container_name: lion-r24-md002
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD002
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD002
+  worker-03:
+    <<: *worker-common
+    container_name: lion-r24-md003
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD003
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD003
+  worker-04:
+    <<: *worker-common
+    container_name: lion-r24-md004
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD004
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD004
+  worker-05:
+    <<: *worker-common
+    container_name: lion-r24-md005
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD005
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD005
+  worker-06:
+    <<: *worker-common
+    container_name: lion-r24-md006
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD006
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD006
+  worker-07:
+    <<: *worker-common
+    container_name: lion-r24-md007
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD007
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD007
+  worker-08:
+    <<: *worker-common
+    container_name: lion-r24-md008
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD008
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD008
+  worker-09:
+    <<: *worker-common
+    container_name: lion-r24-md009
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD009
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD009
+  worker-10:
+    <<: *worker-common
+    container_name: lion-r24-md010
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD010
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD010
+  worker-11:
+    <<: *worker-common
+    container_name: lion-r24-md011
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD011
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD011
+  worker-12:
+    <<: *worker-common
+    container_name: lion-r24-md012
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD012
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD012
+  worker-13:
+    <<: *worker-common
+    container_name: lion-r24-md013
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD013
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD013
+  worker-14:
+    <<: *worker-common
+    container_name: lion-r24-md014
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD014
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD014
+  worker-15:
+    <<: *worker-common
+    container_name: lion-r24-md015
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD015
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD015
+  worker-16:
+    <<: *worker-common
+    container_name: lion-r24-md016
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD016
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD016
+  worker-17:
+    <<: *worker-common
+    container_name: lion-r24-md017
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD017
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD017
+  worker-18:
+    <<: *worker-common
+    container_name: lion-r24-md018
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD018
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD018
+  worker-19:
+    <<: *worker-common
+    container_name: lion-r24-md019
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD019
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD019
+  worker-20:
+    <<: *worker-common
+    container_name: lion-r24-md020
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD020
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD020
+  worker-21:
+    <<: *worker-common
+    container_name: lion-r24-md021
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD021
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD021
+  worker-22:
+    <<: *worker-common
+    container_name: lion-r24-md022
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD022
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD022
+  worker-23:
+    <<: *worker-common
+    container_name: lion-r24-md023
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD023
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD023
+  worker-24:
+    <<: *worker-common
+    container_name: lion-r24-md024
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD024
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD024
+  worker-25:
+    <<: *worker-common
+    container_name: lion-r24-md025
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD025
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD025
+  worker-26:
+    <<: *worker-common
+    container_name: lion-r24-md026
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD026
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD026
+  worker-27:
+    <<: *worker-common
+    container_name: lion-r24-md027
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD027
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD027
+  worker-28:
+    <<: *worker-common
+    container_name: lion-r24-md028
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD028
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD028
+  worker-29:
+    <<: *worker-common
+    container_name: lion-r24-md029
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD029
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD029
+  worker-30:
+    <<: *worker-common
+    container_name: lion-r24-md030
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD030
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD030
+  worker-31:
+    <<: *worker-common
+    container_name: lion-r24-md031
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD031
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD031
+  worker-32:
+    <<: *worker-common
+    container_name: lion-r24-md032
+    environment:
+      <<: *worker-env
+      LION_MATERIAL_WORKER_ID: MD032
+    labels:
+      <<: *worker-labels
+      LION_MATERIAL_WORKER_ID: MD032
