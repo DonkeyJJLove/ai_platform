@@ -44,6 +44,11 @@ def canonical(value):
 
 
 identity=load_worker_identity(IDENTITY_PATH,WORKER_PATH,CONTRACT_PATH)
+observer_gid=int(identity.get("observation_gid",-1))
+runtime_dirs_secure=observer_gid>=0 and all(
+    p.is_dir() and (p.stat().st_uid,p.stat().st_gid,p.stat().st_mode & 0o777)==(65532,observer_gid,0o750)
+    for p in (STATUS_DIR,RUNTIME_DIR/"gate")
+)
 names=subprocess.check_output(
     ["docker","ps","-a","--filter","label="+LABEL,"--format","{{.Names}}"],text=True
 ).splitlines()
@@ -69,7 +74,8 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
     arch=(heartbeat or {}).get("architecture") or {}
     mounts={m.get("Destination"):m for m in (info.get("Mounts") or [])}
     security=bool(
-        host.get("ReadonlyRootfs") is True
+        runtime_dirs_secure
+        and host.get("ReadonlyRootfs") is True
         and host.get("Privileged") is False
         and "ALL" in (host.get("CapDrop") or [])
         and "no-new-privileges:true" in (host.get("SecurityOpt") or [])
@@ -155,6 +161,8 @@ body={
     "material_executor_independence":INDEPENDENCE_STATE,
     "independent_material_executors_proven":0,
     "unique_boot_ids":len(boots),
+    "runtime_directories_secure":runtime_dirs_secure,
+    "observation_gid":observer_gid,
     "expected_material_workers":EXPECTED,
     "materialized":len(rows),
     "ready":sum(1 for r in rows if r["ready"]),

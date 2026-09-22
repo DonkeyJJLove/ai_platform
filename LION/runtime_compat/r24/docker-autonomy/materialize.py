@@ -100,6 +100,21 @@ def main():
         if target.exists():
             shutil.rmtree(target)
         target.mkdir(parents=True,exist_ok=True)
+    # The worker image runs as 65532:65532. Preserve the hardened bind-mount
+    # ownership used by the proven R23 fleet without making these directories
+    # world-writable. Docker root performs only this bounded ownership repair.
+    observer_gid=os.getgid()
+    run([
+        "docker","run","--rm","--user","0:0","--entrypoint","/bin/sh",
+        "-v",str(runtime/"status")+":/status",
+        "-v",str(runtime/"gate")+":/gate",
+        "lion-r20-worker:r1","-c",
+        "chown 65532:"+str(observer_gid)+" /status /gate && chmod 0750 /status /gate",
+    ])
+    for target in (runtime/"status",runtime/"gate"):
+        stat=target.stat()
+        if (stat.st_uid,stat.st_gid,stat.st_mode & 0o777)!=(65532,observer_gid,0o750):
+            raise SystemExit("worker writable directory ownership mismatch: "+str(target))
 
     sys.path.insert(0,str(source))
     from cyber_lion.mission_control.material_worker_runtime import (
@@ -124,6 +139,7 @@ def main():
         "runtime_contract_sha256":contract_sha,
         "compose_sha256":compose_sha,
         "authority_ceiling":"NONE",
+        "observation_gid":observer_gid,
         "material_executor_independence":INDEPENDENCE_STATE,
         "direct_assignment_kinds":list(DIRECT_ASSIGNMENT_KINDS),
         "architecture_capabilities":list(ARCHITECTURE_CAPABILITIES),
