@@ -90,7 +90,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
     const location=conversationInfo(saas.webContents.getURL(),PROJECT),conversationUrl=location.url;
     const needsProjectConfirmation=location.project_membership==='OPERATOR_CONFIRMATION_REQUIRED';
     const pending=await mc('/api/v3/saas-broker/pending');
-    const choices=[...new Map((pending.requests||[]).filter(r=>r.scope_type==='THREAD'&&r.mission_id===null&&r.scope_id===r.thread_id&&r.authority_effect==='NONE'&&r.transport==='CHATGPT_OPENAI_SECURE_MCP_TUNNEL').map(r=>[r.thread_id,r])).values()].slice(-8);
+    const choices=[...new Map((pending.requests||[]).filter(r=>r.scope_type==='THREAD'&&r.mission_id===null&&r.scope_id===r.thread_id&&r.authority_effect==='NONE'&&r.transport==='CHATGPT_SENTINELX_MCP').map(r=>[r.thread_id,r])).values()].slice(-8);
     if(!choices.length)throw Error('PANEL_THREAD_REQUIRED');
     const selection=await dialog.showMessageBox(win,{type:'question',message:'Wybierz wątek panelu dla nowych pytań do tej rozmowy SaaS.',detail:'Rozmowa SaaS: '+conversationUrl+'\nIstniejące i przeterminowane pytania nie zostaną ponownie wysłane.',...(needsProjectConfirmation?{checkboxLabel:'Potwierdzam: rozmowa po prawej należy do projektu LION_EVOLUSION',checkboxChecked:false}:{}),buttons:[...choices.map(r=>String(r.question).slice(0,45)+' · '+r.thread_id.slice(-8)),'Anuluj'],cancelId:choices.length,noLink:true});
     if(selection.response===choices.length)return;

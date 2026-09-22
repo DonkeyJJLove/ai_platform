@@ -1,0 +1,14 @@
+{
+  "schema": "lion.r20.r2.node-panel-runtime-identity/v1",
+  "observed_at": "2026-09-22T11:18:47.599937Z",
+  "panel_pid": 54760,
+  "relay_pid": 17900,
+  "transport": "CHATGPT_SENTINELX_MCP",
+  "sentinelx_hub": "https://mcp.sentinelx.app/",
+  "openai_tunnel_required": false,
+  "files": {
+    "src/mission-control.js": "ae9133667299b550821c1da975033e240e7936533c0654f91bec5c7551b41e3d",
+    "src/secure-mcp-relay.js": "2816d37de1836797fb9bd7e3d54f33fa2d69a8be3a3d3697f4e186986b9ffe93",
+    "test/relay.test.js": "12bdced59c81ed63e39566a52c5c6e3007dd532fbb44cfd1b2799beaeff62115"
+  }
+}

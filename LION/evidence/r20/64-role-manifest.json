@@ -1,0 +1,444 @@
+{
+  "schema": "lion.r20.role-manifest/v2",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "logical_roles": 64,
+  "summary": {
+    "PASS": 62,
+    "BLOCKED": 2,
+    "FAIL": 0
+  },
+  "assignments": [
+    {
+      "worker_id": "W01",
+      "container_id": "ba3a78b6ca697aa043ba64baab4065e7a9a3e42e4ac6e409bfeecbaf779bca5c",
+      "roles": [
+        {
+          "role_id": "L01",
+          "title": "instrukcje repozytorium i autoryzacja",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L02",
+          "title": "topologia MOON/Windows/WSL/Docker",
+          "status": "PASS",
+          "finding": "host.physical_domain='WINDOWS-MOON'"
+        },
+        {
+          "role_id": "L03",
+          "title": "właściciele procesów i konta usług",
+          "status": "PASS",
+          "finding": "ingress.process_identity present=True"
+        },
+        {
+          "role_id": "L04",
+          "title": "native port → PID → entrypoint",
+          "status": "PASS",
+          "finding": "ingress.port=8791"
+        },
+        {
+          "role_id": "L05",
+          "title": "HEAD/TREE, zmiany lokalne, pochodzenie buildu",
+          "status": "PASS",
+          "finding": "repository.candidate_head='b8e05972b9a9c762c579e9a98b90285d0a54f580'"
+        },
+        {
+          "role_id": "L06",
+          "title": "hash plików źródłowych rzeczywistego runtime",
+          "status": "PASS",
+          "finding": "sha256=bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e"
+        },
+        {
+          "role_id": "L07",
+          "title": "mapowanie aktywnego MCP na server.mjs",
+          "status": "PASS",
+          "finding": "ingress.entrypoint='/opt/lion/lion-turn-ingress-node-r2/server.mjs'"
+        },
+        {
+          "role_id": "L08",
+          "title": "manifest obserwacji i ich aktualność",
+          "status": "PASS",
+          "finding": "observed_at present=True"
+        }
+      ]
+    },
+    {
+      "worker_id": "W02",
+      "container_id": "987877f85a60ef3cb196b1d35197f2fd3ab663c52bcead500140a0a4cb52b82e",
+      "roles": [
+        {
+          "role_id": "L09",
+          "title": "pochodzenie --ingress-token-file",
+          "status": "PASS",
+          "finding": "ingress.token_file='/etc/lion/mcp-local-token'"
+        },
+        {
+          "role_id": "L10",
+          "title": "dostęp procesu do wskazanego pliku",
+          "status": "PASS",
+          "finding": "ingress.authenticated_probe=True"
+        },
+        {
+          "role_id": "L11",
+          "title": "odczyt konfiguracji services.json bez wartości sekretów",
+          "status": "PASS",
+          "finding": "browser.services_json_present=True"
+        },
+        {
+          "role_id": "L12",
+          "title": "uwierzytelniony odczyt zdrowia ingress",
+          "status": "PASS",
+          "finding": "ingress.auth_http=200"
+        },
+        {
+          "role_id": "L13",
+          "title": "zgodność adresu, portu i schematu odpowiedzi",
+          "status": "PASS",
+          "finding": "ingress.state_shape_ok=True"
+        },
+        {
+          "role_id": "L14",
+          "title": "różnica sekret obecny / przyjęty / odrzucony / nieznany",
+          "status": "PASS",
+          "finding": "ingress.credential_state='PRESENT_ACCEPTED_WSL_AND_WINDOWS_BROKER'"
+        },
+        {
+          "role_id": "L15",
+          "title": "backup i minimalne uzgodnienie konfiguracji",
+          "status": "PASS",
+          "finding": "browser.native_patch_applied=True"
+        },
+        {
+          "role_id": "L16",
+          "title": "test odmowy i brak wycieku sekretów",
+          "status": "PASS",
+          "finding": "ingress.unauth_http=401"
+        }
+      ]
+    },
+    {
+      "worker_id": "W03",
+      "container_id": "37e0cc7fd51cb6d76d5af2ed187cc7d0ba0fd6849e71264bb3a0fa279fa76d2d",
+      "roles": [
+        {
+          "role_id": "L17",
+          "title": "wybór trasy CHATGPT i eliminacja cichego local fallback",
+          "status": "PASS",
+          "finding": "matches=27, required>=1"
+        },
+        {
+          "role_id": "L18",
+          "title": "zapis nowego request_id i panel_thread_id",
+          "status": "PASS",
+          "finding": "matches=16, required>=2"
+        },
+        {
+          "role_id": "L19",
+          "title": "globalna kolejka kontra focus mission",
+          "status": "PASS",
+          "finding": "matches=31, required>=2"
+        },
+        {
+          "role_id": "L20",
+          "title": "producent MCP turn i zależności drivera",
+          "status": "PASS",
+          "finding": "matches=50, required>=1"
+        },
+        {
+          "role_id": "L21",
+          "title": "atomic claim, lease i generacja",
+          "status": "PASS",
+          "finding": "matches=24, required>=2"
+        },
+        {
+          "role_id": "L22",
+          "title": "serializacja oraz skrót żądania",
+          "status": "PASS",
+          "finding": "matches=12, required>=1"
+        },
+        {
+          "role_id": "L23",
+          "title": "TTL, anulowanie i stare żądania",
+          "status": "PASS",
+          "finding": "matches=2, required>=1"
+        },
+        {
+          "role_id": "L24",
+          "title": "regresje panelowego producenta",
+          "status": "PASS",
+          "finding": "matches=7, required>=1"
+        }
+      ]
+    },
+    {
+      "worker_id": "W04",
+      "container_id": "a06a59e53972066222d8580fef225ca15a89895677cf4bd29897825bcda9710c",
+      "roles": [
+        {
+          "role_id": "L25",
+          "title": "durable store oraz odtworzenie stanu",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L26",
+          "title": "event cursor i initial prime",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L27",
+          "title": "filtrowanie scope/thread/command",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L28",
+          "title": "admission i jawne przyczyny odrzucenia",
+          "status": "PASS",
+          "finding": "matches=11, required>=2"
+        },
+        {
+          "role_id": "L29",
+          "title": "STOP/resume i wyścigi rewizji",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L30",
+          "title": "SEND_UNKNOWN i uzgodnienie bez ponowienia",
+          "status": "PASS",
+          "finding": "matches=5, required>=1"
+        },
+        {
+          "role_id": "L31",
+          "title": "bounded status i transport errors",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L32",
+          "title": "backpressure, deduplikacja i testy kolejki",
+          "status": "PASS",
+          "finding": "matches=26, required>=1"
+        }
+      ]
+    },
+    {
+      "worker_id": "W05",
+      "container_id": "60529d658722b5dd9d57b46f4c8dcc48406acfef8b817d7f7fc0336cb68b9dc1",
+      "roles": [
+        {
+          "role_id": "L33",
+          "title": "zgodność buildu Electron i izolacja Node",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L34",
+          "title": "dostępność zalogowanej sesji bez eksportu danych sesji",
+          "status": "PASS",
+          "finding": "matches=10, required>=2"
+        },
+        {
+          "role_id": "L35",
+          "title": "projekt, conversation_id i canonical URL",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L36",
+          "title": "atomowe powiązanie z właściwym wątkiem",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L37",
+          "title": "zakończenie/anulowanie dialogu wyboru",
+          "status": "PASS",
+          "finding": "matches=6, required>=2"
+        },
+        {
+          "role_id": "L38",
+          "title": "gotowość edytora i kontrola pojedynczego wysłania",
+          "status": "PASS",
+          "finding": "matches=13, required>=2"
+        },
+        {
+          "role_id": "L39",
+          "title": "obserwacja odpowiedzi i dostępności MCP",
+          "status": "PASS",
+          "finding": "matches=11, required>=2"
+        },
+        {
+          "role_id": "L40",
+          "title": "trwałość profilu oraz jawna utrata sesji",
+          "status": "PASS",
+          "finding": "matches=4, required>=1"
+        }
+      ]
+    },
+    {
+      "worker_id": "W06",
+      "container_id": "8e35fd96baaa013e8fea29de810512ab397d3cfdfe07af823cb76cb85679cb98",
+      "roles": [
+        {
+          "role_id": "L41",
+          "title": "połączenie MCP → rzeczywisty backend",
+          "status": "PASS",
+          "finding": "mcp.tool_access=True"
+        },
+        {
+          "role_id": "L42",
+          "title": "zgodność kontraktu ingress i tunelu",
+          "status": "PASS",
+          "finding": "ingress.tunnel_header_same_token_file=True"
+        },
+        {
+          "role_id": "L43",
+          "title": "turn_id, parent_event_id i lineage",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L44",
+          "title": "get_turn i kompletność wejścia",
+          "status": "PASS",
+          "finding": "matches=3, required>=2"
+        },
+        {
+          "role_id": "L45",
+          "title": "complete_turn i walidacja wyniku",
+          "status": "PASS",
+          "finding": "matches=47, required>=1"
+        },
+        {
+          "role_id": "L46",
+          "title": "generation fence i spóźniony wynik",
+          "status": "PASS",
+          "finding": "matches=4, required>=1"
+        },
+        {
+          "role_id": "L47",
+          "title": "obserwowalność błędów narzędzi",
+          "status": "PASS",
+          "finding": "matches=3, required>=1"
+        },
+        {
+          "role_id": "L48",
+          "title": "testy kontraktu na syntetycznych danych",
+          "status": "PASS",
+          "finding": "matches=79, required>=2"
+        }
+      ]
+    },
+    {
+      "worker_id": "W07",
+      "container_id": "edb30a8930861d3cce95d1b3a697dd1be7b644c5bbf7076cd91743c27282fdbb",
+      "roles": [
+        {
+          "role_id": "L49",
+          "title": "wynik SaaS i jego pochodzenie",
+          "status": "PASS",
+          "finding": "matches=26, required>=1"
+        },
+        {
+          "role_id": "L50",
+          "title": "digest odpowiedzi i receipt",
+          "status": "PASS",
+          "finding": "matches=18, required>=1"
+        },
+        {
+          "role_id": "L51",
+          "title": "producent/odbiorca odpowiedzi Mission Control",
+          "status": "PASS",
+          "finding": "matches=290, required>=2"
+        },
+        {
+          "role_id": "L52",
+          "title": "routing do oryginalnego panel_thread_id",
+          "status": "PASS",
+          "finding": "matches=59, required>=2"
+        },
+        {
+          "role_id": "L53",
+          "title": "pojedynczy trwały zapis wiadomości",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L54",
+          "title": "aktualizacja UI po odczycie/reload",
+          "status": "PASS",
+          "finding": "matches=198, required>=1"
+        },
+        {
+          "role_id": "L55",
+          "title": "odróżnienie RECONCILED od DELIVERED",
+          "status": "PASS",
+          "finding": "all required markers present"
+        },
+        {
+          "role_id": "L56",
+          "title": "wykrycie błędnego wątku i zdublowanego wyniku",
+          "status": "PASS",
+          "finding": "matches=16, required>=2"
+        }
+      ]
+    },
+    {
+      "worker_id": "W08",
+      "container_id": "84c7c995875b8b91657a96c546006939f6e72d419750caad160799f6c5487f0b",
+      "roles": [
+        {
+          "role_id": "L57",
+          "title": "falsyfikacja hipotezy przyczyny i przegląd zmian",
+          "status": "PASS",
+          "finding": "root_cause.ingress_discovery_component_wrong=True"
+        },
+        {
+          "role_id": "L58",
+          "title": "integracja gałęzi oraz CI dokładnego HEAD",
+          "status": "PASS",
+          "finding": "repository.pr367_head='b8e05972b9a9c762c579e9a98b90285d0a54f580'"
+        },
+        {
+          "role_id": "L59",
+          "title": "rzeczywista inferencja lokalna i kontrakt semantyczny",
+          "status": "PASS",
+          "finding": "local_model.r20_inference_observed=True"
+        },
+        {
+          "role_id": "L60",
+          "title": "misja syntetyczna oraz agregacja wyników workers",
+          "status": "BLOCKED",
+          "finding": "SAAS_E2E_NO_COMPLETED_RECEIPT_AFTER_MAX_TWO_ATTEMPTS"
+        },
+        {
+          "role_id": "L61",
+          "title": "restart brokera/panelu i deduplikacja",
+          "status": "PASS",
+          "finding": "restart_durability.pass=True"
+        },
+        {
+          "role_id": "L62",
+          "title": "STOP, przerwanie workera i odzyskiwanie",
+          "status": "PASS",
+          "finding": "fleet.stop_test_passed=True"
+        },
+        {
+          "role_id": "L63",
+          "title": "instalacja, rollback oraz zgodność wdrożenia",
+          "status": "PASS",
+          "finding": "deployment.windows_broker_pass=True"
+        },
+        {
+          "role_id": "L64",
+          "title": "końcowy audyt pełnej ścieżki i raport ograniczeń",
+          "status": "BLOCKED",
+          "finding": "FINAL_E2E_AUDIT_BLOCKED_NO_SAAS_RECEIPT_DELIVERY"
+        }
+      ]
+    }
+  ]
+}

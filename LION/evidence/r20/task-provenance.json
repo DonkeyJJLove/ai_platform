@@ -1,0 +1,10 @@
+{
+  "schema": "lion.r20.task-provenance/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "attachment_filename": "Wklejony tekst(20260921-232945).txt",
+  "attachment_bytes": 24063,
+  "attachment_sha256": "02d1aa7cc8b441ef77af5bdebbabe8abb0b1ddeba82a7284c558a505cdf2f33e",
+  "user_launch_message": "Zastosuj do TASK, zrealizuj task",
+  "activation_interpretation": "EXPLICIT_USER_EXECUTION_REQUEST_BOUND_TO_ATTACHED_TASK",
+  "authority_effect": "BOUNDED_BY_TASK"
+}

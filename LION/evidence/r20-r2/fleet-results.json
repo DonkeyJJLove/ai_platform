@@ -1,0 +1,922 @@
+{
+  "schema": "lion.r20.r2.fleet-results/v2",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2",
+  "logical_roles": 64,
+  "material_workers": 8,
+  "summary": {
+    "PASS": 64,
+    "BLOCKED": 0,
+    "FAIL": 0
+  },
+  "physical_failure_domains": 1,
+  "workers": [
+    {
+      "worker_id": "W01",
+      "container_name": "lion-r20r2-w01",
+      "container_id": "78c9919a286ee2f5dd89d24dc8bf9d6d577dbda535701be4836c76e6beaed361",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "7a0748a3f09a4c7bd33d93c1b720da01cef89e25fa9dd171bbf08b4031f6decc",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:12:07.705763Z",
+          "evidence": [
+            "sha256:a8011459485c7288ca61cb9a58d86226a517ba9856dad3ec4124351212ae9fc8",
+            "AGENTS.md"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L01",
+          "status": "PASS",
+          "task": "contains",
+          "title": "instrukcje repozytorium i autoryzacja"
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705807Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": "WINDOWS-MOON",
+          "finding": "host.physical_domain='WINDOWS-MOON'",
+          "role_id": "L02",
+          "status": "PASS",
+          "task": "json",
+          "title": "topologia MOON/Windows/WSL/Docker",
+          "value": "WINDOWS-MOON"
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705832Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "finding": "ingress.process_identity present=True",
+          "role_id": "L03",
+          "status": "PASS",
+          "task": "json_present",
+          "title": "właściciele procesów i konta usług"
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705855Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": 8791,
+          "finding": "ingress.port=8791",
+          "role_id": "L04",
+          "status": "PASS",
+          "task": "json",
+          "title": "native port → PID → entrypoint",
+          "value": 8791
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705872Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": "8361a2cfdf13ecc405048573c1073befbd79b227",
+          "finding": "repository.candidate_head='8361a2cfdf13ecc405048573c1073befbd79b227'",
+          "role_id": "L05",
+          "status": "PASS",
+          "task": "json",
+          "title": "HEAD/TREE, zmiany lokalne, pochodzenie buildu",
+          "value": "8361a2cfdf13ecc405048573c1073befbd79b227"
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705940Z",
+          "evidence": [
+            "browser_broker/src/main.cjs"
+          ],
+          "expected": "bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+          "finding": "sha256=bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+          "role_id": "L06",
+          "sha256": "bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+          "status": "PASS",
+          "task": "hash",
+          "title": "hash plików źródłowych rzeczywistego runtime"
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705961Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": "/opt/lion/lion-turn-ingress-node-r2/server.mjs",
+          "finding": "ingress.entrypoint='/opt/lion/lion-turn-ingress-node-r2/server.mjs'",
+          "role_id": "L07",
+          "status": "PASS",
+          "task": "json",
+          "title": "mapowanie aktywnego MCP na server.mjs",
+          "value": "/opt/lion/lion-turn-ingress-node-r2/server.mjs"
+        },
+        {
+          "completed_at": "2026-09-22T09:12:07.705981Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "finding": "observed_at present=True",
+          "role_id": "L08",
+          "status": "PASS",
+          "task": "json_present",
+          "title": "manifest obserwacji i ich aktualność"
+        }
+      ]
+    },
+    {
+      "worker_id": "W02",
+      "container_name": "lion-r20r2-w02",
+      "container_id": "52b399989bff6ea42d4bcc03cabcd284a89f438ee40db8b6dbbc0688f1e82dff",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "1e4e8dd112583c7fe154d62893737a8b3c39459bd0156eba279ef15d506b22e1",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:11:33.804328Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": "/etc/lion/mcp-local-token",
+          "finding": "ingress.token_file='/etc/lion/mcp-local-token'",
+          "role_id": "L09",
+          "status": "PASS",
+          "task": "json",
+          "title": "pochodzenie --ingress-token-file",
+          "value": "/etc/lion/mcp-local-token"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804366Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "ingress.authenticated_probe=True",
+          "role_id": "L10",
+          "status": "PASS",
+          "task": "json",
+          "title": "dostęp procesu do wskazanego pliku",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804391Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "browser.services_json_present=True",
+          "role_id": "L11",
+          "status": "PASS",
+          "task": "json",
+          "title": "odczyt konfiguracji services.json bez wartości sekretów",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804410Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": 200,
+          "finding": "ingress.auth_http=200",
+          "role_id": "L12",
+          "status": "PASS",
+          "task": "json",
+          "title": "uwierzytelniony odczyt zdrowia ingress",
+          "value": 200
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804428Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "ingress.state_shape_ok=True",
+          "role_id": "L13",
+          "status": "PASS",
+          "task": "json",
+          "title": "zgodność adresu, portu i schematu odpowiedzi",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804446Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": "PRESENT_ACCEPTED_WSL_AND_WINDOWS_BROKER",
+          "finding": "ingress.credential_state='PRESENT_ACCEPTED_WSL_AND_WINDOWS_BROKER'",
+          "role_id": "L14",
+          "status": "PASS",
+          "task": "json",
+          "title": "różnica sekret obecny / przyjęty / odrzucony / nieznany",
+          "value": "PRESENT_ACCEPTED_WSL_AND_WINDOWS_BROKER"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804468Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "browser.native_patch_applied=True",
+          "role_id": "L15",
+          "status": "PASS",
+          "task": "json",
+          "title": "backup i minimalne uzgodnienie konfiguracji",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804489Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": 401,
+          "finding": "ingress.unauth_http=401",
+          "role_id": "L16",
+          "status": "PASS",
+          "task": "json",
+          "title": "test odmowy i brak wycieku sekretów",
+          "value": 401
+        }
+      ]
+    },
+    {
+      "worker_id": "W03",
+      "container_name": "lion-r20r2-w03",
+      "container_id": "c45fc653663531176d49da8995b7d5aba9b2ecb98eb4c1be06a25511a3678619",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "665deaa453dc701103a10fe7284331905ddc5571d1a43c6b93e200c20a79983c",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:11:33.804926Z",
+          "evidence": [
+            "sha256:b97f13f20cd189cb776e1591fe52e55042c29256d84c183cf97201d3e7841f02",
+            "cyber_lion/app_coordination/saas_handoff_extension.py"
+          ],
+          "finding": "matches=27, required>=1",
+          "matches": 27,
+          "role_id": "L17",
+          "status": "PASS",
+          "task": "regex",
+          "title": "wybór trasy CHATGPT i eliminacja cichego local fallback"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805159Z",
+          "evidence": [
+            "sha256:b97f13f20cd189cb776e1591fe52e55042c29256d84c183cf97201d3e7841f02",
+            "cyber_lion/app_coordination/saas_handoff_extension.py"
+          ],
+          "finding": "matches=16, required>=2",
+          "matches": 16,
+          "role_id": "L18",
+          "status": "PASS",
+          "task": "regex",
+          "title": "zapis nowego request_id i panel_thread_id"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806573Z",
+          "evidence": [
+            "sha256:7f40ff2b950e9beace598bbfaec064e3edf70c36ca6fe68cd331b97841a0db87",
+            "tools/lion_mission_control_v3.py"
+          ],
+          "finding": "matches=31, required>=2",
+          "matches": 31,
+          "role_id": "L19",
+          "status": "PASS",
+          "task": "regex",
+          "title": "globalna kolejka kontra focus mission"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806851Z",
+          "evidence": [
+            "sha256:74c367ba3b1191439b544cc3023ea96bd13971e0f3409f2f32911751eca5e44f",
+            "tools/lion_saas_broker.py"
+          ],
+          "finding": "matches=50, required>=1",
+          "matches": 50,
+          "role_id": "L20",
+          "status": "PASS",
+          "task": "regex",
+          "title": "producent MCP turn i zależności drivera"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.807497Z",
+          "evidence": [
+            "sha256:0ccb7a68ba3b103b4f973e27fd78d1d3ccfdf28923b0322b1a488e7e8f9f5c72",
+            "cyber_lion/mission_control/global_scheduler.py"
+          ],
+          "finding": "matches=24, required>=2",
+          "matches": 24,
+          "role_id": "L21",
+          "status": "PASS",
+          "task": "regex",
+          "title": "atomic claim, lease i generacja"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.807622Z",
+          "evidence": [
+            "sha256:d6b46124a9920d194cfd2d1e81c99f3690d9b97c0fa076638435607107592bc5",
+            "browser_broker/src/contract.cjs"
+          ],
+          "finding": "matches=12, required>=1",
+          "matches": 12,
+          "role_id": "L22",
+          "status": "PASS",
+          "task": "regex",
+          "title": "serializacja oraz skrót żądania"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.807726Z",
+          "evidence": [
+            "sha256:6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+            "browser_broker/src/thread-consumer.cjs"
+          ],
+          "finding": "matches=2, required>=1",
+          "matches": 2,
+          "role_id": "L23",
+          "status": "PASS",
+          "task": "regex",
+          "title": "TTL, anulowanie i stare żądania"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.808150Z",
+          "evidence": [
+            "sha256:1bdc12014032d816e90d98316f2a2db0a94010dd84b3781ad50d91c19c380aaa",
+            "cyber_lion/tests/test_r10_r3_hybrid_execution.py"
+          ],
+          "finding": "matches=7, required>=1",
+          "matches": 7,
+          "role_id": "L24",
+          "status": "PASS",
+          "task": "regex",
+          "title": "regresje panelowego producenta"
+        }
+      ]
+    },
+    {
+      "worker_id": "W04",
+      "container_name": "lion-r20r2-w04",
+      "container_id": "fa5b5fc9795e518c8f5e47c58c3c8f3e5874784939bdd91a9568cbb840bc8537",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "c8b3bb5d78287372f5269ab39acf51096ce1818f23a8d68d42bef4046aabf2cc",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:11:33.804711Z",
+          "evidence": [
+            "sha256:bbf5fccdffd4ac4203845282ab5c62869cb7bfda5eabe569abe47a714c0d28f0",
+            "browser_broker/src/store.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L25",
+          "status": "PASS",
+          "task": "contains",
+          "title": "durable store oraz odtworzenie stanu"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804836Z",
+          "evidence": [
+            "sha256:6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+            "browser_broker/src/thread-consumer.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L26",
+          "status": "PASS",
+          "task": "contains",
+          "title": "event cursor i initial prime"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804912Z",
+          "evidence": [
+            "sha256:6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+            "browser_broker/src/thread-consumer.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L27",
+          "status": "PASS",
+          "task": "contains",
+          "title": "filtrowanie scope/thread/command"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805041Z",
+          "evidence": [
+            "sha256:6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+            "browser_broker/src/thread-consumer.cjs"
+          ],
+          "finding": "matches=11, required>=2",
+          "matches": 11,
+          "role_id": "L28",
+          "status": "PASS",
+          "task": "regex",
+          "title": "admission i jawne przyczyny odrzucenia"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805242Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L29",
+          "status": "PASS",
+          "task": "contains",
+          "title": "STOP/resume i wyścigi rewizji"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805631Z",
+          "evidence": [
+            "sha256:0567befa737afe62c8ba31b348ea0e14809c0467856f827e8f6d5e358e70f4a0",
+            "browser_broker/src/engine.cjs"
+          ],
+          "finding": "matches=5, required>=1",
+          "matches": 5,
+          "role_id": "L30",
+          "status": "PASS",
+          "task": "regex",
+          "title": "SEND_UNKNOWN i uzgodnienie bez ponowienia"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805750Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L31",
+          "status": "PASS",
+          "task": "contains",
+          "title": "bounded status i transport errors"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806106Z",
+          "evidence": [
+            "sha256:db29e5982ee271c9c6ba1fc0a85f00f5c0ff7b3469fd1a53487a11107a887500",
+            "browser_broker/test/broker.test.cjs"
+          ],
+          "finding": "matches=26, required>=1",
+          "matches": 26,
+          "role_id": "L32",
+          "status": "PASS",
+          "task": "regex",
+          "title": "backpressure, deduplikacja i testy kolejki"
+        }
+      ]
+    },
+    {
+      "worker_id": "W05",
+      "container_name": "lion-r20r2-w05",
+      "container_id": "1cec6a411c1ff8d373eb5f09bb636d9bf12d14549dd160a835357163e2536051",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "e44de5964ca76d30eb46c59071e3a2fd3f4c165e32305c69684550e163ee2ac1",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:11:33.804889Z",
+          "evidence": [
+            "sha256:d6b46124a9920d194cfd2d1e81c99f3690d9b97c0fa076638435607107592bc5",
+            "browser_broker/src/contract.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L33",
+          "status": "PASS",
+          "task": "contains",
+          "title": "zgodność buildu Electron i izolacja Node"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805104Z",
+          "evidence": [
+            "sha256:207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+            "browser_broker/src/browser.cjs"
+          ],
+          "finding": "matches=13, required>=2",
+          "matches": 13,
+          "role_id": "L34",
+          "status": "PASS",
+          "task": "regex",
+          "title": "dostępność zalogowanej sesji bez eksportu danych sesji"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805361Z",
+          "evidence": [
+            "sha256:5a49df7923e2536a914bebd7da8e1252fbd53c2bb90790379cabc14b637fdab9",
+            "browser_broker/src/conversation.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L35",
+          "status": "PASS",
+          "task": "contains",
+          "title": "projekt, conversation_id i canonical URL"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805551Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L36",
+          "status": "PASS",
+          "task": "contains",
+          "title": "atomowe powiązanie z właściwym wątkiem"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805749Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "matches=6, required>=2",
+          "matches": 6,
+          "role_id": "L37",
+          "status": "PASS",
+          "task": "regex",
+          "title": "zakończenie/anulowanie dialogu wyboru"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805847Z",
+          "evidence": [
+            "sha256:207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+            "browser_broker/src/browser.cjs"
+          ],
+          "finding": "matches=13, required>=2",
+          "matches": 13,
+          "role_id": "L38",
+          "status": "PASS",
+          "task": "regex",
+          "title": "gotowość edytora i kontrola pojedynczego wysłania"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805931Z",
+          "evidence": [
+            "sha256:0567befa737afe62c8ba31b348ea0e14809c0467856f827e8f6d5e358e70f4a0",
+            "browser_broker/src/engine.cjs"
+          ],
+          "finding": "matches=11, required>=2",
+          "matches": 11,
+          "role_id": "L39",
+          "status": "PASS",
+          "task": "regex",
+          "title": "obserwacja odpowiedzi i dostępności MCP"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806067Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "matches=4, required>=1",
+          "matches": 4,
+          "role_id": "L40",
+          "status": "PASS",
+          "task": "regex",
+          "title": "trwałość profilu oraz jawna utrata sesji"
+        }
+      ]
+    },
+    {
+      "worker_id": "W06",
+      "container_name": "lion-r20r2-w06",
+      "container_id": "c8693cba27f32018997c3c60a11a71b2e9453aff37219ba07483db2912ac0723",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "f9155e3671dfed7ddf4ef69766852b891eaef7252825b5a42ff10eb4c4e553be",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:11:33.804342Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "mcp.tool_access=True",
+          "role_id": "L41",
+          "status": "PASS",
+          "task": "json",
+          "title": "połączenie MCP → rzeczywisty backend",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804376Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "ingress.tunnel_header_same_token_file=True",
+          "role_id": "L42",
+          "status": "PASS",
+          "task": "json",
+          "title": "zgodność kontraktu ingress i tunelu",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.804789Z",
+          "evidence": [
+            "sha256:52d45dbd59a23f12b1f25f5be2b8f3d33af3795791ce7c8f1fb8f0bed267b565",
+            "tools/lion_secure_mcp_broker_relay.py"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L43",
+          "status": "PASS",
+          "task": "contains",
+          "title": "turn_id, parent_event_id i lineage"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805334Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "matches=3, required>=2",
+          "matches": 3,
+          "role_id": "L44",
+          "status": "PASS",
+          "task": "regex",
+          "title": "get_turn i kompletność wejścia"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806008Z",
+          "evidence": [
+            "sha256:74c367ba3b1191439b544cc3023ea96bd13971e0f3409f2f32911751eca5e44f",
+            "tools/lion_saas_broker.py"
+          ],
+          "finding": "matches=47, required>=1",
+          "matches": 47,
+          "role_id": "L45",
+          "status": "PASS",
+          "task": "regex",
+          "title": "complete_turn i walidacja wyniku"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806165Z",
+          "evidence": [
+            "sha256:6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+            "browser_broker/src/thread-consumer.cjs"
+          ],
+          "finding": "matches=4, required>=1",
+          "matches": 4,
+          "role_id": "L46",
+          "status": "PASS",
+          "task": "regex",
+          "title": "generation fence i spóźniony wynik"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806326Z",
+          "evidence": [
+            "sha256:bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+            "browser_broker/src/main.cjs"
+          ],
+          "finding": "matches=3, required>=1",
+          "matches": 3,
+          "role_id": "L47",
+          "status": "PASS",
+          "task": "regex",
+          "title": "obserwowalność błędów narzędzi"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806665Z",
+          "evidence": [
+            "sha256:3f8382509ab9d249e940b9abcf6246c2a2478e8bbc342ca8595f2a17bb7b63c4",
+            "browser_broker/test/thread-consumer.test.cjs"
+          ],
+          "finding": "matches=84, required>=2",
+          "matches": 84,
+          "role_id": "L48",
+          "status": "PASS",
+          "task": "regex",
+          "title": "testy kontraktu na syntetycznych danych"
+        }
+      ]
+    },
+    {
+      "worker_id": "W07",
+      "container_name": "lion-r20r2-w07",
+      "container_id": "8f9cb28c3e6a24acb16e71862299883de06c15f808be6b995606cd96d4db2c52",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "7b00ab923425f4979456935fdcaafd946103cb207d2ce87c5be430e03a5ae08b",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T09:11:33.804959Z",
+          "evidence": [
+            "sha256:b97f13f20cd189cb776e1591fe52e55042c29256d84c183cf97201d3e7841f02",
+            "cyber_lion/app_coordination/saas_handoff_extension.py"
+          ],
+          "finding": "matches=26, required>=1",
+          "matches": 26,
+          "role_id": "L49",
+          "status": "PASS",
+          "task": "regex",
+          "title": "wynik SaaS i jego pochodzenie"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.805176Z",
+          "evidence": [
+            "sha256:b97f13f20cd189cb776e1591fe52e55042c29256d84c183cf97201d3e7841f02",
+            "cyber_lion/app_coordination/saas_handoff_extension.py"
+          ],
+          "finding": "matches=18, required>=1",
+          "matches": 18,
+          "role_id": "L50",
+          "status": "PASS",
+          "task": "regex",
+          "title": "digest odpowiedzi i receipt"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.806883Z",
+          "evidence": [
+            "sha256:7f40ff2b950e9beace598bbfaec064e3edf70c36ca6fe68cd331b97841a0db87",
+            "tools/lion_mission_control_v3.py"
+          ],
+          "finding": "matches=290, required>=2",
+          "matches": 290,
+          "role_id": "L51",
+          "status": "PASS",
+          "task": "regex",
+          "title": "producent/odbiorca odpowiedzi Mission Control"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.807629Z",
+          "evidence": [
+            "sha256:caf1c1e0a23a3c0d6f5271a6e918acc521649cc53d4a14bc03f779a573457208",
+            "tools/lion_local_intelligence_runtime.py"
+          ],
+          "finding": "matches=59, required>=2",
+          "matches": 59,
+          "role_id": "L52",
+          "status": "PASS",
+          "task": "regex",
+          "title": "routing do oryginalnego panel_thread_id"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.807754Z",
+          "evidence": [
+            "sha256:caf1c1e0a23a3c0d6f5271a6e918acc521649cc53d4a14bc03f779a573457208",
+            "tools/lion_local_intelligence_runtime.py"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L53",
+          "status": "PASS",
+          "task": "contains",
+          "title": "pojedynczy trwały zapis wiadomości"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.808958Z",
+          "evidence": [
+            "sha256:584042b10ce625a417606a0ab0832ac6a5a0c3d09db79701f837a2afc574a344",
+            "cyber_lion/app_coordination/local_intelligence_gateway.py"
+          ],
+          "finding": "matches=198, required>=1",
+          "matches": 198,
+          "role_id": "L54",
+          "status": "PASS",
+          "task": "regex",
+          "title": "aktualizacja UI po odczycie/reload"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.809051Z",
+          "evidence": [
+            "sha256:6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+            "browser_broker/src/thread-consumer.cjs"
+          ],
+          "finding": "all required markers present",
+          "missing": [],
+          "role_id": "L55",
+          "status": "PASS",
+          "task": "contains",
+          "title": "odróżnienie RECONCILED od DELIVERED"
+        },
+        {
+          "completed_at": "2026-09-22T09:11:33.809169Z",
+          "evidence": [
+            "sha256:3f8382509ab9d249e940b9abcf6246c2a2478e8bbc342ca8595f2a17bb7b63c4",
+            "browser_broker/test/thread-consumer.test.cjs"
+          ],
+          "finding": "matches=16, required>=2",
+          "matches": 16,
+          "role_id": "L56",
+          "status": "PASS",
+          "task": "regex",
+          "title": "wykrycie błędnego wątku i zdublowanego wyniku"
+        }
+      ]
+    },
+    {
+      "worker_id": "W08",
+      "container_name": "lion-r20r2-w08",
+      "container_id": "d222706b9c47248de04681ab7a39a457d30d25c33fb4ea38992e6862019e2d7e",
+      "state": "exited",
+      "exit_code": 0,
+      "result_digest": "65cd09d97f1a753b39c30823e14a676ff412a00783b7fc95c4ff96f690e28a95",
+      "roles": [
+        {
+          "completed_at": "2026-09-22T11:14:13.389681Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "root_cause.ingress_discovery_component_wrong=True",
+          "role_id": "L57",
+          "status": "PASS",
+          "task": "json",
+          "title": "falsyfikacja hipotezy przyczyny i przegląd zmian",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389719Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": "b8e05972b9a9c762c579e9a98b90285d0a54f580",
+          "finding": "repository.pr367_head='b8e05972b9a9c762c579e9a98b90285d0a54f580'",
+          "role_id": "L58",
+          "status": "PASS",
+          "task": "json",
+          "title": "integracja gałęzi oraz CI dokładnego HEAD",
+          "value": "b8e05972b9a9c762c579e9a98b90285d0a54f580"
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389744Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "local_model.r20_inference_observed=True",
+          "role_id": "L59",
+          "status": "PASS",
+          "task": "json",
+          "title": "rzeczywista inferencja lokalna i kontrakt semantyczny",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389765Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "e2e.successful_saas_completion=True",
+          "role_id": "L60",
+          "status": "PASS",
+          "task": "json",
+          "title": "misja syntetyczna oraz agregacja wyników workers",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389785Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "restart_durability.pass=True",
+          "role_id": "L61",
+          "status": "PASS",
+          "task": "json",
+          "title": "restart brokera/panelu i deduplikacja",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389803Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "fleet.stop_test_passed=True",
+          "role_id": "L62",
+          "status": "PASS",
+          "task": "json",
+          "title": "STOP, przerwanie workera i odzyskiwanie",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389826Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "deployment.windows_broker_pass=True",
+          "role_id": "L63",
+          "status": "PASS",
+          "task": "json",
+          "title": "instalacja, rollback oraz zgodność wdrożenia",
+          "value": true
+        },
+        {
+          "completed_at": "2026-09-22T11:14:13.389848Z",
+          "evidence": [
+            "currentness.json"
+          ],
+          "expected": true,
+          "finding": "e2e.final_audit_pass=True",
+          "role_id": "L64",
+          "status": "PASS",
+          "task": "json",
+          "title": "końcowy audyt pełnej ścieżki i raport ograniczeń",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

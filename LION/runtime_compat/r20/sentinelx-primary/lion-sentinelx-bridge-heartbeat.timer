@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh LION SentinelX bridge readiness
+
+[Timer]
+OnBootSec=2s
+OnUnitActiveSec=5s
+AccuracySec=1s
+Unit=lion-sentinelx-bridge-heartbeat.service
+
+[Install]
+WantedBy=timers.target

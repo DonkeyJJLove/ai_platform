@@ -1,0 +1,30 @@
+{
+  "schema": "lion.r20.local-model-reconciliation/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "model": "gpt-oss-20b-MXFP4",
+  "route": "LOCAL_MODEL_DIRECT",
+  "answer": "**Root Cause**  \nThe SaaS E2E attempts were marked unsent because the event‑producer logic incorrectly treated the `parent_event_id` lineage as missing when the incoming event had a `parent_event_id` that was already present in the live Node store. This caused the reconciliation path to skip the event, and the retry policy prevented a third attempt.\n\n**Validated Repairs**  \n1. **Parent Event ID Lineage Fix** – Updated the live Node producer and ingress handlers to correctly match and propagate `parent_event_id` values, ensuring events with existing lineage are processed normally.  \n2. **Ingress Auth** – Re‑enabled credential validation; unauthenticated reads now return 401, while authenticated requests succeed.  \n3. **Contenteditable Normalization** – Adjusted the text normalization logic to count newlines correctly (5 newlines → length 444) and to preserve the original `textContent` length (439). The send button now enables only when the normalized content meets the length requirement.  \n4. **Browser Gate** – Configured to accept either the exact text or the exact CR/LF‑flattened text; all 23 native tests now pass.  \n5. **Panel Restart** – Confirmed that restarting the panel preserves the thread database and local inference model, preventing data loss on restart.\n\n**Residual Blocker**  \nThe SaaS E2E attempts that were already marked unsent remain in the unsent queue; the system’s retry policy disallows a third retry. Therefore, those specific events cannot be re‑sent without manual intervention or a policy change.\n\n**Recommended Next Observation**  \n- Verify that new SaaS E2E events are now processed and sent correctly by triggering a fresh end‑to‑end flow.  \n- Monitor the event queue to ensure no further events are incorrectly flagged as unsent.  \n- If manual re‑processing is required, plan a controlled policy adjustment or a one‑off re‑enqueue operation for the affected events.",
+  "answer_digest": "c950854c5b6dd1e78ed1a1f69cec54b27bf2447941e9aaa97efc11a031116ae0",
+  "authority_effect": "NONE",
+  "verification": {
+    "classification": "PARTIAL_REJECT",
+    "supported": [
+      "ingress authentication repair exists",
+      "parent_event_id propagation repair exists",
+      "browser newline-flattening gate repair exists",
+      "native browser tests 23/23 PASS",
+      "panel restart and local inference persistence PASS"
+    ],
+    "contradicted": [
+      {
+        "claim": "attempt lineage was already present but skipped",
+        "evidence": "attempt_1 parent_event_id was null; attempt_2 parent_event_id was correct and accepted"
+      },
+      {
+        "claim": "send button enablement was fixed by normalization",
+        "evidence": "send_disabled_after_fill was already false; failure was literal textContent equality before click"
+      }
+    ],
+    "admissible_as_terminal_truth": false
+  }
+}

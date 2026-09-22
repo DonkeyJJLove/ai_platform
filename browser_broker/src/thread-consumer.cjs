@@ -1,7 +1,7 @@
 'use strict';
 const {TASK,brokerAllows,matches,hash}=require('./contract.cjs');
 const {boundConversation}=require('./conversation.cjs');
-const TRANSPORT='CHATGPT_OPENAI_SECURE_MCP_TUNNEL';
+const TRANSPORT='CHATGPT_SENTINELX_MCP';
 class ThreadConsumer{
  constructor({store,scope,mc,ingress,now=Date.now}){
   if(scope?.mode!=='THREAD_CONSUMER'||scope.task_sha256!==TASK||scope.mission_id!==null||!/^[A-Za-z0-9_-]{1,160}$/.test(scope.thread_id))throw Error('THREAD_SCOPE_REQUIRED');
@@ -44,7 +44,8 @@ class ThreadConsumer{
      const turn=(await this.ingress('/v1/turns/'+encodeURIComponent(event.data.turn_id))).turn;
      if(turn?.turn_id===event.data.turn_id&&turn.status==='PENDING'&&turn.mission_id===null&&turn.thread_id===this.scope.thread_id&&/^MC-saas-[A-Za-z0-9-]+$/.test(turn.command_id||'')){
       const rid=turn.command_id.slice(3),row=await this.mc('/api/v3/saas-broker/requests/'+encodeURIComponent(rid));
-      const v={request_id:rid,mission_id:null,panel_thread_id:this.scope.thread_id,turn_id:turn.turn_id,turn_request_hash:turn.request_hash,conversation_url:this.scope.conversation_url,task_sha256:TASK,deadline_at:Math.min(Date.parse(row.deadline_at||row.expires_at),this.now()+1200000)};
+      const v={request_id:rid,mission_id:null,panel_thread_id:this.scope.thread_id,turn_id:turn.turn_id,turn_request_hash:turn.request_hash,parent_event_id:turn.parent_event_id,conversation_url:this.scope.conversation_url,task_sha256:TASK,deadline_at:Math.min(Date.parse(row.deadline_at||row.expires_at),this.now()+1200000)};
+      if(v.parent_event_id!=='saas_request:'+rid){this.cursor=event.seq;continue;}
       if(row.status==='CLAIMED')v.claim_generation=row.claim_generation;
       if(row.transport===TRANSPORT&&brokerAllows(v,row,this.now())){
        if(this.store.stopped())return;

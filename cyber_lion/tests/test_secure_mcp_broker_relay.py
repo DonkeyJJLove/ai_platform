@@ -10,6 +10,7 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
     def test_secure_mcp_relay_binds_exact_request_to_turn(self):
         self.assertIn('"command_id":"MC-"+rid',RELAY)
         self.assertIn('"broker_request_id":rid',RELAY)
+        self.assertIn('"parent_event_id":"saas_request:"+rid',RELAY)
         self.assertIn('"turn_id":turn["turn_id"]',RELAY)
         self.assertIn('"turn_request_hash":turn.get("request_hash")',RELAY)
 
@@ -43,8 +44,10 @@ class SecureMcpBrokerRelayTests(unittest.TestCase):
         self.assertIn('driver_mode:"NODE_BACKGROUND"',NODE)
         self.assertIn('bootstrap_alive:!!bootstrapChild',NODE)
 
-    def test_mission_control_supervises_secure_relay_child(self):
+    def test_openai_secure_mcp_child_is_opt_in_fallback(self):
         self.assertIn("def _start_secure_mcp_broker_relay(port):",MISSION)
+        self.assertIn("LION_ENABLE_OPENAI_SECURE_MCP_TUNNEL",MISSION)
+        self.assertIn("return None",MISSION)
         self.assertIn("relay=_start_secure_mcp_broker_relay(a.port)",MISSION)
         self.assertIn("secure-mcp-ingress.token",MISSION)
         self.assertIn("secure-mcp-relay",MISSION)

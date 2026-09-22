@@ -66,7 +66,7 @@ def make_turn(row):
     rid=row["request_id"]
     payload={
       "command_id":"MC-"+rid,"mission_id":row.get("mission_id"),"session_id":"CHATGPT-SAAS",
-      "thread_id":row.get("thread_id"),"cursor":0,
+      "thread_id":row.get("thread_id"),"cursor":0,"parent_event_id":"saas_request:"+rid,
       "input":"LION Mission Control SaaS request.\nAuthority effect: NONE. "
               "This is a cognitive request, not permission for external effects.\n"
               f"Broker request id: {rid}\nQuestion: {row['question']}\n\n"
@@ -74,7 +74,7 @@ def make_turn(row):
               'using response={"text":"<your answer>"} and actor="chatgpt-saas-mcp". '
               "Do not call any other write tool.",
       "metadata":{"source":"LION_MISSION_CONTROL","broker_request_id":rid,
-        "request_code":row.get("request_code"),"scope_type":row.get("scope_type"),
+        "parent_event_id":"saas_request:"+rid,"request_code":row.get("request_code"),"scope_type":row.get("scope_type"),
         "scope_id":row.get("scope_id"),"thread_id":row.get("thread_id"),
         "transport":SECURE,"authority_effect":"NONE"}
     }
