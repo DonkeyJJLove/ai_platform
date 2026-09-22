@@ -116,7 +116,7 @@ def _iso(value: datetime) -> str:
 
 
 def _cols(conn, table: str) -> set[str]:
-    return {r[1] for r in conn.execute("PRAGMA table_info("+table+")")}
+    return {r[0] for r in conn.execute("SELECT name FROM pragma_table_info(?)",(table,))}
 
 
 def migrate(conn, now_fn) -> None:
