@@ -1,7 +1,7 @@
 'use strict';
 const {TASK,hash,matches,brokerAllows}=require('./contract.cjs');
 const {boundConversation}=require('./conversation.cjs');
-const TRANSPORT='CHATGPT_OPENAI_SECURE_MCP_TUNNEL';
+const TRANSPORT='CHATGPT_SENTINELX_MCP';
 const TERMINAL=new Set(['RECONCILED','CANCELLED']);
 
 // This adapter consumes only newly created requests in an explicitly bound scope.
@@ -23,9 +23,9 @@ class Relay{
   return !this.store.stopped()&&m.mission_id===this.scope.mission_id&&['AUTHORIZED','RUNNING'].includes(m.state)&&m.execution_preflight?.mission_readiness==='READY_BOUND';
  }
  async current(r){const row=await this.mc('/api/v3/saas-broker/requests/'+encodeURIComponent(r.request_id));if(!this.sameScope(row)||row.question_digest!==r.question_digest)throw Error('BROKER_IDENTITY_MISMATCH');return row}
- payload(row){return {command_id:'MC-'+row.request_id,mission_id:row.mission_id,session_id:'CHATGPT-SAAS',thread_id:row.thread_id,cursor:0,
+ payload(row){return {command_id:'MC-'+row.request_id,mission_id:row.mission_id,session_id:'CHATGPT-SAAS',thread_id:row.thread_id,cursor:0,parent_event_id:'saas_request:'+row.request_id,
   input:'LION Mission Control cognitive request. Authority effect: NONE.\nBroker request id: '+row.request_id+'\nQuestion: '+row.question+'\n\nAnswer the question and complete this exact LION turn with response.text and actor chatgpt-saas-mcp. Do not call any other write tool.',
-  metadata:{source:'LION_MISSION_CONTROL',broker_request_id:row.request_id,thread_id:row.thread_id,transport:TRANSPORT,authority_effect:'NONE',task_sha256:TASK}}}
+  metadata:{source:'LION_MISSION_CONTROL',broker_request_id:row.request_id,parent_event_id:'saas_request:'+row.request_id,thread_id:row.thread_id,transport:TRANSPORT,authority_effect:'NONE',task_sha256:TASK}}}
  async start(){
   if(!(await this.authorized())||!(await this.browser.ready({conversation_url:this.scope.conversation_url})))return;
   const records=this.store.handoffs();if(records.length>=18||records.filter(r=>r.mission_id===this.scope.mission_id).length>=6){this.state='TURN_LIMIT';return}
@@ -63,8 +63,8 @@ class Relay{
    this.save(r,'TURN_INTENT');
    try{
     const result=await this.ingress('/v1/turns','POST',r.turn_payload);const turn=result.turn;
-    const v={...binding,turn_id:turn?.turn_id,turn_request_hash:turn?.request_hash,conversation_url:r.conversation_url,task_sha256:TASK};
-    if(!matches(v,turn)||turn.status!=='PENDING')throw Error('TURN_BINDING_MISMATCH');
+    const v={...binding,turn_id:turn?.turn_id,turn_request_hash:turn?.request_hash,parent_event_id:turn?.parent_event_id,conversation_url:r.conversation_url,task_sha256:TASK};
+    if(v.parent_event_id!=='saas_request:'+r.request_id||!matches(v,turn)||turn.status!=='PENDING')throw Error('TURN_BINDING_MISMATCH');
     this.save(r,'TURN_CREATED',{envelope:v,turn_payload:undefined});
    }catch{this.save(r,'OPERATOR_REQUIRED',{reason:'TURN_CREATION_OUTCOME_UNKNOWN'})}
    return;
@@ -87,7 +87,7 @@ class Relay{
    // A lost response is resolved by GET on the next tick, never a repeated POST.
    await this.mc('/api/v3/saas-broker/requests/'+r.request_id+'/respond','POST',{
     response_token:r.claim.response_token,claim_generation:r.claim.claim_generation,answer,
-    model_identity:'ChatGPT SaaS / model UNKNOWN / embedded browser + MCP',transport:TRANSPORT,attestation_class:'OPENAI_SECURE_MCP_TUNNEL_TOOL_ROUNDTRIP'
+    model_identity:'ChatGPT SaaS / model UNKNOWN / embedded browser + SentinelX MCP',transport:TRANSPORT,attestation_class:'OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP'
    });
   }
  }

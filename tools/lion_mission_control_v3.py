@@ -74,6 +74,8 @@ SECURE_MCP_RELAY_STATE=DB.parent/'secure-mcp-relay'
 SECURE_MCP_INGRESS_TOKEN=DB.parent/'secure-mcp-ingress.token'
 
 def _start_secure_mcp_broker_relay(port):
+    if os.environ.get('LION_ENABLE_OPENAI_SECURE_MCP_TUNNEL')!='1':
+        return None
     relay=Path(__file__).with_name('lion_secure_mcp_broker_relay.py')
     if not relay.is_file() or not FIREFOX_RELAY_KEY.is_file() or not SECURE_MCP_INGRESS_TOKEN.is_file():
         return None

@@ -8,8 +8,8 @@ function fixture(t){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lion-thread-')),store=new Store(path.join(dir,'broker.db'),PROJECT);
  t.after(()=>{store.close();fs.rmSync(dir,{recursive:true,force:true})});
  const scope={mode:'THREAD_CONSUMER',mission_id:null,thread_id:'panel-thread',conversation_url:'https://chatgpt.com/g/g-p-test/c/saas-thread',task_sha256:TASK};
- const row={request_id:'saas-1',mission_id:null,thread_id:scope.thread_id,scope_type:'THREAD',scope_id:scope.thread_id,authority_effect:'NONE',transport:'CHATGPT_OPENAI_SECURE_MCP_TUNNEL',status:'CLAIMED',claim_generation:1,claim_expires_at:new Date(Date.now()+300000).toISOString(),deadline_at:new Date(Date.now()+600000).toISOString()};
- const turn={turn_id:'turn_1',command_id:'MC-saas-1',mission_id:null,thread_id:scope.thread_id,request_hash:'a'.repeat(64),status:'PENDING',response:null};
+ const row={request_id:'saas-1',mission_id:null,thread_id:scope.thread_id,scope_type:'THREAD',scope_id:scope.thread_id,authority_effect:'NONE',transport:'CHATGPT_SENTINELX_MCP',status:'CLAIMED',claim_generation:1,claim_expires_at:new Date(Date.now()+300000).toISOString(),deadline_at:new Date(Date.now()+600000).toISOString()};
+ const turn={turn_id:'turn_1',command_id:'MC-saas-1',mission_id:null,thread_id:scope.thread_id,request_hash:'a'.repeat(64),parent_event_id:'saas_request:saas-1',status:'PENDING',response:null};
  let events=[{seq:101,type:'turn.pending',data:{turn_id:turn.turn_id,command_id:turn.command_id}}],sends=0,onRead=()=>{};const calls=[];
  const ingress=async(route,method='GET')=>{assert.equal(method,'GET');calls.push(route);if(route==='/v1/state')return {seq:100};if(route.startsWith('/v1/events?'))return {events};onRead();return {turn}};
  const mc=async(route,method='GET')=>{assert.equal(method,'GET');calls.push(route);assert.ok(!route.includes('/missions/'));return {...row}};
@@ -57,4 +57,9 @@ test('unbound thread consumer cannot admit external HTTP envelopes',async t=>{
 });
 test('STOP revision changes independently from resume',t=>{
  const f=fixture(t);const before=f.store.stopRevision();f.store.stop();assert.ok(f.store.stopRevision()>before);const after=f.store.stopRevision();f.store.resume();assert.equal(f.store.stopRevision(),after);
+});
+
+test('malformed causal-lineage event advances cursor without enqueuing',async t=>{
+ const f=fixture(t);f.turn.parent_event_id=null;await f.start();
+ assert.equal(f.store.rows().length,0);assert.equal(f.consumer.cursor,101);assert.equal(f.sends,0);
 });

@@ -1,0 +1,34 @@
+{
+  "schema": "lion.r20.r2.e2e-evidence/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2",
+  "observed_at": "2026-09-22T11:16:46.394799Z",
+  "result": "PASS_SENTINELX_PRIMARY_E2E",
+  "request": {
+    "request_id": "saas-d0b73c6fad88495f80c72d14a970251c",
+    "transport": "CHATGPT_SENTINELX_MCP",
+    "authority_effect": "NONE",
+    "browser_send_count": 1
+  },
+  "turn": {
+    "turn_id": "turn_d90e27d5-a0bb-4f4b-8e08-58bb69c841b5",
+    "status": "COMPLETED",
+    "parent_event_id": "saas_request:saas-d0b73c6fad88495f80c72d14a970251c"
+  },
+  "response": {
+    "text": "R20_R2_SENTINELX_OK",
+    "response_digest": "1678422b31f9dfded8fa16dd04205c1c9035f69f7451cd8b6a8ece64cefb2564",
+    "receipt_digest": "249fa9912d617093f433e27ade24bbb717678433c25ea96c8a8f5030b41ebcda",
+    "model_identity": "ChatGPT SaaS / SentinelX MCP / durable turn completion",
+    "attestation_class": "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP"
+  },
+  "delivery": {
+    "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345",
+    "assistant_message_observed": true,
+    "assistant_receipt_matches_broker": true
+  },
+  "negative_evidence": {
+    "openai_tunnel_used": false,
+    "openai_runtime_api_key_required": false,
+    "blind_retry": false
+  }
+}

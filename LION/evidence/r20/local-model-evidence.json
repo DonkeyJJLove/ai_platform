@@ -1,0 +1,28 @@
+{
+  "schema": "lion.r20.local-model-evidence/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "observed_at": "2026-09-22T00:50:21.325064Z",
+  "model": "gpt-oss-20b-MXFP4",
+  "endpoint": "Windows 127.0.0.1:8772 via active LION panel",
+  "calls": [
+    {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_LOCAL_MODEL_OK",
+      "response_digest": "0dc80506870dbd5670002dbf2f28cfaed7e1efdbf8dd779a71b55996ed119a9c",
+      "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345"
+    },
+    {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_POST_RESTART_LOCAL_OK",
+      "response_digest": "587dba3af8cd81c1d8e0691a96396dd4e021602c80b7dc797c16a3a5e8df6642"
+    }
+  ],
+  "new_model_runtime_created": false,
+  "authority_effect": "NONE",
+  "model_call_count": 3,
+  "reconciliation_proposal": {
+    "answer_digest": "c950854c5b6dd1e78ed1a1f69cec54b27bf2447941e9aaa97efc11a031116ae0",
+    "verification": "PARTIAL_REJECT",
+    "authority_effect": "NONE"
+  }
+}

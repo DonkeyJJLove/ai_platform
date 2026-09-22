@@ -65,3 +65,9 @@ test('claimed broker admission requires exact generation and live lease',t=>{
  Object.assign(f.row,{status:'CLAIMED',claim_generation:2,claim_expires_at:new Date(f.clock+300000).toISOString()});
  assert.equal(brokerAllows(v,f.row,f.clock),true);assert.equal(brokerAllows({...v,claim_generation:1},f.row,f.clock),false);assert.equal(brokerAllows({...v,claim_generation:undefined},f.row,f.clock),false);
 });
+
+// R20_PARENT_EVENT_CONTRACT: fresh turns are causally bound to their durable SaaS request.
+test('fresh relay turn payload carries causal broker request identity',()=>{
+ const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/relay.cjs'),'utf8');
+ assert.match(src,/parent_event_id:'saas_request:'\+row\.request_id/);
+});

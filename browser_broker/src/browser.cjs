@@ -8,6 +8,7 @@ const observeScript=`(() => {
  const busy=!!document.querySelector('button[data-testid="stop-button"]');
  return {composer:!!p&&p.getClientRects().length>0,empty:!!p&&!p.textContent.trim(),send:!!s,busy};
 })()`;
+const composerEquivalent=(observed,expected)=>observed===expected||observed===expected.replace(/\r\n|\r|\n/g,'');
 class EmbeddedBrowser{
  constructor(contents,projectUrl){this.contents=contents;this.projectUrl=projectUrl;this.state='AUTH_OR_BINDING_REQUIRED'}
  bindingReport(){return conversationReport(this.contents.isDestroyed()?'':this.contents.getURL(),this.projectUrl)}
@@ -36,9 +37,10 @@ class EmbeddedBrowser{
   if(!(await this.contents.executeJavaScriptInIsolatedWorld(1001,[{code:fill}]))||!admitted())throw Error('FILL_OR_ADMISSION_UNKNOWN');
   const click=`(() => {if(location.href!==${JSON.stringify(v.conversation_url)})return false;
     const p=document.querySelector('#prompt-textarea[contenteditable="true"]');const s=document.querySelector('button[data-testid="send-button"]');
-    if(!p||p.textContent.trim()!==${JSON.stringify(text)}||!s||s.disabled)return false;s.click();return true;})()`;
+    const expected=${JSON.stringify(text)},observed=p?.textContent||'',contentMatches=(${composerEquivalent.toString()})(observed,expected);
+    if(!p||!contentMatches||!s||s.disabled)return false;s.click();return true;})()`;
   if(!admitted()||!(await this.contents.executeJavaScriptInIsolatedWorld(1001,[{code:click}])))throw Error('SEND_UNKNOWN');
   this.state='AWAITING_MCP_RESULT';
  }
 }
-module.exports={EmbeddedBrowser};
+module.exports={EmbeddedBrowser,composerEquivalent};

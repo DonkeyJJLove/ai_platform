@@ -1,0 +1,67 @@
+{
+  "schema": "lion.r20.r2.final-currentness/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2",
+  "observed_at": "2026-09-22T11:16:46.394799Z",
+  "host": {
+    "physical_domain": "WINDOWS-MOON",
+    "logical_host": "MOON",
+    "docker_workers": 8,
+    "physical_failure_domains": 1
+  },
+  "model_plane": {
+    "model": "gpt-oss-20b-MXFP4",
+    "endpoint": "Windows 127.0.0.1:8772",
+    "final_canary": {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_R2_LOCAL_FINAL_OK"
+    },
+    "new_model_runtime_created": false
+  },
+  "transport_plane": {
+    "primary": "https://mcp.sentinelx.app/",
+    "transport_id": "CHATGPT_SENTINELX_MCP",
+    "attestation_class": "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP",
+    "bounded_helper": "/usr/local/bin/lion-sentinelx-turn",
+    "bounded_helper_sha256": "a8b3ad67cea5ce9e46135e39803cd030050116d1c92a444e97abcb712b1905a1",
+    "sentinelx_bridge_state": "READY",
+    "broker_channel_state": "SENTINELX_MCP_READY",
+    "automatic_hop": "AVAILABLE",
+    "openai_secure_mcp_tunnel_required": false,
+    "openai_secure_mcp_tunnel_service": "disabled/inactive",
+    "authority_effect": "NONE"
+  },
+  "runtime": {
+    "mission_control_pid": 2170114,
+    "panel_pid": 54760,
+    "node_relay_pid": 17900,
+    "browser_pid": 50224,
+    "browser_queue": "STOPPED",
+    "node_relay_status": "READY"
+  },
+  "e2e": {
+    "request_id": "saas-d0b73c6fad88495f80c72d14a970251c",
+    "turn_id": "turn_d90e27d5-a0bb-4f4b-8e08-58bb69c841b5",
+    "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345",
+    "browser_send_count": 1,
+    "turn_status": "COMPLETED",
+    "broker_status": "RESPONDED",
+    "progress_state": "RECEIPT_BOUND",
+    "response_text": "R20_R2_SENTINELX_OK",
+    "response_digest": "1678422b31f9dfded8fa16dd04205c1c9035f69f7451cd8b6a8ece64cefb2564",
+    "receipt_digest": "249fa9912d617093f433e27ade24bbb717678433c25ea96c8a8f5030b41ebcda",
+    "same_thread_delivery": true,
+    "assistant_message_observed": true
+  },
+  "fleet": {
+    "logical_roles": 64,
+    "material_workers": 8,
+    "pass": 64,
+    "blocked": 0,
+    "fail": 0
+  },
+  "rollback": {
+    "openai_tunnel": "optional fallback remains installed but disabled",
+    "browser_queue": "stopped",
+    "authority_effect": "NONE"
+  }
+}

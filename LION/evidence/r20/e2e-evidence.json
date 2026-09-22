@@ -1,0 +1,110 @@
+{
+  "schema": "lion.r20.e2e-evidence/v2",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "observed_at": "2026-09-22T00:52:26.391262Z",
+  "result": "PARTIAL_REPAIRED_NO_FINAL_SAAS_E2E_BY_ATTEMPT_BUDGET",
+  "fresh_attempt_budget": {
+    "max": 2,
+    "used": 2,
+    "remaining": 0,
+    "third_attempt_executed": false
+  },
+  "attempts": [
+    {
+      "request_id": "saas-7aa8c569ba334b1ab229b2186e882198",
+      "turn_id": "turn_a53efaa4-c997-4b8b-b55f-7f334ce41ac6",
+      "parent_event_id": null,
+      "outcome": "REJECTED_BEFORE_BROWSER_SEND_LINEAGE_MISSING",
+      "request_terminal": "CANCELLED",
+      "saas_send": false
+    },
+    {
+      "request_id": "saas-90a9c428db0742bf8c38dbe5a766cf29",
+      "turn_id": "turn_ae7d7865-698c-454f-93aa-f5a8364ca361",
+      "parent_event_id": "saas_request:saas-90a9c428db0742bf8c38dbe5a766cf29",
+      "outcome": "SEND_UNKNOWN_RECONCILED_UNSENT_DRAFT",
+      "request_terminal": "CANCELLED",
+      "wake_terminal": "CANCELLED",
+      "wake_reason": "R20_DOM_READBACK_UNSENT_DRAFT",
+      "ingress_turn_status": "PENDING",
+      "ingress_response": null,
+      "dom_before_cleanup": {
+        "composer_has_turn": true,
+        "composer_has_request": true
+      },
+      "dom_after_cleanup": {
+        "composer_empty": true,
+        "user_message_has_turn": false,
+        "user_message_has_request": false,
+        "assistant_message_has_request": false
+      },
+      "saas_send": false
+    }
+  ],
+  "local_model": {
+    "model": "gpt-oss-20b-MXFP4",
+    "existing_runtime_only": true,
+    "canary_before_restart": {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_LOCAL_MODEL_OK",
+      "response_digest": "0dc80506870dbd5670002dbf2f28cfaed7e1efdbf8dd779a71b55996ed119a9c",
+      "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345"
+    },
+    "canary_after_panel_restart": {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_POST_RESTART_LOCAL_OK",
+      "response_digest": "587dba3af8cd81c1d8e0691a96396dd4e021602c80b7dc797c16a3a5e8df6642"
+    }
+  },
+  "browser_adapter": {
+    "root_cause": {
+      "class": "CONTENTEDITABLE_MULTILINE_NEWLINE_FLATTENING",
+      "fill_exec_return": true,
+      "expected_length": 444,
+      "observed_textcontent_length": 439,
+      "expected_newlines": 5,
+      "observed_textcontent_newlines": 0,
+      "send_button_disabled_after_fill": false,
+      "old_gate": "literal textContent equality",
+      "fix": "composerEquivalent permits exact text or exact expected text with CR/LF removed only"
+    },
+    "final_source_sha256": "207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+    "native_tests": "24/24 PASS",
+    "final_runtime_pid": 9688,
+    "final_runtime_stopped": true,
+    "final_composer_empty": true
+  },
+  "turn_ingress": {
+    "source_sha256": "3f358c685f1c2d1c56b1dc6b0cb5d66784a49d51ba4fe960a817fcea3ff19c03",
+    "lineage_field": "parent_event_id",
+    "attempt_2_lineage_verified": true
+  },
+  "node_secure_mcp_relay": {
+    "source_sha256": "684afd5b4d40ae8d4ba41119b77f82b7c006d9a17872c7307e8321c2f0cfda92",
+    "pid": 48440,
+    "native_tests": "2/2 PASS",
+    "status": "READY"
+  },
+  "panel_restart": {
+    "old_pid": 42856,
+    "new_pid": 52728,
+    "health": "PASS",
+    "thread_db_persisted": true
+  },
+  "fleet": {
+    "logical_roles": 64,
+    "material_workers": 8,
+    "pass": 62,
+    "blocked": 2,
+    "fail": 0
+  },
+  "successful_saas_completion": false,
+  "response_digest": null,
+  "receipt_digest": null,
+  "same_thread_delivery": false,
+  "blocked_predicates": [
+    "L60_SAAS_E2E_COMPLETED_RECEIPT",
+    "L64_FINAL_E2E_AUDIT"
+  ],
+  "authority_effect": "NONE"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "lion.r20.final-rollback/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "desktop_script": "C:/Users/d2j3/Desktop/Rollback-LION-R20-Final.ps1",
+  "desktop_sha256": "13431c481b8e98e25a2e0e694c9d78a0f4a1d9e1a24a6e3d14a1bbf6c4d46bbe",
+  "backup_dir": "C:/Users/d2j3/AppData/Local/LION/backups/r20-panel-saas/final",
+  "restores": [
+    "initial browser installer backup",
+    "browser.cjs pre-send-fix",
+    "Node secure-mcp relay/test pre-R20",
+    "WSL ingress server.mjs pre-R20"
+  ],
+  "preserves": [
+    "broker SQLite history",
+    "panel thread history",
+    "R20 evidence files"
+  ],
+  "executed": false
+}

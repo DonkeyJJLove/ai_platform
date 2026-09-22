@@ -1,0 +1,25 @@
+{
+  "schema": "lion.r20.r2.rollback-manifest/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2",
+  "observed_at": "2026-09-22T11:18:47.599937Z",
+  "strategy": "restore pre-SentinelX source snapshots and disable SentinelX heartbeat; no data-plane DB deletion",
+  "sources": {
+    "browser_previous_git_commit": "8361a2cfdf13ecc405048573c1073befbd79b227",
+    "node_panel_backups": [
+      "mission-control.js.pre-sentinelx-primary",
+      "secure-mcp-relay.js.pre-sentinelx-primary",
+      "relay.test.js.pre-sentinelx-primary"
+    ],
+    "lion_auth_broker_backup": "/var/lib/sentinelx/uploads/lion-mission-control-v3/backups/lion_saas_broker.py.pre-sentinelx-primary-r2",
+    "sentinelx_config_backup": "/etc/sentinelx/config.yaml.bak.20260922-121810-642856"
+  },
+  "steps": [
+    "STOP browser queue before rollback",
+    "restore browser and Node panel pre-SentinelX sources",
+    "restore LION-AUTH-LAB broker backup",
+    "remove the two-line LION_ENABLE_OPENAI_SECURE_MCP_TUNNEL opt-in guard only if returning to historical automatic OpenAI tunnel behavior",
+    "disable lion-sentinelx-bridge-heartbeat.timer and remove bounded helper from SentinelX allowlist only when fully abandoning SentinelX transport",
+    "restart Mission Control, Node panel/relay and browser; reacquire currentness before any new send"
+  ],
+  "destructive_data_actions": false
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "lion.r20.browser-adapter-repair/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "observed_at": "2026-09-22T00:50:21.325064Z",
+  "root_cause": {
+    "class": "CONTENTEDITABLE_MULTILINE_NEWLINE_FLATTENING",
+    "fill_exec_return": true,
+    "expected_length": 444,
+    "observed_textcontent_length": 439,
+    "expected_newlines": 5,
+    "observed_textcontent_newlines": 0,
+    "send_button_disabled_after_fill": false,
+    "old_gate": "literal textContent equality",
+    "fix": "composerEquivalent permits exact text or exact expected text with CR/LF removed only"
+  },
+  "deployed_browser_sha256": "207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+  "unit_contract": {
+    "exact": "PASS",
+    "newline_flattening_only": "PASS",
+    "space_mutation": "REJECT",
+    "character_mutation": "REJECT"
+  },
+  "native_tests": "24/24 PASS",
+  "live_retry_after_fix": "NOT_EXECUTED_MAX_TWO_ATTEMPTS_CONSUMED",
+  "authority_effect": "NONE"
+}

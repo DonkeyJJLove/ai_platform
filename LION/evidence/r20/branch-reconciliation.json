@@ -1,0 +1,28 @@
+{
+  "schema": "lion.r20.branch-reconciliation/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "decisions": [
+    {
+      "ref": "PR#367 feat/r19-integrated-browser-broker-r1",
+      "decision": "BASE_AND_SELECTIVE_PORT",
+      "reason": "exact fix4 source/current native browser baseline"
+    },
+    {
+      "ref": "PR#362 mission/lion-task022-browser-mediator-closure-r1",
+      "decision": "HISTORICAL_SUPERSEDED_FOR_CURRENT_BROWSER_PATH",
+      "reason": "merged predecessor evidence, not redeployed"
+    },
+    {
+      "ref": "PR#363 mission/lion-task022-clock-skew-hotfix-r1",
+      "decision": "DEFERRED",
+      "reason": "separate historical repair line; no mechanical merge"
+    },
+    {
+      "ref": "PR#359 mission/lpcl-panel-sentinelx-operator-bus-r1",
+      "decision": "DEFERRED_CLOSED_UNMERGED",
+      "reason": "different transport architecture"
+    }
+  ],
+  "force_push": false,
+  "branches_deleted": false
+}
