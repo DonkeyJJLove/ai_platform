@@ -474,6 +474,42 @@ def bind_128l64m(conn,mission_id,lpcl_text,workers,now_fn,*,adapter="LPCL_REBOUN
     conn.execute("UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=64,ready=64,updated_at=?,last_error=NULL WHERE mission_id=?",(str(adapter),str(runtime_state),stamp,mission_id));conn.commit();return {"mission_id":mission_id,"logical_count":128,"material_count":64,"unique_uid_count":64,"assignments":128,"ratio":"2:1","authority_effect":"MISSION_SCOPED_CONTROL_BINDING"}
 
 
+
+def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,*,adapter="LPCL_DOCKER_LOCAL_MODEL",runtime_state="DOCKER_LOCAL_MODEL_FLEET_BOUND",role_prefix="AUTONOMOUS_LOGICAL",currentness_digest=None):
+    if type(logical_count) is not int or not 1<=logical_count<=512:raise ValueError("logical count")
+    if not isinstance(workers,list) or len(workers)!=32:raise ValueError("material worker count must be 32")
+    ordered=sorted(workers,key=lambda w:str(w.get("material_worker_id") or ""))
+    mids=[str(w.get("material_worker_id") or "") for w in ordered]
+    expected=[f"MD{i:03d}" for i in range(1,33)]
+    if mids!=expected:raise ValueError("material worker identity set")
+    uids=[str(w.get("pod_uid") or w.get("container_id") or "") for w in ordered]
+    if any(not x for x in uids) or len(set(uids))!=32:raise ValueError("material worker UIDs")
+    if any(int(w.get("ready",0) or 0)!=1 for w in ordered):raise ValueError("all material workers must be ready")
+    stamp=now_fn()
+    conn.execute("DELETE FROM logical_drones WHERE mission_id=?",(mission_id,))
+    conn.execute("DELETE FROM material_workers WHERE mission_id=?",(mission_id,))
+    conn.execute("DELETE FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mission_id,))
+    logical=[f"LD{i:03d}" for i in range(1,logical_count+1)]
+    distribution={mid:[] for mid in mids}
+    for idx,lid in enumerate(logical):
+        mid=mids[idx%32];distribution[mid].append(lid)
+        conn.execute("INSERT INTO logical_drones VALUES(?,?,?,?,?,?)",(mission_id,lid,f"{role_prefix}_{idx+1:03d}",1,1,1))
+    by={str(w["material_worker_id"]):w for w in ordered}
+    for mid in mids:
+        w=by[mid];mapped=distribution[mid]
+        pod_name=str(w.get("pod_name") or w.get("container_name") or mid)
+        pod_uid=str(w.get("pod_uid") or w.get("container_id"))
+        primary=mid
+        conn.execute("INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)",(mission_id,pod_name,pod_uid,primary,"DOCKER_LOCAL_MODEL",1,int(w.get("restarts",0) or 0),w.get("pod_ip"),stamp))
+        for lid in mapped:
+            aid="topology-"+uuid.uuid4().hex
+            value={"material_worker_id":mid,"container_id":pod_uid,"container_name":pod_name,"model":w.get("model"),"currentness_digest":currentness_digest,"binding_class":"DOCKER_LOCAL_MODEL"}
+            conn.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,created_at,claimed_at,finished_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(aid,mission_id,"__TOPOLOGY__",lid,mid,digest(value),_canon(value),"BOUND",1,stamp,stamp,stamp))
+    conn.execute("UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=32,ready=32,updated_at=?,last_error=NULL WHERE mission_id=?",(str(adapter),str(runtime_state),stamp,mission_id))
+    conn.commit()
+    return {"mission_id":mission_id,"logical_count":logical_count,"material_count":32,"unique_uid_count":32,"assignments":logical_count,"distribution":sorted((mid,len(distribution[mid])) for mid in mids),"authority_effect":"MISSION_SCOPED_CONTROL_BINDING"}
+
+
 def eligible_missions(conn):
     rows=conn.execute("SELECT d.mission_id,d.state,d.heartbeat_at,d.current_phase,m.updated_at FROM mission_execution_drivers d JOIN missions m ON m.mission_id=d.mission_id WHERE d.state IN ('ACTIVE','WAITING','BLOCKED') AND m.state NOT IN ('SUPERSEDED','FAILED') ORDER BY CASE d.state WHEN 'ACTIVE' THEN 0 WHEN 'WAITING' THEN 1 ELSE 2 END, COALESCE(d.heartbeat_at,m.updated_at), d.mission_id").fetchall();return [dict(r) for r in rows if operator_control.autonomy_allowed(conn,r['mission_id'])]
 

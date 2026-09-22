@@ -1,0 +1,11 @@
+{
+  "schema": "lion.r22.rollback-manifest/v1",
+  "observed_at": "2026-09-22T14:42:13.819491Z",
+  "policy": "Do not rebind LION back to the old Work conversation.",
+  "safe_rollback": {
+    "code": "restore pre-R22 browser/store source if required",
+    "data": "preserve broker.db, thread DB, receipts and both OpenAI conversation URLs",
+    "dispatch": "set stopped=true before any rebind",
+    "openai": "a rollback target must still be a verified project Chat, never Work"
+  }
+}

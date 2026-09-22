@@ -18,6 +18,7 @@ from cyber_lion.contracts.operator_intervention import (
 
 SCHEMA_ID = "lion.operator-control/v1"
 SCHEMA_VERSION = 5
+GENERAL_CHANNEL_ID = "sentinelx:general"
 AUTONOMOUS_OWNER = "AUTONOMOUS"
 SENTINELX_PROXY_PRINCIPAL = "OPERATOR_SENTINELX_PROXY"
 SENTINELX_PROXY_PARTICIPANT = "operator-proxy:sentinelx"
@@ -185,6 +186,56 @@ CREATE TABLE IF NOT EXISTS operator_consumer_cursors(
   updated_at TEXT NOT NULL,
   PRIMARY KEY(consumer_id,mission_id)
 );
+CREATE TABLE IF NOT EXISTS operator_general_channels(
+  channel_id TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  state TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS operator_general_messages(
+  sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  message_id TEXT NOT NULL UNIQUE,
+  channel_id TEXT NOT NULL,
+  command_id TEXT NOT NULL UNIQUE,
+  from_participant TEXT NOT NULL,
+  to_participant TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  content TEXT NOT NULL,
+  content_digest TEXT NOT NULL,
+  state TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_operator_general_messages_channel
+  ON operator_general_messages(channel_id,sequence);
+CREATE TABLE IF NOT EXISTS operator_general_deliveries(
+  message_id TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  delivery_state TEXT NOT NULL,
+  delivered_at TEXT,
+  receipt_digest TEXT,
+  PRIMARY KEY(message_id,recipient)
+);
+CREATE TABLE IF NOT EXISTS operator_general_message_receipts(
+  message_id TEXT PRIMARY KEY,
+  receipt_digest TEXT NOT NULL UNIQUE,
+  receipt_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TRIGGER IF NOT EXISTS operator_general_message_receipt_immutable
+BEFORE UPDATE ON operator_general_message_receipts
+BEGIN SELECT RAISE(ABORT,'immutable operator general message receipt'); END;
+CREATE TABLE IF NOT EXISTS operator_general_delivery_receipts(
+  message_id TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  receipt_digest TEXT NOT NULL UNIQUE,
+  receipt_json TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY(message_id,recipient)
+);
+CREATE TRIGGER IF NOT EXISTS operator_general_delivery_receipt_immutable
+BEFORE UPDATE ON operator_general_delivery_receipts
+BEGIN SELECT RAISE(ABORT,'immutable operator general delivery receipt'); END;
 CREATE TABLE IF NOT EXISTS operator_schema_migrations(
   version INTEGER PRIMARY KEY,
   schema_id TEXT NOT NULL,
@@ -205,6 +256,7 @@ def migrate(conn, now_fn) -> None:
     if "correlation_id" not in message_cols:conn.execute("ALTER TABLE operator_messages ADD COLUMN correlation_id TEXT")
     if "causation_id" not in message_cols:conn.execute("ALTER TABLE operator_messages ADD COLUMN causation_id TEXT")
     stamp = now_fn()
+    conn.execute("INSERT OR IGNORE INTO operator_general_channels(channel_id,display_name,state,created_at,updated_at) VALUES(?,?,?,?,?)",(GENERAL_CHANNEL_ID,"SentinelX general operator channel","ACTIVE",stamp,stamp))
     conn.execute("INSERT OR IGNORE INTO operator_schema_migrations(version,schema_id,applied_at) VALUES(?,?,?)",(SCHEMA_VERSION,SCHEMA_ID,stamp))
     conn.commit()
 
@@ -242,6 +294,78 @@ def _participant_for_principal(conn,principal_id:str)->dict[str,Any]:
 
 def participant_snapshot(conn,principal_id:str=PRIMARY_OPERATOR)->dict[str,Any]:
     participant=conn.execute("SELECT * FROM operator_participants WHERE principal_id=?",(principal_id,)).fetchone();grants=conn.execute("SELECT * FROM operator_grants WHERE principal_id=? ORDER BY issued_at",(principal_id,)).fetchall();return {"participant":dict(participant) if participant else None,"grants":[dict(g) for g in grants],"authority_effect":"NONE"}
+
+
+def _general_channel_participant(conn,principal_id:str)->dict[str,Any]:
+    if principal_id not in {PRIMARY_OPERATOR,SENTINELX_PROXY_PRINCIPAL}:raise ValueError("general channel principal denied")
+    return _participant_for_principal(conn,principal_id)
+
+
+def _general_channel_grant(conn,principal_id:str,now_value:str)->dict[str,Any]:
+    _general_channel_participant(conn,principal_id)
+    for row in conn.execute("SELECT * FROM operator_grants WHERE principal_id=? AND mission_scope='*' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>?) ORDER BY issued_at DESC",(principal_id,now_value)).fetchall():
+        value=dict(row)
+        try:actions=set(json.loads(value["actions_json"]))
+        except Exception:actions=set()
+        if actions.intersection({"MESSAGE","REQUEST_STATUS"}):return value
+    raise ValueError("general channel not granted")
+
+
+def _general_channel_peer(participant_id:str)->str:
+    if participant_id==PRIMARY_PARTICIPANT:return SENTINELX_PROXY_PARTICIPANT
+    if participant_id==SENTINELX_PROXY_PARTICIPANT:return PRIMARY_PARTICIPANT
+    raise ValueError("general channel participant denied")
+
+
+def _general_protocol_envelope(row:dict[str,Any],delivery_state:str|None=None)->dict[str,Any]:
+    payload={"event":str(row.get("kind") or "MESSAGE"),"text":str(row.get("content") or "")}
+    return {"id":row.get("message_id"),"sequence":int(row.get("sequence") or 0),"observed_at":row.get("created_at"),"protocol":"OPERATOR","from_id":row.get("from_participant"),"to_id":row.get("to_participant"),"phase":None,"direction":"INTERNAL","payload":payload,"payload_digest":digest(payload),"delivery_state":delivery_state or row.get("state") or "PERSISTED"}
+
+
+def post_general_message(conn,principal_id:str,command_id:str,content:str,now_fn)->dict[str,Any]:
+    if not isinstance(command_id,str) or not command_id.strip() or len(command_id)>200:raise ValueError("general channel command_id")
+    if not isinstance(content,str) or not content.strip() or len(content)>16000:raise ValueError("general channel content")
+    stamp=now_fn();grant=_general_channel_grant(conn,principal_id,stamp);participant=_general_channel_participant(conn,principal_id);sender=participant["participant_id"];recipient=_general_channel_peer(sender);command_id=command_id.strip();content=content.strip();content_digest=digest(content)
+    existing=conn.execute("SELECT * FROM operator_general_messages WHERE command_id=?",(command_id,)).fetchone()
+    if existing is not None:
+        row=dict(existing)
+        if row["from_participant"]!=sender or row["content_digest"]!=content_digest:raise ValueError("general channel command_id payload conflict")
+        drow=conn.execute("SELECT delivery_state FROM operator_general_deliveries WHERE message_id=? AND recipient=?",(row["message_id"],row["to_participant"])).fetchone()
+        receipt=conn.execute("SELECT receipt_digest FROM operator_general_message_receipts WHERE message_id=?",(row["message_id"],)).fetchone()
+        return {"schema":"lion.protocol-message-ack/v1","channel_id":GENERAL_CHANNEL_ID,"message":_general_protocol_envelope(row,(drow["delivery_state"] if drow else None)),"receipt_digest":(receipt["receipt_digest"] if receipt else None),"idempotent":True,"authority_effect":"NONE"}
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        message_id="opgen-"+digest({"principal_id":principal_id,"command_id":command_id})[:32]
+        conn.execute("INSERT INTO operator_general_messages(message_id,channel_id,command_id,from_participant,to_participant,kind,content,content_digest,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",(message_id,GENERAL_CHANNEL_ID,command_id,sender,recipient,"MESSAGE",content,content_digest,"PERSISTED",stamp))
+        conn.execute("INSERT INTO operator_general_deliveries(message_id,recipient,delivery_state,delivered_at,receipt_digest) VALUES(?,?,?,NULL,NULL)",(message_id,recipient,"PERSISTED"))
+        sequence=int(conn.execute("SELECT sequence FROM operator_general_messages WHERE message_id=?",(message_id,)).fetchone()[0])
+        receipt={"schema":"lion.operator-general-message-receipt/v1","channel_id":GENERAL_CHANNEL_ID,"sequence":sequence,"message_id":message_id,"command_id":command_id,"from_participant":sender,"to_participant":recipient,"content_digest":content_digest,"delivery_state":"PERSISTED","grant_id":grant["grant_id"],"authority_effect":"NONE","created_at":stamp}
+        receipt_digest=digest(receipt);receipt["receipt_digest"]=receipt_digest
+        conn.execute("INSERT INTO operator_general_message_receipts(message_id,receipt_digest,receipt_json,created_at) VALUES(?,?,?,?)",(message_id,receipt_digest,canonical(receipt),stamp))
+        conn.execute("UPDATE operator_general_channels SET updated_at=? WHERE channel_id=?",(stamp,GENERAL_CHANNEL_ID));conn.commit()
+        row=dict(conn.execute("SELECT * FROM operator_general_messages WHERE message_id=?",(message_id,)).fetchone())
+        return {"schema":"lion.protocol-message-ack/v1","channel_id":GENERAL_CHANNEL_ID,"message":_general_protocol_envelope(row,"PERSISTED"),"receipt_digest":receipt_digest,"idempotent":False,"authority_effect":"NONE"}
+    except Exception:
+        conn.rollback();raise
+
+
+def general_channel_snapshot(conn,principal_id:str,now_fn,*,after=0,limit=200)->dict[str,Any]:
+    if type(after) is not int or after<0 or type(limit) is not int or not 1<=limit<=500:raise ValueError("general channel cursor")
+    stamp=now_fn();_general_channel_grant(conn,principal_id,stamp);participant=_general_channel_participant(conn,principal_id);participant_id=participant["participant_id"]
+    rows=conn.execute("SELECT * FROM operator_general_messages WHERE channel_id=? AND sequence>? ORDER BY sequence LIMIT ?",(GENERAL_CHANNEL_ID,after,limit)).fetchall();messages=[];delivered=0
+    for raw in rows:
+        row=dict(raw);delivery=conn.execute("SELECT * FROM operator_general_deliveries WHERE message_id=? AND recipient=?",(row["message_id"],participant_id)).fetchone()
+        if delivery is not None and delivery["delivery_state"]=="PERSISTED":
+            receipt={"schema":"lion.operator-general-delivery-receipt/v1","channel_id":GENERAL_CHANNEL_ID,"sequence":row["sequence"],"message_id":row["message_id"],"recipient":participant_id,"content_digest":row["content_digest"],"delivery_state":"DELIVERED","authority_effect":"NONE","created_at":stamp}
+            receipt_digest=digest(receipt);receipt["receipt_digest"]=receipt_digest
+            conn.execute("INSERT OR IGNORE INTO operator_general_delivery_receipts(message_id,recipient,receipt_digest,receipt_json,created_at) VALUES(?,?,?,?,?)",(row["message_id"],participant_id,receipt_digest,canonical(receipt),stamp))
+            stored=conn.execute("SELECT receipt_digest FROM operator_general_delivery_receipts WHERE message_id=? AND recipient=?",(row["message_id"],participant_id)).fetchone()[0]
+            conn.execute("UPDATE operator_general_deliveries SET delivery_state='DELIVERED',delivered_at=COALESCE(delivered_at,?),receipt_digest=? WHERE message_id=? AND recipient=? AND delivery_state='PERSISTED'",(stamp,stored,row["message_id"],participant_id));delivered+=1
+        drow=conn.execute("SELECT delivery_state FROM operator_general_deliveries WHERE message_id=? AND recipient=?",(row["message_id"],row["to_participant"])).fetchone()
+        messages.append(_general_protocol_envelope(row,(drow["delivery_state"] if drow else None)))
+    if delivered:conn.commit()
+    channel=conn.execute("SELECT state FROM operator_general_channels WHERE channel_id=?",(GENERAL_CHANNEL_ID,)).fetchone()
+    return {"schema":"lion.protocol-stream/v1","channel_id":GENERAL_CHANNEL_ID,"state":(channel["state"] if channel else "UNKNOWN"),"participant_id":participant_id,"protocol":"OPERATOR","messages":messages,"delivered_now":delivered,"next_cursor":messages[-1]["sequence"] if messages else after,"authority_effect":"NONE"}
 
 
 def _mission_exists(conn,mission_id:str)->bool:return "missions" in _tables(conn) and conn.execute("SELECT 1 FROM missions WHERE mission_id=?",(mission_id,)).fetchone() is not None
@@ -360,6 +484,12 @@ def _mission_drone_inventory(conn,mission_id):
         for row in conn.execute('SELECT logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE mission_id=?',(mission_id,)):
             for name,kind in ((row['logical_drone_id'],'LOGICAL'),(row['material_drone_id'],'MATERIAL')):
                 if name and str(name) not in out:out[str(name)]={'recipient':'drone:'+str(name),'kind':kind,'role':''}
+    if {'operator_swarm_sessions','operator_swarm_members'}.issubset(tables):
+        for row in conn.execute("SELECT m.participant_id,m.role FROM operator_swarm_members m JOIN operator_swarm_sessions s ON s.session_id=m.session_id WHERE s.mission_id=? AND s.state='ACTIVE' AND m.state='ACTIVE' AND m.member_kind='MATERIAL_WORKER'",(mission_id,)):
+            participant=str(row['participant_id'] or '')
+            if participant.startswith('drone:'):
+                name=participant.split(':',1)[1]
+                if name and name not in out:out[name]={'recipient':participant,'kind':'MATERIAL','role':str(row['role'] or '')}
     return out
 
 def resolve_target(conn,mission_id,target):

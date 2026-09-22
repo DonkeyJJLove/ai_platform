@@ -14,6 +14,7 @@ import secrets
 import sqlite3
 import tempfile
 import threading
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -21,7 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from cyber_lion.mission_control import operator_control
+from cyber_lion.mission_control import operator_control, operator_swarm_session
 
 DEFAULT_DB = "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db"
 DEFAULT_KEY = "/var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key"
@@ -67,7 +68,7 @@ class Runtime:
     def __init__(self, db: Path, key_file: Path, proxy_key_file: Path, panel_proxy_key_file: Path, pairing_key_file: Path, floor_file: Path, mission_control_url: str, *, bootstrap_primary=False):
         self.db=db.resolve();self.key_file=key_file.resolve();self.proxy_key_file=proxy_key_file.resolve();self.panel_proxy_key_file=panel_proxy_key_file.resolve();self.pairing_key_file=pairing_key_file.resolve();self.floor_file=floor_file.resolve()
         self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={}
-        c=self.connect();operator_control.migrate(c,now)
+        c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now)
         participant=operator_control.participant_snapshot(c).get('participant')
         if participant is None:
             if not bootstrap_primary:
@@ -185,6 +186,25 @@ class Runtime:
         return self.try_resume_driver(out) if value.get('action')=='RESUME_SCOPE' else out
 
 
+def reconcile_active_swarm_sessions_once(runtime: Runtime) -> dict:
+    c=runtime.connect()
+    try:
+        session_ids=[r[0] for r in c.execute("SELECT session_id FROM operator_swarm_sessions WHERE state='ACTIVE' ORDER BY created_at").fetchall()]
+        processed=handoffs=responses=0
+        for sid in session_ids:
+            result=operator_swarm_session.reconcile_session(c,sid,now)
+            processed+=int(result.get('processed') or 0);handoffs+=int(result.get('handoffs') or 0);responses+=int(result.get('responses') or 0)
+        return {'sessions':len(session_ids),'processed':processed,'handoffs':handoffs,'responses':responses}
+    finally:c.close()
+
+
+def swarm_reconcile_loop(runtime: Runtime):
+    while True:
+        try:reconcile_active_swarm_sessions_once(runtime)
+        except Exception:pass
+        time.sleep(0.5)
+
+
 def make_handler(runtime: Runtime):
     class H(BaseHTTPRequestHandler):
         server_version='LIONOperatorControl/1'
@@ -212,6 +232,33 @@ def make_handler(runtime: Runtime):
                 principal=self.auth(allow_panel_transport=True);u=urlsplit(self.path);path=unquote(u.path);q=parse_qs(u.query)
                 if path=='/health':return self.reply({'status':'ok','schema':operator_control.SCHEMA_ID,'authority_effect':'NONE','authenticated_principal':principal})
                 if path=='/v1/session':return self.reply({'paired':principal==operator_control.PRIMARY_OPERATOR,'principal_id':principal,'authority_effect':'NONE'})
+                if path=='/v1/channel/general':
+                    channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
+                    after=int((q.get('after') or ['0'])[0]);limit=int((q.get('limit') or ['200'])[0])
+                    c=runtime.connect()
+                    try:return self.reply(operator_control.general_channel_snapshot(c,channel_principal,now,after=after,limit=limit))
+                    finally:c.close()
+                if path=='/v1/swarm/session/active':
+                    channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
+                    c=runtime.connect()
+                    try:return self.reply({'session':operator_swarm_session.active_session(c,channel_principal,now),'authority_effect':'NONE'})
+                    finally:c.close()
+                if path.startswith('/v1/swarm/sessions/'):
+                    channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
+                    tail=path[len('/v1/swarm/sessions/'):];parts=[x for x in tail.split('/') if x]
+                    if not parts:raise ValueError('swarm session id')
+                    sid=parts[0];c=runtime.connect()
+                    try:
+                        if len(parts)==2 and parts[1]=='snapshot':return self.reply(operator_swarm_session.session_snapshot(c,sid,channel_principal,now))
+                        if len(parts)==2 and parts[1]=='assistant':
+                            row=c.execute("SELECT * FROM operator_swarm_members WHERE session_id=? AND participant_id=?",(sid,operator_swarm_session.ASSISTANT_PARTICIPANT)).fetchone();return self.reply({'assistant':dict(row) if row else None,'authority_effect':'NONE'})
+                        if len(parts)==2 and parts[1]=='assistant-stream':
+                            if principal!=operator_control.SENTINELX_PROXY_PRINCIPAL:raise PermissionError('SentinelX proxy required')
+                            after=int((q.get('after') or ['0'])[0]);limit=int((q.get('limit') or ['25'])[0]);return self.reply(operator_swarm_session.assistant_stream(c,sid,channel_principal,now,after=after,limit=limit))
+                        if len(parts)==1:
+                            after=int((q.get('after') or ['0'])[0]);limit=int((q.get('limit') or ['25'])[0]);return self.reply(operator_swarm_session.session_stream(c,sid,channel_principal,now,after=after,limit=limit))
+                        return self.reply({'error':'not found'},404)
+                    finally:c.close()
                 if principal==operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('operator pairing required')
                 if path=='/v1/participants':
                     c=runtime.connect()
@@ -234,6 +281,7 @@ def make_handler(runtime: Runtime):
                     c=runtime.connect()
                     try:return self.reply(operator_control.command_status(c,cid))
                     finally:c.close()
+                if principal==operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('operator pairing required')
                 return self.reply({'error':'not found'},404)
             except PermissionError as exc:return self.reply({'error':str(exc)},403)
             except Exception as exc:return self.reply({'error':type(exc).__name__+':'+str(exc)},400)
@@ -249,8 +297,61 @@ def make_handler(runtime: Runtime):
                     principal=self.auth()
                     if principal!=operator_control.PRIMARY_OPERATOR:raise PermissionError('primary operator session required')
                     return self.reply(runtime.revoke_panel_session(self.headers.get('X-LION-Operator-Session')))
+                if path=='/v1/channel/general/messages':
+                    principal=self.auth(allow_panel_transport=True)
+                    channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
+                    if set(value)!={'command_id','content'}:raise ValueError('general channel message schema')
+                    c=runtime.connect()
+                    try:return self.reply(operator_control.post_general_message(c,channel_principal,value['command_id'],value['content'],now),201)
+                    finally:c.close()
+                if path=='/v1/swarm/sessions':
+                    principal=self.auth(allow_panel_transport=True);channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
+                    allowed={'mission_id','duration_seconds','workers','mode'}
+                    if set(value)-allowed or 'mission_id' not in value:raise ValueError('swarm session open schema')
+                    c=runtime.connect()
+                    try:return self.reply(operator_swarm_session.open_session(c,channel_principal,value['mission_id'],now,duration_seconds=int(value.get('duration_seconds') or operator_swarm_session.MAX_SESSION_SECONDS),workers=value.get('workers') or operator_swarm_session.DEFAULT_WORKERS,mode=value.get('mode') or 'TWO_DRONE_VERIFY'),201)
+                    finally:c.close()
+                if path.startswith('/v1/swarm/sessions/'):
+                    principal=self.auth(allow_panel_transport=True);channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
+                    tail=path[len('/v1/swarm/sessions/'):];parts=[x for x in tail.split('/') if x]
+                    if len(parts)!=2:raise ValueError('swarm session operation')
+                    sid,op=parts;c=runtime.connect()
+                    try:
+                        if op=='messages':
+                            allowed={'command_id','target','content','kind','correlation_id','causation_id','thread_id'}
+                            if set(value)-allowed or not {'command_id','target','content'}.issubset(value):raise ValueError('swarm message schema')
+                            return self.reply(operator_swarm_session.send_message(c,channel_principal,sid,value['command_id'],value['target'],value['content'],now,kind=value.get('kind') or 'REQUEST',correlation_id=value.get('correlation_id'),causation_id=value.get('causation_id'),thread_id=value.get('thread_id')),201)
+                        if op=='assistant-attach':
+                            if principal!=operator_control.SENTINELX_PROXY_PRINCIPAL:raise PermissionError('SentinelX proxy required')
+                            if set(value)-{'model_identity'}:raise ValueError('assistant attach schema')
+                            return self.reply(operator_swarm_session.attach_assistant(c,channel_principal,sid,now,model_identity=value.get('model_identity') or 'UNKNOWN'),201)
+                        if op=='assistant-messages':
+                            if principal!=operator_control.SENTINELX_PROXY_PRINCIPAL:raise PermissionError('SentinelX proxy required')
+                            allowed={'command_id','target','content','kind','correlation_id','causation_id','thread_id'}
+                            if set(value)-allowed or not {'command_id','target','content'}.issubset(value):raise ValueError('assistant message schema')
+                            return self.reply(operator_swarm_session.assistant_send(c,channel_principal,sid,value['command_id'],value['target'],value['content'],now,kind=value.get('kind') or 'MESSAGE',correlation_id=value.get('correlation_id'),causation_id=value.get('causation_id'),thread_id=value.get('thread_id')),201)
+                        if op=='close':
+                            if value:raise ValueError('swarm close schema')
+                            return self.reply(operator_swarm_session.close_session(c,sid,channel_principal,now))
+                        return self.reply({'error':'not found'},404)
+                    finally:c.close()
                 principal=self.auth()
-                if path=='/v1/commands':return self.reply(runtime.apply(value,principal_id=principal),201)
+                if path=='/v1/commands':
+                    if principal==operator_control.PRIMARY_OPERATOR and isinstance(value,dict) and value.get('action')=='MESSAGE':
+                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''))
+                        c=runtime.connect()
+                        try:
+                            active=operator_swarm_session.active_session(c,principal,now)
+                            if active and active.get('session',{}).get('mission_id')==mission_id:
+                                sid=active['session']['session_id'];members=active.get('members') or []
+                                if target in {'mission:'+mission_id,'swarm:'+mission_id}:
+                                    primary=next((m.get('participant_id') for m in members if m.get('member_kind')=='MATERIAL_WORKER' and m.get('role')=='PRIMARY' and m.get('state')=='ACTIVE'),None)
+                                    if not primary:raise ValueError('swarm primary worker unavailable')
+                                    target=primary
+                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST')
+                                return self.reply({'schema':'lion.operator-command-swarm-route/v1','mission_id':mission_id,'session_id':sid,'round_id':sent.get('round_id'),'message':sent.get('message'),'assignments':sent.get('assignments') or [],'admission_state':'ACCEPTED','execution_state':'DISPATCHED','observation_state':'PERSISTED','authority_effect':'NONE','idempotent':bool(sent.get('idempotent'))},201)
+                        finally:c.close()
+                    return self.reply(runtime.apply(value,principal_id=principal),201)
                 if path=='/v1/events/ack':
                     if set(value)!={'consumer_id','mission_id','event_id'}:raise ValueError('ack schema')
                     c=runtime.connect()
@@ -269,6 +370,7 @@ def main():
     a=p.parse_args()
     if a.host not in {'127.0.0.1','::1'}:raise SystemExit('operator gateway must remain loopback-only')
     runtime=Runtime(Path(a.db),Path(a.key_file),Path(a.proxy_key_file),Path(a.panel_proxy_key_file),Path(a.pairing_key_file),Path(a.epoch_floor),a.mission_control_url,bootstrap_primary=a.bootstrap_primary)
+    threading.Thread(target=swarm_reconcile_loop,args=(runtime,),daemon=True,name='operator-swarm-reconciler').start()
     ThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
 
 

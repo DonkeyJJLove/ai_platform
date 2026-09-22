@@ -1,0 +1,28 @@
+{
+  "schema": "lion.r21.final-test-evidence/v1",
+  "observed_at": "2026-09-22T13:32:38.055840Z",
+  "native_node": {
+    "node_relay": 3,
+    "browser_stack": 50,
+    "result": "PASS"
+  },
+  "covered_properties": [
+    "authorized restart preserves automatic dispatch",
+    "explicit STOP revokes automatic authorization",
+    "uncertain external effects remain fail-closed",
+    "thread cursor survives restart",
+    "expired/released claim is not reused",
+    "project conversation is CHAT-only",
+    "WORK scope is rejected",
+    "bound startup reopens exact project Chat conversation",
+    "renderer observeScript compiles"
+  ],
+  "live": {
+    "normal_restarts": 2,
+    "authorization_restored": true,
+    "cursor_persisted": true,
+    "claim_reacquire_observed": true,
+    "same_thread_receipts_observed": 3,
+    "pending_requests": 0
+  }
+}

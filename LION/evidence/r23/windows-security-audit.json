@@ -1,0 +1,141 @@
+{
+  "observed_at": "2026-09-22T18:32:16.3957335Z",
+  "computer": "MOON",
+  "defender_status": {
+    "AMServiceEnabled": true,
+    "AntivirusEnabled": true,
+    "BehaviorMonitorEnabled": true,
+    "IoavProtectionEnabled": true,
+    "NISEnabled": true,
+    "OnAccessProtectionEnabled": true,
+    "RealTimeProtectionEnabled": true,
+    "IsTamperProtected": true,
+    "AntivirusSignatureLastUpdated": "/Date(1790046825000)/",
+    "DefenderSignaturesOutOfDate": false
+  },
+  "defender_preferences": {
+    "DisableRealtimeMonitoring": false,
+    "DisableBehaviorMonitoring": false,
+    "DisableIOAVProtection": false,
+    "DisableScriptScanning": false,
+    "MAPSReporting": 2,
+    "SubmitSamplesConsent": 1,
+    "PUAProtection": 1,
+    "EnableControlledFolderAccess": 0,
+    "CloudBlockLevel": 0,
+    "ASRIds": [
+      null
+    ],
+    "ASRActions": [
+      null
+    ]
+  },
+  "firewall": [
+    {
+      "Name": "Domain",
+      "Enabled": 1,
+      "DefaultInboundAction": 0,
+      "DefaultOutboundAction": 0,
+      "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+      "LogAllowed": 0,
+      "LogBlocked": 0,
+      "LogMaxSizeKilobytes": 4096,
+      "NotifyOnListen": 1
+    },
+    {
+      "Name": "Private",
+      "Enabled": 1,
+      "DefaultInboundAction": 0,
+      "DefaultOutboundAction": 0,
+      "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+      "LogAllowed": 0,
+      "LogBlocked": 0,
+      "LogMaxSizeKilobytes": 4096,
+      "NotifyOnListen": 1
+    },
+    {
+      "Name": "Public",
+      "Enabled": 1,
+      "DefaultInboundAction": 0,
+      "DefaultOutboundAction": 0,
+      "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+      "LogAllowed": 0,
+      "LogBlocked": 0,
+      "LogMaxSizeKilobytes": 4096,
+      "NotifyOnListen": 1
+    }
+  ],
+  "uac": {
+    "EnableLUA": 1,
+    "ConsentPromptBehaviorAdmin": 5,
+    "PromptOnSecureDesktop": 1,
+    "EnableInstallerDetection": 1
+  },
+  "device_guard": {
+    "VirtualizationBasedSecurityStatus": 2,
+    "SecurityServicesConfigured": [
+      2
+    ],
+    "SecurityServicesRunning": [
+      2
+    ],
+    "CodeIntegrityPolicyEnforcementStatus": 2,
+    "UsermodeCodeIntegrityPolicyEnforcementStatus": 0
+  },
+  "lsa": {
+    "RunAsPPL": 2,
+    "RunAsPPLBoot": 2,
+    "LmCompatibilityLevel": null,
+    "NoLMHash": 1
+  },
+  "powershell_logging": {
+    "ScriptBlock": {},
+    "Module": {},
+    "Transcription": {}
+  },
+  "smb1": "UNKNOWN",
+  "smb_server": {
+    "EnableSMB1Protocol": false,
+    "EnableSMB2Protocol": true,
+    "RequireSecuritySignature": true,
+    "EnableSecuritySignature": false,
+    "EncryptData": false,
+    "RejectUnencryptedAccess": true
+  },
+  "smb_client": {
+    "RequireSecuritySignature": true,
+    "EnableSecuritySignature": true,
+    "EnableInsecureGuestLogons": false
+  },
+  "rdp": {
+    "fDenyTSConnections": 1,
+    "UserAuthentication": 1,
+    "SecurityLayer": 2,
+    "MinEncryptionLevel": 2
+  },
+  "lion_startup": {
+    "startup": {},
+    "tasks": {
+      "TaskName": "LION-Control-Plane-Supervisor",
+      "State": 3,
+      "Execute": "powershell.exe",
+      "Arguments": "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File \"C:\\Users\\d2j3\\Documents\\Codex\\2026-09-13\\r10-r2-unified\\runtime\\lion-control-plane-supervisor.ps1\""
+    }
+  },
+  "findings": {
+    "defender_realtime_ok": true,
+    "defender_tamper_ok": true,
+    "pua_enabled": true,
+    "firewall_all_enabled": true,
+    "firewall_block_logging": false,
+    "uac_enabled": true,
+    "uac_secure_desktop": true,
+    "lsa_ppl": true,
+    "powershell_scriptblock": false,
+    "powershell_module": false,
+    "powershell_transcription": false,
+    "smb1_disabled": false,
+    "smb_client_guest_disabled": true,
+    "rdp_nla": true
+  }
+}

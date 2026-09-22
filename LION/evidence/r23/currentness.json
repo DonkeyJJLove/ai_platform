@@ -1,0 +1,582 @@
+{
+  "schema": "lion.r23.autonomy-execution-fabric-evidence/v1",
+  "observed_at": "2026-09-22T18:34:43.664232Z",
+  "source": {
+    "head": "dd29f3b456cf60c7c592cf60ba376d2b157c4206",
+    "tree": "9ba8a3e9db2f82cf829a57544327a257c139ad3f"
+  },
+  "fleet": {
+    "state": "READY",
+    "materialized": 32,
+    "ready": 32,
+    "unique_worker_ids": 32,
+    "unique_container_ids": 32,
+    "model": "gpt-oss-20b-MXFP4",
+    "physical_failure_domains": 1,
+    "currentness_digest": "ed52ab821ce7a9daaa01fdebedd3368b51340629b86433984b40cb73fe3f4e9e",
+    "observed_at": "2026-09-22T18:34:13.327558Z"
+  },
+  "missions": {
+    "LION-AUTO-CF2269C51B8AB8A01AD9AC2A": {
+      "state": "COMPLETE",
+      "runtime_state": "DRIVER_COMPLETE",
+      "adapter": "LPCL_DOCKER_LOCAL_MODEL",
+      "logical_count": 76,
+      "material_target": 32,
+      "materialized": 32,
+      "ready": 32,
+      "execution_preflight": {
+        "authority_closure": "PASS",
+        "bound_count": 1,
+        "capability_closure": "PASS",
+        "contract_count": 1,
+        "currentness_closure": "PASS",
+        "dynamic_count": 1,
+        "evidence_closure": "PASS",
+        "invalid_count": 0,
+        "mission_readiness": "READY_BOUND",
+        "phase_count": 1,
+        "phases": [
+          {
+            "binding_mode": "DYNAMIC",
+            "capability_classes": [
+              "CONTROL_PLANE_RECONNAISSANCE"
+            ],
+            "contract_digest": "0da777f49195c5d3383c6ab74365a3b0867c357bf470327f60d665187d0dd557",
+            "contract_source": "DECLARED",
+            "effect_ceiling": "NONE",
+            "matching_capabilities": [
+              "CONTROL_PLANE_RECONNAISSANCE_V1"
+            ],
+            "phase_id": "AUTO_GOAL_ANALYSIS",
+            "state": "VALID_BOUND"
+          }
+        ],
+        "preflight_digest": "707065cda2ed8eadc30a7438bb6e52e09eab0bd909b86366f1352f1749cb73b0",
+        "schema": "lion.mission-execution-preflight/v1",
+        "unbound_count": 0
+      },
+      "phases": [
+        {
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "progress": 100.0,
+          "detail": "Bounded generic effect/evidence executor satisfied the phase contract.",
+          "finished_at": "2026-09-22T18:12:54.073166Z"
+        }
+      ],
+      "driver": {
+        "state": "COMPLETE",
+        "generation": 13,
+        "next_action": "TERMINAL_RECONCILED",
+        "blocking_gate": null,
+        "waiting_reason": null,
+        "last_error": null
+      },
+      "receipts": [
+        {
+          "receipt_id": "receipt-8fd3a8668dc04e7ebbc7adb1c03d0325",
+          "assignment_id": "assignment-e64b4bf59c954194aa9af9e6e94ca834",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "9f56e92a121729eb05df44b5ae38f1007a0ed0ce44bbf79c53be1270342fd1a3",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:12:53.279680Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-7820827f0dc8447f82aa20ede4cc0460",
+          "assignment_id": "assignment-407671b7794b4b5ba67db079ab93ac53",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "223374e92d3b7d77ee30bcc3fa34d78f62c4fe64d947b5fe33589553e5e984a5",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:12:29.044459Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-d657b53b932042069644882ac245e473",
+          "assignment_id": "assignment-9e0573c677eb4cd8a349eac233184885",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "d9b851f965d360acf763ddeb361da4cd80bb3b699a6f795292cda92393f239e4",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:12:02.036518Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-4df1939d846a48fb950afeead5c78f33",
+          "assignment_id": "assignment-4a16725ad9bb4b8095e4cad2104768b9",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "27427aad763e279def98ca9bffd7f38069e8b66e9229ef5a28998f99f9f43fb4",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:38.912375Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-0988ae81af76460fbd58a78f1d53d188",
+          "assignment_id": "assignment-9e5f33a9e5be409fb74f22c35ff62a49",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "f5f332323417e9b20ebd60f26e287e3986a819561a9980b6e8db8e4ff7442c9e",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:34.626567Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-72d3728ea4da418e909b8f42c5acfcb5",
+          "assignment_id": "assignment-f258c72ea7264fb2a9d38b995f5c7038",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "20565560cbe9df108fa8c0d75e776416a49eb4af1c1afef6903d74cc308384f8",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:27.381876Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-2e91782beff1476893602e4e69461103",
+          "assignment_id": "assignment-9c01ac5a47ef43598302595e872e3833",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "5940b44e433a41e3f3d03927ace5856045b3c86da97ee488716dc204368060c2",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:21.828675Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-e672793698454c6cadf60a61597c7879",
+          "assignment_id": "assignment-d0efa9ec14d6405a8bac609ff512bda1",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "9fda57b104291a2d7c004c4d44dc288de259a85dc88abc60373eba55b0c30f80",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:14.431538Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-e1ff5e56d5ab4ccc82ed8c777dccbfc6",
+          "assignment_id": "assignment-4132ae532426456ea1abb8542920189d",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "5e0db1a3c87023892fb2d147edfaf30a2120a84be0bfec9a0e09f26aa824747b",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:06.719032Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-b478aacbd2cd463f808ee8240bf9ac73",
+          "assignment_id": "assignment-2cb21024eabf4128acd312f74dd07168",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "e3534cc3fe0d1d3a91ec23168c4c2a848be83acbd4760682524064870e7f70b1",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:11:01.492477Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-f7f473f0c87e444a8880e2ac09b5bb97",
+          "assignment_id": "assignment-673425a737bd428c9b2137510da0efdb",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "3839a24f482bc4686d509453d4f14097d1f3febb5152fa891c2ef8f0111152b4",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:10:50.521057Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-ae59a0dc054f4fb488fa5a57145f90a3",
+          "assignment_id": "assignment-f000608e84c6491dbc2fede7fdbbbce6",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "3ee87e019dab6a2bedd9ef4371b5f80efd42c789df564c1b663a5434ec247b33",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:10:30.867071Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-25496d00b30c4a509a68376df7a0379b",
+          "assignment_id": "assignment-7fa298e6ee4247ffa23c304b89cfb521",
+          "phase_id": "AUTO_GOAL_ANALYSIS",
+          "status": "PASS",
+          "result_digest": "408a545cb7d895f7056e51cc8d1e0e68ddd3e895f6785a2c380894294823f113",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T17:42:42.057979Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD001"
+        }
+      ]
+    },
+    "LION-R23-DYNAMIC-76L32M-CANARY": {
+      "state": "RUNNING",
+      "runtime_state": "DOCKER_LOCAL_MODEL_FLEET_BOUND",
+      "adapter": "LPCL_DOCKER_LOCAL_MODEL",
+      "logical_count": 76,
+      "material_target": 32,
+      "materialized": 32,
+      "ready": 32,
+      "execution_preflight": {
+        "authority_closure": "PASS",
+        "bound_count": 1,
+        "capability_closure": "PASS",
+        "contract_count": 1,
+        "currentness_closure": "PASS",
+        "dynamic_count": 1,
+        "evidence_closure": "PASS",
+        "invalid_count": 0,
+        "mission_readiness": "READY_BOUND",
+        "phase_count": 1,
+        "phases": [
+          {
+            "binding_mode": "DYNAMIC",
+            "capability_classes": [
+              "CONTROL_PLANE_RECONNAISSANCE"
+            ],
+            "contract_digest": "0daedbce9452a680385887669f7587e1197d07a8e4ebf8b4dd14931662323a56",
+            "contract_source": "DECLARED",
+            "effect_ceiling": "NONE",
+            "matching_capabilities": [
+              "CONTROL_PLANE_RECONNAISSANCE_V1"
+            ],
+            "phase_id": "VERIFY_DYNAMIC_DOCKER_BIND",
+            "state": "VALID_BOUND"
+          }
+        ],
+        "preflight_digest": "7af62950562b5752fb5d0f13bbd46b7dea4e9b0ecd677076c36c70d8592d041a",
+        "schema": "lion.mission-execution-preflight/v1",
+        "unbound_count": 0
+      },
+      "phases": [
+        {
+          "phase_id": "VERIFY_DYNAMIC_DOCKER_BIND",
+          "status": "RUNNING",
+          "progress": 0.0,
+          "detail": null,
+          "finished_at": null
+        }
+      ],
+      "driver": {
+        "state": "PAUSED",
+        "generation": 2,
+        "next_action": "OPERATOR_RESUME",
+        "blocking_gate": null,
+        "waiting_reason": null,
+        "last_error": null
+      },
+      "receipts": []
+    },
+    "LION-R23-MATERIAL-SANDBOX-CANARY": {
+      "state": "COMPLETE",
+      "runtime_state": "DRIVER_COMPLETE",
+      "adapter": "LPCL_DOCKER_LOCAL_MODEL",
+      "logical_count": 76,
+      "material_target": 32,
+      "materialized": 32,
+      "ready": 32,
+      "execution_preflight": {
+        "authority_closure": "PASS",
+        "bound_count": 1,
+        "capability_closure": "PASS",
+        "contract_count": 1,
+        "currentness_closure": "PASS",
+        "dynamic_count": 1,
+        "evidence_closure": "PASS",
+        "invalid_count": 0,
+        "mission_readiness": "READY_BOUND",
+        "phase_count": 1,
+        "phases": [
+          {
+            "binding_mode": "DYNAMIC",
+            "capability_classes": [
+              "CONTROL_PLANE_RECONNAISSANCE"
+            ],
+            "contract_digest": "57515584fb5b2f98a0277734b7132c79cc027bdba7a8f96d915c313169efefff",
+            "contract_source": "DECLARED",
+            "effect_ceiling": "NONE",
+            "matching_capabilities": [
+              "CONTROL_PLANE_RECONNAISSANCE_V1"
+            ],
+            "phase_id": "MATERIAL_SANDBOX_CANARY",
+            "state": "VALID_BOUND"
+          }
+        ],
+        "preflight_digest": "44651c0bdd6044812f62d3da1d5472faefee7849f059e2a78d1c297e6fcb1057",
+        "schema": "lion.mission-execution-preflight/v1",
+        "unbound_count": 0
+      },
+      "phases": [
+        {
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "progress": 100.0,
+          "detail": "MD001 executed exact container-tmpfs write/readback; independent ledger and file digest matched.",
+          "finished_at": "2026-09-22T18:25:18.468660Z"
+        }
+      ],
+      "driver": {
+        "state": "COMPLETE",
+        "generation": 16,
+        "next_action": "TERMINAL_RECONCILED",
+        "blocking_gate": null,
+        "waiting_reason": null,
+        "last_error": null
+      },
+      "receipts": [
+        {
+          "receipt_id": "receipt-acc645e7732740e8a5b41ecb38bcac7a",
+          "assignment_id": "assignment-1a0a9f3ea873491996a0f71ca2436c81",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "835a00d5fe9e8fb6764b39cc1711f8d5b5c354d1fa0b1ece74b2b8b1a62bc1cf",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:24:47.273157Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-78b7f310983a475ba44aa5bec94d8c3c",
+          "assignment_id": "assignment-6327ebb08f18494c860d4f5a2e395c41",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "f87c905b72acde00b9cfb1cf589177f743d6e73084412ea194cea0404366ccab",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:24:08.188773Z",
+          "material_drone_id": "MD001",
+          "logical_drone_id": "LD001"
+        },
+        {
+          "receipt_id": "receipt-3c6316f622c543a7985e8ecb266a07d7",
+          "assignment_id": "assignment-4e090a801b274356b588a955e158c818",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "ac21094461da2f4ff681bc49806ac53229bc920543e3632f364a0730ef842d04",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:23:44.555624Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-dad62c1f9bb64a09a117c632841c1200",
+          "assignment_id": "assignment-961e3533147e4ef7bbe422195caf2c64",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "772dbae4e7b41d53a8ac09f8f40e9e4d241c092c89f332c39cc079d4b1871096",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:23:09.310403Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-703c8a55c958496699c897405385af80",
+          "assignment_id": "assignment-0de263e23a634f529ffb181f26d40309",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "de3ae372049bab8afeb65e9cd9502384587b3811be92210222e8a06edbbb7858",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:22:37.273097Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-614ce76be2894fd6be38c9973e5584fa",
+          "assignment_id": "assignment-75c722163f3646af94076ca296958a2f",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "886434376defc3e5e71a95fc2a630c76359d80d490794416af132a8b815992a3",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:22:06.350266Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-c8b4c1d873d048ec82154320b82bfd69",
+          "assignment_id": "assignment-3a73cd3069624a6abe4eae76321ab909",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "ef4a83d8021fb1d650f2a758cf877ad03aaa685fa7fefd7a28e34bbce00aa7a5",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:21:28.489144Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-4b9853c1b43f4fb3b8f9ea19d5be1907",
+          "assignment_id": "assignment-2b1d13c56aec44ebbbe96c64c4bac720",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "01f8cd19a44b5102674cb629005f672a423416f62a69e02ad1a8d206872bf32f",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:21:02.502124Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-8ea2a00020be4c78b36a00440a04c604",
+          "assignment_id": "assignment-6d5d90ac119d473e8ce0fa1f5760a3e5",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "b1b6994a1962a22cf4855ba6fac0cb32eb328ce4b7808bac4ac0ed9224a7f101",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:20:37.775107Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-7fef7e9005b845b184e95838ea6ed35c",
+          "assignment_id": "assignment-6d4cc8e29db24cb39b633ccf12448fc0",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "b91b0a19795170cd94099620236e2793365a74cf46db80c58f368f18d85e771c",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:20:29.288713Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-48a3482a91284011953c8992ec3e129b",
+          "assignment_id": "assignment-76e968727d714c5691625a84ecc63e71",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "FAIL",
+          "result_digest": "1aab8e71c9376b861bea37ae4ff917b645274b60eae0c7805f7d9e0d2b6a72df",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:20:24.622106Z",
+          "material_drone_id": "MD001",
+          "logical_drone_id": "LD001"
+        },
+        {
+          "receipt_id": "receipt-8753298483054d5fb52a38c9af0f001f",
+          "assignment_id": "assignment-020568877eb64029883c05f89059e67d",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "728397346045b7338fe6eea9f343b4abe84f1852cd1a94688500ed019663c70e",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:20:07.110708Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-b629adfa968946279d05ada6ad7c6e7a",
+          "assignment_id": "assignment-93dcc6fd1a0f4edd8290259684e58c5a",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "0dbbfc764d1bdd0a75dc18f6fde7137d9ffe08f1d1a0174c581ef7dbe5404db2",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:19:42.587907Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-316842f505c748c1bc52557fa2c7239f",
+          "assignment_id": "assignment-5ecbee8be4b04bb1a1ca6fad4824f7c0",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "3ae75397e0edbdd698d130dcae36ca237b99e045cd94332dcb891988d4d367e4",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:19:18.111396Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-3a4cb4afc5d34154bbf71d688dc071d5",
+          "assignment_id": "assignment-5fcde26a14bd44fa859a5d384cbe45a2",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "dfee997af80d75b1f36f44ec2b80aa32baf504063ef23484c8b4c85efba18c38",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:18:56.243346Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD002"
+        },
+        {
+          "receipt_id": "receipt-b015ff1e4e6449a59d0468cbb76d116b",
+          "assignment_id": "assignment-6e2b4bf68d254eda9e4080e4cbc61d75",
+          "phase_id": "MATERIAL_SANDBOX_CANARY",
+          "status": "PASS",
+          "result_digest": "4b4d6506500595b8b85194b00ddb39f0b73da7d8fd771cf05262fdde218f72f7",
+          "effect_receipt_digest": null,
+          "authority_effect": "NONE",
+          "observed_at": "2026-09-22T18:18:45.596239Z",
+          "material_drone_id": "MD025",
+          "logical_drone_id": "LD001"
+        }
+      ]
+    }
+  },
+  "saas_broker": {
+    "channel_state": "SENTINELX_MCP_READY",
+    "transport": "CHATGPT_SENTINELX_MCP",
+    "sentinelx_ready": true,
+    "automatic_hop": "AVAILABLE",
+    "pending_count": null
+  },
+  "governed_host_effect": {
+    "effect_executed_once": true,
+    "reconciliation": "MATCHED",
+    "effect_digest": "8e8d2ee08f27fd4a4ec06244285d199d61ad1ca441aa44d1a798eda67c359e6d",
+    "independent_effect_digest": "8e8d2ee08f27fd4a4ec06244285d199d61ad1ca441aa44d1a798eda67c359e6d",
+    "negative_pass": 20,
+    "negative_total": 20,
+    "replay_denied": true,
+    "runtime_can_mint_authority": false,
+    "runtime_has_signing_secret": false,
+    "production_effect": false,
+    "manifest_sha256": "de60a2a74118b6c00673940460490d9b06bd99e83974f7524e784bd62616c13c"
+  },
+  "windows_audit_findings": {
+    "defender_realtime_ok": true,
+    "defender_tamper_ok": true,
+    "pua_enabled": true,
+    "firewall_all_enabled": true,
+    "firewall_block_logging": false,
+    "uac_enabled": true,
+    "uac_secure_desktop": true,
+    "lsa_ppl": true,
+    "powershell_scriptblock": false,
+    "powershell_module": false,
+    "powershell_transcription": false,
+    "smb1_disabled": false,
+    "smb_client_guest_disabled": true,
+    "rdp_nla": true
+  },
+  "known_boundary": "Windows security changes have been audited but not yet applied by the autonomous mission effect plane."
+}

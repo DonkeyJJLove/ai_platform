@@ -1,0 +1,18 @@
+{
+  "schema": "lion.r21.deployment-manifest/v1",
+  "observed_at": "2026-09-22T13:32:38.055840Z",
+  "result": "DEPLOYED_LIVE",
+  "browser_broker": {
+    "profile": "C:/Users/d2j3/AppData/Local/LION/r19-browser-broker",
+    "conversation_scope": "CHAT",
+    "auto_dispatch_authorized": true,
+    "queue_stopped": false,
+    "cursor": 188
+  },
+  "node_relay": {
+    "transport": "CHATGPT_SENTINELX_MCP",
+    "claim_ttl_validation": true,
+    "blind_retry": false
+  },
+  "authority_effect": "NONE"
+}

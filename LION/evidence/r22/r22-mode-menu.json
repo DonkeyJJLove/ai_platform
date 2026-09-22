@@ -1,0 +1,45 @@
+{
+  "clicked": true,
+  "items": [],
+  "roles": [
+    {
+      "tag": "DIV",
+      "role": "radiogroup",
+      "text": "Chat\nWork",
+      "aria": "Wybierz obszar czatu",
+      "testid": null,
+      "state": null,
+      "top": 29,
+      "left": 341,
+      "width": 138,
+      "height": 27,
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "role": "radio",
+      "text": "Chat",
+      "aria": "",
+      "testid": null,
+      "state": "off",
+      "top": 29,
+      "left": 341,
+      "width": 69,
+      "height": 27,
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "role": "radio",
+      "text": "Work",
+      "aria": "",
+      "testid": null,
+      "state": "on",
+      "top": 29,
+      "left": 409,
+      "width": 69,
+      "height": 27,
+      "visible": true
+    }
+  ]
+}

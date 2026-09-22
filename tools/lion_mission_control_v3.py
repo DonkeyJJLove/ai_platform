@@ -131,7 +131,18 @@ def saas_broker_api(method,path,payload=None):
     if set(x)!={'response_token','claim_generation','answer','model_identity','transport','attestation_class'}:raise ValueError('response schema')
     row=c.execute('SELECT claim_generation FROM saas_handoff_requests WHERE request_id=?',(rid,)).fetchone()
     if row is None or type(x['claim_generation']) is not int or row[0]!=x['claim_generation']:raise ValueError('stale claim')
-    return saas_broker.respond(c,rid,x['response_token'],x['answer'],now,model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'],claim_generation=x['claim_generation'])
+    out=saas_broker.respond(c,rid,x['response_token'],x['answer'],now,model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'],claim_generation=x['claim_generation'])
+    dual=c.execute('SELECT request_id FROM mission_dual_evaluations WHERE saas_request_id=? ORDER BY updated_at DESC LIMIT 1',(rid,)).fetchone()
+    if dual:
+     drid=dual['request_id']
+     prior=c.execute('SELECT response_digest FROM mission_dual_receipts WHERE request_id=? AND provider=?',(drid,DUAL_SAAS_PROVIDER)).fetchone()
+     if prior is None:
+      dual_record_response(c,drid,DUAL_SAAS_PROVIDER,x['answer'],now,transport=x['transport'],authority_effect='NONE')
+     joined=dual_join_result(c,drid);out['dual_result']=joined
+     row=c.execute('SELECT mission_id,phase_id FROM mission_dual_evaluations WHERE request_id=?',(drid,)).fetchone()
+     if row:_process_message(c,row['mission_id'],'RECEIPT','CHATGPT_SAAS_SUPERVISOR','DUAL_RESULT_JOIN',row['phase_id'],{'event':'SAAS_BROKER_RECEIPT_AUTO_JOINED','dual_request_id':drid,'dual_state':joined.get('state'),'saas_request_id':rid,'authority_effect':'NONE'},'INTERNAL')
+     c.commit()
+    return out
   raise ValueError('broker endpoint')
  finally:c.close()
 
@@ -285,6 +296,8 @@ EPOCH3_MATERIAL_CARRIER_ID=LPCL_REBIND_SOURCE
 EPOCH3_MATERIAL_CARRIER_SPEC_DIGEST='be0c4204b0aeffa5db61019128f70b092db5d62ed4c4e6936b41d430a1b67951'
 LPCL_REBIND_ADAPTER='LPCL_REBOUND_EPOCH3_64'
 LPCL_GENERIC_ADAPTER='LPCL_GENERIC_128L64M'
+LPCL_DOCKER_LOCAL_MODEL_ADAPTER='LPCL_DOCKER_LOCAL_MODEL'
+DOCKER_LOCAL_MODEL_CURRENTNESS=Path('/mnt/c/Users/d2j3/AppData/Local/LION/r23-autonomy/fleet-currentness.json')
 PROCESS_CONTRACT_TARGET_MISSION=GENERIC_ADAPTER_REPAIR_MISSION
 PROCESS_CAPABILITY_REGISTRY={
  'REPOSITORY_AND_RUNTIME_RECONCILIATION':(
@@ -440,6 +453,30 @@ def _current_master_identity():
     finally:shutil.rmtree(td,ignore_errors=True)
 
 
+
+def _docker_local_model_currentness(expected_material):
+    if expected_material!=32:raise ValueError("docker material target must be 32")
+    try:value=json.loads(DOCKER_LOCAL_MODEL_CURRENTNESS.read_text(encoding="utf-8"))
+    except Exception as exc:raise ValueError("docker fleet currentness unavailable:"+type(exc).__name__) from exc
+    if value.get("schema")!="lion.docker-local-model-fleet-currentness/v1" or value.get("physical_host")!="MOON":raise ValueError("docker fleet currentness identity")
+    dg=value.get("currentness_digest");body=dict(value);body.pop("currentness_digest",None)
+    if not _hex(str(dg or ""),64) or _payload_digest(body)!=dg:raise ValueError("docker fleet currentness digest")
+    from datetime import datetime as _dt,timezone as _tz
+    try:observed=_dt.fromisoformat(str(value.get("observed_at")).replace("Z","+00:00"))
+    except Exception as exc:raise ValueError("docker fleet currentness timestamp") from exc
+    age=(_dt.now(_tz.utc)-observed).total_seconds()
+    if age<0 or age>20:raise ValueError("docker fleet currentness stale")
+    workers=value.get("workers") or []
+    if value.get("state")!="READY" or int(value.get("materialized",0))!=32 or int(value.get("ready",0))!=32 or len(workers)!=32:raise ValueError("docker fleet not ready")
+    expected={f"MD{i:03d}" for i in range(1,33)}
+    ids={str(w.get("material_worker_id") or "") for w in workers};cids={str(w.get("container_id") or "") for w in workers}
+    if ids!=expected or len(cids)!=32 or "" in cids:raise ValueError("docker fleet material identity")
+    normalized=[]
+    for w in workers:
+        if not w.get("ready") or w.get("container_state")!="running" or w.get("model")!="gpt-oss-20b-MXFP4":raise ValueError("docker worker readiness")
+        normalized.append({"material_worker_id":w["material_worker_id"],"pod_name":w["container_name"],"pod_uid":w["container_id"],"container_id":w["container_id"],"ready":1,"phase":"DOCKER_LOCAL_MODEL","restarts":0,"pod_ip":None,"model":w["model"]})
+    return {"digest":dg,"observed_at":value["observed_at"],"workers":normalized,"physical_failure_domains":int(value.get("physical_failure_domains") or 1)}
+
 def bind_lpcl_execution(mid):
     c=connect()
     try:
@@ -448,8 +485,9 @@ def bind_lpcl_execution(mid):
       if not m or not ps:return None
       if m['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return None
       if not operator_control.autonomy_allowed(c,mid):return process_snapshot(mid)
-      if m['material_target']!=64 or m['logical_count'] not in {12,128}:raise ValueError('lpcl execution adapter cardinality')
       kv=_lpcl_pairs(ps['lpcl_text'])
+      docker_mode=str(kv.get('MATERIAL_RUNTIME') or '').strip().upper()=='DOCKER_LOCAL_MODEL'
+      if not docker_mode and (m['material_target']!=64 or m['logical_count'] not in {12,128}):raise ValueError('lpcl execution adapter cardinality')
       continuation_ok=(kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')=='TRUE' or kv.get('CONTINUE_EXISTING_EPOCH3_LINEAGE')=='TRUE')
       explicit_parent=str(kv.get('PARENT_MISSION_ID') or '').strip()
       fresh_ok=(not continuation_ok and not explicit_parent)
@@ -464,6 +502,31 @@ def bind_lpcl_execution(mid):
        if source_mid==mid:raise ValueError('lpcl parent self-reference')
       else:
        source_mid=None
+      if docker_mode:
+       if continuation_ok or source_mid is not None:raise ValueError('docker local model binding requires fresh mission')
+       observed=_docker_local_model_currentness(int(m['material_target']))
+       if m['adapter']==LPCL_DOCKER_LOCAL_MODEL_ADAPTER:
+        own=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=?',(mid,)).fetchall()
+        logical_total=c.execute('SELECT COUNT(*) FROM logical_drones WHERE mission_id=?',(mid,)).fetchone()[0]
+        topo_total=c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mid,)).fetchone()[0]
+        if len(own)==32 and len({r['pod_uid'] for r in own if r['pod_uid']})==32 and all(int(r['ready'])==1 for r in own) and logical_total==int(m['logical_count']) and topo_total==int(m['logical_count']):
+         c.execute('UPDATE missions SET runtime_state=?,materialized=32,ready=32,last_error=NULL,updated_at=? WHERE mission_id=?',('DOCKER_LOCAL_MODEL_FLEET_BOUND',now(),mid));c.commit();return process_snapshot(mid)
+       role_prefix=str(kv.get('LOGICAL_ROLE_PREFIX') or 'AUTONOMOUS_LOGICAL').strip().upper()[:48]
+       bound=global_sched.bind_dynamic_local_model_fleet(c,mid,int(m['logical_count']),observed['workers'],now,adapter=LPCL_DOCKER_LOCAL_MODEL_ADAPTER,runtime_state='DOCKER_LOCAL_MODEL_FLEET_BOUND',role_prefix=role_prefix,currentness_digest=observed['digest'])
+       generic={'handler_id':'GENERIC_LPCL_PHASE','effect_class':'NONE','gate_class':'COGNITIVE_PLAN','retry_policy':'IDEMPOTENT','authority_class':'NONE'}
+       handlers={prow['phase_id']:generic for prow in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=?',(mid,)).fetchall()}
+       global_sched.compile_phase_specs(c,mid,handlers)
+       nxt=c.execute("SELECT phase_id FROM mission_phases WHERE mission_id=? AND status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED') ORDER BY ordinal LIMIT 1",(mid,)).fetchone()
+       current=nxt['phase_id'] if nxt else None;t=now()
+       c.execute('UPDATE mission_process_specs SET current_phase=?,updated_at=? WHERE mission_id=?',(current,t,mid))
+       if current:c.execute("UPDATE mission_phases SET status=CASE WHEN status='PENDING' THEN 'RUNNING' ELSE status END,started_at=COALESCE(started_at,?),updated_at=? WHERE mission_id=? AND phase_id=?",(t,t,mid,current))
+       ensure_driver(c,mid,now,initial_state='BOOTSTRAP_PAUSED')
+       prior=driver_snapshot(c,mid)
+       if prior and prior['state']=='ACTIVE' and prior.get('lease_owner')!=DRIVER_PROCESS_ID:driver_wait_for_execution_binding(c,mid,now,blocking_gate='EXECUTION_REBIND_HANDOFF',waiting_reason='Dynamic Docker binding superseded an orphan active driver',next_action='EXECUTION_BINDING_READY')
+       driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       _process_message(c,mid,'CURRENTNESS','DOCKER_FLEET_CURRENTNESS','MISSION_CONTROL',current,{'event':'DOCKER_LOCAL_MODEL_FLEET_CURRENTNESS_BOUND','currentness_digest':observed['digest'],'observed_at':observed['observed_at'],'material_count':32,'logical_count':int(m['logical_count']),'physical_failure_domains':observed['physical_failure_domains'],'model':'gpt-oss-20b-MXFP4','authority_effect':'NONE'},'INTERNAL')
+       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','GLOBAL_SCHEDULER',current,{'event':'DYNAMIC_DOCKER_LOCAL_MODEL_BOUND','adapter':LPCL_DOCKER_LOCAL_MODEL_ADAPTER,'logical_count':int(m['logical_count']),'material_count':32,'assignments':bound['assignments'],'distribution':bound['distribution'],'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
+       c.commit();return process_snapshot(mid)
       # A bound mission owns its durable logical/material snapshot. Preserve a
       # complete snapshot across process restarts; otherwise reacquire the exact
       # physical carrier read-only and rebuild the binding.
@@ -589,7 +652,7 @@ def bind_lpcl_execution(mid):
 def reconcile_lpcl_execution_bindings():
     c=connect()
     try:
-      rows=[r['mission_id'] for r in c.execute("SELECT m.mission_id FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE p.authority_state='EXPLICIT_USER_ACTIVATION' AND m.state IN ('AUTHORIZED','RUNNING','WAITING','BLOCKED') AND m.adapter IN ('LPCL_MISSION','LPCL_REBOUND_EPOCH3_64','LPCL_GENERIC_128L64M') ORDER BY m.updated_at DESC").fetchall() if operator_control.autonomy_allowed(c,r['mission_id'])]
+      rows=[r['mission_id'] for r in c.execute("SELECT m.mission_id FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id WHERE p.authority_state='EXPLICIT_USER_ACTIVATION' AND m.state IN ('AUTHORIZED','RUNNING','WAITING','BLOCKED') AND m.adapter IN ('LPCL_MISSION','LPCL_REBOUND_EPOCH3_64','LPCL_GENERIC_128L64M','LPCL_DOCKER_LOCAL_MODEL') ORDER BY m.updated_at DESC").fetchall() if operator_control.autonomy_allowed(c,r['mission_id'])]
     finally:c.close()
     for mid in rows:
       try:bind_lpcl_execution(mid)
@@ -1119,6 +1182,7 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     if mid==MISSION:d['control_authority']='BOUNDED_MISSION_CONTROL'
     elif d.get('adapter')==LPCL_REBIND_ADAPTER:d['control_authority']='BOUNDED_LPCL_EXECUTION_ADAPTER'
     elif d.get('adapter')==LPCL_GENERIC_ADAPTER:d['control_authority']='BOUNDED_GENERIC_LPCL_EXECUTION_ADAPTER'
+    elif d.get('adapter')==LPCL_DOCKER_LOCAL_MODEL_ADAPTER:d['control_authority']='BOUNDED_DOCKER_LOCAL_MODEL_ADAPTER'
     elif mid==LPCL_REBIND_SOURCE:d['control_authority']='BOUNDED_EPOCH3_MATERIAL_ADAPTER'
     else:d['control_authority']='ACTIVATED_NO_EFFECT_ADAPTER' if d['state'] in {'AUTHORIZED','RUNNING'} else 'NONE'
     d=lifecycle_decorate(c,d,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
@@ -2154,8 +2218,21 @@ def local_assignment_receipt(x):
       payload_store=global_sched.store_assignment_payload(c,x['assignment_id'],out['receipt_id'],x['result'],now)
       operator_application=operator_control.note_assignment_application(c,x['assignment_id'],x['result'],now)
       out['operator_application']=operator_application
-      row=c.execute('SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
-      if row:_process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'payload_retained':True,'status':x['status'],'authority_effect':'NONE'},'IN')
+      row=c.execute('SELECT mission_id,phase_id,input_json FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
+      if row:
+       _process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'payload_retained':True,'status':x['status'],'authority_effect':'NONE'},'IN')
+       try:assignment_input=json.loads(row['input_json'] or '{}')
+       except Exception:assignment_input={}
+       drid=assignment_input.get('dual_request_id')
+       response_text=(x.get('result') or {}).get('response_text')
+       if isinstance(drid,str) and isinstance(response_text,str) and response_text.strip():
+        dual=c.execute('SELECT request_id,mission_id,phase_id FROM mission_dual_evaluations WHERE request_id=?',(drid,)).fetchone()
+        if dual:
+         prior=c.execute('SELECT response_digest FROM mission_dual_receipts WHERE request_id=? AND provider=?',(drid,DUAL_LOCAL_PROVIDER)).fetchone()
+         if prior is None:
+          dual_record_response(c,drid,DUAL_LOCAL_PROVIDER,response_text,now,transport=(x.get('result') or {}).get('transport') or 'LOCAL',authority_effect='NONE')
+         joined=dual_join_result(c,drid);out['dual_result']=joined
+         _process_message(c,dual['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','DUAL_RESULT_JOIN',dual['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT_AUTO_JOINED','dual_request_id':drid,'dual_state':joined.get('state'),'assignment_id':x['assignment_id'],'authority_effect':'NONE'},'INTERNAL')
       out['payload_store']=payload_store
       c.commit();return out
     finally:c.close()

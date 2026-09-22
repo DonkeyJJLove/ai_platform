@@ -6,6 +6,15 @@ const make=(id='1')=>({request_id:'saas-'+id,mission_id:'test-mission',panel_thr
 const turn=v=>({turn_id:v.turn_id,thread_id:v.panel_thread_id,mission_id:v.mission_id,request_hash:v.turn_request_hash,command_id:'MC-'+v.request_id,status:'PENDING'});
 function setup(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lion-r19-'));let store=new Store(path.join(dir,'queue.db'),PROJECT);store.resume();t.after(()=>{store.close();fs.rmSync(dir,{recursive:true,force:true})});return {dir,get store(){return store},reopen(){store.close();store=new Store(path.join(dir,'queue.db'),PROJECT);store.recover();return store}}}
 test('queue survives restart without resending an uncertain effect',t=>{const x=setup(t);const v=make();x.store.enqueue(v);x.store.claim();x.reopen();assert.equal(x.store.stopped(),true);assert.equal(x.store.row(v.request_id).state,'SEND_UNKNOWN');x.store.resume();assert.equal(x.store.claim(),null);assert.equal(x.store.row(v.request_id).sends,1)});
+test('authorized idle restart preserves automatic dispatch authorization',t=>{
+ const x=setup(t);assert.equal(x.store.authorized(),true);x.store.shutdown();x.reopen();
+ assert.equal(x.store.stopped(),false);assert.equal(x.store.authorized(),true);
+ const last=x.store.db.prepare("SELECT state,reason FROM events ORDER BY seq DESC LIMIT 1").get();
+ assert.equal(last.state,'RESUMED');assert.equal(last.reason,'PROCESS_START_AUTHORIZATION_RESTORED');
+});
+test('explicit STOP survives restart and clears automatic authorization',t=>{
+ const x=setup(t);x.store.stop();x.reopen();assert.equal(x.store.stopped(),true);assert.equal(x.store.authorized(),false);
+});
 test('duplicate is idempotent but any binding change is rejected',t=>{const {store}=setup(t);const v=make();store.enqueue(v);store.enqueue({...v});assert.equal(store.rows().length,1);assert.throws(()=>store.enqueue({...v,panel_thread_id:'other'}),/BINDING_CONFLICT/)});
 test('one mission and bounded turns; cross-thread mission reuse rejected',t=>{const {store}=setup(t);store.enqueue(make());assert.throws(()=>store.enqueue({...make('2'),mission_id:'other'}),/MISSION_LIMIT/);assert.throws(()=>store.enqueue({...make('2'),panel_thread_id:'other'}),/MISSION_BINDING_CONFLICT/);for(let i=2;i<=6;i++)store.enqueue(make(String(i)));assert.throws(()=>store.enqueue(make('7')),/TURN_LIMIT/)});
 test('STOP cancels queued jobs and freezes uncertain external work',t=>{const {store}=setup(t);store.enqueue(make());store.claim();store.enqueue(make('2'));store.stop();assert.equal(store.row('saas-1').state,'SEND_UNKNOWN');assert.equal(store.row('saas-2').state,'CANCELLED');assert.equal(store.claim(),null)});
@@ -35,4 +44,33 @@ test('cancellation while ingress is read prevents external send',async t=>{
  const {store}=setup(t);const v=make();store.enqueue(v);let allowed=true,sends=0;
  const e=new Engine({store,admit:async()=>allowed,browser:{ready:async()=>true,send:async()=>sends++},getTurn:async()=>{allowed=false;return turn(v)}});
  await e.tick();assert.equal(sends,0);assert.equal(store.row(v.request_id).sends,0);
+});
+
+test('terminal history does not exhaust active turn budget',t=>{
+ const {store}=setup(t);
+ for(let i=1;i<=6;i++){const v=make(String(i));store.enqueue(v);store.transition(v.request_id,['QUEUED'],'CANCELLED','TEST_TERMINAL')}
+ assert.doesNotThrow(()=>store.enqueue(make('7')));
+ assert.equal(store.row('saas-7').state,'QUEUED');
+});
+
+test('terminal history from prior conversation does not block active Chat rebind',t=>{
+ const {store}=setup(t);const old=make('1');store.enqueue(old);store.transition(old.request_id,['QUEUED'],'CANCELLED','MIGRATED');
+ const fresh={...make('2'),conversation_url:'https://chatgpt.com/g/g-p-test/c/newchat'};
+ assert.doesNotThrow(()=>store.enqueue(fresh));
+});
+
+test('unsent queued envelope may drop released broker claim without changing request identity',t=>{
+ const {store}=setup(t);const v={...make('claim-refresh'),claim_generation:1};store.enqueue(v);
+ const before=store.row(v.request_id);const out=store.refreshQueuedEnvelope(v.request_id,x=>{delete x.claim_generation;return x},'BROKER_CLAIM_RELEASED_BEFORE_SEND');
+ assert.equal(out.request_id,before.request_id);assert.equal(out.turn_id,before.turn_id);assert.equal(out.sends,0);assert.equal(out.state,'QUEUED');assert.equal(out.envelope.claim_generation,undefined);
+});
+
+test('late completed turn reconciles operator-required readback without resend',async t=>{
+ const x=setup(t);const v=make('late-readback');x.store.enqueue(v);x.store.claim(v.request_id);
+ x.store.transition(v.request_id,['DISPATCHING'],'OPERATOR_REQUIRED','EXTERNAL_OUTCOME_UNRESOLVED');
+ const sends=x.store.row(v.request_id).sends;
+ const e=new Engine({store:x.store,admit:async()=>true,browser:{ready:async()=>true,send:async()=>{throw Error('must not send')}},getTurn:async()=>({...turn(v),status:'COMPLETED',response:{text:'late answer'}})});
+ await e.tick();
+ assert.equal(x.store.row(v.request_id).state,'RESULT_OBSERVED');
+ assert.equal(x.store.row(v.request_id).sends,sends);
 });

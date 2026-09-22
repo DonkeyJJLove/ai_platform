@@ -40,7 +40,7 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
             "LIVE_8780_RUNTIME","LIVE_BROKER_PROJECTION","LIVE_MISSION_CONTROL_PROJECTION","LIVE_PANEL_PROJECTION","LOCAL_PANEL_CHECKOUT",
             "LPCL12_PROCESS_CONTRACT","MISSION_CONTROL_DB","MISSION_CONTROL_SOURCE","PANEL_SOURCE","POST_RECON_BASELINE","PRE_RECON_BASELINE",
             "PRIVILEGED_BROKER_PACKAGE","RECON_EVIDENCE_SET","SAAS_SESSION_BINDINGS","THREAD_DB","THREAD_DELIVERY_SOURCE",
-            "EXACT_GITHUB_MASTER","CURRENT_BROKER_DB",
+            "EXACT_GITHUB_MASTER","CURRENT_BROKER_DB","LIVE_DOCKER_FLEET","LOCAL_MODEL_IDENTITY",
         }
         evidence={
             "API_ROUTE_MAP","AUTOMATIC_CONSUMER_EVIDENCE","BINDING_DIFF","BINDING_STATE_COUNTS","BROKER_RECEIPT_ROWS","CAPABILITY_REGISTRY_READBACK",
@@ -53,11 +53,44 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
             "RECEIPT_STATE_COUNTS","REPOSITORY_DIFF","REQUEST_COUNT_DIFF","REQUEST_STATE_COUNTS","RESPONDED_ROWS","RUNTIME_PROCESS_IDENTITY",
             "SAAS_LINK_PATH","SCHEDULER_STATE_MODEL","SCHEMA_READBACK","SESSION_STATE","SQLITE_IDENTITY","STATE_DIFF","SUCCESSOR_CAPABILITY_MATRIX",
             "SUCCESSOR_COMPLETION_CONTRACT","SUCCESSOR_LPCL_PROPOSAL_DIGEST","THREAD_RUNTIME","TRANSPORT_CLASSIFICATION","UNCERTAINTY_REGISTER","WORKTREE_STATE",
-            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK",
+            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK","DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS",
         }
         self.assertEqual((currentness|evidence)-set(cr.TOKEN_DOMAIN),set())
         contract={"currentness_requirements":["UNKNOWN_X"],"evidence_requirements":[]}
         self.assertEqual(cr.build_observation_plan(contract)["unsupported_tokens"],["UNKNOWN_X"])
+
+    def test_dynamic_docker_recipe_proves_live_76l32m_binding_and_fails_on_uid_drift(self):
+        from datetime import datetime, timezone
+        from unittest.mock import patch
+        c=self.conn()
+        c.execute("CREATE TABLE missions(mission_id TEXT PRIMARY KEY,logical_count INTEGER,material_target INTEGER,materialized INTEGER,ready INTEGER,runtime_state TEXT,adapter TEXT)")
+        c.execute("CREATE TABLE material_workers(mission_id TEXT,pod_name TEXT,pod_uid TEXT,logical_id TEXT,phase TEXT,ready INTEGER,restarts INTEGER,pod_ip TEXT,observed_at TEXT)")
+        c.execute("CREATE TABLE logical_drones(mission_id TEXT,logical_id TEXT)")
+        mid="DYNAMIC";stamp=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
+        c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?)",(mid,76,32,32,32,"DOCKER_LOCAL_MODEL_FLEET_BOUND","LPCL_DOCKER_LOCAL_MODEL"))
+        workers=[]
+        for i in range(1,33):
+            material=f"MD{i:03d}";cid=f"{i:064x}"
+            workers.append({"material_worker_id":material,"container_name":f"lion-r23-md{i:03d}","container_id":cid,"image_id":"sha256:"+"f"*64,"container_state":"running","started_at":stamp,"heartbeat_observed_at":stamp,"heartbeat_age_seconds":0.0,"model":"gpt-oss-20b-MXFP4","mission_control":"http://host.docker.internal:8766","model_endpoint":"http://host.docker.internal:8772","ready":True})
+            c.execute("INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)",(mid,f"lion-r23-md{i:03d}",cid,material,"DOCKER_LOCAL_MODEL",1,0,None,stamp))
+        for i in range(1,77):
+            lid=f"LD{i:03d}";material=f"MD{((i-1)%32)+1:03d}"
+            c.execute("INSERT INTO logical_drones VALUES(?,?)",(mid,lid))
+            c.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,created_at,claimed_at,finished_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(f"topology-{i}",mid,"__TOPOLOGY__",lid,material,"a"*64,"{}","BOUND",1,stamp,stamp,stamp))
+        body={"schema":"lion.docker-local-model-fleet-currentness/v1","observed_at":stamp,"physical_host":"MOON","physical_failure_domains":1,"expected_material_workers":32,"materialized":32,"ready":32,"unique_worker_ids":32,"unique_container_ids":32,"model":"gpt-oss-20b-MXFP4","state":"READY","workers":workers}
+        value={**body,"currentness_digest":cr.digest(body)}
+        with tempfile.TemporaryDirectory() as td:
+            currentness=Path(td)/"fleet-currentness.json";currentness.write_text(json.dumps(value),encoding="utf-8")
+            with patch.object(cr,"DOCKER_FLEET_CURRENTNESS",currentness):
+                contract={"currentness_requirements":["LIVE_DOCKER_FLEET","LOCAL_MODEL_IDENTITY"],"evidence_requirements":["DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS"]}
+                plan=cr.build_observation_plan(contract)
+                self.assertEqual(plan["unsupported_tokens"],[]);self.assertEqual(plan["domains"],["docker_fleet"])
+                out=cr._docker_fleet_snapshot(c,mid)
+                self.assertTrue(out["valid"],out);self.assertTrue(out["binding_valid"]);self.assertEqual(out["topology_assignment_count"],76)
+                c.execute("UPDATE material_workers SET pod_uid=? WHERE mission_id=? AND logical_id='MD001'",("0"*64,mid));c.commit()
+                drift=cr._docker_fleet_snapshot(c,mid)
+                self.assertFalse(drift["valid"]);self.assertFalse(drift["binding_valid"])
+        c.close()
 
     def test_successor_lineage_resolves_exact_proposal_and_intelligence_digest(self):
         import hashlib

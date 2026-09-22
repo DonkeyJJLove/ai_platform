@@ -33,6 +33,7 @@ LANGUAGE_GAP_SCHEMA = "lion.lpcl-language-gap-matrix/v1"
 MATERIAL_EXECUTION_MODE = "CENTRAL_BOUNDED_READER_ATTRIBUTED_TO_MATERIAL_IDENTITIES"
 TRAJECTORY_ROLES = ("PRIMARY_RECONSTRUCTION", "ADVERSARIAL_FALSIFICATION", "ALTERNATIVE_EXPLANATION")
 LOCAL_MATERIAL = ("MD025", "MD026", "MD027")
+DOCKER_FLEET_CURRENTNESS = Path(os.environ.get("LION_DOCKER_LOCAL_MODEL_CURRENTNESS", "/mnt/c/Users/d2j3/AppData/Local/LION/r23-autonomy/fleet-currentness.json"))
 
 
 def _canon(value: Any) -> str:
@@ -143,6 +144,7 @@ _reg("baseline",
     "PRE_RECON_BASELINE","POST_RECON_BASELINE","STATE_DIFF","REQUEST_COUNT_DIFF","BINDING_DIFF","REPOSITORY_DIFF")
 _reg("process_language","CANONICAL_PROCESS_LANGUAGE_SOURCE","LPCL12_PROCESS_CONTRACT","BACKWARD_COMPATIBILITY")
 _reg("successor_lineage","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK")
+_reg("docker_fleet","LIVE_DOCKER_FLEET","LOCAL_MODEL_IDENTITY","DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS")
 
 SEMANTIC_VERIFY_EVIDENCE = frozenset({
     "PARSER_COMPARISON","TRANSPORT_CLASSIFICATION","FIELD_BY_FIELD_PROJECTION_COMPARISON",
@@ -267,6 +269,73 @@ def _dual_snapshot(conn: sqlite3.Connection) -> dict[str,Any]:
 def _post_astra_snapshot(conn: sqlite3.Connection) -> dict[str,Any]:
     mid="LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1";m=conn.execute("SELECT * FROM missions WHERE mission_id=?",(mid,)).fetchone();p=conn.execute("SELECT * FROM mission_process_specs WHERE mission_id=?",(mid,)).fetchone();d=conn.execute("SELECT * FROM mission_execution_drivers WHERE mission_id=?",(mid,)).fetchone();rc=int(conn.execute("SELECT COUNT(*) FROM mission_execution_receipts WHERE mission_id=?",(mid,)).fetchone()[0])
     return {"mission":dict(m) if m else None,"process":dict(p) if p else None,"driver":dict(d) if d else None,"receipt_count":rc}
+
+
+
+def _docker_fleet_snapshot(conn: sqlite3.Connection, mission_id: str) -> dict[str,Any]:
+    try:
+        value=json.loads(DOCKER_FLEET_CURRENTNESS.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {"valid":False,"reason":"CURRENTNESS_UNAVAILABLE:"+type(exc).__name__,"authority_effect":"NONE"}
+    if not isinstance(value,dict):
+        return {"valid":False,"reason":"CURRENTNESS_MALFORMED","authority_effect":"NONE"}
+    claimed=value.get("currentness_digest");body=dict(value);body.pop("currentness_digest",None)
+    digest_valid=isinstance(claimed,str) and bool(re.fullmatch(r"[0-9a-f]{64}",claimed)) and digest(body)==claimed
+    if value.get("schema")!="lion.docker-local-model-fleet-currentness/v1" or value.get("physical_host")!="MOON":
+        return {"valid":False,"reason":"CURRENTNESS_IDENTITY","currentness_digest":claimed,"digest_valid":digest_valid,"authority_effect":"NONE"}
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        stamp=_dt.now(_tz.utc);observed=_dt.fromisoformat(str(value.get("observed_at") or "").replace("Z","+00:00"));currentness_age=(stamp-observed).total_seconds()
+    except Exception:
+        return {"valid":False,"reason":"CURRENTNESS_TIMESTAMP","currentness_digest":claimed,"digest_valid":digest_valid,"authority_effect":"NONE"}
+    workers=value.get("workers") if isinstance(value.get("workers"),list) else []
+    expected_ids={f"MD{i:03d}" for i in range(1,33)}
+    worker_ids={str(w.get("material_worker_id") or "") for w in workers}
+    container_ids={str(w.get("container_id") or "") for w in workers}
+    heartbeat_ages=[]
+    for worker in workers:
+        try:
+            hb=_dt.fromisoformat(str(worker.get("heartbeat_observed_at") or "").replace("Z","+00:00"));heartbeat_ages.append((stamp-hb).total_seconds())
+        except Exception:
+            heartbeat_ages.append(float("inf"))
+    heartbeat_max=max(heartbeat_ages) if heartbeat_ages else float("inf")
+    worker_health=bool(len(workers)==32 and worker_ids==expected_ids and len(container_ids)==32 and "" not in container_ids and all(
+        bool(w.get("ready")) and w.get("container_state")=="running" and w.get("model")=="gpt-oss-20b-MXFP4" for w in workers
+    ))
+    mission=conn.execute("SELECT logical_count,material_target,materialized,ready,runtime_state,adapter FROM missions WHERE mission_id=?",(mission_id,)).fetchone() if _table(conn,"missions") else None
+    db_workers=conn.execute("SELECT logical_id,pod_uid,ready FROM material_workers WHERE mission_id=? ORDER BY logical_id",(mission_id,)).fetchall() if _table(conn,"material_workers") else []
+    logical_total=int(conn.execute("SELECT COUNT(*) FROM logical_drones WHERE mission_id=?",(mission_id,)).fetchone()[0]) if _table(conn,"logical_drones") else 0
+    topology_count=int(conn.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mission_id,)).fetchone()[0]) if _table(conn,"mission_execution_assignments") else 0
+    topology_material_count=int(conn.execute("SELECT COUNT(DISTINCT material_drone_id) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mission_id,)).fetchone()[0]) if _table(conn,"mission_execution_assignments") else 0
+    db_worker_ids={str(r["logical_id"] or "") for r in db_workers};db_container_ids={str(r["pod_uid"] or "") for r in db_workers}
+    mission_dict=dict(mission) if mission else {}
+    binding_valid=bool(
+        mission and int(mission["logical_count"])==logical_total==topology_count and int(mission["material_target"])==32
+        and int(mission["materialized"])==32 and int(mission["ready"])==32
+        and mission["runtime_state"]=="DOCKER_LOCAL_MODEL_FLEET_BOUND" and mission["adapter"]=="LPCL_DOCKER_LOCAL_MODEL"
+        and len(db_workers)==32 and db_worker_ids==expected_ids and db_container_ids==container_ids
+        and all(int(r["ready"])==1 for r in db_workers) and topology_material_count==32
+    )
+    valid=bool(
+        digest_valid and -5.0<=currentness_age<=20.0 and -5.0<=min(heartbeat_ages or [float("inf")])
+        and heartbeat_max<=20.0 and value.get("state")=="READY" and int(value.get("materialized") or 0)==32
+        and int(value.get("ready") or 0)==32 and int(value.get("unique_worker_ids") or 0)==32
+        and int(value.get("unique_container_ids") or 0)==32 and value.get("model")=="gpt-oss-20b-MXFP4"
+        and worker_health and binding_valid
+    )
+    return {
+        "valid":valid,
+        "reason":None if valid else "DOCKER_FLEET_OR_BINDING_NOT_CURRENT",
+        "schema":value.get("schema"),"physical_host":value.get("physical_host"),"state":value.get("state"),
+        "observed_at":value.get("observed_at"),"currentness_age_seconds":round(currentness_age,6),
+        "currentness_digest":claimed,"digest_valid":digest_valid,"materialized":value.get("materialized"),"ready":value.get("ready"),
+        "unique_worker_ids":len(worker_ids),"unique_container_ids":len(container_ids),"model":value.get("model"),
+        "heartbeat_max_age_seconds":round(heartbeat_max,6) if heartbeat_max!=float("inf") else None,
+        "worker_ids":sorted(worker_ids),"container_ids":sorted(container_ids),"worker_health":worker_health,
+        "binding_valid":binding_valid,"mission":mission_dict,"logical_total":logical_total,"topology_assignment_count":topology_count,
+        "topology_material_count":topology_material_count,"db_container_ids":sorted(db_container_ids),
+        "authority_effect":"NONE",
+    }
 
 
 def _successor_lineage_snapshot(conn: sqlite3.Connection, mission_id: str) -> dict[str,Any]:
@@ -397,6 +466,7 @@ def observation_generation_fingerprint(observations: dict[str,Any]) -> str | Non
         elif name in {"recon_history","artifacts"}: stable[name]=_stable_history_identity(value if name=="recon_history" else {"artifact_summaries":value},phase_id)
         elif name=="process_language": stable[name]={"source_hashes":value.get("source_hashes") or {},"canonical_lpcl_source_present":value.get("canonical_lpcl_source_present"),"lpcl12_compiler_present":value.get("lpcl12_compiler_present")}
         elif name=="successor_lineage": stable[name]={k:value.get(k) for k in ("valid","source_mission_id","source_mission_state","proposal_digest","mission_spec_digest","intelligence_bundle_digest","expected_intelligence_bundle_digest","proposal_content_digest","intelligence_content_digest")}
+        elif name=="docker_fleet": stable[name]={k:value.get(k) for k in ("valid","state","materialized","ready","unique_worker_ids","unique_container_ids","model","binding_valid","logical_total","topology_assignment_count","topology_material_count","container_ids","db_container_ids")}
         elif name=="baseline": stable[name]={"pre_digest":digest(value.get("pre")) if value.get("pre") else None,"post_core":{"mission_count":(value.get("post_core") or {}).get("mission_count"),"missions_digest":(value.get("post_core") or {}).get("missions_digest"),"broker":(value.get("post_core") or {}).get("broker")}}
         else: stable[name]=value
     return digest({"schema":"lion.recon-observation-generation-fingerprint/v1","phase_id":phase_id,"domains":stable})
@@ -459,6 +529,7 @@ def collect_observations(conn: sqlite3.Connection, mission_id: str, phase_id: st
     if "artifacts" in plan["domains"]:domains["artifacts"]=_recon_history(conn,mission_id)["artifact_summaries"]
     if "process_language" in plan["domains"]:domains["process_language"]=_process_language_snapshot()
     if "successor_lineage" in plan["domains"]:domains["successor_lineage"]=_successor_lineage_snapshot(conn,mission_id)
+    if "docker_fleet" in plan["domains"]:domains["docker_fleet"]=_docker_fleet_snapshot(conn,mission_id)
     if "baseline" in plan["domains"]:
         pre=sched.artifact(conn,mission_id,"CONTROL_PLANE_RECON_BASELINE_PRE");domains["baseline"]={"pre":pre["content"] if pre else None,"post_core":_baseline_core(conn,mission_id)}
     missing=[]
@@ -467,6 +538,9 @@ def collect_observations(conn: sqlite3.Connection, mission_id: str, phase_id: st
     lineage=domains.get("successor_lineage")
     if "successor_lineage" in plan["domains"] and (not isinstance(lineage,dict) or not lineage.get("valid")):
         missing.append("SUCCESSOR_LINEAGE_INVALID:"+str((lineage or {}).get("reason") or "UNKNOWN"))
+    docker_fleet=domains.get("docker_fleet")
+    if "docker_fleet" in plan["domains"] and (not isinstance(docker_fleet,dict) or not docker_fleet.get("valid")):
+        missing.append("DOCKER_FLEET_INVALID:"+str((docker_fleet or {}).get("reason") or "UNKNOWN"))
     if "panel" in plan["domains"] and panel is None:missing.append("WINDOWS_OBSERVATION_REQUIRED")
     return {"schema":SCHEMA_ID,"plan":plan,"mission_id":mission_id,"phase_id":phase_id,"domains":domains,"authority_effect":"NONE"},sorted(set(missing))
 
@@ -647,7 +721,7 @@ def _prior_successor_phases_pass(conn: sqlite3.Connection, mission_id: str, term
 
 
 def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], observations: dict[str,Any], *, artifacts: dict[str,Any], baseline: dict[str,Any] | None, local_analysis: dict[str,Any] | None, saas_advisory: dict[str,Any] | None) -> tuple[dict[str,bool],dict[str,Any]]:
-    d=observations.get("domains") or {};panel=d.get("panel") or {};mc=d.get("mission_control") or {};broker=d.get("broker") or {};thread=d.get("thread") or {};dual=d.get("dual") or {};post=d.get("post_astra") or {};hist=d.get("recon_history") or {};lang=d.get("process_language") or {};successor_lineage=d.get("successor_lineage") or {}
+    d=observations.get("domains") or {};panel=d.get("panel") or {};mc=d.get("mission_control") or {};broker=d.get("broker") or {};thread=d.get("thread") or {};dual=d.get("dual") or {};post=d.get("post_astra") or {};hist=d.get("recon_history") or {};lang=d.get("process_language") or {};successor_lineage=d.get("successor_lineage") or {};docker_fleet=d.get("docker_fleet") or {}
     features=_source_features(panel);classes=_classification(observations,baseline)
     runtime=panel.get("runtime") or {};repo=panel.get("repo") or {};model=panel.get("model") or {};sources=panel.get("sources") or {}
     pre=mc.get("preflight") or {};driver=mc.get("driver") or {};scheduler=mc.get("scheduler") or {};contracts=mc.get("contracts") or []
@@ -667,11 +741,12 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
     preflight_binding_evidence=_preflight_binding_terminal_evidence(conn,mission_id,mission=mc_mission,github_master=github_master,preflight=pre,source_currentness_bound=source_currentness_bound)
     panel_projection_evidence=_panel_projection_terminal_evidence(conn,mission_id,mission=mc_mission,github_master=github_master)
     broker_transports=list(broker.get("transports") or [])
-    broker_transport_truthful=bool(broker.get("schema_digest") and broker.get("autonomous_transport_claimed") is False and broker_transports and all(str(x)=="CHATGPT_SENTINELX_SESSION_MEDIATED" for x in broker_transports))
+    broker_transport_truthful=bool(broker.get("schema_digest") and broker.get("autonomous_transport_claimed") is False and any(str(x) in {"CHATGPT_SENTINELX_MCP","CHATGPT_SENTINELX_SESSION_MEDIATED"} for x in broker_transports))
     broker_receipt_lineage_ok,broker_receipt_counts=_broker_receipt_lineage_current(conn)
     legacy_lpcl_11_compatible=_lpcl11_compat_probe()
     lpcl_12_compatible=_lpcl12_compat_probe()
     prior_phases_pass,prior_phase_status=_prior_successor_phases_pass(conn,mission_id,phase_id)
+    dynamic_docker_binding_ready=bool(docker_fleet.get("valid") and docker_fleet.get("binding_valid") and docker_fleet.get("worker_health") and docker_fleet.get("state")=="READY" and docker_fleet.get("model")=="gpt-oss-20b-MXFP4" and int(docker_fleet.get("logical_total") or 0)==int(docker_fleet.get("topology_assignment_count") or -1) and int(docker_fleet.get("topology_material_count") or 0)==32)
     terminal_validation=all((
         source_currentness_bound,
         runtime_revision_evidence is not None,
@@ -686,6 +761,7 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
         bool(runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
     ))
     values: dict[str,bool] = {
+        "DYNAMIC_DOCKER_BINDING_READY":dynamic_docker_binding_ready,
         "PANEL_RUNTIME_IDENTITY_CAPTURED":bool(runtime.get("pid") and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
         "MISSION_CONTROL_RUNTIME_IDENTITY_CAPTURED":bool((mc.get("runtime_identity") or {}).get("pid") and (mc.get("runtime_identity") or {}).get("source_hashes")),
         "GITHUB_MASTER_IDENTITY_CAPTURED":bool((repo.get("github_master") or {}).get("head") and (repo.get("github_master") or {}).get("tree")),

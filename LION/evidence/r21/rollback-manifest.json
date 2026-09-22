@@ -1,0 +1,14 @@
+{
+  "schema": "lion.r21.rollback-manifest/v1",
+  "observed_at": "2026-09-22T13:32:38.055840Z",
+  "strategy": "restore pre-R21 browser and relay source snapshots, then restart only those components",
+  "live_backups": [
+    "browser.cjs.pre-chat-only",
+    "main.cjs.pre-chat-only",
+    "store.cjs.pre-persistent-auto",
+    "thread-consumer.cjs.pre-persistent-auto",
+    "secure-mcp-relay.js.pre-claim-ttl"
+  ],
+  "data_policy": "do not delete broker.db, panel thread DB, receipts or lineage",
+  "fail_closed_after_rollback": true
+}
