@@ -1,0 +1,85 @@
+{
+  "schema": "lion.r21.currentness/v1",
+  "task_id": "LION-R21-PERSISTENT-CHAT-ONLY-SENTINELX",
+  "observed_at": "2026-09-22T13:32:38.055840Z",
+  "project": {
+    "name": "LION_EVOLUSION",
+    "conversation_url": "https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/c/6ab11da9-cf7c-83eb-ac3c-efa090d16f3b",
+    "route": "PROJECT_CONVERSATION",
+    "experience": "CHAT",
+    "work_selected": false
+  },
+  "browser": {
+    "pid": 38224,
+    "state": "COMPOSER_OBSERVED_MCP_UNVERIFIED",
+    "composer": true,
+    "empty": true,
+    "busy": false,
+    "stopped": false,
+    "relay_state": "WAITING_NEW_PANEL_TURN",
+    "cursor": 188,
+    "auto_dispatch_authorized": true
+  },
+  "transport": {
+    "id": "CHATGPT_SENTINELX_MCP",
+    "channel_state": "SENTINELX_MCP_READY",
+    "automatic_hop": "AVAILABLE",
+    "sentinelx_ready": true,
+    "hub": "https://mcp.sentinelx.app",
+    "openai_secure_mcp_tunnel_required": false
+  },
+  "runtime": {
+    "local_model": {
+      "id": "gpt-oss-20b-MXFP4",
+      "port": 8772,
+      "pid": 23532
+    },
+    "panel": {
+      "port": 8780,
+      "pid": 54760
+    },
+    "node_relay": {
+      "pid": 2692,
+      "status": "READY",
+      "active_request_ids": []
+    },
+    "browser": {
+      "port": 8793,
+      "pid": 38224
+    },
+    "mission_control": {
+      "port": 8766,
+      "pid": 2170114
+    }
+  },
+  "live_receipts": [
+    {
+      "question": "Co wiesz o LION?",
+      "request_id": "saas-25ece29cb91b4879b27b69e776751cc9",
+      "claim_generation_after_reacquire": 2,
+      "receipt_digest": "37cb21e9940c483d92e035ffd0cc321fcac7e149fc67dc24c8553d8723ad98a9",
+      "same_thread_delivery": true
+    },
+    {
+      "question": "Ok, a jak wygląda projekt?",
+      "request_id": "saas-eae22aef149f4c63b4010e73f1d944ed",
+      "receipt_digest": "96420e44949f21df831368ff7e53b842219d556cb7dabefbbe140586b181d131",
+      "same_thread_delivery": true
+    },
+    {
+      "question": "TEST?",
+      "request_id": "saas-229802ee464c4b6187d1f0824ec5ed30",
+      "claim_generation_after_reacquire": 2,
+      "receipt_digest": "d863575308016cce1d7a560a6823ded3a9a1f45100417e332d46cc2ab67d906e",
+      "same_thread_delivery": true
+    }
+  ],
+  "pending_requests": 0,
+  "source_sha256": {
+    "browser": "ba3efc54612c0299b1c4299cebe8fa1a3f7a53b3e1298eaa9f4e88ece52c328e",
+    "main": "9ff6c2180b429df6ccb2f64f0e41cd9c4936898b59c3514f4f09c8828502132c",
+    "store": "c23a172f88aaa875302d88a31d62f66b360d416538e026c6327ee188dae3657a",
+    "consumer": "bcb11c9803cc496c2d4d7157b048be32f59bd5c63aa35a279ac3853ab22134dd",
+    "relay": "94337df7f36c908ee5df02ddbe2613d9724b68315958d1fbeed19813b7a13c96"
+  }
+}

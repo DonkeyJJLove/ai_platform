@@ -13,6 +13,12 @@ const FINAL = new Set(['RECONCILED','SUPERSEDED','FAILED','CANCELLED']);
 
 function now() { return new Date().toISOString(); }
 function sha(text) { return crypto.createHash('sha256').update(String(text), 'utf8').digest('hex'); }
+function claimUsable(claim, brokerState, nowMs = Date.now()) {
+  if (!claim || !brokerState || brokerState.status !== 'CLAIMED') return false;
+  if (Number(brokerState.claim_generation) !== Number(claim.claim_generation)) return false;
+  const expiry = Date.parse(claim.claim_expires_at || brokerState.claim_expires_at || '');
+  return !Number.isFinite(expiry) || expiry > nowMs + 1000;
+}
 function parseArgs(argv) {
   const out = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -192,8 +198,12 @@ class BrowserlessSecureMcpRelay {
     if (typeof answer !== 'string' || !answer.trim()) { rec.state = 'FAILED'; rec.error = 'completed turn missing response text'; this.save(rec); return; }
     rec.response_digest = sha(answer);
     let claim = this.claims.get(rid);
+    if (claim && !claimUsable(claim, brokerState)) {
+      this.claims.delete(rid); claim = null;
+    }
     if (!claim) {
       if (brokerState.status === 'CLAIMED') { this.save(rec); return; }
+      if (!WAITING.has(brokerState.status)) { this.save(rec); return; }
       try {
         claim = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}/claim`, { method: 'POST', body: {}, timeoutMs: 8000 });
         this.claims.set(rid, claim); rec.claim_generation = claim.claim_generation; rec.claim_expires_at = claim.claim_expires_at || null;
@@ -261,4 +271,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch((error) => { console.error(error); process.exitCode = 1; });
-module.exports = { BrowserlessSecureMcpRelay, makeTurn, parseArgs };
+module.exports = { BrowserlessSecureMcpRelay, makeTurn, parseArgs, claimUsable };

@@ -20,3 +20,9 @@ test('thread consumer and relay use SentinelX transport identity',()=>{
  assert.match(relay,/CHATGPT_SENTINELX_MCP/);
  assert.match(relay,/OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP/);
 });
+
+test('bound thread startup reopens the verified project Chat conversation',()=>{
+ const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
+ assert.match(main,/startupConversation=relay instanceof ThreadConsumer\?relay\.scope\.conversation_url:store\.restoreConversation\(\)/);
+ assert.match(main,/saas\.webContents\.loadURL\(startupConversation\)/);
+});

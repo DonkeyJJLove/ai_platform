@@ -6,6 +6,15 @@ const make=(id='1')=>({request_id:'saas-'+id,mission_id:'test-mission',panel_thr
 const turn=v=>({turn_id:v.turn_id,thread_id:v.panel_thread_id,mission_id:v.mission_id,request_hash:v.turn_request_hash,command_id:'MC-'+v.request_id,status:'PENDING'});
 function setup(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lion-r19-'));let store=new Store(path.join(dir,'queue.db'),PROJECT);store.resume();t.after(()=>{store.close();fs.rmSync(dir,{recursive:true,force:true})});return {dir,get store(){return store},reopen(){store.close();store=new Store(path.join(dir,'queue.db'),PROJECT);store.recover();return store}}}
 test('queue survives restart without resending an uncertain effect',t=>{const x=setup(t);const v=make();x.store.enqueue(v);x.store.claim();x.reopen();assert.equal(x.store.stopped(),true);assert.equal(x.store.row(v.request_id).state,'SEND_UNKNOWN');x.store.resume();assert.equal(x.store.claim(),null);assert.equal(x.store.row(v.request_id).sends,1)});
+test('authorized idle restart preserves automatic dispatch authorization',t=>{
+ const x=setup(t);assert.equal(x.store.authorized(),true);x.store.shutdown();x.reopen();
+ assert.equal(x.store.stopped(),false);assert.equal(x.store.authorized(),true);
+ const last=x.store.db.prepare("SELECT state,reason FROM events ORDER BY seq DESC LIMIT 1").get();
+ assert.equal(last.state,'RESUMED');assert.equal(last.reason,'PROCESS_START_AUTHORIZATION_RESTORED');
+});
+test('explicit STOP survives restart and clears automatic authorization',t=>{
+ const x=setup(t);x.store.stop();x.reopen();assert.equal(x.store.stopped(),true);assert.equal(x.store.authorized(),false);
+});
 test('duplicate is idempotent but any binding change is rejected',t=>{const {store}=setup(t);const v=make();store.enqueue(v);store.enqueue({...v});assert.equal(store.rows().length,1);assert.throws(()=>store.enqueue({...v,panel_thread_id:'other'}),/BINDING_CONFLICT/)});
 test('one mission and bounded turns; cross-thread mission reuse rejected',t=>{const {store}=setup(t);store.enqueue(make());assert.throws(()=>store.enqueue({...make('2'),mission_id:'other'}),/MISSION_LIMIT/);assert.throws(()=>store.enqueue({...make('2'),panel_thread_id:'other'}),/MISSION_BINDING_CONFLICT/);for(let i=2;i<=6;i++)store.enqueue(make(String(i)));assert.throws(()=>store.enqueue(make('7')),/TURN_LIMIT/)});
 test('STOP cancels queued jobs and freezes uncertain external work',t=>{const {store}=setup(t);store.enqueue(make());store.claim();store.enqueue(make('2'));store.stop();assert.equal(store.row('saas-1').state,'SEND_UNKNOWN');assert.equal(store.row('saas-2').state,'CANCELLED');assert.equal(store.claim(),null)});
