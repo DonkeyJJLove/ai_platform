@@ -20,3 +20,16 @@ test('thread consumer and relay use SentinelX transport identity',()=>{
  assert.match(relay,/CHATGPT_SENTINELX_MCP/);
  assert.match(relay,/OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP/);
 });
+
+test('bound thread startup reopens the verified project Chat conversation',()=>{
+ const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
+ assert.match(main,/startupConversation=relay instanceof ThreadConsumer\?relay\.scope\.conversation_url:store\.restoreConversation\(\)/);
+ assert.match(main,/saas\.webContents\.loadURL\(startupConversation\)/);
+});
+
+test('mission-scoped SaaS admission uses current broker and no R19 prefix gate',()=>{
+ const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
+ assert.doesNotMatch(main,/startsWith\('LION-R19-'\)/);
+ assert.match(main,/\/api\/v3\/saas-broker\/requests\//);
+ assert.match(main,/execution_preflight\?\.mission_readiness==='READY_BOUND'/);
+});

@@ -16,7 +16,7 @@ if(process.env.LION_BROWSER_DATA)app.setPath('userData',path.resolve(process.env
 app.enableSandbox();
 if(!app.requestSingleInstanceLock()){app.quit()}else{
  let win,views=[],store,engine,server,timer;let closing=false;
- const shutdown=()=>{if(closing)return;closing=true;clearInterval(timer);try{store?.stop()}catch{};server?.close();for(const view of views)if(!view.webContents.isDestroyed())view.webContents.close();try{store?.close()}catch{}};
+ const shutdown=()=>{if(closing)return;closing=true;clearInterval(timer);try{store?.shutdown()}catch{};server?.close();for(const view of views)if(!view.webContents.isDestroyed())view.webContents.close();try{store?.close()}catch{}};
  app.on('before-quit',shutdown);
  app.on('second-instance',()=>{if(win&&!win.isDestroyed()){win.show();win.focus()}});
  app.whenReady().then(async()=>{
@@ -61,21 +61,28 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   saas.webContents.on('did-navigate',remember);saas.webContents.on('did-navigate-in-page',remember);
   const admit=async v=>{
    if(v.mission_id===null)return relay instanceof ThreadConsumer&&relay.admits(v);
-   if(!v.mission_id.startsWith('LION-R19-'))return false;
-   if(conversationInfo(v.conversation_url,PROJECT).project_membership==='OPERATOR_CONFIRMATION_REQUIRED'&&!(relay?.scope.conversation_url===v.conversation_url&&relay.scope.thread_id===v.panel_thread_id&&relay.scope.mission_id===v.mission_id))return false;
-   const r=await fetch(MC+'/api/v3/missions/'+encodeURIComponent(v.mission_id)+'/process',{signal:AbortSignal.timeout(5000),redirect:'error'});
+   if(typeof v.mission_id!=='string'||!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$/.test(v.mission_id))return false;
+   if(conversationInfo(v.conversation_url,PROJECT).project_membership==='OPERATOR_CONFIRMATION_REQUIRED'&&!(relay?.scope.conversation_url===v.conversation_url&&relay.scope.thread_id===v.panel_thread_id))return false;
+   const r=await fetch(MC+'/api/v3/missions/'+encodeURIComponent(v.mission_id)+'/process',{signal:AbortSignal.timeout(15000),redirect:'error'});
    if(!r.ok)return false;const m=await r.json();
    if(!(m.mission_id===v.mission_id&&['RUNNING','AUTHORIZED'].includes(m.state)&&m.execution_preflight?.mission_readiness==='READY_BOUND'))return false;
-   const request=await fetch(MC+'/api/v3/saas/requests/'+encodeURIComponent(v.request_id),{signal:AbortSignal.timeout(5000),redirect:'error'});
-   return request.ok&&brokerAllows(v,await request.json());
+   const request=await fetch(MC+'/api/v3/saas-broker/requests/'+encodeURIComponent(v.request_id),{signal:AbortSignal.timeout(5000),redirect:'error'});
+   if(!request.ok)return false;
+   const row=await request.json();
+   if(row.status==='WAITING_SUPERVISOR'&&v.claim_generation!==undefined){
+    const refreshed=store.refreshQueuedEnvelope(v.request_id,(current)=>{delete current.claim_generation;return current},'BROKER_CLAIM_RELEASED_BEFORE_SEND');
+    if(refreshed)Object.keys(v).forEach(k=>delete v[k]),Object.assign(v,refreshed.envelope);
+   }
+   return brokerAllows(v,row);
   };
   engine=new Engine({store,browser,getTurn,admit});
   const selectedScopeFile=process.env.LION_R19_RELAY_SCOPE_FILE||(fs.existsSync(scopeFile)?scopeFile:null);
   const relayScope=selectedScopeFile?JSON.parse(fs.readFileSync(selectedScopeFile,'utf8')):null;
   if(relayScope&&(!ingressToken||(relayScope.mode!=='THREAD_CONSUMER'&&!mediatorKey)||relayScope.task_sha256!==require('./contract.cjs').TASK))throw Error('RELAY_CONFIGURATION_REQUIRED');
   let relay=relayScope?(relayScope.mode==='THREAD_CONSUMER'?new ThreadConsumer({store,mc,ingress,scope:relayScope}):new Relay({store,browser,mc,ingress,scope:relayScope})):null;
+  const startupConversation=relay instanceof ThreadConsumer?relay.scope.conversation_url:store.restoreConversation();
   const source={host:require('node:os').hostname(),entrypoint:__filename,sha256:require('./contract.cjs').hash(fs.readFileSync(__filename))};
-  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
+  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,engine:{running:engine.running,lastTickAt:engine.lastTickAt,lastDecision:engine.lastDecision},relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
   const diagnose=async()=>{
    const probe=async fn=>{try{return await fn()}catch{return {state:'UNREACHABLE_OR_UNAUTHORIZED'}}};
    const [local,broker,health]=await Promise.all([status(),probe(()=>mc('/api/v3/saas/status')),probe(()=>ingress('/health'))]);
@@ -103,7 +110,8 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
      if(!Number.isSafeInteger(check.seq)||check.seq<0)throw Error('INGRESS_CURSOR_REQUIRED');
      ingressTokenFile=picked.filePaths[0];ingressToken=pickedToken;
     }
-    const scope={mode:'THREAD_CONSUMER',mission_id:null,thread_id:choices[selection.response].thread_id,conversation_url:conversationUrl,task_sha256:require('./contract.cjs').TASK};
+    const experience=(await browser.inspect()).experience;if(experience!=='CHAT')throw Error('WORK_MODE_FORBIDDEN');
+    const scope={mode:'THREAD_CONSUMER',experience:'CHAT',mission_id:null,thread_id:choices[selection.response].thread_id,conversation_url:conversationUrl,task_sha256:require('./contract.cjs').TASK};
     if(needsProjectConfirmation)scope.project_confirmation={method:'NATIVE_OPERATOR',project_url:PROJECT,conversation_url:conversationUrl};
     const candidate=new ThreadConsumer({store,mc,ingress,scope});await candidate.prime();
     if(!await browser.ready({conversation_url:conversationUrl}))throw Error('SAAS_COMPOSER_REQUIRED');
@@ -113,7 +121,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
     await dialog.showMessageBox(win,{message:'Połączono dla nowych pytań.',detail:'Wyślij jedno nowe pytanie z panelu po lewej. Odpowiedź jest oczekiwana przez rzeczywistą turę MCP; model i pełne dostarczenie nie są jeszcze potwierdzone.'});
    }catch(e){
     if(!closing)store.stop();
-    const known={INVALID_CONVERSATION:'Widok nie ma prawidłowego adresu rozmowy ChatGPT.',PROJECT_LANDING_PAGE:'Otwarta jest strona projektu. Wybierz konkretną rozmowę.',PROJECT_ID_MISMATCH:'Identyfikator projektu w adresie rozmowy różni się od skonfigurowanego projektu.',CONVERSATION_ROUTE_UNSUPPORTED:'Nie rozpoznano formatu adresu rozmowy. Adres jest podany poniżej.',CONVERSATION_PARAMETERS_UNSUPPORTED:'Adres zawiera parametry lub fragment. Ich znaczenie wymaga sprawdzenia przed powiązaniem.',PROJECT_CONFIRMATION_REQUIRED:'Adres /c/ nie określa projektu. Zaznacz potwierdzenie projektu przy wyborze wątku.',PANEL_THREAD_REQUIRED:'Brak wątku panelu w kolejce. Wyślij jedno pytanie z wybranym CHATGPT, potem powiąż wątek.',SAAS_COMPOSER_REQUIRED:'Pole wiadomości SaaS nie jest gotowe lub zawiera tekst.'};
+    const known={INVALID_CONVERSATION:'Widok nie ma prawidłowego adresu rozmowy ChatGPT.',PROJECT_LANDING_PAGE:'Otwarta jest strona projektu. Wybierz konkretną rozmowę.',PROJECT_ID_MISMATCH:'Identyfikator projektu w adresie rozmowy różni się od skonfigurowanego projektu.',CONVERSATION_ROUTE_UNSUPPORTED:'Nie rozpoznano formatu adresu rozmowy. Adres jest podany poniżej.',CONVERSATION_PARAMETERS_UNSUPPORTED:'Adres zawiera parametry lub fragment. Ich znaczenie wymaga sprawdzenia przed powiązaniem.',PROJECT_CONFIRMATION_REQUIRED:'Adres /c/ nie określa projektu. Zaznacz potwierdzenie projektu przy wyborze wątku.',PANEL_THREAD_REQUIRED:'Brak wątku panelu w kolejce. Wyślij jedno pytanie z wybranym CHATGPT, potem powiąż wątek.',SAAS_COMPOSER_REQUIRED:'Pole wiadomości SaaS nie jest gotowe lub zawiera tekst.',WORK_MODE_FORBIDDEN:'LION wymaga zwyklego Chat w projekcie LION_EVOLUSION. Tryb Work jest zabroniony dla tego kanalu.'};
     const report=browser.bindingReport(),reason=/^[A-Z_0-9]+$/.test(e.message)?e.message:'BINDING_FAILED';
     try{fs.writeFileSync(path.join(dir,'binding-error-r19.json'),JSON.stringify({observed_at:new Date().toISOString(),reason,conversation:report},null,2)+'\n',{mode:0o600})}catch{}
     dialog.showErrorBox('Połączenie LION',(known[e.message]||'Nie udało się zweryfikować usług lokalnych lub pliku dostępu.')+'\n\nKod: '+reason+'\nAdres (bez parametrów): '+report.address+'\nProjekt: '+PROJECT+'\nKolejka pozostaje zatrzymana.');
@@ -136,7 +144,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   ]}]));
   let ticking=false;
   timer=setInterval(async()=>{if(ticking||closing)return;ticking=true;try{await relay?.tick();if(!closing)await engine.tick()}finally{ticking=false}},2000);
-  await Promise.allSettled([panel.webContents.loadURL(PANEL),saas.webContents.loadURL(store.restoreConversation())]);
+  await Promise.allSettled([panel.webContents.loadURL(PANEL),saas.webContents.loadURL(startupConversation)]);
   if(!closing)try{await diagnose()}catch{win.setTitle('LION Broker — raport diagnostyczny niedostępny')}
  }).catch(()=>{dialog.showErrorBox('LION Broker','Uruchomienie nie powiodło się. Sprawdź konfigurację, dostęp do plików i wymagany runtime.');app.quit()});
 }

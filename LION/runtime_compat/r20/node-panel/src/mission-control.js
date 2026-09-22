@@ -51,11 +51,69 @@ class MissionControlAdapter {
 
   saasStatus() { return this.get('/api/v3/saas-broker/status'); }
   saasRequestStatus(requestId) { return this.get(`/api/v3/saas-broker/requests/${encodeURIComponent(requestId)}`); }
-  saasRequest({ threadId, question }) {
-    return this.post('/api/v3/saas-broker/requests', {
+  saasRequest({ threadId, question, missionId = null }) {
+    const body = {
       scope_type: 'THREAD', thread_id: threadId, question,
       authority_effect: 'NONE', transport: SENTINELX_TRANSPORT,
-    });
+    };
+    if (missionId) body.mission_id = missionId;
+    return this.post('/api/v3/saas-broker/requests', body);
+  }
+
+  async autoMission({ threadId, question, logicalCount = 76, materialTarget = 32 }) {
+    const clean = String(question || '').trim().replace(/\s+/g, ' ');
+    if (!clean || clean.length > 4000) throw new Error('auto mission objective');
+    const key = crypto.createHash('sha256').update(String(threadId) + '\0' + clean, 'utf8').digest('hex').slice(0, 24).toUpperCase();
+    const missionId = 'LION-AUTO-' + key;
+    const title = ('AUTO · ' + clean).slice(0, 180);
+    const lines = [
+      'PROJECT=LION_EVOLUSION',
+      'MODE=AUTONOMOUS_EXECUTE',
+      'CONTROL_LANGUAGE=LPCL/1.2',
+      'MISSION_ID=' + missionId,
+      'MISSION_TITLE=' + title,
+      'MISSION_OBJECTIVE=' + clean,
+      'MISSION_DESCRIPTION=Autonomous mission created from the LION panel composer. Phase 1 performs bounded cognitive and currentness analysis before any effectful successor phase.',
+      'LOGICAL_DRONE_COUNT=' + logicalCount,
+      'MATERIAL_DRONE_COUNT=' + materialTarget,
+      'MATERIAL_RUNTIME=DOCKER_LOCAL_MODEL',
+      'LOGICAL_ROLE_PREFIX=AUTONOMOUS',
+      'PROTOCOLS=LPCL,AUTHORITY,CURRENTNESS,ASSIGNMENT,HEARTBEAT,EVIDENCE,VALIDATION,RECEIPT,RECOVERY,CONTROL,TRANSPORT,BROKER,THREAD',
+      'PHASE_01=AUTO_GOAL_ANALYSIS|Autonomous goal analysis',
+      'PHASE_01_EXECUTION_CLASS=OBSERVE',
+      'PHASE_01_CAPABILITY_CLASS=CONTROL_PLANE_RECONNAISSANCE',
+      'PHASE_01_EFFECT_CEILING=NONE',
+      'PHASE_01_BINDING_MODE=DYNAMIC',
+      'PHASE_01_ON_MISSING_CAPABILITY=WAIT',
+      'PHASE_01_AUTO_RESUME=TRUE',
+      'PHASE_01_VERIFY_BEFORE_MUTATE=TRUE',
+      'PHASE_01_CURRENTNESS=LIVE_8766_PACKAGE,LIVE_8780_RUNTIME,CURRENT_BROKER_DB',
+      'PHASE_01_EVIDENCE=TRANSPORT_CLASSIFICATION,FIELD_BY_FIELD_PROJECTION_COMPARISON',
+      'PHASE_01_COMPLETION_01=BROKER_TRANSPORT_TRUTHFUL=PASS',
+    ];
+    const lpcl = lines.join('\n') + '\n';
+    const validated = await this.validateLpcl(lpcl);
+    const registered = await this.registerLpcl(lpcl);
+    const activated = await this.activateLpcl(missionId, validated.lpcl_digest);
+    let saas = null;
+    if (!registered.idempotent) {
+      saas = await this.saasRequest({
+        threadId,
+        missionId,
+        question: 'LION autonomous mission ' + missionId + '. User objective: ' + clean + '. Analyze the objective as the SaaS cognitive supervisor. Do not claim material effects; return a bounded advisory for the mission ledger.',
+      });
+    }
+    return {
+      route: 'AUTO_MISSION',
+      mission_id: missionId,
+      lpcl_digest: validated.lpcl_digest,
+      logical_count: logicalCount,
+      material_target: materialTarget,
+      registered,
+      activated,
+      saas,
+      authority_effect: 'EXPLICIT_USER_ACTIVATION',
+    };
   }
   saasCancel(requestId) { return this.post('/api/v3/saas/cancel', { request_id: requestId }); }
   dualResult(requestId) { return this.get(`/api/v3/dual/${encodeURIComponent(requestId)}`); }

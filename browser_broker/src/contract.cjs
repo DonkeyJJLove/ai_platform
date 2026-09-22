@@ -18,7 +18,7 @@ function envelope(v,projectUrl,now=Date.now()){
  if(v.claim_generation!==undefined){if(!Number.isSafeInteger(v.claim_generation)||v.claim_generation<1)throw Error('INVALID_CLAIM');out.claim_generation=v.claim_generation}
  return {...out,turn_request_hash:v.turn_request_hash,conversation_url:conversation(v.conversation_url,projectUrl),task_sha256:TASK,deadline_at:v.deadline_at};
 }
-function matches(v,turn){return !!turn&&turn.turn_id===v.turn_id&&turn.thread_id===v.panel_thread_id&&turn.mission_id===v.mission_id&&turn.command_id==='MC-'+v.request_id&&turn.request_hash===v.turn_request_hash&&(v.parent_event_id===undefined||turn.parent_event_id===v.parent_event_id);}
+function matches(v,turn){const legacyMission=!!turn&&(turn.mission_id===undefined||turn.mission_id===null&&v.mission_id!==null)&&turn.command_id==='MC-'+v.request_id&&turn.parent_event_id===v.parent_event_id;return !!turn&&turn.turn_id===v.turn_id&&turn.thread_id===v.panel_thread_id&&(turn.mission_id===v.mission_id||legacyMission)&&turn.command_id==='MC-'+v.request_id&&turn.request_hash===v.turn_request_hash&&(v.parent_event_id===undefined||turn.parent_event_id===v.parent_event_id);}
 function brokerAllows(v,request,now=Date.now()){
  const deadline=Date.parse(request?.deadline_at||request?.expires_at||'');
  const state=v.claim_generation===undefined?['CREATED','QUEUED','WAITING_SUPERVISOR','PENDING'].includes(request?.status):request?.status==='CLAIMED'&&request.claim_generation===v.claim_generation&&Date.parse(request.claim_expires_at)>now;

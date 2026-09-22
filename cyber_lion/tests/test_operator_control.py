@@ -235,5 +235,26 @@ class OperatorControlTests(unittest.TestCase):
         self.assertEqual(moved['result']['state'],'READY')
         self.assertEqual(self.c.execute('SELECT material_drone_id FROM mission_execution_assignments WHERE assignment_id=?',(moved['result']['assignment_id'],)).fetchone()[0],'MD026')
 
+    def test_general_sentinelx_channel_is_durable_idempotent_and_preserves_correlated_schema(self):
+        operator_control.ensure_operator_proxy(self.c,now,mission_scope='*',actions={'MESSAGE','REQUEST_STATUS'})
+        first=operator_control.post_general_message(self.c,operator_control.PRIMARY_OPERATOR,'general-1','hello sentinelx',now)
+        again=operator_control.post_general_message(self.c,operator_control.PRIMARY_OPERATOR,'general-1','hello sentinelx',now)
+        self.assertFalse(first['idempotent']);self.assertTrue(again['idempotent'])
+        self.assertEqual(first['receipt_digest'],again['receipt_digest'])
+        proxy=operator_control.general_channel_snapshot(self.c,operator_control.SENTINELX_PROXY_PRINCIPAL,now)
+        self.assertEqual(proxy['channel_id'],operator_control.GENERAL_CHANNEL_ID);self.assertEqual(proxy['delivered_now'],1)
+        self.assertEqual(proxy['messages'][0]['payload']['text'],'hello sentinelx')
+        repeat=operator_control.general_channel_snapshot(self.c,operator_control.SENTINELX_PROXY_PRINCIPAL,now)
+        self.assertEqual(repeat['delivered_now'],0)
+        reply=operator_control.post_general_message(self.c,operator_control.SENTINELX_PROXY_PRINCIPAL,'general-2','ack',now)
+        self.assertFalse(reply['idempotent'])
+        primary=operator_control.general_channel_snapshot(self.c,operator_control.PRIMARY_OPERATOR,now)
+        self.assertEqual(primary['delivered_now'],1)
+        self.assertTrue(any(x['payload']['text']=='ack' for x in primary['messages']))
+        self.assertEqual(self.c.execute('SELECT COUNT(*) FROM operator_general_message_receipts').fetchone()[0],2)
+        self.assertEqual(self.c.execute('SELECT COUNT(*) FROM operator_general_delivery_receipts').fetchone()[0],2)
+        cols={r[1] for r in self.c.execute('PRAGMA table_info(operator_messages)')}
+        self.assertTrue({'correlation_id','causation_id'}.issubset(cols))
+
 
 if __name__=='__main__':unittest.main()

@@ -1,0 +1,30 @@
+{
+  "schema": "lion.r22.test-evidence/v1",
+  "observed_at": "2026-09-22T14:42:13.819491Z",
+  "windows_node24": {
+    "browser_stack": {
+      "pass": 52,
+      "fail": 0
+    },
+    "node_relay": {
+      "pass": 3,
+      "fail": 0
+    },
+    "result": "PASS"
+  },
+  "store_budget_regression": {
+    "pass": 20,
+    "fail": 0
+  },
+  "renderer_script_compile": "PASS",
+  "live_e2e": {
+    "request_id": "saas-35d3bc96652a49629b51e5acafcbe46e",
+    "turn_id": "turn_a85a1706-5820-4c73-a6db-d787c289c79f",
+    "status": "RESPONDED",
+    "progress_state": "RECEIPT_BOUND",
+    "response": "GPT-5.6 Sol",
+    "receipt_digest": "0fb8e83b24d3ffcf1bf863ef6ab4fc0769a3fe8a5b624c24037252ff5e069efd",
+    "browser_send_count": 1,
+    "same_panel_thread_delivery": true
+  }
+}

@@ -7,7 +7,7 @@ const PROJECT='https://chatgpt.com/g/g-p-test/project';
 function fixture(t){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lion-thread-')),store=new Store(path.join(dir,'broker.db'),PROJECT);
  t.after(()=>{store.close();fs.rmSync(dir,{recursive:true,force:true})});
- const scope={mode:'THREAD_CONSUMER',mission_id:null,thread_id:'panel-thread',conversation_url:'https://chatgpt.com/g/g-p-test/c/saas-thread',task_sha256:TASK};
+ const scope={mode:'THREAD_CONSUMER',experience:'CHAT',mission_id:null,thread_id:'panel-thread',conversation_url:'https://chatgpt.com/g/g-p-test/c/saas-thread',task_sha256:TASK};
  const row={request_id:'saas-1',mission_id:null,thread_id:scope.thread_id,scope_type:'THREAD',scope_id:scope.thread_id,authority_effect:'NONE',transport:'CHATGPT_SENTINELX_MCP',status:'CLAIMED',claim_generation:1,claim_expires_at:new Date(Date.now()+300000).toISOString(),deadline_at:new Date(Date.now()+600000).toISOString()};
  const turn={turn_id:'turn_1',command_id:'MC-saas-1',mission_id:null,thread_id:scope.thread_id,request_hash:'a'.repeat(64),parent_event_id:'saas_request:saas-1',status:'PENDING',response:null};
  let events=[{seq:101,type:'turn.pending',data:{turn_id:turn.turn_id,command_id:turn.command_id}}],sends=0,onRead=()=>{};const calls=[];
@@ -15,7 +15,7 @@ function fixture(t){
  const mc=async(route,method='GET')=>{assert.equal(method,'GET');calls.push(route);assert.ok(!route.includes('/missions/'));return {...row}};
  const consumer=new ThreadConsumer({store,scope,mc,ingress});
  const engine=new Engine({store,getTurn:async()=>turn,admit:v=>consumer.admits(v),browser:{ready:async()=>true,send:async()=>{sends++}}});
- return {store,scope,row,turn,calls,consumer,engine,get sends(){return sends},set events(v){events=v},set onRead(v){onRead=v},async start(){await consumer.prime();store.resume();await consumer.tick()}};
+ return {store,scope,row,turn,calls,consumer,engine,mc,ingress,get sends(){return sends},set events(v){events=v},set onRead(v){onRead=v},async start(){await consumer.prime();store.resume();await consumer.tick()}};
 }
 test('THREAD request with null mission uses existing turn and no upstream writes',async t=>{
  const f=fixture(t);await f.start();assert.equal(f.store.row('saas-1').envelope.mission_id,null);assert.equal(f.store.row('saas-1').mission_id,'THREAD:panel-thread');
@@ -29,7 +29,7 @@ test('starting and status observation cannot replay pending historical turns',as
  await f.start();assert.equal(f.store.rows().length,0);assert.equal(f.consumer.cursor,100);assert.equal(f.sends,0);
 });
 test('wrong thread, non-cognitive scope and cancelled requests never enqueue',async t=>{
- for(const patch of [{scope_id:'other'},{authority_effect:'BOUNDED_MATERIAL'},{scope_type:'MISSION'},{status:'CANCELLED'},{mission_id:'LION-R19-other'}]){
+ for(const patch of [{scope_id:'other'},{authority_effect:'BOUNDED_MATERIAL'},{scope_type:'MISSION'},{status:'CANCELLED'}]){
   const f=fixture(t);Object.assign(f.row,patch);await f.start();assert.equal(f.store.rows().length,0);
  }
 });
@@ -62,4 +62,68 @@ test('STOP revision changes independently from resume',t=>{
 test('malformed causal-lineage event advances cursor without enqueuing',async t=>{
  const f=fixture(t);f.turn.parent_event_id=null;await f.start();
  assert.equal(f.store.rows().length,0);assert.equal(f.consumer.cursor,101);assert.equal(f.sends,0);
+});
+
+test('thread event cursor survives authorized restart',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lion-thread-cursor-')),file=path.join(dir,'broker.db');
+ let store=new Store(file,PROJECT);store.resume('TEST_AUTHORIZED');
+ const scope={mode:'THREAD_CONSUMER',experience:'CHAT',mission_id:null,thread_id:'panel-thread',conversation_url:'https://chatgpt.com/g/g-p-test/c/saas-thread',task_sha256:TASK};
+ let events=[{seq:101,type:'turn.pending',data:{turn_id:'turn_1'}}];
+ const ingress=async route=>route==='/v1/state'?{seq:100}:route.startsWith('/v1/events?')?{events}:{turn:{turn_id:'turn_1',command_id:'MC-saas-1',mission_id:null,thread_id:'panel-thread',request_hash:'a'.repeat(64),parent_event_id:null,status:'PENDING'}};
+ const mc=async()=>({request_id:'saas-1',mission_id:null,thread_id:'panel-thread',scope_type:'THREAD',scope_id:'panel-thread',authority_effect:'NONE',transport:'CHATGPT_SENTINELX_MCP',status:'CLAIMED',claim_generation:1,claim_expires_at:new Date(Date.now()+300000).toISOString(),deadline_at:new Date(Date.now()+600000).toISOString()});
+ const first=new ThreadConsumer({store,scope,mc,ingress});await first.prime();await first.tick();
+ assert.equal(first.cursor,101);assert.equal(store.setting('thread_cursor:panel-thread'),'101');
+ store.shutdown();store.close();store=new Store(file,PROJECT);store.recover();
+ const second=new ThreadConsumer({store,scope,mc,ingress});assert.equal(second.cursor,101);assert.equal(store.stopped(),false);
+ store.close();fs.rmSync(dir,{recursive:true,force:true});
+});
+
+test('THREAD consumer rejects Work experience scope',t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lion-work-scope-'));
+ const store=new Store(path.join(dir,'broker.db'),PROJECT);
+ t.after(()=>{store.close();fs.rmSync(dir,{recursive:true,force:true})});
+ const scope={mode:'THREAD_CONSUMER',experience:'WORK',mission_id:null,thread_id:'panel-thread',conversation_url:'https://chatgpt.com/g/g-p-test/c/saas-thread',task_sha256:TASK};
+ assert.throws(()=>new ThreadConsumer({store,scope,mc:async()=>({}),ingress:async()=>({})}),/THREAD_SCOPE_REQUIRED/);
+});
+
+test('authorized consumer with persisted cursor reports waiting when idle',async t=>{
+ const f=fixture(t);f.events=[];f.store.resume('TEST_AUTHORIZED');f.store.setSetting('thread_cursor:'+f.scope.thread_id,100);
+ const c=new ThreadConsumer({store:f.store,scope:f.scope,mc:f.mc,ingress:f.ingress});
+ assert.equal(c.cursor,100);await c.tick();assert.equal(c.state,'WAITING_NEW_PANEL_TURN');
+});
+
+test('thread consumer admits mission-scoped SaaS advisory bound to the same panel thread',async t=>{
+ const f=fixture(t);
+ f.turn.mission_id='LION-MISSION-R23';
+ f.row.mission_id='LION-MISSION-R23';
+ f.row.scope_type='THREAD';f.row.scope_id=f.scope.thread_id;f.row.thread_id=f.scope.thread_id;
+ await f.start();
+ const row=f.store.row('saas-1');
+ assert.ok(row);assert.equal(row.envelope.mission_id,'LION-MISSION-R23');assert.equal(row.envelope.panel_thread_id,f.scope.thread_id);
+});
+
+test('legacy mission-scoped turn without mission_id derives it only from broker identity',async t=>{
+ const f=fixture(t);
+ delete f.turn.mission_id;
+ f.row.mission_id='LION-MISSION-R23';f.row.scope_type='THREAD';f.row.scope_id=f.scope.thread_id;f.row.thread_id=f.scope.thread_id;
+ await f.start();
+ const row=f.store.row('saas-1');
+ assert.ok(row);assert.equal(row.envelope.mission_id,'LION-MISSION-R23');
+});
+
+test('legacy mission-scoped turn normalized to null derives mission from its broker row',async t=>{
+ const f=fixture(t);
+ f.turn.mission_id=null;
+ f.row.mission_id='LION-MISSION-R23';f.row.scope_type='THREAD';f.row.scope_id=f.scope.thread_id;f.row.thread_id=f.scope.thread_id;
+ await f.start();
+ const row=f.store.row('saas-1');
+ assert.ok(row);assert.equal(row.envelope.mission_id,'LION-MISSION-R23');
+});
+
+test('explicit mission identity mismatch between durable turn and broker row is rejected',async t=>{
+ const f=fixture(t);
+ f.turn.mission_id='LION-MISSION-A';
+ f.row.mission_id='LION-MISSION-B';f.row.scope_type='THREAD';f.row.scope_id=f.scope.thread_id;f.row.thread_id=f.scope.thread_id;
+ await f.start();
+ assert.equal(f.store.rows().length,0);
 });

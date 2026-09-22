@@ -1,0 +1,56 @@
+{
+  "schema": "lion.r22.currentness/v1",
+  "task_id": "LION-R22-WORK-TO-PROJECT-CHAT-MIGRATION",
+  "observed_at": "2026-09-22T14:42:13.819491Z",
+  "project": "LION_EVOLUSION",
+  "old_openai_conversation": {
+    "url": "https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/c/6ab11da9-cf7c-83eb-ac3c-efa090d16f3b",
+    "measured_mode": "WORK",
+    "measurement": {
+      "role": "radio",
+      "chat_state": "off",
+      "work_state": "on"
+    }
+  },
+  "new_openai_conversation": {
+    "url": "https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/c/6ab28c62-48dc-83eb-b2d5-8d56a071c32f",
+    "route": "PROJECT_CONVERSATION",
+    "measured_mode": "CHAT",
+    "work_selected": false,
+    "header_work": false,
+    "composer": true
+  },
+  "panel_thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345",
+  "transport": "CHATGPT_SENTINELX_MCP",
+  "automatic_dispatch": true,
+  "queue_stopped": false,
+  "relay_state": "WAITING_NEW_PANEL_TURN",
+  "relay_cursor": 203,
+  "pending_requests": 0,
+  "migration": {
+    "bootstrap_text": "LION Chat channel bootstrap. Reply exactly: LION_CHAT_READY",
+    "bootstrap_was_not_a_panel_request": true,
+    "old_model_request_id": "saas-5fe6edf253354144b328595c5f522772",
+    "old_model_request_terminal": "SUPERSEDED_BY_RETRY",
+    "old_model_browser_sends": 0,
+    "retry_request_id": "saas-35d3bc96652a49629b51e5acafcbe46e",
+    "retry_of_request_id": "saas-5fe6edf253354144b328595c5f522772",
+    "retry_browser_sends": 1,
+    "retry_claim_generation_after_completion": 2,
+    "retry_response": "GPT-5.6 Sol",
+    "retry_receipt_digest": "0fb8e83b24d3ffcf1bf863ef6ab4fc0769a3fe8a5b624c24037252ff5e069efd",
+    "same_panel_thread_delivery": true
+  },
+  "budget_repairs": {
+    "turn_limit_counts_active_records_only": true,
+    "task_budget_counts_active_records_only": true,
+    "conversation_binding_conflict_counts_active_records_only": true,
+    "terminal_history_preserved": true
+  },
+  "source_sha256": {
+    "browser": "37d0cc11c4cd3a993717f346650235f31f3fc69ea4d7786cdda28b57b00f6741",
+    "store": "8f87d8693ac62d880e01a79754fcec716bb5326bf477ce7482cf3ed37f9ded8a",
+    "broker_tests": "3c33beb6126b64127b926f78db57ab2e14c03e00f9b48292289db44f19fb1779",
+    "browser_tests": "7bd5f8e8ff9b843b50cffdc82f6361885dc3ae907efac00f053abf3936edbb7b"
+  }
+}

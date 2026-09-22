@@ -1,0 +1,962 @@
+name: lion-r23-autonomy
+services:
+  worker-01:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md001
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD001
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD001
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-02:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md002
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD002
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD002
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-03:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md003
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD003
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD003
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-04:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md004
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD004
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD004
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-05:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md005
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD005
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD005
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-06:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md006
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD006
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD006
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-07:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md007
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD007
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD007
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-08:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md008
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD008
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD008
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-09:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md009
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD009
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD009
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-10:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md010
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD010
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD010
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-11:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md011
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD011
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD011
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-12:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md012
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD012
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD012
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-13:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md013
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD013
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD013
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-14:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md014
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD014
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD014
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-15:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md015
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD015
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD015
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-16:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md016
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD016
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD016
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-17:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md017
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD017
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD017
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-18:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md018
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD018
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD018
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-19:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md019
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD019
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD019
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-20:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md020
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD020
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD020
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-21:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md021
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD021
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD021
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-22:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md022
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD022
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD022
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-23:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md023
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD023
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD023
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-24:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md024
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD024
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD024
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-25:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md025
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD025
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD025
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-26:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md026
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD026
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD026
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-27:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md027
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD027
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD027
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-28:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md028
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD028
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD028
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-29:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md029
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD029
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD029
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-30:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md030
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD030
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD030
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-31:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md031
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD031
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD031
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
+  worker-32:
+    image: lion-r20-worker:r1
+    container_name: lion-r23-md032
+    entrypoint: ["python3","/runtime/worker.py"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.50
+    environment:
+      LION_MATERIAL_WORKER_ID: MD032
+      LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
+      LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
+      PYTHONPATH: /src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+    labels:
+      LION_ROLE: MATERIAL_LOCAL_MODEL_WORKER
+      LION_MATERIAL_WORKER_ID: MD032
+      LION_MODEL: gpt-oss-20b-MXFP4
+      LION_AUTHORITY_EFFECT: NONE
