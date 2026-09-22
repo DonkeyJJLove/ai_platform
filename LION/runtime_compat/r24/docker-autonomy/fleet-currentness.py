@@ -46,7 +46,7 @@ def canonical(value):
 identity=load_worker_identity(IDENTITY_PATH,WORKER_PATH,CONTRACT_PATH)
 observer_gid=int(identity.get("observation_gid",-1))
 runtime_dirs_secure=observer_gid>=0 and all(
-    p.is_dir() and (p.stat().st_uid,p.stat().st_gid,p.stat().st_mode & 0o777)==(65532,observer_gid,0o750)
+    p.is_dir() and (p.stat().st_uid,p.stat().st_gid,p.stat().st_mode & 0o7777)==(65532,observer_gid,0o2750)
     for p in (STATUS_DIR,RUNTIME_DIR/"gate")
 )
 names=subprocess.check_output(
@@ -64,17 +64,22 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
     wid=labels.get("LION_MATERIAL_WORKER_ID")
     status_path=STATUS_DIR/(str(wid)+".json")
     heartbeat=None
+    status_file_secure=False
     if status_path.is_file():
         try:
+            st=status_path.stat()
+            status_file_secure=(st.st_uid,st.st_gid,st.st_mode & 0o777)==(65532,observer_gid,0o640)
             heartbeat=json.loads(status_path.read_text(encoding="utf-8"))
         except Exception:
             heartbeat=None
+            status_file_secure=False
     hb_time=parse_time((heartbeat or {}).get("observed_at"))
     age=None if hb_time is None else max(0.0,(observed-hb_time).total_seconds())
     arch=(heartbeat or {}).get("architecture") or {}
     mounts={m.get("Destination"):m for m in (info.get("Mounts") or [])}
     security=bool(
         runtime_dirs_secure
+        and status_file_secure
         and host.get("ReadonlyRootfs") is True
         and host.get("Privileged") is False
         and "ALL" in (host.get("CapDrop") or [])
@@ -136,6 +141,7 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
         "direct_assignment_kinds":heartbeat.get("direct_assignment_kinds") if heartbeat else None,
         "material_executor_independence":arch.get("material_executor_independence"),
         "docker_security_profile_ok":security,
+        "status_file_secure":status_file_secure,
         "model":(heartbeat or {}).get("model"),
         "mission_control":(heartbeat or {}).get("mission_control"),
         "model_endpoint":(heartbeat or {}).get("model_endpoint"),

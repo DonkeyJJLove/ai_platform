@@ -95,25 +95,35 @@ def main():
             raise SystemExit("canonical R24 fleet artifact missing: "+name)
         shutil.copy2(src,runtime/name)
 
+    observer_uid=os.getuid()
+    observer_gid=os.getgid()
     for name in ("status","gate"):
         target=runtime/name
         if target.exists():
+            # Previous worker-owned 0640 files are intentionally not removable
+            # by the read-only observation group. Reclaim only this bounded
+            # runtime directory through the same local worker image, then remove it.
+            run([
+                "docker","run","--rm","--user","0:0","--entrypoint","/bin/sh",
+                "-v",str(target)+":/target",
+                "lion-r20-worker:r1","-c",
+                "chown -R "+str(observer_uid)+":"+str(observer_gid)+" /target && chmod -R u+rwX /target",
+            ])
             shutil.rmtree(target)
         target.mkdir(parents=True,exist_ok=True)
     # The worker image runs as 65532:65532. Preserve the hardened bind-mount
     # ownership used by the proven R23 fleet without making these directories
     # world-writable. Docker root performs only this bounded ownership repair.
-    observer_gid=os.getgid()
     run([
         "docker","run","--rm","--user","0:0","--entrypoint","/bin/sh",
         "-v",str(runtime/"status")+":/status",
         "-v",str(runtime/"gate")+":/gate",
         "lion-r20-worker:r1","-c",
-        "chown 65532:"+str(observer_gid)+" /status /gate && chmod 0750 /status /gate",
+        "chown 65532:"+str(observer_gid)+" /status /gate && chmod 2750 /status /gate",
     ])
     for target in (runtime/"status",runtime/"gate"):
         stat=target.stat()
-        if (stat.st_uid,stat.st_gid,stat.st_mode & 0o777)!=(65532,observer_gid,0o750):
+        if (stat.st_uid,stat.st_gid,stat.st_mode & 0o7777)!=(65532,observer_gid,0o2750):
             raise SystemExit("worker writable directory ownership mismatch: "+str(target))
 
     sys.path.insert(0,str(source))

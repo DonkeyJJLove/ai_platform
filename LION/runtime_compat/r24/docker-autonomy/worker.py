@@ -66,6 +66,7 @@ def write_status(**values):
     }
     tmp = STATUS.with_suffix(".tmp")
     tmp.write_text(json.dumps(value, sort_keys=True) + "\n", encoding="utf-8")
+    os.chmod(tmp, 0o640)
     os.replace(tmp, STATUS)
 
 
