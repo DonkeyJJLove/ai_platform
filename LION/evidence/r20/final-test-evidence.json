@@ -1,0 +1,37 @@
+{
+  "schema": "lion.r20.final-test-evidence/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "observed_at": "2026-09-22T00:55:59.487627Z",
+  "python": {
+    "secure_relay": 7,
+    "saas_broker": 16,
+    "hybrid": 10,
+    "total": 33,
+    "result": "PASS"
+  },
+  "browser_native": {
+    "tests": 24,
+    "result": "PASS"
+  },
+  "node_secure_relay_native": {
+    "tests": 2,
+    "result": "PASS"
+  },
+  "ingress_contract": {
+    "exactly_once": "PASS",
+    "parent_event_lineage": "PASS",
+    "claim_complete": "PASS",
+    "mcp_tools_list": "PASS"
+  },
+  "rollback_parser": "PASS",
+  "git_diff_check": "PASS",
+  "live_currentness": {
+    "model_pid": 23532,
+    "panel_pid": 52728,
+    "browser_pid": 9688,
+    "ingress_pid": 16971,
+    "mission_control_http": 200,
+    "relay_status": "READY"
+  },
+  "final_e2e": "BLOCKED_BY_MAX_TWO_LIVE_ATTEMPTS_WITH_BOTH_RECONCILED_UNSENT"
+}

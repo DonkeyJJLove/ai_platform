@@ -1,0 +1,154 @@
+name: lion-r20r2-l64-w8
+services:
+  w01:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w01
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W01.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w02:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w02
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W02.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w03:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w03
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W03.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w04:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w04
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W04.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w05:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w05
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W05.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w06:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w06
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W06.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w07:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w07
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W07.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]
+  w08:
+    image: lion-r20-worker:r1
+    container_name: lion-r20r2-w08
+    user: "65532:65532"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 1.0
+    restart: "no"
+    labels:
+      TASK_ID: LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2
+    volumes:
+      - /srv/lion-e4-candidate-r1/r20-mission/source:/src:ro
+      - ./evidence:/evidence:ro
+      - ./worker/W08.json:/mission/spec.json:ro
+    command: ["--spec","/mission/spec.json"]

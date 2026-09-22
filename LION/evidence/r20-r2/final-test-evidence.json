@@ -1,0 +1,39 @@
+{
+  "schema": "lion.r20.r2.final-test-evidence/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2",
+  "observed_at": "2026-09-22T11:18:47.599937Z",
+  "python": {
+    "explicit_transport": 8,
+    "broker_core": 16,
+    "hybrid": 10,
+    "secure_relay_fallback": 7,
+    "total": 41,
+    "result": "PASS"
+  },
+  "windows_node": {
+    "node_relay": 2,
+    "browser_stack": 26,
+    "total": 28,
+    "result": "PASS"
+  },
+  "syntax": {
+    "python_compile": "PASS",
+    "node_check": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "live_e2e": {
+    "result": "PASS",
+    "transport": "CHATGPT_SENTINELX_MCP",
+    "browser_send_count": 1,
+    "turn_status": "COMPLETED",
+    "broker_status": "RESPONDED",
+    "same_thread_delivery": true
+  },
+  "fleet": {
+    "logical_roles": 64,
+    "material_workers": 8,
+    "pass": 64,
+    "blocked": 0,
+    "fail": 0
+  }
+}

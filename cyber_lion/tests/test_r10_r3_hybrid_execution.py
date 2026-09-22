@@ -234,6 +234,30 @@ class MissionRebindTests(unittest.TestCase):
         self.assertEqual(out['control_authority'], 'BOUNDED_LPCL_EXECUTION_ADAPTER')
         self.assertIn('ASSIGNMENT', {x['protocol'] for x in out['protocol_messages']})
 
+    def test_fresh_12l_mission_has_self_lineage_and_generic_phase_specs(self):
+        tools = Path(__file__).resolve().parents[2] / 'tools'
+        if str(tools) not in sys.path: sys.path.insert(0, str(tools))
+        compat = importlib.import_module('lion_mission_control_compat'); sys.modules['mission_control_compat'] = compat
+        mc = importlib.import_module('lion_mission_control_v3')
+        td = tempfile.TemporaryDirectory(); self.addCleanup(td.cleanup)
+        old_db, old_legacy = mc.DB, mc.LEGACY_DB
+        self.addCleanup(lambda: setattr(mc, 'DB', old_db)); self.addCleanup(lambda: setattr(mc, 'LEGACY_DB', old_legacy))
+        mc.DB = Path(td.name) / 'mc.db'; mc.LEGACY_DB = Path(td.name) / 'none.db'; mc.migrate()
+        protocols=list(mc.PROTOCOLS)
+        text='PROJECT=LION_EVOLUSION\n'+''.join(f'LD{i:02d}=ROLE_{i:02d}\n' for i in range(1,13))
+        mid='FRESH-12L-SHARED-R1'
+        spec={'mission_id':mid,'title':mid,'objective':'o','description':'d','lpcl_digest':hashlib.sha256(text.encode()).hexdigest(),'lpcl_text':text,'source_head':'a'*40,'source_tree':'b'*40,'logical_count':12,'material_target':64,'phases':[{'id':'VERIFY_PANEL','title':'Verify panel'}],'protocols':protocols}
+        mc.register_lpcl_mission(spec)
+        with patch.object(mc,'_current_master_identity',return_value=('f'*40,'e'*40)), patch.object(mc,'epoch3_broker',return_value=(self.live_runtime(), 'live-read-rid')):
+            out=mc.activate_lpcl_mission(mid,{'lpcl_digest':spec['lpcl_digest'],'activation_event':'EXPLICIT_UI_ACTIVATION'})
+        self.assertEqual((out['state'],out['materialized'],out['ready']),('RUNNING',64,64))
+        c=mc.connect()
+        lineage=c.execute('SELECT root_mission_id,parent_mission_id,relation FROM mission_lineage WHERE mission_id=?',(mid,)).fetchone()
+        specs=[dict(x) for x in c.execute('SELECT phase_id,handler_id FROM mission_phase_execution_specs WHERE mission_id=?',(mid,)).fetchall()]
+        c.close()
+        self.assertEqual((lineage['root_mission_id'],lineage['parent_mission_id'],lineage['relation']),(mid,None,'FRESH_SHARED_MATERIAL_BINDING'))
+        self.assertEqual(specs,[{'phase_id':'VERIFY_PANEL','handler_id':'GENERIC_LPCL_PHASE'}])
+
     def test_post_takeover_restart_does_not_require_superseded_parent(self):
         tools = Path(__file__).resolve().parents[2] / 'tools'
         if str(tools) not in sys.path: sys.path.insert(0, str(tools))

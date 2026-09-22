@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 from cyber_lion.mission_control.supervisor_projection import supervisor_projection
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 SCHEMA_ID = "lion.saas-broker/v1"
 TRANSPORT = "CHATGPT_SENTINELX_SESSION_MEDIATED"  # legacy/manual compatibility
 ATTESTATION_CLASS = "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP"
@@ -16,11 +16,14 @@ FIREFOX_TRANSPORT = "CHATGPT_FIREFOX_PROJECT_MEDIATED"
 FIREFOX_ATTESTATION_CLASS = "FIREFOX_UI_PROJECT_BOUND_OBSERVATION"
 SECURE_MCP_TRANSPORT = "CHATGPT_OPENAI_SECURE_MCP_TUNNEL"
 SECURE_MCP_ATTESTATION_CLASS = "OPENAI_SECURE_MCP_TUNNEL_TOOL_ROUNDTRIP"
+SENTINELX_MCP_TRANSPORT = "CHATGPT_SENTINELX_MCP"
+SENTINELX_MCP_ATTESTATION_CLASS = ATTESTATION_CLASS
 MEDIATOR_HEARTBEAT_TTL_SECONDS = 45
 SUPPORTED_TRANSPORT_ATTESTATIONS = {
     TRANSPORT: ATTESTATION_CLASS,
     FIREFOX_TRANSPORT: FIREFOX_ATTESTATION_CLASS,
     SECURE_MCP_TRANSPORT: SECURE_MCP_ATTESTATION_CLASS,
+    SENTINELX_MCP_TRANSPORT: SENTINELX_MCP_ATTESTATION_CLASS,
 }
 
 DDL = r"""
@@ -186,7 +189,7 @@ MEDIATOR_STATES = {"STARTING","LOGIN_REQUIRED","PROJECT_BINDING_REQUIRED","CHAT_
 
 
 def _promote_waiting_to_transport(conn, stamp, target_transport, reason, progress_state):
-    if target_transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:raise ValueError("promotion transport")
+    if target_transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT,SENTINELX_MCP_TRANSPORT}:raise ValueError("promotion transport")
     rows=conn.execute("SELECT request_id,transport FROM saas_handoff_requests WHERE status IN ('CREATED','QUEUED','WAITING_SUPERVISOR','WAITING_OPERATOR_OVERDUE') AND COALESCE(transport,?)=? ORDER BY created_at,request_id",(TRANSPORT,TRANSPORT)).fetchall()
     promoted=[]
     for row in rows:
@@ -206,6 +209,12 @@ def _promote_waiting_to_secure_mcp(conn, stamp):
         "READY_SECURE_MCP_MEDIATOR_ADOPTION","WAITING_SECURE_MCP"
     )
 
+def _promote_waiting_to_sentinelx_mcp(conn, stamp):
+    return _promote_waiting_to_transport(
+        conn,stamp,SENTINELX_MCP_TRANSPORT,
+        "READY_SENTINELX_MCP_MEDIATOR_ADOPTION","WAITING_SENTINELX_MCP"
+    )
+
 
 def record_mediator_heartbeat(conn, payload, now_fn):
     if type(payload) is not dict or set(payload) != {"mediator_id","transport","state","project_title","chat_title","browser","authority_effect"}:
@@ -214,7 +223,7 @@ def record_mediator_heartbeat(conn, payload, now_fn):
         raise ValueError("mediator authority")
     mediator_id=payload.get("mediator_id");transport=payload.get("transport");state=payload.get("state")
     if not isinstance(mediator_id,str) or not mediator_id or len(mediator_id)>96:raise ValueError("mediator_id")
-    if transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:raise ValueError("mediator transport")
+    if transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT,SENTINELX_MCP_TRANSPORT}:raise ValueError("mediator transport")
     if state not in MEDIATOR_STATES:raise ValueError("mediator state")
     for key in ("project_title","chat_title","browser"):
         value=payload.get(key)
@@ -225,7 +234,7 @@ def record_mediator_heartbeat(conn, payload, now_fn):
         "ON CONFLICT(mediator_id) DO UPDATE SET transport=excluded.transport,state=excluded.state,project_title=excluded.project_title,chat_title=excluded.chat_title,browser=excluded.browser,observed_at=excluded.observed_at,details_json=excluded.details_json",
         (mediator_id,transport,state,payload.get("project_title"),payload.get("chat_title"),payload.get("browser"),stamp,_canon(details)),
     )
-    promoted=(_promote_waiting_to_firefox(conn,stamp) if transport==FIREFOX_TRANSPORT else _promote_waiting_to_secure_mcp(conn,stamp)) if state=="READY" else []
+    promoted=(_promote_waiting_to_firefox(conn,stamp) if transport==FIREFOX_TRANSPORT else _promote_waiting_to_secure_mcp(conn,stamp) if transport==SECURE_MCP_TRANSPORT else _promote_waiting_to_sentinelx_mcp(conn,stamp)) if state=="READY" else []
     conn.commit();return {**payload,"observed_at":stamp,"fresh":True,"promoted_request_ids":promoted}
 
 
@@ -241,7 +250,7 @@ def _current_mediator(conn, stamp):
 
 def _preferred_transport(conn, stamp):
     mediator=_current_mediator(conn,stamp)
-    if mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport") in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:
+    if mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport") in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT,SENTINELX_MCP_TRANSPORT}:
         return mediator["transport"]
     return TRANSPORT
 
@@ -305,7 +314,7 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
     question = question.strip()
     qdigest = hashlib.sha256(question.encode("utf-8")).hexdigest()
     retry_of = None
-    if transport is not None and transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT}:
+    if transport is not None and transport not in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT,SENTINELX_MCP_TRANSPORT}:
         raise ValueError('explicit transport')
     target_transport = TRANSPORT if legacy else (transport or _preferred_transport(conn, stamp))
     if not legacy:
@@ -476,11 +485,13 @@ def bridge_status(conn, mission_id, now_fn):
         (mission_id,mission_id),
     ).fetchone()
     mediator=_current_mediator(conn,stamp)
-    mediator_ready=bool(mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport") in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT})
+    mediator_ready=bool(mediator and mediator.get("fresh") and mediator.get("state")=="READY" and mediator.get("transport") in {FIREFOX_TRANSPORT,SECURE_MCP_TRANSPORT,SENTINELX_MCP_TRANSPORT})
     browser_ready=bool(mediator_ready and mediator.get("transport")==FIREFOX_TRANSPORT)
     secure_mcp_ready=bool(mediator_ready and mediator.get("transport")==SECURE_MCP_TRANSPORT)
+    sentinelx_ready=bool(mediator_ready and mediator.get("transport")==SENTINELX_MCP_TRANSPORT)
     target_transport=mediator.get("transport") if mediator_ready else TRANSPORT
-    channel_state="SECURE_MCP_READY" if secure_mcp_ready else ("BROWSER_MEDIATOR_READY" if browser_ready else ("WAITING_MEDIATOR" if mediator else "READY_FOR_HANDOFF"))
+    automatic_ready=bool(browser_ready or secure_mcp_ready or sentinelx_ready)
+    channel_state="SENTINELX_MCP_READY" if sentinelx_ready else ("SECURE_MCP_READY" if secure_mcp_ready else ("BROWSER_MEDIATOR_READY" if browser_ready else ("WAITING_MEDIATOR" if mediator else "READY_FOR_HANDOFF")))
     out = {
         "mission_id": mission_id,
         "state": "BOUND" if binding else ("PENDING_HANDOFF" if pending else "UNBOUND"),
@@ -489,7 +500,7 @@ def bridge_status(conn, mission_id, now_fn):
         "session_scope": "GLOBAL_SUPERVISOR_CHANNEL",
         "schema": SCHEMA_ID,
         "schema_version": SCHEMA_VERSION,
-        "automatic_hop": "AVAILABLE" if browser_ready else "UNAVAILABLE",
+        "automatic_hop": "AVAILABLE" if automatic_ready else "UNAVAILABLE",
         "binding": dict(binding) if binding else None,
         "last_binding": dict(last_binding) if last_binding else None,
         "pending": pending_value,
@@ -499,9 +510,10 @@ def bridge_status(conn, mission_id, now_fn):
         "duplicate_policy": "EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE",
         "terminal_mission_pending_policy": "SUPERSEDE_PRESERVE_HISTORY",
         "transport": target_transport,
-        "automatic_local_to_saas_hop": browser_ready,
-        "operator_mediation_required": not browser_ready,
+        "automatic_local_to_saas_hop": automatic_ready,
+        "operator_mediation_required": not automatic_ready,
         "secure_mcp_ready": secure_mcp_ready,
+        "sentinelx_ready": sentinelx_ready,
         "mediator": mediator,
         "cryptographic_provider_attestation": False,
         "authority_effect": "NONE",

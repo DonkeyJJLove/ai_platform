@@ -1,0 +1,49 @@
+{
+  "schema": "lion.r20.deployment-manifest/v2",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "observed_at": "2026-09-22T00:52:26.391262Z",
+  "result": "DEPLOYED_REPAIRED_COMPONENTS_FINAL_E2E_BLOCKED_BY_ATTEMPT_BUDGET",
+  "wsl_ingress": {
+    "state": "DEPLOYED_RESTARTED",
+    "before_sha256": "30a5f727005302729c841d56fa21a63062be13e6ef5512957d1ce2f62542ecea",
+    "after_sha256": "3f358c685f1c2d1c56b1dc6b0cb5d66784a49d51ba4fe960a817fcea3ff19c03",
+    "backup": "/opt/lion/lion-turn-ingress-node-r2/server.mjs.r20-backup",
+    "unauth_readback_http": 401
+  },
+  "windows_browser": {
+    "state": "DEPLOYED_STOPPED",
+    "installer_report": "C:/Users/d2j3/Desktop/LION-R20-install-report-20260922-022533.json",
+    "installer_sha256": "df6be6cc545103fbf39551b7a38cecb65dfe66a4265b39ad641688488de2c97a",
+    "installer_backup": "C:/Users/d2j3/AppData/Local/LION/backups/r20-panel-saas/20260922-022532",
+    "browser_source_sha256": "207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+    "contract_sha256": "d6b46124a9920d194cfd2d1e81c99f3690d9b97c0fa076638435607107592bc5",
+    "relay_sha256": "21208b7a98352933ac2647734236fc374c09b7bd54063bcb8b857f7ce0d25922",
+    "thread_consumer_sha256": "6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+    "native_tests": "24/24 PASS",
+    "final_pid": 9688,
+    "stopped": true
+  },
+  "node_panel": {
+    "panel_pid": 52728,
+    "panel_source_sha256": "fe9c42edbe289f218ea8d4c324cfe02e877b38d79e0e793d81e8a81e0fc07f62",
+    "secure_relay_pid": 48440,
+    "secure_relay_source_sha256": "684afd5b4d40ae8d4ba41119b77f82b7c006d9a17872c7307e8321c2f0cfda92",
+    "relay_tests": "2/2 PASS"
+  },
+  "local_model": {
+    "state": "EXISTING_RUNTIME_PRESERVED",
+    "model": "gpt-oss-20b-MXFP4",
+    "new_model_instances": 0,
+    "post_restart_inference": "PASS"
+  },
+  "docker_fleet": {
+    "workers": 8,
+    "logical_roles": 64,
+    "summary": {
+      "PASS": 62,
+      "BLOCKED": 2,
+      "FAIL": 0
+    }
+  },
+  "sentinel_policy_modified": false
+}

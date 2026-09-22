@@ -1,0 +1,101 @@
+{
+  "schema": "lion.r20.r2.currentness/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R2",
+  "observed_at": "2026-09-22T11:14:03.925913Z",
+  "host": {
+    "physical_domain": "WINDOWS-MOON",
+    "docker_server": "29.7.2"
+  },
+  "repository": {
+    "candidate_head": "8361a2cfdf13ecc405048573c1073befbd79b227",
+    "candidate_tree": "7f52cef9d880776f2b6b441b97e162d5cf21b24a",
+    "pr367_head": "b8e05972b9a9c762c579e9a98b90285d0a54f580"
+  },
+  "browser": {
+    "main_sha256": "bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+    "services_json_present": true,
+    "thread_scope_present": true,
+    "native_patch_applied": true
+  },
+  "ingress": {
+    "port": 8791,
+    "entrypoint": "/opt/lion/lion-turn-ingress-node-r2/server.mjs",
+    "token_file": "/etc/lion/mcp-local-token",
+    "authenticated_probe": true,
+    "auth_http": 200,
+    "unauth_http": 401,
+    "state_shape_ok": true,
+    "credential_state": "PRESENT_ACCEPTED_WSL_AND_WINDOWS_BROKER",
+    "tunnel_header_same_token_file": true,
+    "process_identity": "lion-turn-ingress-node-r2.service / node / WSL2"
+  },
+  "mcp": {
+    "tool_access": true
+  },
+  "root_cause": {
+    "ingress_discovery_component_wrong": true
+  },
+  "local_model": {
+    "model": "gpt-oss-20b-MXFP4",
+    "r20_inference_observed": true,
+    "r2_canary": {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_R2_LOCAL_OK"
+    }
+  },
+  "restart_durability": {
+    "pass": true
+  },
+  "deployment": {
+    "windows_broker_pass": true
+  },
+  "fleet": {
+    "stop_test_passed": true
+  },
+  "e2e": {
+    "fresh_run": true,
+    "attempt_1": {
+      "request_id": "saas-3e9db71bcc9c4d978bd87847b84c989d",
+      "transport": "CHATGPT_OPENAI_SECURE_MCP_TUNNEL",
+      "browser_send": "PASS",
+      "mcp_completion": "FAIL_SESSION_TERMINATED",
+      "terminal": "CANCELLED"
+    },
+    "attempt_2": {
+      "request_id": "saas-d0b73c6fad88495f80c72d14a970251c",
+      "turn_id": "turn_d90e27d5-a0bb-4f4b-8e08-58bb69c841b5",
+      "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345",
+      "transport": "CHATGPT_SENTINELX_MCP",
+      "browser_send_count": 1,
+      "turn_status": "COMPLETED",
+      "response_text": "R20_R2_SENTINELX_OK",
+      "response_digest": "1678422b31f9dfded8fa16dd04205c1c9035f69f7451cd8b6a8ece64cefb2564",
+      "receipt_digest": "249fa9912d617093f433e27ade24bbb717678433c25ea96c8a8f5030b41ebcda",
+      "attestation_class": "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP",
+      "model_identity": "ChatGPT SaaS / SentinelX MCP / durable turn completion",
+      "broker_status": "RESPONDED",
+      "progress_state": "RECEIPT_BOUND",
+      "same_thread_delivery": true,
+      "assistant_message_observed": true
+    },
+    "successful_saas_completion": true,
+    "same_thread_delivery": true,
+    "final_audit_pass": true
+  },
+  "tunnel": {
+    "sentinelx_primary": true,
+    "hub": "https://mcp.sentinelx.app/",
+    "openai_tunnel_required": false,
+    "openai_tunnel_service": "disabled/inactive",
+    "runtime_api_key_required": false
+  },
+  "transport_architecture": {
+    "primary": "https://mcp.sentinelx.app/",
+    "transport_id": "CHATGPT_SENTINELX_MCP",
+    "openai_secure_mcp_tunnel_required": false,
+    "openai_secure_mcp_tunnel_state": "OPTIONAL_DISABLED_INACTIVE",
+    "bounded_helper": "/usr/local/bin/lion-sentinelx-turn",
+    "helper_sha256": "a8b3ad67cea5ce9e46135e39803cd030050116d1c92a444e97abcb712b1905a1",
+    "authority_effect": "NONE"
+  }
+}

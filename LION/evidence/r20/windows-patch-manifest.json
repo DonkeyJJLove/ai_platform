@@ -1,0 +1,58 @@
+{
+  "schema": "lion.r20.browser-patch/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "repository": "DonkeyJJLove/ai_platform",
+  "base_candidate_head": "b8e05972b9a9c762c579e9a98b90285d0a54f580",
+  "base_candidate_tree": "48febe15db73825b7bd2e593a7d3730c7955c0eb",
+  "main_cjs_required_sha256": "bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+  "files": [
+    {
+      "path": "src/contract.cjs",
+      "required_pre_sha256": "c5485d19210c3999247d89405576d8a6f6ded02d1dca31a34b39ea3cf8ddb5b2",
+      "new_sha256": "d6b46124a9920d194cfd2d1e81c99f3690d9b97c0fa076638435607107592bc5",
+      "bytes": 3529
+    },
+    {
+      "path": "src/relay.cjs",
+      "required_pre_sha256": "72e313eee14aab6a7c4d3354f6cb98788321af48b36e771fc5c95594348d2643",
+      "new_sha256": "21208b7a98352933ac2647734236fc374c09b7bd54063bcb8b857f7ce0d25922",
+      "bytes": 8664
+    },
+    {
+      "path": "src/thread-consumer.cjs",
+      "required_pre_sha256": "0780b0834061984105f7f5f784bb84671e37d39838411b5ee17e3ef598abf4eb",
+      "new_sha256": "ec087a9fb9db411b48d394a69b8c8986ede919b2767274255fdf5a5c77aadbce",
+      "bytes": 4289
+    },
+    {
+      "path": "test/relay.test.cjs",
+      "required_pre_sha256": "9bf2c30949ab702d9b7cbeda5e1db589275227c30d376fdeaae2939df6798ba1",
+      "new_sha256": "111407b13c394b16453f78d5e09293aaa485ff6485887e5990f771e57d8e9022",
+      "bytes": 7374
+    },
+    {
+      "path": "test/thread-consumer.test.cjs",
+      "required_pre_sha256": "019c4c6b9dd682bafc0cf7254d00e6fdbab77fa30acfd5f1e5d61db7974656ba",
+      "new_sha256": "677a49f7a35132a5029dc7402677f60742aa4d14fc293e40028554d44d21d1d6",
+      "bytes": 5705
+    }
+  ],
+  "patch_zip_sha256": "d7f64fa391fb27ae77370395b7e20abf5defcaea7e4d6a830a0a2505703098a0",
+  "installer_sha256": "df6be6cc545103fbf39551b7a38cecb65dfe66a4265b39ad641688488de2c97a",
+  "installer_revision": "R20.1_FINAL_EXECUTED",
+  "installer_report": "C:/Users/d2j3/Desktop/LION-R20-install-report-20260922-022533.json",
+  "post_install_delta": {
+    "browser.cjs": {
+      "sha256": "207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+      "reason": "multiline contenteditable newline flattening repair"
+    },
+    "thread-consumer.cjs": {
+      "sha256": "6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32",
+      "reason": "advance cursor on rejected causal-lineage event"
+    },
+    "node_secure_mcp_relay.js": {
+      "sha256": "684afd5b4d40ae8d4ba41119b77f82b7c006d9a17872c7307e8321c2f0cfda92",
+      "reason": "active Node producer causal lineage"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "lion.r20.node-panel-runtime-compat/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "live_root": "/mnt/c/Users/d2j3/Documents/Codex/2026-09-14/files-pasted-by-the-user-role/work/lion-r2-panel-runtime/node_panel",
+  "active_panel": {
+    "port": 8780,
+    "pid": 52728,
+    "source": "node_panel/src/server.js",
+    "source_sha256": "fe9c42edbe289f218ea8d4c324cfe02e877b38d79e0e793d81e8a81e0fc07f62"
+  },
+  "active_secure_relay": {
+    "pid": 48440,
+    "source": "node_panel/src/secure-mcp-relay.js",
+    "source_sha256": "684afd5b4d40ae8d4ba41119b77f82b7c006d9a17872c7307e8321c2f0cfda92",
+    "test_sha256": "7cdb2db1ea30e4790feeb3aaf76b1c6bf9742c1bd3cdac7c0fe9bd0653c5805a"
+  },
+  "change": "Add parent_event_id=saas_request:<request_id> to the active Node turn producer.",
+  "authority_effect": "NONE"
+}

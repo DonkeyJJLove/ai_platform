@@ -1,0 +1,258 @@
+{
+  "schema": "lion.r20.currentness/v1",
+  "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+  "observed_at": "2026-09-22T00:55:59.487627Z",
+  "host": {
+    "logical_host": "MOON",
+    "environment": "WSL2/Ubuntu-24.04",
+    "physical_domain": "WINDOWS-MOON",
+    "docker_server": "29.7.2",
+    "logical_cpus": 24,
+    "memory_total_bytes": 50511634432
+  },
+  "repository": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "master_head": "da4dbd7b27b4833c0debddf839e003f2ce170d5c",
+    "master_tree": "20fa96a86857cecacc5a3c772e2a4dcd7f797dad",
+    "candidate_branch": "feat/r19-integrated-browser-broker-r1",
+    "candidate_head": "b8e05972b9a9c762c579e9a98b90285d0a54f580",
+    "candidate_tree": "48febe15db73825b7bd2e593a7d3730c7955c0eb",
+    "pr": 367,
+    "pr367_head": "b8e05972b9a9c762c579e9a98b90285d0a54f580"
+  },
+  "browser": {
+    "runtime_path": "C:/Users/d2j3/AppData/Local/LION/browser_broker",
+    "profile": "C:/Users/d2j3/AppData/Local/LION/r19-browser-broker",
+    "main_sha256": "bbbb5bd22e6346fb0721e37d4c2c554e29d7e076aca47435549eb6d58012cb0e",
+    "services_json_present": true,
+    "thread_scope_present": true,
+    "last_binding_state": "NOT_CONFIGURED",
+    "last_conversation_route": "PROJECT_CONVERSATION",
+    "last_project_membership": "URL_PROJECT_ID_MATCH",
+    "native_patch_staged": true,
+    "native_patch_applied": true,
+    "installer_desktop": "C:/Users/d2j3/Desktop/Repair-LION-R20-ISE.ps1",
+    "installer_sha256": "df6be6cc545103fbf39551b7a38cecb65dfe66a4265b39ad641688488de2c97a",
+    "patch_zip_sha256": "d7f64fa391fb27ae77370395b7e20abf5defcaea7e4d6a830a0a2505703098a0",
+    "installer_revision": "R20.1_WSL_PS51_NUL_ROOT_READ_PID_FIX_WITH_AUTO_ROLLBACK",
+    "install_result": "BROKER_AUTH_READY_BIND_PENDING",
+    "native_tests_install": "22/22 PASS",
+    "native_tests_final": "24/24 PASS",
+    "final_pid": 9688,
+    "final_state": "STOPPED",
+    "final_composer_empty": true,
+    "ingress_credential_present": true,
+    "scope_thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345",
+    "conversation_url": "https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/c/6ab11da9-cf7c-83eb-ac3c-efa090d16f3b",
+    "source_hashes": {
+      "browser.cjs": "207b36f05793f5e981f75d14d5c858f5289e0483f50f587446388c682a831419",
+      "contract.cjs": "d6b46124a9920d194cfd2d1e81c99f3690d9b97c0fa076638435607107592bc5",
+      "relay.cjs": "21208b7a98352933ac2647734236fc374c09b7bd54063bcb8b857f7ce0d25922",
+      "thread-consumer.cjs": "6160e327d89082ba4fe921910692ac1a332c48fa4b4dd89ff6e7ffc998d9eb32"
+    },
+    "send_gate_root_cause": {
+      "class": "CONTENTEDITABLE_MULTILINE_NEWLINE_FLATTENING",
+      "fill_exec_return": true,
+      "expected_length": 444,
+      "observed_textcontent_length": 439,
+      "expected_newlines": 5,
+      "observed_textcontent_newlines": 0,
+      "send_button_disabled_after_fill": false,
+      "old_gate": "literal textContent equality",
+      "fix": "composerEquivalent permits exact text or exact expected text with CR/LF removed only"
+    },
+    "binding_state": "THREAD_CONSUMER_BOUND_STOPPED"
+  },
+  "ingress": {
+    "port": 8791,
+    "process_identity": "pid=211 /usr/bin/node",
+    "entrypoint": "/opt/lion/lion-turn-ingress-node-r2/server.mjs",
+    "source_sha256": "3f358c685f1c2d1c56b1dc6b0cb5d66784a49d51ba4fe960a817fcea3ff19c03",
+    "token_file": "/etc/lion/mcp-local-token",
+    "token_mode": "0640 root:lion-mcp",
+    "authenticated_probe": true,
+    "auth_http": 200,
+    "unauth_http": 401,
+    "state_shape_ok": true,
+    "state_seq": 166,
+    "credential_state": "PRESENT_ACCEPTED_WSL_AND_WINDOWS_BROKER",
+    "tunnel_header_same_token_file": true,
+    "source_sha256_before_r20": "30a5f727005302729c841d56fa21a63062be13e6ef5512957d1ce2f62542ecea",
+    "pid": 16971,
+    "service_state": "active/running",
+    "post_restart_unauth_http": 401,
+    "post_restart_authenticated_probe": "UNKNOWN_NOT_REPEATED_AFTER_SECRET_TOOL_BOUNDARY"
+  },
+  "mcp": {
+    "tool_access": true,
+    "single_probe_result": "HISTORICAL_PENDING_OBSERVED_NOT_EXECUTED"
+  },
+  "panel": {
+    "native_runtime": "R17.4 successor supervisor",
+    "last_known_child_pid_file": 58228,
+    "windows_loopback_not_inferred_from_wsl": true,
+    "supervisor_repeated_error": "PANEL_REPO_DIRTY_FAIL_CLOSED",
+    "browser_automation_projection": "DISABLED_BY_POLICY"
+  },
+  "local_model": {
+    "model": "gpt-oss-20b-MXFP4",
+    "artifact": "gpt-oss-20b-MXFP4.gguf",
+    "expected_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+    "runtime": "llama.cpp build 10809 / Vulkan0",
+    "endpoint_windows": "http://127.0.0.1:8772",
+    "model_instances_created_by_r20": 0,
+    "user_reported_running": true,
+    "last_supervisor_state_model_8772": true,
+    "r20_inference_observed": true,
+    "r20_model_calls": 3,
+    "canary_1": {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_LOCAL_MODEL_OK",
+      "response_digest": "0dc80506870dbd5670002dbf2f28cfaed7e1efdbf8dd779a71b55996ed119a9c",
+      "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345"
+    },
+    "post_restart_canary": {
+      "route": "LOCAL_MODEL_DIRECT",
+      "answer": "R20_POST_RESTART_LOCAL_OK",
+      "response_digest": "587dba3af8cd81c1d8e0691a96396dd4e021602c80b7dc797c16a3a5e8df6642"
+    },
+    "reconciliation_proposal": {
+      "answer_digest": "c950854c5b6dd1e78ed1a1f69cec54b27bf2447941e9aaa97efc11a031116ae0",
+      "verification": "PARTIAL_REJECT",
+      "admissible_as_terminal_truth": false
+    },
+    "pid": 23532,
+    "runtime_executable": "C:/Users/d2j3/Documents/Codex/2026-09-10/napraw/outputs/moon-native/runtime/llama-b10809-vulkan/llama-server.exe",
+    "model_file": "C:/Users/d2j3/Documents/Codex/2026-09-10/napraw/outputs/moon-native/models/gpt-oss-20b-MXFP4.gguf",
+    "provider_owner": "llamacpp",
+    "device": "Vulkan0",
+    "context": 4096,
+    "model_params": 20914757184
+  },
+  "mission_control": {
+    "endpoint_wsl": "http://127.0.0.1:8766",
+    "http": 200,
+    "live_binder_supported_topologies": [
+      "12/64",
+      "128/64"
+    ],
+    "requested_diagnostic_topology": "64/8",
+    "requested_topology_is_separate_mesh": true
+  },
+  "root_cause": {
+    "ingress_discovery_component_wrong": true,
+    "detail": "Rev2 searched --ingress-token-file on panel 8780, but active ingress credential is owned by lion-turn-ingress-node-r2.service via LION_INGRESS_TOKEN_FILE=/etc/lion/mcp-local-token.",
+    "send_gate_multiline_newline_flattening": true
+  },
+  "fleet": {
+    "logical_roles": 64,
+    "material_workers": 8,
+    "stop_test_planned": false,
+    "docker_existing_unrelated_containers_preserved": true,
+    "stop_test_passed": true,
+    "stop_test": {
+      "worker_id": "W08",
+      "same_container": true,
+      "running_before_stop": true,
+      "exit_code": 137,
+      "terminal_result_count_before": 1,
+      "terminal_result_count_after": 1,
+      "external_send_attempted": false
+    }
+  },
+  "task_provenance": {
+    "schema": "lion.r20.task-provenance/v1",
+    "task_id": "LION-R20-SOL-L64-W8-PANEL-SAAS-REPAIR-R1",
+    "attachment_filename": "Wklejony tekst(20260921-232945).txt",
+    "attachment_bytes": 24063,
+    "attachment_sha256": "02d1aa7cc8b441ef77af5bdebbabe8abb0b1ddeba82a7284c558a505cdf2f33e",
+    "user_launch_message": "Zastosuj do TASK, zrealizuj task",
+    "activation_interpretation": "EXPLICIT_USER_EXECUTION_REQUEST_BOUND_TO_ATTACHED_TASK",
+    "authority_effect": "BOUNDED_BY_TASK"
+  },
+  "node_panel": {
+    "panel": {
+      "port": 8780,
+      "pid_before": 42856,
+      "pid_after": 52728,
+      "restart_health": "PASS",
+      "source_sha256": "fe9c42edbe289f218ea8d4c324cfe02e877b38d79e0e793d81e8a81e0fc07f62"
+    },
+    "secure_relay": {
+      "pid": 48440,
+      "status": "READY",
+      "source_sha256": "684afd5b4d40ae8d4ba41119b77f82b7c006d9a17872c7307e8321c2f0cfda92",
+      "native_tests": "2/2 PASS",
+      "turn_ingress_ready": true,
+      "mcp_transport_ready": true
+    },
+    "thread_db_restart_persistence": {
+      "thread_id": "b868a1fa93de46d9b3d4d0cd3e1c5345",
+      "message_count": 6,
+      "prior_local_canary_persisted": true
+    }
+  },
+  "deployment": {
+    "windows_broker_pass": true,
+    "backup": "C:/Users/d2j3/AppData/Local/LION/backups/r20-panel-saas/20260922-022532",
+    "wsl_ingress_pass": true,
+    "node_secure_relay_pass": true,
+    "panel_restart_pass": true,
+    "rollback_paths_present": true
+  },
+  "restart_durability": {
+    "pass": true,
+    "browser_restarts_multiple": true,
+    "panel_restart": "42856->52728",
+    "thread_db_persisted": true,
+    "local_model_post_restart": true,
+    "duplicate_external_send_observed": false
+  },
+  "e2e": {
+    "max_live_attempts": 2,
+    "live_attempts_used": 2,
+    "third_attempt_forbidden": true,
+    "attempt_1": {
+      "request_id": "saas-7aa8c569ba334b1ab229b2186e882198",
+      "turn_id": "turn_a53efaa4-c997-4b8b-b55f-7f334ce41ac6",
+      "parent_event_id": null,
+      "outcome": "REJECTED_BEFORE_BROWSER_SEND_LINEAGE_MISSING",
+      "request_terminal": "CANCELLED",
+      "saas_send": false
+    },
+    "attempt_2": {
+      "request_id": "saas-90a9c428db0742bf8c38dbe5a766cf29",
+      "turn_id": "turn_ae7d7865-698c-454f-93aa-f5a8364ca361",
+      "parent_event_id": "saas_request:saas-90a9c428db0742bf8c38dbe5a766cf29",
+      "outcome": "SEND_UNKNOWN_RECONCILED_UNSENT_DRAFT",
+      "request_terminal": "CANCELLED",
+      "wake_terminal": "CANCELLED",
+      "wake_reason": "R20_DOM_READBACK_UNSENT_DRAFT",
+      "ingress_turn_status": "PENDING",
+      "ingress_response": null,
+      "dom_before_cleanup": {
+        "composer_has_turn": true,
+        "composer_has_request": true
+      },
+      "dom_after_cleanup": {
+        "composer_empty": true,
+        "user_message_has_turn": false,
+        "user_message_has_request": false,
+        "assistant_message_has_request": false
+      },
+      "saas_send": false
+    },
+    "successful_saas_completion": false,
+    "receipt_digest": null,
+    "same_thread_delivery": false,
+    "result": "BLOCKED_NO_SUCCESSFUL_SAAS_SEND_AFTER_MAX_TWO_LIVE_ATTEMPTS"
+  },
+  "tests": {
+    "python_unittest": "33/33 PASS",
+    "browser_native": "24/24 PASS",
+    "node_secure_relay_native": "2/2 PASS",
+    "ingress_contract": "PASS",
+    "rollback_parser": "PASS",
+    "git_diff_check": "PASS"
+  }
+}

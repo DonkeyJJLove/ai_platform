@@ -1,0 +1,13 @@
+[Unit]
+Description=LION SentinelX bridge readiness heartbeat
+After=sentinelx-cloud-core.service
+Wants=sentinelx-cloud-core.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/lion/sentinelx-bridge-heartbeat.py
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -43,6 +43,21 @@ class ExplicitTransportRoutingTests(unittest.TestCase):
         saved=broker.request_status(self.c,req['request_id'],self.now)
         self.assertEqual(saved['transport'],broker.SECURE_MCP_TRANSPORT)
 
+    def test_explicit_sentinelx_survives_other_mediator_heartbeat(self):
+        req=self.create(broker.SENTINELX_MCP_TRANSPORT)
+        self.hb(broker.SECURE_MCP_TRANSPORT,'SECURE')
+        saved=broker.request_status(self.c,req['request_id'],self.now)
+        self.assertEqual(saved['transport'],broker.SENTINELX_MCP_TRANSPORT)
+        self.assertEqual(broker.SUPPORTED_TRANSPORT_ATTESTATIONS[broker.SENTINELX_MCP_TRANSPORT],broker.SENTINELX_MCP_ATTESTATION_CLASS)
+
+    def test_sentinelx_ready_heartbeat_is_automatic_channel(self):
+        self.hb(broker.SENTINELX_MCP_TRANSPORT,'SENTINELX')
+        status=broker.bridge_status(self.c,None,self.now)
+        self.assertTrue(status['sentinelx_ready'])
+        self.assertEqual(status['channel_state'],'SENTINELX_MCP_READY')
+        self.assertEqual(status['transport'],broker.SENTINELX_MCP_TRANSPORT)
+        self.assertEqual(status['automatic_hop'],'AVAILABLE')
+
     def test_unpinned_backward_compatibility_can_be_adopted(self):
         req=self.create()
         self.assertEqual(req['transport'],broker.TRANSPORT)
