@@ -151,8 +151,10 @@ def main():
     }
 
     if args.up:
-        service_probe("http://127.0.0.1:8766/api/v3/health")
-        service_probe("http://127.0.0.1:8772/v1/models")
+        service_probe("http://127.0.0.1:8766/api/v3/local/assignments?limit=1")
+        # The model endpoint is reachable from the Docker host-gateway path, not
+        # from the WSL loopback. Each worker probes /v1/models itself and the
+        # fleet is not READY until all 32 workers prove that exact path.
         run(["docker","compose","-p","lion-r24-autonomy","-f",str(runtime/"compose.yaml"),"up","-d"],cwd=runtime)
         deadline=time.time()+max(10,args.timeout)
         last=None
