@@ -5,12 +5,14 @@ import fcntl
 import json
 import os
 import socket
+import sys
 import time
 import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, "/src/LION/runtime_compat/r24/docker-autonomy")
+from transport import PersistentJsonTransport
 
 from tools.lion_local_intelligence_runtime import LpclControlBridge, local_assignment_worker_once
 from cyber_lion.mission_control.material_worker_runtime import (
@@ -64,6 +66,7 @@ ARCH = architecture_profile(IDENTITY, runtime_instance_id=RUNTIME_INSTANCE_ID, b
 
 
 def write_status(**values):
+    transport=globals().get("TRANSPORT")
     value = {
         "schema": STATUS_SCHEMA,
         "observed_at": stamp(),
@@ -73,6 +76,12 @@ def write_status(**values):
         "model": MODEL_NAME,
         "worker_profile": PROFILE,
         "architecture": ARCH,
+        "transport_protocol": "HTTP/1.1_PERSISTENT",
+        "transport_metrics": {
+            "open_connections": int(transport.open_connections) if transport is not None else 0,
+            "connection_creations": int(transport.connection_creations) if transport is not None else 0,
+            "reconnects": int(transport.reconnects) if transport is not None else 0,
+        },
         **values,
     }
     tmp = STATUS.with_suffix(".tmp")
@@ -81,29 +90,11 @@ def write_status(**values):
     os.replace(tmp, STATUS)
 
 
-def force_ipv4_url(url):
-    parsed = urllib.parse.urlsplit(url)
-    if parsed.hostname != "host.docker.internal":
-        return url
-    ip = socket.gethostbyname(parsed.hostname)
-    netloc = ip + ((":" + str(parsed.port)) if parsed.port else "")
-    return urllib.parse.urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+TRANSPORT = PersistentJsonTransport(user_agent="LION-R24-Material-Worker/2")
 
 
 def request(url, body=None, timeout=10):
-    data = None
-    headers = {"User-Agent": "LION-R24-Material-Worker/2"}
-    if body is not None:
-        data = json.dumps(body).encode()
-        headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(
-        force_ipv4_url(url),
-        data=data,
-        headers=headers,
-        method="POST" if body is not None else "GET",
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        return json.load(response)
+    return TRANSPORT.request_json(url, body=body, timeout=float(timeout))
 
 
 def transient_transport_error(exc):
