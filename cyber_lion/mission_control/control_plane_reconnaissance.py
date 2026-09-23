@@ -747,6 +747,8 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
     lpcl_12_compatible=_lpcl12_compat_probe()
     prior_phases_pass,prior_phase_status=_prior_successor_phases_pass(conn,mission_id,phase_id)
     dynamic_docker_binding_ready=bool(docker_fleet.get("valid") and docker_fleet.get("binding_valid") and docker_fleet.get("worker_health") and docker_fleet.get("state")=="READY" and docker_fleet.get("model")=="gpt-oss-20b-MXFP4" and int(docker_fleet.get("logical_total") or 0)==int(docker_fleet.get("topology_assignment_count") or -1) and int(docker_fleet.get("topology_material_count") or 0)==32)
+    panel_runtime_observed=bool(isinstance(panel,dict) and (panel.get("runtime") or {}).get("pid") and (panel.get("runtime") or {}).get("runtime_source_sha256"))
+    baseline_and_fleet_bound=bool(source_currentness_bound and live_package_identified and broker_db_current and mc_db.get("integrity")=="ok" and panel_runtime_observed and dynamic_docker_binding_ready)
     terminal_validation=all((
         source_currentness_bound,
         runtime_revision_evidence is not None,
@@ -761,6 +763,7 @@ def derive_facts(conn: sqlite3.Connection, mission_id: str, phase_id: str, contr
         bool(runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
     ))
     values: dict[str,bool] = {
+        "BASELINE_AND_FLEET_BOUND":baseline_and_fleet_bound,
         "DYNAMIC_DOCKER_BINDING_READY":dynamic_docker_binding_ready,
         "PANEL_RUNTIME_IDENTITY_CAPTURED":bool(runtime.get("pid") and runtime.get("runtime_source_sha256") and runtime.get("gateway_source_sha256")),
         "MISSION_CONTROL_RUNTIME_IDENTITY_CAPTURED":bool((mc.get("runtime_identity") or {}).get("pid") and (mc.get("runtime_identity") or {}).get("source_hashes")),
