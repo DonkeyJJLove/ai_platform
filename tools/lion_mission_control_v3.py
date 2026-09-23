@@ -509,7 +509,9 @@ def bind_lpcl_execution(mid):
         own=c.execute('SELECT pod_uid,ready FROM material_workers WHERE mission_id=?',(mid,)).fetchall()
         logical_total=c.execute('SELECT COUNT(*) FROM logical_drones WHERE mission_id=?',(mid,)).fetchone()[0]
         topo_total=c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mid,)).fetchone()[0]
-        if len(own)==32 and len({r['pod_uid'] for r in own if r['pod_uid']})==32 and all(int(r['ready'])==1 for r in own) and logical_total==int(m['logical_count']) and topo_total==int(m['logical_count']):
+        own_uids={r['pod_uid'] for r in own if r['pod_uid']}
+        observed_uids={str(w['pod_uid']) for w in observed['workers'] if w.get('pod_uid')}
+        if len(own)==32 and len(own_uids)==32 and own_uids==observed_uids and all(int(r['ready'])==1 for r in own) and logical_total==int(m['logical_count']) and topo_total==int(m['logical_count']):
          c.execute('UPDATE missions SET runtime_state=?,materialized=32,ready=32,last_error=NULL,updated_at=? WHERE mission_id=?',('DOCKER_LOCAL_MODEL_FLEET_BOUND',now(),mid));c.commit();return process_snapshot(mid)
        role_prefix=str(kv.get('LOGICAL_ROLE_PREFIX') or 'AUTONOMOUS_LOGICAL').strip().upper()[:48]
        bound=global_sched.bind_dynamic_local_model_fleet(c,mid,int(m['logical_count']),observed['workers'],now,adapter=LPCL_DOCKER_LOCAL_MODEL_ADAPTER,runtime_state='DOCKER_LOCAL_MODEL_FLEET_BOUND',role_prefix=role_prefix,currentness_digest=observed['digest'])
