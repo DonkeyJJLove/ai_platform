@@ -133,6 +133,31 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         self.assertEqual(facts,{"REPAIR_BASELINE_FROZEN":False})
         c.close()
 
+    def test_r24_baseline_and_fleet_bound_accepts_observed_panel_drift_but_requires_current_docker_binding(self):
+        c=self.conn();head="1"*40;tree="2"*40
+        observations={"domains":{
+            "panel":{
+                "runtime":{"pid":39688,"runtime_source_sha256":"a"*64},
+                "repo":{"github_master":{"head":head,"tree":tree}},
+            },
+            "mission_control":{
+                "runtime_identity":{"pid":9,"source_hashes":{"mission_control_v3.py":"b"*64,"cyber_lion/mission_control/control_plane_reconnaissance.py":"c"*64}},
+                "db":{"integrity":"ok"},
+                "mission":{"mission_id":"R24","spec_digest":"d"*64,"source_head":head,"source_tree":tree},
+                "preflight":{},"contracts":[],
+            },
+            "broker":{"schema_digest":"e"*64,"request_state_counts":{},"binding_state_counts":{},"responded_count":0,"receipt_count":0,"pending_count":0,"transports":[],"autonomous_transport_claimed":False},
+            "docker_fleet":{"valid":True,"binding_valid":True,"worker_health":True,"state":"READY","model":"gpt-oss-20b-MXFP4","logical_total":64,"topology_assignment_count":64,"topology_material_count":32},
+        }}
+        contract={"completion_predicates":["BASELINE_AND_FLEET_BOUND=PASS"]}
+        facts,detail=cr.derive_facts(c,"R24","FREEZE_AND_BIND",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(facts,{"BASELINE_AND_FLEET_BOUND":True})
+        self.assertTrue(detail["successor_baseline"]["source_currentness_bound"])
+        observations["domains"]["docker_fleet"]["binding_valid"]=False
+        facts,_=cr.derive_facts(c,"R24","FREEZE_AND_BIND",contract,observations,artifacts={},baseline=None,local_analysis=None,saas_advisory=None)
+        self.assertEqual(facts,{"BASELINE_AND_FLEET_BOUND":False})
+        c.close()
+
     def test_terminal_validation_requires_current_exact_evidence_prior_passes_and_truthful_transport(self):
         c=self.conn();mid="SUCCESSOR";registered_head="1"*40;registered_tree="2"*40;current_head="3"*40;current_tree="4"*40;spec="d"*64;recon_sha="e"*64;pre_digest="f"*64
         c.executescript("""
