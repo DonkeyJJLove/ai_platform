@@ -15,7 +15,7 @@ projectInfo(PROJECT);
 if(process.env.LION_BROWSER_DATA)app.setPath('userData',path.resolve(process.env.LION_BROWSER_DATA));
 app.enableSandbox();
 if(!app.requestSingleInstanceLock()){app.quit()}else{
- let win,views=[],store,engine,server,timer;let closing=false;
+ let win,views=[],store,engine,server,timer;let closing=false;let activeRightTab='mission';
  const shutdown=()=>{if(closing)return;closing=true;clearInterval(timer);try{store?.shutdown()}catch{};server?.close();for(const view of views)if(!view.webContents.isDestroyed())view.webContents.close();try{store?.close()}catch{}};
  app.on('before-quit',shutdown);
  app.on('second-instance',()=>{if(win&&!win.isDestroyed()){win.show();win.focus()}});
@@ -33,11 +33,13 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   win=new BaseWindow({width:1500,height:960,title:'LION Broker — sesja SaaS',show:true});
   const panel=new WebContentsView({webPreferences:webPreferences('persist:lion-panel-r19')});
   const saas=new WebContentsView({webPreferences:webPreferences('persist:lion-saas-r19')});
-  views=[panel,saas];views.forEach(v=>win.contentView.addChildView(v));
+  const mission=new WebContentsView({webPreferences:webPreferences('persist:lion-mission-control-r24')});
+  const tabs=new WebContentsView({webPreferences:webPreferences('persist:lion-tabs-r24')});
+  views=[panel,saas,mission,tabs];views.forEach(v=>win.contentView.addChildView(v));
   const authHosts=new Set(['chatgpt.com','auth.openai.com','auth0.openai.com','accounts.google.com','login.microsoftonline.com','login.live.com','appleid.apple.com']);
   for(const v of views){
    const wc=v.webContents;
-   const allowed=raw=>{try{const u=new URL(raw);return !u.username&&!u.password&&(v===panel?u.origin===new URL(PANEL).origin:u.protocol==='https:'&&authHosts.has(u.hostname))}catch{return false}};
+   const allowed=raw=>{try{const u=new URL(raw);if(u.username||u.password)return false;if(v===panel)return u.origin===new URL(PANEL).origin;if(v===mission)return u.origin===new URL(MC).origin;if(v===tabs)return u.protocol==='data:';return u.protocol==='https:'&&authHosts.has(u.hostname)}catch{return false}};
    wc.on('will-navigate',(event,url)=>{if(!allowed(url))event.preventDefault()});
    wc.on('will-redirect',(event,url)=>{if(!allowed(url))event.preventDefault()});
    wc.setWindowOpenHandler(()=>({action:'deny'}));
@@ -47,8 +49,12 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    wc.session.on('will-download',event=>event.preventDefault());
    wc.on('render-process-gone',()=>{store.stop();win.setTitle('LION Broker — renderer stopped; operator required')});
   }
-  const layout=()=>{const {width,height}=win.getContentBounds();const split=Math.floor(width*.5);panel.setBounds({x:0,y:0,width:split,height});saas.setBounds({x:split,y:0,width:width-split,height})};
-  win.on('resize',layout);layout();win.on('closed',()=>app.quit());
+  const TAB_HEIGHT=38;
+  const layout=()=>{const {width,height}=win.getContentBounds();const split=Math.floor(width*.5),rightWidth=width-split,bodyHeight=Math.max(0,height-TAB_HEIGHT);panel.setBounds({x:0,y:0,width:split,height});tabs.setBounds({x:split,y:0,width:rightWidth,height:TAB_HEIGHT});const shown={x:split,y:TAB_HEIGHT,width:rightWidth,height:bodyHeight},hidden={x:split,y:TAB_HEIGHT,width:0,height:0};saas.setBounds(activeRightTab==='saas'?shown:hidden);mission.setBounds(activeRightTab==='mission'?shown:hidden)};
+  const selectRightTab=name=>{activeRightTab=name==='saas'?'saas':'mission';layout();win.setTitle(activeRightTab==='mission'?'LION Broker — Mission Control':'LION Broker — sesja SaaS')};
+  tabs.webContents.on('did-navigate-in-page',(_event,url)=>{try{const hash=new URL(url).hash;if(hash==='#saas')selectRightTab('saas');else if(hash==='#mission')selectRightTab('mission')}catch{}});
+  const tabHtml='<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0b1117;color:#dce8f2;font:13px system-ui;overflow:hidden}nav{height:100%;display:flex;align-items:end;border-bottom:1px solid #304454;padding:0 8px;box-sizing:border-box;gap:6px}a{color:#b7c9d7;text-decoration:none;padding:9px 14px 8px;border:1px solid #304454;border-bottom:0;border-radius:7px 7px 0 0;background:#121d26}a:hover{background:#1b2a36;color:white}</style><nav><a href="#mission">LION MISSION CONTROL</a><a href="#saas">ChatGPT SaaS</a></nav>';
+  win.on('resize',layout);selectRightTab('mission');win.on('closed',()=>app.quit());
   const browser=new EmbeddedBrowser(saas.webContents,PROJECT);
   const request=async(base,headers,route,method='GET',body)=>{
    const response=await fetch(new URL(route,base),{method,headers:{...headers,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(5000),redirect:'error'});
@@ -144,7 +150,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   ]}]));
   let ticking=false;
   timer=setInterval(async()=>{if(ticking||closing)return;ticking=true;try{await relay?.tick();if(!closing)await engine.tick()}finally{ticking=false}},2000);
-  await Promise.allSettled([panel.webContents.loadURL(PANEL),saas.webContents.loadURL(startupConversation)]);
+  await Promise.allSettled([panel.webContents.loadURL(PANEL),saas.webContents.loadURL(startupConversation),mission.webContents.loadURL(MC),tabs.webContents.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(tabHtml))]);
   if(!closing)try{await diagnose()}catch{win.setTitle('LION Broker — raport diagnostyczny niedostępny')}
  }).catch(()=>{dialog.showErrorBox('LION Broker','Uruchomienie nie powiodło się. Sprawdź konfigurację, dostęp do plików i wymagany runtime.');app.quit()});
 }
