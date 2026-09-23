@@ -103,6 +103,7 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
         and heartbeat.get("state")=="READY"
         and heartbeat.get("self_test")=="PASS"
         and heartbeat.get("model")==MODEL_NAME
+        and heartbeat.get("transport_protocol")=="HTTP/1.1_PERSISTENT"
         and tuple(heartbeat.get("direct_assignment_kinds") or ())==DIRECT_ASSIGNMENT_KINDS
         and arch.get("profile")==PROFILE
         and arch.get("source_head")==identity["source_head"]
@@ -142,6 +143,8 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
         "material_executor_independence":arch.get("material_executor_independence"),
         "docker_security_profile_ok":security,
         "status_file_secure":status_file_secure,
+        "transport_protocol":(heartbeat or {}).get("transport_protocol"),
+        "transport_metrics":(heartbeat or {}).get("transport_metrics"),
         "model":(heartbeat or {}).get("model"),
         "mission_control":(heartbeat or {}).get("mission_control"),
         "model_endpoint":(heartbeat or {}).get("model_endpoint"),
