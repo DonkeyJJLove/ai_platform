@@ -53,7 +53,7 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
             "RECEIPT_STATE_COUNTS","REPOSITORY_DIFF","REQUEST_COUNT_DIFF","REQUEST_STATE_COUNTS","RESPONDED_ROWS","RUNTIME_PROCESS_IDENTITY",
             "SAAS_LINK_PATH","SCHEDULER_STATE_MODEL","SCHEMA_READBACK","SESSION_STATE","SQLITE_IDENTITY","STATE_DIFF","SUCCESSOR_CAPABILITY_MATRIX",
             "SUCCESSOR_COMPLETION_CONTRACT","SUCCESSOR_LPCL_PROPOSAL_DIGEST","THREAD_RUNTIME","TRANSPORT_CLASSIFICATION","UNCERTAINTY_REGISTER","WORKTREE_STATE",
-            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK","DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS",
+            "EXACT_SOURCE_READBACK","CONTROL_PLANE_INTELLIGENCE_BUNDLE_READBACK","RESTART_DURABILITY","BACKWARD_COMPATIBILITY","BROKER_TRANSPORT_READBACK","DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS","DYNAMIC_DOCKER_BINDING","LOGICAL_MATERIAL_TOPOLOGY",
         }
         self.assertEqual((currentness|evidence)-set(cr.TOKEN_DOMAIN),set())
         contract={"currentness_requirements":["UNKNOWN_X"],"evidence_requirements":[]}
@@ -82,7 +82,7 @@ class ControlPlaneReconnaissanceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             currentness=Path(td)/"fleet-currentness.json";currentness.write_text(json.dumps(value),encoding="utf-8")
             with patch.object(cr,"DOCKER_FLEET_CURRENTNESS",currentness):
-                contract={"currentness_requirements":["LIVE_DOCKER_FLEET","LOCAL_MODEL_IDENTITY"],"evidence_requirements":["DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS"]}
+                contract={"currentness_requirements":["LIVE_DOCKER_FLEET","LOCAL_MODEL_IDENTITY"],"evidence_requirements":["DOCKER_HEARTBEATS","UNIQUE_CONTAINER_IDS","DYNAMIC_DOCKER_BINDING","LOGICAL_MATERIAL_TOPOLOGY"]}
                 plan=cr.build_observation_plan(contract)
                 self.assertEqual(plan["unsupported_tokens"],[]);self.assertEqual(plan["domains"],["docker_fleet"])
                 out=cr._docker_fleet_snapshot(c,mid)
