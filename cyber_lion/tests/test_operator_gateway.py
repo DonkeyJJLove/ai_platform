@@ -8,7 +8,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
 
-from tools.lion_operator_gateway import Runtime,make_handler,now
+from tools.lion_operator_gateway import FleetThreadingHTTPServer,Runtime,make_handler,now
 from cyber_lion.mission_control import operator_control
 
 
@@ -19,7 +19,7 @@ class OperatorGatewayTests(unittest.TestCase):
         self.key.write_text('k'*64,encoding='utf-8');self.proxy_key.write_text('p'*64,encoding='utf-8');self.panel_key.write_text('n'*64,encoding='utf-8');self.pair_key.write_text('z'*64,encoding='utf-8')
         c=sqlite3.connect(self.db);c.execute('CREATE TABLE missions(mission_id TEXT PRIMARY KEY,state TEXT)');c.execute("INSERT INTO missions VALUES('M1','RUNNING')");c.commit();c.close()
         self.runtime=Runtime(self.db,self.key,self.proxy_key,self.panel_key,self.pair_key,self.floor,'http://127.0.0.1:9',bootstrap_primary=True)
-        self.server=ThreadingHTTPServer(('127.0.0.1',0),make_handler(self.runtime));self.port=self.server.server_address[1]
+        self.server=FleetThreadingHTTPServer(('127.0.0.1',0),make_handler(self.runtime));self.port=self.server.server_address[1]
         self.thread=Thread(target=self.server.serve_forever,daemon=True);self.thread.start()
     def tearDown(self):
         self.server.shutdown();self.server.server_close();self.thread.join(timeout=2);self.tmp.cleanup()
@@ -40,6 +40,10 @@ class OperatorGatewayTests(unittest.TestCase):
             c=self.runtime.connect();row=c.execute("SELECT control_epoch FROM mission_operator_control WHERE mission_id='M1'").fetchone();c.close();value['expected_revision']=int(row[0]) if row else 1 if expected is None else expected
             if expected is not None:value['expected_revision']=expected
         return value
+    def test_fleet_backlog_is_bounded_above_default(self):
+        self.assertGreaterEqual(self.server.request_queue_size,128)
+        self.assertTrue(self.server.daemon_threads)
+
     def test_auth_and_message(self):
         self.assertEqual(self.req('/v1/state?mission_id=M1',auth=False)[0],403)
         code,out=self.req('/v1/commands',self.command('m','MESSAGE',{'content':'hello'}));self.assertEqual(code,201);self.assertFalse(out['idempotent'])

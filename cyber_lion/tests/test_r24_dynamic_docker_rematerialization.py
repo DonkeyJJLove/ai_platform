@@ -102,6 +102,12 @@ class R24DynamicDockerRematerializationTests(unittest.TestCase):
         c.close()
         self.assertEqual(topology_after,topology_before)
 
+    def test_mission_control_http_backlog_supports_fleet_bursts(self):
+        mc=self.module()
+        self.assertGreaterEqual(mc.FleetThreadingHTTPServer.request_queue_size,128)
+        self.assertTrue(mc.FleetThreadingHTTPServer.daemon_threads)
+        self.assertTrue(mc.FleetThreadingHTTPServer.allow_reuse_address)
+
 
 if __name__=="__main__":
     unittest.main()

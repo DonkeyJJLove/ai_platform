@@ -51,4 +51,19 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
             raise AssertionError(op)
         self.assertIsNone(local_assignment_worker_once(control,lambda *a:"no",material_drone_id="MD025"))
 
+    def test_prefetched_assignments_do_not_poll_control_plane_again(self):
+        calls=[]
+        row={"assignment_id":"assignment-prefetch","material_drone_id":"MD025","lease_generation":2,"lease_expires_at":"2099-01-01T00:00:00Z","input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}]}"}
+        def control(op,args):
+            calls.append(op)
+            if op=="local_assignments":raise AssertionError("unexpected duplicate poll")
+            if op=="local_assignment_claim":return dict(row,state="CLAIMED",mission_id="M1",phase_id="P1",logical_drone_id="LD1")
+            if op=="model_call_intent":return {"status":"INTENT_DURABLE","model_call_id":args["model_call_id"]}
+            if op=="model_call_transition":return {"status":args["state"],"model_call_id":args["model_call_id"]}
+            if op=="local_assignment_receipt":return {"receipt_id":"receipt-prefetch","duplicate":False}
+            raise AssertionError(op)
+        out=local_assignment_worker_once(control,lambda messages,max_tokens:"OK",material_drone_id="MD025",pending=[row])
+        self.assertEqual(out["receipt_id"],"receipt-prefetch")
+        self.assertNotIn("local_assignments",calls)
+
 if __name__=="__main__":unittest.main()
