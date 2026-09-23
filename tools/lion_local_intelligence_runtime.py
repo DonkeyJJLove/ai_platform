@@ -506,8 +506,9 @@ def providers(broker,model):
 
 
 
-def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025'):
-    pending=control('local_assignments',{'limit':16}).get('assignments') or []
+def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025', pending=None):
+    if pending is None:
+        pending=control('local_assignments',{'limit':16}).get('assignments') or []
     for row in pending:
         if row.get('material_drone_id')!=material_drone_id:continue
         aid=row.get('assignment_id')

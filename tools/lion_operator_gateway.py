@@ -363,6 +363,12 @@ def make_handler(runtime: Runtime):
     return H
 
 
+class FleetThreadingHTTPServer(ThreadingHTTPServer):
+    request_queue_size=128
+    daemon_threads=True
+    allow_reuse_address=True
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--db',default=DEFAULT_DB);p.add_argument('--key-file',default=DEFAULT_KEY);p.add_argument('--proxy-key-file',default=DEFAULT_PROXY_KEY);p.add_argument('--panel-proxy-key-file',default=DEFAULT_PANEL_PROXY_KEY);p.add_argument('--pairing-key-file',default=DEFAULT_PAIRING_KEY)
     p.add_argument('--epoch-floor',default=DEFAULT_FLOOR);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766')
@@ -371,7 +377,7 @@ def main():
     if a.host not in {'127.0.0.1','::1'}:raise SystemExit('operator gateway must remain loopback-only')
     runtime=Runtime(Path(a.db),Path(a.key_file),Path(a.proxy_key_file),Path(a.panel_proxy_key_file),Path(a.pairing_key_file),Path(a.epoch_floor),a.mission_control_url,bootstrap_primary=a.bootstrap_primary)
     threading.Thread(target=swarm_reconcile_loop,args=(runtime,),daemon=True,name='operator-swarm-reconciler').start()
-    ThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
+    FleetThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
 
 
 if __name__=='__main__':main()

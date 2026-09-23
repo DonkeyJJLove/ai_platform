@@ -2480,8 +2480,13 @@ class H(BaseHTTPRequestHandler):
  def do_PATCH(self):self.json({'error':'method denied'},405)
  def do_DELETE(self):self.json({'error':'method denied'},405)
 
+class FleetThreadingHTTPServer(ThreadingHTTPServer):
+ request_queue_size=128
+ daemon_threads=True
+ allow_reuse_address=True
+
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=ThreadingHTTPServer((a.host,a.port),H);relay=_start_secure_mcp_broker_relay(a.port);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
+ ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=FleetThreadingHTTPServer((a.host,a.port),H);relay=_start_secure_mcp_broker_relay(a.port);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
  for lp in (a.listen_state,a.legacy_listen_state):
   q=Path(lp);q.parent.mkdir(parents=True,exist_ok=True);tmp=q.with_name(q.name+'.tmp-'+uuid.uuid4().hex[:8]);tmp.write_text(json.dumps(loc,sort_keys=True),encoding='utf-8');os.replace(tmp,q)
  print(json.dumps(loc),flush=True)

@@ -6,6 +6,7 @@ import json
 import os
 import socket
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -35,6 +36,16 @@ WORKER_PATH = Path("/runtime/worker.py")
 RUNTIME_CONTRACT_PATH = Path("/src/cyber_lion/mission_control/material_worker_runtime.py")
 RUNTIME_INSTANCE_ID = socket.gethostname()
 BOOT_ID_PATH = Path("/proc/sys/kernel/random/boot_id")
+MODEL_HEALTH = Path("/gate/model-health.json")
+WORKER_INDEX = max(1, int(WORKER_ID[-3:]))
+POLL_INTERVAL_SECONDS = float(os.environ.get("LION_WORKER_POLL_INTERVAL_SECONDS", "2.0"))
+STARTUP_SPREAD_SECONDS = float(os.environ.get("LION_WORKER_STARTUP_SPREAD_SECONDS", "2.0"))
+MODEL_HEALTH_TTL_SECONDS = float(os.environ.get("LION_MODEL_HEALTH_TTL_SECONDS", "60"))
+MODEL_LOCAL_CHECK_INTERVAL_SECONDS = float(os.environ.get("LION_MODEL_LOCAL_CHECK_INTERVAL_SECONDS", "15"))
+TRANSPORT_DEGRADED_AFTER_ERRORS = int(os.environ.get("LION_TRANSPORT_DEGRADED_AFTER_ERRORS", "4"))
+TRANSPORT_STALE_AFTER_SECONDS = float(os.environ.get("LION_TRANSPORT_STALE_AFTER_SECONDS", "20"))
+STATUS_HEARTBEAT_SECONDS = float(os.environ.get("LION_WORKER_STATUS_HEARTBEAT_SECONDS", "5"))
+STARTUP_JITTER_SECONDS = ((WORKER_INDEX - 1) % 32) / 32.0 * STARTUP_SPREAD_SECONDS
 
 
 def stamp():
@@ -95,6 +106,75 @@ def request(url, body=None, timeout=10):
         return json.load(response)
 
 
+def transient_transport_error(exc):
+    if isinstance(exc, (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError)):
+        return True
+    if isinstance(exc, OSError) and getattr(exc, "errno", None) in {101, 110, 111, 113}:
+        return True
+    reason = getattr(exc, "reason", None)
+    if isinstance(reason, OSError) and getattr(reason, "errno", None) in {101, 110, 111, 113}:
+        return True
+    return False
+
+
+def _model_cache_read():
+    try:
+        value=json.loads(MODEL_HEALTH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    checked=float(value.get("checked_at_epoch") or 0)
+    if time.time()-checked > MODEL_HEALTH_TTL_SECONDS:
+        return None
+    if value.get("model") != MODEL_NAME or value.get("state") != "READY":
+        return None
+    return value
+
+
+def _ensure_model_identity_locked(force=False):
+    if not force:
+        cached=_model_cache_read()
+        if cached is not None:
+            return cached
+    models=request(MODEL.rstrip("/") + "/v1/models", timeout=5)
+    ids=[
+        str(x.get("id") or x.get("name") or x.get("model") or "")
+        for x in (models.get("data") or models.get("models") or [])
+        if isinstance(x, dict)
+    ]
+    if not any(MODEL_NAME in x for x in ids):
+        raise RuntimeError("local model identity mismatch")
+    value={
+        "state":"READY",
+        "model":MODEL_NAME,
+        "checked_at_epoch":time.time(),
+        "checked_at":stamp(),
+        "checker":WORKER_ID,
+    }
+    tmp=MODEL_HEALTH.with_suffix(".tmp-"+WORKER_ID)
+    tmp.write_text(json.dumps(value,sort_keys=True)+"\n",encoding="utf-8")
+    os.chmod(tmp,0o640)
+    os.replace(tmp,MODEL_HEALTH)
+    return value
+
+
+def ensure_model_identity(force=False):
+    LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with LOCK.open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        try:
+            return _ensure_model_identity_locked(force=force)
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+
+def transport_degraded(consecutive_errors,last_success_monotonic):
+    if consecutive_errors >= TRANSPORT_DEGRADED_AFTER_ERRORS:
+        return True
+    if last_success_monotonic <= 0:
+        return True
+    return (time.monotonic()-last_success_monotonic) >= TRANSPORT_STALE_AFTER_SECONDS
+
+
 bridge = LpclControlBridge(None, MC)
 
 
@@ -103,14 +183,7 @@ def modelprov(messages, max_tokens=384):
     with LOCK.open("a+") as lock:
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
         try:
-            models = request(MODEL.rstrip("/") + "/v1/models", timeout=5)
-            ids = [
-                str(x.get("id") or x.get("name") or x.get("model") or "")
-                for x in (models.get("data") or models.get("models") or [])
-                if isinstance(x, dict)
-            ]
-            if not any(MODEL_NAME in x for x in ids):
-                raise RuntimeError("local model identity mismatch")
+            _ensure_model_identity_locked(force=False)
             out = request(
                 MODEL.rstrip("/") + "/v1/chat/completions",
                 {"messages": messages, "max_tokens": int(max_tokens), "temperature": 0.1, "stream": False},
@@ -152,8 +225,7 @@ def receipt(assignment_id, claimed, status, result):
     )
 
 
-def material_contract_assignment_once():
-    listing = request(MC.rstrip("/") + "/api/v3/local/assignments?limit=64", timeout=5)
+def material_contract_assignment_once(listing):
     supported = {
         "CANONICAL_ACTION_IR_VALIDATE",
         "RUNTIME_EXECUTION_ENVELOPE_VALIDATE",
@@ -211,8 +283,7 @@ def material_contract_assignment_once():
     return None
 
 
-def material_sandbox_canary_once():
-    listing = request(MC.rstrip("/") + "/api/v3/local/assignments?limit=64", timeout=5)
+def material_sandbox_canary_once(listing):
     for row in listing.get("assignments") or []:
         if row.get("material_drone_id") != WORKER_ID:
             continue
@@ -272,54 +343,125 @@ write_status(
     state="STARTING",
     self_test="IDENTITY_VERIFIED",
     direct_assignment_kinds=list(DIRECT_ASSIGNMENT_KINDS),
+    transport_state="STARTING",
+    mission_control_reachability="UNKNOWN",
+    model_reachability="UNKNOWN",
+    poll_interval_seconds=POLL_INTERVAL_SECONDS,
+    startup_jitter_seconds=STARTUP_JITTER_SECONDS,
+    consecutive_transport_errors=0,
     last_receipt=None,
     last_error=None,
 )
 
+consecutive_transport_errors=0
+last_success_monotonic=0.0
+last_model_local_check_monotonic=0.0
+last_status_monotonic=0.0
+last_receipt=None
+last_mc_ok_at=None
+last_model_ok_at=None
+time.sleep(STARTUP_JITTER_SECONDS)
+
 while True:
+    operation="MC_POLL"
     try:
-        request(MC.rstrip("/") + "/api/v3/local/assignments?limit=1", timeout=5)
-        models = request(MODEL.rstrip("/") + "/v1/models", timeout=5)
-        ids = [
-            str(x.get("id") or x.get("name") or x.get("model") or "")
-            for x in (models.get("data") or models.get("models") or [])
-            if isinstance(x, dict)
-        ]
-        if not any(MODEL_NAME in x for x in ids):
-            raise RuntimeError("local model identity mismatch")
-        write_status(
-            state="READY",
-            self_test="PASS",
-            direct_assignment_kinds=list(DIRECT_ASSIGNMENT_KINDS),
-            last_receipt=None,
-            last_error=None,
-        )
-        result = material_contract_assignment_once()
+        listing=request(MC.rstrip("/") + "/api/v3/local/assignments?limit=64", timeout=5)
+        now_mono=time.monotonic()
+        last_mc_ok_at=stamp()
+
+        if last_model_local_check_monotonic<=0 or now_mono-last_model_local_check_monotonic>=MODEL_LOCAL_CHECK_INTERVAL_SECONDS:
+            operation="MODEL_HEALTH"
+            model_health=ensure_model_identity(force=False)
+            last_model_ok_at=str(model_health.get("checked_at") or stamp())
+            last_model_local_check_monotonic=now_mono
+
+        consecutive_transport_errors=0
+        last_success_monotonic=now_mono
+        operation="CONTRACT_ASSIGNMENT"
+        result=material_contract_assignment_once(listing)
         if result is None:
-            result = material_sandbox_canary_once()
+            operation="SANDBOX_ASSIGNMENT"
+            result=material_sandbox_canary_once(listing)
         if result is None:
-            result = local_assignment_worker_once(bridge, modelprov, material_drone_id=WORKER_ID)
+            operation="LOCAL_MODEL_ASSIGNMENT"
+            result=local_assignment_worker_once(
+                bridge,
+                modelprov,
+                material_drone_id=WORKER_ID,
+                pending=listing.get("assignments") or [],
+            )
         if result is not None:
-            print(json.dumps({"event": "LION_WORKER_RECEIPT", "worker": WORKER_ID, "receipt": result}, ensure_ascii=False), flush=True)
+            last_receipt=result
+            print(json.dumps({"event":"LION_WORKER_RECEIPT","worker":WORKER_ID,"receipt":result},ensure_ascii=False),flush=True)
+
+        now_mono=time.monotonic()
+        if result is not None or now_mono-last_status_monotonic>=STATUS_HEARTBEAT_SECONDS:
             write_status(
                 state="READY",
                 self_test="PASS",
                 direct_assignment_kinds=list(DIRECT_ASSIGNMENT_KINDS),
-                last_receipt=result,
+                transport_state="READY",
+                mission_control_reachability="OK",
+                model_reachability="OK" if last_model_ok_at else "UNKNOWN",
+                last_mission_control_ok_at=last_mc_ok_at,
+                last_model_ok_at=last_model_ok_at,
+                poll_interval_seconds=POLL_INTERVAL_SECONDS,
+                startup_jitter_seconds=STARTUP_JITTER_SECONDS,
+                consecutive_transport_errors=0,
+                last_transport_operation=operation,
+                last_receipt=last_receipt,
                 last_error=None,
             )
-        time.sleep(0.75)
+            last_status_monotonic=now_mono
+        time.sleep(POLL_INTERVAL_SECONDS)
     except KeyboardInterrupt:
-        write_status(state="STOPPED", self_test="PASS", direct_assignment_kinds=list(DIRECT_ASSIGNMENT_KINDS), last_receipt=None, last_error=None)
+        write_status(
+            state="STOPPED",
+            self_test="PASS",
+            direct_assignment_kinds=list(DIRECT_ASSIGNMENT_KINDS),
+            transport_state="STOPPED",
+            mission_control_reachability="UNKNOWN",
+            model_reachability="UNKNOWN",
+            consecutive_transport_errors=consecutive_transport_errors,
+            last_receipt=last_receipt,
+            last_error=None,
+        )
         raise
     except Exception as exc:
-        err = type(exc).__name__ + ":" + str(exc)[:800]
-        print(json.dumps({"event": "LION_WORKER_ERROR", "worker": WORKER_ID, "error": err}), flush=True)
+        err=type(exc).__name__+":"+str(exc)[:800]
+        transient=transient_transport_error(exc)
+        if transient:
+            consecutive_transport_errors+=1
+        else:
+            consecutive_transport_errors=max(consecutive_transport_errors+1,TRANSPORT_DEGRADED_AFTER_ERRORS)
+        degraded=transport_degraded(consecutive_transport_errors,last_success_monotonic)
+        state="DEGRADED" if degraded else "READY"
+        self_test="FAIL" if degraded else "PASS"
+        transport_state="DEGRADED" if degraded else "TRANSIENT_ERROR"
+        print(json.dumps({
+            "event":"LION_WORKER_ERROR",
+            "worker":WORKER_ID,
+            "operation":operation,
+            "transient":transient,
+            "consecutive_transport_errors":consecutive_transport_errors,
+            "error":err,
+        }),flush=True)
         write_status(
-            state="DEGRADED",
-            self_test="FAIL",
+            state=state,
+            self_test=self_test,
             direct_assignment_kinds=list(DIRECT_ASSIGNMENT_KINDS),
-            last_receipt=None,
+            transport_state=transport_state,
+            mission_control_reachability="OK" if last_mc_ok_at and not degraded else "STALE",
+            model_reachability="OK" if last_model_ok_at and not degraded else "STALE",
+            last_mission_control_ok_at=last_mc_ok_at,
+            last_model_ok_at=last_model_ok_at,
+            poll_interval_seconds=POLL_INTERVAL_SECONDS,
+            startup_jitter_seconds=STARTUP_JITTER_SECONDS,
+            consecutive_transport_errors=consecutive_transport_errors,
+            last_transport_operation=operation,
+            last_receipt=last_receipt,
             last_error=err,
         )
-        time.sleep(2)
+        delay=min(10.0,1.0*(2**min(max(consecutive_transport_errors-1,0),3)))
+        delay+=((WORKER_INDEX-1)%8)*0.05
+        time.sleep(delay)
