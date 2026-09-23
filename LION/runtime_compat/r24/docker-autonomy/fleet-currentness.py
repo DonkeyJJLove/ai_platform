@@ -22,8 +22,8 @@ STATUS_DIR=RUNTIME_DIR/"status"
 IDENTITY_PATH=RUNTIME_DIR/"identity.json"
 WORKER_PATH=RUNTIME_DIR/"worker.py"
 CONTRACT_PATH=SOURCE_DIR/"cyber_lion/mission_control/material_worker_runtime.py"
-PRIMARY_OUT=Path("/mnt/c/Users/d2j3/AppData/Local/LION/r24-autonomy/fleet-currentness.json")
-COMPAT_OUT=Path("/mnt/c/Users/d2j3/AppData/Local/LION/r23-autonomy/fleet-currentness.json")
+PRIMARY_OUT=Path(os.environ.get("LION_R24_CURRENTNESS_OUT","/mnt/c/Users/d2j3/AppData/Local/LION/r24-autonomy/fleet-currentness.json"))
+COMPAT_OUT=Path(os.environ.get("LION_R23_CURRENTNESS_COMPAT_OUT","/mnt/c/Users/d2j3/AppData/Local/LION/r23-autonomy/fleet-currentness.json"))
 LABEL="LION_WORKER_PROFILE="+PROFILE
 EXPECTED=32
 
@@ -145,6 +145,14 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
         "status_file_secure":status_file_secure,
         "transport_protocol":(heartbeat or {}).get("transport_protocol"),
         "transport_metrics":(heartbeat or {}).get("transport_metrics"),
+        "transport_state":(heartbeat or {}).get("transport_state"),
+        "mission_control_reachability":(heartbeat or {}).get("mission_control_reachability"),
+        "model_reachability":(heartbeat or {}).get("model_reachability"),
+        "consecutive_transport_errors":int((heartbeat or {}).get("consecutive_transport_errors") or 0),
+        "last_mission_control_ok_at":(heartbeat or {}).get("last_mission_control_ok_at"),
+        "last_model_ok_at":(heartbeat or {}).get("last_model_ok_at"),
+        "last_transport_operation":(heartbeat or {}).get("last_transport_operation"),
+        "last_transport_error":(heartbeat or {}).get("last_error"),
         "model":(heartbeat or {}).get("model"),
         "mission_control":(heartbeat or {}).get("mission_control"),
         "model_endpoint":(heartbeat or {}).get("model_endpoint"),
@@ -154,6 +162,27 @@ for name in sorted(x for x in names if x.startswith("lion-r24-md")):
 ids=[r.get("material_worker_id") for r in rows]
 containers=[r.get("container_id") for r in rows]
 boots={r.get("boot_id") for r in rows if r.get("boot_id")}
+transport_ready_count=sum(1 for r in rows if r.get("transport_state")=="READY")
+transport_transient_count=sum(1 for r in rows if r.get("transport_state")=="TRANSIENT_ERROR")
+transport_degraded_count=sum(1 for r in rows if r.get("transport_state")=="DEGRADED")
+mc_ok_count=sum(1 for r in rows if r.get("mission_control_reachability")=="OK")
+model_ok_count=sum(1 for r in rows if r.get("model_reachability")=="OK")
+shared_failure_threshold=max(4,EXPECTED//4)
+shared_transport_failure_suspected=bool(
+    len(rows)>=shared_failure_threshold
+    and (
+        len(rows)-mc_ok_count>=shared_failure_threshold
+        or len(rows)-model_ok_count>=shared_failure_threshold
+    )
+)
+if rows and transport_ready_count==len(rows) and mc_ok_count==len(rows) and model_ok_count==len(rows):
+    transport_health="HEALTHY"
+elif shared_transport_failure_suspected:
+    transport_health="SHARED_GATEWAY_DEGRADED"
+elif transport_degraded_count:
+    transport_health="WORKER_TRANSPORT_DEGRADED"
+else:
+    transport_health="TRANSIENT_DEGRADED"
 healthy=bool(
     len(rows)==EXPECTED
     and len(set(ids))==EXPECTED and None not in ids
@@ -167,6 +196,15 @@ body={
     "observed_at":now(),
     "physical_host":"MOON",
     "physical_failure_domains":1,
+    "shared_transport_failure_domain":"WINDOWS_MOON_DOCKER_DESKTOP_HOST_GATEWAY",
+    "container_host_gateway_name":"host.docker.internal",
+    "transport_health":transport_health,
+    "transport_ready_workers":transport_ready_count,
+    "transport_transient_workers":transport_transient_count,
+    "transport_degraded_workers":transport_degraded_count,
+    "mission_control_reachable_workers":mc_ok_count,
+    "model_reachable_workers":model_ok_count,
+    "shared_transport_failure_suspected":shared_transport_failure_suspected,
     "material_executor_independence":INDEPENDENCE_STATE,
     "independent_material_executors_proven":0,
     "unique_boot_ids":len(boots),
