@@ -18,7 +18,7 @@ CONTROL_ACTIONS = frozenset({
     "TAKE_CONTROL", "RELEASE_CONTROL", "RESUME_SCOPE",
 })
 ACTIONS = COMMUNICATION_ACTIONS | CONTEXT_ACTIONS | CONTROL_ACTIONS
-TARGET_RE = re.compile(r"^(?:mission|drone|swarm|group|operator):[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$")
+TARGET_RE = re.compile(r"^(?:mission|drone|worker|swarm|group|operator):[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$")
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$")
 
 
