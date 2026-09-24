@@ -274,8 +274,7 @@ class Runtime:
         c=self.connect()
         try:
             prior=c.execute("""SELECT assignment_id,state FROM mission_execution_assignments
-                               WHERE mission_id=? AND phase_id='__OPERATOR_BUS__'
-                                 AND input_json LIKE ?
+                               WHERE mission_id=? AND input_json LIKE ?
                                ORDER BY created_at DESC LIMIT 1""",
                             (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
             if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'idempotent':True,'authority_effect':'NONE'}
@@ -306,6 +305,45 @@ class Runtime:
             aid=global_scheduler.create_assignment(c,mission_id,'__OPERATOR_BUS__',logical_id,material_id,assignment_input,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
             return {'assignment_id':aid,'state':'READY','logical_drone_id':logical_id,'material_drone_id':material_id,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
         finally:c.close()
+
+
+def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 16) -> dict:
+    c=runtime.connect()
+    try:
+        rows=[dict(r) for r in c.execute("""SELECT mission_id,message_id,command_id,target,content,correlation_id
+                                           FROM operator_messages
+                                           WHERE from_participant=?
+                                             AND command_id LIKE 'panel-%'
+                                             AND correlation_id IS NOT NULL
+                                             AND state IN ('PENDING','PARTIAL')
+                                           ORDER BY created_at,message_id LIMIT ?""",
+                                        (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
+    finally:c.close()
+    dispatched=existing=failed=0;errors=[]
+    for row in rows:
+        value={
+            'command_id':row['command_id'],
+            'mission_id':row['mission_id'],
+            'action':'MESSAGE',
+            'target':row['target'],
+            'payload':{'content':row['content']},
+            'correlation_id':row['correlation_id'],
+        }
+        try:
+            routed,_=runtime.route_conversation_command(value)
+            out=runtime.dispatch_conversation_message(routed,{'result':{'message_id':row['message_id']}})
+            if out.get('idempotent'):existing+=1
+            else:dispatched+=1
+        except Exception as exc:
+            failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+    return {'pending':len(rows),'dispatched':dispatched,'existing':existing,'failed':failed,'errors':errors,'authority_effect':'NONE'}
+
+
+def conversation_reconcile_loop(runtime: Runtime):
+    while True:
+        try:reconcile_pending_conversations_once(runtime)
+        except Exception:pass
+        time.sleep(1.0)
 
 
 def reconcile_active_swarm_sessions_once(runtime: Runtime) -> dict:
@@ -521,6 +559,7 @@ def main():
     if a.host not in {'127.0.0.1','::1'}:raise SystemExit('operator gateway must remain loopback-only')
     runtime=Runtime(Path(a.db),Path(a.key_file),Path(a.proxy_key_file),Path(a.panel_proxy_key_file),Path(a.pairing_key_file),Path(a.epoch_floor),a.mission_control_url,bootstrap_primary=a.bootstrap_primary)
     threading.Thread(target=swarm_reconcile_loop,args=(runtime,),daemon=True,name='operator-swarm-reconciler').start()
+    threading.Thread(target=conversation_reconcile_loop,args=(runtime,),daemon=True,name='operator-conversation-reconciler').start()
     FleetThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
 
 

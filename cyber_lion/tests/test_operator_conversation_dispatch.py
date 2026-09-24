@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from cyber_lion.mission_control import execution_driver, global_scheduler, operator_control
-from tools.lion_operator_gateway import Runtime
+from tools.lion_operator_gateway import Runtime, reconcile_pending_conversations_once
 
 
 def now():
@@ -127,6 +127,25 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         rows=[{'message_id':'m1','content':'old'},{'message_id':'m2','content':'current'}]
         selected=operator_control.assignment_messages_for_input(rows,json.dumps({'operator_message_ids':['m2']}))
         self.assertEqual(selected,[{'message_id':'m2','content':'current'}])
+
+    def test_backlog_reconciler_materializes_missing_panel_assignment_once(self):
+        value=self.command(command_id='panel-'+('3'*32),correlation='b'*32,content='Misja?')
+        applied=self.runtime.apply(value,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        c=self.runtime.connect()
+        try:
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE input_json LIKE ?",('%"operator_message_ids":["'+mid+'"]%',)).fetchone()[0],0)
+        finally:c.close()
+        first=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(first['dispatched'],1)
+        self.assertEqual(first['failed'],0)
+        second=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(second['existing'],1)
+        c=self.runtime.connect()
+        try:
+            rows=c.execute("SELECT assignment_id FROM mission_execution_assignments WHERE input_json LIKE ?",('%"operator_message_ids":["'+mid+'"]%',)).fetchall()
+            self.assertEqual(len(rows),1)
+        finally:c.close()
 
 
 if __name__=='__main__':
