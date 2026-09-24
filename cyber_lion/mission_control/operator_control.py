@@ -571,8 +571,11 @@ def assignment_messages_for_input(messages,input_json):
 
 def note_assignment_application(conn,assignment_id,result,now_fn):
     if "mission_execution_assignments" not in _tables(conn):return {"applied_messages":0,"partial_messages":0}
-    row=conn.execute("SELECT mission_id,logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+    row=conn.execute("SELECT mission_id,logical_drone_id,material_drone_id,input_json FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
     if row is None:raise ValueError("assignment missing")
+    try:assignment_input=json.loads(row['input_json'] or '{}')
+    except Exception:assignment_input={}
+    conversation_v2=assignment_input.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and assignment_input.get('conversation_protocol_version')==2
     ids=result.get("operator_message_ids") or []
     if not isinstance(ids,list) or any(not isinstance(x,str) for x in ids):ids=[]
     stamp=now_fn();applied=0;partial=0;responses=[];recipients=['worker:'+str(row['material_drone_id'] or ''),'drone:'+str(row['material_drone_id'] or ''),'drone:'+str(row['logical_drone_id'] or '')]
@@ -585,7 +588,7 @@ def note_assignment_application(conn,assignment_id,result,now_fn):
             total=int(counts['total']);done=int(counts['applied'] or 0);state='APPLIED' if done==total else 'PARTIAL';conn.execute("UPDATE operator_messages SET state=?,applied_at=CASE WHEN ?='APPLIED' THEN ? ELSE applied_at END,applied_assignment_id=CASE WHEN ?='APPLIED' THEN ? ELSE applied_assignment_id END WHERE message_id=?",(state,state,stamp,state,assignment_id,message_id));applied+=1 if state=='APPLIED' else 0;partial+=1 if state=='PARTIAL' else 0
         else:applied+=int(bool(matched))
         response_text=result.get('response_text')
-        if matched and isinstance(response_text,str) and response_text.strip():
+        if (matched or conversation_v2) and isinstance(response_text,str) and response_text.strip():
             reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'response':response_text})[:32];from_participant=('worker:'+str(row['material_drone_id'])) if row['material_drone_id'] else ('drone:'+str(row['logical_drone_id']));original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,from_participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id));responses.append(reply_id)
     if applied or partial:_event(conn,row['mission_id'],'OPERATOR_MESSAGE_APPLIED',{'assignment_id':assignment_id,'message_ids':ids[:64],'applied_messages':applied,'partial_messages':partial,'response_message_ids':responses},now_fn)
     return {"applied_messages":applied,"partial_messages":partial,"response_message_ids":responses}
