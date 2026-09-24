@@ -95,6 +95,7 @@ class OperatorGatewayTests(unittest.TestCase):
             execution_driver.migrate(c,now,source_head='a'*40,source_tree='b'*40)
             global_scheduler.migrate(c,now)
             execution_driver.ensure_driver(c,'M1',now,initial_state='ACTIVE')
+            c.execute("UPDATE mission_execution_drivers SET current_phase='P1' WHERE mission_id='M1'")
             stamp=now()
             for lid,mid in [('LD001','MD001'),('LD002','MD002')]:
                 c.execute("""INSERT INTO mission_execution_assignments(
@@ -122,7 +123,8 @@ class OperatorGatewayTests(unittest.TestCase):
         try:
             row=c.execute("SELECT phase_id,logical_drone_id,material_drone_id,input_json FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
             payload=json.loads(row['input_json'])
-            self.assertEqual(row['phase_id'],'__OPERATOR_BUS__')
+            self.assertTrue(row['phase_id'].startswith('OPERATOR_BUS_'))
+            self.assertEqual(payload['mission_phase_context'],'P1')
             self.assertEqual(payload['operator_message_ids'],[message_id])
             self.assertEqual(payload['correlation_id'],value['correlation_id'])
             self.assertEqual(payload['purpose'],'OPERATOR_BUS_CONVERSATION_R1')
