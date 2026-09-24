@@ -1,4 +1,6 @@
 import unittest
+
+from cyber_lion.mission_control import operator_control
 from tools.lion_local_intelligence_runtime import local_assignment_worker_once
 
 class LocalAssignmentWorkerTests(unittest.TestCase):
@@ -50,6 +52,15 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
             if op=="local_assignments":return {"assignments":[{"assignment_id":"a","material_drone_id":"MD026","input_json":"{}"}]}
             raise AssertionError(op)
         self.assertIsNone(local_assignment_worker_once(control,lambda *a:"no",material_drone_id="MD025"))
+
+    def test_assignment_claim_filters_operator_messages_to_explicit_ids(self):
+        rows=[
+            {'message_id':'old','content':'stale pending'},
+            {'message_id':'current','content':'current request'},
+        ]
+        filtered=operator_control.assignment_messages_for_input(rows,'{"operator_message_ids":["current"]}')
+        self.assertEqual([x['message_id'] for x in filtered],['current'])
+        self.assertEqual(operator_control.assignment_messages_for_input(rows,'{}'),rows)
 
     def test_prefetched_assignments_do_not_poll_control_plane_again(self):
         calls=[]
