@@ -9,7 +9,7 @@ from pathlib import Path
 from threading import Thread
 
 from tools.lion_operator_gateway import FleetThreadingHTTPServer,Runtime,make_handler,now
-from cyber_lion.mission_control import operator_control
+from cyber_lion.mission_control import execution_driver, global_scheduler, operator_control
 
 
 class OperatorGatewayTests(unittest.TestCase):
@@ -85,6 +85,59 @@ class OperatorGatewayTests(unittest.TestCase):
         code,out=self.req('/v1/session/revoke',{},panel=True,session=token);self.assertEqual(code,200);self.assertTrue(out['revoked'])
         self.assertEqual(self.req('/v1/state?mission_id=M1',panel=True,session=token)[0],403)
         self.assertEqual(self.req('/v1/commands',self.command('revoked-panel','STOP_SCOPE'),panel=True,session=token)[0],403)
+
+    def test_conversation_fallback_creates_one_assignment_and_correlated_response(self):
+        c=self.runtime.connect()
+        try:
+            c.execute('''CREATE TABLE IF NOT EXISTS schema_migrations(
+                version INTEGER, schema_id TEXT, applied_at TEXT, source_head TEXT, source_tree TEXT,
+                migration_digest TEXT, note TEXT, UNIQUE(version,schema_id))''')
+            execution_driver.migrate(c,now,source_head='a'*40,source_tree='b'*40)
+            global_scheduler.migrate(c,now)
+            execution_driver.ensure_driver(c,'M1',now,initial_state='ACTIVE')
+            stamp=now()
+            for lid,mid in [('LD001','MD001'),('LD002','MD002')]:
+                c.execute("""INSERT INTO mission_execution_assignments(
+                    assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,
+                    input_digest,input_json,state,lease_generation,created_at,claimed_at,finished_at
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ('topology-'+lid,'M1','__TOPOLOGY__',lid,mid,'d'*64,'{}','BOUND',1,stamp,stamp,stamp))
+            c.commit()
+        finally:c.close()
+        value={
+            'command_id':'conversation-1','mission_id':'M1','action':'MESSAGE','target':'mission:M1',
+            'payload':{'content':'Model?'},
+            'correlation_id':'thread-000000000000000000000000000001',
+        }
+        routed,meta=self.runtime.route_conversation_command(value)
+        self.assertEqual(routed['target'],'worker:'+meta['material_drone_id'])
+        self.assertIn(meta['logical_drone_id'],{'LD001','LD002'})
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        self.assertEqual(applied['result']['recipient_count'],1)
+        message_id=applied['result']['message_id']
+        dispatched=self.runtime.dispatch_conversation_message(routed,applied)
+        aid=dispatched['assignment_id']
+        self.assertFalse(dispatched['idempotent'])
+        c=self.runtime.connect()
+        try:
+            row=c.execute("SELECT phase_id,logical_drone_id,material_drone_id,input_json FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+            payload=json.loads(row['input_json'])
+            self.assertEqual(row['phase_id'],'__OPERATOR_BUS__')
+            self.assertEqual(payload['operator_message_ids'],[message_id])
+            self.assertEqual(payload['correlation_id'],value['correlation_id'])
+            self.assertEqual(payload['purpose'],'OPERATOR_BUS_CONVERSATION_R1')
+        finally:c.close()
+        again=self.runtime.dispatch_conversation_message(routed,applied)
+        self.assertTrue(again['idempotent']);self.assertEqual(again['assignment_id'],aid)
+        c=self.runtime.connect()
+        try:
+            result=operator_control.note_assignment_application(c,aid,{'operator_message_ids':[message_id],'response_text':'Odpowiedź modelu'},now)
+            self.assertEqual(result['applied_messages'],1)
+            reply=c.execute("SELECT kind,content,correlation_id,causation_id FROM operator_messages WHERE kind='RESPONSE' AND causation_id=?",(message_id,)).fetchone()
+            self.assertIsNotNone(reply)
+            self.assertEqual(reply['content'],'Odpowiedź modelu')
+            self.assertEqual(reply['correlation_id'],value['correlation_id'])
+        finally:c.close()
 
 
 if __name__=='__main__':unittest.main()
