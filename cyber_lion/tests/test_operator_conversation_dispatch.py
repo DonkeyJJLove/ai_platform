@@ -182,6 +182,49 @@ class OperatorConversationDispatchTests(unittest.TestCase):
             self.assertFalse(reply['conversation_valid'])
         finally:c.close()
 
+    def test_v2_response_is_recorded_even_when_legacy_delivery_was_already_applied(self):
+        value=self.command(command_id='panel-'+('9'*32),correlation='f'*32,content='Legacy delivery?')
+        routed,_=self.runtime.route_conversation_command(value)
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        dispatch=self.runtime.dispatch_conversation_message(routed,applied)
+        c=self.runtime.connect()
+        try:
+            c.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED' WHERE message_id=?",(mid,))
+            out=operator_control.note_assignment_application(c,dispatch['assignment_id'],{'operator_message_ids':[mid],'response_text':'v2 repaired response'},now)
+            c.commit()
+            self.assertEqual(len(out['response_message_ids']),1)
+            snapshot=operator_control.mission_snapshot(c,'M1',now)
+            reply=next(m for m in snapshot['messages'] if m.get('causation_id')==mid and m.get('content')=='v2 repaired response')
+            self.assertTrue(reply['conversation_valid'])
+        finally:c.close()
+
+    def test_reconciler_repairs_missing_response_from_retained_pass_payload(self):
+        value=self.command(command_id='panel-'+('a'*32),correlation='1'*32,content='Retained?')
+        routed,_=self.runtime.route_conversation_command(value)
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        dispatch=self.runtime.dispatch_conversation_message(routed,applied)
+        c=self.runtime.connect()
+        try:
+            claimed=global_scheduler.claim_assignment(c,dispatch['assignment_id'],now,expected_material_drone_id=dispatch['material_drone_id'])
+            result={'operator_message_ids':[mid],'response_text':'retained response'}
+            receipt=global_scheduler.record_receipt(c,dispatch['assignment_id'],result,now,material_drone_id=dispatch['material_drone_id'],lease_generation=claimed['lease_generation'])
+            global_scheduler.store_assignment_payload(c,dispatch['assignment_id'],receipt['receipt_id'],result,now)
+            c.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED' WHERE message_id=?",(mid,))
+            c.commit()
+            self.assertIsNone(c.execute("SELECT 1 FROM operator_messages WHERE kind='RESPONSE' AND causation_id=?",(mid,)).fetchone())
+        finally:c.close()
+        out=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(out['repaired'],1,out)
+        self.assertEqual(out['failed'],0,out)
+        c=self.runtime.connect()
+        try:
+            snapshot=operator_control.mission_snapshot(c,'M1',now)
+            reply=next(m for m in snapshot['messages'] if m.get('causation_id')==mid and m.get('content')=='retained response')
+            self.assertTrue(reply['conversation_valid'])
+        finally:c.close()
+
     def test_backlog_reconciler_materializes_missing_panel_assignment_once(self):
         value=self.command(command_id='panel-'+('3'*32),correlation='b'*32,content='Misja?')
         applied=self.runtime.apply(value,principal_id=operator_control.PRIMARY_OPERATOR)
