@@ -389,9 +389,13 @@ class OperatorControlBridge:
     def __call__(self,op,args):
         args=dict(args or {})
         if op=='pair':
-            pairing_code=args.get('pairing_code') or (_read_operator_local_secret(self.pairing_file) if self.pairing_file else None)
-            if not pairing_code:raise ValueError('operator pairing code unavailable')
-            return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            pairing_code=args.get('pairing_code')
+            if pairing_code:
+                return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            challenge=self._request('/v1/session/pair/challenge',{},10)
+            challenge_id=challenge.get('challenge_id');code=challenge.get('pairing_code')
+            if not isinstance(challenge_id,str) or not isinstance(code,str):raise ValueError('operator pairing challenge unavailable')
+            return self._request('/v1/session/pair',{'challenge_id':challenge_id,'pairing_code':code},10)
         if op=='session':return self._request('/v1/session',session_token=args.get('session_token'))
         if op=='unpair':return self._request('/v1/session/revoke',{},10,session_token=args.get('session_token'))
         if op=='state':
@@ -761,6 +765,4 @@ def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
                         if answer:
                             control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_PASS','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'response_bytes':len(answer.encode('utf-8')),'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK','authority_effect':'NONE'}})
                         else:
-                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_EMPTY','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'authority_effect':'NONE'}})
-                elif phase=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
-                   
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'
