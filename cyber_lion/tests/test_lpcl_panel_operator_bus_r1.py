@@ -56,6 +56,13 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('saveRenameThread',t)
         self.assertIn("if(!r.ok)throw new Error",t)
 
+    def test_delivery_observability_is_aggregated_not_inlined_per_recipient(self):
+        t=self.ui
+        self.assertIn('deliverySummary',t)
+        self.assertIn("mDeliveries.length+' odbiorca'",t)
+        self.assertIn('<summary>Delivery</summary>',t)
+        self.assertNotIn("map(d=>d.recipient+':'+d.delivery_state).join(' · ')",t)
+
     def test_bus_scroll_follows_new_message_start_not_tail(self):
         t=self.ui
         self.assertIn("scrollIntoView({behavior:'smooth',block:'start'})",t)
