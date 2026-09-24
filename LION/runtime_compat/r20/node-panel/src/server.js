@@ -165,7 +165,7 @@ function createApp(config) {
       if (!['AUTO','LOCAL','CHATGPT'].includes(route)) throw new Error('composer route');
       const thread = store.get(req.params.threadId);
       if (route === 'AUTO') {
-        const auto = await mission.autoMission({ threadId: req.params.threadId, question: message, logicalCount: 76, materialTarget: 32 });
+        const auto = await mission.autoMission({ threadId: req.params.threadId, question: message });
         const rid = auto.saas && auto.saas.request_id;
         try {
           store.appendUserOnce(req.params.threadId, message, 'auto-user:' + auto.mission_id, {
