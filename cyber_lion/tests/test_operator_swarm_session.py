@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import unittest
 from datetime import datetime, timezone
@@ -72,6 +73,10 @@ class OperatorSwarmSessionTests(unittest.TestCase):
         ).fetchone()
         self.assertEqual(assignment["material_drone_id"],"MD025")
         self.assertEqual(assignment["state"],"READY")
+        assignment_payload=json.loads(assignment["input_json"])
+        self.assertEqual(assignment_payload["trusted_participant_context"]["material_worker"],"worker:MD025")
+        self.assertEqual(assignment_payload["trusted_participant_context"]["cognitive_executor"],"model:local")
+        self.assertEqual(assignment_payload["evidence_classes"],["TRUSTED_TOPOLOGY_CONTEXT","OPERATOR_MESSAGE"])
         message=self.c.execute(
             "SELECT * FROM operator_general_messages WHERE command_id='swarm-test-1'"
         ).fetchone()
@@ -82,6 +87,44 @@ class OperatorSwarmSessionTests(unittest.TestCase):
         self.assertEqual(after["control_owner"],before["control_owner"])
         self.assertEqual(after["pause_latch"],before["pause_latch"])
         self.assertEqual(after["stop_latch"],before["stop_latch"])
+
+    def test_verifier_record_requires_independent_evidence_for_supported_claim(self):
+        source={"material_worker":"worker:MD025","logical_drone":"drone:LD025","cognitive_executor":"model:local"}
+        verifier={"material_worker":"worker:MD026","logical_drone":"drone:LD026","cognitive_executor":"model:local"}
+        valid={
+            "schema":"lion.swarm-verifier-record/v1",
+            "source_participant":"worker:MD025",
+            "claims":[{
+                "claim":"The source material participant is worker:MD025.",
+                "evidence":[{"class":"TRUSTED_TOPOLOGY_CONTEXT","ref":"TRUSTED_SOURCE_CONTEXT_JSON.material_worker"}],
+                "verdict":"SUPPORTED_BY_TRUSTED_CONTEXT"
+            }],
+            "unknowns":[],
+            "summary":"Participant identity is supported by trusted source context."
+        }
+        parsed=operator_swarm_session._parse_verifier_record(json.dumps(valid),source,verifier)
+        self.assertEqual(parsed["claims"][0]["verdict"],"SUPPORTED_BY_TRUSTED_CONTEXT")
+        invalid=json.loads(json.dumps(valid))
+        invalid["claims"][0]["evidence"]=[{"class":"MODEL_CLAIM","ref":"UNTRUSTED_PRIMARY_RESPONSE"}]
+        with self.assertRaisesRegex(ValueError,"independent trusted evidence"):
+            operator_swarm_session._parse_verifier_record(json.dumps(invalid),source,verifier)
+
+    def test_verifier_record_rejects_nonexistent_trusted_context_ref(self):
+        source={"material_worker":"worker:MD025","logical_drone":"drone:LD025"}
+        verifier={"material_worker":"worker:MD026","logical_drone":"drone:LD026"}
+        value={
+            "schema":"lion.swarm-verifier-record/v1",
+            "source_participant":"worker:MD025",
+            "claims":[{
+                "claim":"An invented signature exists.",
+                "evidence":[{"class":"TRUSTED_TOPOLOGY_CONTEXT","ref":"TRUSTED_SOURCE_CONTEXT_JSON.signature"}],
+                "verdict":"SUPPORTED_BY_TRUSTED_CONTEXT"
+            }],
+            "unknowns":[],
+            "summary":"Invalid evidence reference."
+        }
+        with self.assertRaisesRegex(ValueError,"trusted-context ref"):
+            operator_swarm_session._parse_verifier_record(json.dumps(value),source,verifier)
 
 
 if __name__=="__main__":
