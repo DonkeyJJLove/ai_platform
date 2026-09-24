@@ -166,6 +166,33 @@ class OperatorConversationDispatchTests(unittest.TestCase):
             self.assertEqual(snap['suppressed_response_ids'],[])
         finally:c.close()
 
+    def test_thread_snapshot_pairs_rapid_questions_with_their_causal_answers(self):
+        corr='2'*32
+        turns=[]
+        for suffix,content in [('c','Q1'),('d','Q2'),('e','Q3')]:
+            value=self.command(command_id='panel-'+(suffix*32),correlation=corr,content=content)
+            routed,meta=self.runtime.route_conversation_command(value)
+            applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+            turns.append((applied['result']['message_id'],meta,content))
+        c=self.runtime.connect()
+        try:
+            driver=execution_driver.snapshot(c,'M1')
+            for index,(mid,meta,content) in enumerate(turns,1):
+                aid=global_scheduler.create_assignment(c,'M1',f'OPERATOR_BUS_TEST_{index}',meta['logical_drone_id'],meta['material_drone_id'],{
+                    'kind':'LOCAL_MODEL_INFERENCE',
+                    'purpose':'OPERATOR_BUS_CONVERSATION_R1',
+                    'conversation_protocol_version':2,
+                    'operator_message_ids':[mid],
+                    'messages':[{'role':'user','content':content}],
+                },now,lease_generation=driver['generation'])
+                operator_control.note_assignment_application(c,aid,{'operator_message_ids':[mid],'response_text':f'A{index}'},now)
+            c.commit()
+            snap=operator_control.thread_snapshot(c,corr,now)
+            self.assertEqual([m['content'] for m in snap['messages']],['Q1','A1','Q2','A2','Q3','A3'])
+            self.assertTrue(all(m.get('conversation_state')=='ANSWERED' for m in snap['messages'] if m.get('kind')=='MESSAGE'))
+            self.assertTrue(all(m.get('conversation_state')=='DELIVERED' for m in snap['messages'] if m.get('kind')=='RESPONSE'))
+        finally:c.close()
+
     def test_stale_generation_ready_is_not_listed_and_is_retried_on_current_generation(self):
         value=self.command(command_id='panel-'+('8'*32),correlation='e'*32,content='Generation?')
         routed,_=self.runtime.route_conversation_command(value)
@@ -190,6 +217,35 @@ class OperatorConversationDispatchTests(unittest.TestCase):
             self.assertEqual(len(rows),2)
             self.assertNotEqual(rows[0]['assignment_id'],rows[1]['assignment_id'])
             self.assertEqual(rows[1]['lease_generation'],rows[0]['lease_generation']+1)
+        finally:c.close()
+
+    def test_pass_is_terminal_across_driver_generations(self):
+        value=self.command(command_id='panel-'+('b'*32),correlation='1'*32,content='Once only')
+        routed,_=self.runtime.route_conversation_command(value)
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        first=self.runtime.dispatch_conversation_message(routed,applied)
+        c=self.runtime.connect()
+        try:
+            row=c.execute("SELECT material_drone_id FROM mission_execution_assignments WHERE assignment_id=?",(first['assignment_id'],)).fetchone()
+            claimed=global_scheduler.claim_assignment(c,first['assignment_id'],now,expected_material_drone_id=row['material_drone_id'])
+            result={'operator_message_ids':[mid],'response_text':'Only answer'}
+            global_scheduler.record_receipt(c,first['assignment_id'],result,now,material_drone_id=row['material_drone_id'],lease_generation=claimed['lease_generation'])
+            operator_control.note_assignment_application(c,first['assignment_id'],result,now)
+            current=c.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id='M1'").fetchone()['generation']
+            c.execute("UPDATE mission_execution_drivers SET generation=? WHERE mission_id='M1'",(current+1,))
+            c.commit()
+        finally:c.close()
+        out=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(out['dispatched'],0,out)
+        again=self.runtime.dispatch_conversation_message(routed,applied)
+        self.assertTrue(again['idempotent'])
+        self.assertEqual(again['state'],'PASS')
+        self.assertEqual(again['assignment_id'],first['assignment_id'])
+        c=self.runtime.connect()
+        try:
+            rows=c.execute("SELECT assignment_id FROM mission_execution_assignments WHERE input_json LIKE ?",('%"operator_message_ids":["'+mid+'"]%',)).fetchall()
+            self.assertEqual(len(rows),1)
         finally:c.close()
 
     def test_assignment_operator_message_filter_excludes_unrelated_pending_messages(self):
