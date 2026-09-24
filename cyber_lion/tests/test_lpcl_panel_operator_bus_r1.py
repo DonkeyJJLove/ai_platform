@@ -56,6 +56,11 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('saveRenameThread',t)
         self.assertIn("if(!r.ok)throw new Error",t)
 
+    def test_invalid_legacy_conversation_responses_are_filtered_from_thread_bus(self):
+        t=self.ui
+        self.assertIn("m.get('conversation_valid') is False",t)
+        self.assertIn("m.get('kind')=='RESPONSE'",t)
+
     def test_delivery_observability_is_aggregated_not_inlined_per_recipient(self):
         t=self.ui
         self.assertIn('deliverySummary',t)
