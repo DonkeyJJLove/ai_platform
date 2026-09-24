@@ -56,10 +56,17 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('saveRenameThread',t)
         self.assertIn("if(!r.ok)throw new Error",t)
 
-    def test_invalid_legacy_conversation_responses_are_filtered_from_thread_bus(self):
+    def test_thread_history_uses_correlation_projection_across_mission_rebinds(self):
         t=self.ui
-        self.assertIn("m.get('conversation_valid') is False",t)
-        self.assertIn("m.get('kind')=='RESPONSE'",t)
+        self.assertIn("self._operator('thread'",t)
+        self.assertIn("'correlation_id':tid",t)
+        self.assertIn("'thread_mission_ids'",t)
+        self.assertIn("'suppressed_response_ids'",t)
+        self.assertNotIn("messages=[m for m in (state.get('messages') or []) if m.get('correlation_id')==tid",t)
+
+    def test_conversation_state_overrides_raw_fanout_state_in_ui(self):
+        t=self.ui
+        self.assertIn('m.conversation_state||m.state',t)
 
     def test_delivery_observability_is_aggregated_not_inlined_per_recipient(self):
         t=self.ui
