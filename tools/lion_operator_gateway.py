@@ -23,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from cyber_lion.mission_control import operator_control, operator_swarm_session
+from cyber_lion.mission_control import global_scheduler, operator_control, operator_swarm_session
 
 DEFAULT_DB = "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db"
 DEFAULT_KEY = "/var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key"
@@ -207,6 +207,106 @@ class Runtime:
             self.persist_floor(value['mission_id'])
         return self.try_resume_driver(out) if value.get('action')=='RESUME_SCOPE' else out
 
+    def _conversation_bindings(self,c,mission_id):
+        rows=c.execute("""SELECT logical_drone_id,material_drone_id
+                          FROM mission_execution_assignments
+                          WHERE mission_id=? AND phase_id='__TOPOLOGY__' AND state='BOUND'
+                            AND logical_drone_id IS NOT NULL AND material_drone_id IS NOT NULL
+                          ORDER BY logical_drone_id,material_drone_id""",(mission_id,)).fetchall()
+        out=[];seen=set()
+        for row in rows:
+            pair=(str(row['logical_drone_id']),str(row['material_drone_id']))
+            if pair in seen:continue
+            seen.add(pair);out.append(pair)
+        return out
+
+    def _conversation_binding(self,c,mission_id,target,correlation_id):
+        bindings=self._conversation_bindings(c,mission_id)
+        if not bindings:raise ValueError('conversation topology unavailable')
+        candidates=list(bindings)
+        if isinstance(target,str) and target.startswith('drone:'):
+            ident=target.split(':',1)[1];candidates=[x for x in bindings if x[0]==ident]
+        elif isinstance(target,str) and target.startswith('worker:'):
+            ident=target.split(':',1)[1];candidates=[x for x in bindings if x[1]==ident]
+        elif isinstance(target,str) and target.startswith('group:'):
+            recipients=set(operator_control.resolve_target(c,mission_id,target))
+            candidates=[x for x in bindings if ('drone:'+x[0]) in recipients or ('worker:'+x[1]) in recipients]
+        elif isinstance(target,str) and target not in {'mission:'+mission_id,'swarm:'+mission_id}:
+            operator_control.resolve_target(c,mission_id,target)
+        if not candidates:raise ValueError('conversation target has no current executor')
+        seed=str(correlation_id or target or mission_id)
+        index=int(hashlib.sha256(seed.encode('utf-8')).hexdigest(),16)%len(candidates)
+        return candidates[index]
+
+    def route_conversation_command(self,value):
+        mission_id=str(value.get('mission_id') or '');target=str(value.get('target') or ('mission:'+mission_id));correlation_id=value.get('correlation_id')
+        c=self.connect()
+        try:logical_id,material_id=self._conversation_binding(c,mission_id,target,correlation_id)
+        finally:c.close()
+        routed=dict(value);routed['target']='worker:'+material_id
+        payload=dict(value.get('payload') or {});payload['conversation_scope_target']=target;payload['conversation_logical_context']='drone:'+logical_id;routed['payload']=payload
+        return routed,{'scope_target':target,'logical_drone_id':logical_id,'material_drone_id':material_id,'authority_effect':'NONE'}
+
+    def _conversation_history(self,c,mission_id,correlation_id,current_message_id,limit=12):
+        if not isinstance(correlation_id,str) or not correlation_id:return []
+        rows=c.execute("""SELECT message_id,from_participant,kind,content
+                          FROM operator_messages
+                          WHERE mission_id=? AND correlation_id=? AND message_id<>?
+                            AND kind IN ('MESSAGE','RESPONSE')
+                          ORDER BY created_at DESC,message_id DESC LIMIT ?""",
+                       (mission_id,correlation_id,current_message_id,int(limit))).fetchall()
+        messages=[]
+        for row in reversed(rows):
+            role='assistant' if row['kind']=='RESPONSE' else 'user'
+            messages.append({'role':role,'content':str(row['content'])[:12000]})
+        return messages
+
+    def dispatch_conversation_message(self,value,applied):
+        mission_id=str(value.get('mission_id') or '')
+        target=str(value.get('target') or ('mission:'+mission_id))
+        correlation_id=value.get('correlation_id')
+        result=applied.get('result') if isinstance(applied,dict) else None
+        message_id=result.get('message_id') if isinstance(result,dict) else None
+        payload=value.get('payload') if isinstance(value.get('payload'),dict) else {}
+        content=payload.get('content')
+        if not mission_id or not isinstance(message_id,str) or not isinstance(content,str) or not content.strip():
+            raise ValueError('conversation dispatch input')
+        c=self.connect()
+        try:
+            prior=c.execute("""SELECT assignment_id,state FROM mission_execution_assignments
+                               WHERE mission_id=? AND phase_id='__OPERATOR_BUS__'
+                                 AND input_json LIKE ?
+                               ORDER BY created_at DESC LIMIT 1""",
+                            (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
+            if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'idempotent':True,'authority_effect':'NONE'}
+            driver=c.execute("SELECT generation,state,current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+            if not driver or int(driver['generation'] or 0)<1:raise ValueError('conversation driver generation unavailable')
+            logical_id,material_id=self._conversation_binding(c,mission_id,target,correlation_id)
+            control=operator_control.control_state(c,mission_id,now) or {}
+            dispatch_authority=operator_control.PRIMARY_OPERATOR if control.get('control_owner')==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
+            history=self._conversation_history(c,mission_id,correlation_id,message_id)
+            messages=history+[{'role':'user','content':content.strip()[:16000]}]
+            assignment_input={
+                'kind':'LOCAL_MODEL_INFERENCE',
+                'capability':'OPERATOR_BUS_CONVERSATION_R1',
+                'model_capability':'OPERATOR_BUS_CONVERSATION_R1',
+                'purpose':'OPERATOR_BUS_CONVERSATION_R1',
+                'trajectory_role':'CONVERSATION',
+                'task_id':'operator-message:'+message_id,
+                'correlation_id':correlation_id,
+                'operator_message_ids':[message_id],
+                'messages':messages[-13:],
+                'max_tokens':768,
+                'communication_source':'operator:primary',
+                'logical_context':'drone:'+logical_id,
+                'communication_phase':'OPERATOR_BUS',
+                'evidence_classes':['TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE'],
+                'authority_effect':'NONE',
+            }
+            aid=global_scheduler.create_assignment(c,mission_id,'__OPERATOR_BUS__',logical_id,material_id,assignment_input,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
+            return {'assignment_id':aid,'state':'READY','logical_drone_id':logical_id,'material_drone_id':material_id,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
+        finally:c.close()
+
 
 def reconcile_active_swarm_sessions_once(runtime: Runtime) -> dict:
     c=runtime.connect()
@@ -378,9 +478,23 @@ def make_handler(runtime: Runtime):
                                     primary=next((m.get('participant_id') for m in members if m.get('member_kind')=='MATERIAL_WORKER' and m.get('role')=='PRIMARY' and m.get('state')=='ACTIVE'),None)
                                     if not primary:raise ValueError('swarm primary worker unavailable')
                                     target=primary
-                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST')
+                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST',correlation_id=value.get('correlation_id'))
                                 return self.reply({'schema':'lion.operator-command-swarm-route/v1','mission_id':mission_id,'session_id':sid,'round_id':sent.get('round_id'),'message':sent.get('message'),'assignments':sent.get('assignments') or [],'admission_state':'ACCEPTED','execution_state':'DISPATCHED','observation_state':'PERSISTED','authority_effect':'NONE','idempotent':bool(sent.get('idempotent'))},201)
                         finally:c.close()
+                        try:
+                            routed,route_meta=runtime.route_conversation_command(value)
+                        except Exception as route_exc:
+                            applied=runtime.apply(value,principal_id=principal)
+                            response=dict(applied);response.update({'schema':'lion.operator-conversation-dispatch/v1','execution_state':'WAITING_DISPATCH','observation_state':'PERSISTED','conversation_route':None,'dispatch_error':type(route_exc).__name__+':'+str(route_exc)[:400],'authority_effect':'NONE'})
+                            return self.reply(response,201)
+                        applied=runtime.apply(routed,principal_id=principal)
+                        try:
+                            dispatch=runtime.dispatch_conversation_message(routed,applied)
+                            response=dict(applied);response.update({'schema':'lion.operator-conversation-dispatch/v1','execution_state':'DISPATCHED','observation_state':'PERSISTED','conversation_route':route_meta,'conversation_assignment':dispatch,'authority_effect':'NONE'})
+                            return self.reply(response,201)
+                        except Exception as exc:
+                            response=dict(applied);response.update({'schema':'lion.operator-conversation-dispatch/v1','execution_state':'WAITING_DISPATCH','observation_state':'PERSISTED','conversation_route':route_meta,'dispatch_error':type(exc).__name__+':'+str(exc)[:400],'authority_effect':'NONE'})
+                            return self.reply(response,201)
                     return self.reply(runtime.apply(value,principal_id=principal),201)
                 if path=='/v1/events/ack':
                     if set(value)!={'consumer_id','mission_id','event_id'}:raise ValueError('ack schema')
