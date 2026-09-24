@@ -69,9 +69,10 @@ class ExplicitTransportRoutingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.create('NOT_A_TRANSPORT')
 
-    def test_project_handoff_source_pins_firefox(self):
+    def test_project_handoff_uses_broker_preferred_current_transport(self):
         src=(Path(__file__).resolve().parents[2]/'cyber_lion/app_coordination/saas_handoff_extension.py').read_text(encoding='utf-8')
-        self.assertIn('"transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"',src)
+        self.assertNotIn('"transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"',src)
+        self.assertIn("transport=str(handoff.get('transport') or 'UNKNOWN')",src)
 
     def test_api_contract_accepts_transport_field(self):
         src=(Path(__file__).resolve().parents[2]/'tools/lion_mission_control_v3.py').read_text(encoding='utf-8')
