@@ -5,7 +5,7 @@ from typing import Mapping,Tuple
 from cyber_lion.contracts.complete_mediation import EffectSurfaceInventory
 from tools.p0_surface_closure_campaign_contract import ProviderFamilyClosurePlan,SurfaceClosureCampaign,SurfaceClosureWorkItem
 
-EXPECTED_SCAN_DIGEST="4448aa6f5bf7f3839f5ef96b9f0fabe4802971b14b391e4d5e1dc4b24ce2da3c"
+EXPECTED_SCAN_DIGEST="4bbe50b172b3e5d367fd4adc6e33673dcf2a50f9b32adb321da87041791001a1"
 CERTIFIED_PARTIAL_SURFACE="8c6d0020a0816d674a783504d2a8ccc25e3e75c0d446057ba3f4450bd768f687"
 MOON_PROVIDERS=frozenset({
     ".github.workflows.moon-file-write.yml",
