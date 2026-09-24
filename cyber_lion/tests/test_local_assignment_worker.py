@@ -53,6 +53,24 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
             raise AssertionError(op)
         self.assertIsNone(local_assignment_worker_once(control,lambda *a:"no",material_drone_id="MD025"))
 
+    def test_conversation_message_is_not_duplicated_into_operator_guidance(self):
+        captured=[]
+        row={"assignment_id":"conversation-1","material_drone_id":"MD025","lease_generation":2,"lease_expires_at":"2099-01-01T00:00:00Z","input_json":"{\"kind\":\"LOCAL_MODEL_INFERENCE\",\"purpose\":\"OPERATOR_BUS_CONVERSATION_R1\",\"operator_message_ids\":[\"m1\"],\"messages\":[{\"role\":\"user\",\"content\":\"Question once\"}]}"}
+        def control(op,args):
+            if op=="local_assignments":return {"assignments":[row]}
+            if op=="local_assignment_claim":return dict(row,state="CLAIMED",mission_id="M1",phase_id="P1",logical_drone_id="LD1",operator_messages=[{"message_id":"m1","target":"worker:MD025","content":"Question once","context_revision":0}])
+            if op=="model_call_intent":return {"status":"INTENT_DURABLE","model_call_id":args["model_call_id"]}
+            if op=="model_call_transition":return {"status":args["state"],"model_call_id":args["model_call_id"]}
+            if op=="local_assignment_receipt":return {"receipt_id":"conversation-receipt","duplicate":False}
+            raise AssertionError(op)
+        def model(messages,max_tokens):
+            captured.extend(messages)
+            return "Answer"
+        out=local_assignment_worker_once(control,model,material_drone_id="MD025")
+        self.assertEqual(out["receipt_id"],"conversation-receipt")
+        self.assertEqual(sum("Question once" in m.get("content","") for m in captured),1)
+        self.assertEqual([m for m in captured if m.get("role")=="user"][-1]["content"],"Question once")
+
     def test_assignment_claim_filters_operator_messages_to_explicit_ids(self):
         rows=[
             {'message_id':'old','content':'stale pending'},
@@ -60,7 +78,7 @@ class LocalAssignmentWorkerTests(unittest.TestCase):
         ]
         filtered=operator_control.assignment_messages_for_input(rows,'{"operator_message_ids":["current"]}')
         self.assertEqual([x['message_id'] for x in filtered],['current'])
-        self.assertEqual(operator_control.assignment_messages_for_input(rows,'{}'),rows)
+        self.assertEqual(operator_control.assignment_messages_for_input(rows,'{}'),[])
 
     def test_prefetched_assignments_do_not_poll_control_plane_again(self):
         calls=[]
