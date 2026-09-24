@@ -717,6 +717,48 @@ def _conversation_response_valid(conn,message):
     ids=value.get('operator_message_ids')
     return value.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and value.get('conversation_protocol_version')==2 and isinstance(ids,list) and message.get('causation_id') in ids
 
+def thread_snapshot(conn,correlation_id,now_fn=None,*,limit=500):
+    if not isinstance(correlation_id,str) or not correlation_id or len(correlation_id)>128:raise ValueError("correlation_id")
+    if type(limit) is not int or not 1<=limit<=1000:raise ValueError("thread limit")
+    rows=[dict(r) for r in conn.execute("""SELECT message_id,mission_id,command_id,from_participant,target,kind,content,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id
+                                         FROM operator_messages
+                                         WHERE correlation_id=?
+                                         ORDER BY created_at DESC,message_id DESC LIMIT ?""",(correlation_id,limit)).fetchall()]
+    rows=list(reversed(rows))
+    suppressed=[]
+    latest_valid={}
+    for message in rows:
+        if message.get("kind")!="RESPONSE":continue
+        valid=_conversation_response_valid(conn,message)
+        message["conversation_valid"]=valid
+        if valid is True and message.get("causation_id"):
+            latest_valid[message["causation_id"]]=message
+        else:
+            suppressed.append(message["message_id"])
+    visible=[]
+    latest_ids={m["message_id"] for m in latest_valid.values()}
+    answered=set(latest_valid)
+    for message in rows:
+        if message.get("kind")=="RESPONSE" and message.get("message_id") not in latest_ids:continue
+        if message.get("kind")=="MESSAGE":
+            message["conversation_state"]="ANSWERED" if message.get("message_id") in answered else message.get("state")
+        elif message.get("kind")=="RESPONSE":
+            message["conversation_state"]="DELIVERED"
+        visible.append(message)
+    ids={m["message_id"] for m in visible}
+    deliveries=[dict(r) for r in conn.execute("""SELECT d.* FROM operator_message_deliveries d
+                                                 JOIN operator_messages m ON m.message_id=d.message_id
+                                                 WHERE m.correlation_id=?
+                                                 ORDER BY m.created_at,d.recipient""",(correlation_id,)).fetchall()
+                if r["message_id"] in ids]
+    mission_ids=[]
+    seen=set()
+    for message in rows:
+        mid=message.get("mission_id")
+        if isinstance(mid,str) and mid not in seen:
+            seen.add(mid);mission_ids.append(mid)
+    return {"schema":"lion.operator-thread-projection/v1","correlation_id":correlation_id,"messages":visible,"message_deliveries":deliveries,"mission_ids":mission_ids,"suppressed_response_ids":suppressed,"authority_effect":"NONE"}
+
 def mission_snapshot(conn,mission_id,now_fn=None):
     control=control_state(conn,mission_id,None) or _legacy_default_state(mission_id);commands=[dict(r) for r in conn.execute("SELECT command_id,action,target,principal_id,effective_priority,delivery_state,admission_state,execution_state,observation_state,created_at,completed_at FROM operator_commands WHERE mission_id=? ORDER BY admitted_at DESC LIMIT 50",(mission_id,))];messages=[dict(r) for r in conn.execute("SELECT message_id,command_id,from_participant,target,kind,content,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id FROM operator_messages WHERE mission_id=? ORDER BY created_at DESC LIMIT 200",(mission_id,))];[m.__setitem__('conversation_valid',_conversation_response_valid(conn,m)) for m in messages if m.get('kind')=='RESPONSE' and m.get('correlation_id')];deliveries=[dict(r) for r in conn.execute("SELECT d.* FROM operator_message_deliveries d JOIN operator_messages m ON m.message_id=d.message_id WHERE m.mission_id=? ORDER BY m.created_at,d.recipient",(mission_id,))];return {"schema":"lion.operator-mission-projection/v1","mission_id":mission_id,"control":control,"commands":commands,"messages":messages,"message_deliveries":deliveries,"control_capabilities":{"block_new_admissions":"SUPPORTED","cancel_ready_assignments":"SUPPORTED","cancel_inflight":"BEST_EFFORT_CHECKPOINT_REQUIRED","remote_unreachable_worker":"LEASE_EXPIRY_ONLY","emergency_helper":"PREPROVISIONED_EXACT_INVENTORY_ONLY"},"operator":participant_snapshot(conn),"operator_proxy":participant_snapshot(conn,SENTINELX_PROXY_PRINCIPAL),"authority_effect":"NONE"}
 def force_epoch_at_least(conn,mission_id,minimum_epoch,now_fn,*,incarnation_id=None):
