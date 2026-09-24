@@ -21,6 +21,11 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
  app.on('second-instance',()=>{if(win&&!win.isDestroyed()){win.show();win.focus()}});
  app.whenReady().then(async()=>{
   const dir=app.getPath('userData');fs.mkdirSync(dir,{recursive:true});
+  const contract=require('./contract.cjs');
+  const source={host:require('node:os').hostname(),entrypoint:__filename,sha256:contract.hash(fs.readFileSync(__filename))};
+  const tabStateFile=path.join(dir,'tab-state-r24.json');
+  let previousTabState=null;
+  try{if(fs.existsSync(tabStateFile))previousTabState=JSON.parse(fs.readFileSync(tabStateFile,'utf8'))}catch{}
   const keyFile=path.join(dir,'control.key');
   if(!fs.existsSync(keyFile))fs.writeFileSync(keyFile,randomBytes(32).toString('hex'),{mode:0o600,flag:'wx'});
   const token=fs.readFileSync(keyFile,'utf8').trim();
@@ -51,7 +56,22 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   }
   const TAB_HEIGHT=38;
   const layout=()=>{const {width,height}=win.getContentBounds();const split=Math.floor(width*.5),rightWidth=width-split,bodyHeight=Math.max(0,height-TAB_HEIGHT);panel.setBounds({x:0,y:0,width:split,height});tabs.setBounds({x:split,y:0,width:rightWidth,height:TAB_HEIGHT});const shown={x:split,y:TAB_HEIGHT,width:rightWidth,height:bodyHeight},hidden={x:split,y:TAB_HEIGHT,width:0,height:0};saas.setBounds(activeRightTab==='saas'?shown:hidden);mission.setBounds(activeRightTab==='mission'?shown:hidden)};
-  const selectRightTab=name=>{activeRightTab=name==='saas'?'saas':'mission';layout();win.setTitle(activeRightTab==='mission'?'LION Broker — Mission Control':'LION Broker — sesja SaaS')};
+  const saasWebContentsId=saas.webContents.id,saasPartition='persist:lion-saas-r19';
+  let sessionProof={same_webcontents:true,url_digest_unchanged:true};
+  const safeOrigin=raw=>{try{return new URL(raw).origin}catch{return null}};
+  const bounds=v=>{const b=v.getBounds();return {x:b.x,y:b.y,width:b.width,height:b.height}};
+  const tabState=()=>{
+   const saasUrl=saas.webContents.getURL()||'',missionUrl=mission.webContents.getURL()||'',panelUrl=panel.webContents.getURL()||'';
+   const panelBounds=bounds(panel),saasBounds=bounds(saas),missionBounds=bounds(mission),tabsBounds=bounds(tabs);
+   const layoutAcceptance=activeRightTab==='mission'&&panelBounds.width>0&&panelBounds.height>0&&missionBounds.width>0&&missionBounds.height>0&&saasBounds.width===0&&saasBounds.height===0&&tabsBounds.height===TAB_HEIGHT&&safeOrigin(missionUrl)===new URL(MC).origin&&safeOrigin(panelUrl)===new URL(PANEL).origin;
+   const sessionPreservation=sessionProof.same_webcontents===true&&sessionProof.url_digest_unchanged===true&&!saas.webContents.isDestroyed()&&saas.webContents.id===saasWebContentsId;
+   const restartDurability=!!previousTabState&&previousTabState.source_sha256===source.sha256&&previousTabState.runtime_pid!==process.pid&&previousTabState.saas_partition===saasPartition;
+   const body={schema:'lion.electron-tabs-state/v1',observed_at:new Date().toISOString(),authority_effect:'NONE',runtime_pid:process.pid,source_sha256:source.sha256,active_right_tab:activeRightTab,default_right_tab:'mission',saas_partition:saasPartition,saas_webcontents_id:saas.webContents.id,saas_origin:safeOrigin(saasUrl),saas_url_digest:contract.hash(saasUrl),mission_origin:safeOrigin(missionUrl),panel_origin:safeOrigin(panelUrl),panel_bounds:panelBounds,mission_bounds:missionBounds,saas_bounds:saasBounds,tabs_bounds:tabsBounds,layout_acceptance:layoutAcceptance,session_preservation:sessionPreservation,restart_durability:restartDurability,previous_runtime_pid:previousTabState?.runtime_pid||null};
+   body.state_fingerprint=contract.hash([body.source_sha256,body.runtime_pid,body.active_right_tab,body.default_right_tab,body.saas_partition,body.saas_url_digest,body.mission_origin,body.panel_origin,body.layout_acceptance,body.session_preservation,body.restart_durability].join('|'));
+   return body;
+  };
+  const writeTabState=()=>{const state=tabState(),temporary=tabStateFile+'.tmp';fs.writeFileSync(temporary,JSON.stringify(state,null,2)+'\n',{mode:0o600});fs.renameSync(temporary,tabStateFile);return state};
+  const selectRightTab=name=>{activeRightTab=name==='saas'?'saas':'mission';layout();win.setTitle(activeRightTab==='mission'?'LION Broker — Mission Control':'LION Broker — sesja SaaS');try{writeTabState()}catch{}};
   tabs.webContents.on('did-navigate-in-page',(_event,url)=>{try{const hash=new URL(url).hash;if(hash==='#saas')selectRightTab('saas');else if(hash==='#mission')selectRightTab('mission')}catch{}});
   const tabHtml='<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0b1117;color:#dce8f2;font:13px system-ui;overflow:hidden}nav{height:100%;display:flex;align-items:end;border-bottom:1px solid #304454;padding:0 8px;box-sizing:border-box;gap:6px}a{color:#b7c9d7;text-decoration:none;padding:9px 14px 8px;border:1px solid #304454;border-bottom:0;border-radius:7px 7px 0 0;background:#121d26}a:hover{background:#1b2a36;color:white}</style><nav><a href="#mission">LION MISSION CONTROL</a><a href="#saas">ChatGPT SaaS</a></nav>';
   win.on('resize',layout);selectRightTab('mission');win.on('closed',()=>app.quit());
@@ -87,8 +107,17 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   if(relayScope&&(!ingressToken||(relayScope.mode!=='THREAD_CONSUMER'&&!mediatorKey)||relayScope.task_sha256!==require('./contract.cjs').TASK))throw Error('RELAY_CONFIGURATION_REQUIRED');
   let relay=relayScope?(relayScope.mode==='THREAD_CONSUMER'?new ThreadConsumer({store,mc,ingress,scope:relayScope}):new Relay({store,browser,mc,ingress,scope:relayScope})):null;
   const startupConversation=relay instanceof ThreadConsumer?relay.scope.conversation_url:store.restoreConversation();
-  const source={host:require('node:os').hostname(),entrypoint:__filename,sha256:require('./contract.cjs').hash(fs.readFileSync(__filename))};
-  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,engine:{running:engine.running,lastTickAt:engine.lastTickAt,lastDecision:engine.lastDecision},relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
+  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},electron_tabs:tabState(),browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,engine:{running:engine.running,lastTickAt:engine.lastTickAt,lastDecision:engine.lastDecision},relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
+  let lastElectronEvidenceFingerprint=null,nextElectronEvidenceAt=0;
+  const electronEvidenceTick=async()=>{
+   if(Date.now()<nextElectronEvidenceAt)return;nextElectronEvidenceAt=Date.now()+5000;
+   const recent=await mc('/api/v3/missions/recent?view=operational');const mid=recent.focus_mission_id;if(!mid)return;
+   const snap=await mc('/api/v3/missions/'+encodeURIComponent(mid)+'/process');const phase=snap.process?.current_phase;if(phase!=='ELECTRON_TABS')return;
+   const state=writeTabState();if(state.state_fingerprint===lastElectronEvidenceFingerprint)return;
+   const payload={event:'ELECTRON_TABS_LIVE_READBACK',schema:'lion.electron-tabs-readback/v1',state_file:'tab-state-r24.json',state_fingerprint:state.state_fingerprint,source_sha256:state.source_sha256,runtime_pid:state.runtime_pid,active_right_tab:state.active_right_tab,default_right_tab:state.default_right_tab,saas_partition:state.saas_partition,saas_url_digest:state.saas_url_digest,mission_origin:state.mission_origin,panel_origin:state.panel_origin,layout_acceptance:state.layout_acceptance,session_preservation:state.session_preservation,restart_durability:state.restart_durability,authority_effect:'NONE'};
+   await mc('/api/v3/missions/'+encodeURIComponent(mid)+'/messages','POST',{protocol:'EVIDENCE',from_id:'ELECTRON_BROWSER_BROKER',to_id:'MISSION_EXECUTION_DRIVER',phase,payload});
+   lastElectronEvidenceFingerprint=state.state_fingerprint;
+  };
   const diagnose=async()=>{
    const probe=async fn=>{try{return await fn()}catch{return {state:'UNREACHABLE_OR_UNAUTHORIZED'}}};
    const [local,broker,health]=await Promise.all([status(),probe(()=>mc('/api/v3/saas/status')),probe(()=>ingress('/health'))]);
@@ -149,8 +178,13 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    {label:'Zakończ',click:()=>app.quit()}
   ]}]));
   let ticking=false;
-  timer=setInterval(async()=>{if(ticking||closing)return;ticking=true;try{await relay?.tick();if(!closing)await engine.tick()}finally{ticking=false}},2000);
+  timer=setInterval(async()=>{if(ticking||closing)return;ticking=true;try{try{await electronEvidenceTick()}catch{};await relay?.tick();if(!closing)await engine.tick()}finally{ticking=false}},2000);
   await Promise.allSettled([panel.webContents.loadURL(PANEL),saas.webContents.loadURL(startupConversation),mission.webContents.loadURL(MC),tabs.webContents.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(tabHtml))]);
+  const beforeSaasId=saas.webContents.id,beforeSaasDigest=contract.hash(saas.webContents.getURL()||'');
+  selectRightTab('saas');selectRightTab('mission');
+  sessionProof={same_webcontents:saas.webContents.id===beforeSaasId,url_digest_unchanged:contract.hash(saas.webContents.getURL()||'')===beforeSaasDigest};
+  writeTabState();
+  try{await electronEvidenceTick()}catch{}
   if(!closing)try{await diagnose()}catch{win.setTitle('LION Broker — raport diagnostyczny niedostępny')}
  }).catch(()=>{dialog.showErrorBox('LION Broker','Uruchomienie nie powiodło się. Sprawdź konfigurację, dostęp do plików i wymagany runtime.');app.quit()});
 }

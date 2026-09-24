@@ -64,3 +64,18 @@ test('switching right tabs changes bounds only and never reloads the SaaS conver
  assert.doesNotMatch(match[1],/loadURL|reload|close/);
  assert.match(match[1],/layout\(\)/);
 });
+
+
+test('Electron tab runtime emits durable bounded live evidence',()=>{
+ const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
+ assert.match(main,/tab-state-r24\.json/);
+ assert.match(main,/ELECTRON_TABS_LIVE_READBACK/);
+ assert.match(main,/lion\.electron-tabs-readback\/v1/);
+ assert.match(main,/authority_effect:'NONE'/);
+ assert.match(main,/layout_acceptance/);
+ assert.match(main,/session_preservation/);
+ assert.match(main,/restart_durability/);
+ assert.match(main,/source_sha256/);
+ assert.match(main,/\/api\/v3\/missions\/recent\?view=operational/);
+ assert.match(main,/\/messages'/);
+});

@@ -557,6 +557,68 @@ class LpclRebindLiveCurrentnessTests(unittest.TestCase):
             self.mc.register_lpcl_mission(spec)
 
 
+    def test_electron_tabs_completion_requires_fresh_live_readback_source_and_restart(self):
+        from cyber_lion.mission_control import mission_reconciliation as mr
+        mid='ELECTRON-TABS-EVIDENCE-R1'
+        spec=self.spec(mid,'PROJECT=LION_EVOLUSION\n')
+        self.mc.register_lpcl_mission(spec)
+        source=Path(self.td.name)/'main.cjs';source.write_text("'use strict';\n",encoding='utf-8')
+        state_path=Path(self.td.name)/'tab-state-r24.json'
+        source_sha=hashlib.sha256(source.read_bytes()).hexdigest()
+        fingerprint='e'*64
+        state={
+            'schema':mr.ELECTRON_TABS_STATE_SCHEMA,
+            'observed_at':self.mc.now(),
+            'authority_effect':'NONE',
+            'runtime_pid':4321,
+            'source_sha256':source_sha,
+            'active_right_tab':'mission',
+            'default_right_tab':'mission',
+            'saas_partition':'persist:lion-saas-r19',
+            'saas_url_digest':'d'*64,
+            'mission_origin':'http://127.0.0.1:8766',
+            'panel_origin':'http://127.0.0.1:8780',
+            'layout_acceptance':True,
+            'session_preservation':True,
+            'restart_durability':True,
+            'state_fingerprint':fingerprint,
+        }
+        state_path.write_text(json.dumps(state),encoding='utf-8')
+        event={
+            'event':mr.ELECTRON_TABS_EVENT,
+            'schema':mr.ELECTRON_TABS_READBACK_SCHEMA,
+            'state_file':'tab-state-r24.json',
+            'state_fingerprint':fingerprint,
+            'source_sha256':source_sha,
+            'runtime_pid':4321,
+            'active_right_tab':'mission',
+            'default_right_tab':'mission',
+            'saas_partition':'persist:lion-saas-r19',
+            'saas_url_digest':'d'*64,
+            'mission_origin':'http://127.0.0.1:8766',
+            'panel_origin':'http://127.0.0.1:8780',
+            'layout_acceptance':True,
+            'session_preservation':True,
+            'restart_durability':True,
+            'authority_effect':'NONE',
+        }
+        self.mc.post_protocol_message(mid,{'protocol':'EVIDENCE','from_id':'ELECTRON_BROWSER_BROKER','to_id':'MISSION_EXECUTION_DRIVER','phase':'ELECTRON_TABS','payload':event})
+        with patch.object(mr,'ELECTRON_TABS_SOURCE_PATH',source),patch.object(mr,'ELECTRON_TABS_STATE_PATH',state_path),patch.object(mr,'ELECTRON_TABS_EXPECTED_SOURCE_SHA256',source_sha):
+            c=self.mc.connect();ok,evidence=mr.evaluate_completion_predicates(c,mid,'ELECTRON_TABS',['ELECTRON_TABS_REPAIRED=PASS'],db_path=self.mc.DB);c.close()
+            self.assertTrue(ok,evidence)
+            self.assertEqual(evidence['checks']['ELECTRON_TABS_REPAIRED'],'PASS')
+            state['restart_durability']=False;state_path.write_text(json.dumps(state),encoding='utf-8')
+            c=self.mc.connect();ok,evidence=mr.evaluate_completion_predicates(c,mid,'ELECTRON_TABS',['ELECTRON_TABS_REPAIRED=PASS'],db_path=self.mc.DB);c.close()
+            self.assertFalse(ok,evidence);self.assertFalse(evidence['electron_tabs']['checks']['restart'])
+            state['restart_durability']=True;state['observed_at']='2000-01-01T00:00:00Z';state_path.write_text(json.dumps(state),encoding='utf-8')
+            c=self.mc.connect();ok,evidence=mr.evaluate_completion_predicates(c,mid,'ELECTRON_TABS',['ELECTRON_TABS_REPAIRED=PASS'],db_path=self.mc.DB);c.close()
+            self.assertFalse(ok,evidence);self.assertFalse(evidence['electron_tabs']['checks']['fresh_state'])
+            state['observed_at']=self.mc.now();state_path.write_text(json.dumps(state),encoding='utf-8')
+        with patch.object(mr,'ELECTRON_TABS_SOURCE_PATH',source),patch.object(mr,'ELECTRON_TABS_STATE_PATH',state_path),patch.object(mr,'ELECTRON_TABS_EXPECTED_SOURCE_SHA256','f'*64):
+            c=self.mc.connect();ok,evidence=mr.evaluate_completion_predicates(c,mid,'ELECTRON_TABS',['ELECTRON_TABS_REPAIRED=PASS'],db_path=self.mc.DB);c.close()
+            self.assertFalse(ok,evidence);self.assertFalse(evidence['electron_tabs']['checks']['source'])
+
+
 
 if __name__ == '__main__':
     unittest.main()

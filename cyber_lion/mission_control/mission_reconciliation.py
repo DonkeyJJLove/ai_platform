@@ -6,8 +6,12 @@ observed predicate set satisfies a PhaseExecutionContract.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import re
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -17,6 +21,13 @@ GENERIC_ADAPTER = "LPCL_GENERIC_128L64M"
 GENERIC_HANDLER = "GENERIC_LPCL_PHASE"
 POST_ASTRA_MISSION = "LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1"
 SESSION_MEDIATED = "CHATGPT_SENTINELX_SESSION_MEDIATED"
+ELECTRON_TABS_EVENT = "ELECTRON_TABS_LIVE_READBACK"
+ELECTRON_TABS_READBACK_SCHEMA = "lion.electron-tabs-readback/v1"
+ELECTRON_TABS_STATE_SCHEMA = "lion.electron-tabs-state/v1"
+ELECTRON_TABS_EXPECTED_SOURCE_SHA256 = "abb03e2e92b1b6033ac8040aaf2bc243d8b5e56a347d533b26fc87e47cc0f40b"
+ELECTRON_TABS_STATE_PATH = Path(os.environ.get("LION_ELECTRON_TABS_STATE_PATH", "/mnt/c/Users/d2j3/AppData/Local/LION/r19-browser-broker/tab-state-r24.json"))
+ELECTRON_TABS_SOURCE_PATH = Path(os.environ.get("LION_ELECTRON_TABS_SOURCE_PATH", "/mnt/c/Users/d2j3/AppData/Local/LION/browser_broker/src/main.cjs"))
+ELECTRON_TABS_FRESHNESS_SECONDS = 30.0
 
 
 def _exists_table(conn: sqlite3.Connection, name: str) -> bool:
@@ -28,6 +39,96 @@ def _json(value: str | None, default: Any) -> Any:
         return json.loads(value or "")
     except Exception:
         return default
+
+
+def _sha256_file(path: Path) -> str | None:
+    try:
+        h = hashlib.sha256()
+        with Path(path).open("rb") as f:
+            while True:
+                chunk = f.read(1024 * 1024)
+                if not chunk:
+                    break
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def _parse_observed_at(value: Any) -> datetime | None:
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _electron_tabs_completion(conn: sqlite3.Connection, mission_id: str, phase_id: str) -> tuple[bool, dict[str, Any]]:
+    facts: dict[str, Any] = {
+        "event": None,
+        "state": None,
+        "source_sha256": _sha256_file(ELECTRON_TABS_SOURCE_PATH),
+        "expected_source_sha256": ELECTRON_TABS_EXPECTED_SOURCE_SHA256,
+        "authority_effect": "NONE",
+    }
+    if phase_id != "ELECTRON_TABS":
+        facts["reason"] = "PHASE_MISMATCH"
+        return False, facts
+    event = None
+    for row in conn.execute(
+        "SELECT observed_at,payload_json,payload_digest FROM protocol_messages "
+        "WHERE mission_id=? AND protocol='EVIDENCE' AND from_id='ELECTRON_BROWSER_BROKER' AND phase=? "
+        "ORDER BY id DESC LIMIT 30",
+        (mission_id, phase_id),
+    ):
+        payload = _json(row["payload_json"], {})
+        if (
+            payload.get("event") == ELECTRON_TABS_EVENT
+            and payload.get("schema") == ELECTRON_TABS_READBACK_SCHEMA
+            and payload.get("authority_effect") == "NONE"
+        ):
+            event = {**payload, "protocol_observed_at": row["observed_at"], "protocol_payload_digest": row["payload_digest"]}
+            break
+    facts["event"] = event
+    try:
+        state = json.loads(ELECTRON_TABS_STATE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        state = None
+    facts["state"] = state
+    if not isinstance(event, dict) or not isinstance(state, dict):
+        facts["reason"] = "EVIDENCE_OR_STATE_MISSING"
+        return False, facts
+    now = datetime.now(timezone.utc)
+    event_time = _parse_observed_at(event.get("protocol_observed_at"))
+    state_time = _parse_observed_at(state.get("observed_at"))
+    event_age = None if event_time is None else (now - event_time.astimezone(timezone.utc)).total_seconds()
+    state_age = None if state_time is None else (now - state_time.astimezone(timezone.utc)).total_seconds()
+    facts["event_age_seconds"] = event_age
+    facts["state_age_seconds"] = state_age
+    source_sha = facts["source_sha256"]
+    fingerprint = str(event.get("state_fingerprint") or "")
+    saas_digest = str(event.get("saas_url_digest") or "")
+    checks = {
+        "schemas": state.get("schema") == ELECTRON_TABS_STATE_SCHEMA,
+        "authority": state.get("authority_effect") == "NONE",
+        "fresh_event": event_age is not None and -5.0 <= event_age <= ELECTRON_TABS_FRESHNESS_SECONDS,
+        "fresh_state": state_age is not None and -5.0 <= state_age <= ELECTRON_TABS_FRESHNESS_SECONDS,
+        "source": source_sha == ELECTRON_TABS_EXPECTED_SOURCE_SHA256 == event.get("source_sha256") == state.get("source_sha256"),
+        "fingerprint": bool(re.fullmatch(r"[0-9a-f]{64}", fingerprint)) and fingerprint == state.get("state_fingerprint"),
+        "runtime_pid": isinstance(event.get("runtime_pid"), int) and event.get("runtime_pid") > 0 and event.get("runtime_pid") == state.get("runtime_pid"),
+        "default_tab": event.get("default_right_tab") == state.get("default_right_tab") == "mission",
+        "active_tab": event.get("active_right_tab") == state.get("active_right_tab") == "mission",
+        "mission_origin": event.get("mission_origin") == state.get("mission_origin") == "http://127.0.0.1:8766",
+        "panel_origin": event.get("panel_origin") == state.get("panel_origin") == "http://127.0.0.1:8780",
+        "saas_partition": event.get("saas_partition") == state.get("saas_partition") == "persist:lion-saas-r19",
+        "saas_digest": bool(re.fullmatch(r"[0-9a-f]{64}", saas_digest)) and saas_digest == state.get("saas_url_digest"),
+        "layout": event.get("layout_acceptance") is True and state.get("layout_acceptance") is True,
+        "session": event.get("session_preservation") is True and state.get("session_preservation") is True,
+        "restart": event.get("restart_durability") is True and state.get("restart_durability") is True,
+    }
+    facts["checks"] = checks
+    facts["reason"] = None if all(checks.values()) else "ELECTRON_TAB_EVIDENCE_INCOMPLETE"
+    return all(checks.values()), facts
 
 
 def _restart_backup_evidence(db_path: Path, mission_id: str) -> dict[str, Any] | None:
@@ -200,6 +301,9 @@ def evaluate_completion_predicates(
     if _exists_table(conn, "saas_session_bindings"):
         autonomous_claim = autonomous_claim or bool(conn.execute("SELECT 1 FROM saas_session_bindings WHERE transport LIKE '%AUTONOMOUS%' LIMIT 1").fetchone())
 
+    electron_tabs_ok, electron_tabs_evidence = _electron_tabs_completion(conn, mission_id, phase_id) if "ELECTRON_TABS_REPAIRED" in names else (False, {"authority_effect": "NONE", "reason": "NOT_REQUESTED"})
+    facts["electron_tabs"] = electron_tabs_evidence
+
     values: dict[str, bool] = {
         "DB_INTEGRITY": integrity == "ok",
         "GENERIC_ADAPTER_BOUND": bool(mission and mission["adapter"] == GENERIC_ADAPTER),
@@ -259,6 +363,7 @@ def evaluate_completion_predicates(
         "PANEL_TRUTH_PROJECTION_REPAIRED": panel_projection_evidence is not None,
         "LEGACY_LPCL_1_1_COMPATIBLE": _lpcl11_probe(),
         "LPCL_1_2_COMPATIBLE": _lpcl12_probe(),
+        "ELECTRON_TABS_REPAIRED": electron_tabs_ok,
     }
     values["SUCCESSOR_TERMINAL_VALIDATION"] = all(values.get(k, False) for k in (
         "RUNTIME_REVISIONS_CONVERGED",
