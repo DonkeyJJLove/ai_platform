@@ -247,19 +247,28 @@ class Runtime:
         payload=dict(value.get('payload') or {});payload['conversation_scope_target']=target;payload['conversation_logical_context']='drone:'+logical_id;routed['payload']=payload
         return routed,{'scope_target':target,'logical_drone_id':logical_id,'material_drone_id':material_id,'authority_effect':'NONE'}
 
-    def _conversation_history(self,c,mission_id,correlation_id,current_message_id,limit=12):
+    def _conversation_history(self,c,mission_id,correlation_id,current_message_id,limit=6):
         if not isinstance(correlation_id,str) or not correlation_id:return []
-        rows=c.execute("""SELECT message_id,from_participant,kind,content
-                          FROM operator_messages
-                          WHERE mission_id=? AND correlation_id=? AND message_id<>?
-                            AND kind IN ('MESSAGE','RESPONSE')
-                          ORDER BY created_at DESC,message_id DESC LIMIT ?""",
-                       (mission_id,correlation_id,current_message_id,int(limit))).fetchall()
+        current=c.execute("SELECT created_at,message_id FROM operator_messages WHERE mission_id=? AND message_id=?",(mission_id,current_message_id)).fetchone()
+        if not current:return []
+        prior=c.execute("""SELECT message_id,content,created_at
+                           FROM operator_messages
+                           WHERE mission_id=? AND correlation_id=? AND from_participant=? AND kind='MESSAGE'
+                             AND (created_at<? OR (created_at=? AND message_id<?))
+                           ORDER BY created_at DESC,message_id DESC LIMIT ?""",
+                        (mission_id,correlation_id,operator_control.PRIMARY_PARTICIPANT,current['created_at'],current['created_at'],current['message_id'],int(limit))).fetchall()
         messages=[]
-        for row in reversed(rows):
-            role='assistant' if row['kind']=='RESPONSE' else 'user'
-            messages.append({'role':role,'content':str(row['content'])[:12000]})
-        return messages
+        for row in reversed(prior):
+            messages.append({'role':'user','content':str(row['content'])[:12000]})
+            reply=c.execute("""SELECT r.content
+                               FROM operator_messages r
+                               JOIN mission_execution_assignments a ON a.assignment_id=r.applied_assignment_id
+                               WHERE r.mission_id=? AND r.correlation_id=? AND r.kind='RESPONSE'
+                                 AND r.causation_id=? AND a.input_json LIKE '%"conversation_protocol_version":2%'
+                               ORDER BY r.created_at DESC,r.message_id DESC LIMIT 1""",
+                            (mission_id,correlation_id,row['message_id'])).fetchone()
+            if reply:messages.append({'role':'assistant','content':str(reply['content'])[:12000]})
+        return messages[-12:]
 
     def dispatch_conversation_message(self,value,applied):
         mission_id=str(value.get('mission_id') or '')
@@ -273,13 +282,19 @@ class Runtime:
             raise ValueError('conversation dispatch input')
         c=self.connect()
         try:
+            turn=c.execute("SELECT created_at FROM operator_messages WHERE mission_id=? AND message_id=?",(mission_id,message_id)).fetchone()
+            if not turn:raise ValueError('conversation message missing')
             prior=c.execute("""SELECT assignment_id,state FROM mission_execution_assignments
                                WHERE mission_id=? AND input_json LIKE ?
+                                 AND input_json LIKE '%"conversation_protocol_version":2%'
+                                 AND state IN ('READY','CLAIMED','PASS')
                                ORDER BY created_at DESC LIMIT 1""",
                             (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
             if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'idempotent':True,'authority_effect':'NONE'}
             driver=c.execute("SELECT generation,state,current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
             if not driver or int(driver['generation'] or 0)<1:raise ValueError('conversation driver generation unavailable')
+            mission_phase_context=str(driver['current_phase'] or 'UNKNOWN')
+            assignment_phase='OPERATOR_BUS_'+hashlib.sha256(message_id.encode('utf-8')).hexdigest()[:16]
             logical_id,material_id=self._conversation_binding(c,mission_id,target,correlation_id)
             control=operator_control.control_state(c,mission_id,now) or {}
             dispatch_authority=operator_control.PRIMARY_OPERATOR if control.get('control_owner')==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
@@ -293,6 +308,9 @@ class Runtime:
                 'trajectory_role':'CONVERSATION',
                 'task_id':'operator-message:'+message_id,
                 'correlation_id':correlation_id,
+                'conversation_protocol_version':2,
+                'conversation_turn_created_at':turn['created_at'],
+                'mission_phase_context':mission_phase_context,
                 'operator_message_ids':[message_id],
                 'messages':messages[-13:],
                 'max_tokens':768,
@@ -302,15 +320,15 @@ class Runtime:
                 'evidence_classes':['TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE'],
                 'authority_effect':'NONE',
             }
-            aid=global_scheduler.create_assignment(c,mission_id,'__OPERATOR_BUS__',logical_id,material_id,assignment_input,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
-            return {'assignment_id':aid,'state':'READY','logical_drone_id':logical_id,'material_drone_id':material_id,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
+            aid=global_scheduler.create_assignment(c,mission_id,assignment_phase,logical_id,material_id,assignment_input,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
+            return {'assignment_id':aid,'state':'READY','phase_id':assignment_phase,'logical_drone_id':logical_id,'material_drone_id':material_id,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
         finally:c.close()
 
 
-def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 16) -> dict:
+def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> dict:
     c=runtime.connect()
     try:
-        rows=[dict(r) for r in c.execute("""SELECT mission_id,message_id,command_id,target,content,correlation_id
+        rows=[dict(r) for r in c.execute("""SELECT mission_id,message_id,command_id,target,content,correlation_id,created_at
                                            FROM operator_messages
                                            WHERE from_participant=?
                                              AND command_id LIKE 'panel-%'
@@ -319,24 +337,42 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 16) -> d
                                            ORDER BY created_at,message_id LIMIT ?""",
                                         (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
     finally:c.close()
-    dispatched=existing=failed=0;errors=[]
-    for row in rows:
-        value={
-            'command_id':row['command_id'],
-            'mission_id':row['mission_id'],
-            'action':'MESSAGE',
-            'target':row['target'],
-            'payload':{'content':row['content']},
-            'correlation_id':row['correlation_id'],
-        }
-        try:
-            routed,_=runtime.route_conversation_command(value)
-            out=runtime.dispatch_conversation_message(routed,{'result':{'message_id':row['message_id']}})
-            if out.get('idempotent'):existing+=1
-            else:dispatched+=1
-        except Exception as exc:
-            failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
-    return {'pending':len(rows),'dispatched':dispatched,'existing':existing,'failed':failed,'errors':errors,'authority_effect':'NONE'}
+    groups={}
+    for row in rows:groups.setdefault((row['mission_id'],row['correlation_id']),[]).append(row)
+    dispatched=existing=completed=failed=0;errors=[]
+    for (_mission_id,_correlation_id),turns in groups.items():
+        for row in turns:
+            c=runtime.connect()
+            try:
+                prior=c.execute("""SELECT assignment_id,state FROM mission_execution_assignments
+                                   WHERE mission_id=? AND input_json LIKE ?
+                                     AND input_json LIKE '%"conversation_protocol_version":2%'
+                                   ORDER BY created_at DESC LIMIT 1""",
+                                (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
+            finally:c.close()
+            if prior and prior['state']=='PASS':
+                completed+=1
+                continue
+            if prior and prior['state'] in {'READY','CLAIMED'}:
+                existing+=1
+                break
+            value={
+                'command_id':row['command_id'],
+                'mission_id':row['mission_id'],
+                'action':'MESSAGE',
+                'target':row['target'],
+                'payload':{'content':row['content']},
+                'correlation_id':row['correlation_id'],
+            }
+            try:
+                routed,_=runtime.route_conversation_command(value)
+                out=runtime.dispatch_conversation_message(routed,{'result':{'message_id':row['message_id']}})
+                if out.get('idempotent'):existing+=1
+                else:dispatched+=1
+            except Exception as exc:
+                failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+            break
+    return {'pending':len(rows),'threads':len(groups),'dispatched':dispatched,'existing':existing,'completed':completed,'failed':failed,'errors':errors,'authority_effect':'NONE'}
 
 
 def conversation_reconcile_loop(runtime: Runtime):
