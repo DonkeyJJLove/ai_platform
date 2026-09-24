@@ -474,33 +474,57 @@ def is_capability_revoked(conn,mission_id,capability):return False if "operator_
 
 
 def _mission_drone_inventory(conn,mission_id):
+    """Return canonical mission participants keyed by stable identity.
+
+    Logical drones use drone:<LD...>. Material executors use worker:<MD...>.
+    Historical drone:<MD...> targets are accepted by resolve_target as an alias
+    but are never emitted as the canonical recipient.
+    """
     out={};tables=_tables(conn)
     if 'logical_drones' in tables:
-        for row in conn.execute('SELECT logical_id,role FROM logical_drones WHERE mission_id=?',(mission_id,)):out[str(row['logical_id'])]={'recipient':'drone:'+str(row['logical_id']),'kind':'LOGICAL','role':str(row['role'] or '')}
+        for row in conn.execute('SELECT logical_id,role FROM logical_drones WHERE mission_id=?',(mission_id,)):
+            ident=str(row['logical_id']);out[ident]={'recipient':'drone:'+ident,'kind':'LOGICAL','role':str(row['role'] or '')}
     if 'material_workers' in tables:
         for row in conn.execute('SELECT pod_name,logical_id FROM material_workers WHERE mission_id=?',(mission_id,)):
-            if row['pod_name']:out[str(row['pod_name'])]={'recipient':'drone:'+str(row['pod_name']),'kind':'MATERIAL','role':str(row['logical_id'] or '')}
+            logical_field=str(row['logical_id'] or '')
+            pod=str(row['pod_name'] or '')
+            material=logical_field if logical_field.upper().startswith('MD') else (pod if pod.upper().startswith('MD') else logical_field or pod)
+            if material:out[material]={'recipient':'worker:'+material,'kind':'MATERIAL','role':'MATERIAL_EXECUTOR','pod_name':pod}
+            if pod:out[pod]={'recipient':'worker:'+(material or pod),'kind':'MATERIAL','role':'MATERIAL_EXECUTOR','pod_name':pod}
     if 'mission_execution_assignments' in tables:
         for row in conn.execute('SELECT logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE mission_id=?',(mission_id,)):
-            for name,kind in ((row['logical_drone_id'],'LOGICAL'),(row['material_drone_id'],'MATERIAL')):
-                if name and str(name) not in out:out[str(name)]={'recipient':'drone:'+str(name),'kind':kind,'role':''}
+            logical=row['logical_drone_id'];material=row['material_drone_id']
+            if logical and str(logical) not in out:
+                ident=str(logical);out[ident]={'recipient':'drone:'+ident,'kind':'LOGICAL','role':''}
+            if material and str(material) not in out:
+                ident=str(material);out[ident]={'recipient':'worker:'+ident,'kind':'MATERIAL','role':'MATERIAL_EXECUTOR'}
     if {'operator_swarm_sessions','operator_swarm_members'}.issubset(tables):
-        for row in conn.execute("SELECT m.participant_id,m.role FROM operator_swarm_members m JOIN operator_swarm_sessions s ON s.session_id=m.session_id WHERE s.mission_id=? AND s.state='ACTIVE' AND m.state='ACTIVE' AND m.member_kind='MATERIAL_WORKER'",(mission_id,)):
+        for row in conn.execute("SELECT m.participant_id,m.role,m.member_kind FROM operator_swarm_members m JOIN operator_swarm_sessions s ON s.session_id=m.session_id WHERE s.mission_id=? AND s.state='ACTIVE' AND m.state='ACTIVE' AND m.member_kind IN ('MATERIAL_WORKER','LOGICAL_DRONE')",(mission_id,)):
             participant=str(row['participant_id'] or '')
-            if participant.startswith('drone:'):
-                name=participant.split(':',1)[1]
-                if name and name not in out:out[name]={'recipient':participant,'kind':'MATERIAL','role':str(row['role'] or '')}
+            if ':' not in participant:continue
+            prefix,name=participant.split(':',1)
+            kind='MATERIAL' if row['member_kind']=='MATERIAL_WORKER' else 'LOGICAL'
+            canonical=('worker:' if kind=='MATERIAL' else 'drone:')+name
+            if name and name not in out:out[name]={'recipient':canonical,'kind':kind,'role':str(row['role'] or '')}
     return out
 
 def resolve_target(conn,mission_id,target):
     if not _mission_exists(conn,mission_id):raise ValueError('mission not found')
+    if not isinstance(target,str) or ':' not in target:raise ValueError('unresolved target')
     prefix,ident=target.split(':',1);inv=_mission_drone_inventory(conn,mission_id)
     if prefix=='mission':
         if ident!=mission_id:raise ValueError('target mission mismatch')
         return sorted({v['recipient'] for v in inv.values()})
     if prefix=='drone':
-        if ident not in inv:raise ValueError('unresolved drone target')
-        return [inv[ident]['recipient']]
+        item=inv.get(ident)
+        if item is None:raise ValueError('unresolved drone target')
+        # Backward compatibility: historical drone:MDxxx is accepted, but the
+        # canonical delivery recipient is worker:MDxxx.
+        return [item['recipient']]
+    if prefix=='worker':
+        item=inv.get(ident)
+        if item is None or item.get('kind')!='MATERIAL':raise ValueError('unresolved worker target')
+        return [item['recipient']]
     if prefix=='operator':
         row=conn.execute("SELECT participant_id FROM operator_participants WHERE participant_id=? AND state='ACTIVE'",('operator:'+ident,)).fetchone()
         if row is None:raise ValueError('unresolved operator target')
@@ -519,7 +543,10 @@ def resolve_target(conn,mission_id,target):
 
 def _message_target_matches(target,mission_id,material_drone_id,logical_drone_id):
     if target=='mission:'+mission_id:return True
-    if target.startswith('drone:'):return target.split(':',1)[1] in {str(material_drone_id or ''),str(logical_drone_id or '')}
+    if target.startswith('worker:'):return target.split(':',1)[1]==str(material_drone_id or '')
+    if target.startswith('drone:'):
+        ident=target.split(':',1)[1]
+        return ident==str(logical_drone_id or '') or ident==str(material_drone_id or '')  # legacy drone:MD alias
     return False
 
 def assignment_context(conn,mission_id,material_drone_id,logical_drone_id):
@@ -527,7 +554,7 @@ def assignment_context(conn,mission_id,material_drone_id,logical_drone_id):
     if state is None:return {"control":None,"context":None,"plan":None,"messages":[]}
     context=conn.execute("SELECT * FROM mission_context_revisions WHERE mission_id=? ORDER BY revision DESC LIMIT 1",(mission_id,)).fetchone();plan=conn.execute("SELECT * FROM mission_plan_revisions WHERE mission_id=? ORDER BY revision DESC LIMIT 1",(mission_id,)).fetchone();messages=[]
     for row in conn.execute("SELECT * FROM operator_messages WHERE mission_id=? AND state IN ('PENDING','PARTIAL') ORDER BY created_at,message_id",(mission_id,)):
-        value=dict(row);direct=_message_target_matches(value["target"],mission_id,material_drone_id,logical_drone_id);delivered=conn.execute("SELECT 1 FROM operator_message_deliveries WHERE message_id=? AND recipient IN (?,?) AND delivery_state!='APPLIED' LIMIT 1",(value['message_id'],'drone:'+str(material_drone_id or ''),'drone:'+str(logical_drone_id or ''))).fetchone()
+        value=dict(row);direct=_message_target_matches(value["target"],mission_id,material_drone_id,logical_drone_id);delivered=conn.execute("SELECT 1 FROM operator_message_deliveries WHERE message_id=? AND recipient IN (?,?,?) AND delivery_state!='APPLIED' LIMIT 1",(value['message_id'],'worker:'+str(material_drone_id or ''),'drone:'+str(material_drone_id or ''),'drone:'+str(logical_drone_id or ''))).fetchone()
         if direct or delivered:messages.append(value)
     return {"control":dict(state),"context":dict(context) if context else None,"plan":dict(plan) if plan else None,"messages":messages[:64]}
 
@@ -537,7 +564,7 @@ def note_assignment_application(conn,assignment_id,result,now_fn):
     if row is None:raise ValueError("assignment missing")
     ids=result.get("operator_message_ids") or []
     if not isinstance(ids,list) or any(not isinstance(x,str) for x in ids):ids=[]
-    stamp=now_fn();applied=0;partial=0;responses=[];recipients=['drone:'+str(row['material_drone_id'] or ''),'drone:'+str(row['logical_drone_id'] or '')]
+    stamp=now_fn();applied=0;partial=0;responses=[];recipients=['worker:'+str(row['material_drone_id'] or ''),'drone:'+str(row['material_drone_id'] or ''),'drone:'+str(row['logical_drone_id'] or '')]
     for message_id in ids[:64]:
         matched=0
         for recipient in recipients:matched+=conn.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED',delivered_at=COALESCE(delivered_at,?),applied_at=?,applied_assignment_id=? WHERE message_id=? AND recipient=? AND delivery_state!='APPLIED'",(stamp,stamp,assignment_id,message_id,recipient)).rowcount
@@ -548,7 +575,7 @@ def note_assignment_application(conn,assignment_id,result,now_fn):
         else:applied+=int(bool(matched))
         response_text=result.get('response_text')
         if matched and isinstance(response_text,str) and response_text.strip():
-            reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'response':response_text})[:32];from_participant='drone:'+str(row['material_drone_id'] or row['logical_drone_id']);original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,from_participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id));responses.append(reply_id)
+            reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'response':response_text})[:32];from_participant=('worker:'+str(row['material_drone_id'])) if row['material_drone_id'] else ('drone:'+str(row['logical_drone_id']));original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,from_participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id));responses.append(reply_id)
     if applied or partial:_event(conn,row['mission_id'],'OPERATOR_MESSAGE_APPLIED',{'assignment_id':assignment_id,'message_ids':ids[:64],'applied_messages':applied,'partial_messages':partial,'response_message_ids':responses},now_fn)
     return {"applied_messages":applied,"partial_messages":partial,"response_message_ids":responses}
 
