@@ -8,6 +8,7 @@ process so containment can survive loss of the main 8766 HTTP service.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -67,7 +68,7 @@ def read_json(path: Path, default):
 class Runtime:
     def __init__(self, db: Path, key_file: Path, proxy_key_file: Path, panel_proxy_key_file: Path, pairing_key_file: Path, floor_file: Path, mission_control_url: str, *, bootstrap_primary=False):
         self.db=db.resolve();self.key_file=key_file.resolve();self.proxy_key_file=proxy_key_file.resolve();self.panel_proxy_key_file=panel_proxy_key_file.resolve();self.pairing_key_file=pairing_key_file.resolve();self.floor_file=floor_file.resolve()
-        self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={}
+        self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={};self.pairing_challenges={}
         c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now)
         participant=operator_control.participant_snapshot(c).get('participant')
         if participant is None:
@@ -96,10 +97,31 @@ class Runtime:
         if len(supplied)==len(self.panel_proxy_key) and secrets.compare_digest(supplied,self.panel_proxy_key):return operator_control.PANEL_PROXY_PRINCIPAL
         return None
 
-    def pair_panel(self, supplied_key, pairing_code):
+    def issue_panel_pairing_challenge(self, supplied_key):
         if self._key_identity(supplied_key)!=operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('panel transport authentication required')
-        if not isinstance(pairing_code,str) or len(pairing_code)!=len(self.pairing_key) or not secrets.compare_digest(pairing_code,self.pairing_key):raise PermissionError('operator pairing code denied')
-        token=secrets.token_urlsafe(48);expires=__import__('time').time()+8*3600
+        stamp=time.time();challenge_id=secrets.token_hex(16);code=secrets.token_hex(16);expires=stamp+60.0
+        with self.session_lock:
+            self.pairing_challenges={k:v for k,v in self.pairing_challenges.items() if v.get('expires',0)>stamp and v.get('attempts',0)>0}
+            self.pairing_challenges[challenge_id]={'code_digest':hashlib.sha256(code.encode()).hexdigest(),'expires':expires,'attempts':3,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL}
+        return {'challenge_id':challenge_id,'pairing_code':code,'expires_at_epoch':expires,'attempts_remaining':3,'authority_effect':'NONE'}
+
+    def pair_panel(self, supplied_key, pairing_code, challenge_id=None):
+        if self._key_identity(supplied_key)!=operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('panel transport authentication required')
+        if challenge_id is None:
+            if not isinstance(pairing_code,str) or len(pairing_code)!=len(self.pairing_key) or not secrets.compare_digest(pairing_code,self.pairing_key):raise PermissionError('operator pairing code denied')
+        else:
+            if not isinstance(challenge_id,str) or len(challenge_id)!=32 or not isinstance(pairing_code,str):raise PermissionError('operator pairing challenge denied')
+            stamp=time.time()
+            with self.session_lock:
+                challenge=self.pairing_challenges.get(challenge_id)
+                if not challenge or challenge.get('expires',0)<=stamp or challenge.get('transport_principal')!=operator_control.PANEL_PROXY_PRINCIPAL:
+                    self.pairing_challenges.pop(challenge_id,None);raise PermissionError('operator pairing challenge expired or invalid')
+                if not secrets.compare_digest(hashlib.sha256(pairing_code.encode()).hexdigest(),challenge['code_digest']):
+                    challenge['attempts']=int(challenge.get('attempts',0))-1
+                    if challenge['attempts']<=0:self.pairing_challenges.pop(challenge_id,None)
+                    raise PermissionError('operator pairing challenge denied')
+                self.pairing_challenges.pop(challenge_id,None)
+        token=secrets.token_urlsafe(48);expires=time.time()+8*3600
         with self.session_lock:self.sessions[token]={'principal_id':operator_control.PRIMARY_OPERATOR,'expires':expires,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL}
         return {'paired':True,'principal_id':operator_control.PRIMARY_OPERATOR,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL,'session_token':token,'expires_at_epoch':expires}
 
@@ -288,10 +310,18 @@ def make_handler(runtime: Runtime):
         def do_POST(self):
             try:
                 path=unquote(urlsplit(self.path).path);value=self.body()
-                if path=='/v1/session/pair':
-                    if set(value)!={'pairing_code'}:raise ValueError('pair schema')
+                if path=='/v1/session/pair/challenge':
+                    if value:raise ValueError('pair challenge schema')
                     supplied=self.headers.get('X-LION-Panel-Proxy-Key') or self.headers.get('X-LION-Operator-Proxy-Key')
-                    return self.reply(runtime.pair_panel(supplied,value['pairing_code']),201)
+                    return self.reply(runtime.issue_panel_pairing_challenge(supplied),201)
+                if path=='/v1/session/pair':
+                    if set(value)=={'pairing_code'}:
+                        challenge_id=None
+                    elif set(value)=={'pairing_code','challenge_id'}:
+                        challenge_id=value['challenge_id']
+                    else:raise ValueError('pair schema')
+                    supplied=self.headers.get('X-LION-Panel-Proxy-Key') or self.headers.get('X-LION-Operator-Proxy-Key')
+                    return self.reply(runtime.pair_panel(supplied,value['pairing_code'],challenge_id),201)
                 if path=='/v1/session/revoke':
                     if value:raise ValueError('revoke schema')
                     principal=self.auth()
