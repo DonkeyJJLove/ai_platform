@@ -33,6 +33,29 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('ORDER BY t.created_at DESC',t)
         self.assertNotIn('ORDER BY updated_at DESC LIMIT 500',t)
 
+    def test_panel_uses_contextual_mission_binding_not_raw_target_entry(self):
+        t=self.ui
+        self.assertNotIn('id="busTarget"',t)
+        self.assertIn('id="bindingHint"',t)
+        self.assertIn('Powiąż z wybraną misją',t)
+        self.assertIn("const target='mission:'+mid",t)
+        self.assertIn('Przepiąć ten wątek z misji',t)
+
+    def test_operator_pairing_is_local_otp_handshake_without_renderer_secret_entry(self):
+        t=self.ui
+        self.assertNotIn('id="operatorPairing"',t)
+        self.assertIn('Aktywuj sterowanie operatorem',t)
+        self.assertIn("body:'{}'",t)
+        self.assertIn("PAIRING · lokalny OTP",t)
+
+    def test_thread_rename_is_inline_and_has_http_readback(self):
+        t=self.ui
+        self.assertNotIn("prompt('Nowa nazwa wątku:",t)
+        self.assertIn('data-rename-input',t)
+        self.assertIn('data-rename-save',t)
+        self.assertIn('saveRenameThread',t)
+        self.assertIn("if(!r.ok)throw new Error",t)
+
     def test_bus_scroll_follows_new_message_start_not_tail(self):
         t=self.ui
         self.assertIn("scrollIntoView({behavior:'smooth',block:'start'})",t)
