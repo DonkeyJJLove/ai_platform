@@ -90,6 +90,11 @@ def apply_saas_handoff_extension(cls):
     original_capability = getattr(cls, "_capability_answer", None)
 
     def route(self, message):
+        if isinstance(message,str) and message.startswith('LION COMMUNICATION ENVELOPE'):
+            m=re.search(r'"target"\s*:\s*"([^"]+)"',message)
+            semantic_target=(m.group(1).strip().lower() if m else '')
+            if semantic_target=='model:local':
+                return original_route(self, message)
         if _supervisor_status_question(message) and not _explicit_saas(message) and not _dual_saas_local(message):
             return "LION_CAPABILITY_CURRENTNESS", "canonical SaaS supervisor status"
         if isinstance(message, str) and _dual_saas_local(message):
@@ -100,8 +105,8 @@ def apply_saas_handoff_extension(cls):
 
     def state(self):
         out = original_state(self)
-        observed_at = None
-        if callable(getattr(self, "control_provider", None)):
+        observed_at = datetime.now(timezone.utc).isoformat() if isinstance(out.get("saas_session_bridge"), dict) else None
+        if not isinstance(out.get("saas_session_bridge"), dict) and callable(getattr(self, "control_provider", None)):
             try:
                 out["saas_session_bridge"] = self.control_provider("saas_status", {})
                 observed_at = datetime.now(timezone.utc).isoformat()
@@ -177,7 +182,7 @@ def apply_saas_handoff_extension(cls):
             local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
             if durable_dual:
                 self.control_provider("dual_response", {"request_id":dual["request_id"],"provider":"gpt-oss-20b-MXFP4","response_text":str(local.get("answer") or ""),"transport":"LOCAL_MODEL_RUNTIME"})
-            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
+            handoff = self.control_provider("saas_request", {"mission_id": mission_id, "question": saas_prompt} if durable_dual else {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":saas_prompt,"authority_effect":"NONE"})
             if durable_dual:
                 self.control_provider("dual_link_saas", {"request_id":dual["request_id"],"saas_request_id":handoff["request_id"]})
                 handoff["dual_request_id"] = dual["request_id"]
@@ -210,21 +215,22 @@ def apply_saas_handoff_extension(cls):
                 raise ValueError("SaaS handoff control provider unavailable")
             mission_id = None
             question = _question(message)
-            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE","transport":"CHATGPT_FIREFOX_PROJECT_MEDIATED"})
+            handoff = self.control_provider("saas_request", {"scope_type":"THREAD" if THREAD_CONTEXT.get() else "CONTROL_PLANE","thread_id":THREAD_CONTEXT.get(),"question":question,"authority_effect":"NONE"})
             polish = output_language == "pl" or (output_language == "auto" and bool(re.search(r"[ąćęłńóśźż]|\b(?:kim|co|czy|jak|wykonaj|zapytaj|pytanie)\b", message.lower())))
-            firefox_transport=handoff.get('transport')=='CHATGPT_FIREFOX_PROJECT_MEDIATED'
+            transport=str(handoff.get('transport') or 'UNKNOWN')
+            automatic_transport=transport in {'CHATGPT_SENTINELX_MCP','CHATGPT_SECURE_MCP','CHATGPT_FIREFOX_PROJECT_MEDIATED'}
             if polish:
-                transport_text=("Transport CHATGPT_FIREFOX_PROJECT_MEDIATED: przypięty Firefox mediator przejmie request automatycznie i po realnej odpowiedzi ChatGPT zwróci receipt do tego samego wątku. " if firefox_transport else "Transport pozostaje EXTERNAL_SESSION_MEDIATED — automatyczny browser mediator nie jest obecnie READY, więc odpowiedź wymaga zewnętrznego mediatora. ")
+                transport_text=(f"Transport {transport}: request korzysta z bieżącego preferowanego mediatora Mission Control. " if automatic_transport else f"Transport {transport}: automatyczna mediacja nie jest potwierdzona. ")
                 answer = ("Żądanie zostało zapisane w kontrolowanym kanale SaaS. "
                           f"Kod {handoff['request_code']}; request {handoff['request_id']}. "
-                          "Panel śledzi dokładnie ten request automatycznie i po otrzymaniu realnego receiptu dopisze odpowiedź do tego samego wątku. "
+                          "Panel śledzi dokładnie ten request i po otrzymaniu realnego receiptu wiąże odpowiedź z tym samym wątkiem. "
                           +transport_text+
                           "Powtórzenie identycznego unresolved pytania jest wiązane przez dedupe/retry lineage zamiast mnożyć aktywną kolejkę. Odpowiedź ma authority_effect=NONE.")
             else:
-                transport_text=("Transport is CHATGPT_FIREFOX_PROJECT_MEDIATED: the pinned Firefox mediator will claim the request automatically and return a real ChatGPT receipt to the same thread. " if firefox_transport else "Transport remains EXTERNAL_SESSION_MEDIATED: the automatic browser mediator is not READY, so an external mediator is still required. ")
+                transport_text=(f"Transport {transport}: the request uses Mission Control's current preferred mediator. " if automatic_transport else f"Transport {transport}: automatic mediation is not attested. ")
                 answer = ("The request is queued in the controlled SaaS channel. "
                           f"Code {handoff['request_code']}; request {handoff['request_id']}. "
-                          "The panel follows this exact request and appends the real supervisor response to the same thread when its receipt arrives. "
+                          "The panel follows this exact request and binds the real supervisor receipt back to the same thread. "
                           +transport_text+
                           "Repeating the same unresolved question is bound through dedupe/retry lineage instead of multiplying the active queue. authority_effect=NONE.")
             return {
