@@ -558,6 +558,16 @@ def assignment_context(conn,mission_id,material_drone_id,logical_drone_id):
         if direct or delivered:messages.append(value)
     return {"control":dict(state),"context":dict(context) if context else None,"plan":dict(plan) if plan else None,"messages":messages[:64]}
 
+def assignment_messages_for_input(messages,input_json):
+    rows=list(messages or [])
+    try:value=json.loads(input_json or '{}')
+    except Exception:value={}
+    requested_ids=value.get('operator_message_ids') if isinstance(value,dict) else None
+    if isinstance(requested_ids,list) and requested_ids and all(isinstance(v,str) for v in requested_ids):
+        requested=set(requested_ids);rows=[m for m in rows if m.get('message_id') in requested]
+    return rows
+
+
 def note_assignment_application(conn,assignment_id,result,now_fn):
     if "mission_execution_assignments" not in _tables(conn):return {"applied_messages":0,"partial_messages":0}
     row=conn.execute("SELECT mission_id,logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
