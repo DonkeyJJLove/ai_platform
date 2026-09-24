@@ -137,7 +137,7 @@ class OperatorControlTests(unittest.TestCase):
         self.assertEqual(out['partial_messages'],1)
         self.assertEqual(self.c.execute('SELECT state FROM operator_messages WHERE message_id=?',(mid,)).fetchone()[0],'PARTIAL')
         reply=self.c.execute("SELECT from_participant,target,content FROM operator_messages WHERE kind='RESPONSE'").fetchone()
-        self.assertEqual((reply['from_participant'],reply['target'],reply['content']),('drone:MD025','operator:primary','MD025 response'))
+        self.assertEqual((reply['from_participant'],reply['target'],reply['content']),('worker:MD025','operator:primary','MD025 response'))
 
     def test_stale_resume_after_stop_is_conflict(self):
         before=operator_control.control_state(self.c,'M1',now)['control_epoch']
