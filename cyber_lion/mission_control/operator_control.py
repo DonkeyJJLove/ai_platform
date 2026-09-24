@@ -773,4 +773,5 @@ def mission_snapshot(conn,mission_id,now_fn=None):
 def force_epoch_at_least(conn,mission_id,minimum_epoch,now_fn,*,incarnation_id=None):
     if type(minimum_epoch) is not int or minimum_epoch<1:raise ValueError("minimum epoch")
     state=ensure_control_state(conn,mission_id,now_fn);changed=False
-    if int(state["control_epoch"])<minimum_epoch:conn.execute("UPDATE mission_operator_control SET control_epoch=?,incarnation_id=?,control_owner=?,pause_latch=1,stop_latch=1,updated_at=? WHERE mission_id=?",(minimum_epoch,incarnation_id or ("incarnation-"+uuid.uuid4().hex),PRIMARY_OPERATOR,no
+    if int(state["control_epoch"])<minimum_epoch:conn.execute("UPDATE mission_operator_control SET control_epoch=?,incarnation_id=?,control_owner=?,pause_latch=1,stop_latch=1,updated_at=? WHERE mission_id=?",(minimum_epoch,incarnation_id or ("incarnation-"+uuid.uuid4().hex),PRIMARY_OPERATOR,now_fn(),mission_id));_driver_fence(conn,mission_id,now_fn,state="STOPPED",reason="EPOCH_FLOOR_RECONCILIATION");_fence_assignments(conn,mission_id,now_fn);changed=True
+    conn.commit();return {**ensure_control_state(conn,mission_id,now_fn),"reconciled":changed}
