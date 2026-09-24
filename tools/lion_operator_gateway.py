@@ -309,7 +309,7 @@ def make_handler(runtime: Runtime):
                     allowed={'mission_id','duration_seconds','workers','mode'}
                     if set(value)-allowed or 'mission_id' not in value:raise ValueError('swarm session open schema')
                     c=runtime.connect()
-                    try:return self.reply(operator_swarm_session.open_session(c,channel_principal,value['mission_id'],now,duration_seconds=int(value.get('duration_seconds') or operator_swarm_session.MAX_SESSION_SECONDS),workers=value.get('workers') or operator_swarm_session.DEFAULT_WORKERS,mode=value.get('mode') or 'TWO_DRONE_VERIFY'),201)
+                    try:return self.reply(operator_swarm_session.open_session(c,channel_principal,value['mission_id'],now,duration_seconds=int(value.get('duration_seconds') or operator_swarm_session.MAX_SESSION_SECONDS),workers=value.get('workers'),mode=value.get('mode') or 'TWO_DRONE_VERIFY'),201)
                     finally:c.close()
                 if path.startswith('/v1/swarm/sessions/'):
                     principal=self.auth(allow_panel_transport=True);channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
@@ -318,9 +318,9 @@ def make_handler(runtime: Runtime):
                     sid,op=parts;c=runtime.connect()
                     try:
                         if op=='messages':
-                            allowed={'command_id','target','content','kind','correlation_id','causation_id','thread_id'}
+                            allowed={'command_id','target','content','kind','correlation_id','causation_id','thread_id','verifier_worker'}
                             if set(value)-allowed or not {'command_id','target','content'}.issubset(value):raise ValueError('swarm message schema')
-                            return self.reply(operator_swarm_session.send_message(c,channel_principal,sid,value['command_id'],value['target'],value['content'],now,kind=value.get('kind') or 'REQUEST',correlation_id=value.get('correlation_id'),causation_id=value.get('causation_id'),thread_id=value.get('thread_id')),201)
+                            return self.reply(operator_swarm_session.send_message(c,channel_principal,sid,value['command_id'],value['target'],value['content'],now,kind=value.get('kind') or 'REQUEST',correlation_id=value.get('correlation_id'),causation_id=value.get('causation_id'),thread_id=value.get('thread_id'),verifier_worker=value.get('verifier_worker')),201)
                         if op=='assistant-attach':
                             if principal!=operator_control.SENTINELX_PROXY_PRINCIPAL:raise PermissionError('SentinelX proxy required')
                             if set(value)-{'model_identity'}:raise ValueError('assistant attach schema')
