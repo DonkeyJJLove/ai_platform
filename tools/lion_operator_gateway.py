@@ -23,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from cyber_lion.mission_control import global_scheduler, hmk9d_process, operator_control, operator_swarm_session
+from cyber_lion.mission_control import global_scheduler, operator_control, operator_swarm_session
 
 DEFAULT_DB = "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db"
 DEFAULT_KEY = "/var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key"
@@ -69,7 +69,7 @@ class Runtime:
     def __init__(self, db: Path, key_file: Path, proxy_key_file: Path, panel_proxy_key_file: Path, pairing_key_file: Path, floor_file: Path, mission_control_url: str, *, bootstrap_primary=False):
         self.db=db.resolve();self.key_file=key_file.resolve();self.proxy_key_file=proxy_key_file.resolve();self.panel_proxy_key_file=panel_proxy_key_file.resolve();self.pairing_key_file=pairing_key_file.resolve();self.floor_file=floor_file.resolve()
         self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={};self.pairing_challenges={}
-        c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now);hmk9d_process.migrate(c,now)
+        c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now)
         participant=operator_control.participant_snapshot(c).get('participant')
         if participant is None:
             if not bootstrap_primary:
@@ -348,12 +348,6 @@ class Runtime:
             dispatch_authority=operator_control.PRIMARY_OPERATOR if control.get('control_owner')==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
             history=self._conversation_history(c,mission_id,correlation_id,message_id)
             messages=history+[{'role':'user','content':content.strip()[:16000]}]
-            hmk_process_id=hmk9d_process.ensure_conversation_process(c,mission_id,correlation_id,message_id,now)
-            hmk9d_process.dispatch_prefix(
-                c,hmk_process_id,message_id=message_id,correlation_id=correlation_id,
-                scope_target=scope_target,logical_drone_id=logical_id,material_worker_id=material_id,
-                dispatch_authority=dispatch_authority,history_count=len(history),now_fn=now,
-            )
             assignment_input={
                 'kind':'LOCAL_MODEL_INFERENCE',
                 'capability':'OPERATOR_BUS_CONVERSATION_R1',
@@ -363,8 +357,6 @@ class Runtime:
                 'task_id':'operator-message:'+message_id,
                 'correlation_id':correlation_id,
                 'conversation_protocol_version':3,
-                'hmk9d_process_id':hmk_process_id,
-                'hmk9d_profile_id':hmk9d_process.PROFILE_ID,
                 'conversation_turn_created_at':turn['created_at'],
                 'mission_phase_context':mission_phase_context,
                 'lease_scope':'OPERATOR_BUS',
@@ -473,12 +465,6 @@ def conversation_reconcile_loop(runtime: Runtime):
     while True:
         try:reconcile_pending_conversations_once(runtime)
         except Exception:pass
-        c=None
-        try:
-            c=runtime.connect();hmk9d_process.reconcile_observed(c,now)
-        except Exception:pass
-        finally:
-            if c is not None:c.close()
         time.sleep(1.0)
 
 
@@ -564,10 +550,7 @@ def make_handler(runtime: Runtime):
                     correlation_id=(q.get('correlation_id') or [None])[0];limit=int((q.get('limit') or ['500'])[0])
                     if not correlation_id:raise ValueError('correlation_id')
                     c=runtime.connect()
-                    try:
-                        out=operator_control.thread_snapshot(c,correlation_id,now,limit=limit)
-                        out['hmk9d']=hmk9d_process.thread_projection(c,correlation_id,limit=min(limit,100))
-                        return self.reply(out)
+                    try:return self.reply(operator_control.thread_snapshot(c,correlation_id,now,limit=limit))
                     finally:c.close()
                 if path=='/v1/state':
                     mid=(q.get('mission_id') or [None])[0]
