@@ -738,13 +738,22 @@ def thread_snapshot(conn,correlation_id,now_fn=None,*,limit=500):
     visible=[]
     latest_ids={m["message_id"] for m in latest_valid.values()}
     answered=set(latest_valid)
+    source_ids={m.get("message_id") for m in rows if m.get("kind")=="MESSAGE"}
     for message in rows:
-        if message.get("kind")=="RESPONSE" and message.get("message_id") not in latest_ids:continue
+        if message.get("kind")=="RESPONSE":
+            if message.get("message_id") not in latest_ids and message.get("message_id") not in suppressed:suppressed.append(message["message_id"])
+            continue
         if message.get("kind")=="MESSAGE":
             message["conversation_state"]="ANSWERED" if message.get("message_id") in answered else message.get("state")
-        elif message.get("kind")=="RESPONSE":
-            message["conversation_state"]="DELIVERED"
+            visible.append(message)
+            reply=latest_valid.get(message.get("message_id"))
+            if reply:
+                reply["conversation_state"]="DELIVERED";visible.append(reply)
+            continue
         visible.append(message)
+    for causation,reply in latest_valid.items():
+        if causation not in source_ids:
+            reply["conversation_state"]="DELIVERED";visible.append(reply)
     ids={m["message_id"] for m in visible}
     deliveries=[dict(r) for r in conn.execute("""SELECT d.* FROM operator_message_deliveries d
                                                  JOIN operator_messages m ON m.message_id=d.message_id
@@ -764,5 +773,4 @@ def mission_snapshot(conn,mission_id,now_fn=None):
 def force_epoch_at_least(conn,mission_id,minimum_epoch,now_fn,*,incarnation_id=None):
     if type(minimum_epoch) is not int or minimum_epoch<1:raise ValueError("minimum epoch")
     state=ensure_control_state(conn,mission_id,now_fn);changed=False
-    if int(state["control_epoch"])<minimum_epoch:conn.execute("UPDATE mission_operator_control SET control_epoch=?,incarnation_id=?,control_owner=?,pause_latch=1,stop_latch=1,updated_at=? WHERE mission_id=?",(minimum_epoch,incarnation_id or ("incarnation-"+uuid.uuid4().hex),PRIMARY_OPERATOR,now_fn(),mission_id));_driver_fence(conn,mission_id,now_fn,state="STOPPED",reason="EPOCH_FLOOR_RECONCILIATION");_fence_assignments(conn,mission_id,now_fn);changed=True
-    conn.commit();return {**ensure_control_state(conn,mission_id,now_fn),"reconciled":changed}
+    if int(state["control_epoch"])<minimum_epoch:conn.execute("UPDATE mission_operator_control SET control_epoch=?,incarnation_id=?,control_owner=?,pause_latch=1,stop_latch=1,updated_at=? WHERE mission_id=?",(minimum_epoch,incarnation_id or ("incarnation-"+uuid.uuid4().hex),PRIMARY_OPERATOR,no
