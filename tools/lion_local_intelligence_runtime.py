@@ -399,7 +399,25 @@ class OperatorControlBridge:
         if op=='participants':return self._request('/v1/participants',session_token=args.get('session_token'))
         if op=='events':
             return self._request('/v1/events?'+urllib.parse.urlencode({'mission_id':args.get('mission_id'),'after':int(args.get('after',0)),'limit':int(args.get('limit',200))}),session_token=args.get('session_token'))
+        if op=='swarm_active':
+            return self._request('/v1/swarm/session/active',session_token=args.get('session_token'))
+        if op=='swarm_open':
+            body={'mission_id':args.get('mission_id')}
+            if args.get('duration_seconds') is not None:body['duration_seconds']=int(args['duration_seconds'])
+            if args.get('workers') is not None:body['workers']=list(args['workers'])
+            if args.get('mode') is not None:body['mode']=str(args['mode'])
+            return self._request('/v1/swarm/sessions',body,15,session_token=args.get('session_token'))
+        if op=='swarm_snapshot':
+            sid=urllib.parse.quote(str(args.get('session_id')),safe='')
+            return self._request('/v1/swarm/sessions/'+sid+'/snapshot',session_token=args.get('session_token'))
+        if op=='swarm_stream':
+            sid=urllib.parse.quote(str(args.get('session_id')),safe='')
+            query=urllib.parse.urlencode({'after':int(args.get('after',0)),'limit':int(args.get('limit',25))})
+            return self._request('/v1/swarm/sessions/'+sid+'?'+query,timeout=15,session_token=args.get('session_token'))
         session_token=args.pop('__session_token',None)
+        if op=='swarm_send':
+            sid=urllib.parse.quote(str(args.pop('session_id')),safe='')
+            return self._request('/v1/swarm/sessions/'+sid+'/messages',args,20,session_token=session_token)
         if op=='command':return self._request('/v1/commands',args,15,session_token=session_token)
         if op=='command_status':return self._request('/v1/commands/'+urllib.parse.quote(str(args.get('command_id')),safe=''),session_token=session_token)
         if op=='ack':return self._request('/v1/events/ack',args,session_token=session_token)
@@ -521,6 +539,42 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             messages=payload.get('messages')
             if not isinstance(messages,list) or not messages:raise ValueError('local assignment messages')
             messages=[dict(m) for m in messages if isinstance(m,dict) and m.get('role') in {'system','user','assistant'} and isinstance(m.get('content'),str)]
+            trusted_participant_context=payload.get('trusted_participant_context')
+            trusted_source_context=payload.get('trusted_source_context')
+            evidence_classes=payload.get('evidence_classes') or []
+            if trusted_participant_context is not None and type(trusted_participant_context) is not dict:raise ValueError('trusted participant context')
+            if trusted_source_context is not None and type(trusted_source_context) is not dict:raise ValueError('trusted source context')
+            if type(evidence_classes) is not list or any(x not in {'TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE','MODEL_CLAIM'} for x in evidence_classes):raise ValueError('communication evidence classes')
+            communication_context={
+                'schema':'lion.cognitive-participant-context/v1',
+                'mission_id':claimed.get('mission_id'),
+                'phase_id':claimed.get('phase_id'),
+                'logical_drone_id':claimed.get('logical_drone_id'),
+                'material_worker_id':claimed.get('material_drone_id'),
+                'cognitive_executor':'model:local',
+                'model':'gpt-oss-20b-MXFP4',
+                'direct_effect_authority':'NONE',
+                'mediated_system_communication':'AVAILABLE',
+                'mediated_channels':['mission_control','operator_bus','logical_drone_context','material_worker_receipt','chatgpt_saas_via_control_plane'],
+                'reply_path':['model:local','worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN'),'mission_control'],
+                'effect_rule':'MODEL_OUTPUT_IS_ADVISORY; EFFECTS_REQUIRE_ADMITTED_CAPABILITY_AND_AUTHORITY',
+            }
+            communication_guidance=(
+                'LION COMMUNICATION CONTEXT. PARTICIPANT ONTOLOGY IS STRICT. '
+                'You are model:local (gpt-oss-20b-MXFP4), the shared proposal-only cognitive executor. '
+                'You are NOT worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN')+' and you are NOT drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN')+'. '
+                'worker:MDxxx is the bounded material runtime that invokes you and carries the assignment/receipt. '
+                'drone:LDxxx is a logical role/context bound by Mission Control to a worker; it is not a physical agent and not a model. '
+                'operator:primary is the human operator. model:saas is the remote cognitive supervisor. Mission Control is the control plane. '
+                'You have no direct OS/tool/effect authority, but you DO have mediated communication through LION: your answer returns through the bound worker, is persisted as a receipt, and can be routed by Mission Control to logical drones, the operator, or ChatGPT SaaS. '
+                'Never collapse "no direct authority" into "I cannot communicate with the system". '
+                'If asked who you are, identify yourself as model:local and separately name the current worker and logical context. '
+                'Do not claim that a worker or logical drone has thoughts, knowledge, sensors, physical embodiment, or model identity. '
+                'When asked to help the system, reason substantively and emit the bounded request/handoff that LION can route. '
+                'Never claim an effect occurred unless a matching receipt is supplied. Current participant context follows: '
+                +json.dumps(communication_context,ensure_ascii=False,sort_keys=True)
+            )
+            messages=[{'role':'system','content':communication_guidance}]+messages
             op_context=claimed.get('operator_context') or {};op_plan=claimed.get('operator_plan') or {};op_messages=claimed.get('operator_messages') or []
             operator_parts=[]
             if op_context.get('content') is not None:operator_parts.append('CONTEXT REVISION '+str(op_context.get('revision'))+': '+json.dumps(op_context.get('content'),ensure_ascii=False,sort_keys=True))
@@ -555,7 +609,7 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not answer:
                 control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='FAILED'
                 raise ValueError('empty local model result')
-            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'participant_context':communication_context,'trusted_participant_context':trusted_participant_context,'trusted_source_context':trusted_source_context,'evidence_classes':list(evidence_classes),'source_participant':'model:local','reply_via':'worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN'),'logical_context':'drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN'),'authority_effect':'NONE'}
             dual_id=payload.get('dual_request_id')
             if dual_id:control('dual_response',{'request_id':dual_id,'provider':declared_model,'response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
             receipt=control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})
@@ -709,33 +763,4 @@ def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
                         else:
                             control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_EMPTY','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'authority_effect':'NONE'}})
                 elif phase=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
-                    exists=False
-                    for msg in snap.get('protocol_messages') or []:
-                        payload=msg.get('payload') or {}
-                        if msg.get('protocol')=='EVIDENCE' and msg.get('from_id')=='LPCL_PANEL' and msg.get('phase')==phase and payload.get('event')=='WINDOWS_CONTROL_SURFACE_READBACK':
-                            exists=True;break
-                    if not exists:
-                        panel=_json_request(f'http://127.0.0.1:{panel_port}/health',timeout=3)
-                        models=_json_request(model_url.rstrip('/')+'/v1/models',timeout=5)
-                        model_count=len(models.get('data') or []) if isinstance(models,dict) else 0
-                        control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'WINDOWS_CONTROL_SURFACE_READBACK','panel_http':200 if panel.get('status')=='ok' else 0,'panel_authority_effect':panel.get('authority_effect'),'model_http':200,'model_count':model_count,'model_id':'gpt-oss-20b-MXFP4','authority_effect':'NONE'}})
-        except Exception:
-            pass
-        stop_event.wait(5)
-
-def main():
-    p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--operator-control-url',default='http://127.0.0.1:8767');p.add_argument('--operator-key-file');p.add_argument('--operator-panel-proxy-key-file');p.add_argument('--operator-pairing-key-file');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');a=p.parse_args()
-    if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
-    b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
-    operator_key_file=a.operator_panel_proxy_key_file or a.operator_key_file
-    operator=OperatorControlBridge(a.operator_control_url,operator_key_file,a.operator_pairing_key_file) if operator_key_file else None
-    g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads,operator_provider=operator)
-    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
-    for material_id in ('MD025','MD026','MD027'):
-        threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
-    threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
-    from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
-    threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
-    try: serve_gateway(g,a.port)
-    finally: canary_stop.set()
-if __name__=='__main__':main()
+                   
