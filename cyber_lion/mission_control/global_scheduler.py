@@ -583,7 +583,16 @@ def _record_receipt(conn,assignment_id,result,now_fn,*,status,effect_receipt_dig
 def pending_local_assignments(conn,*,mission_id=None,limit=16):
     if type(limit) is not int or not 1<=limit<=64:raise ValueError("assignment limit")
     rows=conn.execute("SELECT * FROM mission_execution_assignments WHERE state='READY' AND mission_id=? ORDER BY created_at,assignment_id LIMIT ?",(mission_id,max(limit*4,limit))).fetchall() if mission_id else conn.execute("SELECT * FROM mission_execution_assignments WHERE state='READY' ORDER BY created_at,assignment_id LIMIT ?",(max(limit*4,limit),)).fetchall();allowed=[]
+    driver_cols={r[1] for r in conn.execute("PRAGMA table_info(mission_execution_drivers)")}
+    generation_cache={}
     for row in rows:
+        if 'generation' in driver_cols:
+            mid=row['mission_id']
+            if mid not in generation_cache:
+                driver=conn.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id=?",(mid,)).fetchone()
+                generation_cache[mid]=int(driver['generation']) if driver and driver['generation'] is not None else None
+            current_generation=generation_cache[mid]
+            if current_generation is not None and int(row['lease_generation'])!=current_generation:continue
         if operator_control.assignment_allowed(conn,row['mission_id'],row['dispatch_authority'],int(row['control_epoch'])):allowed.append(dict(row))
         if len(allowed)>=limit:break
     return allowed

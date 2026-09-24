@@ -284,15 +284,17 @@ class Runtime:
         try:
             turn=c.execute("SELECT created_at FROM operator_messages WHERE mission_id=? AND message_id=?",(mission_id,message_id)).fetchone()
             if not turn:raise ValueError('conversation message missing')
-            prior=c.execute("""SELECT assignment_id,state FROM mission_execution_assignments
+            driver=c.execute("SELECT generation,state,current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+            if not driver or int(driver['generation'] or 0)<1:raise ValueError('conversation driver generation unavailable')
+            generation=int(driver['generation'])
+            prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                WHERE mission_id=? AND input_json LIKE ?
                                  AND input_json LIKE '%"conversation_protocol_version":2%'
                                  AND state IN ('READY','CLAIMED','PASS')
+                                 AND lease_generation=?
                                ORDER BY created_at DESC LIMIT 1""",
-                            (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
-            if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'idempotent':True,'authority_effect':'NONE'}
-            driver=c.execute("SELECT generation,state,current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
-            if not driver or int(driver['generation'] or 0)<1:raise ValueError('conversation driver generation unavailable')
+                            (mission_id,'%"operator_message_ids":["'+message_id+'"]%',generation)).fetchone()
+            if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'lease_generation':prior['lease_generation'],'idempotent':True,'authority_effect':'NONE'}
             mission_phase_context=str(driver['current_phase'] or 'UNKNOWN')
             assignment_phase='OPERATOR_BUS_'+hashlib.sha256(message_id.encode('utf-8')).hexdigest()[:16]
             logical_id,material_id=self._conversation_binding(c,mission_id,target,correlation_id)
@@ -344,11 +346,14 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
         for row in turns:
             c=runtime.connect()
             try:
-                prior=c.execute("""SELECT assignment_id,state FROM mission_execution_assignments
+                driver=c.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id=?",(row['mission_id'],)).fetchone()
+                generation=int(driver['generation']) if driver and driver['generation'] is not None else None
+                prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                    WHERE mission_id=? AND input_json LIKE ?
                                      AND input_json LIKE '%"conversation_protocol_version":2%'
+                                     AND lease_generation=?
                                    ORDER BY created_at DESC LIMIT 1""",
-                                (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
+                                (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%',generation)).fetchone() if generation is not None else None
             finally:c.close()
             if prior and prior['state']=='PASS':
                 completed+=1

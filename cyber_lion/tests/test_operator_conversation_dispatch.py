@@ -130,6 +130,32 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         self.assertTrue(d2['idempotent'])
         self.assertEqual(d1['assignment_id'],d2['assignment_id'])
 
+    def test_stale_generation_ready_is_not_listed_and_is_retried_on_current_generation(self):
+        value=self.command(command_id='panel-'+('8'*32),correlation='e'*32,content='Generation?')
+        routed,_=self.runtime.route_conversation_command(value)
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        first=self.runtime.dispatch_conversation_message(routed,applied)
+        c=self.runtime.connect()
+        try:
+            first_row=c.execute("SELECT lease_generation,state FROM mission_execution_assignments WHERE assignment_id=?",(first['assignment_id'],)).fetchone()
+            self.assertEqual(first_row['state'],'READY')
+            current=c.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id='M1'").fetchone()['generation']
+            self.assertEqual(first_row['lease_generation'],current)
+            c.execute("UPDATE mission_execution_drivers SET generation=? WHERE mission_id='M1'",(current+1,))
+            c.commit()
+            pending=global_scheduler.pending_local_assignments(c,mission_id='M1',limit=64)
+            self.assertNotIn(first['assignment_id'],[x['assignment_id'] for x in pending])
+        finally:c.close()
+        out=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(out['dispatched'],1,out)
+        c=self.runtime.connect()
+        try:
+            rows=c.execute("SELECT assignment_id,lease_generation FROM mission_execution_assignments WHERE input_json LIKE ? ORDER BY created_at",('%"operator_message_ids":["'+applied['result']['message_id']+'"]%',)).fetchall()
+            self.assertEqual(len(rows),2)
+            self.assertNotEqual(rows[0]['assignment_id'],rows[1]['assignment_id'])
+            self.assertEqual(rows[1]['lease_generation'],rows[0]['lease_generation']+1)
+        finally:c.close()
+
     def test_assignment_operator_message_filter_excludes_unrelated_pending_messages(self):
         rows=[{'message_id':'m1','content':'old'},{'message_id':'m2','content':'current'}]
         selected=operator_control.assignment_messages_for_input(rows,json.dumps({'operator_message_ids':['m2']}))
