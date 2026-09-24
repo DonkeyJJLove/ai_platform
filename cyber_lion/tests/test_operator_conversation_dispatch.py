@@ -130,6 +130,42 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         self.assertTrue(d2['idempotent'])
         self.assertEqual(d1['assignment_id'],d2['assignment_id'])
 
+    def test_thread_snapshot_survives_mission_rebind_and_marks_answered_turn(self):
+        corr='f'*32
+        first_value=self.command(command_id='panel-'+('9'*32),correlation=corr,content='M1 question')
+        routed,_=self.runtime.route_conversation_command(first_value)
+        first=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=first['result']['message_id']
+        dispatch=self.runtime.dispatch_conversation_message(routed,first)
+        c=self.runtime.connect()
+        try:
+            row=c.execute("SELECT material_drone_id FROM mission_execution_assignments WHERE assignment_id=?",(dispatch['assignment_id'],)).fetchone()
+            claimed=global_scheduler.claim_assignment(c,dispatch['assignment_id'],now,expected_material_drone_id=row['material_drone_id'])
+            result={'operator_message_ids':[mid],'response_text':'M1 answer'}
+            global_scheduler.record_receipt(c,dispatch['assignment_id'],result,now,material_drone_id=row['material_drone_id'],lease_generation=claimed['lease_generation'])
+            operator_control.note_assignment_application(c,dispatch['assignment_id'],result,now)
+            c.commit()
+        finally:c.close()
+        c=self.runtime.connect()
+        try:
+            c.execute("INSERT INTO missions(mission_id,state,updated_at) VALUES('M2','RUNNING',?)",(now(),))
+            c.commit()
+        finally:c.close()
+        second_value=self.command(command_id='panel-'+('a'*32),correlation=corr,content='M2 question')
+        second_value['mission_id']='M2';second_value['target']='mission:M2'
+        second=self.runtime.apply(second_value,principal_id=operator_control.PRIMARY_OPERATOR)
+        c=self.runtime.connect()
+        try:
+            snap=operator_control.thread_snapshot(c,corr,now)
+            self.assertEqual(snap['mission_ids'],['M1','M2'])
+            self.assertEqual([m['content'] for m in snap['messages']],['M1 question','M1 answer','M2 question'])
+            first_msg=next(m for m in snap['messages'] if m['message_id']==mid)
+            second_msg=next(m for m in snap['messages'] if m['message_id']==second['result']['message_id'])
+            self.assertEqual(first_msg['conversation_state'],'ANSWERED')
+            self.assertNotEqual(second_msg['conversation_state'],'ANSWERED')
+            self.assertEqual(snap['suppressed_response_ids'],[])
+        finally:c.close()
+
     def test_stale_generation_ready_is_not_listed_and_is_retried_on_current_generation(self):
         value=self.command(command_id='panel-'+('8'*32),correlation='e'*32,content='Generation?')
         routed,_=self.runtime.route_conversation_command(value)
