@@ -54,6 +54,7 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         execution_driver.migrate(c,now,source_head='a'*40,source_tree='b'*40)
         global_scheduler.migrate(c,now)
         execution_driver.ensure_driver(c,'M1',now,initial_state='ACTIVE')
+        c.execute("UPDATE mission_execution_drivers SET current_phase='P1' WHERE mission_id='M1'")
         workers=[
             {'material_worker_id':'MD001','pod_uid':'container-1','pod_name':'lion-md001','ready':1,'restarts':0},
             {'material_worker_id':'MD002','pod_uid':'container-2','pod_name':'lion-md002','ready':1,'restarts':0},
@@ -94,9 +95,12 @@ class OperatorConversationDispatchTests(unittest.TestCase):
             self.assertEqual(deliveries[0]['recipient'],'worker:'+meta['material_drone_id'])
             row=dict(c.execute('SELECT * FROM mission_execution_assignments WHERE assignment_id=?',(dispatch['assignment_id'],)).fetchone())
             payload=json.loads(row['input_json'])
-            self.assertEqual(row['phase_id'],'__OPERATOR_BUS__')
+            self.assertTrue(row['phase_id'].startswith('OPERATOR_BUS_'))
+            self.assertEqual(payload['mission_phase_context'],'P1')
             self.assertEqual(payload['operator_message_ids'],[mid])
             self.assertEqual(payload['purpose'],'OPERATOR_BUS_CONVERSATION_R1')
+            self.assertEqual(payload['conversation_protocol_version'],2)
+            self.assertTrue(payload['conversation_turn_created_at'])
             self.assertEqual(payload['messages'][-1],{'role':'user','content':'Model?'})
             result=operator_control.note_assignment_application(
                 c,dispatch['assignment_id'],
@@ -109,6 +113,9 @@ class OperatorConversationDispatchTests(unittest.TestCase):
             self.assertEqual(original,'APPLIED')
             self.assertEqual(reply['content'],'Model answer')
             self.assertEqual(reply['correlation_id'],'a'*32)
+            projected=operator_control.mission_snapshot(c,'M1',now)
+            projected_reply=next(m for m in projected['messages'] if m['message_id']==reply['message_id'])
+            self.assertTrue(projected_reply['conversation_valid'])
         finally:
             c.close()
 
@@ -127,6 +134,27 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         rows=[{'message_id':'m1','content':'old'},{'message_id':'m2','content':'current'}]
         selected=operator_control.assignment_messages_for_input(rows,json.dumps({'operator_message_ids':['m2']}))
         self.assertEqual(selected,[{'message_id':'m2','content':'current'}])
+        self.assertEqual(operator_control.assignment_messages_for_input(rows,'{}'),[])
+
+    def test_v1_correlated_response_is_retained_but_not_valid_conversation_output(self):
+        value=self.command(command_id='panel-'+('7'*32),correlation='d'*32,content='Old protocol')
+        routed,meta=self.runtime.route_conversation_command(value)
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        c=self.runtime.connect()
+        try:
+            driver=execution_driver.snapshot(c,'M1')
+            aid=global_scheduler.create_assignment(c,'M1','P1',meta['logical_drone_id'],meta['material_drone_id'],{
+                'kind':'LOCAL_MODEL_INFERENCE',
+                'purpose':'OPERATOR_BUS_CONVERSATION_R1',
+                'operator_message_ids':[mid],
+                'messages':[{'role':'user','content':'Old protocol'}],
+            },now,lease_generation=driver['generation'])
+            operator_control.note_assignment_application(c,aid,{'operator_message_ids':[mid],'response_text':'legacy answer'},now)
+            snapshot=operator_control.mission_snapshot(c,'M1',now)
+            reply=next(m for m in snapshot['messages'] if m.get('causation_id')==mid)
+            self.assertFalse(reply['conversation_valid'])
+        finally:c.close()
 
     def test_backlog_reconciler_materializes_missing_panel_assignment_once(self):
         value=self.command(command_id='panel-'+('3'*32),correlation='b'*32,content='Misja?')
@@ -145,6 +173,47 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         try:
             rows=c.execute("SELECT assignment_id FROM mission_execution_assignments WHERE input_json LIKE ?",('%"operator_message_ids":["'+mid+'"]%',)).fetchall()
             self.assertEqual(len(rows),1)
+        finally:c.close()
+
+    def test_backlog_is_serial_and_history_never_reads_future_turns(self):
+        corr='c'*32
+        first=self.runtime.apply(self.command(command_id='panel-'+('4'*32),correlation=corr,content='Misja?'),principal_id=operator_control.PRIMARY_OPERATOR)
+        second=self.runtime.apply(self.command(command_id='panel-'+('5'*32),correlation=corr,content='Model'),principal_id=operator_control.PRIMARY_OPERATOR)
+        third=self.runtime.apply(self.command(command_id='panel-'+('6'*32),correlation=corr,content='SaaS: Model?'),principal_id=operator_control.PRIMARY_OPERATOR)
+        mids=[first['result']['message_id'],second['result']['message_id'],third['result']['message_id']]
+        out1=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(out1['dispatched'],1)
+        c=self.runtime.connect()
+        try:
+            rows=c.execute("SELECT assignment_id,material_drone_id,input_json,state FROM mission_execution_assignments WHERE input_json LIKE '%\"conversation_protocol_version\":2%' ORDER BY created_at").fetchall()
+            selected=[]
+            for row in rows:
+                payload=json.loads(row['input_json'])
+                if payload.get('correlation_id')==corr:selected.append((row,payload))
+            self.assertEqual(len(selected),1)
+            row,payload=selected[0]
+            self.assertEqual(payload['operator_message_ids'],[mids[0]])
+            self.assertEqual(payload['messages'],[{'role':'user','content':'Misja?'}])
+            claimed=global_scheduler.claim_assignment(c,row['assignment_id'],now,expected_material_drone_id=row['material_drone_id'])
+            result={'operator_message_ids':[mids[0]],'response_text':'Odpowiedź na pierwsze pytanie'}
+            global_scheduler.record_receipt(c,row['assignment_id'],result,now,material_drone_id=row['material_drone_id'],lease_generation=claimed['lease_generation'])
+            operator_control.note_assignment_application(c,row['assignment_id'],result,now)
+            c.commit()
+        finally:c.close()
+        out2=reconcile_pending_conversations_once(self.runtime)
+        self.assertEqual(out2['dispatched'],1,out2)
+        c=self.runtime.connect()
+        try:
+            rows=c.execute("SELECT input_json FROM mission_execution_assignments WHERE input_json LIKE '%\"conversation_protocol_version\":2%' ORDER BY created_at").fetchall()
+            payloads=[json.loads(r['input_json']) for r in rows if json.loads(r['input_json']).get('correlation_id')==corr]
+            self.assertEqual(len(payloads),2)
+            self.assertEqual(payloads[1]['operator_message_ids'],[mids[1]])
+            self.assertEqual(payloads[1]['messages'],[
+                {'role':'user','content':'Misja?'},
+                {'role':'assistant','content':'Odpowiedź na pierwsze pytanie'},
+                {'role':'user','content':'Model'},
+            ])
+            self.assertNotIn('SaaS: Model?',[m['content'] for m in payloads[1]['messages']])
         finally:c.close()
 
 
