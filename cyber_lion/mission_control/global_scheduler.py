@@ -477,13 +477,14 @@ def bind_128l64m(conn,mission_id,lpcl_text,workers,now_fn,*,adapter="LPCL_REBOUN
 
 def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,*,adapter="LPCL_DOCKER_LOCAL_MODEL",runtime_state="DOCKER_LOCAL_MODEL_FLEET_BOUND",role_prefix="AUTONOMOUS_LOGICAL",currentness_digest=None):
     if type(logical_count) is not int or not 1<=logical_count<=512:raise ValueError("logical count")
-    if not isinstance(workers,list) or len(workers)!=32:raise ValueError("material worker count must be 32")
+    if not isinstance(workers,list) or not 1<=len(workers)<=32:raise ValueError("material worker count must be 1..32")
     ordered=sorted(workers,key=lambda w:str(w.get("material_worker_id") or ""))
+    material_count=len(ordered)
     mids=[str(w.get("material_worker_id") or "") for w in ordered]
-    expected=[f"MD{i:03d}" for i in range(1,33)]
+    expected=[f"MD{i:03d}" for i in range(1,material_count+1)]
     if mids!=expected:raise ValueError("material worker identity set")
     uids=[str(w.get("pod_uid") or w.get("container_id") or "") for w in ordered]
-    if any(not x for x in uids) or len(set(uids))!=32:raise ValueError("material worker UIDs")
+    if any(not x for x in uids) or len(set(uids))!=material_count:raise ValueError("material worker UIDs")
     if any(int(w.get("ready",0) or 0)!=1 for w in ordered):raise ValueError("all material workers must be ready")
     stamp=now_fn()
     conn.execute("DELETE FROM logical_drones WHERE mission_id=?",(mission_id,))
@@ -492,7 +493,7 @@ def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,
     logical=[f"LD{i:03d}" for i in range(1,logical_count+1)]
     distribution={mid:[] for mid in mids}
     for idx,lid in enumerate(logical):
-        mid=mids[idx%32];distribution[mid].append(lid)
+        mid=mids[idx%material_count];distribution[mid].append(lid)
         conn.execute("INSERT INTO logical_drones VALUES(?,?,?,?,?,?)",(mission_id,lid,f"{role_prefix}_{idx+1:03d}",1,1,1))
     by={str(w["material_worker_id"]):w for w in ordered}
     for mid in mids:
@@ -505,9 +506,9 @@ def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,
             aid="topology-"+uuid.uuid4().hex
             value={"material_worker_id":mid,"container_id":pod_uid,"container_name":pod_name,"model":w.get("model"),"currentness_digest":currentness_digest,"binding_class":"DOCKER_LOCAL_MODEL"}
             conn.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,created_at,claimed_at,finished_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(aid,mission_id,"__TOPOLOGY__",lid,mid,digest(value),_canon(value),"BOUND",1,stamp,stamp,stamp))
-    conn.execute("UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=32,ready=32,updated_at=?,last_error=NULL WHERE mission_id=?",(str(adapter),str(runtime_state),stamp,mission_id))
+    conn.execute("UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=?,ready=?,updated_at=?,last_error=NULL WHERE mission_id=?",(str(adapter),str(runtime_state),material_count,material_count,stamp,mission_id))
     conn.commit()
-    return {"mission_id":mission_id,"logical_count":logical_count,"material_count":32,"unique_uid_count":32,"assignments":logical_count,"distribution":sorted((mid,len(distribution[mid])) for mid in mids),"authority_effect":"MISSION_SCOPED_CONTROL_BINDING"}
+    return {"mission_id":mission_id,"logical_count":logical_count,"material_count":material_count,"unique_uid_count":material_count,"assignments":logical_count,"distribution":sorted((mid,len(distribution[mid])) for mid in mids),"authority_effect":"MISSION_SCOPED_CONTROL_BINDING"}
 
 
 def eligible_missions(conn):
