@@ -35,31 +35,36 @@ test('mission-scoped SaaS admission uses current broker and no R19 prefix gate',
 });
 
 
-test('right pane defaults to Mission Control and keeps SaaS alive as a sibling tab',()=>{
+test('Mission Control stays left while the right pane defaults to LPCL Panel and keeps SaaS alive',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- assert.match(main,/let activeRightTab='mission'/);
+ assert.match(main,/let activeRightTab='panel'/);
  assert.match(main,/const mission=new WebContentsView/);
  assert.match(main,/const tabs=new WebContentsView/);
  assert.match(main,/views=\[panel,saas,mission,tabs\]/);
+ assert.match(main,/mission\.setBounds\(\{x:0,y:0,width:split,height\}\)/);
+ assert.match(main,/panel\.setBounds\(activeRightTab==='panel'\?shown:hidden\)/);
  assert.match(main,/saas\.setBounds\(activeRightTab==='saas'\?shown:hidden\)/);
- assert.match(main,/mission\.setBounds\(activeRightTab==='mission'\?shown:hidden\)/);
- assert.match(main,/selectRightTab\('mission'\)/);
+ assert.match(main,/selectRightTab\('panel'\)/);
  assert.match(main,/mission\.webContents\.loadURL\(MC\)/);
+ assert.match(main,/panel\.webContents\.loadURL\(PANEL\)/);
  assert.match(main,/saas\.webContents\.loadURL\(startupConversation\)/);
 });
 
-test('Mission Control tab is loopback-origin constrained and tab chrome has no external navigation',()=>{
+test('right tab chrome uses bounded lion-tab navigation and exposes LPCL Panel plus ChatGPT SaaS',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
  assert.match(main,/if\(v===mission\)return u\.origin===new URL\(MC\)\.origin/);
- assert.match(main,/if\(v===tabs\)return u\.protocol==='data:'/);
- assert.match(main,/LION MISSION CONTROL/);
+ assert.match(main,/u\.protocol==='lion-tab:'/);
+ assert.match(main,/selectRightTab\(u\.hostname\)/);
+ assert.match(main,/lion-tab:\/\/panel/);
+ assert.match(main,/lion-tab:\/\/saas/);
+ assert.match(main,/LPCL PANEL/);
  assert.match(main,/ChatGPT SaaS/);
- assert.match(main,/did-navigate-in-page/);
+ assert.doesNotMatch(main,/tabs\.webContents\.on\('did-navigate-in-page'/);
 });
 
-test('switching right tabs changes bounds only and never reloads the SaaS conversation',()=>{
+test('switching right tabs changes bounds only and never reloads the LPCL or SaaS views',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- const match=main.match(/const selectRightTab=name=>\{([^}]+)\}/);
+ const match=main.match(/selectRightTab=name=>\{([^}]+)\}/);
  assert.ok(match);
  assert.doesNotMatch(match[1],/loadURL|reload|close/);
  assert.match(match[1],/layout\(\)/);
