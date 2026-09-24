@@ -48,6 +48,15 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn("body:'{}'",t)
         self.assertIn("PAIRING · lokalny OTP",t)
 
+    def test_boot_auto_pairs_local_operator_session_before_opening_thread(self):
+        t=self.ui
+        self.assertIn('async function ensureOperatorSession()',t)
+        self.assertIn("operatorApi('/api/operator/session')",t)
+        self.assertIn('await operatorPair();return operatorSessionPaired',t)
+        self.assertIn('await ensureOperatorSession();await refreshOperator();',t)
+        self.assertLess(t.index('await ensureOperatorSession();await refreshOperator();'),t.index("if(threads.length)await openThread"))
+        self.assertNotIn('id="operatorPairing"',t)
+
     def test_thread_rename_is_inline_and_has_http_readback(self):
         t=self.ui
         self.assertNotIn("prompt('Nowa nazwa wątku:",t)
