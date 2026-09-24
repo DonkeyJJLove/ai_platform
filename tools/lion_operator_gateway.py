@@ -287,10 +287,17 @@ class Runtime:
             driver=c.execute("SELECT generation,state,current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
             if not driver or int(driver['generation'] or 0)<1:raise ValueError('conversation driver generation unavailable')
             generation=int(driver['generation'])
+            completed=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
+                                   WHERE mission_id=? AND input_json LIKE ?
+                                     AND input_json LIKE '%"conversation_protocol_version":2%'
+                                     AND state='PASS'
+                                   ORDER BY created_at LIMIT 1""",
+                                (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
+            if completed:return {'assignment_id':completed['assignment_id'],'state':'PASS','lease_generation':completed['lease_generation'],'idempotent':True,'authority_effect':'NONE'}
             prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                WHERE mission_id=? AND input_json LIKE ?
                                  AND input_json LIKE '%"conversation_protocol_version":2%'
-                                 AND state IN ('READY','CLAIMED','PASS')
+                                 AND state IN ('READY','CLAIMED')
                                  AND lease_generation=?
                                ORDER BY created_at DESC LIMIT 1""",
                             (mission_id,'%"operator_message_ids":["'+message_id+'"]%',generation)).fetchone()
@@ -348,25 +355,32 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
             try:
                 driver=c.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id=?",(row['mission_id'],)).fetchone()
                 generation=int(driver['generation']) if driver and driver['generation'] is not None else None
+                completed_row=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
+                                           WHERE mission_id=? AND input_json LIKE ?
+                                             AND input_json LIKE '%"conversation_protocol_version":2%'
+                                             AND state='PASS'
+                                           ORDER BY created_at LIMIT 1""",
+                                        (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
                 prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                    WHERE mission_id=? AND input_json LIKE ?
                                      AND input_json LIKE '%"conversation_protocol_version":2%'
+                                     AND state IN ('READY','CLAIMED')
                                      AND lease_generation=?
                                    ORDER BY created_at DESC LIMIT 1""",
                                 (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%',generation)).fetchone() if generation is not None else None
             finally:c.close()
-            if prior and prior['state']=='PASS':
+            if completed_row:
                 c=runtime.connect()
                 try:
-                    reply=c.execute("SELECT 1 FROM operator_messages WHERE mission_id=? AND correlation_id=? AND kind='RESPONSE' AND causation_id=? AND applied_assignment_id=? LIMIT 1",(row['mission_id'],row['correlation_id'],row['message_id'],prior['assignment_id'])).fetchone()
+                    reply=c.execute("SELECT 1 FROM operator_messages WHERE mission_id=? AND correlation_id=? AND kind='RESPONSE' AND causation_id=? AND applied_assignment_id=? LIMIT 1",(row['mission_id'],row['correlation_id'],row['message_id'],completed_row['assignment_id'])).fetchone()
                     if reply:
                         completed+=1
                         continue
-                    retained=c.execute("SELECT result_json FROM mission_assignment_payloads WHERE assignment_id=?",(prior['assignment_id'],)).fetchone()
+                    retained=c.execute("SELECT result_json FROM mission_assignment_payloads WHERE assignment_id=?",(completed_row['assignment_id'],)).fetchone()
                     if not retained:raise ValueError('conversation PASS missing retained payload')
                     try:result=json.loads(retained['result_json'])
                     except Exception as exc:raise ValueError('conversation retained payload invalid') from exc
-                    applied=operator_control.note_assignment_application(c,prior['assignment_id'],result,now)
+                    applied=operator_control.note_assignment_application(c,completed_row['assignment_id'],result,now)
                     c.commit()
                     if not applied.get('response_message_ids'):raise ValueError('conversation PASS retained payload has no response')
                     repaired+=1;completed+=1
@@ -375,7 +389,7 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
                     failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
                     break
                 finally:c.close()
-            if prior and prior['state'] in {'READY','CLAIMED'}:
+            if prior:
                 existing+=1
                 break
             value={
