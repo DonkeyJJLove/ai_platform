@@ -552,11 +552,15 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if trusted_participant_context is not None and type(trusted_participant_context) is not dict:raise ValueError('trusted participant context')
             if trusted_source_context is not None and type(trusted_source_context) is not dict:raise ValueError('trusted source context')
             if type(evidence_classes) is not list or any(x not in {'TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE','MODEL_CLAIM'} for x in evidence_classes):raise ValueError('communication evidence classes')
+            conversation_mode=payload.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1'
             communication_context={
                 'schema':'lion.cognitive-participant-context/v1',
                 'mission_id':claimed.get('mission_id'),
                 'phase_id':claimed.get('phase_id'),
-                'logical_drone_id':claimed.get('logical_drone_id'),
+                'logical_drone_id':claimed.get('logical_drone_id') if payload.get('conversation_context_class')!='OPERATOR_BUS' else None,
+                'logical_context':payload.get('logical_context') or ('drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN')),
+                'conversation_context_class':payload.get('conversation_context_class'),
+                'conversation_binding_mode':payload.get('conversation_binding_mode'),
                 'material_worker_id':claimed.get('material_drone_id'),
                 'cognitive_executor':'model:local',
                 'model':'gpt-oss-20b-MXFP4',
@@ -581,9 +585,20 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
                 'Never claim an effect occurred unless a matching receipt is supplied. Current participant context follows: '
                 +json.dumps(communication_context,ensure_ascii=False,sort_keys=True)
             )
+            if conversation_mode:
+                communication_guidance=(
+                    'LION OPERATOR BUS CONVERSATION. Answer the human operator latest message directly and substantively. '
+                    'Do not begin by reciting your identity, worker id, logical context, mission id, or transport unless the operator asks for that information or it is necessary to answer. '
+                    'The selected mission is conversation context, not evidence that any mission fact, state, effect, or capability is true. '
+                    'Use supplied authenticated context when relevant; if a requested fact is not evidenced, say that it is unknown rather than inventing it. '
+                    'You are model:local (gpt-oss-20b-MXFP4), proposal-only, with no direct effect authority. '
+                    'Your answer is returned through the bound material worker and persisted as a receipt. '
+                    'If the operator explicitly asks about SaaS, distinguish model:local from model:saas and do not pretend to be the SaaS model. '
+                    'Current participant/context evidence follows: '
+                    +json.dumps(communication_context,ensure_ascii=False,sort_keys=True)
+                )
             messages=[{'role':'system','content':communication_guidance}]+messages
             op_context=claimed.get('operator_context') or {};op_plan=claimed.get('operator_plan') or {};op_messages=claimed.get('operator_messages') or []
-            conversation_mode=payload.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1'
             operator_parts=[]
             if op_context.get('content') is not None:operator_parts.append('CONTEXT REVISION '+str(op_context.get('revision'))+': '+json.dumps(op_context.get('content'),ensure_ascii=False,sort_keys=True))
             if op_plan.get('content') is not None:operator_parts.append('PLAN REVISION '+str(op_plan.get('revision'))+': '+json.dumps(op_plan.get('content'),ensure_ascii=False,sort_keys=True))
@@ -617,7 +632,7 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not answer:
                 control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='FAILED'
                 raise ValueError('empty local model result')
-            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'participant_context':communication_context,'trusted_participant_context':trusted_participant_context,'trusted_source_context':trusted_source_context,'evidence_classes':list(evidence_classes),'source_participant':'model:local','reply_via':'worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN'),'logical_context':'drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN'),'authority_effect':'NONE'}
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'participant_context':communication_context,'trusted_participant_context':trusted_participant_context,'trusted_source_context':trusted_source_context,'evidence_classes':list(evidence_classes),'source_participant':'model:local','reply_via':'worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN'),'logical_context':payload.get('logical_context') or ('drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN')),'authority_effect':'NONE'}
             dual_id=payload.get('dual_request_id')
             if dual_id:control('dual_response',{'request_id':dual_id,'provider':declared_model,'response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
             receipt=control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})

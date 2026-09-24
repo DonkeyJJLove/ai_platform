@@ -525,6 +525,13 @@ def resolve_target(conn,mission_id,target):
         item=inv.get(ident)
         if item is None or item.get('kind')!='MATERIAL':raise ValueError('unresolved worker target')
         return [item['recipient']]
+    if prefix=='operatorbus':
+        if 'material_workers' not in _tables(conn):raise ValueError('operator bus worker inventory unavailable')
+        row=conn.execute("""SELECT logical_id FROM material_workers
+                           WHERE logical_id=? AND ready=1 AND phase='DOCKER_LOCAL_MODEL'
+                           ORDER BY observed_at DESC LIMIT 1""",(ident,)).fetchone()
+        if row is None:raise ValueError('unresolved operator bus worker')
+        return ['worker:'+ident]
     if prefix=='operator':
         row=conn.execute("SELECT participant_id FROM operator_participants WHERE participant_id=? AND state='ACTIVE'",('operator:'+ident,)).fetchone()
         if row is None:raise ValueError('unresolved operator target')
@@ -544,6 +551,7 @@ def resolve_target(conn,mission_id,target):
 def _message_target_matches(target,mission_id,material_drone_id,logical_drone_id):
     if target=='mission:'+mission_id:return True
     if target.startswith('worker:'):return target.split(':',1)[1]==str(material_drone_id or '')
+    if target.startswith('operatorbus:'):return target.split(':',1)[1]==str(material_drone_id or '')
     if target.startswith('drone:'):
         ident=target.split(':',1)[1]
         return ident==str(logical_drone_id or '') or ident==str(material_drone_id or '')  # legacy drone:MD alias
@@ -575,20 +583,26 @@ def note_assignment_application(conn,assignment_id,result,now_fn):
     if row is None:raise ValueError("assignment missing")
     try:assignment_input=json.loads(row['input_json'] or '{}')
     except Exception:assignment_input={}
-    conversation_v2=assignment_input.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and assignment_input.get('conversation_protocol_version')==2
+    conversation_v3=assignment_input.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and assignment_input.get('conversation_protocol_version')==3
     ids=result.get("operator_message_ids") or []
     if not isinstance(ids,list) or any(not isinstance(x,str) for x in ids):ids=[]
     stamp=now_fn();applied=0;partial=0;responses=[];recipients=['worker:'+str(row['material_drone_id'] or ''),'drone:'+str(row['material_drone_id'] or ''),'drone:'+str(row['logical_drone_id'] or '')]
     for message_id in ids[:64]:
         matched=0
         for recipient in recipients:matched+=conn.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED',delivered_at=COALESCE(delivered_at,?),applied_at=?,applied_assignment_id=? WHERE message_id=? AND recipient=? AND delivery_state!='APPLIED'",(stamp,stamp,assignment_id,message_id,recipient)).rowcount
+        if conversation_v3:
+            conn.execute("UPDATE operator_messages SET state='APPLIED',applied_at=?,applied_assignment_id=? WHERE message_id=? AND mission_id=?",(stamp,assignment_id,message_id,row['mission_id']));applied+=1
+            response_text=result.get('response_text')
+            if isinstance(response_text,str) and response_text.strip():
+                reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'response':response_text})[:32];from_participant=('worker:'+str(row['material_drone_id'])) if row['material_drone_id'] else ('drone:'+str(row['logical_drone_id']));original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,from_participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id));responses.append(reply_id)
+            continue
         if matched==0:matched=conn.execute("UPDATE operator_messages SET state='APPLIED',applied_at=?,applied_assignment_id=? WHERE message_id=? AND mission_id=? AND state='PENDING'",(stamp,assignment_id,message_id,row['mission_id'])).rowcount
         counts=conn.execute("SELECT COUNT(*) total,SUM(CASE WHEN delivery_state='APPLIED' THEN 1 ELSE 0 END) applied FROM operator_message_deliveries WHERE message_id=?",(message_id,)).fetchone()
         if counts and int(counts['total'] or 0)>0:
             total=int(counts['total']);done=int(counts['applied'] or 0);state='APPLIED' if done==total else 'PARTIAL';conn.execute("UPDATE operator_messages SET state=?,applied_at=CASE WHEN ?='APPLIED' THEN ? ELSE applied_at END,applied_assignment_id=CASE WHEN ?='APPLIED' THEN ? ELSE applied_assignment_id END WHERE message_id=?",(state,state,stamp,state,assignment_id,message_id));applied+=1 if state=='APPLIED' else 0;partial+=1 if state=='PARTIAL' else 0
         else:applied+=int(bool(matched))
         response_text=result.get('response_text')
-        if (matched or conversation_v2) and isinstance(response_text,str) and response_text.strip():
+        if (matched or conversation_v3) and isinstance(response_text,str) and response_text.strip():
             reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'response':response_text})[:32];from_participant=('worker:'+str(row['material_drone_id'])) if row['material_drone_id'] else ('drone:'+str(row['logical_drone_id']));original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,from_participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id));responses.append(reply_id)
     if applied or partial:_event(conn,row['mission_id'],'OPERATOR_MESSAGE_APPLIED',{'assignment_id':assignment_id,'message_ids':ids[:64],'applied_messages':applied,'partial_messages':partial,'response_message_ids':responses},now_fn)
     return {"applied_messages":applied,"partial_messages":partial,"response_message_ids":responses}
@@ -715,7 +729,7 @@ def _conversation_response_valid(conn,message):
     try:value=json.loads(row['input_json'] or '{}')
     except Exception:return False
     ids=value.get('operator_message_ids')
-    return value.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and value.get('conversation_protocol_version')==2 and isinstance(ids,list) and message.get('causation_id') in ids
+    return value.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and value.get('conversation_protocol_version')==3 and isinstance(ids,list) and message.get('causation_id') in ids
 
 def thread_snapshot(conn,correlation_id,now_fn=None,*,limit=500):
     if not isinstance(correlation_id,str) or not correlation_id or len(correlation_id)>128:raise ValueError("correlation_id")

@@ -137,6 +137,26 @@ class GlobalSchedulerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'not ready'):
             g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
 
+    def test_operator_bus_lease_scope_claims_without_mission_driver(self):
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M-BUS','AUTHORIZED',now(),'x','NOT_STARTED',0,0,None))
+        aid=g.create_assignment(
+            self.c,'M-BUS','OPERATOR_BUS_turn','OPERATOR_BUS','MD001',
+            {'kind':'LOCAL_MODEL_INFERENCE','lease_scope':'OPERATOR_BUS','conversation_protocol_version':3,'messages':[{'role':'user','content':'Działasz?'}]},
+            now,lease_generation=1
+        )
+        self.assertIsNone(self.c.execute("SELECT 1 FROM mission_execution_drivers WHERE mission_id='M-BUS'").fetchone())
+        pending=g.pending_local_assignments(self.c,mission_id='M-BUS')
+        self.assertEqual([x['assignment_id'] for x in pending],[aid])
+        claimed=g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
+        self.assertEqual(claimed['state'],'CLAIMED')
+        receipt=g.record_receipt(
+            self.c,aid,{'response_text':'Tak'},now,
+            material_drone_id='MD001',lease_generation=claimed['lease_generation']
+        )
+        self.assertTrue(receipt['receipt_id'].startswith('receipt-'))
+        row=self.c.execute("SELECT state FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+        self.assertEqual(row['state'],'PASS')
+
     def test_duplicate_receipt_fails_closed_without_replacing_first(self):
         self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
         aid=g.create_assignment(self.c,'M','P','LD001','MD001',{'x':1},now,lease_generation=1)

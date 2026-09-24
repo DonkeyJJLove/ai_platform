@@ -220,32 +220,65 @@ class Runtime:
             seen.add(pair);out.append(pair)
         return out
 
+    def _global_ready_workers(self,c):
+        if 'material_workers' not in {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}:
+            return []
+        rows=c.execute("""SELECT logical_id,MAX(observed_at) observed_at
+                          FROM material_workers
+                          WHERE ready=1 AND phase='DOCKER_LOCAL_MODEL'
+                            AND logical_id IS NOT NULL AND logical_id LIKE 'MD%'
+                          GROUP BY logical_id
+                          ORDER BY logical_id""").fetchall()
+        return [str(r['logical_id']) for r in rows if isinstance(r['logical_id'],str) and r['logical_id']]
+
     def _conversation_binding(self,c,mission_id,target,correlation_id):
         bindings=self._conversation_bindings(c,mission_id)
-        if not bindings:raise ValueError('conversation topology unavailable')
-        candidates=list(bindings)
-        if isinstance(target,str) and target.startswith('drone:'):
-            ident=target.split(':',1)[1];candidates=[x for x in bindings if x[0]==ident]
-        elif isinstance(target,str) and target.startswith('worker:'):
-            ident=target.split(':',1)[1];candidates=[x for x in bindings if x[1]==ident]
-        elif isinstance(target,str) and target.startswith('group:'):
-            recipients=set(operator_control.resolve_target(c,mission_id,target))
-            candidates=[x for x in bindings if ('drone:'+x[0]) in recipients or ('worker:'+x[1]) in recipients]
-        elif isinstance(target,str) and target not in {'mission:'+mission_id,'swarm:'+mission_id}:
-            operator_control.resolve_target(c,mission_id,target)
-        if not candidates:raise ValueError('conversation target has no current executor')
         seed=str(correlation_id or target or mission_id)
-        index=int(hashlib.sha256(seed.encode('utf-8')).hexdigest(),16)%len(candidates)
-        return candidates[index]
+        if bindings:
+            candidates=list(bindings)
+            if isinstance(target,str) and target.startswith('drone:'):
+                ident=target.split(':',1)[1];candidates=[x for x in bindings if x[0]==ident]
+            elif isinstance(target,str) and target.startswith('worker:'):
+                ident=target.split(':',1)[1];candidates=[x for x in bindings if x[1]==ident]
+            elif isinstance(target,str) and target.startswith('group:'):
+                recipients=set(operator_control.resolve_target(c,mission_id,target))
+                candidates=[x for x in bindings if ('drone:'+x[0]) in recipients or ('worker:'+x[1]) in recipients]
+            elif isinstance(target,str) and target not in {'mission:'+mission_id,'swarm:'+mission_id}:
+                operator_control.resolve_target(c,mission_id,target)
+            if candidates:
+                index=int(hashlib.sha256(seed.encode('utf-8')).hexdigest(),16)%len(candidates)
+                logical_id,material_id=candidates[index]
+                return logical_id,material_id,'MISSION_TOPOLOGY'
+        global_workers=self._global_ready_workers(c)
+        if isinstance(target,str) and target.startswith('operatorbus:'):
+            ident=target.split(':',1)[1]
+            if ident in global_workers:return 'OPERATOR_BUS',ident,'GLOBAL_READY_WORKER_EXPLICIT'
+            raise ValueError('conversation worker unavailable')
+        if isinstance(target,str) and target.startswith('worker:'):
+            ident=target.split(':',1)[1]
+            if ident in global_workers:return 'OPERATOR_BUS',ident,'GLOBAL_READY_WORKER_EXPLICIT'
+            raise ValueError('conversation worker unavailable')
+        if isinstance(target,str) and (target.startswith('drone:') or target.startswith('group:')):
+            raise ValueError('conversation target requires mission topology')
+        if isinstance(target,str) and target not in {'mission:'+mission_id,'swarm:'+mission_id}:
+            raise ValueError('conversation target has no current executor')
+        if not global_workers:raise ValueError('global conversation worker unavailable')
+        index=int(hashlib.sha256(seed.encode('utf-8')).hexdigest(),16)%len(global_workers)
+        return 'OPERATOR_BUS',global_workers[index],'GLOBAL_READY_WORKER_FALLBACK'
 
     def route_conversation_command(self,value):
         mission_id=str(value.get('mission_id') or '');target=str(value.get('target') or ('mission:'+mission_id));correlation_id=value.get('correlation_id')
         c=self.connect()
-        try:logical_id,material_id=self._conversation_binding(c,mission_id,target,correlation_id)
+        try:logical_id,material_id,binding_mode=self._conversation_binding(c,mission_id,target,correlation_id)
         finally:c.close()
-        routed=dict(value);routed['target']='worker:'+material_id
-        payload=dict(value.get('payload') or {});payload['conversation_scope_target']=target;payload['conversation_logical_context']='drone:'+logical_id;routed['payload']=payload
-        return routed,{'scope_target':target,'logical_drone_id':logical_id,'material_drone_id':material_id,'authority_effect':'NONE'}
+        routed=dict(value);routed['target']='operatorbus:'+material_id
+        payload=dict(value.get('payload') or {})
+        payload['conversation_scope_target']=target
+        payload['conversation_context_class']='OPERATOR_BUS' if logical_id=='OPERATOR_BUS' else 'MISSION_LOGICAL_DRONE'
+        payload['conversation_binding_mode']=binding_mode
+        payload['conversation_logical_context']=('operator-bus:'+mission_id) if logical_id=='OPERATOR_BUS' else ('drone:'+logical_id)
+        routed['payload']=payload
+        return routed,{'scope_target':target,'logical_drone_id':logical_id,'material_drone_id':material_id,'binding_mode':binding_mode,'authority_effect':'NONE'}
 
     def _conversation_history(self,c,mission_id,correlation_id,current_message_id,limit=6):
         if not isinstance(correlation_id,str) or not correlation_id:return []
@@ -264,7 +297,7 @@ class Runtime:
                                FROM operator_messages r
                                JOIN mission_execution_assignments a ON a.assignment_id=r.applied_assignment_id
                                WHERE r.mission_id=? AND r.correlation_id=? AND r.kind='RESPONSE'
-                                 AND r.causation_id=? AND a.input_json LIKE '%"conversation_protocol_version":2%'
+                                 AND r.causation_id=? AND a.input_json LIKE '%"conversation_protocol_version":3%'
                                ORDER BY r.created_at DESC,r.message_id DESC LIMIT 1""",
                             (mission_id,correlation_id,row['message_id'])).fetchone()
             if reply:messages.append({'role':'assistant','content':str(reply['content'])[:12000]})
@@ -284,27 +317,33 @@ class Runtime:
         try:
             turn=c.execute("SELECT created_at FROM operator_messages WHERE mission_id=? AND message_id=?",(mission_id,message_id)).fetchone()
             if not turn:raise ValueError('conversation message missing')
-            driver=c.execute("SELECT generation,state,current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
-            if not driver or int(driver['generation'] or 0)<1:raise ValueError('conversation driver generation unavailable')
-            generation=int(driver['generation'])
+            mission_row=c.execute("SELECT * FROM missions WHERE mission_id=?",(mission_id,)).fetchone()
+            if not mission_row:raise ValueError('conversation mission missing')
+            driver=c.execute("SELECT current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+            mission_runtime=mission_row['runtime_state'] if 'runtime_state' in mission_row.keys() else None
+            mission_phase_context=str((driver['current_phase'] if driver else None) or mission_runtime or mission_row['state'] or 'UNKNOWN')
             completed=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                    WHERE mission_id=? AND input_json LIKE ?
-                                     AND input_json LIKE '%"conversation_protocol_version":2%'
+                                     AND input_json LIKE '%"conversation_protocol_version":3%'
                                      AND state='PASS'
                                    ORDER BY created_at LIMIT 1""",
                                 (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
             if completed:return {'assignment_id':completed['assignment_id'],'state':'PASS','lease_generation':completed['lease_generation'],'idempotent':True,'authority_effect':'NONE'}
             prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                WHERE mission_id=? AND input_json LIKE ?
-                                 AND input_json LIKE '%"conversation_protocol_version":2%'
+                                 AND input_json LIKE '%"conversation_protocol_version":3%'
                                  AND state IN ('READY','CLAIMED')
-                                 AND lease_generation=?
                                ORDER BY created_at DESC LIMIT 1""",
-                            (mission_id,'%"operator_message_ids":["'+message_id+'"]%',generation)).fetchone()
+                            (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
             if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'lease_generation':prior['lease_generation'],'idempotent':True,'authority_effect':'NONE'}
-            mission_phase_context=str(driver['current_phase'] or 'UNKNOWN')
+            bus_generation=int(c.execute("""SELECT COALESCE(MAX(lease_generation),0)+1
+                                            FROM mission_execution_assignments
+                                            WHERE mission_id=? AND input_json LIKE ?
+                                              AND input_json LIKE '%"conversation_protocol_version":3%'""",
+                                         (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()[0])
             assignment_phase='OPERATOR_BUS_'+hashlib.sha256(message_id.encode('utf-8')).hexdigest()[:16]
-            logical_id,material_id=self._conversation_binding(c,mission_id,target,correlation_id)
+            scope_target=payload.get('conversation_scope_target') or target
+            logical_id,material_id,binding_mode=self._conversation_binding(c,mission_id,scope_target,correlation_id)
             control=operator_control.control_state(c,mission_id,now) or {}
             dispatch_authority=operator_control.PRIMARY_OPERATOR if control.get('control_owner')==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
             history=self._conversation_history(c,mission_id,correlation_id,message_id)
@@ -317,20 +356,24 @@ class Runtime:
                 'trajectory_role':'CONVERSATION',
                 'task_id':'operator-message:'+message_id,
                 'correlation_id':correlation_id,
-                'conversation_protocol_version':2,
+                'conversation_protocol_version':3,
                 'conversation_turn_created_at':turn['created_at'],
                 'mission_phase_context':mission_phase_context,
+                'lease_scope':'OPERATOR_BUS',
+                'conversation_context_class':'OPERATOR_BUS' if logical_id=='OPERATOR_BUS' else 'MISSION_LOGICAL_DRONE',
+                'conversation_binding_mode':binding_mode,
+                'conversation_scope_target':payload.get('conversation_scope_target') or target,
                 'operator_message_ids':[message_id],
                 'messages':messages[-13:],
                 'max_tokens':768,
                 'communication_source':'operator:primary',
-                'logical_context':'drone:'+logical_id,
+                'logical_context':payload.get('conversation_logical_context') or (('operator-bus:'+mission_id) if logical_id=='OPERATOR_BUS' else ('drone:'+logical_id)),
                 'communication_phase':'OPERATOR_BUS',
-                'evidence_classes':['TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE'],
+                'evidence_classes':(['OPERATOR_MESSAGE'] if logical_id=='OPERATOR_BUS' else ['TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE']),
                 'authority_effect':'NONE',
             }
-            aid=global_scheduler.create_assignment(c,mission_id,assignment_phase,logical_id,material_id,assignment_input,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
-            return {'assignment_id':aid,'state':'READY','phase_id':assignment_phase,'logical_drone_id':logical_id,'material_drone_id':material_id,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
+            aid=global_scheduler.create_assignment(c,mission_id,assignment_phase,logical_id,material_id,assignment_input,now,lease_generation=bus_generation,dispatch_authority=dispatch_authority)
+            return {'assignment_id':aid,'state':'READY','phase_id':assignment_phase,'logical_drone_id':logical_id,'material_drone_id':material_id,'binding_mode':binding_mode,'lease_generation':bus_generation,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
         finally:c.close()
 
 
@@ -342,7 +385,7 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
                                            WHERE from_participant=?
                                              AND command_id LIKE 'panel-%'
                                              AND correlation_id IS NOT NULL
-                                             AND state IN ('PENDING','PARTIAL')
+                                             AND state IN ('PENDING','PARTIAL','PERSISTED_NO_CURRENT_RECIPIENT')
                                            ORDER BY created_at,message_id LIMIT ?""",
                                         (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
     finally:c.close()
@@ -353,21 +396,18 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
         for row in turns:
             c=runtime.connect()
             try:
-                driver=c.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id=?",(row['mission_id'],)).fetchone()
-                generation=int(driver['generation']) if driver and driver['generation'] is not None else None
                 completed_row=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                            WHERE mission_id=? AND input_json LIKE ?
-                                             AND input_json LIKE '%"conversation_protocol_version":2%'
+                                             AND input_json LIKE '%"conversation_protocol_version":3%'
                                              AND state='PASS'
                                            ORDER BY created_at LIMIT 1""",
                                         (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
                 prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
                                    WHERE mission_id=? AND input_json LIKE ?
-                                     AND input_json LIKE '%"conversation_protocol_version":2%'
+                                     AND input_json LIKE '%"conversation_protocol_version":3%'
                                      AND state IN ('READY','CLAIMED')
-                                     AND lease_generation=?
                                    ORDER BY created_at DESC LIMIT 1""",
-                                (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%',generation)).fetchone() if generation is not None else None
+                                (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
             finally:c.close()
             if completed_row:
                 c=runtime.connect()

@@ -96,7 +96,13 @@ class OperatorGatewayTests(unittest.TestCase):
             global_scheduler.migrate(c,now)
             execution_driver.ensure_driver(c,'M1',now,initial_state='ACTIVE')
             c.execute("UPDATE mission_execution_drivers SET current_phase='P1' WHERE mission_id='M1'")
+            c.execute('''CREATE TABLE IF NOT EXISTS material_workers(
+                mission_id TEXT NOT NULL,pod_name TEXT NOT NULL,pod_uid TEXT,logical_id TEXT,phase TEXT,
+                ready INTEGER NOT NULL,restarts INTEGER NOT NULL,pod_ip TEXT,observed_at TEXT NOT NULL,
+                PRIMARY KEY(mission_id,pod_name))''')
             stamp=now()
+            c.execute("INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)",('POOL','lion-md001','uid-1','MD001','DOCKER_LOCAL_MODEL',1,0,None,stamp))
+            c.execute("INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)",('POOL','lion-md002','uid-2','MD002','DOCKER_LOCAL_MODEL',1,0,None,stamp))
             for lid,mid in [('LD001','MD001'),('LD002','MD002')]:
                 c.execute("""INSERT INTO mission_execution_assignments(
                     assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,
@@ -111,7 +117,7 @@ class OperatorGatewayTests(unittest.TestCase):
             'correlation_id':'thread-000000000000000000000000000001',
         }
         routed,meta=self.runtime.route_conversation_command(value)
-        self.assertEqual(routed['target'],'worker:'+meta['material_drone_id'])
+        self.assertEqual(routed['target'],'operatorbus:'+meta['material_drone_id'])
         self.assertIn(meta['logical_drone_id'],{'LD001','LD002'})
         applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
         self.assertEqual(applied['result']['recipient_count'],1)
