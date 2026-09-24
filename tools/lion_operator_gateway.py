@@ -482,6 +482,12 @@ def make_handler(runtime: Runtime):
                     c=runtime.connect()
                     try:return self.reply(operator_control.participant_snapshot(c,principal))
                     finally:c.close()
+                if path=='/v1/thread':
+                    correlation_id=(q.get('correlation_id') or [None])[0];limit=int((q.get('limit') or ['500'])[0])
+                    if not correlation_id:raise ValueError('correlation_id')
+                    c=runtime.connect()
+                    try:return self.reply(operator_control.thread_snapshot(c,correlation_id,now,limit=limit))
+                    finally:c.close()
                 if path=='/v1/state':
                     mid=(q.get('mission_id') or [None])[0]
                     if not mid:raise ValueError('mission_id')
