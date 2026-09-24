@@ -347,7 +347,7 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         c=self.runtime.connect()
         try:
             claimed=global_scheduler.claim_assignment(c,dispatch['assignment_id'],now,expected_material_drone_id=dispatch['material_drone_id'])
-            result={'operator_message_ids':[mid],'response_text':'retained response'}
+            result={'operator_message_ids':[],'response_text':'retained response'}
             receipt=global_scheduler.record_receipt(c,dispatch['assignment_id'],result,now,material_drone_id=dispatch['material_drone_id'],lease_generation=claimed['lease_generation'])
             global_scheduler.store_assignment_payload(c,dispatch['assignment_id'],receipt['receipt_id'],result,now)
             c.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED' WHERE message_id=?",(mid,))

@@ -417,9 +417,19 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
                         completed+=1
                         continue
                     retained=c.execute("SELECT result_json FROM mission_assignment_payloads WHERE assignment_id=?",(completed_row['assignment_id'],)).fetchone()
-                    if not retained:raise ValueError('conversation PASS missing retained payload')
+                    assignment=c.execute("SELECT input_json FROM mission_execution_assignments WHERE assignment_id=?",(completed_row['assignment_id'],)).fetchone()
+                    if not retained or not assignment:raise ValueError('conversation PASS missing retained payload')
                     try:result=json.loads(retained['result_json'])
                     except Exception as exc:raise ValueError('conversation retained payload invalid') from exc
+                    try:assignment_input=json.loads(assignment['input_json'] or '{}')
+                    except Exception as exc:raise ValueError('conversation assignment input invalid') from exc
+                    assignment_ids=assignment_input.get('operator_message_ids')
+                    if assignment_input.get('conversation_protocol_version')!=3 or not (isinstance(assignment_ids,list) and assignment_ids==[row['message_id']]):
+                        raise ValueError('conversation PASS provenance mismatch')
+                    if not result.get('operator_message_ids'):
+                        result={**result,'operator_message_ids':list(assignment_ids)}
+                    elif result.get('operator_message_ids')!=assignment_ids:
+                        raise ValueError('conversation PASS result provenance mismatch')
                     applied=operator_control.note_assignment_application(c,completed_row['assignment_id'],result,now)
                     c.commit()
                     if not applied.get('response_message_ids'):raise ValueError('conversation PASS retained payload has no response')
