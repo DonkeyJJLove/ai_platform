@@ -341,7 +341,7 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
     finally:c.close()
     groups={}
     for row in rows:groups.setdefault((row['mission_id'],row['correlation_id']),[]).append(row)
-    dispatched=existing=completed=failed=0;errors=[]
+    dispatched=existing=completed=repaired=failed=0;errors=[]
     for (_mission_id,_correlation_id),turns in groups.items():
         for row in turns:
             c=runtime.connect()
@@ -356,8 +356,25 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
                                 (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%',generation)).fetchone() if generation is not None else None
             finally:c.close()
             if prior and prior['state']=='PASS':
-                completed+=1
-                continue
+                c=runtime.connect()
+                try:
+                    reply=c.execute("SELECT 1 FROM operator_messages WHERE mission_id=? AND correlation_id=? AND kind='RESPONSE' AND causation_id=? AND applied_assignment_id=? LIMIT 1",(row['mission_id'],row['correlation_id'],row['message_id'],prior['assignment_id'])).fetchone()
+                    if reply:
+                        completed+=1
+                        continue
+                    retained=c.execute("SELECT result_json FROM mission_assignment_payloads WHERE assignment_id=?",(prior['assignment_id'],)).fetchone()
+                    if not retained:raise ValueError('conversation PASS missing retained payload')
+                    try:result=json.loads(retained['result_json'])
+                    except Exception as exc:raise ValueError('conversation retained payload invalid') from exc
+                    applied=operator_control.note_assignment_application(c,prior['assignment_id'],result,now)
+                    c.commit()
+                    if not applied.get('response_message_ids'):raise ValueError('conversation PASS retained payload has no response')
+                    repaired+=1;completed+=1
+                    continue
+                except Exception as exc:
+                    failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+                    break
+                finally:c.close()
             if prior and prior['state'] in {'READY','CLAIMED'}:
                 existing+=1
                 break
@@ -377,7 +394,7 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
             except Exception as exc:
                 failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
             break
-    return {'pending':len(rows),'threads':len(groups),'dispatched':dispatched,'existing':existing,'completed':completed,'failed':failed,'errors':errors,'authority_effect':'NONE'}
+    return {'pending':len(rows),'threads':len(groups),'dispatched':dispatched,'existing':existing,'completed':completed,'repaired':repaired,'failed':failed,'errors':errors,'authority_effect':'NONE'}
 
 
 def conversation_reconcile_loop(runtime: Runtime):
