@@ -46,6 +46,9 @@ R24_ELECTRON_EVIDENCE = Path("/var/lib/sentinelx/uploads/lion-mission-control-v3
 R24_BROWSER_LIVE_ROOT = Path("/mnt/c/Users/d2j3/AppData/Local/LION/browser_broker")
 R24_BROWSER_RELEASE_ROOT = Path("/mnt/c/Users/d2j3/AppData/Local/LION/control-panel/releases/r24-semantic-mesh-r1/browser_broker")
 R24_BROWSER_SOURCE_PATHS = ("src/main.cjs", "src/thread-consumer.cjs", "src/contract.cjs", "src/store.cjs")
+R24_OTP_PAIRING_SCHEMA = "lion.r24-otp-pairing-evidence/v1"
+R24_OTP_PAIRING_EVENT = "R24_OTP_PAIRING_LIVE_EVIDENCE"
+R24_OTP_PAIRING_SENDER = "WINDOWS_RUNTIME_VERIFIER"
 
 
 def _exists_table(conn: sqlite3.Connection, name: str) -> bool:
@@ -225,6 +228,75 @@ def _r24_electron_tabs_evidence(
         return None
 
 
+def _r24_otp_pairing_evidence(
+    conn: sqlite3.Connection,
+    mission_id: str,
+    phase_id: str,
+    *,
+    now_value: datetime | None = None,
+) -> dict[str, Any] | None:
+    """Reconcile fresh Windows OTP pairing canary evidence without exposing secrets."""
+    if phase_id != "OTP_PAIRING" or not _exists_table(conn, "protocol_messages"):
+        return None
+    required = {
+        "event","schema","windows_host","panel_port","operator_port","root_status",
+        "before_paired","pair_paired","pair_principal","after_paired",
+        "pair_response_secret_fields","unpair_revoked","final_paired","cleanup",
+        "authority_effect",
+    }
+    rows = conn.execute(
+        "SELECT observed_at,from_id,phase,payload_json,payload_digest "
+        "FROM protocol_messages WHERE mission_id=? AND protocol='EVIDENCE' "
+        "ORDER BY id DESC LIMIT 64",
+        (mission_id,),
+    ).fetchall()
+    now_dt = now_value or datetime.now(timezone.utc)
+    for row in rows:
+        if row["from_id"] != R24_OTP_PAIRING_SENDER or row["phase"] != phase_id:
+            continue
+        payload = _json(row["payload_json"], {})
+        if type(payload) is not dict or set(payload) != required:
+            continue
+        if (
+            payload["event"] != R24_OTP_PAIRING_EVENT
+            or payload["schema"] != R24_OTP_PAIRING_SCHEMA
+            or payload["windows_host"] != "MOON"
+            or payload["panel_port"] != 8780
+            or payload["operator_port"] != 8767
+            or payload["root_status"] != 200
+            or payload["before_paired"] is not False
+            or payload["pair_paired"] is not True
+            or payload["pair_principal"] != "OPERATOR_PRIMARY"
+            or payload["after_paired"] is not True
+            or payload["pair_response_secret_fields"] is not False
+            or payload["unpair_revoked"] is not True
+            or payload["final_paired"] is not False
+            or payload["cleanup"] != "UNPAIRED"
+            or payload["authority_effect"] != "NONE"
+        ):
+            continue
+        try:
+            observed = datetime.fromisoformat(str(row["observed_at"]).replace("Z", "+00:00"))
+        except Exception:
+            continue
+        age = (now_dt - observed).total_seconds()
+        if age < -120 or age > 900:
+            continue
+        return {
+            "observed_at": row["observed_at"],
+            "protocol_payload_digest": row["payload_digest"],
+            "windows_host": payload["windows_host"],
+            "panel_port": payload["panel_port"],
+            "operator_port": payload["operator_port"],
+            "pairing_cycle": "UNPAIRED_TO_PAIRED_TO_UNPAIRED",
+            "principal_id": payload["pair_principal"],
+            "secret_nondisclosure": True,
+            "cleanup": payload["cleanup"],
+            "authority_effect": "NONE",
+        }
+    return None
+
+
 def _restart_backup_evidence(db_path: Path, mission_id: str) -> dict[str, Any] | None:
     backup_root = db_path.parent / "backups"
     if not backup_root.is_dir():
@@ -400,6 +472,9 @@ def evaluate_completion_predicates(
     r24_electron_tabs = _r24_electron_tabs_evidence(mission_id) if "ELECTRON_TABS_REPAIRED" in names else None
     facts["r24_electron_tabs_evidence"] = r24_electron_tabs
 
+    r24_otp_pairing = _r24_otp_pairing_evidence(conn, mission_id, phase_id) if "OTP_PAIRING_REPAIRED" in names else None
+    facts["r24_otp_pairing_evidence"] = r24_otp_pairing
+
     values: dict[str, bool] = {
         "DB_INTEGRITY": integrity == "ok",
         "GENERIC_ADAPTER_BOUND": bool(mission and mission["adapter"] == GENERIC_ADAPTER),
@@ -460,6 +535,7 @@ def evaluate_completion_predicates(
         "LEGACY_LPCL_1_1_COMPATIBLE": _lpcl11_probe(),
         "LPCL_1_2_COMPATIBLE": _lpcl12_probe(),
         "ELECTRON_TABS_REPAIRED": r24_electron_tabs is not None,
+        "OTP_PAIRING_REPAIRED": r24_otp_pairing is not None,
     }
     values["SUCCESSOR_TERMINAL_VALIDATION"] = all(values.get(k, False) for k in (
         "RUNTIME_REVISIONS_CONVERGED",
