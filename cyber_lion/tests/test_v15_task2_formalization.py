@@ -22,6 +22,6 @@ class V15Task2FormalizationTests(unittest.TestCase):
         self.assertEqual(len(ids),len(set(ids)));self.assertEqual(len(paths),len(set(paths)))
     def test_task2_preclosure_rag_delta_is_explicit(self):
         bootstrap=json.loads((ROOT/"LION/rag/RAG_BOOTSTRAP.json").read_text(encoding="utf-8"))
-        self.assertEqual(bootstrap["v15_task3_currentness"],"PRE_CLOSURE")
+        self.assertEqual(bootstrap["v15_task3_currentness"],"CURRENT_CANDIDATE")
         self.assertEqual(bootstrap["preferred_release"],"lion-rag32-v1.4-r9-auth-lifecycle-candidate")
 if __name__=="__main__":unittest.main()
