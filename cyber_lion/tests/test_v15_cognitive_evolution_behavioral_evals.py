@@ -30,8 +30,13 @@ class V15CognitiveEvolutionBehavioralEvals(unittest.TestCase):
         b=InvocationIntent("inv:saas","parent:1","msg:1",Z,"binding:s",Z,"SAAS","route:1","PLANNING","2026-09-25T12:00:00Z","causal:dual").validate()
         self.assertNotEqual(a.invocation_id,b.invocation_id);self.assertEqual(a.causal_group_ref,b.causal_group_ref)
     def test_COGNITIVE_RESULT_IS_NOT_AUTHORITY(self):
+        from cyber_lion.tests.test_model_call_v2 import v1_record
+        record=project_v1_to_v2(
+            v1_record(),invocation_ref="inv:1",attempt_ref="att:1",provider_ref="provider:1",
+            model_release_ref="release:1",transport_profile_ref="transport:local",causal_group_ref="cg:1",
+        )
         with self.assertRaises(ModelCallV2Error):
-            ModelCallV2("mc:1","m:1","p:1","t:1","a:1","inv:1","att:1","provider:1","release:1","transport:local","cg:1","planning","LOCAL",Z,Z,"RESPONSE_RECONCILED",authority_effect="ALLOW").sealed()
+            replace(record,authority_effect="WRITE",record_digest="").sealed()
     def test_TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH(self):
         with self.assertRaises(EvidenceBoundLearningEpisodeError):
             episode(episode_class="POSITIVE_CANDIDATE",outcome="CONFIRMED_SUCCESS",evidence=(evidence("TEACHER_OUTPUT"),),teacher_output_refs=("teacher:1",)).sealed()
