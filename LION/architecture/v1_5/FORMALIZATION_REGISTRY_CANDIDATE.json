@@ -332,7 +332,8 @@
       ],
       "validation_refs": [
         "RAG retrieval probes"
-      ]
+      ],
+      "source_dependencies": []
     },
     {
       "artifact_class": "RAG_RELEASE",
@@ -442,7 +443,7 @@
       "consumers": [
         "governed repository admission"
       ],
-      "currentness_mode": "EXTRACT_HEAD",
+      "currentness_mode": "EXACT_HEAD",
       "generator": "cyber_lion.contracts.formalization_closure",
       "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
       "refresh_triggers": [
@@ -463,7 +464,7 @@
       ]
     }
   ],
-  "registry_digest": "90a912f4cb31b7f2a8d55378ae244b5d1996dad8a1284bda264303044b8f5592",
   "registry_id": "formalization-registry:v1.5-candidate",
-  "schema_id": "lion.formalization-registry/v1"
+  "schema_id": "lion.formalization-registry/v1",
+  "registry_digest": "48e05b0e787bef15d0b40688de917f9563c7fca5c4c7226d20b34dc2f3c4fdb3"
 }
