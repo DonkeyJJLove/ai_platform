@@ -147,5 +147,39 @@ class OperatorGatewayTests(unittest.TestCase):
             self.assertEqual(reply['correlation_id'],value['correlation_id'])
         finally:c.close()
 
+    def test_saas_request_and_response_are_linked_to_operator_message(self):
+        value={
+            'command_id':'saas-conversation-1','mission_id':'M1','action':'MESSAGE','target':'mission:M1',
+            'payload':{'content':'Remote model?','model_route':'SAAS'},
+            'correlation_id':'thread-saas-000000000000000000000001',
+        }
+        applied=self.runtime.apply(value,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        calls=[]
+        def fake(path,*,method='GET',body=None,timeout=10):
+            calls.append((path,method,body))
+            if method=='POST':
+                self.assertEqual(body['thread_id'],value['correlation_id']);self.assertEqual(body['question'],'Remote model?')
+                return {'request_id':'saas-gateway-1'}
+            self.assertEqual(path,'/api/v3/saas-broker/requests/saas-gateway-1')
+            return {'status':'RESPONDED','response_text':'Remote gateway answer','receipt_digest':'c'*64}
+        self.runtime._mission_control_json=fake
+        linked=self.runtime.ensure_saas_request(mid)
+        self.assertEqual(linked['request_id'],'saas-gateway-1');self.assertFalse(linked['idempotent'])
+        linked2=self.runtime.ensure_saas_request(mid)
+        self.assertTrue(linked2['idempotent'])
+        out=self.runtime.reconcile_saas_message(mid)
+        self.assertTrue(out['delivered']);self.assertEqual(out['state'],'RESPONDED')
+        c=self.runtime.connect()
+        try:
+            snap=operator_control.thread_snapshot(c,value['correlation_id'],now)
+            source=next(m for m in snap['messages'] if m['message_id']==mid)
+            reply=next(m for m in snap['messages'] if m.get('causation_id')==mid)
+            self.assertEqual(source['conversation_state'],'ANSWERED')
+            self.assertEqual(reply['from_participant'],'model:saas')
+            self.assertEqual(reply['conversation_leg'],'SAAS')
+        finally:c.close()
+        self.assertEqual(sum(1 for path,method,_ in calls if method=='POST'),1)
+
 
 if __name__=='__main__':unittest.main()
