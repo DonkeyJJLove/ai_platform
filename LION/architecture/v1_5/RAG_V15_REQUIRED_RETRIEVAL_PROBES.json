@@ -1,0 +1,75 @@
+{
+  "schema": "lion.rag-v15-required-retrieval-probes/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "probes": [
+    {
+      "id": "V15-CIP-OWNER",
+      "query": "cognitive invocation provider endpoint session attempt currentness reconciliation",
+      "must_route_to": [
+        "cyber_lion/contracts/cognitive_invocation.py"
+      ],
+      "must_preserve": [
+        "PROVIDER != ENDPOINT != SESSION != INVOCATION != TRANSPORT != RESULT",
+        "COGNITIVE_INVOCATION != AUTHORITY_ACTIVATION"
+      ]
+    },
+    {
+      "id": "V15-EBLE-TIME",
+      "query": "evidence bound learning episode future evidence teacher ground truth input cutoff",
+      "must_route_to": [
+        "cyber_lion/contracts/evidence_bound_learning_episode.py"
+      ],
+      "must_preserve": [
+        "future evidence cannot enter pre-decision input",
+        "teacher output is not ground truth"
+      ]
+    },
+    {
+      "id": "V15-MODEL-RELEASE",
+      "query": "immutable ModelRelease components lifecycle",
+      "must_route_to": [
+        "cyber_lion/contracts/model_release.py"
+      ],
+      "must_preserve": [
+        "lifecycle state is outside immutable release identity"
+      ]
+    },
+    {
+      "id": "V15-MODEL-CALL",
+      "query": "model call v2 SentinelX transport v1 projection",
+      "must_route_to": [
+        "cyber_lion/contracts/model_call_v2.py"
+      ],
+      "must_preserve": [
+        "missing v1 row != proof of no SaaS invocation"
+      ]
+    },
+    {
+      "id": "V15-COMPETENCY",
+      "query": "local coordinator competency authority separation no aggregate score",
+      "must_route_to": [
+        "cyber_lion/contracts/coordinator_competency.py"
+      ],
+      "must_preserve": [
+        "better competence does not widen authority"
+      ]
+    },
+    {
+      "id": "V15-LAYERS",
+      "query": "CognitiveInvocation architecture layers new plane",
+      "must_route_to": [
+        "cyber_lion/architecture_projection/full_architecture.py"
+      ],
+      "must_preserve": [
+        "TOP_LEVEL_LAYER_ADDED=FALSE"
+      ]
+    }
+  ],
+  "candidate_binding": {
+    "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+    "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+    "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+    "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf"
+  }
+}

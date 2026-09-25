@@ -1,0 +1,23 @@
+{
+  "active_unknowns": [],
+  "authority_effect": "NONE",
+  "non_blocking_future_unknowns": [
+    {
+      "description": "Future canonical v1.5 RAG release identity is intentionally not minted by this task.",
+      "id": "U-FUTURE-RAG-RELEASE",
+      "state": "NOT_PART_OF_TASK"
+    },
+    {
+      "description": "GovernedChangeProposal/v2 remains deferred until shadow evidence from the sidecar design exists.",
+      "id": "U-GCP-V2",
+      "state": "DEFERRED"
+    },
+    {
+      "description": "PR #381/#382 remain separate candidates and are not promoted into this baseline.",
+      "id": "U-PR381",
+      "state": "SEPARATE_CANDIDATE"
+    }
+  ],
+  "schema": "lion.unknown-register/v1",
+  "scope": "LION-V15-ARCHITECTURE-FORMALIZATION-KERNEL-R1"
+}
