@@ -182,6 +182,51 @@ class Runtime:
         except Exception:c.rollback();raise
         finally:c.close()
 
+    def _mission_control_json(self,path,*,method='GET',body=None,timeout=10):
+        url=self.mission_control_url+path
+        data=None;headers={'Accept':'application/json','User-Agent':'LION-Operator-Gateway/1'}
+        if body is not None:
+            data=json.dumps(body,sort_keys=True,separators=(',',':')).encode('utf-8');headers['Content-Type']='application/json'
+        req=urllib.request.Request(url,data=data,headers=headers,method=method)
+        with urllib.request.urlopen(req,timeout=timeout) as response:
+            raw=response.read().decode('utf-8')
+        value=json.loads(raw or '{}')
+        if not isinstance(value,dict):raise ValueError('mission control response')
+        return value
+
+    def ensure_saas_request(self,message_id):
+        c=self.connect()
+        try:
+            row=c.execute("""SELECT mission_id,message_id,content,correlation_id,model_route,external_request_id
+                             FROM operator_messages WHERE message_id=?""",(message_id,)).fetchone()
+            if row is None:raise ValueError('operator message missing')
+            if row['model_route'] not in {'SAAS','DUAL'}:raise ValueError('saas route not requested')
+            if not row['correlation_id']:raise ValueError('saas thread correlation required')
+            if row['external_request_id']:
+                return {'message_id':message_id,'request_id':row['external_request_id'],'idempotent':True,'authority_effect':'NONE'}
+            payload={'scope_type':'THREAD','thread_id':row['correlation_id'],'mission_id':row['mission_id'],'question':row['content'],'authority_effect':'NONE'}
+        finally:c.close()
+        created=self._mission_control_json('/api/v3/saas-broker/requests',method='POST',body=payload,timeout=15)
+        request_id=created.get('request_id')
+        if not isinstance(request_id,str) or not request_id:raise ValueError('saas request identity')
+        c=self.connect()
+        try:return operator_control.link_external_request(c,message_id,request_id,now)
+        finally:c.close()
+
+    def reconcile_saas_message(self,message_id):
+        linked=self.ensure_saas_request(message_id)
+        request_id=linked['request_id']
+        status=self._mission_control_json('/api/v3/saas-broker/requests/'+request_id,timeout=10)
+        if status.get('status')!='RESPONDED' or not status.get('receipt_digest'):
+            return {'message_id':message_id,'request_id':request_id,'state':status.get('status') or 'UNKNOWN','delivered':False,'authority_effect':'NONE'}
+        text=status.get('response_text');receipt=status.get('receipt_digest')
+        if not isinstance(text,str) or not text.strip():raise ValueError('saas response text missing')
+        c=self.connect()
+        try:
+            out=operator_control.record_external_model_response(c,message_id,request_id,'model:saas',text,receipt,now)
+        finally:c.close()
+        return {**out,'state':'RESPONDED','delivered':True}
+
     def try_resume_driver(self,command):
         result=command.get('result') or {}
         if not result.get('driver_resume_required'):return command
@@ -388,11 +433,12 @@ class Runtime:
 def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> dict:
     c=runtime.connect()
     try:
-        rows=[dict(r) for r in c.execute("""SELECT mission_id,message_id,command_id,target,content,correlation_id,created_at
+        rows=[dict(r) for r in c.execute("""SELECT mission_id,message_id,command_id,target,content,correlation_id,created_at,model_route
                                            FROM operator_messages
                                            WHERE from_participant=?
                                              AND command_id LIKE 'panel-%'
                                              AND correlation_id IS NOT NULL
+                                             AND model_route IN ('LOCAL','DUAL')
                                              AND state IN ('PENDING','PARTIAL','PERSISTED_NO_CURRENT_RECIPIENT')
                                            ORDER BY created_at,message_id LIMIT ?""",
                                         (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
@@ -455,7 +501,7 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
                 'mission_id':row['mission_id'],
                 'action':'MESSAGE',
                 'target':row['target'],
-                'payload':{'content':row['content']},
+                'payload':{'content':row['content'],'model_route':row.get('model_route') or 'LOCAL'},
                 'correlation_id':row['correlation_id'],
             }
             try:
@@ -469,9 +515,42 @@ def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> d
     return {'pending':len(rows),'threads':len(groups),'dispatched':dispatched,'existing':existing,'completed':completed,'repaired':repaired,'failed':failed,'errors':errors,'authority_effect':'NONE'}
 
 
+def reconcile_pending_saas_once(runtime: Runtime, limit: int = 64) -> dict:
+    c=runtime.connect()
+    try:
+        rows=[dict(r) for r in c.execute("""SELECT m.mission_id,m.message_id,m.command_id,m.content,m.correlation_id,m.model_route,m.external_request_id,m.created_at
+                                           FROM operator_messages m
+                                           LEFT JOIN operator_external_model_receipts e
+                                             ON e.source_message_id=m.message_id AND e.provider='model:saas'
+                                           WHERE m.from_participant=?
+                                             AND m.command_id LIKE 'panel-%'
+                                             AND m.correlation_id IS NOT NULL
+                                             AND m.model_route IN ('SAAS','DUAL')
+                                             AND e.response_message_id IS NULL
+                                           ORDER BY m.created_at,m.message_id LIMIT ?""",
+                                        (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
+    finally:c.close()
+    groups={}
+    for row in rows:groups.setdefault(row['correlation_id'],[]).append(row)
+    created=pending=delivered=failed=0;errors=[]
+    for _correlation_id,turns in groups.items():
+        row=turns[0]
+        try:
+            had_request=bool(row.get('external_request_id'))
+            out=runtime.reconcile_saas_message(row['message_id'])
+            if out.get('delivered'):delivered+=1
+            elif had_request:pending+=1
+            else:created+=1
+        except Exception as exc:
+            failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+    return {'pending_messages':len(rows),'threads':len(groups),'created':created,'waiting':pending,'delivered':delivered,'failed':failed,'errors':errors,'authority_effect':'NONE'}
+
+
 def conversation_reconcile_loop(runtime: Runtime):
     while True:
         try:reconcile_pending_conversations_once(runtime)
+        except Exception:pass
+        try:reconcile_pending_saas_once(runtime)
         except Exception:pass
         c=None
         try:
@@ -651,11 +730,12 @@ def make_handler(runtime: Runtime):
                 principal=self.auth()
                 if path=='/v1/commands':
                     if principal==operator_control.PRIMARY_OPERATOR and isinstance(value,dict) and value.get('action')=='MESSAGE':
-                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''))
+                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''));explicit_model_route='model_route' in payload;model_route=str(payload.get('model_route') or 'LOCAL').upper()
+                        if model_route not in {'LOCAL','SAAS','DUAL'}:raise ValueError('model_route')
                         c=runtime.connect()
                         try:
                             active=operator_swarm_session.active_session(c,principal,now)
-                            if active and active.get('session',{}).get('mission_id')==mission_id:
+                            if not explicit_model_route and active and active.get('session',{}).get('mission_id')==mission_id:
                                 sid=active['session']['session_id'];members=active.get('members') or []
                                 if target in {'mission:'+mission_id,'swarm:'+mission_id}:
                                     primary=next((m.get('participant_id') for m in members if m.get('member_kind')=='MATERIAL_WORKER' and m.get('role')=='PRIMARY' and m.get('state')=='ACTIVE'),None)
@@ -664,6 +744,14 @@ def make_handler(runtime: Runtime):
                                 sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST',correlation_id=value.get('correlation_id'))
                                 return self.reply({'schema':'lion.operator-command-swarm-route/v1','mission_id':mission_id,'session_id':sid,'round_id':sent.get('round_id'),'message':sent.get('message'),'assignments':sent.get('assignments') or [],'admission_state':'ACCEPTED','execution_state':'DISPATCHED','observation_state':'PERSISTED','authority_effect':'NONE','idempotent':bool(sent.get('idempotent'))},201)
                         finally:c.close()
+                        if model_route=='SAAS':
+                            applied=runtime.apply(value,principal_id=principal);message_id=(applied.get('result') or {}).get('message_id')
+                            try:
+                                external=runtime.ensure_saas_request(message_id)
+                                response=dict(applied);response.update({'schema':'lion.operator-model-route/v1','model_route':'SAAS','execution_state':'DISPATCHED_EXTERNAL','observation_state':'PERSISTED','external_request':external,'authority_effect':'NONE'})
+                            except Exception as exc:
+                                response=dict(applied);response.update({'schema':'lion.operator-model-route/v1','model_route':'SAAS','execution_state':'WAITING_EXTERNAL','observation_state':'PERSISTED','external_error':type(exc).__name__+':'+str(exc)[:400],'authority_effect':'NONE'})
+                            return self.reply(response,201)
                         try:
                             routed,route_meta=runtime.route_conversation_command(value)
                         except Exception as route_exc:
