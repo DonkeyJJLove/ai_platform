@@ -1,0 +1,340 @@
+{
+  "schema_id": "lion.formalization-closure-record/v1",
+  "closure_id": "fcr:v1.5-task2-cip-eble-cognitive-evolution-r1",
+  "candidate": {
+    "candidate_digest": "2d65304dcf22b976b216a0540f3b783f5a36d18cccabcbcea145511ec8dfc098",
+    "head": "f72d3becd1c16e25f62e1f90999beeb7f54855ef",
+    "tree": "faf1f77e46ccc983346262130e084abfe381c5c3",
+    "verification_digest": "cbd8eb1c106f7a3b0757fe1f1cc365f80ff69575ebc882100a7e6dc507ffdba9"
+  },
+  "formalization_manifest_digest": "b7662c7c4f2bb35388e7a83d369ced1ce8c7e80ddcfe45748c2cf14bd8750a18",
+  "artifact_results": [
+    {
+      "artifact_id": "architecture-docs",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/README.md",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "cyber_lion/architecture_projection/full_architecture.py",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/capability_catalog.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/contract_catalog.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "current-state",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/current_state.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/canonical-state-v1-3-candidate.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "AGENTS.md",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/event_state_catalog.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/evals/evolution/evolution_cases.yaml",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "formalization-manifest",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_5/FORMALIZATION_REGISTRY_CANDIDATE.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "gap-projection",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "cyber_lion/architecture_projection/gap.py",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "material-object-catalog",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/material_object_catalog.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "rag-release",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/rag/",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "rag-routing",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/rag/RAG_BOOTSTRAP.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "LION/architecture/v1_4/semantic_owners.json",
+        "ci:core:36152180962:success",
+        "required-formalization-set:a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+      ]
+    }
+  ],
+  "semantic_owner_uniqueness": "PASS",
+  "catalog_coverage": "PASS",
+  "discoverability_result": "PASS",
+  "rag_result": "PASS",
+  "required_test_results": [
+    {
+      "id": "test_cognitive_invocation_contract",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_cognitive_invocation_contract"
+      ]
+    },
+    {
+      "id": "test_evidence_bound_learning_episode",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_evidence_bound_learning_episode"
+      ]
+    },
+    {
+      "id": "test_model_release",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_model_release"
+      ]
+    },
+    {
+      "id": "test_model_call_v2",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_model_call_v2"
+      ]
+    },
+    {
+      "id": "test_coordinator_competency",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_coordinator_competency"
+      ]
+    },
+    {
+      "id": "test_cognitive_evolution_architecture",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_cognitive_evolution_architecture"
+      ]
+    },
+    {
+      "id": "test_hmk9d_ablation_contract",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "test:test_hmk9d_ablation_contract"
+      ]
+    }
+  ],
+  "required_eval_results": [
+    {
+      "id": "TRANSPORT_READY_IS_NOT_COGNITION_DONE",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:TRANSPORT_READY_IS_NOT_COGNITION_DONE"
+      ]
+    },
+    {
+      "id": "SENTINELX_READY_IS_NOT_SAAS_SESSION_READY",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:SENTINELX_READY_IS_NOT_SAAS_SESSION_READY"
+      ]
+    },
+    {
+      "id": "MODEL_HEARTBEAT_IS_NOT_INFERENCE",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:MODEL_HEARTBEAT_IS_NOT_INFERENCE"
+      ]
+    },
+    {
+      "id": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION"
+      ]
+    },
+    {
+      "id": "DUAL_LEGS_KEEP_SEPARATE_IDENTITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:DUAL_LEGS_KEEP_SEPARATE_IDENTITY"
+      ]
+    },
+    {
+      "id": "COGNITIVE_RESULT_IS_NOT_AUTHORITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:COGNITIVE_RESULT_IS_NOT_AUTHORITY"
+      ]
+    },
+    {
+      "id": "TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH"
+      ]
+    },
+    {
+      "id": "FUTURE_EVIDENCE_CANNOT_ENTER_INPUT",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:FUTURE_EVIDENCE_CANNOT_ENTER_INPUT"
+      ]
+    },
+    {
+      "id": "UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE"
+      ]
+    },
+    {
+      "id": "MODEL_RELEASE_CANNOT_CHANGE_IN_PLACE",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:MODEL_RELEASE_CANNOT_CHANGE_IN_PLACE"
+      ]
+    },
+    {
+      "id": "BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "ci:core:36152180962:success",
+        "eval:BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY"
+      ]
+    }
+  ],
+  "currentness_result": "CURRENT_CANDIDATE",
+  "unknowns": [],
+  "decision": "PASS",
+  "authority_effect": "NONE",
+  "closure_digest": "7529d5708431c104b47eb1c03147c106bc6db20466797a15ec2c8fde9df520b1"
+}

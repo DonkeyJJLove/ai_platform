@@ -11,6 +11,7 @@
   "schema": "lion.rag-bootstrap/v1",
   "v15_candidate_input_root": "LION/architecture/v1_5",
   "v15_task3_source_set": "LION/architecture/v1_5/RAG_V15_SOURCE_SET.json",
-  "v15_task3_currentness": "PRE_CLOSURE",
-  "v15_note": "Candidate Task3 inputs do not replace preferred_release or live reacquisition."
+  "v15_task3_currentness": "CURRENT_CANDIDATE",
+  "v15_note": "Candidate Task3 inputs do not replace preferred_release or live reacquisition.",
+  "v15_task3_formalization_closure": "LION/architecture/v1_5/RAG_V15_FORMALIZATION_CLOSURE.json"
 }

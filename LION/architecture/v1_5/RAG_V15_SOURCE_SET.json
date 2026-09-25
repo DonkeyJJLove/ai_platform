@@ -1,7 +1,7 @@
 {
   "schema": "lion.rag-v15-source-set/v1",
   "authority_effect": "NONE",
-  "currentness": "PRE_CLOSURE",
+  "currentness": "CURRENT_CANDIDATE",
   "task_id": "LION-V15-CIP-EBLE-COGNITIVE-EVOLUTION-INTEGRATION-R1",
   "predecessor": {
     "task_id": "LION-V15-ARCHITECTURE-FORMALIZATION-KERNEL-R1",
@@ -54,5 +54,11 @@
     "LION/evals/evolution/evolution_cases.yaml"
   ],
   "training_effect": "NONE",
-  "model_promotion_effect": "NONE"
+  "model_promotion_effect": "NONE",
+  "candidate_binding": {
+    "head": "f72d3becd1c16e25f62e1f90999beeb7f54855ef",
+    "tree": "faf1f77e46ccc983346262130e084abfe381c5c3",
+    "truth_subject": "f69d592f4e30399d1a2347365e7d2f4df7aea02507bf067268007eb5d99ae6a0",
+    "formalization_closure_digest": "7529d5708431c104b47eb1c03147c106bc6db20466797a15ec2c8fde9df520b1"
+  }
 }
