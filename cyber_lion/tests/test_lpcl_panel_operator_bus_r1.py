@@ -26,6 +26,18 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertNotIn('LION Local + SaaS Supervisor',t)
         self.assertNotIn('saasBridgeDetail',t)
 
+    def test_model_route_is_thread_state_not_per_message_free_text(self):
+        ui=self.ui;runtime=self.runtime
+        self.assertIn('id="modelRoute"',ui)
+        self.assertIn('setActiveThreadModelRoute',ui)
+        self.assertIn("'/model-route'",ui)
+        self.assertIn("'model_route':model_route",ui)
+        self.assertIn("payload':{'content':x['content'].strip()[:16000],'model_route':model_route}",ui)
+        self.assertIn('CREATE TABLE IF NOT EXISTS thread_model_routes',runtime)
+        self.assertIn("if op=='set_model_route'",runtime)
+        self.assertIn("route not in {'LOCAL','SAAS','DUAL'}",runtime)
+        self.assertIn("m.conversation_leg?('MODEL '+m.conversation_leg)",ui)
+
     def test_thread_binding_and_stable_order_are_persistent(self):
         t=self.runtime
         self.assertIn('CREATE TABLE IF NOT EXISTS thread_bindings',t)
