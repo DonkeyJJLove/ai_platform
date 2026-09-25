@@ -27,7 +27,7 @@ from tools.p0_moon_runner_attested_bridge_contract import (
 import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-CURRENT_SCAN = "632d251adc44dc533282d74c6527c9e1862d18d55585356717de93acbf92083f"
+CURRENT_SCAN = "062a1200d41ecbfbc1992c41d523ffa7c43ff12cb560830df02d2c4d3503bf51"
 HISTORICAL_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 LIVE_SOURCE_REVISION = "830f8c2e5561655dc35118c97f4574acc3bf0816"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
