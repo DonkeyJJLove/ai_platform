@@ -1,0 +1,63 @@
+{
+  "schema": "lion.rag-v15-semantic-owner-set/v1",
+  "authority_effect": "NONE",
+  "currentness": "PRE_CLOSURE",
+  "owners": [
+    {
+      "concept": "CognitiveInvocation",
+      "primary": "cyber_lion/contracts/cognitive_invocation.py",
+      "layers": [
+        "EVOLUTIONARY_EPOCH",
+        "FLEET_AND_SWARM",
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ]
+    },
+    {
+      "concept": "EvidenceBoundLearningEpisode",
+      "primary": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "secondary": [
+        "cyber_lion/contracts/evolutionary_rnd.py"
+      ],
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "EVOLUTIONARY_EPOCH"
+      ]
+    },
+    {
+      "concept": "ModelRelease",
+      "primary": "cyber_lion/contracts/model_release.py",
+      "secondary": [
+        "cyber_lion/contracts/model_plane_adapter.py"
+      ],
+      "layers": [
+        "TRUSTED_RUNTIME",
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ]
+    },
+    {
+      "concept": "CoordinatorCompetencyProfile",
+      "primary": "cyber_lion/contracts/coordinator_competency.py",
+      "secondary": [
+        "LION/evals/evolution/evolution_cases.yaml"
+      ],
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "EVOLUTIONARY_EPOCH"
+      ]
+    },
+    {
+      "concept": "ModelCallV2",
+      "primary": "cyber_lion/contracts/model_call_v2.py",
+      "secondary": [
+        "cyber_lion/mission_control/model_calls.py"
+      ],
+      "layers": [
+        "FLEET_AND_SWARM",
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "OBSERVABILITY_AND_RECONCILIATION"
+      ]
+    }
+  ],
+  "duplicate_primary_owner": "NONE",
+  "top_level_layer_added": false
+}

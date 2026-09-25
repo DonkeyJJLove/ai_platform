@@ -1,0 +1,44 @@
+{
+  "schema": "lion.rag-v15-currentness-boundaries/v1",
+  "authority_effect": "NONE",
+  "currentness": "PRE_CLOSURE",
+  "boundaries": {
+    "live_master": {
+      "repository": "DonkeyJJLove/ai_platform",
+      "head": "1217e1536af5bfbb6ed81d548e9844af48883bff",
+      "tree": "e23a043012d5bf865af4f398c0a2cc53c94c36d2",
+      "role": "LIVE_BASELINE"
+    },
+    "task1": {
+      "head": "35a2d87af643a24f90cf4e6bc84f5f5fdaba734e",
+      "tree": "f3443d9ac51b66f1309311dc56706489dbc8b0c7",
+      "role": "STACKED_PREDECESSOR_CANDIDATE"
+    },
+    "task2": {
+      "branch": "mission/v15-cip-eble-cognitive-evolution-r1",
+      "head": null,
+      "tree": null,
+      "role": "PRE_CLOSURE_CANDIDATE_TO_BE_BOUND_AT_FCR"
+    },
+    "related_chunk_chunk": {
+      "head": "b8657037e94787a103c99f1fbb3058341821ffd7",
+      "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
+      "role": "READ_ONLY_HMK9D_SOURCE"
+    },
+    "preferred_rag_release": {
+      "release": "lion-rag32-v1.4-r9-auth-lifecycle-candidate",
+      "role": "VERSIONED_CONTEXT_NOT_LIVE_TRUTH"
+    },
+    "open_prs": [
+      381,
+      382,
+      383
+    ]
+  },
+  "invariants": [
+    "Task2 does not inherit Task1 currentness from report text",
+    "STACKED_CANDIDATE requires exact predecessor ancestry",
+    "open PR content is not promoted into Task2 baseline",
+    "training/model promotion/authority expansion remain NONE"
+  ]
+}
