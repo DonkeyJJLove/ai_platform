@@ -17,4 +17,10 @@ class ModelReleaseTests(unittest.TestCase):
     def test_lifecycle_cannot_mint_authority(self):
         with self.assertRaises(ModelReleaseError):
             ModelReleaseLifecycle("release:1","SHADOW_CANDIDATE",(),authority_effect="PROMOTE").validate()
+    def test_model_plane_identity_adapter_is_unresolved(self):
+        from cyber_lion.contracts.model_plane_adapter import ModelPlaneIdentity
+        ident=ModelPlaneIdentity("provider:test","model:test",Z).validate()
+        ref=model_plane_identity_to_release_ref(ident)
+        self.assertEqual(ref.resolution_state,"IDENTITY_ONLY_UNRESOLVED")
+        self.assertEqual(ref.authority_effect,"NONE")
 if __name__=="__main__":unittest.main()

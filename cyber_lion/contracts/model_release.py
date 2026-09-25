@@ -34,3 +34,24 @@ class ModelReleaseLifecycle:
         _t(self.release_ref,"release_ref")
         if self.state not in LIFECYCLE_STATES or type(self.evidence_refs) is not tuple or self.authority_effect!="NONE":raise ModelReleaseError("lifecycle")
         return self
+
+@dataclass(frozen=True)
+class ModelReleaseRef:
+    release_ref: str
+    source_model_identity_digest: str
+    resolution_state: str = "IDENTITY_ONLY_UNRESOLVED"
+    authority_effect: str = "NONE"
+    def validate(self):
+        _t(self.release_ref,"release_ref");_h(self.source_model_identity_digest,"source_model_identity_digest")
+        if self.resolution_state not in {"IDENTITY_ONLY_UNRESOLVED","EXACT_RELEASE_BOUND"} or self.authority_effect!="NONE":
+            raise ModelReleaseError("release ref")
+        return self
+
+def model_plane_identity_to_release_ref(identity) -> ModelReleaseRef:
+    identity.validate()
+    digest=identity.digest()
+    return ModelReleaseRef(
+        release_ref=f"model-release-ref:{digest}",
+        source_model_identity_digest=digest,
+        resolution_state="IDENTITY_ONLY_UNRESOLVED",
+    ).validate()
