@@ -1,0 +1,43 @@
+{
+  "$id": "lion.formalization-proposal-binding/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority_effect": {
+      "const": "NONE"
+    },
+    "binding_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "binding_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "execution_effect": {
+      "const": "NONE"
+    },
+    "formalization_manifest_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "proposal_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema_id": {
+      "const": "lion.formalization-proposal-binding/v1"
+    }
+  },
+  "required": [
+    "schema_id",
+    "binding_id",
+    "proposal_digest",
+    "formalization_manifest_digest",
+    "authority_effect",
+    "execution_effect",
+    "binding_digest"
+  ],
+  "title": "FormalizationProposalBinding",
+  "type": "object"
+}

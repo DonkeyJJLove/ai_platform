@@ -1,0 +1,207 @@
+{
+  "$defs": {
+    "gates": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "UNKNOWN",
+              "NOT_APPLICABLE"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "result",
+          "evidence_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "$id": "lion.formalization-closure-record/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_results": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "classification": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "state": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "STALE",
+              "UNKNOWN",
+              "NOT_APPLICABLE"
+            ]
+          }
+        },
+        "required": [
+          "artifact_id",
+          "classification",
+          "state",
+          "evidence_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "authority_effect": {
+      "const": "NONE"
+    },
+    "candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "head": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "tree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "verification_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidate_digest",
+        "head",
+        "tree",
+        "verification_digest"
+      ],
+      "type": "object"
+    },
+    "catalog_coverage": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "UNKNOWN"
+      ]
+    },
+    "closure_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "closure_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "currentness_result": {
+      "enum": [
+        "CURRENT_CANDIDATE",
+        "STALE",
+        "UNKNOWN"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "PASS",
+        "BLOCKED",
+        "FAIL"
+      ]
+    },
+    "discoverability_result": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "UNKNOWN",
+        "NOT_REQUIRED"
+      ]
+    },
+    "formalization_manifest_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "rag_result": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "UNKNOWN",
+        "NOT_REQUIRED"
+      ]
+    },
+    "required_eval_results": {
+      "$ref": "#/$defs/gates"
+    },
+    "required_test_results": {
+      "$ref": "#/$defs/gates"
+    },
+    "schema_id": {
+      "const": "lion.formalization-closure-record/v1"
+    },
+    "semantic_owner_uniqueness": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "UNKNOWN"
+      ]
+    },
+    "unknowns": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_id",
+    "closure_id",
+    "candidate",
+    "formalization_manifest_digest",
+    "artifact_results",
+    "semantic_owner_uniqueness",
+    "catalog_coverage",
+    "discoverability_result",
+    "rag_result",
+    "required_test_results",
+    "required_eval_results",
+    "currentness_result",
+    "unknowns",
+    "decision",
+    "authority_effect",
+    "closure_digest"
+  ],
+  "title": "FormalizationClosureRecord",
+  "type": "object"
+}

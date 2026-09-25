@@ -1,0 +1,48 @@
+{
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "master",
+    "head": "1217e1536af5bfbb6ed81d548e9844af48883bff",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "e23a043012d5bf865af4f398c0a2cc53c94c36d2"
+  },
+  "candidate_local_validation": {
+    "compileall": "PASS",
+    "formalization_unittest": "PASS_24_OF_24",
+    "registry_json_schema": "PASS"
+  },
+  "deferred_successor": "GovernedChangeProposal/v2 after sidecar shadow evidence",
+  "deployment_effect": "NONE",
+  "kernel_contracts": [
+    "lion.formalization-registry/v1",
+    "lion.architecture-formalization-manifest/v1",
+    "lion.required-formalization-set/v1",
+    "lion.formalization-closure-record/v1",
+    "lion.formalization-proposal-binding/v1"
+  ],
+  "model_promotion_effect": "NONE",
+  "research_contract_test_results": {
+    "cip": "PASS_40_OF_40",
+    "eble": "PASS_26_OF_26",
+    "formalization": "PASS_28_OF_28"
+  },
+  "research_inputs": [
+    {"authority_effect":"NONE","id":"LION_ARCHITECTURE_FORMALIZATION_UPGRADE_R1","zip_sha256":"08de29e711bc217b910e6604d8a0c87dc490301c1250fd3a2bc5f82431a573d2"},
+    {"authority_effect":"NONE","id":"LION_CIP_RESEARCH_R1","zip_sha256":"5580dd97db4135fd35c6930e1cd5bce9dd5cc4e842615103e21a911fe755480d"},
+    {"authority_effect":"NONE","id":"LION_EBLE_COORDINATOR_DESIGN_R1","zip_sha256":"9cb43b55b81f00f902c006c05849c828454516ece53a54e8a18c1f7213ca1237"}
+  ],
+  "research_manifest_verification": {
+    "LION_ARCHITECTURE_FORMALIZATION_UPGRADE_R1": "PASS_17_FILES",
+    "LION_CIP_RESEARCH_R1": "PASS_53_FILES",
+    "LION_EBLE_COORDINATOR_DESIGN_R1": "PASS_16_FILES"
+  },
+  "schema": "lion.task2-input-manifest/v1",
+  "shadow": {
+    "cip_eble_precision": 1.0,
+    "cip_eble_recall": 1.0,
+    "process_contract_precision": 0.35294117647058826,
+    "process_contract_recall": 1.0
+  },
+  "task_id": "LION-V15-ARCHITECTURE-FORMALIZATION-KERNEL-R1",
+  "training_effect": "NONE"
+}
