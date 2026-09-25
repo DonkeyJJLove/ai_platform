@@ -301,6 +301,50 @@ class OperatorConversationDispatchTests(unittest.TestCase):
         self.assertEqual(selected,[{'message_id':'m2','content':'current'}])
         self.assertEqual(operator_control.assignment_messages_for_input(rows,'{}'),[])
 
+    def test_saas_route_requires_immutable_external_receipt_before_visible_response(self):
+        corr='s'*32
+        value=self.command(command_id='panel-'+('9'*32),correlation=corr,content='SaaS answer?')
+        value['payload']['model_route']='SAAS'
+        applied=self.runtime.apply(value,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        c=self.runtime.connect()
+        try:
+            source=c.execute("SELECT model_route,state,external_request_id FROM operator_messages WHERE message_id=?",(mid,)).fetchone()
+            self.assertEqual(source['model_route'],'SAAS');self.assertEqual(source['state'],'PENDING_EXTERNAL');self.assertIsNone(source['external_request_id'])
+            linked=operator_control.link_external_request(c,mid,'saas-request-1',now)
+            self.assertFalse(linked['idempotent'])
+            recorded=operator_control.record_external_model_response(c,mid,'saas-request-1','model:saas','Remote answer','a'*64,now)
+            self.assertFalse(recorded['idempotent'])
+            again=operator_control.record_external_model_response(c,mid,'saas-request-1','model:saas','Remote answer','a'*64,now)
+            self.assertTrue(again['idempotent'])
+            snap=operator_control.thread_snapshot(c,corr,now)
+            source_msg=next(m for m in snap['messages'] if m['message_id']==mid)
+            reply=next(m for m in snap['messages'] if m.get('causation_id')==mid)
+            self.assertEqual(source_msg['conversation_state'],'ANSWERED')
+            self.assertEqual(reply['conversation_leg'],'SAAS');self.assertTrue(reply['conversation_valid'])
+            with self.assertRaisesRegex(ValueError,'external response conflict'):
+                operator_control.record_external_model_response(c,mid,'saas-request-1','model:saas','Different answer','a'*64,now)
+        finally:c.close()
+
+    def test_dual_route_is_partial_until_both_legs_exist(self):
+        corr='u'*32
+        value=self.command(command_id='panel-'+('a'*32),correlation=corr,content='Compare both')
+        value['payload']['model_route']='DUAL'
+        applied=self.runtime.apply(value,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        c=self.runtime.connect()
+        try:
+            source=c.execute("SELECT model_route,state FROM operator_messages WHERE message_id=?",(mid,)).fetchone()
+            self.assertEqual(source['model_route'],'DUAL');self.assertEqual(source['state'],'PENDING')
+            operator_control.link_external_request(c,mid,'saas-request-dual',now)
+            operator_control.record_external_model_response(c,mid,'saas-request-dual','model:saas','Remote half','b'*64,now)
+            snap=operator_control.thread_snapshot(c,corr,now)
+            source_msg=next(m for m in snap['messages'] if m['message_id']==mid)
+            replies=[m for m in snap['messages'] if m.get('causation_id')==mid]
+            self.assertEqual(source_msg['conversation_state'],'PARTIAL')
+            self.assertEqual([m['conversation_leg'] for m in replies],['SAAS'])
+        finally:c.close()
+
     def test_v1_correlated_response_is_retained_but_not_valid_conversation_output(self):
         value=self.command(command_id='panel-'+('7'*32),correlation='d'*32,content='Old protocol')
         routed,meta=self.runtime.route_conversation_command(value)
