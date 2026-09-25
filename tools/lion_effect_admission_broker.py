@@ -1684,4 +1684,518 @@ def mission_control_v3_package_identity_at(root:Path)->dict[str,str]:
 def mission_control_v3_package_identity()->dict[str,str]:
  return mission_control_v3_package_identity_at(MISSION_CONTROL_V3_ROOT)
 
-def mission_contro
+def mission_control_v3_install(request:dict[str,Any])->dict[str,Any]:
+ head,tree,_=mission64_require_envelope(request,worker=False);mission64_verify_current(head,tree)
+ package_identity=mission_control_v3_package_identity()
+ MISSION_CONTROL_V3_DROPIN.parent.mkdir(parents=True,exist_ok=True)
+ current=MISSION_CONTROL_V3_DROPIN.read_bytes() if MISSION_CONTROL_V3_DROPIN.is_file() else None
+ if current is not None:
+  backup=MISSION64_STATE/"mission-control-backups"/("99-v3-control."+sha256(current)+"."+datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")+".bak");backup.parent.mkdir(parents=True,exist_ok=True);backup.write_bytes(current);os.chmod(backup,0o400)
+ raw=MISSION_CONTROL_V3_DROPIN_TEXT.encode();fd,tmpname=tempfile.mkstemp(prefix=".99-v3-control.",suffix=".tmp",dir=str(MISSION_CONTROL_V3_DROPIN.parent));tmp=Path(tmpname)
+ try:
+  with os.fdopen(fd,"wb") as h:h.write(raw);h.flush();os.fsync(h.fileno())
+  os.chmod(tmp,0o644);os.replace(tmp,MISSION_CONTROL_V3_DROPIN)
+ finally:
+  if tmp.exists():tmp.unlink()
+ for argv in (["/bin/systemctl","daemon-reload"],["/bin/systemctl","restart",MISSION_CONTROL_V3_UNIT]):
+  proc=subprocess.run(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=False,check=False,timeout=60)
+  if proc.returncode!=0:raise Deny("MISSION_CONTROL_V3_SYSTEMD:"+(proc.stderr or proc.stdout).decode("utf-8","replace")[-2000:])
+ import time as _time
+ end=_time.time()+20;loc=None
+ while _time.time()<end:
+  active=subprocess.run(["/bin/systemctl","is-active","--quiet",MISSION_CONTROL_V3_UNIT],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=False).returncode==0
+  if active and MISSION_CONTROL_V3_LOCATOR.is_file():
+   try:
+    loc=json.loads(MISSION_CONTROL_V3_LOCATOR.read_text(encoding="utf-8"))
+    if loc.get("port")==8766 and loc.get("generation")=="MISSION_CONTROL_V3":break
+   except Exception:pass
+  _time.sleep(.25)
+ else:raise Deny("MISSION_CONTROL_V3_NOT_READY")
+ result={"installed":True,"unit":MISSION_CONTROL_V3_UNIT,"port":8766,"source_sha256":package_identity["mission_control_v3.py"],"package_identity":package_identity,"package_digest":sha256(canonical(package_identity)),"dropin_sha256":sha256(raw),"locator":loc}
+ result.update(mission64_receipt(request,result));return result
+
+
+
+# ---- Operator Intervention R1 branch-fixed transactional deployment -------
+OPERATOR_INTERVENTION_TASK_ID="LION-OPERATOR-DRONE-SUPREMACY-AND-LIVE-MISSION-INTERVENTION-R1"
+OPERATOR_INTERVENTION_BRANCH="mission/r24-electron-control-plane-convergence-r1"
+OPERATOR_INTERVENTION_STAGE_ROOT=Path("/var/lib/sentinelx/uploads/lion-mission-control-v3.stage-operator-intervention")
+OPERATOR_INTERVENTION_STATE_ROOT=STATE_ROOT/"operator-intervention-r1"
+OPERATOR_CONTROL_UNIT="lion-operator-control.service"
+OPERATOR_CONTROL_UNIT_PACKAGE_REL="systemd/lion-operator-control.service"
+OPERATOR_CONTROL_UNIT_PATH=Path("/etc/systemd/system/lion-operator-control.service")
+OPERATOR_PROXY_KEY_PATH=MISSION_CONTROL_V3_ROOT/"operator-sentinelx-proxy.key"
+OPERATOR_DB_PATH=MISSION_CONTROL_V3_ROOT/"mission-control-v3.db"
+
+
+def operator_intervention_git_identity()->tuple[str,str]:
+ td=Path(tempfile.mkdtemp(prefix="lion-operator-intervention-currentness-"))
+ try:
+  run(["/usr/bin/git","init",str(td)],timeout=30)
+  run(["/usr/bin/git","-C",str(td),"remote","add","origin",REPO_URL],timeout=30)
+  run(["/usr/bin/git","-C",str(td),"fetch","--no-tags","--depth=1","origin",f"refs/heads/{OPERATOR_INTERVENTION_BRANCH}"],timeout=180)
+  head=run(["/usr/bin/git","-C",str(td),"rev-parse","FETCH_HEAD"],capture=True,timeout=30).stdout.decode().strip()
+  tree=run(["/usr/bin/git","-C",str(td),"rev-parse","FETCH_HEAD^{tree}"],capture=True,timeout=30).stdout.decode().strip()
+  return require_hex40(head,"operator-live-head"),require_hex40(tree,"operator-live-tree")
+ finally:shutil.rmtree(td,ignore_errors=True)
+
+
+def operator_intervention_require_envelope(request:dict[str,Any])->tuple[str,str]:
+ expected={"schema_version","request_id","operation","task_id","source_head","source_tree"}
+ if set(request)!=expected:raise Deny("OPERATOR_INTERVENTION_FIELD_SET")
+ if request.get("task_id")!=OPERATOR_INTERVENTION_TASK_ID:raise Deny("OPERATOR_INTERVENTION_TASK_ID")
+ head=require_hex40(request.get("source_head"),"source_head");tree=require_hex40(request.get("source_tree"),"source_tree")
+ live_head,live_tree=operator_intervention_git_identity()
+ if (head,tree)!=(live_head,live_tree):raise Deny("OPERATOR_INTERVENTION_LIVE_SOURCE_DRIFT:"+live_head+":"+live_tree)
+ return head,tree
+
+
+def _atomic_copy_file(src:Path,dst:Path,mode:int|None=None,owner:tuple[int,int]|None=None)->None:
+ dst.parent.mkdir(parents=True,exist_ok=True)
+ fd,tmpname=tempfile.mkstemp(prefix="."+dst.name+".",suffix=".tmp",dir=str(dst.parent));tmp=Path(tmpname)
+ try:
+  with src.open("rb") as inp,os.fdopen(fd,"wb") as out:
+   shutil.copyfileobj(inp,out);out.flush();os.fsync(out.fileno())
+  os.chmod(tmp,mode if mode is not None else (src.stat().st_mode & 0o777))
+  if owner is not None and os.geteuid()==0:os.chown(tmp,owner[0],owner[1])
+  os.replace(tmp,dst)
+ finally:
+  if tmp.exists():tmp.unlink()
+
+
+def _live_package_owner()->tuple[int,int]:
+ st=MISSION_CONTROL_V3_ROOT.stat();return st.st_uid,st.st_gid
+
+
+def _ensure_live_package_parent(dst:Path)->tuple[int,int]:
+ root=MISSION_CONTROL_V3_ROOT
+ try:rel=dst.parent.relative_to(root)
+ except ValueError as exc:raise Deny("LIVE_PACKAGE_PATH_ESCAPE") from exc
+ owner=_live_package_owner();current=root
+ for part in rel.parts:
+  current=current/part;current.mkdir(exist_ok=True);os.chmod(current,0o755)
+  if os.geteuid()==0:os.chown(current,owner[0],owner[1])
+ return owner
+
+
+def _live_package_copy(src:Path,dst:Path)->None:
+ owner=_ensure_live_package_parent(dst);_atomic_copy_file(src,dst,owner=owner)
+
+
+def _systemctl_exact(*args:str,check:bool=True)->subprocess.CompletedProcess[bytes]:
+ proc=subprocess.run(["/bin/systemctl",*args],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=False,check=False,timeout=60)
+ if check and proc.returncode!=0:raise Deny("OPERATOR_INTERVENTION_SYSTEMD:"+" ".join(args)+":"+(proc.stderr or proc.stdout).decode("utf-8","replace")[-2000:])
+ return proc
+
+
+def _sqlite_integrity(path:Path)->str:
+ conn=sqlite3.connect("file:"+path.as_posix()+"?mode=ro",uri=True,timeout=5)
+ try:return str(conn.execute("PRAGMA integrity_check").fetchone()[0])
+ finally:conn.close()
+
+
+def _operator_control_health()->dict[str,Any]:
+ key=OPERATOR_PROXY_KEY_PATH.read_text(encoding="utf-8").strip()
+ if len(key)<64:raise Deny("OPERATOR_PROXY_KEY_UNAVAILABLE")
+ conn=http.client.HTTPConnection("127.0.0.1",8767,timeout=3)
+ try:
+  conn.request("GET","/health",headers={"X-LION-Operator-Proxy-Key":key,"User-Agent":"LION-Operator-Deploy-Readback/1"})
+  res=conn.getresponse();raw=res.read(65536)
+ finally:conn.close()
+ if res.status!=200:raise Deny("OPERATOR_CONTROL_HEALTH_HTTP:"+str(res.status))
+ value=json.loads(raw.decode("utf-8"))
+ if value.get("status")!="ok" or value.get("authenticated_principal")!="OPERATOR_SENTINELX_PROXY":raise Deny("OPERATOR_CONTROL_HEALTH_IDENTITY")
+ return value
+
+
+def _mission_control_health()->dict[str,Any]:
+ conn=http.client.HTTPConnection("127.0.0.1",8766,timeout=3)
+ try:
+  conn.request("GET","/health",headers={"User-Agent":"LION-Operator-Deploy-Readback/1"});res=conn.getresponse();raw=res.read(65536)
+ finally:conn.close()
+ if res.status!=200:raise Deny("MISSION_CONTROL_HEALTH_HTTP:"+str(res.status))
+ value=json.loads(raw.decode("utf-8"))
+ if value.get("status")!="ok":raise Deny("MISSION_CONTROL_HEALTH_STATE")
+ return value
+
+
+def _wait_health(fn,unit:str,timeout:float=20.0)->dict[str,Any]:
+ import time as _time
+ end=_time.time()+timeout;last=None
+ while _time.time()<end:
+  if _systemctl_exact("is-active","--quiet",unit,check=False).returncode==0:
+   try:return fn()
+   except Exception as exc:last=exc
+  _time.sleep(.25)
+ raise Deny("OPERATOR_INTERVENTION_NOT_READY:"+unit+":"+(type(last).__name__ if last else "UNKNOWN"))
+
+
+def _backup_optional(src:Path,dst:Path)->bool:
+ if not src.is_file():return False
+ dst.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src,dst);return True
+
+
+def _restore_optional(backup:Path,target:Path,existed:bool)->None:
+ if existed:_atomic_copy_file(backup,target)
+ elif target.exists():target.unlink()
+
+
+def operator_intervention_receipt(request:dict[str,Any],result:dict[str,Any])->dict[str,Any]:
+ payload={"schema":"lion.operator-intervention-deploy-receipt/v1","request_id":request["request_id"],"operation":request["operation"],"task_id":OPERATOR_INTERVENTION_TASK_ID,"source_head":request["source_head"],"source_tree":request["source_tree"],"result_digest":sha256(canonical(result)),"observed_at":now(),"authority":"BOUNDED_PRIVILEGED_ADMISSION"}
+ payload["receipt_digest"]=sha256(canonical(payload));path=OPERATOR_INTERVENTION_STATE_ROOT/"receipts"/(request["request_id"]+".json");atomic_json(path,payload);return payload
+
+
+def operator_intervention_deploy(request:dict[str,Any])->dict[str,Any]:
+ head,tree=operator_intervention_require_envelope(request)
+ stage_identity=mission_control_v3_package_identity_at(OPERATOR_INTERVENTION_STAGE_ROOT)
+ if OPERATOR_CONTROL_UNIT_PACKAGE_REL not in stage_identity:raise Deny("OPERATOR_CONTROL_UNIT_NOT_IN_PACKAGE")
+ if not OPERATOR_DB_PATH.is_file() or _sqlite_integrity(OPERATOR_DB_PATH)!="ok":raise Deny("OPERATOR_DB_INTEGRITY_PRECHECK")
+ for secret in (MISSION_CONTROL_V3_ROOT/"operator-gateway.key",MISSION_CONTROL_V3_ROOT/"operator-sentinelx-proxy.key",MISSION_CONTROL_V3_ROOT/"operator-panel-proxy.key",MISSION_CONTROL_V3_ROOT/"operator-pairing.key"):
+  if not secret.is_file() or len(secret.read_text(encoding="utf-8").strip())<64:raise Deny("OPERATOR_SECRET_PRECHECK:"+secret.name)
+ backup=OPERATOR_INTERVENTION_STATE_ROOT/"deploy-backups"/request["request_id"]
+ if backup.exists():raise Deny("OPERATOR_INTERVENTION_REQUEST_REPLAY")
+ backup.mkdir(parents=True,exist_ok=False)
+ package_existed={}
+ for name in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256):
+  src=MISSION_CONTROL_V3_ROOT/name;package_existed[name]=_backup_optional(src,backup/"package"/name)
+ dropin_existed=_backup_optional(MISSION_CONTROL_V3_DROPIN,backup/"systemd"/MISSION_CONTROL_V3_DROPIN.name)
+ operator_unit_existed=_backup_optional(OPERATOR_CONTROL_UNIT_PATH,backup/"systemd"/OPERATOR_CONTROL_UNIT_PATH.name)
+ operator_unit_enabled=_systemctl_exact("is-enabled","--quiet",OPERATOR_CONTROL_UNIT,check=False).returncode==0
+ rollback_errors=[]
+ try:
+  for name in sorted(MISSION_CONTROL_V3_REQUIRED_SHA256):_live_package_copy(OPERATOR_INTERVENTION_STAGE_ROOT/name,MISSION_CONTROL_V3_ROOT/name)
+  live_identity=mission_control_v3_package_identity()
+  _atomic_copy_file(MISSION_CONTROL_V3_ROOT/OPERATOR_CONTROL_UNIT_PACKAGE_REL,OPERATOR_CONTROL_UNIT_PATH,0o644)
+  drop_src=backup/"new-mission-control-dropin";drop_src.write_bytes(MISSION_CONTROL_V3_DROPIN_TEXT.encode());_atomic_copy_file(drop_src,MISSION_CONTROL_V3_DROPIN,0o644)
+  _systemctl_exact("daemon-reload")
+  _systemctl_exact("enable",OPERATOR_CONTROL_UNIT)
+  _systemctl_exact("restart",OPERATOR_CONTROL_UNIT)
+  operator_health=_wait_health(_operator_control_health,OPERATOR_CONTROL_UNIT)
+  _systemctl_exact("restart",MISSION_CONTROL_V3_UNIT)
+  mission_health=_wait_health(_mission_control_health,MISSION_CONTROL_V3_UNIT)
+  if _sqlite_integrity(OPERATOR_DB_PATH)!="ok":raise Deny("OPERATOR_DB_INTEGRITY_POSTDEPLOY")
+  locator=None
+  if MISSION_CONTROL_V3_LOCATOR.is_file():
+   locator=json.loads(MISSION_CONTROL_V3_LOCATOR.read_text(encoding="utf-8"))
+  if not isinstance(locator,dict) or locator.get("port")!=8766 or locator.get("generation")!="MISSION_CONTROL_V3":raise Deny("MISSION_CONTROL_V3_LOCATOR_READBACK")
+  result={"installed":True,"task_id":OPERATOR_INTERVENTION_TASK_ID,"source_head":head,"source_tree":tree,"package_identity":live_identity,"package_digest":sha256(canonical(live_identity)),"operator_unit_sha256":sha256_file(OPERATOR_CONTROL_UNIT_PATH),"operator_control_health":operator_health,"mission_control_health":mission_health,"locator":locator,"db_integrity":"ok","rollback_backup":str(backup),"authority_effect":"BOUNDED_OPERATOR_INTERVENTION_DEPLOY"}
+  result["control_receipt"]=operator_intervention_receipt(request,result)
+  return result
+ except Exception as exc:
+  # Roll back package and both unit definitions; preserve the original failure.
+  try:_systemctl_exact("disable","--now",OPERATOR_CONTROL_UNIT,check=False)
+  except Exception as rb:rollback_errors.append(type(rb).__name__+":"+str(rb))
+  for name,existed in package_existed.items():
+   try:
+    target=MISSION_CONTROL_V3_ROOT/name
+    if existed:_live_package_copy(backup/"package"/name,target)
+    elif target.exists():target.unlink()
+   except Exception as rb:rollback_errors.append(name+":"+type(rb).__name__)
+  try:_restore_optional(backup/"systemd"/MISSION_CONTROL_V3_DROPIN.name,MISSION_CONTROL_V3_DROPIN,dropin_existed)
+  except Exception as rb:rollback_errors.append("mission-dropin:"+type(rb).__name__)
+  try:_restore_optional(backup/"systemd"/OPERATOR_CONTROL_UNIT_PATH.name,OPERATOR_CONTROL_UNIT_PATH,operator_unit_existed)
+  except Exception as rb:rollback_errors.append("operator-unit:"+type(rb).__name__)
+  try:_systemctl_exact("daemon-reload")
+  except Exception as rb:rollback_errors.append("daemon-reload:"+type(rb).__name__)
+  try:_systemctl_exact("restart",MISSION_CONTROL_V3_UNIT)
+  except Exception as rb:rollback_errors.append("mission-restart:"+type(rb).__name__)
+  if operator_unit_existed:
+   try:
+    if operator_unit_enabled:_systemctl_exact("enable",OPERATOR_CONTROL_UNIT)
+    _systemctl_exact("restart",OPERATOR_CONTROL_UNIT)
+   except Exception as rb:rollback_errors.append("operator-restart:"+type(rb).__name__)
+  rollback={"schema":"lion.operator-intervention-rollback/v1","request_id":request["request_id"],"failure":type(exc).__name__+":"+str(exc),"rollback_errors":rollback_errors,"observed_at":now()};atomic_json(backup/"rollback.json",rollback)
+  raise Deny("OPERATOR_INTERVENTION_DEPLOY_FAILED:"+type(exc).__name__+":"+str(exc)+":rollback_errors="+str(len(rollback_errors))) from exc
+# ---- end Operator Intervention R1 deployment ------------------------------
+
+def handle(
+    request: dict[str, Any],
+) -> dict[str, Any]:
+
+    sentinel_uid = (
+        pwd.getpwnam(
+            SENTINEL_USER
+        ).pw_uid
+    )
+
+    if peer_uid() != sentinel_uid:
+        raise Deny(
+            "CALLER_UID_DENIED"
+        )
+
+    if os.getuid() != 0:
+        raise Deny(
+            "BROKER_NOT_ROOT"
+        )
+
+    if (
+        socket.gethostname()
+        != EXPECTED_HOST
+    ):
+        raise Deny(
+            "WRONG_HOST"
+        )
+
+    if (
+        request.get(
+            "schema_version"
+        )
+        != SCHEMA
+    ):
+        raise Deny(
+            "SCHEMA_MISMATCH"
+        )
+
+    request_id = require_hex64(
+        request.get(
+            "request_id"
+        ),
+        "request_id",
+    )
+
+    operation = request.get(
+        "operation"
+    )
+
+    if operation == "PING":
+        if set(request) != {
+            "schema_version",
+            "request_id",
+            "operation",
+        }:
+            raise Deny(
+                "PING_FIELD_SET"
+            )
+
+        prepared = None
+
+        if IDENTITY_FILE.is_file():
+            prepared = fixed_identity()
+
+        return {
+            "broker": "READY",
+            "authority_class": (
+                "BOUNDED_PRIVILEGED_ADMISSION"
+            ),
+            "host_id": HOST_ID,
+            "hostname": (
+                EXPECTED_HOST
+            ),
+            "caller_uid": (
+                pwd.getpwnam(
+                    SENTINEL_USER
+                ).pw_uid
+            ),
+            "direct_docker_authority": (
+                False
+            ),
+            "prepared_scale64": (
+                prepared
+            ),
+            "operations": [
+                "PING",
+                "PRECHECK_SCALE64",
+                "PREPARE_SCALE64",
+                "RUN_SCALE64",
+                "READ_EVIDENCE",
+                "MISSION64_CURRENTNESS_READ",
+                "MISSION64_PRECHECK",
+                "MISSION64_START",
+                "MISSION64_READ",
+                "MISSION64_PAUSE",
+                "MISSION64_RESUME",
+                "MISSION64_RESTART_ONE",
+                "MISSION64_VALIDATE",
+                "MISSION64_STOP",
+                "MISSION_CONTROL_V3_INSTALL",
+                "OPERATOR_INTERVENTION_DEPLOY",
+                "EPOCH3_M64_PRECHECK",
+                "EPOCH3_M64_START",
+                "EPOCH3_M64_READ",
+                "EPOCH3_M64_RESTART_ONE",
+                "EPOCH3_M64_VALIDATE",
+                "EPOCH3_M64_STOP",
+                "EPOCH3_M64_START_LOGICAL",
+                "EPOCH3_M64_RESTART_LOGICAL",
+                "EPOCH3_M64_VALIDATE_LOGICAL",
+            ],
+            "mission64": mission64_spec(),
+        }
+
+    if operation == "MISSION64_CURRENTNESS_READ":
+        if set(request) != {"schema_version", "request_id", "operation"}:
+            raise Deny("MISSION64_CURRENTNESS_FIELD_SET")
+        head,tree=mission64_git_identity()
+        return {
+            "source_head":head,
+            "source_tree":tree,
+            "repository":MISSION64_MASTER_REPO,
+            "branch":MISSION64_MASTER_BRANCH,
+            "currentness_source":"GITHUB_MASTER_READ",
+            "authority_effect":"NONE",
+        }
+
+    if operation == "PRECHECK_SCALE64":
+        if set(request) != {"schema_version", "request_id", "operation", "source_head", "source_tree"}:
+            raise Deny("PRECHECK_FIELD_SET")
+        head = require_hex40(request["source_head"], "source_head")
+        tree = require_hex40(request["source_tree"], "source_tree")
+        return precheck_scale64(head, tree)
+
+    if operation == "PREPARE_SCALE64":
+        if set(request) != {
+            "schema_version",
+            "request_id",
+            "operation",
+            "source_head",
+            "source_tree",
+        }:
+            raise Deny(
+                "PREPARE_FIELD_SET"
+            )
+
+        head = require_hex40(
+            request[
+                "source_head"
+            ],
+            "source_head",
+        )
+
+        tree = require_hex40(
+            request[
+                "source_tree"
+            ],
+            "source_tree",
+        )
+
+        return prepare_scale64(
+            head,
+            tree,
+        )
+
+    if operation == "RUN_SCALE64":
+        if set(request) != {
+            "schema_version",
+            "request_id",
+            "operation",
+            "source_head",
+            "source_tree",
+        }:
+            raise Deny(
+                "RUN_FIELD_SET"
+            )
+
+        head = require_hex40(
+            request[
+                "source_head"
+            ],
+            "source_head",
+        )
+
+        tree = require_hex40(
+            request[
+                "source_tree"
+            ],
+            "source_tree",
+        )
+
+        return run_scale64(
+            request_id,
+            head,
+            tree,
+        )
+
+    if operation == "READ_EVIDENCE":
+        if set(request) != {
+            "schema_version",
+            "request_id",
+            "operation",
+            "run_request_id",
+        }:
+            raise Deny(
+                "READ_FIELD_SET"
+            )
+
+        target = require_hex64(
+            request[
+                "run_request_id"
+            ],
+            "run_request_id",
+        )
+
+        return read_evidence(
+            target
+        )
+
+    if operation == "MISSION_CONTROL_V3_INSTALL":
+        return mission_control_v3_install(request)
+
+    if operation == "OPERATOR_INTERVENTION_DEPLOY":
+        return operator_intervention_deploy(request)
+
+    if operation in {"EPOCH3_M64_START_LOGICAL","EPOCH3_M64_RESTART_LOGICAL","EPOCH3_M64_VALIDATE_LOGICAL"}:
+        return e3_component_handle(request)
+
+    if operation in {"EPOCH3_M64_PRECHECK","EPOCH3_M64_START","EPOCH3_M64_READ","EPOCH3_M64_RESTART_ONE","EPOCH3_M64_VALIDATE","EPOCH3_M64_STOP"}:
+        return e3_handle(request)
+
+    if operation in {"MISSION64_PRECHECK","MISSION64_START","MISSION64_READ","MISSION64_PAUSE","MISSION64_RESUME","MISSION64_RESTART_ONE","MISSION64_VALIDATE","MISSION64_STOP"}:
+        return mission64_handle(request)
+
+    raise Deny(
+        "OPERATION_NOT_ALLOWLISTED"
+    )
+
+
+def main() -> int:
+    request_id = None
+
+    try:
+        request = receive()
+
+        candidate = request.get(
+            "request_id"
+        )
+
+        if isinstance(
+            candidate,
+            str,
+        ):
+            request_id = candidate
+
+        result = handle(
+            request
+        )
+
+        reply(
+            {
+                "ok": True,
+                "request_id": (
+                    request_id
+                ),
+                "result": result,
+            }
+        )
+
+        return 0
+
+    except Exception as exc:
+        reply(
+            {
+                "ok": False,
+                "request_id": (
+                    request_id
+                ),
+                "error": (
+                    type(exc).__name__
+                    + ":"
+                    + str(exc)[:2000]
+                ),
+            }
+        )
+
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

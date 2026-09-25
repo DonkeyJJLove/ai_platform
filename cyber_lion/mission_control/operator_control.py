@@ -758,4 +758,110 @@ def apply_command(conn,value,now_fn,*,principal_id=PRIMARY_OPERATOR):
         elif cmd.action=="CANCEL_ASSIGNMENT" and result.get("state")=="CANCEL_REQUESTED":execution_state="CONTAINMENT_PENDING";observation_state="PARTIAL";completed_at=None
         elif cmd.action=="REASSIGN" and result.get("state")=="WAITING_CHECKPOINT":execution_state="WAITING_CHECKPOINT";observation_state="PARTIAL";completed_at=None
         elif cmd.action=="AMEND_PLAN" and result.get("state")=="AWAITING_SCOPE_ACTIVATION":execution_state="AWAITING_SCOPE_ACTIVATION";observation_state="PENDING_AUTHORITY";completed_at=None
-        conn.execute("UPDATE operator_commands SET execution_state=?,observation_state=?,completed_at=?,result_json=? WHERE command_id=?",(execution_state,observation_state,completed_at,canonical(result),cmd.command_id));event_id=_event(conn,cmd.mission_id,"OPERATOR_COMMAND_APPLIED",{"command_id":cmd.command_id,"action":cmd.action,"target":cmd.target,"control_epoch":final_state["control_epoch"],"effect_class":action_effect(cmd.action),"authority_effect":"OPERATOR_SCOPED_CONTROL" if cmd.action in CONTROL_ACTIONS else "NONE"},now_fn,command_id=cmd.command_id);receipt={"schema":"lion.operator-command-receipt/v1","command_id":cmd.command_id,"command_digest":cmd.payload_digest,"mission_id":cmd.mission_id,"action":cmd.action,"principal_id":principal_id,"participant_id":participant_id,"grant_id":grant["grant_id"],"effective_priority":1000 if principal_id==PRIMARY_OPERATOR else 900,"control_epoch":final_state["control_epoch"],"context_revision":final_state["context_revision"],"plan_revision":final_state["plan_revision"],"event_id":event_id,"delivery_state":"PERSISTED","admission_state":"ACCEPTED","execution_state":execution_state,"observation_state":observation_state,"created_at":now_fn()};receipt["receipt_digest"]=command_receipt_digest(receipt);conn.execute("INSERT INTO operator_command_receipts VALUES(?,?,?,?)",(cmd.command_id,receipt["r
+        conn.execute("UPDATE operator_commands SET execution_state=?,observation_state=?,completed_at=?,result_json=? WHERE command_id=?",(execution_state,observation_state,completed_at,canonical(result),cmd.command_id));event_id=_event(conn,cmd.mission_id,"OPERATOR_COMMAND_APPLIED",{"command_id":cmd.command_id,"action":cmd.action,"target":cmd.target,"control_epoch":final_state["control_epoch"],"effect_class":action_effect(cmd.action),"authority_effect":"OPERATOR_SCOPED_CONTROL" if cmd.action in CONTROL_ACTIONS else "NONE"},now_fn,command_id=cmd.command_id);receipt={"schema":"lion.operator-command-receipt/v1","command_id":cmd.command_id,"command_digest":cmd.payload_digest,"mission_id":cmd.mission_id,"action":cmd.action,"principal_id":principal_id,"participant_id":participant_id,"grant_id":grant["grant_id"],"effective_priority":1000 if principal_id==PRIMARY_OPERATOR else 900,"control_epoch":final_state["control_epoch"],"context_revision":final_state["context_revision"],"plan_revision":final_state["plan_revision"],"event_id":event_id,"delivery_state":"PERSISTED","admission_state":"ACCEPTED","execution_state":execution_state,"observation_state":observation_state,"created_at":now_fn()};receipt["receipt_digest"]=command_receipt_digest(receipt);conn.execute("INSERT INTO operator_command_receipts VALUES(?,?,?,?)",(cmd.command_id,receipt["receipt_digest"],canonical(receipt),receipt["created_at"]));conn.commit();return {**_command_result(conn,cmd.command_id),"receipt":receipt,"idempotent":False}
+    except Exception:conn.rollback();raise
+
+
+def command_status(conn,command_id):return _command_result(conn,command_id)
+def events_after(conn,mission_id,after=0,*,limit=200):
+    if type(after) is not int or after<0 or type(limit) is not int or not 1<=limit<=1000:raise ValueError("event cursor")
+    values=[]
+    for row in conn.execute("SELECT * FROM operator_events WHERE mission_id=? AND event_id>? ORDER BY event_id LIMIT ?",(mission_id,after,limit)).fetchall():
+        value=dict(row)
+        try:value["payload"]=json.loads(value.pop("payload_json"))
+        except Exception:value["payload"]={}
+        values.append(value)
+    return {"mission_id":mission_id,"events":values,"next_cursor":values[-1]["event_id"] if values else after}
+def acknowledge_events(conn,consumer_id,mission_id,event_id,now_fn):
+    if not isinstance(consumer_id,str) or not consumer_id or type(event_id) is not int or event_id<0:raise ValueError("consumer cursor")
+    prior=conn.execute("SELECT event_id FROM operator_consumer_cursors WHERE consumer_id=? AND mission_id=?",(consumer_id,mission_id)).fetchone()
+    if prior and int(event_id)<int(prior["event_id"]):raise ValueError("event cursor regression")
+    conn.execute("INSERT INTO operator_consumer_cursors VALUES(?,?,?,?) ON CONFLICT(consumer_id,mission_id) DO UPDATE SET event_id=excluded.event_id,updated_at=excluded.updated_at",(consumer_id,mission_id,event_id,now_fn()));conn.commit();return {"consumer_id":consumer_id,"mission_id":mission_id,"event_id":event_id}
+def _conversation_response_leg(conn,message):
+    if message.get('kind')!='RESPONSE' or not message.get('correlation_id') or not message.get('causation_id'):return None
+    if message.get('from_participant')=='model:saas' or message.get('model_route')=='SAAS':
+        request_id=message.get('external_request_id')
+        if not isinstance(request_id,str) or not request_id:return None
+        receipt=conn.execute("""SELECT source_message_id,request_id,provider,receipt_digest,response_digest
+                                FROM operator_external_model_receipts WHERE response_message_id=?""",(message.get('message_id'),)).fetchone()
+        if not receipt or receipt['source_message_id']!=message.get('causation_id') or receipt['request_id']!=request_id or receipt['provider']!='model:saas':return None
+        if receipt['response_digest']!=digest(str(message.get('content') or '')):return None
+        source=conn.execute("SELECT model_route,external_request_id FROM operator_messages WHERE message_id=?",(message.get('causation_id'),)).fetchone()
+        if not source or source['model_route'] not in {'SAAS','DUAL'} or source['external_request_id']!=request_id:return None
+        return 'SAAS'
+    aid=message.get('applied_assignment_id')
+    if not isinstance(aid,str) or not aid:return None
+    row=conn.execute("SELECT input_json FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+    if not row:return None
+    try:value=json.loads(row['input_json'] or '{}')
+    except Exception:return None
+    ids=value.get('operator_message_ids')
+    return 'LOCAL' if value.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1' and value.get('conversation_protocol_version')==3 and isinstance(ids,list) and message.get('causation_id') in ids else None
+
+def _conversation_response_valid(conn,message):
+    if message.get('kind')!='RESPONSE' or not message.get('correlation_id') or not message.get('causation_id'):return None
+    return _conversation_response_leg(conn,message) is not None
+
+def thread_snapshot(conn,correlation_id,now_fn=None,*,limit=500):
+    if not isinstance(correlation_id,str) or not correlation_id or len(correlation_id)>128:raise ValueError("correlation_id")
+    if type(limit) is not int or not 1<=limit<=1000:raise ValueError("thread limit")
+    rows=[dict(r) for r in conn.execute("""SELECT message_id,mission_id,command_id,from_participant,target,kind,content,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id,model_route,external_request_id
+                                         FROM operator_messages
+                                         WHERE correlation_id=?
+                                         ORDER BY created_at DESC,message_id DESC LIMIT ?""",(correlation_id,limit)).fetchall()]
+    rows=list(reversed(rows))
+    suppressed=[]
+    latest_valid={}
+    for message in rows:
+        if message.get("kind")!="RESPONSE":continue
+        leg=_conversation_response_leg(conn,message)
+        message["conversation_valid"]=leg is not None
+        message["conversation_leg"]=leg
+        if leg and message.get("causation_id"):
+            latest_valid[(message["causation_id"],leg)]=message
+        else:
+            suppressed.append(message["message_id"])
+    visible=[]
+    latest_ids={m["message_id"] for m in latest_valid.values()}
+    source_ids={m.get("message_id") for m in rows if m.get("kind")=="MESSAGE"}
+    for message in rows:
+        if message.get("kind")=="RESPONSE":
+            if message.get("message_id") not in latest_ids and message.get("message_id") not in suppressed:suppressed.append(message["message_id"])
+            continue
+        if message.get("kind")=="MESSAGE":
+            route=str(message.get("model_route") or "LOCAL").upper()
+            required=("LOCAL","SAAS") if route=="DUAL" else ((route,) if route in {"LOCAL","SAAS"} else ("LOCAL",))
+            replies=[latest_valid.get((message.get("message_id"),leg)) for leg in required]
+            replies=[reply for reply in replies if reply]
+            if len(replies)==len(required):message["conversation_state"]="ANSWERED"
+            elif replies:message["conversation_state"]="PARTIAL"
+            else:message["conversation_state"]=message.get("state")
+            visible.append(message)
+            for reply in replies:
+                reply["conversation_state"]="DELIVERED";visible.append(reply)
+            continue
+        visible.append(message)
+    for (causation,_leg),reply in latest_valid.items():
+        if causation not in source_ids:
+            reply["conversation_state"]="DELIVERED";visible.append(reply)
+    ids={m["message_id"] for m in visible}
+    deliveries=[dict(r) for r in conn.execute("""SELECT d.* FROM operator_message_deliveries d
+                                                 JOIN operator_messages m ON m.message_id=d.message_id
+                                                 WHERE m.correlation_id=?
+                                                 ORDER BY m.created_at,d.recipient""",(correlation_id,)).fetchall()
+                if r["message_id"] in ids]
+    mission_ids=[]
+    seen=set()
+    for message in rows:
+        mid=message.get("mission_id")
+        if isinstance(mid,str) and mid not in seen:
+            seen.add(mid);mission_ids.append(mid)
+    return {"schema":"lion.operator-thread-projection/v1","correlation_id":correlation_id,"messages":visible,"message_deliveries":deliveries,"mission_ids":mission_ids,"suppressed_response_ids":suppressed,"authority_effect":"NONE"}
+
+def mission_snapshot(conn,mission_id,now_fn=None):
+    control=control_state(conn,mission_id,None) or _legacy_default_state(mission_id);commands=[dict(r) for r in conn.execute("SELECT command_id,action,target,principal_id,effective_priority,delivery_state,admission_state,execution_state,observation_state,created_at,completed_at FROM operator_commands WHERE mission_id=? ORDER BY admitted_at DESC LIMIT 50",(mission_id,))];messages=[dict(r) for r in conn.execute("SELECT message_id,command_id,from_participant,target,kind,content,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id,model_route,external_request_id FROM operator_messages WHERE mission_id=? ORDER BY created_at DESC LIMIT 200",(mission_id,))];[(m.__setitem__('conversation_leg',_conversation_response_leg(conn,m)),m.__setitem__('conversation_valid',_conversation_response_leg(conn,m) is not None)) for m in messages if m.get('kind')=='RESPONSE' and m.get('correlation_id')];deliveries=[dict(r) for r in conn.execute("SELECT d.* FROM operator_message_deliveries d JOIN operator_messages m ON m.message_id=d.message_id WHERE m.mission_id=? ORDER BY m.created_at,d.recipient",(mission_id,))];return {"schema":"lion.operator-mission-projection/v1","mission_id":mission_id,"control":control,"commands":commands,"messages":messages,"message_deliveries":deliveries,"control_capabilities":{"block_new_admissions":"SUPPORTED","cancel_ready_assignments":"SUPPORTED","cancel_inflight":"BEST_EFFORT_CHECKPOINT_REQUIRED","remote_unreachable_worker":"LEASE_EXPIRY_ONLY","emergency_helper":"PREPROVISIONED_EXACT_INVENTORY_ONLY"},"operator":participant_snapshot(conn),"operator_proxy":participant_snapshot(conn,SENTINELX_PROXY_PRINCIPAL),"authority_effect":"NONE"}
+def force_epoch_at_least(conn,mission_id,minimum_epoch,now_fn,*,incarnation_id=None):
+    if type(minimum_epoch) is not int or minimum_epoch<1:raise ValueError("minimum epoch")
+    state=ensure_control_state(conn,mission_id,now_fn);changed=False
+    if int(state["control_epoch"])<minimum_epoch:conn.execute("UPDATE mission_operator_control SET control_epoch=?,incarnation_id=?,control_owner=?,pause_latch=1,stop_latch=1,updated_at=? WHERE mission_id=?",(minimum_epoch,incarnation_id or ("incarnation-"+uuid.uuid4().hex),PRIMARY_OPERATOR,now_fn(),mission_id));_driver_fence(conn,mission_id,now_fn,state="STOPPED",reason="EPOCH_FLOOR_RECONCILIATION");_fence_assignments(conn,mission_id,now_fn);changed=True
+    conn.commit();return {**ensure_control_state(conn,mission_id,now_fn),"reconciled":changed}

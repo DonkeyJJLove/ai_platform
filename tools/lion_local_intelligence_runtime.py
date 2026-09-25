@@ -744,4 +744,85 @@ def control_plane_recon_observer_once(control,broker,gitprov,thread_db,repo,mode
     local=gitprov('head_tree',{});status=gitprov('status',{});gh=broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result'];model=broker.call('MAT09','model_health',{})['result'];thread=_recon_thread_db(thread_db);sources=_recon_source_snapshot(repo);features=_recon_source_features(repo);saas=control('saas_status',{})
     fingerprint,feature_digest=_recon_observation_fingerprint(phase=phase,runtime_loaded_sha=RUNTIME_LOADED_SOURCE_SHA,gateway_loaded_sha=GATEWAY_LOADED_SOURCE_SHA,features=features,local=local,github={'head':gh.get('head'),'tree':gh.get('tree')},thread_identity=thread.get('identity_digest'))
     for msg in snap.get('protocol_messages') or []:
-        payload=msg.
+        payload=msg.get('payload') or {}
+        if msg.get('phase')==phase and payload.get('event')=='CONTROL_PLANE_WINDOWS_OBSERVATION' and payload.get('source_fingerprint')==fingerprint:return {'idempotent':True,'source_fingerprint':fingerprint}
+    health=model.get('health') if isinstance(model,dict) else None;health_state=(health or {}).get('status') if isinstance(health,dict) else None
+    payload={'event':'CONTROL_PLANE_WINDOWS_OBSERVATION','schema':RECON_WINDOWS_SCHEMA,'source_fingerprint':fingerprint,'snapshot':{
+      'runtime':{'pid':os.getpid(),'runtime_started_at':RUNTIME_STARTED_AT,'python_runtime':sys.version.split()[0],'argv':[str(x) for x in sys.argv],'runtime_source_sha256':RUNTIME_LOADED_SOURCE_SHA,'runtime_file_sha256':runtime_file_sha,'gateway_source_sha256':GATEWAY_LOADED_SOURCE_SHA,'gateway_file_sha256':gateway_file_sha,'feature_vector_digest':feature_digest,'frontend_revision':frontend,'mission_control_url':getattr(control,'base',None),'model_endpoint':model_url},
+      'repo':{'local_head':local.get('head'),'local_tree':local.get('tree'),'status_count':len(status) if isinstance(status,list) else None,'github_master':{'head':gh.get('head'),'tree':gh.get('tree')}},
+      'thread_db':thread,
+      'model':{'endpoint':model_url,'health':health_state or model.get('status') if isinstance(model,dict) else 'UNKNOWN','model_count':len(model.get('models') or []) if isinstance(model,dict) else None,'model_ids':[x.get('id') for x in (model.get('models') or []) if isinstance(x,dict)] if isinstance(model,dict) else []},
+      'sources':sources,'source_features':features,
+      'provider_graph':['MAT01_LOCAL_REPOSITORY_CURRENTNESS','MAT02_LOCAL_REPOSITORY_CONTENT','MAT04_FEDERATION_CURRENTNESS','MAT09_MODEL_GPU_OBSERVER','MISSION_CONTROL_8766','THREAD_DB'],
+      'saas_projection':(saas.get('supervisor_projection') if isinstance(saas,dict) else None) or saas,
+    },'authority_effect':'NONE'}
+    return control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':payload})
+
+
+def control_plane_recon_observer_loop(control,broker,gitprov,thread_db,repo,model_url,stop_event):
+    while not stop_event.is_set():
+        try:control_plane_recon_observer_once(control,broker,gitprov,thread_db,repo,model_url)
+        except Exception:pass
+        stop_event.wait(2)
+
+
+def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
+    """Windows-side LOCAL canary producer for the self-hosting gate.
+
+    Mission Control runs in WSL and must not probe Windows 127.0.0.1:8772.
+    This loop executes the proposal-only local model in its own namespace and
+    posts evidence only; it never advances a phase or grants authority.
+    """
+    while not stop_event.is_set():
+        try:
+            recent=control('recent',{})
+            mid=recent.get('focus_mission_id')
+            if mid:
+                snap=control('process',{'mission_id':mid})
+                phase=(snap.get('process') or {}).get('current_phase')
+                if phase=='LIVE_AUTONOMY_CANARY':
+                    exists=False
+                    for msg in snap.get('protocol_messages') or []:
+                        payload=msg.get('payload') or {}
+                        if msg.get('protocol')=='EVIDENCE' and msg.get('from_id')=='LPCL_PANEL' and msg.get('phase')==phase and payload.get('event')=='LOCAL_MODEL_CANARY_PASS':
+                            exists=True;break
+                    if not exists:
+                        prompt='LOCAL self-hosting inference canary: return any concise non-empty response.'
+                        answer=str(modelprov([{'role':'system','content':'You are the proposal-only local LION cognitive executor. Return a concise response.'},{'role':'user','content':prompt}],64)).strip()
+                        rd=hashlib.sha256(answer.encode('utf-8')).hexdigest()
+                        pd=hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+                        if answer:
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_PASS','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'response_bytes':len(answer.encode('utf-8')),'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK','authority_effect':'NONE'}})
+                        else:
+                            control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'LOCAL_MODEL_CANARY_EMPTY','model':'gpt-oss-20b-MXFP4','prompt_digest':pd,'response_digest':rd,'authority_effect':'NONE'}})
+                elif phase=='READY_FOR_SYSTEM_ACCEPTANCE_TESTS':
+                    exists=False
+                    for msg in snap.get('protocol_messages') or []:
+                        payload=msg.get('payload') or {}
+                        if msg.get('protocol')=='EVIDENCE' and msg.get('from_id')=='LPCL_PANEL' and msg.get('phase')==phase and payload.get('event')=='WINDOWS_CONTROL_SURFACE_READBACK':
+                            exists=True;break
+                    if not exists:
+                        panel=_json_request(f'http://127.0.0.1:{panel_port}/health',timeout=3)
+                        models=_json_request(model_url.rstrip('/')+'/v1/models',timeout=5)
+                        model_count=len(models.get('data') or []) if isinstance(models,dict) else 0
+                        control('post_message',{'mission_id':mid,'protocol':'EVIDENCE','from_id':'LPCL_PANEL','to_id':'MISSION_EXECUTION_DRIVER','phase':phase,'payload':{'event':'WINDOWS_CONTROL_SURFACE_READBACK','panel_http':200 if panel.get('status')=='ok' else 0,'panel_authority_effect':panel.get('authority_effect'),'model_http':200,'model_count':model_count,'model_id':'gpt-oss-20b-MXFP4','authority_effect':'NONE'}})
+        except Exception:
+            pass
+        stop_event.wait(5)
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--operator-control-url',default='http://127.0.0.1:8767');p.add_argument('--operator-key-file');p.add_argument('--operator-panel-proxy-key-file');p.add_argument('--operator-pairing-key-file');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');a=p.parse_args()
+    if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
+    b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
+    operator_key_file=a.operator_panel_proxy_key_file or a.operator_key_file
+    operator=OperatorControlBridge(a.operator_control_url,operator_key_file,a.operator_pairing_key_file) if operator_key_file else None
+    g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads,operator_provider=operator)
+    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
+    for material_id in ('MD025','MD026','MD027'):
+        threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
+    threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
+    from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
+    threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
+    try: serve_gateway(g,a.port)
+    finally: canary_stop.set()
+if __name__=='__main__':main()
