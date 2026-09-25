@@ -7,7 +7,7 @@ Następnie odtwórz live Git/CI/runtime w zakresie pytania, przeczytaj canonical
 
 PROCESS_CONTRACT_PLANE: dla pracy obejmującej LPCL, Mission Control, fazy, scheduler, capability, generic execution lub phase completion przeczytaj `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md` przed projektowaniem wykonania. Obowiązuje `PHASE_INTENT != PHASE_EXECUTION_CONTRACT != CAPABILITY_BINDING != ACTION_IR != EFFECT != COMPLETION`. LPCL/1.2 wymaga jawnego kontraktu fazy; LPCL/1.1 pozostaje kompatybilny przez fail-closed `LEGACY_INFERRED_SAFE`. Capability binding i effect ceiling nie są authority.
 
-## Routing
+V1_5_CANDIDATE: when a mission explicitly targets architecture epoch 1.5 cognitive evolution, read `LION/architecture/v1_5/README.md` after live reacquisition. This route is candidate context only and does not replace v1.4 live truth, authority lifecycle, or RAG currentness.\n\n## Routing
 
 - Relacje i hipotezy: [TIGER_GEOMETRY](LION/codex/TIGER_GEOMETRY.md).
 - Literalna struktura wejścia: [SCAFFOLDING_PROTOCOL](LION/codex/SCAFFOLDING_PROTOCOL.md).

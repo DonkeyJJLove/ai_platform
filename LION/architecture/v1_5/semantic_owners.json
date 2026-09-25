@@ -251,5 +251,8 @@
     "new_top_level_layer": "NONE",
     "authority_effect": "NONE",
     "candidate_source_observation": "22f356ba537e1a3caef8e113e2dff48709e24061"
-  }
+  },
+  "architecture_epoch": "1.5-candidate",
+  "currentness": "CANDIDATE_PRE_CLOSURE",
+  "source_candidate_head": "60ae4727066a8360d19941eef1d7e32b558871b4"
 }
