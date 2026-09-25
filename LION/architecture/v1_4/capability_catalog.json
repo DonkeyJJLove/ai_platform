@@ -526,12 +526,135 @@
       "test_evidence": [
         "execution_digest 9b01fc231170b1e156a9e3b4b1fbb10c34ccb8086e074328d5b6f5d163789532"
       ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for inert contract/projection use; existing external authority remains required for consequential effects",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "currentness": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+      "effect_class": "NONE",
+      "runtime_state": "CANDIDATE_NON_EFFECTFUL",
+      "target_successor": null,
+      "negative_evidence": [],
+      "capability_id": "CAP-COGNITIVE-INVOCATION",
+      "consumer": "fleet/process/model coordination",
+      "contract": "cyber_lion/contracts/cognitive_invocation.py",
+      "description": "typed provider/endpoint/session/invocation/attempt/currentness/reconciliation identities across LOCAL and SAAS legs",
+      "documentation_owner": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+      "provider": "CognitiveInvocation contracts",
+      "failure_modes": [
+        "transport ready misread as cognition complete",
+        "session bound misread as model ready",
+        "dual-leg identity collapse",
+        "receipt misread as correct result"
+      ],
+      "test_evidence": [
+        "test_cognitive_invocation_contract.CognitiveInvocationTests"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for inert contract/projection use; existing external authority remains required for consequential effects",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "currentness": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+      "effect_class": "NONE",
+      "runtime_state": "CANDIDATE_NON_EFFECTFUL",
+      "target_successor": null,
+      "negative_evidence": [],
+      "capability_id": "CAP-EBLE-PROJECTION",
+      "consumer": "EvolutionaryRnD/evaluation",
+      "contract": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "description": "read-only evidence-bound learning episode with time-safe pre-decision reconstruction and bridge into existing EvidenceObservation",
+      "documentation_owner": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+      "provider": "EvidenceBoundLearningEpisode",
+      "failure_modes": [
+        "future-information leakage",
+        "teacher output promoted to ground truth",
+        "UNKNOWN relabeled positive/negative"
+      ],
+      "test_evidence": [
+        "test_evidence_bound_learning_episode.EBLETests"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for inert contract/projection use; existing external authority remains required for consequential effects",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "currentness": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+      "effect_class": "NONE",
+      "runtime_state": "CANDIDATE_NON_EFFECTFUL",
+      "target_successor": null,
+      "negative_evidence": [],
+      "capability_id": "CAP-MODEL-RELEASE-IDENTITY",
+      "consumer": "model invocation/evaluation",
+      "contract": "cyber_lion/contracts/model_release.py",
+      "description": "immutable model package identity across weights/adapter/tokenizer/template/prompt/tools/runtime/knowledge",
+      "documentation_owner": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+      "provider": "ModelRelease",
+      "failure_modes": [
+        "in-place release mutation",
+        "lifecycle state confused with release identity"
+      ],
+      "test_evidence": [
+        "test_model_release.ModelReleaseTests"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for inert contract/projection use; existing external authority remains required for consequential effects",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "currentness": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+      "effect_class": "NONE",
+      "runtime_state": "CANDIDATE_NON_EFFECTFUL",
+      "target_successor": null,
+      "negative_evidence": [],
+      "capability_id": "CAP-MODEL-CALL-V2",
+      "consumer": "Mission Control / cognitive invocation",
+      "contract": "cyber_lion/contracts/model_call_v2.py",
+      "description": "compatible model-call/v2 provenance with invocation/attempt/provider/release/transport/causal refs and SentinelX representation",
+      "documentation_owner": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+      "provider": "ModelCallV2 projection",
+      "failure_modes": [
+        "silent v1 enum widening",
+        "missing v1 row treated as proof of no invocation"
+      ],
+      "test_evidence": [
+        "test_model_call_v2.ModelCallV2Tests"
+      ]
+    },
+    {
+      "authority_ceiling": "NONE",
+      "authority_required": "NONE for inert contract/projection use; existing external authority remains required for consequential effects",
+      "consumer_repository": "DonkeyJJLove/ai_platform",
+      "provider_repository": "DonkeyJJLove/ai_platform",
+      "currentness": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+      "effect_class": "NONE",
+      "runtime_state": "CANDIDATE_NON_EFFECTFUL",
+      "target_successor": null,
+      "negative_evidence": [],
+      "capability_id": "CAP-COORDINATOR-COMPETENCY-EVIDENCE",
+      "consumer": "evaluation / local coordinator development",
+      "contract": "cyber_lion/contracts/coordinator_competency.py",
+      "description": "ten separate coordinator competency evidence records without aggregate quality score",
+      "documentation_owner": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+      "provider": "CoordinatorCompetencyProfile",
+      "failure_modes": [
+        "aggregate score hides competency failure",
+        "competence widens authority"
+      ],
+      "test_evidence": [
+        "test_coordinator_competency.CoordinatorCompetencyTests"
+      ]
     }
   ],
   "reconciliation": {
-    "candidate_source_observation": "PENDING_FINAL_CANDIDATE_SHA",
-    "process_epoch": "EPOCH3_CLOSURE",
-    "rule": "Live/deployed evidence is materialized into isolated candidate; no documentation statement self-promotes publication, merge or authority."
+    "process_epoch": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+    "candidate_source_observation": "22f356ba537e1a3caef8e113e2dff48709e24061",
+    "rule": "Candidate capabilities are inert/source-bound and do not self-promote runtime, training, model promotion or authority."
   },
   "schema": "lion.documentation.capability-catalog.v1"
 }

@@ -1,0 +1,44 @@
+{
+  "schema": "lion.rag-v15-record-migration-map/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "migrations": [
+    {
+      "source": "lion.model-call/v1",
+      "target": "lion.model-call/v2",
+      "mode": "READ_ONLY_PROJECTION",
+      "old_storage_mutated": false,
+      "rule": "missing v1 record != proof of no SaaS invocation"
+    },
+    {
+      "source": "ModelPlaneIdentity",
+      "target": "ModelReleaseRef",
+      "mode": "IDENTITY_ONLY_UNRESOLVED",
+      "rule": "adapter does not claim full ModelRelease component identity"
+    },
+    {
+      "source": "EvidenceBoundLearningEpisode",
+      "target": "EvolutionaryRnD/EvidenceObservation",
+      "mode": "READ_ONLY_EVIDENCE_BRIDGE",
+      "rule": "no new learning-promotion engine"
+    },
+    {
+      "source": "CIP research contracts",
+      "target": "cyber_lion/contracts/cognitive_invocation.py",
+      "mode": "MINIMAL_CANONICAL_SUCCESSOR",
+      "rule": "research package not copied 1:1"
+    },
+    {
+      "source": "EBLE research design",
+      "target": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "mode": "MINIMAL_CANONICAL_SUCCESSOR",
+      "rule": "teacher output and receipts remain non-ground-truth evidence classes"
+    }
+  ],
+  "candidate_binding": {
+    "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+    "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+    "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+    "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf"
+  }
+}

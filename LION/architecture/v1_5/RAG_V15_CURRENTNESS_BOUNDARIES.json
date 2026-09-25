@@ -1,0 +1,54 @@
+{
+  "schema": "lion.rag-v15-currentness-boundaries/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "boundaries": {
+    "live_master": {
+      "repository": "DonkeyJJLove/ai_platform",
+      "head": "1217e1536af5bfbb6ed81d548e9844af48883bff",
+      "tree": "e23a043012d5bf865af4f398c0a2cc53c94c36d2",
+      "role": "LIVE_BASELINE"
+    },
+    "task1": {
+      "head": "35a2d87af643a24f90cf4e6bc84f5f5fdaba734e",
+      "tree": "f3443d9ac51b66f1309311dc56706489dbc8b0c7",
+      "role": "STACKED_PREDECESSOR_CANDIDATE"
+    },
+    "task2": {
+      "branch": "mission/v15-cip-eble-cognitive-evolution-r1",
+      "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+      "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+      "source_head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+      "source_tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+      "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+      "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf",
+      "verification_head": "5ca1832fc271614dcc41de17eb208229cd81107e",
+      "verification_tree": "02313f7eb888be72aff6fb2e6d323634f82c9088",
+      "verification_core_run": 36158426570,
+      "role": "CURRENT_CANDIDATE_SOURCE_CLOSED"
+    },
+    "related_chunk_chunk": {
+      "head": "b8657037e94787a103c99f1fbb3058341821ffd7",
+      "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
+      "role": "READ_ONLY_HMK9D_SOURCE"
+    },
+    "preferred_rag_release": {
+      "release": "lion-rag32-v1.4-r9-auth-lifecycle-candidate",
+      "role": "VERSIONED_CONTEXT_NOT_LIVE_TRUTH"
+    },
+    "open_prs": [
+      381,
+      382,
+      383,
+      384,
+      385,
+      386
+    ]
+  },
+  "invariants": [
+    "Task2 does not inherit Task1 currentness from report text",
+    "STACKED_CANDIDATE requires exact predecessor ancestry",
+    "open PR content is not promoted into Task2 baseline",
+    "training/model promotion/authority expansion remain NONE"
+  ]
+}

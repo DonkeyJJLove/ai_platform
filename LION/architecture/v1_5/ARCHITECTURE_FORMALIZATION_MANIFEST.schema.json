@@ -1,0 +1,358 @@
+{
+  "$defs": {
+    "transition": {
+      "additionalProperties": false,
+      "properties": {
+        "compatibility_adapter": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exit_condition": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "steps",
+        "compatibility_adapter",
+        "exit_condition"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "lion.architecture-formalization-manifest/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "affected_concepts": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "authority_effect": {
+      "const": "NONE"
+    },
+    "baseline": {
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "head": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        },
+        "tree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "branch",
+        "head",
+        "tree"
+      ],
+      "type": "object"
+    },
+    "change_class": {
+      "enum": [
+        "ARCHITECTURE_CONCEPT",
+        "CAPABILITY",
+        "CONTRACT",
+        "CURRENTNESS",
+        "DOCUMENTATION",
+        "EVAL",
+        "FLOW",
+        "MIXED_ARCHITECTURE",
+        "RAG",
+        "SEMANTIC_OWNER"
+      ]
+    },
+    "currentness_invalidations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "discoverability": {
+      "additionalProperties": false,
+      "properties": {
+        "bootstrap_routes": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "max_reads_to_owner": {
+          "maximum": 16,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "probe_questions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "bootstrap_routes",
+        "probe_questions",
+        "max_reads_to_owner"
+      ],
+      "type": "object"
+    },
+    "evals_required": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "execution_effect": {
+      "const": "NONE"
+    },
+    "falsifiers": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "formalization_updates": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operation": {
+            "enum": [
+              "UPDATE",
+              "REGENERATE",
+              "ADD",
+              "SUPERSEDE",
+              "VALIDATE_ONLY",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifact_id",
+          "operation",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "layer_bindings": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "concept": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "new_top_level_layer_required": {
+            "const": false
+          }
+        },
+        "required": [
+          "concept",
+          "layers",
+          "new_top_level_layer_required"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "manifest_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "manifest_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "migration": {
+      "$ref": "#/$defs/transition"
+    },
+    "rag_delta": {
+      "additionalProperties": false,
+      "properties": {
+        "record_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "retrieval_probes": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "required",
+        "record_ids",
+        "retrieval_probes"
+      ],
+      "type": "object"
+    },
+    "rollback": {
+      "$ref": "#/$defs/transition"
+    },
+    "schema_id": {
+      "const": "lion.architecture-formalization-manifest/v1"
+    },
+    "semantic_owner_delta": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "concept": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operation": {
+            "enum": [
+              "ADD",
+              "UPDATE",
+              "REPLACE",
+              "REMOVE",
+              "VALIDATE_ONLY"
+            ]
+          },
+          "primary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "secondary": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "concept",
+          "primary",
+          "secondary",
+          "operation"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "source_evolution_delta": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "ref": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "tests_required": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_id",
+    "manifest_id",
+    "baseline",
+    "source_evolution_delta",
+    "change_class",
+    "affected_concepts",
+    "layer_bindings",
+    "semantic_owner_delta",
+    "formalization_updates",
+    "currentness_invalidations",
+    "migration",
+    "rollback",
+    "tests_required",
+    "evals_required",
+    "falsifiers",
+    "discoverability",
+    "rag_delta",
+    "authority_effect",
+    "execution_effect",
+    "manifest_digest"
+  ],
+  "title": "ArchitectureFormalizationManifest",
+  "type": "object"
+}
