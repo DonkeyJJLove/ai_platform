@@ -46,8 +46,10 @@ class Task2FormalizationClosureTests(unittest.TestCase):
         self.assertEqual(c.decision,"PASS");self.assertEqual(c.currentness_result,"CURRENT_CANDIDATE");self.assertFalse(c.unknowns)
     def test_closure_binds_exact_source_candidate(self):
         c=closure()
-        self.assertEqual(c.candidate.head,"f72d3becd1c16e25f62e1f90999beeb7f54855ef")
-        self.assertEqual(c.candidate.tree,"faf1f77e46ccc983346262130e084abfe381c5c3")
+        boundary=json.loads((V15/"RAG_V15_CURRENTNESS_BOUNDARIES.json").read_text(encoding="utf-8"))["boundaries"]["task2"]
+        self.assertEqual(c.candidate.head,boundary["source_head"])
+        self.assertEqual(c.candidate.tree,boundary["source_tree"])
+        self.assertEqual(c.closure_digest,boundary["formalization_closure_digest"])
     def test_all_task3_inputs_are_current_candidate(self):
         for name in ("RAG_V15_SOURCE_SET.json","RAG_V15_SEMANTIC_OWNER_SET.json","RAG_V15_RECORD_MIGRATION_MAP.json","RAG_V15_SUPERSESSION_MAP.json","RAG_V15_REQUIRED_RETRIEVAL_PROBES.json","RAG_V15_CURRENTNESS_BOUNDARIES.json"):
             self.assertEqual(json.loads((V15/name).read_text(encoding="utf-8"))["currentness"],"CURRENT_CANDIDATE")
