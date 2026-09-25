@@ -56,9 +56,9 @@
   "training_effect": "NONE",
   "model_promotion_effect": "NONE",
   "candidate_binding": {
-    "head": "f72d3becd1c16e25f62e1f90999beeb7f54855ef",
-    "tree": "faf1f77e46ccc983346262130e084abfe381c5c3",
-    "truth_subject": "f69d592f4e30399d1a2347365e7d2f4df7aea02507bf067268007eb5d99ae6a0",
-    "formalization_closure_digest": "7529d5708431c104b47eb1c03147c106bc6db20466797a15ec2c8fde9df520b1"
+    "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+    "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+    "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+    "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf"
   }
 }
