@@ -48,15 +48,6 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn("body:'{}'",t)
         self.assertIn("PAIRING · lokalny OTP",t)
 
-    def test_boot_auto_pairs_local_operator_session_before_opening_thread(self):
-        t=self.ui
-        self.assertIn('async function ensureOperatorSession()',t)
-        self.assertIn("operatorApi('/api/operator/session')",t)
-        self.assertIn('await operatorPair();return operatorSessionPaired',t)
-        self.assertIn('await ensureOperatorSession();await refreshOperator();',t)
-        self.assertLess(t.index('await ensureOperatorSession();await refreshOperator();'),t.index("if(threads.length)await openThread"))
-        self.assertNotIn('id="operatorPairing"',t)
-
     def test_thread_rename_is_inline_and_has_http_readback(self):
         t=self.ui
         self.assertNotIn("prompt('Nowa nazwa wątku:",t)
@@ -64,6 +55,14 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('data-rename-save',t)
         self.assertIn('saveRenameThread',t)
         self.assertIn("if(!r.ok)throw new Error",t)
+
+    def test_boot_establishes_local_operator_session_before_bus_polling(self):
+        t=self.ui
+        self.assertIn('async function ensureOperatorSession()',t)
+        self.assertIn("const session=await operatorApi('/api/operator/session')",t)
+        self.assertIn('await operatorPair();return operatorSessionPaired',t)
+        self.assertIn('await ensureOperatorSession();await refreshOperator()',t)
+        self.assertNotIn('Promise.allSettled([refreshThreads(),refreshMissions(),state(),refreshOperator()])',t)
 
     def test_thread_history_uses_correlation_projection_across_mission_rebinds(self):
         t=self.ui
@@ -76,6 +75,17 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
     def test_conversation_state_overrides_raw_fanout_state_in_ui(self):
         t=self.ui
         self.assertIn('m.conversation_state||m.state',t)
+
+    def test_hmk9d_process_trace_is_projected_read_only_into_thread_ui(self):
+        t=self.ui
+        self.assertIn("'hmk9d':thread_state.get('hmk9d')",t)
+        self.assertIn('PROCESS SEMANTICS · HMK-9D',t)
+        self.assertIn('HMK-9D Process Trace',t)
+        self.assertIn('function renderHmk9d(x)',t)
+        self.assertIn("['AUTH','NONE']",t)
+        self.assertIn("last.bridge_id||'—'",t)
+        self.assertIn("human.material_worker_id||locus.material_worker_id",t)
+        self.assertIn("human.model_declared||human.provider",t)
 
     def test_delivery_observability_is_aggregated_not_inlined_per_recipient(self):
         t=self.ui
