@@ -91,7 +91,10 @@ class ThreadBindingTests(unittest.TestCase):
             store('rename',{'thread_id':a['thread_id'],'title':'A2'})
             order=[x['thread_id'] for x in store('list',{})['threads']]
             self.assertEqual(order,[b['thread_id'],a['thread_id']])
-            reopened=ThreadStore(Path(td)/'threads.db');self.assertEqual(reopened('get',{'thread_id':a['thread_id']})['context']['mission_id'],'M1')
+            route=store('set_model_route',{'thread_id':a['thread_id'],'model_route':'DUAL'});self.assertEqual(route['model_route'],'DUAL');self.assertEqual(route['route_revision'],2)
+            reopened=ThreadStore(Path(td)/'threads.db');got2=reopened('get',{'thread_id':a['thread_id']});self.assertEqual(got2['context']['mission_id'],'M1');self.assertEqual(got2['model_route'],'DUAL');self.assertEqual(got2['route_revision'],2)
+            listed={x['thread_id']:x for x in reopened('list',{})['threads']};self.assertEqual(listed[a['thread_id']]['model_route'],'DUAL')
+            with self.assertRaises(ValueError):reopened('set_model_route',{'thread_id':a['thread_id'],'model_route':'AUTO'})
             with self.assertRaises(ValueError):reopened('bind',{'thread_id':a['thread_id'],'mission_id':'M1','target':'http://not-a-lion-target'})
             unbound=reopened('unbind',{'thread_id':a['thread_id']});self.assertEqual(unbound['binding_state'],'MISSION_UNBOUND')
 
@@ -128,10 +131,11 @@ class PanelBusHttpIntegrationTests(unittest.TestCase):
             try:
                 root=opener.open(base+'/',timeout=5).read().decode();csrf=re.search(r"const OPERATOR_CSRF='([^']+)'",root).group(1)
                 status,pair=req('/api/operator/pair',{},csrf);self.assertEqual(status,201);self.assertTrue(pair['paired'])
-                status,created=req('/api/threads',{});self.assertEqual(status,201);tid=created['thread_id']
+                status,created=req('/api/threads',{});self.assertEqual(status,201);tid=created['thread_id'];self.assertEqual(created['model_route'],'LOCAL')
+                status,routed=req('/api/threads/'+tid+'/model-route',{'model_route':'SAAS'},csrf);self.assertEqual(status,200);self.assertEqual(routed['model_route'],'SAAS')
                 status,bound=req('/api/threads/'+tid+'/context',{'action':'BIND','mission_id':'M1','target':'drone:MD025'},csrf);self.assertEqual(bound['binding_state'],'MISSION_BOUND')
                 client_id='c'*32
-                status,sent=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(g.commands[0]['correlation_id'],tid);self.assertEqual(g.commands[0]['target'],'drone:MD025')
+                status,sent=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(sent['model_route'],'SAAS');self.assertEqual(g.commands[0]['correlation_id'],tid);self.assertEqual(g.commands[0]['target'],'drone:MD025');self.assertEqual(g.commands[0]['payload']['model_route'],'SAAS')
                 status,sent2=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(g.commands[0]['command_id'],g.commands[1]['command_id'])
                 status,view=req('/api/threads/'+tid+'/bus');self.assertEqual(status,200);self.assertEqual(view['messages'][0]['correlation_id'],tid);self.assertEqual(view['messages'][0]['content'],'status now')
                 try:req('/api/threads/'+tid+'/chat',{'message':'must not route','route':'SAAS'})
