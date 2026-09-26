@@ -40,6 +40,36 @@ class PhaseControlTests(unittest.TestCase):
         self.assertRegex(caps['RECHECK']['operation_token'],r'^[0-9a-f]{64}$')
         self.assertNotIn('PASS',caps)
 
+    def test_active_supervisor_request_fences_duplicate_resolution_actions(self):
+        snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE'
+        snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'})
+        snap['phases'][0]['status']='BLOCKED'
+        snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}]
+        snap['phase_evidence_counts']={'ONE':4}
+        snap['phase_curriculum']={'runs':{'ONE':{'state':'WAITING_SUPERVISOR','resolution':{
+            'state':'WAITING_SUPERVISOR',
+            'supervisor_request':{'request_id':'saas-1','status':'WAITING_SUPERVISOR','progress_state':'WAITING_SUPERVISOR'}
+        }}}}
+        caps=phase_capabilities(snap,'ONE')
+        for action in ('RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE'):
+            self.assertFalse(caps[action]['supported'])
+            self.assertEqual(caps[action]['reason'],'SUPERVISOR_REQUEST_ACTIVE')
+        self.assertTrue(caps['PAUSE']['supported'])
+        self.assertTrue(caps['STOP']['supported'])
+
+    def test_supervisor_request_identity_is_bound_into_operation_token(self):
+        snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE'
+        snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'})
+        snap['phases'][0]['status']='BLOCKED'
+        snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}]
+        snap['phase_evidence_counts']={'ONE':4}
+        one=phase_capabilities(snap,'ONE')['INSPECT']['operation_token']
+        snap['phase_curriculum']={'runs':{'ONE':{'resolution':{
+            'state':'WAITING_SUPERVISOR','supervisor_request':{'request_id':'saas-1','status':'WAITING_SUPERVISOR'}
+        }}}}
+        two=phase_capabilities(snap,'ONE')['INSPECT']['operation_token']
+        self.assertNotEqual(one,two)
+
     def test_operation_token_changes_with_evidence_revision_and_gate(self):
         snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE';snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'});snap['phases'][0]['status']='BLOCKED';snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}];snap['phase_evidence_counts']={'ONE':4}
         one=phase_capabilities(snap,'ONE')['RECHECK']['operation_token']
