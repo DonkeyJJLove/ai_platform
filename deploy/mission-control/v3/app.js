@@ -47,14 +47,27 @@ function semanticDetail(key,title,fields,raw,escape){
 }
 
 function phaseCard(phase,mission,escape){
-  const caps=phase.capabilities||{};
+  const caps=phase.capabilities||{},activity=phase.activity||{};
   const supported=Object.entries(caps).filter(([a,c])=>a!=='INSPECT'&&c&&c.supported===true).map(([a])=>a);
   const fields=[['State',phase.status??phase.state],['Progress',phase.progress===null||phase.progress===undefined?null:phase.progress+'%'],['Handler',phase.handler_id],['Handler version',phase.handler_version],['Blocker',phase.blocker],['Plan state',phase.plan_state],['Completion',phase.completion_predicates],['Checks',phase.completion_checks],['Currentness',phase.currentness_requirements],['Evidence required',phase.evidence_requirements],['Evidence count',phase.evidence_count],['Detail',phase.detail],['Control',supported.join(' / ')||phase.control_unavailable_reason||(caps.PAUSE&&caps.PAUSE.reason)||'INSPECTION_ONLY']];
+  const age=ts=>{const t=Date.parse(ts||'');if(!Number.isFinite(t))return 'no activity';let s=Math.max(0,Math.floor((Date.now()-t)/1000));if(s<5)return 'now';if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m '+(s%60)+'s ago';if(s<86400)return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m ago';return Math.floor(s/86400)+'d ago'};
+  const life=String(phase.activity_state||activity.state||phase.status||'UNKNOWN').toUpperCase();
+  const lifeClass=life.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  const lifeLabels={READY_TO_ADVANCE:'READY TO ADVANCE',EXECUTING:'LIVE · EXECUTING',WAITING_LOCAL:'LIVE · WAITING LOCAL',WAITING_EVIDENCE:'LIVE · WAITING EVIDENCE',WAITING:'LIVE · WAITING',BLOCKED:'BLOCKED',PAUSED:'PAUSED',STOPPED:'STOPPED',COMPLETE:'COMPLETE',PENDING:'PENDING'};
+  const current=activity.is_current===true?'<span class="phase-current">CURRENT</span>':'';
+  const details=[];
+  if(activity.last_activity_at)details.push((activity.last_activity_kind||'ACTIVITY')+' '+age(activity.last_activity_at));
+  if(activity.scheduler_heartbeat_at)details.push('scheduler '+age(activity.scheduler_heartbeat_at));
+  if(activity.driver_heartbeat_at)details.push('driver '+age(activity.driver_heartbeat_at));
+  if(activity.next_expected&&activity.next_expected!=='NONE')details.push('NEXT '+activity.next_expected);
+  if(activity.blocking_gate)details.push('GATE '+activity.blocking_gate);
+  if(activity.auto_resume_armed)details.push('AUTO-RESUME ARMED');
+  const lifeBar='<div class="phase-liveness phase-life-'+escape(lifeClass)+'"><span class="phase-life-dot" aria-hidden="true"></span>'+current+'<b class="phase-life-label">'+escape(lifeLabels[life]||life)+'</b><span class="phase-life-detail">'+escape(details.join(' · ')||'No runtime activity recorded')+'</span></div>';
   const opDefs=[['RECHECK','Recheck now','phase-op-primary'],['REACQUIRE_CURRENTNESS','Request currentness','phase-op-currentness'],['REQUEST_SAAS_EVIDENCE','Ask SaaS evidence','phase-op-saas'],['RETRY_LOCAL_PLAN','Retry local plan','phase-op-retry'],['RESUME','Resume phase','phase-op-resume']];
   const ops=opDefs.filter(([a])=>caps[a]&&caps[a].supported===true&&typeof caps[a].operation_token==='string').map(([a,label,tone])=>'<button type="button" class="phase-op '+tone+'" data-phase-operation="'+escape(a)+'" data-phase-id="'+escape(phase.phase_id)+'" data-operation-token="'+escape(caps[a].operation_token)+'">'+escape(label)+'</button>').join('');
   const containment=['PAUSE','STOP'].filter(a=>caps[a]&&caps[a].supported===true&&typeof caps[a].control_token==='string').map(a=>'<button type="button" class="phase-op '+(a==='PAUSE'?'phase-op-pause':'phase-op-stop')+'" data-phase-action="'+escape(a)+'" data-phase-id="'+escape(phase.phase_id)+'" data-control-token="'+escape(caps[a].control_token)+'">'+(a==='PAUSE'?'Pause':'Stop')+'</button>').join('');
   const sep=ops&&containment?'<span class="phase-action-separator" aria-hidden="true"></span>':'';
-  return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>','<div class="phase-actions">'+ops+sep+containment+'</div></article>');
+  return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>',lifeBar+'<div class="phase-actions">'+ops+sep+containment+'</div></article>');
 }
 function workerCards(mission,escape,workerControl=null){
   const workers=boundedRows(mission.normalized_runtime?.fleet?.material_workers??mission.workers).map(worker=>{

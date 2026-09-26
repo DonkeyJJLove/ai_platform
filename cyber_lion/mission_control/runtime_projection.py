@@ -50,6 +50,7 @@ def normalize_snapshot(snapshot):
     specs = {p['phase_id']: p for p in out.get('phase_execution_specs', [])}
     contracts = {p['phase_id']: p for p in out.get('phase_execution_contracts', [])}
     plans = {p['phase_id']: p for p in out.get('generic_phase_plans', [])}
+    activities = out.get('phase_activity') or {}
     for phase in phases:
         phase_spec = specs.get(phase['phase_id'], {})
         phase['handler_id'] = phase_spec.get('handler_id')
@@ -79,6 +80,56 @@ def normalize_snapshot(snapshot):
         active = [p['phase_id'] for p in phases if p.get('status') in {'ACTIVE', 'RUNNING'}]
         current = active[0] if len(active) == 1 else None
         reason = 'DERIVED_SINGLE_ACTIVE_PHASE' if len(active) == 1 else ('AMBIGUOUS_ACTIVE_PHASES' if active else 'NO_ACTIVE_PHASE_RECORDED')
+    scheduler=out.get('scheduler') or {}
+    terminal_states={'PASS','COMPLETE','SKIPPED','CANCELLED'}
+    for phase in phases:
+        pid=phase['phase_id'];is_current=(pid==current);checks=phase.get('completion_checks') or {}
+        checks_pass=bool(checks) and all(str(v).upper()=='PASS' for v in checks.values())
+        gate=driver.get('blocking_gate') if is_current else None
+        dstate=driver.get('state') if is_current else None
+        if phase.get('status') in terminal_states:
+            activity_state='COMPLETE'
+        elif not is_current:
+            activity_state='PENDING'
+        elif checks_pass:
+            activity_state='READY_TO_ADVANCE'
+        elif dstate=='ACTIVE':
+            activity_state='EXECUTING'
+        elif dstate=='WAITING' and gate=='GENERIC_PHASE_LOCAL_PLAN_RECEIPT':
+            activity_state='WAITING_LOCAL'
+        elif dstate=='WAITING' and gate in {'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','EVIDENCE_REACQUISITION_REQUIRED'}:
+            activity_state='WAITING_EVIDENCE'
+        elif dstate=='WAITING':
+            activity_state='WAITING'
+        elif dstate=='BLOCKED':
+            activity_state='BLOCKED'
+        elif dstate=='PAUSED':
+            activity_state='PAUSED'
+        elif dstate=='STOPPED':
+            activity_state='STOPPED'
+        else:
+            activity_state=str(phase.get('status') or 'UNKNOWN')
+        if activity_state=='READY_TO_ADVANCE':next_expected='PHASE_TRANSITION'
+        elif gate=='GENERIC_PHASE_LOCAL_PLAN_RECEIPT':next_expected='LOCAL_PLAN_RECEIPT'
+        elif gate in {'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','EVIDENCE_REACQUISITION_REQUIRED'}:next_expected='EVIDENCE_OR_RECHECK'
+        elif gate=='CURRENTNESS_REQUIRED':next_expected='CURRENTNESS_EVIDENCE'
+        elif gate=='CAPABILITY_NOT_AVAILABLE':next_expected='CAPABILITY_BINDING'
+        elif activity_state=='EXECUTING':next_expected='DRIVER_STEP_OR_RECEIPT'
+        elif activity_state=='PENDING':next_expected='PREVIOUS_PHASE_COMPLETION'
+        elif activity_state=='COMPLETE':next_expected='NONE'
+        else:next_expected=driver.get('next_action') if is_current else None
+        activity=deepcopy(activities.get(pid) or {})
+        activity.update({
+            'is_current':is_current,'state':activity_state,'driver_state':dstate,'blocking_gate':gate,
+            'next_expected':next_expected,'next_action':driver.get('next_action') if is_current else None,
+            'auto_resume_armed':bool(is_current and dstate in {'WAITING','BLOCKED'}),
+            'driver_generation':driver.get('generation') if is_current else None,
+            'driver_heartbeat_at':driver.get('heartbeat_at') if is_current else None,
+            'scheduler_heartbeat_at':scheduler.get('heartbeat_at') if is_current else None,
+            'checks_pass':checks_pass,
+        })
+        phase['activity_state']=activity_state
+        phase['activity']=activity
     raw_runtime = out.get('runtime_state')
     material_state = None if str(raw_runtime or '').startswith('DRIVER_') else raw_runtime
     own_lineage = next((x for x in out.get('lineage', []) if x.get('mission_id') == out.get('mission_id')), {})
