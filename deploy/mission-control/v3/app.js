@@ -47,9 +47,13 @@ function semanticDetail(key,title,fields,raw,escape){
 }
 
 function phaseCard(phase,mission,escape){
-  const fields=[['State',phase.status??phase.state],['Progress',phase.progress===null||phase.progress===undefined?null:phase.progress+'%'],['Handler',phase.handler_id],['Handler version',phase.handler_version],['Blocker',phase.blocker],['Evidence count',phase.evidence_count],['Detail',phase.detail],['Control',Object.entries(phase.capabilities||{}).filter(([a,c])=>['PAUSE','STOP'].includes(a)&&c.supported===true).map(([a])=>a).join(' / ')||phase.control_unavailable_reason||phase.capabilities?.PAUSE?.reason||'INSPECTION_ONLY · no phase mutation capability supplied']];
-  const controls=['PAUSE','STOP'].filter(action=>phase.capabilities?.[action]?.supported===true&&typeof phase.capabilities[action].control_token==='string').map(action=>`<button type="button" data-key="${action}" data-phase-action="${action}" data-phase-id="${escape(phase.phase_id)}" data-control-token="${escape(phase.capabilities[action].control_token)}">${action} current phase driver</button>`).join('');
-  return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>',`<div class="phase-actions">${controls}</div></article>`);
+  const caps=phase.capabilities||{};
+  const supported=Object.entries(caps).filter(([a,c])=>a!=='INSPECT'&&c&&c.supported===true).map(([a])=>a);
+  const fields=[['State',phase.status??phase.state],['Progress',phase.progress===null||phase.progress===undefined?null:phase.progress+'%'],['Handler',phase.handler_id],['Handler version',phase.handler_version],['Blocker',phase.blocker],['Plan state',phase.plan_state],['Completion',phase.completion_predicates],['Checks',phase.completion_checks],['Currentness',phase.currentness_requirements],['Evidence required',phase.evidence_requirements],['Evidence count',phase.evidence_count],['Detail',phase.detail],['Control',supported.join(' / ')||phase.control_unavailable_reason||(caps.PAUSE&&caps.PAUSE.reason)||'INSPECTION_ONLY']];
+  const opDefs=[['RECHECK','Recheck now'],['REACQUIRE_CURRENTNESS','Request currentness'],['REQUEST_SAAS_EVIDENCE','Ask SaaS evidence'],['RETRY_LOCAL_PLAN','Retry local plan'],['RESUME','Resume phase']];
+  const ops=opDefs.filter(([a])=>caps[a]&&caps[a].supported===true&&typeof caps[a].operation_token==='string').map(([a,label])=>'<button type="button" data-phase-operation="'+escape(a)+'" data-phase-id="'+escape(phase.phase_id)+'" data-operation-token="'+escape(caps[a].operation_token)+'">'+escape(label)+'</button>').join('');
+  const containment=['PAUSE','STOP'].filter(a=>caps[a]&&caps[a].supported===true&&typeof caps[a].control_token==='string').map(a=>'<button type="button" data-phase-action="'+escape(a)+'" data-phase-id="'+escape(phase.phase_id)+'" data-control-token="'+escape(caps[a].control_token)+'">'+(a==='PAUSE'?'Pause phase':'Stop phase')+'</button>').join('');
+  return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>','<div class="phase-actions">'+ops+containment+'</div></article>');
 }
 function workerCards(mission,escape,workerControl=null){
   const workers=boundedRows(mission.normalized_runtime?.fleet?.material_workers??mission.workers).map(worker=>{

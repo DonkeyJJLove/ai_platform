@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse,unquote,parse_qs
 from cyber_lion.mission_control.runtime_projection import normalize_snapshot, validate_registration, SCHEMA_VERSION as RUNTIME_SCHEMA_VERSION
-from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
+from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action, phase_capabilities, PHASE_RECHECKABLE_GATES
 from cyber_lion.contracts.phase_execution_contract import (
  PhaseExecutionContract, PhaseExecutionContractError, compile_panel_phase_contracts,
  preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
@@ -304,6 +304,9 @@ PROCESS_CAPABILITY_REGISTRY={
   {'capability_id':'GENERIC_EXECUTION_BINDER_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
  ),
  'MISSION_RUNTIME_RECONCILIATION':(
+  {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
+ ),
+ 'EPOCH_CLOSURE_RECONCILIATION':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
  ),
  'CONTROL_PLANE_RECONNAISSANCE':(
@@ -771,6 +774,86 @@ def activate_lpcl_mission(mid,x):
     except Exception as e:
       c=connect();c.execute('UPDATE missions SET last_error=?,updated_at=? WHERE mission_id=?',('LPCL_EXECUTION_BIND:'+type(e).__name__+':'+str(e)[:800],now(),mid));c.commit();c.close();return process_snapshot(mid)
 
+def _phase_operation_capability(mid,pid,action,token):
+    snap=process_snapshot(mid,read_only=True)
+    phase=next((p for p in (snap.get('normalized_runtime') or {}).get('phases',[]) if p.get('phase_id')==pid),None)
+    if not phase:raise ValueError('phase not found')
+    cap=(phase.get('capabilities') or {}).get(action)
+    if not cap or not cap.get('supported'):raise ValueError((cap or {}).get('reason') or 'phase operation unavailable')
+    expected=cap.get('operation_token')
+    if not isinstance(token,str) or token!=expected:raise ValueError('stale phase operation token')
+    return snap,phase,cap
+
+
+def _phase_saas_question(snap,pid,kind):
+    contract=next((x for x in snap.get('phase_execution_contracts',[]) if x.get('phase_id')==pid),{})
+    driver=snap.get('execution_driver') or {}
+    base={
+      'mission_id':snap.get('mission_id'),'phase_id':pid,'source_head':snap.get('source_head'),'source_tree':snap.get('source_tree'),
+      'contract_digest':contract.get('contract_digest'),'blocking_gate':driver.get('blocking_gate'),
+      'currentness_requirements':contract.get('currentness_requirements') or [],
+      'evidence_requirements':contract.get('evidence_requirements') or [],
+      'completion_predicates':contract.get('completion_predicates') or [],
+      'authority_effect':'NONE',
+    }
+    instruction='Reacquire the listed currentness requirements and report evidence refs. Do not claim PASS without direct evidence.' if kind=='REACQUIRE_CURRENTNESS' else 'Independently verify the phase completion predicate and provide evidence refs. Do not perform external effects and do not manufacture PASS.'
+    return 'LION PHASE SUPERVISOR REQUEST\n'+instruction+'\n'+json.dumps(base,sort_keys=True,ensure_ascii=False)
+
+
+def phase_operation(mid,x):
+    if type(x) is not dict or set(x)!={'phase_id','action','operation_token'}:raise ValueError('phase operation schema')
+    pid=str(x['phase_id']);action=str(x['action']).upper();token=x['operation_token']
+    if action not in {'RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE','RETRY_LOCAL_PLAN','RESUME'}:raise ValueError('phase operation denied')
+    before,phase,cap=_phase_operation_capability(mid,pid,action,token)
+    before_status=phase.get('status');before_generation=int((before.get('execution_driver') or {}).get('generation') or 0)
+    request={'phase_id':pid,'action':action,'operation_token':token}
+    effect='CONTROL_STATE' if action in {'RECHECK','RETRY_LOCAL_PLAN','RESUME'} else 'NONE'
+    result={}
+    if action=='RECHECK':
+      c=connect()
+      try:_process_message(c,mid,'CONTROL','OPERATOR','GENERIC_EFFECT_EVIDENCE_EXECUTOR',pid,{'event':'PHASE_RECHECK_REQUESTED','blocking_gate':(before.get('execution_driver') or {}).get('blocking_gate'),'authority_effect':'CONTROL_STATE'},'IN');c.commit()
+      finally:c.close()
+      drive_generic_once(mid)
+      result={'rechecked':True}
+    elif action in {'REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE'}:
+      c=connect()
+      try:
+       q=_phase_saas_question(before,pid,action)
+       out=saas_broker.create_request(c,mid,q,now,scope_type='MISSION',scope_id=mid,authority_effect='NONE',transport=saas_broker.SENTINELX_MCP_TRANSPORT)
+       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','CHATGPT_SAAS_SUPERVISOR',pid,{'event':'PHASE_'+action+'_REQUESTED','request_id':out['request_id'],'request_code':out['request_code'],'transport':out['transport'],'authority_effect':'NONE'},'OUT')
+       c.commit();result={'request_id':out['request_id'],'request_code':out['request_code'],'transport':out['transport'],'state':out.get('status') or out.get('state')}
+      finally:c.close()
+    elif action=='RETRY_LOCAL_PLAN':
+      c=connect()
+      try:
+       if not operator_control.autonomy_allowed(c,mid):raise ValueError('operator control fence prevents local plan retry')
+       d=driver_snapshot(c,mid)
+       if not d or d.get('state') not in {'WAITING','BLOCKED'}:raise ValueError('driver not retryable')
+       m=c.execute('SELECT title FROM missions WHERE mission_id=?',(mid,)).fetchone();ps=c.execute('SELECT objective,description FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();pr=c.execute('SELECT title FROM mission_phases WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()
+       d=driver_activate(c,mid,now,next_action='GENERIC_PHASE_REPLAN',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       prompt=('LION generic LPCL phase replanning after a failed proposal. Authority effect NONE. Do not claim effects. Produce a corrected bounded plan with required capabilities, evidence, currentness prerequisites and completion test.\n\n'
+               f'Mission: {m["title"]}\nObjective: {ps["objective"]}\nPhase: {pid} — {pr["title"]}\nDescription: {ps["description"]}')
+       payload={'kind':'LOCAL_MODEL_INFERENCE','messages':[{'role':'user','content':prompt}],'max_tokens':768,'mission_id':mid,'phase_id':pid,'authority_effect':'NONE'}
+       aid=global_sched.create_assignment(c,mid,pid,'LD001','MD025',payload,now,lease_generation=int(d['generation']))
+       _process_message(c,mid,'ASSIGNMENT','GLOBAL_SCHEDULER','LOCAL_MODEL',pid,{'event':'GENERIC_PHASE_LOCAL_REPLAN_REQUESTED','assignment_id':aid,'material_drone_id':'MD025','authority_effect':'NONE'},'OUT')
+       _generic_wait(c,mid,pid,gate='GENERIC_PHASE_LOCAL_PLAN_RECEIPT',reason='Waiting for retried proposal-only LOCAL planning receipt',next_action='WAIT_FOR_LOCAL_PLAN',detail='LOCAL plan retry requested; waiting for receipt.')
+       result={'assignment_id':aid,'driver_generation':int(d['generation'])}
+      finally:c.close()
+    elif action=='RESUME':
+      result=mission_action(mid,{'action':'RESUME'})
+
+    after=process_snapshot(mid,read_only=True)
+    after_phase=next((p for p in (after.get('normalized_runtime') or {}).get('phases',[]) if p.get('phase_id')==pid),{})
+    after_generation=int((after.get('execution_driver') or {}).get('generation') or 0)
+    c=connect()
+    try:
+      receipt=lifecycle_create_action_receipt(c,mid,'PHASE_'+action,effect,'PASS',request,{'phase_id':pid,'before_status':before_status,'after_status':after_phase.get('status'),'before_generation':before_generation,'after_generation':after_generation,'result':result,'authority_effect':effect if effect!='NONE' else 'NONE'},now)
+      _process_message(c,mid,'CONTROL','MISSION_CONTROL','OPERATOR',pid,{'event':'PHASE_OPERATION_RESULT','action':action,'before_status':before_status,'after_status':after_phase.get('status'),'receipt_id':receipt.get('receipt_id'),'authority_effect':effect if effect!='NONE' else 'NONE'},'OUT')
+      c.commit()
+    finally:c.close()
+    return {'mission_id':mid,'phase_id':pid,'action':action,'status':'PASS','effect_class':effect,'result':result,'readback':{'phase_status':after_phase.get('status'),'driver_state':(after.get('execution_driver') or {}).get('state'),'driver_generation':after_generation,'blocking_gate':(after.get('execution_driver') or {}).get('blocking_gate')},'receipt':receipt}
+
+
 def update_lpcl_phase(mid,x):
     required={'phase_id','status','progress','protocol','from_id','to_id','detail','payload'}
     if type(x) is not dict or set(x)!=required:raise ValueError('phase update schema')
@@ -796,8 +879,23 @@ def post_protocol_message(mid,x):
     required={'protocol','from_id','to_id','phase','payload'}
     if type(x) is not dict or set(x)!=required:raise ValueError('protocol schema')
     c=connect()
-    if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone():c.close();raise ValueError('mission not found')
-    out=_process_message(c,mid,x['protocol'],x['from_id'],x['to_id'],x['phase'],x['payload'],'INTERNAL');c.commit();c.close();return out
+    if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone():
+      c.close();raise ValueError('mission not found')
+    trigger=False
+    try:
+      out=_process_message(c,mid,x['protocol'],x['from_id'],x['to_id'],x['phase'],x['payload'],'INTERNAL')
+      if x['protocol'] in {'EVIDENCE','VALIDATION','RECEIPT'} and x['phase']:
+       ps=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+       ds=driver_snapshot(c,mid)
+       trigger=bool(ps and ps['current_phase']==x['phase'] and ds and ds.get('state') in {'WAITING','BLOCKED'} and str(ds.get('blocking_gate') or '') in PHASE_RECHECKABLE_GATES)
+      c.commit()
+    finally:c.close()
+    if trigger:
+      drive_generic_once(mid)
+      out={**out,'auto_recheck':'TRIGGERED'}
+    else:out={**out,'auto_recheck':'NOT_APPLICABLE'}
+    return out
+
 
 def _send_broker_request(req):
     s=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);s.settimeout(240);s.connect(SOCKET);s.sendall(json.dumps(req,sort_keys=True,separators=(',',':')).encode()+b'\n');s.shutdown(socket.SHUT_WR);data=bytearray()
@@ -2384,6 +2482,12 @@ class H(BaseHTTPRequestHandler):
     mid=path[len('/api/v3/missions/'):-len('/focus')];n=int(self.headers.get('Content-Length','0'))
     if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
     return self.json(set_focus_mission(mid,json.loads(self.rfile.read(n))))
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
+  if path.startswith('/api/v3/missions/') and path.endswith('/phase-operations'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/phase-operations')].strip('/');n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>8192 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n));return self.json(phase_operation(mid,x))
    except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path.startswith('/api/v3/missions/') and path.endswith('/phase-actions'):
    try:

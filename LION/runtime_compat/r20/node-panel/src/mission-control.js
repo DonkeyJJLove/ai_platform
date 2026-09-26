@@ -55,6 +55,7 @@ class MissionControlAdapter {
   missionDelete(missionId, specDigest) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/delete`, { spec_digest: specDigest }); }
   missionAction(missionId, action, payload = {}) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/actions`, { action, ...payload }, 240000); }
   phaseAction(missionId, value) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/phase-actions`, value); }
+  phaseOperation(missionId, value) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/phase-operations`, value); }
   currentAction(value) { return this.post('/api/v3/missions/current/actions', value, 240000); }
   capabilityRegistry() { return this.get('/api/v3/capabilities/process-contracts'); }
 

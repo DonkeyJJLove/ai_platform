@@ -267,6 +267,12 @@ class LpclControlBridge:
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(pid,str) or not self.MID_RE.fullmatch(pid):raise ValueError('phase identity')
             if action not in {'PAUSE','STOP'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase containment action/token')
             return self._post('/api/v3/missions/'+mid+'/phase-actions',{'phase_id':pid,'action':action,'control_token':token})
+        if op=='phase_operation':
+            if type(args) is not dict or set(args)!={'mission_id','phase_id','action','operation_token'}:raise ValueError('phase operation schema')
+            mid=args['mission_id'];pid=args['phase_id'];action=args['action'];token=args['operation_token']
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(pid,str) or not self.MID_RE.fullmatch(pid):raise ValueError('phase identity')
+            if action not in {'RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE','RETRY_LOCAL_PLAN','RESUME'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase operation/token')
+            return self._post('/api/v3/missions/'+mid+'/phase-operations',{'phase_id':pid,'action':action,'operation_token':token})
         if op=='saas_request':
             if args.get('scope_type'):
                 return self._post('/api/v3/saas-broker/requests',args)

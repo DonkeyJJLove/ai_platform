@@ -81,6 +81,13 @@ async function mcPhaseAction(button){
   finally{button.disabled=false}
 }
 
+async function mcPhaseOperation(button){
+  const missionId=MC_SELECTED,payload={phase_id:button.dataset.phaseId,action:button.dataset.phaseOperation,operation_token:button.dataset.operationToken};button.disabled=true;
+  try{const r=await fetch(missionPath(missionId,'/phase-operations'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),result=await r.json();if(!r.ok)throw new Error(result.error||('HTTP '+r.status));patchHtml(MC('mcPhaseControlResult'),semanticDetail('phase-operation-receipt','Phase operation receipt',[['Mission',missionId],['Action',payload.action],['Receipt',result.receipt?.receipt_id],['Driver',result.readback?.driver_state],['Phase',result.readback?.phase_status],['Gate',result.readback?.blocking_gate],['Request',result.result?.request_id]],result,mcesc));await mcRefresh()}
+  catch(error){MC('mcPhaseControlResult').textContent='PHASE OPERATION DENIED / UNAVAILABLE · '+error.message}
+  finally{button.disabled=false}
+}
+
 async function mcCurrentMaterialAct(action,pod){
   if(MC_DATA?.mission_id!=='LION-R4-PREFLIGHT-L12-M64-MISSION-CONTROL-V3')return alert('Low-level material action is not bound to this mission.');
   if(!confirm(action+(pod?' '+pod:'')))return;
@@ -202,7 +209,7 @@ function mcRender(s,registry,sources){
   const d=s.execution_driver||{};
   patchHtml(MC('mcDriverState'),d.driver_id?`<div class="mc-driver-grid"><span><b>DRIVER</b> ${mcesc(d.state||'UNKNOWN')}</span><span><b>GEN</b> ${mcesc(d.generation)}</span><span><b>HEARTBEAT</b> ${mcesc(d.heartbeat_at||'NONE')}</span><span><b>PHASE</b> ${mcesc(d.current_phase||'—')}</span><span><b>ATTEMPT</b> ${mcesc((d.latest_attempt||{}).attempt_id||'—')}</span><span><b>WAIT</b> ${mcesc(d.waiting_reason||'—')}</span><span><b>GATE</b> ${mcesc(d.blocking_gate||'—')}</span><span><b>NEXT</b> ${mcesc(d.next_action||'—')}</span><span><b>LAST EFFECT</b> ${mcesc(d.last_effect||'—')}</span><span><b>RECEIPT</b> ${mcesc(d.last_effect_receipt||'—')}</span></div>`:'<div class="mc-line mc-history"><b>DRIVER:</b> not materialized for this mission/stage.</div>');
   patchHtml(MC('mcPhases'),boundedRows(s.normalized_runtime?.phases??s.phases).map(x=>phaseCard(x,s,mcesc)).join('')||'<p>'+missingRecord(s)+'</p>');
-  MC('mcPhases').querySelectorAll('[data-phase-action]').forEach(b=>b.onclick=()=>mcPhaseAction(b));
+  MC('mcPhases').querySelectorAll('[data-phase-action]').forEach(b=>b.onclick=()=>mcPhaseAction(b));MC('mcPhases').querySelectorAll('[data-phase-operation]').forEach(b=>b.onclick=()=>mcPhaseOperation(b));
   mcRenderProtocols(s);
   const startComponentAllowed=capState('START_COMPONENT')!=='UNAVAILABLE';
   patchHtml(MC('mcV3Logical'),(s.logical||[]).map(x=>`<article class="mc-ld"><b>${mcesc(x.logical_id)} · ${mcesc(x.role)}</b><div>${x.ready}/${x.material_target} ready · ${x.materialized}/${x.material_target} materialized</div><div class="bar"><i style="width:${Math.min(100,100*x.ready/Math.max(1,x.material_target))}%"></i></div>${startComponentAllowed?`<button type="button" data-start-component="${mcesc(x.logical_id)}">start component</button>`:''}</article>`).join('')||'<div class="mc-line mc-history">No logical component model was recorded for this mission/stage.</div>');

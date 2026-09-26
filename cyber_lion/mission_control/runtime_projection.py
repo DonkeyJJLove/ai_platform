@@ -48,6 +48,8 @@ def normalize_snapshot(snapshot):
     phases = deepcopy(out.get('phases') or [])
     messages = out.get('protocol_messages') or []
     specs = {p['phase_id']: p for p in out.get('phase_execution_specs', [])}
+    contracts = {p['phase_id']: p for p in out.get('phase_execution_contracts', [])}
+    plans = {p['phase_id']: p for p in out.get('generic_phase_plans', [])}
     for phase in phases:
         phase_spec = specs.get(phase['phase_id'], {})
         phase['handler_id'] = phase_spec.get('handler_id')
@@ -57,6 +59,16 @@ def normalize_snapshot(snapshot):
         phase['evidence_count_scope'] = 'PERSISTED_TOTAL' if isinstance(totals, dict) else 'RECENT_MESSAGE_WINDOW'
         phase['blocker'] = driver.get('blocking_gate') if driver.get('current_phase') == phase['phase_id'] else (phase.get('detail') if phase.get('status') == 'BLOCKED' else None)
         phase['capabilities'] = phase_capabilities(out, phase['phase_id'])
+        contract=contracts.get(phase['phase_id'],{})
+        phase['completion_predicates']=deepcopy(contract.get('completion_predicates') or [])
+        phase['currentness_requirements']=deepcopy(contract.get('currentness_requirements') or [])
+        phase['evidence_requirements']=deepcopy(contract.get('evidence_requirements') or [])
+        phase['contract_digest']=contract.get('contract_digest')
+        plan=plans.get(phase['phase_id'],{})
+        phase['plan_state']=plan.get('state')
+        try: plan_evidence=json.loads(plan.get('evidence_json') or '{}') if isinstance(plan,dict) else {}
+        except (ValueError,TypeError): plan_evidence={}
+        phase['completion_checks']=deepcopy(plan_evidence.get('checks') or {})
     current = process.get('current_phase')
     if current is not None:
         reason = 'RECORDED_PROCESS_CURSOR'
