@@ -335,25 +335,19 @@ def create_request(conn, mission_id, question, now_fn, *, ttl_seconds=900, scope
             )
         same=[r for r in same_all if (r['transport'] or TRANSPORT)==target_transport]
         if same:
-            live=[r for r in same if r['status']!='WAITING_OPERATOR_OVERDUE']
-            if live:
-                # Prefer a claimed request, then the oldest stable request. Collapse
-                # stale duplicate siblings without invalidating the canonical poll id.
-                canonical=next((r for r in live if r['status']=='CLAIMED'),live[0])
-                for row in same:
-                    if row['request_id']==canonical['request_id'] or row['status']=='CLAIMED':continue
-                    conn.execute("UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_DUPLICATE',claim_expires_at=NULL WHERE request_id=?",(row['request_id'],))
-                conn.commit()
-                refreshed=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(canonical['request_id'],)).fetchone()
-                return _public_created_request(refreshed,deduplicated=True)
-            # The same unresolved semantic request already timed out waiting for
-            # mediation. Preserve its history, collapse all stale siblings and
-            # create one explicit retry linked to the latest predecessor.
-            retry_of=same[-1]['request_id']
-            conn.executemany(
-                "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_BY_RETRY',claim_expires_at=NULL WHERE request_id=?",
-                [(r['request_id'],) for r in same],
-            )
+            # A deadline is an observability signal, not permission to fan out.
+            # Preserve one semantic request across WAITING_SUPERVISOR,
+            # WAITING_OPERATOR_OVERDUE and CLAIMED.  Retries must be explicit.
+            canonical=next((r for r in same if r['status']=='CLAIMED'),same[0])
+            for row in same:
+                if row['request_id']==canonical['request_id'] or row['status']=='CLAIMED':continue
+                conn.execute(
+                    "UPDATE saas_handoff_requests SET status='SUPERSEDED',progress_state='SUPERSEDED_DUPLICATE',claim_expires_at=NULL WHERE request_id=?",
+                    (row['request_id'],),
+                )
+            conn.commit()
+            refreshed=conn.execute('SELECT * FROM saas_handoff_requests WHERE request_id=?',(canonical['request_id'],)).fetchone()
+            return _public_created_request(refreshed,deduplicated=True)
     request_id = "saas-" + uuid.uuid4().hex
     request_code = secrets.token_hex(4).upper()
     token = secrets.token_hex(32)
@@ -507,7 +501,7 @@ def bridge_status(conn, mission_id, now_fn):
         "pending_count": pending_count,
         "last_response": dict(last_response) if last_response else None,
         "queue_policy": "FIFO_MULTI_PENDING",
-        "duplicate_policy": "EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE",
+        "duplicate_policy": "EXACT_SCOPE_QUESTION_DEDUPE_PRESERVE_OVERDUE",
         "terminal_mission_pending_policy": "SUPERSEDE_PRESERVE_HISTORY",
         "transport": target_transport,
         "automatic_local_to_saas_hop": automatic_ready,
