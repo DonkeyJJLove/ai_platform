@@ -2686,8 +2686,9 @@ def reconcile_epoch_closure_late_saas():
        if row["blocking_gate"] not in {"EVIDENCE_REQUIREMENTS_NOT_SATISFIED","CURRENTNESS_REQUIRED","EVIDENCE_REACQUISITION_REQUIRED"}:continue
        spec=_phase_exec_spec(c,mid,pid)
        if not spec or spec.get("handler_id")!=GENERIC_PHASE_HANDLER:continue
-       bound=global_sched.bound_capability(c,mid,pid)
-       if not bound or bound.get("capability_id")!="GENERIC_MISSION_CONTRACT_RECONCILIATION":continue
+       bindings=global_sched.phase_capability_bindings(c,mid,pid)
+       bound=next((item for item in bindings if item.get("state")=="BOUND" and item.get("capability_id")=="GENERIC_MISSION_CONTRACT_RECONCILIATION"),None)
+       if not bound:continue
        contract=global_sched.phase_execution_contract(c,mid,pid)
        if not contract:continue
        resolution=phase_curriculum.resolve(c,mid,pid,contract,now)
