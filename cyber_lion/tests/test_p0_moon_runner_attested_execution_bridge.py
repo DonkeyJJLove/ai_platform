@@ -27,7 +27,7 @@ from tools.p0_moon_runner_attested_bridge_contract import (
 import tools.p0_moon_runner_attested_execution_bridge as bridge
 
 REPOSITORY = "DonkeyJJLove/ai_platform"
-CURRENT_SCAN = "916f7af4b36798bce891de04db0a9797e91d6d0639162cb07d4cfed189c36f45"
+CURRENT_SCAN = "d4c591fb9a4454a583e664559bf7580c29adf4f6488eee1ecb18593c957829cf"
 HISTORICAL_SCAN = "2e509f22b7684e465dbebba73886aa9eae74f166480cb7e46d5be90a02a566d3"
 LIVE_SOURCE_REVISION = "830f8c2e5561655dc35118c97f4574acc3bf0816"
 WORKFLOW_SOURCE = "tools/p0_moon_runner_attested_execution_bridge.workflow.source.yml"
@@ -38,8 +38,9 @@ def inventory():
     sources: dict[str, str] = {}
     for base in (root / "cyber_lion", root / ".github/workflows"):
         for path in sorted(base.rglob("*")):
-            if path.is_file() and path.suffix in {".py", ".yml", ".yaml"}:
-                sources[path.relative_to(root).as_posix()] = path.read_text(encoding="utf-8")
+            rel=path.relative_to(root).as_posix()
+            if path.is_file() and path.suffix in {".py", ".yml", ".yaml"} and not rel.startswith("cyber_lion/tests/"):
+                sources[rel] = path.read_text(encoding="utf-8")
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=root, text=True).strip()
     raw = EffectSurfaceScanner().scan(

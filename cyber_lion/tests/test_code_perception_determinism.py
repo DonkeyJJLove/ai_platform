@@ -214,6 +214,12 @@ def make_repo(root: Path) -> tuple[str, str]:
     run(["git", "init", "-q"], root)
     run(["git", "config", "user.email", "lion@example.invalid"], root)
     run(["git", "config", "user.name", "LION Test"], root)
+    # Hosted runners may have automatic repository maintenance enabled.  These
+    # fixture repositories are intentionally ephemeral, so background maintenance
+    # only introduces nondeterministic writes that can race TemporaryDirectory
+    # cleanup and can duplicate loose objects into packs.
+    run(["git", "config", "gc.auto", "0"], root)
+    run(["git", "config", "maintenance.auto", "false"], root)
     (root / "pkg").mkdir()
     (root / "pkg" / "__init__.py").write_text("from .a import f\n", encoding="utf-8")
     (root / "pkg" / "a.py").write_text(
@@ -345,19 +351,20 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
 
     def test_F25_partial_index_fails_closed_when_blob_disappears(self):
         source = git_source_identity(self.root, REPOSITORY, self.commit, expected_tree=self.tree)
-        object_path = self.root / ".git" / "objects" / source.source_tree_sha[:2] / source.source_tree_sha[2:]
-        if object_path.exists():
-            backup = object_path.read_bytes()
-            object_path.unlink()
-            try:
-                with self.assertRaises(CodePerceptionBuildError):
-                    git_blob_inputs(self.root, source)
-            finally:
-                object_path.parent.mkdir(parents=True, exist_ok=True)
-                object_path.write_bytes(backup)
-        else:
+        # Removing one loose object is not a reliable loss-of-object test because
+        # Git may also have the same object in a pack (notably after hosted-runner
+        # auto-maintenance).  Make the complete object database unavailable so the
+        # observation itself, rather than its storage representation, is tested.
+        object_store = self.root / ".git" / "objects"
+        backup_store = self.root / ".git" / "objects-f25-backup"
+        object_store.rename(backup_store)
+        object_store.mkdir()
+        try:
             with self.assertRaises(CodePerceptionBuildError):
-                git_source_identity(self.root, REPOSITORY, "0" * 40)
+                git_blob_inputs(self.root, source)
+        finally:
+            object_store.rmdir()
+            backup_store.rename(object_store)
 
     def test_P0_malformed_and_nonexistent_base_ref_fail_closed(self):
         for value in (None, "", " refs/heads/main", "refs/heads/main", "-main", "bad ref"):

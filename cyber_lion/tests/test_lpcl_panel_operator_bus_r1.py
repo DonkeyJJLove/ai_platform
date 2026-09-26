@@ -26,12 +26,85 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertNotIn('LION Local + SaaS Supervisor',t)
         self.assertNotIn('saasBridgeDetail',t)
 
+    def test_model_route_is_thread_state_not_per_message_free_text(self):
+        ui=self.ui;runtime=self.runtime
+        self.assertIn('id="modelRoute"',ui)
+        self.assertIn('setActiveThreadModelRoute',ui)
+        self.assertIn("'/model-route'",ui)
+        self.assertIn("'model_route':model_route",ui)
+        self.assertIn("payload':{'content':x['content'].strip()[:16000],'model_route':model_route}",ui)
+        self.assertIn('CREATE TABLE IF NOT EXISTS thread_model_routes',runtime)
+        self.assertIn("if op=='set_model_route'",runtime)
+        self.assertIn("route not in {'LOCAL','SAAS','DUAL'}",runtime)
+        self.assertIn("m.conversation_leg?('MODEL '+m.conversation_leg)",ui)
+
     def test_thread_binding_and_stable_order_are_persistent(self):
         t=self.runtime
         self.assertIn('CREATE TABLE IF NOT EXISTS thread_bindings',t)
         self.assertIn("'LION_BUS'",t)
         self.assertIn('ORDER BY t.created_at DESC',t)
         self.assertNotIn('ORDER BY updated_at DESC LIMIT 500',t)
+
+    def test_panel_uses_contextual_mission_binding_not_raw_target_entry(self):
+        t=self.ui
+        self.assertNotIn('id="busTarget"',t)
+        self.assertIn('id="bindingHint"',t)
+        self.assertIn('Powiąż z wybraną misją',t)
+        self.assertIn("const target='mission:'+mid",t)
+        self.assertIn('Przepiąć ten wątek z misji',t)
+
+    def test_operator_pairing_is_local_otp_handshake_without_renderer_secret_entry(self):
+        t=self.ui
+        self.assertNotIn('id="operatorPairing"',t)
+        self.assertIn('Aktywuj sterowanie operatorem',t)
+        self.assertIn("body:'{}'",t)
+        self.assertIn("PAIRING · lokalny OTP",t)
+
+    def test_thread_rename_is_inline_and_has_http_readback(self):
+        t=self.ui
+        self.assertNotIn("prompt('Nowa nazwa wątku:",t)
+        self.assertIn('data-rename-input',t)
+        self.assertIn('data-rename-save',t)
+        self.assertIn('saveRenameThread',t)
+        self.assertIn("if(!r.ok)throw new Error",t)
+
+    def test_boot_establishes_local_operator_session_before_bus_polling(self):
+        t=self.ui
+        self.assertIn('async function ensureOperatorSession()',t)
+        self.assertIn("const session=await operatorApi('/api/operator/session')",t)
+        self.assertIn('await operatorPair();return operatorSessionPaired',t)
+        self.assertIn('await ensureOperatorSession();await refreshOperator()',t)
+        self.assertNotIn('Promise.allSettled([refreshThreads(),refreshMissions(),state(),refreshOperator()])',t)
+
+    def test_thread_history_uses_correlation_projection_across_mission_rebinds(self):
+        t=self.ui
+        self.assertIn("self._operator('thread'",t)
+        self.assertIn("'correlation_id':tid",t)
+        self.assertIn("'thread_mission_ids'",t)
+        self.assertIn("'suppressed_response_ids'",t)
+        self.assertNotIn("messages=[m for m in (state.get('messages') or []) if m.get('correlation_id')==tid",t)
+
+    def test_conversation_state_overrides_raw_fanout_state_in_ui(self):
+        t=self.ui
+        self.assertIn('m.conversation_state||m.state',t)
+
+    def test_hmk9d_process_trace_is_projected_read_only_into_thread_ui(self):
+        t=self.ui
+        self.assertIn("'hmk9d':thread_state.get('hmk9d')",t)
+        self.assertIn('PROCESS SEMANTICS · HMK-9D',t)
+        self.assertIn('HMK-9D Process Trace',t)
+        self.assertIn('function renderHmk9d(x)',t)
+        self.assertIn("['AUTH','NONE']",t)
+        self.assertIn("last.bridge_id||'—'",t)
+        self.assertIn("human.material_worker_id||locus.material_worker_id",t)
+        self.assertIn("human.model_declared||human.provider",t)
+
+    def test_delivery_observability_is_aggregated_not_inlined_per_recipient(self):
+        t=self.ui
+        self.assertIn('deliverySummary',t)
+        self.assertIn("mDeliveries.length+' odbiorca'",t)
+        self.assertIn('<summary>Delivery</summary>',t)
+        self.assertNotIn("map(d=>d.recipient+':'+d.delivery_state).join(' · ')",t)
 
     def test_bus_scroll_follows_new_message_start_not_tail(self):
         t=self.ui

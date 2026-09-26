@@ -28,6 +28,7 @@ SOURCE_MAP = {
     "systemd/lion-operator-control.service": ROOT / "deploy/systemd/lion-operator-control.service",
     "cyber_lion/contracts/operator_intervention.py": ROOT / "cyber_lion/contracts/operator_intervention.py",
     "cyber_lion/mission_control/operator_control.py": ROOT / "cyber_lion/mission_control/operator_control.py",
+    "cyber_lion/mission_control/hmk9d_process.py": ROOT / "cyber_lion/mission_control/hmk9d_process.py",
     "cyber_lion/mission_control/operator_swarm_session.py": ROOT / "cyber_lion/mission_control/operator_swarm_session.py",
     "cyber_lion/mission_control/model_calls.py": ROOT / "cyber_lion/mission_control/model_calls.py",
     "cyber_lion/contracts/mission_contract_profiles.py": ROOT / "cyber_lion/contracts/mission_contract_profiles.py",
@@ -44,6 +45,7 @@ SOURCE_MAP = {
     "cyber_lion/mission_control/supervisor_projection.py": ROOT / "cyber_lion/mission_control/supervisor_projection.py",
     "cyber_lion/mission_control/runtime_projection.py": ROOT / "cyber_lion/mission_control/runtime_projection.py",
     "cyber_lion/mission_control/phase_control.py": ROOT / "cyber_lion/mission_control/phase_control.py",
+    "cyber_lion/mission_control/phase_curriculum.py": ROOT / "cyber_lion/mission_control/phase_curriculum.py",
     **{"static/" + name: ROOT / "deploy/mission-control/v3" / name
        for name in ("index.html", "app.css", "app.js", "passive.js", "control-v3.js")},
 }

@@ -48,6 +48,10 @@ def normalize_snapshot(snapshot):
     phases = deepcopy(out.get('phases') or [])
     messages = out.get('protocol_messages') or []
     specs = {p['phase_id']: p for p in out.get('phase_execution_specs', [])}
+    contracts = {p['phase_id']: p for p in out.get('phase_execution_contracts', [])}
+    plans = {p['phase_id']: p for p in out.get('generic_phase_plans', [])}
+    activities = out.get('phase_activity') or {}
+    curriculum_runs = ((out.get('phase_curriculum') or {}).get('runs') or {})
     for phase in phases:
         phase_spec = specs.get(phase['phase_id'], {})
         phase['handler_id'] = phase_spec.get('handler_id')
@@ -57,6 +61,17 @@ def normalize_snapshot(snapshot):
         phase['evidence_count_scope'] = 'PERSISTED_TOTAL' if isinstance(totals, dict) else 'RECENT_MESSAGE_WINDOW'
         phase['blocker'] = driver.get('blocking_gate') if driver.get('current_phase') == phase['phase_id'] else (phase.get('detail') if phase.get('status') == 'BLOCKED' else None)
         phase['capabilities'] = phase_capabilities(out, phase['phase_id'])
+        contract=contracts.get(phase['phase_id'],{})
+        phase['completion_predicates']=deepcopy(contract.get('completion_predicates') or [])
+        phase['currentness_requirements']=deepcopy(contract.get('currentness_requirements') or [])
+        phase['evidence_requirements']=deepcopy(contract.get('evidence_requirements') or [])
+        phase['contract_digest']=contract.get('contract_digest')
+        plan=plans.get(phase['phase_id'],{})
+        phase['plan_state']=plan.get('state')
+        try: plan_evidence=json.loads(plan.get('evidence_json') or '{}') if isinstance(plan,dict) else {}
+        except (ValueError,TypeError): plan_evidence={}
+        phase['completion_checks']=deepcopy(plan_evidence.get('checks') or {})
+        phase['curriculum']=deepcopy(curriculum_runs.get(phase['phase_id']) or {})
     current = process.get('current_phase')
     if current is not None:
         reason = 'RECORDED_PROCESS_CURSOR'
@@ -67,6 +82,69 @@ def normalize_snapshot(snapshot):
         active = [p['phase_id'] for p in phases if p.get('status') in {'ACTIVE', 'RUNNING'}]
         current = active[0] if len(active) == 1 else None
         reason = 'DERIVED_SINGLE_ACTIVE_PHASE' if len(active) == 1 else ('AMBIGUOUS_ACTIVE_PHASES' if active else 'NO_ACTIVE_PHASE_RECORDED')
+    scheduler=out.get('scheduler') or {}
+    terminal_states={'PASS','COMPLETE','SKIPPED','CANCELLED'}
+    for phase in phases:
+        pid=phase['phase_id'];is_current=(pid==current);checks=phase.get('completion_checks') or {}
+        checks_pass=bool(checks) and all(str(v).upper()=='PASS' for v in checks.values())
+        gate=driver.get('blocking_gate') if is_current else None
+        dstate=driver.get('state') if is_current else None
+        curriculum_run=curriculum_runs.get(pid) or {}
+        curriculum_resolution=curriculum_run.get('resolution') or {}
+        curriculum_state=str(curriculum_resolution.get('state') or curriculum_run.get('state') or '')
+        supervisor_request=curriculum_resolution.get('supervisor_request') or {}
+        if phase.get('status') in terminal_states:
+            activity_state='COMPLETE'
+        elif not is_current:
+            activity_state='PENDING'
+        elif checks_pass:
+            activity_state='READY_TO_ADVANCE'
+        elif curriculum_state=='SUPERVISOR_RECEIPT_BOUND':
+            activity_state='SUPERVISOR_RECEIPT_BOUND'
+        elif curriculum_state=='WAITING_SUPERVISOR_OVERDUE':
+            activity_state='WAITING_SUPERVISOR_OVERDUE'
+        elif curriculum_state=='WAITING_SUPERVISOR':
+            activity_state='WAITING_SUPERVISOR'
+        elif dstate=='ACTIVE':
+            activity_state='EXECUTING'
+        elif dstate=='WAITING' and gate=='GENERIC_PHASE_LOCAL_PLAN_RECEIPT':
+            activity_state='WAITING_LOCAL'
+        elif dstate=='WAITING' and gate in {'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','EVIDENCE_REACQUISITION_REQUIRED'}:
+            activity_state='WAITING_EVIDENCE'
+        elif dstate=='WAITING':
+            activity_state='WAITING'
+        elif dstate=='BLOCKED':
+            activity_state='BLOCKED'
+        elif dstate=='PAUSED':
+            activity_state='PAUSED'
+        elif dstate=='STOPPED':
+            activity_state='STOPPED'
+        else:
+            activity_state=str(phase.get('status') or 'UNKNOWN')
+        if activity_state=='READY_TO_ADVANCE':next_expected='PHASE_TRANSITION'
+        elif activity_state=='SUPERVISOR_RECEIPT_BOUND':next_expected='AUTO_RECEIPT_WAKE'
+        elif activity_state=='WAITING_SUPERVISOR_OVERDUE':next_expected='EXPLICIT_RETRY_OR_LATE_RECEIPT'
+        elif activity_state=='WAITING_SUPERVISOR':next_expected=supervisor_request.get('next_expected') or 'SUPERVISOR_RESPONSE'
+        elif gate=='GENERIC_PHASE_LOCAL_PLAN_RECEIPT':next_expected='LOCAL_PLAN_RECEIPT'
+        elif gate in {'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','EVIDENCE_REACQUISITION_REQUIRED'}:next_expected='EVIDENCE_OR_RECHECK'
+        elif gate=='CURRENTNESS_REQUIRED':next_expected='CURRENTNESS_EVIDENCE'
+        elif gate=='CAPABILITY_NOT_AVAILABLE':next_expected='CAPABILITY_BINDING'
+        elif activity_state=='EXECUTING':next_expected='DRIVER_STEP_OR_RECEIPT'
+        elif activity_state=='PENDING':next_expected='PREVIOUS_PHASE_COMPLETION'
+        elif activity_state=='COMPLETE':next_expected='NONE'
+        else:next_expected=driver.get('next_action') if is_current else None
+        activity=deepcopy(activities.get(pid) or {})
+        activity.update({
+            'is_current':is_current,'state':activity_state,'driver_state':dstate,'blocking_gate':gate,
+            'next_expected':next_expected,'next_action':driver.get('next_action') if is_current else None,
+            'auto_resume_armed':bool(is_current and dstate in {'WAITING','BLOCKED'}),
+            'driver_generation':driver.get('generation') if is_current else None,
+            'driver_heartbeat_at':driver.get('heartbeat_at') if is_current else None,
+            'scheduler_heartbeat_at':scheduler.get('heartbeat_at') if is_current else None,
+            'checks_pass':checks_pass,'supervisor_request':deepcopy(supervisor_request) if is_current else {},
+        })
+        phase['activity_state']=activity_state
+        phase['activity']=activity
     raw_runtime = out.get('runtime_state')
     material_state = None if str(raw_runtime or '').startswith('DRIVER_') else raw_runtime
     own_lineage = next((x for x in out.get('lineage', []) if x.get('mission_id') == out.get('mission_id')), {})

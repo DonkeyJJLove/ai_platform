@@ -1,9 +1,83 @@
-"""Containment-only controls for the recorded current phase's existing driver."""
+"""Phase-scoped Mission Control operations.
+
+Containment remains fail-closed and atomic. Operational phase controls are
+read/re-evaluate/delegate operations; none may manufacture a phase verdict.
+"""
+from __future__ import annotations
+
 import hashlib
 import json
 import re
 
-KNOWN_HANDLERS = frozenset({'VERIFY_128L64M_BIND', 'VERIFY_SCHEDULER_SCHEMA', 'GLOBAL_MULTI_RUN_DISPATCH', 'VERIFY_LEASE_FAIRNESS', 'VERIFY_PHASE_PLAN', 'VERIFY_DRIVER_LIFECYCLE', 'VERIFY_UNKNOWN_HANDLER_WAIT'})
+KNOWN_HANDLERS = frozenset({
+    'VERIFY_128L64M_BIND', 'VERIFY_SCHEDULER_SCHEMA', 'GLOBAL_MULTI_RUN_DISPATCH',
+    'VERIFY_LEASE_FAIRNESS', 'VERIFY_PHASE_PLAN', 'VERIFY_DRIVER_LIFECYCLE',
+    'VERIFY_UNKNOWN_HANDLER_WAIT', 'GENERIC_LPCL_PHASE',
+})
+
+PHASE_RECHECKABLE_GATES = frozenset({
+    'CAPABILITY_NOT_AVAILABLE', 'CURRENTNESS_REQUIRED', 'EXECUTOR_NOT_AVAILABLE',
+    'EXTERNAL_DEPENDENCY_WAIT', 'EVIDENCE_REQUIREMENTS_NOT_SATISFIED',
+    'EVIDENCE_REACQUISITION_REQUIRED',
+})
+PHASE_CURRENTNESS_GATES = frozenset({
+    'CURRENTNESS_REQUIRED', 'EXTERNAL_DEPENDENCY_WAIT',
+    'EVIDENCE_REQUIREMENTS_NOT_SATISFIED', 'EVIDENCE_REACQUISITION_REQUIRED',
+})
+PHASE_SAAS_EVIDENCE_GATES = frozenset({
+    'EVIDENCE_REQUIREMENTS_NOT_SATISFIED', 'CURRENTNESS_REQUIRED',
+    'EVIDENCE_REACQUISITION_REQUIRED',
+})
+PHASE_LOCAL_RETRY_GATES = frozenset({'GENERIC_PHASE_LOCAL_PLAN_FAILED'})
+
+
+def _phase_contract(snapshot, phase_id):
+    return next((x for x in snapshot.get('phase_execution_contracts', []) if x.get('phase_id') == phase_id), {})
+
+
+def _phase_evidence_count(snapshot, phase_id):
+    totals=snapshot.get('phase_evidence_counts')
+    if isinstance(totals,dict):
+        return int(totals.get(phase_id,0) or 0)
+    phase=next((p for p in snapshot.get('phases',[]) if p.get('phase_id')==phase_id),{})
+    return int(phase.get('evidence_count',0) or 0)
+
+
+def _control_binding(snapshot, phase_id):
+    process = snapshot.get('process') or {}
+    driver = snapshot.get('execution_driver') or {}
+    phase = next((p for p in snapshot.get('phases', []) if p.get('phase_id') == phase_id), None)
+    spec = next((p for p in snapshot.get('phase_execution_specs', []) if p.get('phase_id') == phase_id), {})
+    return {
+        'mission_id': snapshot.get('mission_id'), 'phase_id': phase_id,
+        'phase_status': (phase or {}).get('status'), 'source_head': snapshot.get('source_head'),
+        'source_tree': snapshot.get('source_tree'), 'driver_id': driver.get('driver_id'),
+        'generation': driver.get('generation'), 'driver_state': driver.get('state'),
+        'current_phase': process.get('current_phase'), 'authority_state': process.get('authority_state'),
+        'handler': spec.get('handler_id'),
+    }
+
+
+def _operation_binding(snapshot, phase_id):
+    value=_control_binding(snapshot,phase_id)
+    driver=snapshot.get('execution_driver') or {}
+    contract=_phase_contract(snapshot,phase_id)
+    curriculum=((snapshot.get('phase_curriculum') or {}).get('runs') or {}).get(phase_id) or {}
+    resolution=curriculum.get('resolution') or {}
+    supervisor=resolution.get('supervisor_request') or {}
+    value.update({
+        'blocking_gate':driver.get('blocking_gate'),
+        'contract_digest':contract.get('contract_digest'),
+        'evidence_count':_phase_evidence_count(snapshot,phase_id),
+        'curriculum_state':resolution.get('state') or curriculum.get('state'),
+        'supervisor_request_id':supervisor.get('request_id'),
+        'supervisor_request_status':supervisor.get('status'),
+    })
+    return value
+
+
+def _token(binding):
+    return hashlib.sha256(json.dumps(binding, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
 def phase_capabilities(snapshot, phase_id):
@@ -18,7 +92,7 @@ def phase_capabilities(snapshot, phase_id):
         reason = 'MISSION_NOT_ACTIVE'
     elif not phase or process.get('current_phase') != phase_id or driver.get('current_phase') != phase_id:
         reason = 'NOT_EXACT_CURRENT_PHASE'
-    elif phase.get('status') not in {'RUNNING', 'WAITING', 'BLOCKED'}:
+    elif phase.get('status') not in {'ACTIVE', 'RUNNING', 'WAITING', 'BLOCKED'}:
         reason = 'PHASE_NOT_ACTIVE'
     elif process.get('authority_state') != 'EXPLICIT_USER_ACTIVATION':
         reason = 'EXACT_ACTIVATION_REQUIRED'
@@ -28,12 +102,37 @@ def phase_capabilities(snapshot, phase_id):
         reason = 'UNKNOWN_PHASE_HANDLER'
     elif not driver.get('driver_id') or type(driver.get('generation')) is not int or driver['generation'] < 1:
         reason = 'DRIVER_GENERATION_REQUIRED'
-    binding = {'mission_id': snapshot.get('mission_id'), 'phase_id': phase_id, 'phase_status': (phase or {}).get('status'), 'source_head': snapshot.get('source_head'), 'source_tree': snapshot.get('source_tree'), 'driver_id': driver.get('driver_id'), 'generation': driver.get('generation'), 'driver_state': driver.get('state'), 'authority_state': process.get('authority_state'), 'handler': spec.get('handler_id')}
-    token = hashlib.sha256(json.dumps(binding, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-    result = {'INSPECT': {'supported': phase is not None, 'effect': 'NONE', 'reason': None if phase else 'PHASE_NOT_FOUND', 'control_token': None}}
+
+    control_token=_token(_control_binding(snapshot,phase_id))
+    operation_token=_token(_operation_binding(snapshot,phase_id))
+    state=str(driver.get('state') or 'UNKNOWN')
+    gate=str(driver.get('blocking_gate') or '')
+    generic=spec.get('handler_id')=='GENERIC_LPCL_PHASE'
+    blocked_waiting=state in {'WAITING','BLOCKED'}
+    curriculum=((snapshot.get('phase_curriculum') or {}).get('runs') or {}).get(phase_id) or {}
+    curriculum_resolution=curriculum.get('resolution') or {}
+    curriculum_state=str(curriculum_resolution.get('state') or curriculum.get('state') or '')
+    supervisor_wait=curriculum_state in {'WAITING_SUPERVISOR','WAITING_SUPERVISOR_OVERDUE','SUPERVISOR_RECEIPT_BOUND'}
+    supervisor_wait_reason='SUPERVISOR_REQUEST_ACTIVE' if curriculum_state=='WAITING_SUPERVISOR' else 'SUPERVISOR_REQUEST_OVERDUE' if curriculum_state=='WAITING_SUPERVISOR_OVERDUE' else 'SUPERVISOR_RECEIPT_PENDING_WAKE' if curriculum_state=='SUPERVISOR_RECEIPT_BOUND' else None
+
+    def item(supported, why, label, effect='CONTROL_STATE', *, operation=False):
+        out={'supported':bool(supported),'reason':None if supported else why,'label':label,'effect':effect}
+        if supported:
+            out['operation_token' if operation else 'control_token']=operation_token if operation else control_token
+        return out
+
+    operational_reason=reason or 'PHASE_OPERATION_NOT_APPLICABLE'
+    result={
+        'INSPECT': {'supported': phase is not None, 'effect': 'NONE', 'reason': None if phase else 'PHASE_NOT_FOUND', 'operation_token': operation_token if phase else None, 'label':'Inspect phase'},
+        'RECHECK': item(reason is None and generic and blocked_waiting and gate in PHASE_RECHECKABLE_GATES and not supervisor_wait, operational_reason if reason else supervisor_wait_reason or 'BLOCKING_GATE_NOT_RECHECKABLE', 'Recheck phase', operation=True),
+        'REACQUIRE_CURRENTNESS': item(reason is None and generic and blocked_waiting and gate in PHASE_CURRENTNESS_GATES and not supervisor_wait, operational_reason if reason else supervisor_wait_reason or 'CURRENTNESS_GATE_NOT_ACTIVE', 'Request currentness', effect='NONE', operation=True),
+        'REQUEST_SAAS_EVIDENCE': item(reason is None and generic and blocked_waiting and gate in PHASE_SAAS_EVIDENCE_GATES and not supervisor_wait, operational_reason if reason else supervisor_wait_reason or 'SAAS_EVIDENCE_GATE_NOT_ACTIVE', 'Ask SaaS evidence', effect='NONE', operation=True),
+        'RETRY_LOCAL_PLAN': item(reason is None and generic and blocked_waiting and gate in PHASE_LOCAL_RETRY_GATES, operational_reason if reason else 'LOCAL_PLAN_RETRY_NOT_REQUIRED', 'Retry local plan', operation=True),
+        'RESUME': item(reason is None and state in {'PAUSED','STOPPED','FAILED'}, operational_reason if reason else 'DRIVER_NOT_RESUMABLE', 'Resume phase', operation=True),
+    }
     for action, states in [('PAUSE', {'ACTIVE', 'WAITING', 'BLOCKED'}), ('STOP', {'ACTIVE', 'WAITING', 'BLOCKED', 'PAUSED'})]:
-        why = reason or (None if driver.get('state') in states else 'DRIVER_STATE_NOT_ELIGIBLE')
-        result[action] = {'supported': why is None, 'effect': 'CONTROL_STATE' if why is None else 'NONE', 'reason': why, 'control_token': token if why is None else None, 'scope': 'CURRENT_PHASE_DRIVER_CONTAINMENT'}
+        why = reason or (None if state in states else 'DRIVER_STATE_NOT_ELIGIBLE')
+        result[action] = item(why is None, why, ('Pause phase' if action=='PAUSE' else 'Stop phase'))
     return result
 
 
@@ -83,6 +182,8 @@ def fence_phase_action(connection, mission_id, request):
         snapshot['execution_driver'] = dict(connection.execute('SELECT * FROM mission_execution_drivers WHERE mission_id=?', (mission_id,)).fetchone() or {})
         snapshot['phases'] = [dict(row) for row in connection.execute('SELECT * FROM mission_phases WHERE mission_id=?', (mission_id,))]
         snapshot['phase_execution_specs'] = [dict(row) for row in connection.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=?', (mission_id,))]
+        snapshot['phase_execution_contracts'] = []
+        snapshot['phase_evidence_counts'] = {}
         capability = phase_capabilities(snapshot, request['phase_id'])[request['action']]
         if not capability['supported']:
             raise ValueError(capability['reason'])

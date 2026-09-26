@@ -9,7 +9,7 @@ from pathlib import Path
 from threading import Thread
 
 from tools.lion_operator_gateway import FleetThreadingHTTPServer,Runtime,make_handler,now
-from cyber_lion.mission_control import operator_control
+from cyber_lion.mission_control import execution_driver, global_scheduler, operator_control
 
 
 class OperatorGatewayTests(unittest.TestCase):
@@ -85,6 +85,101 @@ class OperatorGatewayTests(unittest.TestCase):
         code,out=self.req('/v1/session/revoke',{},panel=True,session=token);self.assertEqual(code,200);self.assertTrue(out['revoked'])
         self.assertEqual(self.req('/v1/state?mission_id=M1',panel=True,session=token)[0],403)
         self.assertEqual(self.req('/v1/commands',self.command('revoked-panel','STOP_SCOPE'),panel=True,session=token)[0],403)
+
+    def test_conversation_fallback_creates_one_assignment_and_correlated_response(self):
+        c=self.runtime.connect()
+        try:
+            c.execute('''CREATE TABLE IF NOT EXISTS schema_migrations(
+                version INTEGER, schema_id TEXT, applied_at TEXT, source_head TEXT, source_tree TEXT,
+                migration_digest TEXT, note TEXT, UNIQUE(version,schema_id))''')
+            execution_driver.migrate(c,now,source_head='a'*40,source_tree='b'*40)
+            global_scheduler.migrate(c,now)
+            execution_driver.ensure_driver(c,'M1',now,initial_state='ACTIVE')
+            c.execute("UPDATE mission_execution_drivers SET current_phase='P1' WHERE mission_id='M1'")
+            c.execute('''CREATE TABLE IF NOT EXISTS material_workers(
+                mission_id TEXT NOT NULL,pod_name TEXT NOT NULL,pod_uid TEXT,logical_id TEXT,phase TEXT,
+                ready INTEGER NOT NULL,restarts INTEGER NOT NULL,pod_ip TEXT,observed_at TEXT NOT NULL,
+                PRIMARY KEY(mission_id,pod_name))''')
+            stamp=now()
+            c.execute("INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)",('POOL','lion-md001','uid-1','MD001','DOCKER_LOCAL_MODEL',1,0,None,stamp))
+            c.execute("INSERT INTO material_workers VALUES(?,?,?,?,?,?,?,?,?)",('POOL','lion-md002','uid-2','MD002','DOCKER_LOCAL_MODEL',1,0,None,stamp))
+            for lid,mid in [('LD001','MD001'),('LD002','MD002')]:
+                c.execute("""INSERT INTO mission_execution_assignments(
+                    assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,
+                    input_digest,input_json,state,lease_generation,created_at,claimed_at,finished_at
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ('topology-'+lid,'M1','__TOPOLOGY__',lid,mid,'d'*64,'{}','BOUND',1,stamp,stamp,stamp))
+            c.commit()
+        finally:c.close()
+        value={
+            'command_id':'conversation-1','mission_id':'M1','action':'MESSAGE','target':'mission:M1',
+            'payload':{'content':'Model?'},
+            'correlation_id':'thread-000000000000000000000000000001',
+        }
+        routed,meta=self.runtime.route_conversation_command(value)
+        self.assertEqual(routed['target'],'operatorbus:'+meta['material_drone_id'])
+        self.assertIn(meta['logical_drone_id'],{'LD001','LD002'})
+        applied=self.runtime.apply(routed,principal_id=operator_control.PRIMARY_OPERATOR)
+        self.assertEqual(applied['result']['recipient_count'],1)
+        message_id=applied['result']['message_id']
+        dispatched=self.runtime.dispatch_conversation_message(routed,applied)
+        aid=dispatched['assignment_id']
+        self.assertFalse(dispatched['idempotent'])
+        c=self.runtime.connect()
+        try:
+            row=c.execute("SELECT phase_id,logical_drone_id,material_drone_id,input_json FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+            payload=json.loads(row['input_json'])
+            self.assertTrue(row['phase_id'].startswith('OPERATOR_BUS_'))
+            self.assertEqual(payload['mission_phase_context'],'P1')
+            self.assertEqual(payload['operator_message_ids'],[message_id])
+            self.assertEqual(payload['correlation_id'],value['correlation_id'])
+            self.assertEqual(payload['purpose'],'OPERATOR_BUS_CONVERSATION_R1')
+        finally:c.close()
+        again=self.runtime.dispatch_conversation_message(routed,applied)
+        self.assertTrue(again['idempotent']);self.assertEqual(again['assignment_id'],aid)
+        c=self.runtime.connect()
+        try:
+            result=operator_control.note_assignment_application(c,aid,{'operator_message_ids':[message_id],'response_text':'Odpowiedź modelu'},now)
+            self.assertEqual(result['applied_messages'],1)
+            reply=c.execute("SELECT kind,content,correlation_id,causation_id FROM operator_messages WHERE kind='RESPONSE' AND causation_id=?",(message_id,)).fetchone()
+            self.assertIsNotNone(reply)
+            self.assertEqual(reply['content'],'Odpowiedź modelu')
+            self.assertEqual(reply['correlation_id'],value['correlation_id'])
+        finally:c.close()
+
+    def test_saas_request_and_response_are_linked_to_operator_message(self):
+        value={
+            'command_id':'saas-conversation-1','mission_id':'M1','action':'MESSAGE','target':'mission:M1',
+            'payload':{'content':'Remote model?','model_route':'SAAS'},
+            'correlation_id':'thread-saas-000000000000000000000001',
+        }
+        applied=self.runtime.apply(value,principal_id=operator_control.PRIMARY_OPERATOR)
+        mid=applied['result']['message_id']
+        calls=[]
+        def fake(path,*,method='GET',body=None,timeout=10):
+            calls.append((path,method,body))
+            if method=='POST':
+                self.assertEqual(body['thread_id'],value['correlation_id']);self.assertEqual(body['question'],'Remote model?')
+                return {'request_id':'saas-gateway-1'}
+            self.assertEqual(path,'/api/v3/saas-broker/requests/saas-gateway-1')
+            return {'status':'RESPONDED','response_text':'Remote gateway answer','receipt_digest':'c'*64}
+        self.runtime._mission_control_json=fake
+        linked=self.runtime.ensure_saas_request(mid)
+        self.assertEqual(linked['request_id'],'saas-gateway-1');self.assertFalse(linked['idempotent'])
+        linked2=self.runtime.ensure_saas_request(mid)
+        self.assertTrue(linked2['idempotent'])
+        out=self.runtime.reconcile_saas_message(mid)
+        self.assertTrue(out['delivered']);self.assertEqual(out['state'],'RESPONDED')
+        c=self.runtime.connect()
+        try:
+            snap=operator_control.thread_snapshot(c,value['correlation_id'],now)
+            source=next(m for m in snap['messages'] if m['message_id']==mid)
+            reply=next(m for m in snap['messages'] if m.get('causation_id')==mid)
+            self.assertEqual(source['conversation_state'],'ANSWERED')
+            self.assertEqual(reply['from_participant'],'model:saas')
+            self.assertEqual(reply['conversation_leg'],'SAAS')
+        finally:c.close()
+        self.assertEqual(sum(1 for path,method,_ in calls if method=='POST'),1)
 
 
 if __name__=='__main__':unittest.main()

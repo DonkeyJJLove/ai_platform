@@ -337,9 +337,12 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         revision=subprocess.run(["git","rev-parse","HEAD"],check=True,capture_output=True,text=True).stdout.strip()
         tree_digest=subprocess.run(["git","write-tree"],check=True,capture_output=True,text=True).stdout.strip()
         inv=EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY,revision=revision,tree_digest=tree_digest,sources=sources)
-        # Current production-source additions remain effect-free: E02 trust composition,
-        # Mission Control source-rebind planning, failure-domain evidence, and two
-        # read-only validation workflows increase the source set without adding a surface.
+        # Current production-source additions remain effect-free except for the
+        # two explicit fail-closed verifier-state writes in operator_swarm_session:
+        # dispatch and round are persisted as FAILED_VERIFIER_SCHEMA on invalid evidence.
+        # These add two known local persistent-state surfaces and no unclassified refs.
+        # Conversation protocol v3 adds two more known local persistent-state writes:
+        # applying the causal operator turn and persisting its correlated response.
         self.assertIn('cyber_lion/app_coordination/__init__.py', sources)
         self.assertIn('cyber_lion/app_coordination/task_assignment.py', sources)
         self.assertIn('cyber_lion/app_coordination/e02_trust_primitives.py', sources)
@@ -349,7 +352,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         self.assertIn('cyber_lion/app_coordination/saas_thread_delivery.py', sources)
         self.assertIn('cyber_lion/contracts/mission_contract_profiles.py', sources)
         self.assertIn('cyber_lion/mission_control/mission_reconciliation.py', sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(348,466,6))
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(350,480,6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

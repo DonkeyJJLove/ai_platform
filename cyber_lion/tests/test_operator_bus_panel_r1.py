@@ -91,7 +91,10 @@ class ThreadBindingTests(unittest.TestCase):
             store('rename',{'thread_id':a['thread_id'],'title':'A2'})
             order=[x['thread_id'] for x in store('list',{})['threads']]
             self.assertEqual(order,[b['thread_id'],a['thread_id']])
-            reopened=ThreadStore(Path(td)/'threads.db');self.assertEqual(reopened('get',{'thread_id':a['thread_id']})['context']['mission_id'],'M1')
+            route=store('set_model_route',{'thread_id':a['thread_id'],'model_route':'DUAL'});self.assertEqual(route['model_route'],'DUAL');self.assertEqual(route['route_revision'],2)
+            reopened=ThreadStore(Path(td)/'threads.db');got2=reopened('get',{'thread_id':a['thread_id']});self.assertEqual(got2['context']['mission_id'],'M1');self.assertEqual(got2['model_route'],'DUAL');self.assertEqual(got2['route_revision'],2)
+            listed={x['thread_id']:x for x in reopened('list',{})['threads']};self.assertEqual(listed[a['thread_id']]['model_route'],'DUAL')
+            with self.assertRaises(ValueError):reopened('set_model_route',{'thread_id':a['thread_id'],'model_route':'AUTO'})
             with self.assertRaises(ValueError):reopened('bind',{'thread_id':a['thread_id'],'mission_id':'M1','target':'http://not-a-lion-target'})
             unbound=reopened('unbind',{'thread_id':a['thread_id']});self.assertEqual(unbound['binding_state'],'MISSION_UNBOUND')
 
@@ -114,7 +117,8 @@ class PanelBusHttpIntegrationTests(unittest.TestCase):
                         command={k:v for k,v in args.items() if k!='__session_token'};self.commands.append(command)
                         self.messages.append({'message_id':'opmsg-http-1','command_id':command['command_id'],'from_participant':'operator:primary','target':command['target'],'kind':'MESSAGE','content':command['payload']['content'],'context_revision':0,'plan_revision':0,'state':'PENDING','created_at':'2026-09-17T12:00:00Z','applied_at':None,'applied_assignment_id':None,'correlation_id':command.get('correlation_id'),'causation_id':command.get('causation_id')})
                         return {'execution_state':'APPLIED','admission_state':'ACCEPTED','receipt_digest':'f'*64,'result':{'message_id':'opmsg-http-1'}}
-                    if op=='state':return {'control':{'control_owner':'AUTONOMOUS','control_epoch':1},'messages':list(self.messages),'message_deliveries':[{'message_id':'opmsg-http-1','recipient':'drone:MD025','delivery_state':'PERSISTED'}] if self.messages else [],'operator':{'principal_id':'OPERATOR_PRIMARY'},'operator_proxy':{'principal_id':'OPERATOR_SENTINELX_PROXY'}}
+                    if op=='state':return {'control':{'control_owner':'AUTONOMOUS','control_epoch':1},'operator':{'principal_id':'OPERATOR_PRIMARY'},'operator_proxy':{'principal_id':'OPERATOR_SENTINELX_PROXY'}}
+                    if op=='thread':return {'schema':'lion.operator-thread-projection/v1','correlation_id':args['correlation_id'],'messages':list(self.messages),'message_deliveries':[{'message_id':'opmsg-http-1','recipient':'drone:MD025','delivery_state':'PERSISTED'}] if self.messages else [],'mission_ids':['M1'],'suppressed_response_ids':[],'authority_effect':'NONE'}
                     if op=='events':return {'events':[],'next_cursor':0}
                     raise AssertionError((op,args))
             g=FakeGateway();server=ThreadingHTTPServer(('127.0.0.1',0),make_handler(g));thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start();base=f'http://127.0.0.1:{server.server_address[1]}'
@@ -127,10 +131,11 @@ class PanelBusHttpIntegrationTests(unittest.TestCase):
             try:
                 root=opener.open(base+'/',timeout=5).read().decode();csrf=re.search(r"const OPERATOR_CSRF='([^']+)'",root).group(1)
                 status,pair=req('/api/operator/pair',{},csrf);self.assertEqual(status,201);self.assertTrue(pair['paired'])
-                status,created=req('/api/threads',{});self.assertEqual(status,201);tid=created['thread_id']
+                status,created=req('/api/threads',{});self.assertEqual(status,201);tid=created['thread_id'];self.assertEqual(created['model_route'],'LOCAL')
+                status,routed=req('/api/threads/'+tid+'/model-route',{'model_route':'SAAS'},csrf);self.assertEqual(status,200);self.assertEqual(routed['model_route'],'SAAS')
                 status,bound=req('/api/threads/'+tid+'/context',{'action':'BIND','mission_id':'M1','target':'drone:MD025'},csrf);self.assertEqual(bound['binding_state'],'MISSION_BOUND')
                 client_id='c'*32
-                status,sent=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(g.commands[0]['correlation_id'],tid);self.assertEqual(g.commands[0]['target'],'drone:MD025')
+                status,sent=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(sent['model_route'],'SAAS');self.assertEqual(g.commands[0]['correlation_id'],tid);self.assertEqual(g.commands[0]['target'],'drone:MD025');self.assertEqual(g.commands[0]['payload']['model_route'],'SAAS')
                 status,sent2=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(g.commands[0]['command_id'],g.commands[1]['command_id'])
                 status,view=req('/api/threads/'+tid+'/bus');self.assertEqual(status,200);self.assertEqual(view['messages'][0]['correlation_id'],tid);self.assertEqual(view['messages'][0]['content'],'status now')
                 try:req('/api/threads/'+tid+'/chat',{'message':'must not route','route':'SAAS'})

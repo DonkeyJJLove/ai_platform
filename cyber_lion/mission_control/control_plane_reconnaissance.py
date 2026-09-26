@@ -207,10 +207,24 @@ def _material_ids_for_phase(ordinal: int, target: int, *, semantic: bool) -> lis
 
 def ensure_material_leases(conn: sqlite3.Connection, mission_id: str, phase_id: str, contract: dict[str,Any], now_fn) -> list[dict[str,Any]]:
     plan=build_observation_plan(contract);target=_material_target(contract,plan);semantic=bool(trajectory_roles(contract))
-    mids=_material_ids_for_phase(int(contract["ordinal"]),target,semantic=semantic);lids=_cohort_logical_ids(int(contract["ordinal"]));stamp=now_fn()
-    ready={r["logical_id"] for r in conn.execute("SELECT logical_id FROM material_workers WHERE mission_id=? AND ready=1",(mission_id,))}
-    if not set(mids)<=ready:
-        raise ValueError("recon material identity unavailable")
+    ordinal=int(contract["ordinal"])
+    ready=sorted(str(r["logical_id"]) for r in conn.execute("SELECT logical_id FROM material_workers WHERE mission_id=? AND ready=1 ORDER BY logical_id",(mission_id,)) if r["logical_id"])
+    if not ready:raise ValueError("recon material identity unavailable")
+    target=min(target,len(ready))
+    start=((ordinal-1)*4)%len(ready)
+    rotated=ready[start:]+ready[:start]
+    mids=rotated[:target]
+    if semantic:
+        forced=[x for x in LOCAL_MATERIAL if x in ready][:target]
+        base=[x for x in mids if x not in forced]+[x for x in ready if x not in mids and x not in forced]
+        mids=(base[:max(0,target-len(forced))]+forced)[:target]
+    if _table(conn,"logical_drones"):
+        lids_all=sorted(str(r["logical_id"]) for r in conn.execute("SELECT logical_id FROM logical_drones WHERE mission_id=? ORDER BY logical_id",(mission_id,)) if r["logical_id"])
+    else:
+        lids_all=_cohort_logical_ids(ordinal)
+    if not lids_all:raise ValueError("recon logical identity unavailable")
+    lstart=((ordinal-1)*8)%len(lids_all);lrot=lids_all[lstart:]+lids_all[:lstart];lids=lrot[:min(8,len(lrot))]
+    stamp=now_fn()
     for idx,mid in enumerate(mids):
         row=conn.execute("SELECT * FROM mission_recon_material_leases WHERE mission_id=? AND phase_id=? AND material_drone_id=?",(mission_id,phase_id,mid)).fetchone()
         if row:continue

@@ -83,16 +83,17 @@ class CognitiveBrokerTests(unittest.TestCase):
         rows=self.conn.execute("SELECT request_id,status FROM saas_handoff_requests").fetchall()
         self.assertEqual([(r['request_id'],r['status']) for r in rows],[(first['request_id'],'WAITING_SUPERVISOR')])
 
-    def test_overdue_same_thread_question_creates_one_retry_and_supersedes_predecessor(self):
+    def test_overdue_same_thread_question_preserves_one_request_without_automatic_retry(self):
         first=self.request(ttl_seconds=1)
         self.stamp='2026-09-15T00:00:02Z'
-        retry=self.request(ttl_seconds=30)
-        self.assertNotEqual(retry['request_id'],first['request_id'])
-        self.assertEqual(retry['retry_of_request_id'],first['request_id'])
+        same=self.request(ttl_seconds=30)
+        self.assertEqual(same['request_id'],first['request_id'])
+        self.assertTrue(same['deduplicated'])
         rows={r['request_id']:(r['status'],r['progress_state']) for r in self.conn.execute("SELECT request_id,status,progress_state FROM saas_handoff_requests")}
-        self.assertEqual(rows[first['request_id']],('SUPERSEDED','SUPERSEDED_BY_RETRY'))
-        self.assertEqual(rows[retry['request_id']][0],'WAITING_SUPERVISOR')
-        status=broker.bridge_status(self.conn,None,self.now);self.assertEqual(status['pending_count'],1);self.assertEqual(status['duplicate_policy'],'EXACT_SCOPE_QUESTION_DEDUPE_WITH_OVERDUE_RETRY_LINEAGE')
+        self.assertEqual(rows[first['request_id']],('WAITING_OPERATOR_OVERDUE','WAITING_OPERATOR_OVERDUE'))
+        status=broker.bridge_status(self.conn,None,self.now)
+        self.assertEqual(status['pending_count'],1)
+        self.assertEqual(status['duplicate_policy'],'EXACT_SCOPE_QUESTION_DEDUPE_PRESERVE_OVERDUE')
 
     def test_distinct_thread_questions_remain_independent_fifo_handoffs(self):
         first=self.request()

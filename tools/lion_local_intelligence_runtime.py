@@ -58,9 +58,10 @@ class ThreadStore:
             CREATE TABLE IF NOT EXISTS threads(thread_id TEXT PRIMARY KEY,title TEXT NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL);
             CREATE TABLE IF NOT EXISTS messages(message_id TEXT PRIMARY KEY,thread_id TEXT NOT NULL,seq INTEGER NOT NULL,role TEXT NOT NULL,content TEXT NOT NULL,created_at REAL NOT NULL,meta_json TEXT NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE,UNIQUE(thread_id,seq));
             CREATE TABLE IF NOT EXISTS thread_bindings(thread_id TEXT PRIMARY KEY,mission_id TEXT,target TEXT NOT NULL,channel TEXT NOT NULL,binding_revision INTEGER NOT NULL,binding_state TEXT NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE);
+            CREATE TABLE IF NOT EXISTS thread_model_routes(thread_id TEXT PRIMARY KEY,model_route TEXT NOT NULL,route_revision INTEGER NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE);
             CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_thread_seq ON messages(thread_id,seq);
-            """);c.commit();ui_runtime_events.migrate(c);c.close()
+            """);c.execute("INSERT OR IGNORE INTO thread_model_routes(thread_id,model_route,route_revision,created_at,updated_at) SELECT thread_id,'LOCAL',1,created_at,updated_at FROM threads");c.commit();ui_runtime_events.migrate(c);c.close()
     def _id(self,v):
         if not isinstance(v,str) or not self.ID_RE.fullmatch(v):raise ValueError('thread_id')
         return v
@@ -73,11 +74,11 @@ class ThreadStore:
                     return ui_runtime_events.record(c,args)
                 if op=='list':
                     rows=[]
-                    for x in c.execute('SELECT t.thread_id,t.title,t.created_at,t.updated_at,b.mission_id,b.target,b.channel,b.binding_revision,b.binding_state FROM threads t LEFT JOIN thread_bindings b ON b.thread_id=t.thread_id ORDER BY t.created_at DESC LIMIT 500'):
+                    for x in c.execute("SELECT t.thread_id,t.title,t.created_at,t.updated_at,b.mission_id,b.target,b.channel,b.binding_revision,b.binding_state,COALESCE(r.model_route,'LOCAL') model_route,COALESCE(r.route_revision,1) route_revision FROM threads t LEFT JOIN thread_bindings b ON b.thread_id=t.thread_id LEFT JOIN thread_model_routes r ON r.thread_id=t.thread_id ORDER BY t.created_at DESC LIMIT 500"):
                         d=dict(x);d['context']={'mission_id':d.pop('mission_id'),'target':d.pop('target'),'channel':d.pop('channel'),'binding_revision':d.pop('binding_revision'),'binding_state':d.pop('binding_state')} if d.get('channel') else None;rows.append(d)
                     return {'threads':rows}
                 if op=='create':
-                    tid=uuid.uuid4().hex;title=str(args.get('title') or 'Nowa rozmowa').strip()[:120] or 'Nowa rozmowa';t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t));c.commit();return {'thread_id':tid,'title':title,'created_at':t,'updated_at':t,'messages':[],'context':None}
+                    tid=uuid.uuid4().hex;title=str(args.get('title') or 'Nowa rozmowa').strip()[:120] or 'Nowa rozmowa';t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t));c.execute("INSERT INTO thread_model_routes VALUES(?,?,?,?,?)",(tid,'LOCAL',1,t,t));c.commit();return {'thread_id':tid,'title':title,'created_at':t,'updated_at':t,'messages':[],'context':None,'model_route':'LOCAL','route_revision':1}
                 if op=='saas_delivery_candidates':
                     result=[]
                     for row in c.execute("SELECT thread_id,meta_json FROM messages ORDER BY created_at DESC"):
@@ -96,7 +97,7 @@ class ThreadStore:
                         if not content:continue
                         clean.append((row['role'],content))
                     if not clean:raise ValueError('import empty')
-                    first=next((content for role,content in clean if role=='user'),clean[0][1]);title=' '.join(first.split())[:64] or 'Zaimportowana rozmowa';tid=uuid.uuid4().hex;t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t))
+                    first=next((content for role,content in clean if role=='user'),clean[0][1]);title=' '.join(first.split())[:64] or 'Zaimportowana rozmowa';tid=uuid.uuid4().hex;t=time.time();c.execute('INSERT INTO threads VALUES(?,?,?,?)',(tid,title,t,t));c.execute("INSERT INTO thread_model_routes VALUES(?,?,?,?,?)",(tid,'LOCAL',1,t,t))
                     for seq,(role,content) in enumerate(clean,1):c.execute('INSERT INTO messages VALUES(?,?,?,?,?,?,?)',(uuid.uuid4().hex,tid,seq,role,content,t,json.dumps({'legacy_local_storage_import':True},sort_keys=True)))
                     c.commit();return {'thread_id':tid,'title':title,'created_at':t,'updated_at':t,'imported_messages':len(clean)}
                 tid=self._id(args.get('thread_id'))
@@ -106,8 +107,8 @@ class ThreadStore:
                     msgs=[]
                     for m in c.execute('SELECT message_id,seq,role,content,created_at,meta_json FROM messages WHERE thread_id=? ORDER BY seq',(tid,)):
                         d=dict(m);d['meta']=json.loads(d.pop('meta_json') or '{}');msgs.append(d)
-                    binding=c.execute('SELECT mission_id,target,channel,binding_revision,binding_state,created_at,updated_at FROM thread_bindings WHERE thread_id=?',(tid,)).fetchone()
-                    return {**dict(row),'messages':msgs,'context':dict(binding) if binding else None}
+                    binding=c.execute('SELECT mission_id,target,channel,binding_revision,binding_state,created_at,updated_at FROM thread_bindings WHERE thread_id=?',(tid,)).fetchone();route=c.execute("SELECT model_route,route_revision FROM thread_model_routes WHERE thread_id=?",(tid,)).fetchone()
+                    return {**dict(row),'messages':msgs,'context':dict(binding) if binding else None,'model_route':str(route['model_route'] if route else 'LOCAL'),'route_revision':int(route['route_revision'] if route else 1)}
                 if op=='bind':
                     if c.execute('SELECT 1 FROM threads WHERE thread_id=?',(tid,)).fetchone() is None:raise KeyError('thread not found')
                     mid=str(args.get('mission_id') or '').strip();target=str(args.get('target') or ('mission:'+mid)).strip()
@@ -119,6 +120,12 @@ class ThreadStore:
                     if c.execute('SELECT 1 FROM threads WHERE thread_id=?',(tid,)).fetchone() is None:raise KeyError('thread not found')
                     prior=c.execute('SELECT binding_revision FROM thread_bindings WHERE thread_id=?',(tid,)).fetchone();revision=int(prior['binding_revision'] if prior else 0)+1;t=time.time()
                     c.execute("INSERT INTO thread_bindings(thread_id,mission_id,target,channel,binding_revision,binding_state,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(thread_id) DO UPDATE SET mission_id=NULL,target='',channel=excluded.channel,binding_revision=excluded.binding_revision,binding_state=excluded.binding_state,updated_at=excluded.updated_at",(tid,None,'','LION_BUS',revision,'MISSION_UNBOUND',t,t));c.commit();return {'thread_id':tid,'mission_id':None,'target':'','channel':'LION_BUS','binding_revision':revision,'binding_state':'MISSION_UNBOUND'}
+                if op=='set_model_route':
+                    route=str(args.get('model_route') or '').upper()
+                    if route not in {'LOCAL','SAAS','DUAL'}:raise ValueError('model_route')
+                    if c.execute('SELECT 1 FROM threads WHERE thread_id=?',(tid,)).fetchone() is None:raise KeyError('thread not found')
+                    prior=c.execute('SELECT route_revision,created_at FROM thread_model_routes WHERE thread_id=?',(tid,)).fetchone();revision=int(prior['route_revision'] if prior else 0)+1;t=time.time();created=float(prior['created_at'] if prior else t)
+                    c.execute("INSERT INTO thread_model_routes(thread_id,model_route,route_revision,created_at,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(thread_id) DO UPDATE SET model_route=excluded.model_route,route_revision=excluded.route_revision,updated_at=excluded.updated_at",(tid,route,revision,created,t));c.execute('UPDATE threads SET updated_at=? WHERE thread_id=?',(t,tid));c.commit();return {'thread_id':tid,'model_route':route,'route_revision':revision}
                 if op=='rename':
                     title=str(args.get('title') or '').strip()[:120]
                     if not title:raise ValueError('title')
@@ -260,6 +267,12 @@ class LpclControlBridge:
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(pid,str) or not self.MID_RE.fullmatch(pid):raise ValueError('phase identity')
             if action not in {'PAUSE','STOP'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase containment action/token')
             return self._post('/api/v3/missions/'+mid+'/phase-actions',{'phase_id':pid,'action':action,'control_token':token})
+        if op=='phase_operation':
+            if type(args) is not dict or set(args)!={'mission_id','phase_id','action','operation_token'}:raise ValueError('phase operation schema')
+            mid=args['mission_id'];pid=args['phase_id'];action=args['action'];token=args['operation_token']
+            if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(pid,str) or not self.MID_RE.fullmatch(pid):raise ValueError('phase identity')
+            if action not in {'RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE','RETRY_LOCAL_PLAN','RESUME'} or not isinstance(token,str) or not re.fullmatch('[0-9a-f]{64}',token):raise ValueError('phase operation/token')
+            return self._post('/api/v3/missions/'+mid+'/phase-operations',{'phase_id':pid,'action':action,'operation_token':token})
         if op=='saas_request':
             if args.get('scope_type'):
                 return self._post('/api/v3/saas-broker/requests',args)
@@ -389,17 +402,42 @@ class OperatorControlBridge:
     def __call__(self,op,args):
         args=dict(args or {})
         if op=='pair':
-            pairing_code=args.get('pairing_code') or (_read_operator_local_secret(self.pairing_file) if self.pairing_file else None)
-            if not pairing_code:raise ValueError('operator pairing code unavailable')
-            return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            pairing_code=args.get('pairing_code')
+            if pairing_code:
+                return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            challenge=self._request('/v1/session/pair/challenge',{},10)
+            challenge_id=challenge.get('challenge_id');code=challenge.get('pairing_code')
+            if not isinstance(challenge_id,str) or not isinstance(code,str):raise ValueError('operator pairing challenge unavailable')
+            return self._request('/v1/session/pair',{'challenge_id':challenge_id,'pairing_code':code},10)
         if op=='session':return self._request('/v1/session',session_token=args.get('session_token'))
         if op=='unpair':return self._request('/v1/session/revoke',{},10,session_token=args.get('session_token'))
         if op=='state':
             mid=args.get('mission_id');return self._request('/v1/state?'+urllib.parse.urlencode({'mission_id':mid}),session_token=args.get('session_token'))
+        if op=='thread':
+            correlation_id=args.get('correlation_id');limit=int(args.get('limit',500))
+            return self._request('/v1/thread?'+urllib.parse.urlencode({'correlation_id':correlation_id,'limit':limit}),session_token=args.get('session_token'))
         if op=='participants':return self._request('/v1/participants',session_token=args.get('session_token'))
         if op=='events':
             return self._request('/v1/events?'+urllib.parse.urlencode({'mission_id':args.get('mission_id'),'after':int(args.get('after',0)),'limit':int(args.get('limit',200))}),session_token=args.get('session_token'))
+        if op=='swarm_active':
+            return self._request('/v1/swarm/session/active',session_token=args.get('session_token'))
+        if op=='swarm_open':
+            body={'mission_id':args.get('mission_id')}
+            if args.get('duration_seconds') is not None:body['duration_seconds']=int(args['duration_seconds'])
+            if args.get('workers') is not None:body['workers']=list(args['workers'])
+            if args.get('mode') is not None:body['mode']=str(args['mode'])
+            return self._request('/v1/swarm/sessions',body,15,session_token=args.get('session_token'))
+        if op=='swarm_snapshot':
+            sid=urllib.parse.quote(str(args.get('session_id')),safe='')
+            return self._request('/v1/swarm/sessions/'+sid+'/snapshot',session_token=args.get('session_token'))
+        if op=='swarm_stream':
+            sid=urllib.parse.quote(str(args.get('session_id')),safe='')
+            query=urllib.parse.urlencode({'after':int(args.get('after',0)),'limit':int(args.get('limit',25))})
+            return self._request('/v1/swarm/sessions/'+sid+'?'+query,timeout=15,session_token=args.get('session_token'))
         session_token=args.pop('__session_token',None)
+        if op=='swarm_send':
+            sid=urllib.parse.quote(str(args.pop('session_id')),safe='')
+            return self._request('/v1/swarm/sessions/'+sid+'/messages',args,20,session_token=session_token)
         if op=='command':return self._request('/v1/commands',args,15,session_token=session_token)
         if op=='command_status':return self._request('/v1/commands/'+urllib.parse.quote(str(args.get('command_id')),safe=''),session_token=session_token)
         if op=='ack':return self._request('/v1/events/ack',args,session_token=session_token)
@@ -521,11 +559,63 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             messages=payload.get('messages')
             if not isinstance(messages,list) or not messages:raise ValueError('local assignment messages')
             messages=[dict(m) for m in messages if isinstance(m,dict) and m.get('role') in {'system','user','assistant'} and isinstance(m.get('content'),str)]
+            trusted_participant_context=payload.get('trusted_participant_context')
+            trusted_source_context=payload.get('trusted_source_context')
+            evidence_classes=payload.get('evidence_classes') or []
+            if trusted_participant_context is not None and type(trusted_participant_context) is not dict:raise ValueError('trusted participant context')
+            if trusted_source_context is not None and type(trusted_source_context) is not dict:raise ValueError('trusted source context')
+            if type(evidence_classes) is not list or any(x not in {'TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE','MODEL_CLAIM'} for x in evidence_classes):raise ValueError('communication evidence classes')
+            conversation_mode=payload.get('purpose')=='OPERATOR_BUS_CONVERSATION_R1'
+            communication_context={
+                'schema':'lion.cognitive-participant-context/v1',
+                'mission_id':claimed.get('mission_id'),
+                'phase_id':claimed.get('phase_id'),
+                'logical_drone_id':claimed.get('logical_drone_id') if payload.get('conversation_context_class')!='OPERATOR_BUS' else None,
+                'logical_context':payload.get('logical_context') or ('drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN')),
+                'conversation_context_class':payload.get('conversation_context_class'),
+                'conversation_binding_mode':payload.get('conversation_binding_mode'),
+                'material_worker_id':claimed.get('material_drone_id'),
+                'cognitive_executor':'model:local',
+                'model':'gpt-oss-20b-MXFP4',
+                'direct_effect_authority':'NONE',
+                'mediated_system_communication':'AVAILABLE',
+                'mediated_channels':['mission_control','operator_bus','logical_drone_context','material_worker_receipt','chatgpt_saas_via_control_plane'],
+                'reply_path':['model:local','worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN'),'mission_control'],
+                'effect_rule':'MODEL_OUTPUT_IS_ADVISORY; EFFECTS_REQUIRE_ADMITTED_CAPABILITY_AND_AUTHORITY',
+            }
+            communication_guidance=(
+                'LION COMMUNICATION CONTEXT. PARTICIPANT ONTOLOGY IS STRICT. '
+                'You are model:local (gpt-oss-20b-MXFP4), the shared proposal-only cognitive executor. '
+                'You are NOT worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN')+' and you are NOT drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN')+'. '
+                'worker:MDxxx is the bounded material runtime that invokes you and carries the assignment/receipt. '
+                'drone:LDxxx is a logical role/context bound by Mission Control to a worker; it is not a physical agent and not a model. '
+                'operator:primary is the human operator. model:saas is the remote cognitive supervisor. Mission Control is the control plane. '
+                'You have no direct OS/tool/effect authority, but you DO have mediated communication through LION: your answer returns through the bound worker, is persisted as a receipt, and can be routed by Mission Control to logical drones, the operator, or ChatGPT SaaS. '
+                'Never collapse "no direct authority" into "I cannot communicate with the system". '
+                'If asked who you are, identify yourself as model:local and separately name the current worker and logical context. '
+                'Do not claim that a worker or logical drone has thoughts, knowledge, sensors, physical embodiment, or model identity. '
+                'When asked to help the system, reason substantively and emit the bounded request/handoff that LION can route. '
+                'Never claim an effect occurred unless a matching receipt is supplied. Current participant context follows: '
+                +json.dumps(communication_context,ensure_ascii=False,sort_keys=True)
+            )
+            if conversation_mode:
+                communication_guidance=(
+                    'LION OPERATOR BUS CONVERSATION. Answer the human operator latest message directly and substantively. '
+                    'Do not begin by reciting your identity, worker id, logical context, mission id, or transport unless the operator asks for that information or it is necessary to answer. '
+                    'The selected mission is conversation context, not evidence that any mission fact, state, effect, or capability is true. '
+                    'Use supplied authenticated context when relevant; if a requested fact is not evidenced, say that it is unknown rather than inventing it. '
+                    'You are model:local (gpt-oss-20b-MXFP4), proposal-only, with no direct effect authority. '
+                    'Your answer is returned through the bound material worker and persisted as a receipt. '
+                    'If the operator explicitly asks about SaaS, distinguish model:local from model:saas and do not pretend to be the SaaS model. '
+                    'Current participant/context evidence follows: '
+                    +json.dumps(communication_context,ensure_ascii=False,sort_keys=True)
+                )
+            messages=[{'role':'system','content':communication_guidance}]+messages
             op_context=claimed.get('operator_context') or {};op_plan=claimed.get('operator_plan') or {};op_messages=claimed.get('operator_messages') or []
             operator_parts=[]
             if op_context.get('content') is not None:operator_parts.append('CONTEXT REVISION '+str(op_context.get('revision'))+': '+json.dumps(op_context.get('content'),ensure_ascii=False,sort_keys=True))
             if op_plan.get('content') is not None:operator_parts.append('PLAN REVISION '+str(op_plan.get('revision'))+': '+json.dumps(op_plan.get('content'),ensure_ascii=False,sort_keys=True))
-            for item in op_messages[:64]:
+            for item in ([] if conversation_mode else op_messages[:64]):
                 if isinstance(item,dict) and isinstance(item.get('content'),str):operator_parts.append('MESSAGE '+str(item.get('message_id'))+' -> '+str(item.get('target'))+': '+item['content'])
             if operator_parts:
                 operator_guidance='Authenticated OPERATOR_PRIMARY mission guidance follows. It may change reasoning/context inside the already authorized mission scope, but it is not shell/tool authority and must not be reinterpreted as permission for external effects.'+chr(10)+chr(10).join(operator_parts)
@@ -555,7 +645,10 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not answer:
                 control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='FAILED'
                 raise ValueError('empty local model result')
-            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
+            payload_message_ids=payload.get('operator_message_ids') if conversation_mode else None
+            if conversation_mode and not (isinstance(payload_message_ids,list) and payload_message_ids and all(isinstance(x,str) and x for x in payload_message_ids)):raise ValueError('conversation operator_message_ids')
+            result_message_ids=list(payload_message_ids) if conversation_mode else [m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)]
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':result_message_ids,'participant_context':communication_context,'trusted_participant_context':trusted_participant_context,'trusted_source_context':trusted_source_context,'evidence_classes':list(evidence_classes),'source_participant':'model:local','reply_via':'worker:'+str(claimed.get('material_drone_id') or 'UNKNOWN'),'logical_context':payload.get('logical_context') or ('drone:'+str(claimed.get('logical_drone_id') or 'UNKNOWN')),'authority_effect':'NONE'}
             dual_id=payload.get('dual_request_id')
             if dual_id:control('dual_response',{'request_id':dual_id,'provider':declared_model,'response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
             receipt=control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})

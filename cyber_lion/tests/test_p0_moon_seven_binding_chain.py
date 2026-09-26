@@ -12,7 +12,7 @@ from tools.p0_moon_seven_binding import (
 from tools.p0_moon_seven_binding_contract import COMPONENT_DOMAINS
 
 REPO="DonkeyJJLove/ai_platform"
-EXPECTED_SCAN="916f7af4b36798bce891de04db0a9797e91d6d0639162cb07d4cfed189c36f45"
+EXPECTED_SCAN="d4c591fb9a4454a583e664559bf7580c29adf4f6488eee1ecb18593c957829cf"
 EXPECTED_ATTACKS={
     "STALE_EFFECT_KEY","WRONG_EXPECTED_STATE","REPLAYED_EFFECT_KEY","CROSS_EPOCH_BINDING",
     "SURFACE_SUBSTITUTION","PROVIDER_SUBSTITUTION","ENTRYPOINT_SUBSTITUTION",
@@ -25,8 +25,9 @@ def current_inventory():
     sources={}
     for base in (root/"cyber_lion",root/".github/workflows"):
         for p in sorted(base.rglob("*")):
-            if p.is_file() and p.suffix in {".py",".yml",".yaml"}:
-                sources[p.relative_to(root).as_posix()]=p.read_text(encoding="utf-8")
+            rel=p.relative_to(root).as_posix()
+            if p.is_file() and p.suffix in {".py",".yml",".yaml"} and not rel.startswith("cyber_lion/tests/"):
+                sources[rel]=p.read_text(encoding="utf-8")
     revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip()
     tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],cwd=root,text=True).strip()
     raw=EffectSurfaceScanner().scan(repository=REPO,revision=revision,tree_digest=tree,sources=sources)

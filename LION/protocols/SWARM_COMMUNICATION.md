@@ -4,10 +4,16 @@ Niezależne wątki nie mogą zakładać bezpośredniego dostępu do stanu czatu 
 
 ## Adresy
 
+- `operator:primary` — uwierzytelniony operator człowiek.
+- `model:local` — lokalny wykonawca poznawczy `gpt-oss-20b-MXFP4`; wynik jest advisory, nie authority.
+- `model:saas` — ChatGPT SaaS supervisor przez bieżący zarejestrowany transport; wynik jest advisory, nie authority.
 - `mission:<mission_id>` — kanał roboczy misji.
-- `drone:<drone_id>` — rozwiązuje się do zarejestrowanego kanału roboczego drona.
+- `drone:<logical_id>` — **wyłącznie logiczny dron/rola misji**, np. `drone:LD001`.
+- `worker:<material_id>` — **wyłącznie materialny worker/executor**, np. `worker:MD001`.
 - `swarm:<swarm_id>` — współdzielony, tymczasowy kanał roju.
 - `group:<name>` — stabilny kanał funkcjonalny. Dla `architecture`, `security` i `runtime` transportem jest governowany `lion-group-channel.yml`, a rezultatem dostarczenia jest artefakt i niezależnie zweryfikowany receipt evidence-only.
+
+Historyczne `drone:MDxxx` może być rozpoznane jako alias kompatybilności, ale nowe receipts i odpowiedzi materialnego wykonawcy MUSZĄ używać `worker:MDxxx`. Dron logiczny i worker materialny nie są tym samym uczestnikiem.
 
 Nierozwiązany adres => fail closed i raport błędu routingu.
 
@@ -16,6 +22,10 @@ Nierozwiązany adres => fail closed i raport błędu routingu.
 Każda wiadomość między dronami zapisuje `message_id`, nadawcę, adres docelowy, kontekst misji, typ, correlation id, evidence refs, requested action i czas utworzenia. Dla transportu grupowego canonical envelope dodatkowo wiąże `repository`, `target`, `expected_master_head`, `issued_at`, `expires_at`, `payload_digest` i `envelope_digest`.
 
 Dozwolone typy logicznych wiadomości pozostają: `DEPENDENCY`, `HANDOFF`, `BLOCKER`, `EVIDENCE`, `REQUEST`, `STATUS`, `RECONCILIATION`. Sam typ wiadomości nie nadaje authority.
+
+Każdy hop poznawczy lub wykonawczy musi zachować pięć rozdzielnych ról: operator formułuje intencję; dron logiczny utrzymuje rolę/kontekst zadania; worker materialny odbiera bounded assignment i wystawia receipt; `model:local` wykonuje inferencję jako proposal-only executor; `model:saas` może niezależnie weryfikować lub rozszerzać inferencję przez zarejestrowany transport. Brak bezpośredniej authority modelu **nie oznacza braku komunikacji**: modele komunikują się z systemem wyłącznie przez mediowane koperty, assignments, receipts i Mission Control.
+
+Minimalna koperta komunikacyjna v2 przenosi: `source`, `target`, `mission_id`, `logical_drone_id`, `material_worker_id`, `correlation_id`, `causation_id`, `cognitive_route`, `evidence_refs`, `authority_effect`, `hop_count`, `hop_limit` i digest. Odbiorca nie może zamienić koperty komunikacyjnej w authority.
 
 ## Dostarczenie
 

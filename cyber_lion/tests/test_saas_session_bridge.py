@@ -152,14 +152,14 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
             def state(self):return {'status':'ok'}
             def chat(self,message,use_web=False,history=None,output_language='auto'):return {'route':'LOCAL','answer':'local'}
         apply_saas_handoff_extension(Dummy)
-        d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'ABCD1234','request_id':'saas-'+'1'*32,'authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
+        d=Dummy();d.control_provider=lambda op,args: ({'focus_mission_id':'M1','missions':[]} if op=='recent' else ({'request_code':'ABCD1234','request_id':'saas-'+'1'*32,'transport':'CHATGPT_SENTINELX_MCP','authority_effect':'NONE'} if op=='saas_request' else {'state':'UNBOUND'}))
         self.assertEqual(d._route('No to wykonaj na SaaS zapytanie: Kim jesteś?')[0],'LOCAL')
         token=ROUTE_CONTEXT.set('SAAS');self.addCleanup(lambda: ROUTE_CONTEXT.reset(token))
         self.assertEqual(d._route('No to wykonaj na SaaS zapytanie: Kim jesteś?')[0],'SAAS_HANDOFF')
         out=d.chat('No to wykonaj na SaaS zapytanie: Kim jesteś?',output_language='pl')
         self.assertEqual(out['route'],'SAAS_HANDOFF')
-        self.assertIn('automatycznie',out['answer'])
-        self.assertIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
+        self.assertIn('CHATGPT_SENTINELX_MCP',out['answer'])
+        self.assertIn('bieżącego preferowanego mediatora',out['answer'])
 
     def test_explicit_saas_route_reports_firefox_mediator_when_request_is_browser_bound(self):
         class Dummy:
@@ -258,8 +258,10 @@ class PanelThreadDeliveryTests(unittest.TestCase):
         self.assertNotIn('adoptPendingSaas',ui)
         self.assertNotIn('stopThreadPolling',ui)
         self.assertNotIn('renderSupervisor(x.supervisor_projection)',ui)
-        self.assertIn("m.get('correlation_id')==tid",source)
+        self.assertIn("self._operator('thread',{'correlation_id':tid,'limit':500",source)
         self.assertIn("'correlation_id':tid",source)
+        self.assertIn("'suppressed_response_ids':thread_state.get('suppressed_response_ids')",source)
+        self.assertIn("'thread_mission_ids':thread_state.get('mission_ids')",source)
         self.assertIn('missionPinned=false',ui)
         self.assertIn('FOLLOW_FOCUS',ui)
         self.assertIn('missionsRefreshing',ui)

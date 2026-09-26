@@ -477,13 +477,14 @@ def bind_128l64m(conn,mission_id,lpcl_text,workers,now_fn,*,adapter="LPCL_REBOUN
 
 def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,*,adapter="LPCL_DOCKER_LOCAL_MODEL",runtime_state="DOCKER_LOCAL_MODEL_FLEET_BOUND",role_prefix="AUTONOMOUS_LOGICAL",currentness_digest=None):
     if type(logical_count) is not int or not 1<=logical_count<=512:raise ValueError("logical count")
-    if not isinstance(workers,list) or len(workers)!=32:raise ValueError("material worker count must be 32")
+    if not isinstance(workers,list) or not 1<=len(workers)<=32:raise ValueError("material worker count must be 1..32")
     ordered=sorted(workers,key=lambda w:str(w.get("material_worker_id") or ""))
+    material_count=len(ordered)
     mids=[str(w.get("material_worker_id") or "") for w in ordered]
-    expected=[f"MD{i:03d}" for i in range(1,33)]
+    expected=[f"MD{i:03d}" for i in range(1,material_count+1)]
     if mids!=expected:raise ValueError("material worker identity set")
     uids=[str(w.get("pod_uid") or w.get("container_id") or "") for w in ordered]
-    if any(not x for x in uids) or len(set(uids))!=32:raise ValueError("material worker UIDs")
+    if any(not x for x in uids) or len(set(uids))!=material_count:raise ValueError("material worker UIDs")
     if any(int(w.get("ready",0) or 0)!=1 for w in ordered):raise ValueError("all material workers must be ready")
     stamp=now_fn()
     conn.execute("DELETE FROM logical_drones WHERE mission_id=?",(mission_id,))
@@ -492,7 +493,7 @@ def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,
     logical=[f"LD{i:03d}" for i in range(1,logical_count+1)]
     distribution={mid:[] for mid in mids}
     for idx,lid in enumerate(logical):
-        mid=mids[idx%32];distribution[mid].append(lid)
+        mid=mids[idx%material_count];distribution[mid].append(lid)
         conn.execute("INSERT INTO logical_drones VALUES(?,?,?,?,?,?)",(mission_id,lid,f"{role_prefix}_{idx+1:03d}",1,1,1))
     by={str(w["material_worker_id"]):w for w in ordered}
     for mid in mids:
@@ -505,9 +506,9 @@ def bind_dynamic_local_model_fleet(conn,mission_id,logical_count,workers,now_fn,
             aid="topology-"+uuid.uuid4().hex
             value={"material_worker_id":mid,"container_id":pod_uid,"container_name":pod_name,"model":w.get("model"),"currentness_digest":currentness_digest,"binding_class":"DOCKER_LOCAL_MODEL"}
             conn.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,created_at,claimed_at,finished_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(aid,mission_id,"__TOPOLOGY__",lid,mid,digest(value),_canon(value),"BOUND",1,stamp,stamp,stamp))
-    conn.execute("UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=32,ready=32,updated_at=?,last_error=NULL WHERE mission_id=?",(str(adapter),str(runtime_state),stamp,mission_id))
+    conn.execute("UPDATE missions SET adapter=?,state='RUNNING',runtime_state=?,materialized=?,ready=?,updated_at=?,last_error=NULL WHERE mission_id=?",(str(adapter),str(runtime_state),material_count,material_count,stamp,mission_id))
     conn.commit()
-    return {"mission_id":mission_id,"logical_count":logical_count,"material_count":32,"unique_uid_count":32,"assignments":logical_count,"distribution":sorted((mid,len(distribution[mid])) for mid in mids),"authority_effect":"MISSION_SCOPED_CONTROL_BINDING"}
+    return {"mission_id":mission_id,"logical_count":logical_count,"material_count":material_count,"unique_uid_count":material_count,"assignments":logical_count,"distribution":sorted((mid,len(distribution[mid])) for mid in mids),"authority_effect":"MISSION_SCOPED_CONTROL_BINDING"}
 
 
 def eligible_missions(conn):
@@ -554,7 +555,7 @@ def _store_stale_result(conn,row,result,result_digest,now_fn,*,material_drone_id
 def _record_receipt(conn,assignment_id,result,now_fn,*,status,effect_receipt_digest,authority_effect,worker_binding=None):
     result_digest=digest(result);rid="receipt-"+uuid.uuid4().hex;stamp=now_fn();conn.execute('SAVEPOINT scheduler_receipt_ingress')
     try:
-        conn.execute('UPDATE mission_execution_assignments SET state=state WHERE assignment_id=?',(assignment_id,));row=conn.execute("SELECT assignment_id,mission_id,phase_id,state,material_drone_id,lease_generation,control_epoch,dispatch_authority FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+        conn.execute('UPDATE mission_execution_assignments SET state=state WHERE assignment_id=?',(assignment_id,));row=conn.execute("SELECT assignment_id,mission_id,phase_id,state,material_drone_id,lease_generation,control_epoch,dispatch_authority,input_json FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
         if not row:raise ValueError("assignment missing")
         if worker_binding is not None:
             material_drone_id,lease_generation=worker_binding
@@ -563,8 +564,9 @@ def _record_receipt(conn,assignment_id,result,now_fn,*,status,effect_receipt_dig
                 if "mission_operator_control" in {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}:
                     sid=_store_stale_result(conn,row,result,result_digest,now_fn,material_drone_id=material_drone_id,lease_generation=lease_generation,reason='STALE_CONTROL_EPOCH');conn.execute('RELEASE scheduler_receipt_ingress');conn.commit();raise StaleAssignmentResult('stale assignment control epoch; historical_result='+sid)
                 raise ValueError('stale assignment control epoch')
-            driver=conn.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(row['mission_id'],)).fetchone()
-            if row['lease_generation']!=lease_generation or not driver or driver['generation']!=lease_generation:
+            driver_required=_assignment_lease_scope(row)!='OPERATOR_BUS'
+            driver=conn.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(row['mission_id'],)).fetchone() if driver_required else None
+            if row['lease_generation']!=lease_generation or (driver_required and (not driver or driver['generation']!=lease_generation)):
                 tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
                 if 'mission_operator_control' in tables and row['state']=='CANCEL_REQUESTED':
                     sid=_store_stale_result(conn,row,result,result_digest,now_fn,material_drone_id=material_drone_id,lease_generation=lease_generation,reason='STALE_DRIVER_GENERATION');conn.execute('RELEASE scheduler_receipt_ingress');conn.commit();raise StaleAssignmentResult('stale assignment generation; historical_result='+sid)
@@ -579,10 +581,24 @@ def _record_receipt(conn,assignment_id,result,now_fn,*,status,effect_receipt_dig
     conn.execute('RELEASE scheduler_receipt_ingress');conn.commit();return {"receipt_id":rid,"duplicate":False,"result_digest":result_digest}
 
 
+def _assignment_lease_scope(row):
+    try:value=json.loads(row['input_json'] or '{}')
+    except Exception:value={}
+    return value.get('lease_scope') if isinstance(value,dict) else None
+
 def pending_local_assignments(conn,*,mission_id=None,limit=16):
     if type(limit) is not int or not 1<=limit<=64:raise ValueError("assignment limit")
     rows=conn.execute("SELECT * FROM mission_execution_assignments WHERE state='READY' AND mission_id=? ORDER BY created_at,assignment_id LIMIT ?",(mission_id,max(limit*4,limit))).fetchall() if mission_id else conn.execute("SELECT * FROM mission_execution_assignments WHERE state='READY' ORDER BY created_at,assignment_id LIMIT ?",(max(limit*4,limit),)).fetchall();allowed=[]
+    driver_cols={r[1] for r in conn.execute("PRAGMA table_info(mission_execution_drivers)")}
+    generation_cache={}
     for row in rows:
+        if 'generation' in driver_cols and _assignment_lease_scope(row)!='OPERATOR_BUS':
+            mid=row['mission_id']
+            if mid not in generation_cache:
+                driver=conn.execute("SELECT generation FROM mission_execution_drivers WHERE mission_id=?",(mid,)).fetchone()
+                generation_cache[mid]=int(driver['generation']) if driver and driver['generation'] is not None else None
+            current_generation=generation_cache[mid]
+            if current_generation is not None and int(row['lease_generation'])!=current_generation:continue
         if operator_control.assignment_allowed(conn,row['mission_id'],row['dispatch_authority'],int(row['control_epoch'])):allowed.append(dict(row))
         if len(allowed)>=limit:break
     return allowed
@@ -610,7 +626,7 @@ def claim_assignment(conn,assignment_id,now_fn,*,expected_material_drone_id=None
         if expected_material_drone_id and row['material_drone_id']!=expected_material_drone_id:raise ValueError("material identity mismatch")
         if not operator_control.assignment_allowed(conn,row['mission_id'],row['dispatch_authority'],int(row['control_epoch'])):raise ValueError('operator control fence')
         driver_cols={r[1] for r in conn.execute('PRAGMA table_info(mission_execution_drivers)')}
-        if 'generation' in driver_cols:
+        if 'generation' in driver_cols and _assignment_lease_scope(row)!='OPERATOR_BUS':
             driver=conn.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(row['mission_id'],)).fetchone()
             if not driver or int(driver['generation'])!=int(row['lease_generation']):raise ValueError('stale assignment generation')
         stamp=now_fn();expires=_assignment_lease_deadline(stamp,lease_seconds);cur=conn.execute("UPDATE mission_execution_assignments SET state='CLAIMED',claimed_at=?,lease_expires_at=? WHERE assignment_id=? AND state='READY'",(stamp,expires,assignment_id))

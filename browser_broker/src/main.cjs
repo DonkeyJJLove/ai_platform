@@ -15,7 +15,7 @@ projectInfo(PROJECT);
 if(process.env.LION_BROWSER_DATA)app.setPath('userData',path.resolve(process.env.LION_BROWSER_DATA));
 app.enableSandbox();
 if(!app.requestSingleInstanceLock()){app.quit()}else{
- let win,views=[],store,engine,server,timer;let closing=false;let activeRightTab='mission';
+ let win,views=[],store,engine,server,timer;let closing=false;let activeRightTab='panel';let selectRightTab=()=>{};
  const shutdown=()=>{if(closing)return;closing=true;clearInterval(timer);try{store?.shutdown()}catch{};server?.close();for(const view of views)if(!view.webContents.isDestroyed())view.webContents.close();try{store?.close()}catch{}};
  app.on('before-quit',shutdown);
  app.on('second-instance',()=>{if(win&&!win.isDestroyed()){win.show();win.focus()}});
@@ -39,8 +39,8 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   const authHosts=new Set(['chatgpt.com','auth.openai.com','auth0.openai.com','accounts.google.com','login.microsoftonline.com','login.live.com','appleid.apple.com']);
   for(const v of views){
    const wc=v.webContents;
-   const allowed=raw=>{try{const u=new URL(raw);if(u.username||u.password)return false;if(v===panel)return u.origin===new URL(PANEL).origin;if(v===mission)return u.origin===new URL(MC).origin;if(v===tabs)return u.protocol==='data:';return u.protocol==='https:'&&authHosts.has(u.hostname)}catch{return false}};
-   wc.on('will-navigate',(event,url)=>{if(!allowed(url))event.preventDefault()});
+   const allowed=raw=>{try{const u=new URL(raw);if(u.username||u.password)return false;if(v===panel)return u.origin===new URL(PANEL).origin;if(v===mission)return u.origin===new URL(MC).origin;if(v===tabs)return u.protocol==='data:'||u.protocol==='lion-tab:';return u.protocol==='https:'&&authHosts.has(u.hostname)}catch{return false}};
+   wc.on('will-navigate',(event,url)=>{if(v===tabs){try{const u=new URL(url);if(u.protocol==='lion-tab:'){event.preventDefault();selectRightTab(u.hostname);return}}catch{}}if(!allowed(url))event.preventDefault()});
    wc.on('will-redirect',(event,url)=>{if(!allowed(url))event.preventDefault()});
    wc.setWindowOpenHandler(()=>({action:'deny'}));
    wc.on('will-attach-webview',event=>event.preventDefault());
@@ -50,11 +50,10 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
    wc.on('render-process-gone',()=>{store.stop();win.setTitle('LION Broker — renderer stopped; operator required')});
   }
   const TAB_HEIGHT=38;
-  const layout=()=>{const {width,height}=win.getContentBounds();const split=Math.floor(width*.5),rightWidth=width-split,bodyHeight=Math.max(0,height-TAB_HEIGHT);panel.setBounds({x:0,y:0,width:split,height});tabs.setBounds({x:split,y:0,width:rightWidth,height:TAB_HEIGHT});const shown={x:split,y:TAB_HEIGHT,width:rightWidth,height:bodyHeight},hidden={x:split,y:TAB_HEIGHT,width:0,height:0};saas.setBounds(activeRightTab==='saas'?shown:hidden);mission.setBounds(activeRightTab==='mission'?shown:hidden)};
-  const selectRightTab=name=>{activeRightTab=name==='saas'?'saas':'mission';layout();win.setTitle(activeRightTab==='mission'?'LION Broker — Mission Control':'LION Broker — sesja SaaS')};
-  tabs.webContents.on('did-navigate-in-page',(_event,url)=>{try{const hash=new URL(url).hash;if(hash==='#saas')selectRightTab('saas');else if(hash==='#mission')selectRightTab('mission')}catch{}});
-  const tabHtml='<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0b1117;color:#dce8f2;font:13px system-ui;overflow:hidden}nav{height:100%;display:flex;align-items:end;border-bottom:1px solid #304454;padding:0 8px;box-sizing:border-box;gap:6px}a{color:#b7c9d7;text-decoration:none;padding:9px 14px 8px;border:1px solid #304454;border-bottom:0;border-radius:7px 7px 0 0;background:#121d26}a:hover{background:#1b2a36;color:white}</style><nav><a href="#mission">LION MISSION CONTROL</a><a href="#saas">ChatGPT SaaS</a></nav>';
-  win.on('resize',layout);selectRightTab('mission');win.on('closed',()=>app.quit());
+  const layout=()=>{const {width,height}=win.getContentBounds();const split=Math.floor(width*.5),rightWidth=width-split,bodyHeight=Math.max(0,height-TAB_HEIGHT);mission.setBounds({x:0,y:0,width:split,height});tabs.setBounds({x:split,y:0,width:rightWidth,height:TAB_HEIGHT});const shown={x:split,y:TAB_HEIGHT,width:rightWidth,height:bodyHeight},hidden={x:split,y:TAB_HEIGHT,width:0,height:0};panel.setBounds(activeRightTab==='panel'?shown:hidden);saas.setBounds(activeRightTab==='saas'?shown:hidden)};
+  selectRightTab=name=>{activeRightTab=name==='saas'?'saas':'panel';layout();win.setTitle(activeRightTab==='panel'?'LION Broker — LPCL Panel':'LION Broker — sesja SaaS')};
+  const tabHtml='<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0b1117;color:#dce8f2;font:13px system-ui;overflow:hidden}nav{height:100%;display:flex;align-items:end;border-bottom:1px solid #304454;padding:0 8px;box-sizing:border-box;gap:6px}a{color:#b7c9d7;text-decoration:none;padding:9px 14px 8px;border:1px solid #304454;border-bottom:0;border-radius:7px 7px 0 0;background:#121d26}a:hover{background:#1b2a36;color:white}</style><nav><a href="lion-tab://panel">LPCL PANEL</a><a href="lion-tab://saas">ChatGPT SaaS</a></nav>';
+  win.on('resize',layout);selectRightTab('panel');win.on('closed',()=>app.quit());
   const browser=new EmbeddedBrowser(saas.webContents,PROJECT);
   const request=async(base,headers,route,method='GET',body)=>{
    const response=await fetch(new URL(route,base),{method,headers:{...headers,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(5000),redirect:'error'});
@@ -88,7 +87,7 @@ if(!app.requestSingleInstanceLock()){app.quit()}else{
   let relay=relayScope?(relayScope.mode==='THREAD_CONSUMER'?new ThreadConsumer({store,mc,ingress,scope:relayScope}):new Relay({store,browser,mc,ingress,scope:relayScope})):null;
   const startupConversation=relay instanceof ThreadConsumer?relay.scope.conversation_url:store.restoreConversation();
   const source={host:require('node:os').hostname(),entrypoint:__filename,sha256:require('./contract.cjs').hash(fs.readFileSync(__filename))};
-  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,engine:{running:engine.running,lastTickAt:engine.lastTickAt,lastDecision:engine.lastDecision},relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
+  const status=async()=>({observed_at:new Date().toISOString(),runtime:{electron:process.versions.electron,node:process.versions.node,platform:process.platform,source},ui:{left_surface:'mission_control',right_active:activeRightTab,right_tabs:['panel','saas']},browser:await browser.inspect(),conversation:browser.bindingReport(),ingress_credential_present:!!ingressToken,mediator_credential_present:!!mediatorKey,transport_error:engine.lastError,engine:{running:engine.running,lastTickAt:engine.lastTickAt,lastDecision:engine.lastDecision},relay:relay?.status()||{state:'NOT_CONFIGURED'},conversation_url:(()=>{try{return require('./contract.cjs').conversation(saas.webContents.getURL(),PROJECT)}catch{return 'PROJECT_OR_AUTH_VIEW'}})()});
   const diagnose=async()=>{
    const probe=async fn=>{try{return await fn()}catch{return {state:'UNREACHABLE_OR_UNAUTHORIZED'}}};
    const [local,broker,health]=await Promise.all([status(),probe(()=>mc('/api/v3/saas/status')),probe(()=>ingress('/health'))]);

@@ -8,6 +8,7 @@ process so containment can survive loss of the main 8766 HTTP service.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -22,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from cyber_lion.mission_control import operator_control, operator_swarm_session
+from cyber_lion.mission_control import global_scheduler, hmk9d_process, operator_control, operator_swarm_session
 
 DEFAULT_DB = "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db"
 DEFAULT_KEY = "/var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key"
@@ -67,8 +68,8 @@ def read_json(path: Path, default):
 class Runtime:
     def __init__(self, db: Path, key_file: Path, proxy_key_file: Path, panel_proxy_key_file: Path, pairing_key_file: Path, floor_file: Path, mission_control_url: str, *, bootstrap_primary=False):
         self.db=db.resolve();self.key_file=key_file.resolve();self.proxy_key_file=proxy_key_file.resolve();self.panel_proxy_key_file=panel_proxy_key_file.resolve();self.pairing_key_file=pairing_key_file.resolve();self.floor_file=floor_file.resolve()
-        self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={}
-        c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now)
+        self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={};self.pairing_challenges={}
+        c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now);hmk9d_process.migrate(c,now)
         participant=operator_control.participant_snapshot(c).get('participant')
         if participant is None:
             if not bootstrap_primary:
@@ -96,10 +97,31 @@ class Runtime:
         if len(supplied)==len(self.panel_proxy_key) and secrets.compare_digest(supplied,self.panel_proxy_key):return operator_control.PANEL_PROXY_PRINCIPAL
         return None
 
-    def pair_panel(self, supplied_key, pairing_code):
+    def issue_panel_pairing_challenge(self, supplied_key):
         if self._key_identity(supplied_key)!=operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('panel transport authentication required')
-        if not isinstance(pairing_code,str) or len(pairing_code)!=len(self.pairing_key) or not secrets.compare_digest(pairing_code,self.pairing_key):raise PermissionError('operator pairing code denied')
-        token=secrets.token_urlsafe(48);expires=__import__('time').time()+8*3600
+        stamp=time.time();challenge_id=secrets.token_hex(16);code=secrets.token_hex(16);expires=stamp+60.0
+        with self.session_lock:
+            self.pairing_challenges={k:v for k,v in self.pairing_challenges.items() if v.get('expires',0)>stamp and v.get('attempts',0)>0}
+            self.pairing_challenges[challenge_id]={'code_digest':hashlib.sha256(code.encode()).hexdigest(),'expires':expires,'attempts':3,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL}
+        return {'challenge_id':challenge_id,'pairing_code':code,'expires_at_epoch':expires,'attempts_remaining':3,'authority_effect':'NONE'}
+
+    def pair_panel(self, supplied_key, pairing_code, challenge_id=None):
+        if self._key_identity(supplied_key)!=operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('panel transport authentication required')
+        if challenge_id is None:
+            if not isinstance(pairing_code,str) or len(pairing_code)!=len(self.pairing_key) or not secrets.compare_digest(pairing_code,self.pairing_key):raise PermissionError('operator pairing code denied')
+        else:
+            if not isinstance(challenge_id,str) or len(challenge_id)!=32 or not isinstance(pairing_code,str):raise PermissionError('operator pairing challenge denied')
+            stamp=time.time()
+            with self.session_lock:
+                challenge=self.pairing_challenges.get(challenge_id)
+                if not challenge or challenge.get('expires',0)<=stamp or challenge.get('transport_principal')!=operator_control.PANEL_PROXY_PRINCIPAL:
+                    self.pairing_challenges.pop(challenge_id,None);raise PermissionError('operator pairing challenge expired or invalid')
+                if not secrets.compare_digest(hashlib.sha256(pairing_code.encode()).hexdigest(),challenge['code_digest']):
+                    challenge['attempts']=int(challenge.get('attempts',0))-1
+                    if challenge['attempts']<=0:self.pairing_challenges.pop(challenge_id,None)
+                    raise PermissionError('operator pairing challenge denied')
+                self.pairing_challenges.pop(challenge_id,None)
+        token=secrets.token_urlsafe(48);expires=time.time()+8*3600
         with self.session_lock:self.sessions[token]={'principal_id':operator_control.PRIMARY_OPERATOR,'expires':expires,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL}
         return {'paired':True,'principal_id':operator_control.PRIMARY_OPERATOR,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL,'session_token':token,'expires_at_epoch':expires}
 
@@ -160,6 +182,51 @@ class Runtime:
         except Exception:c.rollback();raise
         finally:c.close()
 
+    def _mission_control_json(self,path,*,method='GET',body=None,timeout=10):
+        url=self.mission_control_url+path
+        data=None;headers={'Accept':'application/json','User-Agent':'LION-Operator-Gateway/1'}
+        if body is not None:
+            data=json.dumps(body,sort_keys=True,separators=(',',':')).encode('utf-8');headers['Content-Type']='application/json'
+        req=urllib.request.Request(url,data=data,headers=headers,method=method)
+        with urllib.request.urlopen(req,timeout=timeout) as response:
+            raw=response.read().decode('utf-8')
+        value=json.loads(raw or '{}')
+        if not isinstance(value,dict):raise ValueError('mission control response')
+        return value
+
+    def ensure_saas_request(self,message_id):
+        c=self.connect()
+        try:
+            row=c.execute("""SELECT mission_id,message_id,content,correlation_id,model_route,external_request_id
+                             FROM operator_messages WHERE message_id=?""",(message_id,)).fetchone()
+            if row is None:raise ValueError('operator message missing')
+            if row['model_route'] not in {'SAAS','DUAL'}:raise ValueError('saas route not requested')
+            if not row['correlation_id']:raise ValueError('saas thread correlation required')
+            if row['external_request_id']:
+                return {'message_id':message_id,'request_id':row['external_request_id'],'idempotent':True,'authority_effect':'NONE'}
+            payload={'scope_type':'THREAD','thread_id':row['correlation_id'],'mission_id':row['mission_id'],'question':row['content'],'authority_effect':'NONE'}
+        finally:c.close()
+        created=self._mission_control_json('/api/v3/saas-broker/requests',method='POST',body=payload,timeout=15)
+        request_id=created.get('request_id')
+        if not isinstance(request_id,str) or not request_id:raise ValueError('saas request identity')
+        c=self.connect()
+        try:return operator_control.link_external_request(c,message_id,request_id,now)
+        finally:c.close()
+
+    def reconcile_saas_message(self,message_id):
+        linked=self.ensure_saas_request(message_id)
+        request_id=linked['request_id']
+        status=self._mission_control_json('/api/v3/saas-broker/requests/'+request_id,timeout=10)
+        if status.get('status')!='RESPONDED' or not status.get('receipt_digest'):
+            return {'message_id':message_id,'request_id':request_id,'state':status.get('status') or 'UNKNOWN','delivered':False,'authority_effect':'NONE'}
+        text=status.get('response_text');receipt=status.get('receipt_digest')
+        if not isinstance(text,str) or not text.strip():raise ValueError('saas response text missing')
+        c=self.connect()
+        try:
+            out=operator_control.record_external_model_response(c,message_id,request_id,'model:saas',text,receipt,now)
+        finally:c.close()
+        return {**out,'state':'RESPONDED','delivered':True}
+
     def try_resume_driver(self,command):
         result=command.get('result') or {}
         if not result.get('driver_resume_required'):return command
@@ -184,6 +251,314 @@ class Runtime:
         if value.get('action') in operator_control.CONTROL_ACTIONS or value.get('action')=='REASSIGN':
             self.persist_floor(value['mission_id'])
         return self.try_resume_driver(out) if value.get('action')=='RESUME_SCOPE' else out
+
+    def _conversation_bindings(self,c,mission_id):
+        rows=c.execute("""SELECT logical_drone_id,material_drone_id
+                          FROM mission_execution_assignments
+                          WHERE mission_id=? AND phase_id='__TOPOLOGY__' AND state='BOUND'
+                            AND logical_drone_id IS NOT NULL AND material_drone_id IS NOT NULL
+                          ORDER BY logical_drone_id,material_drone_id""",(mission_id,)).fetchall()
+        out=[];seen=set()
+        for row in rows:
+            pair=(str(row['logical_drone_id']),str(row['material_drone_id']))
+            if pair in seen:continue
+            seen.add(pair);out.append(pair)
+        return out
+
+    def _global_ready_workers(self,c):
+        if 'material_workers' not in {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}:
+            return []
+        rows=c.execute("""SELECT logical_id,MAX(observed_at) observed_at
+                          FROM material_workers
+                          WHERE ready=1 AND phase='DOCKER_LOCAL_MODEL'
+                            AND logical_id IS NOT NULL AND logical_id LIKE 'MD%'
+                          GROUP BY logical_id
+                          ORDER BY logical_id""").fetchall()
+        return [str(r['logical_id']) for r in rows if isinstance(r['logical_id'],str) and r['logical_id']]
+
+    def _conversation_binding(self,c,mission_id,target,correlation_id):
+        bindings=self._conversation_bindings(c,mission_id)
+        seed=str(correlation_id or target or mission_id)
+        if bindings:
+            candidates=list(bindings)
+            if isinstance(target,str) and target.startswith('drone:'):
+                ident=target.split(':',1)[1];candidates=[x for x in bindings if x[0]==ident]
+            elif isinstance(target,str) and target.startswith('worker:'):
+                ident=target.split(':',1)[1];candidates=[x for x in bindings if x[1]==ident]
+            elif isinstance(target,str) and target.startswith('group:'):
+                recipients=set(operator_control.resolve_target(c,mission_id,target))
+                candidates=[x for x in bindings if ('drone:'+x[0]) in recipients or ('worker:'+x[1]) in recipients]
+            elif isinstance(target,str) and target not in {'mission:'+mission_id,'swarm:'+mission_id}:
+                operator_control.resolve_target(c,mission_id,target)
+            if candidates:
+                index=int(hashlib.sha256(seed.encode('utf-8')).hexdigest(),16)%len(candidates)
+                logical_id,material_id=candidates[index]
+                return logical_id,material_id,'MISSION_TOPOLOGY'
+        global_workers=self._global_ready_workers(c)
+        if isinstance(target,str) and target.startswith('operatorbus:'):
+            ident=target.split(':',1)[1]
+            if ident in global_workers:return 'OPERATOR_BUS',ident,'GLOBAL_READY_WORKER_EXPLICIT'
+            raise ValueError('conversation worker unavailable')
+        if isinstance(target,str) and target.startswith('worker:'):
+            ident=target.split(':',1)[1]
+            if ident in global_workers:return 'OPERATOR_BUS',ident,'GLOBAL_READY_WORKER_EXPLICIT'
+            raise ValueError('conversation worker unavailable')
+        if isinstance(target,str) and (target.startswith('drone:') or target.startswith('group:')):
+            raise ValueError('conversation target requires mission topology')
+        if isinstance(target,str) and target not in {'mission:'+mission_id,'swarm:'+mission_id}:
+            raise ValueError('conversation target has no current executor')
+        if not global_workers:raise ValueError('global conversation worker unavailable')
+        index=int(hashlib.sha256(seed.encode('utf-8')).hexdigest(),16)%len(global_workers)
+        return 'OPERATOR_BUS',global_workers[index],'GLOBAL_READY_WORKER_FALLBACK'
+
+    def route_conversation_command(self,value):
+        mission_id=str(value.get('mission_id') or '');target=str(value.get('target') or ('mission:'+mission_id));correlation_id=value.get('correlation_id')
+        c=self.connect()
+        try:logical_id,material_id,binding_mode=self._conversation_binding(c,mission_id,target,correlation_id)
+        finally:c.close()
+        routed=dict(value);routed['target']='operatorbus:'+material_id
+        payload=dict(value.get('payload') or {})
+        payload['conversation_scope_target']=target
+        payload['conversation_context_class']='OPERATOR_BUS' if logical_id=='OPERATOR_BUS' else 'MISSION_LOGICAL_DRONE'
+        payload['conversation_binding_mode']=binding_mode
+        payload['conversation_logical_context']=('operator-bus:'+mission_id) if logical_id=='OPERATOR_BUS' else ('drone:'+logical_id)
+        routed['payload']=payload
+        return routed,{'scope_target':target,'logical_drone_id':logical_id,'material_drone_id':material_id,'binding_mode':binding_mode,'authority_effect':'NONE'}
+
+    def _conversation_history(self,c,mission_id,correlation_id,current_message_id,limit=6):
+        if not isinstance(correlation_id,str) or not correlation_id:return []
+        current=c.execute("SELECT created_at,message_id FROM operator_messages WHERE mission_id=? AND message_id=?",(mission_id,current_message_id)).fetchone()
+        if not current:return []
+        prior=c.execute("""SELECT message_id,content,created_at
+                           FROM operator_messages
+                           WHERE mission_id=? AND correlation_id=? AND from_participant=? AND kind='MESSAGE'
+                             AND (created_at<? OR (created_at=? AND message_id<?))
+                           ORDER BY created_at DESC,message_id DESC LIMIT ?""",
+                        (mission_id,correlation_id,operator_control.PRIMARY_PARTICIPANT,current['created_at'],current['created_at'],current['message_id'],int(limit))).fetchall()
+        messages=[]
+        for row in reversed(prior):
+            messages.append({'role':'user','content':str(row['content'])[:12000]})
+            reply=c.execute("""SELECT r.content
+                               FROM operator_messages r
+                               JOIN mission_execution_assignments a ON a.assignment_id=r.applied_assignment_id
+                               WHERE r.mission_id=? AND r.correlation_id=? AND r.kind='RESPONSE'
+                                 AND r.causation_id=? AND a.input_json LIKE '%"conversation_protocol_version":3%'
+                               ORDER BY r.created_at DESC,r.message_id DESC LIMIT 1""",
+                            (mission_id,correlation_id,row['message_id'])).fetchone()
+            if reply:messages.append({'role':'assistant','content':str(reply['content'])[:12000]})
+        return messages[-12:]
+
+    def dispatch_conversation_message(self,value,applied):
+        mission_id=str(value.get('mission_id') or '')
+        target=str(value.get('target') or ('mission:'+mission_id))
+        correlation_id=value.get('correlation_id')
+        result=applied.get('result') if isinstance(applied,dict) else None
+        message_id=result.get('message_id') if isinstance(result,dict) else None
+        payload=value.get('payload') if isinstance(value.get('payload'),dict) else {}
+        content=payload.get('content')
+        if not mission_id or not isinstance(message_id,str) or not isinstance(content,str) or not content.strip():
+            raise ValueError('conversation dispatch input')
+        c=self.connect()
+        try:
+            turn=c.execute("SELECT created_at FROM operator_messages WHERE mission_id=? AND message_id=?",(mission_id,message_id)).fetchone()
+            if not turn:raise ValueError('conversation message missing')
+            mission_row=c.execute("SELECT * FROM missions WHERE mission_id=?",(mission_id,)).fetchone()
+            if not mission_row:raise ValueError('conversation mission missing')
+            driver=c.execute("SELECT current_phase FROM mission_execution_drivers WHERE mission_id=?",(mission_id,)).fetchone()
+            mission_runtime=mission_row['runtime_state'] if 'runtime_state' in mission_row.keys() else None
+            mission_phase_context=str((driver['current_phase'] if driver else None) or mission_runtime or mission_row['state'] or 'UNKNOWN')
+            completed=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
+                                   WHERE mission_id=? AND input_json LIKE ?
+                                     AND input_json LIKE '%"conversation_protocol_version":3%'
+                                     AND state='PASS'
+                                   ORDER BY created_at LIMIT 1""",
+                                (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
+            if completed:return {'assignment_id':completed['assignment_id'],'state':'PASS','lease_generation':completed['lease_generation'],'idempotent':True,'authority_effect':'NONE'}
+            prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
+                               WHERE mission_id=? AND input_json LIKE ?
+                                 AND input_json LIKE '%"conversation_protocol_version":3%'
+                                 AND state IN ('READY','CLAIMED')
+                               ORDER BY created_at DESC LIMIT 1""",
+                            (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()
+            if prior:return {'assignment_id':prior['assignment_id'],'state':prior['state'],'lease_generation':prior['lease_generation'],'idempotent':True,'authority_effect':'NONE'}
+            bus_generation=int(c.execute("""SELECT COALESCE(MAX(lease_generation),0)+1
+                                            FROM mission_execution_assignments
+                                            WHERE mission_id=? AND input_json LIKE ?
+                                              AND input_json LIKE '%"conversation_protocol_version":3%'""",
+                                         (mission_id,'%"operator_message_ids":["'+message_id+'"]%')).fetchone()[0])
+            assignment_phase='OPERATOR_BUS_'+hashlib.sha256(message_id.encode('utf-8')).hexdigest()[:16]
+            scope_target=payload.get('conversation_scope_target') or target
+            logical_id,material_id,binding_mode=self._conversation_binding(c,mission_id,scope_target,correlation_id)
+            control=operator_control.control_state(c,mission_id,now) or {}
+            dispatch_authority=operator_control.PRIMARY_OPERATOR if control.get('control_owner')==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
+            history=self._conversation_history(c,mission_id,correlation_id,message_id)
+            messages=history+[{'role':'user','content':content.strip()[:16000]}]
+            hmk_process_id=hmk9d_process.ensure_conversation_process(c,mission_id,correlation_id,message_id,now)
+            hmk9d_process.dispatch_prefix(
+                c,hmk_process_id,message_id=message_id,correlation_id=correlation_id,
+                scope_target=scope_target,logical_drone_id=logical_id,material_worker_id=material_id,
+                dispatch_authority=dispatch_authority,history_count=len(history),now_fn=now,
+            )
+            assignment_input={
+                'kind':'LOCAL_MODEL_INFERENCE',
+                'capability':'OPERATOR_BUS_CONVERSATION_R1',
+                'model_capability':'OPERATOR_BUS_CONVERSATION_R1',
+                'purpose':'OPERATOR_BUS_CONVERSATION_R1',
+                'trajectory_role':'CONVERSATION',
+                'task_id':'operator-message:'+message_id,
+                'correlation_id':correlation_id,
+                'conversation_protocol_version':3,
+                'hmk9d_process_id':hmk_process_id,
+                'hmk9d_profile_id':hmk9d_process.PROFILE_ID,
+                'conversation_turn_created_at':turn['created_at'],
+                'mission_phase_context':mission_phase_context,
+                'lease_scope':'OPERATOR_BUS',
+                'conversation_context_class':'OPERATOR_BUS' if logical_id=='OPERATOR_BUS' else 'MISSION_LOGICAL_DRONE',
+                'conversation_binding_mode':binding_mode,
+                'conversation_scope_target':payload.get('conversation_scope_target') or target,
+                'operator_message_ids':[message_id],
+                'messages':messages[-13:],
+                'max_tokens':768,
+                'communication_source':'operator:primary',
+                'logical_context':payload.get('conversation_logical_context') or (('operator-bus:'+mission_id) if logical_id=='OPERATOR_BUS' else ('drone:'+logical_id)),
+                'communication_phase':'OPERATOR_BUS',
+                'evidence_classes':(['OPERATOR_MESSAGE'] if logical_id=='OPERATOR_BUS' else ['TRUSTED_TOPOLOGY_CONTEXT','OPERATOR_MESSAGE']),
+                'authority_effect':'NONE',
+            }
+            aid=global_scheduler.create_assignment(c,mission_id,assignment_phase,logical_id,material_id,assignment_input,now,lease_generation=bus_generation,dispatch_authority=dispatch_authority)
+            return {'assignment_id':aid,'state':'READY','phase_id':assignment_phase,'logical_drone_id':logical_id,'material_drone_id':material_id,'binding_mode':binding_mode,'lease_generation':bus_generation,'dispatch_authority':dispatch_authority,'idempotent':False,'authority_effect':'NONE'}
+        finally:c.close()
+
+
+def reconcile_pending_conversations_once(runtime: Runtime, limit: int = 64) -> dict:
+    c=runtime.connect()
+    try:
+        rows=[dict(r) for r in c.execute("""SELECT mission_id,message_id,command_id,target,content,correlation_id,created_at,model_route
+                                           FROM operator_messages
+                                           WHERE from_participant=?
+                                             AND command_id LIKE 'panel-%'
+                                             AND correlation_id IS NOT NULL
+                                             AND model_route IN ('LOCAL','DUAL')
+                                             AND state IN ('PENDING','PARTIAL','PERSISTED_NO_CURRENT_RECIPIENT')
+                                           ORDER BY created_at,message_id LIMIT ?""",
+                                        (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
+    finally:c.close()
+    groups={}
+    for row in rows:groups.setdefault((row['mission_id'],row['correlation_id']),[]).append(row)
+    dispatched=existing=completed=repaired=failed=0;errors=[]
+    for (_mission_id,_correlation_id),turns in groups.items():
+        for row in turns:
+            c=runtime.connect()
+            try:
+                completed_row=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
+                                           WHERE mission_id=? AND input_json LIKE ?
+                                             AND input_json LIKE '%"conversation_protocol_version":3%'
+                                             AND state='PASS'
+                                           ORDER BY created_at LIMIT 1""",
+                                        (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
+                prior=c.execute("""SELECT assignment_id,state,lease_generation FROM mission_execution_assignments
+                                   WHERE mission_id=? AND input_json LIKE ?
+                                     AND input_json LIKE '%"conversation_protocol_version":3%'
+                                     AND state IN ('READY','CLAIMED')
+                                   ORDER BY created_at DESC LIMIT 1""",
+                                (row['mission_id'],'%"operator_message_ids":["'+row['message_id']+'"]%')).fetchone()
+            finally:c.close()
+            if completed_row:
+                c=runtime.connect()
+                try:
+                    reply=c.execute("SELECT 1 FROM operator_messages WHERE mission_id=? AND correlation_id=? AND kind='RESPONSE' AND causation_id=? AND applied_assignment_id=? LIMIT 1",(row['mission_id'],row['correlation_id'],row['message_id'],completed_row['assignment_id'])).fetchone()
+                    if reply:
+                        completed+=1
+                        continue
+                    retained=c.execute("SELECT result_json FROM mission_assignment_payloads WHERE assignment_id=?",(completed_row['assignment_id'],)).fetchone()
+                    assignment=c.execute("SELECT input_json FROM mission_execution_assignments WHERE assignment_id=?",(completed_row['assignment_id'],)).fetchone()
+                    if not retained or not assignment:raise ValueError('conversation PASS missing retained payload')
+                    try:result=json.loads(retained['result_json'])
+                    except Exception as exc:raise ValueError('conversation retained payload invalid') from exc
+                    try:assignment_input=json.loads(assignment['input_json'] or '{}')
+                    except Exception as exc:raise ValueError('conversation assignment input invalid') from exc
+                    assignment_ids=assignment_input.get('operator_message_ids')
+                    if assignment_input.get('conversation_protocol_version')!=3 or not (isinstance(assignment_ids,list) and assignment_ids==[row['message_id']]):
+                        raise ValueError('conversation PASS provenance mismatch')
+                    if not result.get('operator_message_ids'):
+                        result={**result,'operator_message_ids':list(assignment_ids)}
+                    elif result.get('operator_message_ids')!=assignment_ids:
+                        raise ValueError('conversation PASS result provenance mismatch')
+                    applied=operator_control.note_assignment_application(c,completed_row['assignment_id'],result,now)
+                    c.commit()
+                    if not applied.get('response_message_ids'):raise ValueError('conversation PASS retained payload has no response')
+                    repaired+=1;completed+=1
+                    continue
+                except Exception as exc:
+                    failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+                    break
+                finally:c.close()
+            if prior:
+                existing+=1
+                break
+            value={
+                'command_id':row['command_id'],
+                'mission_id':row['mission_id'],
+                'action':'MESSAGE',
+                'target':row['target'],
+                'payload':{'content':row['content'],'model_route':row.get('model_route') or 'LOCAL'},
+                'correlation_id':row['correlation_id'],
+            }
+            try:
+                routed,_=runtime.route_conversation_command(value)
+                out=runtime.dispatch_conversation_message(routed,{'result':{'message_id':row['message_id']}})
+                if out.get('idempotent'):existing+=1
+                else:dispatched+=1
+            except Exception as exc:
+                failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+            break
+    return {'pending':len(rows),'threads':len(groups),'dispatched':dispatched,'existing':existing,'completed':completed,'repaired':repaired,'failed':failed,'errors':errors,'authority_effect':'NONE'}
+
+
+def reconcile_pending_saas_once(runtime: Runtime, limit: int = 64) -> dict:
+    c=runtime.connect()
+    try:
+        rows=[dict(r) for r in c.execute("""SELECT m.mission_id,m.message_id,m.command_id,m.content,m.correlation_id,m.model_route,m.external_request_id,m.created_at
+                                           FROM operator_messages m
+                                           LEFT JOIN operator_external_model_receipts e
+                                             ON e.source_message_id=m.message_id AND e.provider='model:saas'
+                                           WHERE m.from_participant=?
+                                             AND m.command_id LIKE 'panel-%'
+                                             AND m.correlation_id IS NOT NULL
+                                             AND m.model_route IN ('SAAS','DUAL')
+                                             AND e.response_message_id IS NULL
+                                           ORDER BY m.created_at,m.message_id LIMIT ?""",
+                                        (operator_control.PRIMARY_PARTICIPANT,int(limit))).fetchall()]
+    finally:c.close()
+    groups={}
+    for row in rows:groups.setdefault(row['correlation_id'],[]).append(row)
+    created=pending=delivered=failed=0;errors=[]
+    for _correlation_id,turns in groups.items():
+        row=turns[0]
+        try:
+            had_request=bool(row.get('external_request_id'))
+            out=runtime.reconcile_saas_message(row['message_id'])
+            if out.get('delivered'):delivered+=1
+            elif had_request:pending+=1
+            else:created+=1
+        except Exception as exc:
+            failed+=1;errors.append({'message_id':row['message_id'],'error':type(exc).__name__+':'+str(exc)[:200]})
+    return {'pending_messages':len(rows),'threads':len(groups),'created':created,'waiting':pending,'delivered':delivered,'failed':failed,'errors':errors,'authority_effect':'NONE'}
+
+
+def conversation_reconcile_loop(runtime: Runtime):
+    while True:
+        try:reconcile_pending_conversations_once(runtime)
+        except Exception:pass
+        try:reconcile_pending_saas_once(runtime)
+        except Exception:pass
+        c=None
+        try:
+            c=runtime.connect();hmk9d_process.reconcile_observed(c,now)
+        except Exception:pass
+        finally:
+            if c is not None:c.close()
+        time.sleep(1.0)
 
 
 def reconcile_active_swarm_sessions_once(runtime: Runtime) -> dict:
@@ -264,6 +639,15 @@ def make_handler(runtime: Runtime):
                     c=runtime.connect()
                     try:return self.reply(operator_control.participant_snapshot(c,principal))
                     finally:c.close()
+                if path=='/v1/thread':
+                    correlation_id=(q.get('correlation_id') or [None])[0];limit=int((q.get('limit') or ['500'])[0])
+                    if not correlation_id:raise ValueError('correlation_id')
+                    c=runtime.connect()
+                    try:
+                        out=operator_control.thread_snapshot(c,correlation_id,now,limit=limit)
+                        out['hmk9d']=hmk9d_process.thread_projection(c,correlation_id,limit=min(limit,100))
+                        return self.reply(out)
+                    finally:c.close()
                 if path=='/v1/state':
                     mid=(q.get('mission_id') or [None])[0]
                     if not mid:raise ValueError('mission_id')
@@ -288,10 +672,18 @@ def make_handler(runtime: Runtime):
         def do_POST(self):
             try:
                 path=unquote(urlsplit(self.path).path);value=self.body()
-                if path=='/v1/session/pair':
-                    if set(value)!={'pairing_code'}:raise ValueError('pair schema')
+                if path=='/v1/session/pair/challenge':
+                    if value:raise ValueError('pair challenge schema')
                     supplied=self.headers.get('X-LION-Panel-Proxy-Key') or self.headers.get('X-LION-Operator-Proxy-Key')
-                    return self.reply(runtime.pair_panel(supplied,value['pairing_code']),201)
+                    return self.reply(runtime.issue_panel_pairing_challenge(supplied),201)
+                if path=='/v1/session/pair':
+                    if set(value)=={'pairing_code'}:
+                        challenge_id=None
+                    elif set(value)=={'pairing_code','challenge_id'}:
+                        challenge_id=value['challenge_id']
+                    else:raise ValueError('pair schema')
+                    supplied=self.headers.get('X-LION-Panel-Proxy-Key') or self.headers.get('X-LION-Operator-Proxy-Key')
+                    return self.reply(runtime.pair_panel(supplied,value['pairing_code'],challenge_id),201)
                 if path=='/v1/session/revoke':
                     if value:raise ValueError('revoke schema')
                     principal=self.auth()
@@ -309,7 +701,7 @@ def make_handler(runtime: Runtime):
                     allowed={'mission_id','duration_seconds','workers','mode'}
                     if set(value)-allowed or 'mission_id' not in value:raise ValueError('swarm session open schema')
                     c=runtime.connect()
-                    try:return self.reply(operator_swarm_session.open_session(c,channel_principal,value['mission_id'],now,duration_seconds=int(value.get('duration_seconds') or operator_swarm_session.MAX_SESSION_SECONDS),workers=value.get('workers') or operator_swarm_session.DEFAULT_WORKERS,mode=value.get('mode') or 'TWO_DRONE_VERIFY'),201)
+                    try:return self.reply(operator_swarm_session.open_session(c,channel_principal,value['mission_id'],now,duration_seconds=int(value.get('duration_seconds') or operator_swarm_session.MAX_SESSION_SECONDS),workers=value.get('workers'),mode=value.get('mode') or 'TWO_DRONE_VERIFY'),201)
                     finally:c.close()
                 if path.startswith('/v1/swarm/sessions/'):
                     principal=self.auth(allow_panel_transport=True);channel_principal=operator_control.PRIMARY_OPERATOR if principal==operator_control.PANEL_PROXY_PRINCIPAL else principal
@@ -318,9 +710,9 @@ def make_handler(runtime: Runtime):
                     sid,op=parts;c=runtime.connect()
                     try:
                         if op=='messages':
-                            allowed={'command_id','target','content','kind','correlation_id','causation_id','thread_id'}
+                            allowed={'command_id','target','content','kind','correlation_id','causation_id','thread_id','verifier_worker'}
                             if set(value)-allowed or not {'command_id','target','content'}.issubset(value):raise ValueError('swarm message schema')
-                            return self.reply(operator_swarm_session.send_message(c,channel_principal,sid,value['command_id'],value['target'],value['content'],now,kind=value.get('kind') or 'REQUEST',correlation_id=value.get('correlation_id'),causation_id=value.get('causation_id'),thread_id=value.get('thread_id')),201)
+                            return self.reply(operator_swarm_session.send_message(c,channel_principal,sid,value['command_id'],value['target'],value['content'],now,kind=value.get('kind') or 'REQUEST',correlation_id=value.get('correlation_id'),causation_id=value.get('causation_id'),thread_id=value.get('thread_id'),verifier_worker=value.get('verifier_worker')),201)
                         if op=='assistant-attach':
                             if principal!=operator_control.SENTINELX_PROXY_PRINCIPAL:raise PermissionError('SentinelX proxy required')
                             if set(value)-{'model_identity'}:raise ValueError('assistant attach schema')
@@ -338,19 +730,42 @@ def make_handler(runtime: Runtime):
                 principal=self.auth()
                 if path=='/v1/commands':
                     if principal==operator_control.PRIMARY_OPERATOR and isinstance(value,dict) and value.get('action')=='MESSAGE':
-                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''))
+                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''));explicit_model_route='model_route' in payload;model_route=str(payload.get('model_route') or 'LOCAL').upper()
+                        if model_route not in {'LOCAL','SAAS','DUAL'}:raise ValueError('model_route')
                         c=runtime.connect()
                         try:
                             active=operator_swarm_session.active_session(c,principal,now)
-                            if active and active.get('session',{}).get('mission_id')==mission_id:
+                            if not explicit_model_route and active and active.get('session',{}).get('mission_id')==mission_id:
                                 sid=active['session']['session_id'];members=active.get('members') or []
                                 if target in {'mission:'+mission_id,'swarm:'+mission_id}:
                                     primary=next((m.get('participant_id') for m in members if m.get('member_kind')=='MATERIAL_WORKER' and m.get('role')=='PRIMARY' and m.get('state')=='ACTIVE'),None)
                                     if not primary:raise ValueError('swarm primary worker unavailable')
                                     target=primary
-                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST')
+                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST',correlation_id=value.get('correlation_id'))
                                 return self.reply({'schema':'lion.operator-command-swarm-route/v1','mission_id':mission_id,'session_id':sid,'round_id':sent.get('round_id'),'message':sent.get('message'),'assignments':sent.get('assignments') or [],'admission_state':'ACCEPTED','execution_state':'DISPATCHED','observation_state':'PERSISTED','authority_effect':'NONE','idempotent':bool(sent.get('idempotent'))},201)
                         finally:c.close()
+                        if model_route=='SAAS':
+                            applied=runtime.apply(value,principal_id=principal);message_id=(applied.get('result') or {}).get('message_id')
+                            try:
+                                external=runtime.ensure_saas_request(message_id)
+                                response=dict(applied);response.update({'schema':'lion.operator-model-route/v1','model_route':'SAAS','execution_state':'DISPATCHED_EXTERNAL','observation_state':'PERSISTED','external_request':external,'authority_effect':'NONE'})
+                            except Exception as exc:
+                                response=dict(applied);response.update({'schema':'lion.operator-model-route/v1','model_route':'SAAS','execution_state':'WAITING_EXTERNAL','observation_state':'PERSISTED','external_error':type(exc).__name__+':'+str(exc)[:400],'authority_effect':'NONE'})
+                            return self.reply(response,201)
+                        try:
+                            routed,route_meta=runtime.route_conversation_command(value)
+                        except Exception as route_exc:
+                            applied=runtime.apply(value,principal_id=principal)
+                            response=dict(applied);response.update({'schema':'lion.operator-conversation-dispatch/v1','execution_state':'WAITING_DISPATCH','observation_state':'PERSISTED','conversation_route':None,'dispatch_error':type(route_exc).__name__+':'+str(route_exc)[:400],'authority_effect':'NONE'})
+                            return self.reply(response,201)
+                        applied=runtime.apply(routed,principal_id=principal)
+                        try:
+                            dispatch=runtime.dispatch_conversation_message(routed,applied)
+                            response=dict(applied);response.update({'schema':'lion.operator-conversation-dispatch/v1','execution_state':'DISPATCHED','observation_state':'PERSISTED','conversation_route':route_meta,'conversation_assignment':dispatch,'authority_effect':'NONE'})
+                            return self.reply(response,201)
+                        except Exception as exc:
+                            response=dict(applied);response.update({'schema':'lion.operator-conversation-dispatch/v1','execution_state':'WAITING_DISPATCH','observation_state':'PERSISTED','conversation_route':route_meta,'dispatch_error':type(exc).__name__+':'+str(exc)[:400],'authority_effect':'NONE'})
+                            return self.reply(response,201)
                     return self.reply(runtime.apply(value,principal_id=principal),201)
                 if path=='/v1/events/ack':
                     if set(value)!={'consumer_id','mission_id','event_id'}:raise ValueError('ack schema')
@@ -377,6 +792,7 @@ def main():
     if a.host not in {'127.0.0.1','::1'}:raise SystemExit('operator gateway must remain loopback-only')
     runtime=Runtime(Path(a.db),Path(a.key_file),Path(a.proxy_key_file),Path(a.panel_proxy_key_file),Path(a.pairing_key_file),Path(a.epoch_floor),a.mission_control_url,bootstrap_primary=a.bootstrap_primary)
     threading.Thread(target=swarm_reconcile_loop,args=(runtime,),daemon=True,name='operator-swarm-reconciler').start()
+    threading.Thread(target=conversation_reconcile_loop,args=(runtime,),daemon=True,name='operator-conversation-reconciler').start()
     FleetThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
 
 

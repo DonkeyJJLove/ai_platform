@@ -165,7 +165,7 @@ function createApp(config) {
       if (!['AUTO','LOCAL','CHATGPT'].includes(route)) throw new Error('composer route');
       const thread = store.get(req.params.threadId);
       if (route === 'AUTO') {
-        const auto = await mission.autoMission({ threadId: req.params.threadId, question: message, logicalCount: 76, materialTarget: 32 });
+        const auto = await mission.autoMission({ threadId: req.params.threadId, question: message });
         const rid = auto.saas && auto.saas.request_id;
         try {
           store.appendUserOnce(req.params.threadId, message, 'auto-user:' + auto.mission_id, {
@@ -215,6 +215,7 @@ function createApp(config) {
   app.post('/api/missions/:missionId/delete', async (req, res) => { try { res.json(await mission.missionDelete(req.params.missionId, req.body && req.body.spec_digest)); } catch (e) { sendError(res, e); } });
   app.post('/api/missions/:missionId/action', async (req, res) => { try { const x = req.body || {}; res.json(await mission.missionAction(req.params.missionId, x.action, x.payload || {})); } catch (e) { sendError(res, e); } });
   app.post('/api/missions/:missionId/phase-actions', async (req, res) => { try { res.json(await mission.phaseAction(req.params.missionId, req.body || {})); } catch (e) { sendError(res, e); } });
+  app.post('/api/missions/:missionId/phase-operations', async (req, res) => { try { res.json(await mission.phaseOperation(req.params.missionId, req.body || {})); } catch (e) { sendError(res, e); } });
   app.post('/api/lpcl/validate', async (req, res) => { try { res.json(await mission.validateLpcl(req.body && req.body.lpcl_text)); } catch (e) { sendError(res, e); } });
   app.post('/api/lpcl/register', async (req, res) => { try { res.status(201).json(await mission.registerLpcl(req.body && req.body.lpcl_text)); } catch (e) { sendError(res, e); } });
   app.post('/api/lpcl/activate', async (req, res) => { try { const x = req.body || {}; res.json(await mission.activateLpcl(x.mission_id, x.lpcl_digest)); } catch (e) { sendError(res, e); } });

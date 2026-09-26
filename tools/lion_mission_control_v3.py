@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse,unquote,parse_qs
 from cyber_lion.mission_control.runtime_projection import normalize_snapshot, validate_registration, SCHEMA_VERSION as RUNTIME_SCHEMA_VERSION
-from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
+from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action, phase_capabilities, PHASE_RECHECKABLE_GATES
 from cyber_lion.contracts.phase_execution_contract import (
  PhaseExecutionContract, PhaseExecutionContractError, compile_panel_phase_contracts,
  preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
@@ -42,6 +42,7 @@ except ImportError:
  import global_scheduler as global_sched
 from cyber_lion.mission_control import operator_control
 from cyber_lion.mission_control import model_calls as model_call_ledger
+from cyber_lion.mission_control import phase_curriculum as phase_curriculum
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -190,6 +191,7 @@ def migrate():
  global_sched.migrate(c,now)
  operator_control.migrate(c,now)
  model_call_ledger.migrate(c,now)
+ phase_curriculum.migrate(c,now)
  # Capture the pre-capability execution preflight before startup reconciliation
  # recomputes it against the current capability registry.
  control_recon.capture_pre_recon_baselines(c,now)
@@ -304,6 +306,9 @@ PROCESS_CAPABILITY_REGISTRY={
   {'capability_id':'GENERIC_EXECUTION_BINDER_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
  ),
  'MISSION_RUNTIME_RECONCILIATION':(
+  {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
+ ),
+ 'EPOCH_CLOSURE_RECONCILIATION':(
   {'capability_id':'GENERIC_MISSION_CONTRACT_RECONCILIATION','executor_id':'MISSION_CONTROL_PROCESS_CONTRACT_RECONCILER','effect_ceiling':'NONE','mode':'READ_ONLY_VERIFY'},
  ),
  'CONTROL_PLANE_RECONNAISSANCE':(
@@ -455,7 +460,7 @@ def _current_master_identity():
 
 
 def _docker_local_model_currentness(expected_material):
-    if expected_material!=32:raise ValueError("docker material target must be 32")
+    if type(expected_material) is not int or not 1<=expected_material<=32:raise ValueError("docker material target must be 1..32")
     try:value=json.loads(DOCKER_LOCAL_MODEL_CURRENTNESS.read_text(encoding="utf-8"))
     except Exception as exc:raise ValueError("docker fleet currentness unavailable:"+type(exc).__name__) from exc
     if value.get("schema")!="lion.docker-local-model-fleet-currentness/v1" or value.get("physical_host")!="MOON":raise ValueError("docker fleet currentness identity")
@@ -468,14 +473,17 @@ def _docker_local_model_currentness(expected_material):
     if age<0 or age>20:raise ValueError("docker fleet currentness stale")
     workers=value.get("workers") or []
     if value.get("state")!="READY" or int(value.get("materialized",0))!=32 or int(value.get("ready",0))!=32 or len(workers)!=32:raise ValueError("docker fleet not ready")
-    expected={f"MD{i:03d}" for i in range(1,33)}
+    expected_pool={f"MD{i:03d}" for i in range(1,33)}
     ids={str(w.get("material_worker_id") or "") for w in workers};cids={str(w.get("container_id") or "") for w in workers}
-    if ids!=expected or len(cids)!=32 or "" in cids:raise ValueError("docker fleet material identity")
+    if ids!=expected_pool or len(cids)!=32 or "" in cids:raise ValueError("docker fleet material identity")
+    by={str(w.get("material_worker_id") or ""):w for w in workers}
+    selected_ids=[f"MD{i:03d}" for i in range(1,expected_material+1)]
     normalized=[]
-    for w in workers:
+    for mid in selected_ids:
+        w=by[mid]
         if not w.get("ready") or w.get("container_state")!="running" or w.get("model")!="gpt-oss-20b-MXFP4":raise ValueError("docker worker readiness")
-        normalized.append({"material_worker_id":w["material_worker_id"],"pod_name":w["container_name"],"pod_uid":w["container_id"],"container_id":w["container_id"],"ready":1,"phase":"DOCKER_LOCAL_MODEL","restarts":0,"pod_ip":None,"model":w["model"]})
-    return {"digest":dg,"observed_at":value["observed_at"],"workers":normalized,"physical_failure_domains":int(value.get("physical_failure_domains") or 1)}
+        normalized.append({"material_worker_id":mid,"pod_name":w["container_name"],"pod_uid":w["container_id"],"container_id":w["container_id"],"ready":1,"phase":"DOCKER_LOCAL_MODEL","restarts":0,"pod_ip":None,"model":w["model"]})
+    return {"digest":dg,"observed_at":value["observed_at"],"workers":normalized,"physical_failure_domains":int(value.get("physical_failure_domains") or 1),"pool_materialized":32,"pool_ready":32,"selected_material":expected_material}
 
 def bind_lpcl_execution(mid):
     c=connect()
@@ -511,8 +519,9 @@ def bind_lpcl_execution(mid):
         topo_total=c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE mission_id=? AND phase_id='__TOPOLOGY__'",(mid,)).fetchone()[0]
         own_uids={r['pod_uid'] for r in own if r['pod_uid']}
         observed_uids={str(w['pod_uid']) for w in observed['workers'] if w.get('pod_uid')}
-        if len(own)==32 and len(own_uids)==32 and own_uids==observed_uids and all(int(r['ready'])==1 for r in own) and logical_total==int(m['logical_count']) and topo_total==int(m['logical_count']):
-         c.execute('UPDATE missions SET runtime_state=?,materialized=32,ready=32,last_error=NULL,updated_at=? WHERE mission_id=?',('DOCKER_LOCAL_MODEL_FLEET_BOUND',now(),mid));c.commit();return process_snapshot(mid)
+        material_count=int(m['material_target'])
+        if len(own)==material_count and len(own_uids)==material_count and own_uids==observed_uids and all(int(r['ready'])==1 for r in own) and logical_total==int(m['logical_count']) and topo_total==int(m['logical_count']):
+         c.execute('UPDATE missions SET runtime_state=?,materialized=?,ready=?,last_error=NULL,updated_at=? WHERE mission_id=?',('DOCKER_LOCAL_MODEL_FLEET_BOUND',material_count,material_count,now(),mid));c.commit();return process_snapshot(mid)
        role_prefix=str(kv.get('LOGICAL_ROLE_PREFIX') or 'AUTONOMOUS_LOGICAL').strip().upper()[:48]
        bound=global_sched.bind_dynamic_local_model_fleet(c,mid,int(m['logical_count']),observed['workers'],now,adapter=LPCL_DOCKER_LOCAL_MODEL_ADAPTER,runtime_state='DOCKER_LOCAL_MODEL_FLEET_BOUND',role_prefix=role_prefix,currentness_digest=observed['digest'])
        generic={'handler_id':'GENERIC_LPCL_PHASE','effect_class':'NONE','gate_class':'COGNITIVE_PLAN','retry_policy':'IDEMPOTENT','authority_class':'NONE'}
@@ -526,8 +535,9 @@ def bind_lpcl_execution(mid):
        prior=driver_snapshot(c,mid)
        if prior and prior['state']=='ACTIVE' and prior.get('lease_owner')!=DRIVER_PROCESS_ID:driver_wait_for_execution_binding(c,mid,now,blocking_gate='EXECUTION_REBIND_HANDOFF',waiting_reason='Dynamic Docker binding superseded an orphan active driver',next_action='EXECUTION_BINDING_READY')
        driver_activate(c,mid,now,next_action='GLOBAL_SCHEDULER_DISPATCH',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
-       _process_message(c,mid,'CURRENTNESS','DOCKER_FLEET_CURRENTNESS','MISSION_CONTROL',current,{'event':'DOCKER_LOCAL_MODEL_FLEET_CURRENTNESS_BOUND','currentness_digest':observed['digest'],'observed_at':observed['observed_at'],'material_count':32,'logical_count':int(m['logical_count']),'physical_failure_domains':observed['physical_failure_domains'],'model':'gpt-oss-20b-MXFP4','authority_effect':'NONE'},'INTERNAL')
-       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','GLOBAL_SCHEDULER',current,{'event':'DYNAMIC_DOCKER_LOCAL_MODEL_BOUND','adapter':LPCL_DOCKER_LOCAL_MODEL_ADAPTER,'logical_count':int(m['logical_count']),'material_count':32,'assignments':bound['assignments'],'distribution':bound['distribution'],'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
+       selected_material=int(m['material_target'])
+       _process_message(c,mid,'CURRENTNESS','DOCKER_FLEET_CURRENTNESS','MISSION_CONTROL',current,{'event':'DOCKER_LOCAL_MODEL_FLEET_CURRENTNESS_BOUND','currentness_digest':observed['digest'],'observed_at':observed['observed_at'],'material_count':selected_material,'pool_materialized':observed.get('pool_materialized',32),'pool_ready':observed.get('pool_ready',32),'logical_count':int(m['logical_count']),'physical_failure_domains':observed['physical_failure_domains'],'model':'gpt-oss-20b-MXFP4','authority_effect':'NONE'},'INTERNAL')
+       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','GLOBAL_SCHEDULER',current,{'event':'DYNAMIC_DOCKER_LOCAL_MODEL_BOUND','adapter':LPCL_DOCKER_LOCAL_MODEL_ADAPTER,'logical_count':int(m['logical_count']),'material_count':selected_material,'pool_materialized':observed.get('pool_materialized',32),'assignments':bound['assignments'],'distribution':bound['distribution'],'authority_effect':'MISSION_SCOPED_CONTROL_BINDING'},'INTERNAL')
        c.commit();return process_snapshot(mid)
       # A bound mission owns its durable logical/material snapshot. Preserve a
       # complete snapshot across process restarts; otherwise reacquire the exact
@@ -766,6 +776,86 @@ def activate_lpcl_mission(mid,x):
     except Exception as e:
       c=connect();c.execute('UPDATE missions SET last_error=?,updated_at=? WHERE mission_id=?',('LPCL_EXECUTION_BIND:'+type(e).__name__+':'+str(e)[:800],now(),mid));c.commit();c.close();return process_snapshot(mid)
 
+def _phase_operation_capability(mid,pid,action,token):
+    snap=process_snapshot(mid,read_only=True)
+    phase=next((p for p in (snap.get('normalized_runtime') or {}).get('phases',[]) if p.get('phase_id')==pid),None)
+    if not phase:raise ValueError('phase not found')
+    cap=(phase.get('capabilities') or {}).get(action)
+    if not cap or not cap.get('supported'):raise ValueError((cap or {}).get('reason') or 'phase operation unavailable')
+    expected=cap.get('operation_token')
+    if not isinstance(token,str) or token!=expected:raise ValueError('stale phase operation token')
+    return snap,phase,cap
+
+
+def _phase_saas_question(snap,pid,kind):
+    contract=next((x for x in snap.get('phase_execution_contracts',[]) if x.get('phase_id')==pid),{})
+    driver=snap.get('execution_driver') or {}
+    base={
+      'mission_id':snap.get('mission_id'),'phase_id':pid,'source_head':snap.get('source_head'),'source_tree':snap.get('source_tree'),
+      'contract_digest':contract.get('contract_digest'),'blocking_gate':driver.get('blocking_gate'),
+      'currentness_requirements':contract.get('currentness_requirements') or [],
+      'evidence_requirements':contract.get('evidence_requirements') or [],
+      'completion_predicates':contract.get('completion_predicates') or [],
+      'authority_effect':'NONE',
+    }
+    instruction='Reacquire the listed currentness requirements and report evidence refs. Do not claim PASS without direct evidence.' if kind=='REACQUIRE_CURRENTNESS' else 'Independently verify the phase completion predicate and provide evidence refs. Do not perform external effects and do not manufacture PASS.'
+    return 'LION PHASE SUPERVISOR REQUEST\n'+instruction+'\n'+json.dumps(base,sort_keys=True,ensure_ascii=False)
+
+
+def phase_operation(mid,x):
+    if type(x) is not dict or set(x)!={'phase_id','action','operation_token'}:raise ValueError('phase operation schema')
+    pid=str(x['phase_id']);action=str(x['action']).upper();token=x['operation_token']
+    if action not in {'RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE','RETRY_LOCAL_PLAN','RESUME'}:raise ValueError('phase operation denied')
+    before,phase,cap=_phase_operation_capability(mid,pid,action,token)
+    before_status=phase.get('status');before_generation=int((before.get('execution_driver') or {}).get('generation') or 0)
+    request={'phase_id':pid,'action':action,'operation_token':token}
+    effect='CONTROL_STATE' if action in {'RECHECK','RETRY_LOCAL_PLAN','RESUME'} else 'NONE'
+    result={}
+    if action=='RECHECK':
+      c=connect()
+      try:_process_message(c,mid,'CONTROL','OPERATOR','GENERIC_EFFECT_EVIDENCE_EXECUTOR',pid,{'event':'PHASE_RECHECK_REQUESTED','blocking_gate':(before.get('execution_driver') or {}).get('blocking_gate'),'authority_effect':'CONTROL_STATE'},'IN');c.commit()
+      finally:c.close()
+      drive_generic_once(mid)
+      result={'rechecked':True}
+    elif action in {'REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE'}:
+      c=connect()
+      try:
+       q=_phase_saas_question(before,pid,action)
+       out=saas_broker.create_request(c,mid,q,now,scope_type='MISSION',scope_id=mid,authority_effect='NONE',transport=saas_broker.SENTINELX_MCP_TRANSPORT)
+       _process_message(c,mid,'ASSIGNMENT','MISSION_CONTROL','CHATGPT_SAAS_SUPERVISOR',pid,{'event':'PHASE_'+action+'_REQUESTED','request_id':out['request_id'],'request_code':out['request_code'],'transport':out['transport'],'authority_effect':'NONE'},'OUT')
+       c.commit();result={'request_id':out['request_id'],'request_code':out['request_code'],'transport':out['transport'],'state':out.get('status') or out.get('state')}
+      finally:c.close()
+    elif action=='RETRY_LOCAL_PLAN':
+      c=connect()
+      try:
+       if not operator_control.autonomy_allowed(c,mid):raise ValueError('operator control fence prevents local plan retry')
+       d=driver_snapshot(c,mid)
+       if not d or d.get('state') not in {'WAITING','BLOCKED'}:raise ValueError('driver not retryable')
+       m=c.execute('SELECT title FROM missions WHERE mission_id=?',(mid,)).fetchone();ps=c.execute('SELECT objective,description FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone();pr=c.execute('SELECT title FROM mission_phases WHERE mission_id=? AND phase_id=?',(mid,pid)).fetchone()
+       d=driver_activate(c,mid,now,next_action='GENERIC_PHASE_REPLAN',owner_id=DRIVER_PROCESS_ID,lease_seconds=30)
+       prompt=('LION generic LPCL phase replanning after a failed proposal. Authority effect NONE. Do not claim effects. Produce a corrected bounded plan with required capabilities, evidence, currentness prerequisites and completion test.\n\n'
+               f'Mission: {m["title"]}\nObjective: {ps["objective"]}\nPhase: {pid} — {pr["title"]}\nDescription: {ps["description"]}')
+       payload={'kind':'LOCAL_MODEL_INFERENCE','messages':[{'role':'user','content':prompt}],'max_tokens':768,'mission_id':mid,'phase_id':pid,'authority_effect':'NONE'}
+       aid=global_sched.create_assignment(c,mid,pid,'LD001','MD025',payload,now,lease_generation=int(d['generation']))
+       _process_message(c,mid,'ASSIGNMENT','GLOBAL_SCHEDULER','LOCAL_MODEL',pid,{'event':'GENERIC_PHASE_LOCAL_REPLAN_REQUESTED','assignment_id':aid,'material_drone_id':'MD025','authority_effect':'NONE'},'OUT')
+       _generic_wait(c,mid,pid,gate='GENERIC_PHASE_LOCAL_PLAN_RECEIPT',reason='Waiting for retried proposal-only LOCAL planning receipt',next_action='WAIT_FOR_LOCAL_PLAN',detail='LOCAL plan retry requested; waiting for receipt.')
+       result={'assignment_id':aid,'driver_generation':int(d['generation'])}
+      finally:c.close()
+    elif action=='RESUME':
+      result=mission_action(mid,{'action':'RESUME'})
+
+    after=process_snapshot(mid,read_only=True)
+    after_phase=next((p for p in (after.get('normalized_runtime') or {}).get('phases',[]) if p.get('phase_id')==pid),{})
+    after_generation=int((after.get('execution_driver') or {}).get('generation') or 0)
+    c=connect()
+    try:
+      receipt=lifecycle_create_action_receipt(c,mid,'PHASE_'+action,effect,'PASS',request,{'phase_id':pid,'before_status':before_status,'after_status':after_phase.get('status'),'before_generation':before_generation,'after_generation':after_generation,'result':result,'authority_effect':effect if effect!='NONE' else 'NONE'},now)
+      _process_message(c,mid,'CONTROL','MISSION_CONTROL','OPERATOR',pid,{'event':'PHASE_OPERATION_RESULT','action':action,'before_status':before_status,'after_status':after_phase.get('status'),'receipt_id':receipt.get('receipt_id'),'authority_effect':effect if effect!='NONE' else 'NONE'},'OUT')
+      c.commit()
+    finally:c.close()
+    return {'mission_id':mid,'phase_id':pid,'action':action,'status':'PASS','effect_class':effect,'result':result,'readback':{'phase_status':after_phase.get('status'),'driver_state':(after.get('execution_driver') or {}).get('state'),'driver_generation':after_generation,'blocking_gate':(after.get('execution_driver') or {}).get('blocking_gate')},'receipt':receipt}
+
+
 def update_lpcl_phase(mid,x):
     required={'phase_id','status','progress','protocol','from_id','to_id','detail','payload'}
     if type(x) is not dict or set(x)!=required:raise ValueError('phase update schema')
@@ -791,8 +881,23 @@ def post_protocol_message(mid,x):
     required={'protocol','from_id','to_id','phase','payload'}
     if type(x) is not dict or set(x)!=required:raise ValueError('protocol schema')
     c=connect()
-    if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone():c.close();raise ValueError('mission not found')
-    out=_process_message(c,mid,x['protocol'],x['from_id'],x['to_id'],x['phase'],x['payload'],'INTERNAL');c.commit();c.close();return out
+    if not c.execute('SELECT 1 FROM missions WHERE mission_id=?',(mid,)).fetchone():
+      c.close();raise ValueError('mission not found')
+    trigger=False
+    try:
+      out=_process_message(c,mid,x['protocol'],x['from_id'],x['to_id'],x['phase'],x['payload'],'INTERNAL')
+      if x['protocol'] in {'EVIDENCE','VALIDATION','RECEIPT'} and x['phase']:
+       ps=c.execute('SELECT current_phase FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+       ds=driver_snapshot(c,mid)
+       trigger=bool(ps and ps['current_phase']==x['phase'] and ds and ds.get('state') in {'WAITING','BLOCKED'} and str(ds.get('blocking_gate') or '') in PHASE_RECHECKABLE_GATES)
+      c.commit()
+    finally:c.close()
+    if trigger:
+      drive_generic_once(mid)
+      out={**out,'auto_recheck':'TRIGGERED'}
+    else:out={**out,'auto_recheck':'NOT_APPLICABLE'}
+    return out
+
 
 def _send_broker_request(req):
     s=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);s.settimeout(240);s.connect(SOCKET);s.sendall(json.dumps(req,sort_keys=True,separators=(',',':')).encode()+b'\n');s.shutdown(socket.SHUT_WR);data=bytearray()
@@ -1149,6 +1254,37 @@ def _project_mission_liveness(c,mid,mission,process,driver,scheduler):
     }
 
 
+
+def _phase_activity_snapshot(c,mid):
+    phase_rows=c.execute("SELECT phase_id,updated_at FROM mission_phases WHERE mission_id=? ORDER BY ordinal",(mid,)).fetchall()
+    out={r["phase_id"]:{"last_phase_update_at":r["updated_at"]} for r in phase_rows}
+    def merge(sql,key):
+      for row in c.execute(sql,(mid,)).fetchall():
+       pid=row["phase_id"];stamp=row["stamp"]
+       if pid not in out:out[pid]={}
+       out[pid][key]=stamp
+    merge("SELECT phase_id,MAX(COALESCE(finished_at,claimed_at,created_at)) AS stamp FROM mission_execution_assignments WHERE mission_id=? GROUP BY phase_id","last_assignment_at")
+    merge("SELECT phase_id,MAX(observed_at) AS stamp FROM mission_execution_receipts WHERE mission_id=? GROUP BY phase_id","last_receipt_at")
+    merge("SELECT phase AS phase_id,MAX(observed_at) AS stamp FROM protocol_messages WHERE mission_id=? GROUP BY phase","last_event_at")
+    merge("SELECT phase_id,MAX(updated_at) AS stamp FROM mission_generic_phase_plans WHERE mission_id=? GROUP BY phase_id","last_plan_at")
+    merge("SELECT phase_id,MAX(observed_at) AS stamp FROM mission_generic_action_receipts WHERE mission_id=? GROUP BY phase_id","last_action_receipt_at")
+    for pid,value in out.items():
+      candidates=[
+       ("PHASE",value.get("last_phase_update_at")),
+       ("ASSIGNMENT",value.get("last_assignment_at")),
+       ("RECEIPT",value.get("last_receipt_at")),
+       ("EVENT",value.get("last_event_at")),
+       ("PLAN",value.get("last_plan_at")),
+       ("ACTION_RECEIPT",value.get("last_action_receipt_at")),
+      ]
+      candidates=[x for x in candidates if x[1]]
+      if candidates:
+       kind,stamp=max(candidates,key=lambda x:str(x[1]));value["last_activity_at"]=stamp;value["last_activity_kind"]=kind
+      else:
+       value["last_activity_at"]=None;value["last_activity_kind"]="NONE"
+    return out
+
+
 def process_snapshot(mid, *, read_only=False, _connection=None):
     if _connection is not None and not read_only:raise ValueError('shared snapshot must be read only')
     c=_connection if _connection is not None else connect()
@@ -1171,6 +1307,8 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d['phase_capability_bindings']=global_sched.phase_capability_bindings(c,mid)
     d['execution_preflight']=global_sched.execution_preflight(c,mid)
     d['phase_evidence_counts']={r['phase']:r['total'] for r in c.execute("SELECT phase,COUNT(*) AS total FROM protocol_messages WHERE mission_id=? AND protocol IN ('EVIDENCE','VALIDATION','RECEIPT') GROUP BY phase",(mid,))}
+    d['phase_activity']=_phase_activity_snapshot(c,mid)
+    d['phase_curriculum']=phase_curriculum.curriculum_summary(c,mid)
     d['logical']=[dict(r) for r in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,))]
     d['workers']=[dict(r) for r in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,))]
     d['commands']=[dict(r) for r in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 40',(mid,))]
@@ -1881,6 +2019,410 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
     }
 
 
+
+EPOCH_CLOSURE_LOCAL_PRODUCER_ID="MISSION_CONTROL_DETERMINISTIC_EVIDENCE_R1"
+
+
+def _ledger_digest(rows):
+    return hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest()
+
+
+def _extract_task_ids_from_value(value,out):
+    if isinstance(value,dict):
+      for key,item in value.items():
+       if str(key).lower() in {"task_id","source_task_id","parent_task_id"} and isinstance(item,str) and item.strip():
+        out.add(item.strip())
+       _extract_task_ids_from_value(item,out)
+    elif isinstance(value,list):
+      for item in value:_extract_task_ids_from_value(item,out)
+
+
+def _p03_task_mission_ledger_evidence(c,mid,pid,contract):
+    if pid!="P03_TASK_MISSION_LEDGER":
+      return None
+    integrity=c.execute("PRAGMA integrity_check").fetchone()[0]
+    missions=[dict(r) for r in c.execute(
+      "SELECT mission_id,title,adapter,source_head,source_tree,state,runtime_state,logical_count,material_target,materialized,ready,created_at,authorized_at,updated_at,last_error "
+      "FROM missions ORDER BY mission_id"
+    ).fetchall()]
+    processes=[dict(r) for r in c.execute(
+      "SELECT mission_id,lpcl_digest,authority_state,current_phase,progress,created_at,updated_at FROM mission_process_specs ORDER BY mission_id"
+    ).fetchall()]
+    phases=[dict(r) for r in c.execute(
+      "SELECT mission_id,phase_id,ordinal,status,progress,started_at,finished_at,updated_at FROM mission_phases ORDER BY mission_id,ordinal"
+    ).fetchall()]
+    assignments=[dict(r) for r in c.execute(
+      "SELECT assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,state,lease_generation,created_at,claimed_at,finished_at,control_epoch,context_revision,plan_revision,dispatch_authority "
+      "FROM mission_execution_assignments ORDER BY mission_id,phase_id,created_at,assignment_id"
+    ).fetchall()]
+    receipts=[dict(r) for r in c.execute(
+      "SELECT receipt_id,assignment_id,mission_id,phase_id,result_digest,effect_receipt_digest,authority_effect,status,observed_at "
+      "FROM mission_execution_receipts ORDER BY mission_id,phase_id,observed_at,receipt_id"
+    ).fetchall()]
+    task_ids=set()
+    for row in c.execute("SELECT spec_json FROM missions ORDER BY mission_id").fetchall():
+      try:_extract_task_ids_from_value(json.loads(row["spec_json"] or "{}"),task_ids)
+      except Exception:pass
+    for row in c.execute("SELECT input_json FROM mission_execution_assignments WHERE input_json IS NOT NULL ORDER BY assignment_id").fetchall():
+      try:_extract_task_ids_from_value(json.loads(row["input_json"] or "{}"),task_ids)
+      except Exception:pass
+
+    orphan_process=int(c.execute("SELECT COUNT(*) FROM mission_process_specs p LEFT JOIN missions m ON m.mission_id=p.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_phase=int(c.execute("SELECT COUNT(*) FROM mission_phases p LEFT JOIN missions m ON m.mission_id=p.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_assignment=int(c.execute("SELECT COUNT(*) FROM mission_execution_assignments a LEFT JOIN missions m ON m.mission_id=a.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_receipt_mission=int(c.execute("SELECT COUNT(*) FROM mission_execution_receipts r LEFT JOIN missions m ON m.mission_id=r.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_receipt_assignment=int(c.execute("SELECT COUNT(*) FROM mission_execution_receipts r LEFT JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id WHERE a.assignment_id IS NULL").fetchone()[0])
+    mismatch_rows=[dict(r) for r in c.execute(
+      "SELECT a.mission_id,a.phase_id,COUNT(*) AS count FROM mission_execution_assignments a "
+      "LEFT JOIN mission_phases p ON p.mission_id=a.mission_id AND p.phase_id=a.phase_id "
+      "WHERE a.phase_id!='__TOPOLOGY__' AND p.phase_id IS NULL GROUP BY a.mission_id,a.phase_id ORDER BY a.mission_id,a.phase_id"
+    ).fetchall()]
+    def _auxiliary_phase(name):
+      return (
+        name=="__OPERATOR_BUS__" or name=="COMMUNICATION_WINDOW" or name.startswith("OPERATOR_BUS_")
+        or name.startswith("COMMUNICATION_") or name in {"R23_DOCKER_LOCAL_MODEL_CANARY","R23_DUAL_COMM_CANARY","__R23_DOCKER_LOCAL_MODEL_CANARY__"}
+      )
+    auxiliary_mismatches=[x for x in mismatch_rows if _auxiliary_phase(str(x["phase_id"]))]
+    unknown_mismatches=[x for x in mismatch_rows if not _auxiliary_phase(str(x["phase_id"]))]
+    assignment_phase_mismatch=sum(int(x["count"]) for x in mismatch_rows)
+    auxiliary_assignment_phase_count=sum(int(x["count"]) for x in auxiliary_mismatches)
+    unknown_assignment_phase_mismatch=sum(int(x["count"]) for x in unknown_mismatches)
+    receipt_identity_mismatch=int(c.execute(
+      "SELECT COUNT(*) FROM mission_execution_receipts r JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id "
+      "WHERE r.mission_id!=a.mission_id OR r.phase_id!=a.phase_id"
+    ).fetchone()[0])
+    current=c.execute("SELECT source_head,source_tree,state,runtime_state FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    requirements=set(contract.get("evidence_requirements") or [])
+    expected={"TASK_LEDGER","MISSION_LEDGER","ASSIGNMENT_LEDGER","RECEIPT_LEDGER"}
+    checks={
+      "DB_INTEGRITY":integrity=="ok",
+      "MISSION_LEDGER_NONEMPTY":bool(missions),
+      "TASK_LEDGER_NONEMPTY":bool(task_ids),
+      "ASSIGNMENT_LEDGER_NONEMPTY":bool(assignments),
+      "RECEIPT_LEDGER_NONEMPTY":bool(receipts),
+      "NO_ORPHAN_PROCESS":orphan_process==0,
+      "NO_ORPHAN_PHASE":orphan_phase==0,
+      "NO_ORPHAN_ASSIGNMENT":orphan_assignment==0,
+      "NO_ORPHAN_RECEIPT_MISSION":orphan_receipt_mission==0,
+      "NO_ORPHAN_RECEIPT_ASSIGNMENT":orphan_receipt_assignment==0,
+      "NO_UNKNOWN_ASSIGNMENT_PHASE_MISMATCH":unknown_assignment_phase_mismatch==0,
+      "NO_RECEIPT_IDENTITY_MISMATCH":receipt_identity_mismatch==0,
+      "EVIDENCE_REQUIREMENTS_EXACT":requirements==expected,
+      "MISSION_SOURCE_IDENTITY_PRESENT":bool(current and current["source_head"] and current["source_tree"]),
+      "LIVE_RUNTIME_STATE_PRESENT":bool(current and current["runtime_state"]),
+    }
+    predicate=str((contract.get("completion_predicates") or ["P03_TASK_MISSION_LEDGER_VERIFIED=PASS"])[0]).split("=",1)[0]
+    passed=all(checks.values())
+    summaries={
+      "task_ledger":{"count":len(task_ids),"digest":_ledger_digest(sorted(task_ids)),"task_ids":sorted(task_ids)},
+      "mission_ledger":{"count":len(missions),"digest":_ledger_digest(missions),"state_counts":{}},
+      "assignment_ledger":{"count":len(assignments),"digest":_ledger_digest(assignments),"topology_count":sum(1 for x in assignments if x["phase_id"]=="__TOPOLOGY__")},
+      "receipt_ledger":{"count":len(receipts),"digest":_ledger_digest(receipts),"pass_count":sum(1 for x in receipts if x["status"]=="PASS"),"authority_none_count":sum(1 for x in receipts if x["authority_effect"]=="NONE")},
+      "process_ledger":{"count":len(processes),"digest":_ledger_digest(processes)},
+      "phase_ledger":{"count":len(phases),"digest":_ledger_digest(phases)},
+    }
+    for row in missions:
+      state=str(row["state"]);summaries["mission_ledger"]["state_counts"][state]=summaries["mission_ledger"]["state_counts"].get(state,0)+1
+    return {
+      "producer":EPOCH_CLOSURE_LOCAL_PRODUCER_ID,
+      "producer_mode":"LOCAL_DETERMINISTIC_READ_ONLY",
+      "authority_effect":"NONE",
+      "requirements_covered":sorted(expected),
+      "checks":{**{k:"PASS" if v else "FAIL" for k,v in checks.items()},predicate:"PASS" if passed else "FAIL"},
+      "ledger_summary":summaries,
+      "lineage_integrity":{
+        "orphan_process":orphan_process,"orphan_phase":orphan_phase,"orphan_assignment":orphan_assignment,
+        "orphan_receipt_mission":orphan_receipt_mission,"orphan_receipt_assignment":orphan_receipt_assignment,
+        "assignment_phase_mismatch_total":assignment_phase_mismatch,
+        "auxiliary_assignment_phase_count":auxiliary_assignment_phase_count,
+        "unknown_assignment_phase_mismatch":unknown_assignment_phase_mismatch,
+        "auxiliary_namespaces":auxiliary_mismatches,
+        "unknown_mismatches":unknown_mismatches,
+        "receipt_identity_mismatch":receipt_identity_mismatch,
+      },
+      "source_identity":{"head":current["source_head"] if current else None,"tree":current["source_tree"] if current else None},
+      "runtime_identity":{"mission_state":current["state"] if current else None,"runtime_state":current["runtime_state"] if current else None},
+      "evidence_refs":[
+        "sqlite:missions","sqlite:mission_process_specs","sqlite:mission_phases",
+        "sqlite:mission_execution_assignments","sqlite:mission_execution_receipts",
+      ],
+    }
+
+
+
+
+def _p04_asis_architecture_evidence(c,mid,pid,contract):
+    if pid!="P04_ASIS_ARCHITECTURE":return None
+    integrity=c.execute("PRAGMA integrity_check").fetchone()[0]
+    current=c.execute("SELECT mission_id,source_head,source_tree,state,runtime_state,logical_count,material_target,materialized,ready FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    missions=[dict(r) for r in c.execute("SELECT mission_id,source_head,source_tree,state,runtime_state,logical_count,material_target,materialized,ready FROM missions ORDER BY mission_id").fetchall()]
+    processes=[dict(r) for r in c.execute("SELECT mission_id,authority_state,current_phase,progress FROM mission_process_specs ORDER BY mission_id").fetchall()]
+    logical=[dict(r) for r in c.execute("SELECT mission_id,logical_id,role FROM logical_drones ORDER BY mission_id,logical_id").fetchall()]
+    workers=[dict(r) for r in c.execute("SELECT mission_id,pod_uid,logical_id,phase,ready,restarts,observed_at FROM material_workers ORDER BY mission_id,logical_id").fetchall()]
+    controls=[dict(r) for r in c.execute("SELECT mission_id,control_epoch,control_owner,pause_latch,stop_latch,context_revision,plan_revision,updated_at FROM mission_operator_control ORDER BY mission_id").fetchall()]
+    bindings=[dict(r) for r in c.execute("SELECT mission_id,phase_id,capability_class,capability_id,state,executor_id,binding_digest FROM mission_phase_capability_bindings ORDER BY mission_id,phase_id").fetchall()]
+    grants=[dict(r) for r in c.execute("SELECT grant_id,principal_id,mission_scope,actions_json,issued_at,expires_at,revoked_at FROM operator_grants ORDER BY grant_id").fetchall()]
+    revocations=[dict(r) for r in c.execute("SELECT mission_id,capability,command_id,control_epoch,revoked_at,released_at FROM operator_capability_revocations ORDER BY mission_id,capability,revoked_at").fetchall()]
+    tables=[]
+    for row in c.execute("SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").fetchall():
+      name=row["name"]
+      try:count=int(c.execute("SELECT COUNT(*) FROM "+name).fetchone()[0])
+      except Exception:count=-1
+      tables.append({"name":name,"count":count,"schema_digest":hashlib.sha256(str(row["sql"] or "").encode()).hexdigest()})
+    expected={"ASIS_GRAPH","RUNTIME_GRAPH","DATA_GRAPH","AUTHORITY_GRAPH"}
+    requirements=set(contract.get("evidence_requirements") or [])
+    checks={
+      "DB_INTEGRITY":integrity=="ok",
+      "CURRENT_MISSION_PRESENT":current is not None,
+      "LIVE_SOURCE_IDENTITY_PRESENT":bool(current and current["source_head"] and current["source_tree"]),
+      "LIVE_RUNTIME_IDENTITY_PRESENT":bool(current and current["runtime_state"]),
+      "RUNTIME_GRAPH_NONEMPTY":bool(logical) and bool(workers),
+      "DATA_GRAPH_NONEMPTY":bool(tables),
+      "AUTHORITY_GRAPH_NONEMPTY":bool(bindings) or bool(controls) or bool(grants),
+      "EVIDENCE_REQUIREMENTS_EXACT":requirements==expected,
+    }
+    pred=str((contract.get("completion_predicates") or ["P04_ASIS_ARCHITECTURE_VERIFIED=PASS"])[0]).split("=",1)[0]
+    passed=all(checks.values())
+    asis_graph={
+      "missions":{"count":len(missions),"digest":_ledger_digest(missions)},
+      "processes":{"count":len(processes),"digest":_ledger_digest(processes)},
+      "current_mission":dict(current) if current else None,
+    }
+    runtime_graph={
+      "logical":{"count":len(logical),"digest":_ledger_digest(logical)},
+      "material":{"count":len(workers),"ready":sum(int(x["ready"]) for x in workers),"digest":_ledger_digest(workers)},
+      "runtime_state_counts":{},
+    }
+    for row in missions:
+      state=str(row["runtime_state"]);runtime_graph["runtime_state_counts"][state]=runtime_graph["runtime_state_counts"].get(state,0)+1
+    data_graph={"table_count":len(tables),"tables":tables,"digest":_ledger_digest(tables)}
+    authority_graph={
+      "controls":{"count":len(controls),"digest":_ledger_digest(controls)},
+      "capability_bindings":{"count":len(bindings),"digest":_ledger_digest(bindings)},
+      "grants":{"count":len(grants),"digest":_ledger_digest(grants)},
+      "revocations":{"count":len(revocations),"digest":_ledger_digest(revocations)},
+    }
+    return {
+      "producer":EPOCH_CLOSURE_LOCAL_PRODUCER_ID,"producer_mode":"LOCAL_DETERMINISTIC_READ_ONLY","authority_effect":"NONE",
+      "requirements_covered":sorted(expected),
+      "checks":{**{k:"PASS" if v else "FAIL" for k,v in checks.items()},pred:"PASS" if passed else "FAIL"},
+      "asis_graph":asis_graph,"runtime_graph":runtime_graph,"data_graph":data_graph,"authority_graph":authority_graph,
+      "evidence_refs":["sqlite:missions","sqlite:mission_process_specs","sqlite:logical_drones","sqlite:material_workers","sqlite:mission_operator_control","sqlite:mission_phase_capability_bindings","sqlite:operator_grants","sqlite:operator_capability_revocations","sqlite:schema"],
+    }
+
+
+def _p05_capability_map_evidence(c,mid,pid,contract):
+    if pid!="P05_CAPABILITY_MAP":return None
+    current=c.execute("SELECT source_head,source_tree,state,runtime_state FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    flat=[]
+    for capability_class,items in sorted(PROCESS_CAPABILITY_REGISTRY.items()):
+      for item in items:
+       flat.append({"capability_class":capability_class,"capability_id":item.get("capability_id"),"executor_id":item.get("executor_id"),"effect_ceiling":item.get("effect_ceiling"),"mode":item.get("mode")})
+    bindings=[dict(r) for r in c.execute("SELECT mission_id,phase_id,capability_class,capability_id,state,executor_id,binding_digest FROM mission_phase_capability_bindings ORDER BY mission_id,phase_id").fetchall()]
+    current_bindings=[x for x in bindings if x["mission_id"]==mid]
+    by_cap={}
+    for item in flat:
+      by_cap.setdefault(item["capability_id"],[]).append(item)
+    duplicates=[]
+    for cap,items in sorted(by_cap.items()):
+      classes=sorted({x["capability_class"] for x in items});executors=sorted({x["executor_id"] for x in items})
+      if len(items)>1:
+       duplicates.append({"capability_id":cap,"occurrences":len(items),"capability_classes":classes,"executors":executors,"semantic_duplicate":len(executors)==1})
+    consumer_map={}
+    for row in bindings:
+      key=row["capability_id"];consumer_map.setdefault(key,[]).append({"mission_id":row["mission_id"],"phase_id":row["phase_id"],"state":row["state"],"executor_id":row["executor_id"]})
+    runtime_consumers=[{"capability_id":k,"consumer_count":len(v),"consumers":v} for k,v in sorted(consumer_map.items())]
+    expected={"CAPABILITY_GRAPH","DUPLICATE_IMPLEMENTATION_MAP","RUNTIME_CONSUMERS"}
+    requirements=set(contract.get("evidence_requirements") or [])
+    known_classes=set(PROCESS_CAPABILITY_REGISTRY)
+    checks={
+      "CAPABILITY_REGISTRY_NONEMPTY":bool(flat),
+      "CURRENT_PHASE_BINDINGS_NONEMPTY":bool(current_bindings),
+      "CURRENT_BINDINGS_BOUND":all(x["state"]=="BOUND" for x in current_bindings),
+      "CURRENT_BINDING_CLASSES_KNOWN":all(x["capability_class"] in known_classes for x in current_bindings),
+      "RUNTIME_CONSUMERS_NONEMPTY":bool(runtime_consumers),
+      "LIVE_SOURCE_IDENTITY_PRESENT":bool(current and current["source_head"] and current["source_tree"]),
+      "LIVE_RUNTIME_IDENTITY_PRESENT":bool(current and current["runtime_state"]),
+      "EVIDENCE_REQUIREMENTS_EXACT":requirements==expected,
+    }
+    pred=str((contract.get("completion_predicates") or ["P05_CAPABILITY_MAP_VERIFIED=PASS"])[0]).split("=",1)[0]
+    passed=all(checks.values())
+    return {
+      "producer":EPOCH_CLOSURE_LOCAL_PRODUCER_ID,"producer_mode":"LOCAL_DETERMINISTIC_READ_ONLY","authority_effect":"NONE",
+      "requirements_covered":sorted(expected),
+      "checks":{**{k:"PASS" if v else "FAIL" for k,v in checks.items()},pred:"PASS" if passed else "FAIL"},
+      "capability_graph":{"entry_count":len(flat),"digest":_ledger_digest(flat),"entries":flat},
+      "duplicate_implementation_map":{"count":len(duplicates),"digest":_ledger_digest(duplicates),"duplicates":duplicates},
+      "runtime_consumers":{"capability_count":len(runtime_consumers),"binding_count":len(bindings),"digest":_ledger_digest(runtime_consumers),"items":runtime_consumers},
+      "evidence_refs":["in-memory:PROCESS_CAPABILITY_REGISTRY","sqlite:mission_phase_capability_bindings","sqlite:missions"],
+    }
+
+
+def _epoch_closure_saas_response_evidence(c,mid,pid,contract):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    predicates=list(contract.get("completion_predicates") or [])
+    rows=c.execute(
+      "SELECT request_id,question,status,response_text,response_digest,response_meta_json,receipt_digest,progress_state,scope_type,scope_id,transport,authority_effect,responded_at "
+      "FROM saas_handoff_requests WHERE mission_id=? AND status='RESPONDED' ORDER BY responded_at DESC",(mid,)
+    ).fetchall()
+    fallback=None
+    for row in rows:
+      if row["scope_type"]!="MISSION" or row["scope_id"]!=mid or row["transport"]!=saas_broker.SENTINELX_MCP_TRANSPORT or row["authority_effect"]!="NONE":
+       continue
+      if row["progress_state"]!="RECEIPT_BOUND" or not row["receipt_digest"] or not row["response_digest"]:
+       continue
+      receipt=c.execute("SELECT receipt_digest FROM saas_broker_receipts WHERE request_id=?",(row["request_id"],)).fetchone()
+      if not receipt or receipt["receipt_digest"]!=row["receipt_digest"]:continue
+      question=str(row["question"] or "")
+      pos=question.find("{")
+      if pos<0:continue
+      try:q=json.loads(question[pos:])
+      except Exception:continue
+      if q.get("mission_id")!=mid or q.get("phase_id")!=pid or q.get("source_head")!=mission["source_head"] or q.get("source_tree")!=mission["source_tree"] or q.get("contract_digest")!=contract.get("contract_digest"):
+       continue
+      if list(q.get("completion_predicates") or [])!=predicates:continue
+      try:meta=json.loads(row["response_meta_json"] or "{}")
+      except Exception:meta={}
+      if meta.get("authority_effect")!="NONE" or meta.get("transport")!=saas_broker.SENTINELX_MCP_TRANSPORT:continue
+      lines={line.strip() for line in str(row["response_text"] or "").splitlines()}
+      checks={}
+      for predicate in predicates:
+       name=str(predicate).split("=",1)[0]
+       checks[name]="PASS" if name+"=PASS" in lines else "FAIL"
+      candidate={
+        "producer":"CHATGPT_SAAS_SUPERVISOR","producer_mode":"BROKER_RECEIPT_BOUND",
+        "authority_effect":"NONE","checks":checks,"request_id":row["request_id"],"response_digest":row["response_digest"],
+        "receipt_digest":row["receipt_digest"],"responded_at":row["responded_at"],
+        "evidence_refs":["saas-request:"+row["request_id"],"saas-response-sha256:"+row["response_digest"],"saas-receipt-sha256:"+row["receipt_digest"]],
+      }
+      if checks and all(v=="PASS" for v in checks.values()):return candidate
+      if fallback is None:fallback=candidate
+    return fallback
+
+
+EPOCH_CLOSURE_LOCAL_PRODUCERS={
+  "P03_TASK_MISSION_LEDGER":_p03_task_mission_ledger_evidence,
+  "P04_ASIS_ARCHITECTURE":_p04_asis_architecture_evidence,
+  "P05_CAPABILITY_MAP":_p05_capability_map_evidence,
+}
+
+
+def _epoch_closure_local_evidence(c,mid,pid,contract):
+    producer=EPOCH_CLOSURE_LOCAL_PRODUCERS.get(pid)
+    if producer is None:return None
+    return producer(c,mid,pid,contract)
+
+
+def _ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    question=(
+      "LION PHASE SUPERVISOR REQUEST\n"
+      "Independently verify the phase completion predicate and provide evidence refs. "
+      "Do not perform external effects and do not manufacture PASS.\n"+
+      json.dumps({
+        "mission_id":mid,"phase_id":pid,"source_head":mission["source_head"],"source_tree":mission["source_tree"],
+        "contract_digest":contract.get("contract_digest"),"completion_predicates":contract.get("completion_predicates") or [],
+        "currentness_requirements":contract.get("currentness_requirements") or [],
+        "evidence_requirements":contract.get("evidence_requirements") or [],
+        "observed_checks":(evidence or {}).get("checks") or {},"authority_effect":"NONE",
+      },sort_keys=True,ensure_ascii=False)
+    )
+    return saas_broker.create_request(c,mid,question,now,scope_type="MISSION",scope_id=mid,authority_effect="NONE",transport=saas_broker.SENTINELX_MCP_TRANSPORT)
+
+
+
+def _curriculum_question_meta(question):
+    text=str(question or "");pos=text.find("{")
+    if pos<0:return None
+    try:value=json.loads(text[pos:])
+    except Exception:return None
+    return value if isinstance(value,dict) else None
+
+
+def _curriculum_currentness_receipt(c,mid,pid,contract,resolution):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    required=set(resolution.get("missing_currentness") or [])
+    if not required:
+      return {"passed_currentness":[],"evidence_refs":["local-currentness:no-external-currentness-required"],"authority_effect":"NONE"}
+    rows=c.execute(
+      "SELECT request_id,question,status,response_text,response_digest,response_meta_json,receipt_digest,progress_state,"
+      "scope_type,scope_id,transport,authority_effect,responded_at FROM saas_handoff_requests "
+      "WHERE mission_id=? AND status='RESPONDED' ORDER BY responded_at DESC",(mid,)
+    ).fetchall()
+    for row in rows:
+      if row["scope_type"]!="MISSION" or row["scope_id"]!=mid or row["transport"]!=saas_broker.SENTINELX_MCP_TRANSPORT or row["authority_effect"]!="NONE":continue
+      if row["progress_state"]!="RECEIPT_BOUND" or not row["receipt_digest"] or not row["response_digest"]:continue
+      receipt=c.execute("SELECT receipt_digest FROM saas_broker_receipts WHERE request_id=?",(row["request_id"],)).fetchone()
+      if not receipt or receipt["receipt_digest"]!=row["receipt_digest"]:continue
+      meta=_curriculum_question_meta(row["question"])
+      if not meta or meta.get("curriculum_request_kind")!="CURRENTNESS_ONLY":continue
+      if meta.get("mission_id")!=mid or meta.get("phase_id")!=pid:continue
+      if meta.get("source_head")!=mission["source_head"] or meta.get("source_tree")!=mission["source_tree"]:continue
+      if meta.get("contract_digest")!=contract.get("contract_digest") or meta.get("contract_signature")!=resolution.get("contract_signature"):continue
+      if set(meta.get("required_currentness") or [])!=required:continue
+      try:rmeta=json.loads(row["response_meta_json"] or "{}")
+      except Exception:rmeta={}
+      if rmeta.get("authority_effect")!="NONE" or rmeta.get("transport")!=saas_broker.SENTINELX_MCP_TRANSPORT:continue
+      lines=[line.strip() for line in str(row["response_text"] or "").splitlines() if line.strip()]
+      passed={item for item in required if item+"=PASS" in lines}
+      failed={item for item in required if item+"=FAIL" in lines}
+      refs=[line.split("=",1)[1] for line in lines if line.startswith("EVIDENCE_REF=") and "=" in line]
+      if required<=passed and not failed:
+       return {
+        "request_id":row["request_id"],"passed_currentness":sorted(passed),
+        "response_digest":row["response_digest"],"receipt_digest":row["receipt_digest"],
+        "responded_at":row["responded_at"],"evidence_refs":refs+[
+          "saas-request:"+row["request_id"],"saas-response-sha256:"+row["response_digest"],
+          "saas-receipt-sha256:"+row["receipt_digest"],
+        ],"authority_effect":"NONE",
+       }
+    return None
+
+
+def _ensure_curriculum_currentness_request(c,mid,pid,contract,resolution):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    required=sorted(set(resolution.get("missing_currentness") or []))
+    if not required:return None
+    signature=resolution.get("contract_signature")
+    rows=c.execute(
+      "SELECT request_id,question,status,request_code,transport,progress_state,created_at FROM saas_handoff_requests "
+      "WHERE mission_id=? ORDER BY created_at DESC LIMIT 40",(mid,)
+    ).fetchall()
+    for row in rows:
+      meta=_curriculum_question_meta(row["question"])
+      if not meta or meta.get("curriculum_request_kind")!="CURRENTNESS_ONLY":continue
+      if meta.get("phase_id")!=pid or meta.get("contract_digest")!=contract.get("contract_digest") or meta.get("contract_signature")!=signature:continue
+      if set(meta.get("required_currentness") or [])!=set(required):continue
+      if row["status"] not in {"CANCELLED","FAILED"}:
+       return {"request_id":row["request_id"],"request_code":row["request_code"],"transport":row["transport"],"status":row["status"],"progress_state":row["progress_state"],"existing":True}
+    meta={
+      "curriculum_request_kind":"CURRENTNESS_ONLY","schema":"lion.phase-curriculum-currentness/v1",
+      "mission_id":mid,"phase_id":pid,"source_head":mission["source_head"],"source_tree":mission["source_tree"],
+      "contract_digest":contract.get("contract_digest"),"contract_signature":signature,
+      "required_currentness":required,"authority_effect":"NONE",
+    }
+    expected="\n".join(item+"=PASS|FAIL" for item in required)
+    question=(
+      "LION CURRICULUM CURRENTNESS REQUEST\n"
+      "Verify only the listed live-currentness requirements using authoritative live sources. "
+      "Do not decide the phase predicate and do not perform external effects.\n"
+      "Return one exact line for every requirement:\n"+expected+"\n"
+      "Then add one or more EVIDENCE_REF=<source/ref> lines.\n"+
+      json.dumps(meta,sort_keys=True,ensure_ascii=False)
+    )
+    out=saas_broker.create_request(c,mid,question,now,scope_type="MISSION",scope_id=mid,authority_effect="NONE",transport=saas_broker.SENTINELX_MCP_TRANSPORT)
+    _process_message(c,mid,"ASSIGNMENT","PHASE_CURRICULUM_RESOLVER","CHATGPT_SAAS_SUPERVISOR",pid,{
+      "event":"CURRICULUM_CURRENTNESS_REQUESTED","request_id":out["request_id"],"request_code":out["request_code"],
+      "contract_signature":signature,"required_currentness":required,"authority_effect":"NONE",
+    },"OUT")
+    c.commit()
+    return {"request_id":out["request_id"],"request_code":out["request_code"],"transport":out["transport"],"status":out.get("status"),"existing":False}
+
+
 def _generic_execute_read_plan(c,plan):
     capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id'];executor_id=plan.get('executor_id') or 'MISSION_CONTROL_READ_ONLY_EVIDENCE'
     control=operator_control.control_state(c,mid,None)
@@ -1948,8 +2490,47 @@ def _generic_execute_read_plan(c,plan):
     elif capability=='GENERIC_MISSION_CONTRACT_RECONCILIATION':
       contract=global_sched.phase_execution_contract(c,mid,pid)
       if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
-      ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
-      evidence={'capability':capability,'contract_digest':contract['contract_digest'],**evidence}
+      resolution=phase_curriculum.resolve(c,mid,pid,contract,now)
+      if resolution.get('recipe')=='COMPOSE_LINEAGE_V1':
+       currentness=_curriculum_currentness_receipt(c,mid,pid,contract,resolution)
+       if currentness is None:
+        req=_ensure_curriculum_currentness_request(c,mid,pid,contract,resolution)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,
+                  'curriculum':resolution,'checks':{str(x).split('=',1)[0]:'FAIL' for x in contract.get('completion_predicates') or []},
+                  'currentness_request':req,'authority_effect':'NONE'}
+        global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id=executor_id,evidence=evidence)
+        return {'state':'BLOCKED','gate':'CURRENTNESS_REQUIRED','reason':'Phase curriculum composed prior lessons; live external currentness is required before lineage materialization','evidence':evidence}
+       composed=phase_curriculum.compose_lineage(c,mid,pid,contract,resolution,currentness,now)
+       if composed is not None:
+        names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+        ok=all((composed.get('checks') or {}).get(name)=='PASS' for name in names)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':True,
+                  'adaptive_curriculum_resolver':True,**composed}
+       else:
+        ok=False
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,
+                  'adaptive_curriculum_resolver':True,'curriculum':resolution,
+                  'checks':{str(x).split('=',1)[0]:'FAIL' for x in contract.get('completion_predicates') or []},
+                  'authority_effect':'NONE'}
+      else:
+       local=_epoch_closure_local_evidence(c,mid,pid,contract)
+       if local is not None:
+        names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+        ok=all((local.get('checks') or {}).get(name)=='PASS' for name in names)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':True,**local}
+       else:
+        saas_evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
+        if saas_evidence is not None:
+         names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+         ok=all((saas_evidence.get('checks') or {}).get(name)=='PASS' for name in names)
+         evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':True,**saas_evidence}
+        else:
+         ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
+         evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':False,**evidence}
+         if not ok:
+          req=_ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence)
+          if req:
+           evidence['saas_request']={'request_id':req.get('request_id'),'request_code':req.get('request_code'),'transport':req.get('transport'),'status':req.get('status')}
     else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
     global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id=executor_id)
     global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id=executor_id)
@@ -1959,6 +2540,38 @@ def _generic_execute_read_plan(c,plan):
       return {'state':'BLOCKED','gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','reason':'Independent read-only evidence did not satisfy the phase completion contract','evidence':evidence}
     receipt=global_sched.record_generic_action_receipt(c,plan['plan_id'],now,status='PASS',evidence=evidence,authority_effect='NONE')
     return {'state':'PASS','receipt':receipt,'evidence':evidence}
+
+
+
+def _generic_phase_transition_payload(event,planrow,receipt_id,evidence_digest,evidence):
+    evidence=evidence if isinstance(evidence,dict) else {}
+    summary={}
+    for key in ("producer","producer_mode","requirements_covered","checks","request_id","response_digest","receipt_digest"):
+      value=evidence.get(key)
+      if value is not None:summary[key]=value
+    ledger=evidence.get("ledger_summary")
+    if isinstance(ledger,dict):
+      summary["ledger_counts"]={k:v.get("count") for k,v in ledger.items() if isinstance(v,dict) and "count" in v}
+      summary["ledger_digests"]={k:v.get("digest") for k,v in ledger.items() if isinstance(v,dict) and v.get("digest")}
+    lineage=evidence.get("lineage_integrity")
+    if isinstance(lineage,dict):
+      summary["lineage_integrity"]={k:v for k,v in lineage.items() if k not in {"auxiliary_namespaces","unknown_mismatches"}}
+    for key in ("asis_graph","runtime_graph","data_graph","authority_graph","capability_graph","duplicate_implementation_map","runtime_consumers"):
+      value=evidence.get(key)
+      if not isinstance(value,dict):continue
+      bounded={}
+      for k in ("count","entry_count","table_count","capability_count","binding_count","digest","runtime_state_counts"):
+       if k in value:bounded[k]=value[k]
+      if bounded:summary[key]=bounded
+    payload={
+      "event":event,"plan_id":planrow["plan_id"],"action_receipt_id":receipt_id,
+      "action_ir_digest":planrow["action_ir_digest"],"evidence_digest":evidence_digest,
+      "evidence_summary":summary,"authority_effect":"NONE",
+    }
+    raw=json.dumps(payload,ensure_ascii=False)
+    if len(raw)>15000:
+      payload["evidence_summary"]={"producer":summary.get("producer"),"checks":summary.get("checks"),"summary_digest":hashlib.sha256(json.dumps(summary,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest()}
+    return payload
 
 
 def _generic_existing_action_receipt(c,plan_id):
@@ -2016,7 +2629,8 @@ def drive_generic_once(mid):
        action_receipt=_generic_existing_action_receipt(c,planrow['plan_id'])
        if action_receipt and action_receipt.get('status')=='PASS':
         evidence=json.loads(planrow['evidence_json'] or '{}')
-        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',{'event':'GENERIC_PHASE_EXECUTION_PASS','plan_id':planrow['plan_id'],'action_receipt_id':action_receipt['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':action_receipt['evidence_digest'],'authority_effect':'NONE',**evidence},'VALIDATION')
+        transition_payload=_generic_phase_transition_payload('GENERIC_PHASE_EXECUTION_PASS',planrow,action_receipt['receipt_id'],action_receipt['evidence_digest'],evidence)
+        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',transition_payload,'VALIDATION')
         if current and driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
         return
        result=_generic_execute_read_plan(c,planrow)
@@ -2024,7 +2638,8 @@ def drive_generic_once(mid):
         ar=result['receipt']
         _process_message(c,mid,'EVIDENCE','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_ACTION_EVIDENCE_OBSERVED','plan_id':planrow['plan_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE'},'INTERNAL')
         _process_message(c,mid,'RECEIPT','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_ACTION_RECEIPT','plan_id':planrow['plan_id'],'receipt_id':ar['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE'},'INTERNAL');c.commit()
-        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',{'event':'GENERIC_PHASE_EXECUTION_PASS','plan_id':planrow['plan_id'],'action_receipt_id':ar['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE',**result['evidence']},'VALIDATION')
+        transition_payload=_generic_phase_transition_payload('GENERIC_PHASE_EXECUTION_PASS',planrow,ar['receipt_id'],ar['evidence_digest'],result['evidence'])
+        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',transition_payload,'VALIDATION')
         if current and driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
         return
        gate=result.get('gate') or ('AUTHORITY_REQUIRED' if result['state']=='WAITING_AUTHORITY' else 'CURRENTNESS_REQUIRED' if result['state']=='WAITING_CURRENTNESS' else 'GENERIC_EXECUTION_BLOCKED')
@@ -2057,8 +2672,90 @@ def reconcile_control_plane_late_saas():
     finally:c.close()
 
 
+def reconcile_epoch_closure_late_saas():
+    c=connect();wake=[]
+    try:
+      rows=c.execute(
+        "SELECT m.mission_id,p.current_phase,d.state,d.blocking_gate "
+        "FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id "
+        "JOIN mission_execution_drivers d ON d.mission_id=m.mission_id "
+        "WHERE m.state='RUNNING' AND d.state IN ('WAITING','BLOCKED') AND p.current_phase IS NOT NULL"
+      ).fetchall()
+      for row in rows:
+       mid=row["mission_id"];pid=row["current_phase"]
+       if row["blocking_gate"] not in {"EVIDENCE_REQUIREMENTS_NOT_SATISFIED","CURRENTNESS_REQUIRED","EVIDENCE_REACQUISITION_REQUIRED"}:continue
+       spec=_phase_exec_spec(c,mid,pid)
+       if not spec or spec.get("handler_id")!=GENERIC_PHASE_HANDLER:continue
+       bindings=global_sched.phase_capability_bindings(c,mid,pid)
+       bound=next((item for item in bindings if item.get("state")=="BOUND" and item.get("capability_id")=="GENERIC_MISSION_CONTRACT_RECONCILIATION"),None)
+       if not bound:continue
+       contract=global_sched.phase_execution_contract(c,mid,pid)
+       if not contract:continue
+       resolution=phase_curriculum.resolve(c,mid,pid,contract,now)
+       curriculum_currentness=_curriculum_currentness_receipt(c,mid,pid,contract,resolution) if resolution.get("recipe") else None
+       if curriculum_currentness is not None and resolution.get("recipe")=="COMPOSE_LINEAGE_V1":
+        wake.append((mid,pid,curriculum_currentness.get("request_id") or "LOCAL_CURRENTNESS"))
+        continue
+       evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
+       if evidence is None:continue
+       names=[str(x).split("=",1)[0] for x in contract.get("completion_predicates") or []]
+       if names and all((evidence.get("checks") or {}).get(name)=="PASS" for name in names):
+        wake.append((mid,pid,evidence["request_id"]))
+    finally:c.close()
+    results=[]
+    for mid,pid,request_id in wake:
+      drive_generic_once(mid)
+      results.append({"mission_id":mid,"phase_id":pid,"request_id":request_id})
+    return results
+
+
+def reconcile_passed_generic_phase_receipts():
+    c=connect()
+    try:
+      sql=(
+        "SELECT ps.mission_id,ps.current_phase AS phase_id,p.status AS phase_status, "
+        "gp.plan_id,gp.action_ir_digest,gp.evidence_json,gp.evidence_digest, "
+        "gr.receipt_id AS action_receipt_id,gr.evidence_digest AS receipt_evidence_digest, "
+        "d.state AS driver_state,d.current_phase AS driver_phase "
+        "FROM mission_process_specs ps "
+        "JOIN mission_phases p ON p.mission_id=ps.mission_id AND p.phase_id=ps.current_phase "
+        "JOIN mission_generic_phase_plans gp ON gp.mission_id=ps.mission_id AND gp.phase_id=ps.current_phase "
+        "JOIN mission_generic_action_receipts gr ON gr.plan_id=gp.plan_id "
+        "JOIN mission_execution_drivers d ON d.mission_id=ps.mission_id "
+        "WHERE p.status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED','FAIL') "
+        "AND gp.state='PASS' AND gr.status='PASS' AND gr.authority_effect='NONE' "
+        "AND gp.evidence_digest=gr.evidence_digest "
+        "AND d.current_phase=ps.current_phase "
+        "AND d.state IN ('ACTIVE','WAITING','BLOCKED') "
+        "ORDER BY ps.mission_id"
+      )
+      rows=c.execute(sql).fetchall()
+      repaired=[]
+      for row in rows:
+       try:evidence=json.loads(row['evidence_json'] or '{}')
+       except Exception:evidence={}
+       planrow={'plan_id':row['plan_id'],'action_ir_digest':row['action_ir_digest']}
+       transition_payload=_generic_phase_transition_payload('GENERIC_PHASE_DURABLE_PASS_RECONCILED',planrow,row['action_receipt_id'],row['receipt_evidence_digest'],evidence)
+       current,overall=_driver_phase_result(
+        c,row['mission_id'],row['phase_id'],'PASS',
+        'Durable PASS evidence receipt reconciled into the phase verdict.',
+        transition_payload,'VALIDATION',
+       )
+       ds=driver_snapshot(c,row['mission_id'])
+       if current and ds and ds.get('state') in {'WAITING','BLOCKED'}:
+        driver_transition(c,row['mission_id'],'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
+       elif current is None and ds and ds.get('state')!='COMPLETE':
+        driver_reconcile_complete(c,row['mission_id'],now,next_action='TERMINAL_RECONCILED')
+       repaired.append({'mission_id':row['mission_id'],'phase_id':row['phase_id'],'next_phase':current,'progress':overall})
+      return repaired
+    finally:c.close()
+
 def global_scheduler_once():
+    try:reconcile_passed_generic_phase_receipts()
+    except Exception:pass
     try:reconcile_control_plane_late_saas()
+    except Exception:pass
+    try:reconcile_epoch_closure_late_saas()
     except Exception:pass
     c=connect()
     try:
@@ -2203,9 +2900,41 @@ def local_assignment_claim(x):
     try:
       out=global_sched.claim_assignment(c,x['assignment_id'],now,expected_material_drone_id=x['material_drone_id'])
       ctx=operator_control.assignment_context(c,out['mission_id'],out['material_drone_id'],out['logical_drone_id'])
+      operator_messages=operator_control.assignment_messages_for_input(ctx.get('messages',[]),out.get('input_json'))
       out['operator_control']=ctx.get('control');out['operator_context']=_decode_revision(ctx.get('context'));out['operator_plan']=_decode_revision(ctx.get('plan'))
-      out['operator_messages']=[{k:m.get(k) for k in ('message_id','from_participant','target','kind','content','context_revision','plan_revision','created_at')} for m in ctx.get('messages',[])]
+      out['operator_messages']=[{k:m.get(k) for k in ('message_id','from_participant','target','kind','content','context_revision','plan_revision','created_at')} for m in operator_messages]
       return out
+    finally:c.close()
+
+
+def _wake_generic_phase_after_local_receipt(mission_id,phase_id):
+    c=connect()
+    try:
+      process=c.execute("SELECT current_phase FROM mission_process_specs WHERE mission_id=?",(mission_id,)).fetchone()
+      driver=driver_snapshot(c,mission_id)
+      spec=_phase_exec_spec(c,mission_id,phase_id)
+      eligible=bool(
+        process and process["current_phase"]==phase_id
+        and spec and spec.get("handler_id")==GENERIC_PHASE_HANDLER
+        and driver and driver.get("current_phase")==phase_id
+        and driver.get("state") in {"WAITING","BLOCKED"}
+        and driver.get("blocking_gate") in {"GENERIC_PHASE_LOCAL_PLAN_RECEIPT","GENERIC_PHASE_LOCAL_PLAN_FAILED"}
+      )
+    finally:c.close()
+    if not eligible:return {"triggered":False,"reason":"NOT_EXACT_WAITING_GENERIC_PHASE"}
+    drive_generic_once(mission_id)
+    c=connect()
+    try:
+      after=driver_snapshot(c,mission_id)
+      phase=c.execute("SELECT status,progress FROM mission_phases WHERE mission_id=? AND phase_id=?",(mission_id,phase_id)).fetchone()
+      return {
+        "triggered":True,
+        "driver_state":after.get("state") if after else None,
+        "blocking_gate":after.get("blocking_gate") if after else None,
+        "current_phase":after.get("current_phase") if after else None,
+        "phase_status":phase["status"] if phase else None,
+        "phase_progress":phase["progress"] if phase else None,
+      }
     finally:c.close()
 
 
@@ -2214,7 +2943,7 @@ def local_assignment_receipt(x):
     if type(x) is not dict or set(x)!=required:raise ValueError('local assignment receipt schema')
     if x['status'] not in {'PASS','FAIL'} or x['authority_effect']!='NONE':raise ValueError('local assignment receipt status/authority')
     if type(x['result']) is not dict:raise ValueError('local assignment result')
-    c=connect()
+    c=connect();wake=None
     try:
       out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,material_drone_id=x['material_drone_id'],lease_generation=x['lease_generation'],status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
       payload_store=global_sched.store_assignment_payload(c,x['assignment_id'],out['receipt_id'],x['result'],now)
@@ -2223,6 +2952,7 @@ def local_assignment_receipt(x):
       row=c.execute('SELECT mission_id,phase_id,input_json FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
       if row:
        _process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'payload_retained':True,'status':x['status'],'authority_effect':'NONE'},'IN')
+       wake=(row['mission_id'],row['phase_id'])
        try:assignment_input=json.loads(row['input_json'] or '{}')
        except Exception:assignment_input={}
        drid=assignment_input.get('dual_request_id')
@@ -2236,8 +2966,11 @@ def local_assignment_receipt(x):
          joined=dual_join_result(c,drid);out['dual_result']=joined
          _process_message(c,dual['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','DUAL_RESULT_JOIN',dual['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT_AUTO_JOINED','dual_request_id':drid,'dual_state':joined.get('state'),'assignment_id':x['assignment_id'],'authority_effect':'NONE'},'INTERNAL')
       out['payload_store']=payload_store
-      c.commit();return out
+      c.commit()
     finally:c.close()
+    if wake is not None:
+      out['phase_wake']=_wake_generic_phase_after_local_receipt(wake[0],wake[1])
+    return out
 
 def model_call_intent(x):
     if type(x) is not dict:raise ValueError('model call intent schema')
@@ -2378,6 +3111,12 @@ class H(BaseHTTPRequestHandler):
     mid=path[len('/api/v3/missions/'):-len('/focus')];n=int(self.headers.get('Content-Length','0'))
     if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
     return self.json(set_focus_mission(mid,json.loads(self.rfile.read(n))))
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
+  if path.startswith('/api/v3/missions/') and path.endswith('/phase-operations'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/phase-operations')].strip('/');n=int(self.headers.get('Content-Length','0'))
+    if n<2 or n>8192 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+    x=json.loads(self.rfile.read(n));return self.json(phase_operation(mid,x))
    except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
   if path.startswith('/api/v3/missions/') and path.endswith('/phase-actions'):
    try:

@@ -19,12 +19,63 @@ class PhaseControlTests(unittest.TestCase):
     def request(self, snapshot, action='PAUSE'):
         return {'phase_id': 'ONE', 'action': action, 'control_token': phase_capabilities(snapshot, 'ONE')[action]['control_token']}
 
-    def test_only_containment_actions_are_projected(self):
+    def test_containment_and_phase_operations_are_projected_separately(self):
         caps = phase_capabilities(active(), 'ONE')
-        self.assertEqual(set(caps), {'INSPECT', 'PAUSE', 'STOP'})
+        self.assertEqual(set(caps), {'INSPECT','RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE','RETRY_LOCAL_PLAN','RESUME','PAUSE','STOP'})
         self.assertTrue(caps['PAUSE']['supported'])
         self.assertTrue(caps['STOP']['supported'])
         self.assertEqual(caps['PAUSE']['effect'], 'CONTROL_STATE')
+        self.assertFalse(caps['RECHECK']['supported'])
+        self.assertFalse(caps['REQUEST_SAAS_EVIDENCE']['supported'])
+
+
+    def test_generic_evidence_gate_exposes_recheck_and_saas_without_force_pass(self):
+        snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE';snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'})
+        snap['phases'][0]['status']='BLOCKED';snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}];snap['phase_evidence_counts']={'ONE':4}
+        caps=phase_capabilities(snap,'ONE')
+        self.assertTrue(caps['RECHECK']['supported'])
+        self.assertTrue(caps['REACQUIRE_CURRENTNESS']['supported'])
+        self.assertTrue(caps['REQUEST_SAAS_EVIDENCE']['supported'])
+        self.assertFalse(caps['RETRY_LOCAL_PLAN']['supported'])
+        self.assertRegex(caps['RECHECK']['operation_token'],r'^[0-9a-f]{64}$')
+        self.assertNotIn('PASS',caps)
+
+    def test_active_supervisor_request_fences_duplicate_resolution_actions(self):
+        snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE'
+        snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'})
+        snap['phases'][0]['status']='BLOCKED'
+        snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}]
+        snap['phase_evidence_counts']={'ONE':4}
+        snap['phase_curriculum']={'runs':{'ONE':{'state':'WAITING_SUPERVISOR','resolution':{
+            'state':'WAITING_SUPERVISOR',
+            'supervisor_request':{'request_id':'saas-1','status':'WAITING_SUPERVISOR','progress_state':'WAITING_SUPERVISOR'}
+        }}}}
+        caps=phase_capabilities(snap,'ONE')
+        for action in ('RECHECK','REACQUIRE_CURRENTNESS','REQUEST_SAAS_EVIDENCE'):
+            self.assertFalse(caps[action]['supported'])
+            self.assertEqual(caps[action]['reason'],'SUPERVISOR_REQUEST_ACTIVE')
+        self.assertTrue(caps['PAUSE']['supported'])
+        self.assertTrue(caps['STOP']['supported'])
+
+    def test_supervisor_request_identity_is_bound_into_operation_token(self):
+        snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE'
+        snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'})
+        snap['phases'][0]['status']='BLOCKED'
+        snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}]
+        snap['phase_evidence_counts']={'ONE':4}
+        one=phase_capabilities(snap,'ONE')['INSPECT']['operation_token']
+        snap['phase_curriculum']={'runs':{'ONE':{'resolution':{
+            'state':'WAITING_SUPERVISOR','supervisor_request':{'request_id':'saas-1','status':'WAITING_SUPERVISOR'}
+        }}}}
+        two=phase_capabilities(snap,'ONE')['INSPECT']['operation_token']
+        self.assertNotEqual(one,two)
+
+    def test_operation_token_changes_with_evidence_revision_and_gate(self):
+        snap=active();snap['phase_execution_specs'][0]['handler_id']='GENERIC_LPCL_PHASE';snap['execution_driver'].update({'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'});snap['phases'][0]['status']='BLOCKED';snap['phase_execution_contracts']=[{'phase_id':'ONE','contract_digest':'c'*64}];snap['phase_evidence_counts']={'ONE':4}
+        one=phase_capabilities(snap,'ONE')['RECHECK']['operation_token']
+        snap['phase_evidence_counts']['ONE']=5
+        two=phase_capabilities(snap,'ONE')['RECHECK']['operation_token']
+        self.assertNotEqual(one,two)
 
     def test_stale_generation_source_or_phase_token_prevents_action(self):
         for kind in ('generation', 'source', 'phase'):
@@ -134,6 +185,42 @@ class PhaseControlTests(unittest.TestCase):
         for bad in ({**args, 'action': 'RESUME'}, {**args, 'control_token': 'bad'}, {**args, 'status': 'PASS'}):
             with self.assertRaises(ValueError):bridge('phase_action', bad)
         bridge._post.assert_not_called()
+        op={'mission_id':'test','phase_id':'ONE','action':'RECHECK','operation_token':'b'*64}
+        bridge('phase_operation',op)
+        bridge._post.assert_called_once_with('/api/v3/missions/test/phase-operations',{'phase_id':'ONE','action':'RECHECK','operation_token':'b'*64})
+
+    def test_evidence_arrival_rechecks_exact_current_blocked_phase_without_new_verdict_write(self):
+        from tools import lion_mission_control_compat
+        with patch.dict(sys.modules, {'mission_control_compat': lion_mission_control_compat}):
+            service = importlib.import_module('tools.lion_mission_control_v3')
+        conn=Mock()
+        mission_row=object(); process_row={'current_phase':'ONE'}
+        conn.execute.side_effect=[Mock(fetchone=Mock(return_value=mission_row)),Mock(fetchone=Mock(return_value=process_row))]
+        payload={'protocol':'EVIDENCE','from_id':'CHATGPT_SAAS_SUPERVISOR','to_id':'MISSION_CONTROL','phase':'ONE','payload':{'event':'TEST','authority_effect':'NONE'}}
+        with patch.object(service,'connect',return_value=conn), \
+             patch.object(service,'_process_message',return_value={'protocol':'EVIDENCE','payload_digest':'d'*64}), \
+             patch.object(service,'driver_snapshot',return_value={'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'}), \
+             patch.object(service,'drive_generic_once') as drive:
+            out=service.post_protocol_message('test',payload)
+        self.assertEqual(out['auto_recheck'],'TRIGGERED')
+        drive.assert_called_once_with('test')
+        conn.commit.assert_called_once()
+        conn.close.assert_called_once()
+
+    def test_evidence_arrival_does_not_recheck_wrong_phase(self):
+        from tools import lion_mission_control_compat
+        with patch.dict(sys.modules, {'mission_control_compat': lion_mission_control_compat}):
+            service = importlib.import_module('tools.lion_mission_control_v3')
+        conn=Mock()
+        conn.execute.side_effect=[Mock(fetchone=Mock(return_value=object())),Mock(fetchone=Mock(return_value={'current_phase':'TWO'}))]
+        payload={'protocol':'EVIDENCE','from_id':'X','to_id':'MISSION_CONTROL','phase':'ONE','payload':{'event':'TEST'}}
+        with patch.object(service,'connect',return_value=conn), \
+             patch.object(service,'_process_message',return_value={'protocol':'EVIDENCE','payload_digest':'d'*64}), \
+             patch.object(service,'driver_snapshot',return_value={'state':'BLOCKED','blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED'}), \
+             patch.object(service,'drive_generic_once') as drive:
+            out=service.post_protocol_message('test',payload)
+        self.assertEqual(out['auto_recheck'],'NOT_APPLICABLE')
+        drive.assert_not_called()
 
     def test_real_mission_action_commits_state_checkpoint_and_receipt_together(self):
         self._real_atomic_action(fail_receipt=False)

@@ -56,10 +56,10 @@ class HybridGatewayTests(unittest.TestCase):
         apply_hybrid_gateway_extension(ExtendedGateway)
         g = ExtendedGateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: 'local', self.cur, self.git)
         self.assertEqual(g._route('Co to LION')[0], 'SYSTEM_CONTEXT')
-        self.assertEqual(g.state()['saas_supervisor']['transport'], 'EXTERNAL_SESSION_MEDIATED')
+        self.assertEqual(g.state()['saas_supervisor']['transport'], 'UNKNOWN')
         self.assertFalse(g.state()['saas_supervisor']['automatic_hop_materialized'])
 
-    def test_dual_evaluation_never_fakes_saas_answer(self):
+    def test_hybrid_compatibility_layer_does_not_infer_dual_from_prose(self):
         td, root = self.ctxrepo(); self.addCleanup(td.cleanup)
         calls = []
         class ExtendedGateway(Gateway):
@@ -67,12 +67,8 @@ class HybridGatewayTests(unittest.TestCase):
         apply_hybrid_gateway_extension(ExtendedGateway)
         g = ExtendedGateway(root, None, None, None, 'http://127.0.0.1:8772', 'b' * 64, lambda m, n: (calls.append(m) or 'LOCAL'), self.cur, self.git)
         out = g.chat('Zapytaj model SaaS i model lokalny o to samo pytanie: Co to LION', output_language='pl')
-        self.assertEqual(out['route'], 'DUAL_EVALUATION')
-        self.assertEqual(out['local_evaluation']['answer'], 'LOCAL')
-        self.assertEqual(out['local_evaluation']['route'], 'SYSTEM_CONTEXT')
-        self.assertEqual(out['saas_handoff']['status'], 'AWAITING_EXTERNAL_SESSION_MEDIATION')
-        self.assertFalse(out['saas_handoff']['automatic_hop_materialized'])
-        self.assertEqual(len(calls), 1)
+        self.assertNotEqual(out['route'], 'DUAL_EVALUATION')
+        self.assertNotIn('saas_handoff', out)
 
 
 class ParserNormalizationTests(unittest.TestCase):

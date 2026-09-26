@@ -6,8 +6,11 @@ observed predicate set satisfies a PhaseExecutionContract.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -17,6 +20,35 @@ GENERIC_ADAPTER = "LPCL_GENERIC_128L64M"
 GENERIC_HANDLER = "GENERIC_LPCL_PHASE"
 POST_ASTRA_MISSION = "LION-POST-ASTRA-SAAS-TRANSPORT-TRUTH-REACQUIRE-R1"
 SESSION_MEDIATED = "CHATGPT_SENTINELX_SESSION_MEDIATED"
+EPOCH_CLOSURE_SCHEMA = "lion.epoch-closure-evidence/v1"
+EPOCH_CLOSURE_EVENT = "EPOCH_CLOSURE_EVIDENCE"
+EPOCH_CLOSURE_CHECKS = (
+    "P00_BOOTSTRAP_CHANNELS_VERIFIED",
+    "P01_VERSION_AND_RUNTIME_FREEZE_VERIFIED",
+    "P02_REPOSITORY_FEDERATION_MAP_VERIFIED",
+    "P03_TASK_MISSION_LEDGER_VERIFIED",
+    "P04_ASIS_ARCHITECTURE_VERIFIED",
+    "P05_CAPABILITY_MAP_VERIFIED",
+    "P06_LINEAGE_REGISTER_VERIFIED",
+    "P07_CONTRADICTION_MATRIX_VERIFIED",
+    "P08_TARGET_OPERATING_MODEL_VERIFIED",
+    "P09_CONSOLIDATION_EXECUTION_RECONCILED",
+    "P10_DEFINITION_OF_DONE_VERIFIED",
+    "P11_OBJECTIVE_TESTS_VERIFIED",
+    "P12_NEGATIVE_SECURITY_TESTS_VERIFIED",
+    "P13_PERFORMANCE_TESTS_VERIFIED",
+    "P14_END_TO_END_PROOF_VERIFIED",
+    "P15_FAILURE_RECOVERY_VERIFIED",
+    "P16_DOCUMENTATION_AND_EVIDENCE_CLOSED",
+    "P17_FINAL_CLOSURE_AUDIT_VERIFIED",
+)
+R24_ELECTRON_EVIDENCE = Path("/var/lib/sentinelx/uploads/lion-mission-control-v3/runtime/r24-electron-tabs-evidence.json")
+R24_BROWSER_LIVE_ROOT = Path("/mnt/c/Users/d2j3/AppData/Local/LION/browser_broker")
+R24_BROWSER_RELEASE_ROOT = Path("/mnt/c/Users/d2j3/AppData/Local/LION/control-panel/releases/r24-semantic-mesh-r1/browser_broker")
+R24_BROWSER_SOURCE_PATHS = ("src/main.cjs", "src/thread-consumer.cjs", "src/contract.cjs", "src/store.cjs")
+R24_OTP_PAIRING_SCHEMA = "lion.r24-otp-pairing-evidence/v1"
+R24_OTP_PAIRING_EVENT = "R24_OTP_PAIRING_LIVE_EVIDENCE"
+R24_OTP_PAIRING_SENDER = "WINDOWS_RUNTIME_VERIFIER"
 
 
 def _exists_table(conn: sqlite3.Connection, name: str) -> bool:
@@ -28,6 +60,241 @@ def _json(value: str | None, default: Any) -> Any:
         return json.loads(value or "")
     except Exception:
         return default
+
+
+def _epoch_closure_evidence(
+    conn: sqlite3.Connection,
+    mission_id: str,
+    phase_id: str,
+    mission: sqlite3.Row | dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Return the newest exact-source, authority-free supervisor evidence package."""
+    if mission is None or not _exists_table(conn, "protocol_messages"):
+        return None
+    expected_head = mission["source_head"]
+    expected_tree = mission["source_tree"]
+    rows = conn.execute(
+        "SELECT observed_at,from_id,phase,payload_json,payload_digest "
+        "FROM protocol_messages WHERE mission_id=? AND protocol='EVIDENCE' "
+        "ORDER BY id DESC LIMIT 128",
+        (mission_id,),
+    ).fetchall()
+    for row in rows:
+        if row["from_id"] != "CHATGPT_SAAS_SUPERVISOR" or row["phase"] != phase_id:
+            continue
+        payload = _json(row["payload_json"], {})
+        if (
+            payload.get("schema") != EPOCH_CLOSURE_SCHEMA
+            or payload.get("event") != EPOCH_CLOSURE_EVENT
+            or payload.get("authority_effect") != "NONE"
+            or payload.get("source_head") != expected_head
+            or payload.get("source_tree") != expected_tree
+        ):
+            continue
+        checks = payload.get("checks")
+        refs = payload.get("evidence_refs")
+        if not isinstance(checks, dict):
+            continue
+        if not isinstance(refs, list) or not refs or any(not isinstance(x, str) or not x.strip() for x in refs):
+            continue
+        return {
+            **payload,
+            "protocol_observed_at": row["observed_at"],
+            "protocol_payload_digest": row["payload_digest"],
+        }
+    return None
+
+
+def _epoch_closure_check_values(payload: dict[str, Any] | None) -> dict[str, bool]:
+    checks = payload.get("checks") if isinstance(payload, dict) else {}
+    values = {name: bool(isinstance(checks, dict) and checks.get(name) == "PASS") for name in EPOCH_CLOSURE_CHECKS}
+    values["EPOCH_CLOSURE_PLAN_RECONCILED"] = all(values.values())
+    return values
+
+
+def _canonical(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _r24_electron_tabs_evidence(
+    mission_id: str,
+    *,
+    receipt_path: Path = R24_ELECTRON_EVIDENCE,
+    live_root: Path = R24_BROWSER_LIVE_ROOT,
+    release_root: Path = R24_BROWSER_RELEASE_ROOT,
+    require_trusted_owner: bool = True,
+    now_value: datetime | None = None,
+) -> dict[str, Any] | None:
+    try:
+        st = receipt_path.stat()
+        if require_trusted_owner and (st.st_uid not in {0, os.geteuid()} or (st.st_mode & 0o022)):
+            return None
+        value = json.loads(receipt_path.read_text(encoding="utf-8"))
+        required = {
+            "schema","mission_id","phase_id","observed_at","candidate_head","candidate_tree",
+            "source_sha256","restart","session","electron","panel","authority_effect","receipt_digest",
+        }
+        if type(value) is not dict or set(value) != required:
+            return None
+        if value["schema"] != "lion.r24-electron-tabs-evidence/v1" or value["mission_id"] != mission_id or value["phase_id"] != "ELECTRON_TABS" or value["authority_effect"] != "NONE":
+            return None
+        body = dict(value); claimed = body.pop("receipt_digest")
+        if not isinstance(claimed, str) or hashlib.sha256(_canonical(body)).hexdigest() != claimed:
+            return None
+        if any(not isinstance(value[k], str) or len(value[k]) != 40 or any(ch not in "0123456789abcdef" for ch in value[k]) for k in ("candidate_head","candidate_tree")):
+            return None
+        observed = datetime.fromisoformat(str(value["observed_at"]).replace("Z","+00:00"))
+        now_dt = now_value or datetime.now(timezone.utc)
+        age = (now_dt - observed).total_seconds()
+        if age < -120 or age > 900:
+            return None
+
+        claimed_hashes = value["source_sha256"]
+        if type(claimed_hashes) is not dict or set(claimed_hashes) != set(R24_BROWSER_SOURCE_PATHS):
+            return None
+        live_hashes = {}; release_hashes = {}
+        for rel in R24_BROWSER_SOURCE_PATHS:
+            lp = live_root / rel; rp = release_root / rel
+            if not lp.is_file() or not rp.is_file():
+                return None
+            live_hashes[rel] = _sha256_file(lp); release_hashes[rel] = _sha256_file(rp)
+        if live_hashes != release_hashes or claimed_hashes != live_hashes:
+            return None
+
+        main = (live_root / "src/main.cjs").read_text(encoding="utf-8")
+        store = (live_root / "src/store.cjs").read_text(encoding="utf-8")
+        markers = (
+            "app.enableSandbox();",
+            "let activeRightTab='panel';",
+            "if(v===mission)return u.origin===new URL(MC).origin",
+            "u.protocol==='lion-tab:'",
+            "wc.setWindowOpenHandler(()=>({action:'deny'}));",
+            "wc.session.on('will-download',event=>event.preventDefault());",
+            "mission.setBounds({x:0,y:0,width:split,height})",
+            "panel.setBounds(activeRightTab==='panel'?shown:hidden);saas.setBounds(activeRightTab==='saas'?shown:hidden)",
+            "selectRightTab('panel');",
+            "lion-tab://panel",
+            "lion-tab://saas",
+            "store.rememberConversation(saas.webContents.getURL())",
+        )
+        if any(marker not in main for marker in markers):
+            return None
+        switch_line = next((line for line in main.splitlines() if "selectRightTab=name=>" in line), "")
+        if not switch_line or "loadURL" in switch_line:
+            return None
+        if "rememberConversation(url)" not in store or "restoreConversation()" not in store:
+            return None
+
+        restart=value["restart"]; session=value["session"]; electron=value["electron"]; panel=value["panel"]
+        if type(restart) is not dict or set(restart)!={"old_pid","new_pid","new_alive"}:
+            return None
+        if type(session) is not dict or set(session)!={"before_sha256","after_sha256","conversation_present_after"}:
+            return None
+        if type(electron) is not dict or set(electron)!={"main_pid","main_count","renderer_count","executable","profile"}:
+            return None
+        if type(panel) is not dict or set(panel)!={"pid","health_status","authority_effect"}:
+            return None
+        if not all(type(restart[k]) is int and restart[k] > 0 for k in ("old_pid","new_pid")) or restart["old_pid"] == restart["new_pid"] or restart["new_alive"] is not True:
+            return None
+        if electron["main_pid"] != restart["new_pid"] or electron["main_count"] != 1 or not isinstance(electron["renderer_count"], int) or electron["renderer_count"] < 3:
+            return None
+        if not isinstance(electron["executable"], str) or not electron["executable"].lower().endswith(r"\browser_broker\node_modules\electron\dist\electron.exe"):
+            return None
+        if electron["profile"] != r"C:\Users\d2j3\AppData\Local\LION\r19-browser-broker":
+            return None
+        before=session["before_sha256"]; after=session["after_sha256"]
+        if not session["conversation_present_after"] or not isinstance(before,str) or len(before)!=64 or before != after:
+            return None
+        if not isinstance(panel["pid"], int) or panel["pid"] <= 0 or panel["health_status"] != "ok" or panel["authority_effect"] != "NONE":
+            return None
+        return {
+            "receipt_digest": claimed,
+            "observed_at": value["observed_at"],
+            "candidate_head": value["candidate_head"],
+            "candidate_tree": value["candidate_tree"],
+            "source_sha256": live_hashes,
+            "source_converged": True,
+            "tab_layout_acceptance": True,
+            "session_preservation": True,
+            "restart_durability": True,
+            "panel_health": "ok",
+            "authority_effect": "NONE",
+        }
+    except Exception:
+        return None
+
+
+def _r24_otp_pairing_evidence(
+    conn: sqlite3.Connection,
+    mission_id: str,
+    phase_id: str,
+    *,
+    now_value: datetime | None = None,
+) -> dict[str, Any] | None:
+    """Reconcile fresh Windows OTP pairing canary evidence without exposing secrets."""
+    if phase_id != "OTP_PAIRING" or not _exists_table(conn, "protocol_messages"):
+        return None
+    required = {
+        "event","schema","windows_host","panel_port","operator_port","root_status",
+        "before_paired","pair_paired","pair_principal","after_paired",
+        "pair_response_secret_fields","unpair_revoked","final_paired","cleanup",
+        "authority_effect",
+    }
+    rows = conn.execute(
+        "SELECT observed_at,from_id,phase,payload_json,payload_digest "
+        "FROM protocol_messages WHERE mission_id=? AND protocol='EVIDENCE' "
+        "ORDER BY id DESC LIMIT 64",
+        (mission_id,),
+    ).fetchall()
+    now_dt = now_value or datetime.now(timezone.utc)
+    for row in rows:
+        if row["from_id"] != R24_OTP_PAIRING_SENDER or row["phase"] != phase_id:
+            continue
+        payload = _json(row["payload_json"], {})
+        if type(payload) is not dict or set(payload) != required:
+            continue
+        if (
+            payload["event"] != R24_OTP_PAIRING_EVENT
+            or payload["schema"] != R24_OTP_PAIRING_SCHEMA
+            or payload["windows_host"] != "MOON"
+            or payload["panel_port"] != 8780
+            or payload["operator_port"] != 8767
+            or payload["root_status"] != 200
+            or payload["before_paired"] is not False
+            or payload["pair_paired"] is not True
+            or payload["pair_principal"] != "OPERATOR_PRIMARY"
+            or payload["after_paired"] is not True
+            or payload["pair_response_secret_fields"] is not False
+            or payload["unpair_revoked"] is not True
+            or payload["final_paired"] is not False
+            or payload["cleanup"] != "UNPAIRED"
+            or payload["authority_effect"] != "NONE"
+        ):
+            continue
+        try:
+            observed = datetime.fromisoformat(str(row["observed_at"]).replace("Z", "+00:00"))
+        except Exception:
+            continue
+        age = (now_dt - observed).total_seconds()
+        if age < -120 or age > 900:
+            continue
+        return {
+            "observed_at": row["observed_at"],
+            "protocol_payload_digest": row["payload_digest"],
+            "windows_host": payload["windows_host"],
+            "panel_port": payload["panel_port"],
+            "operator_port": payload["operator_port"],
+            "pairing_cycle": "UNPAIRED_TO_PAIRED_TO_UNPAIRED",
+            "principal_id": payload["pair_principal"],
+            "secret_nondisclosure": True,
+            "cleanup": payload["cleanup"],
+            "authority_effect": "NONE",
+        }
+    return None
 
 
 def _restart_backup_evidence(db_path: Path, mission_id: str) -> dict[str, Any] | None:
@@ -182,6 +449,9 @@ def evaluate_completion_predicates(
         "broker_orphan_receipts": broker_orphan_receipts,
     }
 
+    epoch_closure = _epoch_closure_evidence(conn, mission_id, phase_id, mission)
+    facts["epoch_closure_evidence"] = epoch_closure
+
     current_ordinal = next((int(r["ordinal"]) for r in phase_rows if process and r["phase_id"] == process["current_phase"]), 0)
     passed = [r for r in phase_rows if r["status"] in {"PASS", "COMPLETE", "SKIPPED"}]
     non_topology_assignments = conn.execute("SELECT assignment_id,phase_id,material_drone_id,state FROM mission_execution_assignments WHERE mission_id=? AND phase_id!='__TOPOLOGY__'", (mission_id,)).fetchall()
@@ -199,6 +469,11 @@ def evaluate_completion_predicates(
         autonomous_claim = bool(conn.execute("SELECT 1 FROM saas_handoff_requests WHERE transport LIKE '%AUTONOMOUS%' LIMIT 1").fetchone())
     if _exists_table(conn, "saas_session_bindings"):
         autonomous_claim = autonomous_claim or bool(conn.execute("SELECT 1 FROM saas_session_bindings WHERE transport LIKE '%AUTONOMOUS%' LIMIT 1").fetchone())
+    r24_electron_tabs = _r24_electron_tabs_evidence(mission_id) if "ELECTRON_TABS_REPAIRED" in names else None
+    facts["r24_electron_tabs_evidence"] = r24_electron_tabs
+
+    r24_otp_pairing = _r24_otp_pairing_evidence(conn, mission_id, phase_id) if "OTP_PAIRING_REPAIRED" in names else None
+    facts["r24_otp_pairing_evidence"] = r24_otp_pairing
 
     values: dict[str, bool] = {
         "DB_INTEGRITY": integrity == "ok",
@@ -259,6 +534,8 @@ def evaluate_completion_predicates(
         "PANEL_TRUTH_PROJECTION_REPAIRED": panel_projection_evidence is not None,
         "LEGACY_LPCL_1_1_COMPATIBLE": _lpcl11_probe(),
         "LPCL_1_2_COMPATIBLE": _lpcl12_probe(),
+        "ELECTRON_TABS_REPAIRED": r24_electron_tabs is not None,
+        "OTP_PAIRING_REPAIRED": r24_otp_pairing is not None,
     }
     values["SUCCESSOR_TERMINAL_VALIDATION"] = all(values.get(k, False) for k in (
         "RUNTIME_REVISIONS_CONVERGED",
@@ -269,6 +546,8 @@ def evaluate_completion_predicates(
         "LEGACY_LPCL_1_1_COMPATIBLE",
         "LPCL_1_2_COMPATIBLE",
     ))
+
+    values.update(_epoch_closure_check_values(epoch_closure))
 
     for name in names:
         checks[name] = bool(values.get(name, False))

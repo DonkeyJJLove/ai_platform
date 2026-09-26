@@ -9,6 +9,15 @@ const SHA64 = /^[0-9a-f]{64}$/;
 const PROTOCOLS = new Set(['LPCL','AUTHORITY','CURRENTNESS','ASSIGNMENT','HEARTBEAT','EVIDENCE','VALIDATION','RECEIPT','RECOVERY','GITHUB','HUMAN','CONTROL','LIFECYCLE','HISTORY','LINEAGE','TRANSPORT','BROKER','MEDIATOR','THREAD']);
 const SENTINELX_TRANSPORT = 'CHATGPT_SENTINELX_MCP';
 
+function inferFleetCardinality(question, fallbackLogical = 76, fallbackMaterial = 32) {
+  const text = String(question || '').trim();
+  const explicit = text.match(/(?:^|\s)(\d{1,3})\s*(?:\/|x|×|:)\s*(\d{1,4})(?=\s|$|[.,;!?])/i);
+  if (!explicit) return { logical_count: fallbackLogical, material_target: fallbackMaterial, source: 'DEFAULT' };
+  const logical = Number(explicit[1]); const material = Number(explicit[2]);
+  if (!Number.isInteger(logical) || logical < 1 || logical > 512 || !Number.isInteger(material) || material < 0 || material > 4096) throw new Error('fleet cardinality');
+  return { logical_count: logical, material_target: material, source: 'EXPLICIT_N_M' };
+}
+
 function parsePairs(text) {
   const lines = String(text).replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
   const out = {}; let i = 0;
@@ -46,6 +55,7 @@ class MissionControlAdapter {
   missionDelete(missionId, specDigest) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/delete`, { spec_digest: specDigest }); }
   missionAction(missionId, action, payload = {}) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/actions`, { action, ...payload }, 240000); }
   phaseAction(missionId, value) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/phase-actions`, value); }
+  phaseOperation(missionId, value) { return this.post(`/api/v3/missions/${encodeURIComponent(missionId)}/phase-operations`, value); }
   currentAction(value) { return this.post('/api/v3/missions/current/actions', value, 240000); }
   capabilityRegistry() { return this.get('/api/v3/capabilities/process-contracts'); }
 
@@ -60,9 +70,13 @@ class MissionControlAdapter {
     return this.post('/api/v3/saas-broker/requests', body);
   }
 
-  async autoMission({ threadId, question, logicalCount = 76, materialTarget = 32 }) {
+  async autoMission({ threadId, question, logicalCount = null, materialTarget = null }) {
     const clean = String(question || '').trim().replace(/\s+/g, ' ');
     if (!clean || clean.length > 4000) throw new Error('auto mission objective');
+    const inferred = inferFleetCardinality(clean);
+    logicalCount = logicalCount == null ? inferred.logical_count : Number(logicalCount);
+    materialTarget = materialTarget == null ? inferred.material_target : Number(materialTarget);
+    if (!Number.isInteger(logicalCount) || logicalCount < 1 || logicalCount > 512 || !Number.isInteger(materialTarget) || materialTarget < 0 || materialTarget > 4096) throw new Error('fleet cardinality');
     const key = crypto.createHash('sha256').update(String(threadId) + '\0' + clean, 'utf8').digest('hex').slice(0, 24).toUpperCase();
     const missionId = 'LION-AUTO-' + key;
     const title = ('AUTO · ' + clean).slice(0, 180);
@@ -186,4 +200,4 @@ class MissionControlAdapter {
   }
 }
 
-module.exports = { MissionControlAdapter, parsePairs, SENTINELX_TRANSPORT };
+module.exports = { MissionControlAdapter, parsePairs, inferFleetCardinality, SENTINELX_TRANSPORT };
