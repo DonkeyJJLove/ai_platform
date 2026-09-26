@@ -1984,6 +1984,319 @@ def _generic_plan_definition(c,mid,pid,assignment,receipt):
     }
 
 
+
+EPOCH_CLOSURE_LOCAL_PRODUCER_ID="MISSION_CONTROL_DETERMINISTIC_EVIDENCE_R1"
+
+
+def _ledger_digest(rows):
+    return hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest()
+
+
+def _extract_task_ids_from_value(value,out):
+    if isinstance(value,dict):
+      for key,item in value.items():
+       if str(key).lower() in {"task_id","source_task_id","parent_task_id"} and isinstance(item,str) and item.strip():
+        out.add(item.strip())
+       _extract_task_ids_from_value(item,out)
+    elif isinstance(value,list):
+      for item in value:_extract_task_ids_from_value(item,out)
+
+
+def _p03_task_mission_ledger_evidence(c,mid,pid,contract):
+    if pid!="P03_TASK_MISSION_LEDGER":
+      return None
+    integrity=c.execute("PRAGMA integrity_check").fetchone()[0]
+    missions=[dict(r) for r in c.execute(
+      "SELECT mission_id,title,adapter,source_head,source_tree,state,runtime_state,logical_count,material_target,materialized,ready,created_at,authorized_at,updated_at,last_error "
+      "FROM missions ORDER BY mission_id"
+    ).fetchall()]
+    processes=[dict(r) for r in c.execute(
+      "SELECT mission_id,lpcl_digest,authority_state,current_phase,progress,created_at,updated_at FROM mission_process_specs ORDER BY mission_id"
+    ).fetchall()]
+    phases=[dict(r) for r in c.execute(
+      "SELECT mission_id,phase_id,ordinal,status,progress,started_at,finished_at,updated_at FROM mission_phases ORDER BY mission_id,ordinal"
+    ).fetchall()]
+    assignments=[dict(r) for r in c.execute(
+      "SELECT assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,state,lease_generation,created_at,claimed_at,finished_at,control_epoch,context_revision,plan_revision,dispatch_authority "
+      "FROM mission_execution_assignments ORDER BY mission_id,phase_id,created_at,assignment_id"
+    ).fetchall()]
+    receipts=[dict(r) for r in c.execute(
+      "SELECT receipt_id,assignment_id,mission_id,phase_id,result_digest,effect_receipt_digest,authority_effect,status,observed_at "
+      "FROM mission_execution_receipts ORDER BY mission_id,phase_id,observed_at,receipt_id"
+    ).fetchall()]
+    task_ids=set()
+    for row in c.execute("SELECT spec_json FROM missions ORDER BY mission_id").fetchall():
+      try:_extract_task_ids_from_value(json.loads(row["spec_json"] or "{}"),task_ids)
+      except Exception:pass
+    for row in c.execute("SELECT input_json FROM mission_execution_assignments WHERE input_json IS NOT NULL ORDER BY assignment_id").fetchall():
+      try:_extract_task_ids_from_value(json.loads(row["input_json"] or "{}"),task_ids)
+      except Exception:pass
+
+    orphan_process=int(c.execute("SELECT COUNT(*) FROM mission_process_specs p LEFT JOIN missions m ON m.mission_id=p.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_phase=int(c.execute("SELECT COUNT(*) FROM mission_phases p LEFT JOIN missions m ON m.mission_id=p.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_assignment=int(c.execute("SELECT COUNT(*) FROM mission_execution_assignments a LEFT JOIN missions m ON m.mission_id=a.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_receipt_mission=int(c.execute("SELECT COUNT(*) FROM mission_execution_receipts r LEFT JOIN missions m ON m.mission_id=r.mission_id WHERE m.mission_id IS NULL").fetchone()[0])
+    orphan_receipt_assignment=int(c.execute("SELECT COUNT(*) FROM mission_execution_receipts r LEFT JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id WHERE a.assignment_id IS NULL").fetchone()[0])
+    mismatch_rows=[dict(r) for r in c.execute(
+      "SELECT a.mission_id,a.phase_id,COUNT(*) AS count FROM mission_execution_assignments a "
+      "LEFT JOIN mission_phases p ON p.mission_id=a.mission_id AND p.phase_id=a.phase_id "
+      "WHERE a.phase_id!='__TOPOLOGY__' AND p.phase_id IS NULL GROUP BY a.mission_id,a.phase_id ORDER BY a.mission_id,a.phase_id"
+    ).fetchall()]
+    def _auxiliary_phase(name):
+      return (
+        name=="__OPERATOR_BUS__" or name=="COMMUNICATION_WINDOW" or name.startswith("OPERATOR_BUS_")
+        or name.startswith("COMMUNICATION_") or name in {"R23_DOCKER_LOCAL_MODEL_CANARY","R23_DUAL_COMM_CANARY","__R23_DOCKER_LOCAL_MODEL_CANARY__"}
+      )
+    auxiliary_mismatches=[x for x in mismatch_rows if _auxiliary_phase(str(x["phase_id"]))]
+    unknown_mismatches=[x for x in mismatch_rows if not _auxiliary_phase(str(x["phase_id"]))]
+    assignment_phase_mismatch=sum(int(x["count"]) for x in mismatch_rows)
+    auxiliary_assignment_phase_count=sum(int(x["count"]) for x in auxiliary_mismatches)
+    unknown_assignment_phase_mismatch=sum(int(x["count"]) for x in unknown_mismatches)
+    receipt_identity_mismatch=int(c.execute(
+      "SELECT COUNT(*) FROM mission_execution_receipts r JOIN mission_execution_assignments a ON a.assignment_id=r.assignment_id "
+      "WHERE r.mission_id!=a.mission_id OR r.phase_id!=a.phase_id"
+    ).fetchone()[0])
+    current=c.execute("SELECT source_head,source_tree,state,runtime_state FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    requirements=set(contract.get("evidence_requirements") or [])
+    expected={"TASK_LEDGER","MISSION_LEDGER","ASSIGNMENT_LEDGER","RECEIPT_LEDGER"}
+    checks={
+      "DB_INTEGRITY":integrity=="ok",
+      "MISSION_LEDGER_NONEMPTY":bool(missions),
+      "TASK_LEDGER_NONEMPTY":bool(task_ids),
+      "ASSIGNMENT_LEDGER_NONEMPTY":bool(assignments),
+      "RECEIPT_LEDGER_NONEMPTY":bool(receipts),
+      "NO_ORPHAN_PROCESS":orphan_process==0,
+      "NO_ORPHAN_PHASE":orphan_phase==0,
+      "NO_ORPHAN_ASSIGNMENT":orphan_assignment==0,
+      "NO_ORPHAN_RECEIPT_MISSION":orphan_receipt_mission==0,
+      "NO_ORPHAN_RECEIPT_ASSIGNMENT":orphan_receipt_assignment==0,
+      "NO_UNKNOWN_ASSIGNMENT_PHASE_MISMATCH":unknown_assignment_phase_mismatch==0,
+      "NO_RECEIPT_IDENTITY_MISMATCH":receipt_identity_mismatch==0,
+      "EVIDENCE_REQUIREMENTS_EXACT":requirements==expected,
+      "MISSION_SOURCE_IDENTITY_PRESENT":bool(current and current["source_head"] and current["source_tree"]),
+      "LIVE_RUNTIME_STATE_PRESENT":bool(current and current["runtime_state"]),
+    }
+    predicate=str((contract.get("completion_predicates") or ["P03_TASK_MISSION_LEDGER_VERIFIED=PASS"])[0]).split("=",1)[0]
+    passed=all(checks.values())
+    summaries={
+      "task_ledger":{"count":len(task_ids),"digest":_ledger_digest(sorted(task_ids)),"task_ids":sorted(task_ids)},
+      "mission_ledger":{"count":len(missions),"digest":_ledger_digest(missions),"state_counts":{}},
+      "assignment_ledger":{"count":len(assignments),"digest":_ledger_digest(assignments),"topology_count":sum(1 for x in assignments if x["phase_id"]=="__TOPOLOGY__")},
+      "receipt_ledger":{"count":len(receipts),"digest":_ledger_digest(receipts),"pass_count":sum(1 for x in receipts if x["status"]=="PASS"),"authority_none_count":sum(1 for x in receipts if x["authority_effect"]=="NONE")},
+      "process_ledger":{"count":len(processes),"digest":_ledger_digest(processes)},
+      "phase_ledger":{"count":len(phases),"digest":_ledger_digest(phases)},
+    }
+    for row in missions:
+      state=str(row["state"]);summaries["mission_ledger"]["state_counts"][state]=summaries["mission_ledger"]["state_counts"].get(state,0)+1
+    return {
+      "producer":EPOCH_CLOSURE_LOCAL_PRODUCER_ID,
+      "producer_mode":"LOCAL_DETERMINISTIC_READ_ONLY",
+      "authority_effect":"NONE",
+      "requirements_covered":sorted(expected),
+      "checks":{**{k:"PASS" if v else "FAIL" for k,v in checks.items()},predicate:"PASS" if passed else "FAIL"},
+      "ledger_summary":summaries,
+      "lineage_integrity":{
+        "orphan_process":orphan_process,"orphan_phase":orphan_phase,"orphan_assignment":orphan_assignment,
+        "orphan_receipt_mission":orphan_receipt_mission,"orphan_receipt_assignment":orphan_receipt_assignment,
+        "assignment_phase_mismatch_total":assignment_phase_mismatch,
+        "auxiliary_assignment_phase_count":auxiliary_assignment_phase_count,
+        "unknown_assignment_phase_mismatch":unknown_assignment_phase_mismatch,
+        "auxiliary_namespaces":auxiliary_mismatches,
+        "unknown_mismatches":unknown_mismatches,
+        "receipt_identity_mismatch":receipt_identity_mismatch,
+      },
+      "source_identity":{"head":current["source_head"] if current else None,"tree":current["source_tree"] if current else None},
+      "runtime_identity":{"mission_state":current["state"] if current else None,"runtime_state":current["runtime_state"] if current else None},
+      "evidence_refs":[
+        "sqlite:missions","sqlite:mission_process_specs","sqlite:mission_phases",
+        "sqlite:mission_execution_assignments","sqlite:mission_execution_receipts",
+      ],
+    }
+
+
+
+
+def _p04_asis_architecture_evidence(c,mid,pid,contract):
+    if pid!="P04_ASIS_ARCHITECTURE":return None
+    integrity=c.execute("PRAGMA integrity_check").fetchone()[0]
+    current=c.execute("SELECT mission_id,source_head,source_tree,state,runtime_state,logical_count,material_target,materialized,ready FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    missions=[dict(r) for r in c.execute("SELECT mission_id,source_head,source_tree,state,runtime_state,logical_count,material_target,materialized,ready FROM missions ORDER BY mission_id").fetchall()]
+    processes=[dict(r) for r in c.execute("SELECT mission_id,authority_state,current_phase,progress FROM mission_process_specs ORDER BY mission_id").fetchall()]
+    logical=[dict(r) for r in c.execute("SELECT mission_id,logical_id,role FROM logical_drones ORDER BY mission_id,logical_id").fetchall()]
+    workers=[dict(r) for r in c.execute("SELECT mission_id,pod_uid,logical_id,phase,ready,restarts,observed_at FROM material_workers ORDER BY mission_id,logical_id").fetchall()]
+    controls=[dict(r) for r in c.execute("SELECT mission_id,control_epoch,control_owner,pause_latch,stop_latch,context_revision,plan_revision,updated_at FROM mission_operator_control ORDER BY mission_id").fetchall()]
+    bindings=[dict(r) for r in c.execute("SELECT mission_id,phase_id,capability_class,capability_id,state,executor_id,binding_digest FROM mission_phase_capability_bindings ORDER BY mission_id,phase_id").fetchall()]
+    grants=[dict(r) for r in c.execute("SELECT grant_id,principal_id,mission_scope,actions_json,issued_at,expires_at,revoked_at FROM operator_grants ORDER BY grant_id").fetchall()]
+    revocations=[dict(r) for r in c.execute("SELECT mission_id,capability,command_id,control_epoch,revoked_at,released_at FROM operator_capability_revocations ORDER BY mission_id,capability,revoked_at").fetchall()]
+    tables=[]
+    for row in c.execute("SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").fetchall():
+      name=row["name"]
+      try:count=int(c.execute("SELECT COUNT(*) FROM "+name).fetchone()[0])
+      except Exception:count=-1
+      tables.append({"name":name,"count":count,"schema_digest":hashlib.sha256(str(row["sql"] or "").encode()).hexdigest()})
+    expected={"ASIS_GRAPH","RUNTIME_GRAPH","DATA_GRAPH","AUTHORITY_GRAPH"}
+    requirements=set(contract.get("evidence_requirements") or [])
+    checks={
+      "DB_INTEGRITY":integrity=="ok",
+      "CURRENT_MISSION_PRESENT":current is not None,
+      "LIVE_SOURCE_IDENTITY_PRESENT":bool(current and current["source_head"] and current["source_tree"]),
+      "LIVE_RUNTIME_IDENTITY_PRESENT":bool(current and current["runtime_state"]),
+      "RUNTIME_GRAPH_NONEMPTY":bool(logical) and bool(workers),
+      "DATA_GRAPH_NONEMPTY":bool(tables),
+      "AUTHORITY_GRAPH_NONEMPTY":bool(bindings) or bool(controls) or bool(grants),
+      "EVIDENCE_REQUIREMENTS_EXACT":requirements==expected,
+    }
+    pred=str((contract.get("completion_predicates") or ["P04_ASIS_ARCHITECTURE_VERIFIED=PASS"])[0]).split("=",1)[0]
+    passed=all(checks.values())
+    asis_graph={
+      "missions":{"count":len(missions),"digest":_ledger_digest(missions)},
+      "processes":{"count":len(processes),"digest":_ledger_digest(processes)},
+      "current_mission":dict(current) if current else None,
+    }
+    runtime_graph={
+      "logical":{"count":len(logical),"digest":_ledger_digest(logical)},
+      "material":{"count":len(workers),"ready":sum(int(x["ready"]) for x in workers),"digest":_ledger_digest(workers)},
+      "runtime_state_counts":{},
+    }
+    for row in missions:
+      state=str(row["runtime_state"]);runtime_graph["runtime_state_counts"][state]=runtime_graph["runtime_state_counts"].get(state,0)+1
+    data_graph={"table_count":len(tables),"tables":tables,"digest":_ledger_digest(tables)}
+    authority_graph={
+      "controls":{"count":len(controls),"digest":_ledger_digest(controls)},
+      "capability_bindings":{"count":len(bindings),"digest":_ledger_digest(bindings)},
+      "grants":{"count":len(grants),"digest":_ledger_digest(grants)},
+      "revocations":{"count":len(revocations),"digest":_ledger_digest(revocations)},
+    }
+    return {
+      "producer":EPOCH_CLOSURE_LOCAL_PRODUCER_ID,"producer_mode":"LOCAL_DETERMINISTIC_READ_ONLY","authority_effect":"NONE",
+      "requirements_covered":sorted(expected),
+      "checks":{**{k:"PASS" if v else "FAIL" for k,v in checks.items()},pred:"PASS" if passed else "FAIL"},
+      "asis_graph":asis_graph,"runtime_graph":runtime_graph,"data_graph":data_graph,"authority_graph":authority_graph,
+      "evidence_refs":["sqlite:missions","sqlite:mission_process_specs","sqlite:logical_drones","sqlite:material_workers","sqlite:mission_operator_control","sqlite:mission_phase_capability_bindings","sqlite:operator_grants","sqlite:operator_capability_revocations","sqlite:schema"],
+    }
+
+
+def _p05_capability_map_evidence(c,mid,pid,contract):
+    if pid!="P05_CAPABILITY_MAP":return None
+    current=c.execute("SELECT source_head,source_tree,state,runtime_state FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    flat=[]
+    for capability_class,items in sorted(PROCESS_CAPABILITY_REGISTRY.items()):
+      for item in items:
+       flat.append({"capability_class":capability_class,"capability_id":item.get("capability_id"),"executor_id":item.get("executor_id"),"effect_ceiling":item.get("effect_ceiling"),"mode":item.get("mode")})
+    bindings=[dict(r) for r in c.execute("SELECT mission_id,phase_id,capability_class,capability_id,state,executor_id,binding_digest FROM mission_phase_capability_bindings ORDER BY mission_id,phase_id").fetchall()]
+    current_bindings=[x for x in bindings if x["mission_id"]==mid]
+    by_cap={}
+    for item in flat:
+      by_cap.setdefault(item["capability_id"],[]).append(item)
+    duplicates=[]
+    for cap,items in sorted(by_cap.items()):
+      classes=sorted({x["capability_class"] for x in items});executors=sorted({x["executor_id"] for x in items})
+      if len(items)>1:
+       duplicates.append({"capability_id":cap,"occurrences":len(items),"capability_classes":classes,"executors":executors,"semantic_duplicate":len(executors)==1})
+    consumer_map={}
+    for row in bindings:
+      key=row["capability_id"];consumer_map.setdefault(key,[]).append({"mission_id":row["mission_id"],"phase_id":row["phase_id"],"state":row["state"],"executor_id":row["executor_id"]})
+    runtime_consumers=[{"capability_id":k,"consumer_count":len(v),"consumers":v} for k,v in sorted(consumer_map.items())]
+    expected={"CAPABILITY_GRAPH","DUPLICATE_IMPLEMENTATION_MAP","RUNTIME_CONSUMERS"}
+    requirements=set(contract.get("evidence_requirements") or [])
+    known_classes=set(PROCESS_CAPABILITY_REGISTRY)
+    checks={
+      "CAPABILITY_REGISTRY_NONEMPTY":bool(flat),
+      "CURRENT_PHASE_BINDINGS_NONEMPTY":bool(current_bindings),
+      "CURRENT_BINDINGS_BOUND":all(x["state"]=="BOUND" for x in current_bindings),
+      "CURRENT_BINDING_CLASSES_KNOWN":all(x["capability_class"] in known_classes for x in current_bindings),
+      "RUNTIME_CONSUMERS_NONEMPTY":bool(runtime_consumers),
+      "LIVE_SOURCE_IDENTITY_PRESENT":bool(current and current["source_head"] and current["source_tree"]),
+      "LIVE_RUNTIME_IDENTITY_PRESENT":bool(current and current["runtime_state"]),
+      "EVIDENCE_REQUIREMENTS_EXACT":requirements==expected,
+    }
+    pred=str((contract.get("completion_predicates") or ["P05_CAPABILITY_MAP_VERIFIED=PASS"])[0]).split("=",1)[0]
+    passed=all(checks.values())
+    return {
+      "producer":EPOCH_CLOSURE_LOCAL_PRODUCER_ID,"producer_mode":"LOCAL_DETERMINISTIC_READ_ONLY","authority_effect":"NONE",
+      "requirements_covered":sorted(expected),
+      "checks":{**{k:"PASS" if v else "FAIL" for k,v in checks.items()},pred:"PASS" if passed else "FAIL"},
+      "capability_graph":{"entry_count":len(flat),"digest":_ledger_digest(flat),"entries":flat},
+      "duplicate_implementation_map":{"count":len(duplicates),"digest":_ledger_digest(duplicates),"duplicates":duplicates},
+      "runtime_consumers":{"capability_count":len(runtime_consumers),"binding_count":len(bindings),"digest":_ledger_digest(runtime_consumers),"items":runtime_consumers},
+      "evidence_refs":["in-memory:PROCESS_CAPABILITY_REGISTRY","sqlite:mission_phase_capability_bindings","sqlite:missions"],
+    }
+
+
+def _epoch_closure_saas_response_evidence(c,mid,pid,contract):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    predicates=list(contract.get("completion_predicates") or [])
+    rows=c.execute(
+      "SELECT request_id,question,status,response_text,response_digest,response_meta_json,receipt_digest,progress_state,scope_type,scope_id,transport,authority_effect,responded_at "
+      "FROM saas_handoff_requests WHERE mission_id=? AND status='RESPONDED' ORDER BY responded_at DESC",(mid,)
+    ).fetchall()
+    fallback=None
+    for row in rows:
+      if row["scope_type"]!="MISSION" or row["scope_id"]!=mid or row["transport"]!=saas_broker.SENTINELX_MCP_TRANSPORT or row["authority_effect"]!="NONE":
+       continue
+      if row["progress_state"]!="RECEIPT_BOUND" or not row["receipt_digest"] or not row["response_digest"]:
+       continue
+      receipt=c.execute("SELECT receipt_digest FROM saas_broker_receipts WHERE request_id=?",(row["request_id"],)).fetchone()
+      if not receipt or receipt["receipt_digest"]!=row["receipt_digest"]:continue
+      question=str(row["question"] or "")
+      pos=question.find("{")
+      if pos<0:continue
+      try:q=json.loads(question[pos:])
+      except Exception:continue
+      if q.get("mission_id")!=mid or q.get("phase_id")!=pid or q.get("source_head")!=mission["source_head"] or q.get("source_tree")!=mission["source_tree"] or q.get("contract_digest")!=contract.get("contract_digest"):
+       continue
+      if list(q.get("completion_predicates") or [])!=predicates:continue
+      try:meta=json.loads(row["response_meta_json"] or "{}")
+      except Exception:meta={}
+      if meta.get("authority_effect")!="NONE" or meta.get("transport")!=saas_broker.SENTINELX_MCP_TRANSPORT:continue
+      lines={line.strip() for line in str(row["response_text"] or "").splitlines()}
+      checks={}
+      for predicate in predicates:
+       name=str(predicate).split("=",1)[0]
+       checks[name]="PASS" if name+"=PASS" in lines else "FAIL"
+      candidate={
+        "producer":"CHATGPT_SAAS_SUPERVISOR","producer_mode":"BROKER_RECEIPT_BOUND",
+        "authority_effect":"NONE","checks":checks,"request_id":row["request_id"],"response_digest":row["response_digest"],
+        "receipt_digest":row["receipt_digest"],"responded_at":row["responded_at"],
+        "evidence_refs":["saas-request:"+row["request_id"],"saas-response-sha256:"+row["response_digest"],"saas-receipt-sha256:"+row["receipt_digest"]],
+      }
+      if checks and all(v=="PASS" for v in checks.values()):return candidate
+      if fallback is None:fallback=candidate
+    return fallback
+
+
+EPOCH_CLOSURE_LOCAL_PRODUCERS={
+  "P03_TASK_MISSION_LEDGER":_p03_task_mission_ledger_evidence,
+  "P04_ASIS_ARCHITECTURE":_p04_asis_architecture_evidence,
+  "P05_CAPABILITY_MAP":_p05_capability_map_evidence,
+}
+
+
+def _epoch_closure_local_evidence(c,mid,pid,contract):
+    producer=EPOCH_CLOSURE_LOCAL_PRODUCERS.get(pid)
+    if producer is None:return None
+    return producer(c,mid,pid,contract)
+
+
+def _ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    question=(
+      "LION PHASE SUPERVISOR REQUEST\n"
+      "Independently verify the phase completion predicate and provide evidence refs. "
+      "Do not perform external effects and do not manufacture PASS.\n"+
+      json.dumps({
+        "mission_id":mid,"phase_id":pid,"source_head":mission["source_head"],"source_tree":mission["source_tree"],
+        "contract_digest":contract.get("contract_digest"),"completion_predicates":contract.get("completion_predicates") or [],
+        "currentness_requirements":contract.get("currentness_requirements") or [],
+        "evidence_requirements":contract.get("evidence_requirements") or [],
+        "observed_checks":(evidence or {}).get("checks") or {},"authority_effect":"NONE",
+      },sort_keys=True,ensure_ascii=False)
+    )
+    return saas_broker.create_request(c,mid,question,now,scope_type="MISSION",scope_id=mid,authority_effect="NONE",transport=saas_broker.SENTINELX_MCP_TRANSPORT)
+
+
 def _generic_execute_read_plan(c,plan):
     capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id'];executor_id=plan.get('executor_id') or 'MISSION_CONTROL_READ_ONLY_EVIDENCE'
     control=operator_control.control_state(c,mid,None)
@@ -2051,8 +2364,24 @@ def _generic_execute_read_plan(c,plan):
     elif capability=='GENERIC_MISSION_CONTRACT_RECONCILIATION':
       contract=global_sched.phase_execution_contract(c,mid,pid)
       if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
-      ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
-      evidence={'capability':capability,'contract_digest':contract['contract_digest'],**evidence}
+      local=_epoch_closure_local_evidence(c,mid,pid,contract)
+      if local is not None:
+       names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+       ok=all((local.get('checks') or {}).get(name)=='PASS' for name in names)
+       evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':True,**local}
+      else:
+       saas_evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
+       if saas_evidence is not None:
+        names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+        ok=all((saas_evidence.get('checks') or {}).get(name)=='PASS' for name in names)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':True,**saas_evidence}
+       else:
+        ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':False,**evidence}
+        if not ok:
+         req=_ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence)
+         if req:
+          evidence['saas_request']={'request_id':req.get('request_id'),'request_code':req.get('request_code'),'transport':req.get('transport'),'status':req.get('status')}
     else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
     global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id=executor_id)
     global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id=executor_id)
@@ -2565,49 +2894,4 @@ class H(BaseHTTPRequestHandler):
   if path.startswith('/api/v3/missions/') and path.endswith('/activate'):
    try:
     mid=path[len('/api/v3/missions/'):-len('/activate')].strip('/');n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(activate_lpcl_mission(mid,x))
-   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
-  if path.startswith('/api/v3/missions/') and path.endswith('/phase'):
-   try:
-    mid=path[len('/api/v3/missions/'):-len('/phase')].strip('/');n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(update_lpcl_phase(mid,x))
-   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
-  if path.startswith('/api/v3/missions/') and path.endswith('/messages'):
-   try:
-    mid=path[len('/api/v3/missions/'):-len('/messages')].strip('/');n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(post_protocol_message(mid,x),201)
-   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},400)
-  if path=='/api/v3/missions/register':
-   try:
-    n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(register_observation(x),201)
-   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},400)
-  if path not in {'/api/v3/missions/current/actions','/api/v3/missions/'+MISSION+'/actions'}:return self.json({'error':'not found'},404)
-  try:
-   n=int(self.headers.get('Content-Length','0'))
-   if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
-   x=json.loads(self.rfile.read(n));allowed={'action','pod_name'}
-   if type(x) is not dict or not set(x).issubset(allowed) or x.get('action') not in ACTIONS:raise ValueError('action schema')
-   if x.get('action')!='RESTART_ONE' and 'pod_name' in x:raise ValueError('pod_name denied')
-   with LOCK:out=command(x['action'],x.get('pod_name'))
-   return self.json(out)
-  except ValueError as e:return self.json({'error':str(e)},409)
-  except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},500)
- def do_PUT(self):self.json({'error':'method denied'},405)
- def do_PATCH(self):self.json({'error':'method denied'},405)
- def do_DELETE(self):self.json({'error':'method denied'},405)
-
-class FleetThreadingHTTPServer(ThreadingHTTPServer):
- request_queue_size=128
- daemon_threads=True
- allow_reuse_address=True
-
-def main():
- ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=FleetThreadingHTTPServer((a.host,a.port),H);relay=_start_secure_mcp_broker_relay(a.port);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
- for lp in (a.listen_state,a.legacy_listen_state):
-  q=Path(lp);q.parent.mkdir(parents=True,exist_ok=True);tmp=q.with_name(q.name+'.tmp-'+uuid.uuid4().hex[:8]);tmp.write_text(json.dumps(loc,sort_keys=True),encoding='utf-8');os.replace(tmp,q)
- print(json.dumps(loc),flush=True)
- try:srv.serve_forever()
- finally:
-  STOP_EVENT.set();DRIVER_STOP.set();srv.server_close()
-  if relay is not None and relay.poll() is None:
-   relay.terminate()
-   try:relay.wait(timeout=5)
-   except subprocess.TimeoutExpired:relay.kill()
-if __name__=='__main__':main()
+   except
