@@ -1,6 +1,6 @@
 const MC=id=>document.getElementById(id);
 const mcesc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let MC_SELECTED=null,MC_DATA=null,MC_PROTOCOL='ALL',MC_FOCUS=null,MC_PINNED=false,MC_VIEW='operational',MC_REFRESHING=false,MC_REFRESH_PENDING=false,MC_LAST_RENDER_KEY=null,MC_LAST_HEARTBEAT_SIGNATURE=null,MC_HEARTBEAT_TIMER=null;
+let MC_SELECTED=null,MC_DATA=null,MC_PROTOCOL='ALL',MC_FOCUS=null,MC_PINNED=false,MC_VIEW='operational',MC_REFRESHING=false,MC_REFRESH_PENDING=false,MC_INDICATOR_POLLING=false,MC_LAST_RENDER_KEY=null,MC_LAST_STRUCTURE_SIGNATURE=null,MC_LAST_STRUCTURAL_REFRESH_AT=0,MC_LAST_HEARTBEAT_SIGNATURE=null,MC_HEARTBEAT_TIMER=null;
 
 async function mcget(path){
   const r=await fetch(path,{cache:'no-store',signal:AbortSignal.timeout(10000)});
@@ -11,6 +11,73 @@ function mccard(k,v){return `<div class="card"><div class="k">${mcesc(k)}</div><
 function mcbtn(a,label,cls=''){return `<button type="button" class="${cls}" data-mc-action="${mcesc(a)}">${mcesc(label)}</button>`}
 function capState(name){return MC_DATA?.capabilities?.[name]?.state||'UNAVAILABLE'}
 function missionPath(mid,suffix=''){return '/api/v3/missions/'+encodeURIComponent(mid)+suffix}
+function mcStructureSignature(s){
+  const p=s?.process||{},d=s?.execution_driver||{};
+  return JSON.stringify({
+    mission:[s?.mission_id,s?.state,s?.runtime_state,s?.ready,s?.materialized,s?.material_target],
+    process:[p.current_phase,p.progress,p.authority_state],
+    driver:[d.state,d.generation,d.current_phase,d.blocking_gate,d.next_action],
+    phases:(s?.normalized_runtime?.phases||s?.phases||[]).map(x=>[
+      x.phase_id,x.status,x.progress,x.evidence_count,x.blocker,x.plan_state,x.activity_state,
+      x.curriculum?.state,x.curriculum?.step,x.curriculum?.resolution?.state,
+      x.curriculum?.resolution?.supervisor_request?.request_id,
+      x.curriculum?.resolution?.supervisor_request?.status,
+      x.curriculum?.resolution?.supervisor_request?.progress_state
+    ])
+  });
+}
+function mcRenderIndicators(s){
+  if(!s)return;
+  MC_DATA=s;
+  const n=s.normalized_runtime||{},p={...(s.process||{}),current_phase:n.runtime?.current_phase??s.process?.current_phase},sc=s.schema_context||{};
+  mcRenderHeader(s);
+  mcRenderLiveness(s);
+  const hasProgress=p.progress!==null&&p.progress!==undefined,progress=hasProgress?Number(p.progress):null;
+  if(MC('mcProgressLabel'))MC('mcProgressLabel').textContent=hasProgress?'Progress '+progress.toFixed(1)+'%':'Progress: NOT RECORDED AT SOURCE STAGE';
+  if(MC('mcCurrentPhase'))MC('mcCurrentPhase').textContent=p.current_phase?('Current phase: '+p.current_phase):(String(sc.record_class||'').startsWith('HISTORICAL')?'Phase model did not exist for this record':'No active phase');
+  if(MC('mcProgressBar'))MC('mcProgressBar').style.width=hasProgress?Math.max(0,Math.min(100,progress))+'%':'0%';
+  if(MC('mcV3Cards'))patchHtml(MC('mcV3Cards'),[['STATE',s.state],['RUNTIME',s.runtime_state],['LOGICAL',s.logical_count],['MATERIAL',`${s.materialized}/${s.material_target}`],['READY',`${s.ready}/${s.material_target}`],['PROGRESS',hasProgress?progress.toFixed(1)+'%':'N/A'],['SCHEMA',sc.record_class||'UNKNOWN'],['AUTH',p.authority_state||'N/A']].map(x=>mccard(...x)).join(''));
+}
+function mcPatchPhaseLiveness(s){
+  const root=MC('mcPhases');if(!root)return;
+  for(const phase of (s?.normalized_runtime?.phases||s?.phases||[])){
+    const card=Array.from(root.querySelectorAll('.semantic-card[data-key]')).find(x=>x.dataset.key===String(phase.phase_id));
+    const bar=card?.querySelector('.phase-liveness');if(!bar)continue;
+    const a=phase.activity||{},life=String(phase.activity_state||a.state||phase.status||'UNKNOWN').toUpperCase();
+    const labels={READY_TO_ADVANCE:'READY TO ADVANCE',EXECUTING:'LIVE · EXECUTING',WAITING_LOCAL:'LIVE · WAITING LOCAL',WAITING_EVIDENCE:'LIVE · WAITING EVIDENCE',WAITING_SUPERVISOR:'WAITING FOR SUPERVISOR',WAITING_SUPERVISOR_OVERDUE:'SUPERVISOR OVERDUE',SUPERVISOR_RECEIPT_BOUND:'RECEIPT BOUND · WAKING',WAITING:'LIVE · WAITING',BLOCKED:'BLOCKED',PAUSED:'PAUSED',STOPPED:'STOPPED',COMPLETE:'COMPLETE',PENDING:'PENDING'};
+    bar.className='phase-liveness phase-life-'+life.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    const current=bar.querySelector('.phase-current');if(current)current.hidden=a.is_current!==true;
+    const label=bar.querySelector('.phase-life-label');if(label)label.textContent=labels[life]||life;
+    const details=[],supervisor=a.supervisor_request||{};
+    if(a.last_activity_at)details.push((a.last_activity_kind||'ACTIVITY')+' '+mcSince(a.last_activity_at)+' ago');
+    if(a.scheduler_heartbeat_at)details.push('scheduler '+mcSince(a.scheduler_heartbeat_at)+' ago');
+    if(a.driver_heartbeat_at)details.push('driver '+mcSince(a.driver_heartbeat_at)+' ago');
+    if(supervisor.request_id)details.push('REQUEST '+supervisor.request_id);
+    if(supervisor.progress_state)details.push('SUPERVISOR '+supervisor.progress_state);
+    if(supervisor.created_at)details.push('request '+mcSince(supervisor.created_at)+' ago');
+    if(a.next_expected&&a.next_expected!=='NONE')details.push('NEXT '+a.next_expected);
+    if(a.blocking_gate)details.push('GATE '+a.blocking_gate);
+    if(a.auto_resume_armed)details.push('AUTO-RESUME ARMED');
+    const detail=bar.querySelector('.phase-life-detail');if(detail)detail.textContent=details.join(' · ')||'No runtime activity recorded';
+  }
+}
+async function mcIndicatorPoll(){
+  if(MC_INDICATOR_POLLING||MC_REFRESHING||!MC_SELECTED)return;
+  MC_INDICATOR_POLLING=true;
+  const requested=MC_SELECTED;
+  try{
+    const [state,supervisor]=await Promise.all([mcget(missionPath(requested,'/process')),mcget('/api/v3/saas-broker/status').catch(()=>null)]);
+    if(requested!==MC_SELECTED)return;
+    mcRenderSupervisor(supervisor?.supervisor_projection);
+    mcRenderIndicators(state);
+    mcPatchPhaseLiveness(state);
+    const signature=mcStructureSignature(state);
+    if(MC_LAST_STRUCTURE_SIGNATURE!==null&&signature!==MC_LAST_STRUCTURE_SIGNATURE)queueMicrotask(mcRefresh);
+    else MC_LAST_STRUCTURE_SIGNATURE=signature;
+  }catch(error){mcMarkDisconnected(error)}
+  finally{MC_INDICATOR_POLLING=false}
+}
+
 function mcRenderKey(s,registry,sources){
   const p=s.process||{},d=s.execution_driver||{},sc=s.schema_context||{},dc=s.driver_controls||{};
   return JSON.stringify({focus:MC_FOCUS,selected:MC_SELECTED,pinned:MC_PINNED,view:MC_VIEW,lifecycle:s.lifecycle,
@@ -193,6 +260,7 @@ function renderLifecycleActions(s){
 
 function mcRender(s,registry,sources){
   MC_DATA=s;const n=s.normalized_runtime||{},p={...(s.process||{}),current_phase:n.runtime?.current_phase??s.process?.current_phase},sc=s.schema_context||{};
+  MC_LAST_STRUCTURE_SIGNATURE=mcStructureSignature(s);MC_LAST_STRUCTURAL_REFRESH_AT=Date.now();
   patchHtml(MC('mcV3Authority'),'CONTROL: <b>'+mcesc(s.control_authority||'NONE')+'</b>');
   mcRenderHeader(s);
   const historical=String(sc.record_class||'').startsWith('HISTORICAL');
@@ -251,4 +319,4 @@ async function mcRefresh(){
   }catch(e){mcRenderSupervisor(null);mcMarkDisconnected(e)}
   finally{MC_REFRESHING=false;if(MC_REFRESH_PENDING){MC_REFRESH_PENDING=false;queueMicrotask(mcRefresh)}}
 }
-mcRefresh();setInterval(mcRefresh,3000);
+mcRefresh();setInterval(mcIndicatorPoll,3000);setInterval(()=>{if(Date.now()-MC_LAST_STRUCTURAL_REFRESH_AT>=30000)mcRefresh()},30000);
