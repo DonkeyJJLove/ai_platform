@@ -1252,6 +1252,7 @@ def _project_mission_liveness(c,mid,mission,process,driver,scheduler):
     }
 
 
+
 def _phase_activity_snapshot(c,mid):
     phase_rows=c.execute("SELECT phase_id,updated_at FROM mission_phases WHERE mission_id=? ORDER BY ordinal",(mid,)).fetchall()
     out={r["phase_id"]:{"last_phase_update_at":r["updated_at"]} for r in phase_rows}
@@ -2424,6 +2425,7 @@ def _generic_execute_read_plan(c,plan):
     return {'state':'PASS','receipt':receipt,'evidence':evidence}
 
 
+
 def _generic_phase_transition_payload(event,planrow,receipt_id,evidence_digest,evidence):
     evidence=evidence if isinstance(evidence,dict) else {}
     summary={}
@@ -2624,7 +2626,6 @@ def reconcile_passed_generic_phase_receipts():
        repaired.append({'mission_id':row['mission_id'],'phase_id':row['phase_id'],'next_phase':current,'progress':overall})
       return repaired
     finally:c.close()
-
 
 def global_scheduler_once():
     try:reconcile_passed_generic_phase_receipts()
