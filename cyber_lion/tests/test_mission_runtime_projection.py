@@ -50,6 +50,33 @@ class RuntimeProjectionTests(unittest.TestCase):
         raw['phases'][0]['status'] = 'COMPLETE'
         self.assertIsNone(normalize_snapshot(raw)['mission_summary']['current_phase'])
 
+    def test_supervisor_wait_state_is_distinct_from_generic_blocked(self):
+        raw=mission()
+        raw['process']['current_phase']='ONE'
+        raw['phases'][0]['status']='BLOCKED'
+        raw['execution_driver']={
+            'driver_id':'driver','generation':3,'state':'BLOCKED','current_phase':'ONE',
+            'blocking_gate':'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','next_action':'WAIT_FOR_EVIDENCE',
+            'heartbeat_at':'2026-09-26T11:39:45Z',
+        }
+        raw['scheduler']={'heartbeat_at':'2026-09-26T11:39:46Z'}
+        raw['phase_activity']={'ONE':{'last_activity_at':'2026-09-26T11:39:41Z','last_activity_kind':'ASSIGNMENT'}}
+        raw['phase_curriculum']={'runs':{'ONE':{
+            'state':'WAITING_SUPERVISOR',
+            'resolution':{
+                'state':'WAITING_SUPERVISOR','step':'AWAIT_SUPERVISOR_RECEIPT',
+                'supervisor_request':{
+                    'request_id':'saas-1','status':'WAITING_SUPERVISOR',
+                    'progress_state':'WAITING_SUPERVISOR','next_expected':'SUPERVISOR_RESPONSE'
+                }
+            }
+        }}}
+        phase=normalize_snapshot(raw)['normalized_runtime']['phases'][0]
+        self.assertEqual(phase['activity_state'],'WAITING_SUPERVISOR')
+        self.assertEqual(phase['activity']['next_expected'],'SUPERVISOR_RESPONSE')
+        self.assertEqual(phase['activity']['supervisor_request']['request_id'],'saas-1')
+        self.assertEqual(phase['curriculum']['resolution']['state'],'WAITING_SUPERVISOR')
+
     def test_historical_absence_is_distinct_from_current_missing(self):
         historical = normalize_snapshot({'mission_id': 'old', 'adapter': 'LEGACY_OBSERVATION:VKT'})['normalized_runtime']
         self.assertEqual(historical['record_class'], 'HISTORICAL_PARTIAL_SCHEMA')
