@@ -42,6 +42,7 @@ except ImportError:
  import global_scheduler as global_sched
 from cyber_lion.mission_control import operator_control
 from cyber_lion.mission_control import model_calls as model_call_ledger
+from cyber_lion.mission_control import phase_curriculum as phase_curriculum
 
 DB=Path('/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db')
 LEGACY_DB=Path('/var/lib/sentinelx/uploads/lion-mission-control/mission-control.db')
@@ -190,6 +191,7 @@ def migrate():
  global_sched.migrate(c,now)
  operator_control.migrate(c,now)
  model_call_ledger.migrate(c,now)
+ phase_curriculum.migrate(c,now)
  # Capture the pre-capability execution preflight before startup reconciliation
  # recomputes it against the current capability registry.
  control_recon.capture_pre_recon_baselines(c,now)
@@ -1306,6 +1308,7 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d['execution_preflight']=global_sched.execution_preflight(c,mid)
     d['phase_evidence_counts']={r['phase']:r['total'] for r in c.execute("SELECT phase,COUNT(*) AS total FROM protocol_messages WHERE mission_id=? AND protocol IN ('EVIDENCE','VALIDATION','RECEIPT') GROUP BY phase",(mid,))}
     d['phase_activity']=_phase_activity_snapshot(c,mid)
+    d['phase_curriculum']=phase_curriculum.curriculum_summary(c,mid)
     d['logical']=[dict(r) for r in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,))]
     d['workers']=[dict(r) for r in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,))]
     d['commands']=[dict(r) for r in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 40',(mid,))]
@@ -2329,6 +2332,97 @@ def _ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence):
     return saas_broker.create_request(c,mid,question,now,scope_type="MISSION",scope_id=mid,authority_effect="NONE",transport=saas_broker.SENTINELX_MCP_TRANSPORT)
 
 
+
+def _curriculum_question_meta(question):
+    text=str(question or "");pos=text.find("{")
+    if pos<0:return None
+    try:value=json.loads(text[pos:])
+    except Exception:return None
+    return value if isinstance(value,dict) else None
+
+
+def _curriculum_currentness_receipt(c,mid,pid,contract,resolution):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    required=set(resolution.get("missing_currentness") or [])
+    if not required:
+      return {"passed_currentness":[],"evidence_refs":["local-currentness:no-external-currentness-required"],"authority_effect":"NONE"}
+    rows=c.execute(
+      "SELECT request_id,question,status,response_text,response_digest,response_meta_json,receipt_digest,progress_state,"
+      "scope_type,scope_id,transport,authority_effect,responded_at FROM saas_handoff_requests "
+      "WHERE mission_id=? AND status='RESPONDED' ORDER BY responded_at DESC",(mid,)
+    ).fetchall()
+    for row in rows:
+      if row["scope_type"]!="MISSION" or row["scope_id"]!=mid or row["transport"]!=saas_broker.SENTINELX_MCP_TRANSPORT or row["authority_effect"]!="NONE":continue
+      if row["progress_state"]!="RECEIPT_BOUND" or not row["receipt_digest"] or not row["response_digest"]:continue
+      receipt=c.execute("SELECT receipt_digest FROM saas_broker_receipts WHERE request_id=?",(row["request_id"],)).fetchone()
+      if not receipt or receipt["receipt_digest"]!=row["receipt_digest"]:continue
+      meta=_curriculum_question_meta(row["question"])
+      if not meta or meta.get("curriculum_request_kind")!="CURRENTNESS_ONLY":continue
+      if meta.get("mission_id")!=mid or meta.get("phase_id")!=pid:continue
+      if meta.get("source_head")!=mission["source_head"] or meta.get("source_tree")!=mission["source_tree"]:continue
+      if meta.get("contract_digest")!=contract.get("contract_digest") or meta.get("contract_signature")!=resolution.get("contract_signature"):continue
+      if set(meta.get("required_currentness") or [])!=required:continue
+      try:rmeta=json.loads(row["response_meta_json"] or "{}")
+      except Exception:rmeta={}
+      if rmeta.get("authority_effect")!="NONE" or rmeta.get("transport")!=saas_broker.SENTINELX_MCP_TRANSPORT:continue
+      lines=[line.strip() for line in str(row["response_text"] or "").splitlines() if line.strip()]
+      passed={item for item in required if item+"=PASS" in lines}
+      failed={item for item in required if item+"=FAIL" in lines}
+      refs=[line.split("=",1)[1] for line in lines if line.startswith("EVIDENCE_REF=") and "=" in line]
+      if required<=passed and not failed:
+       return {
+        "request_id":row["request_id"],"passed_currentness":sorted(passed),
+        "response_digest":row["response_digest"],"receipt_digest":row["receipt_digest"],
+        "responded_at":row["responded_at"],"evidence_refs":refs+[
+          "saas-request:"+row["request_id"],"saas-response-sha256:"+row["response_digest"],
+          "saas-receipt-sha256:"+row["receipt_digest"],
+        ],"authority_effect":"NONE",
+       }
+    return None
+
+
+def _ensure_curriculum_currentness_request(c,mid,pid,contract,resolution):
+    mission=c.execute("SELECT source_head,source_tree FROM missions WHERE mission_id=?",(mid,)).fetchone()
+    if mission is None:return None
+    required=sorted(set(resolution.get("missing_currentness") or []))
+    if not required:return None
+    signature=resolution.get("contract_signature")
+    rows=c.execute(
+      "SELECT request_id,question,status,request_code,transport,progress_state,created_at FROM saas_handoff_requests "
+      "WHERE mission_id=? ORDER BY created_at DESC LIMIT 40",(mid,)
+    ).fetchall()
+    for row in rows:
+      meta=_curriculum_question_meta(row["question"])
+      if not meta or meta.get("curriculum_request_kind")!="CURRENTNESS_ONLY":continue
+      if meta.get("phase_id")!=pid or meta.get("contract_digest")!=contract.get("contract_digest") or meta.get("contract_signature")!=signature:continue
+      if set(meta.get("required_currentness") or [])!=set(required):continue
+      if row["status"] not in {"CANCELLED","FAILED"}:
+       return {"request_id":row["request_id"],"request_code":row["request_code"],"transport":row["transport"],"status":row["status"],"progress_state":row["progress_state"],"existing":True}
+    meta={
+      "curriculum_request_kind":"CURRENTNESS_ONLY","schema":"lion.phase-curriculum-currentness/v1",
+      "mission_id":mid,"phase_id":pid,"source_head":mission["source_head"],"source_tree":mission["source_tree"],
+      "contract_digest":contract.get("contract_digest"),"contract_signature":signature,
+      "required_currentness":required,"authority_effect":"NONE",
+    }
+    expected="\n".join(item+"=PASS|FAIL" for item in required)
+    question=(
+      "LION CURRICULUM CURRENTNESS REQUEST\n"
+      "Verify only the listed live-currentness requirements using authoritative live sources. "
+      "Do not decide the phase predicate and do not perform external effects.\n"
+      "Return one exact line for every requirement:\n"+expected+"\n"
+      "Then add one or more EVIDENCE_REF=<source/ref> lines.\n"+
+      json.dumps(meta,sort_keys=True,ensure_ascii=False)
+    )
+    out=saas_broker.create_request(c,mid,question,now,scope_type="MISSION",scope_id=mid,authority_effect="NONE",transport=saas_broker.SENTINELX_MCP_TRANSPORT)
+    _process_message(c,mid,"ASSIGNMENT","PHASE_CURRICULUM_RESOLVER","CHATGPT_SAAS_SUPERVISOR",pid,{
+      "event":"CURRICULUM_CURRENTNESS_REQUESTED","request_id":out["request_id"],"request_code":out["request_code"],
+      "contract_signature":signature,"required_currentness":required,"authority_effect":"NONE",
+    },"OUT")
+    c.commit()
+    return {"request_id":out["request_id"],"request_code":out["request_code"],"transport":out["transport"],"status":out.get("status"),"existing":False}
+
+
 def _generic_execute_read_plan(c,plan):
     capability=plan['capability'];pid=plan['phase_id'];mid=plan['mission_id'];executor_id=plan.get('executor_id') or 'MISSION_CONTROL_READ_ONLY_EVIDENCE'
     control=operator_control.control_state(c,mid,None)
@@ -2396,24 +2490,47 @@ def _generic_execute_read_plan(c,plan):
     elif capability=='GENERIC_MISSION_CONTRACT_RECONCILIATION':
       contract=global_sched.phase_execution_contract(c,mid,pid)
       if not contract:return {'state':'BLOCKED','gate':'PROCESS_CONTRACT_MISSING','reason':'Phase execution contract is not materialized'}
-      local=_epoch_closure_local_evidence(c,mid,pid,contract)
-      if local is not None:
-       names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
-       ok=all((local.get('checks') or {}).get(name)=='PASS' for name in names)
-       evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':True,**local}
-      else:
-       saas_evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
-       if saas_evidence is not None:
+      resolution=phase_curriculum.resolve(c,mid,pid,contract,now)
+      if resolution.get('recipe')=='COMPOSE_LINEAGE_V1':
+       currentness=_curriculum_currentness_receipt(c,mid,pid,contract,resolution)
+       if currentness is None:
+        req=_ensure_curriculum_currentness_request(c,mid,pid,contract,resolution)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,
+                  'curriculum':resolution,'checks':{str(x).split('=',1)[0]:'FAIL' for x in contract.get('completion_predicates') or []},
+                  'currentness_request':req,'authority_effect':'NONE'}
+        global_sched.update_generic_plan_state(c,plan['plan_id'],'WAITING_CURRENTNESS',now,executor_id=executor_id,evidence=evidence)
+        return {'state':'BLOCKED','gate':'CURRENTNESS_REQUIRED','reason':'Phase curriculum composed prior lessons; live external currentness is required before lineage materialization','evidence':evidence}
+       composed=phase_curriculum.compose_lineage(c,mid,pid,contract,resolution,currentness,now)
+       if composed is not None:
         names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
-        ok=all((saas_evidence.get('checks') or {}).get(name)=='PASS' for name in names)
-        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':True,**saas_evidence}
+        ok=all((composed.get('checks') or {}).get(name)=='PASS' for name in names)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':True,
+                  'adaptive_curriculum_resolver':True,**composed}
        else:
-        ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
-        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':False,**evidence}
-        if not ok:
-         req=_ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence)
-         if req:
-          evidence['saas_request']={'request_id':req.get('request_id'),'request_code':req.get('request_code'),'transport':req.get('transport'),'status':req.get('status')}
+        ok=False
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,
+                  'adaptive_curriculum_resolver':True,'curriculum':resolution,
+                  'checks':{str(x).split('=',1)[0]:'FAIL' for x in contract.get('completion_predicates') or []},
+                  'authority_effect':'NONE'}
+      else:
+       local=_epoch_closure_local_evidence(c,mid,pid,contract)
+       if local is not None:
+        names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+        ok=all((local.get('checks') or {}).get(name)=='PASS' for name in names)
+        evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':True,**local}
+       else:
+        saas_evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
+        if saas_evidence is not None:
+         names=[str(x).split('=',1)[0] for x in contract['completion_predicates']]
+         ok=all((saas_evidence.get('checks') or {}).get(name)=='PASS' for name in names)
+         evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':True,**saas_evidence}
+        else:
+         ok,evidence=evaluate_completion_predicates(c,mid,pid,contract['completion_predicates'],db_path=DB)
+         evidence={'capability':capability,'contract_digest':contract['contract_digest'],'local_evidence_producer':False,'saas_evidence_adapter':False,**evidence}
+         if not ok:
+          req=_ensure_epoch_closure_saas_request(c,mid,pid,contract,evidence)
+          if req:
+           evidence['saas_request']={'request_id':req.get('request_id'),'request_code':req.get('request_code'),'transport':req.get('transport'),'status':req.get('status')}
     else:return {'state':'BLOCKED','gate':'CAPABILITY_NOT_AVAILABLE','reason':'Capability is not in the bounded generic executor registry'}
     global_sched.update_generic_plan_state(c,plan['plan_id'],'READY_TO_EXECUTE',now,executor_id=executor_id)
     global_sched.update_generic_plan_state(c,plan['plan_id'],'EXECUTING',now,executor_id=executor_id)
@@ -2573,6 +2690,11 @@ def reconcile_epoch_closure_late_saas():
        if not bound or bound.get("capability_id")!="GENERIC_MISSION_CONTRACT_RECONCILIATION":continue
        contract=global_sched.phase_execution_contract(c,mid,pid)
        if not contract:continue
+       resolution=phase_curriculum.resolve(c,mid,pid,contract,now)
+       curriculum_currentness=_curriculum_currentness_receipt(c,mid,pid,contract,resolution) if resolution.get("recipe") else None
+       if curriculum_currentness is not None and resolution.get("recipe")=="COMPOSE_LINEAGE_V1":
+        wake.append((mid,pid,curriculum_currentness.get("request_id") or "LOCAL_CURRENTNESS"))
+        continue
        evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
        if evidence is None:continue
        names=[str(x).split("=",1)[0] for x in contract.get("completion_predicates") or []]

@@ -13,7 +13,7 @@ from tools.p0_moon_seven_binding import DIRECT_OBSERVER_BLOCKED,FENCE,PERMISSION
 from tools.p0_moon_attack_registry import live_attacks
 from tools.p0_readonly_sqlite_boundary import open_readonly_sqlite
 
-EXPECTED_SCAN_DIGEST="ef9283a4ecb60919dd1f7aa60d2ab51441d664b1ca70f10ecde6d60c3b7fc94b"
+EXPECTED_SCAN_DIGEST="c36ed60bdbf8f2a3cb5e15398aef33dae40b1835cfdcb2e976ddac7cb04d5555"
 FENCE_PATH="/home/d2j3/.lion-moon-file-write-fence.sqlite3"
 TARGET_PATH="/home/d2j3/lion-p0-moon-replace-live-cert-r1.canary"
 TABLE="moon_file_write_effect"

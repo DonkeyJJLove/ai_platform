@@ -51,6 +51,7 @@ def normalize_snapshot(snapshot):
     contracts = {p['phase_id']: p for p in out.get('phase_execution_contracts', [])}
     plans = {p['phase_id']: p for p in out.get('generic_phase_plans', [])}
     activities = out.get('phase_activity') or {}
+    curriculum_runs = ((out.get('phase_curriculum') or {}).get('runs') or {})
     for phase in phases:
         phase_spec = specs.get(phase['phase_id'], {})
         phase['handler_id'] = phase_spec.get('handler_id')
@@ -70,6 +71,7 @@ def normalize_snapshot(snapshot):
         try: plan_evidence=json.loads(plan.get('evidence_json') or '{}') if isinstance(plan,dict) else {}
         except (ValueError,TypeError): plan_evidence={}
         phase['completion_checks']=deepcopy(plan_evidence.get('checks') or {})
+        phase['curriculum']=deepcopy(curriculum_runs.get(phase['phase_id']) or {})
     current = process.get('current_phase')
     if current is not None:
         reason = 'RECORDED_PROCESS_CURSOR'

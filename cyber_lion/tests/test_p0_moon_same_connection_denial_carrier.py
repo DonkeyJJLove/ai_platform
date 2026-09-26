@@ -11,13 +11,14 @@ from tools.p0_moon_same_connection_denial_carrier import (
 from tools.p0_moon_same_connection_denial_contract import ATTACK_IDS,CREATE_TABLE_SURFACE,PRAGMA_SURFACE
 
 REPO="DonkeyJJLove/ai_platform"
-EXPECTED_SCAN="ef9283a4ecb60919dd1f7aa60d2ab51441d664b1ca70f10ecde6d60c3b7fc94b"
+EXPECTED_SCAN="c36ed60bdbf8f2a3cb5e15398aef33dae40b1835cfdcb2e976ddac7cb04d5555"
 
 def inventory():
     root=Path(__file__).resolve().parents[2];sources={}
     for base in (root/"cyber_lion",root/".github/workflows"):
         for p in sorted(base.rglob("*")):
-            if p.is_file() and p.suffix in {".py",".yml",".yaml"}:sources[p.relative_to(root).as_posix()]=p.read_text(encoding="utf-8")
+            rel=p.relative_to(root).as_posix()
+            if p.is_file() and p.suffix in {".py",".yml",".yaml"} and not rel.startswith("cyber_lion/tests/"):sources[rel]=p.read_text(encoding="utf-8")
     rev=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip();tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],cwd=root,text=True).strip()
     raw=EffectSurfaceScanner().scan(repository=REPO,revision=rev,tree_digest=tree,sources=sources)
     inv,_,_=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=sources);return inv

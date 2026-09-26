@@ -63,11 +63,14 @@ function phaseCard(phase,mission,escape){
   if(activity.blocking_gate)details.push('GATE '+activity.blocking_gate);
   if(activity.auto_resume_armed)details.push('AUTO-RESUME ARMED');
   const lifeBar='<div class="phase-liveness phase-life-'+escape(lifeClass)+'"><span class="phase-life-dot" aria-hidden="true"></span>'+current+'<b class="phase-life-label">'+escape(lifeLabels[life]||life)+'</b><span class="phase-life-detail">'+escape(details.join(' · ')||'No runtime activity recorded')+'</span></div>';
+  const cr=phase.curriculum||{},cres=cr.resolution||{};
+  const lessons=Array.isArray(cres.reused_lessons)?cres.reused_lessons:[];
+  const curriculumBar=Object.keys(cr).length?'<div class="phase-curriculum"><span class="phase-curriculum-tag">CURRICULUM</span><b>'+escape(cres.phase_class||cr.phase_class||'UNKNOWN')+'</b><span>'+escape(cres.recipe||'DISCOVER')+'</span><span>STEP '+escape(cres.step||cr.step||'—')+'</span><span>STATE '+escape(cres.state||cr.state||'—')+'</span><span>LESSONS '+escape(lessons.length)+'</span>'+(cres.missing_currentness?.length?'<span class="phase-curriculum-missing">MISSING '+escape(cres.missing_currentness.join(', '))+'</span>':'')+'</div>':'';
   const opDefs=[['RECHECK','Recheck now','phase-op-primary'],['REACQUIRE_CURRENTNESS','Request currentness','phase-op-currentness'],['REQUEST_SAAS_EVIDENCE','Ask SaaS evidence','phase-op-saas'],['RETRY_LOCAL_PLAN','Retry local plan','phase-op-retry'],['RESUME','Resume phase','phase-op-resume']];
   const ops=opDefs.filter(([a])=>caps[a]&&caps[a].supported===true&&typeof caps[a].operation_token==='string').map(([a,label,tone])=>'<button type="button" class="phase-op '+tone+'" data-phase-operation="'+escape(a)+'" data-phase-id="'+escape(phase.phase_id)+'" data-operation-token="'+escape(caps[a].operation_token)+'">'+escape(label)+'</button>').join('');
   const containment=['PAUSE','STOP'].filter(a=>caps[a]&&caps[a].supported===true&&typeof caps[a].control_token==='string').map(a=>'<button type="button" class="phase-op '+(a==='PAUSE'?'phase-op-pause':'phase-op-stop')+'" data-phase-action="'+escape(a)+'" data-phase-id="'+escape(phase.phase_id)+'" data-control-token="'+escape(caps[a].control_token)+'">'+(a==='PAUSE'?'Pause':'Stop')+'</button>').join('');
   const sep=ops&&containment?'<span class="phase-action-separator" aria-hidden="true"></span>':'';
-  return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>',lifeBar+'<div class="phase-actions">'+ops+sep+containment+'</div></article>');
+  return semanticDetail(phase.phase_id||phase.id,phase.title||phase.phase_id,fields,{...phase,schema_context:mission.schema_context},escape).replace('</article>',lifeBar+curriculumBar+'<div class="phase-actions">'+ops+sep+containment+'</div></article>');
 }
 function workerCards(mission,escape,workerControl=null){
   const workers=boundedRows(mission.normalized_runtime?.fleet?.material_workers??mission.workers).map(worker=>{

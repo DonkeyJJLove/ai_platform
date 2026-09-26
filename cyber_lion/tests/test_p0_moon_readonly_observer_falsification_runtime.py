@@ -13,7 +13,7 @@ from tools.p0_moon_readonly_observer_falsification import (
 )
 
 REPO="DonkeyJJLove/ai_platform"
-EXPECTED_SCAN="ef9283a4ecb60919dd1f7aa60d2ab51441d664b1ca70f10ecde6d60c3b7fc94b"
+EXPECTED_SCAN="c36ed60bdbf8f2a3cb5e15398aef33dae40b1835cfdcb2e976ddac7cb04d5555"
 CREATE_BLOCKED="478e559a2f8762b471ec9d69eca2bf03ed2744ab0e4f34593ab5060ae95cad9d"
 PRAGMA_BLOCKED="e631906532cb4c60aa69736270432263cb1d5346afde33cbb01fecec6c793de0"
 SCHEMA="CREATE TABLE moon_file_write_effect(effect_key TEXT PRIMARY KEY,admission_digest TEXT UNIQUE NOT NULL,request_digest TEXT UNIQUE NOT NULL,repository TEXT NOT NULL,target_path TEXT NOT NULL,state TEXT NOT NULL,prepared_at TEXT NOT NULL,attempted_at TEXT,observed_at TEXT,reconciled_at TEXT,pre_observation_digest TEXT,post_observation_digest TEXT,reconciliation_digest TEXT)"
@@ -22,7 +22,8 @@ def current_inventory():
     root=Path(__file__).resolve().parents[2];sources={}
     for base in (root/"cyber_lion",root/".github/workflows"):
         for p in sorted(base.rglob("*")):
-            if p.is_file() and p.suffix in {".py",".yml",".yaml"}:sources[p.relative_to(root).as_posix()]=p.read_text(encoding="utf-8")
+            rel=p.relative_to(root).as_posix()
+            if p.is_file() and p.suffix in {".py",".yml",".yaml"} and not rel.startswith("cyber_lion/tests/"):sources[rel]=p.read_text(encoding="utf-8")
     revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip();tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],cwd=root,text=True).strip()
     raw=EffectSurfaceScanner().scan(repository=REPO,revision=revision,tree_digest=tree,sources=sources)
     inventory,report,_=EffectTaxonomyReconciler().reconcile(raw_inventory=raw,sources=sources);return inventory,report

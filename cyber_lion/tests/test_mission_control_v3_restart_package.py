@@ -45,6 +45,7 @@ SOURCE_MAP = {
     "cyber_lion/mission_control/supervisor_projection.py": ROOT / "cyber_lion/mission_control/supervisor_projection.py",
     "cyber_lion/mission_control/runtime_projection.py": ROOT / "cyber_lion/mission_control/runtime_projection.py",
     "cyber_lion/mission_control/phase_control.py": ROOT / "cyber_lion/mission_control/phase_control.py",
+    "cyber_lion/mission_control/phase_curriculum.py": ROOT / "cyber_lion/mission_control/phase_curriculum.py",
     **{"static/" + name: ROOT / "deploy/mission-control/v3" / name
        for name in ("index.html", "app.css", "app.js", "passive.js", "control-v3.js")},
 }
