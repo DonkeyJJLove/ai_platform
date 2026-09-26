@@ -2894,4 +2894,49 @@ class H(BaseHTTPRequestHandler):
   if path.startswith('/api/v3/missions/') and path.endswith('/activate'):
    try:
     mid=path[len('/api/v3/missions/'):-len('/activate')].strip('/');n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(activate_lpcl_mission(mid,x))
-   except
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
+  if path.startswith('/api/v3/missions/') and path.endswith('/phase'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/phase')].strip('/');n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(update_lpcl_phase(mid,x))
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},409)
+  if path.startswith('/api/v3/missions/') and path.endswith('/messages'):
+   try:
+    mid=path[len('/api/v3/missions/'):-len('/messages')].strip('/');n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(post_protocol_message(mid,x),201)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},400)
+  if path=='/api/v3/missions/register':
+   try:
+    n=int(self.headers.get('Content-Length','0'));x=json.loads(self.rfile.read(n));return self.json(register_observation(x),201)
+   except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},400)
+  if path not in {'/api/v3/missions/current/actions','/api/v3/missions/'+MISSION+'/actions'}:return self.json({'error':'not found'},404)
+  try:
+   n=int(self.headers.get('Content-Length','0'))
+   if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
+   x=json.loads(self.rfile.read(n));allowed={'action','pod_name'}
+   if type(x) is not dict or not set(x).issubset(allowed) or x.get('action') not in ACTIONS:raise ValueError('action schema')
+   if x.get('action')!='RESTART_ONE' and 'pod_name' in x:raise ValueError('pod_name denied')
+   with LOCK:out=command(x['action'],x.get('pod_name'))
+   return self.json(out)
+  except ValueError as e:return self.json({'error':str(e)},409)
+  except Exception as e:return self.json({'error':type(e).__name__+':'+str(e)},500)
+ def do_PUT(self):self.json({'error':'method denied'},405)
+ def do_PATCH(self):self.json({'error':'method denied'},405)
+ def do_DELETE(self):self.json({'error':'method denied'},405)
+
+class FleetThreadingHTTPServer(ThreadingHTTPServer):
+ request_queue_size=128
+ daemon_threads=True
+ allow_reuse_address=True
+
+def main():
+ ap=argparse.ArgumentParser();ap.add_argument('--host',default='127.0.0.1');ap.add_argument('--port',type=int,default=8767);ap.add_argument('--listen-state',default='/run/lion-mission-control/listen.json');ap.add_argument('--legacy-listen-state',default='/run/lion-vkt-mission-control/listen.json');a=ap.parse_args();migrate();reconcile_phase_execution_contracts();reconcile_lpcl_execution_bindings();observe_once();threading.Thread(target=observer,daemon=True).start();threading.Thread(target=mission_driver_loop,daemon=True).start();srv=FleetThreadingHTTPServer((a.host,a.port),H);relay=_start_secure_mcp_broker_relay(a.port);loc={'status':'LISTENING','host':a.host,'port':a.port,'pid':os.getpid(),'generation':'MISSION_CONTROL_V3','mission_id':MISSION};
+ for lp in (a.listen_state,a.legacy_listen_state):
+  q=Path(lp);q.parent.mkdir(parents=True,exist_ok=True);tmp=q.with_name(q.name+'.tmp-'+uuid.uuid4().hex[:8]);tmp.write_text(json.dumps(loc,sort_keys=True),encoding='utf-8');os.replace(tmp,q)
+ print(json.dumps(loc),flush=True)
+ try:srv.serve_forever()
+ finally:
+  STOP_EVENT.set();DRIVER_STOP.set();srv.server_close()
+  if relay is not None and relay.poll() is None:
+   relay.terminate()
+   try:relay.wait(timeout=5)
+   except subprocess.TimeoutExpired:relay.kill()
+if __name__=='__main__':main()
