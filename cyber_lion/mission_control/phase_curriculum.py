@@ -188,6 +188,44 @@ def _resolution_recipe(evidence_requirements):
     return None,set()
 
 
+def _question_meta(question):
+    text=str(question or "");pos=text.find("{")
+    if pos<0:return None
+    try:value=json.loads(text[pos:])
+    except Exception:return None
+    return value if isinstance(value,dict) else None
+
+
+def supervisor_request_snapshot(conn,mission_id,phase_id,contract):
+    rows=conn.execute(
+      "SELECT request_id,status,progress_state,created_at,expires_at,claimed_at,responded_at,response_digest,receipt_digest,question,transport,authority_effect "
+      "FROM saas_handoff_requests WHERE mission_id=? ORDER BY created_at DESC",(mission_id,)
+    ).fetchall()
+    wanted_digest=contract.get("contract_digest")
+    for row in rows:
+      if row["authority_effect"]!="NONE":continue
+      meta=_question_meta(row["question"])
+      if not meta or meta.get("mission_id")!=mission_id or meta.get("phase_id")!=phase_id:continue
+      if meta.get("contract_digest")!=wanted_digest:continue
+      status=str(row["status"] or "")
+      if status in {"SUPERSEDED","CANCELLED","FAILED","FAIL"}:continue
+      value={
+        "request_id":row["request_id"],"status":status,"progress_state":row["progress_state"],
+        "created_at":row["created_at"],"expires_at":row["expires_at"],"claimed_at":row["claimed_at"],
+        "responded_at":row["responded_at"],"transport":row["transport"],"authority_effect":"NONE",
+      }
+      if status=="RESPONDED" and row["progress_state"]=="RECEIPT_BOUND" and row["response_digest"] and row["receipt_digest"]:
+        value["wait_state"]="SUPERVISOR_RECEIPT_BOUND";value["next_expected"]="AUTO_RECEIPT_WAKE"
+      elif status=="WAITING_OPERATOR_OVERDUE":
+        value["wait_state"]="WAITING_SUPERVISOR_OVERDUE";value["next_expected"]="EXPLICIT_RETRY_OR_LATE_RECEIPT"
+      elif status=="CLAIMED":
+        value["wait_state"]="WAITING_SUPERVISOR";value["next_expected"]="SUPERVISOR_RESPONSE"
+      else:
+        value["wait_state"]="WAITING_SUPERVISOR";value["next_expected"]="SUPERVISOR_CLAIM_OR_RESPONSE"
+      return value
+    return None
+
+
 def resolve(conn,mission_id,phase_id,contract,now_fn):
     learn_completed(conn,mission_id,now_fn)
     currentness,evidence_requirements,_=_contract_sets(contract)
@@ -209,7 +247,15 @@ def resolve(conn,mission_id,phase_id,contract,now_fn):
       state="WAITING_CURRENTNESS" if missing_currentness else "READY"
       step="ACQUIRE_CURRENTNESS" if missing_currentness else "COMPOSE"
     elif recipe=="COGNITIVE_SYNTHESIS":
-      state="NEEDS_COGNITIVE_SYNTHESIS";step="DELEGATE_COGNITIVE"
+      supervisor=supervisor_request_snapshot(conn,mission_id,phase_id,contract)
+      if supervisor and supervisor.get("wait_state")=="SUPERVISOR_RECEIPT_BOUND":
+       state="SUPERVISOR_RECEIPT_BOUND";step="CONSUME_SUPERVISOR_RECEIPT"
+      elif supervisor and supervisor.get("wait_state")=="WAITING_SUPERVISOR_OVERDUE":
+       state="WAITING_SUPERVISOR_OVERDUE";step="RETRY_SUPERVISOR_AVAILABLE"
+      elif supervisor:
+       state="WAITING_SUPERVISOR";step="AWAIT_SUPERVISOR_RECEIPT"
+      else:
+       state="NEEDS_COGNITIVE_SYNTHESIS";step="DELEGATE_COGNITIVE"
     elif recipe:
       state="MISSING_LESSON_INPUTS";step="LEARN_OR_ACQUIRE"
     else:
@@ -221,6 +267,7 @@ def resolve(conn,mission_id,phase_id,contract,now_fn):
       "state":state,"step":step,"reused_lessons":reused,
       "covered_evidence":sorted(covered),"missing_evidence":missing_evidence,
       "local_currentness":local_current,"missing_currentness":missing_currentness,
+      "supervisor_request":supervisor_request_snapshot(conn,mission_id,phase_id,contract) if recipe=="COGNITIVE_SYNTHESIS" else None,
       "authority_effect":"NONE",
     }
     record_run(conn,result,now_fn)
