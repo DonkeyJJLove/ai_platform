@@ -62,10 +62,16 @@ def _operation_binding(snapshot, phase_id):
     value=_control_binding(snapshot,phase_id)
     driver=snapshot.get('execution_driver') or {}
     contract=_phase_contract(snapshot,phase_id)
+    curriculum=((snapshot.get('phase_curriculum') or {}).get('runs') or {}).get(phase_id) or {}
+    resolution=curriculum.get('resolution') or {}
+    supervisor=resolution.get('supervisor_request') or {}
     value.update({
         'blocking_gate':driver.get('blocking_gate'),
         'contract_digest':contract.get('contract_digest'),
         'evidence_count':_phase_evidence_count(snapshot,phase_id),
+        'curriculum_state':resolution.get('state') or curriculum.get('state'),
+        'supervisor_request_id':supervisor.get('request_id'),
+        'supervisor_request_status':supervisor.get('status'),
     })
     return value
 
@@ -103,6 +109,11 @@ def phase_capabilities(snapshot, phase_id):
     gate=str(driver.get('blocking_gate') or '')
     generic=spec.get('handler_id')=='GENERIC_LPCL_PHASE'
     blocked_waiting=state in {'WAITING','BLOCKED'}
+    curriculum=((snapshot.get('phase_curriculum') or {}).get('runs') or {}).get(phase_id) or {}
+    curriculum_resolution=curriculum.get('resolution') or {}
+    curriculum_state=str(curriculum_resolution.get('state') or curriculum.get('state') or '')
+    supervisor_wait=curriculum_state in {'WAITING_SUPERVISOR','WAITING_SUPERVISOR_OVERDUE','SUPERVISOR_RECEIPT_BOUND'}
+    supervisor_wait_reason='SUPERVISOR_REQUEST_ACTIVE' if curriculum_state=='WAITING_SUPERVISOR' else 'SUPERVISOR_REQUEST_OVERDUE' if curriculum_state=='WAITING_SUPERVISOR_OVERDUE' else 'SUPERVISOR_RECEIPT_PENDING_WAKE' if curriculum_state=='SUPERVISOR_RECEIPT_BOUND' else None
 
     def item(supported, why, label, effect='CONTROL_STATE', *, operation=False):
         out={'supported':bool(supported),'reason':None if supported else why,'label':label,'effect':effect}
@@ -113,9 +124,9 @@ def phase_capabilities(snapshot, phase_id):
     operational_reason=reason or 'PHASE_OPERATION_NOT_APPLICABLE'
     result={
         'INSPECT': {'supported': phase is not None, 'effect': 'NONE', 'reason': None if phase else 'PHASE_NOT_FOUND', 'operation_token': operation_token if phase else None, 'label':'Inspect phase'},
-        'RECHECK': item(reason is None and generic and blocked_waiting and gate in PHASE_RECHECKABLE_GATES, operational_reason if reason else 'BLOCKING_GATE_NOT_RECHECKABLE', 'Recheck phase', operation=True),
-        'REACQUIRE_CURRENTNESS': item(reason is None and generic and blocked_waiting and gate in PHASE_CURRENTNESS_GATES, operational_reason if reason else 'CURRENTNESS_GATE_NOT_ACTIVE', 'Request currentness', effect='NONE', operation=True),
-        'REQUEST_SAAS_EVIDENCE': item(reason is None and generic and blocked_waiting and gate in PHASE_SAAS_EVIDENCE_GATES, operational_reason if reason else 'SAAS_EVIDENCE_GATE_NOT_ACTIVE', 'Ask SaaS evidence', effect='NONE', operation=True),
+        'RECHECK': item(reason is None and generic and blocked_waiting and gate in PHASE_RECHECKABLE_GATES and not supervisor_wait, operational_reason if reason else supervisor_wait_reason or 'BLOCKING_GATE_NOT_RECHECKABLE', 'Recheck phase', operation=True),
+        'REACQUIRE_CURRENTNESS': item(reason is None and generic and blocked_waiting and gate in PHASE_CURRENTNESS_GATES and not supervisor_wait, operational_reason if reason else supervisor_wait_reason or 'CURRENTNESS_GATE_NOT_ACTIVE', 'Request currentness', effect='NONE', operation=True),
+        'REQUEST_SAAS_EVIDENCE': item(reason is None and generic and blocked_waiting and gate in PHASE_SAAS_EVIDENCE_GATES and not supervisor_wait, operational_reason if reason else supervisor_wait_reason or 'SAAS_EVIDENCE_GATE_NOT_ACTIVE', 'Ask SaaS evidence', effect='NONE', operation=True),
         'RETRY_LOCAL_PLAN': item(reason is None and generic and blocked_waiting and gate in PHASE_LOCAL_RETRY_GATES, operational_reason if reason else 'LOCAL_PLAN_RETRY_NOT_REQUIRED', 'Retry local plan', operation=True),
         'RESUME': item(reason is None and state in {'PAUSED','STOPPED','FAILED'}, operational_reason if reason else 'DRIVER_NOT_RESUMABLE', 'Resume phase', operation=True),
     }
