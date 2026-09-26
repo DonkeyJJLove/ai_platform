@@ -53,12 +53,16 @@ function phaseCard(phase,mission,escape){
   const age=ts=>{const t=Date.parse(ts||'');if(!Number.isFinite(t))return 'no activity';let s=Math.max(0,Math.floor((Date.now()-t)/1000));if(s<5)return 'now';if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m '+(s%60)+'s ago';if(s<86400)return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m ago';return Math.floor(s/86400)+'d ago'};
   const life=String(phase.activity_state||activity.state||phase.status||'UNKNOWN').toUpperCase();
   const lifeClass=life.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-  const lifeLabels={READY_TO_ADVANCE:'READY TO ADVANCE',EXECUTING:'LIVE · EXECUTING',WAITING_LOCAL:'LIVE · WAITING LOCAL',WAITING_EVIDENCE:'LIVE · WAITING EVIDENCE',WAITING:'LIVE · WAITING',BLOCKED:'BLOCKED',PAUSED:'PAUSED',STOPPED:'STOPPED',COMPLETE:'COMPLETE',PENDING:'PENDING'};
+  const lifeLabels={READY_TO_ADVANCE:'READY TO ADVANCE',EXECUTING:'LIVE · EXECUTING',WAITING_LOCAL:'LIVE · WAITING LOCAL',WAITING_EVIDENCE:'LIVE · WAITING EVIDENCE',WAITING_SUPERVISOR:'WAITING FOR SUPERVISOR',WAITING_SUPERVISOR_OVERDUE:'SUPERVISOR OVERDUE',SUPERVISOR_RECEIPT_BOUND:'RECEIPT BOUND · WAKING',WAITING:'LIVE · WAITING',BLOCKED:'BLOCKED',PAUSED:'PAUSED',STOPPED:'STOPPED',COMPLETE:'COMPLETE',PENDING:'PENDING'};
   const current=activity.is_current===true?'<span class="phase-current">CURRENT</span>':'';
   const details=[];
   if(activity.last_activity_at)details.push((activity.last_activity_kind||'ACTIVITY')+' '+age(activity.last_activity_at));
   if(activity.scheduler_heartbeat_at)details.push('scheduler '+age(activity.scheduler_heartbeat_at));
   if(activity.driver_heartbeat_at)details.push('driver '+age(activity.driver_heartbeat_at));
+  const supervisor=activity.supervisor_request||{};
+  if(supervisor.request_id)details.push('REQUEST '+supervisor.request_id);
+  if(supervisor.progress_state)details.push('SUPERVISOR '+supervisor.progress_state);
+  if(supervisor.created_at)details.push('request '+age(supervisor.created_at));
   if(activity.next_expected&&activity.next_expected!=='NONE')details.push('NEXT '+activity.next_expected);
   if(activity.blocking_gate)details.push('GATE '+activity.blocking_gate);
   if(activity.auto_resume_armed)details.push('AUTO-RESUME ARMED');
