@@ -1252,6 +1252,36 @@ def _project_mission_liveness(c,mid,mission,process,driver,scheduler):
     }
 
 
+def _phase_activity_snapshot(c,mid):
+    phase_rows=c.execute("SELECT phase_id,updated_at FROM mission_phases WHERE mission_id=? ORDER BY ordinal",(mid,)).fetchall()
+    out={r["phase_id"]:{"last_phase_update_at":r["updated_at"]} for r in phase_rows}
+    def merge(sql,key):
+      for row in c.execute(sql,(mid,)).fetchall():
+       pid=row["phase_id"];stamp=row["stamp"]
+       if pid not in out:out[pid]={}
+       out[pid][key]=stamp
+    merge("SELECT phase_id,MAX(COALESCE(finished_at,claimed_at,created_at)) AS stamp FROM mission_execution_assignments WHERE mission_id=? GROUP BY phase_id","last_assignment_at")
+    merge("SELECT phase_id,MAX(observed_at) AS stamp FROM mission_execution_receipts WHERE mission_id=? GROUP BY phase_id","last_receipt_at")
+    merge("SELECT phase AS phase_id,MAX(observed_at) AS stamp FROM protocol_messages WHERE mission_id=? GROUP BY phase","last_event_at")
+    merge("SELECT phase_id,MAX(updated_at) AS stamp FROM mission_generic_phase_plans WHERE mission_id=? GROUP BY phase_id","last_plan_at")
+    merge("SELECT phase_id,MAX(observed_at) AS stamp FROM mission_generic_action_receipts WHERE mission_id=? GROUP BY phase_id","last_action_receipt_at")
+    for pid,value in out.items():
+      candidates=[
+       ("PHASE",value.get("last_phase_update_at")),
+       ("ASSIGNMENT",value.get("last_assignment_at")),
+       ("RECEIPT",value.get("last_receipt_at")),
+       ("EVENT",value.get("last_event_at")),
+       ("PLAN",value.get("last_plan_at")),
+       ("ACTION_RECEIPT",value.get("last_action_receipt_at")),
+      ]
+      candidates=[x for x in candidates if x[1]]
+      if candidates:
+       kind,stamp=max(candidates,key=lambda x:str(x[1]));value["last_activity_at"]=stamp;value["last_activity_kind"]=kind
+      else:
+       value["last_activity_at"]=None;value["last_activity_kind"]="NONE"
+    return out
+
+
 def process_snapshot(mid, *, read_only=False, _connection=None):
     if _connection is not None and not read_only:raise ValueError('shared snapshot must be read only')
     c=_connection if _connection is not None else connect()
@@ -1274,6 +1304,7 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d['phase_capability_bindings']=global_sched.phase_capability_bindings(c,mid)
     d['execution_preflight']=global_sched.execution_preflight(c,mid)
     d['phase_evidence_counts']={r['phase']:r['total'] for r in c.execute("SELECT phase,COUNT(*) AS total FROM protocol_messages WHERE mission_id=? AND protocol IN ('EVIDENCE','VALIDATION','RECEIPT') GROUP BY phase",(mid,))}
+    d['phase_activity']=_phase_activity_snapshot(c,mid)
     d['logical']=[dict(r) for r in c.execute('SELECT * FROM logical_drones WHERE mission_id=? ORDER BY logical_id',(mid,))]
     d['workers']=[dict(r) for r in c.execute('SELECT * FROM material_workers WHERE mission_id=? ORDER BY logical_id,pod_name',(mid,))]
     d['commands']=[dict(r) for r in c.execute('SELECT command_id,action,pod_name,requested_at,finished_at,status,request_id,error FROM commands WHERE mission_id=? ORDER BY requested_at DESC LIMIT 40',(mid,))]
@@ -2393,6 +2424,37 @@ def _generic_execute_read_plan(c,plan):
     return {'state':'PASS','receipt':receipt,'evidence':evidence}
 
 
+def _generic_phase_transition_payload(event,planrow,receipt_id,evidence_digest,evidence):
+    evidence=evidence if isinstance(evidence,dict) else {}
+    summary={}
+    for key in ("producer","producer_mode","requirements_covered","checks","request_id","response_digest","receipt_digest"):
+      value=evidence.get(key)
+      if value is not None:summary[key]=value
+    ledger=evidence.get("ledger_summary")
+    if isinstance(ledger,dict):
+      summary["ledger_counts"]={k:v.get("count") for k,v in ledger.items() if isinstance(v,dict) and "count" in v}
+      summary["ledger_digests"]={k:v.get("digest") for k,v in ledger.items() if isinstance(v,dict) and v.get("digest")}
+    lineage=evidence.get("lineage_integrity")
+    if isinstance(lineage,dict):
+      summary["lineage_integrity"]={k:v for k,v in lineage.items() if k not in {"auxiliary_namespaces","unknown_mismatches"}}
+    for key in ("asis_graph","runtime_graph","data_graph","authority_graph","capability_graph","duplicate_implementation_map","runtime_consumers"):
+      value=evidence.get(key)
+      if not isinstance(value,dict):continue
+      bounded={}
+      for k in ("count","entry_count","table_count","capability_count","binding_count","digest","runtime_state_counts"):
+       if k in value:bounded[k]=value[k]
+      if bounded:summary[key]=bounded
+    payload={
+      "event":event,"plan_id":planrow["plan_id"],"action_receipt_id":receipt_id,
+      "action_ir_digest":planrow["action_ir_digest"],"evidence_digest":evidence_digest,
+      "evidence_summary":summary,"authority_effect":"NONE",
+    }
+    raw=json.dumps(payload,ensure_ascii=False)
+    if len(raw)>15000:
+      payload["evidence_summary"]={"producer":summary.get("producer"),"checks":summary.get("checks"),"summary_digest":hashlib.sha256(json.dumps(summary,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest()}
+    return payload
+
+
 def _generic_existing_action_receipt(c,plan_id):
     row=c.execute('SELECT * FROM mission_generic_action_receipts WHERE plan_id=?',(plan_id,)).fetchone()
     return dict(row) if row else None
@@ -2448,7 +2510,8 @@ def drive_generic_once(mid):
        action_receipt=_generic_existing_action_receipt(c,planrow['plan_id'])
        if action_receipt and action_receipt.get('status')=='PASS':
         evidence=json.loads(planrow['evidence_json'] or '{}')
-        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',{'event':'GENERIC_PHASE_EXECUTION_PASS','plan_id':planrow['plan_id'],'action_receipt_id':action_receipt['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':action_receipt['evidence_digest'],'authority_effect':'NONE',**evidence},'VALIDATION')
+        transition_payload=_generic_phase_transition_payload('GENERIC_PHASE_EXECUTION_PASS',planrow,action_receipt['receipt_id'],action_receipt['evidence_digest'],evidence)
+        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',transition_payload,'VALIDATION')
         if current and driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
         return
        result=_generic_execute_read_plan(c,planrow)
@@ -2456,7 +2519,8 @@ def drive_generic_once(mid):
         ar=result['receipt']
         _process_message(c,mid,'EVIDENCE','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_ACTION_EVIDENCE_OBSERVED','plan_id':planrow['plan_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE'},'INTERNAL')
         _process_message(c,mid,'RECEIPT','GENERIC_EFFECT_EVIDENCE_EXECUTOR','MISSION_CONTROL',pid,{'event':'GENERIC_ACTION_RECEIPT','plan_id':planrow['plan_id'],'receipt_id':ar['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE'},'INTERNAL');c.commit()
-        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',{'event':'GENERIC_PHASE_EXECUTION_PASS','plan_id':planrow['plan_id'],'action_receipt_id':ar['receipt_id'],'action_ir_digest':planrow['action_ir_digest'],'evidence_digest':ar['evidence_digest'],'authority_effect':'NONE',**result['evidence']},'VALIDATION')
+        transition_payload=_generic_phase_transition_payload('GENERIC_PHASE_EXECUTION_PASS',planrow,ar['receipt_id'],ar['evidence_digest'],result['evidence'])
+        current,overall=_driver_phase_result(c,mid,pid,'PASS','Bounded generic effect/evidence executor satisfied the phase contract.',transition_payload,'VALIDATION')
         if current and driver_snapshot(c,mid)['state'] in {'WAITING','BLOCKED'}:driver_transition(c,mid,'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
         return
        gate=result.get('gate') or ('AUTHORITY_REQUIRED' if result['state']=='WAITING_AUTHORITY' else 'CURRENTNESS_REQUIRED' if result['state']=='WAITING_CURRENTNESS' else 'GENERIC_EXECUTION_BLOCKED')
@@ -2489,8 +2553,85 @@ def reconcile_control_plane_late_saas():
     finally:c.close()
 
 
+def reconcile_epoch_closure_late_saas():
+    c=connect();wake=[]
+    try:
+      rows=c.execute(
+        "SELECT m.mission_id,p.current_phase,d.state,d.blocking_gate "
+        "FROM missions m JOIN mission_process_specs p ON p.mission_id=m.mission_id "
+        "JOIN mission_execution_drivers d ON d.mission_id=m.mission_id "
+        "WHERE m.state='RUNNING' AND d.state IN ('WAITING','BLOCKED') AND p.current_phase IS NOT NULL"
+      ).fetchall()
+      for row in rows:
+       mid=row["mission_id"];pid=row["current_phase"]
+       if row["blocking_gate"] not in {"EVIDENCE_REQUIREMENTS_NOT_SATISFIED","CURRENTNESS_REQUIRED","EVIDENCE_REACQUISITION_REQUIRED"}:continue
+       spec=_phase_exec_spec(c,mid,pid)
+       if not spec or spec.get("handler_id")!=GENERIC_PHASE_HANDLER:continue
+       bound=global_sched.bound_capability(c,mid,pid)
+       if not bound or bound.get("capability_id")!="GENERIC_MISSION_CONTRACT_RECONCILIATION":continue
+       contract=global_sched.phase_execution_contract(c,mid,pid)
+       if not contract:continue
+       evidence=_epoch_closure_saas_response_evidence(c,mid,pid,contract)
+       if evidence is None:continue
+       names=[str(x).split("=",1)[0] for x in contract.get("completion_predicates") or []]
+       if names and all((evidence.get("checks") or {}).get(name)=="PASS" for name in names):
+        wake.append((mid,pid,evidence["request_id"]))
+    finally:c.close()
+    results=[]
+    for mid,pid,request_id in wake:
+      drive_generic_once(mid)
+      results.append({"mission_id":mid,"phase_id":pid,"request_id":request_id})
+    return results
+
+
+def reconcile_passed_generic_phase_receipts():
+    c=connect()
+    try:
+      sql=(
+        "SELECT ps.mission_id,ps.current_phase AS phase_id,p.status AS phase_status, "
+        "gp.plan_id,gp.action_ir_digest,gp.evidence_json,gp.evidence_digest, "
+        "gr.receipt_id AS action_receipt_id,gr.evidence_digest AS receipt_evidence_digest, "
+        "d.state AS driver_state,d.current_phase AS driver_phase "
+        "FROM mission_process_specs ps "
+        "JOIN mission_phases p ON p.mission_id=ps.mission_id AND p.phase_id=ps.current_phase "
+        "JOIN mission_generic_phase_plans gp ON gp.mission_id=ps.mission_id AND gp.phase_id=ps.current_phase "
+        "JOIN mission_generic_action_receipts gr ON gr.plan_id=gp.plan_id "
+        "JOIN mission_execution_drivers d ON d.mission_id=ps.mission_id "
+        "WHERE p.status NOT IN ('PASS','COMPLETE','SKIPPED','CANCELLED','FAIL') "
+        "AND gp.state='PASS' AND gr.status='PASS' AND gr.authority_effect='NONE' "
+        "AND gp.evidence_digest=gr.evidence_digest "
+        "AND d.current_phase=ps.current_phase "
+        "AND d.state IN ('ACTIVE','WAITING','BLOCKED') "
+        "ORDER BY ps.mission_id"
+      )
+      rows=c.execute(sql).fetchall()
+      repaired=[]
+      for row in rows:
+       try:evidence=json.loads(row['evidence_json'] or '{}')
+       except Exception:evidence={}
+       planrow={'plan_id':row['plan_id'],'action_ir_digest':row['action_ir_digest']}
+       transition_payload=_generic_phase_transition_payload('GENERIC_PHASE_DURABLE_PASS_RECONCILED',planrow,row['action_receipt_id'],row['receipt_evidence_digest'],evidence)
+       current,overall=_driver_phase_result(
+        c,row['mission_id'],row['phase_id'],'PASS',
+        'Durable PASS evidence receipt reconciled into the phase verdict.',
+        transition_payload,'VALIDATION',
+       )
+       ds=driver_snapshot(c,row['mission_id'])
+       if current and ds and ds.get('state') in {'WAITING','BLOCKED'}:
+        driver_transition(c,row['mission_id'],'ACTIVE',now,current_phase=current,next_action='SELECT_NEXT_PHASE')
+       elif current is None and ds and ds.get('state')!='COMPLETE':
+        driver_reconcile_complete(c,row['mission_id'],now,next_action='TERMINAL_RECONCILED')
+       repaired.append({'mission_id':row['mission_id'],'phase_id':row['phase_id'],'next_phase':current,'progress':overall})
+      return repaired
+    finally:c.close()
+
+
 def global_scheduler_once():
+    try:reconcile_passed_generic_phase_receipts()
+    except Exception:pass
     try:reconcile_control_plane_late_saas()
+    except Exception:pass
+    try:reconcile_epoch_closure_late_saas()
     except Exception:pass
     c=connect()
     try:
@@ -2642,12 +2783,43 @@ def local_assignment_claim(x):
     finally:c.close()
 
 
+def _wake_generic_phase_after_local_receipt(mission_id,phase_id):
+    c=connect()
+    try:
+      process=c.execute("SELECT current_phase FROM mission_process_specs WHERE mission_id=?",(mission_id,)).fetchone()
+      driver=driver_snapshot(c,mission_id)
+      spec=_phase_exec_spec(c,mission_id,phase_id)
+      eligible=bool(
+        process and process["current_phase"]==phase_id
+        and spec and spec.get("handler_id")==GENERIC_PHASE_HANDLER
+        and driver and driver.get("current_phase")==phase_id
+        and driver.get("state") in {"WAITING","BLOCKED"}
+        and driver.get("blocking_gate") in {"GENERIC_PHASE_LOCAL_PLAN_RECEIPT","GENERIC_PHASE_LOCAL_PLAN_FAILED"}
+      )
+    finally:c.close()
+    if not eligible:return {"triggered":False,"reason":"NOT_EXACT_WAITING_GENERIC_PHASE"}
+    drive_generic_once(mission_id)
+    c=connect()
+    try:
+      after=driver_snapshot(c,mission_id)
+      phase=c.execute("SELECT status,progress FROM mission_phases WHERE mission_id=? AND phase_id=?",(mission_id,phase_id)).fetchone()
+      return {
+        "triggered":True,
+        "driver_state":after.get("state") if after else None,
+        "blocking_gate":after.get("blocking_gate") if after else None,
+        "current_phase":after.get("current_phase") if after else None,
+        "phase_status":phase["status"] if phase else None,
+        "phase_progress":phase["progress"] if phase else None,
+      }
+    finally:c.close()
+
+
 def local_assignment_receipt(x):
     required={'assignment_id','status','result','effect_receipt_digest','authority_effect','material_drone_id','lease_generation'}
     if type(x) is not dict or set(x)!=required:raise ValueError('local assignment receipt schema')
     if x['status'] not in {'PASS','FAIL'} or x['authority_effect']!='NONE':raise ValueError('local assignment receipt status/authority')
     if type(x['result']) is not dict:raise ValueError('local assignment result')
-    c=connect()
+    c=connect();wake=None
     try:
       out=global_sched.record_receipt(c,x['assignment_id'],x['result'],now,material_drone_id=x['material_drone_id'],lease_generation=x['lease_generation'],status=x['status'],effect_receipt_digest=x['effect_receipt_digest'],authority_effect='NONE')
       payload_store=global_sched.store_assignment_payload(c,x['assignment_id'],out['receipt_id'],x['result'],now)
@@ -2656,6 +2828,7 @@ def local_assignment_receipt(x):
       row=c.execute('SELECT mission_id,phase_id,input_json FROM mission_execution_assignments WHERE assignment_id=?',(x['assignment_id'],)).fetchone()
       if row:
        _process_message(c,row['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','GLOBAL_SCHEDULER',row['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT','assignment_id':x['assignment_id'],'receipt_id':out['receipt_id'],'result_digest':out['result_digest'],'payload_retained':True,'status':x['status'],'authority_effect':'NONE'},'IN')
+       wake=(row['mission_id'],row['phase_id'])
        try:assignment_input=json.loads(row['input_json'] or '{}')
        except Exception:assignment_input={}
        drid=assignment_input.get('dual_request_id')
@@ -2669,8 +2842,11 @@ def local_assignment_receipt(x):
          joined=dual_join_result(c,drid);out['dual_result']=joined
          _process_message(c,dual['mission_id'],'RECEIPT','LOCAL_ASSIGNMENT_WORKER','DUAL_RESULT_JOIN',dual['phase_id'],{'event':'LOCAL_ASSIGNMENT_RECEIPT_AUTO_JOINED','dual_request_id':drid,'dual_state':joined.get('state'),'assignment_id':x['assignment_id'],'authority_effect':'NONE'},'INTERNAL')
       out['payload_store']=payload_store
-      c.commit();return out
+      c.commit()
     finally:c.close()
+    if wake is not None:
+      out['phase_wake']=_wake_generic_phase_after_local_receipt(wake[0],wake[1])
+    return out
 
 def model_call_intent(x):
     if type(x) is not dict:raise ValueError('model call intent schema')
