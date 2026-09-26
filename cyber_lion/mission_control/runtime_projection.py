@@ -89,12 +89,22 @@ def normalize_snapshot(snapshot):
         checks_pass=bool(checks) and all(str(v).upper()=='PASS' for v in checks.values())
         gate=driver.get('blocking_gate') if is_current else None
         dstate=driver.get('state') if is_current else None
+        curriculum_run=curriculum_runs.get(pid) or {}
+        curriculum_resolution=curriculum_run.get('resolution') or {}
+        curriculum_state=str(curriculum_resolution.get('state') or curriculum_run.get('state') or '')
+        supervisor_request=curriculum_resolution.get('supervisor_request') or {}
         if phase.get('status') in terminal_states:
             activity_state='COMPLETE'
         elif not is_current:
             activity_state='PENDING'
         elif checks_pass:
             activity_state='READY_TO_ADVANCE'
+        elif curriculum_state=='SUPERVISOR_RECEIPT_BOUND':
+            activity_state='SUPERVISOR_RECEIPT_BOUND'
+        elif curriculum_state=='WAITING_SUPERVISOR_OVERDUE':
+            activity_state='WAITING_SUPERVISOR_OVERDUE'
+        elif curriculum_state=='WAITING_SUPERVISOR':
+            activity_state='WAITING_SUPERVISOR'
         elif dstate=='ACTIVE':
             activity_state='EXECUTING'
         elif dstate=='WAITING' and gate=='GENERIC_PHASE_LOCAL_PLAN_RECEIPT':
@@ -112,6 +122,9 @@ def normalize_snapshot(snapshot):
         else:
             activity_state=str(phase.get('status') or 'UNKNOWN')
         if activity_state=='READY_TO_ADVANCE':next_expected='PHASE_TRANSITION'
+        elif activity_state=='SUPERVISOR_RECEIPT_BOUND':next_expected='AUTO_RECEIPT_WAKE'
+        elif activity_state=='WAITING_SUPERVISOR_OVERDUE':next_expected='EXPLICIT_RETRY_OR_LATE_RECEIPT'
+        elif activity_state=='WAITING_SUPERVISOR':next_expected=supervisor_request.get('next_expected') or 'SUPERVISOR_RESPONSE'
         elif gate=='GENERIC_PHASE_LOCAL_PLAN_RECEIPT':next_expected='LOCAL_PLAN_RECEIPT'
         elif gate in {'EVIDENCE_REQUIREMENTS_NOT_SATISFIED','EVIDENCE_REACQUISITION_REQUIRED'}:next_expected='EVIDENCE_OR_RECHECK'
         elif gate=='CURRENTNESS_REQUIRED':next_expected='CURRENTNESS_EVIDENCE'
@@ -128,7 +141,7 @@ def normalize_snapshot(snapshot):
             'driver_generation':driver.get('generation') if is_current else None,
             'driver_heartbeat_at':driver.get('heartbeat_at') if is_current else None,
             'scheduler_heartbeat_at':scheduler.get('heartbeat_at') if is_current else None,
-            'checks_pass':checks_pass,
+            'checks_pass':checks_pass,'supervisor_request':deepcopy(supervisor_request) if is_current else {},
         })
         phase['activity_state']=activity_state
         phase['activity']=activity
