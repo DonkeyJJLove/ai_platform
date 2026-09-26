@@ -198,7 +198,7 @@ def _question_meta(question):
 
 def supervisor_request_snapshot(conn,mission_id,phase_id,contract):
     rows=conn.execute(
-      "SELECT request_id,status,progress_state,created_at,expires_at,claimed_at,responded_at,response_digest,receipt_digest,question,transport,authority_effect "
+      "SELECT request_id,status,progress_state,created_at,expires_at,claim_expires_at,responded_at,response_digest,receipt_digest,question,transport,authority_effect "
       "FROM saas_handoff_requests WHERE mission_id=? ORDER BY created_at DESC",(mission_id,)
     ).fetchall()
     wanted_digest=contract.get("contract_digest")
@@ -211,7 +211,7 @@ def supervisor_request_snapshot(conn,mission_id,phase_id,contract):
       if status in {"SUPERSEDED","CANCELLED","FAILED","FAIL"}:continue
       value={
         "request_id":row["request_id"],"status":status,"progress_state":row["progress_state"],
-        "created_at":row["created_at"],"expires_at":row["expires_at"],"claimed_at":row["claimed_at"],
+        "created_at":row["created_at"],"expires_at":row["expires_at"],"claim_expires_at":row["claim_expires_at"],
         "responded_at":row["responded_at"],"transport":row["transport"],"authority_effect":"NONE",
       }
       if status=="RESPONDED" and row["progress_state"]=="RECEIPT_BOUND" and row["response_digest"] and row["receipt_digest"]:
