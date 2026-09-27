@@ -13,7 +13,7 @@ from tools.p0_moon_seven_binding_contract import (
     MoonSafeAttackSpec,MoonSevenBindingPlan,MoonSurfaceEvidenceBundle,
 )
 
-EXPECTED_SCAN_DIGEST="b1d455bd5edaae321e4e40ad64b0433b8800c860789a6050265dc82483658f0d"
+EXPECTED_SCAN_DIGEST="5bec1a6e8029d016eaaa06816114e344fa4c784bfa74909f2991a99011705be7"
 SEVEN=tuple(sorted(RECEIPT_IMPLIED_MOON_SURFACES))
 PERMISSION="dbff98ee0801784d8616fc32d67dfbb2ea19fbfcc1cfbda829cf904953f5631b"
 FENCE=set(SEVEN)-{PERMISSION}
