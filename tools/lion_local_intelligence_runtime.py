@@ -389,9 +389,12 @@ class OperatorControlBridge:
     def __call__(self,op,args):
         args=dict(args or {})
         if op=='pair':
-            pairing_code=args.get('pairing_code') or (_read_operator_local_secret(self.pairing_file) if self.pairing_file else None)
-            if not pairing_code:raise ValueError('operator pairing code unavailable')
-            return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            pairing_code=args.get('pairing_code')
+            if pairing_code:return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            challenge=self._request('/v1/session/pair/challenge',{},10)
+            challenge_id=challenge.get('challenge_id');code=challenge.get('pairing_code')
+            if not isinstance(challenge_id,str) or not isinstance(code,str):raise ValueError('operator pairing challenge unavailable')
+            return self._request('/v1/session/pair',{'challenge_id':challenge_id,'pairing_code':code},10)
         if op=='session':return self._request('/v1/session',session_token=args.get('session_token'))
         if op=='unpair':return self._request('/v1/session/revoke',{},10,session_token=args.get('session_token'))
         if op=='state':

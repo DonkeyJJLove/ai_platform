@@ -59,19 +59,20 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('Observe-OptionalFirefoxTransport',t)
         self.assertIn('optional_model_transport_8790=$FirefoxTransportActive',t)
         self.assertIn("--operator-panel-proxy-key-file",t)
-        self.assertIn("--operator-pairing-key-file",t)
-        self.assertIn("OPERATOR_PAIRING_KEY_MISSING",t)
+        self.assertNotIn("--operator-pairing-key-file",t)
+        self.assertNotIn("OPERATOR_PAIRING_KEY_MISSING",t)
         self.assertIn("$OperatorControlUrl = 'http://127.0.0.1:8767'",t)
 
-    def test_operator_pairing_uses_local_pairing_file_without_browser_secret_or_challenge_endpoint(self):
-        self.assertIn("_read_operator_local_secret(self.pairing_file)",self.runtime)
-        self.assertNotIn("/v1/session/pair/challenge",self.runtime)
+    def test_operator_pairing_uses_ephemeral_gateway_challenge_without_browser_secret(self):
+        self.assertIn("/v1/session/pair/challenge",self.runtime)
+        self.assertIn("'challenge_id':challenge_id,'pairing_code':code",self.runtime)
         self.assertIn("body:'{}'",self.ui)
         self.assertIn("PAIRING · lokalna obecność operatora",self.ui)
         self.assertNotIn('id="operatorPairing"',self.ui)
         self.assertIn("Aktywuj sterowanie operatorem",self.ui)
         self.assertIn("operator-panel-proxy.dpapi",self.supervisor)
-        self.assertIn(r"\\wsl.localhost\LION-AUTH-LAB\var\lib\sentinelx\uploads\lion-mission-control-v3\operator-pairing.key",self.supervisor)
+        self.assertNotIn("--operator-pairing-key-file",self.supervisor)
+        self.assertNotIn("OPERATOR_PAIRING_KEY_MISSING",self.supervisor)
 
     def test_optional_browser_transport_is_observed_not_managed(self):
         t=self.supervisor

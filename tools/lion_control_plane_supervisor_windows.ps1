@@ -5,7 +5,7 @@ param(
     [string]$Python = 'C:\Users\d2j3\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\python.exe',
     [string]$ModelRoot = 'C:\Users\d2j3\Documents\Codex\2026-09-10\napraw\outputs\moon-native',
     [string]$OperatorPanelProxyKey = 'C:\Users\d2j3\AppData\Local\LION\operator-control\operator-panel-proxy.dpapi',
-    [string]$OperatorPairingKey = '\\wsl.localhost\LION-AUTH-LAB\var\lib\sentinelx\uploads\lion-mission-control-v3\operator-pairing.key'
+    [string]$OperatorPairingKey = ''
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -143,16 +143,14 @@ function Ensure-Panel([hashtable]$RepoIdentity) {
         if ([IO.Path]::GetFullPath($p.ExecutablePath) -ne [IO.Path]::GetFullPath($Python)) { throw 'PORT_8780_FOREIGN_PROCESS' }
         if ($p.CommandLine -notmatch 'lion_local_intelligence_runtime\.py' -or $p.CommandLine -notmatch [regex]::Escape($Repo)) { throw 'PORT_8780_WRONG_RUNTIME' }
         if ($p.CommandLine -notmatch '--operator-panel-proxy-key-file' -or $p.CommandLine -notmatch [regex]::Escape($OperatorPanelProxyKey)) { throw 'PORT_8780_OPERATOR_BINDING_MISSING' }
-        if ($p.CommandLine -notmatch '--operator-pairing-key-file' -or $p.CommandLine -notmatch [regex]::Escape($OperatorPairingKey)) { throw 'PORT_8780_OPERATOR_PAIRING_BINDING_MISSING' }
         if (-not (Wait-Http ($PanelUrl + '/') 5)) { throw 'PANEL_8780_UNHEALTHY' }
         return [int]$p.ProcessId
     }
     if (-not (Test-Path -LiteralPath $OperatorPanelProxyKey)) { throw 'OPERATOR_PANEL_PROXY_KEY_MISSING' }
-    if (-not (Test-Path -LiteralPath $OperatorPairingKey)) { throw 'OPERATOR_PAIRING_KEY_MISSING' }
     $stamp=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')
     $out=Join-Path $Runtime ('supervised8780-' + $stamp + '.out.log')
     $err=Join-Path $Runtime ('supervised8780-' + $stamp + '.err.log')
-    $args=@((Join-Path $Repo 'tools\lion_local_intelligence_runtime.py'),'--repo',$Repo,'--model',$ModelUrl,'--model-sha',$ExpectedModelSha,'--port','8780','--material-runtime-dir',$MatRuntime,'--thread-db',$ThreadDb,'--mission-control-url',$MissionControlUrl,'--operator-control-url',$OperatorControlUrl,'--operator-panel-proxy-key-file',$OperatorPanelProxyKey,'--operator-pairing-key-file',$OperatorPairingKey)
+    $args=@((Join-Path $Repo 'tools\lion_local_intelligence_runtime.py'),'--repo',$Repo,'--model',$ModelUrl,'--model-sha',$ExpectedModelSha,'--port','8780','--material-runtime-dir',$MatRuntime,'--thread-db',$ThreadDb,'--mission-control-url',$MissionControlUrl,'--operator-control-url',$OperatorControlUrl,'--operator-panel-proxy-key-file',$OperatorPanelProxyKey)
     $proc=Start-Process -FilePath $Python -ArgumentList $args -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err -PassThru
     Write-Log ('PANEL_START pid=' + $proc.Id + ' head=' + $RepoIdentity.head + ' operator_control=8767')
     if (-not (Wait-Http ($PanelUrl + '/') 30)) { throw 'PANEL_START_TIMEOUT' }
