@@ -522,6 +522,8 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not isinstance(messages,list) or not messages:raise ValueError('local assignment messages')
             messages=[dict(m) for m in messages if isinstance(m,dict) and m.get('role') in {'system','user','assistant'} and isinstance(m.get('content'),str)]
             op_context=claimed.get('operator_context') or {};op_plan=claimed.get('operator_plan') or {};op_messages=claimed.get('operator_messages') or []
+            bound_message_ids=set(payload.get('operator_message_ids') or [])
+            if bound_message_ids:op_messages=[m for m in op_messages if isinstance(m,dict) and m.get('message_id') in bound_message_ids]
             operator_parts=[]
             if op_context.get('content') is not None:operator_parts.append('CONTEXT REVISION '+str(op_context.get('revision'))+': '+json.dumps(op_context.get('content'),ensure_ascii=False,sort_keys=True))
             if op_plan.get('content') is not None:operator_parts.append('PLAN REVISION '+str(op_plan.get('revision'))+': '+json.dumps(op_plan.get('content'),ensure_ascii=False,sort_keys=True))

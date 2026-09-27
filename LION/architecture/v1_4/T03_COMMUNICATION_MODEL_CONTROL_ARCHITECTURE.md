@@ -138,8 +138,23 @@ route to the shared local model and a current route to Mission Control. The
 worker status carrier exposes local-model capability, model-route currentness,
 Mission-Control-route currentness, container identity and worker identity.
 
-Current implementation scope of this candidate uses the local-model assignment
-path for protocol fanout participants. Existing Model Chat supports explicit
-LOCAL, SAAS and DUAL routing. Participant-level SaaS/DUAL protocol fanout is a
-remaining dependency and must not be inferred from Model Chat routing.
-Authority remains NONE for all cognition.
+Protocol cognition is frozen per recipient at message admission. Material
+workers are LOCAL-only cognitive executors. Logical drones accept LOCAL, SAAS or
+DUAL cognition routes; when no explicit route policy is supplied, material
+workers resolve to LOCAL and logical drones resolve to SAAS. Provider selection
+remains independent from participant identity and carries no authority.
+
+Each frozen participant owns one durable cognitive trajectory. LOCAL creates one
+participant-bound LOCAL_MODEL_INFERENCE assignment and model-call lineage. SAAS
+creates one participant-bound external handoff and reconciles only its returned
+receipt. DUAL creates two independent legs: a local assignment and a SaaS
+handoff, joined through the durable dual-result ledger. A DUAL participant
+delivery is not terminal until both legs exist and the joined result is
+reconciled. Ambiguous SaaS sends enter SEND_UNKNOWN-shaped trajectory states and
+are not blindly retried.
+
+PAUSE_SCOPE and STOP_SCOPE fence new cognitive admissions before routing.
+Participant responses retain the source fanout_id/recipient_set_digest lineage
+through the source message, preserve causation_id and correlation_id, and can
+satisfy only the exact participant delivery. Authority remains NONE for all
+cognition.
