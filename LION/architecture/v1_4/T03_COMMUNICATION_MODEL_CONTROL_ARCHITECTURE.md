@@ -78,3 +78,68 @@ UI controls are disabled until pairing is confirmed, and backend submission inde
 - PR358 provider-selector semantics are superseded for normal communication; retained context, pairing, model-route diagnostics and browser opt-in requirements remain.
 - PR348 backup and PR353 execution-currentness semantics are integrated.
 - local R3 Firefox mediation is retained only as optional Model Plane transport.
+
+## R24 model-chat / protocol-fanout refinement
+
+Task: LION-R24-MODEL-CHAT-PROTOCOL-SWARM-COGNITIVE-FANOUT-R1.
+
+The operator UI now distinguishes two user-visible conversational surfaces:
+
+~~~text
+HUMAN MODEL CHAT
+→ explicit LOCAL | SAAS | DUAL model route
+→ Model Plane
+→ response in model-chat thread
+
+OPERATOR / SYSTEM PROTOCOL
+→ mission | swarm | group | drone | worker target
+→ frozen exact recipient set
+→ participant-level cognitive trajectory
+→ correlated participant response
+→ Protocol Channel
+~~~
+
+The canonical separation is:
+
+~~~text
+MODEL_CHAT
+!=
+PROTOCOL_COMMUNICATION
+!=
+AUTHORITY_CONTROL
+~~~
+
+A model is a cognitive backend, not a participant identity. A material worker is
+an execution substrate, not a logical drone. The three axes are independent:
+
+~~~text
+PARTICIPANT_IDENTITY
+!=
+EXECUTION_SUBSTRATE
+!=
+MODEL_PROVIDER
+~~~
+
+Protocol broadcast freezes recipient_set_digest and fanout_id when the operator
+message is admitted. A participant joining later does not enter the existing
+fanout. Each frozen recipient has one delivery and one independent cognitive
+trajectory. One worker result can acknowledge only the responding_participant_id
+carried by that assignment; it cannot mark both a logical drone and a material
+worker as answered.
+
+Canonical protocol identities are drone:<LD...> for logical drones and
+worker:<MD...> for material workers. Historical drone:<MD...> input may be
+accepted only as a compatibility alias; newly materialized deliveries and
+responses use the canonical class-specific identity.
+
+R24 material workers remain deterministic container orchestration. They do not
+carry independent model weights. Every cognitively ready worker proves a current
+route to the shared local model and a current route to Mission Control. The
+worker status carrier exposes local-model capability, model-route currentness,
+Mission-Control-route currentness, container identity and worker identity.
+
+Current implementation scope of this candidate uses the local-model assignment
+path for protocol fanout participants. Existing Model Chat supports explicit
+LOCAL, SAAS and DUAL routing. Participant-level SaaS/DUAL protocol fanout is a
+remaining dependency and must not be inferred from Model Chat routing.
+Authority remains NONE for all cognition.

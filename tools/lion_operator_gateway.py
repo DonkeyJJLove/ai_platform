@@ -22,7 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from cyber_lion.mission_control import operator_control, operator_swarm_session
+from cyber_lion.mission_control import operator_control, operator_swarm_session, global_scheduler, execution_driver
 
 DEFAULT_DB = "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db"
 DEFAULT_KEY = "/var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key"
@@ -183,7 +183,120 @@ class Runtime:
         finally:c.close()
         if value.get('action') in operator_control.CONTROL_ACTIONS or value.get('action')=='REASSIGN':
             self.persist_floor(value['mission_id'])
+        if value.get('action')=='MESSAGE':
+            result=out.get('result') if isinstance(out,dict) else None
+            message_id=result.get('message_id') if isinstance(result,dict) else None
+            if message_id:
+                try:out['protocol_fanout']=dispatch_protocol_message(self,message_id)
+                except Exception as exc:out['protocol_fanout']={'state':'PARTIAL','error':type(exc).__name__+':'+str(exc),'authority_effect':'NONE'}
         return self.try_resume_driver(out) if value.get('action')=='RESUME_SCOPE' else out
+
+
+def _assignment_payload(row):
+    try:return json.loads(row['input_json'] or '{}')
+    except Exception:return {}
+
+
+def _existing_protocol_assignment(conn,message_id,participant_id):
+    for row in conn.execute("SELECT assignment_id,input_json,state FROM mission_execution_assignments WHERE input_json LIKE ? ORDER BY created_at",('%'+message_id+'%',)):
+        payload=_assignment_payload(row)
+        if payload.get('purpose')=='PROTOCOL_FANOUT_R1' and payload.get('protocol_message_id')==message_id and payload.get('responding_participant_id')==participant_id:
+            return {'assignment_id':row['assignment_id'],'state':row['state']}
+    return None
+
+
+def _execution_binding(conn,mission_id,participant_id):
+    if participant_id.startswith('worker:'):
+        material=participant_id.split(':',1)[1]
+        row=conn.execute("SELECT logical_drone_id FROM mission_execution_assignments WHERE mission_id=? AND material_drone_id=? AND phase_id='__TOPOLOGY__' ORDER BY created_at LIMIT 1",(mission_id,material)).fetchone()
+        logical=(row['logical_drone_id'] if row else None) or ('MATERIAL_'+material)
+        return logical,material
+    if participant_id.startswith('drone:'):
+        logical=participant_id.split(':',1)[1]
+        row=conn.execute("SELECT material_drone_id FROM mission_execution_assignments WHERE mission_id=? AND logical_drone_id=? AND material_drone_id IS NOT NULL ORDER BY CASE WHEN phase_id='__TOPOLOGY__' THEN 0 ELSE 1 END,created_at LIMIT 1",(mission_id,logical)).fetchone()
+        if row and row['material_drone_id']:return logical,row['material_drone_id']
+        # Compatibility for small in-memory/operator tests where material_workers
+        # carries the logical mapping directly.
+        cols={r['name'] for r in conn.execute('PRAGMA table_info(material_workers)')}
+        if {'mission_id','pod_name','logical_id'}.issubset(cols):
+            row=conn.execute("SELECT pod_name FROM material_workers WHERE mission_id=? AND logical_id=? ORDER BY pod_name LIMIT 1",(mission_id,logical)).fetchone()
+            if row and row['pod_name']:return logical,row['pod_name']
+        raise ValueError('logical participant has no material execution substrate: '+participant_id)
+    raise ValueError('unsupported protocol participant: '+str(participant_id))
+
+
+def dispatch_protocol_message(runtime: Runtime,message_id: str) -> dict:
+    c=runtime.connect()
+    try:
+        msg=c.execute("SELECT message_id,mission_id,content,fanout_id,recipient_set_digest,state FROM operator_messages WHERE message_id=?",(message_id,)).fetchone()
+        if msg is None:raise ValueError('protocol message not found')
+        control=operator_control.control_state(c,msg['mission_id'],now)
+        if control and (bool(control['pause_latch']) or bool(control['stop_latch'])):
+            return {'state':'FENCED','created':0,'existing':0,'pending':0,'authority_effect':'NONE'}
+        driver=c.execute("SELECT generation,current_phase,state FROM mission_execution_drivers WHERE mission_id=?",(msg['mission_id'],)).fetchone()
+        if driver is None:raise ValueError('mission execution driver unavailable')
+        if driver['state'] not in {'ACTIVE','WAITING','BLOCKED'}:raise ValueError('mission driver not dispatchable')
+        dispatch_authority=operator_control.PRIMARY_OPERATOR if control and control['control_owner']==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
+        rows=c.execute("SELECT recipient,delivery_state FROM operator_message_deliveries WHERE message_id=? ORDER BY recipient",(message_id,)).fetchall()
+        created=[];existing=[];failed=[]
+        for delivery in rows:
+            participant=delivery['recipient']
+            if delivery['delivery_state']=='APPLIED':continue
+            prior=_existing_protocol_assignment(c,message_id,participant)
+            if prior:
+                existing.append({'participant_id':participant,**prior});continue
+            try:
+                logical,material=_execution_binding(c,msg['mission_id'],participant)
+                payload={
+                    'kind':'LOCAL_MODEL_INFERENCE',
+                    'purpose':'PROTOCOL_FANOUT_R1',
+                    'conversation_protocol_version':4,
+                    'protocol_message_id':message_id,
+                    'fanout_id':msg['fanout_id'],
+                    'recipient_set_digest':msg['recipient_set_digest'],
+                    'responding_participant_id':participant,
+                    'cognition_route':'LOCAL',
+                    'model_capability':'LOCAL_MODEL_INFERENCE',
+                    'operator_message_ids':[message_id],
+                    'messages':[{'role':'user','content':msg['content']}],
+                    'max_tokens':384,
+                    'authority_effect':'NONE',
+                }
+                participant_phase='PROTO_'+operator_control.digest({'message_id':message_id,'participant_id':participant})[:24]
+                aid=global_scheduler.create_assignment(c,msg['mission_id'],participant_phase,logical,material,payload,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
+                created.append({'participant_id':participant,'assignment_id':aid,'logical_drone_id':logical,'material_worker_id':material,'cognition_route':'LOCAL'})
+            except Exception as exc:
+                failed.append({'participant_id':participant,'error':type(exc).__name__+':'+str(exc)})
+        state='COMPLETE_DISPATCH' if not failed and len(created)+len(existing)==len([r for r in rows if r['delivery_state']!='APPLIED']) else 'PARTIAL'
+        return {'state':state,'message_id':message_id,'fanout_id':msg['fanout_id'],'expected':len(rows),'created':created,'existing':existing,'failed':failed,'authority_effect':'NONE'}
+    finally:c.close()
+
+
+def reconcile_protocol_fanout_once(runtime: Runtime) -> dict:
+    c=runtime.connect()
+    try:
+        rows=c.execute("""SELECT DISTINCT m.message_id
+                         FROM operator_messages m
+                         JOIN operator_message_deliveries d ON d.message_id=m.message_id
+                         WHERE m.kind='MESSAGE' AND m.state IN ('PENDING','PARTIAL')
+                           AND d.delivery_state!='APPLIED'
+                         ORDER BY m.created_at,m.message_id LIMIT 64""").fetchall()
+        ids=[r['message_id'] for r in rows]
+    finally:c.close()
+    created=existing=failed=0
+    for mid in ids:
+        try:
+            out=dispatch_protocol_message(runtime,mid)
+            created+=len(out.get('created') or []);existing+=len(out.get('existing') or []);failed+=len(out.get('failed') or [])
+        except Exception:failed+=1
+    return {'messages':len(ids),'created':created,'existing':existing,'failed':failed,'authority_effect':'NONE'}
+
+
+def protocol_fanout_loop(runtime: Runtime):
+    while True:
+        try:reconcile_protocol_fanout_once(runtime)
+        except Exception:pass
+        time.sleep(0.75)
 
 
 def reconcile_active_swarm_sessions_once(runtime: Runtime) -> dict:
@@ -337,20 +450,6 @@ def make_handler(runtime: Runtime):
                     finally:c.close()
                 principal=self.auth()
                 if path=='/v1/commands':
-                    if principal==operator_control.PRIMARY_OPERATOR and isinstance(value,dict) and value.get('action')=='MESSAGE':
-                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''))
-                        c=runtime.connect()
-                        try:
-                            active=operator_swarm_session.active_session(c,principal,now)
-                            if active and active.get('session',{}).get('mission_id')==mission_id:
-                                sid=active['session']['session_id'];members=active.get('members') or []
-                                if target in {'mission:'+mission_id,'swarm:'+mission_id}:
-                                    primary=next((m.get('participant_id') for m in members if m.get('member_kind')=='MATERIAL_WORKER' and m.get('role')=='PRIMARY' and m.get('state')=='ACTIVE'),None)
-                                    if not primary:raise ValueError('swarm primary worker unavailable')
-                                    target=primary
-                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST')
-                                return self.reply({'schema':'lion.operator-command-swarm-route/v1','mission_id':mission_id,'session_id':sid,'round_id':sent.get('round_id'),'message':sent.get('message'),'assignments':sent.get('assignments') or [],'admission_state':'ACCEPTED','execution_state':'DISPATCHED','observation_state':'PERSISTED','authority_effect':'NONE','idempotent':bool(sent.get('idempotent'))},201)
-                        finally:c.close()
                     return self.reply(runtime.apply(value,principal_id=principal),201)
                 if path=='/v1/events/ack':
                     if set(value)!={'consumer_id','mission_id','event_id'}:raise ValueError('ack schema')
@@ -377,6 +476,7 @@ def main():
     if a.host not in {'127.0.0.1','::1'}:raise SystemExit('operator gateway must remain loopback-only')
     runtime=Runtime(Path(a.db),Path(a.key_file),Path(a.proxy_key_file),Path(a.panel_proxy_key_file),Path(a.pairing_key_file),Path(a.epoch_floor),a.mission_control_url,bootstrap_primary=a.bootstrap_primary)
     threading.Thread(target=swarm_reconcile_loop,args=(runtime,),daemon=True,name='operator-swarm-reconciler').start()
+    threading.Thread(target=protocol_fanout_loop,args=(runtime,),daemon=True,name='operator-protocol-fanout-reconciler').start()
     FleetThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
 
 

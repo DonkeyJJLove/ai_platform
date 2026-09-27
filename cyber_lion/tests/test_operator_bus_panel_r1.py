@@ -102,8 +102,13 @@ class PanelBusHttpIntegrationTests(unittest.TestCase):
             store=ThreadStore(Path(td)/'threads.db')
             class FakeGateway:
                 def __init__(self):
-                    self.thread_provider=store;self.messages=[];self.commands=[]
+                    self.thread_provider=store;self.messages=[];self.commands=[];self.model_calls=[]
                     self.control_provider=self.control;self.operator_provider=self.operator
+                def chat(self,message,history=None,output_language='auto',use_web=False):
+                    from cyber_lion.app_coordination.saas_handoff_extension import ROUTE_CONTEXT
+                    route=ROUTE_CONTEXT.get()
+                    self.model_calls.append({'message':message,'history':history or [],'route':route})
+                    return {'route':route+'_MODEL_ONLY','answer':route+':'+message,'authority_boundary':False,'rag_sources':[],'currentness':[],'web_sources':[],'web_fetches':[],'source_evidence':[],'tool_calls':[],'material_receipts':[]}
                 def control(self,op,args):
                     if op=='process':return {'process':{'mission_id':args['mission_id'],'state':'RUNNING'}}
                     raise AssertionError((op,args))
@@ -133,9 +138,15 @@ class PanelBusHttpIntegrationTests(unittest.TestCase):
                 status,sent=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(g.commands[0]['correlation_id'],tid);self.assertEqual(g.commands[0]['target'],'drone:MD025')
                 status,sent2=req('/api/threads/'+tid+'/bus',{'content':'status now','client_id':client_id},csrf);self.assertEqual(status,201);self.assertEqual(g.commands[0]['command_id'],g.commands[1]['command_id'])
                 status,view=req('/api/threads/'+tid+'/bus');self.assertEqual(status,200);self.assertEqual(view['messages'][0]['correlation_id'],tid);self.assertEqual(view['messages'][0]['content'],'status now')
-                try:req('/api/threads/'+tid+'/chat',{'message':'must not route','route':'SAAS'})
-                except urllib.error.HTTPError as exc:self.assertEqual(exc.code,410);self.assertIn('SUPERSEDED_BY_LION_BUS',exc.read().decode())
-                else:self.fail('legacy chat route must be gone')
+                before=len(g.commands)
+                for route in ('LOCAL','SAAS','DUAL'):
+                    status,chat=req('/api/threads/'+tid+'/chat',{'message':'model '+route.lower(),'route':route})
+                    self.assertEqual(status,201);self.assertEqual(chat['surface'],'MODEL_CHAT');self.assertEqual(chat['model_route'],route)
+                    self.assertEqual(len(g.commands),before)
+                    self.assertEqual(g.model_calls[-1]['route'],route)
+                status,thread_data=req('/api/threads/'+tid)
+                self.assertEqual([m['role'] for m in thread_data['messages']],['user','assistant']*3)
+                self.assertEqual(thread_data['messages'][-1]['content'],'DUAL:model dual')
             finally:
                 server.shutdown();server.server_close();thread.join(timeout=2)
 

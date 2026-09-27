@@ -11,13 +11,15 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         cls.supervisor=(ROOT/'tools/lion_control_plane_supervisor_windows.ps1').read_text(encoding='utf-8')
         cls.client=(ROOT/'tools/lion_operator_client.py').read_text(encoding='utf-8')
 
-    def test_main_composer_is_shared_bus_not_provider_route(self):
+    def test_main_composer_is_model_chat_and_protocol_bus_is_separate(self):
         t=self.ui
-        self.assertIn('SHARED OPERATOR MESSAGE PLANE',t)
-        self.assertIn('LION BUS · SENTINELX',t)
+        self.assertIn('PROTOCOL COMMUNICATION PLANE',t)
+        self.assertIn('LION BUS · PROTOKÓŁ ROJU',t)
         self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",t)
-        self.assertIn("'SUPERSEDED_BY_LION_BUS'",t)
-        self.assertNotIn('<select id="composerRoute"',t)
+        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/chat'",t)
+        self.assertIn('id="modelRoute"',t)
+        self.assertIn('MODEL CHAT',t)
+        self.assertNotIn("'SUPERSEDED_BY_LION_BUS'",t)
         self.assertNotIn('Otwórz Firefox Mediator',t)
         self.assertNotIn('id="saasBridgePanel"',t)
         self.assertNotIn('refreshFirefoxMediator',t)
