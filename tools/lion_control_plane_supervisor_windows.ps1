@@ -4,8 +4,8 @@ param(
     [string]$Runtime = 'C:\Users\d2j3\Documents\Codex\2026-09-13\r10-r2-unified\runtime',
     [string]$Python = 'C:\Users\d2j3\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\python.exe',
     [string]$ModelRoot = 'C:\Users\d2j3\Documents\Codex\2026-09-10\napraw\outputs\moon-native',
-    [string]$OperatorPanelProxyKey = 'C:\Users\d2j3\AppData\Local\LION\secrets\operator-panel-proxy.key',
-    [string]$OperatorPairingKey = 'C:\Users\d2j3\AppData\Local\LION\secrets\operator-pairing.key'
+    [string]$OperatorPanelProxyKey = 'C:\Users\d2j3\AppData\Local\LION\operator-control\operator-panel-proxy.dpapi',
+    [string]$OperatorPairingKey = '\\wsl.localhost\LION-AUTH-LAB\var\lib\sentinelx\uploads\lion-mission-control-v3\operator-pairing.key'
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest

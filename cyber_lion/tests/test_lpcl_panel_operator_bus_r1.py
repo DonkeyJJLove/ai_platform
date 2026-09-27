@@ -63,6 +63,16 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn("OPERATOR_PAIRING_KEY_MISSING",t)
         self.assertIn("$OperatorControlUrl = 'http://127.0.0.1:8767'",t)
 
+    def test_operator_pairing_uses_local_pairing_file_without_browser_secret_or_challenge_endpoint(self):
+        self.assertIn("_read_operator_local_secret(self.pairing_file)",self.runtime)
+        self.assertNotIn("/v1/session/pair/challenge",self.runtime)
+        self.assertIn("body:'{}'",self.ui)
+        self.assertIn("PAIRING · lokalna obecność operatora",self.ui)
+        self.assertNotIn('id="operatorPairing"',self.ui)
+        self.assertIn("Aktywuj sterowanie operatorem",self.ui)
+        self.assertIn("operator-panel-proxy.dpapi",self.supervisor)
+        self.assertIn(r"\\wsl.localhost\LION-AUTH-LAB\var\lib\sentinelx\uploads\lion-mission-control-v3\operator-pairing.key",self.supervisor)
+
     def test_optional_browser_transport_is_observed_not_managed(self):
         t=self.supervisor
         self.assertIn('Process-For-Port 8790',t)
