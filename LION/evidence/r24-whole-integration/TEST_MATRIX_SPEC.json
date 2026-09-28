@@ -1,0 +1,247 @@
+{
+  "schema": "lion.r24.integration-test-matrix-spec/v1",
+  "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
+  "tests": [
+    {
+      "id": "T01",
+      "name": "UNBOUND LOCAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_local_request_has_complete_identity_and_independent_provider_session"
+    },
+    {
+      "id": "T02",
+      "name": "UNBOUND SAAS",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_saas_request_uses_distinct_broker_identity_and_delivers_later"
+    },
+    {
+      "id": "T03",
+      "name": "UNBOUND DUAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_dual_freezes_one_context_and_dispatches_saas_before_local_without_hidden_state"
+    },
+    {
+      "id": "T04",
+      "name": "MISSION_BOUND LOCAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_mission_bound_local_saas_and_dual_routes_preserve_binding_identity"
+    },
+    {
+      "id": "T05",
+      "name": "MISSION_BOUND SAAS",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_mission_bound_local_saas_and_dual_routes_preserve_binding_identity"
+    },
+    {
+      "id": "T06",
+      "name": "MISSION_BOUND DUAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_mission_bound_local_saas_and_dual_routes_preserve_binding_identity"
+    },
+    {
+      "id": "T07",
+      "name": "BIND creates isolated successor",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_domain.R24ConversationDomainTests.test_bind_and_detach_create_successors_and_freeze_predecessors"
+    },
+    {
+      "id": "T08",
+      "name": "DETACH creates clean UNBOUND successor",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_domain.R24ConversationDomainTests.test_bind_and_detach_create_successors_and_freeze_predecessors"
+    },
+    {
+      "id": "T09",
+      "name": "two simultaneous conversations same mission",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_domain.R24ConversationDomainTests.test_simultaneous_same_mission_conversations_remain_distinct"
+    },
+    {
+      "id": "T10",
+      "name": "native SaaS LION_EVOLUSION thread independent",
+      "evidence_class": "contract",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_identity_contract.R24ConversationIdentityContractTests.test_native_saas_project_thread_requires_bridge_and_cannot_be_conversation_identity"
+    },
+    {
+      "id": "T11",
+      "name": "explicit SaaS bridge",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_domain.R24ConversationDomainTests.test_lane_and_external_bridge_are_explicit_and_idempotent"
+    },
+    {
+      "id": "T12",
+      "name": "delayed real SaaS response correct UI thread",
+      "evidence_class": "live_evidence",
+      "evidence_ref": "REAL_MODEL_EVIDENCE.json#saas + HUMAN_GATE_EVIDENCE.json#H3"
+    },
+    {
+      "id": "T13",
+      "name": "UI disconnect/reconnect no duplicate",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_delivery_cursor_survives_reconnect_and_suppresses_duplicates"
+    },
+    {
+      "id": "T14",
+      "name": "switch active conversation while SaaS pending",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_switching_conversations_cannot_redirect_delayed_response"
+    },
+    {
+      "id": "T15",
+      "name": "single logical drone LOCAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_dual_route_does_not_close_delivery_until_join"
+    },
+    {
+      "id": "T16",
+      "name": "single logical drone SAAS",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_explicit_mixed_routes_materialize_saas_dual_and_local_legs"
+    },
+    {
+      "id": "T17",
+      "name": "single logical drone DUAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_dual_route_does_not_close_delivery_until_join"
+    },
+    {
+      "id": "T18",
+      "name": "single material worker LOCAL",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_default_routes_logical_saas_and_material_local_are_frozen"
+    },
+    {
+      "id": "T19",
+      "name": "4 logical + 4 material => 8 independent trajectories/reconciliations",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_four_logical_four_material_produce_eight_independent_reconciliations"
+    },
+    {
+      "id": "T20",
+      "name": "participant timeout",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_saas_participant_timeout_terminalizes_its_exact_trajectory"
+    },
+    {
+      "id": "T21",
+      "name": "participant failure",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_explicit_local_participant_failure_terminalizes_exact_delivery"
+    },
+    {
+      "id": "T22",
+      "name": "STOP during cognition",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_stop_fences_new_cognitive_assignments"
+    },
+    {
+      "id": "T23",
+      "name": "PAUSE during cognition",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_pause_after_claim_marks_explicit_cancellation_requested"
+    },
+    {
+      "id": "T24",
+      "name": "DUAL local-leg failure",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_dual_local_leg_failure_terminalizes_participant"
+    },
+    {
+      "id": "T25",
+      "name": "DUAL SaaS-leg failure",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_dual_saas_leg_failure_terminalizes_participant"
+    },
+    {
+      "id": "T26",
+      "name": "active migration EXACT_ATTRIBUTABLE",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_backfill.R24ConversationBackfillTests.test_exact_attributable_migration_preserves_provenance_without_fabrication"
+    },
+    {
+      "id": "T27",
+      "name": "active migration AMBIGUOUS",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_backfill.R24ConversationBackfillTests.test_ambiguous_history_apply_creates_no_canonical_messages"
+    },
+    {
+      "id": "T28",
+      "name": "run backfill twice",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_backfill.R24ConversationBackfillTests.test_apply_requires_h4_allowlist_and_is_idempotent"
+    },
+    {
+      "id": "T29",
+      "name": "interrupted backfill + resume",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_backfill.R24ConversationBackfillTests.test_per_mission_atomicity_and_resume"
+    },
+    {
+      "id": "T30",
+      "name": "rollback after partial mission cutover",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_backfill.R24ConversationBackfillTests.test_partial_cutover_has_working_preapply_rollback_snapshot"
+    },
+    {
+      "id": "T31",
+      "name": "cross-conversation injection",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_cross_conversation_response_injection_is_denied"
+    },
+    {
+      "id": "T32",
+      "name": "cross-mission injection",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_cross_mission_target_injection_is_denied_before_fanout"
+    },
+    {
+      "id": "T33",
+      "name": "cross-lane injection",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_cross_lane_provider_injection_is_denied"
+    },
+    {
+      "id": "T34",
+      "name": "wrong participant response",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_protocol_cognitive_fanout.R24ProtocolCognitiveFanoutTests.test_wrong_participant_response_is_rejected_without_delivery_mutation"
+    },
+    {
+      "id": "T35",
+      "name": "stale provider response",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_stale_conflicting_provider_response_is_denied"
+    },
+    {
+      "id": "T36",
+      "name": "duplicate delivery",
+      "evidence_class": "unit",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_delivery_cursor_survives_reconnect_and_suppresses_duplicates"
+    },
+    {
+      "id": "T37",
+      "name": "authority_effect verification",
+      "evidence_class": "contract",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_identity_contract.R24ConversationIdentityContractTests.test_schema_declares_complete_identity_invariants_and_target_entities"
+    },
+    {
+      "id": "T38",
+      "name": "package/currentness/truth-plane verification",
+      "evidence_class": "gate",
+      "evidence_ref": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1"
+    },
+    {
+      "id": "T39",
+      "name": "browser refresh/restart/reconnect",
+      "evidence_class": "unit+human",
+      "evidence_ref": "cyber_lion.tests.test_r24_conversation_model_chat.R24ConversationModelChatTests.test_delivery_cursor_persists_across_threadstore_restart + HUMAN_GATE_EVIDENCE.json#H3"
+    },
+    {
+      "id": "T40",
+      "name": "existing mission continues after migration",
+      "evidence_class": "live_evidence",
+      "evidence_ref": "T40_MISSION_CONTINUITY_EVIDENCE.json"
+    }
+  ],
+  "authority_effect": "NONE"
+}

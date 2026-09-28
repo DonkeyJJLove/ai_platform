@@ -1,0 +1,132 @@
+{
+  "schema": "lion.r24.active-mission-mapping/v1",
+  "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
+  "migration_version": "r24-conversation-backfill-v1",
+  "applied_at": "2026-09-28T16:12:18Z",
+  "entries": [
+    {
+      "mission_id": "LION-AUTO-107121D664EC0696A50C71DD",
+      "conversation_id": "conv-mig-94b819c38342521695e28d6499a94292",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "c4147e37ae0615b5371b6eff6d67b7be58d1b9a28bbc341d6439c273d9fb6c00",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-AUTO-378E9195A27E4B5190675B80",
+      "conversation_id": "conv-mig-94b88b62784154368cd4f536812eaa10",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "2e640083f8776e90480520764277f9ae88e2a777d74a03699793198462a60b31",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-AUTO-PAINT-16L8M-R1",
+      "conversation_id": "conv-mig-67e500a4d28d573cb9a7cdd3f5868dd6",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "ee60e432946ecfe5d28a6ba633ad798abf333416c493589f24dbffd3fbc22cb0",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-CONTROL-LPCL-PANEL-SAAS-E2E-DELIVERY-CLOSURE-R2",
+      "conversation_id": "conv-mig-982166f73a36581db5ea97a75612b3c5",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "c91a38c5ab07deddd0b3b92edd535670b4c4f20bf3a01a0e0f305f30838f8138",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-CONTROL-LPCL-PANEL-SAAS-E2E-DELIVERY-CLOSURE-R3",
+      "conversation_id": "conv-mig-b1d044d93bc55ec396ec9f625a3a9262",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "7f1a39a562a756ebf3cf52bae14affceafacf466596f401cb8dddd35a4f76aa8",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-OMEGA-BENCH-20260924-192004-841B56",
+      "conversation_id": "conv-mig-07ca6f01993152ef92d0f9d7b298e014",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "a8dc4e1332f58df7801654f31b8d36900dcbeae765cfd574421015c2c1eaff8d",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-BOUNDED-MUTATION-SUBSTRATE-BOOTSTRAP-R1",
+      "conversation_id": "conv-mig-d30a469ea4425c2b99944186c1d81e15",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "cae07d9a479448542db5f5c3cde170535cc182428d5103630ddb25be81adae45",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-BOUNDED-MUTATION-SUBSTRATE-BOOTSTRAP-R2",
+      "conversation_id": "conv-mig-747308e5d3f157abbd28f0bed28977aa",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "2f4657d688688d98a05cd5127e8f4deb45bd3fca360cafa59c81060fa35c87e4",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-EPOCH-CLOSURE-SUPERVISOR-R1",
+      "conversation_id": "conv-mig-f890d287cea85f9eb5a98c592bf35e57",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "a3debb28363a0f18a71703ae62d157b620c138b54ba1f32bd96a5119ec35834e",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-FULL-CONTROL-PLANE-FEDERATION-64L32M-R1",
+      "conversation_id": "conv-mig-c79d691cd4ed529a99fa042265692692",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "78ecb50cc2979c49935c83ea78e12681e768841ae79551ca29c291cc58b7dcce",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-PR381-CI-CLOSURE-64L32M-R1",
+      "conversation_id": "conv-mig-ad1b7d67d4525518822368ce496932ef",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "0d282f31e55354faaeaaa7301f166a238a1f9b10e231b103a944503a01887cf5",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-PR381-CI-CLOSURE-64L32M-R2",
+      "conversation_id": "conv-mig-cd158491be2d589fbec12059005ac99b",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "40c374be9b34ebb2494da82b3c9953df583e81aa38d31d0607b4be341b3dca29",
+      "authority_effect": "NONE"
+    },
+    {
+      "mission_id": "LION-R24-PROTOCOL-COGNITIVE-FANOUT-CANARY-R1",
+      "conversation_id": "conv-mig-47ad1f42bfd3584da0f07472a02e9560",
+      "binding_epoch": 1,
+      "binding_state": "BOUND",
+      "history_classification": "ABSENT",
+      "source_digest": "7f921f89f96262521033555c195f5b9bf7d0e211490d35322d5cf5ff2e670c4f",
+      "authority_effect": "NONE"
+    }
+  ],
+  "excluded": [
+    {
+      "mission_id": "legacy::vkt-r3-live",
+      "reason": "H4_REVIEW_LEGACY_RECORDED_MISSION_NOT_APPROVED"
+    }
+  ],
+  "authority_effect": "NONE"
+}

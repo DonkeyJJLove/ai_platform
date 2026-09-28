@@ -56,7 +56,15 @@ function participants(value,run){table('participants',['Participant ID','Role','
 function artifacts(value,id){table('artifacts',['Artifact ID','Type','Run ID','Origin','Path / reference','Digest','Created at','Verification state'],(value||[]).map(a=>[a.artifact_id,a.type??a.artifact_type,a.run_id??id,a.origin??a.evidence_class,a.path??a.reference,a.sha256??a.digest,stamp(a.created_at??a.timestamp),a.verification_state??a.verification_status]))}
 function receipts(value,id){table('receipts',['Receipt ID','Run ID','Presence','Operation','Reported status','Effect observed','Reconciliation complete','Path / reference','Digest','Created at'],(value||[]).map(r=>[r.receipt_id,r.run_id??id,'RECEIPT_PRESENT',r.operation,r.status,r.effect_observed,r.reconciliation_complete,r.path??r.reference,r.sha256??r.digest,stamp(r.created_at??r.timestamp)]))}
 async function detail(id,silent=false){const generation=++detailGeneration;if(selectedRunId!==id)selectedChannel='ALL';selectedRunId=id;if(!silent){$('detail').hidden=true;$('empty').hidden=true;$('detailState').textContent='Loading selected run…';renderRuns();$('runDetail').scrollIntoView?.({behavior:'smooth',block:'start'})}try{const [r,e,m,p,a,rc]=await Promise.all(['','/events','/metrics','/participants','/artifacts','/receipts'].map(s=>get('/api/runs/'+encodeURIComponent(id)+s)));if(generation!==detailGeneration||selectedRunId!==id)return;const run=r.run;if(!run)throw new Error('Run unavailable');$('empty').hidden=true;$('detail').hidden=false;$('detailState').textContent='Recorded run evidence · '+id;renderChips('identity',{run_id:run.run_id,process_language:run.process_language,process_class:run.process_class,adapter_type:run.adapter_type,recorded_status:run.status,observation_status:latestObservations[run.run_id]?.observation_status,heartbeat_status:latestObservations[run.run_id]?.heartbeat_status,phase:run.phase,host:run.host,runtime:run.runtime,namespace:run.namespace});renderChips('source',run.source);renderChips('target',run.target);renderChips('authority',run.authority);renderChips('timeline',{started_at:stamp(run.started_at),finished_at:stamp(run.finished_at),duration_seconds:run.duration??'UNKNOWN'});table('events',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(e.events||[]));table('phases',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows((e.events||[]).filter(x=>['PHASE_STARTED','PHASE_COMPLETED'].includes(x.event_type))));$('adapterTitle').textContent=run.adapter_type==='VKT_R3'?'Vulnerability Knowledge Test':run.adapter_type==='OSS_REPOSITORY_TEST'?'OSS repository test':known(run.adapter_type);const metricValues={...(run.metrics||{}),...(m.metrics||{})};delete metricValues.drone_pods;renderChips('metrics',metricValues);participants({...run.participants,...p.participants},run);artifacts(a.artifacts,id);receipts(rc.receipts,id);renderChips('cleanup',run.cleanup);renderChips('verification',{verification_status:run.verification_status,evidence:run.evidence});renderPassiveEvidence(run,e.events||[]);renderRunObservations(run,e.events||[])}catch(error){if(generation!==detailGeneration)return;$('detail').hidden=true;$('detailState').textContent='UNKNOWN — selected run could not be refreshed. '+error.message}}
-function environment(summary,adapters){$('adapters').textContent=(adapters.adapters||[]).map(a=>`${a.adapter_id} · ${(a.supported_process_classes||[]).join(', ')} · observation only`).join(' | ')||'No registered adapters reported.';$('hosts').textContent=[...new Set(allRuns.map(r=>r.host).filter(Boolean))].join(', ')||'UNKNOWN';$('currentness').textContent='API read at '+new Date().toISOString()+'. Runtime currentness: '+(summary.fleet?.currentness??'UNKNOWN')+'. '+(summary.observation?('Reason: '+summary.observation.reason+'; poll age: '+known(summary.observation.age_seconds)+' s; last success: '+stamp(summary.observation.success_at)):(summary.error||'API availability does not establish readiness.'));if(summary.observation?.adapters){const reasons=Object.entries(summary.observation.adapters).filter(([,v])=>v.empty_reason).map(([k,v])=>k+': '+v.empty_reason);if(reasons.length)$('currentness').textContent+='; '+reasons.join(' | ')}$('health').textContent=summary.ok?'API AVAILABLE':'DEGRADED';$('health').className='pill '+(summary.ok?'':'tone-warn')}
+function environment(summary,adapters){
+  $('adapters').textContent=(adapters.adapters||[]).map(a=>`${a.adapter_id} · ${(a.supported_process_classes||[]).join(', ')} · observation only`).join(' | ')||'No registered adapters reported.';
+  $('hosts').textContent=[...new Set(allRuns.map(r=>r.host).filter(Boolean))].join(', ')||'UNKNOWN';
+  $('currentness').textContent='API read at '+new Date().toISOString()+'. Runtime currentness: '+(summary.fleet?.currentness??'UNKNOWN')+'. '+(summary.observation?('Reason: '+summary.observation.reason+'; poll age: '+known(summary.observation.age_seconds)+' s; last success: '+stamp(summary.observation.success_at)):(summary.error||'API availability does not establish readiness.'));
+  if(summary.observation?.adapters){
+    const reasons=Object.entries(summary.observation.adapters).filter(([,v])=>v.empty_reason).map(([k,v])=>k+': '+v.empty_reason);
+    if(reasons.length)$('currentness').textContent+='; '+reasons.join(' | ');
+  }
+}
 
 // Count visualization only: aggregate phase participants are not drone identities.
 let clusterOnline=false;
@@ -116,6 +124,63 @@ function renderCluster(online=clusterOnline){
   if(clusterSelectedPodRun===run.run_id)showPod(clusterSelectedPod);
 }
 
-async function refresh(){if(refreshInFlight)return;refreshInFlight=true;try{const [s,data,adapters]=await Promise.all([get('/api/summary'),get('/api/runs'),get('/api/adapters')]);latestFleet=s.ok===true?(s.fleet||{}):{};latestObservations=s.run_observations||{};latestRunFleets=s.ok===true?(s.run_fleets||{}):{};allRuns=data.runs||[];renderSummary(s.summary||{});environment(s,adapters);rebuildFilters();renderRuns();renderCluster(true);const events=await Promise.all(allRuns.map(r=>get('/api/runs/'+encodeURIComponent(r.run_id)+'/events')));table('recentEvents',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(events.flatMap(x=>x.events||[])).slice(-30));if(selectedRunId)await detail(selectedRunId,true)}catch(e){$('health').textContent='OFFLINE';$('health').className='pill tone-bad';$('currentness').textContent='Runtime currentness: UNKNOWN — refresh failed. Visible records may be stale.';$('detailState').textContent='UNKNOWN — connection lost; previous details are hidden.';$('detail').hidden=true;latestFleet={};latestObservations={};latestRunFleets={};renderSummary({});renderCluster(false)}finally{refreshInFlight=false}}
+async function refresh(){
+  if(refreshInFlight)return;
+  refreshInFlight=true;
+  try{
+    // HTTP /health is the connectivity oracle. Slow or failed read projections
+    // are currentness degradation, not evidence that the backend went offline.
+    await get('/health');
+    const issues=[];
+    const [summaryResult,dataResult,adaptersResult]=await Promise.allSettled([
+      get('/api/summary'),get('/api/runs'),get('/api/adapters')
+    ]);
+    const s=summaryResult.status==='fulfilled'?summaryResult.value:null;
+    const data=dataResult.status==='fulfilled'?dataResult.value:null;
+    const adapters=adaptersResult.status==='fulfilled'?adaptersResult.value:null;
+    if(s){
+      latestFleet=s.ok===true?(s.fleet||{}):{};
+      latestObservations=s.run_observations||{};
+      latestRunFleets=s.ok===true?(s.run_fleets||{}):{};
+      renderSummary(s.summary||{});
+      if(s.ok!==true)issues.push('summary-state');
+    }else issues.push('summary');
+    if(data)allRuns=data.runs||[];else issues.push('runs');
+    if(s&&adapters)environment(s,adapters);else if(!adapters)issues.push('adapters');
+    rebuildFilters();
+    renderRuns();
+    renderCluster(true);
+    const eventResults=await Promise.allSettled(allRuns.map(r=>get('/api/runs/'+encodeURIComponent(r.run_id)+'/events')));
+    const events=[];
+    let eventFailures=0;
+    for(const result of eventResults){
+      if(result.status==='fulfilled')events.push(...(result.value.events||[]));
+      else eventFailures++;
+    }
+    if(eventFailures)issues.push('events:'+eventFailures);
+    table('recentEvents',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(events).slice(-30));
+    if(selectedRunId){
+      try{await detail(selectedRunId,true)}
+      catch(_){issues.push('detail')}
+    }
+    $('health').textContent='API AVAILABLE';
+    $('health').className='pill';
+    if(issues.length){
+      const base=$('currentness').textContent||'Runtime currentness: LAST KNOWN';
+      $('currentness').textContent=base+' · delayed projections: '+issues.join(', ');
+    }
+  }catch(e){
+    $('health').textContent='OFFLINE';
+    $('health').className='pill tone-bad';
+    $('currentness').textContent='Runtime currentness: UNKNOWN — /health is unreachable. Visible records may be stale.';
+    $('detailState').textContent='UNKNOWN — connection lost; previous details are hidden.';
+    $('detail').hidden=true;
+    latestFleet={};latestObservations={};latestRunFleets={};
+    renderSummary({});
+    renderCluster(false);
+  }finally{
+    refreshInFlight=false;
+  }
+}
 $('clusterRun').onchange=()=>renderCluster();
 $('adapter').onchange=renderRuns;$('status').onchange=renderRuns;$('processClass').onchange=renderRuns;refresh();setInterval(refresh,5000);

@@ -15,7 +15,7 @@ class OperatorWorkerDeliveryTests(unittest.TestCase):
                 'input_json':json.dumps({'kind':'LOCAL_MODEL_INFERENCE','messages':[{'role':'user','content':'base'}],'max_tokens':64}),
                 'operator_context':{'revision':2,'content':{'rule':'prefer evidence A'}},
                 'operator_plan':None,
-                'operator_messages':[{'message_id':'opmsg-1','target':'drone:MD025','content':'check branch X'}],
+                'operator_messages':[{'message_id':'opmsg-1','target':'worker:MD025','content':'check branch X'}],
             }
             if op=='model_call_intent':return {'status':'INTENT_DURABLE','model_call_id':args['model_call_id']}
             if op=='model_call_transition':return {'status':args['state'],'model_call_id':args['model_call_id']}

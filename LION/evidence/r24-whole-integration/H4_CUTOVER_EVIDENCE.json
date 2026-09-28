@@ -1,0 +1,38 @@
+{
+  "schema": "lion.r24.h4-cutover-evidence/v1",
+  "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
+  "decision": "APPROVE_ALL_ELIGIBLE",
+  "explicit_apply_authorization": "APPLY LIVE H4 CUTOVER FOR 13 APPROVED MISSIONS WITH BACKUP",
+  "observed_at": "2026-09-28T16:12:18Z",
+  "result": "PASS_H4_APPROVED_CUTOVER_APPLIED",
+  "approved_count": 13,
+  "verified_count": 13,
+  "excluded": [
+    "legacy::vkt-r3-live"
+  ],
+  "backup": {
+    "path": "/mnt/c/Users/d2j3/AppData/Local/LION/backups/threads.db.r24-h4-pre-20260928T161218Z.sqlite",
+    "sha256": "b83a7cc67033977d5c239e02e8b4a763a904a2b2aa04f970a02b9372101695b5"
+  },
+  "legacy_projection": {
+    "before": "85c1c98f32fb62e5c8c727977a66539f6e7a9014806756800cb8ba4709c601e6",
+    "after": "85c1c98f32fb62e5c8c727977a66539f6e7a9014806756800cb8ba4709c601e6",
+    "unchanged": true,
+    "counts": {
+      "threads": 2,
+      "thread_bindings": 1,
+      "thread_model_routes": 2,
+      "messages": 3
+    }
+  },
+  "canonical_readback": {
+    "conversation_count": 13,
+    "conversation_message_count": 0,
+    "migration_provenance_count": 13,
+    "integrity_check": "ok",
+    "foreign_key_check_count": 0,
+    "schema_digest": "2e7c78e837b6ca827a074fd6399a725dae0e069125e7b5ed532c47e5b0bb6b87"
+  },
+  "legacy_unapproved_present": false,
+  "authority_effect": "NONE"
+}

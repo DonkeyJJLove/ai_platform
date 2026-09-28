@@ -38,7 +38,7 @@ class OperatorBusCorrelationTests(unittest.TestCase):
 
     def test_message_and_drone_response_preserve_thread_correlation(self):
         tid='a'*32
-        cmd={'command_id':'panel-'+('b'*32),'mission_id':'M1','action':'MESSAGE','target':'drone:MD025','payload':{'content':'status'},'correlation_id':tid}
+        cmd={'command_id':'panel-'+('b'*32),'mission_id':'M1','action':'MESSAGE','target':'worker:MD025','payload':{'content':'status'},'correlation_id':tid}
         out=operator_control.apply_command(self.c,cmd,now)
         mid=out['result']['message_id']
         row=self.c.execute('SELECT correlation_id,causation_id FROM operator_messages WHERE message_id=?',(mid,)).fetchone()
@@ -56,7 +56,7 @@ class OperatorBusCorrelationTests(unittest.TestCase):
         tid='a'*32;client_id='c'*32
         import hashlib
         command_id='panel-'+hashlib.sha256((tid+'|'+client_id).encode()).hexdigest()[:32]
-        base={'command_id':command_id,'mission_id':'M1','action':'MESSAGE','target':'drone:MD025','payload':{'content':'hello'},'correlation_id':tid}
+        base={'command_id':command_id,'mission_id':'M1','action':'MESSAGE','target':'worker:MD025','payload':{'content':'hello'},'correlation_id':tid}
         first=operator_control.apply_command(self.c,base,now);second=operator_control.apply_command(self.c,base,now)
         self.assertFalse(first['idempotent']);self.assertTrue(second['idempotent'])
         changed={**base,'payload':{'content':'changed'}}
@@ -102,7 +102,7 @@ class PanelBusHttpIntegrationTests(unittest.TestCase):
             store=ThreadStore(Path(td)/'threads.db')
             class FakeGateway:
                 def __init__(self):
-                    self.thread_provider=store;self.messages=[];self.commands=[];self.model_calls=[]
+                    self.thread_provider=store;self.messages=[];self.commands=[];self.model_calls=[];self.legacy_mutation_compat=True
                     self.control_provider=self.control;self.operator_provider=self.operator
                 def chat(self,message,history=None,output_language='auto',use_web=False):
                     from cyber_lion.app_coordination.saas_handoff_extension import ROUTE_CONTEXT

@@ -299,7 +299,8 @@ def send_message(conn, principal_id: str, session_id: str, command_id: str, targ
     conn.commit()  # preserve canonical envelope before bounded command admission
     for index,recipient in enumerate(selected):
         worker=recipient.split(":",1)[1];mcid=command_id+"-"+worker
-        command={"command_id":mcid,"mission_id":s["mission_id"],"action":"MESSAGE","target":recipient,"payload":{"content":content},"correlation_id":root["message_id"],"causation_id":causation_id}
+        canonical_target="worker:"+worker
+        command={"command_id":mcid,"mission_id":s["mission_id"],"action":"MESSAGE","target":canonical_target,"payload":{"content":content},"correlation_id":root["message_id"],"causation_id":causation_id}
         operator_control.apply_command(conn,command,now_fn,principal_id=principal_id)
         mrow=conn.execute("SELECT message_id FROM operator_messages WHERE mission_id=? AND command_id=?",(s["mission_id"],mcid)).fetchone()
         if not mrow:raise ValueError("swarm mission message missing")

@@ -1,0 +1,55 @@
+name: LION R24 Whole Integration Closure
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "cyber_lion/app_coordination/**"
+      - "cyber_lion/mission_control/**"
+      - "tools/lion_operator_gateway.py"
+      - "tools/lion_local_intelligence_runtime.py"
+      - "tools/lion_r24_whole_integration_gate.py"
+      - "LION/evidence/r24-whole-integration/**"
+      - ".github/workflows/lion-r24-whole-integration-closure.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  whole-integration-gate:
+    name: LION-R24-WHOLE-INTEGRATION-CLOSURE-R1
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run exact whole-integration gate
+        run: |
+          python tools/lion_r24_whole_integration_gate.py --output r24-whole-integration-gate.json
+
+      - name: Verify gate artifact
+        run: |
+          python -m json.tool r24-whole-integration-gate.json >/dev/null
+          python - <<'PY'
+          import json
+          value=json.load(open("r24-whole-integration-gate.json",encoding="utf-8"))
+          assert value["result"]=="PASS", value["reasons"]
+          assert value["task_id"]=="LION-R24-WHOLE-INTEGRATION-CLOSURE-R1"
+          assert value["authority_effect"]=="NONE"
+          PY
+
+      - name: Upload exact gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-r24-whole-integration-gate
+          path: r24-whole-integration-gate.json
+          if-no-files-found: error

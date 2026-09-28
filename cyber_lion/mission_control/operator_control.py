@@ -519,17 +519,14 @@ def _mission_drone_inventory(conn,mission_id):
         for row in material_rows:
             logical_field=str(row['logical_id'] or '')
             pod=str(row['pod_name'] or '')
-            ident=logical_field if logical_field.upper().startswith('MD') else (pod if pod.upper().startswith('MD') else logical_field or pod)
+            # The material-worker registry carries the canonical MD identity.
+            # Legacy rows that expose only an LD mapping are not promoted into a
+            # worker identity; execution assignments are bindings, not a
+            # participant registry.
+            ident=logical_field if logical_field.upper().startswith('MD') else (pod if pod.upper().startswith('MD') else '')
             if not ident:continue
             if 'ready' in cols and not bool(row['ready']):continue
             out['worker:'+ident]={'recipient':'worker:'+ident,'kind':'MATERIAL_WORKER','role':'MATERIAL_EXECUTOR','pod_name':pod}
-    if 'mission_execution_assignments' in tables:
-        for row in conn.execute('SELECT logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE mission_id=?',(mission_id,)):
-            logical=row['logical_drone_id'];material=row['material_drone_id']
-            if logical:
-                pid='drone:'+str(logical);out.setdefault(pid,{'recipient':pid,'kind':'LOGICAL_DRONE','role':''})
-            if material:
-                pid='worker:'+str(material);out.setdefault(pid,{'recipient':pid,'kind':'MATERIAL_WORKER','role':'MATERIAL_EXECUTOR'})
     return out
 
 def resolve_target(conn,mission_id,target):
@@ -542,8 +539,6 @@ def resolve_target(conn,mission_id,target):
     if prefix=='drone':
         direct='drone:'+ident
         if direct in inv:return [direct]
-        legacy='worker:'+ident
-        if legacy in inv:return [legacy]
         raise ValueError('unresolved drone target')
     if prefix=='worker':
         direct='worker:'+ident
@@ -567,7 +562,7 @@ def _message_target_matches(target,mission_id,material_drone_id,logical_drone_id
     if target.startswith('worker:'):return target.split(':',1)[1]==str(material_drone_id or '')
     if target.startswith('drone:'):
         ident=target.split(':',1)[1]
-        return ident==str(logical_drone_id or '') or ident==str(material_drone_id or '')  # legacy drone:MD alias
+        return ident==str(logical_drone_id or '')
     return False
 
 def assignment_context(conn,mission_id,material_drone_id,logical_drone_id):
@@ -594,6 +589,10 @@ def note_assignment_application(conn,assignment_id,result,now_fn):
     if not isinstance(participant,str) or not (participant.startswith('drone:') or participant.startswith('worker:')):
         raise ValueError('responding participant identity')
     protocol_fanout=assignment_input.get('purpose')=='PROTOCOL_FANOUT_R1'
+    if protocol_fanout:
+        expected_participant=assignment_input.get('responding_participant_id')
+        if not isinstance(expected_participant,str) or participant!=expected_participant:
+            raise ValueError('protocol fanout participant identity mismatch')
     cognition_route=str(assignment_input.get('cognition_route') or 'LOCAL').upper()
     stamp=now_fn();applied=0;partial=0;responses=[]
     if protocol_fanout and cognition_route=='DUAL':
@@ -689,11 +688,12 @@ def protocol_trajectory_update(conn,message_id,participant_id,now_fn,**changes):
     return dict(conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE trajectory_id=?",(values['trajectory_id'],)).fetchone())
 
 def _reconcile_protocol_message_state(conn,message_id,stamp):
-    counts=conn.execute("SELECT COUNT(*) total,SUM(CASE WHEN delivery_state='APPLIED' THEN 1 ELSE 0 END) applied,SUM(CASE WHEN delivery_state='FAILED' THEN 1 ELSE 0 END) failed FROM operator_message_deliveries WHERE message_id=?",(message_id,)).fetchone()
-    total=int(counts['total'] or 0);applied=int(counts['applied'] or 0);failed=int(counts['failed'] or 0)
-    state='APPLIED' if total and applied==total else 'FAILED' if total and failed==total else 'PARTIAL' if applied or failed else 'PENDING'
+    counts=conn.execute("SELECT COUNT(*) total,SUM(CASE WHEN delivery_state='APPLIED' THEN 1 ELSE 0 END) applied,SUM(CASE WHEN delivery_state='FAILED' THEN 1 ELSE 0 END) failed,SUM(CASE WHEN delivery_state='CANCELLED' THEN 1 ELSE 0 END) cancelled FROM operator_message_deliveries WHERE message_id=?",(message_id,)).fetchone()
+    total=int(counts['total'] or 0);applied=int(counts['applied'] or 0);failed=int(counts['failed'] or 0);cancelled=int(counts['cancelled'] or 0)
+    terminal=applied+failed+cancelled
+    state='APPLIED' if total and applied==total else 'FAILED' if total and failed==total else 'CANCELLED' if total and cancelled==total else 'PARTIAL' if terminal else 'PENDING'
     conn.execute("UPDATE operator_messages SET state=?,applied_at=CASE WHEN ?='APPLIED' THEN COALESCE(applied_at,?) ELSE applied_at END WHERE message_id=?",(state,state,stamp,message_id))
-    return {'state':state,'total':total,'applied':applied,'failed':failed,'pending':max(0,total-applied-failed)}
+    return {'state':state,'total':total,'applied':applied,'failed':failed,'cancelled':cancelled,'pending':max(0,total-terminal)}
 
 def record_protocol_model_response(conn,message_id,participant_id,response_text,now_fn,*,result_digest=None,model_call_id=None):
     if not isinstance(response_text,str) or not response_text.strip():raise ValueError('protocol response')
@@ -719,10 +719,20 @@ def fail_protocol_trajectory(conn,message_id,participant_id,reason,now_fn):
     stamp=now_fn();trajectory=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
     if trajectory is None:raise ValueError('protocol trajectory missing')
     if trajectory['state']=='RESPONSE_RECONCILED':return {'state':'RESPONSE_RECONCILED'}
-    conn.execute("UPDATE operator_message_deliveries SET delivery_state='FAILED',delivered_at=COALESCE(delivered_at,?) WHERE message_id=? AND recipient=? AND delivery_state!='APPLIED'",(stamp,message_id,participant_id))
+    conn.execute("UPDATE operator_message_deliveries SET delivery_state='FAILED',delivered_at=COALESCE(delivered_at,?) WHERE message_id=? AND recipient=? AND delivery_state NOT IN ('APPLIED','CANCELLED')",(stamp,message_id,participant_id))
     protocol_trajectory_update(conn,message_id,participant_id,now_fn,state='FAILED',result_digest=digest(str(reason)))
     state=_reconcile_protocol_message_state(conn,message_id,stamp)
     return {'state':'FAILED','message_state':state['state'],'reason':str(reason)[:500]}
+
+def cancel_protocol_trajectory(conn,message_id,participant_id,reason,now_fn):
+    stamp=now_fn();trajectory=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    if trajectory is None:raise ValueError('protocol trajectory missing')
+    if trajectory['state']=='RESPONSE_RECONCILED':return {'state':'RESPONSE_RECONCILED'}
+    conn.execute("UPDATE operator_message_deliveries SET delivery_state='CANCELLED',delivered_at=COALESCE(delivered_at,?) WHERE message_id=? AND recipient=? AND delivery_state NOT IN ('APPLIED','FAILED')",(stamp,message_id,participant_id))
+    protocol_trajectory_update(conn,message_id,participant_id,now_fn,state='CANCELLED',result_digest=digest(str(reason)))
+    state=_reconcile_protocol_message_state(conn,message_id,stamp)
+    _event(conn,trajectory['mission_id'],'PROTOCOL_PARTICIPANT_CANCELLED',{'message_id':message_id,'participant_id':participant_id,'reason':str(reason)[:500],'authority_effect':'NONE'},now_fn)
+    return {'state':'CANCELLED','message_state':state['state'],'reason':str(reason)[:500]}
 
 def _command_result(conn,command_id):
     row=conn.execute("SELECT * FROM operator_commands WHERE command_id=?",(command_id,)).fetchone()

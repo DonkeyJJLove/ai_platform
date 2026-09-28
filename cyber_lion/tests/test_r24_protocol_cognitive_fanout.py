@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from cyber_lion.mission_control import dual_result_join, execution_driver, global_scheduler, operator_control
-from tools.lion_operator_gateway import dispatch_protocol_message, reconcile_protocol_external_once
+from tools.lion_operator_gateway import dispatch_protocol_message, reconcile_protocol_external_once, reconcile_protocol_local_once
 
 
 def now():
@@ -298,6 +298,353 @@ class R24ProtocolCognitiveFanoutTests(unittest.TestCase):
             self.assertEqual(c.execute("SELECT COUNT(*) FROM mission_execution_assignments WHERE input_json LIKE '%PROTOCOL_FANOUT_R1%'").fetchone()[0],0)
         finally:c.close()
 
+
+    def test_assignment_only_identity_cannot_join_canonical_recipient_set(self):
+        c=self.runtime.connect()
+        try:
+            value={"material_worker_id":"MD999","binding_class":"DOCKER_LOCAL_MODEL"}
+            c.execute("""INSERT INTO mission_execution_assignments(
+              assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,
+              input_digest,input_json,state,lease_generation,control_epoch,context_revision,
+              plan_revision,dispatch_authority,created_at,claimed_at,finished_at)
+              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+              ("ghost-topology","M1","__TOPOLOGY__","LD999","MD999",
+               operator_control.digest(value),json.dumps(value,sort_keys=True),"BOUND",
+               1,0,0,0,"AUTONOMOUS",now(),now(),now()))
+            c.commit()
+        finally:c.close()
+        msg=self._message(cid="canonical-registry-only")
+        self.assertEqual(set(msg["recipients"]),{
+            "drone:LD001","drone:LD002","worker:MD001","worker:MD002",
+        })
+        self.assertNotIn("drone:LD999",msg["recipients"])
+        self.assertNotIn("worker:MD999",msg["recipients"])
+
+    def test_completed_local_assignment_receipt_repairs_stale_ready_trajectory(self):
+        msg=self._message(cid="local-reconcile")
+        out=dispatch_protocol_message(self.runtime,msg["message_id"])
+        chosen=next(x for x in out["created"] if x["participant_id"]=="worker:MD001")
+        c=self.runtime.connect()
+        try:
+            claimed=global_scheduler.claim_assignment(
+                c,chosen["assignment_id"],now,expected_material_drone_id="MD001"
+            )
+            result={
+                "kind":"LOCAL_MODEL_INFERENCE",
+                "model_call_id":"modelcall-reconcile-md001",
+                "response_text":"recovered local receipt response",
+                "response_digest":operator_control.digest("recovered local receipt response"),
+                "responding_participant_id":"worker:MD001",
+                "operator_message_ids":[msg["message_id"]],
+                "authority_effect":"NONE",
+            }
+            receipt=global_scheduler.record_receipt(
+                c,chosen["assignment_id"],result,now,
+                material_drone_id="MD001",
+                lease_generation=claimed["lease_generation"],
+                status="PASS",
+                authority_effect="NONE",
+            )
+            global_scheduler.store_assignment_payload(
+                c,chosen["assignment_id"],receipt["receipt_id"],result,now
+            )
+            stale=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(stale,"LOCAL_ASSIGNMENT_READY")
+            c.commit()
+        finally:c.close()
+        repaired=reconcile_protocol_local_once(self.runtime)
+        self.assertGreaterEqual(repaired["reconciled"],1)
+        c=self.runtime.connect()
+        try:
+            state=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(state,"RESPONSE_RECONCILED")
+            delivery=c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(delivery,"APPLIED")
+            reply=c.execute(
+                "SELECT content FROM operator_messages WHERE kind='RESPONSE' AND from_participant='worker:MD001'"
+            ).fetchone()[0]
+            self.assertEqual(reply,"recovered local receipt response")
+        finally:c.close()
+
+    def test_pause_after_admission_cancels_ready_trajectories_explicitly(self):
+        msg=self._message(cid="pause-after-admission")
+        dispatched=dispatch_protocol_message(self.runtime,msg["message_id"])
+        self.assertEqual(len(dispatched["created"]),4)
+        c=self.runtime.connect()
+        try:
+            operator_control.apply_command(c,{
+                "command_id":"pause-after-dispatch","mission_id":"M1","action":"PAUSE_SCOPE",
+                "target":"mission:M1","payload":{},
+            },now)
+        finally:c.close()
+        reconciled=reconcile_protocol_local_once(self.runtime)
+        self.assertEqual(reconciled["cancelled"],4)
+        c=self.runtime.connect()
+        try:
+            states={r["participant_id"]:r["state"] for r in c.execute(
+                "SELECT participant_id,state FROM protocol_cognitive_trajectories WHERE message_id=?",
+                (msg["message_id"],)
+            )}
+            self.assertEqual(set(states.values()),{"CANCELLED"})
+            delivery_states={r[0] for r in c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=?",
+                (msg["message_id"],)
+            )}
+            self.assertEqual(delivery_states,{"CANCELLED"})
+            message_state=c.execute(
+                "SELECT state FROM operator_messages WHERE message_id=?",(msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(message_state,"CANCELLED")
+        finally:c.close()
+
+    def test_pause_after_claim_marks_explicit_cancellation_requested(self):
+        msg=self._message(cid="pause-after-claim")
+        out=dispatch_protocol_message(self.runtime,msg["message_id"])
+        chosen=next(x for x in out["created"] if x["participant_id"]=="worker:MD001")
+        c=self.runtime.connect()
+        try:
+            global_scheduler.claim_assignment(
+                c,chosen["assignment_id"],now,expected_material_drone_id="MD001"
+            )
+            operator_control.apply_command(c,{
+                "command_id":"pause-after-claim-command","mission_id":"M1","action":"PAUSE_SCOPE",
+                "target":"mission:M1","payload":{},
+            },now)
+        finally:c.close()
+        reconcile_protocol_local_once(self.runtime)
+        c=self.runtime.connect()
+        try:
+            state=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(state,"CANCELLATION_REQUESTED")
+            delivery=c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(delivery,"PERSISTED")
+        finally:c.close()
+
+
+    def test_wrong_participant_response_is_rejected_without_delivery_mutation(self):
+        msg=self._message(cid="wrong-participant")
+        out=dispatch_protocol_message(self.runtime,msg["message_id"])
+        chosen=next(x for x in out["created"] if x["participant_id"]=="worker:MD001")
+        c=self.runtime.connect()
+        try:
+            with self.assertRaisesRegex(ValueError,"participant identity mismatch"):
+                operator_control.note_assignment_application(c,chosen["assignment_id"],{
+                    "operator_message_ids":[msg["message_id"]],
+                    "responding_participant_id":"worker:MD002",
+                    "response_text":"forged other participant",
+                    "response_digest":operator_control.digest("forged other participant"),
+                    "model_call_id":"modelcall-wrong-participant",
+                },now)
+            states={r["recipient"]:r["delivery_state"] for r in c.execute(
+                "SELECT recipient,delivery_state FROM operator_message_deliveries WHERE message_id=?",
+                (msg["message_id"],)
+            )}
+            self.assertEqual(states["worker:MD001"],"PERSISTED")
+            self.assertEqual(states["worker:MD002"],"PERSISTED")
+        finally:c.close()
+
+    def test_saas_participant_timeout_terminalizes_its_exact_trajectory(self):
+        c=self.runtime.connect()
+        try:
+            out=operator_control.apply_command(c,{
+                "command_id":"saas-timeout","mission_id":"M1","action":"MESSAGE","target":"drone:LD001",
+                "payload":{"content":"timeout test","cognition_routes":{"default":"SAAS"}},"correlation_id":"c"*32,
+            },now)
+            msg=out["result"]
+        finally:c.close()
+        dispatch=dispatch_protocol_message(self.runtime,msg["message_id"])
+        request_id=dispatch["created"][0]["saas_request_id"]
+        self.runtime.saas[request_id].update({"status":"EXPIRED","state":"EXPIRED"})
+        recon=reconcile_protocol_external_once(self.runtime)
+        self.assertEqual(recon["failed"],1)
+        c=self.runtime.connect()
+        try:
+            row=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='drone:LD001'",
+                (msg["message_id"],)
+            ).fetchone()
+            self.assertEqual(row["state"],"FAILED")
+            delivery=c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient='drone:LD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(delivery,"FAILED")
+        finally:c.close()
+
+    def test_dual_local_leg_failure_terminalizes_participant(self):
+        routes={"participants":{"drone:LD001":"DUAL","drone:LD002":"LOCAL","worker:MD001":"LOCAL","worker:MD002":"LOCAL"}}
+        msg=self._message(cid="dual-local-failure",cognition_routes=routes)
+        dispatch=dispatch_protocol_message(self.runtime,msg["message_id"])
+        dual=next(x for x in dispatch["created"] if x["participant_id"]=="drone:LD001")
+        c=self.runtime.connect()
+        try:
+            claimed=global_scheduler.claim_assignment(c,dual["assignment_id"],now,expected_material_drone_id="MD001")
+            failure={"kind":"LOCAL_MODEL_INFERENCE","error":"synthetic local leg failure","authority_effect":"NONE"}
+            receipt=global_scheduler.record_receipt(
+                c,dual["assignment_id"],failure,now,
+                material_drone_id="MD001",lease_generation=claimed["lease_generation"],
+                status="FAIL",authority_effect="NONE"
+            )
+            global_scheduler.store_assignment_payload(c,dual["assignment_id"],receipt["receipt_id"],failure,now)
+            c.commit()
+        finally:c.close()
+        local=reconcile_protocol_local_once(self.runtime)
+        self.assertEqual(local["failed"],1)
+        c=self.runtime.connect()
+        try:
+            state=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='drone:LD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(state,"FAILED")
+        finally:c.close()
+
+    def test_dual_saas_leg_failure_terminalizes_participant(self):
+        routes={"participants":{"drone:LD001":"DUAL","drone:LD002":"LOCAL","worker:MD001":"LOCAL","worker:MD002":"LOCAL"}}
+        msg=self._message(cid="dual-saas-failure",cognition_routes=routes)
+        dispatch=dispatch_protocol_message(self.runtime,msg["message_id"])
+        dual=next(x for x in dispatch["created"] if x["participant_id"]=="drone:LD001")
+        self.runtime.saas[dual["saas_request_id"]].update({"status":"EXPIRED","state":"EXPIRED"})
+        external=reconcile_protocol_external_once(self.runtime)
+        self.assertEqual(external["failed"],1)
+        c=self.runtime.connect()
+        try:
+            state=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='drone:LD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(state,"FAILED")
+            delivery=c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient='drone:LD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(delivery,"FAILED")
+        finally:c.close()
+
+    def test_four_logical_four_material_produce_eight_independent_reconciliations(self):
+        c=self.runtime.connect()
+        try:
+            c.executemany("INSERT INTO logical_drones VALUES(?,?,?)",[
+                ("M1","LD003","ARCHITECT"),("M1","LD004","AUDITOR"),
+            ])
+            c.executemany("INSERT INTO material_workers VALUES(?,?,?)",[
+                ("M1","MD003","LD003"),("M1","MD004","LD004"),
+            ])
+            generation=execution_driver.snapshot(c,"M1")["generation"]
+            for logical,material in (("LD003","MD003"),("LD004","MD004")):
+                value={"material_worker_id":material,"binding_class":"DOCKER_LOCAL_MODEL"}
+                c.execute("""INSERT INTO mission_execution_assignments(
+                  assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,
+                  input_digest,input_json,state,lease_generation,control_epoch,context_revision,
+                  plan_revision,dispatch_authority,created_at,claimed_at,finished_at)
+                  VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                  ("topology-"+logical,"M1","__TOPOLOGY__",logical,material,
+                   operator_control.digest(value),json.dumps(value,sort_keys=True),"BOUND",
+                   generation,0,0,0,"AUTONOMOUS",now(),now(),now()))
+            c.commit()
+        finally:c.close()
+        msg=self._message(cid="eight-trajectories",cognition_routes=None)
+        self.assertEqual(msg["recipient_count"],8)
+        dispatch=dispatch_protocol_message(self.runtime,msg["message_id"])
+        self.assertEqual(dispatch["state"],"COMPLETE_DISPATCH")
+        self.assertEqual(len(dispatch["created"]),8)
+        local=[x for x in dispatch["created"] if x["participant_id"].startswith("worker:")]
+        saas=[x for x in dispatch["created"] if x["participant_id"].startswith("drone:")]
+        self.assertEqual((len(local),len(saas)),(4,4))
+        c=self.runtime.connect()
+        try:
+            for item in local:
+                participant=item["participant_id"]
+                text="local response "+participant
+                operator_control.note_assignment_application(c,item["assignment_id"],{
+                    "operator_message_ids":[msg["message_id"]],
+                    "responding_participant_id":participant,
+                    "response_text":text,
+                    "response_digest":operator_control.digest(text),
+                    "model_call_id":"modelcall-"+participant.replace(":","-"),
+                },now)
+            c.commit()
+        finally:c.close()
+        for item in saas:
+            self.runtime.respond_saas(item["saas_request_id"],"saas response "+item["participant_id"])
+        external=reconcile_protocol_external_once(self.runtime)
+        self.assertEqual(external["reconciled"],4)
+        c=self.runtime.connect()
+        try:
+            trajectories=[dict(r) for r in c.execute(
+                "SELECT participant_id,state,response_message_id FROM protocol_cognitive_trajectories WHERE message_id=? ORDER BY participant_id",
+                (msg["message_id"],)
+            )]
+            self.assertEqual(len(trajectories),8)
+            self.assertEqual({x["state"] for x in trajectories},{"RESPONSE_RECONCILED"})
+            self.assertEqual(len({x["response_message_id"] for x in trajectories}),8)
+            deliveries=[dict(r) for r in c.execute(
+                "SELECT recipient,delivery_state FROM operator_message_deliveries WHERE message_id=? ORDER BY recipient",
+                (msg["message_id"],)
+            )]
+            self.assertEqual(len(deliveries),8)
+            self.assertEqual({x["delivery_state"] for x in deliveries},{"APPLIED"})
+        finally:c.close()
+
+    def test_cross_mission_target_injection_is_denied_before_fanout(self):
+        c=self.runtime.connect()
+        try:
+            c.execute("INSERT INTO missions VALUES('M2','RUNNING',?)",(now(),))
+            c.commit()
+            with self.assertRaisesRegex(ValueError,"target mission mismatch|unresolved swarm target"):
+                operator_control.apply_command(c,{
+                    "command_id":"cross-mission","mission_id":"M1","action":"MESSAGE",
+                    "target":"swarm:M2","payload":{"content":"forged cross mission"},
+                    "correlation_id":"d"*32,
+                },now)
+            self.assertEqual(
+                c.execute("SELECT COUNT(*) FROM operator_messages WHERE command_id='cross-mission'").fetchone()[0],
+                0,
+            )
+        finally:c.close()
+
+    def test_explicit_local_participant_failure_terminalizes_exact_delivery(self):
+        msg=self._message(cid="local-participant-failure")
+        dispatch=dispatch_protocol_message(self.runtime,msg["message_id"])
+        chosen=next(x for x in dispatch["created"] if x["participant_id"]=="worker:MD001")
+        c=self.runtime.connect()
+        try:
+            operator_control.fail_protocol_trajectory(
+                c,msg["message_id"],"worker:MD001","LOCAL_MODEL_FAILED",now
+            )
+            c.commit()
+            state=c.execute(
+                "SELECT state FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            delivery=c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient='worker:MD001'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            other=c.execute(
+                "SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient='worker:MD002'",
+                (msg["message_id"],)
+            ).fetchone()[0]
+            self.assertEqual(state,"FAILED")
+            self.assertEqual(delivery,"FAILED")
+            self.assertEqual(other,"PERSISTED")
+            self.assertTrue(chosen["assignment_id"])
+        finally:c.close()
 
 if __name__=="__main__":
     unittest.main()

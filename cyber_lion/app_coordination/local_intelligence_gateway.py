@@ -12,6 +12,9 @@ from .currentness_tool_adapter import read_currentness
 from .web_research_broker import PublicWebReadBroker
 from .local_tool_protocol import ToolCall,parse_tool_call
 from .local_tool_gate import evaluate_tool_call
+from .conversation_domain import ConversationDomainError, ConversationConflict, ConversationNotFound
+from .conversation_chat import submit_chat
+from .r24_model_chat_ui import R24_MODEL_CHAT_UI
 
 SENSITIVE=("push","merge","delete branch","delete ref","remove branch","usuń gałą","usun galaz","usuń branch","usun branch","credential","trust anchor","authority decision","autoryzacj","deploy production","runtime authority","force push")
 REPO_WORDS=('repo','repository','repozytor','branch','gałą','galaz','master','commit','tree',' head','git','federac','source','źródło lokalne','zrodlo lokalne','stan projektu')
@@ -766,6 +769,8 @@ def make_handler(g):
                 self.send_response(204);self.send_header('Cache-Control','public, max-age=3600');self.end_headers();return
             if path=='/':
                 sid,csrf=new_operator_session();b=UI.replace("__FRONTEND_REVISION__",sha256(UI.encode()).hexdigest()).replace('__OPERATOR_CSRF__',csrf).encode();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.send_header('Set-Cookie','lion_operator_session='+sid+'; Path=/; HttpOnly; SameSite=Strict');self.end_headers();self.wfile.write(b);return
+            if path=='/r24-model-chat':
+                b=R24_MODEL_CHAT_UI.encode('utf-8');self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(b);return
             if path=='/health':return self.out({'status':'ok','authority_effect':'NONE'})
             if path=='/api/state':return self.out(g.state())
             if path.startswith('/api/operator/'):
@@ -802,6 +807,30 @@ def make_handler(g):
                 rid=path[len('/api/dual/'):].strip('/');return self.out(self._control('dual_result',{'request_id':rid}))
             if path.startswith('/api/missions/') and path.endswith('/process'):
                 mid=path[len('/api/missions/'):-len('/process')].strip('/');return self.out(self._control('process',{'mission_id':mid}))
+            if path=='/api/conversations':
+                try:
+                    q=parse_qs(urlsplit(self.path).query);limit=int((q.get('limit') or ['500'])[0]);mission_id=(q.get('mission_id') or [None])[0]
+                    args={'limit':limit};args.update({'mission_id':mission_id} if mission_id else {})
+                    return self.out(self._thread('conversation_list',args))
+                except ConversationDomainError as e:return self.out({'error':str(e)},400)
+            if path.startswith('/api/conversations/'):
+                tail=path[len('/api/conversations/'):].strip('/')
+                try:
+                    if tail.endswith('/lineage'):
+                        cid=tail[:-len('/lineage')].rstrip('/');return self.out(self._thread('conversation_lineage',{'conversation_id':cid}))
+                    if tail.endswith('/lanes'):
+                        cid=tail[:-len('/lanes')].rstrip('/');return self.out(self._thread('conversation_lanes',{'conversation_id':cid}))
+                    if tail.endswith('/bridges'):
+                        cid=tail[:-len('/bridges')].rstrip('/');return self.out(self._thread('conversation_bridges',{'conversation_id':cid}))
+                    if tail.endswith('/messages'):
+                        cid=tail[:-len('/messages')].rstrip('/');return self.out(self._thread('conversation_chat_transcript',{'conversation_id':cid}))
+                    if tail.endswith('/events'):
+                        cid=tail[:-len('/events')].rstrip('/');q=parse_qs(urlsplit(self.path).query);consumer=(q.get('consumer_id') or ['panel-r24'])[0];after=(q.get('after') or [None])[0];limit=int((q.get('limit') or ['100'])[0]);args={'conversation_id':cid,'consumer_id':consumer,'limit':limit};args.update({'after':int(after)} if after is not None else {});return self.out(self._thread('conversation_chat_events',args))
+                    if '/' in tail:return self.out({'error':'not found'},404)
+                    return self.out(self._thread('conversation_get',{'conversation_id':tail}))
+                except ConversationNotFound:return self.out({'error':'conversation not found'},404)
+                except ConversationConflict as e:return self.out({'error':str(e)},409)
+                except ConversationDomainError as e:return self.out({'error':str(e)},400)
             if path=='/api/threads':return self.out(self._thread('list'))
             if path.startswith('/api/threads/') and path.endswith('/bus'):
                 tid=path[len('/api/threads/'):-len('/bus')].rstrip('/')
@@ -873,6 +902,42 @@ def make_handler(g):
                 if path=='/api/dual/response':
                     if type(x) is not dict or set(x)!={'request_id','provider','response_text','transport'}:raise ValueError('dual response schema')
                     return self.out(self._control('dual_response',x))
+                if path=='/api/conversations':
+                    try:
+                        if type(x) is not dict:raise ConversationDomainError('create schema')
+                        return self.out(self._thread('conversation_create',x),201)
+                    except ConversationConflict as e:return self.out({'error':str(e)},409)
+                    except ConversationDomainError as e:return self.out({'error':str(e)},400)
+                if path.startswith('/api/conversations/'):
+                    tail=path[len('/api/conversations/'):].strip('/')
+                    try:
+                        if tail.endswith('/bind'):
+                            cid=tail[:-len('/bind')].rstrip('/')
+                            return self.out(self._thread('conversation_bind',{'conversation_id':cid,'transition':x}),201)
+                        if tail.endswith('/detach'):
+                            cid=tail[:-len('/detach')].rstrip('/')
+                            return self.out(self._thread('conversation_detach',{'conversation_id':cid,'transition':x}),201)
+                        if tail.endswith('/lanes'):
+                            cid=tail[:-len('/lanes')].rstrip('/')
+                            return self.out(self._thread('conversation_lane_create',{'conversation_id':cid,'lane':x}),201)
+                        if tail.endswith('/bridges'):
+                            cid=tail[:-len('/bridges')].rstrip('/')
+                            return self.out(self._thread('conversation_bridge_create',{'conversation_id':cid,'bridge':x}),201)
+                        if tail.endswith('/chat'):
+                            cid=tail[:-len('/chat')].rstrip('/')
+                            if type(x) is not dict or set(x)-{'message','route','client_request_id','output_language'}:raise ConversationDomainError('model chat schema')
+                            return self.out(submit_chat(g.thread_provider,g,cid,x),201)
+                        if tail.endswith('/cursor'):
+                            cid=tail[:-len('/cursor')].rstrip('/')
+                            if type(x) is not dict or set(x)!={'consumer_id','last_sequence'}:raise ConversationDomainError('cursor schema')
+                            return self.out(self._thread('conversation_chat_ack_cursor',{'conversation_id':cid,**x}))
+                        return self.out({'error':'not found'},404)
+                    except ConversationNotFound:return self.out({'error':'conversation not found'},404)
+                    except ConversationConflict as e:return self.out({'error':str(e)},409)
+                    except ConversationDomainError as e:return self.out({'error':str(e)},400)
+                if path=='/api/threads' or path=='/api/threads/import' or path.startswith('/api/threads/'):
+                    if not bool(getattr(g,'legacy_mutation_compat',False)):
+                        return self.out({'error':'legacy thread mutation retired','archival_read_only':True,'canonical_surface':'/api/conversations','authority_effect':'NONE'},410)
                 if path=='/api/threads':
                     if type(x) is not dict or not set(x).issubset({'title'}):raise ValueError('thread create schema')
                     return self.out(self._thread('create',x),201)
@@ -934,6 +999,8 @@ def make_handler(g):
             try:
                 path=unquote(self.path.split('?',1)[0])
                 if not path.startswith('/api/threads/'):return self.out({'error':'not found'},404)
+                if not bool(getattr(g,'legacy_mutation_compat',False)):
+                    return self.out({'error':'legacy thread mutation retired','archival_read_only':True,'canonical_surface':'/api/conversations','authority_effect':'NONE'},410)
                 tid=path[len('/api/threads/'):];n=int(self.headers.get('Content-Length','0'))
                 if n<2 or n>4096 or 'application/json' not in self.headers.get('Content-Type',''):raise ValueError('request')
                 x=json.loads(self.rfile.read(n))
@@ -945,6 +1012,8 @@ def make_handler(g):
             try:
                 path=self.path.split('?',1)[0]
                 if not path.startswith('/api/threads/'):return self.out({'error':'not found'},404)
+                if not bool(getattr(g,'legacy_mutation_compat',False)):
+                    return self.out({'error':'legacy thread mutation retired','archival_read_only':True,'canonical_surface':'/api/conversations','authority_effect':'NONE'},410)
                 tid=unquote(path[len('/api/threads/'):])
                 return self.out(self._thread('delete',{'thread_id':tid,'cancel_handoff':lambda rid:self._control('saas_request_cancel',{'request_id':rid})}))
             except Exception as e:return self.out({'error':type(e).__name__+':'+str(e)},400)

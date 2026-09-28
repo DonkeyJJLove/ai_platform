@@ -376,6 +376,72 @@ def dispatch_protocol_message(runtime: Runtime,message_id: str) -> dict:
     finally:c.close()
 
 
+def reconcile_protocol_local_once(runtime: Runtime) -> dict:
+    c=runtime.connect()
+    try:
+        tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        required={'protocol_cognitive_trajectories','mission_execution_assignments','mission_execution_receipts','mission_assignment_payloads'}
+        if not required.issubset(tables):
+            return {'checked':0,'reconciled':0,'failed':0,'cancelled':0,'waiting':0,'authority_effect':'NONE'}
+        rows=[dict(r) for r in c.execute("""
+          SELECT t.*,a.state AS assignment_state,r.status AS receipt_status,p.result_json
+          FROM protocol_cognitive_trajectories t
+          JOIN mission_execution_assignments a ON a.assignment_id=t.local_assignment_id
+          LEFT JOIN mission_execution_receipts r ON r.assignment_id=a.assignment_id
+          LEFT JOIN mission_assignment_payloads p ON p.assignment_id=a.assignment_id
+          WHERE t.local_assignment_id IS NOT NULL
+            AND t.state NOT IN ('RESPONSE_RECONCILED','FAILED','CANCELLED')
+          ORDER BY t.created_at,t.participant_id LIMIT 64
+        """).fetchall()]
+    finally:c.close()
+    reconciled=failed=cancelled=waiting=0
+    for row in rows:
+        try:
+            assignment_state=str(row.get('assignment_state') or '')
+            if assignment_state=='PASS':
+                try:result=json.loads(row.get('result_json') or '{}')
+                except Exception:result={}
+                response=result.get('response_text') if isinstance(result,dict) else None
+                if not isinstance(response,str) or not response.strip():
+                    c=runtime.connect()
+                    try:
+                        operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'LOCAL_PASS_WITHOUT_RESPONSE_PAYLOAD',now)
+                        c.commit();failed+=1
+                    finally:c.close()
+                    continue
+                c=runtime.connect()
+                try:
+                    operator_control.note_assignment_application(c,row['local_assignment_id'],result,now)
+                    state=c.execute("SELECT state FROM protocol_cognitive_trajectories WHERE trajectory_id=?",(row['trajectory_id'],)).fetchone()[0]
+                    c.commit()
+                finally:c.close()
+                if state in {'RESPONSE_RECONCILED','DUAL_LOCAL_RESPONSE_READY'}:reconciled+=1
+                else:waiting+=1
+            elif assignment_state=='FAIL':
+                c=runtime.connect()
+                try:
+                    operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'LOCAL_ASSIGNMENT_FAIL',now)
+                    c.commit();failed+=1
+                finally:c.close()
+            elif assignment_state in {'CANCELLED','STALE_RESULT'}:
+                c=runtime.connect()
+                try:
+                    operator_control.cancel_protocol_trajectory(c,row['message_id'],row['participant_id'],'LOCAL_ASSIGNMENT_'+assignment_state,now)
+                    c.commit();cancelled+=1
+                finally:c.close()
+            elif assignment_state=='CANCEL_REQUESTED':
+                c=runtime.connect()
+                try:
+                    operator_control.protocol_trajectory_update(c,row['message_id'],row['participant_id'],now,state='CANCELLATION_REQUESTED')
+                    c.commit();waiting+=1
+                finally:c.close()
+            else:
+                waiting+=1
+        except Exception:
+            failed+=1
+    return {'checked':len(rows),'reconciled':reconciled,'failed':failed,'cancelled':cancelled,'waiting':waiting,'authority_effect':'NONE'}
+
+
 def reconcile_protocol_external_once(runtime: Runtime) -> dict:
     c=runtime.connect()
     try:
@@ -401,6 +467,17 @@ def reconcile_protocol_external_once(runtime: Runtime) -> dict:
                     finally:c.close()
                 else:waiting+=1
             elif row['cognition_route']=='DUAL':
+                saas_request_id=row.get('saas_request_id')
+                if saas_request_id:
+                    saas_status=runtime.mc_get('/api/v3/saas/requests/'+saas_request_id)
+                    saas_state=saas_status.get('status') or saas_status.get('state')
+                    if saas_state in {'FAILED','CANCELLED','EXPIRED','REJECTED','SUPERSEDED'}:
+                        c=runtime.connect()
+                        try:
+                            operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'DUAL_SAAS_'+str(saas_state),now)
+                            c.commit();failed+=1
+                        finally:c.close()
+                        continue
                 if row.get('state')!='DUAL_LOCAL_RESPONSE_READY':waiting+=1;continue
                 if not row.get('dual_request_id'):waiting+=1;continue
                 status=runtime.mc_get('/api/v3/dual/'+row['dual_request_id'])
@@ -416,6 +493,7 @@ def reconcile_protocol_external_once(runtime: Runtime) -> dict:
     return {'checked':len(rows),'reconciled':reconciled,'failed':failed,'waiting':waiting,'authority_effect':'NONE'}
 
 def reconcile_protocol_fanout_once(runtime: Runtime) -> dict:
+    local=reconcile_protocol_local_once(runtime)
     external=reconcile_protocol_external_once(runtime)
     c=runtime.connect()
     try:
@@ -433,7 +511,7 @@ def reconcile_protocol_fanout_once(runtime: Runtime) -> dict:
             out=dispatch_protocol_message(runtime,mid)
             created+=len(out.get('created') or []);existing+=len(out.get('existing') or []);failed+=len(out.get('failed') or [])
         except Exception:failed+=1
-    return {'messages':len(ids),'created':created,'existing':existing,'failed':failed,'external':external,'authority_effect':'NONE'}
+    return {'messages':len(ids),'created':created,'existing':existing,'failed':failed,'local':local,'external':external,'authority_effect':'NONE'}
 
 
 def protocol_fanout_loop(runtime: Runtime):

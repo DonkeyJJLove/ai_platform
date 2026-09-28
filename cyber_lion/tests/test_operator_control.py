@@ -35,13 +35,13 @@ class OperatorControlTests(unittest.TestCase):
         return operator_control.apply_command(self.c,value,now)
 
     def test_message_idempotency_and_payload_conflict(self):
-        first=self.command('c1','MESSAGE',{'content':'check this'},'drone:MD025')
-        again=self.command('c1','MESSAGE',{'content':'check this'},'drone:MD025')
+        first=self.command('c1','MESSAGE',{'content':'check this'},'worker:MD025')
+        again=self.command('c1','MESSAGE',{'content':'check this'},'worker:MD025')
         self.assertFalse(first['idempotent']);self.assertTrue(again['idempotent'])
         self.assertEqual(self.c.execute('SELECT COUNT(*) FROM operator_messages').fetchone()[0],1)
         self.assertEqual(self.c.execute('SELECT COUNT(*) FROM operator_command_receipts').fetchone()[0],1)
         with self.assertRaisesRegex(ValueError,'payload conflict'):
-            self.command('c1','MESSAGE',{'content':'different'},'drone:MD025')
+            self.command('c1','MESSAGE',{'content':'different'},'worker:MD025')
 
     def test_client_cannot_supply_priority_field(self):
         with self.assertRaisesRegex(ValueError,'command fields'):
@@ -86,7 +86,7 @@ class OperatorControlTests(unittest.TestCase):
 
     def test_context_and_message_are_visible_to_target_drone(self):
         self.command('ctx','AMEND_CONTEXT',{'content':{'rule':'use evidence A'}})
-        msg=self.command('msg','MESSAGE',{'content':'verify branch X'},'drone:MD025')
+        msg=self.command('msg','MESSAGE',{'content':'verify branch X'},'worker:MD025')
         view=operator_control.assignment_context(self.c,'M1','MD025','LD1')
         self.assertEqual(view['context']['revision'],1)
         self.assertEqual(len(view['messages']),1)
@@ -115,7 +115,7 @@ class OperatorControlTests(unittest.TestCase):
             global_scheduler.record_receipt(self.c,aid,{'answer':'late'},now,material_drone_id='MD025',lease_generation=claimed['lease_generation'])
 
     def test_worker_application_marks_operator_message(self):
-        self.command('msg','MESSAGE',{'content':'use this input'},'drone:MD025')
+        self.command('msg','MESSAGE',{'content':'use this input'},'worker:MD025')
         d=execution_driver.snapshot(self.c,'M1')
         aid=global_scheduler.create_assignment(self.c,'M1','P1','LD1','MD025',{'kind':'LOCAL_MODEL_INFERENCE'},now,lease_generation=d['generation'])
         view=operator_control.assignment_context(self.c,'M1','MD025','LD1')
@@ -154,7 +154,7 @@ class OperatorControlTests(unittest.TestCase):
         self.command('parent-pause','PAUSE_SCOPE')
         current=operator_control.control_state(self.c,'M1')['control_epoch']
         with self.assertRaisesRegex(ValueError,'mission scope target'):
-            self.command('child-resume','RESUME_SCOPE',{'latch':'ALL'},target='drone:MD025',expected=current)
+            self.command('child-resume','RESUME_SCOPE',{'latch':'ALL'},target='worker:MD025',expected=current)
         self.assertEqual(operator_control.control_state(self.c,'M1')['pause_latch'],1)
 
     def test_stop_reassign_release_resume_preserves_remaining_ready_work(self):
