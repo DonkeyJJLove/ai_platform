@@ -66,7 +66,7 @@ class P0SurfaceClosureCampaignTests(unittest.TestCase):
     def test_provider_family_partition_and_concentration(self):
         _,c=campaign();multi=[f for f in c.provider_families if len(f.surface_digests)>1];single=[f for f in c.provider_families if len(f.surface_digests)==1]
         self.assertEqual(len(multi),50);self.assertEqual(sum(len(f.surface_digests) for f in multi),498);self.assertEqual(len(single),15)
-        self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),513
+        self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),513)
 
     def test_foreign_runtime_evidence_and_scan_drift_fail_closed(self):
         inv,_=current_inventory()
