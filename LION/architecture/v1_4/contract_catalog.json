@@ -2,8 +2,8 @@
   "schema": "lion.documentation.contract-catalog.v1",
   "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
   "reconciliation": {
-    "process_epoch": "R23",
-    "candidate_source_observation": "5f90f1c11e9f997ed9c5e3ac1b02c6d802d15745",
+    "process_epoch": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
+    "candidate_source_observation": "22f356ba537e1a3caef8e113e2dff48709e24061",
     "authority_effect": "NONE"
   },
   "record_semantics": "Each complete contract record is record_defaults overlaid by the contract-specific fields below.",
@@ -301,6 +301,137 @@
         "budget is not authority"
       ],
       "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "evolutionary-rnd",
+      "canonical_path": "cyber_lion/contracts/evolutionary_rnd.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "1.0.0",
+      "owner": "Evidence and epistemic R&D",
+      "invariants": [
+        "EvidenceObservation/Hypothesis/Experiment/Falsification/Promotion/Memory/Delta remain non-authoritative"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "evolutionary-epoch",
+      "canonical_path": "cyber_lion/contracts/evolutionary_epoch.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Evolutionary epoch",
+      "invariants": [
+        "epoch state transition is not authority or effect"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "governed-change-proposal",
+      "canonical_path": "cyber_lion/contracts/governed_change_proposal.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Governed self-implementation",
+      "invariants": [
+        "proposal is candidate only",
+        "proposal does not mint authority"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "governed-change-admission",
+      "canonical_path": "cyber_lion/contracts/governed_change_admission.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Governed change admission",
+      "invariants": [
+        "admission request derives from sealed proposal",
+        "admission request is non-effectful"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "cognitive-invocation",
+      "canonical_path": "cyber_lion/contracts/cognitive_invocation.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.cognitive-invocation/v1",
+      "owner": "CognitiveInvocation",
+      "invariants": [
+        "provider != endpoint != session != invocation != transport != result",
+        "cognitive invocation != authority activation",
+        "LOCAL and SAAS legs retain separate identities",
+        "receipt != reconciled result"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_cognitive_invocation_contract.CognitiveInvocationTests"
+      ]
+    },
+    {
+      "contract_id": "evidence-bound-learning-episode",
+      "canonical_path": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.evidence-bound-learning-episode/v1",
+      "owner": "GEP / EVALUATION-LEARNING",
+      "invariants": [
+        "post-decision evidence may label outcome but cannot enter pre-decision input",
+        "teacher output is not ground truth",
+        "UNKNOWN is not positive or negative",
+        "episode projects into existing EvolutionaryRnD evidence"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_evidence_bound_learning_episode.EBLETests"
+      ]
+    },
+    {
+      "contract_id": "model-release",
+      "canonical_path": "cyber_lion/contracts/model_release.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.model-release/v1",
+      "owner": "ModelRelease",
+      "invariants": [
+        "release identity is immutable",
+        "lifecycle state is outside release digest",
+        "promotion does not mint authority"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_model_release.ModelReleaseTests"
+      ]
+    },
+    {
+      "contract_id": "model-call-v2",
+      "canonical_path": "cyber_lion/contracts/model_call_v2.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.model-call/v2",
+      "owner": "ModelCallV2",
+      "invariants": [
+        "v1 storage remains unchanged",
+        "SentinelX-mediated SaaS transport is representable",
+        "missing v1 row != proof of no SaaS invocation"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_COMPATIBLE_SUCCESSOR",
+      "historical_predecessors": [
+        "lion.model-call/v1"
+      ],
+      "tests": [
+        "test_model_call_v2.ModelCallV2Tests"
+      ]
+    },
+    {
+      "contract_id": "coordinator-competency",
+      "canonical_path": "cyber_lion/contracts/coordinator_competency.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "v1.5 candidate",
+      "owner": "CoordinatorCompetencyProfile",
+      "invariants": [
+        "each competency has separate task/evidence",
+        "no aggregate coordinator quality score",
+        "competence cannot widen authority"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_coordinator_competency.CoordinatorCompetencyTests"
+      ]
     }
   ]
 }

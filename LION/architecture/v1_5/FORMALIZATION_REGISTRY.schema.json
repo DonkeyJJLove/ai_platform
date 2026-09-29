@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "entry": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_class": {
+          "enum": [
+            "CONTRACT",
+            "CURRENTNESS_CARRIER",
+            "DERIVED_PROJECTION",
+            "DOCUMENTATION",
+            "EVAL",
+            "RAG_RELEASE",
+            "RAG_ROUTE",
+            "RESEARCH_ARTIFACT",
+            "SOURCE"
+          ]
+        },
+        "artifact_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "consumers": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "currentness_mode": {
+          "enum": [
+            "EXACT_HEAD",
+            "MIXED",
+            "RUNTIME_OBSERVED",
+            "SOURCE_DERIVED",
+            "SUBJECT_DIGEST",
+            "VERSIONED_STATIC"
+          ]
+        },
+        "generator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "refresh_triggers": {
+          "items": {
+            "enum": [
+              "CAPABILITY_CHANGE",
+              "CONTRACT_CHANGE",
+              "CURRENTNESS_CHANGE",
+              "FLOW_CHANGE",
+              "MANUAL_REVIEW",
+              "RAG_RELEASE",
+              "RUNTIME_OBSERVATION",
+              "SEMANTIC_OWNER_CHANGE",
+              "SOURCE_CHANGE"
+            ]
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "schema_or_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "semantic_owner_concept": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "semantic_role": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_dependencies": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "validation_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "artifact_id",
+        "path",
+        "schema_or_type",
+        "semantic_role",
+        "semantic_owner_concept",
+        "generator",
+        "source_dependencies",
+        "refresh_triggers",
+        "validation_refs",
+        "consumers",
+        "currentness_mode",
+        "artifact_class"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "lion.formalization-registry/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "architecture_epoch": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "authority_effect": {
+      "const": "NONE"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/entry"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "registry_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "registry_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_id": {
+      "const": "lion.formalization-registry/v1"
+    }
+  },
+  "required": [
+    "schema_id",
+    "registry_id",
+    "architecture_epoch",
+    "entries",
+    "authority_effect",
+    "registry_digest"
+  ],
+  "title": "LION Formalization Registry",
+  "type": "object"
+}

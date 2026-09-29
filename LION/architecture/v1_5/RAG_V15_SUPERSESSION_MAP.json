@@ -1,0 +1,48 @@
+{
+  "schema": "lion.rag-v15-supersession-map/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "records": [
+    {
+      "old": "LION_CIP_RESEARCH_R1",
+      "new": "cyber_lion/contracts/cognitive_invocation.py",
+      "relation": "CANDIDATE_SEMANTIC_SUCCESSOR",
+      "history_preserved": true,
+      "effective": false
+    },
+    {
+      "old": "LION_EBLE_COORDINATOR_DESIGN_R1",
+      "new": "cyber_lion/contracts/evidence_bound_learning_episode.py + coordinator_competency.py + model_release.py",
+      "relation": "CANDIDATE_SEMANTIC_SUCCESSOR",
+      "history_preserved": true,
+      "effective": false
+    },
+    {
+      "old": "LION_ARCHITECTURE_FORMALIZATION_UPGRADE_R1",
+      "new": "LION v1.5 formalization kernel + Task2 AFM/FCR",
+      "relation": "CANDIDATE_SEMANTIC_SUCCESSOR",
+      "history_preserved": true,
+      "effective": false
+    },
+    {
+      "old": "lion.model-call/v1",
+      "new": "lion.model-call/v2",
+      "relation": "COMPATIBLE_PROJECTION_NOT_STORAGE_SUPERSESSION",
+      "history_preserved": true,
+      "effective": false
+    },
+    {
+      "old": "ModelPlaneIdentity",
+      "new": "ModelRelease",
+      "relation": "REFERENCE_ADAPTER_ONLY_UNTIL_EXACT_RELEASE_BOUND",
+      "history_preserved": true,
+      "effective": false
+    }
+  ],
+  "candidate_binding": {
+    "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+    "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+    "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+    "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf"
+  }
+}

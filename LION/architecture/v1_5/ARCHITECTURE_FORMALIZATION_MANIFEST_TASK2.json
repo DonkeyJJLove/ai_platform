@@ -1,0 +1,261 @@
+{
+  "schema_id": "lion.architecture-formalization-manifest/v1",
+  "manifest_id": "afm:v1.5-task2-cip-eble-model-release-model-call-v2",
+  "baseline": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "branch": "mission/v15-architecture-formalization-kernel-r1",
+    "head": "35a2d87af643a24f90cf4e6bc84f5f5fdaba734e",
+    "tree": "f3443d9ac51b66f1309311dc56706489dbc8b0c7"
+  },
+  "source_evolution_delta": {
+    "ref": "task:LION-V15-CIP-EBLE-COGNITIVE-EVOLUTION-INTEGRATION-R1",
+    "digest": "7753f03a7fde315e8a55dd919229e2f8f98a4e2132ff96792fef191007660fa7"
+  },
+  "change_class": "MIXED_ARCHITECTURE",
+  "affected_concepts": [
+    "CognitiveInvocation",
+    "EvidenceBoundLearningEpisode",
+    "ModelRelease",
+    "CoordinatorCompetencyProfile",
+    "ModelCallV2"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "CognitiveInvocation",
+      "layers": [
+        "EVOLUTIONARY_EPOCH",
+        "FLEET_AND_SWARM",
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "EvidenceBoundLearningEpisode",
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "EVOLUTIONARY_EPOCH"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "ModelRelease",
+      "layers": [
+        "TRUSTED_RUNTIME",
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "CoordinatorCompetencyProfile",
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "EVOLUTIONARY_EPOCH"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "ModelCallV2",
+      "layers": [
+        "FLEET_AND_SWARM",
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "OBSERVABILITY_AND_RECONCILIATION"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "semantic_owner_delta": [
+    {
+      "concept": "CognitiveInvocation",
+      "primary": "cyber_lion/contracts/cognitive_invocation.py",
+      "secondary": [
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "EvidenceBoundLearningEpisode",
+      "primary": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "secondary": [
+        "cyber_lion/contracts/evolutionary_rnd.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "ModelRelease",
+      "primary": "cyber_lion/contracts/model_release.py",
+      "secondary": [
+        "cyber_lion/contracts/model_plane_adapter.py"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "CoordinatorCompetencyProfile",
+      "primary": "cyber_lion/contracts/coordinator_competency.py",
+      "secondary": [
+        "LION/evals/evolution/evolution_cases.yaml"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "ModelCallV2",
+      "primary": "cyber_lion/contracts/model_call_v2.py",
+      "secondary": [
+        "cyber_lion/mission_control/model_calls.py"
+      ],
+      "operation": "ADD"
+    }
+  ],
+  "formalization_updates": [
+    {
+      "artifact_id": "semantic-owners",
+      "operation": "UPDATE",
+      "reason": "Five new canonical concepts require unique semantic owners."
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "operation": "UPDATE",
+      "reason": "Cognitive invocation, EBLE, ModelRelease and ModelCallV2 add canonical contracts."
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "operation": "UPDATE",
+      "reason": "Cognitive routing and coordinator competencies add bounded non-authoritative capabilities."
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "operation": "UPDATE",
+      "reason": "New concepts bind to existing architecture layers without a sixteenth layer."
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "operation": "UPDATE",
+      "reason": "Cognitive invocation and EBLE introduce bounded subflow/event semantics."
+    },
+    {
+      "artifact_id": "gap-projection",
+      "operation": "UPDATE",
+      "reason": "The cognition/learning frontier becomes explicit and no longer appears as an unowned gap."
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "operation": "UPDATE",
+      "reason": "Behavioral regressions must cover transport/cognition, evidence leakage, identity and authority separation."
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "operation": "UPDATE",
+      "reason": "Fresh agents must discover canonical cognitive and learning owners."
+    },
+    {
+      "artifact_id": "rag-routing",
+      "operation": "UPDATE",
+      "reason": "Task3 requires versioned v1.5 source/owner/migration/supersession/currentness inputs."
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "operation": "REGENERATE",
+      "reason": "Any integrated successor must rebind truth/currentness after candidate source stabilization."
+    }
+  ],
+  "currentness_invalidations": [
+    "semantic-owners",
+    "contract-catalog",
+    "capability-catalog",
+    "architecture-projection",
+    "event-state-catalog",
+    "gap-projection",
+    "rag-routing",
+    "currentness-carriers"
+  ],
+  "migration": {
+    "steps": [
+      "Add inert v1.5 contracts and existing-layer architecture projection.",
+      "Add model-call/v1 to model-call/v2 projection without mutating v1 storage.",
+      "Add EBLE bridge to existing EvolutionaryRnD EvidenceObservation path.",
+      "Add v1.5 catalog/discoverability/RAG candidate artifacts.",
+      "Verify closure before any repository integration."
+    ],
+    "compatibility_adapter": "model-call/v1 -> model-call/v2 projection; existing ModelPlane identity -> ModelReleaseRef adapter",
+    "exit_condition": "FormalizationClosureRecord PASS on exact candidate tree with all required evals/tests and RAG probes PASS."
+  },
+  "rollback": {
+    "steps": [
+      "Drop v1.5 cognitive/learning candidate files.",
+      "Retain model-call/v1 and existing ModelPlane paths unchanged.",
+      "Retain v1.4 architecture lineage unchanged."
+    ],
+    "compatibility_adapter": null,
+    "exit_condition": "No operational database, scheduler, broker, authority, model weights, runtime or deployment state changed."
+  },
+  "tests_required": [
+    "test_cognitive_invocation_contract",
+    "test_evidence_bound_learning_episode",
+    "test_model_release",
+    "test_model_call_v2",
+    "test_coordinator_competency",
+    "test_cognitive_evolution_architecture",
+    "test_hmk9d_ablation_contract"
+  ],
+  "evals_required": [
+    "TRANSPORT_READY_IS_NOT_COGNITION_DONE",
+    "SENTINELX_READY_IS_NOT_SAAS_SESSION_READY",
+    "MODEL_HEARTBEAT_IS_NOT_INFERENCE",
+    "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
+    "DUAL_LEGS_KEEP_SEPARATE_IDENTITY",
+    "COGNITIVE_RESULT_IS_NOT_AUTHORITY",
+    "TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH",
+    "FUTURE_EVIDENCE_CANNOT_ENTER_INPUT",
+    "UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE",
+    "MODEL_RELEASE_CANNOT_CHANGE_IN_PLACE",
+    "BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY"
+  ],
+  "falsifiers": [
+    "Any new top-level architecture layer is added without a separate falsification showing existing layers insufficient.",
+    "Transport/session/heartbeat state is accepted as proof of completed cognition.",
+    "LOCAL and SAAS legs share invocation or attempt identity.",
+    "Teacher/model agreement is accepted as confirmed ground truth without independent evidence/reconciliation.",
+    "Post-decision evidence enters reconstructed pre-decision input.",
+    "ModelRelease bytes/components change under an existing release identity.",
+    "Competency evidence changes effective authority.",
+    "EBLE writes to queues, scheduler, sessions, broker, authority or operational truth stores.",
+    "model-call/v1 is silently widened instead of projected to v2."
+  ],
+  "discoverability": {
+    "bootstrap_routes": [
+      "AGENTS.md -> LION/architecture/v1_5/README.md",
+      "LION/architecture/v1_5/README.md -> LION/architecture/v1_5/semantic_owners.json",
+      "LION/architecture/v1_5/semantic_owners.json -> canonical contract owner"
+    ],
+    "probe_questions": [
+      "Where is CognitiveInvocation owned?",
+      "What proves a SaaS cognitive invocation completed?",
+      "Where is EBLE semantics owned?",
+      "What identifies an immutable ModelRelease?",
+      "How is model-call/v1 projected to model-call/v2?",
+      "Which top-level layers contain CognitiveInvocation?"
+    ],
+    "max_reads_to_owner": 3
+  },
+  "rag_delta": {
+    "required": true,
+    "record_ids": [
+      "RAG-V15-CIP",
+      "RAG-V15-EBLE",
+      "RAG-V15-MODEL-RELEASE",
+      "RAG-V15-MODEL-CALL-V2",
+      "RAG-V15-COORDINATOR-COMPETENCY",
+      "RAG-V15-FORMALIZATION-CLOSURE"
+    ],
+    "retrieval_probes": [
+      "cognitive invocation provider endpoint session attempt currentness reconciliation",
+      "evidence bound learning episode time leakage teacher ground truth",
+      "model release immutable identity lifecycle",
+      "model call v2 SentinelX transport projection",
+      "coordinator competency authority separation"
+    ]
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "manifest_digest": "b7662c7c4f2bb35388e7a83d369ced1ce8c7e80ddcfe45748c2cf14bd8750a18"
+}
