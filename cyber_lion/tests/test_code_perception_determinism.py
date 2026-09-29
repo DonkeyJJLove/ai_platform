@@ -584,7 +584,10 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
         event_merge_metadata = optional_sha40_metadata(pr.get("merge_commit_sha"), "pull_request merge metadata sha")
         workflow_merge = validated_sha40(os.environ.get("GITHUB_SHA", ""), "workflow synthetic merge sha")
 
-        live_base = resolve_live_base_sha(root, expected_base_ref)
+        # pull_request.base.sha is immutable event evidence. The default branch may
+        # advance while a long-running PR workflow is still executing (including
+        # because this exact PR was merged), so live branch movement is not base drift.
+        pinned_base = expected_base
         live_head_before = resolve_live_base_sha(root, expected_head_ref)
         candidate_tree = fetch_exact_branch_tree(root, expected_head_ref, expected_head)
         live_head_after = resolve_live_base_sha(root, expected_head_ref)
@@ -595,7 +598,7 @@ class CodePerceptionDeterminismTests(unittest.TestCase):
 
         validate_synthetic_merge_topology(
             event_base_sha=expected_base,
-            live_base_sha=live_base,
+            live_base_sha=pinned_base,
             event_head_sha=expected_head,
             live_head_sha=live_head_after,
             workflow_merge_sha=workflow_merge,
