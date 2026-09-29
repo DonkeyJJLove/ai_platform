@@ -1,10 +1,8 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
 const {conversation,conversationInfo,boundConversation,conversationReport}=require('../src/conversation.cjs');
 const {EmbeddedBrowser}=require('../src/browser.cjs');
-const {ThreadConsumer}=require('../src/thread-consumer.cjs');
-const {Relay}=require('../src/relay.cjs');
-const {TASK}=require('../src/contract.cjs');
 const PROJECT='https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b-lion-evolusion/project';
 const DIRECT='https://chatgpt.com/c/6a123456-1234-1234-1234-123456789abc';
 const SCOPED='https://chatgpt.com/g/g-p-6a91cabd3f208191a37f295819e9f75b/c/6a123456-1234-1234-1234-123456789abc';
@@ -33,27 +31,38 @@ test('diagnostic retains the routing error but never query, fragment or auth cre
  assert.ok(!JSON.stringify(report).includes('secret'));
  for(const url of ['https://auth.openai.com/?code=secret','https://user:secret@chatgpt.com/c/test'])assert.ok(!JSON.stringify(conversationReport(url,PROJECT)).includes('secret'));
 });
-test('thread and mission consumers require native confirmation before binding an unscoped route',()=>{
- const store={projectUrl:PROJECT,handoffs:()=>[]},scope={mode:'THREAD_CONSUMER',mission_id:null,thread_id:'test-thread',conversation_url:DIRECT,task_sha256:TASK};
- assert.throws(()=>new ThreadConsumer({store,scope}),/PROJECT_CONFIRMATION_REQUIRED/);
- const consumer=new ThreadConsumer({store,scope:{...scope,project_confirmation:confirmation}});assert.equal(consumer.scope.conversation_url,DIRECT);
- const mission={...scope,mission_id:'LION-R19-test'};assert.throws(()=>new Relay({store,scope:mission}),/PROJECT_CONFIRMATION_REQUIRED/);
- assert.equal(new Relay({store,scope:{...mission,project_confirmation:confirmation}}).scope.conversation_url,DIRECT);
+test('legacy thread and mission consumers are retired from Electron startup in favor of canonical conversations',()=>{
+ const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
+ assert.match(main,/CanonicalConversationSaaSConsumer/);
+ assert.match(main,/LEGACY_DELIVERY_RETIRED/);
+ assert.match(main,/external_saas_semantics:'EXPLICIT_BRIDGE_ONLY'/);
+ assert.doesNotMatch(main,/new ThreadConsumer\(/);
+ assert.doesNotMatch(main,/new Relay\(/);
 });
 test('browser send binds exact direct conversation and refuses a navigation before click',async()=>{
- for(const navigate of [false,true]){
-  let current=DIRECT,clicks=0;
-  const contents={isDestroyed:()=>false,getURL:()=>current,executeJavaScriptInIsolatedWorld:async(world,[{code}])=>{
-   assert.equal(world,1001);
-   if(code.includes('return {composer:'))return {composer:true,empty:true,busy:false};
-   // Exercise the generated URL guard, not a fake implementation of ready().
-   const document={querySelector:selector=>selector.includes('send-button')?{disabled:false,click(){clicks++}}:{textContent:code.includes('s.click()')?'fixture prompt':'',focus(){}},execCommand:()=>{if(navigate)current=DIRECT+'-other';return true}};
-   return Function('location','document','return '+code)({href:current},document);
-  }};
-  const browser=new EmbeddedBrowser(contents,PROJECT);
-  if(navigate)await assert.rejects(browser.send({conversation_url:DIRECT},'fixture prompt',()=>true),/SEND_UNKNOWN/);
-  else await browser.send({conversation_url:DIRECT},'fixture prompt',()=>true);
-  assert.equal(clicks,navigate?0:1);
-  assert.equal(await browser.ready({conversation_url:DIRECT+'-other'}),navigate);
+ const PriorInputEvent=global.InputEvent,PriorEvent=global.Event;
+ global.InputEvent=class InputEvent{constructor(type,init={}){this.type=type;Object.assign(this,init)}};
+ global.Event=class Event{constructor(type,init={}){this.type=type;Object.assign(this,init)}};
+ try{
+  for(const navigate of [false,true]){
+   let current=DIRECT,clicks=0;
+   const contents={isDestroyed:()=>false,getURL:()=>current,executeJavaScriptInIsolatedWorld:async(world,[{code}])=>{
+    assert.equal(world,1001);
+    if(code.includes('return {composer:'))return {composer:true,empty:true,busy:false};
+    // Exercise the generated URL guard, not a fake implementation of ready().
+    const sendButton={disabled:false,click(){clicks++}};
+    const prompt={textContent:code.includes('s.click()')?'fixture prompt':'',focus(){},dispatchEvent(){},closest(){return {querySelector:()=>sendButton}}};
+    const document={querySelector:selector=>selector.includes('send-button')?sendButton:prompt,execCommand:()=>{if(navigate)current=DIRECT+'-other';return true}};
+    return Function('location','document','return '+code)({href:current},document);
+   }};
+   const browser=new EmbeddedBrowser(contents,PROJECT);
+   if(navigate)await assert.rejects(browser.send({conversation_url:DIRECT},'fixture prompt',()=>true),/SEND_UNKNOWN/);
+   else await browser.send({conversation_url:DIRECT},'fixture prompt',()=>true);
+   assert.equal(clicks,navigate?0:1);
+   assert.equal(await browser.ready({conversation_url:DIRECT+'-other'}),navigate);
+  }
+ }finally{
+  if(PriorInputEvent===undefined)delete global.InputEvent;else global.InputEvent=PriorInputEvent;
+  if(PriorEvent===undefined)delete global.Event;else global.Event=PriorEvent;
  }
 });
