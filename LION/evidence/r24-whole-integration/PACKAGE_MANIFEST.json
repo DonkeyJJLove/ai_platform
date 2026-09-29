@@ -2,19 +2,55 @@
   "schema": "lion.r24.package-manifest/v1",
   "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
   "files": [
-    {"path":"cyber_lion/app_coordination/conversation_schema.py","sha256":"3dbb9d26ce48eaf11ecebfaa741817f17fd7f292b6189c9f6b697a1bdd85d014"},
-    {"path":"cyber_lion/app_coordination/conversation_domain.py","sha256":"4e0365a1cb7e26d62dda44bde6753dc2e7d14c4435f6dd68bb29787b8591b9fc"},
-    {"path":"cyber_lion/app_coordination/conversation_chat.py","sha256":"c664d2aadc02c0de9b40bd47a0f0983697042490b793517ca0f5439c4cabc3af"},
-    {"path":"cyber_lion/app_coordination/conversation_backfill.py","sha256":"c69869bd4ac557381885350cb883406be656f1e1eeed123232a1ff729b896f74"},
-    {"path":"cyber_lion/app_coordination/r24_model_chat_ui.py","sha256":"d022f262d72244637ecbebb0abb6c5b43ce8aff675f78d2d9f34c2e49e23713f"},
-    {"path":"cyber_lion/app_coordination/local_intelligence_gateway.py","sha256":"05021047899961f2af3c4bc44a7d1a8853a9f1dfcf91fd5b5418e074f90c4ef5"},
-    {"path":"cyber_lion/mission_control/operator_control.py","sha256":"694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697"},
-    {"path":"cyber_lion/mission_control/operator_swarm_session.py","sha256":"1f473ba8e935412e8491734f1de72d73d02934517275953502cffb08e0060ef8"},
-    {"path":"tools/lion_operator_gateway.py","sha256":"0a19c0f169e33e863e956013d46899805305407272319251fa478a56243e2279"},
-    {"path":"tools/lion_local_intelligence_runtime.py","sha256":"66ef28b63e0acb3650762e95d22b87d4072e15d4ddfad1a22cac1d30c3483819"},
-    {"path":"tools/lion_r24_whole_integration_gate.py","sha256":"bc9b012d875f2d69c5126263d0bc3680098ce0aabb274094b300b568d41f1840"},
-    {"path":".github/workflows/lion-r24-whole-integration-closure.yml","sha256":"6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"}
+    {
+      "path": "cyber_lion/app_coordination/conversation_schema.py",
+      "sha256": "3dbb9d26ce48eaf11ecebfaa741817f17fd7f292b6189c9f6b697a1bdd85d014"
+    },
+    {
+      "path": "cyber_lion/app_coordination/conversation_domain.py",
+      "sha256": "4e0365a1cb7e26d62dda44bde6753dc2e7d14c4435f6dd68bb29787b8591b9fc"
+    },
+    {
+      "path": "cyber_lion/app_coordination/conversation_chat.py",
+      "sha256": "23be23d6eec76773d3c0f7a26dbb68d28a850c970eb2a6dad3f327e3f4f3debe"
+    },
+    {
+      "path": "cyber_lion/app_coordination/conversation_backfill.py",
+      "sha256": "c69869bd4ac557381885350cb883406be656f1e1eeed123232a1ff729b896f74"
+    },
+    {
+      "path": "cyber_lion/app_coordination/r24_model_chat_ui.py",
+      "sha256": "d022f262d72244637ecbebb0abb6c5b43ce8aff675f78d2d9f34c2e49e23713f"
+    },
+    {
+      "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
+      "sha256": "0d9c12e8c5ea809d0949ba6c83b59e7de312a2767e10b2f5afd70a5bd4c48395"
+    },
+    {
+      "path": "cyber_lion/mission_control/operator_control.py",
+      "sha256": "694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697"
+    },
+    {
+      "path": "cyber_lion/mission_control/operator_swarm_session.py",
+      "sha256": "1f473ba8e935412e8491734f1de72d73d02934517275953502cffb08e0060ef8"
+    },
+    {
+      "path": "tools/lion_operator_gateway.py",
+      "sha256": "0a19c0f169e33e863e956013d46899805305407272319251fa478a56243e2279"
+    },
+    {
+      "path": "tools/lion_local_intelligence_runtime.py",
+      "sha256": "66ef28b63e0acb3650762e95d22b87d4072e15d4ddfad1a22cac1d30c3483819"
+    },
+    {
+      "path": "tools/lion_r24_whole_integration_gate.py",
+      "sha256": "bc9b012d875f2d69c5126263d0bc3680098ce0aabb274094b300b568d41f1840"
+    },
+    {
+      "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
+      "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
+    }
   ],
-  "package_digest": "43f3d111c0d35dca2ed30471a6d48caf95d0b0194592195a079eb6623d36be62",
+  "package_digest": "e6c174eeee05e1b6ce4ed717b6bbb90e2be58e6c364bcf4b856fd5b6aff58145",
   "authority_effect": "NONE"
 }
