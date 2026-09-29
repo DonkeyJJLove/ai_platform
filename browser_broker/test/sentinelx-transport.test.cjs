@@ -21,46 +21,53 @@ test('thread consumer and relay use SentinelX transport identity',()=>{
  assert.match(relay,/OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP/);
 });
 
-test('bound thread startup reopens the verified project Chat conversation',()=>{
+test('canonical startup opens project landing and exact native thread only through explicit bridge',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- assert.match(main,/startupConversation=relay instanceof ThreadConsumer\?relay\.scope\.conversation_url:store\.restoreConversation\(\)/);
+ assert.match(main,/CanonicalConversationSaaSConsumer/);
+ assert.match(main,/const startupConversation=PROJECT/);
  assert.match(main,/saas\.webContents\.loadURL\(startupConversation\)/);
+ assert.match(main,/openBridgeForConversation\(conversationId\)/);
+ assert.match(main,/LEGACY_DELIVERY_RETIRED/);
 });
 
-test('mission-scoped SaaS admission uses current broker and no R19 prefix gate',()=>{
- const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- assert.doesNotMatch(main,/startsWith\('LION-R19-'\)/);
- assert.match(main,/\/api\/v3\/saas-broker\/requests\//);
- assert.match(main,/execution_preflight\?\.mission_readiness==='READY_BOUND'/);
+test('canonical SaaS admission uses current broker and canonical conversation queue without R19 prefix gates',()=>{
+ const consumer=fs.readFileSync(path.join(__dirname,'../src/canonical-conversation-consumer.cjs'),'utf8');
+ assert.doesNotMatch(consumer,/startsWith\('LION-R19-'\)/);
+ assert.match(consumer,/\/api\/v3\/saas-broker\/requests\//);
+ assert.match(consumer,/\/api\/conversations\/saas\/pending\?limit=128/);
+ assert.match(consumer,/CANONICAL_BRIDGE_WINS/);
 });
 
 
-test('right pane defaults to Mission Control and keeps SaaS alive as a sibling tab',()=>{
+test('Mission Control stays on the left while LPCL Panel and SaaS are persistent right-side siblings',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- assert.match(main,/let activeRightTab='mission'/);
+ assert.match(main,/let activeRightTab='panel'/);
  assert.match(main,/const mission=new WebContentsView/);
  assert.match(main,/const tabs=new WebContentsView/);
- assert.match(main,/views=\[panel,saas,mission,tabs\]/);
- assert.match(main,/saas\.setBounds\(activeRightTab==='saas'\?shown:hidden\)/);
- assert.match(main,/mission\.setBounds\(activeRightTab==='mission'\?shown:hidden\)/);
- assert.match(main,/selectRightTab\('mission'\)/);
+ assert.match(main,/views=\[saas,panel,mission,tabs\]/);
+ assert.match(main,/mission\.setBounds\(\{x:0,y:0,width:split,height\}\)/);
+ assert.match(main,/panel\.setBounds\(activeRightTab==='panel'\?shown:hidden\)/);
+ assert.match(main,/saas\.setBounds\(shown\)/);
+ assert.match(main,/selectRightTab\('panel'\)/);
  assert.match(main,/mission\.webContents\.loadURL\(MC\)/);
  assert.match(main,/saas\.webContents\.loadURL\(startupConversation\)/);
 });
 
-test('Mission Control tab is loopback-origin constrained and tab chrome has no external navigation',()=>{
+test('Mission Control left surface is loopback-origin constrained and right tab chrome has no external navigation',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
  assert.match(main,/if\(v===mission\)return u\.origin===new URL\(MC\)\.origin/);
- assert.match(main,/if\(v===tabs\)return u\.protocol==='data:'/);
- assert.match(main,/LION MISSION CONTROL/);
+ assert.match(main,/if\(v===tabs\)return u\.protocol==='data:'\|\|u\.protocol==='lion-tab:'/);
+ assert.match(main,/lion-tab:\/\/panel/);
+ assert.match(main,/lion-tab:\/\/saas/);
+ assert.match(main,/LPCL PANEL/);
  assert.match(main,/ChatGPT SaaS/);
- assert.match(main,/did-navigate-in-page/);
 });
 
 test('switching right tabs changes bounds only and never reloads the SaaS conversation',()=>{
  const main=fs.readFileSync(path.join(__dirname,'../src/main.cjs'),'utf8');
- const match=main.match(/const selectRightTab=name=>\{([^}]+)\}/);
- assert.ok(match);
- assert.doesNotMatch(match[1],/loadURL|reload|close/);
- assert.match(match[1],/layout\(\)/);
+ const line=main.split('\n').find(x=>x.includes('selectRightTab=name=>'));
+ assert.ok(line);
+ assert.doesNotMatch(line,/loadURL|reload|close/);
+ assert.match(line,/activeRightTab=name==='saas'\?'saas':'panel'/);
+ assert.match(line,/layout\(\)/);
 });
