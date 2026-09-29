@@ -76,6 +76,19 @@ def write_status(**values):
         "model": MODEL_NAME,
         "worker_profile": PROFILE,
         "architecture": ARCH,
+        "local_model_inference_capable": True,
+        "local_model_route_current": bool(values.get("model_reachability") == "OK"),
+        "mission_control_route_current": bool(values.get("mission_control_reachability") == "OK"),
+        "container_id_current": bool(RUNTIME_INSTANCE_ID and RUNTIME_INSTANCE_ID != "UNKNOWN"),
+        "worker_id_current": bool(WORKER_ID and WORKER_ID.startswith("MD")),
+        "cognitive_readiness": (
+            "READY"
+            if values.get("mission_control_reachability") == "OK"
+            and values.get("model_reachability") == "OK"
+            and RUNTIME_INSTANCE_ID
+            and WORKER_ID.startswith("MD")
+            else "NOT_COGNITIVELY_READY"
+        ),
         "transport_protocol": "HTTP/1.1_PERSISTENT",
         "transport_metrics": {
             "open_connections": int(transport.open_connections) if transport is not None else 0,

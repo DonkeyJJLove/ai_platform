@@ -1,0 +1,40 @@
+{
+  "schema": "lion.r24.real-model-evidence/v1",
+  "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
+  "local": {
+    "evidence_class": "LIVE_RUNTIME_READBACK",
+    "model_call_id": "modelcall-8867a29629399a5cc8972377ba33585e",
+    "mission_id": "LION-R24-BOUNDED-MUTATION-SUBSTRATE-BOOTSTRAP-R2",
+    "phase_id": "PROTO_04276be987301eddae80e224",
+    "assignment_id": "assignment-62fcd1e959d24a57b7af4d77b6731b63",
+    "logical_drone_id": "LD001",
+    "material_worker_id": "MD001",
+    "provider": "LION_LOCAL_MODEL",
+    "model_requested": "gpt-oss-20b-MXFP4",
+    "model_declared": "gpt-oss-20b-MXFP4",
+    "transport": "LOCAL",
+    "state": "RESPONSE_RECONCILED",
+    "input_digest": "7609714a26998b60d6b4b98b4dd2263a323ad1878fd8c175cf6935bcb9b80c55",
+    "result_digest": "b8ecf991752ee9306815dd35f839394e4906acc58b2d19fac370a0c8e0114fa1",
+    "finished_at": "2026-09-28T00:19:26.576128Z",
+    "authority_effect": "NONE"
+  },
+  "saas": {
+    "evidence_class": "LIVE_RUNTIME_READBACK",
+    "request_id": "saas-356fddd02ad0497db56b00f81f50b097",
+    "turn_id": "turn_86aa9ccc-10e4-47e6-8aa5-baa8dab03e4b",
+    "status": "RESPONDED",
+    "progress_state": "RECEIPT_BOUND",
+    "transport": "CHATGPT_SENTINELX_MCP",
+    "response_text": "R24_SAAS_REAL_OK_R2",
+    "response_digest": "f830f6e23fa1a201c6084acc5faa41d7b90f3a728e040840761b4b167e2df736",
+    "receipt_digest": "7455db2dea504578c72401c429ea44e6ec008be18a01fb52bd83a74e5c819924",
+    "binding_id": "saas-binding-225064c4f4494649b7c84a4fc8103d4d",
+    "scope_type": "CONTROL_PLANE",
+    "scope_id": "GLOBAL_SUPERVISOR_CHANNEL",
+    "thread_id": null,
+    "responded_at": "2026-09-28T13:49:35.465956Z",
+    "authority_effect": "NONE"
+  },
+  "authority_effect": "NONE"
+}

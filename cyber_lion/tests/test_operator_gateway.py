@@ -9,6 +9,7 @@ from pathlib import Path
 from threading import Thread
 
 from tools.lion_operator_gateway import FleetThreadingHTTPServer,Runtime,make_handler,now
+from tools.lion_local_intelligence_runtime import OperatorControlBridge
 from cyber_lion.mission_control import operator_control
 
 
@@ -66,6 +67,27 @@ class OperatorGatewayTests(unittest.TestCase):
     def test_revoked_proxy_grant_denies_still_valid_transport_key(self):
         c=self.runtime.connect();operator_control.revoke_active_grants(c,operator_control.SENTINELX_PROXY_PRINCIPAL,now);c.close()
         code,out=self.req('/v1/commands',self.command('afterrevoke','STOP_SCOPE'),proxy=True);self.assertEqual(code,409);self.assertIn('not granted',out['error'])
+    def test_ephemeral_panel_pairing_challenge_is_single_use_and_bridge_e2e(self):
+        bridge=OperatorControlBridge(f'http://127.0.0.1:{self.port}',self.panel_key)
+        paired=bridge('pair',{})
+        self.assertTrue(paired['paired']);self.assertEqual(paired['principal_id'],'OPERATOR_PRIMARY')
+        token=paired['session_token']
+        session=bridge('session',{'session_token':token})
+        self.assertTrue(session['paired']);self.assertEqual(session['principal_id'],'OPERATOR_PRIMARY')
+        revoked=bridge('unpair',{'session_token':token});self.assertTrue(revoked['revoked'])
+
+        code,challenge=self.req('/v1/session/pair/challenge',{},panel=True)
+        self.assertEqual(code,201);self.assertEqual(challenge['authority_effect'],'NONE')
+        payload={'challenge_id':challenge['challenge_id'],'pairing_code':challenge['pairing_code']}
+        code,paired=self.req('/v1/session/pair',payload,panel=True);self.assertEqual(code,201);self.assertTrue(paired['paired'])
+        code,replay=self.req('/v1/session/pair',payload,panel=True);self.assertEqual(code,403);self.assertIn('challenge denied',replay['error'])
+
+    def test_pairing_challenge_rejects_wrong_transport_and_wrong_code(self):
+        code,_=self.req('/v1/session/pair/challenge',{},panel=False);self.assertEqual(code,403)
+        code,challenge=self.req('/v1/session/pair/challenge',{},panel=True);self.assertEqual(code,201)
+        payload={'challenge_id':challenge['challenge_id'],'pairing_code':'wrong'}
+        code,out=self.req('/v1/session/pair',payload,panel=True);self.assertEqual(code,403);self.assertIn('challenge denied',out['error'])
+
     def test_panel_transport_requires_human_pairing_for_primary_command(self):
         code,out=self.req('/v1/commands',self.command('panel-unpaired','STOP_SCOPE'),panel=True);self.assertEqual(code,403)
         code,paired=self.req('/v1/session/pair',{'pairing_code':'z'*64},panel=True);self.assertEqual(code,201);self.assertTrue(paired['paired']);token=paired['session_token']

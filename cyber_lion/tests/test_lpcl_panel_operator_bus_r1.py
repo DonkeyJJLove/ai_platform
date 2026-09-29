@@ -11,13 +11,15 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         cls.supervisor=(ROOT/'tools/lion_control_plane_supervisor_windows.ps1').read_text(encoding='utf-8')
         cls.client=(ROOT/'tools/lion_operator_client.py').read_text(encoding='utf-8')
 
-    def test_main_composer_is_shared_bus_not_provider_route(self):
+    def test_main_composer_is_model_chat_and_protocol_bus_is_separate(self):
         t=self.ui
-        self.assertIn('SHARED OPERATOR MESSAGE PLANE',t)
-        self.assertIn('LION BUS · SENTINELX',t)
+        self.assertIn('PROTOCOL COMMUNICATION PLANE',t)
+        self.assertIn('LION BUS · PROTOKÓŁ ROJU',t)
         self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",t)
-        self.assertIn("'SUPERSEDED_BY_LION_BUS'",t)
-        self.assertNotIn('<select id="composerRoute"',t)
+        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/chat'",t)
+        self.assertIn('id="modelRoute"',t)
+        self.assertIn('MODEL CHAT',t)
+        self.assertNotIn("'SUPERSEDED_BY_LION_BUS'",t)
         self.assertNotIn('Otwórz Firefox Mediator',t)
         self.assertNotIn('id="saasBridgePanel"',t)
         self.assertNotIn('refreshFirefoxMediator',t)
@@ -57,9 +59,20 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         self.assertIn('Observe-OptionalFirefoxTransport',t)
         self.assertIn('optional_model_transport_8790=$FirefoxTransportActive',t)
         self.assertIn("--operator-panel-proxy-key-file",t)
-        self.assertIn("--operator-pairing-key-file",t)
-        self.assertIn("OPERATOR_PAIRING_KEY_MISSING",t)
+        self.assertNotIn("--operator-pairing-key-file",t)
+        self.assertNotIn("OPERATOR_PAIRING_KEY_MISSING",t)
         self.assertIn("$OperatorControlUrl = 'http://127.0.0.1:8767'",t)
+
+    def test_operator_pairing_uses_ephemeral_gateway_challenge_without_browser_secret(self):
+        self.assertIn("/v1/session/pair/challenge",self.runtime)
+        self.assertIn("'challenge_id':challenge_id,'pairing_code':code",self.runtime)
+        self.assertIn("body:'{}'",self.ui)
+        self.assertIn("PAIRING · lokalna obecność operatora",self.ui)
+        self.assertNotIn('id="operatorPairing"',self.ui)
+        self.assertIn("Aktywuj sterowanie operatorem",self.ui)
+        self.assertIn("operator-panel-proxy.dpapi",self.supervisor)
+        self.assertNotIn("--operator-pairing-key-file",self.supervisor)
+        self.assertNotIn("OPERATOR_PAIRING_KEY_MISSING",self.supervisor)
 
     def test_optional_browser_transport_is_observed_not_managed(self):
         t=self.supervisor

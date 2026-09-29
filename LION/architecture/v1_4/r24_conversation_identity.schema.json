@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lion://schemas/r24/conversation-identity/v1",
+  "title": "LION R24 Conversation Identity Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conversation_id",
+    "binding_epoch",
+    "channel",
+    "lane_id",
+    "message_id",
+    "causation_id",
+    "correlation_id",
+    "context_digest",
+    "authority_effect"
+  ],
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "mission_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "binding_epoch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "channel": {
+      "enum": [
+        "MODEL_CHAT",
+        "PROTOCOL"
+      ]
+    },
+    "model_route": {
+      "enum": [
+        "LOCAL",
+        "SAAS",
+        "DUAL",
+        "DETERMINISTIC_ONLY"
+      ]
+    },
+    "lane_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "provider": {
+      "enum": [
+        "LOCAL",
+        "SAAS",
+        "DETERMINISTIC"
+      ]
+    },
+    "provider_session_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "native_saas_project_thread_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "external_bridge_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "protocol_correlation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "participant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(?:drone:LD|worker:MD)[A-Za-z0-9._:-]*$"
+    },
+    "participant_kind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "LOGICAL_DRONE",
+        "MATERIAL_WORKER",
+        null
+      ]
+    },
+    "executor_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "executor_kind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "LOGICAL",
+        "MATERIAL",
+        null
+      ]
+    },
+    "message_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "causation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "context_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authority_effect": {
+      "const": "NONE"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "native_saas_project_thread_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "native_saas_project_thread_id"
+        ]
+      },
+      "then": {
+        "required": [
+          "external_bridge_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "participant_kind": {
+            "const": "LOGICAL_DRONE"
+          }
+        },
+        "required": [
+          "participant_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "participant_id": {
+            "pattern": "^drone:LD"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "participant_kind": {
+            "const": "MATERIAL_WORKER"
+          }
+        },
+        "required": [
+          "participant_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "participant_id": {
+            "pattern": "^worker:MD"
+          }
+        }
+      }
+    }
+  ],
+  "x-lion-semantic-invariants": [
+    "CONVERSATION_ID != MISSION_ID",
+    "CONVERSATION_ID != PROVIDER_SESSION_ID",
+    "CONVERSATION_ID != NATIVE_SAAS_PROJECT_THREAD_ID",
+    "CONVERSATION_ID != PROTOCOL_CORRELATION_ID",
+    "MODEL_CHAT != PROTOCOL_CHANNEL",
+    "LOGICAL_DRONE != MATERIAL_WORKER",
+    "PARTICIPANT_IDENTITY != EXECUTOR_IDENTITY",
+    "MISSION_BINDING != CONVERSATION_IDENTITY",
+    "MODEL_ROUTE != CONVERSATION_IDENTITY",
+    "LOCAL_PROVIDER_SESSION != SAAS_PROVIDER_SESSION",
+    "RESPONSE_DELIVERY_REQUIRES_EXACT_IDENTITY_MATCH",
+    "AUTHORITY_EFFECT == NONE"
+  ],
+  "x-lion-successor-semantics": {
+    "BIND": "FREEZE_PREDECESSOR_AND_CREATE_BOUND_SUCCESSOR",
+    "DETACH": "FREEZE_PREDECESSOR_AND_CREATE_UNBOUND_SUCCESSOR",
+    "HISTORY_REWRITE": "FORBIDDEN"
+  },
+  "x-lion-delivery-match-dimensions": [
+    "conversation_id",
+    "binding_epoch",
+    "lane_id",
+    "message_id",
+    "causation_id",
+    "correlation_id",
+    "context_digest",
+    "participant_id"
+  ],
+  "x-lion-target-entities": {
+    "conversations": [
+      "conversation_id",
+      "state",
+      "created_at"
+    ],
+    "conversation_lineage": [
+      "conversation_id",
+      "predecessor_conversation_id",
+      "transition",
+      "created_at",
+      "provenance"
+    ],
+    "conversation_bindings": [
+      "conversation_id",
+      "binding_epoch",
+      "mission_id",
+      "state",
+      "context_digest",
+      "bound_at",
+      "detached_at",
+      "provenance"
+    ],
+    "conversation_provider_lanes": [
+      "conversation_id",
+      "binding_epoch",
+      "lane_id",
+      "provider",
+      "provider_session_ref",
+      "state",
+      "context_digest"
+    ],
+    "conversation_threads": [
+      "conversation_id",
+      "binding_epoch",
+      "lane_id",
+      "thread_ref",
+      "state"
+    ],
+    "conversation_messages": [
+      "message_id",
+      "conversation_id",
+      "binding_epoch",
+      "lane_id",
+      "causation_id",
+      "correlation_id",
+      "context_digest"
+    ],
+    "conversation_delivery_events": [
+      "event_id",
+      "conversation_id",
+      "binding_epoch",
+      "lane_id",
+      "message_id",
+      "sequence",
+      "state"
+    ],
+    "conversation_delivery_cursors": [
+      "conversation_id",
+      "binding_epoch",
+      "consumer_id",
+      "last_sequence"
+    ],
+    "conversation_external_bridges": [
+      "bridge_id",
+      "conversation_id",
+      "external_thread_ref",
+      "external_system",
+      "created_at",
+      "provenance",
+      "context_snapshot_digest",
+      "authority_effect"
+    ],
+    "conversation_migration_provenance": [
+      "migration_version",
+      "mission_id",
+      "conversation_id",
+      "source_digest",
+      "history_classification",
+      "created_at"
+    ]
+  },
+  "x-lion-dual-lane-rule": "LOCAL_AND_SAAS_PROVIDER_SESSIONS_ARE_DISTINCT_AND_SHARE_ONLY_IMMUTABLE_CONTEXT_SNAPSHOT",
+  "x-lion-phase1-runtime-conformance": "RED_NOT_IMPLEMENTED"
+}

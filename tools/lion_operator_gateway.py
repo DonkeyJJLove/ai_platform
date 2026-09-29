@@ -8,6 +8,7 @@ process so containment can survive loss of the main 8766 HTTP service.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -22,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from cyber_lion.mission_control import operator_control, operator_swarm_session
+from cyber_lion.mission_control import operator_control, operator_swarm_session, global_scheduler, execution_driver, dual_result_join
 
 DEFAULT_DB = "/var/lib/sentinelx/uploads/lion-mission-control-v3/mission-control-v3.db"
 DEFAULT_KEY = "/var/lib/sentinelx/uploads/lion-mission-control-v3/operator-gateway.key"
@@ -67,7 +68,7 @@ def read_json(path: Path, default):
 class Runtime:
     def __init__(self, db: Path, key_file: Path, proxy_key_file: Path, panel_proxy_key_file: Path, pairing_key_file: Path, floor_file: Path, mission_control_url: str, *, bootstrap_primary=False):
         self.db=db.resolve();self.key_file=key_file.resolve();self.proxy_key_file=proxy_key_file.resolve();self.panel_proxy_key_file=panel_proxy_key_file.resolve();self.pairing_key_file=pairing_key_file.resolve();self.floor_file=floor_file.resolve()
-        self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={}
+        self.key=load_key(self.key_file);self.proxy_key=load_key(self.proxy_key_file);self.panel_proxy_key=load_key(self.panel_proxy_key_file);self.pairing_key=load_key(self.pairing_key_file);self.mission_control_url=mission_control_url.rstrip('/');self.lock=threading.Lock();self.session_lock=threading.Lock();self.sessions={};self.pairing_challenges={}
         c=self.connect();operator_control.migrate(c,now);operator_swarm_session.migrate(c,now)
         participant=operator_control.participant_snapshot(c).get('participant')
         if participant is None:
@@ -96,9 +97,27 @@ class Runtime:
         if len(supplied)==len(self.panel_proxy_key) and secrets.compare_digest(supplied,self.panel_proxy_key):return operator_control.PANEL_PROXY_PRINCIPAL
         return None
 
-    def pair_panel(self, supplied_key, pairing_code):
+    def issue_panel_pairing_challenge(self, supplied_key):
         if self._key_identity(supplied_key)!=operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('panel transport authentication required')
-        if not isinstance(pairing_code,str) or len(pairing_code)!=len(self.pairing_key) or not secrets.compare_digest(pairing_code,self.pairing_key):raise PermissionError('operator pairing code denied')
+        stamp=__import__('time').time();challenge_id='pair-'+secrets.token_urlsafe(18);pairing_code=secrets.token_urlsafe(32);expires=stamp+60
+        code_digest=hashlib.sha256(pairing_code.encode('utf-8')).hexdigest()
+        with self.session_lock:
+            self.pairing_challenges={k:v for k,v in self.pairing_challenges.items() if float(v.get('expires') or 0)>stamp}
+            while len(self.pairing_challenges)>=32:self.pairing_challenges.pop(next(iter(self.pairing_challenges)))
+            self.pairing_challenges[challenge_id]={'code_digest':code_digest,'expires':expires}
+        return {'challenge_id':challenge_id,'pairing_code':pairing_code,'expires_at_epoch':expires,'authority_effect':'NONE'}
+
+    def pair_panel(self, supplied_key, pairing_code, challenge_id=None):
+        if self._key_identity(supplied_key)!=operator_control.PANEL_PROXY_PRINCIPAL:raise PermissionError('panel transport authentication required')
+        if challenge_id is None:
+            if not isinstance(pairing_code,str) or len(pairing_code)!=len(self.pairing_key) or not secrets.compare_digest(pairing_code,self.pairing_key):raise PermissionError('operator pairing code denied')
+        else:
+            if not isinstance(challenge_id,str) or not isinstance(pairing_code,str):raise PermissionError('operator pairing challenge denied')
+            stamp=__import__('time').time()
+            with self.session_lock:challenge=self.pairing_challenges.pop(challenge_id,None)
+            if not challenge or float(challenge.get('expires') or 0)<=stamp:raise PermissionError('operator pairing challenge denied')
+            observed=hashlib.sha256(pairing_code.encode('utf-8')).hexdigest()
+            if not secrets.compare_digest(observed,str(challenge.get('code_digest') or '')):raise PermissionError('operator pairing challenge denied')
         token=secrets.token_urlsafe(48);expires=__import__('time').time()+8*3600
         with self.session_lock:self.sessions[token]={'principal_id':operator_control.PRIMARY_OPERATOR,'expires':expires,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL}
         return {'paired':True,'principal_id':operator_control.PRIMARY_OPERATOR,'transport_principal':operator_control.PANEL_PROXY_PRINCIPAL,'session_token':token,'expires_at_epoch':expires}
@@ -177,13 +196,329 @@ class Runtime:
         try:return operator_control.command_status(c,cid)
         finally:c.close()
 
+    def mc_get(self,path,timeout=8):
+        req=urllib.request.Request(self.mission_control_url+path,headers={'User-Agent':'LION-Protocol-Cognition/1'},method='GET')
+        with urllib.request.urlopen(req,timeout=timeout) as response:
+            return json.loads(response.read().decode('utf-8'))
+
+    def mc_post(self,path,value,timeout=10):
+        body=json.dumps(value,ensure_ascii=False).encode('utf-8')
+        req=urllib.request.Request(self.mission_control_url+path,data=body,headers={'Content-Type':'application/json','User-Agent':'LION-Protocol-Cognition/1'},method='POST')
+        with urllib.request.urlopen(req,timeout=timeout) as response:
+            return json.loads(response.read().decode('utf-8'))
+
     def apply(self,value,*,principal_id):
         c=self.connect()
         try:out=operator_control.apply_command(c,value,now,principal_id=principal_id)
         finally:c.close()
         if value.get('action') in operator_control.CONTROL_ACTIONS or value.get('action')=='REASSIGN':
             self.persist_floor(value['mission_id'])
+        if value.get('action')=='MESSAGE':
+            result=out.get('result') if isinstance(out,dict) else None
+            message_id=result.get('message_id') if isinstance(result,dict) else None
+            if message_id:
+                try:out['protocol_fanout']=dispatch_protocol_message(self,message_id)
+                except Exception as exc:out['protocol_fanout']={'state':'PARTIAL','error':type(exc).__name__+':'+str(exc),'authority_effect':'NONE'}
         return self.try_resume_driver(out) if value.get('action')=='RESUME_SCOPE' else out
+
+
+def _protocol_route(conn,message_id,participant_id):
+    row=conn.execute("SELECT cognition_route FROM operator_protocol_recipient_routes WHERE message_id=? AND recipient=?",(message_id,participant_id)).fetchone()
+    if row is None:raise ValueError('protocol cognition route missing')
+    return str(row['cognition_route'])
+
+def _protocol_trajectory(conn,message_id,participant_id):
+    row=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    return dict(row) if row else None
+
+
+def _execution_binding(conn,mission_id,participant_id):
+    if participant_id.startswith('worker:'):
+        material=participant_id.split(':',1)[1]
+        row=conn.execute("SELECT logical_drone_id FROM mission_execution_assignments WHERE mission_id=? AND material_drone_id=? AND phase_id='__TOPOLOGY__' ORDER BY created_at LIMIT 1",(mission_id,material)).fetchone()
+        logical=(row['logical_drone_id'] if row else None) or ('MATERIAL_'+material)
+        return logical,material
+    if participant_id.startswith('drone:'):
+        logical=participant_id.split(':',1)[1]
+        row=conn.execute("SELECT material_drone_id FROM mission_execution_assignments WHERE mission_id=? AND logical_drone_id=? AND material_drone_id IS NOT NULL ORDER BY CASE WHEN phase_id='__TOPOLOGY__' THEN 0 ELSE 1 END,created_at LIMIT 1",(mission_id,logical)).fetchone()
+        if row and row['material_drone_id']:return logical,row['material_drone_id']
+        # Compatibility for small in-memory/operator tests where material_workers
+        # carries the logical mapping directly.
+        cols={r['name'] for r in conn.execute('PRAGMA table_info(material_workers)')}
+        if {'mission_id','pod_name','logical_id'}.issubset(cols):
+            row=conn.execute("SELECT pod_name FROM material_workers WHERE mission_id=? AND logical_id=? ORDER BY pod_name LIMIT 1",(mission_id,logical)).fetchone()
+            if row and row['pod_name']:return logical,row['pod_name']
+        raise ValueError('logical participant has no material execution substrate: '+participant_id)
+    raise ValueError('unsupported protocol participant: '+str(participant_id))
+
+
+def _participant_prompt(participant_id,mission_id,content,route):
+    return ("LION PROTOCOL PARTICIPANT\nparticipant_id="+participant_id+"\nmission_id="+mission_id+
+            "\ncognition_route="+route+"\nauthority_effect=NONE\n"
+            "Respond only as this participant. Do not impersonate or aggregate other participants.\n\n"+content)
+
+def _create_local_protocol_assignment(conn,msg,participant,route,logical,material,driver,dispatch_authority,prompt,dual_request_id=None):
+    participant_phase='PROTO_'+operator_control.digest({'message_id':msg['message_id'],'participant_id':participant,'route':route})[:24]
+    payload={
+        'kind':'LOCAL_MODEL_INFERENCE',
+        'purpose':'PROTOCOL_FANOUT_R1',
+        'conversation_protocol_version':5,
+        'protocol_message_id':msg['message_id'],
+        'fanout_id':msg['fanout_id'],
+        'recipient_set_digest':msg['recipient_set_digest'],
+        'responding_participant_id':participant,
+        'cognition_route':route,
+        'model_capability':'LOCAL_MODEL_INFERENCE',
+        'operator_message_ids':[msg['message_id']],
+        'messages':[{'role':'user','content':prompt}],
+        'max_tokens':384,
+        'dual_request_id':dual_request_id,
+        'authority_effect':'NONE',
+    }
+    aid=global_scheduler.create_assignment(conn,msg['mission_id'],participant_phase,logical,material,payload,now,lease_generation=int(driver['generation']),dispatch_authority=dispatch_authority)
+    operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,local_assignment_id=aid,state='LOCAL_ASSIGNMENT_READY' if route=='LOCAL' else 'DUAL_WAITING_RESPONSES')
+    conn.commit()
+    return aid
+
+def _dispatch_protocol_participant(runtime,conn,msg,delivery,driver,dispatch_authority):
+    participant=delivery['recipient'];route=_protocol_route(conn,msg['message_id'],participant)
+    trajectory=_protocol_trajectory(conn,msg['message_id'],participant)
+    if trajectory is None:
+        trajectory=operator_control.ensure_protocol_trajectory(conn,msg['message_id'],msg['mission_id'],participant,route,now)
+        conn.commit()
+    if trajectory['state'] in {'RESPONSE_RECONCILED','FAILED','CANCELLED','SAAS_SEND_UNKNOWN','DUAL_SAAS_SEND_UNKNOWN'}:
+        return {'participant_id':participant,'cognition_route':route,'state':trajectory['state'],'idempotent':True}
+    logical,material=_execution_binding(conn,msg['mission_id'],participant)
+    prompt=_participant_prompt(participant,msg['mission_id'],msg['content'],route)
+    if route=='DETERMINISTIC_ONLY':
+        operator_control.record_protocol_model_response(conn,msg['message_id'],participant,'DETERMINISTIC_OK',now,result_digest=operator_control.digest('DETERMINISTIC_OK'),model_call_id='deterministic:'+trajectory['trajectory_id'])
+        conn.commit()
+        return {'participant_id':participant,'cognition_route':route,'state':'RESPONSE_RECONCILED','idempotent':False}
+    if route=='LOCAL':
+        if trajectory.get('local_assignment_id'):
+            return {'participant_id':participant,'cognition_route':route,'state':trajectory['state'],'assignment_id':trajectory['local_assignment_id'],'idempotent':True}
+        aid=_create_local_protocol_assignment(conn,msg,participant,route,logical,material,driver,dispatch_authority,prompt)
+        return {'participant_id':participant,'cognition_route':route,'state':'LOCAL_ASSIGNMENT_READY','assignment_id':aid,'logical_drone_id':logical,'material_worker_id':material,'idempotent':False}
+    if route=='SAAS':
+        if not participant.startswith('drone:'):raise ValueError('SAAS protocol cognition requires logical drone participant')
+        request_id=trajectory.get('saas_request_id')
+        if not request_id:
+            operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,state='SAAS_SEND_ATTEMPT')
+            conn.commit()
+            try:
+                handoff=runtime.mc_post('/api/v3/saas-broker/requests',{'scope_type':'MISSION','mission_id':msg['mission_id'],'question':prompt,'authority_effect':'NONE'})
+            except Exception:
+                operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,state='SAAS_SEND_UNKNOWN')
+                conn.commit()
+                raise
+            request_id=handoff['request_id']
+            trajectory=operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,saas_request_id=request_id,state='SAAS_WAITING_RESPONSE')
+            conn.commit()
+        return {'participant_id':participant,'cognition_route':route,'state':trajectory['state'],'saas_request_id':request_id,'idempotent':True}
+    if route=='DUAL':
+        if not participant.startswith('drone:'):raise ValueError('DUAL protocol cognition requires logical drone participant')
+        dual_id=trajectory.get('dual_request_id')
+        if not dual_id:
+            currentness={'mission_id':msg['mission_id'],'fanout_id':msg['fanout_id'],'participant_id':participant,'recipient_set_digest':msg['recipient_set_digest']}
+            dual=dual_result_join.create_dual(conn,msg['mission_id'],'PROTO_'+operator_control.digest({'message_id':msg['message_id'],'participant_id':participant})[:24],prompt,currentness,now)
+            dual_id=dual['request_id']
+            trajectory=operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,dual_request_id=dual_id,state='DUAL_INTENT_DURABLE')
+            conn.commit()
+        dualrow=conn.execute("SELECT local_prompt,saas_prompt,saas_request_id FROM mission_dual_evaluations WHERE request_id=?",(dual_id,)).fetchone()
+        if dualrow is None:raise ValueError('dual protocol evaluation missing')
+        aid=trajectory.get('local_assignment_id')
+        if not aid:
+            aid=_create_local_protocol_assignment(conn,msg,participant,route,logical,material,driver,dispatch_authority,dualrow['local_prompt'],dual_request_id=dual_id)
+            trajectory=operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,local_assignment_id=aid,state='DUAL_WAITING_RESPONSES')
+            conn.commit()
+        saas_id=trajectory.get('saas_request_id') or dualrow['saas_request_id']
+        if not saas_id:
+            operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,state='DUAL_SAAS_SEND_ATTEMPT')
+            conn.commit()
+            try:
+                handoff=runtime.mc_post('/api/v3/saas-broker/requests',{'scope_type':'MISSION','mission_id':msg['mission_id'],'question':dualrow['saas_prompt'],'authority_effect':'NONE'})
+            except Exception:
+                operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,state='DUAL_SAAS_SEND_UNKNOWN')
+                conn.commit()
+                raise
+            saas_id=handoff['request_id']
+            dual_result_join.link_saas_request(conn,dual_id,saas_id,now)
+            trajectory=operator_control.protocol_trajectory_update(conn,msg['message_id'],participant,now,saas_request_id=saas_id,state='DUAL_WAITING_RESPONSES')
+            conn.commit()
+        return {'participant_id':participant,'cognition_route':route,'state':'DUAL_WAITING_RESPONSES','assignment_id':aid,'dual_request_id':dual_id,'saas_request_id':saas_id,'logical_drone_id':logical,'material_worker_id':material,'idempotent':False}
+    raise ValueError('unsupported protocol cognition route')
+
+def dispatch_protocol_message(runtime: Runtime,message_id: str) -> dict:
+    c=runtime.connect()
+    try:
+        msg=c.execute("SELECT message_id,mission_id,content,fanout_id,recipient_set_digest,state FROM operator_messages WHERE message_id=?",(message_id,)).fetchone()
+        if msg is None:raise ValueError('protocol message not found')
+        control=operator_control.control_state(c,msg['mission_id'],now)
+        if control and (bool(control['pause_latch']) or bool(control['stop_latch'])):
+            return {'state':'FENCED','message_id':message_id,'created':[],'existing':[],'failed':[],'expected':0,'authority_effect':'NONE'}
+        driver=c.execute("SELECT generation,current_phase,state FROM mission_execution_drivers WHERE mission_id=?",(msg['mission_id'],)).fetchone()
+        if driver is None:raise ValueError('mission execution driver unavailable')
+        if driver['state'] not in {'ACTIVE','WAITING','BLOCKED'}:raise ValueError('mission driver not dispatchable')
+        dispatch_authority=operator_control.PRIMARY_OPERATOR if control and control['control_owner']==operator_control.PRIMARY_OPERATOR else operator_control.AUTONOMOUS_OWNER
+        rows=c.execute("SELECT recipient,delivery_state FROM operator_message_deliveries WHERE message_id=? ORDER BY recipient",(message_id,)).fetchall()
+        created=[];existing=[];failed=[]
+        for delivery in rows:
+            participant=delivery['recipient']
+            if delivery['delivery_state'] in {'APPLIED','FAILED','CANCELLED'}:continue
+            try:
+                before=_protocol_trajectory(c,message_id,participant)
+                out=_dispatch_protocol_participant(runtime,c,msg,delivery,driver,dispatch_authority)
+                (existing if before else created).append(out)
+            except Exception as exc:
+                failed.append({'participant_id':participant,'error':type(exc).__name__+':'+str(exc)})
+        state='COMPLETE_DISPATCH' if not failed else 'PARTIAL'
+        return {'state':state,'message_id':message_id,'fanout_id':msg['fanout_id'],'expected':len(rows),'created':created,'existing':existing,'failed':failed,'authority_effect':'NONE'}
+    finally:c.close()
+
+
+def reconcile_protocol_local_once(runtime: Runtime) -> dict:
+    c=runtime.connect()
+    try:
+        tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        required={'protocol_cognitive_trajectories','mission_execution_assignments','mission_execution_receipts','mission_assignment_payloads'}
+        if not required.issubset(tables):
+            return {'checked':0,'reconciled':0,'failed':0,'cancelled':0,'waiting':0,'authority_effect':'NONE'}
+        rows=[dict(r) for r in c.execute("""
+          SELECT t.*,a.state AS assignment_state,r.status AS receipt_status,p.result_json
+          FROM protocol_cognitive_trajectories t
+          JOIN mission_execution_assignments a ON a.assignment_id=t.local_assignment_id
+          LEFT JOIN mission_execution_receipts r ON r.assignment_id=a.assignment_id
+          LEFT JOIN mission_assignment_payloads p ON p.assignment_id=a.assignment_id
+          WHERE t.local_assignment_id IS NOT NULL
+            AND t.state NOT IN ('RESPONSE_RECONCILED','FAILED','CANCELLED')
+          ORDER BY t.created_at,t.participant_id LIMIT 64
+        """).fetchall()]
+    finally:c.close()
+    reconciled=failed=cancelled=waiting=0
+    for row in rows:
+        try:
+            assignment_state=str(row.get('assignment_state') or '')
+            if assignment_state=='PASS':
+                try:result=json.loads(row.get('result_json') or '{}')
+                except Exception:result={}
+                response=result.get('response_text') if isinstance(result,dict) else None
+                if not isinstance(response,str) or not response.strip():
+                    c=runtime.connect()
+                    try:
+                        operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'LOCAL_PASS_WITHOUT_RESPONSE_PAYLOAD',now)
+                        c.commit();failed+=1
+                    finally:c.close()
+                    continue
+                c=runtime.connect()
+                try:
+                    operator_control.note_assignment_application(c,row['local_assignment_id'],result,now)
+                    state=c.execute("SELECT state FROM protocol_cognitive_trajectories WHERE trajectory_id=?",(row['trajectory_id'],)).fetchone()[0]
+                    c.commit()
+                finally:c.close()
+                if state in {'RESPONSE_RECONCILED','DUAL_LOCAL_RESPONSE_READY'}:reconciled+=1
+                else:waiting+=1
+            elif assignment_state=='FAIL':
+                c=runtime.connect()
+                try:
+                    operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'LOCAL_ASSIGNMENT_FAIL',now)
+                    c.commit();failed+=1
+                finally:c.close()
+            elif assignment_state in {'CANCELLED','STALE_RESULT'}:
+                c=runtime.connect()
+                try:
+                    operator_control.cancel_protocol_trajectory(c,row['message_id'],row['participant_id'],'LOCAL_ASSIGNMENT_'+assignment_state,now)
+                    c.commit();cancelled+=1
+                finally:c.close()
+            elif assignment_state=='CANCEL_REQUESTED':
+                c=runtime.connect()
+                try:
+                    operator_control.protocol_trajectory_update(c,row['message_id'],row['participant_id'],now,state='CANCELLATION_REQUESTED')
+                    c.commit();waiting+=1
+                finally:c.close()
+            else:
+                waiting+=1
+        except Exception:
+            failed+=1
+    return {'checked':len(rows),'reconciled':reconciled,'failed':failed,'cancelled':cancelled,'waiting':waiting,'authority_effect':'NONE'}
+
+
+def reconcile_protocol_external_once(runtime: Runtime) -> dict:
+    c=runtime.connect()
+    try:
+        rows=[dict(r) for r in c.execute("SELECT * FROM protocol_cognitive_trajectories WHERE state IN ('SAAS_WAITING_RESPONSE','DUAL_WAITING_RESPONSES','DUAL_LOCAL_RESPONSE_READY','DUAL_INTENT_DURABLE') ORDER BY created_at LIMIT 64").fetchall()]
+    finally:c.close()
+    reconciled=failed=waiting=0
+    for row in rows:
+        try:
+            if row['cognition_route']=='SAAS':
+                if not row.get('saas_request_id'):waiting+=1;continue
+                status=runtime.mc_get('/api/v3/saas/requests/'+row['saas_request_id']);state=status.get('status') or status.get('state')
+                if state=='RESPONDED' and isinstance(status.get('response_text'),str) and status['response_text'].strip():
+                    c=runtime.connect()
+                    try:
+                        operator_control.record_protocol_model_response(c,row['message_id'],row['participant_id'],status['response_text'],now,result_digest=status.get('response_digest'),model_call_id='saas:'+row['saas_request_id'])
+                        c.commit();reconciled+=1
+                    finally:c.close()
+                elif state in {'FAILED','CANCELLED','EXPIRED','REJECTED','SUPERSEDED'}:
+                    c=runtime.connect()
+                    try:
+                        operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'SAAS_'+str(state),now)
+                        c.commit();failed+=1
+                    finally:c.close()
+                else:waiting+=1
+            elif row['cognition_route']=='DUAL':
+                saas_request_id=row.get('saas_request_id')
+                if saas_request_id:
+                    saas_status=runtime.mc_get('/api/v3/saas/requests/'+saas_request_id)
+                    saas_state=saas_status.get('status') or saas_status.get('state')
+                    if saas_state in {'FAILED','CANCELLED','EXPIRED','REJECTED','SUPERSEDED'}:
+                        c=runtime.connect()
+                        try:
+                            operator_control.fail_protocol_trajectory(c,row['message_id'],row['participant_id'],'DUAL_SAAS_'+str(saas_state),now)
+                            c.commit();failed+=1
+                        finally:c.close()
+                        continue
+                if row.get('state')!='DUAL_LOCAL_RESPONSE_READY':waiting+=1;continue
+                if not row.get('dual_request_id'):waiting+=1;continue
+                status=runtime.mc_get('/api/v3/dual/'+row['dual_request_id'])
+                if status.get('state')=='JOINED' and isinstance(status.get('answer'),str) and status['answer'].strip():
+                    c=runtime.connect()
+                    try:
+                        operator_control.record_protocol_model_response(c,row['message_id'],row['participant_id'],status['answer'],now,result_digest=operator_control.digest(status['answer']),model_call_id='dual:'+row['dual_request_id'])
+                        c.commit();reconciled+=1
+                    finally:c.close()
+                else:waiting+=1
+        except Exception:
+            failed+=1
+    return {'checked':len(rows),'reconciled':reconciled,'failed':failed,'waiting':waiting,'authority_effect':'NONE'}
+
+def reconcile_protocol_fanout_once(runtime: Runtime) -> dict:
+    local=reconcile_protocol_local_once(runtime)
+    external=reconcile_protocol_external_once(runtime)
+    c=runtime.connect()
+    try:
+        rows=c.execute("""SELECT DISTINCT m.message_id
+                         FROM operator_messages m
+                         JOIN operator_message_deliveries d ON d.message_id=m.message_id
+                         WHERE m.kind='MESSAGE' AND m.state IN ('PENDING','PARTIAL')
+                           AND d.delivery_state NOT IN ('APPLIED','FAILED','CANCELLED')
+                         ORDER BY m.created_at,m.message_id LIMIT 64""").fetchall()
+        ids=[r['message_id'] for r in rows]
+    finally:c.close()
+    created=existing=failed=0
+    for mid in ids:
+        try:
+            out=dispatch_protocol_message(runtime,mid)
+            created+=len(out.get('created') or []);existing+=len(out.get('existing') or []);failed+=len(out.get('failed') or [])
+        except Exception:failed+=1
+    return {'messages':len(ids),'created':created,'existing':existing,'failed':failed,'local':local,'external':external,'authority_effect':'NONE'}
+
+
+def protocol_fanout_loop(runtime: Runtime):
+    while True:
+        try:reconcile_protocol_fanout_once(runtime)
+        except Exception:pass
+        time.sleep(0.75)
 
 
 def reconcile_active_swarm_sessions_once(runtime: Runtime) -> dict:
@@ -288,10 +623,14 @@ def make_handler(runtime: Runtime):
         def do_POST(self):
             try:
                 path=unquote(urlsplit(self.path).path);value=self.body()
-                if path=='/v1/session/pair':
-                    if set(value)!={'pairing_code'}:raise ValueError('pair schema')
+                if path=='/v1/session/pair/challenge':
+                    if value:raise ValueError('pair challenge schema')
                     supplied=self.headers.get('X-LION-Panel-Proxy-Key') or self.headers.get('X-LION-Operator-Proxy-Key')
-                    return self.reply(runtime.pair_panel(supplied,value['pairing_code']),201)
+                    return self.reply(runtime.issue_panel_pairing_challenge(supplied),201)
+                if path=='/v1/session/pair':
+                    if set(value) not in ({'pairing_code'},{'challenge_id','pairing_code'}):raise ValueError('pair schema')
+                    supplied=self.headers.get('X-LION-Panel-Proxy-Key') or self.headers.get('X-LION-Operator-Proxy-Key')
+                    return self.reply(runtime.pair_panel(supplied,value['pairing_code'],value.get('challenge_id')),201)
                 if path=='/v1/session/revoke':
                     if value:raise ValueError('revoke schema')
                     principal=self.auth()
@@ -337,20 +676,6 @@ def make_handler(runtime: Runtime):
                     finally:c.close()
                 principal=self.auth()
                 if path=='/v1/commands':
-                    if principal==operator_control.PRIMARY_OPERATOR and isinstance(value,dict) and value.get('action')=='MESSAGE':
-                        mission_id=value.get('mission_id');payload=value.get('payload') if isinstance(value.get('payload'),dict) else {};content=payload.get('content');command_id=value.get('command_id');target=value.get('target') or ('mission:'+str(mission_id or ''))
-                        c=runtime.connect()
-                        try:
-                            active=operator_swarm_session.active_session(c,principal,now)
-                            if active and active.get('session',{}).get('mission_id')==mission_id:
-                                sid=active['session']['session_id'];members=active.get('members') or []
-                                if target in {'mission:'+mission_id,'swarm:'+mission_id}:
-                                    primary=next((m.get('participant_id') for m in members if m.get('member_kind')=='MATERIAL_WORKER' and m.get('role')=='PRIMARY' and m.get('state')=='ACTIVE'),None)
-                                    if not primary:raise ValueError('swarm primary worker unavailable')
-                                    target=primary
-                                sent=operator_swarm_session.send_message(c,principal,sid,command_id,target,content,now,kind='REQUEST')
-                                return self.reply({'schema':'lion.operator-command-swarm-route/v1','mission_id':mission_id,'session_id':sid,'round_id':sent.get('round_id'),'message':sent.get('message'),'assignments':sent.get('assignments') or [],'admission_state':'ACCEPTED','execution_state':'DISPATCHED','observation_state':'PERSISTED','authority_effect':'NONE','idempotent':bool(sent.get('idempotent'))},201)
-                        finally:c.close()
                     return self.reply(runtime.apply(value,principal_id=principal),201)
                 if path=='/v1/events/ack':
                     if set(value)!={'consumer_id','mission_id','event_id'}:raise ValueError('ack schema')
@@ -377,6 +702,7 @@ def main():
     if a.host not in {'127.0.0.1','::1'}:raise SystemExit('operator gateway must remain loopback-only')
     runtime=Runtime(Path(a.db),Path(a.key_file),Path(a.proxy_key_file),Path(a.panel_proxy_key_file),Path(a.pairing_key_file),Path(a.epoch_floor),a.mission_control_url,bootstrap_primary=a.bootstrap_primary)
     threading.Thread(target=swarm_reconcile_loop,args=(runtime,),daemon=True,name='operator-swarm-reconciler').start()
+    threading.Thread(target=protocol_fanout_loop,args=(runtime,),daemon=True,name='operator-protocol-fanout-reconciler').start()
     FleetThreadingHTTPServer((a.host,a.port),make_handler(runtime)).serve_forever()
 
 

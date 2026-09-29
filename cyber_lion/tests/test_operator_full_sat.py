@@ -17,7 +17,7 @@ class OperatorFullSATTests(unittest.TestCase):
         if action in {'RESUME_SCOPE','RELEASE_CONTROL','AMEND_PLAN','REASSIGN','APPROVE_PROPOSAL'}:x['expected_revision']=operator_control.control_state(self.c,'SAT-M',now)['control_epoch']
         return operator_control.apply_command(self.c,x,now)
     def test_message_status_context_take_stop_reassign_release_resume_without_models(self):
-        msg=self.cmd('sat-01','MESSAGE',{'content':'operator evidence'},'drone:MD025');self.assertEqual(msg['admission_state'],'ACCEPTED')
+        msg=self.cmd('sat-01','MESSAGE',{'content':'operator evidence'},'worker:MD025');self.assertEqual(msg['admission_state'],'ACCEPTED')
         status=self.cmd('sat-02','REQUEST_STATUS');self.assertEqual(status['result']['mission_id'],'SAT-M')
         ctx=self.cmd('sat-03','AMEND_CONTEXT',{'content':{'rule':'operator revision'}});self.assertEqual(ctx['result']['context_revision'],1)
         take=self.cmd('sat-04','TAKE_CONTROL');self.assertEqual(take['result']['control']['control_owner'],operator_control.PRIMARY_OPERATOR)

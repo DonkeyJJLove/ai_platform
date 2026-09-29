@@ -19,6 +19,9 @@ from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handof
 apply_saas_handoff_extension(Gateway)
 from cyber_lion.app_coordination.web_research_broker import WebEvidence
 from cyber_lion.app_coordination import ui_runtime_events
+from cyber_lion.app_coordination.conversation_schema import migrate_conversation_schema
+from cyber_lion.app_coordination.conversation_domain import conversation_domain_operation
+from cyber_lion.app_coordination.conversation_chat import chat_store_operation
 from cyber_lion.contracts.phase_execution_contract import compile_panel_phase_contracts, preflight_execution_contracts, PhaseExecutionContractError
 
 DRONE_ROLES={
@@ -60,7 +63,7 @@ class ThreadStore:
             CREATE TABLE IF NOT EXISTS thread_bindings(thread_id TEXT PRIMARY KEY,mission_id TEXT,target TEXT NOT NULL,channel TEXT NOT NULL,binding_revision INTEGER NOT NULL,binding_state TEXT NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE);
             CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_thread_seq ON messages(thread_id,seq);
-            """);c.commit();ui_runtime_events.migrate(c);c.close()
+            """);c.commit();ui_runtime_events.migrate(c);migrate_conversation_schema(c);c.close()
     def _id(self,v):
         if not isinstance(v,str) or not self.ID_RE.fullmatch(v):raise ValueError('thread_id')
         return v
@@ -71,6 +74,10 @@ class ThreadStore:
             try:
                 if op=='ui_runtime_event':
                     return ui_runtime_events.record(c,args)
+                if op.startswith('conversation_chat_'):
+                    return chat_store_operation(c,op[len('conversation_chat_'):],args)
+                if op.startswith('conversation_'):
+                    return conversation_domain_operation(c,op[len('conversation_'):],args)
                 if op=='list':
                     rows=[]
                     for x in c.execute('SELECT t.thread_id,t.title,t.created_at,t.updated_at,b.mission_id,b.target,b.channel,b.binding_revision,b.binding_state FROM threads t LEFT JOIN thread_bindings b ON b.thread_id=t.thread_id ORDER BY t.created_at DESC LIMIT 500'):
@@ -389,9 +396,12 @@ class OperatorControlBridge:
     def __call__(self,op,args):
         args=dict(args or {})
         if op=='pair':
-            pairing_code=args.get('pairing_code') or (_read_operator_local_secret(self.pairing_file) if self.pairing_file else None)
-            if not pairing_code:raise ValueError('operator pairing code unavailable')
-            return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            pairing_code=args.get('pairing_code')
+            if pairing_code:return self._request('/v1/session/pair',{'pairing_code':pairing_code},10)
+            challenge=self._request('/v1/session/pair/challenge',{},10)
+            challenge_id=challenge.get('challenge_id');code=challenge.get('pairing_code')
+            if not isinstance(challenge_id,str) or not isinstance(code,str):raise ValueError('operator pairing challenge unavailable')
+            return self._request('/v1/session/pair',{'challenge_id':challenge_id,'pairing_code':code},10)
         if op=='session':return self._request('/v1/session',session_token=args.get('session_token'))
         if op=='unpair':return self._request('/v1/session/revoke',{},10,session_token=args.get('session_token'))
         if op=='state':
@@ -522,6 +532,8 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not isinstance(messages,list) or not messages:raise ValueError('local assignment messages')
             messages=[dict(m) for m in messages if isinstance(m,dict) and m.get('role') in {'system','user','assistant'} and isinstance(m.get('content'),str)]
             op_context=claimed.get('operator_context') or {};op_plan=claimed.get('operator_plan') or {};op_messages=claimed.get('operator_messages') or []
+            bound_message_ids=set(payload.get('operator_message_ids') or [])
+            if bound_message_ids:op_messages=[m for m in op_messages if isinstance(m,dict) and m.get('message_id') in bound_message_ids]
             operator_parts=[]
             if op_context.get('content') is not None:operator_parts.append('CONTEXT REVISION '+str(op_context.get('revision'))+': '+json.dumps(op_context.get('content'),ensure_ascii=False,sort_keys=True))
             if op_plan.get('content') is not None:operator_parts.append('PLAN REVISION '+str(op_plan.get('revision'))+': '+json.dumps(op_plan.get('content'),ensure_ascii=False,sort_keys=True))
@@ -555,7 +567,7 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if not answer:
                 control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='FAILED'
                 raise ValueError('empty local model result')
-            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
+            result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'responding_participant_id':payload.get('responding_participant_id'),'protocol_message_id':payload.get('protocol_message_id'),'fanout_id':payload.get('fanout_id'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
             dual_id=payload.get('dual_request_id')
             if dual_id:control('dual_response',{'request_id':dual_id,'provider':declared_model,'response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
             receipt=control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})
@@ -724,18 +736,22 @@ def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
         stop_event.wait(5)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--operator-control-url',default='http://127.0.0.1:8767');p.add_argument('--operator-key-file');p.add_argument('--operator-panel-proxy-key-file');p.add_argument('--operator-pairing-key-file');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--operator-control-url',default='http://127.0.0.1:8767');p.add_argument('--operator-key-file');p.add_argument('--operator-panel-proxy-key-file');p.add_argument('--operator-pairing-key-file');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');p.add_argument('--staging-model-chat-only',action='store_true');a=p.parse_args()
     if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
     b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
     operator_key_file=a.operator_panel_proxy_key_file or a.operator_key_file
     operator=OperatorControlBridge(a.operator_control_url,operator_key_file,a.operator_pairing_key_file) if operator_key_file else None
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads,operator_provider=operator)
-    canary_stop=threading.Event();threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
-    for material_id in ('MD025','MD026','MD027'):
-        threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
-    threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
-    from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
-    threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
+    canary_stop=threading.Event()
+    from cyber_lion.app_coordination.conversation_chat import delivery_loop as conversation_delivery_loop
+    if not a.staging_model_chat_only:
+        threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
+        for material_id in ('MD025','MD026','MD027'):
+            threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
+        threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
+        from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
+        threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
+    threading.Thread(target=conversation_delivery_loop,args=(threads,control,canary_stop),daemon=True,name='conversation-saas-delivery').start()
     try: serve_gateway(g,a.port)
     finally: canary_stop.set()
 if __name__=='__main__':main()

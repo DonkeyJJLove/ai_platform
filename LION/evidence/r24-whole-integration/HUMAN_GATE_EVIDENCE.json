@@ -1,0 +1,32 @@
+{
+  "schema": "lion.r24.human-gate-evidence/v1",
+  "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
+  "gates": {
+    "H0": {
+      "decision": "APPROVE"
+    },
+    "H1": {
+      "decision": "APPROVE"
+    },
+    "H2": {
+      "decision": "APPROVE"
+    },
+    "H3": {
+      "decision": "APPROVE",
+      "manual_ui_verified": [
+        "UNBOUND_LOCAL_DELIVERED",
+        "UNBOUND_SAAS_DELIVERED_REACTIVE",
+        "UNBOUND_DUAL_DURABLE_JOIN"
+      ]
+    },
+    "H4": {
+      "decision": "APPROVE ALL_ELIGIBLE",
+      "approved_count": 13,
+      "excluded": [
+        "legacy::vkt-r3-live"
+      ],
+      "apply_authorization": "APPLY LIVE H4 CUTOVER FOR 13 APPROVED MISSIONS WITH BACKUP"
+    }
+  },
+  "authority_effect": "NONE"
+}

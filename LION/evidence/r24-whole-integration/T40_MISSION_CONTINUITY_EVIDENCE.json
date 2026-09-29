@@ -1,0 +1,27 @@
+{
+  "schema": "lion.r24.mission-continuity-evidence/v1",
+  "task_id": "LION-R24-WHOLE-INTEGRATION-CLOSURE-R1",
+  "mission_id": "LION-R24-BOUNDED-MUTATION-SUBSTRATE-BOOTSTRAP-R2",
+  "pre_cutover_state": "RUNNING",
+  "cutover_observed_at": "2026-09-28T16:12:18Z",
+  "post_cutover": {
+    "state": "RUNNING",
+    "runtime_state": "DOCKER_LOCAL_MODEL_FLEET_BOUND",
+    "execution_driver": {
+      "generation": 2,
+      "state": "WAITING",
+      "current_phase": "P05_LIVE_BINDING_READBACK",
+      "waiting_reason": "No bounded capability is registered for this generic phase"
+    },
+    "scheduler": {
+      "state": "ACTIVE",
+      "heartbeat_at": "2026-09-28T16:37:23.698417Z",
+      "queue_depth": 8,
+      "last_error": null
+    },
+    "execution_assignment_count": 21,
+    "execution_receipt_count": 20
+  },
+  "proof": "scheduler heartbeat is later than H4 cutover and mission remains RUNNING",
+  "authority_effect": "NONE"
+}

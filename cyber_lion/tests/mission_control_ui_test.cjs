@@ -142,6 +142,25 @@ async function main() {
   await run("detail('gone')");
   assert.equal(node('detail').hidden,true);
   assert.match(node('detailState').textContent,/UNKNOWN/);
+
+  // Projection latency/failure is not backend connectivity failure. /health is
+  // the single writer for the top-level API badge; delayed event projections
+  // are surfaced through currentness without flickering the badge.
+  run('selectedRunId=null;refreshInFlight=false');
+  context.fetch=async url=>{
+    if(url.endsWith('/health'))return {ok:true,json:async()=>({ok:true})};
+    if(url.endsWith('/api/summary'))return {ok:true,json:async()=>({ok:true,summary:{recorded_active_runs:1},fleet:{currentness:'RECORDED'},run_observations:{},run_fleets:{},observation:{reason:'NO_FLEET_OBSERVATION',age_seconds:0,success_at:0}})};
+    if(url.endsWith('/api/runs'))return {ok:true,json:async()=>({runs:[{run_id:'slow-projection',adapter_type:'OSS_REPOSITORY_TEST',status:'RUNNING'}]})};
+    if(url.endsWith('/api/adapters'))return {ok:true,json:async()=>({adapters:[]})};
+    if(url.includes('/events'))return {ok:false,status:504,json:async()=>({})};
+    return {ok:false,status:404,json:async()=>({})};
+  };
+  await run('refresh()');
+  assert.equal(node('health').textContent,'API AVAILABLE');
+  assert.equal(node('health').className,'pill');
+  assert.match(node('currentness').textContent,/delayed projections: events:1/);
+
+  context.fetch=async()=>({ok:false,status:404});
   run('refreshInFlight=false');
   await run('refresh()');
   assert.equal(node('health').textContent,'OFFLINE');

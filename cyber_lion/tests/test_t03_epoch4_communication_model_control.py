@@ -26,8 +26,12 @@ class Epoch4CommunicationModelControlArchitectureTests(unittest.TestCase):
         self.assertIn('CREATE TABLE IF NOT EXISTS thread_bindings',self.runtime)
         self.assertIn("'LION_BUS'",self.runtime)
         self.assertIn("'correlation_id':tid",self.gateway)
-        self.assertIn("'SUPERSEDED_BY_LION_BUS'",self.gateway)
-        self.assertIn('Wiadomość do LION BUS',self.gateway)
+        self.assertIn("'surface':'MODEL_CHAT'",self.gateway)
+        self.assertIn("route not in {'LOCAL','SAAS','DUAL'}",self.gateway)
+        self.assertNotIn("'SUPERSEDED_BY_LION_BUS'",self.gateway)
+        self.assertIn('Model Chat',self.gateway)
+        self.assertIn('MODEL CHAT',self.gateway)
+        self.assertIn('LION BUS · PROTOKÓŁ ROJU',self.gateway)
 
     def test_auto_text_cannot_select_saas_or_dual_provider(self):
         self.assertEqual(saas_ext.ROUTE_CONTEXT.get(),'AUTO')

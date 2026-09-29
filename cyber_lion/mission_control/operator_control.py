@@ -17,7 +17,7 @@ from cyber_lion.contracts.operator_intervention import (
 )
 
 SCHEMA_ID = "lion.operator-control/v1"
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 7
 GENERAL_CHANNEL_ID = "sentinelx:general"
 AUTONOMOUS_OWNER = "AUTONOMOUS"
 SENTINELX_PROXY_PRINCIPAL = "OPERATOR_SENTINELX_PROXY"
@@ -117,7 +117,9 @@ CREATE TABLE IF NOT EXISTS operator_messages(
   applied_at TEXT,
   applied_assignment_id TEXT,
   correlation_id TEXT,
-  causation_id TEXT
+  causation_id TEXT,
+  fanout_id TEXT,
+  recipient_set_digest TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_operator_messages_target
   ON operator_messages(mission_id,target,state,created_at);
@@ -132,6 +134,32 @@ CREATE TABLE IF NOT EXISTS operator_message_deliveries(
 );
 CREATE INDEX IF NOT EXISTS idx_operator_message_deliveries_state
   ON operator_message_deliveries(delivery_state,message_id);
+CREATE TABLE IF NOT EXISTS operator_protocol_recipient_routes(
+  message_id TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  cognition_route TEXT NOT NULL,
+  PRIMARY KEY(message_id,recipient)
+);
+CREATE TABLE IF NOT EXISTS protocol_cognitive_trajectories(
+  trajectory_id TEXT PRIMARY KEY,
+  message_id TEXT NOT NULL,
+  mission_id TEXT NOT NULL,
+  participant_id TEXT NOT NULL,
+  cognition_route TEXT NOT NULL,
+  local_assignment_id TEXT,
+  local_model_call_id TEXT,
+  saas_request_id TEXT,
+  dual_request_id TEXT,
+  state TEXT NOT NULL,
+  result_digest TEXT,
+  response_message_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  authority_effect TEXT NOT NULL,
+  UNIQUE(message_id,participant_id)
+);
+CREATE INDEX IF NOT EXISTS idx_protocol_cognitive_trajectories_state
+  ON protocol_cognitive_trajectories(state,mission_id,message_id);
 CREATE TABLE IF NOT EXISTS mission_context_revisions(
   mission_id TEXT NOT NULL,
   revision INTEGER NOT NULL,
@@ -255,6 +283,8 @@ def migrate(conn, now_fn) -> None:
     message_cols={r[1] for r in conn.execute("PRAGMA table_info(operator_messages)")}
     if "correlation_id" not in message_cols:conn.execute("ALTER TABLE operator_messages ADD COLUMN correlation_id TEXT")
     if "causation_id" not in message_cols:conn.execute("ALTER TABLE operator_messages ADD COLUMN causation_id TEXT")
+    if "fanout_id" not in message_cols:conn.execute("ALTER TABLE operator_messages ADD COLUMN fanout_id TEXT")
+    if "recipient_set_digest" not in message_cols:conn.execute("ALTER TABLE operator_messages ADD COLUMN recipient_set_digest TEXT")
     stamp = now_fn()
     conn.execute("INSERT OR IGNORE INTO operator_general_channels(channel_id,display_name,state,created_at,updated_at) VALUES(?,?,?,?,?)",(GENERAL_CHANNEL_ID,"SentinelX general operator channel","ACTIVE",stamp,stamp))
     conn.execute("INSERT OR IGNORE INTO operator_schema_migrations(version,schema_id,applied_at) VALUES(?,?,?)",(SCHEMA_VERSION,SCHEMA_ID,stamp))
@@ -474,40 +504,50 @@ def is_capability_revoked(conn,mission_id,capability):return False if "operator_
 
 
 def _mission_drone_inventory(conn,mission_id):
+    """Canonical protocol participants keyed by stable participant identity."""
     out={};tables=_tables(conn)
     if 'logical_drones' in tables:
-        for row in conn.execute('SELECT logical_id,role FROM logical_drones WHERE mission_id=?',(mission_id,)):out[str(row['logical_id'])]={'recipient':'drone:'+str(row['logical_id']),'kind':'LOGICAL','role':str(row['role'] or '')}
+        for row in conn.execute('SELECT logical_id,role FROM logical_drones WHERE mission_id=?',(mission_id,)):
+            ident=str(row['logical_id'])
+            if ident:out['drone:'+ident]={'recipient':'drone:'+ident,'kind':'LOGICAL_DRONE','role':str(row['role'] or '')}
     if 'material_workers' in tables:
-        for row in conn.execute('SELECT pod_name,logical_id FROM material_workers WHERE mission_id=?',(mission_id,)):
-            if row['pod_name']:out[str(row['pod_name'])]={'recipient':'drone:'+str(row['pod_name']),'kind':'MATERIAL','role':str(row['logical_id'] or '')}
-    if 'mission_execution_assignments' in tables:
-        for row in conn.execute('SELECT logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE mission_id=?',(mission_id,)):
-            for name,kind in ((row['logical_drone_id'],'LOGICAL'),(row['material_drone_id'],'MATERIAL')):
-                if name and str(name) not in out:out[str(name)]={'recipient':'drone:'+str(name),'kind':kind,'role':''}
-    if {'operator_swarm_sessions','operator_swarm_members'}.issubset(tables):
-        for row in conn.execute("SELECT m.participant_id,m.role FROM operator_swarm_members m JOIN operator_swarm_sessions s ON s.session_id=m.session_id WHERE s.mission_id=? AND s.state='ACTIVE' AND m.state='ACTIVE' AND m.member_kind='MATERIAL_WORKER'",(mission_id,)):
-            participant=str(row['participant_id'] or '')
-            if participant.startswith('drone:'):
-                name=participant.split(':',1)[1]
-                if name and name not in out:out[name]={'recipient':participant,'kind':'MATERIAL','role':str(row['role'] or '')}
+        cols={r['name'] for r in conn.execute('PRAGMA table_info(material_workers)')}
+        if 'ready' in cols:
+            material_rows=conn.execute('SELECT pod_name,logical_id,ready FROM material_workers WHERE mission_id=?',(mission_id,))
+        else:
+            material_rows=conn.execute('SELECT pod_name,logical_id FROM material_workers WHERE mission_id=?',(mission_id,))
+        for row in material_rows:
+            logical_field=str(row['logical_id'] or '')
+            pod=str(row['pod_name'] or '')
+            # The material-worker registry carries the canonical MD identity.
+            # Legacy rows that expose only an LD mapping are not promoted into a
+            # worker identity; execution assignments are bindings, not a
+            # participant registry.
+            ident=logical_field if logical_field.upper().startswith('MD') else (pod if pod.upper().startswith('MD') else '')
+            if not ident:continue
+            if 'ready' in cols and not bool(row['ready']):continue
+            out['worker:'+ident]={'recipient':'worker:'+ident,'kind':'MATERIAL_WORKER','role':'MATERIAL_EXECUTOR','pod_name':pod}
     return out
 
 def resolve_target(conn,mission_id,target):
     if not _mission_exists(conn,mission_id):raise ValueError('mission not found')
+    if not isinstance(target,str) or ':' not in target:raise ValueError('unresolved target')
     prefix,ident=target.split(':',1);inv=_mission_drone_inventory(conn,mission_id)
-    if prefix=='mission':
-        if ident!=mission_id:raise ValueError('target mission mismatch')
-        return sorted({v['recipient'] for v in inv.values()})
+    if prefix in {'mission','swarm'}:
+        if ident!=mission_id:raise ValueError('target mission mismatch' if prefix=='mission' else 'unresolved swarm target')
+        return sorted(inv)
     if prefix=='drone':
-        if ident not in inv:raise ValueError('unresolved drone target')
-        return [inv[ident]['recipient']]
+        direct='drone:'+ident
+        if direct in inv:return [direct]
+        raise ValueError('unresolved drone target')
+    if prefix=='worker':
+        direct='worker:'+ident
+        if direct not in inv:raise ValueError('unresolved worker target')
+        return [direct]
     if prefix=='operator':
         row=conn.execute("SELECT participant_id FROM operator_participants WHERE participant_id=? AND state='ACTIVE'",('operator:'+ident,)).fetchone()
         if row is None:raise ValueError('unresolved operator target')
         return [target]
-    if prefix=='swarm':
-        if ident!=mission_id:raise ValueError('unresolved swarm target')
-        return sorted({v['recipient'] for v in inv.values()})
     if prefix=='group':
         if ident not in {'architecture','security','runtime'}:raise ValueError('unresolved group target')
         values=[]
@@ -518,8 +558,11 @@ def resolve_target(conn,mission_id,target):
     raise ValueError('unresolved target')
 
 def _message_target_matches(target,mission_id,material_drone_id,logical_drone_id):
-    if target=='mission:'+mission_id:return True
-    if target.startswith('drone:'):return target.split(':',1)[1] in {str(material_drone_id or ''),str(logical_drone_id or '')}
+    if target in {'mission:'+mission_id,'swarm:'+mission_id}:return True
+    if target.startswith('worker:'):return target.split(':',1)[1]==str(material_drone_id or '')
+    if target.startswith('drone:'):
+        ident=target.split(':',1)[1]
+        return ident==str(logical_drone_id or '')
     return False
 
 def assignment_context(conn,mission_id,material_drone_id,logical_drone_id):
@@ -527,35 +570,169 @@ def assignment_context(conn,mission_id,material_drone_id,logical_drone_id):
     if state is None:return {"control":None,"context":None,"plan":None,"messages":[]}
     context=conn.execute("SELECT * FROM mission_context_revisions WHERE mission_id=? ORDER BY revision DESC LIMIT 1",(mission_id,)).fetchone();plan=conn.execute("SELECT * FROM mission_plan_revisions WHERE mission_id=? ORDER BY revision DESC LIMIT 1",(mission_id,)).fetchone();messages=[]
     for row in conn.execute("SELECT * FROM operator_messages WHERE mission_id=? AND state IN ('PENDING','PARTIAL') ORDER BY created_at,message_id",(mission_id,)):
-        value=dict(row);direct=_message_target_matches(value["target"],mission_id,material_drone_id,logical_drone_id);delivered=conn.execute("SELECT 1 FROM operator_message_deliveries WHERE message_id=? AND recipient IN (?,?) AND delivery_state!='APPLIED' LIMIT 1",(value['message_id'],'drone:'+str(material_drone_id or ''),'drone:'+str(logical_drone_id or ''))).fetchone()
+        value=dict(row);direct=_message_target_matches(value["target"],mission_id,material_drone_id,logical_drone_id);delivered=conn.execute("SELECT 1 FROM operator_message_deliveries WHERE message_id=? AND recipient IN (?,?,?) AND delivery_state NOT IN ('APPLIED','FAILED','CANCELLED') LIMIT 1",(value['message_id'],'worker:'+str(material_drone_id or ''),'drone:'+str(logical_drone_id or ''),'drone:'+str(material_drone_id or ''))).fetchone()
         if direct or delivered:messages.append(value)
     return {"control":dict(state),"context":dict(context) if context else None,"plan":dict(plan) if plan else None,"messages":messages[:64]}
 
 def note_assignment_application(conn,assignment_id,result,now_fn):
     if "mission_execution_assignments" not in _tables(conn):return {"applied_messages":0,"partial_messages":0}
-    row=conn.execute("SELECT mission_id,logical_drone_id,material_drone_id FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+    row=conn.execute("SELECT mission_id,logical_drone_id,material_drone_id,input_json FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
     if row is None:raise ValueError("assignment missing")
+    try:assignment_input=json.loads(row['input_json'] or '{}')
+    except Exception:assignment_input={}
     ids=result.get("operator_message_ids") or []
     if not isinstance(ids,list) or any(not isinstance(x,str) for x in ids):ids=[]
-    stamp=now_fn();applied=0;partial=0;responses=[];recipients=['drone:'+str(row['material_drone_id'] or ''),'drone:'+str(row['logical_drone_id'] or '')]
+    participant=result.get('responding_participant_id') or assignment_input.get('responding_participant_id')
+    if participant is None:
+        if assignment_input.get('purpose')=='PROTOCOL_FANOUT_R1':raise ValueError('protocol fanout responding participant missing')
+        participant='worker:'+str(row['material_drone_id']) if row['material_drone_id'] else 'drone:'+str(row['logical_drone_id'])
+    if not isinstance(participant,str) or not (participant.startswith('drone:') or participant.startswith('worker:')):
+        raise ValueError('responding participant identity')
+    protocol_fanout=assignment_input.get('purpose')=='PROTOCOL_FANOUT_R1'
+    if protocol_fanout:
+        expected_participant=assignment_input.get('responding_participant_id')
+        if not isinstance(expected_participant,str) or participant!=expected_participant:
+            raise ValueError('protocol fanout participant identity mismatch')
+    cognition_route=str(assignment_input.get('cognition_route') or 'LOCAL').upper()
+    stamp=now_fn();applied=0;partial=0;responses=[]
+    if protocol_fanout and cognition_route=='DUAL':
+        for message_id in ids[:64]:
+            protocol_trajectory_update(conn,message_id,participant,now_fn,
+                state='DUAL_LOCAL_RESPONSE_READY',
+                local_assignment_id=assignment_id,
+                local_model_call_id=result.get('model_call_id'),
+                result_digest=result.get('response_digest'))
+        return {"responding_participant_id":participant,"applied_messages":0,"partial_messages":0,"response_message_ids":[],"dual_local_leg_recorded":True}
     for message_id in ids[:64]:
-        matched=0
-        for recipient in recipients:matched+=conn.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED',delivered_at=COALESCE(delivered_at,?),applied_at=?,applied_assignment_id=? WHERE message_id=? AND recipient=? AND delivery_state!='APPLIED'",(stamp,stamp,assignment_id,message_id,recipient)).rowcount
-        if matched==0:matched=conn.execute("UPDATE operator_messages SET state='APPLIED',applied_at=?,applied_assignment_id=? WHERE message_id=? AND mission_id=? AND state='PENDING'",(stamp,assignment_id,message_id,row['mission_id'])).rowcount
+        if protocol_fanout:
+            response_text=result.get('response_text')
+            if isinstance(response_text,str) and response_text.strip():
+                protocol_trajectory_update(conn,message_id,participant,now_fn,
+                    local_assignment_id=assignment_id,
+                    local_model_call_id=result.get('model_call_id'),
+                    state='LOCAL_RESPONSE_READY',
+                    result_digest=result.get('response_digest'))
+                recorded=record_protocol_model_response(conn,message_id,participant,response_text,now_fn,
+                    result_digest=result.get('response_digest'),model_call_id=result.get('model_call_id'))
+                responses.append(recorded['response_message_id'])
+                applied+=1 if recorded['state']=='APPLIED' else 0
+                partial+=1 if recorded['state']=='PARTIAL' else 0
+            continue
+        matched=conn.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED',delivered_at=COALESCE(delivered_at,?),applied_at=?,applied_assignment_id=? WHERE message_id=? AND recipient=? AND delivery_state!='APPLIED'",(stamp,stamp,assignment_id,message_id,participant)).rowcount
         counts=conn.execute("SELECT COUNT(*) total,SUM(CASE WHEN delivery_state='APPLIED' THEN 1 ELSE 0 END) applied FROM operator_message_deliveries WHERE message_id=?",(message_id,)).fetchone()
         if counts and int(counts['total'] or 0)>0:
-            total=int(counts['total']);done=int(counts['applied'] or 0);state='APPLIED' if done==total else 'PARTIAL';conn.execute("UPDATE operator_messages SET state=?,applied_at=CASE WHEN ?='APPLIED' THEN ? ELSE applied_at END,applied_assignment_id=CASE WHEN ?='APPLIED' THEN ? ELSE applied_assignment_id END WHERE message_id=?",(state,state,stamp,state,assignment_id,message_id));applied+=1 if state=='APPLIED' else 0;partial+=1 if state=='PARTIAL' else 0
-        else:applied+=int(bool(matched))
+            total=int(counts['total']);done=int(counts['applied'] or 0);state='APPLIED' if done==total else 'PARTIAL'
+            conn.execute("UPDATE operator_messages SET state=?,applied_at=CASE WHEN ?='APPLIED' THEN ? ELSE applied_at END,applied_assignment_id=CASE WHEN ?='APPLIED' THEN ? ELSE applied_assignment_id END WHERE message_id=?",(state,state,stamp,state,assignment_id,message_id))
+            applied+=1 if state=='APPLIED' else 0;partial+=1 if state=='PARTIAL' else 0
         response_text=result.get('response_text')
         if matched and isinstance(response_text,str) and response_text.strip():
-            reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'response':response_text})[:32];from_participant='drone:'+str(row['material_drone_id'] or row['logical_drone_id']);original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,from_participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id));responses.append(reply_id)
-    if applied or partial:_event(conn,row['mission_id'],'OPERATOR_MESSAGE_APPLIED',{'assignment_id':assignment_id,'message_ids':ids[:64],'applied_messages':applied,'partial_messages':partial,'response_message_ids':responses},now_fn)
-    return {"applied_messages":applied,"partial_messages":partial,"response_message_ids":responses}
+            reply_id='opreply-'+digest({'assignment_id':assignment_id,'message_id':message_id,'participant':participant,'response':response_text})[:32]
+            original=conn.execute('SELECT context_revision,plan_revision,correlation_id FROM operator_messages WHERE message_id=?',(message_id,)).fetchone()
+            conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id,fanout_id,recipient_set_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,row['mission_id'],'assignment:'+assignment_id,participant,PRIMARY_PARTICIPANT,'RESPONSE',response_text.strip(),digest(response_text.strip()),int(original['context_revision'] if original else 0),int(original['plan_revision'] if original else 0),'DELIVERED',stamp,stamp,assignment_id,original['correlation_id'] if original else None,message_id,None,None));responses.append(reply_id)
+    if applied or partial:_event(conn,row['mission_id'],'OPERATOR_MESSAGE_APPLIED',{'assignment_id':assignment_id,'responding_participant_id':participant,'message_ids':ids[:64],'applied_messages':applied,'partial_messages':partial,'response_message_ids':responses},now_fn)
+    return {"responding_participant_id":participant,"applied_messages":applied,"partial_messages":partial,"response_message_ids":responses}
+
+_PROTOCOL_COGNITION_ROUTES=frozenset({'LOCAL','SAAS','DUAL','DETERMINISTIC_ONLY'})
+
+def _protocol_recipient_routes(payload,recipients):
+    spec=payload.get('cognition_routes') if isinstance(payload,dict) else None
+    if spec is None:spec={}
+    if type(spec) is not dict or set(spec)-{'default','participants'}:raise ValueError('cognition_routes')
+    configured_default=spec.get('default')
+    if configured_default is not None:
+        configured_default=str(configured_default).upper()
+        if configured_default not in _PROTOCOL_COGNITION_ROUTES:raise ValueError('default cognition route')
+    mapping=spec.get('participants') or {}
+    if type(mapping) is not dict:raise ValueError('participant cognition routes')
+    if set(mapping)-set(recipients):raise ValueError('cognition route recipient outside frozen target')
+    out={}
+    for recipient in recipients:
+        fallback='LOCAL' if recipient.startswith('worker:') else 'SAAS'
+        route=str(mapping.get(recipient) or configured_default or fallback).upper()
+        if route not in _PROTOCOL_COGNITION_ROUTES:raise ValueError('participant cognition route')
+        if recipient.startswith('worker:') and route!='LOCAL':raise ValueError('material worker cognition route must be LOCAL')
+        if recipient.startswith('drone:') and route not in {'LOCAL','SAAS','DUAL'}:raise ValueError('logical drone cognition route')
+        out[recipient]=route
+    return out
 
 def _store_message(conn,cmd,state,now_fn,*,kind,participant_id):
     content=cmd.payload.get("content")
     if not isinstance(content,str) or not content.strip() or len(content)>16000:raise ValueError("message content")
-    content=content.strip();message_id="opmsg-"+digest({"command_id":cmd.command_id,"target":cmd.target})[:32];recipients=resolve_target(conn,cmd.mission_id,cmd.target);message_state='PENDING' if recipients else 'PERSISTED_NO_CURRENT_RECIPIENT';created=now_fn();conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(message_id,cmd.mission_id,cmd.command_id,participant_id,cmd.target,kind,content,digest(content),int(state["context_revision"]),int(state["plan_revision"]),message_state,created,None,None,cmd.correlation_id,cmd.causation_id));[conn.execute("INSERT OR IGNORE INTO operator_message_deliveries VALUES(?,?,?,NULL,NULL,NULL)",(message_id,r,'PERSISTED')) for r in recipients];return {"message_id":message_id,"target":cmd.target,"state":message_state,"recipients":recipients,"recipient_count":len(recipients),"correlation_id":cmd.correlation_id,"causation_id":cmd.causation_id}
+    content=content.strip();message_id="opmsg-"+digest({"command_id":cmd.command_id,"target":cmd.target})[:32]
+    recipients=resolve_target(conn,cmd.mission_id,cmd.target)
+    recipient_routes=_protocol_recipient_routes(cmd.payload,recipients) if kind=="MESSAGE" else {r:"DETERMINISTIC_ONLY" for r in recipients}
+    recipient_set_digest=digest(sorted(recipients));fanout_id='fanout-'+digest({'message_id':message_id,'recipients':sorted(recipients)})[:32]
+    message_state='PENDING' if recipients else 'PERSISTED_NO_CURRENT_RECIPIENT';created=now_fn()
+    conn.execute("INSERT OR IGNORE INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id,fanout_id,recipient_set_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(message_id,cmd.mission_id,cmd.command_id,participant_id,cmd.target,kind,content,digest(content),int(state["context_revision"]),int(state["plan_revision"]),message_state,created,None,None,cmd.correlation_id,cmd.causation_id,fanout_id,recipient_set_digest))
+    for recipient in recipients:
+        conn.execute("INSERT OR IGNORE INTO operator_message_deliveries VALUES(?,?,?,NULL,NULL,NULL)",(message_id,recipient,'PERSISTED'))
+        conn.execute("INSERT OR IGNORE INTO operator_protocol_recipient_routes(message_id,recipient,cognition_route) VALUES(?,?,?)",(message_id,recipient,recipient_routes[recipient]))
+    return {"message_id":message_id,"target":cmd.target,"state":message_state,"recipients":recipients,"recipient_count":len(recipients),"recipient_routes":recipient_routes,"fanout_id":fanout_id,"recipient_set_digest":recipient_set_digest,"correlation_id":cmd.correlation_id,"causation_id":cmd.causation_id}
+
+
+def ensure_protocol_trajectory(conn,message_id,mission_id,participant_id,cognition_route,now_fn):
+    trajectory_id='trajectory-'+digest({'message_id':message_id,'participant_id':participant_id})[:32];stamp=now_fn()
+    conn.execute("INSERT OR IGNORE INTO protocol_cognitive_trajectories(trajectory_id,message_id,mission_id,participant_id,cognition_route,local_assignment_id,local_model_call_id,saas_request_id,dual_request_id,state,result_digest,response_message_id,created_at,updated_at,authority_effect) VALUES(?,?,?,?,?,NULL,NULL,NULL,NULL,'INTENT_DURABLE',NULL,NULL,?,?,?)",(trajectory_id,message_id,mission_id,participant_id,cognition_route,stamp,stamp,'NONE'))
+    row=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    if row is None:raise RuntimeError('protocol trajectory persistence failed')
+    if row['cognition_route']!=cognition_route:raise ValueError('protocol trajectory route conflict')
+    return dict(row)
+
+def protocol_trajectory_update(conn,message_id,participant_id,now_fn,**changes):
+    allowed={'local_assignment_id','local_model_call_id','saas_request_id','dual_request_id','state','result_digest','response_message_id'}
+    if set(changes)-allowed:raise ValueError('protocol trajectory update fields')
+    row=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    if row is None:raise ValueError('protocol trajectory missing')
+    values=dict(row);values.update(changes);values['updated_at']=now_fn()
+    conn.execute("UPDATE protocol_cognitive_trajectories SET local_assignment_id=?,local_model_call_id=?,saas_request_id=?,dual_request_id=?,state=?,result_digest=?,response_message_id=?,updated_at=? WHERE trajectory_id=?",(values['local_assignment_id'],values['local_model_call_id'],values['saas_request_id'],values['dual_request_id'],values['state'],values['result_digest'],values['response_message_id'],values['updated_at'],values['trajectory_id']))
+    return dict(conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE trajectory_id=?",(values['trajectory_id'],)).fetchone())
+
+def _reconcile_protocol_message_state(conn,message_id,stamp):
+    counts=conn.execute("SELECT COUNT(*) total,SUM(CASE WHEN delivery_state='APPLIED' THEN 1 ELSE 0 END) applied,SUM(CASE WHEN delivery_state='FAILED' THEN 1 ELSE 0 END) failed,SUM(CASE WHEN delivery_state='CANCELLED' THEN 1 ELSE 0 END) cancelled FROM operator_message_deliveries WHERE message_id=?",(message_id,)).fetchone()
+    total=int(counts['total'] or 0);applied=int(counts['applied'] or 0);failed=int(counts['failed'] or 0);cancelled=int(counts['cancelled'] or 0)
+    terminal=applied+failed+cancelled
+    state='APPLIED' if total and applied==total else 'FAILED' if total and failed==total else 'CANCELLED' if total and cancelled==total else 'PARTIAL' if terminal else 'PENDING'
+    conn.execute("UPDATE operator_messages SET state=?,applied_at=CASE WHEN ?='APPLIED' THEN COALESCE(applied_at,?) ELSE applied_at END WHERE message_id=?",(state,state,stamp,message_id))
+    return {'state':state,'total':total,'applied':applied,'failed':failed,'cancelled':cancelled,'pending':max(0,total-terminal)}
+
+def record_protocol_model_response(conn,message_id,participant_id,response_text,now_fn,*,result_digest=None,model_call_id=None):
+    if not isinstance(response_text,str) or not response_text.strip():raise ValueError('protocol response')
+    source=conn.execute("SELECT mission_id,context_revision,plan_revision,correlation_id,fanout_id,recipient_set_digest FROM operator_messages WHERE message_id=?",(message_id,)).fetchone()
+    trajectory=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    delivery=conn.execute("SELECT delivery_state FROM operator_message_deliveries WHERE message_id=? AND recipient=?",(message_id,participant_id)).fetchone()
+    if source is None or trajectory is None or delivery is None:raise ValueError('protocol response lineage missing')
+    response_text=response_text.strip();stamp=now_fn()
+    if trajectory['response_message_id']:
+        prior=conn.execute("SELECT content_digest FROM operator_messages WHERE message_id=?",(trajectory['response_message_id'],)).fetchone()
+        if prior and prior['content_digest']==digest(response_text):
+            return {'idempotent':True,'response_message_id':trajectory['response_message_id'],**_reconcile_protocol_message_state(conn,message_id,stamp)}
+        raise ValueError('protocol response conflict')
+    reply_id='opreply-'+digest({'message_id':message_id,'participant_id':participant_id,'response':response_text})[:32]
+    conn.execute("UPDATE operator_message_deliveries SET delivery_state='APPLIED',delivered_at=COALESCE(delivered_at,?),applied_at=?,applied_assignment_id=COALESCE(applied_assignment_id,?) WHERE message_id=? AND recipient=?",(stamp,stamp,trajectory['local_assignment_id'],message_id,participant_id))
+    conn.execute("INSERT INTO operator_messages(message_id,mission_id,command_id,from_participant,target,kind,content,content_digest,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id,fanout_id,recipient_set_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(reply_id,source['mission_id'],'protocol:'+str(model_call_id or trajectory['trajectory_id']),participant_id,PRIMARY_PARTICIPANT,'RESPONSE',response_text,digest(response_text),int(source['context_revision']),int(source['plan_revision']),'DELIVERED',stamp,stamp,trajectory['local_assignment_id'],source['correlation_id'],message_id,source['fanout_id'],source['recipient_set_digest']))
+    protocol_trajectory_update(conn,message_id,participant_id,now_fn,state='RESPONSE_RECONCILED',result_digest=result_digest or digest(response_text),response_message_id=reply_id,local_model_call_id=model_call_id or trajectory['local_model_call_id'])
+    state=_reconcile_protocol_message_state(conn,message_id,stamp)
+    _event(conn,source['mission_id'],'PROTOCOL_PARTICIPANT_RESPONSE',{'message_id':message_id,'participant_id':participant_id,'cognition_route':trajectory['cognition_route'],'response_message_id':reply_id,'authority_effect':'NONE'},now_fn)
+    return {'idempotent':False,'response_message_id':reply_id,**state}
+
+def fail_protocol_trajectory(conn,message_id,participant_id,reason,now_fn):
+    stamp=now_fn();trajectory=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    if trajectory is None:raise ValueError('protocol trajectory missing')
+    if trajectory['state']=='RESPONSE_RECONCILED':return {'state':'RESPONSE_RECONCILED'}
+    conn.execute("UPDATE operator_message_deliveries SET delivery_state='FAILED',delivered_at=COALESCE(delivered_at,?) WHERE message_id=? AND recipient=? AND delivery_state NOT IN ('APPLIED','CANCELLED')",(stamp,message_id,participant_id))
+    protocol_trajectory_update(conn,message_id,participant_id,now_fn,state='FAILED',result_digest=digest(str(reason)))
+    state=_reconcile_protocol_message_state(conn,message_id,stamp)
+    return {'state':'FAILED','message_state':state['state'],'reason':str(reason)[:500]}
+
+def cancel_protocol_trajectory(conn,message_id,participant_id,reason,now_fn):
+    stamp=now_fn();trajectory=conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE message_id=? AND participant_id=?",(message_id,participant_id)).fetchone()
+    if trajectory is None:raise ValueError('protocol trajectory missing')
+    if trajectory['state']=='RESPONSE_RECONCILED':return {'state':'RESPONSE_RECONCILED'}
+    conn.execute("UPDATE operator_message_deliveries SET delivery_state='CANCELLED',delivered_at=COALESCE(delivered_at,?) WHERE message_id=? AND recipient=? AND delivery_state NOT IN ('APPLIED','FAILED')",(stamp,message_id,participant_id))
+    protocol_trajectory_update(conn,message_id,participant_id,now_fn,state='CANCELLED',result_digest=digest(str(reason)))
+    state=_reconcile_protocol_message_state(conn,message_id,stamp)
+    _event(conn,trajectory['mission_id'],'PROTOCOL_PARTICIPANT_CANCELLED',{'message_id':message_id,'participant_id':participant_id,'reason':str(reason)[:500],'authority_effect':'NONE'},now_fn)
+    return {'state':'CANCELLED','message_state':state['state'],'reason':str(reason)[:500]}
 
 def _command_result(conn,command_id):
     row=conn.execute("SELECT * FROM operator_commands WHERE command_id=?",(command_id,)).fetchone()
@@ -666,7 +843,7 @@ def acknowledge_events(conn,consumer_id,mission_id,event_id,now_fn):
     if prior and int(event_id)<int(prior["event_id"]):raise ValueError("event cursor regression")
     conn.execute("INSERT INTO operator_consumer_cursors VALUES(?,?,?,?) ON CONFLICT(consumer_id,mission_id) DO UPDATE SET event_id=excluded.event_id,updated_at=excluded.updated_at",(consumer_id,mission_id,event_id,now_fn()));conn.commit();return {"consumer_id":consumer_id,"mission_id":mission_id,"event_id":event_id}
 def mission_snapshot(conn,mission_id,now_fn=None):
-    control=control_state(conn,mission_id,None) or _legacy_default_state(mission_id);commands=[dict(r) for r in conn.execute("SELECT command_id,action,target,principal_id,effective_priority,delivery_state,admission_state,execution_state,observation_state,created_at,completed_at FROM operator_commands WHERE mission_id=? ORDER BY admitted_at DESC LIMIT 50",(mission_id,))];messages=[dict(r) for r in conn.execute("SELECT message_id,command_id,from_participant,target,kind,content,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id FROM operator_messages WHERE mission_id=? ORDER BY created_at DESC LIMIT 200",(mission_id,))];deliveries=[dict(r) for r in conn.execute("SELECT d.* FROM operator_message_deliveries d JOIN operator_messages m ON m.message_id=d.message_id WHERE m.mission_id=? ORDER BY m.created_at,d.recipient",(mission_id,))];return {"schema":"lion.operator-mission-projection/v1","mission_id":mission_id,"control":control,"commands":commands,"messages":messages,"message_deliveries":deliveries,"control_capabilities":{"block_new_admissions":"SUPPORTED","cancel_ready_assignments":"SUPPORTED","cancel_inflight":"BEST_EFFORT_CHECKPOINT_REQUIRED","remote_unreachable_worker":"LEASE_EXPIRY_ONLY","emergency_helper":"PREPROVISIONED_EXACT_INVENTORY_ONLY"},"operator":participant_snapshot(conn),"operator_proxy":participant_snapshot(conn,SENTINELX_PROXY_PRINCIPAL),"authority_effect":"NONE"}
+    control=control_state(conn,mission_id,None) or _legacy_default_state(mission_id);commands=[dict(r) for r in conn.execute("SELECT command_id,action,target,principal_id,effective_priority,delivery_state,admission_state,execution_state,observation_state,created_at,completed_at FROM operator_commands WHERE mission_id=? ORDER BY admitted_at DESC LIMIT 50",(mission_id,))];messages=[dict(r) for r in conn.execute("SELECT message_id,command_id,from_participant,target,kind,content,context_revision,plan_revision,state,created_at,applied_at,applied_assignment_id,correlation_id,causation_id,fanout_id,recipient_set_digest FROM operator_messages WHERE mission_id=? ORDER BY created_at DESC LIMIT 200",(mission_id,))];deliveries=[dict(r) for r in conn.execute("SELECT d.* FROM operator_message_deliveries d JOIN operator_messages m ON m.message_id=d.message_id WHERE m.mission_id=? ORDER BY m.created_at,d.recipient",(mission_id,))];return {"schema":"lion.operator-mission-projection/v1","mission_id":mission_id,"control":control,"commands":commands,"messages":messages,"message_deliveries":deliveries,"recipient_routes":[dict(r) for r in conn.execute("SELECT r.* FROM operator_protocol_recipient_routes r JOIN operator_messages m ON m.message_id=r.message_id WHERE m.mission_id=? ORDER BY m.created_at,r.recipient",(mission_id,))],"cognitive_trajectories":[dict(r) for r in conn.execute("SELECT * FROM protocol_cognitive_trajectories WHERE mission_id=? ORDER BY created_at,participant_id",(mission_id,))],"control_capabilities":{"block_new_admissions":"SUPPORTED","cancel_ready_assignments":"SUPPORTED","cancel_inflight":"BEST_EFFORT_CHECKPOINT_REQUIRED","remote_unreachable_worker":"LEASE_EXPIRY_ONLY","emergency_helper":"PREPROVISIONED_EXACT_INVENTORY_ONLY"},"operator":participant_snapshot(conn),"operator_proxy":participant_snapshot(conn,SENTINELX_PROXY_PRINCIPAL),"authority_effect":"NONE"}
 def force_epoch_at_least(conn,mission_id,minimum_epoch,now_fn,*,incarnation_id=None):
     if type(minimum_epoch) is not int or minimum_epoch<1:raise ValueError("minimum epoch")
     state=ensure_control_state(conn,mission_id,now_fn);changed=False
