@@ -1,0 +1,38 @@
+{
+  "schema": "lion.r24.complementary-feature-preservation/v1",
+  "task_id": "LION-R24-COMPLEMENTARY-INTEGRATION-RECOVERY-R1",
+  "features": [
+    {"id":"F01","name":"MISSION_CONTROL_LEFT_PRIMARY","required":true},
+    {"id":"F02","name":"RIGHT_TABS_LPCL_AND_SAAS","required":true},
+    {"id":"F03","name":"LPCL_PANEL_FULL_CONTROL_PLANE","required":true},
+    {"id":"F04","name":"MISSION_LIST","required":true},
+    {"id":"F05","name":"MISSION_LIFECYCLE_PHASE_PROGRESS","required":true},
+    {"id":"F06","name":"MISSION_ACTIONS","required":true},
+    {"id":"F07","name":"LPCL_MISSION_INTAKE","required":true},
+    {"id":"F08","name":"HUMAN_OPERATOR_CONTROL","required":true},
+    {"id":"F09","name":"LION_BUS_PROTOCOL","required":true},
+    {"id":"F10","name":"MODEL_CALLS","required":true},
+    {"id":"F11","name":"LOCAL_MODEL_DIAGNOSTICS","required":true},
+    {"id":"F12","name":"CANONICAL_MODEL_CHAT_MODULE","required":true},
+    {"id":"F13","name":"CANONICAL_CHAT_BINDING_AND_ROUTES","required":true},
+    {"id":"F14","name":"PROTOCOL_SEPARATE_FROM_MODEL_CHAT","required":true},
+    {"id":"F15","name":"NATIVE_CHATGPT_SAAS_TAB","required":true},
+    {"id":"F16","name":"REAL_SAAS_FROM_CANONICAL_MODEL_CHAT","required":true},
+    {"id":"F17","name":"NO_MANUAL_RESPONSE_COPY","required":true},
+    {"id":"F18","name":"NO_LEGACY_THREAD_IDENTITY","required":true},
+    {"id":"F19","name":"SAAS_THREAD_AUTO_CREATE","required":true},
+    {"id":"F20","name":"SAAS_BRIDGE_AUTO_PERSIST","required":true},
+    {"id":"F21","name":"SAAS_BRIDGE_UI_AUTO_FILL","required":true},
+    {"id":"F22","name":"OPERATOR_BRIDGE_LIFECYCLE","required":true},
+    {"id":"F23","name":"BRIDGE_RESTORE_AFTER_RESTART","required":true},
+    {"id":"F24","name":"NO_SUCCESSOR_HIDDEN_SAAS_THREAD_INHERITANCE","required":true}
+  ],
+  "ui_contract": {
+    "electron_left": "MISSION_CONTROL",
+    "electron_right_tabs": ["LPCL PANEL","ChatGPT SaaS"],
+    "lpcl_root_path": "/",
+    "standalone_model_chat_path": "/r24-model-chat",
+    "standalone_model_chat_role": "DIAGNOSTIC_ONLY"
+  },
+  "authority_effect": "NONE"
+}
