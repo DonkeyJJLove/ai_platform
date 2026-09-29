@@ -21,9 +21,9 @@ from cyber_lion.mission_control import control_plane_reconnaissance as control_r
 from cyber_lion.contracts.action_ir import CanonicalActionIR
 from mission_control_compat import compat_get, STATIC
 try:
- from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records, mission_lifecycle_classification, normalize_epoch3_terminal_lifecycle
+ from lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records, mission_lifecycle_classification, normalize_epoch3_terminal_lifecycle, capabilities as lifecycle_capabilities
 except ImportError:
- from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records, mission_lifecycle_classification, normalize_epoch3_terminal_lifecycle
+ from tools.lion_mission_lifecycle_db import migrate as lifecycle_migrate, decorate_snapshot as lifecycle_decorate, sync_components as lifecycle_sync_components, create_audit as lifecycle_create_audit, create_design_revision as lifecycle_create_design_revision, create_action_receipt as lifecycle_create_action_receipt, rollback_plan as lifecycle_rollback_plan, mission_delete_preview, delete_mission_records, mission_lifecycle_classification, normalize_epoch3_terminal_lifecycle, capabilities as lifecycle_capabilities
 try:
  from lion_saas_session_bridge import migrate as saas_migrate, create_request as saas_create, pending_request as saas_pending, request_status as saas_request_status, cancel_request as saas_cancel, bridge_status as saas_bridge_status, respond as saas_respond, TRANSPORT as SAAS_TRANSPORT, ATTESTATION_CLASS as SAAS_ATTESTATION_CLASS
 except ImportError:
@@ -1216,20 +1216,36 @@ def recent_process_missions(view='operational'):
     return deepcopy(pending.result())
 
 
+def _recent_mission_summary(c,mid):
+    m=c.execute('SELECT * FROM missions WHERE mission_id=?',(mid,)).fetchone()
+    if not m:raise ValueError('mission not found')
+    d=dict(m)
+    s=c.execute('SELECT * FROM mission_process_specs WHERE mission_id=?',(mid,)).fetchone()
+    d['process']=dict(s) if s else None
+    d['phases']=[dict(r) for r in c.execute('SELECT * FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,))]
+    d['phase_execution_specs']=[dict(r) for r in c.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=? ORDER BY phase_id',(mid,))]
+    d['execution_driver']=driver_snapshot(c,mid) or {}
+    d['capabilities']=lifecycle_capabilities(c,mid,current_mission_id=MISSION,rebound_adapter=LPCL_REBIND_ADAPTER)
+    projected=normalize_snapshot(d)
+    classification=mission_lifecycle_classification(c,mid)
+    summary=dict(projected['mission_summary'])
+    summary.update({k:classification.get(k) for k in ('lifecycle_class','record_class','operational','historical','legacy','execution_controls_allowed','history_reason')})
+    return summary
+
+
 def _read_recent_process_missions(view='operational'):
     view=_view_name(view);c=connect()
-
-    try:mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 60')]
+    try:
+      mids=[r['mission_id'] for r in c.execute('SELECT mission_id FROM missions ORDER BY updated_at DESC LIMIT 60')]
+      rows=[]
+      for mid in mids:
+        try:
+          summary=_recent_mission_summary(c,mid)
+          if _classification_matches_view(summary,view):rows.append(summary)
+        except ValueError as error:
+          if str(error)!='mission not found':raise
+      return rows
     finally:c.close()
-    rows=[]
-    for mid in mids:
-      try:
-        snap=process_snapshot(mid,read_only=True);classification=snap.get('lifecycle') or {}
-        if not _classification_matches_view(classification,view):continue
-        summary=dict(snap['mission_summary']);summary.update({k:classification.get(k) for k in ('lifecycle_class','record_class','operational','historical','legacy','execution_controls_allowed','history_reason')});rows.append(summary)
-      except ValueError as error:
-        if str(error)!='mission not found':raise
-    return rows
 
 
 def execute_epoch3_lifecycle_normalization(x):
