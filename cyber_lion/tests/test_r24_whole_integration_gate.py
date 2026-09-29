@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 from tools.lion_r24_whole_integration_gate import (
     MATRIX_PATH,
     PROHIBITED_FACTS,
     REQUIRED_TRUE,
+    _deployment_currentness,
     evaluate_final_facts,
 )
 
@@ -51,6 +53,60 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(len({x["id"] for x in tests}), 40)
         self.assertTrue(all(x["evidence_ref"] for x in tests))
         self.assertEqual(value["authority_effect"], "NONE")
+
+    def test_h5_without_live_state_remains_explicit_predeployment(self):
+        result = _deployment_currentness("a" * 40, "b" * 40, None)
+        self.assertEqual(result["deployment_state"], "PRE_H5_NOT_DEPLOYED")
+        self.assertTrue(result["current"])
+        self.assertFalse(result["state_present"])
+
+    def test_h5_exact_live_state_is_postdeployment_current(self):
+        head, tree = "a" * 40, "b" * 40
+        state = {
+            "status": "READY",
+            "repo_head": head,
+            "repo_tree": tree,
+            "candidate_head": head,
+            "candidate_tree": tree,
+            "panel_8780": True,
+            "panel_surface": "CANONICAL_CONVERSATION_MODEL_CHAT",
+            "legacy_thread_mutation": "RETIRED",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "state.json"
+            path.write_text(json.dumps(state), encoding="utf-8")
+            result = _deployment_currentness(head, tree, path)
+        self.assertEqual(result["deployment_state"], "POST_H5_DEPLOYED")
+        self.assertTrue(result["current"])
+        self.assertEqual(result["mismatches"], [])
+
+    def test_h5_live_identity_mismatch_fails_closed(self):
+        head, tree = "a" * 40, "b" * 40
+        state = {
+            "status": "READY",
+            "repo_head": "c" * 40,
+            "repo_tree": tree,
+            "candidate_head": "c" * 40,
+            "candidate_tree": tree,
+            "panel_8780": True,
+            "panel_surface": "CANONICAL_CONVERSATION_MODEL_CHAT",
+            "legacy_thread_mutation": "RETIRED",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "state.json"
+            path.write_text(json.dumps(state), encoding="utf-8")
+            result = _deployment_currentness(head, tree, path)
+        self.assertEqual(result["deployment_state"], "POST_H5_DEPLOYMENT_MISMATCH")
+        self.assertFalse(result["current"])
+        self.assertTrue(any(x.startswith("repo_head:") for x in result["mismatches"]))
+
+    def test_h5_requested_missing_state_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "missing.json"
+            result = _deployment_currentness("a" * 40, "b" * 40, path)
+        self.assertEqual(result["deployment_state"], "POST_H5_STATE_MISSING")
+        self.assertFalse(result["current"])
+        self.assertEqual(result["mismatches"], ["STATE_MISSING"])
 
 
 if __name__ == "__main__":
