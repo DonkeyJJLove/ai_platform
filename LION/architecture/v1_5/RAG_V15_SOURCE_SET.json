@@ -1,0 +1,64 @@
+{
+  "schema": "lion.rag-v15-source-set/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "task_id": "LION-V15-CIP-EBLE-COGNITIVE-EVOLUTION-INTEGRATION-R1",
+  "predecessor": {
+    "task_id": "LION-V15-ARCHITECTURE-FORMALIZATION-KERNEL-R1",
+    "head": "35a2d87af643a24f90cf4e6bc84f5f5fdaba734e",
+    "tree": "f3443d9ac51b66f1309311dc56706489dbc8b0c7",
+    "relation": "STACKED_CANDIDATE"
+  },
+  "live_master": {
+    "head": "1217e1536af5bfbb6ed81d548e9844af48883bff",
+    "tree": "e23a043012d5bf865af4f398c0a2cc53c94c36d2"
+  },
+  "related_repository": {
+    "repository": "DonkeyJJLove/chunk-chunk",
+    "branch": "master",
+    "head": "b8657037e94787a103c99f1fbb3058341821ffd7",
+    "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9"
+  },
+  "research_inputs": [
+    {
+      "id": "LION_ARCHITECTURE_FORMALIZATION_UPGRADE_R1",
+      "sha256": "08de29e711bc217b910e6604d8a0c87dc490301c1250fd3a2bc5f82431a573d2"
+    },
+    {
+      "id": "LION_CIP_RESEARCH_R1",
+      "sha256": "5580dd97db4135fd35c6930e1cd5bce9dd5cc4e842615103e21a911fe755480d"
+    },
+    {
+      "id": "LION_EBLE_COORDINATOR_DESIGN_R1",
+      "sha256": "9cb43b55b81f00f902c006c05849c828454516ece53a54e8a18c1f7213ca1237"
+    }
+  ],
+  "source_paths": [
+    "cyber_lion/contracts/cognitive_invocation.py",
+    "cyber_lion/contracts/evidence_bound_learning_episode.py",
+    "cyber_lion/contracts/model_release.py",
+    "cyber_lion/contracts/model_call_v2.py",
+    "cyber_lion/contracts/coordinator_competency.py",
+    "cyber_lion/contracts/hmk9d_ablation.py",
+    "cyber_lion/architecture_projection/formalization.py",
+    "cyber_lion/architecture_projection/full_architecture.py",
+    "cyber_lion/architecture_projection/gap.py",
+    "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_TASK2.json",
+    "LION/architecture/v1_5/FORMALIZATION_KERNEL.md",
+    "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/architecture/v1_4/semantic_owners.json",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_4/capability_catalog.json",
+    "LION/architecture/v1_4/event_state_catalog.json",
+    "LION/evals/evolution/evolution_cases.yaml"
+  ],
+  "training_effect": "NONE",
+  "model_promotion_effect": "NONE",
+  "candidate_binding": {
+    "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+    "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+    "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+    "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf"
+  }
+}

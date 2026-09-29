@@ -1,0 +1,124 @@
+{
+  "authority_effect": "NONE",
+  "catalog_gaps": [
+    "EvolutionaryRnD",
+    "EvolutionaryEpoch",
+    "GovernedChangeProposal",
+    "GovernedChangeAdmission"
+  ],
+  "observed_live_baseline": {
+    "branch": "master",
+    "head": "1217e1536af5bfbb6ed81d548e9844af48883bff",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "e23a043012d5bf865af4f398c0a2cc53c94c36d2"
+  },
+  "open_candidate_context": [
+    {
+      "base": "1217e1536af5bfbb6ed81d548e9844af48883bff",
+      "exact_head_ci": [
+        {
+          "conclusion": "success",
+          "name": "Cyber-Lion Core",
+          "run_id": 36124447554
+        },
+        {
+          "conclusion": "success",
+          "name": "Bandit Security Scan",
+          "run_id": 36124447549
+        },
+        {
+          "conclusion": "success",
+          "name": "LION R22C Full Symbol Census",
+          "run_id": 36124447564
+        },
+        {
+          "conclusion": "success",
+          "name": "PR #381 dynamic check",
+          "run_id": 36124446029
+        }
+      ],
+      "head": "b1b9ec4d4dea8790e07da086bc7f27846e31c562",
+      "pr": 381,
+      "state": "OPEN_SEPARATE_CANDIDATE"
+    },
+    {
+      "base": "b1b9ec4d4dea8790e07da086bc7f27846e31c562",
+      "ci_note": "Only Core exact-head run observed in reacquisition; no broader candidate CI claim is made.",
+      "exact_head_ci": [
+        {
+          "conclusion": "success",
+          "name": "Cyber-Lion Core",
+          "run_id": 36135557945
+        }
+      ],
+      "head": "2866328b807f1063b2a618c2b4acf86d1540fc40",
+      "pr": 382,
+      "state": "OPEN_DRAFT_STACKED_CANDIDATE"
+    }
+  ],
+  "projection_gaps": [
+    "formalization closure not represented",
+    "gap projection requires explicit classification for new concepts"
+  ],
+  "rag_impact": "REQUIRED_FOR_FUTURE_CANONICAL_RELEASE_NOT_LIVE_TRUTH",
+  "records": [
+    {
+      "class": "STALE_MACHINE_PROJECTION",
+      "finding": "semantic_owners.json and contract_catalog.json remain bound to 67a4f8243aa6805e47035e572bd458f73fd0b358 while live master is 1217e1536af5bfbb6ed81d548e9844af48883bff.",
+      "id": "FD-001",
+      "impact": "canonical semantic/contract discovery can be stale even when source code is current",
+      "required_control": "FormalizationRegistry currentness dependencies and invalidation triggers"
+    },
+    {
+      "class": "STALE_MACHINE_PROJECTION",
+      "finding": "capability_catalog.json is bound to 849db8f5ea6434f5647ee072cd4835fd2264e078; event_state_catalog.json and material_object_catalog.json remain on 67a4f8243aa6805e47035e572bd458f73fd0b358; current_state.json remains on 938aa94460a2e0f81c470c1586626290bb74bc2c.",
+      "id": "FD-002",
+      "impact": "formalization surfaces have independent stale baselines without one closure gate",
+      "required_control": "AFM + RequiredFormalizationSet + FCR"
+    },
+    {
+      "class": "CATALOG_COVERAGE_GAP",
+      "finding": "Live EvolutionaryRnD, EvolutionaryEpoch, GovernedChangeProposal and GovernedChangeAdmission contracts exist in cyber_lion/contracts but are absent from contract_catalog.json.",
+      "id": "FD-003",
+      "impact": "governed evolutionary semantics are not complete in canonical contract discovery",
+      "required_control": "catalog coverage must PASS before FCR PASS"
+    },
+    {
+      "class": "MANUAL_FRONTIER_ENUMERATION",
+      "finding": "cyber_lion/architecture_projection/gap.py remains a manually maintained frontier projection.",
+      "id": "FD-004",
+      "impact": "new architecture concepts can exist before the gap/frontier model learns them",
+      "required_control": "global concept changes must classify gap-projection"
+    },
+    {
+      "class": "NO_FORMALIZATION_CLOSURE_GATE",
+      "finding": "existing repository candidate verification does not itself prove semantic-owner uniqueness, catalog coverage, discoverability, RAG retrieval or formalization currentness.",
+      "id": "FD-005",
+      "impact": "candidate code can be governed while architecture knowledge remains stale",
+      "required_control": "FCR as an additional architecture-candidate verification constraint"
+    },
+    {
+      "class": "RESEARCH_TO_ARCHITECTURE_GAP",
+      "finding": "CIP and EBLE research packages define bounded concepts/contracts/falsifiers but are external proposal inputs, not canonical owners.",
+      "id": "FD-006",
+      "impact": "research can remain narrative without deterministic canonical propagation",
+      "required_control": "research -> EvolutionDelta -> AFM -> RequiredFormalizationSet -> FCR"
+    },
+    {
+      "class": "RAG_CURRENTNESS_BOUNDARY",
+      "finding": "RAG bootstrap prefers an external R9 authorization-lifecycle candidate and explicitly carries authority_effect=NONE.",
+      "id": "FD-007",
+      "impact": "RAG remains useful context but cannot repair live formalization drift by itself",
+      "required_control": "RAG closure/retrieval is a required surface when AFM says required"
+    },
+    {
+      "class": "OPEN_PR_SEPARATION",
+      "finding": "PR #381 and stacked draft #382 alter other live/candidate surfaces and are not the baseline for this v1.5 candidate.",
+      "id": "FD-008",
+      "impact": "successor identity must not silently absorb unmerged candidate state",
+      "required_control": "v1.5 candidate remains based on exact live master and reports overlap separately"
+    }
+  ],
+  "schema": "lion.formalization-drift-register/v1",
+  "semantic_owner_conflicts": []
+}

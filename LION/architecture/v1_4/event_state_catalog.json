@@ -124,5 +124,61 @@
     "process_to_action": "ACTION_REQUIRED emits ActionIntentCandidate only; canonical Action IR/PDP/runtime admission/execution/observation/reconciliation remain separate existing planes.",
     "combined_source_effect": "R23 combined source count 268, effect surfaces 236, raw unclassified 6, reconciled unclassified 0.",
     "authority_effect": "NONE"
+  },
+  "v15_cognitive_subflows": {
+    "authority_effect": "NONE",
+    "top_level_flow_count_change": "NONE",
+    "cognitive_invocation": {
+      "LOCAL": [
+        "COGNITIVE_NEED",
+        "INVOCATION",
+        "MODEL_RUNTIME_RESOLUTION",
+        "SCHEDULER_ASSIGNMENT",
+        "MATERIAL_WORKER",
+        "MODEL_CALL",
+        "RESULT",
+        "INVOCATION_RECONCILIATION"
+      ],
+      "SAAS": [
+        "COGNITIVE_NEED",
+        "INVOCATION",
+        "SESSION_THREAD_BINDING",
+        "DURABLE_SAAS_REQUEST",
+        "SENTINELX_MEDIATED_TURN",
+        "COGNITIVE_RESULT",
+        "THREAD_DELIVERY",
+        "INVOCATION_RECONCILIATION"
+      ],
+      "DUAL": [
+        "PARENT_COGNITIVE_REQUEST",
+        "LOCAL_INVOCATION",
+        "SAAS_INVOCATION",
+        "SEPARATE_RESULTS",
+        "CORRELATION_WITHOUT_TRUTH_PROMOTION"
+      ]
+    },
+    "invocation_invariants": [
+      "PROVIDER != ENDPOINT != SESSION != INVOCATION != TRANSPORT != RESULT",
+      "COGNITIVE_INVOCATION != AUTHORITY_ACTIVATION",
+      "TRANSPORT_READY != COGNITION_DONE",
+      "SESSION_BOUND != MODEL_READY",
+      "HEARTBEAT != INFERENCE",
+      "RECEIPT != CORRECT_RESULT"
+    ],
+    "eble": [
+      "READ_ONLY_PROVENANCE_REFS",
+      "PRE_DECISION_STATE",
+      "DECISION_PROPOSAL",
+      "EXECUTION_TRAJECTORY",
+      "GROUNDED_OUTCOME",
+      "EVOLUTIONARY_RND_EVIDENCE"
+    ],
+    "model_release_lifecycle": [
+      "TRAINING_CANDIDATE",
+      "EVALUATED_CANDIDATE",
+      "SHADOW_CANDIDATE",
+      "APPROVED_RELEASE"
+    ],
+    "note": "Lifecycle is outside immutable ModelRelease identity; Task2 performs no promotion effect."
   }
 }

@@ -188,6 +188,36 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         _observed("BeanBuilderChainBinding", "cyber_lion/contracts/bean_builder_bridge.py"),
         _observed("R2E4EvidenceBinding", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"),
         _observed("FleetAggregateEffectBudget", "cyber_lion/enterprise/fleet_effect_budget.py"),
+        _contract(
+            "CognitiveInvocation",
+            "cyber_lion/contracts/cognitive_invocation.py",
+            missing_runtime="existing LOCAL/SAAS execution paths remain operational owners",
+            next_minimal_gap="validate identities against live routed calls",
+        ),
+        _contract(
+            "EvidenceBoundLearningEpisode",
+            "cyber_lion/contracts/evidence_bound_learning_episode.py",
+            missing_runtime="read-only importer and corpus materialization remain future work",
+            next_minimal_gap="validate leakage-safe reconstruction against evidence fixtures",
+        ),
+        _contract(
+            "ModelRelease",
+            "cyber_lion/contracts/model_release.py",
+            missing_runtime="identity exists without training or promotion effect",
+            next_minimal_gap="bind observed model/runtime package evidence",
+        ),
+        _contract(
+            "ModelCallV2",
+            "cyber_lion/contracts/model_call_v2.py",
+            missing_runtime="v1 storage remains canonical; v2 is projection only",
+            next_minimal_gap="validate SentinelX-mediated v2 projection",
+        ),
+        _contract(
+            "CoordinatorCompetencyProfile",
+            "cyber_lion/contracts/coordinator_competency.py",
+            missing_runtime="competency evidence remains evaluation-only",
+            next_minimal_gap="run per-competency frozen evaluation",
+        ),
         _target(
             "AutonomyBlueprint",
             missing_contract="canonical autonomy blueprint contract",

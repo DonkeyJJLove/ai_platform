@@ -1,0 +1,239 @@
+{
+  "authority_effect": "NONE",
+  "baseline": {
+    "head": "2487cf9e54a027f9503e64fb1b25b6503b8d664d",
+    "tree": "ce449b6dde72a905e753bbc853663094324bfba4"
+  },
+  "experiment": "PROCESS_CONTRACT_PLANE_RETROSPECTIVE",
+  "historical_closure_gaps": [
+    "architecture-projection",
+    "capability-catalog",
+    "current-state",
+    "event-state-catalog",
+    "evolution-evals",
+    "formalization-closure",
+    "formalization-manifest",
+    "formalization-registry",
+    "gap-projection",
+    "material-object-catalog",
+    "rag-routing"
+  ],
+  "historical_terminal_commit": {
+    "head": "44f5a0a8dcac7cdb0ace0dc4a61ceeb80063ea80",
+    "tree": "b73bc942fdccbb268271abf7be7ed624daa7ac52"
+  },
+  "metric_definition": {
+    "precision": "derived required surfaces that were historically changed; extra conservative requirements lower precision and expose historical closure gaps",
+    "recall": "observed historical formalization surfaces covered by derived required set"
+  },
+  "observed_formalization_surfaces": [
+    "architecture-docs",
+    "contract-catalog",
+    "currentness-carriers",
+    "discoverability-bootstrap",
+    "rag-release",
+    "semantic-owners"
+  ],
+  "required_formalization_set": {
+    "items": [
+      {
+        "artifact_id": "architecture-docs",
+        "classification": "UPDATE",
+        "path": "LION/architecture/v1_4/README.md",
+        "reason": "Human architecture navigation must describe the new existing-layer boundary.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "FLOW_CHANGE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "architecture-projection",
+        "classification": "VALIDATE_ONLY",
+        "path": "cyber_lion/architecture_projection/full_architecture.py",
+        "reason": "Existing source-derived architecture projection required validation for the new concept.",
+        "triggers": [
+          "CAPABILITY_CHANGE",
+          "CONTRACT_CHANGE",
+          "FLOW_CHANGE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "capability-catalog",
+        "classification": "NOT_APPLICABLE",
+        "path": "LION/architecture/v1_4/capability_catalog.json",
+        "reason": "No new reusable capability identity was required by the historical plane introduction.",
+        "triggers": [
+          "CAPABILITY_CHANGE",
+          "CONTRACT_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "contract-catalog",
+        "classification": "UPDATE",
+        "path": "LION/architecture/v1_4/contract_catalog.json",
+        "reason": "PhaseExecutionContract and mission preflight contracts require discovery coverage.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "current-state",
+        "classification": "VALIDATE_ONLY",
+        "path": "LION/architecture/v1_4/current_state.json",
+        "reason": "registry refresh trigger matched",
+        "triggers": [
+          "CURRENTNESS_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "currentness-carriers",
+        "classification": "REGENERATE",
+        "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+        "reason": "Architecture source changes invalidate the exact truth subject and carriers.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "CURRENTNESS_CHANGE",
+          "RAG_RELEASE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "discoverability-bootstrap",
+        "classification": "UPDATE",
+        "path": "AGENTS.md",
+        "reason": "Fresh agents must discover Process Contract Plane before execution planning.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "RAG_RELEASE",
+          "SEMANTIC_OWNER_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "event-state-catalog",
+        "classification": "VALIDATE_ONLY",
+        "path": "LION/architecture/v1_4/event_state_catalog.json",
+        "reason": "No new top-level canonical event token was required; state semantics still required validation.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "FLOW_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "evolution-evals",
+        "classification": "UPDATE",
+        "path": "LION/evals/evolution/evolution_cases.yaml",
+        "reason": "Behavioral reasoner regressions should cover phase intent versus execution contracts.",
+        "triggers": [
+          "CAPABILITY_CHANGE",
+          "CONTRACT_CHANGE",
+          "FLOW_CHANGE",
+          "SEMANTIC_OWNER_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "formalization-closure",
+        "classification": "VALIDATE_ONLY",
+        "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+        "reason": "registry refresh trigger matched",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "CURRENTNESS_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "formalization-manifest",
+        "classification": "VALIDATE_ONLY",
+        "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
+        "reason": "registry refresh trigger matched",
+        "triggers": [
+          "CONTRACT_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "formalization-registry",
+        "classification": "VALIDATE_ONLY",
+        "path": "LION/architecture/v1_5/FORMALIZATION_REGISTRY_CANDIDATE.json",
+        "reason": "registry refresh trigger matched",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "gap-projection",
+        "classification": "VALIDATE_ONLY",
+        "path": "cyber_lion/architecture_projection/gap.py",
+        "reason": "Frontier selection required validation against the new process contract boundary.",
+        "triggers": [
+          "CAPABILITY_CHANGE",
+          "CONTRACT_CHANGE",
+          "CURRENTNESS_CHANGE",
+          "FLOW_CHANGE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "material-object-catalog",
+        "classification": "NOT_APPLICABLE",
+        "path": "LION/architecture/v1_4/material_object_catalog.json",
+        "reason": "The Process Contract Plane added contracts and semantics, not a new material runtime object class.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "rag-release",
+        "classification": "ADD",
+        "path": "LION/rag/",
+        "reason": "A versioned Process Contract Plane RAG release was historically materialized.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "RAG_RELEASE",
+          "SEMANTIC_OWNER_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "rag-routing",
+        "classification": "UPDATE",
+        "path": "LION/rag/RAG_BOOTSTRAP.json",
+        "reason": "Versioned RAG routing must expose the new canonical owner.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "RAG_RELEASE",
+          "SEMANTIC_OWNER_CHANGE"
+        ]
+      },
+      {
+        "artifact_id": "semantic-owners",
+        "classification": "UPDATE",
+        "path": "LION/architecture/v1_4/semantic_owners.json",
+        "reason": "Process Contract Plane introduced a new canonical semantic owner.",
+        "triggers": [
+          "CONTRACT_CHANGE",
+          "SEMANTIC_OWNER_CHANGE",
+          "SOURCE_CHANGE"
+        ]
+      }
+    ],
+    "manifest_digest": "27e6b5cc1eaaa30b6059f8c8739519f1b2b5702d6c9f0fea2487448a202ffa5f",
+    "registry_digest": "90a912f4cb31b7f2a8d55378ae244b5d1996dad8a1284bda264303044b8f5592",
+    "schema_id": "lion.required-formalization-set/v1",
+    "set_digest": "bf518c161c823ca8c6abb6462c6169f0976bf895785a15397ce727032f133774"
+  },
+  "required_formalization_set_precision": 0.352941,
+  "required_formalization_set_recall": 1.0,
+  "schema": "lion.formalization-shadow-report/v1",
+  "source_afm_digest": "27e6b5cc1eaaa30b6059f8c8739519f1b2b5702d6c9f0fea2487448a202ffa5f"
+}

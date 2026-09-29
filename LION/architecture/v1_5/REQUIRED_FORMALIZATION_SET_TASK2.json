@@ -1,0 +1,198 @@
+{
+  "schema_id": "lion.required-formalization-set/v1",
+  "manifest_digest": "b7662c7c4f2bb35388e7a83d369ced1ce8c7e80ddcfe45748c2cf14bd8750a18",
+  "registry_digest": "c93e67aa62a9eb19f2280afbabbbbd4f73a5c4f59f5af1d959777d1dfbb73195",
+  "items": [
+    {
+      "artifact_id": "architecture-docs",
+      "path": "LION/architecture/v1_4/README.md",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "FLOW_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "path": "cyber_lion/architecture_projection/full_architecture.py",
+      "classification": "UPDATE",
+      "reason": "New concepts bind to existing architecture layers without a sixteenth layer.",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "CONTRACT_CHANGE",
+        "FLOW_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "path": "LION/architecture/v1_4/capability_catalog.json",
+      "classification": "UPDATE",
+      "reason": "Cognitive routing and coordinator competencies add bounded non-authoritative capabilities.",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "CONTRACT_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "path": "LION/architecture/v1_4/contract_catalog.json",
+      "classification": "UPDATE",
+      "reason": "Cognitive invocation, EBLE, ModelRelease and ModelCallV2 add canonical contracts.",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "current-state",
+      "path": "LION/architecture/v1_4/current_state.json",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CURRENTNESS_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+      "classification": "REGENERATE",
+      "reason": "Any integrated successor must rebind truth/currentness after candidate source stabilization.",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "path": "AGENTS.md",
+      "classification": "UPDATE",
+      "reason": "Fresh agents must discover canonical cognitive and learning owners.",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "path": "LION/architecture/v1_4/event_state_catalog.json",
+      "classification": "UPDATE",
+      "reason": "Cognitive invocation and EBLE introduce bounded subflow/event semantics.",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "FLOW_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "path": "LION/evals/evolution/evolution_cases.yaml",
+      "classification": "UPDATE",
+      "reason": "Behavioral regressions must cover transport/cognition, evidence leakage, identity and authority separation.",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "CONTRACT_CHANGE",
+        "FLOW_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "formalization-manifest",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CONTRACT_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "path": "LION/architecture/v1_5/FORMALIZATION_REGISTRY_CANDIDATE.json",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "gap-projection",
+      "path": "cyber_lion/architecture_projection/gap.py",
+      "classification": "UPDATE",
+      "reason": "The cognition/learning frontier becomes explicit and no longer appears as an unowned gap.",
+      "triggers": [
+        "CAPABILITY_CHANGE",
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "FLOW_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "material-object-catalog",
+      "path": "LION/architecture/v1_4/material_object_catalog.json",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "rag-release",
+      "path": "LION/rag/",
+      "classification": "VALIDATE_ONLY",
+      "reason": "registry refresh trigger matched",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "rag-routing",
+      "path": "LION/rag/RAG_BOOTSTRAP.json",
+      "classification": "UPDATE",
+      "reason": "Task3 requires versioned v1.5 source/owner/migration/supersession/currentness inputs.",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "path": "LION/architecture/v1_4/semantic_owners.json",
+      "classification": "UPDATE",
+      "reason": "Five new canonical concepts require unique semantic owners.",
+      "triggers": [
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ]
+    }
+  ],
+  "set_digest": "a91e7e391650bc2bfbd11e66104b500cc6e3f695cc5a33c9c3d0dca4603298be"
+}

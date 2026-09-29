@@ -8,5 +8,10 @@
   "preferred_release_zip_sha256": "e9fa2ff9e04c8841cb23e616ea9a9238b4ed0f56ffded0d3a621f7db90e07d5d",
   "repository_delta_records": "LION/rag/R9_AUTHORIZATION_LIFECYCLE_RECORDS.md",
   "routing": "NEWEST_VERIFIED_AVAILABLE",
-  "schema": "lion.rag-bootstrap/v1"
+  "schema": "lion.rag-bootstrap/v1",
+  "v15_candidate_input_root": "LION/architecture/v1_5",
+  "v15_task3_source_set": "LION/architecture/v1_5/RAG_V15_SOURCE_SET.json",
+  "v15_task3_currentness": "CURRENT_CANDIDATE",
+  "v15_note": "Candidate Task3 inputs do not replace preferred_release or live reacquisition.",
+  "v15_task3_formalization_closure": "LION/architecture/v1_5/RAG_V15_FORMALIZATION_CLOSURE.json"
 }

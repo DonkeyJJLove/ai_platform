@@ -1,0 +1,69 @@
+{
+  "schema": "lion.rag-v15-semantic-owner-set/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "owners": [
+    {
+      "concept": "CognitiveInvocation",
+      "primary": "cyber_lion/contracts/cognitive_invocation.py",
+      "layers": [
+        "EVOLUTIONARY_EPOCH",
+        "FLEET_AND_SWARM",
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ]
+    },
+    {
+      "concept": "EvidenceBoundLearningEpisode",
+      "primary": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "secondary": [
+        "cyber_lion/contracts/evolutionary_rnd.py"
+      ],
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "EVOLUTIONARY_EPOCH"
+      ]
+    },
+    {
+      "concept": "ModelRelease",
+      "primary": "cyber_lion/contracts/model_release.py",
+      "secondary": [
+        "cyber_lion/contracts/model_plane_adapter.py"
+      ],
+      "layers": [
+        "TRUSTED_RUNTIME",
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ]
+    },
+    {
+      "concept": "CoordinatorCompetencyProfile",
+      "primary": "cyber_lion/contracts/coordinator_competency.py",
+      "secondary": [
+        "LION/evals/evolution/evolution_cases.yaml"
+      ],
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "EVOLUTIONARY_EPOCH"
+      ]
+    },
+    {
+      "concept": "ModelCallV2",
+      "primary": "cyber_lion/contracts/model_call_v2.py",
+      "secondary": [
+        "cyber_lion/mission_control/model_calls.py"
+      ],
+      "layers": [
+        "FLEET_AND_SWARM",
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "OBSERVABILITY_AND_RECONCILIATION"
+      ]
+    }
+  ],
+  "duplicate_primary_owner": "NONE",
+  "top_level_layer_added": false,
+  "candidate_binding": {
+    "head": "8153d108c9b5e0b0842a27b6f24d72fcc45ec8eb",
+    "tree": "c3127342539dea42bec16203eb083fd54cb9be0b",
+    "truth_subject": "207b6fa4b340b0eaf5a85cb9ae13d7bbc34858dd4e1fff16f0aebe1c5e7279b8",
+    "formalization_closure_digest": "5eb9c21b511d44d7cc2950ba3fb209d1142e93efe290acdd9f1f1fc6aa3faebf"
+  }
+}
