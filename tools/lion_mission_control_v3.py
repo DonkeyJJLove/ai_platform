@@ -366,18 +366,26 @@ def _phase_lifecycle_state(rows,current_phase=None):
     return 'AUTHORIZED'
 
 
+def _lpcl_assignment(row):
+    row=str(row or '').strip()
+    if '=' not in row:return None
+    left,right=row.split('=',1);key=left.strip()
+    if not key or not ('A'<=key[0]<='Z'):return None
+    if any(ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_' for ch in key[1:]):return None
+    return key,right.strip()
+
+
 def _lpcl_pairs(text):
-    import re
     lines=str(text or '').replace('\r\n','\n').replace('\r','\n').split('\n');out={};i=0
     while i<len(lines):
-      m=re.match(r'^([A-Z][A-Z0-9_]*)\s*=\s*(.*)$',lines[i].strip())
-      if not m:i+=1;continue
-      key,val=m.group(1),m.group(2).strip();i+=1
+      pair=_lpcl_assignment(lines[i])
+      if not pair:i+=1;continue
+      key,val=pair;i+=1
       if not val:
        buf=[]
        while i<len(lines):
         row=lines[i].strip()
-        if re.match(r'^([A-Z][A-Z0-9_]*)\s*=\s*(.*)$',row):break
+        if _lpcl_assignment(row):break
         if row and not row.startswith('#'):buf.append(row)
         i+=1
        val=' '.join(buf).strip()

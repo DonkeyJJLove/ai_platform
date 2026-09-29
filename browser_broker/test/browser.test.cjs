@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {composerEquivalent,chatExperience,observeScript}=require('../src/browser.cjs');
+const {composerEquivalent,chatExperience,observeScript,safeJsLiteral}=require('../src/browser.cjs');
 
 test('composer equivalence accepts only observed newline flattening',()=>{
  const expected='line-1\nline-2\r\nline-3\rline-4';
@@ -29,4 +29,13 @@ test('renderer Work detection uses project Chat/Work radiogroup state and header
  assert.match(observeScript,/headerWork/);
  assert.match(observeScript,/workOn/);
  assert.match(observeScript,/chatOn/);
+});
+
+
+test('safeJsLiteral prevents executable string breakout',()=>{
+ const payload='</script><script>globalThis.PWNED=1</script>\u2028x&y';
+ const literal=safeJsLiteral(payload);
+ assert.equal(literal.includes('</script>'),false);
+ assert.equal(literal.includes('\\u2028'),true);
+ assert.equal(Function('return '+literal)(),payload);
 });

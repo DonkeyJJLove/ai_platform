@@ -30,6 +30,10 @@ const observeScript=`(() => {
  return {composer:!!p&&p.getClientRects().length>0,empty:!!p&&!value.trim(),send:!!s,busy,experience,work_selected:experience==='WORK',chat_state:chatRadio?.getAttribute('data-state')||null,work_state:workRadio?.getAttribute('data-state')||null,header_work:headerWork,editors,buttons,composer_buttons,composer_context:String(composer_context).slice(0,12000)};
 })()`;
 const composerEquivalent=(observed,expected)=>observed===expected||observed===expected.replace(/\r\n|\r|\n/g,'');
+const safeJsLiteral=value=>{
+ const map={'<':'\\u003C','>':'\\u003E','/':'\\u002F','&':'\\u0026','\u2028':'\\u2028','\u2029':'\\u2029'};
+ return JSON.stringify(String(value)).replace(/[<>&/\u2028\u2029]/g,ch=>map[ch]);
+};
 class EmbeddedBrowser{
  constructor(contents,projectUrl){this.contents=contents;this.projectUrl=projectUrl;this.state='AUTH_OR_BINDING_REQUIRED'}
  bindingReport(){return conversationReport(this.contents.isDestroyed()?'':this.contents.getURL(),this.projectUrl)}
@@ -83,7 +87,7 @@ class EmbeddedBrowser{
   if(this.contents.isDestroyed())return false;
   const project=new URL(this.projectUrl);
   const code=`(() => {
-   if(location.origin!==${JSON.stringify(project.origin)}||location.pathname!==${JSON.stringify(project.pathname)})return false;
+   if(location.origin!==${safeJsLiteral(project.origin)}||location.pathname!==${safeJsLiteral(project.pathname)})return false;
    const p=document.querySelector('#prompt-textarea[contenteditable="true"],#prompt-textarea,textarea[data-testid="prompt-textarea"],[contenteditable="true"][data-lexical-editor="true"],div.ProseMirror[contenteditable="true"]');
    if(!p)return false;p.focus();
    if('value' in p){
@@ -129,17 +133,17 @@ class EmbeddedBrowser{
   if(!ready){if(!(await this._activateProjectNewChat()))throw Error('PROJECT_NEW_CHAT_CONTROL_REQUIRED');await this._wait(async()=>await this._anyChatComposerReady(),30000,300)}
   if(!admitted())throw Error('ADMISSION_REVOKED');
   const fill=`(() => {
-    if(location.origin!==${JSON.stringify(project.origin)})return false;
+    if(location.origin!==${safeJsLiteral(project.origin)})return false;
     const p=document.querySelector('#prompt-textarea[contenteditable="true"],#prompt-textarea,textarea[data-testid="prompt-textarea"],[contenteditable="true"][data-lexical-editor="true"],div.ProseMirror[contenteditable="true"]');
     if(!p)return false;const current=('value' in p?String(p.value||''):String(p.textContent||''));if(current.trim())return false;p.focus();
-    if('value' in p){const proto=p.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;const setter=Object.getOwnPropertyDescriptor(proto,'value')?.set;if(!setter)return false;setter.call(p,${JSON.stringify(text)});p.dispatchEvent(new Event('input',{bubbles:true}));return true}
-    const ok=document.execCommand('insertText',false,${JSON.stringify(text)});p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:${JSON.stringify(text)}}));return ok;
+    if('value' in p){const proto=p.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;const setter=Object.getOwnPropertyDescriptor(proto,'value')?.set;if(!setter)return false;setter.call(p,${safeJsLiteral(text)});p.dispatchEvent(new Event('input',{bubbles:true}));return true}
+    const ok=document.execCommand('insertText',false,${safeJsLiteral(text)});p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:${safeJsLiteral(text)}}));return ok;
   })()`;
   if(!(await this.contents.executeJavaScriptInIsolatedWorld(1001,[{code:fill}])))throw Error('PROJECT_COMPOSER_FILL_FAILED');
   const click=()=>this.contents.executeJavaScriptInIsolatedWorld(1001,[{code:`(() => {
     const p=document.querySelector('#prompt-textarea[contenteditable="true"],#prompt-textarea,textarea[data-testid="prompt-textarea"],[contenteditable="true"][data-lexical-editor="true"],div.ProseMirror[contenteditable="true"]');
     const form=p?.closest('form');const s=(form||document).querySelector('button[data-testid="send-button"],button[aria-label*="Wyślij" i],button[aria-label*="Send" i]');
-    const expected=${JSON.stringify(text)},observed=p?('value' in p?String(p.value||''):String(p.textContent||'')):'';
+    const expected=${safeJsLiteral(text)},observed=p?('value' in p?String(p.value||''):String(p.textContent||'')):'';
     const ok=(${composerEquivalent.toString()})(observed,expected);
     if(!p||!ok||!s||s.disabled)return false;s.click();return true;
   })()`}]);
@@ -163,16 +167,16 @@ class EmbeddedBrowser{
  }
  async send(v,text,admitted){
   if(!admitted()||!(await this.ready(v))||!admitted()){if(this.state==='WORK_MODE_FORBIDDEN')throw Error('WORK_MODE_FORBIDDEN');throw Error('NOT_READY')}
-  const fill=`(() => {if(location.href!==${JSON.stringify(v.conversation_url)})return false;
+  const fill=`(() => {if(location.href!==${safeJsLiteral(v.conversation_url)})return false;
     const p=document.querySelector('#prompt-textarea[contenteditable="true"],#prompt-textarea,textarea[data-testid="prompt-textarea"],[contenteditable="true"][data-lexical-editor="true"],div.ProseMirror[contenteditable="true"]');if(!p||(('value' in p?String(p.value||''):String(p.textContent||'')).trim()))return false;
-    p.focus();if('value' in p){const proto=p.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;const setter=Object.getOwnPropertyDescriptor(proto,'value')?.set;if(!setter)return false;setter.call(p,${JSON.stringify(text)});p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:${JSON.stringify(text)}}));return true}const ok=document.execCommand('insertText',false,${JSON.stringify(text)});p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:${JSON.stringify(text)}}));return ok;})()`;
+    p.focus();if('value' in p){const proto=p.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;const setter=Object.getOwnPropertyDescriptor(proto,'value')?.set;if(!setter)return false;setter.call(p,${safeJsLiteral(text)});p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:${safeJsLiteral(text)}}));return true}const ok=document.execCommand('insertText',false,${safeJsLiteral(text)});p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:${safeJsLiteral(text)}}));return ok;})()`;
   if(!(await this.contents.executeJavaScriptInIsolatedWorld(1001,[{code:fill}]))||!admitted())throw Error('FILL_OR_ADMISSION_UNKNOWN');
-  const click=`(() => {if(location.href!==${JSON.stringify(v.conversation_url)})return false;
+  const click=`(() => {if(location.href!==${safeJsLiteral(v.conversation_url)})return false;
     const p=document.querySelector('#prompt-textarea[contenteditable="true"],#prompt-textarea,textarea[data-testid="prompt-textarea"],[contenteditable="true"][data-lexical-editor="true"],div.ProseMirror[contenteditable="true"]');const form=p?.closest('form');const s=(form||document).querySelector('button[data-testid="send-button"],button[aria-label*="Wyślij" i],button[aria-label*="Send" i]');
-    const expected=${JSON.stringify(text)},observed=p?('value' in p?String(p.value||''):String(p.textContent||'')):'',contentMatches=(${composerEquivalent.toString()})(observed,expected);
+    const expected=${safeJsLiteral(text)},observed=p?('value' in p?String(p.value||''):String(p.textContent||'')):'',contentMatches=(${composerEquivalent.toString()})(observed,expected);
     if(!p||!contentMatches||!s||s.disabled)return false;s.click();return true;})()`;
   if(!admitted()||!(await this.contents.executeJavaScriptInIsolatedWorld(1001,[{code:click}])))throw Error('SEND_UNKNOWN');
   this.state='AWAITING_MCP_RESULT';
  }
 }
-module.exports={EmbeddedBrowser,composerEquivalent,chatExperience,observeScript};
+module.exports={EmbeddedBrowser,composerEquivalent,chatExperience,observeScript,safeJsLiteral};

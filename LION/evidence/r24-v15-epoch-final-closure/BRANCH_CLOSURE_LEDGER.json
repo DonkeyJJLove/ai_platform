@@ -1,0 +1,681 @@
+{
+  "schema": "lion.epoch-branch-closure-ledger/v1",
+  "task_id": "LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+  "observed_at": "2026-09-29T19:52:26.481528Z",
+  "repository": "DonkeyJJLove/ai_platform",
+  "baseline": {
+    "branch": "master",
+    "head": "46cbc109ec283e3e87554d733699afeba783df7b",
+    "tree": "9c4233cc8c145bb7ed3da125647db2dcf92a63c0"
+  },
+  "remote_non_master_branch_count": 68,
+  "class_counts": {
+    "DIAGNOSTIC_ARCHIVE": 8,
+    "INTEGRATED_BY_MERGED_PR": 25,
+    "INTEGRATED_BY_SUCCESSOR": 5,
+    "INTEGRATED_EXACT": 9,
+    "SELECTIVE_PORT_REQUIRED": 1,
+    "SUPERSEDED": 20
+  },
+  "unknown_count": 0,
+  "delete_allowed_classes": [
+    "INTEGRATED_EXACT",
+    "INTEGRATED_BY_MERGED_PR",
+    "INTEGRATED_BY_SUCCESSOR",
+    "SUPERSEDED",
+    "DIAGNOSTIC_ARCHIVE"
+  ],
+  "delete_denied_classes": [
+    "SELECTIVE_PORT_REQUIRED",
+    "MERGE_REQUIRED",
+    "UNKNOWN"
+  ],
+  "preserved_next_epoch_local_candidate": {
+    "branch": "mission/v15-communication-envelope-r1",
+    "head": "55ddb1e9496127ca6e23d7896463c7c12d13b118",
+    "remote_ref_present": false
+  },
+  "selective_port": {
+    "branch": "mission/r24-bounded-mutation-substrate-bootstrap-r1",
+    "source_head": "9a1002278b37bafc70dfcb79c7d937a45f764d47",
+    "state": "STAGED_IN_FINAL_CLOSURE_CANDIDATE",
+    "source_sha256": {
+      "cyber_lion/contracts/bounded_mutation.py": "348503cff81f58377fe863ad62f4bdfbb6582251624cc0ee4ffba7cf9089b8d9",
+      "cyber_lion/mission_control/bounded_mutation_substrate.py": "0717b40c14a44b203a234451336118e2e56a88a237c098b015e2afbaa333fd6a",
+      "cyber_lion/tests/test_bounded_mutation_substrate.py": "c8d6ce6225df78bf4d3e4a2d2e0088786b49d810defd8f0bbbaf7ca83c607216"
+    },
+    "candidate_sha256": {
+      "cyber_lion/contracts/bounded_mutation.py": "348503cff81f58377fe863ad62f4bdfbb6582251624cc0ee4ffba7cf9089b8d9",
+      "cyber_lion/mission_control/bounded_mutation_substrate.py": "047e9c871045f94996d6fc9d7e007b87bf56389fc85a34d9326e8c9fcd721c31",
+      "cyber_lion/tests/test_bounded_mutation_substrate.py": "c8d6ce6225df78bf4d3e4a2d2e0088786b49d810defd8f0bbbaf7ca83c607216"
+    },
+    "port_hardening": {
+      "cyber_lion/mission_control/bounded_mutation_substrate.py": "replace closed-table dynamic SELECT construction with literal SELECT statements so effect-surface scanner remains closed-world"
+    }
+  },
+  "branches": [
+    {
+      "branch": "bootstrap/lion-lpcl-direct-supervisor-r1",
+      "head": "fb231ca1c6c1cdbf11891e473af0a9503dc5f7ad",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "bootstrap/lion-lpcl-sentinelx-bus-r1",
+      "head": "f5c7ce6a12e9e710005838fe6950b3e280cbe0b6",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "candidate/lion-e4-t03-consolidation-r1",
+      "head": "52f794d4b8efc2dee7fb8dff3ed70e6e0e645b8a",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #360",
+      "evidence_refs": [
+        "github:pr:360:merged:2026-09-19T01:55:32Z"
+      ]
+    },
+    {
+      "branch": "candidate/lion-e4-t06-optional-firefox-r1",
+      "head": "52f1b0d53e475c984bb68d1e6431da02b4157479",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #361",
+      "evidence_refs": [
+        "github:pr:361:merged:2026-09-19T09:22:29Z"
+      ]
+    },
+    {
+      "branch": "docs/r17-4-node-express-architecture-reconciliation-r1",
+      "head": "5b6f8f8215a413c5f8242c132daf9715da226d09",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #364",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:364:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "feat/r18-background-saas-dispatch-r2",
+      "head": "c739b1a63bf8236c97818411b70aa611e4de95f7",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #366",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:366:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "feat/r18-node-express-saas-fabric-r1",
+      "head": "a81e0c0f82d996d5981e0289a1f433554bae4565",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #365",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:365:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "feat/r19-integrated-browser-broker-r1",
+      "head": "c6d12bf75158d1b8a3e6186933ec4b81bda2418b",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #367",
+      "evidence_refs": [
+        "github:pr:367:merged:2026-09-22T12:26:37Z"
+      ]
+    },
+    {
+      "branch": "fix/r23-core-inventory-reconciliation",
+      "head": "b037177b96bbf9ad517b675854b44a155b085249",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #371",
+      "evidence_refs": [
+        "github:pr:371:merged:2026-09-22T21:41:31Z"
+      ]
+    },
+    {
+      "branch": "fix/r24-baseline-fleet-predicate",
+      "head": "03168bb61ceab213064ed66808d4df5ba618790a",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #377",
+      "evidence_refs": [
+        "github:pr:377:merged:2026-09-23T20:18:37Z"
+      ]
+    },
+    {
+      "branch": "fix/r24-docker-recon-evidence",
+      "head": "c8fbf0a3e630965b4ab3ef758a61c0abf7efc8fb",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #373",
+      "evidence_refs": [
+        "github:pr:373:merged:2026-09-23T10:50:53Z"
+      ]
+    },
+    {
+      "branch": "fix/r24-electron-live-evidence",
+      "head": "7d7e0450aa2f886fa5e03c8a6c59d4f88ced83d7",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #380",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:380:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "fix/r24-electron-tabs",
+      "head": "75ae1db9745df1a5806f57ff95c8daa16c5fe3e2",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #378",
+      "evidence_refs": [
+        "github:pr:378:merged:2026-09-23T21:38:12Z"
+      ]
+    },
+    {
+      "branch": "fix/r24-persistent-worker-transport",
+      "head": "a66c6e9e9808bdc48c3e5d1c33e67f69cc6c619e",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #376",
+      "evidence_refs": [
+        "github:pr:376:merged:2026-09-23T17:43:40Z"
+      ]
+    },
+    {
+      "branch": "fix/r24-rematerialization-rebind",
+      "head": "4937b6503d0556725026e5806c0739a401940a0d",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #374",
+      "evidence_refs": [
+        "github:pr:374:merged:2026-09-23T11:43:21Z"
+      ]
+    },
+    {
+      "branch": "fix/r24-shared-transport-currentness",
+      "head": "cc85d299b3d2350c128eb4336472315fdfc8189b",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #379",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:379:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "fix/r24-worker-transport-stability-r2",
+      "head": "43f0cc576dea14623dd6aa7be2d32669016b6065",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #375",
+      "evidence_refs": [
+        "github:pr:375:merged:2026-09-23T12:54:08Z"
+      ]
+    },
+    {
+      "branch": "mission/control-plane-reconnaissance-r1",
+      "head": "f93f46655201b1dd338e27470d450a7b947f308d",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #343",
+      "evidence_refs": [
+        "github:pr:343:merged:2026-09-15T15:58:12Z"
+      ]
+    },
+    {
+      "branch": "mission/e3c-supervisor-adapter-r1",
+      "head": "2866328b807f1063b2a618c2b4acf86d1540fc40",
+      "classification": "SUPERSEDED",
+      "reason": "runtime adapter mission completed; PR382 closed and successor H5 closure owns terminal state",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/epoch3-lifecycle-normalization-r1",
+      "head": "0074d26a262a3627492b711ab41562be27ccbcbf",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #347",
+      "evidence_refs": [
+        "github:pr:347:merged:2026-09-15T20:04:51Z"
+      ]
+    },
+    {
+      "branch": "mission/epoch3-lifecycle-normalization-r2-followup",
+      "head": "478c787419ae3a0644182ff895be069243ddf521",
+      "classification": "SUPERSEDED",
+      "reason": "merged lifecycle normalization R1 plus later control-plane/H5 lineage",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/federation-final-r1",
+      "head": "67d2933d689124ba2c3bb99925c4756aabf3584b",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/firefox-browser-mediator-impl-r1",
+      "head": "8c95599be461bb235c30cc5d4cfa2feabd7acff6",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #354",
+      "evidence_refs": [
+        "github:pr:354:merged:2026-09-16T11:33:08Z"
+      ]
+    },
+    {
+      "branch": "mission/firefox-mediator-lpcl-carrier-r1",
+      "head": "8bb01b62702b9085e91d383df7489d246bd4674c",
+      "classification": "SUPERSEDED",
+      "reason": "Firefox mediator implementation/recovery/Task022 successor chain merged; carrier is archival input only",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/firefox-mediator-topology-compat-r1",
+      "head": "f6ab092123c8ec03b0ec81f15d4bfebcb2882050",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #352",
+      "evidence_refs": [
+        "github:pr:352:merged:2026-09-16T00:20:54Z"
+      ]
+    },
+    {
+      "branch": "mission/firefox-open-session-recovery-r2",
+      "head": "6f10f94fdf8f8005c838382d92b2a73d31240e31",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #355",
+      "evidence_refs": [
+        "github:pr:355:merged:2026-09-16T16:55:00Z"
+      ]
+    },
+    {
+      "branch": "mission/firefox-project-mediator-successor-r1",
+      "head": "5f7346ebe8e8cfea01ef62c7a12bff7d29ecd86a",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #351",
+      "evidence_refs": [
+        "github:pr:351:merged:2026-09-15T23:51:56Z"
+      ]
+    },
+    {
+      "branch": "mission/general-sentinelx-operator-channel-r1",
+      "head": "669868c9f68ab248801d7a7c0c824234b1703b35",
+      "classification": "INTEGRATED_BY_SUCCESSOR",
+      "reason": "contained in successor mission/operator-intervention-r1",
+      "evidence_refs": [
+        "git:ancestor-of:mission/operator-intervention-r1"
+      ]
+    },
+    {
+      "branch": "mission/lion-e4-t07-secure-mcp-relay-r1",
+      "head": "d9bcbe0328c2648aee4864205a45937fc504494a",
+      "classification": "INTEGRATED_BY_SUCCESSOR",
+      "reason": "contained in successor mission/lion-task022-browser-mediator-closure-r1",
+      "evidence_refs": [
+        "git:ancestor-of:mission/lion-task022-browser-mediator-closure-r1"
+      ]
+    },
+    {
+      "branch": "mission/lion-task022-browser-mediator-closure-r1",
+      "head": "8258d10141893b8c92940b601835b9fd5990fd0e",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #362",
+      "evidence_refs": [
+        "github:pr:362:merged:2026-09-19T19:49:54Z"
+      ]
+    },
+    {
+      "branch": "mission/lion-task022-clock-skew-hotfix-r1",
+      "head": "dac773e68176b1aebf1534ce806fe268416198ac",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #363",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:363:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "mission/lpcl-execution-currentness-decouple-r1",
+      "head": "68d377823a8f542ed1b3e86f73e698d7f22b8301",
+      "classification": "SUPERSEDED",
+      "reason": "later Task022/T03/H5 currentness model supersedes this candidate",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/lpcl-panel-direct-supervisor-r1",
+      "head": "654290ef42a05bcdee8a6f37dd7a46b41a792cc3",
+      "classification": "SUPERSEDED",
+      "reason": "direct-supervisor experiment replaced by current SentinelX/browser-broker control path",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/lpcl-panel-sentinelx-operator-bus-r1",
+      "head": "7232ff69760a5dc111f8b0ba8d6db623d308d3d7",
+      "classification": "SUPERSEDED",
+      "reason": "closed PR359 superseded by merged PR360 consolidation",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/operator-channel-binding-r1",
+      "head": "2eea89e0dcaadac39a87c3b3a7e6c78e5b01ed70",
+      "classification": "SUPERSEDED",
+      "reason": "closed PR357 superseded by merged PR360 consolidation",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/operator-intervention-r1",
+      "head": "669868c9f68ab248801d7a7c0c824234b1703b35",
+      "classification": "SUPERSEDED",
+      "reason": "closed PR356 superseded by merged PR360 consolidation",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/panel-channel-context-browser-r2",
+      "head": "3c280b497bba2536097b2d628758adb1aa86b47e",
+      "classification": "SUPERSEDED",
+      "reason": "closed PR358 superseded by merged PR360 consolidation",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/panel-channel-context-browser-r2-checkpoint",
+      "head": "1da9211844594a60cb02b226f6142d74a2347221",
+      "classification": "INTEGRATED_BY_SUCCESSOR",
+      "reason": "contained in successor mission/panel-channel-context-browser-r2",
+      "evidence_refs": [
+        "git:ancestor-of:mission/panel-channel-context-browser-r2"
+      ]
+    },
+    {
+      "branch": "mission/post-astra-transport-closure-r1",
+      "head": "3ee47ff48794933d6474ea4168393690ac8b13db",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #349",
+      "evidence_refs": [
+        "github:pr:349:merged:2026-09-15T21:46:52Z"
+      ]
+    },
+    {
+      "branch": "mission/post-federation-core-fix-r1",
+      "head": "e9bc9680cadae65ae7f8b10168d0f3d38296a3ce",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/process-contract-plane-lpcl12-r1",
+      "head": "44f5a0a8dcac7cdb0ace0dc4a61ceeb80063ea80",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #342",
+      "evidence_refs": [
+        "github:pr:342:merged:2026-09-15T08:07:11Z"
+      ]
+    },
+    {
+      "branch": "mission/r20-r2-sentinelx-primary-transport",
+      "head": "0b6c563a78832a725dfe2c7a8255abb83dca5033",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #368",
+      "evidence_refs": [
+        "github:pr:368:merged:2026-09-22T12:20:23Z"
+      ]
+    },
+    {
+      "branch": "mission/r21-persistent-chat-only-sentinelx",
+      "head": "1b67a66e7ad8bba067fe2c873a68adfe7c499f88",
+      "classification": "SUPERSEDED",
+      "reason": "terminal E3C PR consolidation explicitly superseded PR #369",
+      "evidence_refs": [
+        "mission:E3C-PR-CONSOLIDATION-R1",
+        "github:pr:369:closed-unmerged"
+      ]
+    },
+    {
+      "branch": "mission/r23-autonomy-execution-fabric",
+      "head": "4343e0050f39d41d1dc4778b6c368654423e3d90",
+      "classification": "INTEGRATED_BY_SUCCESSOR",
+      "reason": "contained in successor fix/r24-electron-tabs",
+      "evidence_refs": [
+        "git:ancestor-of:fix/r24-electron-tabs"
+      ]
+    },
+    {
+      "branch": "mission/r24-bounded-mutation-substrate-bootstrap-r1",
+      "head": "9a1002278b37bafc70dfcb79c7d937a45f764d47",
+      "classification": "SELECTIVE_PORT_REQUIRED",
+      "reason": "three bounded-mutation artifacts absent from H5 master; exact selective port staged in final-closure candidate",
+      "evidence_refs": [
+        "git:diff:electron-convergence..bounded-mutation:3-files",
+        "ported:cyber_lion/contracts/bounded_mutation.py",
+        "ported:cyber_lion/mission_control/bounded_mutation_substrate.py",
+        "ported:cyber_lion/tests/test_bounded_mutation_substrate.py"
+      ]
+    },
+    {
+      "branch": "mission/r24-complementary-integration-recovery-r1",
+      "head": "27d507605c663be133269db8665271a16fb87c4a",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/r24-electron-control-plane-convergence-r1",
+      "head": "56629776a9b136341402bfdd025c04a29a6e6b27",
+      "classification": "SUPERSEDED",
+      "reason": "PR381 candidate superseded by PR388/389/390/391/392 H5 convergence",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/r24-h5-closure-r1",
+      "head": "c68563dfa14e19dd4d02dac08ffce37265f5f6de",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/r24-material-worker-v2",
+      "head": "9e5f1edf4e690d99b531f712ebc18d2613ff2a06",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #372",
+      "evidence_refs": [
+        "github:pr:372:merged:2026-09-22T23:20:48Z"
+      ]
+    },
+    {
+      "branch": "mission/r24-model-chat-protocol-fanout-r1",
+      "head": "43604a447ad8e14ba362777b9e986dd69c622913",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/r24-otp-pairing-completion-r1",
+      "head": "fcf4ffbbc669c4a0660567d9b1cca99faea78f25",
+      "classification": "SUPERSEDED",
+      "reason": "OTP live deployment mission completed; PR383 closed and H5 currentness supersedes carrier line",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "mission/saas-automatic-mediator-r1",
+      "head": "ffb5916926e7e8b58393dc3a0d56c0411a8a04ed",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #350",
+      "evidence_refs": [
+        "github:pr:350:merged:2026-09-15T22:48:47Z"
+      ]
+    },
+    {
+      "branch": "mission/saas-thread-delivery-fix-r1",
+      "head": "cd734adc9d457702fb418b36a59f4607f147ce44",
+      "classification": "INTEGRATED_BY_SUCCESSOR",
+      "reason": "contained in successor candidate/lion-e4-t03-consolidation-r1",
+      "evidence_refs": [
+        "git:ancestor-of:candidate/lion-e4-t03-consolidation-r1"
+      ]
+    },
+    {
+      "branch": "mission/successor-capability-package-r1",
+      "head": "28071a782db1f7e143790826be1c6c31d3b7904f",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #344",
+      "evidence_refs": [
+        "github:pr:344:merged:2026-09-15T16:17:06Z"
+      ]
+    },
+    {
+      "branch": "mission/successor-recon-recipe-r1",
+      "head": "23293b7b346881d0ae94d8d08811d1ff500265ee",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #345",
+      "evidence_refs": [
+        "github:pr:345:merged:2026-09-15T16:52:30Z"
+      ]
+    },
+    {
+      "branch": "mission/successor-terminal-recon-r1",
+      "head": "3bcddbba694978797c49d002c1c3f35a54cc5751",
+      "classification": "INTEGRATED_BY_MERGED_PR",
+      "reason": "exact head merged by PR #346",
+      "evidence_refs": [
+        "github:pr:346:merged:2026-09-15T17:41:11Z"
+      ]
+    },
+    {
+      "branch": "mission/v15-architecture-formalization-kernel-r1",
+      "head": "35a2d87af643a24f90cf4e6bc84f5f5fdaba734e",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/v15-cip-eble-cognitive-evolution-r1",
+      "head": "fffaab1552ccbbd7dfc03d5e484220b69bd4acae",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "mission/v15-convergence-r1",
+      "head": "cd624cce55ac3af6880e98dfda832fbba548af33",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    },
+    {
+      "branch": "ops/r24-phase12-diagnostic-r1",
+      "head": "4c5c7b49c3b1d849bbf87e20b2cdbd5cca64e1d5",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "ops/r24-phase12-diagnostic-r2",
+      "head": "68e02371d0cf9fbaee1c561f9a858bb03f5ce4de",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "ops/r24-phase12-diagnostic-r3",
+      "head": "426ff732ce70b402a92335eeaa42bff972d28272",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "ops/r24-phase12-diagnostic-r4",
+      "head": "828c8f2453d49dd5967b6e63f8a3ba3a649c01b1",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "ops/r24-phase12-diagnostic-r5",
+      "head": "7bb98a4d9702cf7e5beccd45ede2b3fc504f260a",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "ops/r24-phase12-live-canary-r1",
+      "head": "536f1a5eabc5ce571a23d61e8a249f0c34d3819d",
+      "classification": "DIAGNOSTIC_ARCHIVE",
+      "reason": "bootstrap/diagnostic evidence branch; not canonical source owner",
+      "evidence_refs": [
+        "branch-name:bootstrap-or-phase12-diagnostic"
+      ]
+    },
+    {
+      "branch": "repair/effect-surface-census-rebind-r1",
+      "head": "65f276e1f80e02758c2a89f13bca22088b2fd51c",
+      "classification": "SUPERSEDED",
+      "reason": "later R23 inventory reconciliation and H5 scan/currentness supersede this repair line",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "repair/effect-surface-rebind-bootstrap-r1",
+      "head": "d7b3a85ece3714b70c38cf834173c04cb15ab96a",
+      "classification": "SUPERSEDED",
+      "reason": "later R23 inventory reconciliation and H5 scan/currentness supersede bootstrap line",
+      "evidence_refs": [
+        "semantic-successor:current-master"
+      ]
+    },
+    {
+      "branch": "validation/v15-cip-eble-final-r1",
+      "head": "fffaab1552ccbbd7dfc03d5e484220b69bd4acae",
+      "classification": "INTEGRATED_EXACT",
+      "reason": "remote ref is ancestor of current master",
+      "evidence_refs": [
+        "git:merge-base:is-ancestor"
+      ]
+    }
+  ],
+  "authority_effect": "NONE"
+}
