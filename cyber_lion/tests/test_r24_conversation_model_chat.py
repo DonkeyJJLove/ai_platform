@@ -167,6 +167,25 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(after[-1]["context_digest"], out["context_digest"])
         self.assertEqual(after[-1]["correlation_id"], out["correlation_id"])
 
+    def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
+        conv = self.create("saas-cancel-root")
+        out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
+            "message": "cancel-me",
+            "route": "SAAS",
+            "client_request_id": "saas-cancel-1",
+        })
+        request_id = out["saas_handoff"]["request_id"]
+        self.control.requests[request_id]["status"] = "CANCELLED"
+        self.assertEqual(deliver_saas_once(self.store, self.control), [])
+        pending = self.store("conversation_chat_saas_candidates", {"limit": 128})["candidates"]
+        self.assertNotIn(request_id, {x["request_id"] for x in pending})
+        transcript = self.transcript(conv["conversation_id"])["messages"]
+        self.assertEqual([x["role"] for x in transcript], ["USER"])
+        lanes = self.store("conversation_lanes", {"conversation_id": conv["conversation_id"]})["lanes"]
+        saas_lane = next(x for x in lanes if x["lane_id"] == out["legs"][0]["lane_id"])
+        self.assertEqual(saas_lane["state"], "FAILED")
+        self.assertEqual(deliver_saas_once(self.store, self.control), [])
+
     def test_dual_freezes_one_context_and_dispatches_saas_before_local_without_hidden_state(self):
         conv = self.create("dual-root")
         first = submit_chat(self.store, self.gateway, conv["conversation_id"], {
@@ -216,6 +235,20 @@ class R24ConversationModelChatTests(unittest.TestCase):
                 "### LOCAL\nLOCAL-SECRET-OUTPUT:gamma\n\n### SAAS\nSAAS-GAMMA",
             ],
         )
+
+    def test_canonical_history_is_bounded_before_local_gateway(self):
+        conv = self.create("bounded-history-root")
+        for index in range(8):
+            out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
+                "message": f"turn-{index}",
+                "route": "LOCAL",
+                "client_request_id": f"bounded-{index}",
+            })
+            self.assertEqual(out["state"], "LOCAL_COMPLETE")
+        history = self.gateway.local_calls[-1]["history"]
+        self.assertLessEqual(len(history), 8)
+        self.assertLessEqual(sum(len(x["content"]) for x in history), 4200)
+        self.assertEqual(history[-1]["content"], "LOCAL-SECRET-OUTPUT:turn-6")
 
     def test_delivery_cursor_survives_reconnect_and_suppresses_duplicates(self):
         conv = self.create("cursor-root")
