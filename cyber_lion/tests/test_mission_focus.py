@@ -130,6 +130,24 @@ class MissionFocusTests(unittest.TestCase):
         self.assertEqual(len(service.recent_process_missions()),1)
         self.assertEqual(len(service.recent_process_missions('all')),2)
 
+    def test_recent_summary_matches_detail_without_full_snapshot(self):
+        detail=service.process_snapshot(service.MISSION,read_only=True)
+        expected=detail['mission_summary']
+        lifecycle=detail['lifecycle']
+        with patch.object(service,'process_snapshot',side_effect=AssertionError('recent must not build full process snapshot')):
+            row=next(x for x in service.recent_process_missions('operational') if x['mission_id']==service.MISSION)
+        for key in (
+            'mission_id','title','adapter','state','runtime_state','objective',
+            'current_phase','current_phase_reason','progress','authority_state',
+            'normalized_schema_version','projection_version','controllable',
+        ):
+            self.assertEqual(row.get(key),expected.get(key),key)
+        for key in (
+            'lifecycle_class','record_class','operational','historical','legacy',
+            'execution_controls_allowed','history_reason',
+        ):
+            self.assertEqual(row.get(key),lifecycle.get(key),key)
+
 
 if __name__ == '__main__':
     unittest.main()
