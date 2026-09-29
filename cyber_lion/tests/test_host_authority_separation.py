@@ -337,9 +337,9 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         revision=subprocess.run(["git","rev-parse","HEAD"],check=True,capture_output=True,text=True).stdout.strip()
         tree_digest=subprocess.run(["git","write-tree"],check=True,capture_output=True,text=True).stdout.strip()
         inv=EffectSurfaceScanner().scan(repository=CANONICAL_REPOSITORY,revision=revision,tree_digest=tree_digest,sources=sources)
-        # Current production-source additions remain effect-free: E02 trust composition,
-        # Mission Control source-rebind planning, failure-domain evidence, and two
-        # read-only validation workflows increase the source set without adding a surface.
+        # The final-closure selective port adds a bounded mutation substrate with four
+        # durable SQLite write surfaces. Other recent production-source additions remain
+        # effect-free; raw dynamic/unclassified references remain explicitly counted.
         self.assertIn('cyber_lion/app_coordination/__init__.py', sources)
         self.assertIn('cyber_lion/app_coordination/task_assignment.py', sources)
         self.assertIn('cyber_lion/app_coordination/e02_trust_primitives.py', sources)
@@ -349,7 +349,7 @@ class HostAuthoritySeparationTests(unittest.TestCase):
         self.assertIn('cyber_lion/app_coordination/saas_thread_delivery.py', sources)
         self.assertIn('cyber_lion/contracts/mission_contract_profiles.py', sources)
         self.assertIn('cyber_lion/mission_control/mission_reconciliation.py', sources)
-        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(365,515,6))
+        self.assertEqual((len(sources),len(inv.surfaces),len(inv.unclassified_refs)),(367,519,6))
 
     def test_p1_fake_world_harness_not_skipped(self):
         for name in ("test_coherent_fake_world_a_denied_by_real_origin","test_coherent_fake_world_b_denied_by_real_origin",

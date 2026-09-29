@@ -39,6 +39,7 @@ def safe_unlink(path):
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--broker',default='http://127.0.0.1:8766');ap.add_argument('--key-file',default='/var/lib/sentinelx/uploads/lion-mission-control-v3/saas-mediator.key');ap.add_argument('--state-dir',default='/var/lib/sentinelx/uploads/firefox-mediator-relay');ap.add_argument('--ipc-dir',required=True);ap.add_argument('--interval',type=float,default=0.5);ap.add_argument('--once',action='store_true');a=ap.parse_args()
     state=Path(a.state_dir);claims=state/'claims';ipc=Path(a.ipc_dir);inbox=ipc/'inbox';outbox=ipc/'outbox';receipts=ipc/'receipts';archive=ipc/'archive'
+    active_claims={}  # response_token is process-memory-only; never persisted to disk
     for p in (state,claims,ipc,inbox,outbox,receipts,archive):p.mkdir(parents=True,exist_ok=True)
     key=Path(a.key_file).read_text(encoding='utf-8').strip()
     if len(key)<64:raise SystemExit('mediator key unavailable')
@@ -50,8 +51,11 @@ def main():
     def finish_answers():
         for answer_file in sorted(outbox.glob('*.json')):
             ans=load_json(answer_file);rid=ans.get('request_id') if isinstance(ans,dict) else None
-            secret=load_json(claims/(str(rid)+'.json')) if rid else None
-            if not rid or not secret:continue
+            secret=active_claims.get(str(rid)) if rid else None
+            if not rid:continue
+            if not secret:
+                atomic_json(receipts/(str(rid)+'.json'),{'request_id':rid,'status':'REJECTED_RESTART_LOST_RESPONSE_TOKEN','authority_effect':'NONE'},0o644)
+                safe_unlink(answer_file);safe_unlink(claims/(str(rid)+'.json'));safe_unlink(inbox/(str(rid)+'.json'));continue
             if ans.get('claim_generation')!=secret.get('claim_generation'):
                 atomic_json(receipts/(rid+'.json'),{'request_id':rid,'status':'REJECTED_STALE_LOCAL_ANSWER','authority_effect':'NONE'},0o644);safe_unlink(answer_file);continue
             payload={'response_token':secret['response_token'],'claim_generation':secret['claim_generation'],'answer':str(ans.get('answer') or ''),'model_identity':str(ans.get('model_identity') or 'ChatGPT UI / LION_EVOLUSION'),'transport':FIREFOX_TRANSPORT,'attestation_class':FIREFOX_ATTESTATION}
@@ -67,17 +71,21 @@ def main():
             work=inbox/(rid+'.json')
             if work.exists():os.replace(work,archive/(rid+'.work.json'))
             if answer_file.exists():os.replace(answer_file,archive/(rid+'.answer.json'))
-            safe_unlink(claims/(rid+'.json'))
+            safe_unlink(claims/(rid+'.json'));active_claims.pop(str(rid),None)
     def recover_claims():
-        for secret_file in list(claims.glob('*.json')):
-            secret=load_json(secret_file);rid=secret.get('request_id') if isinstance(secret,dict) else None
-            if not rid:continue
+        # Persisted claim metadata intentionally contains no response_token.
+        # After a relay restart an in-flight claim cannot be resumed safely:
+        # discard the local copy and let the broker expire/requeue it.
+        for claim_file in list(claims.glob('*.json')):
+            claim=load_json(claim_file);rid=claim.get('request_id') if isinstance(claim,dict) else None
+            if not rid:safe_unlink(claim_file);continue
             try:status=http_json(a.broker,f'/api/v3/saas-broker/requests/{rid}')
             except Exception:continue
             if status.get('status')=='RESPONDED':
-                atomic_json(receipts/(rid+'.json'),{'request_id':rid,'status':'RESPONDED','receipt_digest':status.get('receipt_digest'),'authority_effect':'NONE'},0o644);safe_unlink(secret_file);safe_unlink(inbox/(rid+'.json'));continue
-            if status.get('status')!='CLAIMED' or status.get('claim_generation')!=secret.get('claim_generation'):
-                safe_unlink(secret_file);safe_unlink(inbox/(rid+'.json'))
+                atomic_json(receipts/(rid+'.json'),{'request_id':rid,'status':'RESPONDED','receipt_digest':status.get('receipt_digest'),'authority_effect':'NONE'},0o644)
+            else:
+                atomic_json(receipts/(rid+'.json'),{'request_id':rid,'status':'RESTART_LOST_RESPONSE_TOKEN','broker_status':status.get('status'),'authority_effect':'NONE'},0o644)
+            safe_unlink(claim_file);safe_unlink(inbox/(rid+'.json'));safe_unlink(outbox/(rid+'.json'));active_claims.pop(str(rid),None)
     def claim_new():
         if any(claims.glob('*.json')):return
         pending=http_json(a.broker,'/api/v3/saas-broker/pending').get('requests') or []
@@ -85,7 +93,8 @@ def main():
         if not row:return
         rid=row['request_id'];claim=http_json(a.broker,f'/api/v3/saas-broker/requests/{rid}/claim','POST',{},key)
         secret={'request_id':rid,'response_token':claim['response_token'],'claim_generation':claim['claim_generation'],'claim_expires_at':claim.get('claim_expires_at'),'question':claim['question'],'question_digest':claim['question_digest']}
-        atomic_json(claims/(rid+'.json'),secret)
+        active_claims[str(rid)]=secret
+        atomic_json(claims/(rid+'.json'),{k:v for k,v in secret.items() if k!='response_token'})
         work={'schema':'lion.firefox-mediator-work/v2','request_id':rid,'question':claim['question'],'question_digest':claim['question_digest'],'claim_generation':claim['claim_generation'],'mission_id':row.get('mission_id'),'thread_id':row.get('thread_id'),'scope_type':row.get('scope_type'),'scope_id':row.get('scope_id'),'transport':FIREFOX_TRANSPORT,'thread_policy':'ONE_CHAT_PER_MISSION_WITH_TERMINAL_ROLLOVER','authority_effect':'NONE'}
         atomic_json(inbox/(rid+'.json'),work,0o644)
     last_hb=0.0

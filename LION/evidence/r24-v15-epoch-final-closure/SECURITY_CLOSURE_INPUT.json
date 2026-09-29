@@ -1,0 +1,170 @@
+{
+  "schema": "lion.epoch-security-closure-input/v1",
+  "task_id": "LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+  "baseline_head": "46cbc109ec283e3e87554d733699afeba783df7b",
+  "open_code_scanning_count": 12,
+  "dependabot_open": 0,
+  "secret_scanning_open": 0,
+  "root_cause_groups": {
+    "JS_CODE_CONSTRUCTION": {
+      "count": 7,
+      "repair": "safe JS literal encoding before isolated-world code construction"
+    },
+    "LPCL_REGEX_REDOS": {
+      "count": 4,
+      "repair": "deterministic split/closed-key parser without backtracking regex"
+    },
+    "FIREFOX_RESPONSE_TOKEN_PLAINTEXT": {
+      "count": 1,
+      "repair": "response_token becomes process-memory-only; disk claim metadata excludes token"
+    }
+  },
+  "alerts": [
+    {
+      "number": 28,
+      "state": "open",
+      "severity": "high",
+      "rule_id": "py/polynomial-redos",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "tools/lion_mission_control_v3.py",
+      "start_line": 373,
+      "message": "This regular expression that depends on a user-provided value may run slow on strings starting with 'A=' and with many repetitions of ' '."
+    },
+    {
+      "number": 29,
+      "state": "open",
+      "severity": "high",
+      "rule_id": "py/polynomial-redos",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "tools/lion_mission_control_v3.py",
+      "start_line": 380,
+      "message": "This regular expression that depends on a user-provided value may run slow on strings starting with 'A=' and with many repetitions of ' '."
+    },
+    {
+      "number": 30,
+      "state": "open",
+      "severity": "high",
+      "rule_id": "py/clear-text-storage-sensitive-data",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "tools/lion_firefox_broker_relay.py",
+      "start_line": 17,
+      "message": "This expression stores sensitive data (secret) as clear text.\nThis expression stores sensitive data (secret) as clear text."
+    },
+    {
+      "number": 31,
+      "state": "open",
+      "severity": "high",
+      "rule_id": "py/polynomial-redos",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "LION/runtime_compat/t07/lion_mission_control_v3.py",
+      "start_line": 357,
+      "message": "This regular expression that depends on a user-provided value may run slow on strings starting with 'A=' and with many repetitions of ' '."
+    },
+    {
+      "number": 32,
+      "state": "open",
+      "severity": "high",
+      "rule_id": "py/polynomial-redos",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "LION/runtime_compat/t07/lion_mission_control_v3.py",
+      "start_line": 364,
+      "message": "This regular expression that depends on a user-provided value may run slow on strings starting with 'A=' and with many repetitions of ' '."
+    },
+    {
+      "number": 33,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 166,
+      "message": "Code construction depends on an improperly sanitized value."
+    },
+    {
+      "number": 35,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 170,
+      "message": "Code construction depends on an improperly sanitized value."
+    },
+    {
+      "number": 40,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 168,
+      "message": "Code construction depends on an improperly sanitized value."
+    },
+    {
+      "number": 41,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 168,
+      "message": "Code construction depends on an improperly sanitized value."
+    },
+    {
+      "number": 42,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 168,
+      "message": "Code construction depends on an improperly sanitized value."
+    },
+    {
+      "number": 43,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 168,
+      "message": "Code construction depends on an improperly sanitized value."
+    },
+    {
+      "number": 44,
+      "state": "open",
+      "severity": "medium",
+      "rule_id": "js/bad-code-sanitization",
+      "tool": "CodeQL",
+      "ref": "refs/heads/master",
+      "commit_sha": "46cbc109ec283e3e87554d733699afeba783df7b",
+      "path": "browser_broker/src/browser.cjs",
+      "start_line": 172,
+      "message": "Code construction depends on an improperly sanitized value."
+    }
+  ],
+  "dismiss_or_suppress_as_fix": false,
+  "authority_effect": "NONE"
+}

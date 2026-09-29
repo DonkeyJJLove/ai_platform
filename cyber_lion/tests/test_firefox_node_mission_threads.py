@@ -137,6 +137,9 @@ class FirefoxNodeMissionThreadTests(unittest.TestCase):
         work=t[start:end]
         self.assertNotIn('response_token',work)
         self.assertNotIn('saas-mediator.key',work)
+        self.assertIn("active_claims[str(rid)]=secret",t)
+        self.assertIn("if k!='response_token'",t)
+        self.assertNotIn("atomic_json(claims/(rid+'.json'),secret)",t)
 
     def test_worker_filters_automation_firefox_instances_and_avoids_window_fanout(self):
         t=self.uia
