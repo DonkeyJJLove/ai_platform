@@ -44,13 +44,13 @@
     },
     {
       "path": "tools/lion_r24_whole_integration_gate.py",
-      "sha256": "bc9b012d875f2d69c5126263d0bc3680098ce0aabb274094b300b568d41f1840"
+      "sha256": "53179eea67777c09969238f23f07b01895b514d0f62a6541cf1cb7a22e11bac2"
     },
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
       "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
     }
   ],
-  "package_digest": "e6c174eeee05e1b6ce4ed717b6bbb90e2be58e6c364bcf4b856fd5b6aff58145",
+  "package_digest": "f4d8f380bde605c30395e1a65fc48034f6940c643ecee08a91da3e2bbc4b058c",
   "authority_effect": "NONE"
 }

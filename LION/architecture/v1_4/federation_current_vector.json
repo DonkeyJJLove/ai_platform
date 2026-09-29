@@ -1,8 +1,8 @@
 {
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
-  "process_epoch": "R24_V15_CONVERGED",
-  "generated_at": "2026-09-29T16:23:29Z",
+  "process_epoch": "R24_V15_H5_CLOSED",
+  "generated_at": "2026-09-29T17:32:49Z",
   "registry_source": "cyber_lion/registry/repositories.json@a9e226cd0f0bcd70165d6c136b329a15599ab3d9",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
   "currentness_rule": "Repository observations bind exact default-branch subject head/tree at this sweep. For ai_platform, the vector follows ADR-004 carrier-last: it records the stabilized pre-carrier subject and does not self-reference the carrier-only commit.",
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "4aad1d4358dbc524796ab865952c2814610a06c5",
-    "subject_tree": "20004ab88c89f54981dac9b0ec2a0acbe5982b54",
+    "subject_head": "90f8927f2645f2e614453ff608e87fae759c7b24",
+    "subject_tree": "7e26dfe3c0f9034cb65f094588bc86b80229609e",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "4aad1d4358dbc524796ab865952c2814610a06c5",
-      "tree": "20004ab88c89f54981dac9b0ec2a0acbe5982b54",
+      "head": "90f8927f2645f2e614453ff608e87fae759c7b24",
+      "tree": "7e26dfe3c0f9034cb65f094588bc86b80229609e",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Head/tree identify the stabilized non-carrier subject immediately before this carrier-only vector commit, per ADR-004 I18/I19; the vector commit itself is not self-referenced."
+      "lineage_note": "Head/tree identify the stabilized H5 non-carrier package subject immediately before this carrier-only vector/truth sequence, per ADR-004 I18/I19; the vector and truth-carrier commits are not self-referenced."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",

@@ -112,6 +112,76 @@ def _git_blob_sha(data: bytes) -> str:
     return sha1(f"blob {len(data)}\0".encode("ascii") + data).hexdigest()
 
 
+def _deployment_currentness(
+    head: str,
+    tree: str,
+    state_path: Path | None,
+) -> dict[str, Any]:
+    if state_path is None:
+        return {
+            "deployment_state": "PRE_H5_NOT_DEPLOYED",
+            "state_path": None,
+            "state_present": False,
+            "current": True,
+            "mismatches": [],
+            "observed": None,
+        }
+    path = Path(state_path)
+    if not path.is_file():
+        return {
+            "deployment_state": "POST_H5_STATE_MISSING",
+            "state_path": str(path),
+            "state_present": False,
+            "current": False,
+            "mismatches": ["STATE_MISSING"],
+            "observed": None,
+        }
+    try:
+        observed = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        return {
+            "deployment_state": "POST_H5_STATE_INVALID",
+            "state_path": str(path),
+            "state_present": True,
+            "current": False,
+            "mismatches": [f"STATE_INVALID:{type(exc).__name__}"],
+            "observed": None,
+        }
+    if not isinstance(observed, dict):
+        return {
+            "deployment_state": "POST_H5_STATE_INVALID",
+            "state_path": str(path),
+            "state_present": True,
+            "current": False,
+            "mismatches": ["STATE_NOT_OBJECT"],
+            "observed": None,
+        }
+    expected = {
+        "status": "READY",
+        "repo_head": head,
+        "repo_tree": tree,
+        "candidate_head": head,
+        "candidate_tree": tree,
+        "panel_8780": True,
+        "panel_surface": "CANONICAL_CONVERSATION_MODEL_CHAT",
+        "legacy_thread_mutation": "RETIRED",
+    }
+    mismatches = [
+        f"{key}:{observed.get(key)!r}!={value!r}"
+        for key, value in expected.items()
+        if observed.get(key) != value
+    ]
+    current = not mismatches
+    return {
+        "deployment_state": "POST_H5_DEPLOYED" if current else "POST_H5_DEPLOYMENT_MISMATCH",
+        "state_path": str(path),
+        "state_present": True,
+        "current": current,
+        "mismatches": mismatches,
+        "observed": observed,
+    }
+
+
 def _production_path(path: str) -> bool:
     if path.startswith("cyber_lion/") and path.endswith(".py") and "/tests/" not in f"/{path}":
         return True
@@ -334,13 +404,18 @@ def _run_critical_tests() -> dict[str, Any]:
     }
 
 
-def run_gate(*, run_tests: bool = True) -> dict[str, Any]:
+def run_gate(
+    *,
+    run_tests: bool = True,
+    deployment_state_path: Path | None = None,
+) -> dict[str, Any]:
     head = str(_run("rev-parse", "HEAD")).strip()
     tree = str(_run("rev-parse", "HEAD^{tree}")).strip()
     working_diff = str(_run("status", "--porcelain=v1", "--untracked-files=no")).strip()
     inventory = _exact_production_inventory(head, tree)
     truth = _subject_currentness()
     package = _package_identity()
+    deployment = _deployment_currentness(head, tree, deployment_state_path)
     evidence_facts, evidence_detail = _evidence_facts()
     critical = _run_critical_tests() if run_tests else {"returncode": 0, "pass": True, "modules": [], "output_tail": []}
 
@@ -360,10 +435,10 @@ def run_gate(*, run_tests: bool = True) -> dict[str, Any]:
         "dual_snapshot_mismatch_count": 0,
         "unreconciled_durable_response_count": 0,
         "non_none_authority_effect_count": evidence_facts["non_none_authority_effect_count"],
-        # H5 is intentionally before candidate deployment. A mismatch is a
-        # failure only if a candidate-live identity is claimed. Here the exact
-        # claim is PRE_H5_NOT_DEPLOYED, so there is no false currentness claim.
-        "repo_live_currentness_mismatch": False,
+        # PRE_H5 is an explicit no-live-claim state. Once an H5 runtime
+        # state path is supplied, exact deployed HEAD/TREE and panel semantics
+        # become fail-closed evidence rather than an assumed constant.
+        "repo_live_currentness_mismatch": not deployment["current"],
         "package_identity_mismatch": not package["match"],
         "stale_exact_currentness_carrier": not (truth["state_current"] and truth["registry_current"]),
         "effect_inventory_mismatch": bool(inventory["unclassified"]) or inventory["taxonomy_status"] != "PASS",
@@ -400,7 +475,8 @@ def run_gate(*, run_tests: bool = True) -> dict[str, Any]:
         "reasons": sorted(set(reasons)),
         "head": head,
         "tree": tree,
-        "deployment_state": "PRE_H5_NOT_DEPLOYED",
+        "deployment_state": deployment["deployment_state"],
+        "deployment_currentness": deployment,
         "candidate_subject_digest": subject,
         "facts": facts,
         "production_inventory": inventory,
@@ -416,8 +492,16 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output")
     parser.add_argument("--no-tests", action="store_true")
+    parser.add_argument(
+        "--deployment-state-path",
+        type=Path,
+        help="Exact live supervisor state used to validate POST_H5 deployment currentness.",
+    )
     args = parser.parse_args()
-    result = run_gate(run_tests=not args.no_tests)
+    result = run_gate(
+        run_tests=not args.no_tests,
+        deployment_state_path=args.deployment_state_path,
+    )
     raw = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         Path(args.output).write_text(raw, encoding="utf-8")
