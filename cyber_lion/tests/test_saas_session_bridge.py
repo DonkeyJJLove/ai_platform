@@ -241,12 +241,15 @@ class PanelThreadDeliveryTests(unittest.TestCase):
             self.assertEqual(len(snap['messages']),3)
             self.assertEqual(snap['messages'][-1]['meta']['external_receipt_key'],'saas:'+'saas-'+'1'*32)
 
-    def test_panel_thread_reopen_recovers_shared_operator_bus_by_correlation(self):
+    def test_canonical_conversation_reopen_keeps_protocol_mission_scoped(self):
         from cyber_lion.app_coordination import local_intelligence_gateway as gateway
         ui=gateway.UI
-        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",ui)
+        self.assertIn("cmcPost('/api/conversations/'+encodeURIComponent(id)+'/chat'",ui)
+        self.assertIn("fetch('/api/missions/'+encodeURIComponent(mid)+'/process'",ui)
+        self.assertIn('PROTOCOL ≠ MODEL CHAT',ui)
+        self.assertNotIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",ui)
         self.assertIn('correlation_id',Path(__import__('tools.lion_operator_client',fromlist=['x']).__file__).read_text(encoding='utf-8'))
-        self.assertIn('activeThreadContext=x.context||null',ui)
+        self.assertIn("localStorage.setItem(CMC_ACTIVE_KEY,c.conversation_id)",ui)
         self.assertIn('await refreshActiveBus(false)',ui)
         self.assertNotIn('resumeThreadSaas',ui)
         self.assertIn('Restart material runtime',ui)

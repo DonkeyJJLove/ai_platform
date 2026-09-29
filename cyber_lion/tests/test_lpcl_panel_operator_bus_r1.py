@@ -15,8 +15,10 @@ class LpclPanelOperatorBusR1SourceTests(unittest.TestCase):
         t=self.ui
         self.assertIn('PROTOCOL COMMUNICATION PLANE',t)
         self.assertIn('LION BUS · PROTOKÓŁ ROJU',t)
-        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",t)
-        self.assertIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/chat'",t)
+        self.assertIn("cmcPost('/api/conversations/'+encodeURIComponent(id)+'/chat'",t)
+        self.assertIn("fetch('/api/missions/'+encodeURIComponent(mid)+'/process'",t)
+        self.assertIn('PROTOCOL ≠ MODEL CHAT',t)
+        self.assertNotIn("'/api/threads/'+encodeURIComponent(activeThreadId)+'/bus'",t)
         self.assertIn('id="modelRoute"',t)
         self.assertIn('MODEL CHAT',t)
         self.assertNotIn("'SUPERSEDED_BY_LION_BUS'",t)
