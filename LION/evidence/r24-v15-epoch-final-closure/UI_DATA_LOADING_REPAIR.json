@@ -1,0 +1,44 @@
+{
+  "schema": "lion.r24-v15.ui-data-loading-repair/v1",
+  "observed_at": "2026-09-30T10:14:01.819842Z",
+  "symptom": {
+    "offline_badge_on_transient_projection_failure": true,
+    "unknown_cards_after_single_refresh_exception": true,
+    "selected_detail_hidden_on_silent_refresh_failure": true
+  },
+  "root_cause": {
+    "class": "ALL_OR_NOTHING_REFRESH_SEMANTICS",
+    "connectivity_and_currentness_conflated": true,
+    "previous_behavior": "Any failed summary/runs/adapters/events/detail request entered one catch block, set OFFLINE, cleared latestFleet/latestObservations, rendered empty summary and hid detail.",
+    "poll_interval_ms": 5000,
+    "request_timeout_ms": 8000,
+    "refresh_overlap_policy": "SKIP_WHILE_REFRESH_IN_FLIGHT",
+    "unbounded_event_fanout": true,
+    "recorded_run_count_at_observation": 30,
+    "active_run_count_at_observation": 1
+  },
+  "repair": {
+    "connectivity_oracle": "/health",
+    "first_state": "LOADING",
+    "partial_projection_failure": "DEGRADED_LAST_KNOWN",
+    "transport_offline_threshold_consecutive_health_failures": 3,
+    "last_known_evidence_preserved": true,
+    "silent_detail_failure_preserves_previous_detail": true,
+    "projection_fetch_policy": "Promise.allSettled",
+    "events_failure_is_projection_degradation_not_offline": true,
+    "files": [
+      "deploy/mission-control/v3/app.js",
+      "cyber_lion/mission_control/static/app.js",
+      "cyber_lion/tests/mission_control_ui_test.cjs",
+      "cyber_lion/tests/test_mission_control_v3_restart_package.py"
+    ],
+    "events_refresh_interval_ms": 15000,
+    "events_fanout_limit": 12,
+    "events_candidate_policy": "selected run first, active runs next, then most recent historical/terminal runs",
+    "events_partial_failure": "retain previous recentEventsCache unless no prior cache exists",
+    "core_refresh_interval_ms": 5000,
+    "events_n_plus_one_removed_from_every_core_poll": true
+  },
+  "authority_effect": "NONE",
+  "runtime_effect": "UI_READ_MODEL_ONLY"
+}

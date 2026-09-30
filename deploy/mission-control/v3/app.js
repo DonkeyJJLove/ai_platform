@@ -68,6 +68,12 @@ let selectedChannel='ALL';
 let channelEvents=[];
 let refreshInFlight=false;
 let detailGeneration=0;
+let healthFailureStreak=0;
+let lastSuccessfulRefreshAt=0;
+let recentEventsCache=[];
+let lastEventsRefreshAt=0;
+const EVENTS_REFRESH_INTERVAL_MS=15000;
+const EVENTS_FANOUT_LIMIT=12;
 const pretty=v=>JSON.stringify(v??{},null,2);
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const targetText=r=>r?.target?.repository||r?.target?.kind||'';
@@ -100,6 +106,19 @@ let latestFleet={};
 let latestObservations={};
 const known=v=>v===null||v===undefined||v===''?'UNKNOWN':typeof v==='object'?JSON.stringify(v):String(v);
 const stamp=v=>v===null||v===undefined?'UNKNOWN':Number.isFinite(Number(v))?new Date(Number(v)*1000).toISOString():String(v);
+const runEpoch=v=>{if(v===null||v===undefined||v==='')return 0;const n=Number(v);if(Number.isFinite(n))return n*1000;const t=Date.parse(String(v));return Number.isFinite(t)?t:0};
+function eventRefreshCandidates(runs){
+  const active=new Set(['RUNNING','STARTING','CLEANING','WAITING','BLOCKED','AUTHORIZED']);
+  const ranked=[...(runs||[])].sort((a,b)=>{
+    const as=active.has(String(a?.status||'').toUpperCase())?1:0,bs=active.has(String(b?.status||'').toUpperCase())?1:0;
+    if(as!==bs)return bs-as;
+    return Math.max(runEpoch(b?.finished_at),runEpoch(b?.started_at))-Math.max(runEpoch(a?.finished_at),runEpoch(a?.started_at));
+  });
+  const selected=selectedRunId?(runs||[]).find(r=>r.run_id===selectedRunId):null;
+  const ordered=selected?[selected,...ranked]:ranked,seen=new Set(),out=[];
+  for(const run of ordered){if(!run?.run_id||seen.has(run.run_id))continue;seen.add(run.run_id);out.push(run);if(out.length>=EVENTS_FANOUT_LIMIT)break}
+  return out;
+}
 const badge=(v,status=v)=>`<span class="state ${tone(status)}">${esc(known(v))}</span>`;
 function renderSummary(x){x={...x,recorded_active_runs:x.recorded_active_runs??x.active_runs};patchHtml($('summary'),[['Recorded active runs','recorded_active_runs'],['Observed active runs','observed_active_runs'],['Authorized','authorized_runs'],['Waiting','waiting_runs'],['Blocked','blocked_runs'],['Paused','paused_runs'],['Registered','registered_runs'],['Completed runs','completed_runs'],['Superseded runs','superseded_runs'],['Failed runs','failed_runs'],['Deferred runs','deferred_runs'],['Hosts','hosts'],['Workloads','workloads'],['Live DB events','events'],['Historical events','historical_events'],['Historical artifacts','artifacts']].map(([label,key])=>card(label,x[key]??'UNKNOWN')).join(''))}
 function table(id,columns,rows){
@@ -115,7 +134,7 @@ function eventRows(events){return [...events].sort((a,b)=>(a.timestamp??Infinity
 function participants(value,run){table('participants',['Participant ID','Role','Fleet','Logical identity','Material identity','Host','Runtime','State','Observation state'],Object.entries(value||{}).map(([id,p])=>{p=p&&typeof p==='object'?p:{state:p};return [p.participant_id??id,p.role,p.fleet,p.logical_identity??p.logical_id??p.drone_id??id,p.material_identity??p.pod_uid??p.uid??'NONE OBSERVED',p.host??run.host,p.runtime??run.runtime,(p.material_identity??p.pod_uid??p.uid)?(p.state??p.status):'LOGICAL ONLY · '+known(p.state??p.status),p.observation_state??p.verification_status]}))}
 function artifacts(value,id){table('artifacts',['Artifact ID','Type','Run ID','Origin','Path / reference','Digest','Created at','Verification state'],(value||[]).map(a=>[a.artifact_id,a.type??a.artifact_type,a.run_id??id,a.origin??a.evidence_class,a.path??a.reference,a.sha256??a.digest,stamp(a.created_at??a.timestamp),a.verification_state??a.verification_status]))}
 function receipts(value,id){table('receipts',['Receipt ID','Run ID','Presence','Operation','Reported status','Effect observed','Reconciliation complete','Path / reference','Digest','Created at'],(value||[]).map(r=>[r.receipt_id,r.run_id??id,'RECEIPT_PRESENT',r.operation,r.status,r.effect_observed,r.reconciliation_complete,r.path??r.reference,r.sha256??r.digest,stamp(r.created_at??r.timestamp)]))}
-async function detail(id,silent=false){const generation=++detailGeneration;if(selectedRunId!==id)selectedChannel='ALL';selectedRunId=id;if(!silent){$('detail').hidden=true;$('empty').hidden=true;$('detailState').textContent='Loading selected run…';renderRuns();$('runDetail').scrollIntoView?.({behavior:'smooth',block:'start'})}try{const [r,e,m,p,a,rc]=await Promise.all(['','/events','/metrics','/participants','/artifacts','/receipts'].map(s=>get('/api/runs/'+encodeURIComponent(id)+s)));if(generation!==detailGeneration||selectedRunId!==id)return;const run=r.run;if(!run)throw new Error('Run unavailable');patchHtml($('runSchema'),semanticDetail('run-schema','Run schema',[['Schema version',run.normalized_schema_version??run.schema_version],['Projection revision',run.projection_revision],['Record class',run.normalized_runtime?.record_class??run.schema_context?.record_class],['Legacy gaps',run.normalized_runtime?.gaps??run.schema_context?.missing_fields]],run,esc));$('empty').hidden=true;$('detail').hidden=false;$('detailState').textContent='Recorded run evidence · '+id;renderChips('identity',{run_id:run.run_id,process_language:run.process_language,process_class:run.process_class,adapter_type:run.adapter_type,recorded_status:run.status,observation_status:latestObservations[run.run_id]?.observation_status,heartbeat_status:latestObservations[run.run_id]?.heartbeat_status,phase:run.phase,host:run.host,runtime:run.runtime,namespace:run.namespace});renderChips('source',run.source);renderChips('target',run.target);renderChips('authority',run.authority);renderChips('timeline',{started_at:stamp(run.started_at),finished_at:stamp(run.finished_at),duration_seconds:run.duration??'UNKNOWN'});table('events',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(e.events||[]));table('phases',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows((e.events||[]).filter(x=>['PHASE_STARTED','PHASE_COMPLETED'].includes(x.event_type))));$('adapterTitle').textContent=run.adapter_type==='VKT_R3'?'Vulnerability Knowledge Test':run.adapter_type==='OSS_REPOSITORY_TEST'?'OSS repository test':known(run.adapter_type);const metricValues={...(run.metrics||{}),...(m.metrics||{})};delete metricValues.drone_pods;renderChips('metrics',metricValues);participants({...run.participants,...p.participants},run);artifacts(a.artifacts,id);receipts(rc.receipts,id);renderChips('cleanup',run.cleanup);renderChips('verification',{verification_status:run.verification_status,evidence:run.evidence});renderPassiveEvidence(run,e.events||[]);$('vktDetail').hidden=run.adapter_type!=='VKT_R3';if(run.adapter_type==='VKT_R3'){renderChannels(id,e.events||[]);renderFleet((latestFleet.run_ids||[]).length===1&&latestFleet.run_ids[0]===id?latestFleet:{},run)}}catch(error){if(generation!==detailGeneration)return;$('detail').hidden=true;$('detailState').textContent='UNKNOWN — selected run could not be refreshed. '+error.message}}
+async function detail(id,silent=false){const generation=++detailGeneration;if(selectedRunId!==id)selectedChannel='ALL';selectedRunId=id;if(!silent){$('detail').hidden=true;$('empty').hidden=true;$('detailState').textContent='Loading selected run…';renderRuns();$('runDetail').scrollIntoView?.({behavior:'smooth',block:'start'})}try{const [r,e,m,p,a,rc]=await Promise.all(['','/events','/metrics','/participants','/artifacts','/receipts'].map(s=>get('/api/runs/'+encodeURIComponent(id)+s)));if(generation!==detailGeneration||selectedRunId!==id)return;const run=r.run;if(!run)throw new Error('Run unavailable');patchHtml($('runSchema'),semanticDetail('run-schema','Run schema',[['Schema version',run.normalized_schema_version??run.schema_version],['Projection revision',run.projection_revision],['Record class',run.normalized_runtime?.record_class??run.schema_context?.record_class],['Legacy gaps',run.normalized_runtime?.gaps??run.schema_context?.missing_fields]],run,esc));$('empty').hidden=true;$('detail').hidden=false;$('detailState').textContent='Recorded run evidence · '+id;renderChips('identity',{run_id:run.run_id,process_language:run.process_language,process_class:run.process_class,adapter_type:run.adapter_type,recorded_status:run.status,observation_status:latestObservations[run.run_id]?.observation_status,heartbeat_status:latestObservations[run.run_id]?.heartbeat_status,phase:run.phase,host:run.host,runtime:run.runtime,namespace:run.namespace});renderChips('source',run.source);renderChips('target',run.target);renderChips('authority',run.authority);renderChips('timeline',{started_at:stamp(run.started_at),finished_at:stamp(run.finished_at),duration_seconds:run.duration??'UNKNOWN'});table('events',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(e.events||[]));table('phases',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows((e.events||[]).filter(x=>['PHASE_STARTED','PHASE_COMPLETED'].includes(x.event_type))));$('adapterTitle').textContent=run.adapter_type==='VKT_R3'?'Vulnerability Knowledge Test':run.adapter_type==='OSS_REPOSITORY_TEST'?'OSS repository test':known(run.adapter_type);const metricValues={...(run.metrics||{}),...(m.metrics||{})};delete metricValues.drone_pods;renderChips('metrics',metricValues);participants({...run.participants,...p.participants},run);artifacts(a.artifacts,id);receipts(rc.receipts,id);renderChips('cleanup',run.cleanup);renderChips('verification',{verification_status:run.verification_status,evidence:run.evidence});renderPassiveEvidence(run,e.events||[]);$('vktDetail').hidden=run.adapter_type!=='VKT_R3';if(run.adapter_type==='VKT_R3'){renderChannels(id,e.events||[]);renderFleet((latestFleet.run_ids||[]).length===1&&latestFleet.run_ids[0]===id?latestFleet:{},run)}}catch(error){if(generation!==detailGeneration)return;if(silent){$('detailState').textContent='STALE — last known selected run retained. '+error.message}else{$('detail').hidden=true;$('detailState').textContent='UNKNOWN — selected run could not be refreshed. '+error.message}}}
 function environment(summary,adapters){patchHtml($('adapters'),boundedRows(adapters.adapters).map(a=>semanticDetail(a.adapter_id,a.adapter_id,[['Supported process classes',a.supported_process_classes],['Control authority',a.control_authority],['State',a.status??a.state]],a,esc)).join('')||'<p>No registered adapters reported.</p>');
   const hosts=[...new Set(allRuns.map(r=>r.host).filter(Boolean))];
   patchHtml($('hosts'),hosts.map(host=>{const runs=allRuns.filter(r=>r.host===host);return semanticDetail(host,host,[['Evidence','RECORDED_RUN_MEMBERSHIP'],['Runtimes',[...new Set(runs.map(r=>r.runtime).filter(Boolean))]],['Recorded runs',runs.length]],{host,runs:runs.map(r=>({run_id:r.run_id,runtime:r.runtime,status:r.status,started_at:r.started_at}))},esc)}).join('')||'<p>NOT_RECORDED · no host observation supplied.</p>');
@@ -178,7 +197,83 @@ function renderCluster(online=clusterOnline){
   if(clusterSelectedPodRun===run.run_id)showPod(clusterSelectedPod);
 }
 
-async function refresh(){if(refreshInFlight)return;refreshInFlight=true;try{const [s,data,adapters]=await Promise.all([get('/api/summary'),get('/api/runs'),get('/api/adapters')]);latestFleet=s.ok===true?(s.fleet||{}):{};latestObservations=s.run_observations||{};allRuns=data.runs||[];renderSummary(s.summary||{});environment(s,adapters);rebuildFilters();renderRuns();renderCluster(true);const events=await Promise.all(allRuns.map(r=>get('/api/runs/'+encodeURIComponent(r.run_id)+'/events')));table('recentEvents',['Timestamp','Type','Run ID','Phase','Source','Payload'],eventRows(events.flatMap(x=>x.events||[])).slice(-30));if(selectedRunId)await detail(selectedRunId,true)}catch(e){$('health').textContent='OFFLINE';$('health').className='pill tone-bad';$('currentness').textContent='Runtime currentness: UNKNOWN — refresh failed. Visible records may be stale.';$('detailState').textContent='UNKNOWN — connection lost; previous details are hidden.';$('detail').hidden=true;latestFleet={};latestObservations={};renderSummary({});renderCluster(false)}finally{refreshInFlight=false}}
+async function refresh(){
+  if(refreshInFlight)return;
+  refreshInFlight=true;
+  const firstLoad=lastSuccessfulRefreshAt===0;
+  if(firstLoad){
+    $('health').textContent='LOADING';
+    $('health').className='pill';
+    $('currentness').textContent='Loading current runtime observations…';
+  }
+  try{
+    await get('/health');
+    healthFailureStreak=0;
+    lastSuccessfulRefreshAt=Date.now();
+    const issues=[];
+    const [summaryResult,dataResult,adaptersResult]=await Promise.allSettled([
+      get('/api/summary'),get('/api/runs'),get('/api/adapters')
+    ]);
+    const s=summaryResult.status==='fulfilled'?summaryResult.value:null;
+    const data=dataResult.status==='fulfilled'?dataResult.value:null;
+    const adapters=adaptersResult.status==='fulfilled'?adaptersResult.value:null;
+    if(s){
+      latestFleet=s.ok===true?(s.fleet||{}):latestFleet;
+      latestObservations=s.run_observations||latestObservations;
+      renderSummary(s.summary||{});
+      if(s.ok!==true)issues.push('summary-state');
+    }else issues.push('summary');
+    if(data)allRuns=data.runs||[];else issues.push('runs');
+    if(s&&adapters)environment(s,adapters);else if(!adapters)issues.push('adapters');
+    rebuildFilters();
+    renderRuns();
+    renderCluster(true);
+    if(!lastEventsRefreshAt||Date.now()-lastEventsRefreshAt>=EVENTS_REFRESH_INTERVAL_MS){
+      const eventRuns=eventRefreshCandidates(allRuns);
+      const eventResults=await Promise.allSettled(eventRuns.map(r=>get('/api/runs/'+encodeURIComponent(r.run_id)+'/events')));
+      const events=[];
+      let eventFailures=0;
+      for(const result of eventResults){
+        if(result.status==='fulfilled')events.push(...(result.value.events||[]));
+        else eventFailures++;
+      }
+      if(eventFailures)issues.push('events:'+eventFailures);
+      const freshRows=eventRows(events).slice(-30);
+      if(!eventFailures||!recentEventsCache.length)recentEventsCache=freshRows;
+      lastEventsRefreshAt=Date.now();
+    }
+    table('recentEvents',['Timestamp','Type','Run ID','Phase','Source','Payload'],recentEventsCache);
+    if(selectedRunId)await detail(selectedRunId,true);
+    if(issues.length){
+      $('health').textContent='DEGRADED · LAST KNOWN';
+      $('health').className='pill tone-warn';
+      const base=$('currentness').textContent||'Runtime currentness: LAST KNOWN';
+      $('currentness').textContent=base+' · delayed projections: '+issues.join(', ');
+    }else{
+      $('health').textContent='API AVAILABLE';
+      $('health').className='pill';
+    }
+  }catch(e){
+    healthFailureStreak++;
+    const hasLastKnown=lastSuccessfulRefreshAt>0;
+    if(hasLastKnown&&healthFailureStreak<3){
+      $('health').textContent='DEGRADED · LAST KNOWN';
+      $('health').className='pill tone-warn';
+      const age=Math.max(0,Math.floor((Date.now()-lastSuccessfulRefreshAt)/1000));
+      $('currentness').textContent='Last successful API read '+age+' s ago · health check failed '+healthFailureStreak+'/3 · retaining last-known evidence.';
+      if(selectedRunId)$('detailState').textContent='STALE · last-known detail retained while health recovers.';
+    }else{
+      $('health').textContent='OFFLINE';
+      $('health').className='pill tone-bad';
+      const age=hasLastKnown?Math.max(0,Math.floor((Date.now()-lastSuccessfulRefreshAt)/1000)):null;
+      $('currentness').textContent=hasLastKnown?'Runtime transport OFFLINE after 3 consecutive health failures · last-known evidence retained · age '+age+' s.':'Runtime transport OFFLINE — no successful API read has been observed.';
+      if(selectedRunId)$('detailState').textContent='OFFLINE · last-known selected run retained.';
+      renderCluster(false);
+    }
+  }finally{
+    refreshInFlight=false;
+  }
+}
 $('clusterRun').onchange=()=>renderCluster();
 $('adapter').onchange=renderRuns;$('status').onchange=renderRuns;$('processClass').onchange=renderRuns;refresh();setInterval(refresh,5000);
 

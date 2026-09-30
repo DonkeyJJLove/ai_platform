@@ -69,6 +69,21 @@ class MissionControlV3RestartPackageTests(unittest.TestCase):
             broker.MISSION_CONTROL_V3_REQUIRED_SHA256["mission_control_v3.py"],
         )
 
+    def test_static_app_preserves_last_known_across_projection_and_transient_health_failures(self):
+        source = SOURCE_MAP["static/app.js"].read_text(encoding="utf-8")
+        self.assertIn("await get('/health')", source)
+        self.assertIn("Promise.allSettled", source)
+        self.assertIn("DEGRADED · LAST KNOWN", source)
+        self.assertIn("healthFailureStreak<3", source)
+        self.assertIn("OFFLINE after 3 consecutive health failures", source)
+        self.assertIn("STALE — last known selected run retained", source)
+        self.assertIn("EVENTS_REFRESH_INTERVAL_MS=15000", source)
+        self.assertIn("EVENTS_FANOUT_LIMIT=12", source)
+        self.assertIn("eventRefreshCandidates", source)
+        self.assertIn("recentEventsCache", source)
+        self.assertNotIn("latestFleet={};latestObservations={};renderSummary({})", source)
+        self.assertNotIn("previous details are hidden", source)
+
     def test_complete_exact_package_is_accepted(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
