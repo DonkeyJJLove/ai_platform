@@ -2158,6 +2158,10 @@ class H(BaseHTTPRequestHandler):
   if path.startswith('/api/v3/saas-broker/'):
    try:return self.json(saas_broker_api('GET',path))
    except ValueError as e:return self.json({'error':str(e)},404)
+  if path=='/api/v3/missions/recent':
+   try:
+    q=parse_qs(urlparse(self.path).query);view=_view_name((q.get('view') or ['operational'])[0]);return self.json({'missions':recent_process_missions(view),'focus_mission_id':focus_mission_id(view),'view':view})
+   except ValueError as e:return self.json({'error':str(e)},400)
   current=snapshot()
   compat=compat_get(path,current)
   if compat is not None:
@@ -2166,10 +2170,6 @@ class H(BaseHTTPRequestHandler):
    return self.send_content(body,ctype,code)
   if path in {'/api/v3/missions/current','/api/v3/missions/'+MISSION}:return self.json(current)
   if path=='/api/v3/missions':return self.json({'missions':mission_summaries(),'process_missions':recent_process_missions(),'legacy_recorded_runs':legacy_count()})
-  if path=='/api/v3/missions/recent':
-   try:
-    q=parse_qs(urlparse(self.path).query);view=_view_name((q.get('view') or ['operational'])[0]);return self.json({'missions':recent_process_missions(view),'focus_mission_id':focus_mission_id(view),'view':view})
-   except ValueError as e:return self.json({'error':str(e)},400)
   if path=='/api/v3/capabilities/process-contracts':return self.json(process_capability_registry_snapshot())
   if path.startswith('/api/v3/missions/') and path.endswith('/delete-preview'):
    mid=path[len('/api/v3/missions/'):-len('/delete-preview')].strip('/');c=connect()

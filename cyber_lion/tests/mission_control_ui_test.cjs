@@ -146,7 +146,13 @@ async function main() {
   // Projection latency/failure is not backend connectivity failure. /health is
   // the single writer for the top-level API badge; delayed event projections
   // are surfaced through currentness without flickering the badge.
-  run('selectedRunId=null;refreshInFlight=false');
+  run('selectedRunId=null;refreshInFlight=false;lastEventsRefreshAt=0;recentEventsCache=[]');
+  const eventWindow=JSON.parse(run(`selectedRunId='selected';JSON.stringify(eventRefreshCandidates([{run_id:'selected',status:'COMPLETE',finished_at:1},{run_id:'active',status:'RUNNING',started_at:1},...${JSON.stringify(Array.from({length:20},(_,i)=>({run_id:'h'+i,status:'COMPLETE',finished_at:100+i}))) }]).map(x=>x.run_id))`));
+  assert.ok(eventWindow.length<=12);
+  assert.equal(eventWindow[0],'selected');
+  assert.ok(eventWindow.includes('active'));
+  run("selectedRunId=null");
+
   context.fetch=async url=>{
     if(url.endsWith('/health'))return {ok:true,json:async()=>({ok:true})};
     if(url.endsWith('/api/summary'))return {ok:true,json:async()=>({ok:true,summary:{recorded_active_runs:1},fleet:{currentness:'RECORDED'},run_observations:{},run_fleets:{},observation:{reason:'NO_FLEET_OBSERVATION',age_seconds:0,success_at:0}})};
@@ -156,16 +162,24 @@ async function main() {
     return {ok:false,status:404,json:async()=>({})};
   };
   await run('refresh()');
-  assert.equal(node('health').textContent,'API AVAILABLE');
-  assert.equal(node('health').className,'pill');
+  assert.equal(node('health').textContent,'DEGRADED · LAST KNOWN');
+  assert.equal(node('health').className,'pill tone-warn');
   assert.match(node('currentness').textContent,/delayed projections: events:1/);
 
   context.fetch=async()=>({ok:false,status:404});
-  run('refreshInFlight=false');
+  run("latestObservations={retained:{observation_status:'OBSERVED'}};healthFailureStreak=0;lastSuccessfulRefreshAt=Date.now();refreshInFlight=false");
   await run('refresh()');
+  assert.equal(node('health').textContent,'DEGRADED · LAST KNOWN');
+  assert.match(node('currentness').textContent,/health check failed 1\/3/);
+  assert.equal(run('Object.keys(latestObservations).length'),1);
+  run('refreshInFlight=false');await run('refresh()');
+  assert.equal(node('health').textContent,'DEGRADED · LAST KNOWN');
+  assert.match(node('currentness').textContent,/health check failed 2\/3/);
+  assert.equal(run('Object.keys(latestObservations).length'),1);
+  run('refreshInFlight=false');await run('refresh()');
   assert.equal(node('health').textContent,'OFFLINE');
-  assert.equal(run('Object.keys(latestObservations).length'),0);
-  assert.equal(node('detail').hidden,true);
+  assert.match(node('currentness').textContent,/last-known evidence retained/);
+  assert.equal(run('Object.keys(latestObservations).length'),1);
   console.log('PASS: global cards, unknowns, evidence separation, logical identities, escaping, filters, selection race, failure state');
 }
 main().catch(e=>{console.error(e);process.exitCode=1});
