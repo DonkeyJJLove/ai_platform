@@ -1,11 +1,11 @@
 {
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
-  "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE_PRE_CLOSURE",
-  "generated_at": "2026-09-30T16:02:31.866076Z",
-  "registry_source": "cyber_lion/registry/repositories.json@97281046c0aa539413c0da6303c6b7da7a01b3f7",
+  "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE_CLOSED",
+  "generated_at": "2026-09-30T16:11:25.616135Z",
+  "registry_source": "cyber_lion/registry/repositories.json@0a94d7c50e5e631d25a7ab675c377bb5e86d50ef",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Pre-closure candidate vector binds exact integrated peers and the stabilized ai_platform source subject. It is used only to prove candidate currentness for formalization closure; final vector/truth carriers are rebound again after FCR.",
+  "currentness_rule": "Final v1.5 federation vector binds integrated peer identities and the formalization-closed ai_platform pre-vector subject. Truth carriers are rebound only after this vector commit per ADR-004.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "3607c4ba239f20ee16e29509adc896ed3ecb78a8",
-    "subject_tree": "022582501dc662a3c85eff0b108899f6eeca1b7b",
+    "subject_head": "9907e1eb3a1c04df869f9b24bf95150e67755f60",
+    "subject_tree": "5dfcd626fae00f52c77c5804a6ef96059e9915b6",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "3607c4ba239f20ee16e29509adc896ed3ecb78a8",
-      "tree": "022582501dc662a3c85eff0b108899f6eeca1b7b",
+      "head": "9907e1eb3a1c04df869f9b24bf95150e67755f60",
+      "tree": "5dfcd626fae00f52c77c5804a6ef96059e9915b6",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Pre-closure v1.5 federation architecture-knowledge source subject; FCR follows candidate-currentness rebind and final vector/carriers follow FCR."
+      "lineage_note": "Formalization-closed v1.5 federated architecture-knowledge source subject. Final truth carriers follow this vector commit per ADR-004."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
