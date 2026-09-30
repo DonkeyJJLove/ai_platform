@@ -15,6 +15,6 @@
   "v15_note": "Candidate Task3 inputs do not replace preferred_release or live reacquisition.",
   "v15_task3_formalization_closure": "LION/architecture/v1_5/RAG_V15_FORMALIZATION_CLOSURE.json",
   "v15_federated_architecture_source_set": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
-  "v15_federated_architecture_currentness": "CANDIDATE_PRE_CLOSURE",
+  "v15_federated_architecture_currentness": "CURRENT_CANDIDATE_SOURCE_CLOSED",
   "v15_federated_architecture_note": "Federated architecture inputs extend candidate retrieval/discoverability only. They do not replace preferred_release, live Git/runtime reacquisition, authority or final carrier currentness."
 }

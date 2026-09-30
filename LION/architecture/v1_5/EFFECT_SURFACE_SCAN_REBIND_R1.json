@@ -1,0 +1,28 @@
+{
+  "schema": "lion.effect-surface-scan-rebind/v1",
+  "observed_at": "2026-09-30T16:06:44.868026Z",
+  "base": {
+    "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
+    "tree": "3378fa25e60adde0193cc189e73f780a828e65c5",
+    "scan_digest": "5d643c50ea0c5e3824ab660d0fa2fe98df6eac9e2ab415347b52969feaaac738",
+    "surface_count": 519,
+    "unresolved_refs": 0
+  },
+  "candidate": {
+    "head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+    "tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+    "scan_digest": "1e6bfb56041934ccac8f24b35a2121266fec82de8ae3b1cf47e9ad6be35c1c1d",
+    "surface_count": 519,
+    "unclassified_count": 0,
+    "taxonomy_status": "PASS",
+    "unresolved_refs": 0
+  },
+  "semantic_delta": {
+    "added_effect_surfaces": 0,
+    "removed_effect_surfaces": 0,
+    "effect_class_matrix_changed": false
+  },
+  "classification": "REVISION_BOUND_SCAN_REFREEZE_NO_EFFECT_SURFACE_CHANGE",
+  "historical_evidence_policy": "Earlier R24/H5 scan evidence remains historical and is not rewritten.",
+  "authority_effect": "NONE"
+}

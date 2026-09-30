@@ -1,0 +1,30 @@
+{
+  "schema": "lion.v15-federated-architecture-closure-summary/v1",
+  "candidate": {
+    "head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+    "tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+    "candidate_digest": "237215cec3551d4fe35b2c7c9863c2ca52cf1de8c15d74ba7247e604d0b96194",
+    "verification_digest": "744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+  },
+  "formalization": {
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "manifest_digest": "e9cd60ecb26452cc31c5d3bd3bf4d811f57feb79da7e56df032946a7ddf6154f",
+    "required_set_digest": "24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+    "federated_binding_digest": "32bd6365d30e11f2558d071055c135288f2a7de0013a7899196c95ee5e89a1e9",
+    "closure_digest": "6d2645dfee96445cbbbb4cf47435799e056113dcc5ffa9af991b5bc191c518de"
+  },
+  "results": {
+    "required_artifacts": 36,
+    "required_tests": 9,
+    "required_evals": 5,
+    "decision": "PASS",
+    "unknowns": 0
+  },
+  "rag": {
+    "candidate_routing": "PASS",
+    "hosted_project_retrieval": "NOT_RUN",
+    "preferred_release_changed": false
+  },
+  "publication_gates": "PENDING_EXACT_HEAD_CI",
+  "authority_effect": "NONE"
+}

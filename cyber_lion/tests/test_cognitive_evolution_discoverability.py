@@ -25,7 +25,7 @@ class CognitiveEvolutionDiscoverabilityTests(unittest.TestCase):
             bootstrap["v15_federated_architecture_source_set"],
             "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
         )
-        self.assertEqual(bootstrap["v15_federated_architecture_currentness"],"CANDIDATE_PRE_CLOSURE")
+        self.assertEqual(bootstrap["v15_federated_architecture_currentness"],"CURRENT_CANDIDATE_SOURCE_CLOSED")
     def test_five_primary_owners_unique(self):
         data=json.loads((ROOT/"LION/architecture/v1_5/semantic_owners.json").read_text(encoding="utf-8"))
         wanted={"CognitiveInvocation","EvidenceBoundLearningEpisode","ModelRelease","CoordinatorCompetencyProfile","ModelCallV2"}

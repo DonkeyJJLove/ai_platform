@@ -29,11 +29,15 @@ class V15FederatedArchitectureDiscoverabilityTests(unittest.TestCase):
     def test_federated_rag_source_set_is_bounded_and_non_authoritative(self):
         data=json.loads((V15/"RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json").read_text(encoding="utf-8"))
         self.assertEqual(data["authority_effect"],"NONE")
-        self.assertEqual(data["currentness"],"CANDIDATE_PRE_CLOSURE")
+        self.assertEqual(data["currentness"],"CURRENT_CANDIDATE")
         self.assertEqual(data["federation"]["repository_count"],10)
         self.assertEqual(len(data["federation"]["repositories"]),10)
         self.assertEqual(data["live_truth_policy"],"RAG_NE_LIVE_TRUTH")
-        self.assertEqual(data["candidate_binding"],"TO_BE_BOUND_AFTER_SOURCE_STABILIZATION")
+        binding=data["candidate_binding"]
+        self.assertEqual(binding["head"],"c11f1acec701dc6372d24c81640d5fdcb7361b9f")
+        self.assertEqual(binding["tree"],"f668210b46599d0a4f0f68c989689c92c24dc83e")
+        self.assertRegex(binding["formalization_manifest_digest"],r"^[0-9a-f]{64}$")
+        self.assertRegex(binding["federated_binding_digest"],r"^[0-9a-f]{64}$")
         for source in data["source_paths"]:
             self.assertTrue((ROOT/source).is_file(),source)
 

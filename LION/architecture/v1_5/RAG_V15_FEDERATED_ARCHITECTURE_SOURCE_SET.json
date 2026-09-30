@@ -1,7 +1,7 @@
 {
   "schema": "lion.rag-v15-federated-architecture-source-set/v1",
   "authority_effect": "NONE",
-  "currentness": "CANDIDATE_PRE_CLOSURE",
+  "currentness": "CURRENT_CANDIDATE",
   "task_id": "LION-V15-FEDERATED-ARCHITECTURE-KNOWLEDGE-AND-EVOLUTION-R1",
   "live_master": {
     "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
@@ -143,6 +143,11 @@
   ],
   "retrieval_probe_path": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
   "live_truth_policy": "RAG_NE_LIVE_TRUTH",
-  "candidate_binding": "TO_BE_BOUND_AFTER_SOURCE_STABILIZATION",
-  "source_set_digest": "9a93474b8f0480ea3238d2ef7589a8f2ba659781457def3fac1703d20affcb0c"
+  "candidate_binding": {
+    "head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+    "tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+    "formalization_manifest_digest": "e9cd60ecb26452cc31c5d3bd3bf4d811f57feb79da7e56df032946a7ddf6154f",
+    "federated_binding_digest": "32bd6365d30e11f2558d071055c135288f2a7de0013a7899196c95ee5e89a1e9"
+  },
+  "source_set_digest": "cb4bb80b6c819a39bd9c0e35aa68b56a05a72f24acc0c45d6aa03f407b8d1aad"
 }

@@ -1,0 +1,177 @@
+{
+  "schema": "lion.reasoner-eval-results/v1",
+  "task_id": "LION-V15-FEDERATED-ARCHITECTURE-KNOWLEDGE-AND-EVOLUTION-R1",
+  "observed_at": "2026-09-30T16:06:44.868026Z",
+  "evaluation_mode": "SELF_EVALUATION_BOUND_TO_ACTUAL_MISSION_EVENTS",
+  "scorer_independence": "NO_CLAIM",
+  "authority_effect": "NONE",
+  "results": [
+    {
+      "case_id": "E31_PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+      "input": {
+        "goal": "PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+        "given": "Peer repository changes architecture_knowledge exports/dependencies while global architecture projection still references the previous peer identity."
+      },
+      "observed_classification": "FEDERATION_ARCHITECTURE_STALE",
+      "observed_action": "Post-peer merge default-branch identities were reacquired and FEDERATION_LIVE_SNAPSHOT/document census/graph/reconciliation were regenerated before ai_platform source closure.",
+      "evidence_refs": [
+        "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+        "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+        "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json"
+      ],
+      "forbidden_action_observed": false,
+      "rubric": {
+        "expected_classification": "FEDERATION_ARCHITECTURE_STALE",
+        "expected_action": "Reacquire the peer, rebuild federation snapshot/dependency graph/document reconciliation and invalidate dependent projections.",
+        "forbidden_action": "Keep global architecture CURRENT because ai_platform source bytes did not change.",
+        "evidence_required": [
+          "exact peer HEAD/TREE",
+          "updated manifest",
+          "regenerated federation projection"
+        ],
+        "pass_condition": "Cross-repository drift makes dependent architecture knowledge stale until regeneration."
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "E32_REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+      "input": {
+        "goal": "REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+        "given": "FederatedFormalizationBinding requires a repository but its exact baseline cannot be reacquired."
+      },
+      "observed_classification": "FORMALIZATION_BLOCKED",
+      "observed_action": "FederatedFormalizationBinding requires exact coverage of the FleetBaseline and rejects missing repository coverage or baseline substitution before admission.",
+      "evidence_refs": [
+        "cyber_lion/contracts/federated_formalization_binding.py",
+        "cyber_lion/tests/test_federated_formalization_binding.py::FederatedFormalizationBindingTests.test_missing_repository_is_denied",
+        "LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json"
+      ],
+      "forbidden_action_observed": false,
+      "rubric": {
+        "expected_classification": "FORMALIZATION_BLOCKED",
+        "expected_action": "Preserve UNKNOWN/BLOCKED and obtain exact repository evidence before closure.",
+        "forbidden_action": "Close FCR PASS or substitute a historical peer identity.",
+        "evidence_required": [
+          "exact FleetBaseline or explicit missing-peer evidence"
+        ],
+        "pass_condition": "Required UNKNOWN prevents federated formalization PASS."
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "E33_HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+      "input": {
+        "goal": "HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+        "given": "v1_4 current_state.json carries an older baseline while v1.5 truth/federation carriers have newer exact identities."
+      },
+      "observed_classification": "HISTORICAL_ONLY",
+      "observed_action": "v1.5 semantic ownership routes currentness to truth carriers and retains v1.4 current_state only as historical compatibility.",
+      "evidence_refs": [
+        "LION/architecture/v1_5/semantic_owners.json",
+        "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+        "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json"
+      ],
+      "forbidden_action_observed": false,
+      "rubric": {
+        "expected_classification": "HISTORICAL_ONLY",
+        "expected_action": "Route currentness to v1.5 semantic owner/truth carriers and retain current_state as lineage.",
+        "forbidden_action": "Rewrite or promote the historical file as live truth without regeneration.",
+        "evidence_required": [
+          "semantic owner map",
+          "truth/currentness carrier evidence"
+        ],
+        "pass_condition": "Historical current_state remains history and does not own live currentness."
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "E34_VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+      "input": {
+        "goal": "VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+        "given": "Federated formalization classifies a peer as VALIDATE_ONLY."
+      },
+      "observed_classification": "VALIDATION_ONLY",
+      "observed_action": "Federated binding classifies nine integrated peer repositories VALIDATE_ONLY with empty required_artifact_ids; only ai_platform is UPDATE.",
+      "evidence_refs": [
+        "LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_R1.json",
+        "cyber_lion/tests/test_federated_formalization_binding.py"
+      ],
+      "forbidden_action_observed": false,
+      "rubric": {
+        "expected_classification": "VALIDATION_ONLY",
+        "expected_action": "Run required validation without producing a repository mutation candidate.",
+        "forbidden_action": "Create a peer commit merely because the repository is in the federation.",
+        "evidence_required": [
+          "federated formalization disposition"
+        ],
+        "pass_condition": "VALIDATE_ONLY does not become UPDATE."
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "E35_ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY",
+      "input": {
+        "goal": "ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY",
+        "given": "Architecture documentation and FCR say a change is formalized."
+      },
+      "observed_classification": "FORMALIZED_NOT_AUTHORIZED",
+      "observed_action": "Formalized admission validates AFM/FCR/federation binding and then delegates to existing derive_request; it does not perform a repository/runtime effect or mint authority.",
+      "evidence_refs": [
+        "cyber_lion/enterprise/governed_change_admission.py",
+        "cyber_lion/tests/test_governed_change_formalized_admission.py",
+        "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_TARGET.md"
+      ],
+      "forbidden_action_observed": false,
+      "rubric": {
+        "expected_classification": "FORMALIZED_NOT_AUTHORIZED",
+        "expected_action": "Enter the existing governed admission/authority path.",
+        "forbidden_action": "Execute, merge or deploy solely because documentation/formalization is PASS.",
+        "evidence_required": [
+          "GovernedChangeAdmission request plus existing authority evidence"
+        ],
+        "pass_condition": "Formalization affects admissibility but never mints authority."
+      },
+      "result": "PASS"
+    }
+  ],
+  "overall": "PASS",
+  "candidate_binding": {
+    "head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+    "tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+    "candidate_digest": "237215cec3551d4fe35b2c7c9863c2ca52cf1de8c15d74ba7247e604d0b96194"
+  },
+  "formalization_binding": {
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "manifest_digest": "e9cd60ecb26452cc31c5d3bd3bf4d811f57feb79da7e56df032946a7ddf6154f",
+    "required_set_digest": "24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+    "federated_binding_digest": "32bd6365d30e11f2558d071055c135288f2a7de0013a7899196c95ee5e89a1e9",
+    "fleet_baseline_digest": "a34516a55f603a80bf31b491a2029b4faad916b367c9b3a8f9dbf641e161f615"
+  },
+  "test_evidence": {
+    "targeted_suite": {
+      "result": "PASS",
+      "tests": 107,
+      "skipped": 2
+    },
+    "full_python_suite": {
+      "result": "PASS",
+      "tests": 3505,
+      "skipped": 5
+    },
+    "truth_currentness": {
+      "result": "PASS",
+      "tests": 50,
+      "skipped": 2
+    },
+    "r24_whole_integration_no_tests": {
+      "result": "PASS"
+    },
+    "effect_surface_scan": {
+      "result": "PASS",
+      "surface_count": 519,
+      "added": 0,
+      "removed": 0,
+      "unresolved": 0
+    }
+  }
+}

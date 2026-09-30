@@ -102,7 +102,7 @@ class V15FederatedArchitectureArtifactsTests(unittest.TestCase):
         rag=json.loads((V15/"RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json").read_text())
         bootstrap=json.loads((ROOT/"LION/rag/RAG_BOOTSTRAP.json").read_text())
         self.assertEqual(rag["formalization_registry"]["registry_digest"],registry().registry_digest)
-        self.assertEqual(rag["currentness"],"CANDIDATE_PRE_CLOSURE")
+        self.assertEqual(rag["currentness"],"CURRENT_CANDIDATE")
         self.assertEqual(bootstrap["preferred_release"],"lion-rag32-v1.4-r9-auth-lifecycle-candidate")
 
     def test_current_owner_map_has_no_v14_current_state_primary(self):

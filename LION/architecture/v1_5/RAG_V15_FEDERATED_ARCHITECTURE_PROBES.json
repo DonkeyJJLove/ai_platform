@@ -1,7 +1,7 @@
 {
   "schema": "lion.rag-v15-federated-architecture-probes/v1",
   "authority_effect": "NONE",
-  "currentness": "CANDIDATE_PRE_CLOSURE",
+  "currentness": "CURRENT_CANDIDATE",
   "probes": [
     {
       "id": "V15-FED-OWNER",
@@ -62,5 +62,10 @@
         "preserved CommunicationEnvelope candidate must be reconciled before reuse"
       ]
     }
-  ]
+  ],
+  "candidate_binding": {
+    "head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+    "tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+    "source_set_digest": "cb4bb80b6c819a39bd9c0e35aa68b56a05a72f24acc0c45d6aa03f407b8d1aad"
+  }
 }
