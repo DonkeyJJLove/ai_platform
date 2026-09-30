@@ -1,0 +1,82 @@
+{
+  "schema": "lion.r24-v15.recent-router-fastpath-repair/v1",
+  "detected_master": {
+    "head": "4089462bf3023e02eb6e20269e85073bff5dc03e",
+    "tree": "37cd274aa2bbc2f05f82a2d6ea592569a3971a47"
+  },
+  "observed_at": "2026-09-30T09:30:32.018482Z",
+  "root_cause": {
+    "class": "UNNECESSARY_PRE_ROUTE_CURRENT_SNAPSHOT",
+    "mechanism": "GET /api/v3/missions/recent was recognized only after current=snapshot() and compat_get(path,current), even though neither value participates in the recent response. Concurrent callers therefore performed avoidable focus snapshot/registry DB work before entering the existing recent single-flight.",
+    "single_flight": "PRESERVED_AND_CORRECT",
+    "wal_repair": "PRESERVED_AND_CORRECT",
+    "http_backlog": "FALSIFIED_AS_ROOT_CAUSE_REQUEST_QUEUE_SIZE_128"
+  },
+  "layer_falsification": {
+    "static_app_css": {
+      "clients": 30,
+      "workers": 6,
+      "success": 30,
+      "failed": 0,
+      "max_seconds": 0.018161337997298688
+    },
+    "health": {
+      "clients": 30,
+      "workers": 6,
+      "success": 30,
+      "failed": 0,
+      "max_seconds": 1.2773068129899912
+    },
+    "recent": {
+      "clients": 30,
+      "workers": 6,
+      "success": 24,
+      "failed": 6,
+      "max_success_seconds": 6.154707795009017
+    },
+    "direct_recent_seconds": 0.013775122992228717
+  },
+  "isolated_restart_before_fastpath": {
+    "workers_6_total_30": {
+      "success": 24,
+      "failed": 6,
+      "max_seconds": 7.060144812974613
+    },
+    "workers_32_total_100": {
+      "success": 100,
+      "failed": 0,
+      "max_seconds": 7.974617252999451
+    }
+  },
+  "repair": {
+    "route": "/api/v3/missions/recent",
+    "before": "static/health/saas-broker -> current=snapshot -> compat_get -> recent",
+    "after": "static/health/saas-broker -> recent -> current=snapshot -> compat_get",
+    "payload_change": false,
+    "authority_change": false,
+    "files": [
+      "tools/lion_mission_control_v3.py",
+      "LION/runtime_compat/t07/lion_mission_control_v3.py"
+    ],
+    "regression_test": "MissionFocusTests.test_http_recent_route_bypasses_current_snapshot_and_compat"
+  },
+  "candidate_falsification": {
+    "production_db_copy_200_concurrency_32": {
+      "success": 200,
+      "failed": 0,
+      "elapsed_seconds": 5.154379500017967,
+      "max_seconds": 1.0960690369829535,
+      "p95_seconds": 1.0839691283996218,
+      "mission_count_each": 30
+    },
+    "live_db_sidecar_with_production_background_writers_200_concurrency_32": {
+      "success": 200,
+      "failed": 0,
+      "elapsed_seconds": 2.4087131129927,
+      "max_seconds": 0.6335009369649924,
+      "p95_seconds": 0.5842817190889036,
+      "mission_count_each": 30
+    }
+  },
+  "authority_effect": "NONE"
+}

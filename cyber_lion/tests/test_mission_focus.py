@@ -151,6 +151,20 @@ class MissionFocusTests(unittest.TestCase):
             server.shutdown();server.server_close();thread.join(timeout=2)
         self.assertEqual([len(value['missions']) for value in values],[2]*6)
 
+    def test_http_recent_route_bypasses_current_snapshot_and_compat(self):
+        server=service.FleetThreadingHTTPServer(('127.0.0.1',0),service.H)
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        url=f'http://127.0.0.1:{server.server_address[1]}/api/v3/missions/recent?view=all'
+        try:
+            with patch.object(service,'snapshot',side_effect=AssertionError('recent route must bypass current snapshot')), \
+                 patch.object(service,'compat_get',side_effect=AssertionError('recent route must bypass compatibility projection')):
+                with urllib.request.urlopen(url,timeout=3) as response:
+                    value=json.load(response)
+        finally:
+            server.shutdown();server.server_close();thread.join(timeout=2)
+        self.assertEqual(value['view'],'all')
+        self.assertEqual(len(value['missions']),2)
+
     def test_recent_summary_matches_detail_without_full_snapshot(self):
         detail=service.process_snapshot(service.MISSION,read_only=True)
         expected=detail['mission_summary']
