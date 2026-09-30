@@ -2,10 +2,10 @@
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
   "process_epoch": "R24_V15_EPOCH_CLOSED",
-  "generated_at": "2026-09-30T09:00:48.113743Z",
-  "registry_source": "cyber_lion/registry/repositories.json@4ea705f67706f450147bde4eb3618e4c7d5972a5",
+  "generated_at": "2026-09-30T10:27:19.860789Z",
+  "registry_source": "cyber_lion/registry/repositories.json@87582f4c19726a2fb049495cac3d86102bf6db4b",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Final epoch vector binds exact federation observations after predecessor closure and the final Mission Control concurrency repair. ai_platform follows ADR-004 carrier-last and records the stabilized pre-vector source subject; vector and truth carriers never self-reference.",
+  "currentness_rule": "Final epoch vector binds exact federation observations after Mission Control recent-router and UI data-loading repair. ai_platform follows ADR-004 carrier-last and records the stabilized pre-vector source subject; vector and truth carriers never self-reference.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "5baf49f9495530262b3a95045ccc28786e8592ea",
-    "subject_tree": "2c0036b66c678b8e801b147560eede0a3cc2fc57",
+    "subject_head": "2cfbdc24e3923ac601512bd8b3b9964cd06aa908",
+    "subject_tree": "8e350a3b52b7e2e135402028276a04ed374445b9",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "5baf49f9495530262b3a95045ccc28786e8592ea",
-      "tree": "2c0036b66c678b8e801b147560eede0a3cc2fc57",
+      "head": "2cfbdc24e3923ac601512bd8b3b9964cd06aa908",
+      "tree": "8e350a3b52b7e2e135402028276a04ed374445b9",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Final R24/v1.5 source subject after branch/security/runtime/mission closure plus the verified Mission Control concurrent-WAL repair; vector/truth carriers follow later per ADR-004."
+      "lineage_note": "Final R24/v1.5 source subject after recent-route fast-path plus UI LOADING/DEGRADED/LAST-KNOWN semantics and bounded event polling; vector/truth carriers follow per ADR-004."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
