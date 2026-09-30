@@ -10,7 +10,7 @@ class ArchitectureProjectionFlowTests(unittest.TestCase):
 
     def test_all_9_named_flows_resolve(self):
         flows = canonical_flows()
-        self.assertEqual(len(flows), 9)
+        self.assertEqual(len(flows), 10)
         self.assertEqual({flow.flow_id for flow in flows}, set(FLOW_SPECS))
 
     def test_flow_order_is_exact_and_closed(self):

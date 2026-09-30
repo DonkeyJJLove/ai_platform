@@ -1,0 +1,1125 @@
+{
+  "registry_id": "formalization-registry:v1.5-federation-r1",
+  "architecture_epoch": "1.5-federated-architecture-knowledge",
+  "entries": [
+    {
+      "artifact_id": "architecture-contradiction-register",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
+      "schema_or_type": "lion.architecture-contradiction-register/v1",
+      "semantic_role": "Explicit code/document/history contradiction register",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": null,
+      "source_dependencies": [
+        "architecture reconciliation",
+        "semantic owner analysis"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "contradiction closure tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "formalization closure",
+        "roadmap reconciliation"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-reconciliation"
+      ],
+      "invalidates": [
+        "roadmap-next"
+      ]
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "path": "LION/architecture/v1_5/README.md",
+      "schema_or_type": "architecture documentation",
+      "semantic_role": "Human-readable v1.5 architecture knowledge navigation",
+      "semantic_owner_concept": "architecture",
+      "generator": null,
+      "source_dependencies": [
+        "architecture concepts",
+        "semantic owners"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "FLOW_CHANGE"
+      ],
+      "validation_refs": [
+        "documentation review"
+      ],
+      "consumers": [
+        "human operator",
+        "reasoner"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION"
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+      "schema_or_type": "lion.architecture-document-census/v1",
+      "semantic_role": "Federation-wide architecture-bearing artifact census",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "FEDERATION_LIVE_SNAPSHOT",
+        "peer manifests",
+        "repository trees"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "federated architecture knowledge projection tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "formalization closure",
+        "documentation graph"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "federation-live-snapshot"
+      ],
+      "invalidates": [
+        "architecture-document-graph",
+        "architecture-reconciliation"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+      "schema_or_type": "lion.architecture-document-graph/v1",
+      "semantic_role": "Functional relation graph for architecture knowledge",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "architecture-document-census",
+        "peer manifests"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "document reachability tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "discoverability validation",
+        "formalization closure"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-document-census"
+      ],
+      "invalidates": [
+        "architecture-reconciliation"
+      ]
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "path": "cyber_lion/architecture_projection/full_architecture.py",
+      "schema_or_type": "FullArchitectureModel",
+      "semantic_role": "Source-derived architecture projection",
+      "semantic_owner_concept": "architecture",
+      "generator": "cyber_lion.architecture_projection.full_architecture",
+      "source_dependencies": [
+        "production source tree",
+        "target declarations"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CONTRACT_CHANGE",
+        "CAPABILITY_CHANGE",
+        "FLOW_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ],
+      "validation_refs": [
+        "full architecture validation"
+      ],
+      "consumers": [
+        "gap projection",
+        "visual projection",
+        "formalization closure"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+      "schema_or_type": "lion.architecture-reconciliation/v1",
+      "semantic_role": "Code/document/federation reconciliation projection",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "architecture-document-census",
+        "architecture-document-graph",
+        "code-derived-architecture"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "reconciliation contradiction tests"
+      ],
+      "consumers": [
+        "formalization closure",
+        "roadmap reconciliation",
+        "reasoner"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-document-census",
+        "architecture-document-graph"
+      ],
+      "invalidates": [
+        "roadmap-next",
+        "rag-routing"
+      ]
+    },
+    {
+      "artifact_id": "autonomous-evolution-control-flow",
+      "path": "LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
+      "schema_or_type": "lion.autonomous-evolution-control-flow/v1",
+      "semantic_role": "Machine-readable architecture/evolution transition and owner map",
+      "semantic_owner_concept": "autonomy",
+      "generator": null,
+      "source_dependencies": [
+        "formalization",
+        "governed admission",
+        "reconciliation"
+      ],
+      "refresh_triggers": [
+        "FLOW_CHANGE",
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ],
+      "validation_refs": [
+        "architecture flow tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "RAG",
+        "documentation"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION",
+      "dependency_refs": [
+        "architecture-projection",
+        "federated-formalization-binding"
+      ],
+      "invalidates": [
+        "rag-routing"
+      ]
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "path": "LION/architecture/v1_4/capability_catalog.json",
+      "schema_or_type": "lion.documentation.capability-catalog.v1",
+      "semantic_role": "Canonical capability discovery surface",
+      "semantic_owner_concept": "capabilities",
+      "generator": null,
+      "source_dependencies": [
+        "capability sources",
+        "architecture evidence"
+      ],
+      "refresh_triggers": [
+        "CAPABILITY_CHANGE",
+        "CONTRACT_CHANGE",
+        "SOURCE_CHANGE"
+      ],
+      "validation_refs": [
+        "capability coverage"
+      ],
+      "consumers": [
+        "planner",
+        "reasoner",
+        "RAG"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+      "schema_or_type": "lion.code-derived-architecture/v1",
+      "semantic_role": "Exact staged-tree code-derived architecture model",
+      "semantic_owner_concept": "architecture",
+      "generator": "cyber_lion.architecture_projection.full_architecture",
+      "source_dependencies": [
+        "staged source tree",
+        "architecture projection"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CONTRACT_CHANGE",
+        "CAPABILITY_CHANGE",
+        "FLOW_CHANGE"
+      ],
+      "validation_refs": [
+        "full architecture validation",
+        "source-tree binding"
+      ],
+      "consumers": [
+        "architecture reconciliation",
+        "reasoner",
+        "formalization closure"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "dependency_refs": [
+        "architecture-projection"
+      ],
+      "invalidates": [
+        "architecture-reconciliation",
+        "roadmap-next"
+      ]
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "path": "LION/architecture/v1_4/contract_catalog.json",
+      "schema_or_type": "lion.documentation.contract-catalog.v1",
+      "semantic_role": "Canonical contract discovery surface",
+      "semantic_owner_concept": "contracts",
+      "generator": null,
+      "source_dependencies": [
+        "cyber_lion/contracts",
+        "contract owners"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ],
+      "validation_refs": [
+        "contract coverage",
+        "contract tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "RAG",
+        "architecture review"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "cross-repository-dependency-graph",
+      "path": "LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+      "schema_or_type": "lion.cross-repository-dependency-graph/v1",
+      "semantic_role": "Cross-repository architecture dependency and global-owner routing graph",
+      "semantic_owner_concept": "federation",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "peer architecture_knowledge manifests"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ],
+      "validation_refs": [
+        "dependency graph tests"
+      ],
+      "consumers": [
+        "federated formalization",
+        "reasoner",
+        "invalidation"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "repository-role-matrix"
+      ],
+      "invalidates": [
+        "architecture-reconciliation",
+        "federated-formalization-binding"
+      ]
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "path": "LION/architecture/canonical-state-v1-3-candidate.json",
+      "schema_or_type": "truth/currentness carrier set",
+      "semantic_role": "Exact truth subject and registry carrier bindings",
+      "semantic_owner_concept": "currentness",
+      "generator": "cyber_lion.architecture_projection.truth_plane",
+      "source_dependencies": [
+        "non-carrier source tree",
+        "cyber_lion/registry/repositories.json"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "RAG_RELEASE"
+      ],
+      "validation_refs": [
+        "truth subject recompute",
+        "carrier-last validation"
+      ],
+      "consumers": [
+        "CI",
+        "reasoner",
+        "RAG"
+      ],
+      "currentness_mode": "SUBJECT_DIGEST",
+      "artifact_class": "CURRENTNESS_CARRIER"
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "path": "AGENTS.md",
+      "schema_or_type": "project routing contract",
+      "semantic_role": "Bootstrap path from fresh context to canonical owner",
+      "semantic_owner_concept": "discoverability",
+      "generator": null,
+      "source_dependencies": [
+        "semantic owners",
+        "architecture contracts",
+        "RAG bootstrap"
+      ],
+      "refresh_triggers": [
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE",
+        "RAG_RELEASE"
+      ],
+      "validation_refs": [
+        "max reads to owner probe"
+      ],
+      "consumers": [
+        "fresh agent",
+        "Codex"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION"
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+      "schema_or_type": "lion.document-derived-architecture/v1",
+      "semantic_role": "Federation documentation-derived architecture projection",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "architecture-document-census",
+        "semantic-owners",
+        "repository-role-matrix"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "federated architecture knowledge projection tests"
+      ],
+      "consumers": [
+        "architecture reconciliation",
+        "reasoner"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-document-census",
+        "semantic-owners"
+      ],
+      "invalidates": [
+        "architecture-reconciliation"
+      ]
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "path": "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+      "schema_or_type": "lion.documentation-currentness-model/v1",
+      "semantic_role": "Typed documentation/federation/RAG/formalization currentness model",
+      "semantic_owner_concept": "currentness",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "Git",
+        "CI",
+        "runtime",
+        "truth"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "RUNTIME_OBSERVATION"
+      ],
+      "validation_refs": [
+        "live-state validation"
+      ],
+      "consumers": [
+        "reasoner",
+        "RAG",
+        "documentation"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "documentation-evolution-control-flow",
+      "path": "LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
+      "schema_or_type": "lion.documentation-evolution-control-flow/v1",
+      "semantic_role": "Machine-readable documentation homeostasis loop",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": null,
+      "source_dependencies": [
+        "architecture knowledge generator",
+        "formalization",
+        "truth plane"
+      ],
+      "refresh_triggers": [
+        "FLOW_CHANGE",
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "document graph tests",
+        "carrier-last tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "formalization closure"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-document-graph",
+        "architecture-reconciliation"
+      ],
+      "invalidates": [
+        "rag-routing",
+        "currentness-carriers"
+      ]
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "path": "LION/architecture/v1_4/event_state_catalog.json",
+      "schema_or_type": "lion.documentation.event-state-catalog.v1",
+      "semantic_role": "Canonical event and state semantics",
+      "semantic_owner_concept": "architecture",
+      "generator": "cyber_lion.architecture_projection.flows",
+      "source_dependencies": [
+        "cyber_lion/architecture_projection/flows.py",
+        "state-bearing contracts"
+      ],
+      "refresh_triggers": [
+        "FLOW_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "canonical flow validation"
+      ],
+      "consumers": [
+        "reasoner",
+        "visual projection",
+        "RAG"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "path": "LION/evals/evolution/evolution_cases.yaml",
+      "schema_or_type": "lion.reasoner-evals/v1",
+      "semantic_role": "Behavioral regressions for evolution reasoning",
+      "semantic_owner_concept": "autonomy",
+      "generator": null,
+      "source_dependencies": [
+        "evolution invariants",
+        "new failure signatures"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "FLOW_CHANGE",
+        "CAPABILITY_CHANGE"
+      ],
+      "validation_refs": [
+        "evolution eval scorer"
+      ],
+      "consumers": [
+        "reasoner evaluation"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "EVAL"
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "path": "cyber_lion/contracts/federated_formalization_binding.py",
+      "schema_or_type": "lion.federated-formalization-binding/v1",
+      "semantic_role": "Bind local AFM to exact federation baseline and per-repository dispositions",
+      "semantic_owner_concept": "formalization",
+      "generator": null,
+      "source_dependencies": [
+        "FleetBaseline",
+        "ArchitectureFormalizationManifest"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "SEMANTIC_OWNER_CHANGE"
+      ],
+      "validation_refs": [
+        "federated formalization negative tests"
+      ],
+      "consumers": [
+        "governed change admission",
+        "formalization closure"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "CONTRACT",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "formalization-manifest",
+        "fleet-baseline",
+        "fleet-baseline-instance"
+      ]
+    },
+    {
+      "artifact_id": "federation-live-snapshot",
+      "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+      "schema_or_type": "lion.federation-live-snapshot/v1",
+      "semantic_role": "Exact post-peer live federation observation used as generator input",
+      "semantic_owner_concept": "federation",
+      "generator": null,
+      "source_dependencies": [
+        "GitHub default branches",
+        "peer manifests",
+        "repository trees"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "live federation reacquisition",
+        "federated architecture knowledge projection tests"
+      ],
+      "consumers": [
+        "architecture-document-census",
+        "repository-role-matrix",
+        "dependency graph",
+        "RAG source set"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "invalidates": [
+        "architecture-document-census",
+        "repository-role-matrix",
+        "cross-repository-dependency-graph"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline",
+      "path": "cyber_lion/contracts/repository_expansion.py",
+      "schema_or_type": "FleetBaseline",
+      "semantic_role": "Exact registered-repository baseline and dependency-edge binding contract",
+      "semantic_owner_concept": "federation",
+      "generator": null,
+      "source_dependencies": [
+        "registered repositories",
+        "repository baseline observations",
+        "dependency edges"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "repository expansion tests",
+        "fleet pin tests"
+      ],
+      "consumers": [
+        "federated-formalization-binding",
+        "repository expansion",
+        "federation tests"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "CONTRACT",
+      "scope": "FEDERATION",
+      "invalidates": [
+        "federated-formalization-binding"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline-instance",
+      "path": "LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json",
+      "schema_or_type": "FleetBaseline instance + Gate0 projection",
+      "semantic_role": "Exact ten-repository baseline used by federated formalization",
+      "semantic_owner_concept": "federation",
+      "generator": null,
+      "source_dependencies": [
+        "FEDERATION_LIVE_SNAPSHOT",
+        "repository manifests",
+        "security baseline observations"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "FleetBaseline.validate",
+        "Gate0Decision"
+      ],
+      "consumers": [
+        "federated-formalization-binding",
+        "formalization closure",
+        "reasoner"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "federation-live-snapshot",
+        "fleet-baseline"
+      ],
+      "invalidates": [
+        "federated-formalization-binding"
+      ]
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+      "schema_or_type": "lion.formalization-closure-record/v1",
+      "semantic_role": "Fail-closed proof of formalization closure",
+      "semantic_owner_concept": "formalization",
+      "generator": "cyber_lion.contracts.formalization_closure",
+      "source_dependencies": [
+        "exact candidate",
+        "independent verification",
+        "AFM",
+        "RequiredFormalizationSet"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "FCR negative tests"
+      ],
+      "consumers": [
+        "governed repository admission"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "CONTRACT"
+    },
+    {
+      "artifact_id": "formalization-manifest",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
+      "schema_or_type": "lion.architecture-formalization-manifest/v1",
+      "semantic_role": "Architecture change formalization sidecar",
+      "semantic_owner_concept": "formalization",
+      "generator": "cyber_lion.contracts.architecture_formalization_manifest",
+      "source_dependencies": [
+        "EvolutionDelta",
+        "FormalizationRegistry"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "AFM contract tests"
+      ],
+      "consumers": [
+        "GovernedChangeProposal sidecar",
+        "RequiredFormalizationSet"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "CONTRACT"
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "path": "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+      "schema_or_type": "lion.formalization-registry/v1",
+      "semantic_role": "Current federation-aware formalization surface registry",
+      "semantic_owner_concept": "formalization",
+      "generator": "cyber_lion.contracts.formalization_registry",
+      "source_dependencies": [
+        "canonical formalization surfaces",
+        "federation architecture knowledge"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "SOURCE_CHANGE"
+      ],
+      "validation_refs": [
+        "registry contract tests"
+      ],
+      "consumers": [
+        "AFM derivation",
+        "federated formalization binding",
+        "formalization closure",
+        "reasoner"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "CONTRACT",
+      "scope": "FEDERATION"
+    },
+    {
+      "artifact_id": "gap-projection",
+      "path": "cyber_lion/architecture_projection/gap.py",
+      "schema_or_type": "canonical_gap_projection",
+      "semantic_role": "Architecture gap and frontier projection",
+      "semantic_owner_concept": "architecture",
+      "generator": "cyber_lion.architecture_projection.gap",
+      "source_dependencies": [
+        "architecture projection",
+        "target declarations",
+        "catalog state"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CONTRACT_CHANGE",
+        "CAPABILITY_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "FLOW_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "gap projection regression"
+      ],
+      "consumers": [
+        "evolution planner",
+        "reasoner"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "material-object-catalog",
+      "path": "LION/architecture/v1_4/material_object_catalog.json",
+      "schema_or_type": "lion.documentation.object-catalog.v1",
+      "semantic_role": "Material object projection",
+      "semantic_owner_concept": "architecture",
+      "generator": null,
+      "source_dependencies": [
+        "material object contracts",
+        "runtime identities"
+      ],
+      "refresh_triggers": [
+        "CONTRACT_CHANGE",
+        "RUNTIME_OBSERVATION",
+        "SOURCE_CHANGE"
+      ],
+      "validation_refs": [
+        "material object coverage"
+      ],
+      "consumers": [
+        "reasoner",
+        "RAG"
+      ],
+      "currentness_mode": "MIXED",
+      "artifact_class": "DERIVED_PROJECTION"
+    },
+    {
+      "artifact_id": "rag-federated-architecture-probes",
+      "path": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
+      "schema_or_type": "lion.rag-v15-federated-architecture-probes/v1",
+      "semantic_role": "Retrieval falsifiers for owner/formalization/currentness/frontier semantics",
+      "semantic_owner_concept": "RAG",
+      "generator": null,
+      "source_dependencies": [
+        "rag-federated-architecture-source-set"
+      ],
+      "refresh_triggers": [
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "RAG probe tests"
+      ],
+      "consumers": [
+        "RAG release validation",
+        "formalization closure"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "EVAL",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "rag-federated-architecture-source-set"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-source-set",
+      "path": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
+      "schema_or_type": "lion.rag-v15-federated-architecture-source-set/v1",
+      "semantic_role": "Versioned candidate source set for federation architecture retrieval",
+      "semantic_owner_concept": "RAG",
+      "generator": null,
+      "source_dependencies": [
+        "v1.5 architecture knowledge",
+        "post-peer federation snapshot"
+      ],
+      "refresh_triggers": [
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE",
+        "SOURCE_CHANGE"
+      ],
+      "validation_refs": [
+        "RAG source-set tests",
+        "retrieval probes"
+      ],
+      "consumers": [
+        "RAG release process",
+        "AGENTS"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "RAG_ROUTE",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-reconciliation",
+        "semantic-owners"
+      ]
+    },
+    {
+      "artifact_id": "rag-release",
+      "path": "LION/rag/",
+      "schema_or_type": "versioned RAG release",
+      "semantic_role": "Versioned knowledge materialization",
+      "semantic_owner_concept": "RAG",
+      "generator": "RAG release process",
+      "source_dependencies": [
+        "formalization closure",
+        "source provenance"
+      ],
+      "refresh_triggers": [
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "manifest/hash/roundtrip/retrieval"
+      ],
+      "consumers": [
+        "RAG bootstrap",
+        "models"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "RAG_RELEASE"
+    },
+    {
+      "artifact_id": "rag-routing",
+      "path": "LION/rag/RAG_BOOTSTRAP.json",
+      "schema_or_type": "lion.rag-bootstrap/v1",
+      "semantic_role": "Versioned knowledge routing bootstrap",
+      "semantic_owner_concept": "RAG",
+      "generator": "RAG release process",
+      "source_dependencies": [],
+      "refresh_triggers": [
+        "RAG_RELEASE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "RAG retrieval probes"
+      ],
+      "consumers": [
+        "AGENTS",
+        "models"
+      ],
+      "currentness_mode": "VERSIONED_STATIC",
+      "artifact_class": "RAG_ROUTE"
+    },
+    {
+      "artifact_id": "repository-documentation-plans",
+      "path": "LION/architecture/v1_5/REPOSITORY_DOCUMENTATION_PLANS.json",
+      "schema_or_type": "lion.repository-documentation-plans/v1",
+      "semantic_role": "Per-repository documentation ownership and mutation disposition",
+      "semantic_owner_concept": "repository_roles",
+      "generator": null,
+      "source_dependencies": [
+        "repository-role-matrix",
+        "peer manifests"
+      ],
+      "refresh_triggers": [
+        "SEMANTIC_OWNER_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "peer manifest validation",
+        "discoverability tests"
+      ],
+      "consumers": [
+        "formalization planner",
+        "reasoner"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "repository-role-matrix"
+      ],
+      "invalidates": [
+        "roadmap-next"
+      ]
+    },
+    {
+      "artifact_id": "repository-role-matrix",
+      "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+      "schema_or_type": "lion.repository-role-matrix/v1",
+      "semantic_role": "Exact federation repository role/capability/authority projection",
+      "semantic_owner_concept": "repository_roles",
+      "generator": "tools/lion_federated_architecture_knowledge.py",
+      "source_dependencies": [
+        "federation-live-snapshot",
+        "peer manifests"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "SEMANTIC_OWNER_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "repository manifest schema",
+        "federated projection tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "dependency graph",
+        "formalization"
+      ],
+      "currentness_mode": "SOURCE_DERIVED",
+      "artifact_class": "DERIVED_PROJECTION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "federation-live-snapshot"
+      ],
+      "invalidates": [
+        "architecture-reconciliation",
+        "roadmap-next"
+      ]
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "path": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "schema_or_type": "evidence-bound roadmap projection",
+      "semantic_role": "Current next-frontier roadmap derived from live architecture dependencies",
+      "semantic_owner_concept": "roadmap",
+      "generator": null,
+      "source_dependencies": [
+        "architecture-reconciliation",
+        "gap-projection",
+        "federation-live-snapshot"
+      ],
+      "refresh_triggers": [
+        "SOURCE_CHANGE",
+        "CAPABILITY_CHANGE",
+        "CURRENTNESS_CHANGE",
+        "CONTRACT_CHANGE"
+      ],
+      "validation_refs": [
+        "roadmap dependency validity tests"
+      ],
+      "consumers": [
+        "reasoner",
+        "operator",
+        "RAG"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION",
+      "scope": "FEDERATION",
+      "dependency_refs": [
+        "architecture-reconciliation",
+        "gap-projection"
+      ],
+      "invalidates": [
+        "rag-routing"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owner-reconciliation",
+      "path": "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
+      "schema_or_type": "lion.semantic-owner-reconciliation/v1",
+      "semantic_role": "Transition from historical owners to current v1.5 owner map",
+      "semantic_owner_concept": "architecture_knowledge",
+      "generator": null,
+      "source_dependencies": [
+        "semantic-owners",
+        "documentation currentness audit"
+      ],
+      "refresh_triggers": [
+        "SEMANTIC_OWNER_CHANGE",
+        "CURRENTNESS_CHANGE"
+      ],
+      "validation_refs": [
+        "semantic owner uniqueness"
+      ],
+      "consumers": [
+        "reasoner",
+        "formalization closure"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DOCUMENTATION",
+      "dependency_refs": [
+        "semantic-owners"
+      ],
+      "invalidates": [
+        "architecture-reconciliation"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "path": "LION/architecture/v1_5/semantic_owners.json",
+      "schema_or_type": "lion.documentation.semantic-owner-map.v1",
+      "semantic_role": "Canonical v1.5 semantic ownership routing",
+      "semantic_owner_concept": "architecture",
+      "generator": null,
+      "source_dependencies": [
+        "canonical architecture concepts",
+        "human semantic owners"
+      ],
+      "refresh_triggers": [
+        "SEMANTIC_OWNER_CHANGE",
+        "CONTRACT_CHANGE",
+        "SOURCE_CHANGE"
+      ],
+      "validation_refs": [
+        "semantic owner uniqueness",
+        "source currentness"
+      ],
+      "consumers": [
+        "AGENTS",
+        "reasoner",
+        "RAG"
+      ],
+      "currentness_mode": "EXACT_HEAD",
+      "artifact_class": "DERIVED_PROJECTION"
+    }
+  ],
+  "authority_effect": "NONE",
+  "schema_id": "lion.formalization-registry/v1",
+  "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f"
+}

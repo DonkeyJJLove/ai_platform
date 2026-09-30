@@ -1,0 +1,44 @@
+{
+  "delta_id": "delta:v15-federated-architecture-knowledge-r1",
+  "target_component": "federated architecture knowledge and formalization",
+  "motivation": "Architecture knowledge is locally formalized but federation-wide ownership, document currentness, dependency invalidation and formalized admission are not first-class or uniformly discoverable.",
+  "evidence_refs": [
+    "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+    "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
+    "LION/architecture/v1_5/FORMALIZATION_KERNEL_AUDIT.json",
+    "LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+    "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json"
+  ],
+  "expected_outcome": "Exact federation architecture knowledge becomes machine-derived, source-bound, discoverable, formally invalidated across repositories and required before architecture-changing governed admission.",
+  "falsification_conditions": [
+    "A required peer can remain unknown while federation formalization reports PASS.",
+    "A stale document can remain current after its source or dependency changes.",
+    "More than one primary semantic owner exists for a required concept.",
+    "A VALIDATE_ONLY repository can be treated as an update target.",
+    "Architecture formalization can widen authority.",
+    "A fresh repository entrypoint cannot route to the global architecture owner within the declared read bound."
+  ],
+  "candidate_scope": [
+    "cyber_lion/contracts",
+    "cyber_lion/architecture_projection",
+    "cyber_lion/enterprise/governed_change_admission.py",
+    "tools/lion_federated_architecture_knowledge.py",
+    "LION/architecture/v1_5",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_4/event_state_catalog.json",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/rag/RAG_BOOTSTRAP.json",
+    "AGENTS.md",
+    "cyber-lion.repository.json"
+  ],
+  "dependency_ids": [
+    "formalization-registry:v1.5-federation-r1",
+    "fleet:v15-federated-architecture-knowledge-r1",
+    "truth-currentness-carriers"
+  ],
+  "risk_class": "AMBER",
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "delta_digest": "02ac8dc159813d1f534b51d7e1d35d9ba15d4f66505d0d4c94ab2987a2bc65f4",
+  "schema_version": "1.0.0"
+}

@@ -1,5 +1,5 @@
 {
-  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+  "baseline_head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
   "canonical_flows": {
     "FLOW-01": [
       "WORLD",
@@ -98,6 +98,17 @@
       "MOSAIC",
       "GOVERNED_EFFECT",
       "RECONCILED_OUTCOME"
+    ],
+    "FLOW-10": [
+      "FEDERATION_STATE",
+      "ARCHITECTURE_DOCUMENT_CENSUS",
+      "ARCHITECTURE_DOCUMENT_GRAPH",
+      "ARCHITECTURE_RECONCILIATION",
+      "EVOLUTION_DELTA",
+      "REQUIRED_FORMALIZATION_SET",
+      "RAG_DISCOVERABILITY",
+      "FEDERATION_VECTOR",
+      "TRUTH_CARRIERS"
     ]
   },
   "coverage_scope": "architecture-material canonical flows/states, not exhaustive all-symbol event extraction",
@@ -180,5 +191,13 @@
       "APPROVED_RELEASE"
     ],
     "note": "Lifecycle is outside immutable ModelRelease identity; Task2 performs no promotion effect."
+  },
+  "v15_federated_architecture_reconciliation": {
+    "canonical_flow_change": "FLOW_10_ADDED",
+    "flow_10": "Federation architecture knowledge homeostasis from exact federation observation through document census/graph/reconciliation and formalization to RAG/federation-vector/truth-carrier closure.",
+    "new_top_level_layer": "NONE",
+    "reason": "The architecture-knowledge lifecycle is now implemented, machine-projected, federation-bound and consumed by formalized governed-change admission; it is no longer merely a cognitive subflow.",
+    "historical_r23_note": "The R23 statement that process semantics did not justify a tenth flow remains valid for that historical epoch and is not rewritten.",
+    "authority_effect": "NONE"
   }
 }

@@ -1,0 +1,47 @@
+{
+  "schema": "lion.semantic-owner-reconciliation/v1",
+  "generated_at": "2026-09-30T13:22:16.185164Z",
+  "baseline_head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
+  "canonical_map": "LION/architecture/v1_5/semantic_owners.json",
+  "historical_compatibility_map": "LION/architecture/v1_4/semantic_owners.json",
+  "changes": [
+    {
+      "concept": "currentness",
+      "from": "LION/architecture/v1_4/current_state.json",
+      "to": "LION/architecture/canonical-state-v1-3-candidate.json",
+      "classification": "REPLACE_STALE_PRIMARY"
+    },
+    {
+      "concept": "models",
+      "from": "LION/architecture/v1_4/current_state.json",
+      "to": "cyber_lion/contracts/model_plane_adapter.py",
+      "classification": "REPLACE_STALE_PRIMARY"
+    },
+    {
+      "concept": "roadmap",
+      "from": "AI_NATIVE_ROADMAP.md",
+      "to": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "classification": "REPLACE_HISTORICAL_PRIMARY"
+    },
+    {
+      "concept": "RAG",
+      "from": "LION-RAG32 package carriers",
+      "to": "LION/rag/RAG_BOOTSTRAP.json",
+      "classification": "MAKE_MACHINE_ROUTING_PRIMARY"
+    },
+    {
+      "concept": "architecture_knowledge",
+      "from": null,
+      "to": "cyber_lion/architecture_projection/architecture_knowledge.py",
+      "classification": "ADD"
+    },
+    {
+      "concept": "formalization",
+      "from": null,
+      "to": "cyber_lion/contracts/formalization_registry.py",
+      "classification": "ADD"
+    }
+  ],
+  "duplicate_primary_global_owner": "NONE",
+  "authority_effect": "NONE"
+}

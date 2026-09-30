@@ -69,8 +69,8 @@ class FullArchitectureModel:
             raise ValueError("all 15 architecture layers must be represented")
         for element in self.elements:
             element.validate()
-        if len(self.flows) != 9:
-            raise ValueError("all 9 canonical flows are required")
+        if len(self.flows) != 10:
+            raise ValueError("all 10 canonical flows are required")
         return self
 
     def canonical_bytes(self) -> bytes:
@@ -84,6 +84,9 @@ class FullArchitectureModel:
 
 _ELEMENT_SPECS = (
     ("architecture-projection", "ARCHITECTURE_PROJECTION", "Canonical architecture projection", "VERIFIED_REFERENCE", "cyber_lion/architecture_projection/extractor.py", "ArchitectureProjectionExtractor", "LIVE_CODE"),
+    ("architecture-knowledge", "ARCHITECTURE_PROJECTION", "Federated architecture knowledge projection", "IMPLEMENTED", "cyber_lion/architecture_projection/architecture_knowledge.py", "FederatedArchitectureKnowledge", "LIVE_CODE"),
+    ("formalization-kernel", "ARCHITECTURE_PROJECTION", "Architecture formalization kernel", "IMPLEMENTED", "cyber_lion/contracts/formalization_closure.py", "FormalizationClosureRecord", "LIVE_CODE"),
+    ("federated-formalization-binding", "EVOLUTIONARY_EPOCH", "Federated formalization binding", "CONTRACT_ONLY", "cyber_lion/contracts/federated_formalization_binding.py", "FederatedFormalizationBinding", "LIVE_CODE"),
     ("authority-effect", "AUTHORITY_AND_EFFECT", "Authority and effect boundary", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),
     ("code-perception", "CODE_PERCEPTION", "Deterministic code perception", "VERIFIED_REFERENCE", "cyber_lion/enterprise/code_perception.py", "build_code_graph", "LIVE_CODE"),
     ("constitution-governance", "CONSTITUTION_AND_GOVERNANCE", "Constitution and governance", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),

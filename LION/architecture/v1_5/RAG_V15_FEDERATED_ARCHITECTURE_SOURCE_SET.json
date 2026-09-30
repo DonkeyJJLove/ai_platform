@@ -1,0 +1,148 @@
+{
+  "schema": "lion.rag-v15-federated-architecture-source-set/v1",
+  "authority_effect": "NONE",
+  "currentness": "CANDIDATE_PRE_CLOSURE",
+  "task_id": "LION-V15-FEDERATED-ARCHITECTURE-KNOWLEDGE-AND-EVOLUTION-R1",
+  "live_master": {
+    "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
+    "tree": "3378fa25e60adde0193cc189e73f780a828e65c5"
+  },
+  "federation": {
+    "snapshot_path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+    "repository_count": 10,
+    "repositories": [
+      {
+        "repository": "DonkeyJJLove/ai_platform",
+        "branch": "master",
+        "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
+        "tree": "3378fa25e60adde0193cc189e73f780a828e65c5",
+        "manifest_blob": "c876bf0f297fbd02c1461988c5c50f3128a67521"
+      },
+      {
+        "repository": "DonkeyJJLove/chunk-chunk",
+        "branch": "master",
+        "head": "793d6f7fdd249f11ab872bc264700124fc573e67",
+        "tree": "2ca47b55d5f71e603f2037367a4a825c2745bd55",
+        "manifest_blob": "38ede68b4b1a935bb275d40fe987d7343f7a6878"
+      },
+      {
+        "repository": "DonkeyJJLove/glitchlab",
+        "branch": "master",
+        "head": "92cc9dacd200d6c2cdf0dbbd892d9db9e7a72d7e",
+        "tree": "3f0673b4744ddd5d589eedf9588823ee6a98c2d1",
+        "manifest_blob": "666892a9baa2c3db1affe3e3dc3f4a60476b884a"
+      },
+      {
+        "repository": "DonkeyJJLove/HA2D",
+        "branch": "master",
+        "head": "a88f842efc9be414ab3fe10fb8766dcb013c0135",
+        "tree": "ba5fb05784434c15640da005da8dced52008d176",
+        "manifest_blob": "ba7f9639e5ccabeb4b1b3bb3dc0d435d6e833d08"
+      },
+      {
+        "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+        "branch": "main",
+        "head": "46e994b651481c62faa4bc84b9e529efbcb5a7b6",
+        "tree": "8c36003c0ead17b0593292633e598022b32de86f",
+        "manifest_blob": "54704022305f7205137c38f6db94d3f06d2cb902"
+      },
+      {
+        "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+        "branch": "main",
+        "head": "f11a707f673a0899e25d51d8b9e5bd635d856e81",
+        "tree": "fe2d9faa55fbc9e68872ed5b3f4774799317d8ed",
+        "manifest_blob": "e458c3a1c8f2673711afa6943eca14f6917bd13e"
+      },
+      {
+        "repository": "DonkeyJJLove/sbom",
+        "branch": "main",
+        "head": "023f90b120950848b5ba82cefc94fdef997995cf",
+        "tree": "4856c77847e444465128061ab3ca873c6bc91a6d",
+        "manifest_blob": "9b74a5ca0edf355fe6a3130512ce94f9290d83e7"
+      },
+      {
+        "repository": "DonkeyJJLove/swarm",
+        "branch": "master",
+        "head": "5964fde8b8c1a17c7dc5c6ee4ea68b8ec1b8e987",
+        "tree": "e1fcf5d0abd87ba80bf59c84fa2612299c207bbb",
+        "manifest_blob": "6bea4cde89dfe1aa590bbede3b04289b78b27c80"
+      },
+      {
+        "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+        "branch": "main",
+        "head": "8750d65a9109aad7514fac8b235846e373ab8b6c",
+        "tree": "79be83f61dd5349b3588387449a05706de2b8cbb",
+        "manifest_blob": "b622ee09f78b2f454f901d3f0ccf409eba946520"
+      },
+      {
+        "repository": "DonkeyJJLove/writeups",
+        "branch": "master",
+        "head": "124d3a9cf913cf717e04615ce6a84610ba30eeca",
+        "tree": "bc23739745fb2dee586d5d19473c84e0b09eff37",
+        "manifest_blob": "18224571d76e8055ad43251c8b27223a70ea54b3"
+      }
+    ]
+  },
+  "semantic_owner_map": {
+    "path": "LION/architecture/v1_5/semantic_owners.json",
+    "owner_count": 30
+  },
+  "formalization_registry": {
+    "path": "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f"
+  },
+  "source_paths": [
+    "AGENTS.md",
+    "cyber-lion.repository.json",
+    "cyber_lion/contracts/v1/repository_manifest.schema.json",
+    "cyber_lion/contracts/formalization_registry.py",
+    "cyber_lion/contracts/federated_formalization_binding.py",
+    "cyber_lion/enterprise/governed_change_admission.py",
+    "cyber_lion/architecture_projection/architecture_knowledge.py",
+    "cyber_lion/architecture_projection/flows.py",
+    "cyber_lion/architecture_projection/full_architecture.py",
+    "cyber_lion/architecture_projection/gap.py",
+    "tools/lion_federated_architecture_knowledge.py",
+    "LION/architecture/v1_5/README.md",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+    "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+    "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+    "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+    "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+    "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+    "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+    "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
+    "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+    "LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
+    "LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
+    "LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+    "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+    "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_AS_IS.md",
+    "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_TARGET.md",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_4/event_state_catalog.json",
+    "cyber_lion/CONTRACT_MAP.md",
+    "LION/architecture/v1_5/FORMALIZATION_KERNEL_AUDIT.json",
+    "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
+    "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+    "LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+    "LION/architecture/v1_5/REPOSITORY_DOCUMENTATION_PLANS.json",
+    "LION/architecture/v1_5/DISCOVERABILITY_TEST_MATRIX.json",
+    "LION/architecture/v1_5/RAG_DELTA_PLAN.json",
+    "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
+    "LION/architecture/v1_5/MIGRATION_PLAN.md",
+    "LION/architecture/v1_5/ROLLBACK_PLAN.md",
+    "LION/architecture/v1_5/FALSIFICATION_PLAN.md",
+    "LION/architecture/v1_5/EVOLUTION_DELTA_FEDERATED_ARCHITECTURE_R1.json",
+    "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_FEDERATION_R1.json",
+    "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_FEDERATION_R1.json",
+    "LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json",
+    "LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_R1.json",
+    "LION/architecture/v1_5/FORMALIZATION_KERNEL.md"
+  ],
+  "retrieval_probe_path": "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
+  "live_truth_policy": "RAG_NE_LIVE_TRUTH",
+  "candidate_binding": "TO_BE_BOUND_AFTER_SOURCE_STABILIZATION",
+  "source_set_digest": "9a93474b8f0480ea3238d2ef7589a8f2ba659781457def3fac1703d20affcb0c"
+}

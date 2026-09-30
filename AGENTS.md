@@ -7,7 +7,9 @@ Następnie odtwórz live Git/CI/runtime w zakresie pytania, przeczytaj canonical
 
 PROCESS_CONTRACT_PLANE: dla pracy obejmującej LPCL, Mission Control, fazy, scheduler, capability, generic execution lub phase completion przeczytaj `LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md` przed projektowaniem wykonania. Obowiązuje `PHASE_INTENT != PHASE_EXECUTION_CONTRACT != CAPABILITY_BINDING != ACTION_IR != EFFECT != COMPLETION`. LPCL/1.2 wymaga jawnego kontraktu fazy; LPCL/1.1 pozostaje kompatybilny przez fail-closed `LEGACY_INFERRED_SAFE`. Capability binding i effect ceiling nie są authority.
 
-V1_5_CANDIDATE: when a mission explicitly targets architecture epoch 1.5 cognitive evolution, read `LION/architecture/v1_5/README.md` after live reacquisition. This route is candidate context only and does not replace v1.4 live truth, authority lifecycle, or RAG currentness.\n\n## Routing
+V1_5_ARCHITECTURE_KNOWLEDGE: when a mission concerns architecture epoch 1.5, federation structure, semantic ownership, documentation currentness, formalization or the next frontier, read `LION/architecture/v1_5/README.md` after live reacquisition, then route through `semantic_owners.json` and `FORMALIZATION_REGISTRY_FEDERATION_R1.json`. Machine-generated census/graph/reconciliation are projections, not authority. v1.4 `current_state.json`, `semantic_owners.json` and `AI_NATIVE_ROADMAP.md` remain historical/compatibility inputs where explicitly referenced; they are not promoted to live v1.5 currentness.
+
+## Routing
 
 - Relacje i hipotezy: [TIGER_GEOMETRY](LION/codex/TIGER_GEOMETRY.md).
 - Literalna struktura wejścia: [SCAFFOLDING_PROTOCOL](LION/codex/SCAFFOLDING_PROTOCOL.md).

@@ -11,6 +11,14 @@ from cyber_lion.contracts.governed_change_admission import (
 )
 from cyber_lion.contracts.governed_change_proposal import GovernedChangeProposal
 from cyber_lion.contracts.policy_gate import GateRequested
+from cyber_lion.contracts.architecture_formalization_manifest import (
+    ArchitectureFormalizationManifest,
+    FormalizationProposalBinding,
+)
+from cyber_lion.contracts.formalization_closure import FormalizationClosureRecord
+from cyber_lion.contracts.formalization_registry import FormalizationRegistry
+from cyber_lion.contracts.federated_formalization_binding import FederatedFormalizationBinding
+from cyber_lion.contracts.repository_expansion import FleetBaseline
 
 
 class GovernedChangeAdmissionError(RuntimeError):
@@ -128,6 +136,47 @@ class GovernedChangeAdmissionEngine:
         self._request_ids[request_id] = request.admission_request_digest
         self._consumed_sources[source_key] = request.admission_request_digest
         return request
+
+    def derive_formalized_request(
+        self,
+        *,
+        proposal: GovernedChangeProposal,
+        action_class: str,
+        trusted_repository: str,
+        formalization_manifest: ArchitectureFormalizationManifest,
+        formalization_registry: FormalizationRegistry,
+        proposal_binding: FormalizationProposalBinding,
+        formalization_closure: FormalizationClosureRecord,
+        federated_binding: FederatedFormalizationBinding,
+        fleet_baseline: FleetBaseline,
+    ) -> GovernedChangeAdmissionRequest:
+        """Derive admission only after architecture formalization closes fail-closed."""
+        self._require_sealed_proposal(proposal)
+        formalization_registry.validate()
+        formalization_manifest.validate(formalization_registry)
+        proposal_binding.validate()
+        if proposal_binding.proposal_digest != proposal.proposal_digest:
+            raise GovernedChangeAdmissionError("formalization proposal substitution denied")
+        if proposal_binding.formalization_manifest_digest != formalization_manifest.manifest_digest:
+            raise GovernedChangeAdmissionError("formalization manifest substitution denied")
+        formalization_closure.validate(formalization_manifest, formalization_registry)
+        if formalization_closure.decision != "PASS":
+            raise GovernedChangeAdmissionError("formalization closure not PASS")
+        federated_binding.validate(fleet_baseline)
+        if federated_binding.formalization_manifest_digest != formalization_manifest.manifest_digest:
+            raise GovernedChangeAdmissionError("federated formalization manifest substitution denied")
+        if trusted_repository not in {item.repository for item in federated_binding.repositories}:
+            raise GovernedChangeAdmissionError("repository outside federated formalization binding")
+        disposition = next(
+            item for item in federated_binding.repositories if item.repository == trusted_repository
+        )
+        if disposition.disposition == "NOT_APPLICABLE":
+            raise GovernedChangeAdmissionError("NOT_APPLICABLE repository cannot request architecture change admission")
+        return self.derive_request(
+            proposal=proposal,
+            action_class=action_class,
+            trusted_repository=trusted_repository,
+        )
 
     def derive_gate_request(
         self,

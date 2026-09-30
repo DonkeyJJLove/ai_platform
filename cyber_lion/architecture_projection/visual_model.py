@@ -147,8 +147,8 @@ class VisualProjectionModel:
             node.validate()
         for flow in self.flows:
             flow.validate()
-        if len(self.flows) != 9:
-            raise ValueError("all 9 canonical flows must be projectable")
+        if len(self.flows) != 10:
+            raise ValueError("all 10 canonical flows must be projectable")
         for gap in self.gaps:
             gap.validate()
         for entry in self.legend:

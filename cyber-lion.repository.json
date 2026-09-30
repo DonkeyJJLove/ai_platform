@@ -9,9 +9,24 @@
   },
   "cyber_lion": {
     "tile_id": "control-plane.cyber-lion",
-    "roles": ["EnterpriseControlPlane", "AgentFoundry", "SwarmPlanner", "FederationRegistry", "AuthorityPolicyEngine", "ProcessContractIntegration"],
-    "layers": ["INF", "SEM", "MAND"],
-    "disposition": ["KEEP", "REFINE", "INTEGRATE"]
+    "roles": [
+      "EnterpriseControlPlane",
+      "AgentFoundry",
+      "SwarmPlanner",
+      "FederationRegistry",
+      "AuthorityPolicyEngine",
+      "ProcessContractIntegration"
+    ],
+    "layers": [
+      "INF",
+      "SEM",
+      "MAND"
+    ],
+    "disposition": [
+      "KEEP",
+      "REFINE",
+      "INTEGRATE"
+    ]
   },
   "capabilities": [
     "agent.spec",
@@ -29,12 +44,30 @@
   ],
   "authority": {
     "maximum_level": "external_write",
-    "required_gates": ["cyber-lion.mand.policy", "independent.verifier"]
+    "required_gates": [
+      "cyber-lion.mand.policy",
+      "independent.verifier"
+    ]
   },
   "observability": {
-    "logs": ["mission.lifecycle", "process.transition", "swarm.lifecycle", "gate.decision", "execution.receipt", "authority.degradation"],
-    "metrics": ["swarm.count", "gate.allow", "gate.deny", "observability.coverage", "authority.expansion.count"],
-    "traces": ["evidence→process→action-intent→proposal→gate→runtime-admission→effect→observation→reconciliation→process-state"]
+    "logs": [
+      "mission.lifecycle",
+      "process.transition",
+      "swarm.lifecycle",
+      "gate.decision",
+      "execution.receipt",
+      "authority.degradation"
+    ],
+    "metrics": [
+      "swarm.count",
+      "gate.allow",
+      "gate.deny",
+      "observability.coverage",
+      "authority.expansion.count"
+    ],
+    "traces": [
+      "evidence→process→action-intent→proposal→gate→runtime-admission→effect→observation→reconciliation→process-state"
+    ]
   },
   "security": {
     "trust_boundaries": [
@@ -53,5 +86,78 @@
   "epistemic": {
     "status": "ENGINEERING_CANDIDATE",
     "confidence": 0.88
+  },
+  "architecture_knowledge": {
+    "schema_version": "1.0.0",
+    "global_owner": "DonkeyJJLove/ai_platform",
+    "semantic_exports": [
+      "architecture",
+      "federation",
+      "repository_roles",
+      "contracts",
+      "capabilities",
+      "authority",
+      "runtime",
+      "currentness",
+      "formalization",
+      "roadmap",
+      "RAG"
+    ],
+    "semantic_imports": [
+      "process_semantics",
+      "evolution_compiler",
+      "context_memory",
+      "hypothesis_research",
+      "structure_graph",
+      "supply_chain_provenance",
+      "execution_mesh",
+      "simulation",
+      "research_corpus"
+    ],
+    "repository_dependencies": [],
+    "architecture_artifacts": [
+      {
+        "path": "AGENTS.md",
+        "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/architecture/v1_5/README.md",
+        "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "cyber_lion/TARGET_ARCHITECTURE.md",
+        "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+        "currentness": "VERSIONED_STATIC"
+      },
+      {
+        "path": "AI_NATIVE_ROADMAP.md",
+        "class": "ROADMAP",
+        "currentness": "HISTORICAL"
+      },
+      {
+        "path": "LION/architecture/v1_4/federation_current_vector.json",
+        "class": "GENERATED_PROJECTION",
+        "currentness": "GENERATED"
+      }
+    ],
+    "discoverability": {
+      "entrypoint": "AGENTS.md",
+      "global_owner_route": "AGENTS.md -> LION/architecture/v1_5/README.md -> semantic owners/formalization registry",
+      "max_reads_to_global_owner": 3
+    },
+    "invalidation_triggers": [
+      "SOURCE_CHANGE",
+      "CONTRACT_CHANGE",
+      "CAPABILITY_CHANGE",
+      "SEMANTIC_OWNER_CHANGE",
+      "FLOW_CHANGE",
+      "RUNTIME_OBSERVATION",
+      "CURRENTNESS_CHANGE",
+      "RAG_RELEASE",
+      "REPOSITORY_ROLE_CHANGE",
+      "DEPENDENCY_CHANGE"
+    ]
   }
 }

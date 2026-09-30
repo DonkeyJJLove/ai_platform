@@ -1,0 +1,62 @@
+{
+  "schema": "lion.documentation-currentness-model/v1",
+  "generated_at": "2026-09-30T12:52:13.325579Z",
+  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "dimensions": {
+    "REPOSITORY_CURRENT": {
+      "owner": "exact Git observation",
+      "rule": "default branch HEAD/TREE equals bound observation"
+    },
+    "DOCUMENT_CURRENT": {
+      "owner": "artifact source binding + repository identity",
+      "rule": "document source dependencies and invalidators are current"
+    },
+    "PROJECTION_CURRENT": {
+      "owner": "deterministic generator",
+      "rule": "projection digest derives from exact current inputs"
+    },
+    "FEDERATION_CURRENT": {
+      "owner": "federation_current_vector",
+      "rule": "all required repository observations are exact and reconciled"
+    },
+    "RUNTIME_CURRENT": {
+      "owner": "runtime observation",
+      "rule": "never inferred from Git or documentation"
+    },
+    "RAG_CURRENT": {
+      "owner": "versioned RAG release/current source set",
+      "rule": "RAG is versioned knowledge, never live truth"
+    },
+    "FORMALIZATION_CURRENT": {
+      "owner": "AFM/RFS/FCR + federated binding",
+      "rule": "exact candidate and all required surfaces close without UNKNOWN"
+    }
+  },
+  "states": [
+    "CURRENT",
+    "STALE",
+    "UNKNOWN",
+    "SUPERSEDED",
+    "TARGET_ONLY",
+    "CONTRACT_ONLY",
+    "PARTIALLY_IMPLEMENTED",
+    "VERSIONED_STATIC"
+  ],
+  "invalidation_pipeline": [
+    "repository/source change",
+    "affected semantic exports/imports",
+    "global semantic owner lookup",
+    "cross-repository dependency traversal",
+    "RequiredFormalizationSet",
+    "architecture documents/projections invalidated",
+    "RAG/discoverability invalidated when required",
+    "federation vector regenerated after integration",
+    "truth carriers regenerated last"
+  ],
+  "historical_surfaces": {
+    "LION/architecture/v1_4/current_state.json": "SUPERSEDED_AS_LIVE_CURRENTNESS_OWNER",
+    "LION/architecture/v1_4/semantic_owners.json": "HISTORICAL_COMPATIBILITY_PROJECTION",
+    "AI_NATIVE_ROADMAP.md": "HISTORICAL_ROADMAP_INPUT"
+  },
+  "authority_effect": "NONE"
+}

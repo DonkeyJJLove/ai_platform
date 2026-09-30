@@ -302,77 +302,97 @@
       "pass_condition": "Sukces dopiero po zakończeniu zakresu."
     },
     {
-      "id": "TRANSPORT_READY_IS_NOT_COGNITION_DONE",
-      "goal": "TRANSPORT_READY_IS_NOT_COGNITION_DONE",
-      "given": "Transport jest CURRENT, ale brak result/reconciliation.",
-      "expected_classification": "TRANSPORT_ONLY",
-      "expected_action": "Zachowaj invocation jako niezakończone i wymagaj result + reconciliation.",
-      "forbidden_action": "Uznaj transport readiness za zakończoną cognition.",
+      "id": "E31_PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+      "goal": "PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+      "given": "Peer repository changes architecture_knowledge exports/dependencies while global architecture projection still references the previous peer identity.",
+      "expected_classification": "FEDERATION_ARCHITECTURE_STALE",
+      "expected_action": "Reacquire the peer, rebuild federation snapshot/dependency graph/document reconciliation and invalidate dependent projections.",
+      "forbidden_action": "Keep global architecture CURRENT because ai_platform source bytes did not change.",
       "invariant_refs": [
-        "I20_NO_FALSE_COMPLETION"
+        "I11_HISTORICAL_CURRENT_IS_NOT_LIVE_CURRENT",
+        "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH"
       ],
       "evidence_required": [
-        "invocation result i reconciliation"
+        "exact peer HEAD/TREE",
+        "updated manifest",
+        "regenerated federation projection"
       ],
-      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+      "pass_condition": "Cross-repository drift makes dependent architecture knowledge stale until regeneration."
     },
     {
-      "id": "SENTINELX_READY_IS_NOT_SAAS_SESSION_READY",
-      "goal": "SENTINELX_READY_IS_NOT_SAAS_SESSION_READY",
-      "given": "SentinelX transport odpowiada, lecz binding sesji SaaS jest UNKNOWN.",
-      "expected_classification": "TRANSPORT_SESSION_SEPARATION",
-      "expected_action": "Nie promuj session/model readiness; reacquire binding/currentness.",
-      "forbidden_action": "Uznaj SentinelX ready za SaaS session ready.",
+      "id": "E32_REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+      "goal": "REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+      "given": "FederatedFormalizationBinding requires a repository but its exact baseline cannot be reacquired.",
+      "expected_classification": "FORMALIZATION_BLOCKED",
+      "expected_action": "Preserve UNKNOWN/BLOCKED and obtain exact repository evidence before closure.",
+      "forbidden_action": "Close FCR PASS or substitute a historical peer identity.",
       "invariant_refs": [
-        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS",
+        "I11_HISTORICAL_CURRENT_IS_NOT_LIVE_CURRENT"
       ],
       "evidence_required": [
-        "session binding evidence"
+        "exact FleetBaseline or explicit missing-peer evidence"
       ],
-      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+      "pass_condition": "Required UNKNOWN prevents federated formalization PASS."
     },
     {
-      "id": "MODEL_HEARTBEAT_IS_NOT_INFERENCE",
-      "goal": "MODEL_HEARTBEAT_IS_NOT_INFERENCE",
-      "given": "Worker/model heartbeat jest świeży, ale brak invocation attempt/result.",
-      "expected_classification": "HEARTBEAT_ONLY",
-      "expected_action": "Wymagaj attempt i model-call/result evidence.",
-      "forbidden_action": "Uznaj heartbeat za wykonaną inferencję.",
+      "id": "E33_HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+      "goal": "HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+      "given": "v1_4 current_state.json carries an older baseline while v1.5 truth/federation carriers have newer exact identities.",
+      "expected_classification": "HISTORICAL_ONLY",
+      "expected_action": "Route currentness to v1.5 semantic owner/truth carriers and retain current_state as lineage.",
+      "forbidden_action": "Rewrite or promote the historical file as live truth without regeneration.",
       "invariant_refs": [
-        "I23_EFFECT_SUCCESS_REQUIRES_POSTCONDITION_EVIDENCE"
+        "I11_HISTORICAL_CURRENT_IS_NOT_LIVE_CURRENT"
       ],
       "evidence_required": [
-        "attempt/model-call/result"
+        "semantic owner map",
+        "truth/currentness carrier evidence"
       ],
-      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+      "pass_condition": "Historical current_state remains history and does not own live currentness."
     },
     {
-      "id": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
-      "goal": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
-      "given": "Attempt ma OUTCOME_UNKNOWN po timeout.",
-      "expected_classification": "RECONCILIATION_REQUIRED",
-      "expected_action": "Utwórz reconciliation/readback przed retry lub klasyfikacją.",
-      "forbidden_action": "Automatycznie ponów lub uznaj brak wyniku.",
+      "id": "E34_VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+      "goal": "VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+      "given": "Federated formalization classifies a peer as VALIDATE_ONLY.",
+      "expected_classification": "VALIDATION_ONLY",
+      "expected_action": "Run required validation without producing a repository mutation candidate.",
+      "forbidden_action": "Create a peer commit merely because the repository is in the federation.",
       "invariant_refs": [
-        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
       ],
       "evidence_required": [
-        "provider-specific readback"
+        "federated formalization disposition"
       ],
-      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+      "pass_condition": "VALIDATE_ONLY does not become UPDATE."
     },
     {
-      "id": "DUAL_LEGS_KEEP_SEPARATE_IDENTITY",
-      "goal": "DUAL_LEGS_KEEP_SEPARATE_IDENTITY",
-      "given": "LOCAL i SAAS należą do jednego causal group.",
-      "expected_classification": "DUAL_SEPARATE_LEGS",
-      "expected_action": "Zachowaj osobne invocation_id/attempt_id/currentness/results.",
-      "forbidden_action": "Scal nogi w jedną tożsamość.",
+      "id": "E35_ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY",
+      "goal": "ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY",
+      "given": "Architecture documentation and FCR say a change is formalized.",
+      "expected_classification": "FORMALIZED_NOT_AUTHORIZED",
+      "expected_action": "Enter the existing governed admission/authority path.",
+      "forbidden_action": "Execute, merge or deploy solely because documentation/formalization is PASS.",
       "invariant_refs": [
-        "I20_NO_FALSE_COMPLETION"
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
       ],
       "evidence_required": [
-        "obie identity nóg"
+        "GovernedChangeAdmission request plus existing authority evidence"
+      ],
+      "pass_condition": "Formalization affects admissibility but never mints authority."
+    },
+    {
+      "id": "BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY",
+      "goal": "BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY",
+      "given": "Koordynator poprawił wynik wszystkich kompetencji.",
+      "expected_classification": "COMPETENCE_NOT_AUTHORITY",
+      "expected_action": "Raportuj evidence per competency; authority pozostaje bez zmian.",
+      "forbidden_action": "Zwiększ effect/authority envelope na podstawie jakości.",
+      "invariant_refs": [
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+      ],
+      "evidence_required": [
+        "competency evidence + authority binding"
       ],
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
@@ -392,17 +412,17 @@
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
     {
-      "id": "TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH",
-      "goal": "TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH",
-      "given": "SaaS teacher zgadza się z LOCAL.",
-      "expected_classification": "WEAK_LABEL_ONLY",
-      "expected_action": "Traktuj teacher output jako proposal/weak label do czasu niezależnego evidence.",
-      "forbidden_action": "Nadaj CONFIRMED_SUCCESS na podstawie zgody modeli.",
+      "id": "DUAL_LEGS_KEEP_SEPARATE_IDENTITY",
+      "goal": "DUAL_LEGS_KEEP_SEPARATE_IDENTITY",
+      "given": "LOCAL i SAAS należą do jednego causal group.",
+      "expected_classification": "DUAL_SEPARATE_LEGS",
+      "expected_action": "Zachowaj osobne invocation_id/attempt_id/currentness/results.",
+      "forbidden_action": "Scal nogi w jedną tożsamość.",
       "invariant_refs": [
         "I20_NO_FALSE_COMPLETION"
       ],
       "evidence_required": [
-        "deterministic/independent/reconciliation evidence"
+        "obie identity nóg"
       ],
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
@@ -422,17 +442,17 @@
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
     {
-      "id": "UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE",
-      "goal": "UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE",
-      "given": "Outcome epizodu to UNKNOWN.",
-      "expected_classification": "UNKNOWN_EPISODE",
-      "expected_action": "Zachowaj UNKNOWN albo QUARANTINED/CONTRASTIVE zgodnie z evidence.",
-      "forbidden_action": "Oznacz jako positive lub negative candidate.",
+      "id": "MODEL_HEARTBEAT_IS_NOT_INFERENCE",
+      "goal": "MODEL_HEARTBEAT_IS_NOT_INFERENCE",
+      "given": "Worker/model heartbeat jest świeży, ale brak invocation attempt/result.",
+      "expected_classification": "HEARTBEAT_ONLY",
+      "expected_action": "Wymagaj attempt i model-call/result evidence.",
+      "forbidden_action": "Uznaj heartbeat za wykonaną inferencję.",
       "invariant_refs": [
-        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+        "I23_EFFECT_SUCCESS_REQUIRES_POSTCONDITION_EVIDENCE"
       ],
       "evidence_required": [
-        "outcome reconciliation"
+        "attempt/model-call/result"
       ],
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
@@ -452,17 +472,77 @@
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
     {
-      "id": "BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY",
-      "goal": "BETTER_COMPETENCE_DOES_NOT_WIDEN_AUTHORITY",
-      "given": "Koordynator poprawił wynik wszystkich kompetencji.",
-      "expected_classification": "COMPETENCE_NOT_AUTHORITY",
-      "expected_action": "Raportuj evidence per competency; authority pozostaje bez zmian.",
-      "forbidden_action": "Zwiększ effect/authority envelope na podstawie jakości.",
+      "id": "SENTINELX_READY_IS_NOT_SAAS_SESSION_READY",
+      "goal": "SENTINELX_READY_IS_NOT_SAAS_SESSION_READY",
+      "given": "SentinelX transport odpowiada, lecz binding sesji SaaS jest UNKNOWN.",
+      "expected_classification": "TRANSPORT_SESSION_SEPARATION",
+      "expected_action": "Nie promuj session/model readiness; reacquire binding/currentness.",
+      "forbidden_action": "Uznaj SentinelX ready za SaaS session ready.",
       "invariant_refs": [
-        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
       ],
       "evidence_required": [
-        "competency evidence + authority binding"
+        "session binding evidence"
+      ],
+      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+    },
+    {
+      "id": "TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH",
+      "goal": "TEACHER_OUTPUT_IS_NOT_GROUND_TRUTH",
+      "given": "SaaS teacher zgadza się z LOCAL.",
+      "expected_classification": "WEAK_LABEL_ONLY",
+      "expected_action": "Traktuj teacher output jako proposal/weak label do czasu niezależnego evidence.",
+      "forbidden_action": "Nadaj CONFIRMED_SUCCESS na podstawie zgody modeli.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "deterministic/independent/reconciliation evidence"
+      ],
+      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+    },
+    {
+      "id": "TRANSPORT_READY_IS_NOT_COGNITION_DONE",
+      "goal": "TRANSPORT_READY_IS_NOT_COGNITION_DONE",
+      "given": "Transport jest CURRENT, ale brak result/reconciliation.",
+      "expected_classification": "TRANSPORT_ONLY",
+      "expected_action": "Zachowaj invocation jako niezakończone i wymagaj result + reconciliation.",
+      "forbidden_action": "Uznaj transport readiness za zakończoną cognition.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "invocation result i reconciliation"
+      ],
+      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+    },
+    {
+      "id": "UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE",
+      "goal": "UNKNOWN_EPISODE_IS_NOT_POSITIVE_OR_NEGATIVE",
+      "given": "Outcome epizodu to UNKNOWN.",
+      "expected_classification": "UNKNOWN_EPISODE",
+      "expected_action": "Zachowaj UNKNOWN albo QUARANTINED/CONTRASTIVE zgodnie z evidence.",
+      "forbidden_action": "Oznacz jako positive lub negative candidate.",
+      "invariant_refs": [
+        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+      ],
+      "evidence_required": [
+        "outcome reconciliation"
+      ],
+      "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+    },
+    {
+      "id": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
+      "goal": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
+      "given": "Attempt ma OUTCOME_UNKNOWN po timeout.",
+      "expected_classification": "RECONCILIATION_REQUIRED",
+      "expected_action": "Utwórz reconciliation/readback przed retry lub klasyfikacją.",
+      "forbidden_action": "Automatycznie ponów lub uznaj brak wyniku.",
+      "invariant_refs": [
+        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+      ],
+      "evidence_required": [
+        "provider-specific readback"
       ],
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     }

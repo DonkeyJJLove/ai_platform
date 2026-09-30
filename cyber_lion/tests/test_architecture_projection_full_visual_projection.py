@@ -35,7 +35,7 @@ class FullVisualProjectionTests(unittest.TestCase):
         self.assertEqual(first.architecture_model_digest, architecture.digest())
         self.assertEqual(len(first.planes), 9)
         self.assertEqual(len({node.layer for node in first.nodes}), 15)
-        self.assertEqual(len(first.flows), 9)
+        self.assertEqual(len(first.flows), 10)
         self.assertEqual(len(first.legend), 8)
 
     def test_as_is_target_gap_and_f005_are_visibly_distinct(self):

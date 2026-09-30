@@ -1,0 +1,65 @@
+{
+  "schema": "lion.roadmap-reconciliation/v1",
+  "generated_at": "2026-09-30T13:22:16.185164Z",
+  "source_roadmap": "AI_NATIVE_ROADMAP.md",
+  "classification": [
+    {
+      "item": "R24/H5 predecessor debt",
+      "state": "COMPLETED",
+      "reason": "final master/runtime/federation closure evidence exists"
+    },
+    {
+      "item": "Architecture Formalization Kernel local",
+      "state": "COMPLETED",
+      "reason": "AFM/RFS/FCR fail-closed kernel exists"
+    },
+    {
+      "item": "Federated architecture knowledge foundation",
+      "state": "STILL_REQUIRED_IN_ACTIVE_CANDIDATE",
+      "reason": "this task implements first-class federation/document currentness and cross-repo binding"
+    },
+    {
+      "item": "CommunicationEnvelope",
+      "state": "PARTIAL_PRESERVED_CANDIDATE",
+      "reason": "local candidate exists but is behind current master and must be reconciled after architecture foundation"
+    },
+    {
+      "item": "MissionIntent",
+      "state": "STILL_REQUIRED",
+      "reason": "depends on communication architecture/currentness foundation"
+    },
+    {
+      "item": "QueryPlan",
+      "state": "STILL_REQUIRED",
+      "reason": "depends on intent and RAG/context contracts"
+    },
+    {
+      "item": "RagContextEnvelope",
+      "state": "STILL_REQUIRED",
+      "reason": "must follow current RAG architecture ownership"
+    },
+    {
+      "item": "ArtifactRecord",
+      "state": "STILL_REQUIRED",
+      "reason": "material identity/provenance contract remains future"
+    },
+    {
+      "item": "ArtifactMaterialization",
+      "state": "STILL_REQUIRED",
+      "reason": "depends on ArtifactRecord and authority/effect boundaries"
+    },
+    {
+      "item": "ExperimentPod",
+      "state": "STILL_REQUIRED",
+      "reason": "requires experiment/runtime isolation contract"
+    }
+  ],
+  "ordering_decision": "INSERT_ARCHITECTURE_FOUNDATION_FIRST",
+  "preserved_candidate": {
+    "branch": "mission/v15-communication-envelope-r1",
+    "head": "55ddb1e9496127ca6e23d7896463c7c12d13b118",
+    "tree": "fe2d9e5cff041ece57e9b714b9a11d7d8c4921ff",
+    "policy": "REBASE_AND_REVERIFY_OR_SELECTIVE_PORT_AFTER_FOUNDATION"
+  },
+  "authority_effect": "NONE"
+}

@@ -188,6 +188,9 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         _observed("BeanBuilderChainBinding", "cyber_lion/contracts/bean_builder_bridge.py"),
         _observed("R2E4EvidenceBinding", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"),
         _observed("FleetAggregateEffectBudget", "cyber_lion/enterprise/fleet_effect_budget.py"),
+        _observed("FederatedArchitectureKnowledge", "cyber_lion/architecture_projection/architecture_knowledge.py"),
+        _observed("FederatedFormalizationBinding", "cyber_lion/contracts/federated_formalization_binding.py"),
+        _observed("FormalizedArchitectureAdmission", "cyber_lion/enterprise/governed_change_admission.py"),
         _contract(
             "CognitiveInvocation",
             "cyber_lion/contracts/cognitive_invocation.py",

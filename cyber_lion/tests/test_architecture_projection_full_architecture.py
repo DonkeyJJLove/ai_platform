@@ -32,7 +32,7 @@ class FullArchitectureProjectionTests(unittest.TestCase):
         self.assertEqual(first.digest(), second.digest())
         self.assertEqual(first.source_tree_sha, tree)
         self.assertEqual(len({element.layer for element in first.elements}), 15)
-        self.assertEqual(len(first.flows), 9)
+        self.assertEqual(len(first.flows), 10)
 
     def test_wrong_source_tree_fails_closed(self):
         with clean_git_repo() as (repo_root, actual):

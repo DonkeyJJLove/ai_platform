@@ -13,4 +13,7 @@ class CognitiveEvolutionArchitectureTests(unittest.TestCase):
         self.assertEqual(rows["model-release"],"TRUSTED_RUNTIME")
         self.assertEqual(rows["model-call-v2"],"FLEET_AND_SWARM")
         self.assertEqual(rows["coordinator-competency"],"EVIDENCE_AND_EPISTEMIC_PLANE")
+        self.assertEqual(rows["architecture-knowledge"],"ARCHITECTURE_PROJECTION")
+        self.assertEqual(rows["formalization-kernel"],"ARCHITECTURE_PROJECTION")
+        self.assertEqual(rows["federated-formalization-binding"],"EVOLUTIONARY_EPOCH")
 if __name__=="__main__":unittest.main()

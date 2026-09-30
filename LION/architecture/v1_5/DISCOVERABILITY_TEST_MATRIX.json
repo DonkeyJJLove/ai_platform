@@ -1,0 +1,61 @@
+{
+  "schema": "lion.discoverability-test-matrix/v1",
+  "generated_at": "2026-09-30T13:22:16.185164Z",
+  "max_reads_to_global_owner": 3,
+  "probes": [
+    {
+      "id": "D01_LOCAL_ROLE",
+      "start": "peer AGENTS.md",
+      "question": "what is this repository role?",
+      "expected_route": [
+        "AGENTS.md",
+        "cyber-lion.repository.json"
+      ],
+      "result": "PASS_AFTER_PEER_MERGE"
+    },
+    {
+      "id": "D02_GLOBAL_OWNER",
+      "start": "peer AGENTS.md",
+      "question": "who owns global LION architecture?",
+      "expected_route": [
+        "AGENTS.md",
+        "cyber-lion.repository.json",
+        "ai_platform:LION/architecture/v1_5/README.md"
+      ],
+      "result": "PASS_AFTER_PEER_MERGE"
+    },
+    {
+      "id": "D03_CURRENTNESS",
+      "start": "ai_platform AGENTS.md",
+      "question": "what is live currentness owner?",
+      "expected_route": [
+        "AGENTS.md",
+        "LION/architecture/v1_5/README.md",
+        "semantic_owners.json"
+      ],
+      "result": "CANDIDATE"
+    },
+    {
+      "id": "D04_FORMALIZATION",
+      "start": "ai_platform v1.5 README",
+      "question": "how does architecture change close?",
+      "expected_route": [
+        "README.md",
+        "FORMALIZATION_REGISTRY_FEDERATION_R1.json"
+      ],
+      "result": "CANDIDATE"
+    },
+    {
+      "id": "D05_HISTORY_NOT_CURRENT",
+      "start": "AI_NATIVE_ROADMAP.md",
+      "question": "is this current frontier?",
+      "expected_route": [
+        "AI_NATIVE_ROADMAP.md",
+        "ROADMAP_RECONCILIATION.json",
+        "AI_NATIVE_ROADMAP_NEXT.md"
+      ],
+      "result": "CANDIDATE"
+    }
+  ],
+  "authority_effect": "NONE"
+}

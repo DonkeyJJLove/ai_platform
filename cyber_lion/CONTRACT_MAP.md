@@ -20,6 +20,9 @@ Integracja jest prowadzona w modelu **contracts-first**. Istniejący providerzy 
 | Structure Graph | `ai_platform` | GlitchLab + Mosaic Lab | konsumenci grafu |
 | Replay Query/Record | `ai_platform` | EGDB/event stores/revision viewer | HUD/audit |
 | Fleet Aggregate Effect Budget | `ai_platform` | `FleetEffectBudgetStore` + `RepositoryMutationPEP` | consequential repository execution |
+| Repository Architecture Knowledge | `ai_platform` schema + local repository manifests | `cyber-lion.repository.json` | fresh agents, federation projection, formalization |
+| Federated Formalization Binding | `ai_platform` | `FleetBaseline` + local AFM | formalized governed-change admission |
+| Formalized Governed Change Admission | `ai_platform` | existing `GovernedChangeAdmissionEngine` | architecture-changing candidate path |
 
 ## 1. Entity Identity Envelope
 
@@ -78,6 +81,39 @@ epistemic:
 ```
 
 Manifest ma charakter deklaratywny. Discovery powinno — tam, gdzie to możliwe — walidować go względem wykonywalnych endpointów/testów.
+
+### 2.1 Architecture knowledge extension
+
+Repository Manifest remains the local repository discovery owner. v1.5 adds an optional, backward-compatible `architecture_knowledge` section:
+
+```yaml
+architecture_knowledge:
+  schema_version: 1.0.0
+  global_owner: DonkeyJJLove/ai_platform
+  semantic_exports: []
+  semantic_imports: []
+  repository_dependencies: []
+  architecture_artifacts: []
+  discoverability:
+    entrypoint: AGENTS.md
+    global_owner_route: AGENTS.md -> cyber-lion.repository.json -> ai_platform
+    max_reads_to_global_owner: 3
+  invalidation_triggers: []
+```
+
+The extension does not make the manifest a live-truth or authority carrier. It describes repository-local architecture knowledge and the bounded route to the federation owner.
+
+### 2.2 Federated Formalization Binding
+
+`FederatedFormalizationBinding` binds an existing local Architecture Formalization Manifest to an exact `FleetBaseline`, a digest of repository dependency edges, and one disposition per registered repository:
+
+```text
+UPDATE
+VALIDATE_ONLY
+NOT_APPLICABLE
+```
+
+It cannot carry authority or execution effect. Architecture-changing admission may use `derive_formalized_request(...)`, which requires proposal binding, AFM, local FCR and the exact federation binding before delegating to the existing admission request derivation.
 
 ## 3. Capability Descriptor
 

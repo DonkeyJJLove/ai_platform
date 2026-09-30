@@ -1,0 +1,468 @@
+{
+  "manifest_id": "afm:v1.5-federated-architecture-knowledge-r1",
+  "baseline": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "branch": "master",
+    "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
+    "tree": "3378fa25e60adde0193cc189e73f780a828e65c5"
+  },
+  "source_evolution_delta": {
+    "ref": "LION/architecture/v1_5/EVOLUTION_DELTA_FEDERATED_ARCHITECTURE_R1.json",
+    "digest": "02ac8dc159813d1f534b51d7e1d35d9ba15d4f66505d0d4c94ab2987a2bc65f4"
+  },
+  "change_class": "MIXED_ARCHITECTURE",
+  "affected_concepts": [
+    "architecture",
+    "architecture_knowledge",
+    "formalization",
+    "federation",
+    "repository_roles",
+    "currentness",
+    "roadmap",
+    "RAG"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "architecture",
+      "layers": [
+        "ARCHITECTURE_PROJECTION",
+        "SYSTEM_CONTEXT"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "architecture_knowledge",
+      "layers": [
+        "ARCHITECTURE_PROJECTION",
+        "EVOLUTIONARY_EPOCH",
+        "OBSERVABILITY_AND_RECONCILIATION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "formalization",
+      "layers": [
+        "ARCHITECTURE_PROJECTION",
+        "EVOLUTIONARY_EPOCH",
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "federation",
+      "layers": [
+        "SYSTEM_CONTEXT",
+        "FLEET_AND_SWARM",
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "repository_roles",
+      "layers": [
+        "SYSTEM_CONTEXT",
+        "FLEET_AND_SWARM"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "currentness",
+      "layers": [
+        "ARCHITECTURE_PROJECTION",
+        "OBSERVABILITY_AND_RECONCILIATION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "roadmap",
+      "layers": [
+        "EVOLUTIONARY_EPOCH",
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "RAG",
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "semantic_owner_delta": [
+    {
+      "concept": "architecture_knowledge",
+      "primary": "cyber_lion/architecture_projection/architecture_knowledge.py",
+      "secondary": [
+        "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+        "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+        "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "formalization",
+      "primary": "cyber_lion/contracts/formalization_registry.py",
+      "secondary": [
+        "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+        "cyber_lion/contracts/federated_formalization_binding.py"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "currentness",
+      "primary": "LION/architecture/canonical-state-v1-3-candidate.json",
+      "secondary": [
+        "cyber_lion/architecture_projection/truth_plane.py",
+        "LION/architecture/v1_4/federation_current_vector.json",
+        "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json"
+      ],
+      "operation": "REPLACE"
+    },
+    {
+      "concept": "models",
+      "primary": "cyber_lion/contracts/model_plane_adapter.py",
+      "secondary": [
+        "cyber_lion/enterprise/models.py",
+        "cyber_lion/TARGET_ARCHITECTURE.md"
+      ],
+      "operation": "REPLACE"
+    },
+    {
+      "concept": "roadmap",
+      "primary": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "secondary": [
+        "LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+        "AI_NATIVE_ROADMAP.md"
+      ],
+      "operation": "REPLACE"
+    },
+    {
+      "concept": "RAG",
+      "primary": "LION/rag/RAG_BOOTSTRAP.json",
+      "secondary": [
+        "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
+        "LION/architecture/v1_4/history_and_supersession.md"
+      ],
+      "operation": "REPLACE"
+    },
+    {
+      "concept": "federation",
+      "primary": "LION/architecture/v1_4/federation_current_vector.json",
+      "secondary": [
+        "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+        "cyber_lion/registry/repositories.json"
+      ],
+      "operation": "UPDATE"
+    },
+    {
+      "concept": "repository_roles",
+      "primary": "cyber_lion/registry/repositories.json",
+      "secondary": [
+        "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+        "peer cyber-lion.repository.json manifests"
+      ],
+      "operation": "UPDATE"
+    }
+  ],
+  "formalization_updates": [
+    {
+      "artifact_id": "semantic-owners",
+      "operation": "UPDATE",
+      "reason": "v1.5 becomes the canonical semantic owner map and stale live owners are replaced."
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "operation": "UPDATE",
+      "reason": "FederatedFormalizationBinding, manifest architecture knowledge and formalized admission become discoverable contracts."
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "No new authority-bearing capability is introduced; existing capability catalog must remain compatible."
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "operation": "UPDATE",
+      "reason": "FLOW-10 and federation architecture knowledge elements enter the existing fifteen-layer projection."
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "operation": "UPDATE",
+      "reason": "Canonical FLOW-10 is now a source-backed architecture flow."
+    },
+    {
+      "artifact_id": "gap-projection",
+      "operation": "UPDATE",
+      "reason": "Federation architecture knowledge/formalization gaps become implemented or contract-bound."
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "operation": "UPDATE",
+      "reason": "Federation currentness, UNKNOWN, VALIDATE_ONLY and documentation-authority falsifiers are required."
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "operation": "UPDATE",
+      "reason": "Fresh reasoners route through v1.5 owner map and federation formalization registry."
+    },
+    {
+      "artifact_id": "rag-routing",
+      "operation": "UPDATE",
+      "reason": "RAG bootstrap gains bounded v1.5 federation architecture candidate inputs without replacing preferred release."
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "operation": "REGENERATE",
+      "reason": "Any integrated successor must rebind truth/currentness only after source and federation stabilization."
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "operation": "UPDATE",
+      "reason": "A federation-aware current registry supersedes the historical candidate registry as the v1.5 current registry."
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "operation": "UPDATE",
+      "reason": "v1.5 README becomes the human architecture-knowledge entrypoint."
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "operation": "ADD",
+      "reason": "Typed repository/document/projection/federation/runtime/RAG/formalization currentness becomes explicit."
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "operation": "ADD",
+      "reason": "Federation-wide architecture-bearing document inventory becomes machine-derived."
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "operation": "ADD",
+      "reason": "Functional relations between architecture knowledge artifacts become machine-derived."
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "operation": "ADD",
+      "reason": "Code/document/federation alignment becomes explicit and testable."
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "operation": "ADD",
+      "reason": "Architecture is independently reconstructed from staged source."
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "operation": "ADD",
+      "reason": "Documentation-derived architecture is independently projected for reconciliation."
+    },
+    {
+      "artifact_id": "repository-role-matrix",
+      "operation": "ADD",
+      "reason": "Repository roles, authority ceilings and semantic imports/exports become exact federation projection."
+    },
+    {
+      "artifact_id": "cross-repository-dependency-graph",
+      "operation": "ADD",
+      "reason": "Cross-repository dependency/currentness invalidation becomes explicit."
+    },
+    {
+      "artifact_id": "architecture-contradiction-register",
+      "operation": "ADD",
+      "reason": "Stale and parallel architecture claims become explicit falsification inputs."
+    },
+    {
+      "artifact_id": "semantic-owner-reconciliation",
+      "operation": "ADD",
+      "reason": "Migration from historical semantic owners to v1.5 owners becomes explicit."
+    },
+    {
+      "artifact_id": "autonomous-evolution-control-flow",
+      "operation": "ADD",
+      "reason": "Architecture documentation participation in autonomous evolution becomes machine-readable."
+    },
+    {
+      "artifact_id": "documentation-evolution-control-flow",
+      "operation": "ADD",
+      "reason": "Documentation homeostasis and carrier-last ordering become machine-readable."
+    },
+    {
+      "artifact_id": "repository-documentation-plans",
+      "operation": "ADD",
+      "reason": "Per-repository UPDATE/INTEGRATED_UPDATE ownership is explicit."
+    },
+    {
+      "artifact_id": "rag-federated-architecture-source-set",
+      "operation": "ADD",
+      "reason": "Federation architecture becomes a bounded versioned RAG candidate source set."
+    },
+    {
+      "artifact_id": "rag-federated-architecture-probes",
+      "operation": "ADD",
+      "reason": "Retrieval of owner/formalization/currentness/frontier semantics becomes falsifiable."
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "operation": "ADD",
+      "reason": "Local AFM is bound to exact FleetBaseline and per-repository dispositions."
+    },
+    {
+      "artifact_id": "fleet-baseline-instance",
+      "operation": "ADD",
+      "reason": "Exact post-peer federation baseline is bound for formalization."
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "operation": "ADD",
+      "reason": "Current frontier is derived from architecture dependencies rather than historical NEXT_STEP."
+    },
+    {
+      "artifact_id": "federation-live-snapshot",
+      "operation": "ADD",
+      "reason": "Post-peer exact federation identity becomes generator input."
+    },
+    {
+      "artifact_id": "fleet-baseline",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing FleetBaseline contract is reused rather than replaced."
+    },
+    {
+      "artifact_id": "formalization-manifest",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing AFM contract remains the local architecture change sidecar."
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing FCR remains the fail-closed local closure contract."
+    },
+    {
+      "artifact_id": "material-object-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "No material object semantics are changed by this documentation/formalization foundation."
+    },
+    {
+      "artifact_id": "rag-release",
+      "operation": "VALIDATE_ONLY",
+      "reason": "No new RAG release is promoted by this task; only candidate inputs are added."
+    }
+  ],
+  "currentness_invalidations": [
+    "architecture-contradiction-register",
+    "architecture-docs",
+    "architecture-document-census",
+    "architecture-document-graph",
+    "architecture-projection",
+    "architecture-reconciliation",
+    "autonomous-evolution-control-flow",
+    "code-derived-architecture",
+    "contract-catalog",
+    "cross-repository-dependency-graph",
+    "currentness-carriers",
+    "discoverability-bootstrap",
+    "document-derived-architecture",
+    "documentation-currentness-model",
+    "documentation-evolution-control-flow",
+    "event-state-catalog",
+    "evolution-evals",
+    "federated-formalization-binding",
+    "federation-live-snapshot",
+    "fleet-baseline-instance",
+    "formalization-registry",
+    "gap-projection",
+    "rag-federated-architecture-probes",
+    "rag-federated-architecture-source-set",
+    "rag-routing",
+    "repository-documentation-plans",
+    "repository-role-matrix",
+    "roadmap-next",
+    "semantic-owner-reconciliation",
+    "semantic-owners"
+  ],
+  "migration": {
+    "steps": [
+      "Integrate peer-local AGENTS and architecture_knowledge manifests first.",
+      "Reacquire exact ten-repository federation after peer integration.",
+      "Add federation architecture knowledge generators, current semantic owners and formalization binding in ai_platform.",
+      "Generate code/document projections, reconciliation, roadmap and bounded RAG candidate inputs.",
+      "Verify local and federated formalization on an exact source candidate before publication.",
+      "Regenerate federation vector after source stabilization and truth carriers last."
+    ],
+    "compatibility_adapter": "legacy manifests remain valid because architecture_knowledge is optional",
+    "exit_condition": "Exact candidate closes formalization, CI, federation currentness and carrier-last truth without runtime effect."
+  },
+  "rollback": {
+    "steps": [
+      "Revert task-created peer architecture-discovery commits if required.",
+      "Revert ai_platform candidate source while preserving historical v1.4 artifacts.",
+      "Restore previous verified RAG routing without promoting historical knowledge to live truth.",
+      "Recompute currentness from reverted exact source rather than manually restoring CURRENT labels."
+    ],
+    "compatibility_adapter": null,
+    "exit_condition": "No runtime, credential, deployment or authority state changed."
+  },
+  "tests_required": [
+    "test_federated_formalization_binding",
+    "test_governed_change_formalized_admission",
+    "test_federated_architecture_knowledge_projection",
+    "test_architecture_knowledge",
+    "test_repository_manifest_architecture_knowledge",
+    "test_v15_federated_architecture_discoverability",
+    "test_formalization_kernel",
+    "test_fleet_registry_pin_live_source",
+    "test_architecture_projection_full_architecture"
+  ],
+  "evals_required": [
+    "E31_PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+    "E32_REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+    "E33_HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+    "E34_VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+    "E35_ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY"
+  ],
+  "falsifiers": [
+    "A required peer remains UNKNOWN while federated formalization reports PASS.",
+    "A stale architecture document remains current after source or dependency drift.",
+    "More than one primary semantic owner exists for a required concept.",
+    "A VALIDATE_ONLY or NOT_APPLICABLE repository is mutated by formalization.",
+    "Human architecture documentation contradicts a machine contract without test failure.",
+    "Versioned RAG is treated as live truth.",
+    "Federation vector or truth carrier self-references its final identity.",
+    "Architecture documentation or formalization widens authority."
+  ],
+  "discoverability": {
+    "bootstrap_routes": [
+      "AGENTS.md -> LION/architecture/v1_5/README.md",
+      "README.md -> semantic_owners.json",
+      "README.md -> FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+      "peer AGENTS.md -> cyber-lion.repository.json -> ai_platform:LION/architecture/v1_5/README.md"
+    ],
+    "probe_questions": [
+      "Who owns global federation architecture?",
+      "How does a peer change invalidate global architecture knowledge?",
+      "What document owns live currentness in v1.5?",
+      "What must close before architecture-changing governed admission?",
+      "What is the current next frontier after architecture foundation?"
+    ],
+    "max_reads_to_owner": 3
+  },
+  "rag_delta": {
+    "required": true,
+    "record_ids": [
+      "RAG-V15-FEDERATED-ARCHITECTURE-OWNER",
+      "RAG-V15-FEDERATED-FORMALIZATION",
+      "RAG-V15-DOCUMENT-CURRENTNESS",
+      "RAG-V15-NEXT-FRONTIER"
+    ],
+    "retrieval_probes": [
+      "global federation architecture owner peer route",
+      "federated formalization FleetBaseline FCR governed admission",
+      "documentation currentness historical current_state truth carriers",
+      "next frontier communication envelope mission intent query plan"
+    ]
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "manifest_digest": "e9cd60ecb26452cc31c5d3bd3bf4d811f57feb79da7e56df032946a7ddf6154f",
+  "schema_id": "lion.architecture-formalization-manifest/v1"
+}
