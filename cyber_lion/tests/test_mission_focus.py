@@ -7,6 +7,7 @@ import json
 import sqlite3
 import sys
 import tempfile
+import urllib.request
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -129,6 +130,26 @@ class MissionFocusTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'read failure'):service.recent_process_missions()
         self.assertEqual(len(service.recent_process_missions()),1)
         self.assertEqual(len(service.recent_process_missions('all')),2)
+
+    def test_concurrent_http_recent_reads_do_not_contend_on_journal_mode(self):
+        with closing(service.connect()) as conn:
+            self.assertEqual(conn.execute('PRAGMA journal_mode').fetchone()[0].lower(),'wal')
+        server=service.FleetThreadingHTTPServer(('127.0.0.1',0),service.H)
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        url=f'http://127.0.0.1:{server.server_address[1]}/api/v3/missions/recent?view=all'
+        gate=threading.Barrier(7)
+        def read_recent():
+            gate.wait(timeout=3)
+            with urllib.request.urlopen(url,timeout=3) as response:
+                return json.load(response)
+        try:
+            with ThreadPoolExecutor(max_workers=6) as pool:
+                futures=[pool.submit(read_recent) for _ in range(6)]
+                gate.wait(timeout=3)
+                values=[future.result(timeout=4) for future in futures]
+        finally:
+            server.shutdown();server.server_close();thread.join(timeout=2)
+        self.assertEqual([len(value['missions']) for value in values],[2]*6)
 
     def test_recent_summary_matches_detail_without_full_snapshot(self):
         detail=service.process_snapshot(service.MISSION,read_only=True)
