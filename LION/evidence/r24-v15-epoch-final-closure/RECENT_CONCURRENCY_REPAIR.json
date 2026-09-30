@@ -1,0 +1,86 @@
+{
+  "schema": "lion.r24-v15.recent-concurrency-repair/v1",
+  "detected_master": {
+    "head": "d3266a4330fe9b7453258f6779b538d18a0a2f08",
+    "tree": "12a875eb9d900d8885cb7587ee717ce76e9f2b65"
+  },
+  "symptom": {
+    "http_recent_eventually_timeout": true,
+    "fresh_direct_recent_seconds": 0.014264447032473981,
+    "long_lived_service_thread_count_observed": 44,
+    "sqlite_journal_mode": "wal",
+    "sqlite_busy_timeout_ms_observed": 5000
+  },
+  "root_cause": {
+    "class": "PER_CONNECTION_WAL_MODE_RENEGOTIATION_CONTENTION",
+    "before": "connect() executed PRAGMA journal_mode=WAL for every SQLite connection, including concurrent read paths.",
+    "mechanism": "PRAGMA journal_mode is not a pure read setting. Concurrent HTTP snapshot/recent connections contended on journal-mode negotiation until client/busy timeouts.",
+    "single_flight_recent": "PRESERVED_NOT_ROOT_CAUSE"
+  },
+  "falsification_before": {
+    "clients_4": {
+      "success": 4,
+      "failed": 0,
+      "max_seconds": 1.460219785978552
+    },
+    "clients_6": {
+      "success": 0,
+      "failed": 6,
+      "max_seconds": 5.007361973985098
+    },
+    "clients_8": {
+      "success": 0,
+      "failed": 8,
+      "max_seconds": 5.010036377992947
+    },
+    "clients_10": {
+      "success": 0,
+      "failed": 10,
+      "max_seconds": 5.013094459020067
+    }
+  },
+  "repair": {
+    "connect": "No journal-mode mutation; retains foreign_keys=ON.",
+    "migrate": "Executes PRAGMA journal_mode=WAL once during startup/schema migration.",
+    "files": [
+      "tools/lion_mission_control_v3.py",
+      "LION/runtime_compat/t07/lion_mission_control_v3.py"
+    ]
+  },
+  "falsification_after": {
+    "clients_4": {
+      "success": 4,
+      "failed": 0,
+      "max_seconds": 0.08957562100840732
+    },
+    "clients_6": {
+      "success": 6,
+      "failed": 0,
+      "max_seconds": 0.22907376301009208
+    },
+    "clients_8": {
+      "success": 8,
+      "failed": 0,
+      "max_seconds": 0.23353927704738453
+    },
+    "clients_10": {
+      "success": 10,
+      "failed": 0,
+      "max_seconds": 0.34368042298592627
+    },
+    "stress_200_concurrency_32": {
+      "success": 200,
+      "failed": 0,
+      "elapsed_seconds": 9.215309069026262,
+      "max_request_seconds": 1.980201597965788,
+      "p95_seconds": 1.9484615912049776,
+      "mission_count_each": 30
+    }
+  },
+  "package_identity": {
+    "files": 34,
+    "mission_control_v3_sha256": "6141f2c79a5fe48fcdefd843ca267205c8e5ec50bb3ec19b4bf68aa3dcf51ea3",
+    "firefox_relay_sha256": "be178c21e5f5ee8cffb7afa2b902fd622351f4dca84bc0f2384f1cb6ac7daf03"
+  },
+  "authority_effect": "NONE"
+}

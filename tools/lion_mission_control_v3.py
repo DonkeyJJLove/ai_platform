@@ -157,7 +157,7 @@ def mediator_authorized(headers):
 
 def now():return datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
 def connect():
- DB.parent.mkdir(parents=True,exist_ok=True);c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute('PRAGMA journal_mode=WAL');c.execute('PRAGMA foreign_keys=ON');return c
+ DB.parent.mkdir(parents=True,exist_ok=True);c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute('PRAGMA foreign_keys=ON');return c
 
 def import_legacy(c):
  if c.execute("SELECT 1 FROM mission_meta WHERE key='runtime_mission_reset' AND value='1'").fetchone():return
@@ -170,7 +170,7 @@ def import_legacy(c):
   except Exception:continue
 
 def migrate():
- c=connect();c.executescript('''
+ c=connect();c.execute('PRAGMA journal_mode=WAL');c.executescript('''
  CREATE TABLE IF NOT EXISTS missions(mission_id TEXT PRIMARY KEY,title TEXT NOT NULL,adapter TEXT NOT NULL,spec_digest TEXT NOT NULL,source_head TEXT,source_tree TEXT,namespace TEXT,state TEXT NOT NULL,runtime_state TEXT,logical_count INTEGER NOT NULL,material_target INTEGER NOT NULL,materialized INTEGER NOT NULL DEFAULT 0,ready INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,authorized_at TEXT,updated_at TEXT NOT NULL,last_error TEXT,spec_json TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS logical_drones(mission_id TEXT NOT NULL,logical_id TEXT NOT NULL,role TEXT NOT NULL,material_target INTEGER NOT NULL,materialized INTEGER NOT NULL DEFAULT 0,ready INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(mission_id,logical_id));
  CREATE TABLE IF NOT EXISTS material_workers(mission_id TEXT NOT NULL,pod_name TEXT NOT NULL,pod_uid TEXT,logical_id TEXT,phase TEXT,ready INTEGER NOT NULL,restarts INTEGER NOT NULL,pod_ip TEXT,observed_at TEXT NOT NULL,PRIMARY KEY(mission_id,pod_name));
