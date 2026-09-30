@@ -29,6 +29,7 @@ ARTIFACT_CLASSES = frozenset({
     "SOURCE", "CONTRACT", "DERIVED_PROJECTION", "CURRENTNESS_CARRIER",
     "RAG_ROUTE", "RAG_RELEASE", "EVAL", "DOCUMENTATION", "RESEARCH_ARTIFACT",
 })
+ARTIFACT_SCOPES = frozenset({"LOCAL", "FEDERATION"})
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$")
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -105,6 +106,10 @@ class FormalizationArtifact:
     consumers: Tuple[str, ...]
     currentness_mode: str
     artifact_class: str
+    repository: str = "DonkeyJJLove/ai_platform"
+    scope: str = "LOCAL"
+    dependency_refs: Tuple[str, ...] = ()
+    invalidates: Tuple[str, ...] = ()
 
     def validate(self) -> "FormalizationArtifact":
         _id(self.artifact_id, "artifact_id")
@@ -126,7 +131,25 @@ class FormalizationArtifact:
             raise FormalizationRegistryError("unknown currentness_mode")
         if self.artifact_class not in ARTIFACT_CLASSES:
             raise FormalizationRegistryError("unknown artifact_class")
+        validate_repository(self.repository, "repository")
+        if self.scope not in ARTIFACT_SCOPES:
+            raise FormalizationRegistryError("unknown artifact scope")
+        _tuple_text(self.dependency_refs, "dependency_refs")
+        _tuple_text(self.invalidates, "invalidates")
         return self
+
+    def canonical_dict(self) -> dict[str, Any]:
+        self.validate()
+        data = asdict(self)
+        if data.get("repository") == "DonkeyJJLove/ai_platform":
+            data.pop("repository", None)
+        if data.get("scope") == "LOCAL":
+            data.pop("scope", None)
+        if not data.get("dependency_refs"):
+            data.pop("dependency_refs", None)
+        if not data.get("invalidates"):
+            data.pop("invalidates", None)
+        return data
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> "FormalizationArtifact":
@@ -136,7 +159,9 @@ class FormalizationArtifact:
             generator=value.get("generator"), source_dependencies=tuple(value.get("source_dependencies", ())),
             refresh_triggers=tuple(value.get("refresh_triggers", ())), validation_refs=tuple(value.get("validation_refs", ())),
             consumers=tuple(value.get("consumers", ())), currentness_mode=value["currentness_mode"],
-            artifact_class=value["artifact_class"],
+            artifact_class=value["artifact_class"], repository=value.get("repository", "DonkeyJJLove/ai_platform"),
+            scope=value.get("scope", "LOCAL"), dependency_refs=tuple(value.get("dependency_refs", ())),
+            invalidates=tuple(value.get("invalidates", ())),
         ).validate()
 
 
@@ -150,9 +175,13 @@ class FormalizationRegistry:
     schema_id: str = SCHEMA_ID
 
     def canonical_payload(self) -> dict[str, Any]:
-        data = asdict(self)
-        data.pop("registry_digest", None)
-        return data
+        return {
+            "registry_id": self.registry_id,
+            "architecture_epoch": self.architecture_epoch,
+            "entries": [entry.canonical_dict() for entry in self.entries],
+            "authority_effect": self.authority_effect,
+            "schema_id": self.schema_id,
+        }
 
     def compute_digest(self) -> str:
         return domain_digest(DIGEST_DOMAIN, self.canonical_payload())
@@ -176,6 +205,18 @@ class FormalizationRegistry:
             raise FormalizationRegistryError("duplicate artifact_id")
         if len(paths) != len(set(paths)):
             raise FormalizationRegistryError("duplicate artifact path")
+        known_ids = set(ids)
+        for entry in self.entries:
+            for ref in entry.dependency_refs:
+                if ref not in known_ids:
+                    raise FormalizationRegistryError(
+                        f"artifact {entry.artifact_id} dependency_ref unknown: {ref}"
+                    )
+            for ref in entry.invalidates:
+                if ref not in known_ids:
+                    raise FormalizationRegistryError(
+                        f"artifact {entry.artifact_id} invalidates unknown: {ref}"
+                    )
         if require_digest:
             validate_sha256(self.registry_digest, "registry_digest")
             if self.registry_digest != self.compute_digest():

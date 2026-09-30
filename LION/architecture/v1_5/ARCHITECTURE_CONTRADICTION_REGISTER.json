@@ -1,0 +1,103 @@
+{
+  "schema": "lion.architecture-contradiction-register/v1",
+  "generated_at": "2026-09-30T12:52:13.325579Z",
+  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "contradictions": [
+    {
+      "id": "C01_STALE_CURRENT_STATE_PRIMARY_OWNER",
+      "classification": "DOCUMENTATION_STALE",
+      "severity": "HIGH",
+      "concepts": [
+        "currentness",
+        "models"
+      ],
+      "claim": "LION/architecture/v1_4/current_state.json is still referenced as a primary semantic owner despite an older exact baseline and explicit historical audit classifying regeneration as required.",
+      "evidence_refs": [
+        "LION/architecture/v1_4/current_state.json",
+        "LION/architecture/v1_4/DOCUMENTATION_CURRENTNESS_AUDIT.md",
+        "LION/architecture/v1_5/semantic_owners.json"
+      ],
+      "resolution": "SUPERSEDE_AS_LIVE_OWNER_KEEP_AS_HISTORY"
+    },
+    {
+      "id": "C02_PARALLEL_SEMANTIC_OWNER_SURFACES",
+      "classification": "PARALLEL_OWNER_CONFLICT",
+      "severity": "MEDIUM",
+      "concepts": [
+        "semantic_owners"
+      ],
+      "claim": "v1_4 and v1_5 semantic owner maps contain the same owner set but have different currentness metadata; formalization registry historically points to v1_4 while v1.5 discovery points to v1_5.",
+      "evidence_refs": [
+        "LION/architecture/v1_4/semantic_owners.json",
+        "LION/architecture/v1_5/semantic_owners.json",
+        "LION/architecture/v1_5/FORMALIZATION_REGISTRY_CANDIDATE.json"
+      ],
+      "resolution": "V1_5_CANONICAL_V1_4_HISTORICAL_COMPATIBILITY"
+    },
+    {
+      "id": "C03_WRITEUPS_MANIFEST_ABSENCE_HISTORY",
+      "classification": "ALIGNED_BUT_HISTORICAL",
+      "severity": "MEDIUM",
+      "concepts": [
+        "repository_roles",
+        "federation"
+      ],
+      "claim": "Historical writeups documentation and old tests state that cyber-lion.repository.json is absent, while live writeups now has a manifest.",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:LION_ARCHITECTURE_ROLE_v1_4.md",
+        "cyber_lion/tests/test_fleet_registry_pin_materialization.py",
+        "cyber_lion/tests/test_fleet_registry_pin_live_source.py",
+        "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json"
+      ],
+      "resolution": "REPAIR_TEST_EXPECTATION_PRESERVE_HISTORY"
+    },
+    {
+      "id": "C04_AI_PLATFORM_LIVE_MANIFEST_PRE_FOUNDATION",
+      "classification": "CODE_UNDOCUMENTED",
+      "severity": "EXPECTED_TRANSITION",
+      "concepts": [
+        "architecture_knowledge"
+      ],
+      "claim": "At post-peer live reacquisition ai_platform/master does not yet contain architecture_knowledge because the global foundation exists only in the active candidate.",
+      "evidence_refs": [
+        "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+        "cyber-lion.repository.json"
+      ],
+      "resolution": "CLOSE_ON_AI_PLATFORM_MERGE"
+    },
+    {
+      "id": "C05_FORMALIZATION_LOCAL_ONLY",
+      "classification": "FUNCTIONAL_UNDOCUMENTED",
+      "severity": "HIGH",
+      "concepts": [
+        "formalization",
+        "federation"
+      ],
+      "claim": "FormalizationRegistry/AFM/RFS/FCR are strong for one repository but do not bind a multi-repository baseline or per-repository dispositions.",
+      "evidence_refs": [
+        "cyber_lion/contracts/formalization_registry.py",
+        "cyber_lion/contracts/architecture_formalization_manifest.py",
+        "cyber_lion/architecture_projection/formalization.py",
+        "cyber_lion/contracts/formalization_closure.py"
+      ],
+      "resolution": "FEDERATED_FORMALIZATION_BINDING"
+    },
+    {
+      "id": "C06_FORMALIZATION_NOT_ENFORCED_BY_ADMISSION",
+      "classification": "DECLARED_NOT_FUNCTIONAL",
+      "severity": "HIGH",
+      "concepts": [
+        "formalization",
+        "governed_change_admission"
+      ],
+      "claim": "Before this candidate, FormalizationProposalBinding/FCR were not consumed by GovernedChangeAdmissionEngine.",
+      "evidence_refs": [
+        "cyber_lion/enterprise/governed_change_admission.py",
+        "cyber_lion/contracts/formalization_closure.py"
+      ],
+      "resolution": "FORMALIZED_ADMISSION_PATH"
+    }
+  ],
+  "required_unknowns": [],
+  "authority_effect": "NONE"
+}

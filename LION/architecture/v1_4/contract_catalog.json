@@ -1,9 +1,9 @@
 {
   "schema": "lion.documentation.contract-catalog.v1",
-  "baseline_head": "67a4f8243aa6805e47035e572bd458f73fd0b358",
+  "baseline_head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
   "reconciliation": {
-    "process_epoch": "V1_5_COGNITIVE_EVOLUTION_CANDIDATE",
-    "candidate_source_observation": "22f356ba537e1a3caef8e113e2dff48709e24061",
+    "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
+    "candidate_source_observation": "ACTIVE_CANDIDATE_PRE_CLOSURE",
     "authority_effect": "NONE"
   },
   "record_semantics": "Each complete contract record is record_defaults overlaid by the contract-specific fields below.",
@@ -23,20 +23,6 @@
     "target_successors": []
   },
   "contracts": [
-    {
-      "contract_id": "action-spec",
-      "canonical_path": "cyber_lion/contracts/v1/action_spec.schema.json",
-      "schema_or_runtime_type": "JSON Schema",
-      "version": "1.0.0",
-      "owner": "Action intent/IR",
-      "invariants": [
-        "wire/runtime ActionProposal divergence preserved"
-      ],
-      "compatibility_status": "CURRENT_WITH_EXPLICIT_CONTRADICTIONS",
-      "known_contradictions": [
-        "wire schema requires schema_version while runtime ActionProposal dataclass lacks it; NO_WIRE_SCHEMA_CONFORMANCE_CLAIM"
-      ]
-    },
     {
       "contract_id": "action-proposal-runtime",
       "canonical_path": "cyber_lion/enterprise/control_plane.py",
@@ -72,22 +58,304 @@
       ]
     },
     {
-      "contract_id": "process-ir",
-      "canonical_path": "cyber_lion/contracts/process_ir.py",
-      "schema_or_runtime_type": "Python contract + cyber_lion/contracts/v1/process_ir.schema.json",
+      "contract_id": "action-spec",
+      "canonical_path": "cyber_lion/contracts/v1/action_spec.schema.json",
+      "schema_or_runtime_type": "JSON Schema",
       "version": "1.0.0",
-      "owner": "Process plane",
+      "owner": "Action intent/IR",
       "invariants": [
-        "deterministic canonical digest",
-        "scope cannot widen",
-        "ACTION_REQUIRED requires evidence/currentness/authority requirements",
-        "non-idempotent retries require RECONCILE_FIRST",
-        "no grant/PDP/runtime/provider/effect operator"
+        "wire/runtime ActionProposal divergence preserved"
       ],
-      "compatibility_status": "R23_CONSOLIDATED_CANDIDATE_NON_EFFECTFUL",
+      "compatibility_status": "CURRENT_WITH_EXPLICIT_CONTRADICTIONS",
+      "known_contradictions": [
+        "wire schema requires schema_version while runtime ActionProposal dataclass lacks it; NO_WIRE_SCHEMA_CONFORMANCE_CLAIM"
+      ]
+    },
+    {
+      "contract_id": "bean",
+      "canonical_path": "cyber_lion/contracts/bean.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Bean",
+      "invariants": [
+        "v1.3 BeanSpec semantics carried forward; no epoch-only schema bump"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "bean-composition",
+      "canonical_path": "cyber_lion/contracts/bean_composition.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Composition",
+      "invariants": [
+        "composition contract"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "capability-need",
+      "canonical_path": "cyber_lion/contracts/capability_need.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Capability planning",
+      "invariants": [
+        "capability requirement"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "cognitive-invocation",
+      "canonical_path": "cyber_lion/contracts/cognitive_invocation.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.cognitive-invocation/v1",
+      "owner": "CognitiveInvocation",
+      "invariants": [
+        "provider != endpoint != session != invocation != transport != result",
+        "cognitive invocation != authority activation",
+        "LOCAL and SAAS legs retain separate identities",
+        "receipt != reconciled result"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
       "tests": [
-        "test_process_ir.ProcessIRTests",
-        "test_lpcl_dynamic_closure.LPCLDynamicClosureCounterexamples"
+        "test_cognitive_invocation_contract.CognitiveInvocationTests"
+      ]
+    },
+    {
+      "contract_id": "complete-mediation",
+      "canonical_path": "cyber_lion/contracts/complete_mediation.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Complete mediation",
+      "invariants": [
+        "global completeness remains UNKNOWN despite contract presence"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "coordinator-competency",
+      "canonical_path": "cyber_lion/contracts/coordinator_competency.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "v1.5 candidate",
+      "owner": "CoordinatorCompetencyProfile",
+      "invariants": [
+        "each competency has separate task/evidence",
+        "no aggregate coordinator quality score",
+        "competence cannot widen authority"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_coordinator_competency.CoordinatorCompetencyTests"
+      ]
+    },
+    {
+      "contract_id": "evidence-bound-learning-episode",
+      "canonical_path": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.evidence-bound-learning-episode/v1",
+      "owner": "GEP / EVALUATION-LEARNING",
+      "invariants": [
+        "post-decision evidence may label outcome but cannot enter pre-decision input",
+        "teacher output is not ground truth",
+        "UNKNOWN is not positive or negative",
+        "episode projects into existing EvolutionaryRnD evidence"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_evidence_bound_learning_episode.EBLETests"
+      ]
+    },
+    {
+      "contract_id": "evolutionary-epoch",
+      "canonical_path": "cyber_lion/contracts/evolutionary_epoch.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Evolutionary epoch",
+      "invariants": [
+        "epoch state transition is not authority or effect"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "evolutionary-rnd",
+      "canonical_path": "cyber_lion/contracts/evolutionary_rnd.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "1.0.0",
+      "owner": "Evidence and epistemic R&D",
+      "invariants": [
+        "EvidenceObservation/Hypothesis/Experiment/Falsification/Promotion/Memory/Delta remain non-authoritative"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "executor-provisioning",
+      "canonical_path": "cyber_lion/contracts/executor_provisioning.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Runtime identity/provisioning",
+      "invariants": [
+        "trusted provisioned executor"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "federated-formalization-binding",
+      "canonical_path": "cyber_lion/contracts/federated_formalization_binding.py",
+      "schema_or_runtime_type": "Python contract / lion.federated-formalization-binding/v1",
+      "version": "1.0.0",
+      "owner": "Architecture Formalization Kernel",
+      "invariants": [
+        "binds one local AFM to an exact FleetBaseline",
+        "binds exact cross-repository dependency graph digest",
+        "covers every federation repository exactly once",
+        "per-repository disposition is UPDATE|VALIDATE_ONLY|NOT_APPLICABLE",
+        "UPDATE requires formalization artifacts",
+        "NOT_APPLICABLE cannot require artifacts",
+        "cannot carry authority or execution effect"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_federated_formalization_binding.FederatedFormalizationBindingTests",
+        "test_governed_change_formalized_admission.GovernedChangeFormalizedAdmissionTests"
+      ]
+    },
+    {
+      "contract_id": "fleet-effect-budget",
+      "canonical_path": "cyber_lion/contracts/fleet_effect_budget.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Fleet effect budget",
+      "invariants": [
+        "budget is not authority"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "fleet-runtime-trust",
+      "canonical_path": "cyber_lion/contracts/fleet_runtime_trust.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Fleet runtime trust",
+      "invariants": [
+        "authority remains externally bounded"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "formalized-governed-change-admission",
+      "canonical_path": "cyber_lion/enterprise/governed_change_admission.py",
+      "schema_or_runtime_type": "GovernedChangeAdmissionEngine.derive_formalized_request",
+      "version": "v1.5 candidate",
+      "owner": "Governed change admission",
+      "invariants": [
+        "proposal digest must match FormalizationProposalBinding",
+        "AFM digest must match proposal binding and federated binding",
+        "local FormalizationClosureRecord decision must be PASS",
+        "FleetBaseline and dependency graph digests must match federated binding",
+        "target repository must exist in federated binding",
+        "NOT_APPLICABLE repository cannot request architecture-change admission",
+        "successful path delegates to existing derive_request and does not mint authority"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_FAIL_CLOSED_EXTENSION",
+      "tests": [
+        "test_governed_change_formalized_admission.GovernedChangeFormalizedAdmissionTests",
+        "test_governed_change_admission.GovernedChangeAdmissionTests"
+      ]
+    },
+    {
+      "contract_id": "governed-change-admission",
+      "canonical_path": "cyber_lion/contracts/governed_change_admission.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Governed change admission",
+      "invariants": [
+        "admission request derives from sealed proposal",
+        "admission request is non-effectful"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "governed-change-proposal",
+      "canonical_path": "cyber_lion/contracts/governed_change_proposal.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Governed self-implementation",
+      "invariants": [
+        "proposal is candidate only",
+        "proposal does not mint authority"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "lpcl-surface",
+      "canonical_path": "cyber_lion/process_language/lpcl.py",
+      "schema_or_runtime_type": "strict text syntax over CanonicalProcessIR",
+      "version": "LPCL 1.0",
+      "owner": "Process language",
+      "invariants": [
+        "strict statement order/set",
+        "strict RFC8259 JSON",
+        "duplicate keys/statements denied",
+        "parsing produces Process IR only",
+        "historical RUN remains data"
+      ],
+      "compatibility_status": "R23_CONSOLIDATED_CANDIDATE_NON_EXECUTING",
+      "tests": [
+        "test_lpcl.LPCLTests",
+        "test_lpcl_negative_corpus.LPCLNegativeCorpusTests"
+      ]
+    },
+    {
+      "contract_id": "model-call-v2",
+      "canonical_path": "cyber_lion/contracts/model_call_v2.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.model-call/v2",
+      "owner": "ModelCallV2",
+      "invariants": [
+        "v1 storage remains unchanged",
+        "SentinelX-mediated SaaS transport is representable",
+        "missing v1 row != proof of no SaaS invocation"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_COMPATIBLE_SUCCESSOR",
+      "historical_predecessors": [
+        "lion.model-call/v1"
+      ],
+      "tests": [
+        "test_model_call_v2.ModelCallV2Tests"
+      ]
+    },
+    {
+      "contract_id": "model-plane-adapter",
+      "canonical_path": "cyber_lion/contracts/model_plane_adapter.py",
+      "schema_or_runtime_type": "Python contracts / Protocol",
+      "version": "R22F source",
+      "owner": "Model plane",
+      "invariants": [
+        "provider-independent request/candidate identities",
+        "ASTRA is compatibility target only",
+        "ASTRA runtime status NOT_OBSERVED",
+        "candidate cannot claim authority",
+        "no endpoint secret provider execution deployment or runtime effect"
+      ],
+      "compatibility_status": "CANDIDATE_CONTRACT_INTEGRATED_RUNTIME_NOT_OBSERVED",
+      "tests": [
+        "test_action_runtime_binding_and_model_plane.ModelPlaneAdapterTests"
+      ]
+    },
+    {
+      "contract_id": "model-release",
+      "canonical_path": "cyber_lion/contracts/model_release.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.model-release/v1",
+      "owner": "ModelRelease",
+      "invariants": [
+        "release identity is immutable",
+        "lifecycle state is outside release digest",
+        "promotion does not mint authority"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_model_release.ModelReleaseTests"
       ]
     },
     {
@@ -127,23 +395,63 @@
       ]
     },
     {
-      "contract_id": "lpcl-surface",
-      "canonical_path": "cyber_lion/process_language/lpcl.py",
-      "schema_or_runtime_type": "strict text syntax over CanonicalProcessIR",
-      "version": "LPCL 1.0",
-      "owner": "Process language",
+      "contract_id": "process-ir",
+      "canonical_path": "cyber_lion/contracts/process_ir.py",
+      "schema_or_runtime_type": "Python contract + cyber_lion/contracts/v1/process_ir.schema.json",
+      "version": "1.0.0",
+      "owner": "Process plane",
       "invariants": [
-        "strict statement order/set",
-        "strict RFC8259 JSON",
-        "duplicate keys/statements denied",
-        "parsing produces Process IR only",
-        "historical RUN remains data"
+        "deterministic canonical digest",
+        "scope cannot widen",
+        "ACTION_REQUIRED requires evidence/currentness/authority requirements",
+        "non-idempotent retries require RECONCILE_FIRST",
+        "no grant/PDP/runtime/provider/effect operator"
       ],
-      "compatibility_status": "R23_CONSOLIDATED_CANDIDATE_NON_EXECUTING",
+      "compatibility_status": "R23_CONSOLIDATED_CANDIDATE_NON_EFFECTFUL",
       "tests": [
-        "test_lpcl.LPCLTests",
-        "test_lpcl_negative_corpus.LPCLNegativeCorpusTests"
+        "test_process_ir.ProcessIRTests",
+        "test_lpcl_dynamic_closure.LPCLDynamicClosureCounterexamples"
       ]
+    },
+    {
+      "contract_id": "production-mediation",
+      "canonical_path": "cyber_lion/contracts/production_mediation.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Production mediation",
+      "invariants": [
+        "code presence is not production evidence"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "repository-manifest-architecture-knowledge",
+      "canonical_path": "cyber_lion/contracts/v1/repository_manifest.schema.json",
+      "schema_or_runtime_type": "JSON Schema extension on repository-manifest/v1",
+      "version": "architecture_knowledge/1.0.0",
+      "owner": "Repository discovery / federation architecture knowledge",
+      "invariants": [
+        "extension is optional and backward-compatible with legacy manifests",
+        "global_owner is DonkeyJJLove/ai_platform",
+        "repository-local semantic exports/imports and architecture artifacts are explicit",
+        "discoverability path is bounded",
+        "manifest does not mint authority or live currentness"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_BACKWARD_COMPATIBLE",
+      "tests": [
+        "test_repository_manifest_architecture_knowledge.RepositoryManifestArchitectureKnowledgeTests"
+      ]
+    },
+    {
+      "contract_id": "runtime-currentness",
+      "canonical_path": "cyber_lion/contracts/runtime_currentness.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "source",
+      "owner": "Effect-time currentness",
+      "invariants": [
+        "revalidation before effect"
+      ],
+      "compatibility_status": "CURRENT_SOURCE_BOUND"
     },
     {
       "contract_id": "runtime-enforcement",
@@ -175,17 +483,6 @@
       "compatibility_status": "CURRENT_SOURCE_BOUND"
     },
     {
-      "contract_id": "runtime-currentness",
-      "canonical_path": "cyber_lion/contracts/runtime_currentness.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Effect-time currentness",
-      "invariants": [
-        "revalidation before effect"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
       "contract_id": "runtime-reconciliation",
       "canonical_path": "cyber_lion/contracts/runtime_reconciliation.py",
       "schema_or_runtime_type": "Python contracts",
@@ -195,243 +492,6 @@
         "independent observer trust"
       ],
       "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "model-plane-adapter",
-      "canonical_path": "cyber_lion/contracts/model_plane_adapter.py",
-      "schema_or_runtime_type": "Python contracts / Protocol",
-      "version": "R22F source",
-      "owner": "Model plane",
-      "invariants": [
-        "provider-independent request/candidate identities",
-        "ASTRA is compatibility target only",
-        "ASTRA runtime status NOT_OBSERVED",
-        "candidate cannot claim authority",
-        "no endpoint secret provider execution deployment or runtime effect"
-      ],
-      "compatibility_status": "CANDIDATE_CONTRACT_INTEGRATED_RUNTIME_NOT_OBSERVED",
-      "tests": [
-        "test_action_runtime_binding_and_model_plane.ModelPlaneAdapterTests"
-      ]
-    },
-    {
-      "contract_id": "bean",
-      "canonical_path": "cyber_lion/contracts/bean.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Bean",
-      "invariants": [
-        "v1.3 BeanSpec semantics carried forward; no epoch-only schema bump"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "bean-composition",
-      "canonical_path": "cyber_lion/contracts/bean_composition.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Composition",
-      "invariants": [
-        "composition contract"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "capability-need",
-      "canonical_path": "cyber_lion/contracts/capability_need.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Capability planning",
-      "invariants": [
-        "capability requirement"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "executor-provisioning",
-      "canonical_path": "cyber_lion/contracts/executor_provisioning.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Runtime identity/provisioning",
-      "invariants": [
-        "trusted provisioned executor"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "complete-mediation",
-      "canonical_path": "cyber_lion/contracts/complete_mediation.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Complete mediation",
-      "invariants": [
-        "global completeness remains UNKNOWN despite contract presence"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "production-mediation",
-      "canonical_path": "cyber_lion/contracts/production_mediation.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Production mediation",
-      "invariants": [
-        "code presence is not production evidence"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "fleet-runtime-trust",
-      "canonical_path": "cyber_lion/contracts/fleet_runtime_trust.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Fleet runtime trust",
-      "invariants": [
-        "authority remains externally bounded"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "fleet-effect-budget",
-      "canonical_path": "cyber_lion/contracts/fleet_effect_budget.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Fleet effect budget",
-      "invariants": [
-        "budget is not authority"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "evolutionary-rnd",
-      "canonical_path": "cyber_lion/contracts/evolutionary_rnd.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "1.0.0",
-      "owner": "Evidence and epistemic R&D",
-      "invariants": [
-        "EvidenceObservation/Hypothesis/Experiment/Falsification/Promotion/Memory/Delta remain non-authoritative"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "evolutionary-epoch",
-      "canonical_path": "cyber_lion/contracts/evolutionary_epoch.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Evolutionary epoch",
-      "invariants": [
-        "epoch state transition is not authority or effect"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "governed-change-proposal",
-      "canonical_path": "cyber_lion/contracts/governed_change_proposal.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Governed self-implementation",
-      "invariants": [
-        "proposal is candidate only",
-        "proposal does not mint authority"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "governed-change-admission",
-      "canonical_path": "cyber_lion/contracts/governed_change_admission.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "source",
-      "owner": "Governed change admission",
-      "invariants": [
-        "admission request derives from sealed proposal",
-        "admission request is non-effectful"
-      ],
-      "compatibility_status": "CURRENT_SOURCE_BOUND"
-    },
-    {
-      "contract_id": "cognitive-invocation",
-      "canonical_path": "cyber_lion/contracts/cognitive_invocation.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "lion.cognitive-invocation/v1",
-      "owner": "CognitiveInvocation",
-      "invariants": [
-        "provider != endpoint != session != invocation != transport != result",
-        "cognitive invocation != authority activation",
-        "LOCAL and SAAS legs retain separate identities",
-        "receipt != reconciled result"
-      ],
-      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
-      "tests": [
-        "test_cognitive_invocation_contract.CognitiveInvocationTests"
-      ]
-    },
-    {
-      "contract_id": "evidence-bound-learning-episode",
-      "canonical_path": "cyber_lion/contracts/evidence_bound_learning_episode.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "lion.evidence-bound-learning-episode/v1",
-      "owner": "GEP / EVALUATION-LEARNING",
-      "invariants": [
-        "post-decision evidence may label outcome but cannot enter pre-decision input",
-        "teacher output is not ground truth",
-        "UNKNOWN is not positive or negative",
-        "episode projects into existing EvolutionaryRnD evidence"
-      ],
-      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
-      "tests": [
-        "test_evidence_bound_learning_episode.EBLETests"
-      ]
-    },
-    {
-      "contract_id": "model-release",
-      "canonical_path": "cyber_lion/contracts/model_release.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "lion.model-release/v1",
-      "owner": "ModelRelease",
-      "invariants": [
-        "release identity is immutable",
-        "lifecycle state is outside release digest",
-        "promotion does not mint authority"
-      ],
-      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
-      "tests": [
-        "test_model_release.ModelReleaseTests"
-      ]
-    },
-    {
-      "contract_id": "model-call-v2",
-      "canonical_path": "cyber_lion/contracts/model_call_v2.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "lion.model-call/v2",
-      "owner": "ModelCallV2",
-      "invariants": [
-        "v1 storage remains unchanged",
-        "SentinelX-mediated SaaS transport is representable",
-        "missing v1 row != proof of no SaaS invocation"
-      ],
-      "compatibility_status": "V1_5_CANDIDATE_COMPATIBLE_SUCCESSOR",
-      "historical_predecessors": [
-        "lion.model-call/v1"
-      ],
-      "tests": [
-        "test_model_call_v2.ModelCallV2Tests"
-      ]
-    },
-    {
-      "contract_id": "coordinator-competency",
-      "canonical_path": "cyber_lion/contracts/coordinator_competency.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "v1.5 candidate",
-      "owner": "CoordinatorCompetencyProfile",
-      "invariants": [
-        "each competency has separate task/evidence",
-        "no aggregate coordinator quality score",
-        "competence cannot widen authority"
-      ],
-      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
-      "tests": [
-        "test_coordinator_competency.CoordinatorCompetencyTests"
-      ]
     }
   ]
 }

@@ -1,11 +1,11 @@
 {
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
-  "process_epoch": "R24_V15_EPOCH_CLOSED",
-  "generated_at": "2026-09-30T10:27:19.860789Z",
-  "registry_source": "cyber_lion/registry/repositories.json@87582f4c19726a2fb049495cac3d86102bf6db4b",
+  "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE_CLOSED",
+  "generated_at": "2026-09-30T16:11:25.616135Z",
+  "registry_source": "cyber_lion/registry/repositories.json@0a94d7c50e5e631d25a7ab675c377bb5e86d50ef",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Final epoch vector binds exact federation observations after Mission Control recent-router and UI data-loading repair. ai_platform follows ADR-004 carrier-last and records the stabilized pre-vector source subject; vector and truth carriers never self-reference.",
+  "currentness_rule": "Final v1.5 federation vector binds integrated peer identities and the formalization-closed ai_platform pre-vector subject. Truth carriers are rebound only after this vector commit per ADR-004.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "2cfbdc24e3923ac601512bd8b3b9964cd06aa908",
-    "subject_tree": "8e350a3b52b7e2e135402028276a04ed374445b9",
+    "subject_head": "9907e1eb3a1c04df869f9b24bf95150e67755f60",
+    "subject_tree": "5dfcd626fae00f52c77c5804a6ef96059e9915b6",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "2cfbdc24e3923ac601512bd8b3b9964cd06aa908",
-      "tree": "8e350a3b52b7e2e135402028276a04ed374445b9",
+      "head": "9907e1eb3a1c04df869f9b24bf95150e67755f60",
+      "tree": "5dfcd626fae00f52c77c5804a6ef96059e9915b6",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,13 +38,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Final R24/v1.5 source subject after recent-route fast-path plus UI LOADING/DEGRADED/LAST-KNOWN semantics and bounded event polling; vector/truth carriers follow per ADR-004."
+      "lineage_note": "Formalization-closed v1.5 federated architecture-knowledge source subject. Final truth carriers follow this vector commit per ADR-004."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "b8657037e94787a103c99f1fbb3058341821ffd7",
-      "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
+      "head": "793d6f7fdd249f11ab872bc264700124fc573e67",
+      "tree": "2ca47b55d5f71e603f2037367a4a825c2745bd55",
       "roles": [
         "context_compression",
         "context_routing",
@@ -62,8 +62,8 @@
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "329d670e53f3e4606f60eeb2f446eb34df3bb05d",
-      "tree": "653f7593e4c6f0478c2f85b48d3091d0faed7892",
+      "head": "92cc9dacd200d6c2cdf0dbbd892d9db9e7a72d7e",
+      "tree": "3f0673b4744ddd5d589eedf9588823ee6a98c2d1",
       "roles": [
         "delta_analysis",
         "anomaly_analysis",
@@ -83,8 +83,8 @@
     {
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "13ac2c760aa0c4f528addaacc782239c00e3890e",
-      "tree": "bc6c8a067074fead00b57d6c9f8f852f1fa74977",
+      "head": "a88f842efc9be414ab3fe10fb8766dcb013c0135",
+      "tree": "ba5fb05784434c15640da005da8dced52008d176",
       "roles": [
         "cognitive_state",
         "memory_semantics",
@@ -103,8 +103,8 @@
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "569acad16f0ca8eb0c4e4522586914b57f5bf475",
-      "tree": "0c1f6d690a2bdae34f0ecd6c9afbb04933af220c",
+      "head": "46e994b651481c62faa4bc84b9e529efbcb5a7b6",
+      "tree": "8c36003c0ead17b0593292633e598022b32de86f",
       "roles": [
         "hypothesis_research",
         "communication_epistemology"
@@ -121,8 +121,8 @@
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "0ad23c8a9fb9f942e41ade83ecafa8f393e5d481",
-      "tree": "ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1",
+      "head": "f11a707f673a0899e25d51d8b9e5bd635d856e81",
+      "tree": "fe2d9faa55fbc9e68872ed5b3f4774799317d8ed",
       "roles": [
         "structure_graph",
         "abstraction_engine",
@@ -141,8 +141,8 @@
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "86b92e9f7c3361d69e2322193441f4626f8205e7",
-      "tree": "8d7cc0e5b5025899d0889c4a5c17ac230681c4fb",
+      "head": "023f90b120950848b5ba82cefc94fdef997995cf",
+      "tree": "4856c77847e444465128061ab3ca873c6bc91a6d",
       "roles": [
         "aid_identity",
         "supply_chain_provenance",
@@ -161,8 +161,8 @@
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "5a6d6f9196a33286a3392a5ddeb94bd832705ab8",
-      "tree": "031f5b365c8c78feeb69fcb71229a3d9f690fbf1",
+      "head": "5964fde8b8c1a17c7dc5c6ee4ea68b8ec1b8e987",
+      "tree": "e1fcf5d0abd87ba80bf59c84fa2612299c207bbb",
       "roles": [
         "execution_mesh",
         "telemetry_transport",
@@ -181,8 +181,8 @@
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "2fa3b9f8285387d8f14e116901a671c4fcb75174",
-      "tree": "9c3fc13abab6ac22631615ac4ac72085bd84ded9",
+      "head": "8750d65a9109aad7514fac8b235846e373ab8b6c",
+      "tree": "79be83f61dd5349b3588387449a05706de2b8cbb",
       "roles": [
         "simulation",
         "monte_carlo",
@@ -201,8 +201,8 @@
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "6a31721161f26d9eb60583d127d3ffeabb830329",
-      "tree": "16ac116a2370b804017a6a918700d28eadf402fe",
+      "head": "124d3a9cf913cf717e04615ce6a84610ba30eeca",
+      "tree": "bc23739745fb2dee586d5d19473c84e0b09eff37",
       "roles": [
         "research_corpus",
         "evidence_source",

@@ -1,0 +1,85 @@
+{
+  "schema": "lion.formalization-verification-bundle/v1",
+  "candidate_digest": "237215cec3551d4fe35b2c7c9863c2ca52cf1de8c15d74ba7247e604d0b96194",
+  "source_head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+  "source_tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+  "formalization": {
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "manifest_digest": "e9cd60ecb26452cc31c5d3bd3bf4d811f57feb79da7e56df032946a7ddf6154f",
+    "required_set_digest": "24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+    "federated_binding_digest": "32bd6365d30e11f2558d071055c135288f2a7de0013a7899196c95ee5e89a1e9",
+    "fleet_baseline_digest": "a34516a55f603a80bf31b491a2029b4faad916b367c9b3a8f9dbf641e161f615",
+    "rag_source_set_digest": "cb4bb80b6c819a39bd9c0e35aa68b56a05a72f24acc0c45d6aa03f407b8d1aad"
+  },
+  "tests": {
+    "targeted_federation_architecture": {
+      "result": "PASS",
+      "tests": 107,
+      "skipped": 2
+    },
+    "full_python_corpus": {
+      "result": "PASS",
+      "tests": 3505,
+      "skipped": 5
+    },
+    "truth_currentness": {
+      "result": "PASS",
+      "tests": 50,
+      "skipped": 2
+    },
+    "r24_whole_integration_no_tests": {
+      "result": "PASS"
+    },
+    "git_diff_check": {
+      "result": "PASS"
+    },
+    "local_bandit": {
+      "result": "UNAVAILABLE_ENVIRONMENT",
+      "required_ci_gate": true
+    }
+  },
+  "security": {
+    "effect_surface_scan": {
+      "result": "PASS",
+      "evidence_digest": "9b8c2b0f89ba9bbba6151161ec526e5043a81c590b9ddb160f6ddc72d8937898",
+      "surface_count": 519,
+      "added": 0,
+      "removed": 0,
+      "unresolved": 0
+    },
+    "swarm_preexisting_security_debt": {
+      "dependabot_open": 4,
+      "secret_scanning_open": 1,
+      "classification": "KNOWN_PREEXISTING_FAILURES"
+    },
+    "new_authority_or_effect_surface": "NONE"
+  },
+  "evals": {
+    "result": "PASS",
+    "evaluation_mode": "SELF_EVALUATION_BOUND_TO_ACTUAL_MISSION_EVENTS",
+    "scorer_independence": "NO_CLAIM",
+    "evidence_digest": "d1c818585f324910d3452a59e85d77051053fa9853ac14da4583c5e83841987c",
+    "cases": [
+      "E31_PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+      "E32_REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+      "E33_HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+      "E34_VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+      "E35_ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY"
+    ]
+  },
+  "rag": {
+    "candidate_routing_probe_result": "PASS",
+    "hosted_project_retrieval": "NOT_RUN",
+    "preferred_release_changed": false,
+    "live_truth_policy": "RAG_NE_LIVE_TRUTH"
+  },
+  "publication_gates_pending": [
+    "GitHub Core",
+    "Bandit",
+    "CodeQL",
+    "R22C/full symbol census",
+    "R24 Whole Integration if required"
+  ],
+  "authority_effect": "NONE",
+  "verification_digest": "744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+}

@@ -44,7 +44,7 @@ class FleetRegistryPinMaterializationTests(unittest.TestCase):
                     default_branch=branch,
                     head=f"{index:040x}",
                     tree=f"{index + 100:040x}",
-                    manifest_present=repository != "DonkeyJJLove/writeups",
+                    manifest_present=True,
                     source_ref=f"github-read:{repository}:{branch}:{index}",
                 ).validate()
             )
@@ -126,28 +126,28 @@ class FleetRegistryPinMaterializationTests(unittest.TestCase):
         self.assertEqual(first.registry_digest, second.registry_digest)
         self.assertNotEqual(first.snapshot_digest(), second.snapshot_digest())
 
-    def test_manifest_absence_is_preserved_not_promoted(self):
-        snapshot = self.snapshot()
-        by_repo = {item.repository: item for item in snapshot.observations}
+    def test_explicit_manifest_absence_is_preserved_not_promoted(self):
+        current = self.snapshot()
+        historical = tuple(
+            replace(item, manifest_present=False)
+            if item.repository == "DonkeyJJLove/writeups"
+            else item
+            for item in current.observations
+        )
+        historical_snapshot = FleetRegistryPinSnapshot(
+            current.schema_version,
+            current.registry_digest,
+            current.members,
+            historical,
+        ).validate()
+        by_repo = {item.repository: item for item in historical_snapshot.observations}
         self.assertFalse(by_repo["DonkeyJJLove/writeups"].manifest_present)
         self.assertTrue(all(
             item.manifest_present
-            for item in snapshot.observations
+            for item in historical_snapshot.observations
             if item.repository != "DonkeyJJLove/writeups"
         ))
-        changed = tuple(
-            replace(item, manifest_present=True)
-            if item.repository == "DonkeyJJLove/writeups"
-            else item
-            for item in snapshot.observations
-        )
-        promoted = FleetRegistryPinSnapshot(
-            snapshot.schema_version,
-            snapshot.registry_digest,
-            snapshot.members,
-            changed,
-        ).validate()
-        self.assertNotEqual(snapshot.snapshot_digest(), promoted.snapshot_digest())
+        self.assertNotEqual(historical_snapshot.snapshot_digest(), current.snapshot_digest())
 
     def test_pin_observation_cannot_claim_health_dependencies_or_authority(self):
         self.assertEqual(

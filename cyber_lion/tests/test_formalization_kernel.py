@@ -6,6 +6,16 @@ class FormalizationKernelTests(unittest.TestCase):
     def test_duplicate_registry_path_fails(self):
         r=registry(); dup=dataclasses.replace(r.entries[1],artifact_id="other-id",path=r.entries[0].path)
         with self.assertRaises(Exception): dataclasses.replace(r,entries=r.entries+(dup,),registry_digest="").sealed()
+    def test_dangling_dependency_ref_fails(self):
+        r=registry()
+        changed=dataclasses.replace(r.entries[0],dependency_refs=("missing-artifact",))
+        with self.assertRaises(Exception):
+            dataclasses.replace(r,entries=(changed,)+r.entries[1:],registry_digest="").sealed()
+    def test_dangling_invalidation_ref_fails(self):
+        r=registry()
+        changed=dataclasses.replace(r.entries[0],invalidates=("missing-artifact",))
+        with self.assertRaises(Exception):
+            dataclasses.replace(r,entries=(changed,)+r.entries[1:],registry_digest="").sealed()
     def test_closure_authority_effect_must_remain_none(self):
         r,m,c=self._closure(); bad=dataclasses.replace(c,authority_effect="MERGE")
         with self.assertRaises(Exception): bad.sealed(m,r)

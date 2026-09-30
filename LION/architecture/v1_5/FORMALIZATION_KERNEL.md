@@ -67,3 +67,37 @@ The prospective shadow binds Cognitive Invocation, EvidenceBoundLearningEpisode,
 ## Migration boundary
 
 `LION/architecture/v1_4/` remains historical lineage and is not rewritten by this candidate. v1.5 is a candidate formalization space. Existing v1.4 projections may be inputs to drift detection but are not silently refreshed here. Merge, deployment, host mutation, training and model promotion are outside this task.
+
+## Federation extension — LION-V15-FEDERATED-ARCHITECTURE-KNOWLEDGE-AND-EVOLUTION-R1
+
+The original kernel remains the local formalization contract and its historical closure evidence is preserved. The federation extension does not mutate those records. It adds four bounded semantics:
+
+1. `FormalizationRegistry` entries may declare `repository`, `scope`, `dependency_refs` and `invalidates`. Default LOCAL/`ai_platform` values are digest-neutral so historical registries and FCRs remain valid. Current federation registry references are fail-closed: dangling dependency or invalidation artifact IDs are rejected.
+2. `FleetBaseline` remains the existing exact multi-repository baseline contract. `FLEET_BASELINE_FEDERATION_R1.json` is an exact ten-repository instance; current peer dependencies are explicit and known pre-existing failures remain classified rather than promoted away.
+3. `FederatedFormalizationBinding` binds one local AFM to that exact FleetBaseline, the dependency-graph digest and one repository disposition: `UPDATE`, `VALIDATE_ONLY` or `NOT_APPLICABLE`. It has `authority_effect=NONE` and `execution_effect=NONE`.
+4. `GovernedChangeAdmissionEngine.derive_formalized_request(...)` verifies proposal binding, AFM, local FCR and federation binding before delegating to the existing admission request derivation. It does not create a second authority path.
+
+The federation extension therefore changes the closure geometry from:
+
+```text
+EvolutionDelta
+→ AFM
+→ RequiredFormalizationSet
+→ FCR
+```
+
+to:
+
+```text
+EvolutionDelta
+→ AFM
+→ RequiredFormalizationSet
+→ FederatedFormalizationBinding
+→ proposal binding
+→ exact candidate + independent verification
+→ FCR
+→ formalized admission request
+→ existing authority / effect path
+```
+
+Architecture documentation participates through generated census/graph/reconciliation, semantic-owner routing, RAG/discoverability and carrier-last currentness. None of those surfaces grants authority.

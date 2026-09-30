@@ -1,0 +1,548 @@
+{
+  "closure_id": "fcr:v1.5-federated-architecture-knowledge-r1",
+  "candidate": {
+    "candidate_digest": "237215cec3551d4fe35b2c7c9863c2ca52cf1de8c15d74ba7247e604d0b96194",
+    "head": "c11f1acec701dc6372d24c81640d5fdcb7361b9f",
+    "tree": "f668210b46599d0a4f0f68c989689c92c24dc83e",
+    "verification_digest": "744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+  },
+  "formalization_manifest_digest": "e9cd60ecb26452cc31c5d3bd3bf4d811f57feb79da7e56df032946a7ddf6154f",
+  "artifact_results": [
+    {
+      "artifact_id": "architecture-contradiction-register",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/README.md",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:cyber_lion/architecture_projection/full_architecture.py",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "autonomous-evolution-control-flow",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_4/capability_catalog.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_4/contract_catalog.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "cross-repository-dependency-graph",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/canonical-state-v1-3-candidate.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:AGENTS.md",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "documentation-evolution-control-flow",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_4/event_state_catalog.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/evals/evolution/evolution_cases.yaml",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:cyber_lion/contracts/federated_formalization_binding.py",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "federation-live-snapshot",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:cyber_lion/contracts/repository_expansion.py",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline-instance",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "formalization-manifest",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "gap-projection",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:cyber_lion/architecture_projection/gap.py",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "material-object-catalog",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_4/material_object_catalog.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-probes",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-source-set",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "rag-release",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/rag/",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "rag-routing",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/rag/RAG_BOOTSTRAP.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "repository-documentation-plans",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/REPOSITORY_DOCUMENTATION_PLANS.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "repository-role-matrix",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owner-reconciliation",
+      "classification": "ADD",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "path:LION/architecture/v1_5/semantic_owners.json",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e",
+        "required-formalization-set:24cf954948954e0ec5327046056c568ca5c12ccf8d35372726016cc51efc5b2c",
+        "verification-bundle:744309c13c3b502554fe7da32a024cfa0450fe598c5f8c4a36314489b4c506e0"
+      ]
+    }
+  ],
+  "semantic_owner_uniqueness": "PASS",
+  "catalog_coverage": "PASS",
+  "discoverability_result": "PASS",
+  "rag_result": "PASS",
+  "required_test_results": [
+    {
+      "id": "test_federated_formalization_binding",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_federated_formalization_binding"
+      ]
+    },
+    {
+      "id": "test_governed_change_formalized_admission",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_governed_change_formalized_admission"
+      ]
+    },
+    {
+      "id": "test_federated_architecture_knowledge_projection",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_federated_architecture_knowledge_projection"
+      ]
+    },
+    {
+      "id": "test_architecture_knowledge",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_architecture_knowledge"
+      ]
+    },
+    {
+      "id": "test_repository_manifest_architecture_knowledge",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_repository_manifest_architecture_knowledge"
+      ]
+    },
+    {
+      "id": "test_v15_federated_architecture_discoverability",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_v15_federated_architecture_discoverability"
+      ]
+    },
+    {
+      "id": "test_formalization_kernel",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_formalization_kernel"
+      ]
+    },
+    {
+      "id": "test_fleet_registry_pin_live_source",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_fleet_registry_pin_live_source"
+      ]
+    },
+    {
+      "id": "test_architecture_projection_full_architecture",
+      "result": "PASS",
+      "evidence_refs": [
+        "local-full-suite:3505-pass:5-skipped",
+        "local-targeted-suite:107-pass:2-skipped",
+        "test:test_architecture_projection_full_architecture"
+      ]
+    }
+  ],
+  "required_eval_results": [
+    {
+      "id": "E31_PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d1c818585f324910d3452a59e85d77051053fa9853ac14da4583c5e83841987c",
+        "case:E31_PEER_ARCHITECTURE_CHANGE_INVALIDATES_GLOBAL_PROJECTION",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e"
+      ]
+    },
+    {
+      "id": "E32_REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d1c818585f324910d3452a59e85d77051053fa9853ac14da4583c5e83841987c",
+        "case:E32_REQUIRED_PEER_UNKNOWN_BLOCKS_FEDERATED_FORMALIZATION",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e"
+      ]
+    },
+    {
+      "id": "E33_HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d1c818585f324910d3452a59e85d77051053fa9853ac14da4583c5e83841987c",
+        "case:E33_HISTORICAL_CURRENT_STATE_IS_NOT_V15_CURRENTNESS_OWNER",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e"
+      ]
+    },
+    {
+      "id": "E34_VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d1c818585f324910d3452a59e85d77051053fa9853ac14da4583c5e83841987c",
+        "case:E34_VALIDATE_ONLY_REPOSITORY_IS_NOT_MUTATION_TARGET",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e"
+      ]
+    },
+    {
+      "id": "E35_ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d1c818585f324910d3452a59e85d77051053fa9853ac14da4583c5e83841987c",
+        "case:E35_ARCHITECTURE_DOCUMENTATION_DOES_NOT_GRANT_AUTHORITY",
+        "candidate:c11f1acec701dc6372d24c81640d5fdcb7361b9f:f668210b46599d0a4f0f68c989689c92c24dc83e"
+      ]
+    }
+  ],
+  "currentness_result": "CURRENT_CANDIDATE",
+  "unknowns": [],
+  "decision": "PASS",
+  "authority_effect": "NONE",
+  "closure_digest": "6d2645dfee96445cbbbb4cf47435799e056113dcc5ffa9af991b5bc191c518de",
+  "schema_id": "lion.formalization-closure-record/v1"
+}

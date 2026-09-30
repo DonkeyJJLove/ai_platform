@@ -13,6 +13,7 @@ from .full_plantuml import (
     serialize_gap_overlay_plantuml,
 )
 from .plantuml import PlantUMLRenderer
+from .flows import FLOW_SPECS
 from .visual_model import VisualProjectionModel
 
 _SHA40 = re.compile(r"^[0-9a-f]{40}$")
@@ -114,19 +115,32 @@ class VisualRenderPlan:
             raise ValueError("only LOCAL_OFFLINE rendering is representable")
         if self.authority_effect != "NONE" or self.runtime_evidence != "NONE":
             raise ValueError("render plan cannot grant authority or prove runtime")
-        if len(self.artifacts) != 11:
-            raise ValueError("render plan requires full architecture, 9 flows, and gap map")
+        expected_flow_ids = tuple(sorted(FLOW_SPECS))
+        expected_artifact_count = len(expected_flow_ids) + 2
+        if len(self.artifacts) != expected_artifact_count:
+            raise ValueError(
+                f"render plan requires full architecture, {len(expected_flow_ids)} flows, and gap map"
+            )
         if self.artifacts != tuple(sorted(set(self.artifacts))):
             raise ValueError("render artifacts must be sorted unique")
         for artifact in self.artifacts:
             artifact.validate()
         kinds = [artifact.artifact_kind for artifact in self.artifacts]
-        if kinds.count("FULL_ARCHITECTURE") != 1 or kinds.count("GAP_MAP") != 1 or kinds.count("FLOW_ATLAS") != 9:
+        if (
+            kinds.count("FULL_ARCHITECTURE") != 1
+            or kinds.count("GAP_MAP") != 1
+            or kinds.count("FLOW_ATLAS") != len(expected_flow_ids)
+        ):
             raise ValueError("render artifact cardinality invalid")
-        expected_flows = tuple(f"FLOW-{index:02d}" for index in range(1, 10))
-        actual_flows = tuple(sorted(artifact.flow_id for artifact in self.artifacts if artifact.artifact_kind == "FLOW_ATLAS"))
-        if actual_flows != expected_flows:
-            raise ValueError("render plan requires all 9 canonical flow ids")
+        actual_flows = tuple(
+            sorted(
+                artifact.flow_id
+                for artifact in self.artifacts
+                if artifact.artifact_kind == "FLOW_ATLAS"
+            )
+        )
+        if actual_flows != expected_flow_ids:
+            raise ValueError("render plan requires all canonical flow ids")
         output_paths = []
         for artifact in self.artifacts:
             output_paths.extend((artifact.puml_output_path, artifact.svg_output_path, artifact.manifest_output_path))

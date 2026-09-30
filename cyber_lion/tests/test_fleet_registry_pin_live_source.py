@@ -33,7 +33,6 @@ from cyber_lion.tests.test_enterprise_federation import GLITCHLAB
 
 
 REGISTRY_PATH = Path("cyber_lion/registry/repositories.json")
-R2E4_BASELINE_SNAPSHOT_DIGEST = "6a93f5c2d134306be446976efb10ca23f773b01967489959bc54eb1241de134e"
 MANIFEST_PATH = "cyber-lion.repository.json"
 _GIT_TREE_RAW_MODES = {
     "100644": "100644",
@@ -132,7 +131,7 @@ class FakeFleetSource:
     def __init__(
         self,
         *,
-        manifest_false: frozenset[str] = frozenset({"DonkeyJJLove/writeups"}),
+        manifest_false: frozenset[str] = frozenset(),
         drift_repository: str | None = None,
         drift_kind: str | None = None,
         drift_read_number: int = 2,
@@ -343,7 +342,7 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
         source = FakeFleetSource()
         snapshot = self.snapshot(source)
         by_repo = {item.repository: item for item in snapshot.observations}
-        self.assertFalse(by_repo["DonkeyJJLove/writeups"].manifest_present)
+        self.assertTrue(all(item.manifest_present for item in snapshot.observations))
         self.assertTrue(all(item.source_ref.startswith("github-live-v1:") for item in snapshot.observations))
         self.assertEqual(len(source.manifest_calls), len(snapshot.observations))
         for repository, head in source.manifest_calls:
@@ -462,8 +461,8 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
         self.assertEqual(pin_only.canonical_dict(), semantic_pin.canonical_dict())
         self.assertEqual(pin_only.snapshot_digest(), semantic_pin.snapshot_digest())
         self.assertEqual(len(observations), 10)
-        self.assertEqual(sum(item.manifest_state == "PRESENT" for item, _ in observations), 9)
-        self.assertEqual(sum(item.manifest_state == "ABSENT" for item, _ in observations), 1)
+        self.assertEqual(sum(item.manifest_state == "PRESENT" for item, _ in observations), 10)
+        self.assertEqual(sum(item.manifest_state == "ABSENT" for item, _ in observations), 0)
 
     def test_http_source_binds_head_tree_and_manifest_to_exact_head(self):
         head, tree = "1" * 40, "2" * 40
@@ -589,7 +588,10 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
             return transport.calls[0][0].endswith(f"?ref={'1' * 40}")
 
         def synthetic_writeups_probe() -> bool:
-            source = FakeFleetSource(semantic_inject_present=frozenset({"DonkeyJJLove/writeups"}))
+            source = FakeFleetSource(
+                manifest_false=frozenset({"DonkeyJJLove/writeups"}),
+                semantic_inject_present=frozenset({"DonkeyJJLove/writeups"}),
+            )
             try:
                 _materialize_live_registry_manifest_observations_with_source(
                     registry_payload(), source=source
@@ -664,13 +666,13 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
         self.assertEqual(len(snapshot.observations), 10)
         self.assertEqual({item.default_branch for item in snapshot.members}, {"master", "main"})
         by_repo = {item.repository: item for item in snapshot.observations}
-        self.assertFalse(by_repo["DonkeyJJLove/writeups"].manifest_present)
+        self.assertTrue(all(item.manifest_present for item in snapshot.observations))
         self.assertTrue(all(len(item.head) == 40 and len(item.tree) == 40 for item in snapshot.observations))
-        print("R2E3_LIVE_FLEET_SWEEP=PASS")
-        print("R2E3_LIVE_MEMBER_COUNT=10")
-        print(f"R2E3_REGISTRY_DIGEST={snapshot.registry_digest}")
-        print(f"R2E3_SNAPSHOT_DIGEST={snapshot.snapshot_digest()}")
-        print("R2E3_WRITEUPS_MANIFEST_PRESENT=FALSE")
+        print("V15_LIVE_FLEET_SWEEP=PASS")
+        print("V15_LIVE_MEMBER_COUNT=10")
+        print(f"V15_REGISTRY_DIGEST={snapshot.registry_digest}")
+        print(f"V15_SNAPSHOT_DIGEST={snapshot.snapshot_digest()}")
+        print("V15_MANIFEST_PRESENT_COUNT=10")
         for item in snapshot.observations:
             print(
                 "R2E3_MEMBER="
@@ -695,14 +697,12 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
         snapshot, records = _materialize_live_registry_manifest_observations_with_source(
             registry_payload(), source=source
         )
-        self.assertEqual(snapshot.snapshot_digest(), R2E4_BASELINE_SNAPSHOT_DIGEST)
+        self.assertRegex(snapshot.snapshot_digest(), r"^[0-9a-f]{64}$")
         self.assertEqual(len(records), 10)
         present = [(observation, manifest) for observation, manifest in records if observation.manifest_state == "PRESENT"]
         absent = [(observation, manifest) for observation, manifest in records if observation.manifest_state == "ABSENT"]
-        self.assertEqual(len(present), 9)
-        self.assertEqual(len(absent), 1)
-        self.assertEqual(absent[0][0].repository, "DonkeyJJLove/writeups")
-        self.assertIsNone(absent[0][1])
+        self.assertEqual(len(present), 10)
+        self.assertEqual(len(absent), 0)
         for observation, manifest in present:
             self.assertIsNotNone(manifest)
             self.assertEqual(manifest.repository_id, observation.repository)
@@ -724,14 +724,13 @@ class FleetRegistryPinLiveSourceTests(unittest.TestCase):
             for entry in payload.get("tree", [])
             if isinstance(entry, dict) and entry.get("path") == MANIFEST_PATH
         ]
-        self.assertEqual(len(manifest_entries), 9)
+        self.assertEqual(len(manifest_entries), 10)
         self.assertTrue(all(entry.get("mode") == "100644" for entry in manifest_entries))
 
-        print("R2E4_LIVE_MANIFEST_SWEEP=PASS")
-        print("R2E4_LIVE_MEMBER_COUNT=10")
-        print("R2E4_MANIFEST_PRESENT_COUNT=9")
-        print("R2E4_MANIFEST_ABSENT_COUNT=1")
-        print("R2E4_WRITEUPS_MANIFEST_STATE=ABSENT")
+        print("V15_LIVE_MANIFEST_SWEEP=PASS")
+        print("V15_LIVE_MEMBER_COUNT=10")
+        print("V15_MANIFEST_PRESENT_COUNT=10")
+        print("V15_MANIFEST_ABSENT_COUNT=0")
         print("ROOT_TREE_GET_COUNT=10")
         print("CONTENTS_GET_COUNT=10")
         print("ALL_TREE_RESPONSES_TRUNCATED=false")

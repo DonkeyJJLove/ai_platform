@@ -1,0 +1,414 @@
+{
+  "schema": "lion.architecture-reconciliation/v1",
+  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "results": [
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+        "DonkeyJJLove/HA2D:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+        "DonkeyJJLove/HA2D:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+        "DonkeyJJLove/HA2D:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "concept": "readme.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+        "DonkeyJJLove/HA2D:readme.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "concept": "README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "concept": "src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "architecture_knowledge",
+      "classification": "CODE_UNDOCUMENTED",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+        "DonkeyJJLove/chunk-chunk:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+        "DonkeyJJLove/chunk-chunk:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+        "DonkeyJJLove/chunk-chunk:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "concept": "doc/9D_process_design.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+        "DonkeyJJLove/chunk-chunk:doc/9D_process_design.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "concept": "hmk9d_protocol.yaml",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+        "DonkeyJJLove/chunk-chunk:hmk9d_protocol.yaml"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+        "DonkeyJJLove/glitchlab:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+        "DonkeyJJLove/glitchlab:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+        "DonkeyJJLove/glitchlab:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "concept": "docs/10_architecture.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+        "DonkeyJJLove/glitchlab:docs/10_architecture.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "concept": "spec/invariants.yaml",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+        "DonkeyJJLove/glitchlab:spec/invariants.yaml"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "concept": "README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+        "DonkeyJJLove/mosaic_lab_pro.py:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+        "DonkeyJJLove/mosaic_lab_pro.py:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+        "DonkeyJJLove/mosaic_lab_pro.py:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "concept": "README.MD",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+        "DonkeyJJLove/mosaic_lab_pro.py:README.MD"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/sbom:cyber-lion.repository.json",
+        "DonkeyJJLove/sbom:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/sbom:cyber-lion.repository.json",
+        "DonkeyJJLove/sbom:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/sbom:cyber-lion.repository.json",
+        "DonkeyJJLove/sbom:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "concept": "AID_CONTRACT.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/sbom:cyber-lion.repository.json",
+        "DonkeyJJLove/sbom:AID_CONTRACT.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "concept": "docs/01_AID_CONTRACT.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/sbom:cyber-lion.repository.json",
+        "DonkeyJJLove/sbom:docs/01_AID_CONTRACT.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "runtime/README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:runtime/README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "security/README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:security/README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "infrastructure/README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:infrastructure/README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "AGENTS.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:AGENTS.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "AI_NATIVE_ROADMAP.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "PROCESS_GUARD.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:PROCESS_GUARD.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "LION_ARCHITECTURE_ROLE_v1_4.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:LION_ARCHITECTURE_ROLE_v1_4.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "evolutionary-agent-systems-organization-framework.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:evolutionary-agent-systems-organization-framework.md"
+      ]
+    }
+  ],
+  "contradictions": [],
+  "unknowns": [],
+  "authority_effect": "NONE",
+  "reconciliation_digest": "295783950f8286d69d924c727626f583c559cf4c60ea3e810ed678dccc6ed68b"
+}

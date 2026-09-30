@@ -1,0 +1,103 @@
+{
+  "schema": "lion.autonomous-evolution-control-flow/v1",
+  "generated_at": "2026-09-30T13:22:16.185164Z",
+  "authority_effect": "NONE",
+  "transitions": [
+    {
+      "from": "AGENTS/RAG_BOOTSTRAP",
+      "to": "LIVE_REACQUISITION",
+      "owner": "AGENTS.md + LION/rag/RAG_BOOTSTRAP.json",
+      "authority": "NONE",
+      "currentness": "REQUIRED",
+      "failure": "historical context promoted to live truth"
+    },
+    {
+      "from": "LIVE_REACQUISITION",
+      "to": "CODE_AND_DOCUMENT_PROJECTION",
+      "owner": "tools/lion_federated_architecture_knowledge.py + architecture_projection",
+      "authority": "READ_ONLY",
+      "currentness": "EXACT_HEAD_TREE",
+      "failure": "partial or drifting source set"
+    },
+    {
+      "from": "CODE_AND_DOCUMENT_PROJECTION",
+      "to": "ARCHITECTURE_RECONCILIATION",
+      "owner": "architecture_knowledge",
+      "authority": "NONE",
+      "currentness": "SOURCE_DERIVED",
+      "failure": "stale or parallel owner hidden"
+    },
+    {
+      "from": "ARCHITECTURE_RECONCILIATION",
+      "to": "EVOLUTION_DELTA",
+      "owner": "EvolutionaryEpoch/R&D",
+      "authority": "NONE",
+      "currentness": "REQUIRED",
+      "failure": "gap inferred without evidence"
+    },
+    {
+      "from": "EVOLUTION_DELTA",
+      "to": "AFM_REQUIRED_FORMALIZATION_SET",
+      "owner": "Formalization Kernel",
+      "authority": "NONE",
+      "currentness": "EXACT_BASELINE",
+      "failure": "architecture surfaces omitted"
+    },
+    {
+      "from": "AFM_REQUIRED_FORMALIZATION_SET",
+      "to": "FEDERATED_FORMALIZATION_BINDING",
+      "owner": "FederatedFormalizationBinding",
+      "authority": "NONE",
+      "currentness": "FEDERATION_BOUND",
+      "failure": "peer substitution or missing disposition"
+    },
+    {
+      "from": "FEDERATED_FORMALIZATION_BINDING",
+      "to": "GOVERNED_CHANGE_PROPOSAL",
+      "owner": "GovernedChangeProposal",
+      "authority": "NONE",
+      "currentness": "BOUND",
+      "failure": "proposal not bound to formalization"
+    },
+    {
+      "from": "GOVERNED_CHANGE_PROPOSAL",
+      "to": "FORMALIZED_ADMISSION",
+      "owner": "GovernedChangeAdmissionEngine.derive_formalized_request",
+      "authority": "REQUEST_ONLY",
+      "currentness": "FCR_PASS",
+      "failure": "formalization not enforced"
+    },
+    {
+      "from": "FORMALIZED_ADMISSION",
+      "to": "CANDIDATE_EFFECT_PATH",
+      "owner": "existing authority/runtime chain",
+      "authority": "EXPLICIT_GATES",
+      "currentness": "EFFECT_SPECIFIC",
+      "failure": "proposal bypasses authority"
+    },
+    {
+      "from": "CANDIDATE_EFFECT_PATH",
+      "to": "OBSERVATION_RECONCILIATION",
+      "owner": "runtime reconciliation",
+      "authority": "NONE_AFTER_EFFECT",
+      "currentness": "OBSERVED",
+      "failure": "reported effect differs from observed effect"
+    },
+    {
+      "from": "OBSERVATION_RECONCILIATION",
+      "to": "ARCHITECTURE_KNOWLEDGE_REGENERATION",
+      "owner": "architecture knowledge generator",
+      "authority": "NONE",
+      "currentness": "INVALIDATE_AND_REBUILD",
+      "failure": "new code leaves old docs current"
+    },
+    {
+      "from": "ARCHITECTURE_KNOWLEDGE_REGENERATION",
+      "to": "RAG_FEDERATION_VECTOR_TRUTH_CARRIERS",
+      "owner": "RAG + federation vector + truth plane",
+      "authority": "NONE",
+      "currentness": "CARRIER_LAST",
+      "failure": "self-reference or stale carrier"
+    }
+  ]
+}

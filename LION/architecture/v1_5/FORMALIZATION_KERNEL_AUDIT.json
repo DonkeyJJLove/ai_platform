@@ -1,0 +1,27 @@
+{
+  "schema": "lion.formalization-kernel-audit/v1",
+  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "local_kernel": {
+    "FormalizationRegistry": "PASS",
+    "ArchitectureFormalizationManifest": "PASS",
+    "RequiredFormalizationSet": "PASS",
+    "FormalizationClosureRecord": "PASS_FAIL_CLOSED",
+    "semantic_owner_uniqueness": "PASS",
+    "discoverability": "PASS_LOCAL",
+    "RAG_delta": "PASS_LOCAL"
+  },
+  "pre_candidate_gaps": [
+    "no first-class multi-repository formalization baseline",
+    "no per-repository UPDATE/VALIDATE_ONLY/NOT_APPLICABLE disposition",
+    "no explicit cross-repository dependency digest binding",
+    "formalization closure not consumed by governed change admission"
+  ],
+  "candidate_repairs": [
+    "FederatedFormalizationBinding binds local AFM to existing FleetBaseline",
+    "repository manifest gains architecture_knowledge local discovery contract",
+    "GovernedChangeAdmissionEngine gains derive_formalized_request fail-closed path",
+    "architecture knowledge census/graph/reconciliation become deterministic projections"
+  ],
+  "new_top_level_layer": "NONE",
+  "authority_effect": "NONE"
+}

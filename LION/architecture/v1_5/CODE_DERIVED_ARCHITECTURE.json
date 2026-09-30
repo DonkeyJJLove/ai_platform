@@ -1,0 +1,948 @@
+{
+  "schema": "lion.code-derived-architecture/v1",
+  "projection_input_tree": "18a7bfeb4da5beaa5ea1ec5c9cbe0f40ca93f64b",
+  "source_repository": "DonkeyJJLove/ai_platform",
+  "generated_at": "2026-09-30T15:19:18.299445Z",
+  "model_digest": "8b815299375f129f8cdf0df0d3a742d41218ff961ddef03a3f8e470cde878b10",
+  "derived_only": true,
+  "authority_effect": "NONE",
+  "runtime_evidence": "NONE",
+  "layers": [
+    "ARCHITECTURE_PROJECTION",
+    "AUTHORITY_AND_EFFECT",
+    "CODE_PERCEPTION",
+    "CONSTITUTION_AND_GOVERNANCE",
+    "EVIDENCE_AND_EPISTEMIC_PLANE",
+    "EVOLUTIONARY_EPOCH",
+    "FLEET_AND_SWARM",
+    "GOVERNED_SELF_IMPLEMENTATION",
+    "OBSERVABILITY_AND_RECONCILIATION",
+    "QUARANTINED_AND_NONCANONICAL",
+    "REPOSITORY_MUTATION",
+    "STARTUP_EVOLUTION",
+    "SYSTEM_CONTEXT",
+    "TARGET_BEAN_FACTORY",
+    "TRUSTED_RUNTIME"
+  ],
+  "elements": [
+    {
+      "element_id": "architecture-knowledge",
+      "layer": "ARCHITECTURE_PROJECTION",
+      "label": "Federated architecture knowledge projection",
+      "status": {
+        "status": "IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Federated architecture knowledge projection",
+        "source_path": "cyber_lion/architecture_projection/architecture_knowledge.py",
+        "symbol": "FederatedArchitectureKnowledge",
+        "source_digest": "c7a7e1e799f8b5c6c4b85d83d74bf33ccc32877490b35462679bb8c7c002c606"
+      },
+      "source_path": "cyber_lion/architecture_projection/architecture_knowledge.py",
+      "symbol": "FederatedArchitectureKnowledge",
+      "target_ref": ""
+    },
+    {
+      "element_id": "architecture-projection",
+      "layer": "ARCHITECTURE_PROJECTION",
+      "label": "Canonical architecture projection",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Canonical architecture projection",
+        "source_path": "cyber_lion/architecture_projection/extractor.py",
+        "symbol": "ArchitectureProjectionExtractor",
+        "source_digest": "cad73953df9456833056e4d86755dd75f5d8872edd1e610ffc43b86b76a1d12e"
+      },
+      "source_path": "cyber_lion/architecture_projection/extractor.py",
+      "symbol": "ArchitectureProjectionExtractor",
+      "target_ref": ""
+    },
+    {
+      "element_id": "authority-effect",
+      "layer": "AUTHORITY_AND_EFFECT",
+      "label": "Authority and effect boundary",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Authority and effect boundary",
+        "source_path": "cyber_lion/enterprise/policy_gate.py",
+        "symbol": "CanonicalPolicyDecisionPoint",
+        "source_digest": "4c5acc3573a6043b8202ff207a3155713ce1a5faa54af454129ddbd4045dc4d2"
+      },
+      "source_path": "cyber_lion/enterprise/policy_gate.py",
+      "symbol": "CanonicalPolicyDecisionPoint",
+      "target_ref": ""
+    },
+    {
+      "element_id": "bean-factory",
+      "layer": "TARGET_BEAN_FACTORY",
+      "label": "Target Bean Factory",
+      "status": {
+        "status": "TARGET_ONLY",
+        "evidence_class": "TARGET_ARCHITECTURE",
+        "rationale": "target-only E005 classification for Target Bean Factory",
+        "source_path": "",
+        "symbol": "",
+        "source_digest": ""
+      },
+      "source_path": "",
+      "symbol": "",
+      "target_ref": "cyber_lion/TARGET_ARCHITECTURE.md#bean-factory"
+    },
+    {
+      "element_id": "code-perception",
+      "layer": "CODE_PERCEPTION",
+      "label": "Deterministic code perception",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Deterministic code perception",
+        "source_path": "cyber_lion/enterprise/code_perception.py",
+        "symbol": "build_code_graph",
+        "source_digest": "4f385f32bb19e008bd7cd805e315108e75640ee666cd7e44f85c879d933d8a5f"
+      },
+      "source_path": "cyber_lion/enterprise/code_perception.py",
+      "symbol": "build_code_graph",
+      "target_ref": ""
+    },
+    {
+      "element_id": "cognitive-invocation",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "Cognitive invocation domain",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Cognitive invocation domain",
+        "source_path": "cyber_lion/contracts/cognitive_invocation.py",
+        "symbol": "CognitiveProvider",
+        "source_digest": "8cd96c3f98e41b79263d71cad233bc3b9c3819b7de60fa0002cd8b7ea16d3268"
+      },
+      "source_path": "cyber_lion/contracts/cognitive_invocation.py",
+      "symbol": "CognitiveProvider",
+      "target_ref": ""
+    },
+    {
+      "element_id": "constitution-governance",
+      "layer": "CONSTITUTION_AND_GOVERNANCE",
+      "label": "Constitution and governance",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Constitution and governance",
+        "source_path": "cyber_lion/enterprise/policy_gate.py",
+        "symbol": "CanonicalPolicyDecisionPoint",
+        "source_digest": "4c5acc3573a6043b8202ff207a3155713ce1a5faa54af454129ddbd4045dc4d2"
+      },
+      "source_path": "cyber_lion/enterprise/policy_gate.py",
+      "symbol": "CanonicalPolicyDecisionPoint",
+      "target_ref": ""
+    },
+    {
+      "element_id": "coordinator-competency",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Coordinator competency evidence",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Coordinator competency evidence",
+        "source_path": "cyber_lion/contracts/coordinator_competency.py",
+        "symbol": "CoordinatorCompetencyProfile",
+        "source_digest": "e80d1df636d5f83687b56cb872997fd24a4c9d8c5ab07e5fbeeac613005b7a5c"
+      },
+      "source_path": "cyber_lion/contracts/coordinator_competency.py",
+      "symbol": "CoordinatorCompetencyProfile",
+      "target_ref": ""
+    },
+    {
+      "element_id": "evidence-bound-learning",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Evidence-bound learning episode",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Evidence-bound learning episode",
+        "source_path": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+        "symbol": "EvidenceBoundLearningEpisode",
+        "source_digest": "6001f3ffcea62d41aa0a1e4bd17a175fb001efde9db46cce343cb763bd037bf5"
+      },
+      "source_path": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "symbol": "EvidenceBoundLearningEpisode",
+      "target_ref": ""
+    },
+    {
+      "element_id": "evidence-epistemic",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Evidence and epistemic R&D",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Evidence and epistemic R&D",
+        "source_path": "cyber_lion/contracts/evolutionary_rnd.py",
+        "symbol": "EvidenceObservation",
+        "source_digest": "5880f142ca36448081fd6466e0460dff5c96183b6637350e4ad7c498b63c51e2"
+      },
+      "source_path": "cyber_lion/contracts/evolutionary_rnd.py",
+      "symbol": "EvidenceObservation",
+      "target_ref": ""
+    },
+    {
+      "element_id": "evolutionary-epoch",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "Evolutionary epoch",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Evolutionary epoch",
+        "source_path": "cyber_lion/enterprise/evolutionary_epoch.py",
+        "symbol": "EvolutionaryEpochEngine",
+        "source_digest": "6c1e6586e29e9f3c0cc2eba3f79e1c4050a757c879ec2076318d78118ef1f960"
+      },
+      "source_path": "cyber_lion/enterprise/evolutionary_epoch.py",
+      "symbol": "EvolutionaryEpochEngine",
+      "target_ref": ""
+    },
+    {
+      "element_id": "federated-formalization-binding",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "Federated formalization binding",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Federated formalization binding",
+        "source_path": "cyber_lion/contracts/federated_formalization_binding.py",
+        "symbol": "FederatedFormalizationBinding",
+        "source_digest": "db6bd148c7f1603a49c3bcd64d27d4249698e180259f692ea02547d2d5bafb47"
+      },
+      "source_path": "cyber_lion/contracts/federated_formalization_binding.py",
+      "symbol": "FederatedFormalizationBinding",
+      "target_ref": ""
+    },
+    {
+      "element_id": "fleet-mission-ir",
+      "layer": "FLEET_AND_SWARM",
+      "label": "LPCL fleet mission execution topology",
+      "status": {
+        "status": "IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for LPCL fleet mission execution topology",
+        "source_path": "cyber_lion/process_language/fleet_mission.py",
+        "symbol": "FleetMissionIR",
+        "source_digest": "a7219b93c0337409aa37919244551c7d07998fb18df4ddd6286c6f40af5d3078"
+      },
+      "source_path": "cyber_lion/process_language/fleet_mission.py",
+      "symbol": "FleetMissionIR",
+      "target_ref": ""
+    },
+    {
+      "element_id": "fleet-swarm",
+      "layer": "FLEET_AND_SWARM",
+      "label": "Fleet and swarm organization",
+      "status": {
+        "status": "PARTIALLY_IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Fleet and swarm organization",
+        "source_path": "cyber_lion/enterprise/models.py",
+        "symbol": "MissionSpec",
+        "source_digest": "e342492b276b2e43875519749154106b51712d3983f22912013f7b381343d45a"
+      },
+      "source_path": "cyber_lion/enterprise/models.py",
+      "symbol": "MissionSpec",
+      "target_ref": ""
+    },
+    {
+      "element_id": "formalization-kernel",
+      "layer": "ARCHITECTURE_PROJECTION",
+      "label": "Architecture formalization kernel",
+      "status": {
+        "status": "IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Architecture formalization kernel",
+        "source_path": "cyber_lion/contracts/formalization_closure.py",
+        "symbol": "FormalizationClosureRecord",
+        "source_digest": "6a3a0d0a91b98202bbe998ac969979b4b99f47d2b3c16b480b2edc00e3431afc"
+      },
+      "source_path": "cyber_lion/contracts/formalization_closure.py",
+      "symbol": "FormalizationClosureRecord",
+      "target_ref": ""
+    },
+    {
+      "element_id": "governed-self-implementation",
+      "layer": "GOVERNED_SELF_IMPLEMENTATION",
+      "label": "Governed self-implementation",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Governed self-implementation",
+        "source_path": "cyber_lion/contracts/governed_change_proposal.py",
+        "symbol": "GovernedChangeProposal",
+        "source_digest": "573ad71df1fa39bf2c3abea8ade073ddac627f818c64cb5824162c1095c865a4"
+      },
+      "source_path": "cyber_lion/contracts/governed_change_proposal.py",
+      "symbol": "GovernedChangeProposal",
+      "target_ref": ""
+    },
+    {
+      "element_id": "model-call-v2",
+      "layer": "FLEET_AND_SWARM",
+      "label": "Model call v2 provenance",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Model call v2 provenance",
+        "source_path": "cyber_lion/contracts/model_call_v2.py",
+        "symbol": "ModelCallV2",
+        "source_digest": "c8886f2962adbe1859f4181b69abcdf1c6198087a80e475b4f2f22c7b3a3425f"
+      },
+      "source_path": "cyber_lion/contracts/model_call_v2.py",
+      "symbol": "ModelCallV2",
+      "target_ref": ""
+    },
+    {
+      "element_id": "model-release",
+      "layer": "TRUSTED_RUNTIME",
+      "label": "Immutable model release identity",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Immutable model release identity",
+        "source_path": "cyber_lion/contracts/model_release.py",
+        "symbol": "ModelRelease",
+        "source_digest": "13ce5534e3951151e61f0756633a1503018c3fe6d0a05069c3449d1bc07ed791"
+      },
+      "source_path": "cyber_lion/contracts/model_release.py",
+      "symbol": "ModelRelease",
+      "target_ref": ""
+    },
+    {
+      "element_id": "observability-reconciliation",
+      "layer": "OBSERVABILITY_AND_RECONCILIATION",
+      "label": "Observability and reconciliation",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Observability and reconciliation",
+        "source_path": "cyber_lion/enterprise/runtime_reconciliation.py",
+        "symbol": "RuntimeReconciler",
+        "source_digest": "8c1f9fff073a71480709073067e5078b0f7ef32a747181fef5ab7ba478004d59"
+      },
+      "source_path": "cyber_lion/enterprise/runtime_reconciliation.py",
+      "symbol": "RuntimeReconciler",
+      "target_ref": ""
+    },
+    {
+      "element_id": "process-contract-language",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "LION Process Contract Language",
+      "status": {
+        "status": "IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for LION Process Contract Language",
+        "source_path": "cyber_lion/contracts/process_ir.py",
+        "symbol": "CanonicalProcessIR",
+        "source_digest": "be76382240e6ac0f874e122583a12340c5f92d0a92c3ced3ca6e9e23e3297529"
+      },
+      "source_path": "cyber_lion/contracts/process_ir.py",
+      "symbol": "CanonicalProcessIR",
+      "target_ref": ""
+    },
+    {
+      "element_id": "process-orchestration",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "LPCL process orchestration projection",
+      "status": {
+        "status": "IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for LPCL process orchestration projection",
+        "source_path": "cyber_lion/architecture_projection/process_orchestration.py",
+        "symbol": "canonical_process_orchestration_projection",
+        "source_digest": "f63c8040597733b094c1c44784d0fcd29eaf6afd7ede8f7f6fcf355f3d944f6a"
+      },
+      "source_path": "cyber_lion/architecture_projection/process_orchestration.py",
+      "symbol": "canonical_process_orchestration_projection",
+      "target_ref": ""
+    },
+    {
+      "element_id": "quarantined-f005",
+      "layer": "QUARANTINED_AND_NONCANONICAL",
+      "label": "F005 runtime plane",
+      "status": {
+        "status": "QUARANTINED",
+        "evidence_class": "EXACT_GIT_STATE",
+        "rationale": "source-bound E005 classification for F005 runtime plane",
+        "source_path": ".lion/runtime/f005-runtime-plane-state.json",
+        "symbol": "f005-local-runtime-v1",
+        "source_digest": "03b7a9d2e9d963d508a3d2a281b69325ea307d9f6219ac632e391a6251c8f1a0"
+      },
+      "source_path": ".lion/runtime/f005-runtime-plane-state.json",
+      "symbol": "f005-local-runtime-v1",
+      "target_ref": ""
+    },
+    {
+      "element_id": "repository-mutation",
+      "layer": "REPOSITORY_MUTATION",
+      "label": "Repository mutation reference path",
+      "status": {
+        "status": "VERIFIED_REFERENCE",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Repository mutation reference path",
+        "source_path": "cyber_lion/enterprise/repository_mutation_pep.py",
+        "symbol": "RepositoryMutationPEP",
+        "source_digest": "d2334a38ca3138cb183b63ca7fdc7532832221bf8d96e46e2da0a39da6fd1de4"
+      },
+      "source_path": "cyber_lion/enterprise/repository_mutation_pep.py",
+      "symbol": "RepositoryMutationPEP",
+      "target_ref": ""
+    },
+    {
+      "element_id": "startup-evolution",
+      "layer": "STARTUP_EVOLUTION",
+      "label": "Startup Evolution Agent",
+      "status": {
+        "status": "IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Startup Evolution Agent",
+        "source_path": "cyber_lion/startup_agent/orchestrator.py",
+        "symbol": "AIDrivenStartupAgent",
+        "source_digest": "f10fb913a3a2120dc4fee78ec9628c5fc6fa9fe89a1f887a7b1f1f65a63b1a86"
+      },
+      "source_path": "cyber_lion/startup_agent/orchestrator.py",
+      "symbol": "AIDrivenStartupAgent",
+      "target_ref": ""
+    },
+    {
+      "element_id": "system-context",
+      "layer": "SYSTEM_CONTEXT",
+      "label": "System context and target boundary",
+      "status": {
+        "status": "PARTIALLY_IMPLEMENTED",
+        "evidence_class": "CANONICAL_DOCUMENTATION",
+        "rationale": "source-bound E005 classification for System context and target boundary",
+        "source_path": "cyber_lion/TARGET_ARCHITECTURE.md",
+        "symbol": "SEM proposal",
+        "source_digest": "4a4d25f72f92c44217fe0a289d2514826396970bbb983259757f6ed1d526689e"
+      },
+      "source_path": "cyber_lion/TARGET_ARCHITECTURE.md",
+      "symbol": "SEM proposal",
+      "target_ref": ""
+    },
+    {
+      "element_id": "trusted-runtime",
+      "layer": "TRUSTED_RUNTIME",
+      "label": "Trusted runtime enforcement",
+      "status": {
+        "status": "PARTIALLY_IMPLEMENTED",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Trusted runtime enforcement",
+        "source_path": "cyber_lion/enterprise/runtime_enforcement.py",
+        "symbol": "RuntimeAdmissionEngine",
+        "source_digest": "a77497e312ac9450ea7c8f46d7c8e8ceb433f81450646e1766d6731cc280b086"
+      },
+      "source_path": "cyber_lion/enterprise/runtime_enforcement.py",
+      "symbol": "RuntimeAdmissionEngine",
+      "target_ref": ""
+    }
+  ],
+  "flows": [
+    {
+      "flow_id": "FLOW-01",
+      "steps": [
+        "WORLD",
+        "OBSERVATION",
+        "EVIDENCE",
+        "HYPOTHESIS",
+        "EXPERIMENT",
+        "FALSIFICATION",
+        "PROMOTION",
+        "MEMORY",
+        "EVOLUTION_DELTA"
+      ]
+    },
+    {
+      "flow_id": "FLOW-02",
+      "steps": [
+        "EVOLUTION_DELTA",
+        "GOVERNED_CHANGE_PROPOSAL",
+        "BUILD_AUTHORIZATION",
+        "BUILDER_ENTRY",
+        "BUILDER_INVOCATION",
+        "INVOCATION_CONSUMPTION",
+        "START_ADMISSION",
+        "PROCESS_LAUNCH",
+        "DETACHED_CANDIDATE"
+      ]
+    },
+    {
+      "flow_id": "FLOW-03",
+      "steps": [
+        "DETACHED_CANDIDATE",
+        "INDEPENDENT_VERIFICATION",
+        "AUTHORITY_LOOKUP",
+        "POLICY_GATE",
+        "CURRENTNESS",
+        "EFFECT_ADMISSION",
+        "EXACT_EFFECT",
+        "OBSERVATION",
+        "RECONCILIATION"
+      ]
+    },
+    {
+      "flow_id": "FLOW-04",
+      "steps": [
+        "MISSION",
+        "CAPABILITY_REQUIREMENTS",
+        "SWARM_PLANNING",
+        "ROLE_ALLOCATION",
+        "EXECUTOR_PROVISIONING",
+        "SANDBOX_BINDING",
+        "RUNTIME_IDENTITY",
+        "DISPATCH",
+        "EXECUTION",
+        "STATUS",
+        "RECONCILIATION"
+      ]
+    },
+    {
+      "flow_id": "FLOW-05",
+      "steps": [
+        "AUTHORITY_SOURCE",
+        "ROOT_GRANT",
+        "AUTHORITY_LINEAGE",
+        "ATTENUATION",
+        "REVOCATION_STATE",
+        "PDP",
+        "RUNTIME_CURRENTNESS",
+        "PEP",
+        "EFFECT"
+      ]
+    },
+    {
+      "flow_id": "FLOW-06",
+      "steps": [
+        "REPOSITORY_BASELINE",
+        "DETACHED_CHANGE",
+        "EXACT_CANDIDATE_TREE",
+        "VERIFICATION",
+        "MERGE_AUTHORITY",
+        "EFFECT_TIME_CURRENTNESS",
+        "REF_MUTATION",
+        "POST_EFFECT_OBSERVATION",
+        "CLOSURE"
+      ]
+    },
+    {
+      "flow_id": "FLOW-07",
+      "steps": [
+        "SOURCE_TREE",
+        "STATIC_CODE_PERCEPTION",
+        "SYMBOL_GRAPH",
+        "ARCHITECTURE_PROJECTION",
+        "CANONICAL_DIAGRAM_MODEL",
+        "PUML",
+        "OPTIONAL_RENDERED_ARTIFACT"
+      ]
+    },
+    {
+      "flow_id": "FLOW-08",
+      "steps": [
+        "MARKET_EVIDENCE",
+        "PRODUCT_HYPOTHESIS",
+        "EXPERIMENT",
+        "SMALLEST_BUILD",
+        "LOCAL_CANDIDATE",
+        "OUTCOME",
+        "STARTUP_STATE_UPDATE"
+      ]
+    },
+    {
+      "flow_id": "FLOW-09",
+      "steps": [
+        "GOAL",
+        "WORLD_STATE",
+        "SYSTEM_STATE",
+        "GAP",
+        "REQUIRED_CAPABILITY",
+        "EXISTING_CAPABILITY_OR_NEW_BEAN",
+        "COMPOSITION",
+        "MOSAIC",
+        "GOVERNED_EFFECT",
+        "RECONCILED_OUTCOME"
+      ]
+    },
+    {
+      "flow_id": "FLOW-10",
+      "steps": [
+        "FEDERATION_STATE",
+        "ARCHITECTURE_DOCUMENT_CENSUS",
+        "ARCHITECTURE_DOCUMENT_GRAPH",
+        "ARCHITECTURE_RECONCILIATION",
+        "EVOLUTION_DELTA",
+        "REQUIRED_FORMALIZATION_SET",
+        "RAG_DISCOVERABILITY",
+        "FEDERATION_VECTOR",
+        "TRUTH_CARRIERS"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "target_id": "GoalContract",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/evolutionary_state.py"
+    },
+    {
+      "target_id": "WorldSnapshot",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/evolutionary_state.py"
+    },
+    {
+      "target_id": "SystemSnapshot",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/evolutionary_state.py"
+    },
+    {
+      "target_id": "Gap",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/evolutionary_state.py"
+    },
+    {
+      "target_id": "BeanSpec",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/bean.py"
+    },
+    {
+      "target_id": "BeanCandidate",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/bean_candidate.py"
+    },
+    {
+      "target_id": "BeanInstance",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/bean.py"
+    },
+    {
+      "target_id": "CapabilityNeed",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/capability_need.py"
+    },
+    {
+      "target_id": "CompositionContract",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/bean_composition.py"
+    },
+    {
+      "target_id": "CompositionEngine",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/enterprise/bean_composition.py"
+    },
+    {
+      "target_id": "MosaicCell",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/mosaic.py"
+    },
+    {
+      "target_id": "HeterogeneousMosaicPlanner",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/enterprise/mosaic.py"
+    },
+    {
+      "target_id": "BeanBuilderChainBinding",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/bean_builder_bridge.py"
+    },
+    {
+      "target_id": "R2E4EvidenceBinding",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"
+    },
+    {
+      "target_id": "FleetAggregateEffectBudget",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/enterprise/fleet_effect_budget.py"
+    },
+    {
+      "target_id": "FederatedArchitectureKnowledge",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/architecture_projection/architecture_knowledge.py"
+    },
+    {
+      "target_id": "FederatedFormalizationBinding",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/federated_formalization_binding.py"
+    },
+    {
+      "target_id": "FormalizedArchitectureAdmission",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/enterprise/governed_change_admission.py"
+    },
+    {
+      "target_id": "CognitiveInvocation",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "existing LOCAL/SAAS execution paths remain operational owners",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "validate identities against live routed calls",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/cognitive_invocation.py"
+    },
+    {
+      "target_id": "EvidenceBoundLearningEpisode",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "read-only importer and corpus materialization remain future work",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "validate leakage-safe reconstruction against evidence fixtures",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/evidence_bound_learning_episode.py"
+    },
+    {
+      "target_id": "ModelRelease",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "identity exists without training or promotion effect",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "bind observed model/runtime package evidence",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/model_release.py"
+    },
+    {
+      "target_id": "ModelCallV2",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "v1 storage remains canonical; v2 is projection only",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "validate SentinelX-mediated v2 projection",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/model_call_v2.py"
+    },
+    {
+      "target_id": "CoordinatorCompetencyProfile",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "competency evidence remains evaluation-only",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "run per-competency frozen evaluation",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/coordinator_competency.py"
+    },
+    {
+      "target_id": "AutonomyBlueprint",
+      "status": "TARGET_ONLY",
+      "missing_contract": "canonical autonomy blueprint contract",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "define digest-bound AutonomyBlueprint",
+      "evidence_class": "",
+      "evidence_ref": ""
+    },
+    {
+      "target_id": "MaterializerRegistry",
+      "status": "TARGET_ONLY",
+      "missing_contract": "canonical materializer registry",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "define domain-independent MaterializerRegistry",
+      "evidence_class": "",
+      "evidence_ref": ""
+    },
+    {
+      "target_id": "ActionSpec",
+      "status": "PARTIALLY_IMPLEMENTED",
+      "missing_contract": "",
+      "missing_runtime": "general reusable canonical PDP ALLOW-to-runtime object materializer/binder for RequestedRuntimeEffect, RuntimeIdentityBinding and CanonicalPDPDecisionEvidence",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "materialize and bind exact runtime effect, identity and PDP evidence before existing RuntimeAdmissionEngine.admit(...)",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/action_proposal_pdp_handoff.py"
+    },
+    {
+      "target_id": "LAIR",
+      "status": "VERIFIED_REFERENCE",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "",
+      "evidence_class": "LIVE_CODE",
+      "evidence_ref": "cyber_lion/contracts/action_ir.py"
+    },
+    {
+      "target_id": "LCMS",
+      "status": "TARGET_ONLY",
+      "missing_contract": "auditable command modeling syntax and parser",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "define LCMS after Action IR",
+      "evidence_class": "",
+      "evidence_ref": ""
+    },
+    {
+      "target_id": "LocalConsole",
+      "status": "TARGET_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "capability-reduced local console runtime",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "implement read-only process.exec after LCMS",
+      "evidence_class": "",
+      "evidence_ref": ""
+    },
+    {
+      "target_id": "GlobalCompleteMediation",
+      "status": "UNKNOWN",
+      "missing_contract": "",
+      "missing_runtime": "",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "effect-specific closures do not prove system-wide reachable-surface coverage",
+      "next_minimal_gap": "enumerate consequential effect surfaces",
+      "evidence_class": "",
+      "evidence_ref": ""
+    }
+  ]
+}

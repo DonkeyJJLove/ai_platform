@@ -58,8 +58,8 @@ class ControlledRenderAdapterTests(unittest.TestCase):
         self.assertEqual(first.rendering_mode, "LOCAL_OFFLINE")
         self.assertEqual(first.authority_effect, "NONE")
         self.assertEqual(first.runtime_evidence, "NONE")
-        self.assertEqual(len(first.artifacts), 11)
-        self.assertEqual(len([a for a in first.artifacts if a.artifact_kind == "FLOW_ATLAS"]), 9)
+        self.assertEqual(len(first.artifacts), 12)
+        self.assertEqual(len([a for a in first.artifacts if a.artifact_kind == "FLOW_ATLAS"]), 10)
 
     def test_fixed_output_paths_and_puml_digests_are_exact(self):
         _, projection = self._projection()
@@ -73,7 +73,7 @@ class ControlledRenderAdapterTests(unittest.TestCase):
         self.assertEqual(full.puml_source_digest, hashlib.sha256(serialize_full_architecture_plantuml(projection)).hexdigest())
         self.assertEqual(gap.puml_source_digest, hashlib.sha256(serialize_gap_overlay_plantuml(projection)).hexdigest())
         flow_sources = dict(serialize_flow_atlas_plantuml(projection))
-        for index in range(1, 10):
+        for index in range(1, 11):
             flow_id = f"FLOW-{index:02d}"
             artifact = by_id[f"lion-{flow_id.lower()}"]
             self.assertEqual(artifact.flow_id, flow_id)
@@ -127,7 +127,7 @@ class ControlledRenderAdapterTests(unittest.TestCase):
             "cyber_lion.architecture_projection.plantuml.PlantUMLRenderer.render_svg", side_effect=AssertionError("must not render")
         ):
             plan = build_visual_render_plan(projection, self._pin())
-        self.assertEqual(len(plan.artifacts), 11)
+        self.assertEqual(len(plan.artifacts), 12)
         import cyber_lion.architecture_projection.render_adapter as adapter
         source = inspect.getsource(adapter)
         self.assertNotIn(".render_svg(", source)
