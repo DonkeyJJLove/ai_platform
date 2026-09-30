@@ -1,0 +1,403 @@
+{
+  "schema": "lion.r24-v15.epoch-final-closure/v1",
+  "task_id": "LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+  "observed_at": "2026-09-30T07:49:21.504341Z",
+  "repository": {
+    "name": "DonkeyJJLove/ai_platform",
+    "master_head": "2eba102086c13873bdbb6cb346d727ecf001f16a",
+    "master_tree": "e28dc48ccd1320dbee4f8b737ce11897cd4616b7",
+    "remote_heads": [
+      {
+        "ref": "refs/heads/master",
+        "sha": "2eba102086c13873bdbb6cb346d727ecf001f16a"
+      }
+    ],
+    "remote_non_master_count": 0,
+    "open_prs": 0
+  },
+  "security": {
+    "code_scanning_open": 0,
+    "dependabot_open": 0,
+    "secret_scanning_open": 0,
+    "open_prs": 0
+  },
+  "branch_closure": {
+    "input_ledger": "LION/evidence/r24-v15-epoch-final-closure/BRANCH_CLOSURE_LEDGER.json",
+    "initial_non_master_refs": 68,
+    "post_merge_gc_deleted_refs": 69,
+    "final_remote_non_master_refs": 0
+  },
+  "mission_reconciliation": {
+    "database_quick_check": "ok",
+    "target_count": 13,
+    "superseded_count": 13,
+    "nonterminal_driver_count": 0,
+    "receipt_count": 13,
+    "receipt_set_digest": "07de0b8a3fccafea1c9cfc0256b4a8594e2a0f879fb29b00983058f300ebedcb",
+    "missions": [
+      {
+        "mission_id": "LION-R24-EPOCH-CLOSURE-SUPERVISOR-R1",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-ab74fcab2f194d1ba18f02bf82c60a32",
+          "receipt_digest": "7bede1be861e332d6ad4f3ca85e2ef381c8d2eaaafabc3e26e1ebbea72393201",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-R24-FULL-CONTROL-PLANE-FEDERATION-64L32M-R1",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-5ab76e67351043699f47b07369b86a73",
+          "receipt_digest": "17720219fb501a3d49079b4505ba30d783d9e9acfb6aa822ec16a9d567b2e2cd",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-CONTROL-LPCL-PANEL-SAAS-E2E-DELIVERY-CLOSURE-R3",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-a0b448ca00384448bc1f6ac027295bfb",
+          "receipt_digest": "c49c8302f3b15083644310f707054134f291ad725087802226f2de3000c13a2b",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-CONTROL-LPCL-PANEL-SAAS-E2E-DELIVERY-CLOSURE-R2",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": null,
+        "receipt": {
+          "receipt_id": "action-bee9118e55004f608f9f7cb5bd6c082a",
+          "receipt_digest": "1d96c2d88e4d762317f27dc09e789835dc4c3196634024850c66237c9ef099e1",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-AUTO-378E9195A27E4B5190675B80",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-6501cfd72bd940b1be8a6d88a6338731",
+          "receipt_digest": "7129a0332b41800707cadc67ebaeb6c2eb65d1d64ce3ce92f16bf9883285d4bb",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-AUTO-107121D664EC0696A50C71DD",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-2c7b830a1dfb49759b015637380d51bb",
+          "receipt_digest": "7f3c12c01c2d45baec72aa12cb45946c78a79644d7ea22de8f1718b850a5aaa6",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-AUTO-PAINT-16L8M-R1",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-8afb7cd2cd3e44c98e03cf9632083b64",
+          "receipt_digest": "530e594748ce5fa50cdb2886a264e6942ef89b0435a7c4d18a2aeda63bc64f8f",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-OMEGA-BENCH-20260924-192004-841B56",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": null,
+        "receipt": {
+          "receipt_id": "action-ac059165cdc742f79049106d208affac",
+          "receipt_digest": "cb15ae366f71af4b51c1216c0034090ff2aec3419a87adddedb0df57ece8bc4a",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-R24-PR381-CI-CLOSURE-64L32M-R1",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": null,
+        "receipt": {
+          "receipt_id": "action-f70ad7c68615456b8d717e62f108ebf1",
+          "receipt_digest": "43342c2f2582b8091c8ed91b386f66a77324b36ec944b3963656c2381da36f3f",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-R24-PR381-CI-CLOSURE-64L32M-R2",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-2ff4075a6b34475591bf249a81fc701e",
+          "receipt_digest": "f8e9b7611e41dc4d44eac2382fb44badef9dfaa924babc9307e972ffc32cfb7b",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-R24-BOUNDED-MUTATION-SUBSTRATE-BOOTSTRAP-R2",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-0a1650f934594a949562286328d9db7a",
+          "receipt_digest": "cd9559529f886de93346292fda487c9d9e00475b0dd273fc821bf85d18e01802",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-R24-PROTOCOL-COGNITIVE-FANOUT-CANARY-R1",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": null,
+        "current_phase": null,
+        "driver_state": "STOPPED",
+        "receipt": {
+          "receipt_id": "action-dce818ff36b44e63b06cad8021a5917f",
+          "receipt_digest": "2ad7960316c4225be64c4c9dc6032729e6fc99f161f3c88e1a0beaedf08734cd",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      },
+      {
+        "mission_id": "LION-R24-BOUNDED-MUTATION-SUBSTRATE-BOOTSTRAP-R1",
+        "state": "SUPERSEDED",
+        "runtime_state": "SUPERSEDED_BY:LION-R24-V15-EPOCH-FINAL-CLOSURE-R1",
+        "updated_at": "2026-09-30T05:16:01.410218Z",
+        "authority_state": "SUPERSEDED_BY_EPOCH_FINAL_2EBA102",
+        "current_phase": null,
+        "driver_state": null,
+        "receipt": {
+          "receipt_id": "action-df8912eb150248ce9fb035a38d8b3ee0",
+          "receipt_digest": "6a1574fedf946c0336adf1f14ea5a98d03d2649585db56e9a14826fccec1614d",
+          "created_at": "2026-09-30T05:16:01.410218Z"
+        }
+      }
+    ]
+  },
+  "runtime": {
+    "supervisor_state": {
+      "observed_at": "2026-09-30T07:49:01.8125265Z",
+      "status": "READY",
+      "repo_head": "2eba102086c13873bdbb6cb346d727ecf001f16a",
+      "repo_tree": "e28dc48ccd1320dbee4f8b737ce11897cd4616b7",
+      "model_pid": 32980,
+      "panel_pid": 18028,
+      "mat_healthy": 12,
+      "mission_control_8766": true,
+      "operator_control_8767": true,
+      "model_8772": true,
+      "panel_8780": true,
+      "panel_surface": "CANONICAL_CONVERSATION_MODEL_CHAT",
+      "canonical_panel_url": "http://127.0.0.1:8780/r24-model-chat",
+      "canonical_thread_db": "C:\\Users\\d2j3\\AppData\\Local\\LION\\control-panel\\threads.db",
+      "canonical_repo": "C:\\Users\\d2j3\\AppData\\Local\\LION\\control-panel\\releases\\r24-master-2eba102-r1",
+      "legacy_thread_mutation": "RETIRED",
+      "candidate_head": "2eba102086c13873bdbb6cb346d727ecf001f16a",
+      "candidate_tree": "e28dc48ccd1320dbee4f8b737ce11897cd4616b7",
+      "legacy_browser_8790": false,
+      "browser_relay_active": false,
+      "optional_model_transport_8790": false,
+      "message_transport": "LION_OPERATOR_MESSAGES",
+      "control_transport": "SENTINELX_OPERATOR_CONTROL",
+      "panel_channel": "LION_BUS",
+      "authority_effect": "LOCAL_RUNTIME_SUPERVISION"
+    },
+    "production_release_expected": "C:\\Users\\d2j3\\AppData\\Local\\LION\\control-panel\\releases\\r24-master-2eba102-r1",
+    "panel_8780": true,
+    "browser_8794_verified_live": true,
+    "staging_8782": false,
+    "mission_control_8766": true,
+    "thread_db_quick_check": "ok",
+    "thread_db_counts": {
+      "conversations": 37,
+      "conversation_messages": 206,
+      "ui_runtime_events": 26
+    }
+  },
+  "federation": {
+    "repository_count": 10,
+    "manifest_count": 10,
+    "open_pr_count": 0,
+    "peer_material_drift": [],
+    "ai_platform_requires_vector_rebind": true,
+    "repositories": [
+      {
+        "repository": "DonkeyJJLove/ai_platform",
+        "branch": "master",
+        "head": "2eba102086c13873bdbb6cb346d727ecf001f16a",
+        "tree": "e28dc48ccd1320dbee4f8b737ce11897cd4616b7",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/chunk-chunk",
+        "branch": "master",
+        "head": "b8657037e94787a103c99f1fbb3058341821ffd7",
+        "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/glitchlab",
+        "branch": "master",
+        "head": "329d670e53f3e4606f60eeb2f446eb34df3bb05d",
+        "tree": "653f7593e4c6f0478c2f85b48d3091d0faed7892",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/HA2D",
+        "branch": "master",
+        "head": "13ac2c760aa0c4f528addaacc782239c00e3890e",
+        "tree": "bc6c8a067074fead00b57d6c9f8f852f1fa74977",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+        "branch": "main",
+        "head": "569acad16f0ca8eb0c4e4522586914b57f5bf475",
+        "tree": "0c1f6d690a2bdae34f0ecd6c9afbb04933af220c",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+        "branch": "main",
+        "head": "0ad23c8a9fb9f942e41ade83ecafa8f393e5d481",
+        "tree": "ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/sbom",
+        "branch": "main",
+        "head": "86b92e9f7c3361d69e2322193441f4626f8205e7",
+        "tree": "8d7cc0e5b5025899d0889c4a5c17ac230681c4fb",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/swarm",
+        "branch": "master",
+        "head": "5a6d6f9196a33286a3392a5ddeb94bd832705ab8",
+        "tree": "031f5b365c8c78feeb69fcb71229a3d9f690fbf1",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+        "branch": "main",
+        "head": "2fa3b9f8285387d8f14e116901a671c4fcb75174",
+        "tree": "9c3fc13abab6ac22631615ac4ac72085bd84ded9",
+        "open_prs": 0,
+        "manifest_present": true
+      },
+      {
+        "repository": "DonkeyJJLove/writeups",
+        "branch": "master",
+        "head": "6a31721161f26d9eb60583d127d3ffeabb830329",
+        "tree": "16ac116a2370b804017a6a918700d28eadf402fe",
+        "open_prs": 0,
+        "manifest_present": true
+      }
+    ]
+  },
+  "validation": {
+    "pr393_full_python": "3462_PASS_5_SKIPPED",
+    "pr394_full_python": "3463_PASS_5_SKIPPED",
+    "effect_scan": "5d643c50ea0c5e3824ab660d0fa2fe98df6eac9e2ab415347b52969feaaac738",
+    "effect_surfaces": 519,
+    "taxonomy_unresolved": 0,
+    "master_check_runs": [
+      {
+        "name": "Analyze (python)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Analyze (javascript-typescript)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Analyze (actions)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Cyber-Lion Merge Authority Observation",
+        "status": "completed",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "core",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Scan Python",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Cyber-Lion Merge Authority Admission",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "next_epoch_candidate": {
+    "branch": "mission/v15-communication-envelope-r1",
+    "local_head": "55ddb1e9496127ca6e23d7896463c7c12d13b118",
+    "remote_ref_present": false,
+    "preserve": true
+  },
+  "authority_effect": "NONE",
+  "closure_state": "SOURCE_EVIDENCE_STABLE_PRE_VECTOR_PRE_CARRIER"
+}

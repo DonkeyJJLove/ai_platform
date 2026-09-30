@@ -1,11 +1,11 @@
 {
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
-  "process_epoch": "R24_V15_H5_CLOSED",
-  "generated_at": "2026-09-29T17:32:49Z",
-  "registry_source": "cyber_lion/registry/repositories.json@a9e226cd0f0bcd70165d6c136b329a15599ab3d9",
+  "process_epoch": "R24_V15_EPOCH_CLOSED",
+  "generated_at": "2026-09-30T07:51:42.177776Z",
+  "registry_source": "cyber_lion/registry/repositories.json@0e225aacea0124b58f30032ca0392b36fe3a7ee9",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Repository observations bind exact default-branch subject head/tree at this sweep. For ai_platform, the vector follows ADR-004 carrier-last: it records the stabilized pre-carrier subject and does not self-reference the carrier-only commit.",
+  "currentness_rule": "Final epoch vector binds exact federation observations after predecessor branch/security/runtime/mission closure. ai_platform follows ADR-004 carrier-last and records the stabilized pre-vector source subject; the vector and later truth-carrier commit never self-reference.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "90f8927f2645f2e614453ff608e87fae759c7b24",
-    "subject_tree": "7e26dfe3c0f9034cb65f094588bc86b80229609e",
+    "subject_head": "8b860fcefc5bcfd4a7a81d376e5c33dcec978c67",
+    "subject_tree": "5cdb70c676b45f7f30cb41d5f035ddd57825864a",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "90f8927f2645f2e614453ff608e87fae759c7b24",
-      "tree": "7e26dfe3c0f9034cb65f094588bc86b80229609e",
+      "head": "8b860fcefc5bcfd4a7a81d376e5c33dcec978c67",
+      "tree": "5cdb70c676b45f7f30cb41d5f035ddd57825864a",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Head/tree identify the stabilized H5 non-carrier package subject immediately before this carrier-only vector/truth sequence, per ADR-004 I18/I19; the vector and truth-carrier commits are not self-referenced."
+      "lineage_note": "Final R24/v1.5 epoch source subject after branch GC, security repair, production deployment, mission terminalization and closure evidence; vector/truth carriers are applied later per ADR-004."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
