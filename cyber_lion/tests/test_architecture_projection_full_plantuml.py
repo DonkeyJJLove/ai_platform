@@ -46,12 +46,12 @@ class FullArchitecturePlantUMLTests(unittest.TestCase):
         self.assertIn(b"UNKNOWN", first)
         self.assertIn(b"Status is explicit text", first)
 
-    def test_flow_atlas_has_exactly_nine_deterministic_sources(self):
+    def test_flow_atlas_has_exactly_ten_deterministic_sources(self):
         model = self._projection()
         first = serialize_flow_atlas_plantuml(model)
         second = serialize_flow_atlas_plantuml(model)
         self.assertEqual(first, second)
-        self.assertEqual(len(first), 9)
+        self.assertEqual(len(first), 10)
         self.assertEqual(tuple(flow_id for flow_id, _ in first), tuple(sorted(flow.flow_id for flow in model.flows)))
         for _, source in first:
             self.assertIn(b"canonical-flow-order", source)

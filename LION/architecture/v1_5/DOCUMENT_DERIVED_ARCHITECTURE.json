@@ -1,8 +1,8 @@
 {
   "schema": "lion.document-derived-architecture/v1",
-  "projection_input_tree": "079aedf882224cc66df6121b1535bc43909babdf",
+  "projection_input_tree": "18a7bfeb4da5beaa5ea1ec5c9cbe0f40ca93f64b",
   "source_federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
-  "generated_at": "2026-09-30T14:08:27.780219Z",
+  "generated_at": "2026-09-30T15:19:18.299445Z",
   "semantic_owners": [
     {
       "concept": "BeanFactory",
@@ -654,5 +654,5 @@
     }
   },
   "authority_effect": "NONE",
-  "projection_digest": "b7aaa8a4f81eb3d7125a93c573cdf3ad67b3ed56946a8c43a0c6a84453c4a06c"
+  "projection_digest": "af73ce10fff18ece35b3b7a3b3be2ace2561ca9308d583d137419cce9c2806da"
 }
