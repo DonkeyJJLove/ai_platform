@@ -1,0 +1,385 @@
+{
+  "schema": "lion.workflow-census/v1",
+  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1",
+  "projection_mode": "BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
+  "workflows": [
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "path": ".github/workflows/repository-hygiene.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "7f978255abe9658827aca2438b8244836ba8ebd687a65ee0f04e00ec7c7f8671"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": ".github/workflows/falsification-guard.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "1d67900c36803a6c8312f5a6815990b5b656888754d2f9d301df2206f10a5e0e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/bandit-security.yml",
+      "workflow_class": "SECURITY_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "59a4f2b3f86ba3797f04c09e5db7f54f6ed1f652d79f48223d99cae3ea9439f8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/cyber-lion-contracts.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "4e5403c574ddd08564686de39ac19df68f3f7a1204d76127428edb2ed379775f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-branch-ownership-registry-ci.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "815c842ade9909f6af7bac183fbf70719b9177cb26d20fd62eee4101c534cde1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-repository-observation-source-ci.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "637fcaa8206410ac79dd0632904d195c04dfe034af23178d44a2d21e44390395"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-branch-ownership-registry-refresh.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "eddd83d3463a93212b3905d6434ed877c5e79a9afa10fcdbfcb9ecac21d66f4d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-composition.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "0c2156ced7f55e3e359a7f496770b83fe67410c4693933658367d9c0dd3ac397"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-reconciliation-execution.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "79df136a917997bf49be823bcc163c996721bb393b7bcdea7152f4291a97956b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-reconciliation-ingestion.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "c4ad65c29f012b2a8c52e76ebfa80ef325f0e00713172257a1e77fa70a879e66"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-reconciliation-preflight.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "b6f0334749142b75499e0883df2fae88235c43bc346524f0d547053fdbd081f5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-repository-observation.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "9760e827bb92b780f7609453727e2866889ab9791cf3770a3eb9d7c70ee71910"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f005-runtime-trust-provisioning.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "5f6f5349b66f44392fd738b850c02d1cdf20f5e5a2eabfe7dc3086afaca7bcc2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/f009-live-runtime-proof.yml",
+      "workflow_class": "LIVE_RUNTIME_PROOF",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "cacc3e135730efca8952b80a1ea99c680a31a4ddc035dd486cc90989ad7bdc66"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/fleet-attestation-n2.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "a67ed32cf2def284c857392c768c98d562f531df03ddf1cceee34ef68b519216"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/fleet-effect-budget-r1.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "183df9106084395837c7ba597621d51b43c59c5fa366226b09e70825fd8b5400"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-actions-dispatch-bridge.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "5af540c76bf1150a74f8bce389bc83c1d749ab235f2891c4e7919b1f7d11dde6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-code-perception-observation.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "65054fa1ca5a39544818ff0f9974eebdde5699e51fa809cdeb82a92ec49b7f80"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-git-logical-tree.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "bf71a40ab1da414ac73336f8af811bb094e03fd4e6e0f18f65afd28a9f940f9a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-group-channel.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "e600d33ea52b44ca00cd7003aca9e30823e8d149562b3bf93a6f41f103a89db8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-moon-runner-attested-execution-bridge.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "6013c8e8b5407b60f2a39e6e9daa13ef7c92ec9500cb441836855101694442ce"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-r22c-full-symbol-census.yml",
+      "workflow_class": "CURRENTNESS_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "1ac38c4f9139778c959f634aefff170eff9a8718a3433a4f39e30038f1bb559f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
+      "workflow_class": "CURRENTNESS_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-rag32-validate.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "98413373613314d87d83ef3628d2b38c1067cbeac5420a3fa8f56a783767383e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-repository-maintenance-sandbox.yml",
+      "workflow_class": "MAINTENANCE_EFFECT",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": true,
+      "sha256": "fede7f5aeb764628047cd1fd624dc4392dec684da2b28b723533a7025c596a19"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-workflow-homeostasis.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "96cce5b992e0edde89baabbb1c6f25147e58aefbac4796f05022a3420fcf0926"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/moon-file-write.yml",
+      "workflow_class": "MAINTENANCE_EFFECT",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "39ab3e1561820bc676fb3dd64400a0767c2e7991aba7d26eb7de6b7144561951"
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "path": ".github/workflows/repository-hygiene.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "bb395731c7a3b6b21272bb242e9267dc26e197d3a1ed4f0daaae8e3276090655"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": ".github/workflows/ci.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "1a79e15c6c5197faa7eb72839ca85efd627c602adf98bc8821f3c48285f40814"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": ".github/workflows/ruff-inventory.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "9b23135eeb9ca1d273099bd08323d3f1d7b59de7014df4bce51ddaf8641ad3ed"
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": ".github/workflows/epistemic-lab-guard.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "1e07641a2714860bcc9a2e61c572b5ed08b81202edad70afd00cab0eb9dc9545"
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "path": ".github/workflows/repository-hygiene.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "98c0ff2e5d37750946b8affd617806b12c40614f0260572614086474778f50ad"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "path": ".github/workflows/docker.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "5ccf1b2404379663a683e2d77e648f95248cf94e3997b9b88fa6666134243076"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "path": ".github/workflows/repository-hygiene.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "af1417fbe686e9973cb76392098f80fc47fa5d555b79c43190062fe3f29866f3"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": ".github/workflows/e4-dependency-compat.yml",
+      "workflow_class": "LIVE_RUNTIME_PROOF",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "570377c30f843167d024e801a7279b6ea8b1d725142b7515aa2d9fe37a0d8cc0"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": ".github/workflows/e5-manifest-security.yml",
+      "workflow_class": "SECURITY_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "5e9eab0f5c571b067321fcbc3c55c81e72d06674ba1b8e55ff213aa310dd6503"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": ".github/workflows/e6-agentworkload-example.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "a6d8e269b69dbe4d55a422af7cca470fff92f0384758f3de15fa70028f125532"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": ".github/workflows/e6-identity-prerequisites.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "c8d5f216837dd1d0753dda1e6cc79d67fd55e972bc20c43ff8443298c59d8e2b"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": ".github/workflows/e6-runtime-admission.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "073110bcc61b7dbf4d52b80096cd586c2f0251910e0037f298764338177344a2"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": ".github/workflows/process-guard.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "a327481cc784cb5d660fee39a6e1df8bffcb66378198b91c56f65bbaaeeb73dd"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": ".github/workflows/repository-hygiene.yml",
+      "workflow_class": "PERMANENT_PLATFORM_GATE",
+      "branch_specific_refs": [],
+      "has_branch_specific_refs": false,
+      "contents_write_permission": false,
+      "sha256": "029af047adc381ad6b9550d4b749804753942f36f2edec2a54545b6b6aeaca56"
+    }
+  ],
+  "counts": {
+    "PERMANENT_PLATFORM_GATE": 22,
+    "SECURITY_GATE": 2,
+    "PERMANENT_PLATFORM_GATE_WITH_HISTORICAL_MARKERS": 11,
+    "LIVE_RUNTIME_PROOF": 2,
+    "CURRENTNESS_GATE": 2,
+    "MAINTENANCE_EFFECT": 2
+  },
+  "authority_effect": "NONE"
+}

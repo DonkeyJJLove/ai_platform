@@ -1,9 +1,9 @@
 {
   "schema": "lion.code-derived-architecture/v1",
-  "projection_input_tree": "eb882238525df9c92985bde8bea20e10d1293816",
+  "projection_input_tree": "38781e883d27c4df197488026e7d91b857fb41be",
   "source_repository": "DonkeyJJLove/ai_platform",
-  "generated_at": "2026-10-01T12:31:18+02:00",
-  "model_digest": "84d48692f190532b6702c9b0a1cb1d2f0659fc0120ce40ff58c517691236fa72",
+  "generated_at": "2026-10-01T15:43:58+02:00",
+  "model_digest": "b26b9f8b7433fad95b4f9f4fb53ebc45742bb27217350e6c91aa5fc28905fac4",
   "derived_only": true,
   "authority_effect": "NONE",
   "runtime_evidence": "NONE",

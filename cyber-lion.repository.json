@@ -205,11 +205,71 @@
         "path": "LION/architecture/v1_4/federation_current_vector.json",
         "class": "GENERATED_PROJECTION",
         "currentness": "GENERATED"
+      },
+      {
+        "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_BASELINE_R1.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "SOURCE_BOUND"
+      },
+      {
+        "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
+        "class": "SCHEMA",
+        "currentness": "VERSIONED_STATIC"
+      },
+      {
+        "path": "LION/standards/README.md",
+        "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/standards/LION_NAMING_STANDARD.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/standards/LION_STATUS_MODEL.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/standards/LION_VERSION_MODEL.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/panel/README.md",
+        "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/panel/PANEL_COMPONENT_CATALOG.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "SOURCE_BOUND"
+      },
+      {
+        "path": "LION/panel/PANEL_STATE_MODEL.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "SOURCE_BOUND"
+      },
+      {
+        "path": "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "LOCAL_OWNER"
       }
     ],
     "discoverability": {
       "entrypoint": "AGENTS.md",
-      "global_owner_route": "AGENTS.md -> LION/architecture/v1_5/README.md; README.md -> LION/README.md -> LION/architecture/v1_5/README.md -> semantic owners/formalization registry",
+      "global_owner_route": "AGENTS.md -> LION/architecture/v1_5/README.md -> semantic owners/formalization registry -> LION/standards + LION/panel; README.md -> LION/README.md -> LION/architecture/v1_5/README.md",
       "max_reads_to_global_owner": 3
     },
     "invalidation_triggers": [
@@ -222,7 +282,12 @@
       "CURRENTNESS_CHANGE",
       "RAG_RELEASE",
       "REPOSITORY_ROLE_CHANGE",
-      "DEPENDENCY_CHANGE"
+      "DEPENDENCY_CHANGE",
+      "NAMING_STANDARD_CHANGE",
+      "STATUS_MODEL_CHANGE",
+      "VERSION_MODEL_CHANGE",
+      "PANEL_CONTRACT_CHANGE",
+      "REPOSITORY_CONTENT_CHANGE"
     ]
   }
 }

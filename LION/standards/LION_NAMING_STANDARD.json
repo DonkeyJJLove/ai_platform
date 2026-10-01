@@ -1,0 +1,37 @@
+{
+  "schema": "lion.naming-standard/v1",
+  "currentness": "CURRENT_STANDARD",
+  "authority_effect": "NONE",
+  "canonical": {
+    "directory": "lower_snake_case",
+    "python_module": "lower_snake_case.py",
+    "python_symbol_function": "lower_snake_case",
+    "python_symbol_class": "PascalCase",
+    "semantic_contract": "PascalCase",
+    "data_key": "lower_snake_case",
+    "environment_variable": "LION_UPPER_SNAKE_CASE",
+    "workflow_filename": "lower-kebab-case.yml",
+    "readme": "README.md",
+    "machine_artifact_id": "lower-kebab-case",
+    "schema_id": "lion.<domain>.<artifact>/vN",
+    "task_id": "LION-UPPER-KEBAB-RN",
+    "branch": "<class>/<semantic-scope>-rN"
+  },
+  "branch_classes": [
+    "mission",
+    "fix",
+    "docs",
+    "ci",
+    "test",
+    "research",
+    "maintenance"
+  ],
+  "name_roles": [
+    "CURRENT_CANONICAL_NAME",
+    "HISTORICAL_NAME",
+    "COMPATIBILITY_ALIAS",
+    "DEPRECATED_ALIAS"
+  ],
+  "immutable_history_policy": "DO_NOT_RENAME_IMMUTABLE_EVIDENCE",
+  "repository_rename_policy": "SEPARATE_FORMALIZED_MIGRATION_REQUIRED"
+}

@@ -94,4 +94,4 @@ Formalization jest warstwą poprawności i currentness, nie authority.
 
 ## Current frontier
 
-Fundament Federated Architecture Knowledge jest zintegrowany. Bieżący porządek successorów jest utrzymywany w [`architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md`](architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md). Kandydat `CommunicationEnvelope` pozostaje osobną zmianą do chwili własnego domknięcia i integracji.
+Fundament Federated Architecture Knowledge oraz `CommunicationEnvelope` są zintegrowane. Bieżący porządek successorów jest utrzymywany w [`architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md`](architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md); następnym frontierem kontraktowym jest `MissionIntent`. Standardy repozytorium znajdują się w [`standards/`](standards/), a formalny opis operator shell/panelu w [`panel/`](panel/).

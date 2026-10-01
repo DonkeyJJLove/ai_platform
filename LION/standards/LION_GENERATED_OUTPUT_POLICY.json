@@ -1,0 +1,22 @@
+{
+  "schema": "lion.generated-output-policy/v1",
+  "currentness": "CURRENT_STANDARD",
+  "classes": [
+    "SOURCE_DATA",
+    "GOLDEN_FIXTURE",
+    "CANONICAL_RESULT",
+    "REPRODUCIBLE_OUTPUT",
+    "PUBLICATION_ARTIFACT",
+    "ARCHIVED_RUN"
+  ],
+  "invariants": [
+    "REPRODUCIBLE_DOES_NOT_IMPLY_DISPOSABLE",
+    "PUBLICATION_AND_PROVENANCE_REQUIRE_EXPLICIT_RETENTION",
+    "DUPLICATE_OUTPUT_PREFERS_REFERENCE_AFTER_HISTORY_CHECK"
+  ],
+  "repository_focus": [
+    "DonkeyJJLove/SymulacjaKaskadySieciowej",
+    "DonkeyJJLove/writeups"
+  ],
+  "authority_effect": "NONE"
+}

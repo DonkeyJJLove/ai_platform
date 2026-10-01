@@ -1,7 +1,20 @@
 {
   "schema": "lion.documentation-currentness-model/v1",
-  "federation_digest": "26cd34c4d0fdbf17c4c746215fabe501809110d3c6fb4661886069adcb3b3f5f",
+  "federation_digest": "855e5782b113a9381949fac3f0bb30c412c929737f2507b324d2e02202b32d0c",
   "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
+  "evidence_identity_types": {
+    "LIVE_REPOSITORY_OBSERVATION": "freshly reacquired default-branch Git identity for the claim being made",
+    "EPOCH_CURRENTNESS_CARRIER": "immutable carrier binding a stabilized epoch subject",
+    "SOURCE_BOUND_PROJECTION": "deterministic projection bound to explicit source identities",
+    "CANDIDATE_BINDING": "pre-integration candidate identity used by formalization/verification",
+    "HISTORICAL_EVIDENCE": "immutable evidence of a past event or architecture epoch"
+  },
+  "evidence_invariants": [
+    "STORED_SNAPSHOT_IS_NOT_SELF_REFRESHING_LIVE_TRUTH",
+    "HISTORICAL_CARRIERS_ARE_NOT_REWRITTEN_TO_LATER_HEADS",
+    "CURRENT_CLAIMS_REQUIRE_REACQUISITION",
+    "PROJECTIONS_DECLARE_EXACT_INPUT_IDENTITY"
+  ],
   "dimensions": {
     "REPOSITORY_CURRENT": {
       "owner": "exact Git observation",

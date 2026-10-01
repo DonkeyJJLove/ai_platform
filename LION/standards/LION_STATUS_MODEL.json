@@ -1,0 +1,51 @@
+{
+  "schema": "lion.typed-status-model/v1",
+  "currentness": "CURRENT_STANDARD",
+  "planes": {
+    "lifecycle": [
+      "EXPERIMENT",
+      "CANDIDATE",
+      "FORMALIZED",
+      "INTEGRATED",
+      "SUPERSEDED",
+      "ARCHIVED"
+    ],
+    "currentness": [
+      "CURRENT",
+      "SOURCE_BOUND",
+      "STALE",
+      "UNKNOWN",
+      "HISTORICAL"
+    ],
+    "authority": [
+      "UNAUTHORIZED",
+      "AUTHORIZED",
+      "REVOKED",
+      "EXPIRED",
+      "UNKNOWN"
+    ],
+    "execution": [
+      "REQUESTED",
+      "ADMITTED",
+      "EXECUTING",
+      "EFFECT_OBSERVED",
+      "RECONCILED",
+      "FAILED",
+      "UNKNOWN"
+    ],
+    "verification": [
+      "PASS",
+      "FAIL",
+      "SKIPPED",
+      "UNKNOWN"
+    ],
+    "deployment": [
+      "NOT_DEPLOYED",
+      "DEPLOYED",
+      "DEGRADED",
+      "UNKNOWN"
+    ]
+  },
+  "invariant": "STATUS_PLANE_MUST_BE_EXPLICIT",
+  "authority_effect": "NONE"
+}

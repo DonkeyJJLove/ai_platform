@@ -3,7 +3,7 @@ name: Fleet Aggregate Effect Budget R1
 on:
   push:
     branches:
-      - mission/fleet-aggregate-effect-budget-r1
+      - master
     paths:
       - "cyber_lion/contracts/fleet_effect_budget.py"
       - "cyber_lion/enterprise/fleet_effect_budget.py"
@@ -58,24 +58,15 @@ jobs:
           EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
-          BASE='8bf8934a0cf2809b58b460c01976cf82ae0692e7'
           ACTUAL="$(git rev-parse HEAD)"
           TREE="$(git rev-parse HEAD^{tree})"
           test "$ACTUAL" = "$EXPECTED_HEAD"
-          git merge-base --is-ancestor "$BASE" "$ACTUAL"
           CONTRACT_DIGEST="$(sha256sum cyber_lion/contracts/fleet_effect_budget.py | awk '{print $1}')"
           IMPLEMENTATION_DIGEST="$(sha256sum cyber_lion/enterprise/fleet_effect_budget.py | awk '{print $1}')"
-          mapfile -t CHANGED < <(git diff --name-only "$BASE".."$ACTUAL" | sort)
-          if [ "${#CHANGED[@]}" -eq 0 ]; then
-            echo 'CHANGED_FILES_EMPTY=YES' >&2
-            exit 1
-          fi
-          CHANGED_JOINED="$(IFS=,; echo "${CHANGED[*]}")"
           printf 'CONTRACT_DIGEST=%s\n' "$CONTRACT_DIGEST"
           printf 'IMPLEMENTATION_DIGEST=%s\n' "$IMPLEMENTATION_DIGEST"
-          printf 'CHANGED_FILES=%s\n' "$CHANGED_JOINED"
-          printf 'SUCCESSOR_HEAD=%s\n' "$ACTUAL"
-          printf 'SUCCESSOR_TREE=%s\n' "$TREE"
+          printf 'CHECKED_HEAD=%s\n' "$ACTUAL"
+          printf 'CHECKED_TREE=%s\n' "$TREE"
       - name: Compile Cyber-Lion
         run: python -m compileall -q cyber_lion
       - name: Verified claim materialization regression

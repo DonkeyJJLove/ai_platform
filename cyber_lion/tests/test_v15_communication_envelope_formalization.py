@@ -15,8 +15,9 @@ from cyber_lion.contracts.federated_formalization_binding import FederatedFormal
 
 ROOT=Path(__file__).resolve().parents[2]
 V15=ROOT/"LION/architecture/v1_5"
-HEAD="3f0f3a01e0d42c190983a0dea32b5b4abb07b589"
-TREE="3ac45ea1329938fdcd7f3c3d4705c78907533949"
+INTEGRATION_BASE_HEAD="3f0f3a01e0d42c190983a0dea32b5b4abb07b589"
+INTEGRATION_BASE_TREE="3ac45ea1329938fdcd7f3c3d4705c78907533949"
+CURRENT_OWNER_BASELINE_HEAD="c064e6aca1c5be8187ae7fd856b9f7950adfa7a4"
 
 def load(name):
     return json.loads((V15/name).read_text(encoding="utf-8"))
@@ -61,7 +62,7 @@ class CommunicationEnvelopeFormalizationTests(unittest.TestCase):
 
     def test_current_owner_catalog_architecture_and_gap_are_rebound(self):
         owners=load("semantic_owners.json")
-        self.assertEqual(owners["baseline_head"],HEAD)
+        self.assertEqual(owners["baseline_head"],CURRENT_OWNER_BASELINE_HEAD)
         rows=[x for x in owners["owners"] if x["concept"]=="CommunicationEnvelope"]
         self.assertEqual(len(rows),1)
         self.assertEqual(rows[0]["primary"],"cyber_lion/contracts/communication_envelope.py")
@@ -78,7 +79,7 @@ class CommunicationEnvelopeFormalizationTests(unittest.TestCase):
 
     def test_afm_rfs_and_exact_federation_binding_validate(self):
         r=registry(); a=manifest(); f=fleet()
-        self.assertEqual((a.baseline.head,a.baseline.tree),(HEAD,TREE))
+        self.assertEqual((a.baseline.head,a.baseline.tree),(INTEGRATION_BASE_HEAD,INTEGRATION_BASE_TREE))
         expected=load("REQUIRED_FORMALIZATION_SET_COMMUNICATION_ENVELOPE_R1.json")
         self.assertEqual(json.loads(json.dumps(derive_required_formalization_set(a,r).to_dict(),sort_keys=True)),expected)
         self.assertEqual(len(expected["items"]),36)

@@ -1,0 +1,29 @@
+{
+  "schema": "lion.version-model/v1",
+  "currentness": "CURRENT_STANDARD",
+  "axes": [
+    "architecture_epoch",
+    "product_release",
+    "contract_version",
+    "schema_version",
+    "formalization_revision",
+    "experiment_revision",
+    "runtime_generation",
+    "documentation_revision"
+  ],
+  "examples": {
+    "architecture_epoch": "1.5",
+    "experiment_revision": [
+      "R24",
+      "E02",
+      "T03"
+    ],
+    "formalization_revision": "r2"
+  },
+  "invariants": [
+    "VERSION_AXES_ARE_INDEPENDENT",
+    "DIRECTORY_NAME_IS_NOT_COMPATIBILITY_PROOF",
+    "HISTORICAL_REVISION_IS_NOT_PRODUCT_RELEASE"
+  ],
+  "authority_effect": "NONE"
+}

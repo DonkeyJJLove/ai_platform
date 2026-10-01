@@ -1,0 +1,87 @@
+{
+  "schema": "lion.panel-component-catalog/v1",
+  "currentness": "SOURCE_BOUND",
+  "authority_effect": "NONE",
+  "components": [
+    {
+      "id": "operator-shell",
+      "path": "browser_broker/src/main.cjs",
+      "role": "CURRENT_UI_SHELL",
+      "surface": "Electron BaseWindow",
+      "mutates_state": true,
+      "authority_owner": false
+    },
+    {
+      "id": "mission-control",
+      "path": "cyber_lion/mission_control",
+      "role": "CURRENT_CONTROL_AND_OBSERVATION_SUBSYSTEM",
+      "surface": "Mission Control",
+      "mutates_state": "BOUNDED_BY_ENDPOINT",
+      "authority_owner": false
+    },
+    {
+      "id": "local-panel",
+      "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
+      "role": "CURRENT_UI_BACKEND",
+      "surface": "LPCL/local panel",
+      "mutates_state": "BOUNDED",
+      "authority_owner": false
+    },
+    {
+      "id": "canonical-model-chat",
+      "path": "cyber_lion/app_coordination/r24_model_chat_ui.py",
+      "role": "CURRENT_UI_MODULE",
+      "surface": "Model Chat",
+      "mutates_state": "CONVERSATION_AND_REQUEST_STATE",
+      "authority_owner": false
+    },
+    {
+      "id": "conversation-domain",
+      "path": "cyber_lion/app_coordination/conversation_domain.py",
+      "role": "CURRENT_CONVERSATION_DOMAIN",
+      "surface": "none",
+      "mutates_state": "VIA_SERVICE",
+      "authority_owner": false
+    },
+    {
+      "id": "saas-consumer",
+      "path": "browser_broker/src/canonical-conversation-consumer.cjs",
+      "role": "CURRENT_TRANSPORT_ADAPTER",
+      "surface": "ChatGPT SaaS",
+      "mutates_state": "DURABLE_TRANSPORT",
+      "authority_owner": false
+    },
+    {
+      "id": "process-language",
+      "path": "cyber_lion/process_language",
+      "role": "CURRENT_PROCESS_CONTRACT_SUBSYSTEM",
+      "surface": "LPCL semantics",
+      "mutates_state": false,
+      "authority_owner": false
+    },
+    {
+      "id": "vkt-r3-mission-control",
+      "path": "cyber_lion/vkt_r3/mission_control",
+      "role": "UNRESOLVED_LINEAGE_OR_COMPATIBILITY",
+      "surface": "historical/compatibility UI",
+      "mutates_state": "UNKNOWN",
+      "authority_owner": false
+    },
+    {
+      "id": "runtime-compat-node-panel",
+      "path": "LION/runtime_compat/r20/node-panel",
+      "role": "COMPATIBILITY_LAYER",
+      "surface": "compatibility panel",
+      "mutates_state": "COMPATIBILITY_BOUND",
+      "authority_owner": false
+    },
+    {
+      "id": "firefox-mediator",
+      "path": "tools/firefox_mediator",
+      "role": "UNRESOLVED_COMPATIBILITY_TRANSPORT",
+      "surface": "external browser mediation",
+      "mutates_state": "TRANSPORT",
+      "authority_owner": false
+    }
+  ]
+}

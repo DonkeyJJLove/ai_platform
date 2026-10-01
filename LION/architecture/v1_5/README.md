@@ -95,8 +95,6 @@ Peer repositories own only their local architecture knowledge through `AGENTS.md
 
 ## Current successor increment
 
-`CommunicationEnvelope` is being reconciled as a selective port from the preserved candidate onto the current post-homeostasis `master`. Only the inert semantic contract and its validated behavior are reused; stale owner, projection, formalization and currentness bindings are regenerated against the current source tree.
+`CommunicationEnvelope` is integrated in `master` as a non-effectful semantic contract: `CommunicationEnvelope != transport != delivery != cognition != authority`. Its completed formalization remains immutable evidence for that integration epoch.
 
-The increment remains non-effectful: `CommunicationEnvelope != transport != delivery != cognition != authority`. It uses the current v1.5 semantic-owner map, documentation-homeostasis loop and federation-aware formalization path. It is not part of the integrated `master` contract surface until its own publication, verification and reconciliation close.
-
-The dependency-derived successor after CommunicationEnvelope closure is `MissionIntent`, as tracked in `AI_NATIVE_ROADMAP_NEXT.md`.
+The dependency-derived contract successor is now `MissionIntent`, as tracked in `AI_NATIVE_ROADMAP_NEXT.md`. In parallel, `LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1` introduces typed repository-content classification, naming/status/version standards and a formal panel architecture. Those maintenance artifacts do not create a new top-level runtime or authority layer.

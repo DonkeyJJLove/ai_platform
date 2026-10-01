@@ -1,0 +1,18 @@
+{
+  "schema": "lion.currentness-evidence-model/v1",
+  "currentness": "CURRENT_STANDARD",
+  "evidence_types": [
+    "LIVE_REPOSITORY_OBSERVATION",
+    "EPOCH_CURRENTNESS_CARRIER",
+    "SOURCE_BOUND_PROJECTION",
+    "CANDIDATE_BINDING",
+    "HISTORICAL_EVIDENCE"
+  ],
+  "invariants": [
+    "STORED_SNAPSHOT_IS_NOT_SELF_REFRESHING_LIVE_TRUTH",
+    "HISTORICAL_CARRIERS_ARE_IMMUTABLE",
+    "CURRENT_CLAIMS_REQUIRE_REACQUISITION",
+    "PROJECTIONS_DECLARE_EXACT_INPUT_IDENTITY"
+  ],
+  "authority_effect": "NONE"
+}
