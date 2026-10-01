@@ -1,6 +1,6 @@
 # Federated Architecture AS-IS — v1.5
 
-Status: `SOURCE_DERIVED_CANDIDATE`. Authority effect: `NONE`.
+Status: `INTEGRATED_FOUNDATION_SOURCE_DERIVED`. Authority effect: `NONE`. The stored federation snapshot is a source-bound projection baseline; later local-owner evolution is reconciled through an exact Git overlay before current documentation claims are derived.
 
 ## System boundary
 
