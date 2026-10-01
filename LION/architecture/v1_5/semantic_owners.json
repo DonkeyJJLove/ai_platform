@@ -1,6 +1,6 @@
 {
   "schema": "lion.documentation.semantic-owner-map.v1",
-  "baseline_head": "3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
+  "baseline_head": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
   "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
   "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
   "owners": [
@@ -265,6 +265,90 @@
         "cyber_lion/contracts/action_runtime_binding.py",
         "cyber_lion/enterprise/runtime_execution.py",
         "cyber_lion/enterprise/live_runtime_evidence_plane.py"
+      ]
+    },
+    {
+      "concept": "repository_content_classification",
+      "primary": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
+      "secondary": [
+        "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
+        "tools/lion_global_repository_census.py"
+      ]
+    },
+    {
+      "concept": "naming_standard",
+      "primary": "LION/standards/LION_NAMING_STANDARD.json",
+      "secondary": [
+        "LION/standards/LION_NAMING_STANDARD.md"
+      ]
+    },
+    {
+      "concept": "status_model",
+      "primary": "LION/standards/LION_STATUS_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_STATUS_MODEL.md",
+        "LION/panel/PANEL_STATE_MODEL.json"
+      ]
+    },
+    {
+      "concept": "version_model",
+      "primary": "LION/standards/LION_VERSION_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_VERSION_MODEL.md"
+      ]
+    },
+    {
+      "concept": "panel",
+      "primary": "LION/panel/PANEL_ARCHITECTURE.md",
+      "secondary": [
+        "LION/panel/PANEL_COMPONENT_CATALOG.json",
+        "browser_broker/src/main.cjs",
+        "cyber_lion/mission_control/server.py",
+        "cyber_lion/app_coordination/r24_model_chat_ui.py"
+      ]
+    },
+    {
+      "concept": "branch_reconciliation",
+      "primary": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
+      "secondary": [
+        "LION/maintenance/branch-closure-manifest-v1.json"
+      ]
+    },
+    {
+      "concept": "test_taxonomy",
+      "primary": "LION/architecture/v1_5/TEST_CENSUS.json",
+      "secondary": [
+        "cyber_lion/tests"
+      ]
+    },
+    {
+      "concept": "workflow_taxonomy",
+      "primary": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
+      "secondary": [
+        ".github/workflows",
+        "tools/lion_workflow_homeostasis.py"
+      ]
+    },
+    {
+      "concept": "repository_layout_standard",
+      "primary": "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.json",
+      "secondary": [
+        "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.md"
+      ]
+    },
+    {
+      "concept": "currentness_evidence_model",
+      "primary": "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.md",
+        "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json"
+      ]
+    },
+    {
+      "concept": "generated_output_policy",
+      "primary": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
+      "secondary": [
+        "LION/standards/LION_GENERATED_OUTPUT_POLICY.md"
       ]
     }
   ],

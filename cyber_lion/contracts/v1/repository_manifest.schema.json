@@ -304,7 +304,12 @@
               "CURRENTNESS_CHANGE",
               "RAG_RELEASE",
               "REPOSITORY_ROLE_CHANGE",
-              "DEPENDENCY_CHANGE"
+              "DEPENDENCY_CHANGE",
+              "NAMING_STANDARD_CHANGE",
+              "STATUS_MODEL_CHANGE",
+              "VERSION_MODEL_CHANGE",
+              "PANEL_CONTRACT_CHANGE",
+              "REPOSITORY_CONTENT_CHANGE"
             ]
           }
         }

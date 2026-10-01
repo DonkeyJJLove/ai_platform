@@ -1,11 +1,16 @@
-# LION R19 — broker-owned browser candidate
+# LION operator shell — Electron browser broker
 
-This is a feasibility candidate, not a production replacement for panel R17.4.
-The existing 8780 panel is displayed without changing its source or data. A second
-WebContentsView belongs to the broker process and hosts the actual ChatGPT site.
-The Chromium profile is persistent; Node.js is unavailable to remote renderers.
-There is no headless mode, external Edge process, Windows UI Automation, cookie
-export, user-agent substitution or execution-policy override.
+Status: current source-level operator shell. Deployment/current runtime remains a separate observation claim.
+
+The component originated as the R19 browser feasibility candidate, but the current source is the Electron shell that composes the operator experience: Mission Control on the left and the LPCL Panel / ChatGPT SaaS surfaces on the right. Historical R19 evidence remains valid for its own epoch; this README describes the current source role rather than preserving the old "not a production replacement" label.
+
+The 8780 panel is displayed without granting renderer authority. A separate
+WebContentsView hosts the ChatGPT SaaS surface. The Chromium profile is persistent;
+Node.js is unavailable to remote renderers. There is no headless mode, external
+Edge process, Windows UI Automation, cookie export, user-agent substitution or
+execution-policy override.
+
+Canonical architecture and information-model documentation lives in `LION/panel/`.
 
 The implementation follows Electron's [WebContentsView](https://www.electronjs.org/docs/latest/api/web-contents-view)
 and [security guidance](https://www.electronjs.org/docs/latest/tutorial/security).

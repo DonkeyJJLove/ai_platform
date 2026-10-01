@@ -1,7 +1,7 @@
 {
   "schema": "lion.document-derived-architecture/v1",
-  "projection_input_tree": "eb882238525df9c92985bde8bea20e10d1293816",
-  "source_federation_digest": "26cd34c4d0fdbf17c4c746215fabe501809110d3c6fb4661886069adcb3b3f5f",
+  "projection_input_tree": "38781e883d27c4df197488026e7d91b857fb41be",
+  "source_federation_digest": "855e5782b113a9381949fac3f0bb30c412c929737f2507b324d2e02202b32d0c",
   "semantic_owners": [
     {
       "concept": "BeanFactory",
@@ -265,6 +265,90 @@
         "cyber_lion/enterprise/runtime_execution.py",
         "cyber_lion/enterprise/live_runtime_evidence_plane.py"
       ]
+    },
+    {
+      "concept": "repository_content_classification",
+      "primary": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
+      "secondary": [
+        "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
+        "tools/lion_global_repository_census.py"
+      ]
+    },
+    {
+      "concept": "naming_standard",
+      "primary": "LION/standards/LION_NAMING_STANDARD.json",
+      "secondary": [
+        "LION/standards/LION_NAMING_STANDARD.md"
+      ]
+    },
+    {
+      "concept": "status_model",
+      "primary": "LION/standards/LION_STATUS_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_STATUS_MODEL.md",
+        "LION/panel/PANEL_STATE_MODEL.json"
+      ]
+    },
+    {
+      "concept": "version_model",
+      "primary": "LION/standards/LION_VERSION_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_VERSION_MODEL.md"
+      ]
+    },
+    {
+      "concept": "panel",
+      "primary": "LION/panel/PANEL_ARCHITECTURE.md",
+      "secondary": [
+        "LION/panel/PANEL_COMPONENT_CATALOG.json",
+        "browser_broker/src/main.cjs",
+        "cyber_lion/mission_control/server.py",
+        "cyber_lion/app_coordination/r24_model_chat_ui.py"
+      ]
+    },
+    {
+      "concept": "branch_reconciliation",
+      "primary": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
+      "secondary": [
+        "LION/maintenance/branch-closure-manifest-v1.json"
+      ]
+    },
+    {
+      "concept": "test_taxonomy",
+      "primary": "LION/architecture/v1_5/TEST_CENSUS.json",
+      "secondary": [
+        "cyber_lion/tests"
+      ]
+    },
+    {
+      "concept": "workflow_taxonomy",
+      "primary": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
+      "secondary": [
+        ".github/workflows",
+        "tools/lion_workflow_homeostasis.py"
+      ]
+    },
+    {
+      "concept": "repository_layout_standard",
+      "primary": "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.json",
+      "secondary": [
+        "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.md"
+      ]
+    },
+    {
+      "concept": "currentness_evidence_model",
+      "primary": "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.md",
+        "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json"
+      ]
+    },
+    {
+      "concept": "generated_output_policy",
+      "primary": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
+      "secondary": [
+        "LION/standards/LION_GENERATED_OUTPUT_POLICY.md"
+      ]
     }
   ],
   "repository_roles": [
@@ -342,9 +426,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "mission/v15-communication-envelope-consolidation-r2",
-      "head": "1b2ef590e9bf76efe1f5b206b15a0dae9b69f15b",
-      "tree": "eb882238525df9c92985bde8bea20e10d1293816",
+      "branch": "mission/global-reconciliation-standardization-r1",
+      "head": "ae9b41168b273bdbf09799677c27e538c8a445be",
+      "tree": "38781e883d27c4df197488026e7d91b857fb41be",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -654,11 +738,11 @@
     }
   ],
   "architecture_documents": {
-    "artifact_count": 761,
+    "artifact_count": 780,
     "by_repository": {
       "DonkeyJJLove/HA2D": 5,
       "DonkeyJJLove/SymulacjaKaskadySieciowej": 8,
-      "DonkeyJJLove/ai_platform": 633,
+      "DonkeyJJLove/ai_platform": 652,
       "DonkeyJJLove/chunk-chunk": 7,
       "DonkeyJJLove/glitchlab": 26,
       "DonkeyJJLove/hipotezy_nadawcze_LLM": 5,
@@ -672,8 +756,8 @@
       "CAPABILITY_CATALOG": 1,
       "CONTRACT_CATALOG": 1,
       "GENERATED_DOCUMENTATION": 9,
-      "HUMAN_ARCHITECTURE_DOCUMENT": 401,
-      "MACHINE_READABLE_ARCHITECTURE": 256,
+      "HUMAN_ARCHITECTURE_DOCUMENT": 409,
+      "MACHINE_READABLE_ARCHITECTURE": 267,
       "PROCESS_CONTRACT": 9,
       "RAG_ROUTING": 49,
       "REPOSITORY_MANIFEST": 10,
@@ -685,5 +769,5 @@
   },
   "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "authority_effect": "NONE",
-  "projection_digest": "4aac9d5d309cc234f3ef8cf9731c1c0df4da6498dbb0a4d63325b80b051508ad"
+  "projection_digest": "28b34a2d84b8cdc0a96d9307aa336a238b5b5513de5c3d7645049618e1b44394"
 }

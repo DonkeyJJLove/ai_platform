@@ -1,0 +1,24 @@
+{
+  "schema": "lion.repository-layout-standard/v1",
+  "currentness": "CURRENT_STANDARD",
+  "roles": {
+    "contracts": "semantic contracts",
+    "schemas": "serialization schemas",
+    "architecture": "architecture knowledge and versioned history",
+    "runtime": "runtime implementation",
+    "mission_control": "mission/control-plane domain",
+    "app_coordination": "application/session/conversation coordination",
+    "process_language": "LPCL/process semantics",
+    "registry": "registries and membership",
+    "rag": "versioned retrieval knowledge",
+    "evals": "evaluations",
+    "tests": "test surfaces with typed metadata",
+    "tools": "operator/generator/validator/migration tools",
+    "docs": "human reference and operations",
+    "compat": "compatibility",
+    "archive": "frozen history",
+    "generated": "deterministic projections"
+  },
+  "migration_policy": "NO_MASS_MOVE_WITHOUT_CONSUMER_AND_ROLLBACK_EVIDENCE",
+  "authority_effect": "NONE"
+}

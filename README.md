@@ -163,7 +163,7 @@ Nie jest to jedna liniowa skala: Git nie dowodzi runtime, test nie dowodzi autho
 
 Fundament v1.5 jest zintegrowany. Następne kroki są wyprowadzane w [`AI_NATIVE_ROADMAP_NEXT.md`](LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md).
 
-`CommunicationEnvelope` jest rozwijany jako osobny, formalizowany successor i **nie należy go traktować jako zintegrowanej funkcji `master`, dopóki jego własny cykl publikacji i rekonsyliacji nie zostanie domknięty**.
+`CommunicationEnvelope` jest zintegrowany w `master` jako nieefektowy kontrakt semantyczny (`envelope != transport != delivery != cognition != authority`). Bieżący frontier architektoniczny rozpoczyna się od `MissionIntent`, natomiast równoległym zadaniem utrzymaniowym jest globalna rekonsyliacja repozytoriów, nazewnictwa, dokumentacji i panelu.
 
 ---
 

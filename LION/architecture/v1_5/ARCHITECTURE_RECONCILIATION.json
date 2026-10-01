@@ -1,6 +1,6 @@
 {
   "schema": "lion.architecture-reconciliation/v1",
-  "federation_digest": "26cd34c4d0fdbf17c4c746215fabe501809110d3c6fb4661886069adcb3b3f5f",
+  "federation_digest": "855e5782b113a9381949fac3f0bb30c412c929737f2507b324d2e02202b32d0c",
   "results": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -243,6 +243,114 @@
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
         "DonkeyJJLove/ai_platform:LION/architecture/v1_4/federation_current_vector.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_BASELINE_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_BASELINE_R1.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
+      "classification": "ALIGNED_VERSIONED_STATIC",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/LION_NAMING_STANDARD.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/LION_NAMING_STANDARD.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/LION_STATUS_MODEL.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/LION_STATUS_MODEL.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/LION_VERSION_MODEL.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/LION_VERSION_MODEL.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/panel/README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/panel/README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/panel/PANEL_COMPONENT_CATALOG.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/panel/PANEL_COMPONENT_CATALOG.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/panel/PANEL_STATE_MODEL.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/panel/PANEL_STATE_MODEL.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/standards/LION_GENERATED_OUTPUT_POLICY.json"
       ]
     },
     {
@@ -566,12 +674,12 @@
       "classification": "ALIGNED_CURRENT",
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-        "DonkeyJJLove/ai_platform:tree:eb882238525df9c92985bde8bea20e10d1293816"
+        "DonkeyJJLove/ai_platform:tree:38781e883d27c4df197488026e7d91b857fb41be"
       ]
     }
   ],
   "contradictions": [],
   "unknowns": [],
   "authority_effect": "NONE",
-  "reconciliation_digest": "17eecafc2e771aa1db6599abdbe0144d4cf9be0918552d8788c95f5faa6216fd"
+  "reconciliation_digest": "50fcd904f8a2eef81b3a55686b47ff78de01fe1b40a11c83d19e74664642a03f"
 }

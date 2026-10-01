@@ -1,0 +1,59 @@
+{
+  "schema": "lion.panel-state-model/v1",
+  "currentness": "SOURCE_BOUND",
+  "lifecycle_states": [
+    "EXPERIMENT",
+    "CANDIDATE",
+    "FORMALIZED",
+    "INTEGRATED",
+    "SUPERSEDED",
+    "ARCHIVED"
+  ],
+  "operator_execution_states": [
+    "REQUESTED",
+    "ADMITTED",
+    "EXECUTING",
+    "EFFECT_OBSERVED",
+    "RECONCILED",
+    "FAILED",
+    "UNKNOWN"
+  ],
+  "conversation_states": [
+    "UNBOUND",
+    "ACTIVE",
+    "FROZEN",
+    "SUPERSEDED"
+  ],
+  "delivery_states": [
+    "ACCEPTED",
+    "SAAS_QUEUED",
+    "DUAL_WAITING",
+    "DELIVERED",
+    "FAILED",
+    "UNKNOWN"
+  ],
+  "model_call_states": [
+    "INTENT_DURABLE",
+    "SEND_ATTEMPT",
+    "SEND_UNKNOWN",
+    "SEND_CONFIRMED",
+    "RESPONSE_RECONCILED",
+    "FAILED",
+    "CANCELLED"
+  ],
+  "mission_readiness_states": [
+    "READY_BOUND",
+    "VALID_WITH_DYNAMIC_BINDING",
+    "WAITING_FOR_CAPABILITIES",
+    "INVALID"
+  ],
+  "authority_states": [
+    "UNAUTHORIZED",
+    "AUTHORIZED",
+    "REVOKED",
+    "EXPIRED",
+    "UNKNOWN"
+  ],
+  "invariant": "UI_MUST_NOT_COLLAPSE_PROPOSAL_AUTHORIZATION_EXECUTION_OBSERVATION",
+  "authority_effect": "NONE"
+}

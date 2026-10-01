@@ -1,11 +1,11 @@
 {
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
-  "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE_CLOSED",
-  "generated_at": "2026-10-01T13:15:00+02:00",
+  "process_epoch": "V1_5_GLOBAL_REPOSITORY_RECONCILIATION_R1_CANDIDATE",
+  "generated_at": "2026-10-01T13:44:59.140609Z",
   "registry_source": "cyber_lion/registry/repositories.json@0a94d7c50e5e631d25a7ab675c377bb5e86d50ef",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Final v1.5 federation vector binds integrated peer identities and the formalization-closed ai_platform pre-vector subject. Truth carriers are rebound only after this vector commit per ADR-004.",
+  "currentness_rule": "Remote candidate vector binds the exact published source/projection commit after manifest-schema closure. Truth carriers follow this vector commit.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "9907e1eb3a1c04df869f9b24bf95150e67755f60",
-    "subject_tree": "5dfcd626fae00f52c77c5804a6ef96059e9915b6",
+    "subject_head": "d5192d72bea46bef64c2e51ef7e10a287cd97d95",
+    "subject_tree": "d6a6e51ca945e2e528e6e1cf75f32e6833dd219d",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "master",
-      "head": "8b8f218616e58ca33483cf2ef69d60be03bfd940",
-      "tree": "225f3d8da12cf430569e7f5070a4fad260685524",
+      "branch": "mission/global-reconciliation-standardization-r1",
+      "head": "d5192d72bea46bef64c2e51ef7e10a287cd97d95",
+      "tree": "d6a6e51ca945e2e528e6e1cf75f32e6833dd219d",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Formalization-closed remote CommunicationEnvelope successor. Final truth carriers follow this vector commit per ADR-004."
+      "lineage_note": "Remote global repository reconciliation source/projection commit after manifest-schema closure; truth carriers follow vector commit."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",

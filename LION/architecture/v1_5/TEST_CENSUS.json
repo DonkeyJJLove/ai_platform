@@ -1,0 +1,3637 @@
+{
+  "schema": "lion.test-census/v1",
+  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1",
+  "projection_mode": "BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
+  "tests": [
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "tests/test_iran_cascade_provider.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3c2f0f14a67a1ab0d5e29418d3e16f946d4b226c3f2b071bff47dc3b0c8d6c38"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "tests/test_simulation_contracts.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "7a5aa628a64465c659f7989ac838f6b5c0e2c5e45b65560f241f331af0aab958"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "tests/test_simulation_provider_conformance.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f8a9baebc06c29ee3fc98f633de05709179e9cc5415d2746adad8f481f2cf38b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/broker.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "796ef65b0d5bf856f92303b5cba39b66af8d46ae0f6474ae4820e5dbe45016e0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/browser.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8afdc239402294bfa82bee8f152b7a3dc8dc492f475f2b64742159d6bd16138b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/canonical-conversation-consumer.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d3ce420be99862b9c9c9c68ec07161b9357f4f4833fe4a41c72033f4a2cf7928"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/conversation.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a3f8a6c8d044ae08a52149e1ad5695a74a77206a890f0227ba3eb0676b5b74eb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/relay.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "111407b13c394b16453f78d5e09293aaa485ff6485887e5990f771e57d8e9022"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/sentinelx-transport.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "27c50eb46b2f61c22c42603994d9344c6026f0de75141103e05ced37206a81ef"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "browser_broker/test/thread-consumer.test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ce345d22a6bf62d5bb885daa1275781ae15ec36a8675640d0f9e5bfcec563f8e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/app_coordination/test_placement.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "30e641c764f379d32de0da6f34088988a4aadf284392dc0ca480df97e3523822"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/architecture_projection_candidate.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "2d2c7b32c86518fce4f1b15f466c1c1a8be32dc75915040e143e9751428ae9ea"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/epoch3_gateway_browser.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "d593f9c013e9a047e1178ea7c774ea7e0fc05266c5f2fa05128ac9f2196e825e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/epoch3_ui_refresh_browser.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "185055a7c6244ed9f08e4dffc9ce4f2e82e225a74d97f535e52da57447d06f46"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/experiments/bean_generativity.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4e753874579755234f6112f93f8a3991c45f4e5429491ff6134e2bb650952e16"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/formalization_test_support.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "41aa42d410cf7a8f7f780e26defe7ec0a60de203155745847c6bbe44659598b6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/local_gateway_deletion_browser.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a13210875cec570a7f9cd1a2860ca43b53e4c53b2a5af91e1bf15243ac38d83b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/lpcl_exact_source_browser.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "45b6a8a12d0da40c9c15d79a02fb320433ef32aa8ef290e1ce6e58ae18ad3d67"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/mission_control_ui_test.cjs",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a73e1e1dd8bb7c0707cf8e2e3ad209975bc9dca1871e5c25c3dafe6898afe5c3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/operator_acceptance_load.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8da3df19f61d66065814a60c37b79a79652e6821e4dec8fd8375ad9c694ae27a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_action_ir.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "060b59dd1a0a3e426589ab7d4feee2079d51ac2e791858971620c8fd0d77d38e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_action_proposal_context.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4c8f455222b07757de4c1fbdd4c194f40a3a713cd6cf935947fdfdeeed9f09ac"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_action_proposal_pdp_handoff.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7058415871613ee37a4fda7ab0526390725fd3474274229fb7f62f5f7bd20932"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_action_proposal_projection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c11d8d7a3f316ac9668b3faa9bc2b977808549c5c01d92bf4c597ec77ac54a07"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_action_runtime_binding_and_model_plane.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "9d1af7291bc0cdbbf51efe030edca7b81fed1ab6fb116c80c258588db5f8c101"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_action_spec_schema.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "3ef3241b7b9c5a3ee09e03c66a1ee4439a98f4bea652d2e3e5cba6bab4c7c6fa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_artifact_redirect_compat.py",
+      "test_class": "COMPATIBILITY",
+      "revision_named": false,
+      "sha256": "e0754a96b3ada67bdf1203870c694fd235ce9f9c4a7c6d5bb71018561d7ecdf7"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_control_failure_receipt_workflow.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6367bb5663a550b1e02b1f8c0de79f5b8e987c4b9fedc3e3c31f501092ea3b95"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_control_ledger.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "675dafab8499803bf95b1d4bad79523bdba75c7ea124f364f871e4eb17368107"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_dispatch_bridge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "98174c33d9db1b47d9ba4856978ed5f152c4810f69696962a5a07f1b0d0cf7de"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_dispatch_temporal_compat.py",
+      "test_class": "COMPATIBILITY",
+      "revision_named": false,
+      "sha256": "ea8fc3e5af44fcf0c85c48a33a68804281cc3c22dfbdcdd9f304975766409ac0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_failure_receipt.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b0eefe590208e2012031b52c49953080982c3df8172b6cce9bb12fcf8e6b865f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_run_cancel_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "6c253de0039cb3db287ca335dc29dc3f1b481f1b48bc96025f2194dab8184a66"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_run_cancel_falsification.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "201d5386463a9d82cf6c1084437fbec5f67f32c7071556582ee06ab77b6ad6a0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_run_cancel_github_effect.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "004501879ca30f8fde4d6f1182b9b203bc49388f6bbf00c1ed49173ec828ab64"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_run_cancel_inventory.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3fdb1ee783fb9836a28acbb4dfa9f395fea4e0540c5bf1fb16ea3c0c2e166bc9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_actions_run_cancel_mediation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8c0f224979f20a14d5f6b23c2588ae2059eff9b247784a6b7c831d53593458ff"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_agent_registry.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3c73c05fd68dbebeb58a152d7de9504220eb94b7034c20212cc8921e298c0b4d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_agent_registry_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "3be50376a3c535b98da4fc195240d324f97304c12d79ff08d9594d1268beb440"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_app_coordination_assignment.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9e9ca8e68e39a117f7e892d14a9438be71208031a5ab339a9f902c2757fcd503"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_knowledge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "52843666287ca98117ac3ef63397bbf94e799fa2c750f7f7b39751b80bfc38ba"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_extractor.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6e842c83c13f8c47646e2d9afc916d2e2bd58a5e526bf457f25d61a9cffcdb7e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_flows.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "41c66b480e24a1423ddca7499e14e2df3f2be5fd6541d931df04afa276563989"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_full_architecture.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ef43fbab709f022994d295b64ea9c1392f28ed353ac7093ef8a8680672de4f19"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_full_plantuml.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "29accf5a986d30c5113060f5eb21189a43e3e286cc60bd75ff4c876a77346b53"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_full_symbol_census.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cb36d13926e815ebe0fef37383b3a2b15aa6eb4318389645825cd6ddf6b741aa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_full_visual_projection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5d75001bdbe5c0b1cd93b55cd09ea024126338febf7fcda07e288bd0722d4e53"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_gap.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ccbb5b4e97eae6bfe3910bf922d1ec06b77b8c8ece60e3deebbf765233262254"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_layout.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9b64670440e0497fa668036df21e3e3cb9862b6125783c6bccf67f0e4bc35d93"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_manifest.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "26f0fca9f05908e2bf302eb3ef1347e9f965435df8375b080a8c1cc6fddca25c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_model.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "af2bbf8500cfc7d99607eacfb2baea5a07817b227e05bf6f6e136a0b701492c0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_plantuml.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "82f718595fd4a8f0cbd97e280593c1c4fb7ed9f4ab1f27490fa8ee42addf5496"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_render_adapter.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "43c83fcfc42ca4fefafe8e9ca2a9cf278723db52dcc72006ffd756356708a5f4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_status.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5fca663a9243e2d455a3cbe05afa68a1b901b09aa38d178cc7e57318d3e65cb0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_architecture_projection_visual_model.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4e951e4dbe615a26e4ca5798f928b81f554bc90743ef32011a5b56aec6a17008"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_grant.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "399e41fe9f13f5f88043e8836dc09c39ddb856b76e574b18eac5e9afac296bf3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_lineage.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "f925a2b3fb62e11c4dd4196a6cd543ab32e30be6f1de0b7cfb51110f650a332f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_provisioning.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "751fc0972898020f34a55d148fe266e63bac39b2556341c0608a448a55a50971"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_revocation.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "cdbc094e48bf2581a4646a1ad955eb904a11df226591cc3086f0f0c124cfabd1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_source.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "bd046f53e7c79ac832e604d1bec22277d7f96d85c9ec42e4222af6af213c8225"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_source_adapter.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "414ea5271f5add56962a13cf3ed2e05f7ec59e40a7178740b424f096195bc9a0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_authority_verification.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "7ae8ac6e7af2b2a9083c8f8630d7ea7c00fab3090a2a5a119595dce352999db8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bean_builder_bridge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d6c5243c62a2cbffee8ca9759ceb31d3da3782ce3206d6f5a67f5973f80b803e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bean_candidate.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "44cf6e14e4559b06a50edd199a30bcbb0766c3fef2624738643f04bf7bd20a43"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bean_composition.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bed75b1e0e43ad4c5be6d6b90b8db9c09faf928a7f6ce6c7bf4245608fe38d8c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bean_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "3689eb9e7fa613e8a0c4bdd536d2619d77ebde9d8d2d7096c5f99bdaa785c8d6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bean_generativity_protocol.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a4a8379f12e7cf214e322faae951383309275d52c08d398a5188291ee6a743ae"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bounded_mutation_substrate.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c8d6ce6225df78bf4d3e4a2d2e0088786b49d810defd8f0bbbaf7ca83c607216"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_branch_ownership_registry.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "76e45f315a3d9e2b60ee26ee7e75ac2434bca5b5defea7e6a2c3bd227b7ecd4b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_branch_ownership_registry_refresh.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "71918b9258e22b77fcefcd577503eb34280c58e752586c98169518dfdc0e9579"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_build_authorization_consumption.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "12b40f97603ac16307b0cc9dc0e57d90fdfe1ce3756706120810f8d44c8cb3ae"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_build_authorization_consumption_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "4f25801bb72ec9b001f8cd753663a319fbf84cd2cd6bc1743ec3021665f07a13"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_entry_permit.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0bf647e1e60dddbb175687615970d2eac1060c73f488efe2221b4ac05a67d8ce"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_entry_permit_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "f049663cb3edea1aa5a7911c4504775a14687c393776321e3e28cc9de8c8cdd8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_invocation_consumption.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "458fb2f812fb7f7f6c14711b55225613fa7adca85d3d40559ef92df92ce80b44"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_invocation_consumption_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "c3a9d7ef937872355644e3fe97083e2af32594eb47301bd9b77c6ceaca77ea8e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_invocation_permit.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a12c4144d307cdff9be689f745a6b9294137acd657270d570cd86b43c96d55c6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_invocation_permit_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "23b21e5a14f841045ae17cdd7650a5528fe617a16017f3d313a7866ce3779883"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_process_launch.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "81d74df14324e8ea24120d579b4e15e31628a61a3880be1a14d9533010f86f62"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_process_launch_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "4de918b270289771aa02d44d136f4469cab311738337d0df0cf69b81af6d78d1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_start_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "642286a1cf74e6cc403f62a927ab5995dafcf56d92e1ac8b4118396017aef035"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_builder_start_admission_contract.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "d3fd6f798320560c18f9fdd3982e1b6b077c89b9b5f4e192ce0987ce6d97c32a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_candidate_build_authorization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "c38273bfdc3c489b0b3b89e79181baa426763fbc6fa5bdae5ac3e677112ad9dc"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_candidate_build_authorization_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": true,
+      "sha256": "8b70f18eb04fe7aafeff288c251f3d259bd5f4671d5092ad266f1e190b0c2536"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_capability_need.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b81c64672089fb89323bb5f01381a7f2e71ddd52e4394f6d03c1d60c7fcc1d8d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_ci_live_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "61181647a951e8b6190fc17cdb1a79ecd27a2ccb2b9f8216de262af923a4183f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_ci_live_admission_entrypoint.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "d76bcda9c3c88337bbed28d128c2a904962e602c102662aedc94f1469715f1b9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_ci_live_admission_providers.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "78210b745fb001b820b6809902e4736593fba8ee758756342b7b4fa79c5ea5d4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_ci_signature_verification_boundary.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b6791c88bf5a2bf638f09818708302552c39a8bc6f1611acd9aff9658fcab851"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_code_perception.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ff9618fb1fb4cbf48ce607f17f9b232feeb6f7b4f182697698ebaf1fe668268d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_code_perception_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "df31a323c8070e57dbb01d8346a7500646f2c4755338efc3bc8b2bbd5f460e52"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_code_perception_determinism.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1efe68f5a54102e83a4bee785e2bd4b1229386675c9714a34b8ebb885c5ea18f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_code_perception_git_boundary.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "326b4d28f0b9ba9622d139e9f4129d2afe85e344fc46e14156076ff59397b94f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_code_perception_observation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "91a769b1c3a305b33203728056914fead20aba633794df8c05e0c69e0b4ea632"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_code_perception_workflow_hardening.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bd4b15bfb5c54cc84ffb2432349d03680e26a00accbbd730aad0e51b228fbb8c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cognitive_evolution_architecture.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a1c8cb1457db17ca38caf2fbbc70768467d3ca659536992ec4a6dbfa3a332169"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cognitive_evolution_discoverability.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2a0ef4d13dc87e5db1cd2ab29d9db84bfd760e1a8ebc747854f13721e16ce2e5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cognitive_invocation_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "2fedac3478c8938274255899a5c0edde574adbd4bf9ab4a94429e9529d786207"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_communication_envelope.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4dd3a0973f6c137a2446876c8d873d7a300b19b03a510efffc3920796c11d369"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_complete_mediation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2607829098bec797754badaa1526f3edc97f0de558023aac7290a1890dfe7398"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_control_plane_reconnaissance.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a61d7fcfaf06d783e8d8f085a72e666d5680b66dce41a57ce0e484bbd6324ad0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_control_plane_self_hosting.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "01d5107e1e4e1bf7fb903a3bd8c91d48ef537a68515d1c9e9354454a5ed547b3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_coordinator_competency.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b1b9809bed59ea70b46581dc75c608706fcd044df782a3b542c9997fbe224b60"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_core_workflow_homeostasis.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a50e2b60adea73e8f01a07c2ce3e9109e4f82d0e1ff0f166f21aca217e796586"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_currentness_repair_gate.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "a2e8e7d05b3adace6bbaacd63da9cf6a8306200ecbb05963babe4a6a9713722e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_docker_fleet_polygon.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "2726e19b5452eab4f815919e108d4c5a380b67d46fdd2f9d4e66b181ca386a3b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_dual_receipt_immutability.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6abe78b06c6372582fc0ee1f4b1e792a459ad3c2b877f7f0ad14080b6b188fde"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_dual_result_join.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4cc7202edf0d6df8a8d0c71b73597370895df3911fffa3cb2e87e921c2319a6c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_dynamic_mosaic.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4e3994613db5abd24451132b68d3a068ec3f28c4f9b20bee67adcf3cbef5229a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e004_r5_epoch_self_evaluation.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "61c4cf3e015068706ba957c761f323c91af71fccf78ea169ffbb30bdc1e42422"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_app_session_attestation.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "ec34c0094ce0f43d133d577033b52733b2ef69f711ecbd627b110684120a71bc"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_app_session_durable.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "a5a5d10394d85de77ad263111ef8db7dc01fecc4a9af543c2e1f78c10caab716"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_app_session_provider_installation.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "8c67b9dc64d83fd42edacf25305f0e0db077c22fee498ef82626c932a5d6eb49"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_offline_decoders.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "9fec0d78e1a1a7bfdeb71944e9334495b6f7f87e93f1321fff68a41068e1f844"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_producer_recorder.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "d38af0762a5a8c1312530c928e59e71722962e6bf812b67a11da604e6aabbf3c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_source_candidates.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "0c051e9d1a9e9f02de695ed9d1564f1ee5fd22e1c2a50dc7d2f1a839688ef68d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_e02_trust_primitives.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "3edbecb450804571158f82a81765358b257984c46259cd3c84ffb85785d81be2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_effect_provider.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "20fa69205af86bf6787dd405fc8e7a41699e4ed0866c2d90374cab226954b3ce"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_effect_surface_collision_identity.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c68020af6b2cb8c255323b56ba25cefdb13ce0e67154099340ac2909cb959fc1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_effect_taxonomy_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "15099b3327cb229b0f6954f1f88dfb1225006ab46ce303403843ed1514d8f973"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_empty_reasons.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b7fc279c79b58b5dd786e91cd0c559d82c17be6510e052d7282777636113b5ee"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_control_plane.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "374db678731740ffa443605c33218d1d90340357676950b642ce406038ec5a6e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_event_bridge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9c16b2b2a5669d3d24000c52f9de1aa7714dd68d2d30db4aa338c081edb0447e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_federation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0cdd437fc0701c62f38bdaa0efed1c6fc00ff52509a153098530ea99ee391d69"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_graph.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "28ba87363fe2584ee92d386d9b7cb02ac4dc886cc4caeacf170206b5acc498bc"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_graph_authority_separation.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "bd55c70da9b4fee1eb1194f67b9be9f4bb0ac3d9713a57188a7e1b03321e8be9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_graph_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "a7b876981547fa7cb1f713179dfe03fd285ca1eb7f60374d683ce033242a2209"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_graph_event_projection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "15dd8a71a557a8eb31769f98c56dd481e13424fee91c3ee8039249c89e1bfe18"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_enterprise_swarm.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4d9fc1c983ad438f03b42e0ab00e8a0733b6d9cb5abb6da5893aded0d68b80d1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_epoch3_currentness_binding.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "9dddaa0a853fad889069e409aaea076439c04d1d0008ed040b73526543a3bd02"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_epoch3_restart_receipt.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "61624ac6e8dba14a603deab2b1616552ca6a2e34aecc76ac99687caba24d3d43"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_epoch3_ui_stability_contract.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "b79608fb4e99bf05da4ccc87c1fdfa358f5ba47087f2df9f95aab03105378edb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_events.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8ea7e22a0a3049e615eeadea5c2422d328a7841b75424d782dd0cb47e77a8730"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evidence_bound_learning_episode.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "059c0fc20c9b4b9d80b34c57ada0599c621d587ee038507721516e954ba8f920"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evolutionary_epoch.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "568787cfc70b090c713e3b1d6f658e11fc5de98d63c596dc4b132e13e78782f2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evolutionary_epoch_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "d6c9ba16b110d19aaba4aee48da67aed55a1fe2cd5041a18828219e3fe754cc9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evolutionary_epoch_memory_head.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a6d0bbd7a2d25ef9c0c47cc479dd5bd8d73756e3cbb7ce8f8b2bee036dda576a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evolutionary_rnd.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9e82ac22a514c3d31421856ca1dc9eeb9e55776adc02076cf96de968847c5b83"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evolutionary_rnd_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "cbfb7f2a9ebcef9f552a1f11234c51508dc12ba4e13163bf061bbf9be99dcab8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_evolutionary_state_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "f9cff43b39fc66bcd344ca3636d46ce674f8ec45b0584774f971794842fc8c4d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_executor_independence.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "93cb04bfda4cfdf0449c58ef4d4d1868743f205db0a7b19eb440d6de43431132"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_executor_provisioning.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a24d0670b8d6bd429fe9bcf25d8d0764c6dbb8baa7c9571c220e0592f7257e83"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_executor_provisioning_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "0099f860da56d7884483f1e0a90beeb55f8ad3250f92ddc42a461cfc198b6e32"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_executor_sandbox.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "62d09e0d30f10cf907795c1375adc2dd06acbfccfaaf897a277432b139741e87"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_executor_sandbox_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "c47622baf467425435e1603f1f87c6fa28441d3d08c5cfc7ece7968919cb4254"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_external_evidence_producer_provisioning.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bb9d857ed921d23d03e8a02c165ae7fb35040bb7f30173e891778a20122300ee"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_f005_ci_workflow_hardening.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "edcd4eef2a6ab8eab60a152d92d763b8382a0f210eccfa8cd81d60514ac93d42"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_f009_workflow_hardening.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "4042cd5818a6679883c06c699cc7848c365a018a8f8ad6307d71596881c9e9a3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_failure_domain_evidence.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ebcf8dd86b2045de90cec6bc830cb63b81bcfc7c31310190aa097d6f9fddaa57"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_federated_architecture_knowledge_projection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c938c4e6dab122a8d7d532f329082b735d444d674230d8570c2219dc2dcd255d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_federated_formalization_binding.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6f5713d4faad7ecf1e06adb89a0be43457b11ca94799fd254e082a74d88ab565"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_firefox_node_mission_threads.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bfb7d3c9b947d04cc9fef7279a5e5155d7001d694c0a919db496553ed248b60e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_firefox_open_session_mediator_source.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5be928ea0468c6f6b7a67fa9bfe06f9733979c0505f212da0f73b6b2d0805abe"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_firefox_outbox_crash_injection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3620805404c9e512ad724e2af42f6dc0ff507677e882790085379b8bdfd752d9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_firefox_scheduler_policy.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e54c8cd238a420117c954a9883691a0357eb920cf34920deec5c2bb7be2e42f2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_attested_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "cd48254b9237815c8f89f1dfb40f728d948436da1e49b743150c83bd844f5640"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_closure_preconditions_provider.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "931beaf3fb3f818b134b4938c7d2bacc47f0b3fbb1db7c3187e7be64542872c0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_control.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "70fdf85c8d476e939c64814a0fc1d37c7f6873e0ecbf7e35b29f0fe2201d7fa9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_coordination_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "a5bcb49ecc79b1ed329ada79d662e0ed8c641e9bebc79e8503d938c38ae5dd90"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_coordination_state.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "fcebe7441ac16c2fd6cb809469721a0ea00510bf4d516a2ac3b51676aedeb027"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_effect_budget.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bc67f762365ae7e40d32ffcdb43a54b5a1066b47ace7fc6ad453874f9018f2a1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_effect_budget_claim_materialization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d406fac8ece64fd586ca12505a031c714fd7fd7ec5530dd8e64249443dd38655"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_effect_budget_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "481023217d0c1554bc0b7d2faedba87583cfde227db9e85f9b692db652e1694e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_effect_budget_workflow_hardening.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "02504f994b3a58b8a030164118c993a8d54ad4f72a4ade4686af4e7ef52e7ea0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "86db0c27b144a7f2f739bcfd3d7b72d01aafb25eb3de75baf861acddc9f07874"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_reconciliation_contract.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "85eb5366d8fd7523a3242b1fe85abc2c029f797ab0d1bebd4e33d2ee8bcb253a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_recorded_inventory_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "b18efbbba02af7c2edb3590b75c6f3c49d59b6a2bd1804a32470d50a467300f3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_registry_pin_live_source.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "490496a37c782cc5c34b7752a2da69dad9c189c0424726a60cedf4982ba639d5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_registry_pin_materialization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "75a7b6679d697cebe9f9cf5181a16f6de92e94106da1170bacc4f453c4273784"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_repository_observation_runtime.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "b52f10185507aca47cfc7ffed6957fa047b3a005114440b6434303b37d09eaaa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_repository_observation_source.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1c276cfc4ae21e21320f5794b8bc649090bac1a18f84df3e7146bd6fe8d1f926"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_composition.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "c9bf602d06322860126d5c6a2f63a12ed8cd6fd0b73b79c8be65bedaa467345e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_convergence.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "9cf8a51b9251996ee2ef9213f87ad3615a14e5a06f5386b6cb0d80b23d8144c5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_paths.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "e139f8743d7e2b1bbfe77a7a3e53e3715ebb0c82aac1ac1df0ab726c788ace20"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_reconciliation_execution.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "f0896ddc3539b69bf5a9d60ee9ef1fc3572c500bd9e67587083a9e8b72484558"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_reconciliation_ingestion.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "6b9d14549a79ad8141987663b95d32104a16e1627f4e6371aee89ad46cd2039e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_reconciliation_preflight.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "d33a35ce9183cb5df979bdefb7926c25028514b2487c82613e6722f008f2e6b9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_snapshot_source.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "8cd890e57b750dda600076ca3a6acd60c2745264243b109093d422c9c24fb35b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_runtime_trust.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "920a21bb7125595edb52841c6ce3cf92df97409c62da3617381cdd2bf59bed70"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_adapters.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5e174a216fd4596a92c83660dd002efcb2b9bba367fac8d076a4092c60ef6fd3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "12f373b2c842b23a437660681f7bfac22bec7928a023b6dc8b1651db24fffb7b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_ingestion.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b2a03d2b40f18f1d1397e8b5d249c1e432aeaff8f5ecc68d73b0f078a51dd8aa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_projection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ae8bd70b65cc31d3f67713a9a24fd55c7737c94949e2b60e3cf87287c26a7a84"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_service.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c266496e11bfab1ddbb0785c9fac16aeda5f479da4ff6756c41150a2f0282af4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_sources.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c34260b2a948edf196008dbf5be50d30405e525b942e5e7c2e13db38aef19e2b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_sources_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "35469868535409ce03e791f682c904ac4afd9d0cce39c87508eb97c632a297b9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_fleet_status_state.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3b5c38582d87b1ddfa7c78c748dad4e304c61d9c53455b7f46a7eb3f83022515"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_formalization_kernel.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0cbcab893606fb0ee4c15d8030997f002773a50b9e3fad50a772d270bf96fac1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_formalization_shadow_cip_eble.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f231c4bbfc6d164cf7555e76eae57477f461ba5444b58ce08fe0edb58000696f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_formalization_shadow_process_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "b8b4496f6383647da66c50845c772b172128635d2183bd9d3a24f3913511c9d5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_github_repository_read_source.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c9b39caa76281f3dc92b395115130d4dd6af52ffbcc6c870d69ecc44b025c393"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_global_mediation_closure_carrier.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ac06ba11e4f1030e5beaba62ae04b2520d18d925bdb742dd5ecaac0c5a6c35fd"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_global_mission_scheduler.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d4a03c49cc4859fdb954c2a7c42dffa0045fd4f2ca262b98e3c780e7cf8f847c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_governed_change_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "bd766bc8015dd74df73522a4aac997b7fd37a261ab21fabe53305fd475c37327"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_governed_change_admission_contract.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "74dcba894f8a9205067796aa432d34276ea3b1fbfcbc1c31ffbbae59f167a80f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_governed_change_formalized_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "161f164dd19b8e0c4305da62baa39087785efdb0b15c348ec0ff5b4f63cf3365"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_governed_change_proposal.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a48a91a22987a0f74cb757ba82216ce52c1702d892884c9091bf7d8a98dc67aa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_governed_change_proposal_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "993ef410d28e659cbd98bc0044262bf8ea977c1e05d80b3376a7cee6bbdbe1b8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_group_channel.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5d54aa78cd51fa38841c4576cad90dfd575b6979ca54e608177ef6cb07e49c90"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_group_channel_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "7f7014608888477246fd0cf882dcb64b911db44fb97353b0fe8303092d67fb1d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_group_channel_workflow_hardening.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "25161d4409735aa5ba5e0bc2893d3237d13ea3ffe0704ce4a05a8c332b07378e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_hmk9d_ablation_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "0f9419371c7c24449aea42bf407d1e854a00e91c81d69fe81a13c71f96f9dad4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_host_authority_separation.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "2a6f35526d6761238efa68c9b38ab5a06bfa89293d8bc9b48fb76dedc8e97c2f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_hybrid_routing.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "da58a0a98cc22dd1a7d702968a3704f75f960ca8b5bf39f9ffd2ee90f2ae38ff"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_hybrid_shadow.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f51ea3dac7cdba47b1ebcb374e2097ea010e76246db5432929c8b87464232bb1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_identity.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a37c138d21bda8da30d583f70679097edf515c587168f2abe8f421e2ccb66242"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_issue_comment_write_mediation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "57dba05ca5d33e79a4b1bb6f8f9d53ee35dbc789af924a80a2b3bba0d07557bd"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_git_logical_tree.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d9d98ac5228ff009f0f969e7f4ff692d8be73e7dee42c47f9dbdf035017e8843"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_k3s_pod_materializer.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ded3d9154583ecb0d053563a94b561b9cf593c42291f718bdce7773e74c0d05c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_k3s_pod_provider.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "755d8982a5a448b1b4e378e33370a351a3c7181d33e5f62627a7beedb3a560eb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_k3s_pod_provider_v2.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0142d69c476e85a818fbb9e7b620ca76546d8e7e26d0aceb9e5730db2a6271a6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_k3s_pod_provider_v3.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c7934f5123bef29448a0f0e509da8641347e810e73e92ccb22d383739832ca61"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_k3s_pod_provider_v4.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b02d61d1e24c15e5927580f5f0dc32123f2b38e922be3ae48dabe8d77eecd707"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_adapters.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e7b64c733c8865975ad7d37879808dec51e4b7134ec30516a38d6d65677bbb97"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_fleet_currentness.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "54949af0b1363c94b4d44f8f07ec1b5f5f6ea9c36de42caab344520aa3c72035"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_lifecycle.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bbe83566850a8b53530a9088c31522ff1b71fc0181a1b71f94c80ab37c345936"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_migration.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e6d5cc94a6f2267ebd1acbfb37f8f83882a7a3af5f65c37813f3ee3e4f5359a4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_models.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f5340d2d67d4ed5835d85e65171d2fc774a7f0b0a2f358c3ed916ef3663ba88a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_security.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "700820a6253cc1ec61867243968960ecde08063475d0bc2c11f9af95850f7a09"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_server.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a007b75a94244df671d06d42f05d422e648ad1d12653eb6e15ea6448a120b242"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_storage.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "fab360e898eb2e084b311d0b9aa9ee21355e9de83d29767365f1330aeec8201a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_mission_control_ui.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a656480b1fa6b7bbf88f8be665a7d7cb448cd5874f56835649b9117474bdcf64"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_rag_artifact_currentness.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "78f8b08ed2f25c27664a83d3bf68b1f8b5eb77d20edf3f1c19e18eb686b3c57d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_workflow_homeostasis.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "aa7a8ac314d1384d33a9d754981a97726de1d525c875fd76640a26a63a73279c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_live_runtime_evidence_plane.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "e351a008a6098137ef754644165510270ba16b95ddc8fb4ad9a8c3b2980c58e0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_live_runtime_evidence_workflow_contract.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "11b67300c0c62ffca686628c49ada74aba7fe942a3bebac4451e8c5f6bad9ddb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_local_assignment_worker.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "be2857dd835eb27621ea7fef2b06656393f497621ec67ff06d6a067e267f751e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_local_build.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d182a09ceb635fe8c7275c742240822dc83fdce635caf3e0da18f3a5dfd7996f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_local_proposal_adapter.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7cdf7c800d54a8ddd33585a626dce28abc85b277ebac79f0a4a19c88ee36a049"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2efb1d8da7af8468ec8adcd4b40e800b85398da1d53cef53fdc2e4c2470c6f35"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_authorization_lifecycle.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b260f94e5dcf34e24d86fe1ad42b2315867ad93c31f024893361aa784c94f776"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_canonical_run.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6309631698302ab97182f984b8d95bac8d67cef8b1af67a0df9afa54897fe074"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_canonical_run_negative_corpus.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ceadbe7352a40d235edfc7d8ad3e1500c4859f1b0c7d8b2cd69fed42b71a8231"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_cross_thread_conformance.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1449c0eb5c2f5865117c6c2cac5b745fb9ee49a14c6f3d6109851f85f7fb9a19"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_dynamic_closure.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bc700e29842aeca59423004062d1fb7075dd321416ba4821cb4ee969bc1f1ef8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_interpretation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "16dd6d5317d7986e2f65b04c7a55aba25c94a9e7c022d6bfcbc186dacb88a277"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_negative_corpus.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6fbf118030bceafd6bbed319a6f738441fb56f57bee3dcf6dc8599caf1647e6d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_panel_exact_source.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c4ec5caca536542bce01aa974a1408db084a2331de639a153f21a9b774e3eb9b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_panel_operator_bus_r1.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "f5926c05b04c957e0cac2123bef2d5153778aa1f9f76afe0995038a4362511e0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_rebind_live_currentness.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "18f9369d71fe8fae9071017244074b36f656dc97e2656075a57064b2b9f80e16"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_market_intelligence.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3d00b1c20c876aaa394b8f0297cbdc273843a74754b1f1e05f4e5bbbe04db649"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_material_worker_runtime.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "b26a9db7eb1dcfe852488044869416a42a0ee6cbc44d48bd06d6834f3c3d1e46"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mediation_falsification.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a56b049a05ffabf1951c2bfb32f932480ba23437205e0a91bccc976714967976"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_merge_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "bfe68c77b4029b78e9b504a3b5782ebf57bdc83aef74dd8df735dff085350f0c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_merge_authority_consumption.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "9ddaa6c302cb7faaa792843666314d9b2e75e34a4990623fa560a4bf2de0fdb1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_merge_authority_lab_control_plane.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "fc51d074e533c74c80783586569fc2b0dbd8119e50e2119dd866fe3f9ed056b2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_merge_authority_observation.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "39b440c53ed8afdbc4fe4121adcb46c942833f9036230e1ed22ee2eda69a8978"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_compat_observation.py",
+      "test_class": "COMPATIBILITY",
+      "revision_named": false,
+      "sha256": "a8f07f2e8fa8381a57f114d3371058fe2d5ba0e8052f4f24a614f830674ff3dd"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_contract_profiles.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "40adc385a910b1b09649245ce2bba250dd2c911a35004ed3c7a53e5e0f9815b1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_control_lifecycle_db.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7a78d241a9551e4b9047c0c5ebb82f70e92d21dec017e26da57ad2c8c6d4c68e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_control_source_rebind.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4984a409ef61d8ddaae9b6b2b72e554fb9f7c84a941637e6e395d933c003053d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_control_source_rebind_admission.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "a625444340233ad408e98efdb2a2d536224cd924d92bfe049a4132cd0f50d9b0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_control_v3_restart_package.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4b392e9c9c385f9cd4f91eb33e6b11d84f0e5984348ccdc26a9dc24519427761"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_execution_driver.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "72867f24ddd3239751a6d1dfdc552c914ba8dc9074c2fb98bda935e425b75158"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_focus.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d93af8758ced31b8b35a17a0be03da1c2d9c380e8cb0240a16571530af1e78dd"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_history_lifecycle.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e2d4ee0b07b46cbbdd28c05a35da9f090ba91df7ada7597359435b2051546914"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_runtime_projection.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "e902d83842ab910bd47ea54dc664c14b94690f0ff784e8066639ed13095eadd4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_mission_state_reset.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5cb744f8da0e44cdf516458e544dadcbb2009bd982890a4f5d3d8c4435dff2d4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_model_call_plane.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "084c79ef2de73a34555418ebb37ff09d27233274452982b242639acabba51843"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_model_call_v2.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0fd5678307e29aacb5e1504857af464459e2f285b6b25708efafd04624ac3d25"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_model_release.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "edaafd343502bb3b1fc89fce26694d8af291aad7f5ec17f3c2ee6d4161f07972"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_file_write.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "15c66b902932afe6fa458ff3a7d54eca7c3fbb591c7228724f7ed0b7df1897f6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_file_write_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "aca3f458b15dc95222802fa502edc3150e3ece0283cc5976a17ddba85d336d11"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_file_write_effect.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "29ac9eb80f3601c374ef102a88f75dbabe71db9b2df36591de206700ee1ab387"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_file_write_falsification.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3f357b3c3a6ffe780d58ceafa8a1fcc8c8002859f82e84de87fcad7bb571996c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_file_write_mediation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e1ee6f0002a8c313d66404e5302a66fb230a3454f164555c22b5f8e7016ffd97"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_file_write_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "cfaf8bdf828703bda4b5b61437830e65333cbded466bdb550d3f4c5446c0ba1c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_r9d9d1_falsification.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b054aeb905ccdfd030fa80a52efdbc5fa72b1056a5cae1dde4ed78e6a968a1ec"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_moon_target_currentness.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "55c5fe0371c0d0a86d5e442bcaee772a7dce94e8662accb1a104035828c29515"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_native_host_preflight.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "72a98a5f80e0077dd5edf68b7b15651b2bdbf712ed40ef03d2113f80e063e0b3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_backpressure.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5bb235bfce414c08ea2f05956f25edf56bba5959dd47a0396cd50585d069a700"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_bus_panel_r1.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "fe70d98b4678d8451583f59b6c4b511373ad4fb59013885ad2a80028e6f47098"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_capability_registry.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b79adda74aeb9bc4e8fcc278989526a46f193808f7702a5c73008a83199e9fd3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_client.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "372e8ec31281dd4da2b593dfa579d784bc27292b00cfbec7a7fc45cb61f12ca1"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_containment_helper.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0de4fba29d3f4ce110ef9800a3bf970b7a5db33771e8115a349df04d228fd482"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_control.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1fb847805dc7db74b933d08d4e466825904fcc0887392957b40c1b7dbaca2a1d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_effect_boundary.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6c0549d92e27dbf67c3c37299a2f6d7429d0082bb03456dd887dfddc529731d4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_full_sat.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ae191b9be9260db9c8ca15ad133dea62ed701f2cd54f5c6b345cd4223c47021d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_gateway.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "35e6acee40424c1470c482fa516a34cb67fd4a720e1a3055423051aa5f095276"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_panel_security.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "68c9ea054c6f81cdbef9f14d786686602d242253572dc522a6c4dd55f18f34ec"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_privileged_deploy.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "843b830fe83f786cfd4a451fbba59c17fbe51bfff9d499ae9b5e748ccf8274cb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_provision.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b934bfdd0c7106065e31b9d8b14544cdfaefd0fbc17d82cf6735e3adb6694cd4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_swarm_session.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2466f26d1353d954915e9b87a72c9beaeab22d6fbbb2f37e21a99f42cd5d3112"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_operator_worker_delivery.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8ef11c3c170a755297cddef8ca10c5e1f17d8e8bbfe4a0424a75d60dea2e07a8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_docker_scale64.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "d4a7cb98152cffbc09eec006c26748781fe9346cf0c0660b24b025fd71dc7ee2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_attested_adjudication.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a57da829b662519987c4467ed3a80f6dd2633a3b1ed31ec15d8ecdc61f3306aa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_authority_security_boundaries.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "ab99119429e263a83e814c8688e76df4b9a0d9a271b2dfbd7da2a738bc2bb9fa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_permission_policy_reclassification.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d209db4a42d625f66fe02c9ed5d292dc86881391e61ad940ae936191ba9e9bfb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_readonly_observer_falsification_runtime.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "ab4bdfa04ed8084cda0c40f8f911b669d940743a7bc57faa290a41b2a7752897"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_runner_attested_execution_bridge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5203d225648229e66046b756eb46602047aff7c00119eb08e8e2a743766e2795"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_same_connection_denial_carrier.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bb75247351a96422e20f0e524058c8acbc6d4ce0fd44eae7d35f37c75ab97c78"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_seven_binding_chain.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ef014333c983b51e3e55b604bc351c3f8d4df3bfea2896e7c65f4161414c91e4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_moon_seven_closure_readiness.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "99a562b5de9cb6af08060a22a6afcf93ce089170de7413ed936891a258983684"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_rootless_docker_provider.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "12b43d387582e330538d7e08317c4069cd897532df674cfb34f3664a9427b972"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_p0_surface_closure_campaign.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "db091a8c31095419032aa4297779bccd178fe5c11666abf6bb34a8955b802fbc"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_persistent_authority_state.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "e4b46dd2568ade91084ce902c94f781f3e49f05e30649d736e216e2d9f5d8daa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_phase_control.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6f97644b5022f57a8b64ba11be5b64d1df2b72e9a0856a7e7004c63302e1abbf"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_phase_execution_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "0a4e6a028e59321c23f7aee6c5b49188512fdaefe6962d4c5d4f080550a963c0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_policy_gate.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c18d09f4af8e9e20355bf9c58bdca2bb8e182cadd25f43b2a05ac4bff42bff43"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_policy_gate_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "400a95a65a674496afb27af4ed9b02d149df6b7999921309ca01a330c6c931d6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_policy_gate_event_bridge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a6b373b19ea5376e0e1277307d8fe6a06bc7a3e73e572f59686d0edf7941d1ab"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_pr_authority_bootstrap.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "2de2d7a8b333f0f4c86b8f9f17eddaad16fc46964eb0a13b50c9ffd0f39ed7e9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_process_contract_plane_integration.py",
+      "test_class": "CURRENT_INTEGRATION",
+      "revision_named": false,
+      "sha256": "17adaac60c504092b57f288fc5d02cfa8713cce0dbe0c176cdac862c4670a92e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_process_ir.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "381aa7e84635ebc57f906af43254dacc30ddbcf3d69c7ba0c6b53322683c475b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_process_reference_corpus.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cdbac99bb508466157b00c8d481332c0d600cd8acc995afed8353d9d65ba0734"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_process_semantics.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ea4377e97c9339555c202e6c0480ab290acded41ed6d452a6545bfc396cf854b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_production_entry_lifecycle.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a3ad0c40232011f2855b5e8e74804ded7d43768e610edaeec10d197dd039e665"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_production_mediation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3c960d2f2e9ac836901a0000936e85cddf55ab6e851a6929c89e424e8086a956"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_providers.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d8174a31b7333fb703936ef85458da356fd561dca99ac226e831443c6cd2697f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r10_local_intelligence.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "e7c20a620ea95efb58a64eba33c11865ac0cd53cd84cf1b1cf3fa96b6b6fb7ab"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r10_r2_material_drones.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "9a1c11b783a8b74f0a7acf70ba87089b357f3c28be24d26b20a0633bb227993a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r10_r3_hybrid_execution.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "1bdc12014032d816e90d98316f2a2db0a94010dd84b3781ad50d91c19c380aaa"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r22f_factory_falsifier.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "ecf9dc37be9144d1830dfb760f78c4bc33a7c2d86830750a8fcd9e9d35ba6d4b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r22f_truth_source_regressions.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "49c138fd16507ee92c9e6a99484f8d5a5ac583e613d07f8c7a95e8da39711150"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r22i_action_runtime_binder_consumption.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "5a340dd0bd1fe54369af7a66f8ff739255dcbd165f8051d07ed37e87653478d5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_complementary_integration.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "4ae634eb5dc085293658d7688f558f63702c4dc7d730b1ad99d1cb17ec67b0dc"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_conversation_backfill.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "d11fb05dbdc64facb3a788d6b60fa691ebc2c501057cb59c12a06ad044bdf281"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_conversation_domain.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "e732ef5284f94fb4892154ca5aa6d21555edb1bfd79e82c768aa41f33943b27b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_conversation_identity_contract.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "9e3218ea544e88f83aef717280f16ee013e6c639e732a06520b9c05d179b250e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_conversation_model_chat.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "f3074b276fbf1b53f7d85e561c7a552f2c76dbcb42fa45ba3d72cb6302d579d4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_conversation_schema_migration.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "e419e8a2f52d4638f2d6defba9891fca513709e740813c251cd5fe0896f6e704"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_dynamic_docker_rematerialization.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "a96c4a77eb1143db69ac808fd6ea12d86ff939eea76d226d423fcb494abda09c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_persistent_worker_transport.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "6bc61718f66eaffe1d5c5cac562c3cdc536731adc74f2b433f4d68bf341a1d23"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_protocol_cognitive_fanout.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "cb3743e61f7b9b6c5c8dcab3577010f7c2d4822c6891022f6e9899be7acbb97b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_v15_epoch_final_closure.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "078cbc4640914d510f25a5f5e9623ea8f2b463e2aeace99aff3cfe30f94f0239"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_whole_integration_gate.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "4c9926822b211b7e413fa6ca5e57d78908bff6faaf11f0f6e4204f4665db1954"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_worker_cognitive_readiness.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "73d221715d5eac37af6b4f9805f1a0fc58f62b90f523a32bc0ec1f746cf6e33b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r2e4_exact_manifest_attack_matrix.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "85ba580c083c686bbc3fe640bda1e22e5b77870ea4b9191c59bebc517f00ef22"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r2q_f005_write_bypass_guards.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "af6dc20dcf3de86d5ab83b9a4c7f40a996cb9f798454afd206c4a7d7a432be8f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r3_workflow_automation.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "6e5c03b9b3e6631d4e0e054297845b39dd84514085b6f35354eb0481ee8800d4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d7_exact_inventory.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "c2b4f2a7d55ad8a9917edec3b969a9e629340b8d3e7415c8d5485eeca3520698"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8_exact_inventory.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "f2139e473c07aa6f68348124d357439abe7409995ae41fde60155aeadddf6fb6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8b_repository_ref_delete_mediation.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "bad27d60ee5ed5cbc0c00d4c60183c9d747fd5cfcb07d3ee41f784daa2c166d3"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8h_canonical_source_state.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "04c8adc6e61f48babfdfd542a310ad9045f914427e260fe3deaccdf51cc1e1ec"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8i_canonical_status_context.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "115610fe08553e3612c7719a35ea2799e2a1a5a172397f40ff037f11bc1da7f6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8l_trusted_maintenance_state.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "256ceea33a779ec80da7cc34b16cc79af372e99530b98a768e8087c57a3b9854"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8u_maintenance_bundle.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "e36b1fc3849b2d1142d06d2c607526b9c19fa03b5146b00741e5628f716f02ff"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8u_mediated_cleanup.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "8963bf38aaed270bf874442d2a2a7edc4335a05250698f4efc2282990c1f2d70"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d8u_workflow_contract.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "dfc274075d597fc23522d84801728f553b6bf17245b48ffdd4ca8415c28f4a4a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d9d_moon_auxiliary_closure.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "3dec5b0233b2d49cc0b9fdac4d5c8cfeaaf06778ba7768c2c6de252cf36fcf45"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r9d9e_repository_maintenance_dynamic_http_closure.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "0ca327f75980e478615921654f3c053659a8c0896b54cc5c7095810584abcab0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_rag_v15_task3_inputs.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "fe5081ee7604f6d78447396874096cad52b7fbdd569d312e1a6a3fe96bb540c9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_rccm_1d_glitchlab_conformance.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8d31f5c93d7fdb900559c6dd7cf78fc02654551b21efa33d8936d348906b9172"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_registry.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e903e47ca5c86415cf8a69211af0288b6edcde2eb07512ad1d0f6db5ed0e7d7c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_reporting_freshness.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d1dcfddb2874f768975a89c9adb944294645d6568681ba9d85a7e0f4ffbc13a7"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_delete_fence.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e9332b50d50ab5eaae894862a5dc535318f09d3cb1d2787a42a95334e7e5c178"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_expansion.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4a12f535f9458399b37ab9dbd8131a2ab13afb0a7a7fe377abc9b79d4820f27e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_maintenance_cleanup.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "81374da02945b4620237a5b00853a205a6ac11a439d75692bb1daf9a03596276"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_maintenance_late_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "c39234b18ab677b944e1ad363d2e15f75383aed5c3eaccb7849b6bbbb97ce103"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_maintenance_receipt.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f98a65198d5c944a4aae0c108fcb9156dc16923841a5426b38144a5f67ba56d4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_maintenance_sandbox.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1a617b0989cb633efc7953002fc7d9edebb261480a71f2ff6e55e62e79014ec6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_maintenance_sandbox_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "79b64c00341cd358869cdf8cfa6886716d9d7f86e6a6bd4a89b0ef9605dab33e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_maintenance_workflow.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9c14f5ce2986d89d7e268e194e062b080daa02d12ec377b33d38488d3688fd4a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_manifest_architecture_knowledge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "63c4089e86a38df40f8da260d9aa6ca1f217b90ae8566bbc7236f354fda26f68"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_mutation_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "d6896869e072e31694ee8bdd21f4bcd01749e480873a48e634e533c80c125d34"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_mutation_pep.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "35ea4ed0bdee0e3447b5447f1c6c2ef06e587ca2b57a21f8863bf4d5633ab5f4"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_mutation_state.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "955970a0aee0f9d6412e24ef4739704748dd135550f46fbb8c268496862589ac"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_ref_authority_provisioning.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "a64a4f901caa2c1da3abe8093b90e2c890d3e446bb33ce06670b7b0e5edbcc33"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_repository_sync_dry_run.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "745522c71cb43079f01f285c1afe8d6fc8c4023dbad3e4ff23df0c79a9404d6a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_attestation.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "c23912fe711cd1f1a04b629b7186efe6f7c14922f7e5af387bff7fc83eba01f6"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_authority_bridge.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "4a61362381213a3333d8da56966dd5cde23111424c4e0088c2d3facc5e9b5e13"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_currentness.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "578982b4c18f77443ffafb742c7adc7b1b7b27d193aa539f05d065208655db23"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_currentness_contract.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "ef51984ae1eaa8bfa62233b76484bf1d66c5649fa7e6a25b83f22dc6f097c897"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_e2e_falsification.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "a672a3ca9c39339a06468e9afba00644e2a72383ac5f441926d0d7b2c9cfb27d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_enforcement.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "19ffcbd2c2f51d4f9e137dd647a143931c625d83fa835ad6f1747bede200eac7"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_enforcement_contract.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "075651de7373cc3148a872f88c26d842cb182e8901cbd1bf0ea29f89cb4e1fc2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_execution.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "bbb2ef1040097705f679bea2dbf8566d9a5687c60cfd1f55650950514d42d9c8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_execution_contract.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "560268fb4829b28f6c6026a81f47d8f9a6251e065e5a7509ae6c09525414cada"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "15e8953fe968bd67d5e6508113f743183b03c8a962c284db6028aa1de43d59b9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_runtime_reconciliation_contract.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "2b04e1baaec93d5d0edada189e134c9a285e3f7527f9d1a0bc6c34b54c64584c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_saas_broker.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6c5fba9aedc16fe5558e626b2732574f8dafbf4225c63f923975f088b141be46"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_saas_explicit_transport.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f338682b6d64dcd9a7301c44560b150a2f8790e9756e8df122b2c6907b2620f2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_saas_session_bridge.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3ce22420fa178fe591479b1af88f01dcbb574c61f0fb7e57a79fec818c98409c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_sbom_adapter.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "159c65fc5e23325b31d01e46dc85e08524cdd74f783d9d232e1bc5de911471dc"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_scale64_control_plane.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cf32cfb733f5656ad6e2dc78f9d68653edc0693493fef99fbcb6c612ba639c78"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_scale64_runner_exec.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ec92244709a7fdadda991ec3fe6bf4bc06a828444eb85d13fe149cf153c1827b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_scheduler_storage_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "d488042113ca8cfd070638fd81b80dae9b98f2cfc211af06ecd7369f13e791a0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_secure_mcp_broker_relay.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "777bc1c6f0a9cc477a303dcb001a1b5ad6e0b1099ceb1f5881855e784c714ddb"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_signed_events.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d338d60f889e82716bae96960c5976d390e7d5e626febe25323af3a73e4bd091"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_startup_agent.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "067f22161e090e9179321f50c7b576ce99d28b7b0cff2614a27e0b3911516a09"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_startup_build_and_replay.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5aa899bd15e1fc1271303a6ed1b3e66df8b5542965e464d9e299318a6dedd128"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_startup_cli.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1e19690c6b04319dfb0c012fc7932a239cfe7f33676d3337c29ce914afd580b8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_startup_orchestrator.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "93a655b9ab6a37c13dfe2f687c690ec565116d89fc4d6fff3d50a6a7f737f1d0"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_supervisor_panel.js",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f92e0c65acbd8eee84fc06002b3bee0c1fb857280460925699948154a89e23c2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_supervisor_projection.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ea1085a51fc9f0dadb7edc4752ec4948986f75950bfc7b22332ce1e3dd47646c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_swarm_formation_manager.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dc19b0ab301b18b3ff7b046772a113aa9a95c1f4cec56f521bc4bcbe7a25e059"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_swarm_governance_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "5acf21d1bf95a727088e7722522d38a0ca76d9a7f9932f6da32d42028b1cb15f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_swarm_governor.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3192e1779fbc8e12b2c5a4c11713f870b5902ce5a8afb84d7a9915140e148c56"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_swarm_role_allocator.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7c539b58c3f53cc34853ae54e1f3ebe5e115993eefae4c6bbc452b381de44988"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_swarm_status.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "609008f756162994263e19f094f539da513e45f3d625a36b8d681c6fb68195a5"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_t03_epoch4_communication_model_control.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "17339db3f537637f2aa782ad64902713f21602260908fc9b6e4dda816beb905c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_test_placement.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2f400e9c0ab9009d902280b9e005728a4b58592798edebed4ee687c6ed7c1c8e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_trusted_control_plane_providers.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8f1a3f5390e6d2a3f3255af10e70790d13959cb8483da2c2ed2be1272a317902"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_trusted_control_plane_runtime.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "71d8a18eb3f059359fd8c67538c8dbe63c6953a9882b70e34e1873f7aa61916b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_trusted_control_plane_service.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1d7215c7f272e744563ea1a59310027118fd3aab6b1b97eecd9b1a67699fc547"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_truth_plane_reconciliation.py",
+      "test_class": "CURRENT_CURRENTNESS",
+      "revision_named": false,
+      "sha256": "84707b2360a3143982705d14c5913dca40f3425be3dd9761b82a1ef59522b29f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_ui_runtime_events.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "2cd07b2e59489e875f6e58a69bf85d9aebffb710f35a3b88a92815f4483af614"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_cognitive_evolution_behavioral_evals.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "488d6517315b7cc352d6313ddb8b8ea85f0ab6b78afb2ad0b9ec41ba751816ed"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_communication_envelope_closure.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ca0e807df46ae590e079b02f15edf7334c48b7941da12a2e388415ac82c0f97a"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_communication_envelope_formalization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "62649ef12dc5501a34cdbbed7412278e832d8003f728396246e120381f8bf6d9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_documentation_homeostasis.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8d99179c42b0e9c1ec0b8ac09ff89a9baa78491d1b65101500172e87222f10a7"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_federated_architecture_artifacts.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "fd7604a795e5fead20c9d1b67883acbc279269c93cc1588799d3ddce7f62d7de"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_federated_architecture_closure.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "788d10717e45d919b26a3b596a299cc92d0196de658f72414a739ff7c6b41053"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_federated_architecture_discoverability.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e7e849640989f7a5ab945571595766a0005da9e985a889b8e284658327336af9"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_global_repository_standardization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5588e3a92cc8b12ffe62f170c20cd6c7fc4f3417b062046245a0b7450aa5dfec"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_task2_formalization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dd5bad99d233f7f5c5f4140355810b49b84a3323195e1677a7f7178ce5fa48ff"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_task2_formalization_closure.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "570809c1ebe95c30bdf30dd6410b5c710e726531cf8389a327739a693e46970d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_verifier_execution_attestation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b062574ef9a0850ca5f1787568aca4b4935cec3d3ebd5de0bfef6424cd6c42a8"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_verifier_execution_attestation_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "343eb2fefca42153df4491fc03a296a4104d1ddcbd3613230cbee97484de364f"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_verifier_identity_provider.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1519722d5fc51e25cb3f8cddc39bc082ab72a809610b4c2507fd0bd6624d57ce"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_verifier_identity_runtime.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "f5af7e5ce0c58fd20a85688fbd3d82c551dbddd858e88d48902f329b0308e143"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_vkt_effect_admission_broker.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": false,
+      "sha256": "9e758ee4bf694f30b52890e9ac8b30b82f1f5f69a72abb6dbbeac771624f59bf"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_vkt_r3_mission_control.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "cb816a3ac2814d0f9e0a21b73ee6ef1bbccc48627353206ae2ceb0a4b57cd091"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_vkt_r3_runtime_payload.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "4f0a72629a872ee498b6728bda0fe8635fa83f0e16ec5fe3dd70a71d0c71cde2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_vkt_r3_validate_600s.py",
+      "test_class": "HISTORICAL_REGRESSION",
+      "revision_named": true,
+      "sha256": "f7b3f814dfcdae51fe7edc659fdeb020091f6912a8b0dd98429e126e3a74352c"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_worker_receipt_fencing.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6e869b90ea87fa43c598937ed14c7b15b5eddfd21bdc34ddd162f06f4b36033e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_workflow_dispatch_boundary_source.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4caca7ce1e4ff6edc1a4139db69862beeb5fa4c67b52f0bf7ac58876b9cc18f7"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_workflow_dispatch_github_effect.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a5770d32025aa7e8e6ec5f99aa5d044447e06580b719874eefeb18a30828d27e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_workflow_dispatch_mediation.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6b0ba924784c4300f76b8b1dac3eade53ecaf2dadf59b81035aec3a84c7ce080"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_workflow_dispatch_mediation_inventory.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "36a983868f7765292f4d1d4aa07892fb2db82e59ec1dd0b9324a40b6e8e3da13"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_workflow_dispatch_runtime.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "071046173f52aaaeb20a8b6b1035bfd9b2d001942f951001250404ec9c771084"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_workload_identity.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "09884b6bd02e234b4e8391a1813fdf57ab8bae4fabbdb17e56270577f8665fef"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/images/q3_mosty9d.PNG",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2a3e75e11f8a7c6bba9112355856f674ff05ea447c9b6cce7bfdf229fc2f7780"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/images/q3_mosty_image_9d.PNG",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "034e83854186cd53aedef0bc0609ca8e407e9c9a4f62ef30c9f1c3e9cc8e7e9d"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/images/q3_nomost9d.PNG",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7d7989add6394464db4f58140f103481204d42216c42b4a446cc612f031acb81"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/images/q3_nomosty_image_9d.PNG",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3d91af0f2f38e51782f49df85dbbb34e89e77ad6064ae6ac435bb3ad5b06619e"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/prompt_q3_mosty_9d.prompt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b3809fc0a18a077586972e86be7f3cd8c06af43b4b9a0c1bb5f93ac07473a524"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/prompt_q3_mosty_image_9d.prompt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0be9b5fc7684e2ac6dcb37a8bb26f5834ad827003fc8996a6f2eb2ded2e2c018"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/prompt_q3_nomost9d.prompt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e34cf1e13850bd0e2a9be24db413d983f5a986edbc13b7db42f0b2bd9da979e2"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/prompt_q3_nomosty_image_9d.prompt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dd0b243972804717b7c28cbd0fc20d771fd6668683dd17e8f5d5eedbd018b539"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/raport_test_Adam_mosty9d_vs_bez.md",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "34e1f64f21c5326b24579d728453387c2f51bf5403be60509001708e6d6e872b"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/raport_test_imagemosty9d_vs_bez.md",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d79f1fb921495380d839833c24f8f6996957935321136fa73c5fdf574bd30159"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "delta/test/test_delta_report_suite.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a3d9612c5b9e83590cbbc02d11db462884e0c9a3f49b8b2336ed630ed33d27ad"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/.githooks/test_glx_tools.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "341b3a65e2e5388e1e9d7d6d65c7889e5a4ba78ac4bf3c4443d5cb2062657e7c"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/.github/workflows/tests.yml",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "88ee1091f78ed76b4c1f1854b9ab74485cc39a12b0fb60d6ef91a2ffcac03d8c"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/__init__.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/conftest.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0549b2085dc61e586a75377f3971db00634053f4d8f60f1e0f83c77ef7b13ba6"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/integration/test_ci_path_adversarial.py",
+      "test_class": "CURRENT_INTEGRATION",
+      "revision_named": false,
+      "sha256": "2ef13edc38c505c7cc4e8b12cbd240202feafdd62df16577d4ef0189262a3460"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/integration/test_with_real_git.py",
+      "test_class": "CURRENT_INTEGRATION",
+      "revision_named": false,
+      "sha256": "2c88b8cdfba86182e03a30caf9a3ef07fbe1864b5d855f3c49ba23439a4c2531"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/property/test_fingerprint.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d044e601bc7793d042dd97e2fd19e760d7a2cf9baf4e5ae78878aa8e992eb8a7"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/property/test_security_regression_family.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": false,
+      "sha256": "3705301fedd43e99f877e3b71617d33fc0d7e5b36452eda0167f4378b5d28655"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/test_ci_ratchet_contract.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "adc58cb5f56ef42374e62ce9397193264ce6f58b0e1fcfe8e2b8f62a0b28eef8"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_delta_fingerprint_fallback.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "80ca602fe22ea6f8dd9449ffe4ca8f0bcfc72427c36eeb58d7cf3b831dcdb911"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_delta_helpers.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "871abf9f8f4c4fd78080539f7d49c86b3e0d0db60585c4829269d4451414fe6c"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_delta_metrics.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "335f06076a4477b799a2b22e8803a9f13f17ef0971f18d2c4c6826511dd5523c"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_glx_tools_suite.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "88c56532375dd9dcd41f70748d8e47efc4393e828269c5837b978fe383d0baac"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_invariants_scoring.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a7767565b990b6c37e41258b88d89274b50b6e0b9218bb95a815fd4014704446"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_project_graph.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "497d2191919bbda6ead0697bf3c1d33a1c9401e1397a46002191d2cb773fa3fa"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/e4_dependency_compat.py",
+      "test_class": "COMPATIBILITY",
+      "revision_named": true,
+      "sha256": "f6ccf7edbf942b68ee595541036476b02c9471e12991f64d005f506da6ffcbb5"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/e5_manifest_security_guard.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": true,
+      "sha256": "9083a58f88b467ed554d0d9e8d4f30fd809d73acfc00365cad840e91d39eb60c"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/e6_agentworkload_example.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "5644700fecf2e6ec22fc0aa246a998a54ad4e0664f6d87a08e29ca1aeb09b15b"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/e6_identity_prerequisites.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": true,
+      "sha256": "8e7a20d05c492492e65071cee6f97cb6bce9316d59ac35fb3c4001a9b90a25c9"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/e6_runtime_admission_contract.py",
+      "test_class": "CURRENT_SECURITY",
+      "revision_named": true,
+      "sha256": "e1ceb53bff6707b4e8530be85944ee7770c9c58c38bf768a180f88c51268916f"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/runtime/e4_runtime_compose.yml",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": true,
+      "sha256": "8b33866a328c3704b3f0e8f7d62cd36aca21c6e6e37242389efce11580497ce5"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/runtime/e4_runtime_probe.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": true,
+      "sha256": "09bb3d36e2af998ec8d0c346a88bae1f3f95f05481dd9cd976d87a93a850b306"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "tests/runtime/e4_runtime_schema.sql",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": true,
+      "sha256": "1788349f5b9ccd825fd10f7a270b1347956f5677e938bdfd49b5f82582911e34"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/README.md",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "77641c6d993150e5b2a2f475aaee144019c13a4f53f68a9436261161955fcaab"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/Bmeta_symmetrized.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "218a36f8ef4d0670eafcb67517e86a1037da299877d5b00748dbe660003de137"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/H0_base_operator.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d791ea7894d281c522927c86a8eeb14c74277f294f230a6e2bd7aaa4f9c3717c"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/H_full_operator.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d791ea7894d281c522927c86a8eeb14c74277f294f230a6e2bd7aaa4f9c3717c"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/LA_axis_A.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "5541795888e75e07fb6f80ac30a05f8b795c916c4f76215ead8d87ef0ed353a9"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/LB_axis_B.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b6b3b55c6c787df1b45a8edfb4058b886be2de1c383bad7bb0439341cdece653"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/LC_axis_C.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c30579b87ecff2b663f2933b4f3e58f600e3114abd825c1d828126ff09f3c264"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/W_local_weights.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "580e493cbc28a5862f70825c5e8b7203c82158a74aafd47b28642765aa25f9d0"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/eig_H.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0bbda0b47ae6919410c62f05a126e226a0d6a3b8fb7922d9be78661bf521bff4"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/eig_H0.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0bbda0b47ae6919410c62f05a126e226a0d6a3b8fb7922d9be78661bf521bff4"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/hmk27d_output.mat",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "842143b2a2a4ae70c1ff9f892da62e679a2ed15495a93a6fa8e93319ecda2d0e"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/omega.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c932e513a7170963065ba71fd4f5b7e067853b734d9424645b2f45cd03f24e13"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/report.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cd8305c17c791539c8d81856b1760c4a03a4b37bf41b97fc48976ff66cf00cac"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/spectrum.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "d9c4217babb95d20aa6f2d5fcdd7ed7a6368fbea8e40e29b811d74335bbde118"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/time_stability.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c351f39be5bc2f59fa6d293295f37155748e68b1127370ae8cd9ed2f85c050af"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d/20260325_113819/weights_labels.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c71e1b818657f3101773deb69d13442f6f91cf1e29db72635b6295b5d26c26c4"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/Bmeta_sym.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "218a36f8ef4d0670eafcb67517e86a1037da299877d5b00748dbe660003de137"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/H27_base.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9672d960ed7228a77756c4c7dca82fb0c348388bfe3198cd44462b12d5b0dd31"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/H27_full.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9672d960ed7228a77756c4c7dca82fb0c348388bfe3198cd44462b12d5b0dd31"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/dynamics.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f862b7520b746177c99da738ca34f28994d3004e8a370a03099f96fcdac7ee78"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/eig_H27_base.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0cc183efef3b6c2377b0a6a64583577a66d739288afa216aac7481cae1715651"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/eig_H27_full.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0cc183efef3b6c2377b0a6a64583577a66d739288afa216aac7481cae1715651"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/hmk27d_sch_output.mat",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "85e75bdf3be85fe1659459b398e3ad3ef161ebb81fd633ae225fe7aabfd7f717"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/operator27_labels_weights.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "42993bf191ad72eb50fa0898c5c965ecdbc4fedf7dd7102fb6e5bf027bd90260"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/potential_1d.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bc83cb96556416a20fd804d96569668e0c3ddf36dd68c93667331257d3c2d3d6"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/potential_1d.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "896f733fae9bc487697d48b2035e0213ca04f05eb175b72c88036c0b36dbb2d8"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/probability_profiles.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "81e78e20e494899343d91f4eba4ee785a660af45d246ebfa3e479a634c2472ce"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/psi_time_heatmap.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "6d4fdec7d2c8e7ab10f0150d74def02b0b40c96c54da0adf028250cc0df767b5"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/report.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "967bf6cefb5e0d57c2c3d73e3ccaea541e376e91fd83be90cf3dd01e559654ad"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/spectrum_27d.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dc195d9d3169d97937b9e1eb4c260aa1a23f51ee47533a5d11804d6dc23c56ed"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134330/time_norm_energy.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e467fa08757ad1652dc28dca4ee4b665b06876a366d2f114a192f8ffa026d569"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/Bmeta_sym.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "218a36f8ef4d0670eafcb67517e86a1037da299877d5b00748dbe660003de137"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/H27_base.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9672d960ed7228a77756c4c7dca82fb0c348388bfe3198cd44462b12d5b0dd31"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/H27_full.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9672d960ed7228a77756c4c7dca82fb0c348388bfe3198cd44462b12d5b0dd31"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/dynamics.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "44db20f2bd5ebc06b550d2cd896027279b161c8203a8c419ce6c971670342ef1"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/eig_H27_base.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0cc183efef3b6c2377b0a6a64583577a66d739288afa216aac7481cae1715651"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/eig_H27_full.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0cc183efef3b6c2377b0a6a64583577a66d739288afa216aac7481cae1715651"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/hmk27d_sch_output.mat",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "16fd23f964df70383967284ce1ad8b8556fd5d7cbdab5457ea330733536cb7b3"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/operator27_labels_weights.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "42993bf191ad72eb50fa0898c5c965ecdbc4fedf7dd7102fb6e5bf027bd90260"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/potential_1d.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bc83cb96556416a20fd804d96569668e0c3ddf36dd68c93667331257d3c2d3d6"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/potential_1d.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "83711b260647293181009acc64e2f18d295caddfb4abec2af8aeae2f40bdf07c"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/probability_profiles.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "f542d74f3ce2b59cdf232ee908512a2199ff1f31c4cb95c37ae623df1f5d8c7c"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/psi_time_heatmap.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "112f5246d02b4535d5209d02a217b2d8f9752269585306617fcd1788c232c8f9"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/report.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7700f0126464603474446a96ee07664b840548e5a559ad01988e26fa180903f7"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/spectrum_27d.png",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ced093d3ffdbe2087114512b3fbc7f8e21e6a48c4678731e2f5064776b8b0fda"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/outputs_hmk27d_sch/20260325_134624/time_norm_energy.csv",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "c76f593cc8b982111b41878941bdd92808778c2b5dd49a3208348d9f2cf0c924"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/run_all_loci_pipeline_tests_2026-03-22_204257.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b834099cb5811e37d91623e17f257d3bd5b6aff6d6eb4f5a9758a220067d0688"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/run_all_loci_pipeline_tests_2026-03-22_204706.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cb350e9bcbcc5c7db8736cd7c0ff180f45aecbd568b64992ad4e371570f583e0"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/run_all_loci_pipeline_tests_2026-03-22_205131.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1ad4f062f83198d27bf1ac3307010ecbf976b76f3e4651300f0c9da6278a356a"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/run_all_loci_pipeline_tests_2026-03-22_205205.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "4aea4cc51eb142a3e9ac60c4268d26fa78d31b4c133dc38c9b6a500156f52b41"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/test_loci_pipeline_2026-03-22_205809.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "e49c47d64c1f44840aba3c21553a7f6d205dc7e8594c2dce07735a4551fe2344"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/test_loci_pipeline_2026-03-22_205809.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "41eb61ad79f47f1c6b5ad3a0cd67f5101aa066a2f2b46f22c869eee3ed5c4e13"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/test_loci_pipeline_sample_0002_2026-03-22_203614.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2fae08e88d71a97e69112e3752c20b32d9b1856df6edd2dc9f800e25b830e1d2"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/results/test_loci_pipeline_sample_0002_2026-03-22_203614.txt",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "b9672c760e6675c494568b80bf24010269bfd6674137bdc63bf7876e923026b5"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/run_all_loci_pipeline_tests.m",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0255349172249106f3d7156c7430aa439756844aff2cb9047e711bca4c31ba4e"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/run_loci_aggregate_report.m",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dfc25a4114f75143172e4554f79b69e8cc7f2372cc604dea84401cc0a3841d6b"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/run_loci_cognitive_readiness_test.m",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "7147e76fb88298836c6f26f3c18755bdfd50d816ee6b501cb76c4f027bb26067"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/test_loci_pipeline_sample_0002.m",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "3c7ea3907a2676b337c21b5679fff2fccd0be986b010077d7079bebde75dcc21"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/test_matlab_export.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "502ac5551ece619f72840c0aa0982b9e5f41b821b81f1d47cb5a4bc9554d61e3"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/test_normalization.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "001dab2277f8ce8494d803148bad4a6a0872869cbbfcd38f63fceb573532e41a"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/LOCI/tests/test_parser.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a5fb4a8857d217a591a1d5fea3a068f1fd1a35fc912dcddad615d96d23716960"
+    }
+  ],
+  "counts": {
+    "CURRENT_UNIT": 342,
+    "CURRENT_CONTRACT": 36,
+    "CURRENT_RUNTIME": 29,
+    "COMPATIBILITY": 4,
+    "CURRENT_SECURITY": 33,
+    "CURRENT_CURRENTNESS": 20,
+    "HISTORICAL_REGRESSION": 50,
+    "CURRENT_INTEGRATION": 3
+  },
+  "authority_effect": "NONE"
+}

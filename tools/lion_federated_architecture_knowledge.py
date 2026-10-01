@@ -23,6 +23,12 @@ DOMAIN = b"LION/FEDERATED-ARCHITECTURE-SNAPSHOT/1\0"
 REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
 GLOBAL_OWNER = "DonkeyJJLove/ai_platform"
+META_CENSUS_PATHS = frozenset({
+    "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
+    "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
+    "LION/architecture/v1_5/TEST_CENSUS.json",
+    "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
+})
 
 PATH_CLASSES = (
     (re.compile(r"(^|/)AGENTS\.md$", re.I), "HUMAN_ARCHITECTURE_DOCUMENT"),
@@ -189,6 +195,8 @@ def build_census(snapshot: dict[str, Any]) -> dict[str, Any]:
         }
         for file in sorted(repo["files"], key=lambda row: row["path"]):
             path = file["path"]
+            if repo["repository"] == GLOBAL_OWNER and path in META_CENSUS_PATHS:
+                continue
             artifact_class = classify_path(path)
             if artifact_class is None and path not in declared:
                 continue
@@ -206,6 +214,8 @@ def build_census(snapshot: dict[str, Any]) -> dict[str, Any]:
                 }
                 artifact_class = class_map.get(meta.get("class"), artifact_class)
             artifact_class = artifact_class or "HUMAN_ARCHITECTURE_DOCUMENT"
+            generated_projection = artifact_class == "GENERATED_DOCUMENTATION"
+            blob_binding = "GENERATOR_OWNED" if generated_projection else file.get("blob")
             currentness_hint = meta.get("currentness", "SOURCE_BOUND")
             if currentness_hint == "HISTORICAL":
                 currentness = "HISTORICAL"
@@ -219,7 +229,8 @@ def build_census(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "repository_head": repo["head"],
                 "repository_tree": repo["tree"],
                 "path": path,
-                "blob": file.get("blob"),
+                "blob": blob_binding,
+                "content_binding": "GENERATOR_OWNED" if generated_projection else "EXACT_GIT_BLOB",
                 "artifact_class": artifact_class,
                 "currentness": currentness,
                 "declared_currentness": currentness_hint,
@@ -446,6 +457,19 @@ def build_currentness_model(snapshot: dict[str, Any]) -> dict[str, Any]:
         "schema": "lion.documentation-currentness-model/v1",
         "federation_digest": federation_identity(snapshot)["digest"],
         "projection_mode": snapshot.get("projection_mode", "EXACT_FEDERATION_SNAPSHOT"),
+        "evidence_identity_types": {
+            "LIVE_REPOSITORY_OBSERVATION": "freshly reacquired default-branch Git identity for the claim being made",
+            "EPOCH_CURRENTNESS_CARRIER": "immutable carrier binding a stabilized epoch subject",
+            "SOURCE_BOUND_PROJECTION": "deterministic projection bound to explicit source identities",
+            "CANDIDATE_BINDING": "pre-integration candidate identity used by formalization/verification",
+            "HISTORICAL_EVIDENCE": "immutable evidence of a past event or architecture epoch",
+        },
+        "evidence_invariants": [
+            "STORED_SNAPSHOT_IS_NOT_SELF_REFRESHING_LIVE_TRUTH",
+            "HISTORICAL_CARRIERS_ARE_NOT_REWRITTEN_TO_LATER_HEADS",
+            "CURRENT_CLAIMS_REQUIRE_REACQUISITION",
+            "PROJECTIONS_DECLARE_EXACT_INPUT_IDENTITY",
+        ],
         "dimensions": {
             "REPOSITORY_CURRENT": {
                 "owner": "exact Git observation",

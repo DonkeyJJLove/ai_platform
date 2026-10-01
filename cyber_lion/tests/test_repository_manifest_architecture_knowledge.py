@@ -45,6 +45,17 @@ class RepositoryManifestArchitectureKnowledgeTests(unittest.TestCase):
         self.base["architecture_knowledge"]=self.architecture_knowledge()
         jsonschema.Draft202012Validator(SCHEMA).validate(self.base)
 
+    def test_actual_repository_manifest_is_valid(self):
+        value=json.loads((ROOT/'cyber-lion.repository.json').read_text(encoding='utf-8'))
+        jsonschema.Draft202012Validator(SCHEMA).validate(value)
+
+    def test_standardization_invalidation_triggers_are_valid(self):
+        self.base['architecture_knowledge']=self.architecture_knowledge()
+        self.base['architecture_knowledge']['invalidation_triggers'].extend([
+            'NAMING_STANDARD_CHANGE','STATUS_MODEL_CHANGE','VERSION_MODEL_CHANGE',
+            'PANEL_CONTRACT_CHANGE','REPOSITORY_CONTENT_CHANGE'])
+        jsonschema.Draft202012Validator(SCHEMA).validate(self.base)
+
     def test_unknown_global_owner_is_denied(self):
         self.base["architecture_knowledge"]=self.architecture_knowledge()
         self.base["architecture_knowledge"]["global_owner"]="Other/repo"
