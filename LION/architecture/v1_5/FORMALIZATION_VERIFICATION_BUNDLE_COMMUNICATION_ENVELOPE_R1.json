@@ -1,0 +1,92 @@
+{
+  "schema": "lion.formalization-verification-bundle/v1",
+  "candidate_digest": "01b0c1644dd4563adae1d3cece19d778de3dcb5ecdcb15b27a44c7e46f6da520",
+  "source_head": "afd1c91d40f8975c41d970e44ae1ece10b43f4a0",
+  "source_tree": "0212f097c8991b507bda58992e1e52461fb4c8ce",
+  "formalization": {
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "manifest_digest": "a930ee0fe8f780e89214d7f6c5bb47671a5a03cebc00eb395d487c8d5ea300f7",
+    "required_set_digest": "9b40d2c081e85edc2b9c5cb376234a7b880e0d8b2c601b89fba4441a76963ba0",
+    "federated_binding_digest": "d809eab17c10c8ab001e6989543101463cc20cb4253aeb8c178f9bb11798f8c0",
+    "fleet_baseline_digest": "a08bf7424bcf53eca9eea122a89b8b9649697ec16df0f5f31325e43a47a2bc15",
+    "rag_source_set_digest": "6242c0f1f4f843384e6e287a1cecb0187623b50d905553700523ff80a39379e9"
+  },
+  "tests": {
+    "full_python_corpus": {
+      "result": "PASS",
+      "tests": 3523,
+      "skipped": 5
+    },
+    "focused_p0_scan_rebind": {
+      "result": "PASS",
+      "tests": 81,
+      "skipped": 0
+    },
+    "v15_suite": {
+      "result": "PASS",
+      "tests": 34,
+      "skipped": 0
+    },
+    "truth_currentness": {
+      "result": "PASS",
+      "tests": 48,
+      "skipped": 2
+    },
+    "r24_whole_integration_no_tests": {
+      "result": "PASS"
+    },
+    "git_diff_check": {
+      "result": "PASS"
+    },
+    "local_bandit": {
+      "result": "NOT_RUN",
+      "required_ci_gate": true
+    }
+  },
+  "security": {
+    "effect_surface_scan": {
+      "result": "PASS",
+      "evidence_digest": "8e77923fd421b28ca50b366569c6bbfe09e18c793c487135bb80d47d34b26220",
+      "source_count": 370,
+      "surface_count": 519,
+      "added": 0,
+      "removed": 0,
+      "taxonomy_unresolved": 0
+    },
+    "new_authority_or_effect_surface": "NONE"
+  },
+  "evals": {
+    "result": "PASS",
+    "evidence_digest": "b5758cc28ec5e703d72d244b021650718233f07e07a877cc1476d4afe2eb0e9b",
+    "cases": [
+      "COMMUNICATION_ENVELOPE_IS_NOT_DELIVERY",
+      "COMMUNICATION_ENVELOPE_IS_NOT_COGNITION_DONE",
+      "COMMUNICATION_RECIPIENT_SET_IS_FROZEN",
+      "COMMUNICATION_PAYLOAD_REF_IS_NOT_EXECUTION"
+    ]
+  },
+  "rag": {
+    "candidate_routing_probe_result": "PASS",
+    "hosted_project_retrieval": "NOT_RUN",
+    "preferred_release_changed": false,
+    "preferred_release": "lion-rag32-v1.4-r9-auth-lifecycle-candidate",
+    "live_truth_policy": "RAG_NE_LIVE_TRUTH"
+  },
+  "federation": {
+    "repositories": 10,
+    "update_repositories": [
+      "DonkeyJJLove/ai_platform"
+    ],
+    "validate_only_repositories": 9,
+    "peer_mutations": 0
+  },
+  "publication_gates_pending": [
+    "GitHub Core",
+    "Bandit",
+    "CodeQL",
+    "R22C/full symbol census",
+    "R24 Whole Integration exact-head"
+  ],
+  "authority_effect": "NONE",
+  "verification_digest": "9d7126b1bfbde2ea07160be5ab0b69c7b2985d143364a80f16ec34ccfc3112d0"
+}

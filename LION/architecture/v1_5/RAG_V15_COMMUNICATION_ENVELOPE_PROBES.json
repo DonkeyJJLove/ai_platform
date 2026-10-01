@@ -1,8 +1,8 @@
 {
   "schema": "lion.rag-v15-communication-envelope-probes/v1",
   "authority_effect": "NONE",
-  "currentness": "FORMALIZATION_PENDING",
-  "source_set_digest": "b17bf2ed79657e1815ae14791286b43b825951517a70ae999a25a723445d01b7",
+  "currentness": "CURRENT_CANDIDATE",
+  "source_set_digest": "6242c0f1f4f843384e6e287a1cecb0187623b50d905553700523ff80a39379e9",
   "probes": [
     {
       "id": "V15-COMMUNICATION-ENVELOPE-OWNER-BOUNDARY",
@@ -19,5 +19,11 @@
         "RAG != live truth"
       ]
     }
-  ]
+  ],
+  "candidate_binding": {
+    "head": "afd1c91d40f8975c41d970e44ae1ece10b43f4a0",
+    "tree": "0212f097c8991b507bda58992e1e52461fb4c8ce",
+    "candidate_digest": "01b0c1644dd4563adae1d3cece19d778de3dcb5ecdcb15b27a44c7e46f6da520",
+    "truth_subject": "4cf2db8584e34431ba9baab989fb05472b2ff9d17acdc72ca4b03453f2a7843e"
+  }
 }
