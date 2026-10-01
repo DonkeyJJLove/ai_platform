@@ -1,8 +1,7 @@
 {
   "schema": "lion.document-derived-architecture/v1",
-  "projection_input_tree": "18a7bfeb4da5beaa5ea1ec5c9cbe0f40ca93f64b",
-  "source_federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
-  "generated_at": "2026-09-30T15:19:18.299445Z",
+  "projection_input_tree": "fb840efffc733474da90420156f11367f95b5d16",
+  "source_federation_digest": "00c399951c41ee0712f2cc1adca14e3cf32cc7b08a8cec08bf1cf6e0ce6c58c8",
   "semantic_owners": [
     {
       "concept": "BeanFactory",
@@ -334,9 +333,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "master",
-      "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
-      "tree": "3378fa25e60adde0193cc189e73f780a828e65c5",
+      "branch": "fix/v15-documentation-homeostasis-r1",
+      "head": "7d63acd7989c2e21bb7e7d74587c4ce22f652d6c",
+      "tree": "fb840efffc733474da90420156f11367f95b5d16",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -366,9 +365,31 @@
         "event.envelope"
       ],
       "maximum_authority": "external_write",
-      "semantic_exports": [],
-      "semantic_imports": [],
-      "global_owner": null
+      "semantic_exports": [
+        "architecture",
+        "federation",
+        "repository_roles",
+        "contracts",
+        "capabilities",
+        "authority",
+        "runtime",
+        "currentness",
+        "formalization",
+        "roadmap",
+        "RAG"
+      ],
+      "semantic_imports": [
+        "process_semantics",
+        "evolution_compiler",
+        "context_memory",
+        "hypothesis_research",
+        "structure_graph",
+        "supply_chain_provenance",
+        "execution_mesh",
+        "simulation",
+        "research_corpus"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
@@ -624,11 +645,11 @@
     }
   ],
   "architecture_documents": {
-    "artifact_count": 705,
+    "artifact_count": 752,
     "by_repository": {
       "DonkeyJJLove/HA2D": 5,
       "DonkeyJJLove/SymulacjaKaskadySieciowej": 8,
-      "DonkeyJJLove/ai_platform": 577,
+      "DonkeyJJLove/ai_platform": 624,
       "DonkeyJJLove/chunk-chunk": 7,
       "DonkeyJJLove/glitchlab": 26,
       "DonkeyJJLove/hipotezy_nadawcze_LLM": 5,
@@ -638,21 +659,22 @@
       "DonkeyJJLove/writeups": 35
     },
     "by_class": {
-      "HUMAN_ARCHITECTURE_DOCUMENT": 358,
-      "ROADMAP": 12,
-      "PROCESS_CONTRACT": 9,
-      "REPOSITORY_MANIFEST": 10,
-      "MACHINE_READABLE_ARCHITECTURE": 252,
-      "RAG_ROUTING": 49,
       "ADR": 8,
-      "TRUTH_CARRIER": 1,
       "CAPABILITY_CATALOG": 1,
       "CONTRACT_CATALOG": 1,
-      "FEDERATION_MANIFEST": 1,
-      "SEMANTIC_OWNER_MAP": 2,
-      "SOURCE_PROVENANCE": 1
+      "GENERATED_DOCUMENTATION": 9,
+      "HUMAN_ARCHITECTURE_DOCUMENT": 393,
+      "MACHINE_READABLE_ARCHITECTURE": 255,
+      "PROCESS_CONTRACT": 9,
+      "RAG_ROUTING": 49,
+      "REPOSITORY_MANIFEST": 10,
+      "ROADMAP": 14,
+      "SEMANTIC_OWNER_MAP": 1,
+      "SOURCE_PROVENANCE": 1,
+      "TRUTH_CARRIER": 1
     }
   },
+  "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "authority_effect": "NONE",
-  "projection_digest": "af73ce10fff18ece35b3b7a3b3be2ace2561ca9308d583d137419cce9c2806da"
+  "projection_digest": "1d964c9996b211a620ceb1da0decb5e549436867e9fcabd50a0d7a6d3666fe51"
 }
