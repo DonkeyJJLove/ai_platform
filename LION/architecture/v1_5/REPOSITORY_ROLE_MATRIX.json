@@ -1,6 +1,6 @@
 {
   "schema": "lion.repository-role-matrix/v1",
-  "federation_digest": "00c399951c41ee0712f2cc1adca14e3cf32cc7b08a8cec08bf1cf6e0ce6c58c8",
+  "federation_digest": "26cd34c4d0fdbf17c4c746215fabe501809110d3c6fb4661886069adcb3b3f5f",
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -76,9 +76,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "fix/v15-documentation-homeostasis-r1",
-      "head": "7d63acd7989c2e21bb7e7d74587c4ce22f652d6c",
-      "tree": "fb840efffc733474da90420156f11367f95b5d16",
+      "branch": "mission/v15-communication-envelope-consolidation-r2",
+      "head": "1b2ef590e9bf76efe1f5b206b15a0dae9b69f15b",
+      "tree": "eb882238525df9c92985bde8bea20e10d1293816",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -388,5 +388,5 @@
     }
   ],
   "authority_effect": "NONE",
-  "matrix_digest": "f53ee3050ff939c52cb4c49f127334c451a167c56602030ece72e5cb50650864"
+  "matrix_digest": "93a8858c99e4cee219b5d95d780a762a9c8a50ed1f1eec3187d4231a2979c35e"
 }

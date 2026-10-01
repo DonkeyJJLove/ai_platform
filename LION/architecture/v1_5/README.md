@@ -93,8 +93,10 @@ A projection may be correct for its source binding and still be stale for a late
 
 Peer repositories own only their local architecture knowledge through `AGENTS.md`, `cyber-lion.repository.json` and explicitly listed local artifacts. The global federation architecture is not copied into peers; federation-wide questions route back to `ai_platform`.
 
-## Next frontier
+## Current successor increment
 
-The dependency-derived order is documented in `AI_NATIVE_ROADMAP_NEXT.md`.
+`CommunicationEnvelope` is being reconciled as a selective port from the preserved candidate onto the current post-homeostasis `master`. Only the inert semantic contract and its validated behavior are reused; stale owner, projection, formalization and currentness bindings are regenerated against the current source tree.
 
-`CommunicationEnvelope` is the current successor candidate. It is not part of the integrated `master` contract surface until its own publication, verification and reconciliation close.
+The increment remains non-effectful: `CommunicationEnvelope != transport != delivery != cognition != authority`. It uses the current v1.5 semantic-owner map, documentation-homeostasis loop and federation-aware formalization path. It is not part of the integrated `master` contract surface until its own publication, verification and reconciliation close.
+
+The dependency-derived successor after CommunicationEnvelope closure is `MissionIntent`, as tracked in `AI_NATIVE_ROADMAP_NEXT.md`.

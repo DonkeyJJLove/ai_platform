@@ -1,0 +1,102 @@
+{
+  "schema": "lion.reasoner-eval-results/v1",
+  "task_id": "LION-V15-COMMUNICATION-ENVELOPE-SELECTIVE-PORT-AND-REFORMALIZATION-R1",
+  "evaluation_mode": "SELF_EVALUATION_BOUND_TO_ACTUAL_CONTRACT_AND_TEST_EVIDENCE",
+  "scorer_independence": "NO_CLAIM",
+  "authority_effect": "NONE",
+  "results": [
+    {
+      "case_id": "COMMUNICATION_ENVELOPE_IS_NOT_DELIVERY",
+      "observed_classification": "SEMANTIC_CARRIER_ONLY",
+      "observed_action": "Delivery remains owned by existing operational ledgers/readback; sealed envelope alone is insufficient.",
+      "evidence_refs": [
+        "cyber_lion/contracts/communication_envelope.py",
+        "cyber_lion/tests/test_communication_envelope.py",
+        "LION/evals/evolution/evolution_cases.yaml"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    },
+    {
+      "case_id": "COMMUNICATION_ENVELOPE_IS_NOT_COGNITION_DONE",
+      "observed_classification": "MESSAGE_IDENTITY_ONLY",
+      "observed_action": "CognitiveInvocation and result/reconciliation remain separate identities and states.",
+      "evidence_refs": [
+        "cyber_lion/contracts/communication_envelope.py",
+        "cyber_lion/contracts/cognitive_invocation.py",
+        "cyber_lion/tests/test_communication_envelope.py"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    },
+    {
+      "case_id": "COMMUNICATION_RECIPIENT_SET_IS_FROZEN",
+      "observed_classification": "COMMUNICATION_IDENTITY_DRIFT",
+      "observed_action": "Recipient substitution is rejected by digest validation and duplicate/noncanonical sets fail closed.",
+      "evidence_refs": [
+        "cyber_lion/tests/test_communication_envelope.py::CommunicationEnvelopeTests.test_recipient_set_is_unique_frozen_and_canonical",
+        "cyber_lion/tests/test_communication_envelope.py::CommunicationEnvelopeTests.test_payload_causation_or_recipient_substitution_breaks_digest"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    },
+    {
+      "case_id": "COMMUNICATION_PAYLOAD_REF_IS_NOT_EXECUTION",
+      "observed_classification": "OPAQUE_PAYLOAD_REFERENCE_ONLY",
+      "observed_action": "Payload bytes stay external; envelope carries only schema/ref/digest and cannot report effect or authority.",
+      "evidence_refs": [
+        "cyber_lion/contracts/communication_envelope.py",
+        "cyber_lion/tests/test_communication_envelope.py::CommunicationEnvelopeTests.test_payload_content_is_not_part_of_envelope_contract"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    }
+  ],
+  "overall": "PASS",
+  "candidate_binding": {
+    "head": "afd1c91d40f8975c41d970e44ae1ece10b43f4a0",
+    "tree": "0212f097c8991b507bda58992e1e52461fb4c8ce",
+    "candidate_digest": "01b0c1644dd4563adae1d3cece19d778de3dcb5ecdcb15b27a44c7e46f6da520"
+  },
+  "formalization_binding": {
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "manifest_digest": "a930ee0fe8f780e89214d7f6c5bb47671a5a03cebc00eb395d487c8d5ea300f7",
+    "required_set_digest": "9b40d2c081e85edc2b9c5cb376234a7b880e0d8b2c601b89fba4441a76963ba0",
+    "federated_binding_digest": "d809eab17c10c8ab001e6989543101463cc20cb4253aeb8c178f9bb11798f8c0",
+    "fleet_baseline_digest": "a08bf7424bcf53eca9eea122a89b8b9649697ec16df0f5f31325e43a47a2bc15"
+  },
+  "test_evidence": {
+    "full_python_suite": {
+      "result": "PASS",
+      "tests": 3523,
+      "skipped": 5
+    },
+    "focused_p0_scan_rebind": {
+      "result": "PASS",
+      "tests": 81,
+      "skipped": 0
+    },
+    "v15_suite": {
+      "result": "PASS",
+      "tests": 34,
+      "skipped": 0
+    },
+    "truth_currentness": {
+      "result": "PASS",
+      "tests": 48,
+      "skipped": 2
+    },
+    "r24_whole_integration_no_tests": {
+      "result": "PASS"
+    },
+    "effect_surface_scan": {
+      "result": "PASS",
+      "source_count": 370,
+      "surface_count": 519,
+      "added": 0,
+      "removed": 0,
+      "taxonomy_unresolved": 0
+    }
+  },
+  "evidence_digest": "b5758cc28ec5e703d72d244b021650718233f07e07a877cc1476d4afe2eb0e9b"
+}

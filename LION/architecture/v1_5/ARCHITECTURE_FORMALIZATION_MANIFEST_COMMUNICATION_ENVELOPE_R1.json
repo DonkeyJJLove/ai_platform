@@ -1,0 +1,236 @@
+{
+  "manifest_id": "afm:v1.5-communication-envelope-successor-r1",
+  "baseline": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "branch": "master",
+    "head": "3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
+    "tree": "3ac45ea1329938fdcd7f3c3d4705c78907533949"
+  },
+  "source_evolution_delta": {
+    "ref": "LION/architecture/v1_5/EVOLUTION_DELTA_COMMUNICATION_ENVELOPE_R1.json",
+    "digest": "7cbc7180f70e5f6d8fb706aa7f21e0149bc933df8048a4aa1d4e4bf1fc19ea6e"
+  },
+  "change_class": "MIXED_ARCHITECTURE",
+  "affected_concepts": [
+    "CommunicationEnvelope"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "CommunicationEnvelope",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "semantic_owner_delta": [
+    {
+      "concept": "CommunicationEnvelope",
+      "primary": "cyber_lion/contracts/communication_envelope.py",
+      "secondary": [
+        "cyber_lion/mission_control/operator_control.py",
+        "cyber_lion/contracts/group_channel.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ],
+      "operation": "ADD"
+    }
+  ],
+  "formalization_updates": [
+    {
+      "artifact_id": "semantic-owners",
+      "operation": "UPDATE",
+      "reason": "Add the unique v1.5 CommunicationEnvelope semantic owner."
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "operation": "UPDATE",
+      "reason": "Register lion.communication-envelope/v1 without inventing a capability."
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "operation": "NOT_APPLICABLE",
+      "reason": "CommunicationEnvelope is a representation contract and adds no capability."
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "operation": "UPDATE",
+      "reason": "Bind CommunicationEnvelope to the existing FLEET_AND_SWARM layer."
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "operation": "NOT_APPLICABLE",
+      "reason": "The envelope introduces no delivery event or runtime state machine."
+    },
+    {
+      "artifact_id": "gap-projection",
+      "operation": "UPDATE",
+      "reason": "Expose CommunicationEnvelope as CONTRACT_ONLY and advance its dependency frontier to MissionIntent."
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "operation": "UPDATE",
+      "reason": "Add regressions for delivery cognition recipient-set and payload-execution separation."
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing AGENTS to v1.5 README to semantic owners route reaches the owner."
+    },
+    {
+      "artifact_id": "rag-routing",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Preferred versioned release remains unchanged; task-specific v1.5 source and probes are separate."
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "operation": "REGENERATE",
+      "reason": "Final non-carrier source requires a new truth subject before carrier-last closure."
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "operation": "UPDATE",
+      "reason": "Document the selective-port successor and semantic boundary."
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "operation": "REGENERATE",
+      "reason": "Source change adds CommunicationEnvelope to FullArchitectureModel; regenerate the exact source-bound code projection."
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "operation": "UPDATE",
+      "reason": "After this increment closes MissionIntent becomes the next dependency-derived frontier."
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Reuse the federation-aware registry without parallel ownership."
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Reuse the federation binding contract with a new exact task instance."
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "operation": "REGENERATE",
+      "reason": "Source and declared architecture-artifact changes require a fresh exact document census."
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "operation": "REGENERATE",
+      "reason": "Public/project routing and the new contract require regeneration from the fresh census."
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "operation": "REGENERATE",
+      "reason": "Code/document/federation reconciliation must be regenerated after the source and owner changes."
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "operation": "REGENERATE",
+      "reason": "Document-derived architecture must bind the refreshed census, owners and repository-role projection."
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "operation": "REGENERATE",
+      "reason": "Documentation currentness must be regenerated against the post-homeostasis source binding."
+    }
+  ],
+  "currentness_invalidations": [
+    "semantic-owners",
+    "contract-catalog",
+    "architecture-projection",
+    "gap-projection",
+    "architecture-docs",
+    "roadmap-next",
+    "currentness-carriers",
+    "code-derived-architecture",
+    "architecture-document-census",
+    "architecture-document-graph",
+    "architecture-reconciliation",
+    "document-derived-architecture",
+    "documentation-currentness-model"
+  ],
+  "migration": {
+    "steps": [
+      "Selective-port the inert CommunicationEnvelope contract and behavioral tests from preserved commit 55ddb1e.",
+      "Regenerate current ownership, catalog, code/document architecture projections, reconciliation, eval and documentation surfaces on the post-homeostasis master.",
+      "Bind the AFM to a fresh ten-repository FleetBaseline with ai_platform UPDATE and nine peers VALIDATE_ONLY.",
+      "Materialize task-specific RAG source and probes without changing the preferred versioned RAG release.",
+      "Close exact candidate formalization then regenerate truth currentness carriers last."
+    ],
+    "compatibility_adapter": "Existing operator_messages and GroupChannel surfaces project to CommunicationEnvelope only through explicit adapters; no storage migration is implied.",
+    "exit_condition": "Exact candidate FCR PASS exact federation binding carrier-last currentness PASS and no authority or effect widening."
+  },
+  "rollback": {
+    "steps": [
+      "Remove CommunicationEnvelope source tests and task-specific formalization RAG records.",
+      "Restore owner catalog projection eval and roadmap surfaces to post-foundation master semantics.",
+      "Retain operator message GroupChannel CognitiveInvocation and transport runtime owners unchanged."
+    ],
+    "compatibility_adapter": null,
+    "exit_condition": "No runtime transport database peer repository authority or production state changed."
+  },
+  "tests_required": [
+    "test_communication_envelope",
+    "test_v15_communication_envelope_formalization",
+    "test_architecture_projection_full_architecture",
+    "test_cognitive_evolution_architecture",
+    "test_cognitive_evolution_discoverability",
+    "test_formalization_kernel",
+    "test_federated_formalization_binding",
+    "test_host_authority_separation",
+    "test_p0_moon_attested_adjudication",
+    "test_p0_moon_permission_policy_reclassification",
+    "test_p0_moon_readonly_observer_falsification_runtime",
+    "test_p0_moon_runner_attested_execution_bridge",
+    "test_p0_moon_same_connection_denial_carrier",
+    "test_p0_moon_seven_binding_chain",
+    "test_p0_moon_seven_closure_readiness",
+    "test_p0_surface_closure_campaign",
+    "test_v15_documentation_homeostasis"
+  ],
+  "evals_required": [
+    "COMMUNICATION_ENVELOPE_IS_NOT_DELIVERY",
+    "COMMUNICATION_ENVELOPE_IS_NOT_COGNITION_DONE",
+    "COMMUNICATION_RECIPIENT_SET_IS_FROZEN",
+    "COMMUNICATION_PAYLOAD_REF_IS_NOT_EXECUTION"
+  ],
+  "falsifiers": [
+    "CommunicationEnvelope claims delivery or cognitive completion.",
+    "CommunicationEnvelope carries payload bytes as executable semantics.",
+    "Recipient payload or causation substitution preserves sealed identity.",
+    "CommunicationEnvelope changes transport ownership.",
+    "CommunicationEnvelope widens capability or authority.",
+    "A peer repository is mutated despite VALIDATE_ONLY disposition.",
+    "The old candidate formalization is promoted as current without regeneration.",
+    "A new top-level architecture layer is introduced."
+  ],
+  "discoverability": {
+    "bootstrap_routes": [
+      "AGENTS.md -> LION/architecture/v1_5/README.md",
+      "LION/architecture/v1_5/README.md -> LION/architecture/v1_5/semantic_owners.json",
+      "LION/architecture/v1_5/semantic_owners.json -> cyber_lion/contracts/communication_envelope.py"
+    ],
+    "probe_questions": [
+      "Where is CommunicationEnvelope owned?",
+      "What does CommunicationEnvelope prove and explicitly not prove?",
+      "Can one CommunicationEnvelope collapse LOCAL and SAAS invocation identities?"
+    ],
+    "max_reads_to_owner": 3
+  },
+  "rag_delta": {
+    "required": true,
+    "record_ids": [
+      "RAG-V15-COMMUNICATION-ENVELOPE-R1"
+    ],
+    "retrieval_probes": [
+      "Where is CommunicationEnvelope owned and how is it separated from transport delivery cognition and authority?"
+    ]
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "manifest_digest": "a930ee0fe8f780e89214d7f6c5bb47671a5a03cebc00eb395d487c8d5ea300f7",
+  "schema_id": "lion.architecture-formalization-manifest/v1"
+}

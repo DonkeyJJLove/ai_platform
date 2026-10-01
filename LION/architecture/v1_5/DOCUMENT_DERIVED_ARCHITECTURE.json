@@ -1,7 +1,7 @@
 {
   "schema": "lion.document-derived-architecture/v1",
-  "projection_input_tree": "fb840efffc733474da90420156f11367f95b5d16",
-  "source_federation_digest": "00c399951c41ee0712f2cc1adca14e3cf32cc7b08a8cec08bf1cf6e0ce6c58c8",
+  "projection_input_tree": "eb882238525df9c92985bde8bea20e10d1293816",
+  "source_federation_digest": "26cd34c4d0fdbf17c4c746215fabe501809110d3c6fb4661886069adcb3b3f5f",
   "semantic_owners": [
     {
       "concept": "BeanFactory",
@@ -14,6 +14,15 @@
         "cyber_lion/contracts/mosaic.py",
         "cyber_lion/tests/experiments/bean_generativity.py",
         "cyber_lion/tests/test_r22f_factory_falsifier.py"
+      ]
+    },
+    {
+      "concept": "CommunicationEnvelope",
+      "primary": "cyber_lion/contracts/communication_envelope.py",
+      "secondary": [
+        "cyber_lion/mission_control/operator_control.py",
+        "cyber_lion/contracts/group_channel.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
       ]
     },
     {
@@ -333,9 +342,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "fix/v15-documentation-homeostasis-r1",
-      "head": "7d63acd7989c2e21bb7e7d74587c4ce22f652d6c",
-      "tree": "fb840efffc733474da90420156f11367f95b5d16",
+      "branch": "mission/v15-communication-envelope-consolidation-r2",
+      "head": "1b2ef590e9bf76efe1f5b206b15a0dae9b69f15b",
+      "tree": "eb882238525df9c92985bde8bea20e10d1293816",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -645,11 +654,11 @@
     }
   ],
   "architecture_documents": {
-    "artifact_count": 752,
+    "artifact_count": 761,
     "by_repository": {
       "DonkeyJJLove/HA2D": 5,
       "DonkeyJJLove/SymulacjaKaskadySieciowej": 8,
-      "DonkeyJJLove/ai_platform": 624,
+      "DonkeyJJLove/ai_platform": 633,
       "DonkeyJJLove/chunk-chunk": 7,
       "DonkeyJJLove/glitchlab": 26,
       "DonkeyJJLove/hipotezy_nadawcze_LLM": 5,
@@ -663,8 +672,8 @@
       "CAPABILITY_CATALOG": 1,
       "CONTRACT_CATALOG": 1,
       "GENERATED_DOCUMENTATION": 9,
-      "HUMAN_ARCHITECTURE_DOCUMENT": 393,
-      "MACHINE_READABLE_ARCHITECTURE": 255,
+      "HUMAN_ARCHITECTURE_DOCUMENT": 401,
+      "MACHINE_READABLE_ARCHITECTURE": 256,
       "PROCESS_CONTRACT": 9,
       "RAG_ROUTING": 49,
       "REPOSITORY_MANIFEST": 10,
@@ -676,5 +685,5 @@
   },
   "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "authority_effect": "NONE",
-  "projection_digest": "1d964c9996b211a620ceb1da0decb5e549436867e9fcabd50a0d7a6d3666fe51"
+  "projection_digest": "4aac9d5d309cc234f3ef8cf9731c1c0df4da6498dbb0a4d63325b80b051508ad"
 }

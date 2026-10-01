@@ -192,6 +192,12 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         _observed("FederatedFormalizationBinding", "cyber_lion/contracts/federated_formalization_binding.py"),
         _observed("FormalizedArchitectureAdmission", "cyber_lion/enterprise/governed_change_admission.py"),
         _contract(
+            "CommunicationEnvelope",
+            "cyber_lion/contracts/communication_envelope.py",
+            missing_runtime="existing operator/group-channel stores and transports remain operational owners; this candidate adds no runtime adapter",
+            next_minimal_gap="define MissionIntent over stable communication/cognitive refs without changing transport or authority ownership",
+        ),
+        _contract(
             "CognitiveInvocation",
             "cyber_lion/contracts/cognitive_invocation.py",
             missing_runtime="existing LOCAL/SAAS execution paths remain operational owners",

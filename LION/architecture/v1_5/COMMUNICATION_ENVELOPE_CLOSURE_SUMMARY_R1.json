@@ -1,0 +1,64 @@
+{
+  "schema": "lion.communication-envelope-closure-summary/v1",
+  "task_id": "LION-V15-COMMUNICATION-ENVELOPE-SELECTIVE-PORT-AND-REFORMALIZATION-R1",
+  "candidate": {
+    "head": "afd1c91d40f8975c41d970e44ae1ece10b43f4a0",
+    "tree": "0212f097c8991b507bda58992e1e52461fb4c8ce",
+    "candidate_digest": "01b0c1644dd4563adae1d3cece19d778de3dcb5ecdcb15b27a44c7e46f6da520",
+    "truth_subject": "4cf2db8584e34431ba9baab989fb05472b2ff9d17acdc72ca4b03453f2a7843e"
+  },
+  "selective_port": {
+    "predecessor_commit": "55ddb1e9496127ca6e23d7896463c7c12d13b118",
+    "contract_sha256": "e426874d50a6a21f29a1f2b913f0d4780ec4c482a6fcf54df5e2c10af5684017",
+    "test_sha256": "4dd3a0973f6c137a2446876c8d873d7a300b19b03a510efffc3920796c11d369",
+    "predecessor_merged_as_is": false
+  },
+  "formalization": {
+    "manifest_digest": "a930ee0fe8f780e89214d7f6c5bb47671a5a03cebc00eb395d487c8d5ea300f7",
+    "required_set_digest": "9b40d2c081e85edc2b9c5cb376234a7b880e0d8b2c601b89fba4441a76963ba0",
+    "federated_binding_digest": "d809eab17c10c8ab001e6989543101463cc20cb4253aeb8c178f9bb11798f8c0",
+    "closure_digest": "6ec33eecf505714471d482e2f736b46c83ac8292a9e4a4464d23a4998275b52f",
+    "decision": "PASS"
+  },
+  "effect_scan": {
+    "base_sources": 369,
+    "candidate_sources": 370,
+    "surface_count": 519,
+    "added_effect_surfaces": 0,
+    "removed_effect_surfaces": 0,
+    "scan_digest": "94db22a3c4dc2e8de3e18f8a3f551b15cb28707cf6228d9aeba164a428a0624f",
+    "taxonomy_status": "PASS"
+  },
+  "tests": {
+    "full_python": {
+      "pass": 3523,
+      "skipped": 5
+    },
+    "focused_p0": {
+      "pass": 81
+    },
+    "v15": {
+      "pass": 34
+    },
+    "truth": {
+      "pass": 48,
+      "skipped": 2
+    },
+    "r24_whole_integration": "PASS"
+  },
+  "federation": {
+    "repositories": 10,
+    "peer_mutations": 0,
+    "peer_disposition": "VALIDATE_ONLY",
+    "ai_platform_disposition": "UPDATE"
+  },
+  "rag": {
+    "source_set_digest": "6242c0f1f4f843384e6e287a1cecb0187623b50d905553700523ff80a39379e9",
+    "preferred_release_changed": false,
+    "live_truth_policy": "RAG_NE_LIVE_TRUTH"
+  },
+  "next_frontier": "MissionIntent",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "deployment_effect": "NONE"
+}
