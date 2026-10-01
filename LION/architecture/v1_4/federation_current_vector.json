@@ -2,7 +2,7 @@
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
   "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE_CLOSED",
-  "generated_at": "2026-09-30T16:11:25.616135Z",
+  "generated_at": "2026-10-01T10:33:19.947794Z",
   "registry_source": "cyber_lion/registry/repositories.json@0a94d7c50e5e631d25a7ab675c377bb5e86d50ef",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
   "currentness_rule": "Final v1.5 federation vector binds integrated peer identities and the formalization-closed ai_platform pre-vector subject. Truth carriers are rebound only after this vector commit per ADR-004.",
@@ -22,8 +22,8 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "9907e1eb3a1c04df869f9b24bf95150e67755f60",
-      "tree": "5dfcd626fae00f52c77c5804a6ef96059e9915b6",
+      "head": "a849bf22ea80c5a051d9bd7b149816d7cce5ba7b",
+      "tree": "c7420dd8d059f953e2c5e38d0fe07ddcb1e38485",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Formalization-closed v1.5 federated architecture-knowledge source subject. Final truth carriers follow this vector commit per ADR-004."
+      "lineage_note": "Pre-closure CommunicationEnvelope successor on the post-homeostasis master. Architecture knowledge was regenerated; peers are unchanged; truth carriers and FCR follow this exact source subject."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",

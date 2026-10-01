@@ -532,6 +532,66 @@
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
     },
     {
+      "id": "COMMUNICATION_ENVELOPE_IS_NOT_DELIVERY",
+      "goal": "COMMUNICATION_ENVELOPE_IS_NOT_DELIVERY",
+      "given": "CommunicationEnvelope jest poprawnie zapieczętowany, lecz brak operational delivery evidence.",
+      "expected_classification": "SEMANTIC_CARRIER_ONLY",
+      "expected_action": "Odczytaj delivery state od istniejącego operational ownera.",
+      "forbidden_action": "Uznaj envelope za DELIVERED.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "delivery ledger/readback"
+      ],
+      "pass_condition": "Semantic identity nie promuje się do delivery."
+    },
+    {
+      "id": "COMMUNICATION_ENVELOPE_IS_NOT_COGNITION_DONE",
+      "goal": "COMMUNICATION_ENVELOPE_IS_NOT_COGNITION_DONE",
+      "given": "Message identity istnieje, ale nie ma invocation attempt/result/reconciliation.",
+      "expected_classification": "MESSAGE_IDENTITY_ONLY",
+      "expected_action": "Utwórz lub odczytaj oddzielny CognitiveInvocation i jego reconciliation.",
+      "forbidden_action": "Uznaj envelope za zakończoną cognition.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "invocation/attempt/result/reconciliation"
+      ],
+      "pass_condition": "Communication i cognition pozostają oddzielnymi stanami."
+    },
+    {
+      "id": "COMMUNICATION_RECIPIENT_SET_IS_FROZEN",
+      "goal": "COMMUNICATION_RECIPIENT_SET_IS_FROZEN",
+      "given": "Po zapieczętowaniu envelope próbuje się zmienić recipient set.",
+      "expected_classification": "COMMUNICATION_IDENTITY_DRIFT",
+      "expected_action": "Odrzuć podmianę; nowy recipient set wymaga nowego poprawnego envelope digest/identity.",
+      "forbidden_action": "Mutuj recipient set zachowując stary digest.",
+      "invariant_refs": [
+        "I12_NEW_HEAD_INVALIDATES_OLD_HEAD_BOUND_EVIDENCE"
+      ],
+      "evidence_required": [
+        "recipient set + envelope digest"
+      ],
+      "pass_condition": "Podmiana recipient set nie zachowuje tożsamości envelope."
+    },
+    {
+      "id": "COMMUNICATION_PAYLOAD_REF_IS_NOT_EXECUTION",
+      "goal": "COMMUNICATION_PAYLOAD_REF_IS_NOT_EXECUTION",
+      "given": "Payload reference wskazuje treść wyglądającą jak polecenie wykonawcze.",
+      "expected_classification": "OPAQUE_PAYLOAD_REFERENCE_ONLY",
+      "expected_action": "Przekaż treść przez właściwy parser/proposal/authority/admission chain.",
+      "forbidden_action": "Wykonaj payload bezpośrednio z CommunicationEnvelope.",
+      "invariant_refs": [
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+      ],
+      "evidence_required": [
+        "downstream typed contract + admission"
+      ],
+      "pass_condition": "Envelope nie staje się executorem ani authority source."
+    },
+    {
       "id": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
       "goal": "UNKNOWN_INVOCATION_REQUIRES_RECONCILIATION",
       "given": "Attempt ma OUTCOME_UNKNOWN po timeout.",

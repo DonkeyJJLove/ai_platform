@@ -1,6 +1,6 @@
 {
   "schema": "lion.documentation.semantic-owner-map.v1",
-  "baseline_head": "7ddb83debb11333895bc6197c93cde3db927807e",
+  "baseline_head": "3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
   "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
   "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
   "owners": [
@@ -15,6 +15,15 @@
         "cyber_lion/contracts/mosaic.py",
         "cyber_lion/tests/experiments/bean_generativity.py",
         "cyber_lion/tests/test_r22f_factory_falsifier.py"
+      ]
+    },
+    {
+      "concept": "CommunicationEnvelope",
+      "primary": "cyber_lion/contracts/communication_envelope.py",
+      "secondary": [
+        "cyber_lion/mission_control/operator_control.py",
+        "cyber_lion/contracts/group_channel.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
       ]
     },
     {

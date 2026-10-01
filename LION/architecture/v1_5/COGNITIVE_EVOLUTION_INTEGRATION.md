@@ -3,6 +3,8 @@
 ## Boundary
 
 ```text
+MESSAGE_STORE != COMMUNICATION_ENVELOPE != COGNITIVE_INVOCATION
+COMMUNICATION_ENVELOPE != TRANSPORT != DELIVERY != COGNITIVE_RESULT
 PROVIDER != ENDPOINT != SESSION != INVOCATION != TRANSPORT != RESULT
 COGNITIVE_INVOCATION != AUTHORITY_ACTIVATION
 TRANSPORT_READY != COGNITION_DONE
@@ -12,6 +14,14 @@ RECEIPT != CORRECT_RESULT
 ```
 
 No `COGNITIVE_INVOCATION_PLANE` or `LEARNING_PLANE` is added. Cognitive invocation is an existing-layer domain crossing `EVOLUTIONARY_EPOCH`, `FLEET_AND_SWARM` and `EVIDENCE_AND_EPISTEMIC_PLANE`.
+
+## Communication envelope
+
+`lion.communication-envelope/v1` is the immutable, transport-independent semantic carrier between existing message surfaces and optional cognition. It binds one envelope identity to sender, a frozen canonical recipient set, conversation/mission references when present, correlation/causation/causal-group references, payload schema/reference/digest and creation time.
+
+It contains no payload bytes, transport state, delivery state, provider/model state, runtime admission, authority grant or effect result. Existing `operator_messages`, `GroupChannelEnvelope`, provider transports and delivery ledgers remain their own operational owners. A valid communication envelope therefore proves message identity/provenance only.
+
+`CognitiveInvocation.message_ref` may reference `CommunicationEnvelope.envelope_id`, while `payload_digest` remains independently bound. A single DUAL communication envelope may causally group LOCAL and SAAS work, but each leg retains its own invocation and attempt identities.
 
 ## Invocation
 

@@ -105,6 +105,25 @@
       "compatibility_status": "CURRENT_SOURCE_BOUND"
     },
     {
+      "contract_id": "communication-envelope",
+      "canonical_path": "cyber_lion/contracts/communication_envelope.py",
+      "schema_or_runtime_type": "Python contract",
+      "version": "lion.communication-envelope/v1",
+      "owner": "CommunicationEnvelope",
+      "invariants": [
+        "semantic message identity is transport-independent",
+        "recipient set is frozen, unique and canonical",
+        "payload bytes stay external and bind by schema/ref/digest",
+        "communication envelope != delivery != cognitive completion",
+        "communication envelope cannot mint authority or report effects",
+        "DUAL legs may share one causal envelope but keep separate invocation/attempt identities"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_communication_envelope.CommunicationEnvelopeTests"
+      ]
+    },
+    {
       "contract_id": "cognitive-invocation",
       "canonical_path": "cyber_lion/contracts/cognitive_invocation.py",
       "schema_or_runtime_type": "Python contracts",

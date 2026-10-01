@@ -1,0 +1,44 @@
+{
+  "delta_id": "delta:v15-communication-envelope-successor-r1",
+  "target_component": "CommunicationEnvelope semantic identity",
+  "motivation": "The preserved CommunicationEnvelope candidate predates the current v1.5 documentation-homeostasis baseline and cannot be merged as-is. Reuse only its inert contract semantics on the current master and regenerate ownership, architecture-knowledge, formalization and currentness bindings.",
+  "evidence_refs": [
+    "git:55ddb1e9496127ca6e23d7896463c7c12d13b118",
+    "master:3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
+    "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+    "cyber_lion/contracts/communication_envelope.py",
+    "LION/architecture/v1_5/EFFECT_SURFACE_SCAN_REBIND_COMMUNICATION_ENVELOPE_R1.json"
+  ],
+  "expected_outcome": "CommunicationEnvelope becomes a current v1.5 contract-only semantic carrier with exact ownership, architecture projection, federation-aware formalization, retrieval evidence and no authority or execution effect.",
+  "falsification_conditions": [
+    "CommunicationEnvelope claims delivery or cognitive completion.",
+    "CommunicationEnvelope carries payload bytes as executable semantics.",
+    "Recipient payload or causation substitution preserves sealed identity.",
+    "CommunicationEnvelope changes transport ownership.",
+    "CommunicationEnvelope widens capability or authority.",
+    "A peer repository is mutated despite VALIDATE_ONLY disposition.",
+    "The old candidate formalization is promoted as current without regeneration.",
+    "A new top-level architecture layer is introduced."
+  ],
+  "candidate_scope": [
+    "cyber_lion/contracts/communication_envelope.py",
+    "cyber_lion/tests/test_communication_envelope.py",
+    "cyber_lion/architecture_projection",
+    "cyber_lion/CONTRACT_MAP.md",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_5",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "tools",
+    "cyber_lion/tests"
+  ],
+  "dependency_ids": [
+    "formalization-registry:v1.5-federation-r1",
+    "fleet:v15-communication-envelope-successor-r1",
+    "truth-currentness-carriers"
+  ],
+  "risk_class": "AMBER",
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "delta_digest": "7cbc7180f70e5f6d8fb706aa7f21e0149bc933df8048a4aa1d4e4bf1fc19ea6e",
+  "schema_version": "1.0.0"
+}

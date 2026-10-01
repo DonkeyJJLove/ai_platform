@@ -1,0 +1,40 @@
+{
+  "schema": "lion.effect-surface-scan-rebind/v1",
+  "task_id": "LION-V15-COMMUNICATION-ENVELOPE-SELECTIVE-PORT-AND-REFORMALIZATION-R1",
+  "base": {
+    "head": "3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
+    "tree": "3ac45ea1329938fdcd7f3c3d4705c78907533949",
+    "source_count": 369,
+    "scan_digest": "1e6bfb56041934ccac8f24b35a2121266fec82de8ae3b1cf47e9ad6be35c1c1d",
+    "surface_count": 519,
+    "raw_unclassified_count": 6,
+    "taxonomy_status": "PASS",
+    "taxonomy_unresolved": 0
+  },
+  "candidate_scan": {
+    "source_baseline_head": "3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
+    "observed_pre_evidence_staged_tree": "c07278138706c795d65786e8c6cda776df01152a",
+    "final_candidate_identity_binding": "DEFER_TO_FORMALIZATION_CANDIDATE_IDENTITY",
+    "source_count": 370,
+    "scan_digest": "94db22a3c4dc2e8de3e18f8a3f551b15cb28707cf6228d9aeba164a428a0624f",
+    "surface_count": 519,
+    "raw_unclassified_count": 6,
+    "taxonomy_status": "PASS",
+    "taxonomy_unresolved": 0
+  },
+  "semantic_delta": {
+    "added_production_sources": [
+      "cyber_lion/contracts/communication_envelope.py"
+    ],
+    "source_count_delta": 1,
+    "added_effect_surfaces": 0,
+    "removed_effect_surfaces": 0,
+    "effect_class_matrix_changed": false,
+    "surface_count_delta": 0
+  },
+  "classification": "REVISION_BOUND_SCAN_REFREEZE_NO_EFFECT_SURFACE_CHANGE",
+  "historical_evidence_policy": "Earlier effect-scan rebind records remain historical and are not rewritten.",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "deployment_effect": "NONE"
+}

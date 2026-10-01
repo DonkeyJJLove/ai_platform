@@ -1,9 +1,9 @@
 {
   "schema": "lion.code-derived-architecture/v1",
-  "projection_input_tree": "fb840efffc733474da90420156f11367f95b5d16",
+  "projection_input_tree": "eb882238525df9c92985bde8bea20e10d1293816",
   "source_repository": "DonkeyJJLove/ai_platform",
-  "generated_at": "2026-10-01T08:25:11+02:00",
-  "model_digest": "473ea783f2a5bac65c7bcc6c3075a7e578acf95db7d6fd9f40153c6adb45fe9b",
+  "generated_at": "2026-10-01T12:31:18+02:00",
+  "model_digest": "84d48692f190532b6702c9b0a1cb1d2f0659fc0120ce40ff58c517691236fa72",
   "derived_only": true,
   "authority_effect": "NONE",
   "runtime_evidence": "NONE",
@@ -119,6 +119,22 @@
       },
       "source_path": "cyber_lion/contracts/cognitive_invocation.py",
       "symbol": "CognitiveProvider",
+      "target_ref": ""
+    },
+    {
+      "element_id": "communication-envelope",
+      "layer": "FLEET_AND_SWARM",
+      "label": "Transport-independent communication semantic identity",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Transport-independent communication semantic identity",
+        "source_path": "cyber_lion/contracts/communication_envelope.py",
+        "symbol": "CommunicationEnvelope",
+        "source_digest": "e426874d50a6a21f29a1f2b913f0d4780ec4c482a6fcf54df5e2c10af5684017"
+      },
+      "source_path": "cyber_lion/contracts/communication_envelope.py",
+      "symbol": "CommunicationEnvelope",
       "target_ref": ""
     },
     {
@@ -799,6 +815,18 @@
       "next_minimal_gap": "",
       "evidence_class": "LIVE_CODE",
       "evidence_ref": "cyber_lion/enterprise/governed_change_admission.py"
+    },
+    {
+      "target_id": "CommunicationEnvelope",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "existing operator/group-channel stores and transports remain operational owners; this candidate adds no runtime adapter",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "define MissionIntent over stable communication/cognitive refs without changing transport or authority ownership",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/communication_envelope.py"
     },
     {
       "target_id": "CognitiveInvocation",

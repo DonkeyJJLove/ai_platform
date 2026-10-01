@@ -1,0 +1,56 @@
+{
+  "schema": "lion.rag-v15-communication-envelope-source-set/v1",
+  "authority_effect": "NONE",
+  "currentness": "FORMALIZATION_PENDING",
+  "task_id": "LION-V15-COMMUNICATION-ENVELOPE-SELECTIVE-PORT-AND-REFORMALIZATION-R1",
+  "baseline": {
+    "head": "3f0f3a01e0d42c190983a0dea32b5b4abb07b589",
+    "tree": "3ac45ea1329938fdcd7f3c3d4705c78907533949"
+  },
+  "fleet_baseline": {
+    "path": "LION/architecture/v1_5/FLEET_BASELINE_COMMUNICATION_ENVELOPE_R1.json",
+    "digest": "a08bf7424bcf53eca9eea122a89b8b9649697ec16df0f5f31325e43a47a2bc15",
+    "repositories": 10
+  },
+  "semantic_owner": {
+    "concept": "CommunicationEnvelope",
+    "path": "LION/architecture/v1_5/semantic_owners.json",
+    "primary": "cyber_lion/contracts/communication_envelope.py"
+  },
+  "formalization": {
+    "manifest_digest": "a930ee0fe8f780e89214d7f6c5bb47671a5a03cebc00eb395d487c8d5ea300f7",
+    "federated_binding_digest": "d809eab17c10c8ab001e6989543101463cc20cb4253aeb8c178f9bb11798f8c0",
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f"
+  },
+  "source_paths": [
+    "cyber_lion/contracts/communication_envelope.py",
+    "cyber_lion/tests/test_communication_envelope.py",
+    "cyber_lion/CONTRACT_MAP.md",
+    "cyber_lion/architecture_projection/full_architecture.py",
+    "cyber_lion/architecture_projection/gap.py",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+    "LION/architecture/v1_5/README.md",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/architecture/v1_5/EVOLUTION_DELTA_COMMUNICATION_ENVELOPE_R1.json",
+    "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_COMMUNICATION_ENVELOPE_R1.json",
+    "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_COMMUNICATION_ENVELOPE_R1.json",
+    "LION/architecture/v1_5/FLEET_BASELINE_COMMUNICATION_ENVELOPE_R1.json",
+    "LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_COMMUNICATION_ENVELOPE_R1.json",
+    "LION/architecture/v1_5/EFFECT_SURFACE_SCAN_REBIND_COMMUNICATION_ENVELOPE_R1.json",
+    "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+    "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+    "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+    "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+    "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+    "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json"
+  ],
+  "retrieval_probe_path": "LION/architecture/v1_5/RAG_V15_COMMUNICATION_ENVELOPE_PROBES.json",
+  "record_ids": [
+    "RAG-V15-COMMUNICATION-ENVELOPE-R1"
+  ],
+  "preferred_release_unchanged": "lion-rag32-v1.4-r9-auth-lifecycle-candidate",
+  "live_truth_policy": "RAG_NE_LIVE_TRUTH",
+  "source_set_digest": "b17bf2ed79657e1815ae14791286b43b825951517a70ae999a25a723445d01b7"
+}

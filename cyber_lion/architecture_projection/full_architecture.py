@@ -91,6 +91,7 @@ _ELEMENT_SPECS = (
     ("code-perception", "CODE_PERCEPTION", "Deterministic code perception", "VERIFIED_REFERENCE", "cyber_lion/enterprise/code_perception.py", "build_code_graph", "LIVE_CODE"),
     ("constitution-governance", "CONSTITUTION_AND_GOVERNANCE", "Constitution and governance", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),
     ("evidence-epistemic", "EVIDENCE_AND_EPISTEMIC_PLANE", "Evidence and epistemic R&D", "VERIFIED_REFERENCE", "cyber_lion/contracts/evolutionary_rnd.py", "EvidenceObservation", "LIVE_CODE"),
+    ("communication-envelope", "FLEET_AND_SWARM", "Transport-independent communication semantic identity", "CONTRACT_ONLY", "cyber_lion/contracts/communication_envelope.py", "CommunicationEnvelope", "LIVE_CODE"),
     ("cognitive-invocation", "EVOLUTIONARY_EPOCH", "Cognitive invocation domain", "CONTRACT_ONLY", "cyber_lion/contracts/cognitive_invocation.py", "CognitiveProvider", "LIVE_CODE"),
     ("evidence-bound-learning", "EVIDENCE_AND_EPISTEMIC_PLANE", "Evidence-bound learning episode", "CONTRACT_ONLY", "cyber_lion/contracts/evidence_bound_learning_episode.py", "EvidenceBoundLearningEpisode", "LIVE_CODE"),
     ("coordinator-competency", "EVIDENCE_AND_EPISTEMIC_PLANE", "Coordinator competency evidence", "CONTRACT_ONLY", "cyber_lion/contracts/coordinator_competency.py", "CoordinatorCompetencyProfile", "LIVE_CODE"),

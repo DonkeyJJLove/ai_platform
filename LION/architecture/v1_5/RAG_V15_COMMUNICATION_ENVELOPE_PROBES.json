@@ -1,0 +1,23 @@
+{
+  "schema": "lion.rag-v15-communication-envelope-probes/v1",
+  "authority_effect": "NONE",
+  "currentness": "FORMALIZATION_PENDING",
+  "source_set_digest": "b17bf2ed79657e1815ae14791286b43b825951517a70ae999a25a723445d01b7",
+  "probes": [
+    {
+      "id": "V15-COMMUNICATION-ENVELOPE-OWNER-BOUNDARY",
+      "query": "where is CommunicationEnvelope owned and what is separate from delivery cognition transport authority",
+      "must_route_to": [
+        "LION/architecture/v1_5/semantic_owners.json",
+        "cyber_lion/contracts/communication_envelope.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ],
+      "must_preserve": [
+        "CommunicationEnvelope != transport != delivery != cognition != authority",
+        "payload bytes remain external",
+        "DUAL legs keep separate invocation identities",
+        "RAG != live truth"
+      ]
+    }
+  ]
+}

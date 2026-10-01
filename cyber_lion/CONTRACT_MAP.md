@@ -10,6 +10,7 @@ Integracja jest prowadzona w modelu **contracts-first**. Istniejący providerzy 
 | Repository Manifest | `ai_platform` | mapowanie LAT_GLX/QV9D | control plane |
 | Capability Descriptor | `ai_platform` | lokalne rejestry/dokumentacja | control plane, agenci |
 | Event Envelope | `ai_platform` | SBOM event envelope, GlitchLab BUS | wszyscy providerzy |
+| Communication Envelope | `ai_platform` | operator messages / GroupChannel projection | cognition, fleet, audit |
 | Provenance Envelope | `ai_platform` | AID + metadane evidence | wszyscy providerzy |
 | Hypothesis/Evidence Record | `ai_platform` | hipotezy/writeups | cognition, graph |
 | Gate Request / Gate Applied | `ai_platform` | SBOM gate, GlitchLab Guard, evidence RBAC | control/execution |
@@ -134,6 +135,14 @@ epistemic_status: FORMALISED
 ```
 
 Capabilities powodujące skutki w świecie rzeczywistym muszą je deklarować. Ukryte side effects dyskwalifikują providera z autonomicznej kompozycji.
+
+## 3a. Communication Envelope
+
+Canonical owner: `cyber_lion/contracts/communication_envelope.py` (`lion.communication-envelope/v1`).
+
+`CommunicationEnvelope` binds immutable semantic message identity: sender, frozen recipient set, optional conversation/mission scope, correlation/causation/causal-group references and external payload schema/ref/digest. It deliberately does **not** own payload bytes, transport/session readiness, delivery state, model invocation state, authority, runtime admission or effect.
+
+Existing `operator_messages`, `GroupChannelEnvelope`, transport adapters and delivery ledgers remain operational owners. A communication envelope may become the `message_ref` of one or more `CognitiveInvocation` records; DUAL legs still keep separate invocation and attempt identities.
 
 ## 4. Provenance Envelope
 
