@@ -1,6 +1,6 @@
 {
   "schema": "lion.architecture-document-graph/v1",
-  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "federation_digest": "00c399951c41ee0712f2cc1adca14e3cf32cc7b08a8cec08bf1cf6e0ce6c58c8",
   "nodes": [
     "DonkeyJJLove/HA2D:AGENTS.md",
     "DonkeyJJLove/HA2D:AI_NATIVE_ROADMAP.md",
@@ -180,18 +180,50 @@
     "DonkeyJJLove/ai_platform:LION/architecture/v1_4/r8_hybrid/R8_HYBRID_STATE__v1_4_r8_hybrid_r1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_4/semantic_owners.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_4/vkt-r3-implementation-status.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_FEDERATION_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_TASK2.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CIP_EBLE_SHADOW_REPORT.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/DISCOVERABILITY_TEST_MATRIX.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/EFFECT_SURFACE_SCAN_REBIND_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/EVOLUTION_DELTA_FEDERATED_ARCHITECTURE_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FALSIFICATION_PLAN.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_ARCHITECTURE_AS_IS.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_ARCHITECTURE_CLOSURE_SUMMARY_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_ARCHITECTURE_EVAL_RESULTS_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_ARCHITECTURE_TARGET.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_CANDIDATE_IDENTITY_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD.schema.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD_FEDERATION_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_DRIFT_REGISTER.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_KERNEL.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_KERNEL_AUDIT.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_PROPOSAL_BINDING.schema.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_REGISTRY.schema.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_REGISTRY_CANDIDATE.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_VERIFICATION_BUNDLE_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/MIGRATION_PLAN.md",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/PROCESS_CONTRACT_SHADOW_REPORT.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_DELTA_PLAN.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_CURRENTNESS_BOUNDARIES.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_PROBES.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_FORMALIZATION_CLOSURE.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_RECORD_MIGRATION_MAP.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_REQUIRED_RETRIEVAL_PROBES.json",
@@ -199,7 +231,13 @@
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_SOURCE_SET.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_V15_SUPERSESSION_MAP.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/REPOSITORY_DOCUMENTATION_PLANS.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_FEDERATION_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_TASK2.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ROLLBACK_PLAN.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/TASK2_INPUT_MANIFEST.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/UNKNOWN_REGISTER.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_owners.json",
@@ -302,6 +340,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/app_coordination/conversation_schema.py",
     "DonkeyJJLove/ai_platform:cyber_lion/app_coordination/rag_tool_adapter.py",
     "DonkeyJJLove/ai_platform:cyber_lion/architecture_projection/__init__.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/architecture_projection/architecture_knowledge.py",
     "DonkeyJJLove/ai_platform:cyber_lion/architecture_projection/cli.py",
     "DonkeyJJLove/ai_platform:cyber_lion/architecture_projection/extractor.py",
     "DonkeyJJLove/ai_platform:cyber_lion/architecture_projection/flows.py",
@@ -362,6 +401,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/executor_provisioning.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/executor_sandbox.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/failure_domain_evidence.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/contracts/federated_formalization_binding.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/fleet_coordination.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/fleet_effect_budget.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/fleet_reconciliation.py",
@@ -452,6 +492,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_action_spec_schema.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_actions_run_cancel_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_agent_registry_contract.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_architecture_knowledge.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_architecture_projection_extractor.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_architecture_projection_flows.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_architecture_projection_full_architecture.py",
@@ -484,6 +525,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_evolutionary_state_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_executor_provisioning_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_executor_sandbox_contract.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_federated_architecture_knowledge_projection.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_fleet_coordination_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_fleet_effect_budget_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_fleet_reconciliation_contract.py",
@@ -507,6 +549,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_r9d8u_workflow_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_rag_v15_task3_inputs.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_repository_maintenance_sandbox_contract.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_repository_manifest_architecture_knowledge.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_repository_mutation_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_runtime_currentness_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_runtime_enforcement_contract.py",
@@ -514,6 +557,9 @@
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_runtime_reconciliation_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_scheduler_storage_reconciliation.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_swarm_governance_contract.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_v15_federated_architecture_artifacts.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_v15_federated_architecture_closure.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_v15_federated_architecture_discoverability.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_verifier_execution_attestation_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/vkt_r3/mission_control/storage.py",
     "DonkeyJJLove/ai_platform:docs/README.md",
@@ -578,6 +624,7 @@
     "DonkeyJJLove/ai_platform:docs/architecture/uml/generated/r18-render-summary.json",
     "DonkeyJJLove/ai_platform:tools/AGENTS.md",
     "DonkeyJJLove/ai_platform:tools/firefox_mediator/README.md",
+    "DonkeyJJLove/ai_platform:tools/lion_federated_architecture_knowledge.py",
     "DonkeyJJLove/ai_platform:tools/lion_rag32_validate.py",
     "DonkeyJJLove/ai_platform:tools/lion_rag_artifact_currentness.py",
     "DonkeyJJLove/ai_platform:tools/p0_docker_fleet_contract.py",
@@ -804,6 +851,132 @@
       "target": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
       "relation": "ROUTED_BY",
       "evidence_ref": "DonkeyJJLove/ai_platform:AGENTS.md"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:LION/README.md",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
+      "relation": "REFERENCES",
+      "evidence_ref": "DonkeyJJLove/ai_platform:LION/README.md"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:README.md",
+      "target": "DonkeyJJLove/ai_platform:LION/README.md",
+      "relation": "REFERENCES",
+      "evidence_ref": "DonkeyJJLove/ai_platform:README.md"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:README.md",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
+      "relation": "REFERENCES",
+      "evidence_ref": "DonkeyJJLove/ai_platform:README.md"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:AGENTS.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:AI_NATIVE_ROADMAP.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/README.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_4/federation_current_vector.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_owners.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:README.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:cyber_lion/TARGET_ARCHITECTURE.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
     },
     {
       "source": "DonkeyJJLove/chunk-chunk:AGENTS.md",
@@ -1143,5 +1316,5 @@
     }
   ],
   "authority_effect": "NONE",
-  "graph_digest": "6ddf33b584f4fe94eabd3db07c551aff97fcd743a4069e6539ddfe280f94cd20"
+  "graph_digest": "4838861a0be9716c0206f5fe04a802168681b96b688addcfd42a6ef87eec82f2"
 }

@@ -1,6 +1,6 @@
 {
   "schema": "lion.repository-role-matrix/v1",
-  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "federation_digest": "00c399951c41ee0712f2cc1adca14e3cf32cc7b08a8cec08bf1cf6e0ce6c58c8",
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -76,9 +76,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "master",
-      "head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
-      "tree": "3378fa25e60adde0193cc189e73f780a828e65c5",
+      "branch": "fix/v15-documentation-homeostasis-r1",
+      "head": "7d63acd7989c2e21bb7e7d74587c4ce22f652d6c",
+      "tree": "fb840efffc733474da90420156f11367f95b5d16",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -108,9 +108,31 @@
         "event.envelope"
       ],
       "maximum_authority": "external_write",
-      "semantic_exports": [],
-      "semantic_imports": [],
-      "global_owner": null
+      "semantic_exports": [
+        "architecture",
+        "federation",
+        "repository_roles",
+        "contracts",
+        "capabilities",
+        "authority",
+        "runtime",
+        "currentness",
+        "formalization",
+        "roadmap",
+        "RAG"
+      ],
+      "semantic_imports": [
+        "process_semantics",
+        "evolution_compiler",
+        "context_memory",
+        "hypothesis_research",
+        "structure_graph",
+        "supply_chain_provenance",
+        "execution_mesh",
+        "simulation",
+        "research_corpus"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
@@ -366,5 +388,5 @@
     }
   ],
   "authority_effect": "NONE",
-  "matrix_digest": "bd6345aa05e527ac61fffc52177b6de2975a1c4a24106abb5cfcf49c6338960f"
+  "matrix_digest": "f53ee3050ff939c52cb4c49f127334c451a167c56602030ece72e5cb50650864"
 }
