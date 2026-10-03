@@ -1,7 +1,7 @@
 {
   "schema": "lion.document-derived-architecture/v1",
-  "projection_input_tree": "db326bd9cdd249a3340698c38f4e45c0cab78737",
-  "source_federation_digest": "bb18ca0f43a9c7287371fde9a2c89bbbe57425588c00e9625c8a773f87021d9b",
+  "projection_input_tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
+  "source_federation_digest": "c93af1493b3b7dc79367811bd331279782a5e0ef64eb628185a44773123b8ed0",
   "semantic_owners": [
     {
       "concept": "BeanFactory",
@@ -475,9 +475,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "maintenance/semantic-cloud-postmerge-reconciliation-r1",
-      "head": "421464deacbec6e1fa92f9f15bf5fbee8ea891cb",
-      "tree": "db326bd9cdd249a3340698c38f4e45c0cab78737",
+      "branch": "master",
+      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -845,5 +845,5 @@
   },
   "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "authority_effect": "NONE",
-  "projection_digest": "3b4e8f24508c40eef6fdcbece1fffb0fb4d6f0a9c5d3189fcc0c9dd1220412eb"
+  "projection_digest": "358e31bd9afa31a1811bffac757826c2c5041622d44812ad0ab971402ad64b23"
 }

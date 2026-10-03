@@ -1,6 +1,6 @@
 {
   "schema": "lion.documentation-currentness-model/v1",
-  "federation_digest": "bb18ca0f43a9c7287371fde9a2c89bbbe57425588c00e9625c8a773f87021d9b",
+  "federation_digest": "c93af1493b3b7dc79367811bd331279782a5e0ef64eb628185a44773123b8ed0",
   "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "evidence_identity_types": {
     "LIVE_REPOSITORY_OBSERVATION": "freshly reacquired default-branch Git identity for the claim being made",
