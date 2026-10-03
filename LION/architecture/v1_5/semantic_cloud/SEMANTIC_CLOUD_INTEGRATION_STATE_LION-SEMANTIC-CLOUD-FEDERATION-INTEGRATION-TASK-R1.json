@@ -2,7 +2,7 @@
   "schema": "lion.semantic-cloud.integration-sync/v1",
   "run_id": "LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1",
   "status": "PASS_RECONCILED",
-  "generated_at": "2026-10-03T15:19:04.088976+00:00",
+  "generated_at": "2026-10-03T16:23:29.181538+00:00",
   "research_program": "LION-SEMANTIC-CLOUD-R1",
   "global_owner": "DonkeyJJLove/ai_platform",
   "architecture_epoch": "1.5",
@@ -14,8 +14,8 @@
       "entry_tree": "e2309ac9a57898c053b5470abdc5eea7b3221872",
       "integrated_head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
       "integrated_tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
-      "source_projection_head": "05845d26da16ad09e695fde30216b162201e276e",
-      "source_projection_tree": "c2099ccb0cd66f4dbcea5252093a07ac31c4ac34",
+      "source_projection_head": "98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
+      "source_projection_tree": "df09119d101cabc6d21381d2f43f1eba60d4fddd",
       "exit_head": null,
       "exit_tree": null,
       "prs": [
@@ -266,5 +266,5 @@
       "fixed model/tool portfolio"
     ]
   },
-  "self_reference_policy": "Final carrier commit SHA is intentionally not self-embedded. Resolve final master tip after carrier-last merge. Exact source/projection head is 05845d26da16ad09e695fde30216b162201e276e."
+  "self_reference_policy": "Final carrier commit SHA is intentionally not self-embedded. Resolve final master tip after carrier-last merge. Exact source/projection head is 98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48."
 }

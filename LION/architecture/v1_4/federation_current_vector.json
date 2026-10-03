@@ -2,10 +2,10 @@
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
   "process_epoch": "V1_5_SEMANTIC_CLOUD_R1_FINAL",
-  "generated_at": "2026-10-03T15:19:04.088976+00:00",
-  "registry_source": "cyber_lion/registry/repositories.json@05845d26da16ad09e695fde30216b162201e276e",
+  "generated_at": "2026-10-03T16:23:29.181538+00:00",
+  "registry_source": "cyber_lion/registry/repositories.json@98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Semantic Cloud R1 vector binds the exact source/projection head and merged peer identities; vector/report are included in the truth subject and truth carriers are written last. Final carrier SHA is intentionally not self-referenced.",
+  "currentness_rule": "Semantic Cloud R1 vector binds the exact post-merge source/projection commit plus exact merged peer identities. This vector/report commit precedes the two truth carriers; final carrier commit SHA is intentionally not self-referenced.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,8 +14,8 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "05845d26da16ad09e695fde30216b162201e276e",
-    "subject_tree": "c2099ccb0cd66f4dbcea5252093a07ac31c4ac34",
+    "subject_head": "98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
+    "subject_tree": "df09119d101cabc6d21381d2f43f1eba60d4fddd",
     "open_pull_requests": 0
   },
   "repositories": [
@@ -63,9 +63,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "master",
-      "head": "05845d26da16ad09e695fde30216b162201e276e",
-      "tree": "c2099ccb0cd66f4dbcea5252093a07ac31c4ac34",
+      "branch": "maintenance/semantic-cloud-postmerge-reconciliation-r1",
+      "head": "98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
+      "tree": "df09119d101cabc6d21381d2f43f1eba60d4fddd",
       "roles": [
         "control_plane",
         "contracts",
@@ -78,9 +78,9 @@
       "maturity": "INTEGRATED_ENGINEERING_PLATFORM",
       "manifest_present": true,
       "open_prs": 0,
-      "currentness": "CURRENT_SOURCE_PROJECTION_PRE_CARRIER",
+      "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Semantic Cloud R1 source/projection subject; carrier-last commit follows."
+      "lineage_note": "Post-merge Semantic Cloud source/projection stabilization; vector/report commit then carrier-last currentness commit."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
@@ -228,6 +228,6 @@
       "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     }
   ],
-  "sweep_cutoff": "2026-10-03T15:19:04.088976+00:00",
+  "sweep_cutoff": "2026-10-03T16:23:29.181538+00:00",
   "observation_mode": "EXACT_POSTMERGE_SEMANTIC_CLOUD_R1"
 }
