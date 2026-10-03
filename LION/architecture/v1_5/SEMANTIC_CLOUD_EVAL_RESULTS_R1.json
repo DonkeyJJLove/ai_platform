@@ -1,0 +1,86 @@
+{
+  "schema": "lion.reasoner-eval-results/v1",
+  "task_id": "LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1",
+  "evaluation_mode": "SELF_EVALUATION_BOUND_TO_ACTUAL_CONTRACT_AND_TEST_EVIDENCE",
+  "scorer_independence": "NO_CLAIM",
+  "authority_effect": "NONE",
+  "results": [
+    {
+      "case_id": "SEMANTIC_RELEVANCE_IS_NOT_AUTHORITY",
+      "observed_classification": "REPRESENTATION_ONLY",
+      "observed_action": "Semantic relevance stays non-effectful and any consequential proposal remains downstream of the existing Action/PDP/runtime path.",
+      "evidence_refs": [
+        "cyber_lion/contracts/semantic_relevance.py",
+        "cyber_lion/tests/test_v15_semantic_cloud_contracts.py"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    },
+    {
+      "case_id": "SEMANTIC_EQUALITY_IS_NOT_PROVENANCE_EQUALITY",
+      "observed_classification": "LINEAGE_AWARE_SEMANTIC_EQUIVALENCE",
+      "observed_action": "SemanticAtom preserves each evidence instance and independent root count instead of turning copies into independent evidence.",
+      "evidence_refs": [
+        "cyber_lion/contracts/semantic_relevance.py::SemanticAtom",
+        "cyber_lion/tests/test_v15_semantic_cloud_contracts.py"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    },
+    {
+      "case_id": "RAG_CONTEXT_IS_NOT_LIVE_TRUTH",
+      "observed_classification": "VERSIONED_CONTEXT_ONLY",
+      "observed_action": "RagContextEnvelope rejects post-cutoff evidence and remains explicitly non-authoritative.",
+      "evidence_refs": [
+        "cyber_lion/contracts/rag_context_envelope.py",
+        "cyber_lion/tests/test_v15_semantic_cloud_contracts.py"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    },
+    {
+      "case_id": "SEMANTIC_PROJECTION_CANNOT_WIDEN_CAPABILITY",
+      "observed_classification": "CAPABILITY_WIDENING_DENIED",
+      "observed_action": "RelevanceProjection validates against both the graph and the explicit allowed/Gap capability set.",
+      "evidence_refs": [
+        "cyber_lion/contracts/semantic_relevance.py::projection_capability_requirements",
+        "cyber_lion/tests/test_v15_semantic_cloud_contracts.py"
+      ],
+      "forbidden_action_observed": false,
+      "result": "PASS"
+    }
+  ],
+  "overall": "PASS",
+  "candidate_binding": {
+    "head": "4c27ef71507885351aa25e484ff015a89ddd228c",
+    "tree": "c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+    "candidate_digest": "47b9f2a6aef051fc16abfc6c2202207d9ab55fd84ca1dd6541f21b346ca53ab8"
+  },
+  "formalization_binding": {
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "manifest_digest": "9059a20cd7925af0111a06d69d7951abedf84c43210e15120569b741ad2d4089",
+    "required_set_digest": "409fc283ca13e03d202f28b92124cb13d9e73cd44beb6b203a5f2a3cd3a4d5ca",
+    "federated_binding_digest": "4839816b6efa65eb63a7977ce3799e122b1373762de44abbaa532b2ac45078bf",
+    "fleet_baseline_digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7"
+  },
+  "test_evidence": {
+    "full_python_suite": {
+      "result": "PASS",
+      "tests": 3567,
+      "skipped": 6
+    },
+    "semantic_cloud_formalization": {
+      "result": "PASS",
+      "tests": 26,
+      "skipped": 0
+    },
+    "effect_surface_scan": {
+      "result": "PASS",
+      "source_count": 376,
+      "surface_count": 519,
+      "unclassified_count": 6,
+      "scan_digest": "e40809017eaff04b340d8cb6d20173f7d3ebf416dba1c05717dd4fb5e2d56379"
+    }
+  },
+  "evidence_digest": "d3dd0d6ec81e2a1c072f2dc50d2b5d6e4d914af73ec7a4bd07ce56a0ceb7a64c"
+}

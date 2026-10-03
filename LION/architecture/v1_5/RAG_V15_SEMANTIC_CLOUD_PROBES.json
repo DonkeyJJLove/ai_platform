@@ -1,41 +1,54 @@
 {
   "schema": "lion.rag-v15-semantic-cloud-probes/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "source_set_digest": "a0e74d0cd2585ce56909749d964183a27d56892eb181551ab4addc7cfe03eae1",
   "probes": [
     {
-      "q": "Does Semantic Cloud grant authority?",
-      "required": [
-        "NO",
-        "existing governed action path"
+      "id": "SC-AUTHORITY-BOUNDARY",
+      "query": "does Semantic Cloud or RelevanceGraph grant authority",
+      "must_route_to": [
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+        "cyber_lion/contracts/semantic_relevance.py"
+      ],
+      "must_preserve": [
+        "relevance != authority",
+        "existing governed Action path remains materialization boundary",
+        "RAG != live truth"
       ]
     },
     {
-      "q": "Is RelevanceGraph a permission graph?",
-      "required": [
-        "NO",
-        "representation only"
+      "id": "SC-HCL-EVIDENCE-BOUNDARY",
+      "query": "does HCL 4.3.3 prove AGI or Semantic Cloud",
+      "must_route_to": [
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json"
+      ],
+      "must_preserve": [
+        "bounded behavioral context effect",
+        "no mechanistic proof",
+        "no AGI claim"
       ]
     },
     {
-      "q": "Does HCL 4.3.3 prove AGI?",
-      "required": [
-        "NO",
-        "bounded behavioral context effect"
-      ]
-    },
-    {
-      "q": "What precedes SemanticScaffoldIR?",
-      "required": [
+      "id": "SC-CHAIN",
+      "query": "what precedes SemanticScaffoldIR and what follows RelevanceProjection",
+      "must_route_to": [
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md"
+      ],
+      "must_preserve": [
         "MissionIntent",
         "QueryPlan",
-        "RagContextEnvelope"
-      ]
-    },
-    {
-      "q": "Can RAG replace live truth?",
-      "required": [
-        "NO",
-        "versioned knowledge"
+        "RagContextEnvelope",
+        "CapabilityNeed",
+        "Composition",
+        "Mosaic"
       ]
     }
-  ]
+  ],
+  "candidate_binding": {
+    "head": "4c27ef71507885351aa25e484ff015a89ddd228c",
+    "tree": "c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+    "candidate_digest": "47b9f2a6aef051fc16abfc6c2202207d9ab55fd84ca1dd6541f21b346ca53ab8",
+    "truth_subject": "d02d1c05e69161a3e905f63d02e4d979ce65e0eada8dac6561834f080d4b0d48"
+  }
 }

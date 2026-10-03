@@ -151,7 +151,7 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
         ids={x["id"] for x in cases}
         self.assertTrue(set(manifest().evals_required)<=ids)
 
-    def test_interim_closure_is_explicitly_blocked_not_false_pass(self):
+    def test_formalization_closure_is_pass_and_bound_to_candidate(self):
         raw=load("FORMALIZATION_CLOSURE_RECORD_SEMANTIC_CLOUD_R1.json")
         afm=manifest(); reg=registry()
         closure=FormalizationClosureRecord(
@@ -174,15 +174,23 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
             closure_digest=raw["closure_digest"],
             schema_id=raw["schema_id"],
         ).validate(afm,reg)
-        self.assertEqual(closure.decision,"BLOCKED")
-        self.assertTrue(closure.unknowns)
-        self.assertEqual(closure.currentness_result,"STALE")
-        self.assertNotEqual(closure.rag_result,"PASS")
+        self.assertEqual(closure.decision,"PASS")
+        self.assertFalse(closure.unknowns)
+        self.assertEqual(closure.currentness_result,"CURRENT_CANDIDATE")
+        self.assertEqual(closure.rag_result,"PASS")
+        self.assertEqual(closure.candidate.head,"4c27ef71507885351aa25e484ff015a89ddd228c")
+        self.assertEqual(closure.candidate.tree,"c50c7095c3f0eb1e1ec6f5372eac11e3013ef647")
 
     def test_rag_candidate_does_not_claim_live_truth(self):
         source=load("RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json")
         self.assertEqual(source["authority_effect"],"NONE")
-        self.assertIn("does not replace live",source["rule"])
+        self.assertEqual(source["live_truth_policy"],"RAG_NE_LIVE_TRUTH")
+        self.assertEqual(source["currentness"],"CURRENT_CANDIDATE")
+        self.assertEqual(source["candidate_binding"]["head"],"4c27ef71507885351aa25e484ff015a89ddd228c")
+        self.assertEqual(source["candidate_binding"]["tree"],"c50c7095c3f0eb1e1ec6f5372eac11e3013ef647")
+        probes=load("RAG_V15_SEMANTIC_CLOUD_PROBES.json")
+        self.assertEqual(probes["source_set_digest"],source["source_set_digest"])
+        self.assertEqual(probes["candidate_binding"],source["candidate_binding"])
 
 if __name__=="__main__":
     unittest.main()
