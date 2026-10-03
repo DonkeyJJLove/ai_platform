@@ -1,6 +1,6 @@
 {
   "schema": "lion.architecture-reconciliation/v1",
-  "federation_digest": "daaee095e23faf72e965bcdc2d8f57ef716397924e40e9249658d1c544bbb63c",
+  "federation_digest": "bb18ca0f43a9c7287371fde9a2c89bbbe57425588c00e9625c8a773f87021d9b",
   "results": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -788,15 +788,23 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "concept": "CODE_DERIVED_ARCHITECTURE.json#projection_input_tree",
-      "classification": "ALIGNED_CURRENT",
+      "classification": "CODE_PROJECTION_STALE",
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-        "DonkeyJJLove/ai_platform:tree:bfc726f4e79ce92438dbba67f157deaf7d6fa8f5"
+        "DonkeyJJLove/ai_platform:tree:db326bd9cdd249a3340698c38f4e45c0cab78737"
       ]
     }
   ],
-  "contradictions": [],
+  "contradictions": [
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+      "classification": "CODE_PROJECTION_STALE",
+      "expected_tree": "db326bd9cdd249a3340698c38f4e45c0cab78737",
+      "observed_tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5"
+    }
+  ],
   "unknowns": [],
   "authority_effect": "NONE",
-  "reconciliation_digest": "24fd68e13c635da68a5c3a5c2a7700ca97f765447bbabdb5fa1fd071c24dc2be"
+  "reconciliation_digest": "821584cd6a3e4915466cb6cf31ebf4eb45b86f9b92b9dc7f7ab3758bb09fc7e1"
 }

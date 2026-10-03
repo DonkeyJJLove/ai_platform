@@ -1,6 +1,6 @@
 {
   "schema": "lion.federation-live-snapshot/v1",
-  "observed_at": "2026-10-03T14:59:53.143809Z",
+  "observed_at": "2026-10-03T15:12:35.989660Z",
   "observation_mode": "EXACT_SWEEP_CUTOFF_WITH_COVERAGE_GROUPS",
   "authority_effect": "NONE",
   "repositories": [
@@ -1126,8 +1126,8 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
-      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
+      "head": "421464deacbec6e1fa92f9f15bf5fbee8ea891cb",
+      "tree": "db326bd9cdd249a3340698c38f4e45c0cab78737",
       "open_prs": 0,
       "manifest_blob": "46e9d26cba916c5dfd10bbbb31695b25e5a056d9",
       "manifest": {
@@ -2228,15 +2228,15 @@
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
-          "blob": "1a48c98544c78122c7dd79d41c97c55f7213b5c0"
+          "blob": "a7f32b776ca6884128c91b33caf89e38e5a49d0a"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
-          "blob": "1457023cfd0dc2591540a22cb7cf9b59dafaf493"
+          "blob": "e5c275b3ec8d70651ac46928ae02cef932075284"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
-          "blob": "4231d37fb2735ee6a1b90a46a6fbda6a84d86ddc"
+          "blob": "c55f3ea06739084a8dccb4d5a224e264a0c8b06d"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
@@ -2260,7 +2260,7 @@
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
-          "blob": "65f90a151a96b026005d92bbc9f2baa7ea5a696e"
+          "blob": "e795fc92c785ee0febf467e36d8eee63393528c1"
         },
         {
           "path": "LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
@@ -2276,7 +2276,7 @@
         },
         {
           "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-          "blob": "01199e285414145ddc9097a350205fab47fa04ac"
+          "blob": "b2bdd840e8fc6facd852ccf4bf961946961a6299"
         },
         {
           "path": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
@@ -2292,7 +2292,7 @@
         },
         {
           "path": "LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
-          "blob": "55d02dfa1cffb5727ef0ceb70a89fcb8ef661658"
+          "blob": "1804e3d1b52fa621df036937fd7524a85c57f347"
         },
         {
           "path": "LION/architecture/v1_5/DISCOVERABILITY_TEST_MATRIX.json",
@@ -2300,7 +2300,7 @@
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
-          "blob": "283500aaf3f8462356edebae8f0d9e7ea5a7034c"
+          "blob": "dcd5e9d24dcd206a14a47609c8582d8a1f2cf762"
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
@@ -2308,7 +2308,7 @@
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
-          "blob": "35d0c05d67667cdbaaac64955bf9bafb1ee6b02b"
+          "blob": "c12b5883c1bd1524e480a9c31e6c4e05875bfd15"
         },
         {
           "path": "LION/architecture/v1_5/EFFECT_SURFACE_SCAN_REBIND_COMMUNICATION_ENVELOPE_R1.json",
@@ -2364,7 +2364,7 @@
         },
         {
           "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
-          "blob": "5c1116df252ee1709f7e411f95dfa2f5b1babb30"
+          "blob": "0adf1de6a3a6230c8c2b068d2348e693feb02dd4"
         },
         {
           "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT_SEMANTIC_CLOUD_R1.json",
@@ -2448,7 +2448,7 @@
         },
         {
           "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
-          "blob": "7ae01fb0530c41256be433b32532062255d90726"
+          "blob": "b2f08342e94328d1335caa5e131a6f6b08f32164"
         },
         {
           "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_SEMANTIC_CLOUD_R1.json",
@@ -2500,11 +2500,11 @@
         },
         {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_PROBES.json",
-          "blob": "0a0ff2e967efb04189e2216793b2fcf155c88478"
+          "blob": "87d269c9d60772ee9c6916b74fb30acff25908de"
         },
         {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json",
-          "blob": "d72ae01e4b07cd56093c5be87b06984386c90172"
+          "blob": "51b6eed88a2735200214bd2d525a04db5e6205bd"
         },
         {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_OWNER_SET.json",
@@ -2536,7 +2536,7 @@
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
-          "blob": "4dc025296ddf6f34ad4c3e990ba1fb81e27d2847"
+          "blob": "d0c12c01b6e0472da3ef0da8c91e96eed6f0eee4"
         },
         {
           "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_COMMUNICATION_ENVELOPE_R1.json",
@@ -2588,7 +2588,7 @@
         },
         {
           "path": "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
-          "blob": "a8d051bbc5ad193027fc823b2fccd90b718c66da"
+          "blob": "1a656a48718ca24908576e94aa08eaf9351c1880"
         },
         {
           "path": "LION/architecture/v1_5/TASK2_INPUT_MANIFEST.json",
@@ -3224,7 +3224,7 @@
         },
         {
           "path": "LION/rag/RAG_BOOTSTRAP.json",
-          "blob": "6467746763e23fd158086e4b14e41768310bc516"
+          "blob": "7ed5a0d91a0c0d3447fbb1e42c61b3d14e915044"
         },
         {
           "path": "LION/rag/lion_project_rag32_v1_4_process_contract_r1/00_START_HERE.md",
@@ -6976,7 +6976,7 @@
         },
         {
           "path": "cyber_lion/tests/test_v15_semantic_cloud_formalization.py",
-          "blob": "c381507763251d1e26fe52edda56d817d0a3154b"
+          "blob": "5a93806874709280b12f54ab160ab8faf3b8cef0"
         },
         {
           "path": "cyber_lion/tests/test_v15_task2_formalization.py",
@@ -10962,8 +10962,8 @@
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "e7a1345ab81559b318fe1be20d221acace06b565",
-      "tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba",
+      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
       "open_prs": 0,
       "manifest_blob": "8e4cb03a8d4b96d30d7d28376c3a8d0d560f94dd",
       "manifest": {
@@ -13984,7 +13984,7 @@
         },
         {
           "path": "badania/lion-semantic-cloud/README.md",
-          "blob": "d50087e0725ebf2e4649ea0cdf40a6ef6112f425"
+          "blob": "628f68a6f7cf642e2a1cc25ebff85300662fc879"
         },
         {
           "path": "badania/lion-semantic-cloud/RESEARCH_PROGRAM.md",

@@ -2,7 +2,7 @@
   "schema": "lion.global-repository-reconciliation-baseline/v1",
   "baseline_id": "LION-SEMANTIC-CLOUD-R1-POSTMERGE",
   "architecture_epoch": "1.5",
-  "observed_at": "2026-10-03T14:59:53.143809Z",
+  "observed_at": "2026-10-03T15:12:35.989660Z",
   "observation_mode": "EXACT_SWEEP_CUTOFF_WITH_COVERAGE_GROUPS",
   "authority_effect": "NONE",
   "repositories": [
@@ -21,8 +21,8 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
-      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5"
+      "head": "421464deacbec6e1fa92f9f15bf5fbee8ea891cb",
+      "tree": "db326bd9cdd249a3340698c38f4e45c0cab78737"
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
@@ -63,8 +63,8 @@
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "e7a1345ab81559b318fe1be20d221acace06b565",
-      "tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba"
+      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f"
     }
   ]
 }
