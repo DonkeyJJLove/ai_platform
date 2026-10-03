@@ -12,7 +12,7 @@ The final ai_platform consumer is PR #405. Its exact final master identity is in
 
 ## Boundaries
 
-These integrations add no new scheduler, PDP, Action plane, runtime owner or authority source. Runtime activation is not implied by repository integration. The privileged broker responds to read-only PING, but the Mission64 currentness read timed out and was not retried; runtime currentness therefore remains explicit UNKNOWN for that path.
+These integrations add no new scheduler, PDP, Action plane, runtime owner or authority source. Runtime activation is not implied by repository integration. The privileged broker responds to read-only PING. A correctly enveloped read-only MISSION64_READ subsequently returned PASS with state K3S_NOT_RUNNING, materialized=0 and ready=0. No runtime start, restart, scale or deployment effect was performed; the runtime boundary is therefore NOOP_OBSERVED_INACTIVE.
 
 Remote branch deletion is not inferred from integration. Branches without exact deletion admission remain retained with recovery SHA in the final lifecycle register.
 
