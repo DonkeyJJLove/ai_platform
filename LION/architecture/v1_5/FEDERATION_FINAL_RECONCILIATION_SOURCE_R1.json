@@ -80,8 +80,18 @@
   "runtime": {
     "repository_runtime_effect": "NONE",
     "privileged_broker_ping": "READY",
-    "mission64_currentness_read": "UNKNOWN_TIMEOUT_NO_RETRY",
-    "runtime_boundary": "NOOP_AUTHORITY_BOUNDARY"
+    "mission64_currentness_read": "PASS_OBSERVED",
+    "mission64_state": "K3S_NOT_RUNNING",
+    "mission64_materialized": 0,
+    "mission64_ready": 0,
+    "k3s_exists": true,
+    "k3s_service_active": false,
+    "runtime_read_request_id": "52ed80c210c1f057494ffa11faba0c929d0e3ec65c70fcadbd476bf0494dcdab",
+    "runtime_read_result_digest": "2d4172af41227661c1c47a559bdf9f9504934268b302d3765028fd47d1714e43",
+    "runtime_read_receipt_digest": "711e2e926c0806096ae8c00ff70cd5e8fa54bea5123baaa4b03cc69d54b7541d",
+    "runtime_read_source_head": "8bf33ec1115e8954b8e69f4bd5a9c3a1fcd9b6f5",
+    "runtime_read_source_tree": "61aa5ee0709cd5382fec57b7a4ddb7b9f2baccd8",
+    "runtime_boundary": "NOOP_OBSERVED_INACTIVE"
   },
   "branch_lifecycle": {
     "policy": "NO_DELETE_WITHOUT_EXACT_BRANCH_IDENTITY_ADMISSION",
