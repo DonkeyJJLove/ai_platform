@@ -143,7 +143,7 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
         self.assertEqual(binding.formalization_manifest_digest,manifest().manifest_digest)
         self.assertEqual(
             {x.repository for x in binding.repositories if x.disposition=="UPDATE"},
-            {"DonkeyJJLove/ai_platform","DonkeyJJLove/writeups"},
+            {x.repository for x in fleet.registered},
         )
 
     def test_required_evals_exist(self):

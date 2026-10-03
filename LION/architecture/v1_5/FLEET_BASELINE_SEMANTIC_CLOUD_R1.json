@@ -1,66 +1,66 @@
 {
   "schema_version": "1.0.0",
-  "baseline_id": "semantic-cloud-r1-default-baseline",
+  "baseline_id": "semantic-cloud-r1-post-peer-merge",
   "registered": [
     {
       "repository": "DonkeyJJLove/HA2D",
       "default_branch": "master",
-      "expected_head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "expected_tree": "3f616645b4034b41fb93ad987cc6c237be523d50"
+      "expected_head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "expected_tree": "556e10fddd4668a33ec46687e93d6f9893508fb0"
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "default_branch": "main",
-      "expected_head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "expected_tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add"
+      "expected_head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "expected_tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10"
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "default_branch": "master",
-      "expected_head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
-      "expected_tree": "e2309ac9a57898c053b5470abdc5eea7b3221872"
+      "default_branch": "research/semantic-cloud-r1",
+      "expected_head": "079c5585e8190e6ff76a8c379d195aa42109095c",
+      "expected_tree": "3b643c5fffe783775908f8f9d2b107854e6d9165"
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "default_branch": "master",
-      "expected_head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "expected_tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7"
+      "expected_head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "expected_tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662"
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
       "default_branch": "master",
-      "expected_head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "expected_tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8"
+      "expected_head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "expected_tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf"
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "default_branch": "main",
-      "expected_head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "expected_tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8"
+      "expected_head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "expected_tree": "e746446fc1d98890e689f8c9626d4435cc088a74"
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "default_branch": "main",
-      "expected_head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "expected_tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9"
+      "expected_head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "expected_tree": "9a0c7336c3aba0509023987d9380e0fee802fab8"
     },
     {
       "repository": "DonkeyJJLove/sbom",
       "default_branch": "main",
-      "expected_head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "expected_tree": "57979058ff9efc672483bbab2e2f479c8a69657d"
+      "expected_head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "expected_tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4"
     },
     {
       "repository": "DonkeyJJLove/swarm",
       "default_branch": "master",
-      "expected_head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "expected_tree": "73399fa85e798a834623fd7b9e034a8229731ae6"
+      "expected_head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "expected_tree": "12131ef5b055d81b80d0272104da4980e19d7221"
     },
     {
       "repository": "DonkeyJJLove/writeups",
       "default_branch": "master",
-      "expected_head": "dd4a61f0b7409b8b98c3591b2a3c97c8fbda8074",
-      "expected_tree": "a9451ed6d5c64b83876b28f2b83c141a5fa4c2e6"
+      "expected_head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "expected_tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba"
     }
   ],
   "observations": [
@@ -68,8 +68,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -99,8 +99,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -130,9 +130,9 @@
     {
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "master",
-      "head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
-      "tree": "e2309ac9a57898c053b5470abdc5eea7b3221872",
+      "branch": "research/semantic-cloud-r1",
+      "head": "079c5585e8190e6ff76a8c379d195aa42109095c",
+      "tree": "3b643c5fffe783775908f8f9d2b107854e6d9165",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -183,8 +183,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -214,8 +214,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -246,8 +246,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -278,8 +278,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -310,8 +310,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -342,8 +342,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -374,8 +374,8 @@
       "schema_version": "1.0.0",
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "dd4a61f0b7409b8b98c3591b2a3c97c8fbda8074",
-      "tree": "a9451ed6d5c64b83876b28f2b83c141a5fa4c2e6",
+      "head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba",
       "dirty": null,
       "build_result": "UNKNOWN",
       "test_result": "UNKNOWN",
@@ -407,10 +407,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
     },
     {
@@ -418,10 +418,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json"
     },
     {
@@ -429,10 +429,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
     },
     {
@@ -440,10 +440,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/glitchlab:cyber-lion.repository.json"
     },
     {
@@ -451,10 +451,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
     },
     {
@@ -462,10 +462,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
     },
     {
@@ -473,10 +473,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/sbom:cyber-lion.repository.json"
     },
     {
@@ -484,10 +484,10 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/swarm:cyber-lion.repository.json"
     },
     {
@@ -495,19 +495,19 @@
       "target": "DonkeyJJLove/ai_platform",
       "relation": "IMPORTS",
       "contract": "architecture_knowledge/v1",
-      "version_assumption": "source-bound exact default-branch baseline",
+      "version_assumption": "exact candidate/default branch baseline",
       "failure_mode": "dependency unavailable or semantic contract drift",
-      "security_impact": "cross-repository semantic input; no authority transfer",
-      "test_coverage": "repository manifest typed validation and federation binding",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
       "evidence": "DonkeyJJLove/writeups:cyber-lion.repository.json"
     }
   ],
-  "baseline_digest": "09929f743bb254c92a2cdb98af9f896b2f74e1630dbfa24df89c2a7dcd98543d",
+  "baseline_digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7",
   "gate0": {
     "all_repositories_inventoried": true,
     "current_failures_separated_from_new_failures": true,
     "cross_repo_dependency_graph_created": true,
     "result": "PASS",
-    "baseline_digest": "09929f743bb254c92a2cdb98af9f896b2f74e1630dbfa24df89c2a7dcd98543d"
+    "baseline_digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7"
   }
 }
