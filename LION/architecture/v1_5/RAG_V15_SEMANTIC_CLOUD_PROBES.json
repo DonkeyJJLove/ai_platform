@@ -1,0 +1,41 @@
+{
+  "schema": "lion.rag-v15-semantic-cloud-probes/v1",
+  "probes": [
+    {
+      "q": "Does Semantic Cloud grant authority?",
+      "required": [
+        "NO",
+        "existing governed action path"
+      ]
+    },
+    {
+      "q": "Is RelevanceGraph a permission graph?",
+      "required": [
+        "NO",
+        "representation only"
+      ]
+    },
+    {
+      "q": "Does HCL 4.3.3 prove AGI?",
+      "required": [
+        "NO",
+        "bounded behavioral context effect"
+      ]
+    },
+    {
+      "q": "What precedes SemanticScaffoldIR?",
+      "required": [
+        "MissionIntent",
+        "QueryPlan",
+        "RagContextEnvelope"
+      ]
+    },
+    {
+      "q": "Can RAG replace live truth?",
+      "required": [
+        "NO",
+        "versioned knowledge"
+      ]
+    }
+  ]
+}

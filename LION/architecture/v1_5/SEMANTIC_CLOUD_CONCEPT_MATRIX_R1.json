@@ -1,0 +1,74 @@
+{
+  "schema": "lion.semantic-cloud.concept-matrix/v1",
+  "authority_effect": "NONE",
+  "concepts": [
+    {
+      "concept": "SemanticDelta",
+      "status": "NEW_CONTRACT",
+      "owner": "SemanticRelevance"
+    },
+    {
+      "concept": "SemanticAtom",
+      "status": "NEW_CONTRACT",
+      "owner": "SemanticRelevance"
+    },
+    {
+      "concept": "SemanticEquivalenceClass",
+      "status": "EXPERIMENT_ONLY"
+    },
+    {
+      "concept": "SemanticProvenanceBinding",
+      "status": "REUSE_PROVENANCE"
+    },
+    {
+      "concept": "TemporalSemanticState",
+      "status": "BIND_CURRENTNESS_AND_RAG"
+    },
+    {
+      "concept": "RelevanceVector",
+      "status": "EXPERIMENT_ONLY"
+    },
+    {
+      "concept": "RelevanceGraph",
+      "status": "NEW_CONTRACT",
+      "owner": "SemanticRelevance"
+    },
+    {
+      "concept": "RelevanceProjection",
+      "status": "NEW_CONTRACT",
+      "owner": "SemanticRelevance"
+    },
+    {
+      "concept": "RelevanceGraphDelta",
+      "status": "REUSE_SEMANTIC_DELTA"
+    },
+    {
+      "concept": "CognitiveFunction",
+      "status": "REUSE_CAPABILITY_BEAN"
+    },
+    {
+      "concept": "CognitiveFormationPlan",
+      "status": "REUSE_CAPABILITY_NEED_COMPOSITION_MOSAIC"
+    },
+    {
+      "concept": "CollectiveDecisionCandidate",
+      "status": "REUSE_EPISTEMIC_ACTION_CANDIDATES"
+    },
+    {
+      "concept": "SemanticHomeostasis",
+      "status": "CURRENTNESS_SUPERSESSION_POLICY"
+    },
+    {
+      "concept": "SemanticCloudResearchEpisode",
+      "status": "EBLE_SIDECAR"
+    },
+    {
+      "concept": "SemanticCloudEvidenceRecord",
+      "status": "REUSE_EVIDENCE_OBSERVATION"
+    },
+    {
+      "concept": "SemanticCloudFalsificationRecord",
+      "status": "REUSE_FALSIFICATION_RESULT"
+    }
+  ]
+}

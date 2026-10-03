@@ -1,0 +1,33 @@
+{
+  "schema": "lion.semantic-cloud.research-binding/v1",
+  "program_id": "LION-SEMANTIC-CLOUD-R1",
+  "baseline_owner_head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
+  "global_architecture_owner": "DonkeyJJLove/ai_platform",
+  "research_owner": "DonkeyJJLove/writeups",
+  "research_refs": [
+    "DonkeyJJLove/writeups:badania/lion-semantic-cloud/README.md",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/artifacts/summary.json",
+    "DonkeyJJLove/writeups:badania/semantic_compilers/sfc_v1.prompt"
+  ],
+  "canonical_contracts": [
+    "lion.mission-intent/v1",
+    "lion.query-plan/v1",
+    "lion.rag-context-envelope/v1",
+    "lion.semantic-scaffold/v1",
+    "lion.semantic-relevance/v1",
+    "lion.semantic-cloud-episode-binding/v1"
+  ],
+  "peer_policy": "VALIDATE_EXISTING_ROLES_FIRST; adapter code only when required by a runnable experiment",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "cross_thread_sync": {
+    "related_task": "LION-FEDERATION-RECONSOLIDATION-AND-DUAL-TRACK-EVOLUTION-20261003-R1",
+    "evidence_class": "USER_PROVIDED_CROSS_THREAD_TRANSCRIPT",
+    "observed_overlap": [
+      "repository manifest parser repair",
+      "MissionIntent candidate",
+      "peer federation work packages"
+    ],
+    "integration_rule": "Only exact Git objects visible in the current execution are integration evidence."
+  }
+}
