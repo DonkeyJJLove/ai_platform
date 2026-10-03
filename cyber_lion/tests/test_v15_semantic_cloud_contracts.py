@@ -7,8 +7,9 @@ from cyber_lion.contracts.rag_context_envelope import RagContextEnvelope, RagCon
 from cyber_lion.contracts.semantic_scaffold import SemanticScaffoldIR, ScaffoldRelation
 from cyber_lion.contracts.semantic_relevance import (
     EvidenceInstance, SemanticAtom, SemanticDelta, RelevanceGraph,
-    RelevanceProjection, SemanticRelevanceError,
+    RelevanceProjection, SemanticRelevanceError, projection_capability_requirements,
 )
+from cyber_lion.contracts.evolutionary_state import Gap
 from cyber_lion.contracts.semantic_cloud_episode_binding import SemanticCloudEpisodeBinding
 
 H="a"*64
@@ -120,6 +121,38 @@ class SemanticCloudContractTests(unittest.TestCase):
         bad=replace(ok,required_capability_refs=("capability:write",)).sealed()
         with self.assertRaisesRegex(SemanticRelevanceError,"capability widening"):
             bad.validate_against(graph,("capability:read",))
+
+    def test_relevance_projection_binds_exactly_to_explicit_gap_capabilities(self):
+        graph=RelevanceGraph(
+            "graph:gap","intent:1","scaffold:1",
+            ("atom:1",),(),("currentness:1",)
+        ).sealed()
+        projection=RelevanceProjection(
+            "projection:gap",graph.graph_id,graph.graph_digest,"consumer:gap",
+            ("capability:verify",),("atom:1",),(),(),5
+        ).sealed()
+        gap=Gap(
+            gap_id="gap:1",goal_digest=H,world_snapshot_digest=H,
+            system_snapshot_digest=H,epistemic_state="CURRENT",
+            missing_capabilities=("capability:verify",),
+            unsatisfied_conditions=("condition:verify",),
+            evidence_refs=("evidence:1",),
+            falsification_conditions=("falsifier:1",),
+            substitution_guard="guard:1",
+        ).validate()
+        self.assertEqual(
+            projection_capability_requirements(
+                projection=projection,graph=graph,gap=gap,
+                allowed_capabilities=("capability:verify","capability:read"),
+            ),
+            ("capability:verify",),
+        )
+        widened=replace(projection,required_capability_refs=("capability:read",)).sealed()
+        with self.assertRaisesRegex(SemanticRelevanceError,"Gap capability mismatch"):
+            projection_capability_requirements(
+                projection=widened,graph=graph,gap=gap,
+                allowed_capabilities=("capability:verify","capability:read"),
+            )
 
     def test_episode_binding_is_non_effectful(self):
         b=SemanticCloudEpisodeBinding(
