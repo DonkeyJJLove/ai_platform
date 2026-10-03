@@ -1,12 +1,12 @@
 {
   "schema": "lion.repository-role-matrix/v1",
-  "federation_digest": "770949d56a07818587a91c4eee6da4b1ce4327a452ef4ba6fa137521ec31fcb6",
+  "federation_digest": "c93af1493b3b7dc79367811bd331279782a5e0ef64eb628185a44773123b8ed0",
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
       "tile_id": "context-memory.ha2d",
       "roles": [
         "ContextMemoryLab",
@@ -29,20 +29,23 @@
       "semantic_exports": [
         "context_memory",
         "memory_semantics",
-        "process_diagnostics"
+        "process_diagnostics",
+        "temporal_semantic_state_candidate",
+        "supersession_evidence"
       ],
       "semantic_imports": [
         "architecture",
         "contracts",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
       "tile_id": "falsification.simulation",
       "roles": [
         "SimulationProvider",
@@ -65,20 +68,23 @@
       "semantic_exports": [
         "simulation",
         "falsification",
-        "sensitivity_analysis"
+        "sensitivity_analysis",
+        "relevance_stress_result",
+        "sensitivity_result"
       ],
       "semantic_imports": [
         "architecture",
         "formalization",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "maintenance/postmerge-federation-reconciliation-fix-r1",
-      "head": "8faca27fe6baf184c5d15da2870f693f944598c8",
-      "tree": "bbd0942fe9615b4767d5f3671fcdcb37e1acc3b1",
+      "branch": "master",
+      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -119,7 +125,13 @@
         "currentness",
         "formalization",
         "roadmap",
-        "RAG"
+        "RAG",
+        "mission_intent",
+        "query_plan",
+        "rag_context",
+        "semantic_scaffold",
+        "semantic_relevance",
+        "semantic_cloud_research_binding"
       ],
       "semantic_imports": [
         "process_semantics",
@@ -137,8 +149,8 @@
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
       "tile_id": "process-semantics.hmk9d",
       "roles": [
         "ProcessSemanticsEngine",
@@ -158,20 +170,23 @@
       "maximum_authority": "read",
       "semantic_exports": [
         "process_semantics",
-        "hmk9d"
+        "hmk9d",
+        "semantic_transition_candidate",
+        "trajectory_semantics"
       ],
       "semantic_imports": [
         "architecture",
         "contracts",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
       "tile_id": "evolution-compiler.glitchlab",
       "roles": [
         "EvolutionCompiler",
@@ -196,20 +211,23 @@
         "evolution_compiler",
         "delta_analysis",
         "invariants",
-        "structure_graph"
+        "structure_graph",
+        "semantic_invariant_validation",
+        "structural_delta_diagnostics"
       ],
       "semantic_imports": [
         "architecture",
         "contracts",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
       "tile_id": "epistemic-lab.llm-hypotheses",
       "roles": [
         "HypothesisLab",
@@ -231,20 +249,23 @@
       "semantic_exports": [
         "hypothesis_research",
         "experiment_design",
-        "falsification_evidence"
+        "falsification_evidence",
+        "hypothesis_candidate",
+        "falsifier_candidate"
       ],
       "semantic_imports": [
         "architecture",
         "formalization",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
       "tile_id": "structural-intelligence.mosaic",
       "roles": [
         "StructuralIntelligenceEngine",
@@ -267,20 +288,23 @@
       "semantic_exports": [
         "structure_graph",
         "topology_analysis",
-        "authority_graph"
+        "authority_graph",
+        "relevance_graph_candidate",
+        "topology_metrics"
       ],
       "semantic_imports": [
         "architecture",
         "contracts",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
       "tile_id": "provenance.sbom",
       "roles": [
         "SupplyChainEvidenceProvider",
@@ -304,20 +328,23 @@
       "semantic_exports": [
         "artifact_identity",
         "supply_chain_provenance",
-        "composition_risk_evidence"
+        "composition_risk_evidence",
+        "artifact_provenance",
+        "lineage_binding"
       ],
       "semantic_imports": [
         "architecture",
         "contracts",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
       "tile_id": "execution-mesh.swarm",
       "roles": [
         "ExecutionMesh",
@@ -342,21 +369,24 @@
         "execution_mesh",
         "workload_runtime",
         "telemetry",
-        "capability_lease_runtime"
+        "capability_lease_runtime",
+        "cognitive_workload_candidate",
+        "runtime_telemetry"
       ],
       "semantic_imports": [
         "architecture",
         "authority",
         "contracts",
-        "currentness"
+        "currentness",
+        "semantic_relevance"
       ],
       "global_owner": "DonkeyJJLove/ai_platform"
     },
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
-      "tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
+      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
       "tile_id": "research-corpus.writeups",
       "roles": [
         "ResearchCorpus",
@@ -377,7 +407,10 @@
       "semantic_exports": [
         "research_corpus",
         "evidence_source",
-        "publication"
+        "publication",
+        "semantic_cloud_research",
+        "semantic_control_research",
+        "hcl_evidence"
       ],
       "semantic_imports": [
         "architecture",
@@ -388,5 +421,5 @@
     }
   ],
   "authority_effect": "NONE",
-  "matrix_digest": "7f9ee9e046f06bd326441c68880ec85d8b53f53d00730a00f901f30b9ca2c197"
+  "matrix_digest": "368423b076c073124e9055d6642a2793693b3089a27953906a815e898ffd83a1"
 }

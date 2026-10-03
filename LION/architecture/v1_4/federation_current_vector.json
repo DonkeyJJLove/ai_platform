@@ -1,11 +1,11 @@
 {
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
-  "process_epoch": "V1_5_GLOBAL_REPOSITORY_RECONCILIATION_R1_FINAL_LATEST_CUTOFF",
-  "generated_at": "2026-10-03T08:04:26.214168Z",
-  "registry_source": "cyber_lion/registry/repositories.json@0a94d7c50e5e631d25a7ab675c377bb5e86d50ef",
+  "process_epoch": "V1_5_SEMANTIC_CLOUD_R1_FINAL",
+  "generated_at": "2026-10-03T16:23:29.181538+00:00",
+  "registry_source": "cyber_lion/registry/repositories.json@98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Remote latest-cutoff vector binds the exact owner-baseline-fixed source/projection commit plus exact live peer identities. Truth carriers follow this vector commit.",
+  "currentness_rule": "Semantic Cloud R1 vector binds the exact post-merge source/projection commit plus exact merged peer identities. This vector/report commit precedes the two truth carriers; final carrier commit SHA is intentionally not self-referenced.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,58 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "c6d71990612b5c0c1a34bf3f12966f35183e6a0b",
-    "subject_tree": "a658670b4245635e0cd8d453d12462ed265a37cc",
+    "subject_head": "98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
+    "subject_tree": "df09119d101cabc6d21381d2f43f1eba60d4fddd",
     "open_pull_requests": 0
   },
   "repositories": [
     {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "roles": [
+        "cognitive_state",
+        "memory_semantics",
+        "human_ai_hud"
+      ],
+      "layers": [
+        "SEM",
+        "MAND"
+      ],
+      "maturity": "SPECIFICATION",
+      "manifest_present": true,
+      "open_prs": 0,
+      "currentness": "CURRENT_AT_FINAL_REACQUISITION",
+      "material_drift": false,
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "roles": [
+        "simulation",
+        "monte_carlo",
+        "sensitivity_analysis"
+      ],
+      "layers": [
+        "SEM",
+        "INF"
+      ],
+      "maturity": "EXECUTABLE_MODEL",
+      "manifest_present": true,
+      "open_prs": 0,
+      "currentness": "CURRENT_AT_FINAL_REACQUISITION",
+      "material_drift": false,
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
+    },
+    {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "maintenance/postmerge-federation-reconciliation-r1",
-      "head": "c6d71990612b5c0c1a34bf3f12966f35183e6a0b",
-      "tree": "a658670b4245635e0cd8d453d12462ed265a37cc",
+      "branch": "maintenance/semantic-cloud-postmerge-reconciliation-r1",
+      "head": "98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
+      "tree": "df09119d101cabc6d21381d2f43f1eba60d4fddd",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,13 +80,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Remote latest-cutoff federation reconciliation after CommunicationEnvelope owner-baseline test fix; truth carriers follow vector commit."
+      "lineage_note": "Post-merge Semantic Cloud source/projection stabilization; vector/report commit then carrier-last currentness commit."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
       "roles": [
         "context_compression",
         "context_routing",
@@ -58,13 +100,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fbf3af235df7377f5228e402",
       "roles": [
         "delta_analysis",
         "anomaly_analysis",
@@ -80,34 +122,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
-    },
-    {
-      "repository": "DonkeyJJLove/HA2D",
-      "branch": "master",
-      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
-      "roles": [
-        "cognitive_state",
-        "memory_semantics",
-        "human_ai_hud"
-      ],
-      "layers": [
-        "SEM",
-        "MAND"
-      ],
-      "maturity": "SPECIFICATION",
-      "manifest_present": true,
-      "open_prs": 0,
-      "currentness": "CURRENT_AT_FINAL_REACQUISITION",
-      "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
       "roles": [
         "hypothesis_research",
         "communication_epistemology"
@@ -120,13 +141,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
       "roles": [
         "structure_graph",
         "abstraction_engine",
@@ -141,13 +162,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     },
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
       "roles": [
         "aid_identity",
         "supply_chain_provenance",
@@ -162,13 +183,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     },
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
       "roles": [
         "execution_mesh",
         "telemetry_transport",
@@ -183,34 +204,13 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "branch": "main",
-      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
-      "roles": [
-        "simulation",
-        "monte_carlo",
-        "sensitivity_analysis"
-      ],
-      "layers": [
-        "SEM",
-        "INF"
-      ],
-      "maturity": "EXECUTABLE_MODEL",
-      "manifest_present": true,
-      "open_prs": 0,
-      "currentness": "CURRENT_AT_FINAL_REACQUISITION",
-      "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     },
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
-      "tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
+      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
       "roles": [
         "research_corpus",
         "evidence_source",
@@ -225,9 +225,9 @@
       "open_prs": 0,
       "currentness": "CURRENT_AT_FINAL_REACQUISITION",
       "material_drift": false,
-      "lineage_note": "Exact default-branch identity at final federation cutoff."
+      "lineage_note": "Exact default-branch identity after merged Semantic Cloud integration."
     }
   ],
-  "sweep_cutoff": "2026-10-03T04:02:44.809865Z",
-  "observation_mode": "EXACT_SWEEP_CUTOFF"
+  "sweep_cutoff": "2026-10-03T16:23:29.181538+00:00",
+  "observation_mode": "EXACT_POSTMERGE_SEMANTIC_CLOUD_R1"
 }

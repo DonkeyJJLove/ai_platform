@@ -1,0 +1,270 @@
+{
+  "schema": "lion.semantic-cloud.integration-sync/v1",
+  "run_id": "LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1",
+  "status": "PASS_RECONCILED",
+  "generated_at": "2026-10-03T16:23:29.181538+00:00",
+  "research_program": "LION-SEMANTIC-CLOUD-R1",
+  "global_owner": "DonkeyJJLove/ai_platform",
+  "architecture_epoch": "1.5",
+  "repositories": [
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "branch": "master",
+      "entry_head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
+      "entry_tree": "e2309ac9a57898c053b5470abdc5eea7b3221872",
+      "integrated_head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+      "integrated_tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
+      "source_projection_head": "98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48",
+      "source_projection_tree": "df09119d101cabc6d21381d2f43f1eba60d4fddd",
+      "exit_head": null,
+      "exit_tree": null,
+      "prs": [
+        403
+      ],
+      "tests": [
+        "3567 PASS, 6 skipped on integrated candidate",
+        "all ai_platform PR checks PASS before merge"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "branch": "master",
+      "entry_head": "dd4a61f0b7409b8b98c3591b2a3c97c8fbda8074",
+      "entry_tree": "a9451ed6d5c64b83876b28f2b83c141a5fa4c2e6",
+      "exit_head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "exit_tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
+      "prs": [
+        8,
+        9
+      ],
+      "tests": [
+        "hygiene PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "branch": "master",
+      "entry_head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "entry_tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "exit_head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "exit_tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "prs": [
+        10
+      ],
+      "tests": [
+        "hygiene PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "entry_head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
+      "entry_tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "exit_head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "exit_tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "prs": [
+        7
+      ],
+      "tests": [
+        "hygiene PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "branch": "main",
+      "entry_head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
+      "entry_tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "exit_head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "exit_tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "prs": [
+        7
+      ],
+      "tests": [
+        "hygiene PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "branch": "master",
+      "entry_head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
+      "entry_tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "exit_head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "exit_tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "prs": [
+        17
+      ],
+      "tests": [
+        "kubediag-boundary PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "branch": "main",
+      "entry_head": "3b9df9207aef81aed652c11d37903e4553554d8c",
+      "entry_tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "exit_head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "exit_tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "prs": [
+        7
+      ],
+      "tests": [
+        "guard PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "branch": "master",
+      "entry_head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "entry_tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "exit_head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "exit_tree": "2e8edeaad630d3210fbf3af235df7377f5228e402",
+      "prs": [
+        31
+      ],
+      "tests": [
+        "inventory PASS",
+        "lint-test-analyze 3.9 PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "entry_head": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "entry_tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "exit_head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "exit_tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "prs": [
+        10
+      ],
+      "tests": [
+        "falsification-guard PASS"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "branch": "main",
+      "entry_head": "a004be254849a842131a8c0c218bcc8c71d889de",
+      "entry_tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "exit_head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "exit_tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "prs": [
+        21
+      ],
+      "tests": [
+        "build PASS",
+        "hygiene PASS"
+      ]
+    }
+  ],
+  "artifacts_created": [
+    "Semantic Cloud research program SC-01..SC-12",
+    "six canonical non-effectful semantic contracts",
+    "AFM/RFS/FederatedBinding/FCR PASS",
+    "post-merge federation snapshot/reconciliation",
+    "canonical integration report/state"
+  ],
+  "artifacts_modified": [
+    "ten repository manifests",
+    "semantic owner map/reconciliation",
+    "contract catalog/maps",
+    "RAG bootstrap and source/probe sidecars",
+    "canonical architecture projections/currentness surfaces"
+  ],
+  "contracts_added": [
+    "lion.mission-intent/v1",
+    "lion.query-plan/v1",
+    "lion.rag-context-envelope/v1",
+    "lion.semantic-scaffold/v1",
+    "lion.semantic-relevance/v1",
+    "lion.semantic-cloud-episode-binding/v1"
+  ],
+  "contracts_changed": [
+    "repository manifest typed architecture_knowledge parsing"
+  ],
+  "semantic_owner_delta": [
+    "MissionIntent",
+    "QueryPlan",
+    "RagContextEnvelope",
+    "SemanticScaffold",
+    "SemanticRelevance"
+  ],
+  "federation_dependency_delta": [
+    "semantic_relevance imported by specialist peers",
+    "research evidence exported by writeups",
+    "provider declarations merged without authority/runtime transfer"
+  ],
+  "capability_delta": [
+    "NONE by semantic declaration; binding stays Gap/CapabilityNeed/Bean/Composition/Mosaic"
+  ],
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "experiments": [
+    {
+      "id": "R1_NO_EFFECT_FIXTURE",
+      "result": "PASS"
+    },
+    {
+      "id": "SC-01..SC-12",
+      "result": "PROSPECTIVE_PROTOCOLS_REGISTERED"
+    }
+  ],
+  "falsifications": [
+    {
+      "id": "relevance_is_not_authority",
+      "result": "PASS"
+    },
+    {
+      "id": "semantic_equality_is_not_provenance_equality",
+      "result": "PASS"
+    },
+    {
+      "id": "rag_context_is_not_live_truth",
+      "result": "PASS"
+    },
+    {
+      "id": "projection_cannot_widen_capability",
+      "result": "PASS"
+    }
+  ],
+  "negative_results": [
+    "Concurrent-thread F01-F09 code candidates lacked exact published Git refs and were not silently promoted."
+  ],
+  "currentness": {
+    "basis": [
+      "exact post-merge ten-repository sweep",
+      "canonical projection regeneration",
+      "carrier-last truth-subject digest"
+    ],
+    "stale_artifacts": [],
+    "reacquired": [
+      "DonkeyJJLove/ai_platform",
+      "DonkeyJJLove/writeups",
+      "DonkeyJJLove/chunk-chunk",
+      "DonkeyJJLove/HA2D",
+      "DonkeyJJLove/mosaic_lab_pro.py",
+      "DonkeyJJLove/swarm",
+      "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "DonkeyJJLove/glitchlab",
+      "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "DonkeyJJLove/sbom"
+    ]
+  },
+  "open_gaps": [
+    "SC-01..SC-12 confirmatory experiments remain future research.",
+    "SC-11 requires multiple independent model/tokenizer strata.",
+    "SC-12 requires activation/intervention-capable model access."
+  ],
+  "blockers": [],
+  "first_unfinished_dependency": "SC-01_RELEVANCE_COMPRESSION_CONFIRMATORY_RUN",
+  "next_task": {
+    "id": "LION-SEMANTIC-CLOUD-SC01-CONFIRMATORY-R1",
+    "objective": "Run preregistered relevance-compression experiment on frozen external tasks without widening authority.",
+    "prerequisites": [
+      "integrated Semantic Cloud contracts",
+      "frozen task generator",
+      "paired seed blocks",
+      "fixed model/tool portfolio"
+    ]
+  },
+  "self_reference_policy": "Final carrier commit SHA is intentionally not self-embedded. Resolve final master tip after carrier-last merge. Exact source/projection head is 98b78933fcbd3b65fd7148c4f7f6b8d5cd0f7d48."
+}

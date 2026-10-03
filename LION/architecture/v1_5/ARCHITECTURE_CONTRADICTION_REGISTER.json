@@ -1,7 +1,7 @@
 {
   "schema": "lion.architecture-contradiction-register/v1",
-  "generated_at": "2026-09-30T12:52:13.325579Z",
-  "federation_digest": "af15bfa19002b75412ea2a9111dab7dc0130fd35a1a8ee805e24c29bde38cd44",
+  "generated_at": "2026-10-03T15:02:05.404396+00:00",
+  "federation_digest": "daaee095e23faf72e965bcdc2d8f57ef716397924e40e9249658d1c544bbb63c",
   "contradictions": [
     {
       "id": "C01_STALE_CURRENT_STATE_PRIMARY_OWNER",
@@ -96,6 +96,23 @@
         "cyber_lion/contracts/formalization_closure.py"
       ],
       "resolution": "FORMALIZED_ADMISSION_PATH"
+    },
+    {
+      "id": "C07_SEMANTIC_CLOUD_PARALLEL_AUTHORITY_RISK",
+      "classification": "RESOLVED_BY_BOUNDARY",
+      "severity": "INFO",
+      "concepts": [
+        "semantic_relevance",
+        "authority",
+        "runtime"
+      ],
+      "claim": "Semantic Cloud would become contradictory if relevance or research artifacts created a parallel authority/runtime plane.",
+      "evidence_refs": [
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+        "cyber_lion/contracts/semantic_relevance.py",
+        "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD_SEMANTIC_CLOUD_R1.json"
+      ],
+      "resolution": "CLOSED_RELEVANCE_IS_NON_EFFECTFUL_AND_EXISTING_ACTION_PDP_RUNTIME_PATH_REMAINS_OWNER"
     }
   ],
   "required_unknowns": [],

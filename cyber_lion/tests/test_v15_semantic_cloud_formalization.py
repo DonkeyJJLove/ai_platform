@@ -185,7 +185,7 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
         source=load("RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json")
         self.assertEqual(source["authority_effect"],"NONE")
         self.assertEqual(source["live_truth_policy"],"RAG_NE_LIVE_TRUTH")
-        self.assertEqual(source["currentness"],"CURRENT_CANDIDATE")
+        self.assertEqual(source["currentness"],"CURRENT_INTEGRATED")
         self.assertEqual(source["candidate_binding"]["head"],"4c27ef71507885351aa25e484ff015a89ddd228c")
         self.assertEqual(source["candidate_binding"]["tree"],"c50c7095c3f0eb1e1ec6f5372eac11e3013ef647")
         probes=load("RAG_V15_SEMANTIC_CLOUD_PROBES.json")

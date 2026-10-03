@@ -1,7 +1,7 @@
 {
   "schema": "lion.rag-v15-semantic-cloud-probes/v1",
   "authority_effect": "NONE",
-  "currentness": "CURRENT_CANDIDATE",
+  "currentness": "CURRENT_INTEGRATED",
   "source_set_digest": "a0e74d0cd2585ce56909749d964183a27d56892eb181551ab4addc7cfe03eae1",
   "probes": [
     {
@@ -50,5 +50,9 @@
     "tree": "c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
     "candidate_digest": "47b9f2a6aef051fc16abfc6c2202207d9ab55fd84ca1dd6541f21b346ca53ab8",
     "truth_subject": "d02d1c05e69161a3e905f63d02e4d979ce65e0eada8dac6561834f080d4b0d48"
+  },
+  "integrated_master": {
+    "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+    "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5"
   }
 }

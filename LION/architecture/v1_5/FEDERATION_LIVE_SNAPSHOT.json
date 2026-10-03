@@ -1,16 +1,16 @@
 {
   "schema": "lion.federation-live-snapshot/v1",
-  "observed_at": "2026-10-03T07:00:08.475427Z",
+  "observed_at": "2026-10-03T15:17:25.035443Z",
   "observation_mode": "EXACT_SWEEP_CUTOFF_WITH_COVERAGE_GROUPS",
   "authority_effect": "NONE",
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
       "open_prs": 0,
-      "manifest_blob": "a2467b43893d7324a805d7324b6c1e8b8398db17",
+      "manifest_blob": "85179fe1ec80a9f938adc685fcc0619967be1ac1",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -87,12 +87,15 @@
           "semantic_exports": [
             "context_memory",
             "memory_semantics",
-            "process_diagnostics"
+            "process_diagnostics",
+            "temporal_semantic_state_candidate",
+            "supersession_evidence"
           ],
           "semantic_imports": [
             "architecture",
             "contracts",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -204,7 +207,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "a2467b43893d7324a805d7324b6c1e8b8398db17"
+          "blob": "85179fe1ec80a9f938adc685fcc0619967be1ac1"
         },
         {
           "path": "fast2gen.md",
@@ -235,10 +238,10 @@
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
       "open_prs": 0,
-      "manifest_blob": "ff0c8f063c7a29a7698bb30a5a90ea20b719dc85",
+      "manifest_blob": "0cab403831f3f4be7849080a3bc33bfcdb8fc55c",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -315,12 +318,15 @@
           "semantic_exports": [
             "simulation",
             "falsification",
-            "sensitivity_analysis"
+            "sensitivity_analysis",
+            "relevance_stress_result",
+            "sensitivity_result"
           ],
           "semantic_imports": [
             "architecture",
             "formalization",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -661,7 +667,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "ff0c8f063c7a29a7698bb30a5a90ea20b719dc85"
+          "blob": "0cab403831f3f4be7849080a3bc33bfcdb8fc55c"
         },
         {
           "path": "main.py",
@@ -1120,10 +1126,10 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
-      "tree": "41ade6f86c646349fe9d98a487a12271eced344b",
+      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
       "open_prs": 0,
-      "manifest_blob": "10b816f6a643677fe6af2fec1885e6b98aa600bc",
+      "manifest_blob": "46e9d26cba916c5dfd10bbbb31695b25e5a056d9",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -1227,7 +1233,13 @@
             "currentness",
             "formalization",
             "roadmap",
-            "RAG"
+            "RAG",
+            "mission_intent",
+            "query_plan",
+            "rag_context",
+            "semantic_scaffold",
+            "semantic_relevance",
+            "semantic_cloud_research_binding"
           ],
           "semantic_imports": [
             "process_semantics",
@@ -1391,6 +1403,21 @@
               "path": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
               "class": "MACHINE_READABLE_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "SOURCE_BOUND"
+            },
+            {
+              "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "currentness": "SOURCE_BOUND"
+            },
+            {
+              "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "SOURCE_BOUND"
             }
           ],
           "discoverability": {
@@ -1593,11 +1620,11 @@
         },
         {
           "path": "LION/README.md",
-          "blob": "6115b88b8561d420e094748bcc61bf29f288f8dc"
+          "blob": "932cdead04c18132516902b6cf35638582c15ac8"
         },
         {
           "path": "LION/architecture/canonical-state-v1-3-candidate.json",
-          "blob": "2d65844ed52601b87895dacd3a0ebdf77c1acb6c"
+          "blob": "1e8bb02f7b02d1922c4369666558900f0752e286"
         },
         {
           "path": "LION/architecture/evolution-map.json",
@@ -2025,7 +2052,7 @@
         },
         {
           "path": "LION/architecture/v1_4/contract_catalog.json",
-          "blob": "1e3ead332624d783023ec2bbca5cc2f34ba5258e"
+          "blob": "a8d3ec90c19ef17e63111e5a6599f089373d55f9"
         },
         {
           "path": "LION/architecture/v1_4/current_state.json",
@@ -2133,7 +2160,7 @@
         },
         {
           "path": "LION/architecture/v1_4/federation_current_vector.json",
-          "blob": "3a85c1565a1082ae081aa05baf0ea3eae83983fc"
+          "blob": "291d45e5ec1f71f179eae9c1793584e0ee1882b3"
         },
         {
           "path": "LION/architecture/v1_4/history_and_supersession.md",
@@ -2197,7 +2224,7 @@
         },
         {
           "path": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
-          "blob": "44f946fcbb0ef6854657c61abe75dba1ead1433a"
+          "blob": "48f1442071166736213bf960d91cbf3b344c832a"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
@@ -2205,11 +2232,11 @@
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
-          "blob": "e7042b010a7b2539dfef90b00c1fecbb00f1a423"
+          "blob": "1457023cfd0dc2591540a22cb7cf9b59dafaf493"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
-          "blob": "3053dbd62cd41a0c25e53b3e9e48b2f40eee2e37"
+          "blob": "4231d37fb2735ee6a1b90a46a6fbda6a84d86ddc"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
@@ -2224,12 +2251,16 @@
           "blob": "3401226fb588847af8a85dd0f3cfaa2e39be4e51"
         },
         {
+          "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_SEMANTIC_CLOUD_R1.json",
+          "blob": "82be00546032b9ad5c7a4e332b1dc1c092945159"
+        },
+        {
           "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_TASK2.json",
           "blob": "09a95b68ad201c0866b29d99d00e705821a5d171"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
-          "blob": "b8b2dd70ce0a4e0c7f61483c1081827bd93b76e8"
+          "blob": "65f90a151a96b026005d92bbc9f2baa7ea5a696e"
         },
         {
           "path": "LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
@@ -2237,7 +2268,7 @@
         },
         {
           "path": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
-          "blob": "cbcc13d0507b921c273a8142989e8e85e6451a62"
+          "blob": "77f895fcfc6bfad9a7cb8d86a35ca5ad3646a33e"
         },
         {
           "path": "LION/architecture/v1_5/CIP_EBLE_SHADOW_REPORT.json",
@@ -2245,7 +2276,7 @@
         },
         {
           "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-          "blob": "9c6a2492b51379a4f1d6fe3f4035a4e69e3b9d0c"
+          "blob": "01199e285414145ddc9097a350205fab47fa04ac"
         },
         {
           "path": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
@@ -2261,7 +2292,7 @@
         },
         {
           "path": "LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
-          "blob": "43e935e684dce065e8d0b78ec4891ec2823a948c"
+          "blob": "55d02dfa1cffb5727ef0ceb70a89fcb8ef661658"
         },
         {
           "path": "LION/architecture/v1_5/DISCOVERABILITY_TEST_MATRIX.json",
@@ -2269,7 +2300,7 @@
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
-          "blob": "0b65eab8e2e01e70316f9f524d1235ed0ca85232"
+          "blob": "283500aaf3f8462356edebae8f0d9e7ea5a7034c"
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
@@ -2277,7 +2308,7 @@
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
-          "blob": "ce4f7a88de8e0430c6412c4f0f46e6ff2f61c917"
+          "blob": "35d0c05d67667cdbaaac64955bf9bafb1ee6b02b"
         },
         {
           "path": "LION/architecture/v1_5/EFFECT_SURFACE_SCAN_REBIND_COMMUNICATION_ENVELOPE_R1.json",
@@ -2294,6 +2325,10 @@
         {
           "path": "LION/architecture/v1_5/EVOLUTION_DELTA_FEDERATED_ARCHITECTURE_R1.json",
           "blob": "ccd1392fbb7e5ea243554dc59ee2af6565ab4453"
+        },
+        {
+          "path": "LION/architecture/v1_5/EVOLUTION_DELTA_SEMANTIC_CLOUD_R1.json",
+          "blob": "5de1e043919f47e4517e9d00db9d49e397834990"
         },
         {
           "path": "LION/architecture/v1_5/FALSIFICATION_PLAN.md",
@@ -2324,8 +2359,16 @@
           "blob": "0727302e061ca241f61850817813fcbf79eb778c"
         },
         {
+          "path": "LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_SEMANTIC_CLOUD_R1.json",
+          "blob": "cff6e89414db2218de29d3a062e230dcbba0d04e"
+        },
+        {
           "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
-          "blob": "3c2026fa46b12868a428a8fa92fce702adc18db1"
+          "blob": "5c1116df252ee1709f7e411f95dfa2f5b1babb30"
+        },
+        {
+          "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT_SEMANTIC_CLOUD_R1.json",
+          "blob": "80ca83dfc7062080088d15d2196bef537e2972d8"
         },
         {
           "path": "LION/architecture/v1_5/FLEET_BASELINE_COMMUNICATION_ENVELOPE_R1.json",
@@ -2334,6 +2377,10 @@
         {
           "path": "LION/architecture/v1_5/FLEET_BASELINE_FEDERATION_R1.json",
           "blob": "345ca8fb906cb0324c2bcd4f9cdd61efbdc8a582"
+        },
+        {
+          "path": "LION/architecture/v1_5/FLEET_BASELINE_SEMANTIC_CLOUD_R1.json",
+          "blob": "88635748064db2bebdf688f03075ec8546af003c"
         },
         {
           "path": "LION/architecture/v1_5/FORMALIZATION_CANDIDATE_IDENTITY_COMMUNICATION_ENVELOPE_R1.json",
@@ -2354,6 +2401,10 @@
         {
           "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD_FEDERATION_R1.json",
           "blob": "e5e7f49bea618a5b42dcc3d437d5cca71bf2abde"
+        },
+        {
+          "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD_SEMANTIC_CLOUD_R1.json",
+          "blob": "580261e33964199cbeb67b2690bcba5fac54c714"
         },
         {
           "path": "LION/architecture/v1_5/FORMALIZATION_DRIFT_REGISTER.json",
@@ -2394,6 +2445,14 @@
         {
           "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_BASELINE_R1.json",
           "blob": "fdba370f241aa07b291486e200fe6c20894b4e20"
+        },
+        {
+          "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
+          "blob": "7ae01fb0530c41256be433b32532062255d90726"
+        },
+        {
+          "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_SEMANTIC_CLOUD_R1.json",
+          "blob": "f84f4ec36d475104318ddb0ed4342e72aaa9d9ed"
         },
         {
           "path": "LION/architecture/v1_5/MIGRATION_PLAN.md",
@@ -2440,6 +2499,14 @@
           "blob": "0cd81ccde130972896f055ed02e7a5df2df89585"
         },
         {
+          "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_PROBES.json",
+          "blob": "0a0ff2e967efb04189e2216793b2fcf155c88478"
+        },
+        {
+          "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json",
+          "blob": "d72ae01e4b07cd56093c5be87b06984386c90172"
+        },
+        {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_OWNER_SET.json",
           "blob": "0d6dd2ac9b99a9a8825cfdf2e94434759f505f11"
         },
@@ -2453,15 +2520,15 @@
         },
         {
           "path": "LION/architecture/v1_5/README.md",
-          "blob": "dab7e70ed9c6c573095b809b0a2c59bd0d97a2b7"
+          "blob": "d001ef73013c943271fda85b1bbbc82298128a95"
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
-          "blob": "ad6583d55aee343cffc0d93084429dd5a1fb259a"
+          "blob": "b5b619688aa32778d96f517ad27d2900598e818e"
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
-          "blob": "e215af5bebf6d9b72259ac5dd98ddda7b789c08f"
+          "blob": "f430a18d29b970a95aae7fd45cc78d36f247608d"
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_DOCUMENTATION_PLANS.json",
@@ -2469,7 +2536,7 @@
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
-          "blob": "f7130a63aae86d06b446e727a317a585b56e10b9"
+          "blob": "4dc025296ddf6f34ad4c3e990ba1fb81e27d2847"
         },
         {
           "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_COMMUNICATION_ENVELOPE_R1.json",
@@ -2478,6 +2545,10 @@
         {
           "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_FEDERATION_R1.json",
           "blob": "34c74bc57138b0882f3e0c5e88b6bd9316c8638a"
+        },
+        {
+          "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_SEMANTIC_CLOUD_R1.json",
+          "blob": "bd0b0caff3a849a0bcac545506d3695af2f9177e"
         },
         {
           "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_TASK2.json",
@@ -2492,6 +2563,30 @@
           "blob": "e662e7f3ed6cded38d12426c03b29e109bf19910"
         },
         {
+          "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_CONCEPT_MATRIX_R1.json",
+          "blob": "947aeb824450ae93bd9e572f8f6d62e493e10ea9"
+        },
+        {
+          "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_EVAL_RESULTS_R1.json",
+          "blob": "86e489ce7750eb13dfba9f18162b11d7e7e3c4e9"
+        },
+        {
+          "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_EXPERIMENT_PLAN_R1.json",
+          "blob": "97316ea174543c8d6359fdfec08f752803c97e61"
+        },
+        {
+          "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+          "blob": "4d29d39d8268965f79348d77da52395436d3fe4a"
+        },
+        {
+          "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json",
+          "blob": "6b87811e864865ec0ea15ae1a518c3bab7c34ac0"
+        },
+        {
+          "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_VERIFICATION_BUNDLE_R1.json",
+          "blob": "08086b2d6e1e91882d416336a881b3cf46af8858"
+        },
+        {
           "path": "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
           "blob": "a8d051bbc5ad193027fc823b2fccd90b718c66da"
         },
@@ -2501,7 +2596,7 @@
         },
         {
           "path": "LION/architecture/v1_5/TEST_CENSUS.json",
-          "blob": "0bf279296ef5960dd9cd7f59e75248ed64090c1c"
+          "blob": "3f0ec43bec17345df37a1a75d953c89ecffa15db"
         },
         {
           "path": "LION/architecture/v1_5/UNKNOWN_REGISTER.json",
@@ -2509,11 +2604,39 @@
         },
         {
           "path": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
-          "blob": "fca381fe11491c93028ded0051645f1a115df78e"
+          "blob": "abab3fc5c9810b28fc749bcac3a9e1e81cd02d5b"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_CENSUS.json",
+          "blob": "7479b935a5f04b518034983b6093d598ef0688af"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_GRAPH.json",
+          "blob": "34dc7b71a78390b8bfeccb8f8c9ae2f8542ba1cf"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_RECONCILIATION.json",
+          "blob": "33a8bc9188267bf959c846308bf9cc14542bb2ce"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+          "blob": "6dd92255ec61af2414b6ae46f811b05a2a736921"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/DOCUMENTATION_CURRENTNESS_MODEL.json",
+          "blob": "064b34e2143e74a66d63081ccd3168e352c9f19a"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/DOCUMENT_DERIVED_ARCHITECTURE.json",
+          "blob": "b3fa83be39cbd7ce9c27585504c81dedfa3db3fc"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/REPOSITORY_ROLE_MATRIX.json",
+          "blob": "60fd0f48494c043395cf447b72696a7358ec209d"
         },
         {
           "path": "LION/architecture/v1_5/semantic_owners.json",
-          "blob": "0e119e538148ee86cf2b9fc8bcd97231b0bf6089"
+          "blob": "1c07b94e2cf20ea9f2447e73922f56a9c39acd9d"
         },
         {
           "path": "LION/archive/E001/MANIFEST.json",
@@ -2589,7 +2712,7 @@
         },
         {
           "path": "LION/evals/evolution/evolution_cases.yaml",
-          "blob": "84d35c577518a5d3aed01f17135b24389b10405e"
+          "blob": "3a51eff16d522437730e1a56db495ea547938afa"
         },
         {
           "path": "LION/evals/retrieval/README.md",
@@ -3545,7 +3668,7 @@
         },
         {
           "path": "README.md",
-          "blob": "636ba84a557b8a4d44e4af5da4cf1374103e729b"
+          "blob": "c8c9bad67374fabe13be19e3d542a2f63143c939"
         },
         {
           "path": "browser_broker/.gitignore",
@@ -3641,7 +3764,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "10b816f6a643677fe6af2fec1885e6b98aa600bc"
+          "blob": "46e9d26cba916c5dfd10bbbb31695b25e5a056d9"
         },
         {
           "path": "cyber_lion/AGENTS.md",
@@ -3649,11 +3772,11 @@
         },
         {
           "path": "cyber_lion/CAPABILITY_MAP.md",
-          "blob": "268d3d012d9a617ad01f67a9d514bc039542d4c8"
+          "blob": "4491e1d5af1e6fbd1bc13d9534795ee420050eac"
         },
         {
           "path": "cyber_lion/CONTRACT_MAP.md",
-          "blob": "63058d4c96c5b3507a3f3d5e23299b0e14892db4"
+          "blob": "2cb528eb7a2d1b42235b3e5e9dab6bdfb34682a5"
         },
         {
           "path": "cyber_lion/EVENT_DATA_MODEL.md",
@@ -3869,7 +3992,7 @@
         },
         {
           "path": "cyber_lion/architecture_projection/full_architecture.py",
-          "blob": "57146c30c91501338c3c4a5e6151240b717bfad4"
+          "blob": "32d3e38ed429151fab9b15f7f1d231f7804bcaa0"
         },
         {
           "path": "cyber_lion/architecture_projection/full_plantuml.py",
@@ -3885,7 +4008,7 @@
         },
         {
           "path": "cyber_lion/architecture_projection/gap.py",
-          "blob": "2c4f6ff8ced756a1fa904569c634a6da4fa7e4ff"
+          "blob": "5a00e9e1c4466593226b595ceaa23ef804aabd81"
         },
         {
           "path": "cyber_lion/architecture_projection/layout.py",
@@ -4208,6 +4331,10 @@
           "blob": "9255068dcf9071946cd06a33748db513af9c4d3a"
         },
         {
+          "path": "cyber_lion/contracts/mission_intent.py",
+          "blob": "1ebeeb419582b45c2b42b9b3ce9f6dc9b2e52817"
+        },
+        {
           "path": "cyber_lion/contracts/model_call_v2.py",
           "blob": "ba1277da1ed2b0f117ac50ae0003e3c63025106f"
         },
@@ -4256,6 +4383,14 @@
           "blob": "1b9565924633c1300a3985bba624af20e1d78e83"
         },
         {
+          "path": "cyber_lion/contracts/query_plan.py",
+          "blob": "6168090c5e323ce512487258a134d579edb7d3f1"
+        },
+        {
+          "path": "cyber_lion/contracts/rag_context_envelope.py",
+          "blob": "951a3baf76784c4628d97f6e9c82b2229e045b34"
+        },
+        {
           "path": "cyber_lion/contracts/repository_expansion.py",
           "blob": "e0e43587790fe283e879eae8bd1fea87ec94d4c9"
         },
@@ -4290,6 +4425,18 @@
         {
           "path": "cyber_lion/contracts/runtime_reconciliation.py",
           "blob": "cb9c3d2d3c7487dbf4c382e4def31c7f33444c35"
+        },
+        {
+          "path": "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+          "blob": "dd569251571749d1ac1157005832043b8a0b6a9d"
+        },
+        {
+          "path": "cyber_lion/contracts/semantic_relevance.py",
+          "blob": "fd8ddcc9ad9e5e01fb2b9e61eea08d692ac9a954"
+        },
+        {
+          "path": "cyber_lion/contracts/semantic_scaffold.py",
+          "blob": "e6f03ed969653f18c26967f59000b0062f8bcbd9"
         },
         {
           "path": "cyber_lion/contracts/signed_events.py",
@@ -4645,7 +4792,7 @@
         },
         {
           "path": "cyber_lion/enterprise/federation.py",
-          "blob": "a994b71ae0beeddb0feb2fca5a021d863b882744"
+          "blob": "07de941ee5f41b636a2d6c180dd3612120b6c609"
         },
         {
           "path": "cyber_lion/enterprise/fleet_closure_preconditions_provider.py",
@@ -5181,7 +5328,7 @@
         },
         {
           "path": "cyber_lion/registry/repositories.json",
-          "blob": "4cb56ecaf33ad116fe7f2c51725b9d374008adc6"
+          "blob": "c3906319621273c32b5afbc290eb51d44f31abbd"
         },
         {
           "path": "cyber_lion/startup_agent/README.md",
@@ -5254,6 +5401,10 @@
         {
           "path": "cyber_lion/tests/experiments/bean_generativity.py",
           "blob": "236d8bcc03b02b00c809a6f9ec50e8769106340d"
+        },
+        {
+          "path": "cyber_lion/tests/experiments/semantic_cloud_r1.py",
+          "blob": "af0820fb5cb43638d31332d84c90f6b325cd2cce"
         },
         {
           "path": "cyber_lion/tests/formalization_test_support.py",
@@ -6005,7 +6156,7 @@
         },
         {
           "path": "cyber_lion/tests/test_host_authority_separation.py",
-          "blob": "fe0f256163d20126837d6fb6cce55f22812e74b8"
+          "blob": "52d91b40ec75c0ab061e8dce10edae09724b9e58"
         },
         {
           "path": "cyber_lion/tests/test_hybrid_routing.py",
@@ -6345,23 +6496,23 @@
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_permission_policy_reclassification.py",
-          "blob": "32c847787527f44ab462021118f3abc6c5d08fab"
+          "blob": "e180aa3713f0b6e6309be4c32d2f5948f34125f5"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_readonly_observer_falsification_runtime.py",
-          "blob": "80e96a47271b60b75666ee48574ceea241f780e6"
+          "blob": "52bb5b076ad2792bc0c7f99d8caea99575636765"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_runner_attested_execution_bridge.py",
-          "blob": "4adb61999d8eedfb3da5ca4c0571cdeeda4345ec"
+          "blob": "ef5bd0e00aec4a5e1cb160b6d9b840f4c398d455"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_same_connection_denial_carrier.py",
-          "blob": "81fc268368fdeb2fac3626c758317d4b8468f804"
+          "blob": "478a6eb68dea99875a02fcff5a3da622690a3a1b"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_seven_binding_chain.py",
-          "blob": "75b127b73675b298b7368e1ac3c4435107d0d5a4"
+          "blob": "eeaa479032fde596882ec7d7f803a80304f782a4"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_seven_closure_readiness.py",
@@ -6609,7 +6760,7 @@
         },
         {
           "path": "cyber_lion/tests/test_repository_manifest_architecture_knowledge.py",
-          "blob": "5b2ac3cc2147e278fc3cb483d85f0a220f71142f"
+          "blob": "9586daef3bbac67f0e2bf8985e5bb69870805b3d"
         },
         {
           "path": "cyber_lion/tests/test_repository_mutation_contract.py",
@@ -6708,6 +6859,10 @@
           "blob": "309477305f80fb581a5e966c6cbbdcd69fb4a958"
         },
         {
+          "path": "cyber_lion/tests/test_semantic_cloud_r1_experiment.py",
+          "blob": "1a1ad6eb8fcb20da9a7bdc257eabc5b6dff75890"
+        },
+        {
           "path": "cyber_lion/tests/test_signed_events.py",
           "blob": "bcc8d42d88409212bf739f6af193e77ff314b8a1"
         },
@@ -6793,7 +6948,7 @@
         },
         {
           "path": "cyber_lion/tests/test_v15_communication_envelope_formalization.py",
-          "blob": "b9100310cbfdcd768e8053ee2c5544e27390bca4"
+          "blob": "9492cd093babf541fd17cbe806c994a26b494703"
         },
         {
           "path": "cyber_lion/tests/test_v15_documentation_homeostasis.py",
@@ -6813,7 +6968,15 @@
         },
         {
           "path": "cyber_lion/tests/test_v15_global_repository_standardization.py",
-          "blob": "9c9c788e3cc28ccd2d1ae682b912ba6c37e411f3"
+          "blob": "c92b5101d0767a0c706fa27c2d0a42cf96a93440"
+        },
+        {
+          "path": "cyber_lion/tests/test_v15_semantic_cloud_contracts.py",
+          "blob": "9a7f67a46d5c8d89e60ce53c541dfc33abc76930"
+        },
+        {
+          "path": "cyber_lion/tests/test_v15_semantic_cloud_formalization.py",
+          "blob": "c381507763251d1e26fe52edda56d817d0a3154b"
         },
         {
           "path": "cyber_lion/tests/test_v15_task2_formalization.py",
@@ -7413,7 +7576,11 @@
         },
         {
           "path": "tools/lion_federated_architecture_knowledge.py",
-          "blob": "d6b3b164305da8cdba4da981cff3bbf81f01c8d4"
+          "blob": "782ab8f5aa65ae4bee201045e7e6ac1f6b25d5e1"
+        },
+        {
+          "path": "tools/lion_federation_snapshot.py",
+          "blob": "0ba8627e69ed7c389c816601bc0a5eea9084957d"
         },
         {
           "path": "tools/lion_firefox_broker_relay.py",
@@ -7424,8 +7591,12 @@
           "blob": "85dd3f798d3faae114b9c08ccc1059b7c9ca4056"
         },
         {
+          "path": "tools/lion_global_maintenance_projection.py",
+          "blob": "5c4816f095d87330bdffb3f92b81407ec98b37f7"
+        },
+        {
           "path": "tools/lion_global_repository_census.py",
-          "blob": "a1893d8faec34a7f062b8c8d3261d783033c6fff"
+          "blob": "02f07f68d7d10da76e94ab46add24c64c8f064df"
         },
         {
           "path": "tools/lion_k3s_pod_materializer.py",
@@ -7609,7 +7780,7 @@
         },
         {
           "path": "tools/p0_moon_attested_adjudication.py",
-          "blob": "14f68151c507bae0b404c75a7f2ee6df2fa2f9ef"
+          "blob": "ed2905dc65fe325ce9d40313ab0773acfcee7532"
         },
         {
           "path": "tools/p0_moon_attested_adjudication_contract.py",
@@ -7621,7 +7792,7 @@
         },
         {
           "path": "tools/p0_moon_readonly_observer_falsification.py",
-          "blob": "3c5e19fe8edba3482c64b112cd46cbef27eff4ca"
+          "blob": "27062acd12499e13e6e034b57913e3a6faf60112"
         },
         {
           "path": "tools/p0_moon_readonly_observer_falsification_contract.py",
@@ -7641,7 +7812,7 @@
         },
         {
           "path": "tools/p0_moon_same_connection_denial_carrier.py",
-          "blob": "909be37151ba8b382a217bd37f43f0895997ec93"
+          "blob": "4ab7d95bb8b7fe224aebac9e81ff19226e6b1909"
         },
         {
           "path": "tools/p0_moon_same_connection_denial_contract.py",
@@ -7657,7 +7828,7 @@
         },
         {
           "path": "tools/p0_moon_seven_binding.py",
-          "blob": "851e25d23a2eec39c8b15a3e141acedb6a47b468"
+          "blob": "ad36e806a5086dfaa59b8b360947f1c087babd03"
         },
         {
           "path": "tools/p0_moon_seven_binding_contract.py",
@@ -7689,7 +7860,7 @@
         },
         {
           "path": "tools/p0_surface_closure_campaign.py",
-          "blob": "8b945c75ff72c4f6170f89c6bfc70df09ae19b7d"
+          "blob": "da26f494223966d36b43d5ff4fba11ab956db5b9"
         },
         {
           "path": "tools/p0_surface_closure_campaign_contract.py",
@@ -7717,17 +7888,17 @@
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 1574,
-      "explicit_file_count": 1574,
+      "tracked_file_count": 1610,
+      "explicit_file_count": 1610,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
       "open_prs": 0,
-      "manifest_blob": "01df9eb1b66c728ffabe927c25229047d5914692",
+      "manifest_blob": "263674acf15c5d0e416a5e18960a1d95f6fac36c",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -7799,12 +7970,15 @@
           "global_owner": "DonkeyJJLove/ai_platform",
           "semantic_exports": [
             "process_semantics",
-            "hmk9d"
+            "hmk9d",
+            "semantic_transition_candidate",
+            "trajectory_semantics"
           ],
           "semantic_imports": [
             "architecture",
             "contracts",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -7901,7 +8075,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "01df9eb1b66c728ffabe927c25229047d5914692"
+          "blob": "263674acf15c5d0e416a5e18960a1d95f6fac36c"
         },
         {
           "path": "doc/9D_process_design.md",
@@ -7976,10 +8150,10 @@
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
       "open_prs": 0,
-      "manifest_blob": "da4a95b875934dc0ee3ce506d661ac74d3c561e2",
+      "manifest_blob": "65ebab16e3ff460e65395a072720be77638bb2c9",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -8058,12 +8232,15 @@
             "evolution_compiler",
             "delta_analysis",
             "invariants",
-            "structure_graph"
+            "structure_graph",
+            "semantic_invariant_validation",
+            "structural_delta_diagnostics"
           ],
           "semantic_imports": [
             "architecture",
             "contracts",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -8592,7 +8769,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "da4a95b875934dc0ee3ce506d661ac74d3c561e2"
+          "blob": "65ebab16e3ff460e65395a072720be77638bb2c9"
         },
         {
           "path": "delta/__init__.py",
@@ -9547,10 +9724,10 @@
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
       "open_prs": 0,
-      "manifest_blob": "546136c3b07d735ffeeba479c58e24d07a6c4cc1",
+      "manifest_blob": "cf61b0c762b4cc0199801d35ac2945bb110b94d3",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -9627,12 +9804,15 @@
           "semantic_exports": [
             "hypothesis_research",
             "experiment_design",
-            "falsification_evidence"
+            "falsification_evidence",
+            "hypothesis_candidate",
+            "falsifier_candidate"
           ],
           "semantic_imports": [
             "architecture",
             "formalization",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -9716,7 +9896,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "546136c3b07d735ffeeba479c58e24d07a6c4cc1"
+          "blob": "cf61b0c762b4cc0199801d35ac2945bb110b94d3"
         }
       ],
       "file_coverage_groups": [],
@@ -9727,10 +9907,10 @@
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
       "open_prs": 0,
-      "manifest_blob": "4eea6742a56ebee8afbd15873d0ac1ee84a16552",
+      "manifest_blob": "97a13ee3f7f491facff65bd15fbdf879ae9fc99b",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -9806,12 +9986,15 @@
           "semantic_exports": [
             "structure_graph",
             "topology_analysis",
-            "authority_graph"
+            "authority_graph",
+            "relevance_graph_candidate",
+            "topology_metrics"
           ],
           "semantic_imports": [
             "architecture",
             "contracts",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -9895,7 +10078,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "4eea6742a56ebee8afbd15873d0ac1ee84a16552"
+          "blob": "97a13ee3f7f491facff65bd15fbdf879ae9fc99b"
         },
         {
           "path": "mosaic_lab_pro.py",
@@ -9910,10 +10093,10 @@
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
       "open_prs": 0,
-      "manifest_blob": "876091da85b29f0c636e666e7b7fc017b575b15f",
+      "manifest_blob": "2821a5aa677ab77fee56390d5e30ce41856118e5",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -9990,12 +10173,15 @@
           "semantic_exports": [
             "artifact_identity",
             "supply_chain_provenance",
-            "composition_risk_evidence"
+            "composition_risk_evidence",
+            "artifact_provenance",
+            "lineage_binding"
           ],
           "semantic_imports": [
             "architecture",
             "contracts",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -10096,7 +10282,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "876091da85b29f0c636e666e7b7fc017b575b15f"
+          "blob": "2821a5aa677ab77fee56390d5e30ce41856118e5"
         },
         {
           "path": "docs/01_AID_CONTRACT.md",
@@ -10203,10 +10389,10 @@
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
       "open_prs": 0,
-      "manifest_blob": "9a4f210781cca998b0f8ff80df5d8fc5dd0a24a7",
+      "manifest_blob": "ee08046027d7a5113b2d88e3e97d2d42c31a6b47",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -10286,13 +10472,16 @@
             "execution_mesh",
             "workload_runtime",
             "telemetry",
-            "capability_lease_runtime"
+            "capability_lease_runtime",
+            "cognitive_workload_candidate",
+            "runtime_telemetry"
           ],
           "semantic_imports": [
             "architecture",
             "authority",
             "contracts",
-            "currentness"
+            "currentness",
+            "semantic_relevance"
           ],
           "repository_dependencies": [
             "DonkeyJJLove/ai_platform"
@@ -10486,7 +10675,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "9a4f210781cca998b0f8ff80df5d8fc5dd0a24a7"
+          "blob": "ee08046027d7a5113b2d88e3e97d2d42c31a6b47"
         },
         {
           "path": "drones/Dockerfile",
@@ -10773,10 +10962,10 @@
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
-      "tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
+      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
       "open_prs": 0,
-      "manifest_blob": "850bf67229e229cd933d8e9cc52744c60645b7ec",
+      "manifest_blob": "8e4cb03a8d4b96d30d7d28376c3a8d0d560f94dd",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -10848,7 +11037,10 @@
           "semantic_exports": [
             "research_corpus",
             "evidence_source",
-            "publication"
+            "publication",
+            "semantic_cloud_research",
+            "semantic_control_research",
+            "hcl_evidence"
           ],
           "semantic_imports": [
             "architecture",
@@ -10892,6 +11084,11 @@
             {
               "path": "REPOSITORY_STANDARDIZATION_R1.json",
               "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "badania/lion-semantic-cloud/README.md",
+              "class": "RESEARCH_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
             }
           ],
@@ -11011,7 +11208,7 @@
         },
         {
           "path": "README.md",
-          "blob": "a5b1e36616f4a88a998b2013bc6e17ffbd248b85"
+          "blob": "37dafe507d3b64bf1822522957aa713dc923459c"
         },
         {
           "path": "REPOSITORY_AUDIT_2026-08-18.md",
@@ -12595,7 +12792,7 @@
         },
         {
           "path": "badania/README.md",
-          "blob": "87951181e0cdc01c305119640cb6eb59602b1dce"
+          "blob": "ee0dd9843b7df45680b80f39c996619a68846002"
         },
         {
           "path": "\"badania/RFC-LOCI-CS-1_ Sformalizowanie i rozwini\\304\\231cie znak\\303\\263w steruj\\304\\205cych jako DSL sterowania.pdf\"",
@@ -13770,8 +13967,88 @@
           "blob": "7a5a3b59a442d31c68035461e15e8d532b39289d"
         },
         {
+          "path": "badania/lion-semantic-cloud/EVIDENCE_INDEX.json",
+          "blob": "b8aae802ac5a897a72f212a4a668e36dcac2b639"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/EXPERIMENT_MATRIX.json",
+          "blob": "d809178831dfabfc960280ee6c897360c530b1a0"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/FEDERATION_RESEARCH_BINDING.json",
+          "blob": "d8bcbd915e074aee05f17a027df9b9739b804155"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/HYPOTHESIS_REGISTER.json",
+          "blob": "8d18ef10c0730cc0a3d486ebc80bcca93c78aeca"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/README.md",
+          "blob": "628f68a6f7cf642e2a1cc25ebff85300662fc879"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/RESEARCH_PROGRAM.md",
+          "blob": "a8e900fa9c9ba0b8a00669707a86820254368f3f"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/baselines/HCL_4_3_3_BINDING.json",
+          "blob": "58ac13dded402654c788e4b1a2907ae8a6cf4486"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-01_RELEVANCE_COMPRESSION.md",
+          "blob": "142e96698e2794e1085525b9e5be5a36c9a05b01"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-02_SEMANTIC_DELTA_COMMUNICATION.md",
+          "blob": "725a497f86ba0d54808ee246faf941c6a73d0028"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-03_DYNAMIC_AGENT_FORMATION.md",
+          "blob": "42304f28598810e1686463f5df993e9a0ba330cb"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-04_RELATION_ABLATION.md",
+          "blob": "7727230a46c63604b2501feb4858bf846e93022b"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-05_FALSE_CONSENSUS.md",
+          "blob": "301d97388a1db91f056f5a4d4337f49220c804ef"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-06_TEMPORAL_SUPERSESSION.md",
+          "blob": "606746824af51baec2ed1ed0852950cd55e26bdc"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-07_RELEVANCE_ATTACK.md",
+          "blob": "0a573de29f2ae8047134ea1090e8a9c28a75204a"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-08_COLLECTIVE_DECISION.md",
+          "blob": "cac3c5941e0665e759b22663bb838f3b8144c8a3"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-09_NOVEL_CAPABILITY.md",
+          "blob": "392d3e41f7ec42e594a456f559448892857f50f9"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-10_YOKE_CLOSURE.md",
+          "blob": "541999554e82b299e751bb2f0b886cff2ba13c62"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-11_CROSS_MODEL.md",
+          "blob": "2d06e7ba524acca48423f688cb14453a45b84176"
+        },
+        {
+          "path": "badania/lion-semantic-cloud/protocols/SC-12_MECHANISTIC_INTERVENTION.md",
+          "blob": "3815033290afe977046b3a43f0e1678999be8a23"
+        },
+        {
           "path": "badania/oczy_kasyno_study_v1_with_writeup.zip",
           "blob": "4bda5e6190d3d1dba8405a2eece2ccc01be6eef0"
+        },
+        {
+          "path": "badania/semantic_compilers/sfc_v1.prompt",
+          "blob": "468141367626a00f88dfc723d374ec7402b2dc98"
         },
         {
           "path": "blackbox_w_kosmosie.md",
@@ -13783,7 +14060,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "850bf67229e229cd933d8e9cc52744c60645b7ec"
+          "blob": "8e4cb03a8d4b96d30d7d28376c3a8d0d560f94dd"
         },
         {
           "path": "cybersecurity-evolusion.md",
@@ -13975,8 +14252,8 @@
           "coverage_semantics": "ALL_TRACKED_FILES_UNDER_PREFIX_AT_BOUND_HEAD"
         }
       ],
-      "tracked_file_count": 77632,
-      "explicit_file_count": 763,
+      "tracked_file_count": 77652,
+      "explicit_file_count": 783,
       "coverage_group_file_count": 76869
     }
   ]

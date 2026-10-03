@@ -1,6 +1,6 @@
 {
   "schema": "lion.documentation.semantic-owner-map.v1",
-  "baseline_head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+  "baseline_head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
   "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
   "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
   "owners": [

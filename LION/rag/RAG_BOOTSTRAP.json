@@ -19,5 +19,8 @@
   "v15_federated_architecture_note": "Federated architecture inputs extend candidate retrieval/discoverability only. They do not replace preferred_release, live Git/runtime reacquisition, authority or final carrier currentness.",
   "v15_communication_envelope_source_set": "LION/architecture/v1_5/RAG_V15_COMMUNICATION_ENVELOPE_SOURCE_SET.json",
   "v15_communication_envelope_currentness": "CURRENT_CANDIDATE_SOURCE_CLOSED",
-  "v15_communication_envelope_note": "CommunicationEnvelope retrieval inputs are exact-candidate sidecars. They do not replace preferred_release, live reacquisition, authority, transport/delivery state or truth carriers."
+  "v15_communication_envelope_note": "CommunicationEnvelope retrieval inputs are exact-candidate sidecars. They do not replace preferred_release, live reacquisition, authority, transport/delivery state or truth carriers.",
+  "v15_semantic_cloud_source_set": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json",
+  "v15_semantic_cloud_currentness": "CURRENT_INTEGRATED_SOURCE_CLOSED",
+  "v15_semantic_cloud_note": "Semantic Cloud retrieval inputs are integrated non-authoritative sidecars. They do not replace preferred_release, live Git/runtime reacquisition, Action/PDP authority, or truth-carrier currentness."
 }

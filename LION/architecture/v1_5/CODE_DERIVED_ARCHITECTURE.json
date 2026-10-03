@@ -1,9 +1,9 @@
 {
   "schema": "lion.code-derived-architecture/v1",
-  "projection_input_tree": "bbd0942fe9615b4767d5f3671fcdcb37e1acc3b1",
+  "projection_input_tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
   "source_repository": "DonkeyJJLove/ai_platform",
-  "generated_at": "2026-10-03T09:51:58+02:00",
-  "model_digest": "e2ec347c487a6bae33f6e874059f99b0a745012deeb807e76fc2350ec3175d78",
+  "generated_at": "2026-10-03T14:59:32.785225+00:00",
+  "model_digest": "7b02c809c64885cd00bdc6e737619bb1c202c97fe39e824994072a40cec1636c",
   "derived_only": true,
   "authority_effect": "NONE",
   "runtime_evidence": "NONE",
@@ -298,6 +298,22 @@
       "target_ref": ""
     },
     {
+      "element_id": "mission-intent",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "Immutable non-effectful mission intent",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Immutable non-effectful mission intent",
+        "source_path": "cyber_lion/contracts/mission_intent.py",
+        "symbol": "MissionIntent",
+        "source_digest": "1cca9c43a4f8705eedaad2e31cdc93ce0d6ecc605860a206665c3fc95076e6c5"
+      },
+      "source_path": "cyber_lion/contracts/mission_intent.py",
+      "symbol": "MissionIntent",
+      "target_ref": ""
+    },
+    {
       "element_id": "model-call-v2",
       "layer": "FLEET_AND_SWARM",
       "label": "Model call v2 provenance",
@@ -394,6 +410,38 @@
       "target_ref": ""
     },
     {
+      "element_id": "query-plan",
+      "layer": "EVOLUTIONARY_EPOCH",
+      "label": "Intent-bound non-effectful query plan",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Intent-bound non-effectful query plan",
+        "source_path": "cyber_lion/contracts/query_plan.py",
+        "symbol": "QueryPlan",
+        "source_digest": "21f3afd63516c8d50dadde295a806e7b822bb07ead22602b3cd01d2b19c5967d"
+      },
+      "source_path": "cyber_lion/contracts/query_plan.py",
+      "symbol": "QueryPlan",
+      "target_ref": ""
+    },
+    {
+      "element_id": "rag-context-envelope",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Source/currentness-bound retrieved context",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Source/currentness-bound retrieved context",
+        "source_path": "cyber_lion/contracts/rag_context_envelope.py",
+        "symbol": "RagContextEnvelope",
+        "source_digest": "91d4e0567752bc73eb440eb8352911fdf581cb349d85d41e865fa6038daaa8fc"
+      },
+      "source_path": "cyber_lion/contracts/rag_context_envelope.py",
+      "symbol": "RagContextEnvelope",
+      "target_ref": ""
+    },
+    {
       "element_id": "repository-mutation",
       "layer": "REPOSITORY_MUTATION",
       "label": "Repository mutation reference path",
@@ -407,6 +455,54 @@
       },
       "source_path": "cyber_lion/enterprise/repository_mutation_pep.py",
       "symbol": "RepositoryMutationPEP",
+      "target_ref": ""
+    },
+    {
+      "element_id": "semantic-cloud-episode",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Read-only semantic-cloud to EBLE episode binding",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Read-only semantic-cloud to EBLE episode binding",
+        "source_path": "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+        "symbol": "SemanticCloudEpisodeBinding",
+        "source_digest": "2b3243dee3b96ad26455a4554f098e5033088889d7d09fe1d90bf158cf41e38b"
+      },
+      "source_path": "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+      "symbol": "SemanticCloudEpisodeBinding",
+      "target_ref": ""
+    },
+    {
+      "element_id": "semantic-relevance",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Semantic atoms, deltas, relevance graph and projections",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Semantic atoms, deltas, relevance graph and projections",
+        "source_path": "cyber_lion/contracts/semantic_relevance.py",
+        "symbol": "RelevanceGraph",
+        "source_digest": "1382ce4980d697d792c652fd616c8b2faccac2efe6b91726a6a5c16586f52553"
+      },
+      "source_path": "cyber_lion/contracts/semantic_relevance.py",
+      "symbol": "RelevanceGraph",
+      "target_ref": ""
+    },
+    {
+      "element_id": "semantic-scaffold",
+      "layer": "EVIDENCE_AND_EPISTEMIC_PLANE",
+      "label": "Semantic Inference Compiler scaffold IR",
+      "status": {
+        "status": "CONTRACT_ONLY",
+        "evidence_class": "LIVE_CODE",
+        "rationale": "source-bound E005 classification for Semantic Inference Compiler scaffold IR",
+        "source_path": "cyber_lion/contracts/semantic_scaffold.py",
+        "symbol": "SemanticScaffoldIR",
+        "source_digest": "cc7b8a107bc6eb712e9da2e416285675bc16aa93d4a0fec41ee8e7c4ac207862"
+      },
+      "source_path": "cyber_lion/contracts/semantic_scaffold.py",
+      "symbol": "SemanticScaffoldIR",
       "target_ref": ""
     },
     {
@@ -820,13 +916,85 @@
       "target_id": "CommunicationEnvelope",
       "status": "CONTRACT_ONLY",
       "missing_contract": "",
-      "missing_runtime": "existing operator/group-channel stores and transports remain operational owners; this candidate adds no runtime adapter",
+      "missing_runtime": "existing operator/group-channel stores and transports remain operational owners; this contract adds no runtime adapter",
       "missing_observation": "",
       "missing_authority_boundary": "",
       "missing_complete_mediation": "",
-      "next_minimal_gap": "define MissionIntent over stable communication/cognitive refs without changing transport or authority ownership",
+      "next_minimal_gap": "MissionIntent is the next semantic successor; transport and authority ownership remain unchanged",
       "evidence_class": "EXACT_GIT_STATE",
       "evidence_ref": "cyber_lion/contracts/communication_envelope.py"
+    },
+    {
+      "target_id": "MissionIntent",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "intent identity is non-effectful and does not invoke cognition or tools",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "bind QueryPlan to exact MissionIntent identity",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/mission_intent.py"
+    },
+    {
+      "target_id": "QueryPlan",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "query planning does not execute retrieval",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "bind retrieved evidence/currentness through RagContextEnvelope",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/query_plan.py"
+    },
+    {
+      "target_id": "RagContextEnvelope",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "RAG context remains versioned evidence input and not live truth",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "compile explicit SemanticScaffoldIR from intent, query and evidence",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/rag_context_envelope.py"
+    },
+    {
+      "target_id": "SemanticScaffoldIR",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "semantic scaffold is representation only and ends before authority/effect",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "derive SemanticDelta/RelevanceGraph/RelevanceProjection and validate no-effect qualification",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/semantic_scaffold.py"
+    },
+    {
+      "target_id": "SemanticRelevance",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "relevance organization has no scheduler or execution owner",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "bind relevance projection to existing CapabilityNeed/Composition/Mosaic without authority widening",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/semantic_relevance.py"
+    },
+    {
+      "target_id": "SemanticCloudEpisodeBinding",
+      "status": "CONTRACT_ONLY",
+      "missing_contract": "",
+      "missing_runtime": "read-only research lineage binding; EBLE and EvolutionaryRnD remain evidence owners",
+      "missing_observation": "",
+      "missing_authority_boundary": "",
+      "missing_complete_mediation": "",
+      "next_minimal_gap": "qualify external multi-agent experiments and independent replication",
+      "evidence_class": "EXACT_GIT_STATE",
+      "evidence_ref": "cyber_lion/contracts/semantic_cloud_episode_binding.py"
     },
     {
       "target_id": "CognitiveInvocation",
@@ -971,6 +1139,79 @@
       "next_minimal_gap": "enumerate consequential effect surfaces",
       "evidence_class": "",
       "evidence_ref": ""
+    }
+  ],
+  "layout": [
+    {
+      "plane": "WORLD_AND_GOALS",
+      "rank": 0,
+      "layers": [
+        "SYSTEM_CONTEXT",
+        "TARGET_BEAN_FACTORY"
+      ]
+    },
+    {
+      "plane": "EVIDENCE_AND_REASONING",
+      "rank": 1,
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE",
+        "CODE_PERCEPTION"
+      ]
+    },
+    {
+      "plane": "EVOLUTION",
+      "rank": 2,
+      "layers": [
+        "EVOLUTIONARY_EPOCH",
+        "STARTUP_EVOLUTION"
+      ]
+    },
+    {
+      "plane": "ORGANIZATION_AND_FLEET",
+      "rank": 3,
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "plane": "AUTHORITY_AND_GOVERNANCE",
+      "rank": 4,
+      "layers": [
+        "CONSTITUTION_AND_GOVERNANCE",
+        "AUTHORITY_AND_EFFECT"
+      ]
+    },
+    {
+      "plane": "BUILD_AND_IMPLEMENTATION",
+      "rank": 5,
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION",
+        "REPOSITORY_MUTATION",
+        "ARCHITECTURE_PROJECTION"
+      ]
+    },
+    {
+      "plane": "TRUSTED_RUNTIME",
+      "rank": 6,
+      "layers": [
+        "TRUSTED_RUNTIME",
+        "QUARANTINED_AND_NONCANONICAL"
+      ]
+    },
+    {
+      "plane": "EFFECT",
+      "rank": 7,
+      "layers": [
+        "AUTHORITY_AND_EFFECT",
+        "REPOSITORY_MUTATION"
+      ]
+    },
+    {
+      "plane": "OBSERVATION_AND_RECONCILIATION",
+      "rank": 8,
+      "layers": [
+        "OBSERVABILITY_AND_RECONCILIATION"
+      ]
     }
   ]
 }
