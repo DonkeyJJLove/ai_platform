@@ -12,6 +12,7 @@ from cyber_lion.contracts.formalization_manifest_types import (
 from cyber_lion.contracts.formalization_registry import FormalizationRegistry
 from cyber_lion.contracts.repository_expansion import FleetBaseline,RegisteredRepository,RepositoryBaseline,RepositoryDependencyEdge
 from cyber_lion.contracts.federated_formalization_binding import FederatedFormalizationBinding,RepositoryFormalizationDisposition
+from cyber_lion.contracts.formalization_closure import FormalizationClosureRecord,CandidateBinding,ArtifactResult,GateResult
 
 ROOT=Path(__file__).resolve().parents[2]
 V15=ROOT/"LION/architecture/v1_5"
@@ -149,6 +150,34 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
         cases=json.loads((ROOT/"LION/evals/evolution/evolution_cases.yaml").read_text(encoding="utf-8"))["cases"]
         ids={x["id"] for x in cases}
         self.assertTrue(set(manifest().evals_required)<=ids)
+
+    def test_interim_closure_is_explicitly_blocked_not_false_pass(self):
+        raw=load("FORMALIZATION_CLOSURE_RECORD_SEMANTIC_CLOUD_R1.json")
+        afm=manifest(); reg=registry()
+        closure=FormalizationClosureRecord(
+            closure_id=raw["closure_id"],
+            candidate=CandidateBinding(**raw["candidate"]),
+            formalization_manifest_digest=raw["formalization_manifest_digest"],
+            artifact_results=tuple(ArtifactResult(
+                x["artifact_id"],x["classification"],x["state"],tuple(x["evidence_refs"])
+            ) for x in raw["artifact_results"]),
+            semantic_owner_uniqueness=raw["semantic_owner_uniqueness"],
+            catalog_coverage=raw["catalog_coverage"],
+            discoverability_result=raw["discoverability_result"],
+            rag_result=raw["rag_result"],
+            required_test_results=tuple(GateResult(x["id"],x["result"],tuple(x["evidence_refs"])) for x in raw["required_test_results"]),
+            required_eval_results=tuple(GateResult(x["id"],x["result"],tuple(x["evidence_refs"])) for x in raw["required_eval_results"]),
+            currentness_result=raw["currentness_result"],
+            unknowns=tuple(raw["unknowns"]),
+            decision=raw["decision"],
+            authority_effect=raw["authority_effect"],
+            closure_digest=raw["closure_digest"],
+            schema_id=raw["schema_id"],
+        ).validate(afm,reg)
+        self.assertEqual(closure.decision,"BLOCKED")
+        self.assertTrue(closure.unknowns)
+        self.assertEqual(closure.currentness_result,"STALE")
+        self.assertNotEqual(closure.rag_result,"PASS")
 
     def test_rag_candidate_does_not_claim_live_truth(self):
         source=load("RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json")

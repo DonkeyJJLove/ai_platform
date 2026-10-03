@@ -1,0 +1,50 @@
+{
+  "schema": "lion.semantic-cloud.verification-bundle/v1",
+  "candidate": {
+    "head": "5f5ccfcde42978f0b543bba51d921d6e134e7221",
+    "tree": "a53b903ca9706ef13c17c9957ffc4fe07f55f62e",
+    "branch": "research/semantic-cloud-r1",
+    "candidate_digest": "b0e2bfbc1dff29d5f67adf86d06e2ec6737b49045bd3176f21b0203ef08474e7"
+  },
+  "tree_equivalence": {
+    "tested_local_head": "b024e5fb1e26ce0a6cd12dfb2de039cc4e322799",
+    "tested_tree": "a53b903ca9706ef13c17c9957ffc4fe07f55f62e",
+    "remote_candidate_tree": "a53b903ca9706ef13c17c9957ffc4fe07f55f62e",
+    "result": "PASS"
+  },
+  "tests": [
+    {
+      "command": "python -m unittest discover -s cyber_lion/tests -p test*.py",
+      "result": "PASS",
+      "tests": 3566,
+      "skipped": 6,
+      "seconds": 145.594,
+      "tree": "a53b903ca9706ef13c17c9957ffc4fe07f55f62e"
+    },
+    {
+      "command": "python -m unittest cyber_lion.tests.test_v15_semantic_cloud_formalization",
+      "result": "PASS",
+      "tests": 7,
+      "tree": "a53b903ca9706ef13c17c9957ffc4fe07f55f62e"
+    }
+  ],
+  "effect_surface": {
+    "source_count": 376,
+    "surface_count": 519,
+    "unclassified_count": 6,
+    "scan_digest": "e40809017eaff04b340d8cb6d20173f7d3ebf416dba1c05717dd4fb5e2d56379",
+    "interpretation": "six new production-source modules changed source inventory but added no effect surface"
+  },
+  "manifest_parser": {
+    "federation_manifests_validated": 10,
+    "result": "PASS"
+  },
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "open_formalization": [
+    "architecture projections/reconciliation",
+    "currentness carriers",
+    "cross-thread peer candidate handoff"
+  ],
+  "verification_digest": "80a0d941ebf82b24db1b4b6496e54f60dc05fbae45932bc80049a5b0a3d2b689"
+}
