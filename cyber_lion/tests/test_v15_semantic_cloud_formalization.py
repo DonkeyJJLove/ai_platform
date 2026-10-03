@@ -96,6 +96,20 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
             {"MissionIntent","QueryPlan","RagContextEnvelope","SemanticScaffold","SemanticRelevance"},
         )
 
+    def test_contract_catalog_contains_semantic_cloud_contracts(self):
+        catalog=json.loads((ROOT/"LION/architecture/v1_4/contract_catalog.json").read_text(encoding="utf-8"))
+        ids={x["contract_id"] for x in catalog["contracts"]}
+        self.assertTrue({
+            "mission-intent","query-plan","rag-context-envelope",
+            "semantic-scaffold","semantic-relevance","semantic-cloud-episode-binding",
+        }<=ids)
+        for row in catalog["contracts"]:
+            if row["contract_id"] in {
+                "mission-intent","query-plan","rag-context-envelope",
+                "semantic-scaffold","semantic-relevance","semantic-cloud-episode-binding",
+            }:
+                self.assertIn("NON_EFFECTFUL",row["compatibility_status"])
+
     def test_required_evals_exist(self):
         cases=json.loads((ROOT/"LION/evals/evolution/evolution_cases.yaml").read_text(encoding="utf-8"))["cases"]
         ids={x["id"] for x in cases}
