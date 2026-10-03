@@ -1,6 +1,6 @@
 {
   "schema": "lion.architecture-reconciliation/v1",
-  "federation_digest": "855e5782b113a9381949fac3f0bb30c412c929737f2507b324d2e02202b32d0c",
+  "federation_digest": "3100707845afec1cfdb2a9fe0349ad363558ea743aedf89b8e803fcc21026e70",
   "results": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -31,11 +31,20 @@
     },
     {
       "repository": "DonkeyJJLove/HA2D",
-      "concept": "readme.md",
+      "concept": "README.md",
       "classification": "ALIGNED_CURRENT",
       "evidence_refs": [
         "DonkeyJJLove/HA2D:cyber-lion.repository.json",
-        "DonkeyJJLove/HA2D:readme.md"
+        "DonkeyJJLove/HA2D:README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+        "DonkeyJJLove/HA2D:REPOSITORY_STANDARDIZATION_R1.json"
       ]
     },
     {
@@ -81,6 +90,15 @@
       "evidence_refs": [
         "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
         "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej:REPOSITORY_STANDARDIZATION_R1.json"
       ]
     },
     {
@@ -354,6 +372,15 @@
       ]
     },
     {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json"
+      ]
+    },
+    {
       "repository": "DonkeyJJLove/chunk-chunk",
       "concept": "AGENTS.md",
       "classification": "ALIGNED_CURRENT",
@@ -396,6 +423,15 @@
       "evidence_refs": [
         "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
         "DonkeyJJLove/chunk-chunk:hmk9d_protocol.yaml"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+        "DonkeyJJLove/chunk-chunk:REPOSITORY_STANDARDIZATION_R1.json"
       ]
     },
     {
@@ -444,6 +480,15 @@
       ]
     },
     {
+      "repository": "DonkeyJJLove/glitchlab",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+        "DonkeyJJLove/glitchlab:REPOSITORY_STANDARDIZATION_R1.json"
+      ]
+    },
+    {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "concept": "AGENTS.md",
       "classification": "ALIGNED_CURRENT",
@@ -480,6 +525,15 @@
       ]
     },
     {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM:REPOSITORY_STANDARDIZATION_R1.json"
+      ]
+    },
+    {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "concept": "AGENTS.md",
       "classification": "ALIGNED_CURRENT",
@@ -508,11 +562,20 @@
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
-      "concept": "README.MD",
+      "concept": "README.md",
       "classification": "ALIGNED_CURRENT",
       "evidence_refs": [
         "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
-        "DonkeyJJLove/mosaic_lab_pro.py:README.MD"
+        "DonkeyJJLove/mosaic_lab_pro.py:README.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+        "DonkeyJJLove/mosaic_lab_pro.py:REPOSITORY_STANDARDIZATION_R1.json"
       ]
     },
     {
@@ -558,6 +621,15 @@
       "evidence_refs": [
         "DonkeyJJLove/sbom:cyber-lion.repository.json",
         "DonkeyJJLove/sbom:docs/01_AID_CONTRACT.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/sbom:cyber-lion.repository.json",
+        "DonkeyJJLove/sbom:REPOSITORY_STANDARDIZATION_R1.json"
       ]
     },
     {
@@ -615,6 +687,15 @@
       ]
     },
     {
+      "repository": "DonkeyJJLove/swarm",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/swarm:cyber-lion.repository.json",
+        "DonkeyJJLove/swarm:REPOSITORY_STANDARDIZATION_R1.json"
+      ]
+    },
+    {
       "repository": "DonkeyJJLove/writeups",
       "concept": "AGENTS.md",
       "classification": "ALIGNED_CURRENT",
@@ -669,17 +750,26 @@
       ]
     },
     {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:REPOSITORY_STANDARDIZATION_R1.json"
+      ]
+    },
+    {
       "repository": "DonkeyJJLove/ai_platform",
       "concept": "CODE_DERIVED_ARCHITECTURE.json#projection_input_tree",
       "classification": "ALIGNED_CURRENT",
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-        "DonkeyJJLove/ai_platform:tree:38781e883d27c4df197488026e7d91b857fb41be"
+        "DonkeyJJLove/ai_platform:tree:861090931c0fac6ad980d91e60d660acb0512cdc"
       ]
     }
   ],
   "contradictions": [],
   "unknowns": [],
   "authority_effect": "NONE",
-  "reconciliation_digest": "50fcd904f8a2eef81b3a55686b47ff78de01fe1b40a11c83d19e74664642a03f"
+  "reconciliation_digest": "aea76d9ac05710519ffb9661d319b9a28d9e870bf67f6d26f69cd0d6e4030e18"
 }

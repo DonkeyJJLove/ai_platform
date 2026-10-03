@@ -1,561 +1,12 @@
 {
   "schema": "lion.branch-reconciliation/v1",
-  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1",
+  "generator": "tools/lion_global_maintenance_projection.py",
+  "invalidators": [
+    "REPOSITORY_CONTENT_CHANGE",
+    "DEPENDENCY_CHANGE"
+  ],
+  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1-FINAL",
   "rows": [
-    {
-      "repository": "DonkeyJJLove/ai_platform",
-      "default_branch": "master",
-      "branch": "fix/v15-documentation-homeostasis-r1",
-      "head": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "tree": "609db37122434fcc293a936cb9949353d94bb73e",
-      "merge_base": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "ahead_by": 0,
-      "behind_by": 0,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/ai_platform",
-      "default_branch": "master",
-      "branch": "master",
-      "head": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "tree": "609db37122434fcc293a936cb9949353d94bb73e",
-      "merge_base": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "ahead_by": 0,
-      "behind_by": 0,
-      "classification": "ACTIVE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/ai_platform",
-      "default_branch": "master",
-      "branch": "mission/v15-communication-envelope-successor-r1",
-      "head": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "tree": "609db37122434fcc293a936cb9949353d94bb73e",
-      "merge_base": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "ahead_by": 0,
-      "behind_by": 0,
-      "classification": "HISTORICAL_EVIDENCE",
-      "default_branch_references": [
-        "LION/architecture/v1_5/FORMALIZATION_CANDIDATE_IDENTITY_COMMUNICATION_ENVELOPE_R1.json"
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "actions-health/20260819",
-      "head": "f8ba907fc69c0952462c9d5bb7138c233282c7cc",
-      "tree": "b7df7150bd79524f398aa0dd0d03ad344b02fcfa",
-      "merge_base": "9aaab213fb009f6de6a84456b95c5213a19bc9f9",
-      "ahead_by": 1,
-      "behind_by": 4,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 6,
-          "merged_at": "2026-08-19T08:44:40Z",
-          "closed_at": "2026-08-19T08:44:40Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "ai-native/enterprise-roadmap-20260818",
-      "head": "7ce665b52d0fe17721b1e247f105558c7866b9fb",
-      "tree": "b80bd942983622ff33639438d160d06cc2a18c97",
-      "merge_base": "12e6dbf0c3431a97ee70be62d8575b75ecf71ab4",
-      "ahead_by": 2,
-      "behind_by": 6,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 5,
-          "merged_at": "2026-08-18T16:25:07Z",
-          "closed_at": "2026-08-18T16:25:07Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "ci/node24-actions-20260819",
-      "head": "b99a1608764bceb52a733e9b4b2e7a522ed51334",
-      "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
-      "merge_base": "ab3d6a30584647d201f5568f1ae18fa1f5ad0018",
-      "ahead_by": 1,
-      "behind_by": 3,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 7,
-          "merged_at": "2026-08-19T09:30:26Z",
-          "closed_at": "2026-08-19T09:30:26Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "codex/propose-fix-for-exposed-env-identifiers",
-      "head": "1be8e70c8dfdabad8f6a927be63814b748ada1b0",
-      "tree": "74e9512c606c604ce94184fb6083ff52c9ca0137",
-      "merge_base": "b71a1d69b912f3cb9d793ef433573fb7e77ae6e8",
-      "ahead_by": 1,
-      "behind_by": 11,
-      "classification": "SUPERSEDED",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 2,
-          "merged_at": null,
-          "closed_at": "2026-08-18T16:28:00Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "codex/propose-fix-for-exposed-env-identifiers-4lnubf",
-      "head": "3c74201063b37adb8aeb25b255915ece4b8c3a3a",
-      "tree": "a6433e5a3f338c46501e2aa9a2114aa4f6d26eab",
-      "merge_base": "3c74201063b37adb8aeb25b255915ece4b8c3a3a",
-      "ahead_by": 0,
-      "behind_by": 7,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "codex/propose-fix-for-telemetry-disclosure-vulnerability",
-      "head": "5ee6d8b49017e7460f10d67dde63234a1c0f81d6",
-      "tree": "3ef22a43701d9418a8eb3aff40340e3aefdaca4a",
-      "merge_base": "5ee6d8b49017e7460f10d67dde63234a1c0f81d6",
-      "ahead_by": 0,
-      "behind_by": 10,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "master",
-      "head": "793d6f7fdd249f11ab872bc264700124fc573e67",
-      "tree": "2ca47b55d5f71e603f2037367a4a825c2745bd55",
-      "merge_base": "793d6f7fdd249f11ab872bc264700124fc573e67",
-      "ahead_by": 0,
-      "behind_by": 0,
-      "classification": "ACTIVE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/chunk-chunk",
-      "default_branch": "master",
-      "branch": "process-upgrade-20260818",
-      "head": "9e1bcc723ffcef4327cfa48ff003b4131b60bd30",
-      "tree": "9d74a03b59c9a7f28352ef22d776f4713069d5f8",
-      "merge_base": "12e6dbf0c3431a97ee70be62d8575b75ecf71ab4",
-      "ahead_by": 4,
-      "behind_by": 6,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-18T16:20:39Z",
-          "closed_at": "2026-08-18T16:20:39Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "ai-native/enterprise-roadmap-20260818",
-      "head": "c1256ab341e747ee22659a16234ed698d6e0fd73",
-      "tree": "249dbca5a34501e291a9160730e6bcf59d6d4b1f",
-      "merge_base": "baf6412f736b920840326d7eb39608f3d9066748",
-      "ahead_by": 2,
-      "behind_by": 31,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 18,
-          "merged_at": "2026-08-18T16:25:29Z",
-          "closed_at": "2026-08-18T16:25:29Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "ci-fix/rccm-1b-fail-closed-invariants-20260819",
-      "head": "6f4ea40d312b573235206d5f4d0d9091228b9be1",
-      "tree": "4f6a77d295b015fe29a3fead5fcc3e3ca6d0c967",
-      "merge_base": "6f4ea40d312b573235206d5f4d0d9091228b9be1",
-      "ahead_by": 0,
-      "behind_by": 22,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "ci-fix/restore-f821-gate-20260819",
-      "head": "f71ffc87997ae97e617e2299064e6cc1b2707f4b",
-      "tree": "48fe51aebf148183a35ff035c2c771f3e178fa26",
-      "merge_base": "2a572200452038726deb7241dbea7d59a5ba736b",
-      "ahead_by": 8,
-      "behind_by": 28,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 20,
-          "merged_at": "2026-08-19T09:19:34Z",
-          "closed_at": "2026-08-19T09:19:34Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "ci/harden-checkout-credentials-20260819",
-      "head": "24c878548243652469cde1eede7798826e11fc46",
-      "tree": "9caa76252b25dfbb3c5af31fd7f50e3197db0ee6",
-      "merge_base": "31a77ffe3aea3d6fc0ec9376fe9740207e45c41b",
-      "ahead_by": 1,
-      "behind_by": 26,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 22,
-          "merged_at": "2026-08-19T09:35:23Z",
-          "closed_at": "2026-08-19T09:35:23Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "ci/node24-actions-20260819",
-      "head": "31e6b317fdcf15a410aa00b6da609cb7947c5e69",
-      "tree": "dd34e8b7baaf7cde8f41a67d5aee02a94951cadb",
-      "merge_base": "3943bdd429480afa9e4e161913c73e530d6a332b",
-      "ahead_by": 1,
-      "behind_by": 27,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 21,
-          "merged_at": "2026-08-19T09:31:16Z",
-          "closed_at": "2026-08-19T09:31:16Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-code-issues-found-by-ruff",
-      "head": "1ac4ba5dea960b8d98acc949c22fc59310adc78e",
-      "tree": "ffddf5dd4013d7dbaf7143781dd9d121804426db",
-      "merge_base": "1ac4ba5dea960b8d98acc949c22fc59310adc78e",
-      "ahead_by": 0,
-      "behind_by": 73,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-code-issues-found-by-ruff-7makdd",
-      "head": "e01c8738c24507ef084f28d8780f27a0080c29d3",
-      "tree": "61a959c768aa2ccee8e4eaf622a9c2f11a3a5941",
-      "merge_base": "e01c8738c24507ef084f28d8780f27a0080c29d3",
-      "ahead_by": 0,
-      "behind_by": 74,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-code-issues-found-by-ruff-fvovw2",
-      "head": "55e40eba5cda4a3324dc94b1b6f8071ca6525930",
-      "tree": "9b66fba5bd3d6ff733ab04db6db527d19d674948",
-      "merge_base": "55e40eba5cda4a3324dc94b1b6f8071ca6525930",
-      "ahead_by": 0,
-      "behind_by": 72,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-code-issues-found-by-ruff-n25apr",
-      "head": "3c415137220d57193f230462d2853bf89d71d398",
-      "tree": "16e89fc7c736964ba47448b11355b7bebd7d0dd9",
-      "merge_base": "3c415137220d57193f230462d2853bf89d71d398",
-      "ahead_by": 0,
-      "behind_by": 74,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-code-issues-found-by-ruff-vbgwd9",
-      "head": "38d273bed59120cbedc0d521898b994cdd1bc8e3",
-      "tree": "26ea7ee89ce98267a2d900f6389652ca8e23a82e",
-      "merge_base": "38d273bed59120cbedc0d521898b994cdd1bc8e3",
-      "ahead_by": 0,
-      "behind_by": 71,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-dsn-style-secret-leakage-in-hooks",
-      "head": "ab7a8c6ff0a920b8a15290358a183533cf7448d9",
-      "tree": "3f8d6602517e768b419e3e9278b087f03b04c32b",
-      "merge_base": "ab7a8c6ff0a920b8a15290358a183533cf7448d9",
-      "ahead_by": 0,
-      "behind_by": 32,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-local-variable-reference-error",
-      "head": "2e8e409ae31a98d1f4b8885a49aab0d3061bea44",
-      "tree": "91dbcf3a2703188c5300dce17c5f2688e26c24bd",
-      "merge_base": "2e8e409ae31a98d1f4b8885a49aab0d3061bea44",
-      "ahead_by": 0,
-      "behind_by": 55,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-local-variable-reference-error-o44p0z",
-      "head": "6cd9b8e4e6546c8d24627ec2787bd8586817d2d0",
-      "tree": "8fa9ef8a4e83fee2a78a9a8209a600a16df7e1f3",
-      "merge_base": "6cd9b8e4e6546c8d24627ec2787bd8586817d2d0",
-      "ahead_by": 0,
-      "behind_by": 40,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-local-variable-reference-error-wqctxi",
-      "head": "cb25c7c26625e4dbc3baed0b38be9be278bc0da8",
-      "tree": "07f45c0f8fdcfe9c568e03bf7d066ec762b1cb25",
-      "merge_base": "cb25c7c26625e4dbc3baed0b38be9be278bc0da8",
-      "ahead_by": 0,
-      "behind_by": 41,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-local-variable-reference-error-ynh0vx",
-      "head": "663a24d99148f04e06577f969b83d711fc40160b",
-      "tree": "b1782181020662ae706c4992c93031b06bf6ef61",
-      "merge_base": "663a24d99148f04e06577f969b83d711fc40160b",
-      "ahead_by": 0,
-      "behind_by": 44,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/fix-unused-imports-and-variable-assignment-error",
-      "head": "fb694aa2f69a054d70cfe31494df3966ab3b3e55",
-      "tree": "c4a226183be97df2131b08cad543358a3884c2d5",
-      "merge_base": "fb694aa2f69a054d70cfe31494df3966ab3b3e55",
-      "ahead_by": 0,
-      "behind_by": 48,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "codex/propose-fix-for-html-script-injection-vulnerability",
-      "head": "28fb19314dada4a31cdb6c5a149a1ae50114f2a4",
-      "tree": "3072f1858e67f4cecf77a54af892731cf436008c",
-      "merge_base": "28fb19314dada4a31cdb6c5a149a1ae50114f2a4",
-      "ahead_by": 0,
-      "behind_by": 58,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "exec/glitchlab-ruff-debt-17-b1a-up006",
-      "head": "b54f2e6a11f5878fb7dddb0a468b0a9e0b58afe2",
-      "tree": "160373d0e0790550a34b27aa1f5a0ea06bbe9302",
-      "merge_base": "7a06d479f5e0c6d68174eecb585eed22c7e40792",
-      "ahead_by": 3,
-      "behind_by": 13,
-      "classification": "SUPERSEDED",
-      "default_branch_references": [],
-      "pr_lineage": [],
-      "resolution_evidence": "Unique content is an ephemeral Ruff measurement/executor workflow only; branch is 12-13 commits behind master, has no default-branch references and no PR lineage. Preserve until explicit branch cleanup effect."
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "exec/glitchlab-ruff-debt-17-b1b-a-up009",
-      "head": "f3901d6dbd9f195151aa0d2b04ede28d73a0dd85",
-      "tree": "368195f3d48990f6567cb3063eecccfa9ab2bf37",
-      "merge_base": "6c8181c278f284fbfee9e5836dbb47cb49aa7602",
-      "ahead_by": 1,
-      "behind_by": 12,
-      "classification": "SUPERSEDED",
-      "default_branch_references": [],
-      "pr_lineage": [],
-      "resolution_evidence": "Unique content is an ephemeral Ruff measurement/executor workflow only; branch is 12-13 commits behind master, has no default-branch references and no PR lineage. Preserve until explicit branch cleanup effect."
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "master",
-      "head": "92cc9dacd200d6c2cdf0dbbd892d9db9e7a72d7e",
-      "tree": "3f0673b4744ddd5d589eedf9588823ee6a98c2d1",
-      "merge_base": "92cc9dacd200d6c2cdf0dbbd892d9db9e7a72d7e",
-      "ahead_by": 0,
-      "behind_by": 0,
-      "classification": "ACTIVE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "measure/glitchlab-ruff-debt-17-b0",
-      "head": "8e45f9a827172ae3e4da17aeeaa2b822aa2ab0f3",
-      "tree": "0b64f48917a10e07734dc262b68b791b203fca16",
-      "merge_base": "7a06d479f5e0c6d68174eecb585eed22c7e40792",
-      "ahead_by": 1,
-      "behind_by": 13,
-      "classification": "SUPERSEDED",
-      "default_branch_references": [],
-      "pr_lineage": [],
-      "resolution_evidence": "Unique content is an ephemeral Ruff measurement/executor workflow only; branch is 12-13 commits behind master, has no default-branch references and no PR lineage. Preserve until explicit branch cleanup effect."
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "mission/e003-ruff-policy-inventory",
-      "head": "a0001b6645748f302e55149358cf6fcc9ffdc080",
-      "tree": "653f7593e4c6f0478c2f85b48d3091d0faed7892",
-      "merge_base": "a0001b6645748f302e55149358cf6fcc9ffdc080",
-      "ahead_by": 0,
-      "behind_by": 3,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "mission/e003-ruff-zero-batch-1",
-      "head": "4ea4dbe13fc27b00c1aac32f3bec2c38bd66b3d2",
-      "tree": "4856e552920d61d848c732093c853dd14f3fc39d",
-      "merge_base": "4ea4dbe13fc27b00c1aac32f3bec2c38bd66b3d2",
-      "ahead_by": 0,
-      "behind_by": 6,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "mission/glitchlab-ruff-debt-17-b1a-up006",
-      "head": "6c8181c278f284fbfee9e5836dbb47cb49aa7602",
-      "tree": "e8861f327c10d3e7b8a3e7b4a97dcc177059aede",
-      "merge_base": "6c8181c278f284fbfee9e5836dbb47cb49aa7602",
-      "ahead_by": 0,
-      "behind_by": 12,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "mission/glitchlab-ruff-debt-17-b1b-a-up009",
-      "head": "608796ed6e592f3f1b447a274054da796c7e39ef",
-      "tree": "a6160546c0c0ab595ca9c3773b0f3cbe14c2fb21",
-      "merge_base": "608796ed6e592f3f1b447a274054da796c7e39ef",
-      "ahead_by": 0,
-      "behind_by": 10,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "process-upgrade-20260818",
-      "head": "a59826f141905e1ab43e6305dfea741899fe1e0e",
-      "tree": "1c424fecdfc186706326b84ee81ae0ecf975f999",
-      "merge_base": "baf6412f736b920840326d7eb39608f3d9066748",
-      "ahead_by": 6,
-      "behind_by": 31,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 16,
-          "merged_at": "2026-08-18T16:22:04Z",
-          "closed_at": "2026-08-18T16:22:04Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/glitchlab",
-      "default_branch": "master",
-      "branch": "test/rccm-1c-security-property-family-20260819",
-      "head": "434abab4e3d82ee352dcbb12883e7a80e7063c0b",
-      "tree": "6999989321a2da05eed1a0f75f3e59d375ca2aee",
-      "merge_base": "434abab4e3d82ee352dcbb12883e7a80e7063c0b",
-      "ahead_by": 0,
-      "behind_by": 14,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
     {
       "repository": "DonkeyJJLove/HA2D",
       "default_branch": "master",
@@ -564,18 +15,9 @@
       "tree": "e13c7221668fe7798b0a09aa7545c223da50ad65",
       "merge_base": "cfed5c73d5c4917b14d2a073e437a2bcccec3cf7",
       "ahead_by": 1,
-      "behind_by": 4,
+      "behind_by": 6,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 3,
-          "merged_at": "2026-08-19T08:44:23Z",
-          "closed_at": "2026-08-19T08:44:23Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -585,18 +27,9 @@
       "tree": "9b799f40b59fc9d02c20b5c6191dbc3640e418a0",
       "merge_base": "8b22ee8de388af3b9cf26365e1679cc6c356ef2a",
       "ahead_by": 2,
-      "behind_by": 6,
+      "behind_by": 8,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 2,
-          "merged_at": "2026-08-18T16:22:58Z",
-          "closed_at": "2026-08-18T16:22:58Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -606,26 +39,29 @@
       "tree": "bc6c8a067074fead00b57d6c9f8f852f1fa74977",
       "merge_base": "573fe80d48a97931e657c8623a254c03314dae13",
       "ahead_by": 1,
-      "behind_by": 3,
+      "behind_by": 5,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-19T09:30:07Z",
-          "closed_at": "2026-08-19T09:30:08Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "default_branch": "master",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
+      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "merge_base": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/HA2D",
       "default_branch": "master",
       "branch": "master",
-      "head": "a88f842efc9be414ab3fe10fb8766dcb013c0135",
-      "tree": "ba5fb05784434c15640da005da8dced52008d176",
-      "merge_base": "a88f842efc9be414ab3fe10fb8766dcb013c0135",
+      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
+      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "merge_base": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
       "ahead_by": 0,
       "behind_by": 0,
       "classification": "ACTIVE",
@@ -639,18 +75,618 @@
       "tree": "e1ca5ea0f7f04cfe3abd9fc1488c8c1ea17e4b10",
       "merge_base": "8b22ee8de388af3b9cf26365e1679cc6c356ef2a",
       "ahead_by": 3,
+      "behind_by": 8,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "ai-native/enterprise-roadmap-20260818",
+      "head": "d570e041d2a5464535d7dd93c48976bf31b2ab53",
+      "tree": "ae6db8f513b16511d97ba8feb753017f8506354a",
+      "merge_base": "ee40d8ec5a095bf5cbd240546b543308dff9a116",
+      "ahead_by": 2,
+      "behind_by": 21,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "ci/add-falsification-guard-20260819",
+      "head": "3c9ea213b6267432ee022068382c76840de46545",
+      "tree": "f8bdf7dbf5526657f39ad3927f32fe7094d93c94",
+      "merge_base": "a5700c6fa3cff6a8fdaf2f2b31d69971437a3b2b",
+      "ahead_by": 1,
+      "behind_by": 19,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "ci/node24-actions-20260819",
+      "head": "05ff2be30c824d95419c792113856d01f9b7338c",
+      "tree": "bce7e29e0d9bee0fe660ecc732a33eb4e1bf425f",
+      "merge_base": "ddd0500380de86c378de9df34583c800d3aaa8f0",
+      "ahead_by": 1,
+      "behind_by": 18,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "main",
+      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "merge_base": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "merge_base": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "mission/rccm-sim-a1-provider-contract",
+      "head": "d8e90ed1f4e110387266bb4a424a6d97ca5c9e54",
+      "tree": "b33f10eee8b0933b88b6398d82d48928c25a725b",
+      "merge_base": "d8e90ed1f4e110387266bb4a424a6d97ca5c9e54",
+      "ahead_by": 0,
+      "behind_by": 13,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "mission/rccm-sim-a2-domain-provider-adapter",
+      "head": "03cd43834eb5294e959a2aca2de05a737608d759",
+      "tree": "e9709f4937a58380f6b2d8248b93918f21b82e49",
+      "merge_base": "03cd43834eb5294e959a2aca2de05a737608d759",
+      "ahead_by": 0,
+      "behind_by": 10,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "mission/rccm-sim-a3-model-risk-conformance",
+      "head": "967538bc98589b08c0d9cf3b9fa0c0fb34c8a312",
+      "tree": "9c3fc13abab6ac22631615ac4ac72085bd84ded9",
+      "merge_base": "967538bc98589b08c0d9cf3b9fa0c0fb34c8a312",
+      "ahead_by": 0,
+      "behind_by": 5,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "branch": "process-upgrade-20260818",
+      "head": "d383826ebfc56391db57081eeea5fa3faa0a153d",
+      "tree": "5fa5eaa4638b991631751b663c29688f17395c68",
+      "merge_base": "ee40d8ec5a095bf5cbd240546b543308dff9a116",
+      "ahead_by": 2,
+      "behind_by": 21,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "default_branch": "master",
+      "branch": "fix/v15-documentation-homeostasis-r1",
+      "head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "tree": "41ade6f86c646349fe9d98a487a12271eced344b",
+      "merge_base": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "HISTORICAL_EVIDENCE",
+      "default_branch_references": [
+        "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "default_branch": "master",
+      "branch": "master",
+      "head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "tree": "41ade6f86c646349fe9d98a487a12271eced344b",
+      "merge_base": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "default_branch": "master",
+      "branch": "mission/global-reconciliation-standardization-r1",
+      "head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "tree": "41ade6f86c646349fe9d98a487a12271eced344b",
+      "merge_base": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "HISTORICAL_EVIDENCE",
+      "default_branch_references": [
+        "LION/architecture/v1_4/federation_current_vector.json",
+        "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
+        "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "default_branch": "master",
+      "branch": "mission/v15-communication-envelope-successor-r1",
+      "head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "tree": "41ade6f86c646349fe9d98a487a12271eced344b",
+      "merge_base": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "HISTORICAL_EVIDENCE",
+      "default_branch_references": [
+        "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
+        "LION/architecture/v1_5/FORMALIZATION_CANDIDATE_IDENTITY_COMMUNICATION_ENVELOPE_R1.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "actions-health/20260819",
+      "head": "f8ba907fc69c0952462c9d5bb7138c233282c7cc",
+      "tree": "b7df7150bd79524f398aa0dd0d03ad344b02fcfa",
+      "merge_base": "9aaab213fb009f6de6a84456b95c5213a19bc9f9",
+      "ahead_by": 1,
       "behind_by": 6,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 1,
-          "merged_at": "2026-08-18T16:19:38Z",
-          "closed_at": "2026-08-18T16:19:38Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "ai-native/enterprise-roadmap-20260818",
+      "head": "7ce665b52d0fe17721b1e247f105558c7866b9fb",
+      "tree": "b80bd942983622ff33639438d160d06cc2a18c97",
+      "merge_base": "12e6dbf0c3431a97ee70be62d8575b75ecf71ab4",
+      "ahead_by": 2,
+      "behind_by": 8,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "ci/node24-actions-20260819",
+      "head": "b99a1608764bceb52a733e9b4b2e7a522ed51334",
+      "tree": "3fdfc7ad46c2b742585aeb33a09c10a8e3b3d4f9",
+      "merge_base": "ab3d6a30584647d201f5568f1ae18fa1f5ad0018",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "codex/propose-fix-for-exposed-env-identifiers",
+      "head": "1be8e70c8dfdabad8f6a927be63814b748ada1b0",
+      "tree": "74e9512c606c604ce94184fb6083ff52c9ca0137",
+      "merge_base": "b71a1d69b912f3cb9d793ef433573fb7e77ae6e8",
+      "ahead_by": 1,
+      "behind_by": 13,
+      "classification": "SUPERSEDED",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "codex/propose-fix-for-exposed-env-identifiers-4lnubf",
+      "head": "3c74201063b37adb8aeb25b255915ece4b8c3a3a",
+      "tree": "a6433e5a3f338c46501e2aa9a2114aa4f6d26eab",
+      "merge_base": "3c74201063b37adb8aeb25b255915ece4b8c3a3a",
+      "ahead_by": 0,
+      "behind_by": 9,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "codex/propose-fix-for-telemetry-disclosure-vulnerability",
+      "head": "5ee6d8b49017e7460f10d67dde63234a1c0f81d6",
+      "tree": "3ef22a43701d9418a8eb3aff40340e3aefdaca4a",
+      "merge_base": "5ee6d8b49017e7460f10d67dde63234a1c0f81d6",
+      "ahead_by": 0,
+      "behind_by": 12,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "merge_base": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "master",
+      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "merge_base": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "branch": "process-upgrade-20260818",
+      "head": "9e1bcc723ffcef4327cfa48ff003b4131b60bd30",
+      "tree": "9d74a03b59c9a7f28352ef22d776f4713069d5f8",
+      "merge_base": "12e6dbf0c3431a97ee70be62d8575b75ecf71ab4",
+      "ahead_by": 4,
+      "behind_by": 8,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "ai-native/enterprise-roadmap-20260818",
+      "head": "c1256ab341e747ee22659a16234ed698d6e0fd73",
+      "tree": "249dbca5a34501e291a9160730e6bcf59d6d4b1f",
+      "merge_base": "baf6412f736b920840326d7eb39608f3d9066748",
+      "ahead_by": 2,
+      "behind_by": 33,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "ci-fix/rccm-1b-fail-closed-invariants-20260819",
+      "head": "6f4ea40d312b573235206d5f4d0d9091228b9be1",
+      "tree": "4f6a77d295b015fe29a3fead5fcc3e3ca6d0c967",
+      "merge_base": "6f4ea40d312b573235206d5f4d0d9091228b9be1",
+      "ahead_by": 0,
+      "behind_by": 24,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "ci-fix/restore-f821-gate-20260819",
+      "head": "f71ffc87997ae97e617e2299064e6cc1b2707f4b",
+      "tree": "48fe51aebf148183a35ff035c2c771f3e178fa26",
+      "merge_base": "2a572200452038726deb7241dbea7d59a5ba736b",
+      "ahead_by": 8,
+      "behind_by": 30,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "ci/harden-checkout-credentials-20260819",
+      "head": "24c878548243652469cde1eede7798826e11fc46",
+      "tree": "9caa76252b25dfbb3c5af31fd7f50e3197db0ee6",
+      "merge_base": "31a77ffe3aea3d6fc0ec9376fe9740207e45c41b",
+      "ahead_by": 1,
+      "behind_by": 28,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "ci/node24-actions-20260819",
+      "head": "31e6b317fdcf15a410aa00b6da609cb7947c5e69",
+      "tree": "dd34e8b7baaf7cde8f41a67d5aee02a94951cadb",
+      "merge_base": "3943bdd429480afa9e4e161913c73e530d6a332b",
+      "ahead_by": 1,
+      "behind_by": 29,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-code-issues-found-by-ruff",
+      "head": "1ac4ba5dea960b8d98acc949c22fc59310adc78e",
+      "tree": "ffddf5dd4013d7dbaf7143781dd9d121804426db",
+      "merge_base": "1ac4ba5dea960b8d98acc949c22fc59310adc78e",
+      "ahead_by": 0,
+      "behind_by": 75,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-code-issues-found-by-ruff-7makdd",
+      "head": "e01c8738c24507ef084f28d8780f27a0080c29d3",
+      "tree": "61a959c768aa2ccee8e4eaf622a9c2f11a3a5941",
+      "merge_base": "e01c8738c24507ef084f28d8780f27a0080c29d3",
+      "ahead_by": 0,
+      "behind_by": 76,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-code-issues-found-by-ruff-fvovw2",
+      "head": "55e40eba5cda4a3324dc94b1b6f8071ca6525930",
+      "tree": "9b66fba5bd3d6ff733ab04db6db527d19d674948",
+      "merge_base": "55e40eba5cda4a3324dc94b1b6f8071ca6525930",
+      "ahead_by": 0,
+      "behind_by": 74,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-code-issues-found-by-ruff-n25apr",
+      "head": "3c415137220d57193f230462d2853bf89d71d398",
+      "tree": "16e89fc7c736964ba47448b11355b7bebd7d0dd9",
+      "merge_base": "3c415137220d57193f230462d2853bf89d71d398",
+      "ahead_by": 0,
+      "behind_by": 76,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-code-issues-found-by-ruff-vbgwd9",
+      "head": "38d273bed59120cbedc0d521898b994cdd1bc8e3",
+      "tree": "26ea7ee89ce98267a2d900f6389652ca8e23a82e",
+      "merge_base": "38d273bed59120cbedc0d521898b994cdd1bc8e3",
+      "ahead_by": 0,
+      "behind_by": 73,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-dsn-style-secret-leakage-in-hooks",
+      "head": "ab7a8c6ff0a920b8a15290358a183533cf7448d9",
+      "tree": "3f8d6602517e768b419e3e9278b087f03b04c32b",
+      "merge_base": "ab7a8c6ff0a920b8a15290358a183533cf7448d9",
+      "ahead_by": 0,
+      "behind_by": 34,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-local-variable-reference-error",
+      "head": "2e8e409ae31a98d1f4b8885a49aab0d3061bea44",
+      "tree": "91dbcf3a2703188c5300dce17c5f2688e26c24bd",
+      "merge_base": "2e8e409ae31a98d1f4b8885a49aab0d3061bea44",
+      "ahead_by": 0,
+      "behind_by": 57,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-local-variable-reference-error-o44p0z",
+      "head": "6cd9b8e4e6546c8d24627ec2787bd8586817d2d0",
+      "tree": "8fa9ef8a4e83fee2a78a9a8209a600a16df7e1f3",
+      "merge_base": "6cd9b8e4e6546c8d24627ec2787bd8586817d2d0",
+      "ahead_by": 0,
+      "behind_by": 42,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-local-variable-reference-error-wqctxi",
+      "head": "cb25c7c26625e4dbc3baed0b38be9be278bc0da8",
+      "tree": "07f45c0f8fdcfe9c568e03bf7d066ec762b1cb25",
+      "merge_base": "cb25c7c26625e4dbc3baed0b38be9be278bc0da8",
+      "ahead_by": 0,
+      "behind_by": 43,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-local-variable-reference-error-ynh0vx",
+      "head": "663a24d99148f04e06577f969b83d711fc40160b",
+      "tree": "b1782181020662ae706c4992c93031b06bf6ef61",
+      "merge_base": "663a24d99148f04e06577f969b83d711fc40160b",
+      "ahead_by": 0,
+      "behind_by": 46,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/fix-unused-imports-and-variable-assignment-error",
+      "head": "fb694aa2f69a054d70cfe31494df3966ab3b3e55",
+      "tree": "c4a226183be97df2131b08cad543358a3884c2d5",
+      "merge_base": "fb694aa2f69a054d70cfe31494df3966ab3b3e55",
+      "ahead_by": 0,
+      "behind_by": 50,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "codex/propose-fix-for-html-script-injection-vulnerability",
+      "head": "28fb19314dada4a31cdb6c5a149a1ae50114f2a4",
+      "tree": "3072f1858e67f4cecf77a54af892731cf436008c",
+      "merge_base": "28fb19314dada4a31cdb6c5a149a1ae50114f2a4",
+      "ahead_by": 0,
+      "behind_by": 60,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "exec/glitchlab-ruff-debt-17-b1a-up006",
+      "head": "b54f2e6a11f5878fb7dddb0a468b0a9e0b58afe2",
+      "tree": "160373d0e0790550a34b27aa1f5a0ea06bbe9302",
+      "merge_base": "7a06d479f5e0c6d68174eecb585eed22c7e40792",
+      "ahead_by": 3,
+      "behind_by": 15,
+      "classification": "SUPERSEDED",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "exec/glitchlab-ruff-debt-17-b1b-a-up009",
+      "head": "f3901d6dbd9f195151aa0d2b04ede28d73a0dd85",
+      "tree": "368195f3d48990f6567cb3063eecccfa9ab2bf37",
+      "merge_base": "6c8181c278f284fbfee9e5836dbb47cb49aa7602",
+      "ahead_by": 1,
+      "behind_by": 14,
+      "classification": "SUPERSEDED",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "merge_base": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "master",
+      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "merge_base": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "measure/glitchlab-ruff-debt-17-b0",
+      "head": "8e45f9a827172ae3e4da17aeeaa2b822aa2ab0f3",
+      "tree": "0b64f48917a10e07734dc262b68b791b203fca16",
+      "merge_base": "7a06d479f5e0c6d68174eecb585eed22c7e40792",
+      "ahead_by": 1,
+      "behind_by": 15,
+      "classification": "SUPERSEDED",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "mission/e003-ruff-policy-inventory",
+      "head": "a0001b6645748f302e55149358cf6fcc9ffdc080",
+      "tree": "653f7593e4c6f0478c2f85b48d3091d0faed7892",
+      "merge_base": "a0001b6645748f302e55149358cf6fcc9ffdc080",
+      "ahead_by": 0,
+      "behind_by": 5,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "mission/e003-ruff-zero-batch-1",
+      "head": "4ea4dbe13fc27b00c1aac32f3bec2c38bd66b3d2",
+      "tree": "4856e552920d61d848c732093c853dd14f3fc39d",
+      "merge_base": "4ea4dbe13fc27b00c1aac32f3bec2c38bd66b3d2",
+      "ahead_by": 0,
+      "behind_by": 8,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "mission/glitchlab-ruff-debt-17-b1a-up006",
+      "head": "6c8181c278f284fbfee9e5836dbb47cb49aa7602",
+      "tree": "e8861f327c10d3e7b8a3e7b4a97dcc177059aede",
+      "merge_base": "6c8181c278f284fbfee9e5836dbb47cb49aa7602",
+      "ahead_by": 0,
+      "behind_by": 14,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "mission/glitchlab-ruff-debt-17-b1b-a-up009",
+      "head": "608796ed6e592f3f1b447a274054da796c7e39ef",
+      "tree": "a6160546c0c0ab595ca9c3773b0f3cbe14c2fb21",
+      "merge_base": "608796ed6e592f3f1b447a274054da796c7e39ef",
+      "ahead_by": 0,
+      "behind_by": 12,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "process-upgrade-20260818",
+      "head": "a59826f141905e1ab43e6305dfea741899fe1e0e",
+      "tree": "1c424fecdfc186706326b84ee81ae0ecf975f999",
+      "merge_base": "baf6412f736b920840326d7eb39608f3d9066748",
+      "ahead_by": 6,
+      "behind_by": 33,
+      "classification": "MERGED_REDUNDANT",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "branch": "test/rccm-1c-security-property-family-20260819",
+      "head": "434abab4e3d82ee352dcbb12883e7a80e7063c0b",
+      "tree": "6999989321a2da05eed1a0f75f3e59d375ca2aee",
+      "merge_base": "434abab4e3d82ee352dcbb12883e7a80e7063c0b",
+      "ahead_by": 0,
+      "behind_by": 16,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
@@ -660,18 +696,9 @@
       "tree": "ca285942585469d4b9a94d972f7116a2d3b43288",
       "merge_base": "c89aa0bcad51bfc51abffa75093c128d8438f9db",
       "ahead_by": 2,
-      "behind_by": 6,
+      "behind_by": 8,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 2,
-          "merged_at": "2026-08-18T16:24:16Z",
-          "closed_at": "2026-08-18T16:24:16Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
@@ -681,18 +708,9 @@
       "tree": "f425158f998756ee460fed1edad1b1d4b7556e1c",
       "merge_base": "2193fafa5d0ff0b9ad0a3731ead2e0c5e7c84f7c",
       "ahead_by": 1,
-      "behind_by": 4,
+      "behind_by": 6,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 3,
-          "merged_at": "2026-08-19T09:13:45Z",
-          "closed_at": "2026-08-19T09:13:45Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
@@ -702,29 +720,32 @@
       "tree": "0c1f6d690a2bdae34f0ecd6c9afbb04933af220c",
       "merge_base": "1164d56e513a148b89f4d70a28967ac2a5710519",
       "ahead_by": 1,
-      "behind_by": 3,
+      "behind_by": 5,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-19T09:30:45Z",
-          "closed_at": "2026-08-19T09:30:46Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "default_branch": "main",
       "branch": "main",
-      "head": "46e994b651481c62faa4bc84b9e529efbcb5a7b6",
-      "tree": "8c36003c0ead17b0593292633e598022b32de86f",
-      "merge_base": "46e994b651481c62faa4bc84b9e529efbcb5a7b6",
+      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
+      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "merge_base": "3b9df9207aef81aed652c11d37903e4553554d8c",
       "ahead_by": 0,
       "behind_by": 0,
       "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "default_branch": "main",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
+      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "merge_base": "3b9df9207aef81aed652c11d37903e4553554d8c",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
     {
@@ -735,18 +756,9 @@
       "tree": "f415f38ee98cac5c570568770712cc91ded691ba",
       "merge_base": "c89aa0bcad51bfc51abffa75093c128d8438f9db",
       "ahead_by": 2,
-      "behind_by": 6,
+      "behind_by": 8,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 1,
-          "merged_at": "2026-08-18T16:21:23Z",
-          "closed_at": "2026-08-18T16:21:23Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
@@ -756,18 +768,9 @@
       "tree": "76d0a5cb2f6c64c04e2731b0f30a5b1d1029f63a",
       "merge_base": "efe17326af37aacf133cb4fb6c8377bc53f33189",
       "ahead_by": 1,
-      "behind_by": 4,
+      "behind_by": 6,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 3,
-          "merged_at": "2026-08-19T08:44:31Z",
-          "closed_at": "2026-08-19T08:44:31Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
@@ -777,18 +780,9 @@
       "tree": "2c70c35add1d3bbc4efeb99f21f3b603ecff46ee",
       "merge_base": "6e03514895dca4fd95e731f23a05af703f7da2e1",
       "ahead_by": 2,
-      "behind_by": 6,
+      "behind_by": 8,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 2,
-          "merged_at": "2026-08-18T16:22:30Z",
-          "closed_at": "2026-08-18T16:22:30Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
@@ -798,29 +792,32 @@
       "tree": "ca88c45e92bd7bd4f5d269bc87c93ccaaf3716f1",
       "merge_base": "0896136e987db70578cf1b16b581f2bb3ccae2d7",
       "ahead_by": 1,
-      "behind_by": 3,
+      "behind_by": 5,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-19T09:30:16Z",
-          "closed_at": "2026-08-19T09:30:16Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "default_branch": "main",
       "branch": "main",
-      "head": "f11a707f673a0899e25d51d8b9e5bd635d856e81",
-      "tree": "fe2d9faa55fbc9e68872ed5b3f4774799317d8ed",
-      "merge_base": "f11a707f673a0899e25d51d8b9e5bd635d856e81",
+      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
+      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "merge_base": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
       "ahead_by": 0,
       "behind_by": 0,
       "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "default_branch": "main",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
+      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "merge_base": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
     {
@@ -831,18 +828,9 @@
       "tree": "aba0b88f868590f938834f9e15e7c586d6ee7da5",
       "merge_base": "6e03514895dca4fd95e731f23a05af703f7da2e1",
       "ahead_by": 3,
-      "behind_by": 6,
+      "behind_by": 8,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 1,
-          "merged_at": "2026-08-18T16:19:17Z",
-          "closed_at": "2026-08-18T16:19:17Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/sbom",
@@ -852,18 +840,9 @@
       "tree": "15a0de368f8114abfe0a89851864170bc5066b0f",
       "merge_base": "5c0d60b2079e012c1786b142fedd57411b072278",
       "ahead_by": 1,
-      "behind_by": 5,
+      "behind_by": 7,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 16,
-          "merged_at": "2026-08-19T08:44:54Z",
-          "closed_at": "2026-08-19T08:44:54Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/sbom",
@@ -873,18 +852,9 @@
       "tree": "94803674fd183b5184975c3a10bee54a45b2284d",
       "merge_base": "94c3b2ae594bb02ee2ba131d4a447ece837e2bea",
       "ahead_by": 3,
-      "behind_by": 4,
+      "behind_by": 6,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 17,
-          "merged_at": "2026-08-19T08:49:21Z",
-          "closed_at": "2026-08-19T08:49:21Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/sbom",
@@ -894,18 +864,9 @@
       "tree": "ca4bf158046abc97936be103a5a4be312987da6d",
       "merge_base": "36bf7e9c3401420d0a9f587ab3892cdadf9e2b0a",
       "ahead_by": 2,
-      "behind_by": 7,
+      "behind_by": 9,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 15,
-          "merged_at": "2026-08-18T16:23:22Z",
-          "closed_at": "2026-08-18T16:23:22Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/sbom",
@@ -915,18 +876,9 @@
       "tree": "8d7cc0e5b5025899d0889c4a5c17ac230681c4fb",
       "merge_base": "c425ae69cf09346d3f0db22fa1f099764c7205aa",
       "ahead_by": 2,
-      "behind_by": 3,
+      "behind_by": 5,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 18,
-          "merged_at": "2026-08-19T09:31:07Z",
-          "closed_at": "2026-08-19T09:31:07Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/sbom",
@@ -936,7 +888,7 @@
       "tree": "e65879a7899fcae3de867d1a079a65cd03047169",
       "merge_base": "8c1327716b059a5c0960fc4f342592b2a31bbc11",
       "ahead_by": 0,
-      "behind_by": 38,
+      "behind_by": 40,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -948,7 +900,7 @@
       "tree": "275bcc545dd4147f9373a23364b67e37282ecb90",
       "merge_base": "8acbc2603ff448151f648b0074e074c56e4ea919",
       "ahead_by": 0,
-      "behind_by": 10,
+      "behind_by": 12,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -960,7 +912,7 @@
       "tree": "42aa3a1e2c8f6550333574cdb8792140cdc79fed",
       "merge_base": "029137d1d1e2405befe3236ff103d8e5d00b09ae",
       "ahead_by": 0,
-      "behind_by": 32,
+      "behind_by": 34,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -972,7 +924,7 @@
       "tree": "3842aeebc764058ca2afb2d56185df7cfff85b79",
       "merge_base": "480cab9eb81653381b5385676ea6db9840a992d0",
       "ahead_by": 0,
-      "behind_by": 38,
+      "behind_by": 40,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -980,12 +932,24 @@
       "repository": "DonkeyJJLove/sbom",
       "default_branch": "main",
       "branch": "main",
-      "head": "023f90b120950848b5ba82cefc94fdef997995cf",
-      "tree": "4856c77847e444465128061ab3ca873c6bc91a6d",
-      "merge_base": "023f90b120950848b5ba82cefc94fdef997995cf",
+      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
+      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "merge_base": "a004be254849a842131a8c0c218bcc8c71d889de",
       "ahead_by": 0,
       "behind_by": 0,
       "classification": "ACTIVE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "default_branch": "main",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
+      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "merge_base": "a004be254849a842131a8c0c218bcc8c71d889de",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
     {
@@ -996,18 +960,9 @@
       "tree": "bbd7b514df147a48b305feae1bf0466bc119a8b8",
       "merge_base": "36bf7e9c3401420d0a9f587ab3892cdadf9e2b0a",
       "ahead_by": 3,
-      "behind_by": 7,
+      "behind_by": 9,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 14,
-          "merged_at": "2026-08-18T16:19:59Z",
-          "closed_at": "2026-08-18T16:19:59Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/swarm",
@@ -1017,18 +972,9 @@
       "tree": "e3e1f863c248b0994211194d205ba931b5d3e449",
       "merge_base": "7b2499870cdcc604314f5c3fe0513071ca0538ec",
       "ahead_by": 1,
-      "behind_by": 31,
+      "behind_by": 33,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 5,
-          "merged_at": "2026-08-19T08:44:16Z",
-          "closed_at": "2026-08-19T08:44:16Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/swarm",
@@ -1038,18 +984,9 @@
       "tree": "f946f0a3958f208fe86913db794c966c6889f0b4",
       "merge_base": "f1b93b2710a3f57c6a92acd31f3efc8417e17f81",
       "ahead_by": 2,
-      "behind_by": 33,
+      "behind_by": 35,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-18T16:23:46Z",
-          "closed_at": "2026-08-18T16:23:46Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/swarm",
@@ -1059,26 +996,29 @@
       "tree": "86830750c688e9e65d3eafc7232e89f20267c705",
       "merge_base": "66be7f7820b8f2742e29608765566fb0bf129fbb",
       "ahead_by": 1,
-      "behind_by": 30,
+      "behind_by": 32,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 6,
-          "merged_at": "2026-08-19T09:30:00Z",
-          "closed_at": "2026-08-19T09:30:00Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "default_branch": "master",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
+      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "merge_base": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
+      "ahead_by": 0,
+      "behind_by": 0,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/swarm",
       "default_branch": "master",
       "branch": "master",
-      "head": "5964fde8b8c1a17c7dc5c6ee4ea68b8ec1b8e987",
-      "tree": "e1fcf5d0abd87ba80bf59c84fa2612299c207bbb",
-      "merge_base": "5964fde8b8c1a17c7dc5c6ee4ea68b8ec1b8e987",
+      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
+      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "merge_base": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
       "ahead_by": 0,
       "behind_by": 0,
       "classification": "ACTIVE",
@@ -1092,7 +1032,7 @@
       "tree": "b371c4eec186dfc2e9950a5e6a63694a87d23d7e",
       "merge_base": "5c5d5121b5339da3671e502060f101a67babc4e3",
       "ahead_by": 0,
-      "behind_by": 14,
+      "behind_by": 16,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -1104,7 +1044,7 @@
       "tree": "8ac6da208c54d518dd5152d659cc955420310e73",
       "merge_base": "68d9b5da1fd6c6a5957651ec5c0fe8ef0b8eb7cb",
       "ahead_by": 0,
-      "behind_by": 12,
+      "behind_by": 14,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -1116,7 +1056,7 @@
       "tree": "a628cd62916f826bd2e7042ad81babd0d0f94506",
       "merge_base": "4c7bc0fb09c41f4e5bcd0db92b0a76e3759c8f7a",
       "ahead_by": 0,
-      "behind_by": 7,
+      "behind_by": 9,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -1128,7 +1068,7 @@
       "tree": "031f5b365c8c78feeb69fcb71229a3d9f690fbf1",
       "merge_base": "7d2a25baeaac7871410b2a47b292e26be9973125",
       "ahead_by": 0,
-      "behind_by": 3,
+      "behind_by": 5,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -1140,7 +1080,7 @@
       "tree": "f2964df7087ba14fb3d756d13a857138273ca697",
       "merge_base": "cd10f519899660bda7d4a6d16f4f4ded9de6a4f6",
       "ahead_by": 0,
-      "behind_by": 9,
+      "behind_by": 11,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -1152,150 +1092,9 @@
       "tree": "248bfff6afd738d37cea879e6c8f41616651c3fe",
       "merge_base": "f1b93b2710a3f57c6a92acd31f3efc8417e17f81",
       "ahead_by": 5,
-      "behind_by": 33,
+      "behind_by": 35,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 3,
-          "merged_at": "2026-08-18T16:21:02Z",
-          "closed_at": "2026-08-18T16:21:02Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "ai-native/enterprise-roadmap-20260818",
-      "head": "d570e041d2a5464535d7dd93c48976bf31b2ab53",
-      "tree": "ae6db8f513b16511d97ba8feb753017f8506354a",
-      "merge_base": "ee40d8ec5a095bf5cbd240546b543308dff9a116",
-      "ahead_by": 2,
-      "behind_by": 19,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 2,
-          "merged_at": "2026-08-18T16:24:40Z",
-          "closed_at": "2026-08-18T16:24:40Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "ci/add-falsification-guard-20260819",
-      "head": "3c9ea213b6267432ee022068382c76840de46545",
-      "tree": "f8bdf7dbf5526657f39ad3927f32fe7094d93c94",
-      "merge_base": "a5700c6fa3cff6a8fdaf2f2b31d69971437a3b2b",
-      "ahead_by": 1,
-      "behind_by": 17,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 3,
-          "merged_at": "2026-08-19T09:13:53Z",
-          "closed_at": "2026-08-19T09:13:53Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "ci/node24-actions-20260819",
-      "head": "05ff2be30c824d95419c792113856d01f9b7338c",
-      "tree": "bce7e29e0d9bee0fe660ecc732a33eb4e1bf425f",
-      "merge_base": "ddd0500380de86c378de9df34583c800d3aaa8f0",
-      "ahead_by": 1,
-      "behind_by": 16,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-19T09:30:56Z",
-          "closed_at": "2026-08-19T09:30:56Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "main",
-      "head": "8750d65a9109aad7514fac8b235846e373ab8b6c",
-      "tree": "79be83f61dd5349b3588387449a05706de2b8cbb",
-      "merge_base": "8750d65a9109aad7514fac8b235846e373ab8b6c",
-      "ahead_by": 0,
-      "behind_by": 0,
-      "classification": "ACTIVE",
       "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "mission/rccm-sim-a1-provider-contract",
-      "head": "d8e90ed1f4e110387266bb4a424a6d97ca5c9e54",
-      "tree": "b33f10eee8b0933b88b6398d82d48928c25a725b",
-      "merge_base": "d8e90ed1f4e110387266bb4a424a6d97ca5c9e54",
-      "ahead_by": 0,
-      "behind_by": 11,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "mission/rccm-sim-a2-domain-provider-adapter",
-      "head": "03cd43834eb5294e959a2aca2de05a737608d759",
-      "tree": "e9709f4937a58380f6b2d8248b93918f21b82e49",
-      "merge_base": "03cd43834eb5294e959a2aca2de05a737608d759",
-      "ahead_by": 0,
-      "behind_by": 8,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "mission/rccm-sim-a3-model-risk-conformance",
-      "head": "967538bc98589b08c0d9cf3b9fa0c0fb34c8a312",
-      "tree": "9c3fc13abab6ac22631615ac4ac72085bd84ded9",
-      "merge_base": "967538bc98589b08c0d9cf3b9fa0c0fb34c8a312",
-      "ahead_by": 0,
-      "behind_by": 3,
-      "classification": "DELETE_ELIGIBLE",
-      "default_branch_references": []
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "default_branch": "main",
-      "branch": "process-upgrade-20260818",
-      "head": "d383826ebfc56391db57081eeea5fa3faa0a153d",
-      "tree": "5fa5eaa4638b991631751b663c29688f17395c68",
-      "merge_base": "ee40d8ec5a095bf5cbd240546b543308dff9a116",
-      "ahead_by": 2,
-      "behind_by": 19,
-      "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 1,
-          "merged_at": "2026-08-18T16:21:43Z",
-          "closed_at": "2026-08-18T16:21:43Z",
-          "base": "main",
-          "state": "closed"
-        }
-      ]
     },
     {
       "repository": "DonkeyJJLove/writeups",
@@ -1305,7 +1104,7 @@
       "tree": "ea5ccb7a770bae19310be93495a4b0c4d32dbc59",
       "merge_base": "876084e0af9bdd5830696cca7707cdf7657813d4",
       "ahead_by": 0,
-      "behind_by": 224,
+      "behind_by": 251,
       "classification": "HISTORICAL_EVIDENCE",
       "default_branch_references": [
         "2025-04_zaklocanie_protokolow_czasu_asyncshel_fire-sale.md",
@@ -1320,18 +1119,9 @@
       "tree": "d3b7863ad5565aac0c242c0e297d415c79e0f3b2",
       "merge_base": "fd9589d842518269f3512cae3223ea73c60e4c20",
       "ahead_by": 1,
-      "behind_by": 13,
+      "behind_by": 40,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 3,
-          "merged_at": "2026-08-19T08:44:07Z",
-          "closed_at": "2026-08-19T08:44:07Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/writeups",
@@ -1341,18 +1131,9 @@
       "tree": "0c829726bf7561bc38ab2d10d6d17fbef9952d96",
       "merge_base": "42441ca329476c295b41cc9da24eea921f3389a4",
       "ahead_by": 2,
-      "behind_by": 30,
+      "behind_by": 57,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 2,
-          "merged_at": "2026-08-18T15:22:38Z",
-          "closed_at": "2026-08-18T15:22:38Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/writeups",
@@ -1362,18 +1143,9 @@
       "tree": "b5f28194134dd10723af24ee5527c96478cfbf6d",
       "merge_base": "ef3ab60ca8a508d8313b299dbb31c181afe75cd6",
       "ahead_by": 1,
-      "behind_by": 12,
+      "behind_by": 39,
       "classification": "MERGED_REDUNDANT",
-      "default_branch_references": [],
-      "pr_lineage": [
-        {
-          "number": 4,
-          "merged_at": "2026-08-19T09:29:48Z",
-          "closed_at": "2026-08-19T09:29:48Z",
-          "base": "master",
-          "state": "closed"
-        }
-      ]
+      "default_branch_references": []
     },
     {
       "repository": "DonkeyJJLove/writeups",
@@ -1383,7 +1155,19 @@
       "tree": "2456655b88e761364ffd4fa5439e878e2885481d",
       "merge_base": "cfdc558d68a89ef6daf743154b371527ec0feb7d",
       "ahead_by": 0,
-      "behind_by": 5,
+      "behind_by": 32,
+      "classification": "DELETE_ELIGIBLE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "default_branch": "master",
+      "branch": "maintenance/repository-standardization-r1",
+      "head": "af94cecd117a165ba7391d0402a15cf62d132429",
+      "tree": "890c9947e56ec799d7c320e181f89c6d1d4bd21f",
+      "merge_base": "af94cecd117a165ba7391d0402a15cf62d132429",
+      "ahead_by": 0,
+      "behind_by": 25,
       "classification": "DELETE_ELIGIBLE",
       "default_branch_references": []
     },
@@ -1391,9 +1175,9 @@
       "repository": "DonkeyJJLove/writeups",
       "default_branch": "master",
       "branch": "master",
-      "head": "124d3a9cf913cf717e04615ce6a84610ba30eeca",
-      "tree": "bc23739745fb2dee586d5d19473c84e0b09eff37",
-      "merge_base": "124d3a9cf913cf717e04615ce6a84610ba30eeca",
+      "head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
+      "tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
+      "merge_base": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
       "ahead_by": 0,
       "behind_by": 0,
       "classification": "ACTIVE",
@@ -1407,31 +1191,21 @@
       "tree": "735bdb393af431df286d9dbb392713711bfbc98b",
       "merge_base": "6ea82826be5cea52d20627ed0e7fa060c758ab6a",
       "ahead_by": 4,
-      "behind_by": 32,
+      "behind_by": 59,
       "classification": "HISTORICAL_EVIDENCE",
       "default_branch_references": [
         "REPOSITORY_AUDIT_2026-08-18.md"
-      ],
-      "pr_lineage": [
-        {
-          "number": 1,
-          "merged_at": "2026-08-18T16:18:57Z",
-          "closed_at": "2026-08-18T16:18:57Z",
-          "base": "master",
-          "state": "closed"
-        }
       ]
     }
   ],
   "counts": {
-    "DELETE_ELIGIBLE": 34,
     "ACTIVE": 10,
-    "HISTORICAL_EVIDENCE": 3,
+    "DELETE_ELIGIBLE": 42,
+    "HISTORICAL_EVIDENCE": 5,
     "MERGED_REDUNDANT": 37,
     "SUPERSEDED": 4
   },
-  "delete_policy": "DELETE_ELIGIBLE requires no unique commits, ancestor/equal default state and no tracked default-branch reference to the branch name.",
-  "unknown_policy": "UNKNOWN is preserved until PR/history/runtime significance is resolved.",
-  "authority_effect": "NONE",
-  "pr_lineage_policy": "Merged default-branch PR resolves squash/rebase ancestry ambiguity; closed-unmerged unreferenced branches are SUPERSEDED but not automatically delete-eligible."
+  "delete_policy": "DELETE_ELIGIBLE requires no unique commits, ancestor/equal default state and no tracked default-branch reference.",
+  "unknown_policy": "UNKNOWN remains preserved until additional PR/history/runtime evidence resolves it.",
+  "authority_effect": "NONE"
 }

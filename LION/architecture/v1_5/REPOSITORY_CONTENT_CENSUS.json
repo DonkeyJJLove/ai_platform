@@ -1,10 +1,19 @@
 {
   "schema": "lion.repository-content-census/v1",
+  "generator": "tools/lion_global_repository_census.py",
+  "invalidators": [
+    "REPOSITORY_CONTENT_CHANGE",
+    "NAMING_STANDARD_CHANGE",
+    "DEPENDENCY_CHANGE"
+  ],
   "generated_from": {
-    "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1",
+    "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1-FINAL",
     "architecture_epoch": "1.5",
     "repository_count": 10,
-    "tracked_file_count": 2806,
+    "tracked_file_count": 79954,
+    "materialized_file_row_count": 3085,
+    "coverage_group_file_count": 76869,
+    "coverage_group_count": 1,
     "projection_mode": "BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
     "overlay_repositories": [
       "DonkeyJJLove/ai_platform"
@@ -14,19 +23,21 @@
     {
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "a88f842efc9be414ab3fe10fb8766dcb013c0135",
-      "tree": "ba5fb05784434c15640da005da8dced52008d176",
-      "baseline_head": "a88f842efc9be414ab3fe10fb8766dcb013c0135",
-      "baseline_tree": "ba5fb05784434c15640da005da8dced52008d176",
+      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
+      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
+      "baseline_head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
+      "baseline_tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 20,
+      "tracked_files": 21,
       "class_counts": {
-        "CURRENT_CONFIG": 2,
+        "CURRENT_CONFIG": 3,
         "CURRENT_DOCUMENTATION": 16,
         "UNKNOWN": 2
       },
+      "materialized_file_rows": 21,
+      "coverage_group_file_count": 0,
       "readmes": [
-        "readme.md"
+        "README.md"
       ],
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
@@ -36,23 +47,25 @@
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "8750d65a9109aad7514fac8b235846e373ab8b6c",
-      "tree": "79be83f61dd5349b3588387449a05706de2b8cbb",
-      "baseline_head": "8750d65a9109aad7514fac8b235846e373ab8b6c",
-      "baseline_tree": "79be83f61dd5349b3588387449a05706de2b8cbb",
+      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
+      "baseline_head": "bc7d1cae30302f7e38153891ae08677c386ac880",
+      "baseline_tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 183,
+      "tracked_files": 184,
       "class_counts": {
-        "CURRENT_CONFIG": 9,
+        "CURRENT_CONFIG": 10,
         "CURRENT_DOCUMENTATION": 16,
         "CURRENT_GENERATED": 92,
         "CURRENT_SOURCE": 15,
         "CURRENT_TEST": 3,
         "UNKNOWN": 48
       },
+      "materialized_file_rows": 184,
+      "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
-        "src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.MD"
+        "src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.md"
       ],
       "workflows": [
         ".github/workflows/falsification-guard.yml"
@@ -62,29 +75,31 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "09fb1fa0fcdabebce298f94eb4cf519a1a6a72d8",
-      "tree": "68019ca9aeff1abed89f84ebf5f2bb748273bc21",
-      "baseline_head": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
-      "baseline_tree": "609db37122434fcc293a936cb9949353d94bb73e",
+      "head": "05cf5c3aec96a667e5c8dc25ddef39b5a73aa324",
+      "tree": "3089d30783c934578f3b7899ffba25d4cd2390c2",
+      "baseline_head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "baseline_tree": "41ade6f86c646349fe9d98a487a12271eced344b",
       "identity_mode": "EXACT_OVERLAY",
-      "tracked_files": 1574,
+      "tracked_files": 1577,
       "class_counts": {
         "ARCHIVED": 4,
         "COMPATIBILITY_LAYER": 28,
         "CURRENT_CONFIG": 78,
         "CURRENT_CONTRACT": 144,
         "CURRENT_DOCUMENTATION": 114,
-        "CURRENT_GENERATED": 101,
+        "CURRENT_GENERATED": 102,
         "CURRENT_RUNTIME": 33,
         "CURRENT_SOURCE": 246,
         "CURRENT_TEST": 429,
-        "CURRENT_TOOL": 87,
+        "CURRENT_TOOL": 89,
         "CURRENT_UI": 14,
         "HISTORICAL": 140,
         "HISTORICAL_EVIDENCE": 79,
         "UNKNOWN": 6,
         "VERSIONED_STATIC": 71
       },
+      "materialized_file_rows": 1577,
+      "coverage_group_file_count": 0,
       "readmes": [
         "LION/README.md",
         "LION/architecture/v1_4/README.md",
@@ -144,19 +159,21 @@
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "793d6f7fdd249f11ab872bc264700124fc573e67",
-      "tree": "2ca47b55d5f71e603f2037367a4a825c2745bd55",
-      "baseline_head": "793d6f7fdd249f11ab872bc264700124fc573e67",
-      "baseline_tree": "2ca47b55d5f71e603f2037367a4a825c2745bd55",
+      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
+      "baseline_head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
+      "baseline_tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 26,
+      "tracked_files": 27,
       "class_counts": {
-        "CURRENT_CONFIG": 3,
+        "CURRENT_CONFIG": 4,
         "CURRENT_DOCUMENTATION": 15,
         "UNKNOWN": 8
       },
+      "materialized_file_rows": 27,
+      "coverage_group_file_count": 0,
       "readmes": [
-        "README.MD"
+        "README.md"
       ],
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
@@ -166,25 +183,28 @@
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "92cc9dacd200d6c2cdf0dbbd892d9db9e7a72d7e",
-      "tree": "3f0673b4744ddd5d589eedf9588823ee6a98c2d1",
-      "baseline_head": "92cc9dacd200d6c2cdf0dbbd892d9db9e7a72d7e",
-      "baseline_tree": "3f0673b4744ddd5d589eedf9588823ee6a98c2d1",
+      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
+      "baseline_head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
+      "baseline_tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 353,
+      "tracked_files": 355,
       "class_counts": {
-        "CURRENT_CONFIG": 62,
+        "CURRENT_CONFIG": 63,
         "CURRENT_CONTRACT": 9,
-        "CURRENT_DOCUMENTATION": 47,
+        "CURRENT_DOCUMENTATION": 48,
         "CURRENT_SOURCE": 187,
         "CURRENT_TEST": 16,
         "CURRENT_TOOL": 1,
         "UNKNOWN": 31
       },
+      "materialized_file_rows": 355,
+      "coverage_group_file_count": 0,
       "readmes": [
-        "bench/README.MD",
+        "README.md",
+        "bench/README.md",
         "mosaic/README.md",
-        "src/README.MD"
+        "src/README.md"
       ],
       "workflows": [
         ".github/workflows/ci.yml",
@@ -195,17 +215,19 @@
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "46e994b651481c62faa4bc84b9e529efbcb5a7b6",
-      "tree": "8c36003c0ead17b0593292633e598022b32de86f",
-      "baseline_head": "46e994b651481c62faa4bc84b9e529efbcb5a7b6",
-      "baseline_tree": "8c36003c0ead17b0593292633e598022b32de86f",
+      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
+      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
+      "baseline_head": "3b9df9207aef81aed652c11d37903e4553554d8c",
+      "baseline_tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 8,
+      "tracked_files": 9,
       "class_counts": {
-        "CURRENT_CONFIG": 2,
+        "CURRENT_CONFIG": 3,
         "CURRENT_DOCUMENTATION": 5,
         "UNKNOWN": 1
       },
+      "materialized_file_rows": 9,
+      "coverage_group_file_count": 0,
       "readmes": [
         "README.md"
       ],
@@ -217,20 +239,22 @@
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "f11a707f673a0899e25d51d8b9e5bd635d856e81",
-      "tree": "fe2d9faa55fbc9e68872ed5b3f4774799317d8ed",
-      "baseline_head": "f11a707f673a0899e25d51d8b9e5bd635d856e81",
-      "baseline_tree": "fe2d9faa55fbc9e68872ed5b3f4774799317d8ed",
+      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
+      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
+      "baseline_head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
+      "baseline_tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 9,
+      "tracked_files": 10,
       "class_counts": {
-        "CURRENT_CONFIG": 2,
+        "CURRENT_CONFIG": 3,
         "CURRENT_DOCUMENTATION": 4,
         "CURRENT_SOURCE": 1,
         "UNKNOWN": 2
       },
+      "materialized_file_rows": 10,
+      "coverage_group_file_count": 0,
       "readmes": [
-        "README.MD"
+        "README.md"
       ],
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
@@ -240,17 +264,19 @@
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "023f90b120950848b5ba82cefc94fdef997995cf",
-      "tree": "4856c77847e444465128061ab3ca873c6bc91a6d",
-      "baseline_head": "023f90b120950848b5ba82cefc94fdef997995cf",
-      "baseline_tree": "4856c77847e444465128061ab3ca873c6bc91a6d",
+      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
+      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
+      "baseline_head": "a004be254849a842131a8c0c218bcc8c71d889de",
+      "baseline_tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 35,
+      "tracked_files": 36,
       "class_counts": {
-        "CURRENT_CONFIG": 7,
+        "CURRENT_CONFIG": 8,
         "CURRENT_DOCUMENTATION": 15,
         "UNKNOWN": 13
       },
+      "materialized_file_rows": 36,
+      "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
         "środowiska-testowe/README.md"
@@ -264,25 +290,26 @@
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "5964fde8b8c1a17c7dc5c6ee4ea68b8ec1b8e987",
-      "tree": "e1fcf5d0abd87ba80bf59c84fa2612299c207bbb",
-      "baseline_head": "5964fde8b8c1a17c7dc5c6ee4ea68b8ec1b8e987",
-      "baseline_tree": "e1fcf5d0abd87ba80bf59c84fa2612299c207bbb",
+      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
+      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
+      "baseline_head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
+      "baseline_tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
       "identity_mode": "EXACT_BASELINE",
       "tracked_files": 103,
       "class_counts": {
-        "CURRENT_CONFIG": 39,
-        "CURRENT_DOCUMENTATION": 31,
+        "CURRENT_CONFIG": 40,
+        "CURRENT_DOCUMENTATION": 30,
         "CURRENT_SOURCE": 16,
         "CURRENT_TEST": 8,
         "UNKNOWN": 9
       },
+      "materialized_file_rows": 103,
+      "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
         "aggregator-api/README.md",
         "aggregator/README.md",
         "aggregator/mqtt_bridge/README.md",
-        "aggregator/readme.md",
         "drones/README.md",
         "infrastructure/README.md",
         "infrastructure/istio/README.md",
@@ -290,11 +317,11 @@
         "infrastructure/istio/destinationrules/README.md",
         "infrastructure/istio/gateways/README.md",
         "infrastructure/istio/policies/README.md",
-        "infrastructure/istio/virtualservices/readme.md",
+        "infrastructure/istio/virtualservices/README.md",
         "infrastructure/kubernetes/README.md",
         "infrastructure/statefulset/README.md",
         "runtime/README.md",
-        "scripts/kubediag/readme.md",
+        "scripts/kubediag/README.md",
         "security/README.md",
         "security/policies/README.md",
         "server/README.md",
@@ -313,26 +340,29 @@
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "124d3a9cf913cf717e04615ce6a84610ba30eeca",
-      "tree": "bc23739745fb2dee586d5d19473c84e0b09eff37",
-      "baseline_head": "124d3a9cf913cf717e04615ce6a84610ba30eeca",
-      "baseline_tree": "bc23739745fb2dee586d5d19473c84e0b09eff37",
+      "head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
+      "tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
+      "baseline_head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
+      "baseline_tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
       "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 495,
+      "tracked_files": 77632,
       "class_counts": {
-        "COMPATIBILITY_LAYER": 2,
-        "CURRENT_CONFIG": 74,
+        "COMPATIBILITY_LAYER": 4,
+        "CURRENT_CONFIG": 202,
         "CURRENT_CONTRACT": 3,
-        "CURRENT_DOCUMENTATION": 159,
-        "CURRENT_SOURCE": 9,
-        "CURRENT_TEST": 61,
-        "UNKNOWN": 187
+        "CURRENT_DOCUMENTATION": 209,
+        "CURRENT_GENERATED": 76869,
+        "CURRENT_SOURCE": 39,
+        "CURRENT_TEST": 100,
+        "UNKNOWN": 206
       },
+      "materialized_file_rows": 763,
+      "coverage_group_file_count": 76869,
       "readmes": [
         "OSINT/README.md",
-        "README.MD",
+        "README.md",
         "artykuły/README.md",
-        "badania/LOCI/README.MD",
+        "badania/LOCI/README.md",
         "badania/LOCI/matlab/README.md",
         "badania/LOCI/matlab/adapters/README.md",
         "badania/LOCI/matlab/compat/README.md",
@@ -349,12 +379,15 @@
         "badania/README.md",
         "badania/Symulacja_GITHUB/README.md",
         "badania/conditional_decision_theory/README.md",
+        "badania/heuristic-causal-lab-final-4.3/README.md",
+        "badania/heuristic-causal-lab-final-4.3/artifacts/README.md",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/README.md",
         "images/README.md"
       ],
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
       ],
-      "tests_count": 61
+      "tests_count": 100
     }
   ],
   "files": [
@@ -364,7 +397,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "workflow-config",
       "size_bytes": 582,
-      "sha256": "7f978255abe9658827aca2438b8244836ba8ebd687a65ee0f04e00ec7c7f8671",
+      "sha256": "b1288e4254f139600dac38894bcfb960caf7dfa0df628b304bdc08b1cb1926a6",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -460,6 +493,30 @@
     },
     {
       "repository": "DonkeyJJLove/HA2D",
+      "path": "README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 8286,
+      "sha256": "21bcfc0bb6d04f1309f3f72d83bcb05dba0453ed432c3283ad99ea682ba91419",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 493,
+      "sha256": "ef306720039b9767fc95f17c2d91e107e57eac903c192e45c330e6221424d6af",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
       "path": "SEED/HYBRID-AI-DRIVEN.prompt",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -493,8 +550,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 2868,
-      "sha256": "8bd34182550e5a803c543522c5b15514c50294677aa8ecf22ac81cf1b715f666",
+      "size_bytes": 3058,
+      "sha256": "329a219e8bdc7039f180c3a0212db1faf8b03b6cf0a3a3e96e69e8d0a9ecdb12",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -537,19 +594,6 @@
       "sha256": "a091ad39139b325cfffa37de071781ff81ba5841a49cff8f677b2a33012d6502",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
-    },
-    {
-      "repository": "DonkeyJJLove/HA2D",
-      "path": "readme.md",
-      "classification": "CURRENT_DOCUMENTATION",
-      "classification_basis": "documentation-or-research-text",
-      "size_bytes": 8286,
-      "sha256": "21bcfc0bb6d04f1309f3f72d83bcb05dba0453ed432c3283ad99ea682ba91419",
-      "naming_conformance": "NONCANONICAL_README_CASE",
-      "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
-      ]
     },
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -631,6 +675,18 @@
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 626,
+      "sha256": "c5ee2b32011644bf5dca7ad027bcccb6eaba85a1a6d6600d5d1196ba48652cd3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
       ]
     },
     {
@@ -1268,8 +1324,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3078,
-      "sha256": "c7b5f95bd3c07543205125febe064bbb7e1e33cb132044b604f75ac026336bca",
+      "size_bytes": 3268,
+      "sha256": "cdab4bd5c9dd8ff73c6431e9ed4476fe3cd8303dae46ebee02f1cdeb556784de",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -2295,15 +2351,14 @@
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.MD",
+      "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 15051,
       "sha256": "80b573cf3bae26dbdda48869cbd139d978f6eb85a1624d0b55857a8e6308babb",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
       ]
     },
     {
@@ -2870,7 +2925,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
       "size_bytes": 7981,
-      "sha256": "9e24141ff88e31f410ed997464351d08e3ac7f547f91d06de6a69330656e8c51",
+      "sha256": "48442ca2653a7e55eeb5cb30f2607671bfc433b6b08192fb054061f89373ef0e",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -4425,8 +4480,8 @@
       "path": "LION/architecture/v1_4/federation_current_vector.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "explicit-current-v1.4-compatibility-surface",
-      "size_bytes": 6639,
-      "sha256": "00bb0c6a464868248cde70939ed669aef3381dee9d6efd059a53d6716472cb59",
+      "size_bytes": 7578,
+      "sha256": "64f6c8c3f219a3eef05e57052d2b5028f582c1684b85bb899da8fb10fa1590a3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4629,8 +4684,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 532302,
-      "sha256": "9dc8cdb6b39a288ab464a7184fab5429e01afef8bf79de1ad0093c8073757704",
+      "size_bytes": 544343,
+      "sha256": "b07b4752c14ad287f1b58f8d9d4684b4d23c2e08ee9d528e83aad52f5ccfa258",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4639,8 +4694,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 91503,
-      "sha256": "eb3a45623c04e5b140f9101538f14b4bae8f7e6e7bca2c002b014f6e44e73456",
+      "size_bytes": 95874,
+      "sha256": "d4867e2a134ed52e822eade42fa4abea8621c6648f276bcc70674753cff06e97",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4693,8 +4748,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 24037,
-      "sha256": "ee9b8c10f3bc461bc8108139f9fa5f73384b0ec6afb60bc55c9a0d3978028319",
+      "size_bytes": 27398,
+      "sha256": "900a7558bb128137cb2c828032fa9bfb1bb7c33f18ead812be1e45cbcb92a433",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4713,8 +4768,8 @@
       "path": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 50076,
-      "sha256": "7f62a97d46ca67d0e7add660c969fc0707f2d249fc2254554db85d2e2e52f04c",
+      "size_bytes": 45497,
+      "sha256": "0c85eb1154c5872df4125ecf9dc32e5b11fe32ed2320686792006e21552f52b7",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -4736,7 +4791,7 @@
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 35623,
-      "sha256": "7fe4c57a54506d679fda539f59f980f6448a9f0a9760f0ab26ae9b4537630187",
+      "sha256": "33e5fc5208b0e3796e9db5b7f9c644e8657f49ac42f33f82e4d1d54c077e293c",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4780,7 +4835,7 @@
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 5404,
-      "sha256": "53ee0b642695a6b931d2a944c7fc08f5a7953b291e4203d6f881608d1cb2df45",
+      "sha256": "404359237b7f2e391d5cfaff8d90617b1a5761f46c533498297f75eed342677f",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4800,7 +4855,7 @@
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 3612,
-      "sha256": "5c767faff238f87d8cd766998ce2bdfc77043250a41d8f5248d16ba83aa3a77c",
+      "sha256": "8fd55099b5f64f83afc1dc4c7ca0418f02af876ad78454ef0d0468385f8a235a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4819,8 +4874,8 @@
       "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 22560,
-      "sha256": "83277ee01098656c35e3653cfa892501e4233688c28cd392265edbe62583c7e8",
+      "size_bytes": 22683,
+      "sha256": "cb18de93cdd8dc9d0f8e2c25f2152b98db610cdef1f6920269846fe958437eea",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4955,8 +5010,8 @@
       "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 452672,
-      "sha256": "8bbf0ab9aa285f969ec4a572fbb13824341d2d81733c80c067bec4a3cbe9ffcb",
+      "size_bytes": 537477,
+      "sha256": "4929f89115955240cedc38f6ee1aa60ffa9c6301bff2e7b5ed7fef304623ee20",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5154,6 +5209,18 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 2370,
+      "sha256": "4bc749a2719aa6795aed91824805c3213eff56b20f04eceeba452d4edb605ba4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/MIGRATION_PLAN.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "v1.5-architecture-documentation",
@@ -5309,7 +5376,7 @@
       "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "self-referential-generated-census-carrier",
-      "size_bytes": 1185328,
+      "size_bytes": 1314294,
       "sha256": "SELF_REFERENTIAL",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
@@ -5321,8 +5388,8 @@
       "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
       "classification": "CURRENT_CONTRACT",
       "classification_basis": "contract-or-schema-path",
-      "size_bytes": 2389,
-      "sha256": "a1618ef7bfb45660a69a8b7d64db9faeca53a0cb993147a6e71b7b69b2902c6a",
+      "size_bytes": 4990,
+      "sha256": "9fa59e2a23ecacd1db20804c7d2fba849750e50b215309b27b6c2492f9d48154",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5341,8 +5408,8 @@
       "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 10345,
-      "sha256": "50d039f35846ea0be239357ebbdfcc4fd39fd8d8f61eb34ebc08e78c6ccb5c3e",
+      "size_bytes": 10303,
+      "sha256": "a05e9b99671a7861797642f0003788acf809e202f1203e4408a37fba8a9ee8ea",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5425,8 +5492,8 @@
       "path": "LION/architecture/v1_5/TEST_CENSUS.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 146047,
-      "sha256": "e337e4ffd84416c9a9e812c4917b4cb8b6048efb4af34cadfd2255118d9bc7f1",
+      "size_bytes": 158882,
+      "sha256": "ec50d0e992d6e756783cd889e3084eb2eee315a1efc5425aea7c7a74a4c95c76",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5445,8 +5512,8 @@
       "path": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 16051,
-      "sha256": "74167c265286266fa1924bf5f15956ba6d51fa4561745562bf01e8403bf68976",
+      "size_bytes": 16205,
+      "sha256": "f7ed68db46dc24acada10e4619e7514218d7affa7f44dad3dfa96f35c31facd2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5455,8 +5522,8 @@
       "path": "LION/architecture/v1_5/semantic_owners.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 12449,
-      "sha256": "29bf0764f2124192ceff1ef6b3949b242ddce04443c1b90f76595ff8c511744a",
+      "size_bytes": 12614,
+      "sha256": "c68b4929494c53c33c9b9e6c2b81125c4e909376f04b04b44f5979a85d243ef4",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -8695,8 +8762,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 8564,
-      "sha256": "67c36bf340320396a2ec2158d0411dac0dedd831dbd0643d8a938d840974c0db",
+      "size_bytes": 8771,
+      "sha256": "e124e9235f4e489879bd26e00d71bcb9fa78c5f58303656e198658af3c1095a6",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -12584,7 +12651,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
       "size_bytes": 3884,
-      "sha256": "c68c73d24a5911bb72a794d20122ea5d9462bd517e5cd45147e2081388ff4ee2",
+      "sha256": "a28cf4d7ddfe7e01b0d59717560b0494825af2e97f239ab0f04dd259fa25f038",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -16743,8 +16810,8 @@
       "path": "cyber_lion/tests/test_v15_global_repository_standardization.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 6245,
-      "sha256": "5588e3a92cc8b12ffe62f170c20cd6c7fc4f3417b062046245a0b7450aa5dfec",
+      "size_bytes": 9425,
+      "sha256": "6c2c53ec37a109414708eee194f9c546dff517374e22951402b2744065f43d5a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18307,8 +18374,18 @@
       "path": "tools/lion_federated_architecture_knowledge.py",
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
-      "size_bytes": 28888,
-      "sha256": "4173eaf62bf7d874e878f3cf07b2fe4b5e15b7e315f3228a1b85aed797b41a4a",
+      "size_bytes": 30339,
+      "sha256": "90fb6abdc5a56788c4415f0130f991aac894dfc0c0e5fb31076c478786cda226",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_federation_snapshot.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 6422,
+      "sha256": "4ccecd81594e49b7c2523d9abe5af847a28c90a45ca36bf41151dc99e3e5e577",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18334,11 +18411,21 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_global_maintenance_projection.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 10570,
+      "sha256": "15729c985160aa4ad41b78043ce3747614fce29607c62b7430035f9d153fcd35",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "tools/lion_global_repository_census.py",
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
-      "size_bytes": 12031,
-      "sha256": "cdce1d2506f3d27b75f74b7f343860958f3bde7065c71bc84176ae62d7817b3a",
+      "size_bytes": 14918,
+      "sha256": "cdb956279b90664ecb8469ace83c007b9f0725b191eade112f0791f6f5c9a092",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19076,7 +19163,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "workflow-config",
       "size_bytes": 561,
-      "sha256": "bb395731c7a3b6b21272bb242e9267dc26e197d3a1ed4f0daaae8e3276090655",
+      "sha256": "fd91fc997ba1a4e93c9fc961d7f7c953b4b0c762f8f764950c230c5e33ec679b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19152,15 +19239,26 @@
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
-      "path": "README.MD",
+      "path": "README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 48343,
       "sha256": "5128f431875dc40af3a751f7b38d60f6a3c0847c58b0b3be7d98a680ed19a0cd",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 500,
+      "sha256": "470c0029b78231f7e22c48ce2de67b55d0cf2befe15916cb4fb773467f964562",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
       ]
     },
     {
@@ -19168,8 +19266,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 2890,
-      "sha256": "5374392fa929e43e6b952cf5166d134977c216e7ad4f92bf6eb7c76069e39e51",
+      "size_bytes": 3080,
+      "sha256": "c1fb5349127b4fb3e86a267f240bf987f62e2308bd1d20f9dc306a623e5a48ec",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19535,6 +19633,30 @@
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
+      "path": "README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1185,
+      "sha256": "74d1c749c45d3001c8dcdadccb45024c58d841fae490424dcf4e081b7a52b79c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1050,
+      "sha256": "86a00897a42337a64b041f59e280ed48bfb49963abd7d421d47f35600863389d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
       "path": "__init__.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
@@ -19775,15 +19897,14 @@
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
-      "path": "bench/README.MD",
+      "path": "bench/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 11907,
       "sha256": "7c6f58a35292c08d207e360b9d0ee3821c9fe8a8fea94f7941679d8ef1eb6807",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
       ]
     },
     {
@@ -20581,8 +20702,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3112,
-      "sha256": "e04239c9f40d5b2a4ff711c592951e47c7302ded0f21b1bb869df00c72bb8379",
+      "size_bytes": 3302,
+      "sha256": "d1bcf4c4e30eb11f5d7ad846782c50697a4b7c8f529e7db4170aa77e5e10a232",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -21344,7 +21465,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
       "size_bytes": 925,
-      "sha256": "42cbf6b42600c795887b2cad4e579515bea3add9eacd68386a784947dfca23d6",
+      "sha256": "6ea51432b245be1a7bb955dcf368968a41bf94bfc442317dccb929c893fdd1ae",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -21550,15 +21671,14 @@
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
-      "path": "src/README.MD",
+      "path": "src/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 28929,
       "sha256": "9e8723298bc9c2a10fcabf47142e126ee6bfe5fabe30cc439e45d112c5456186",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
       ]
     },
     {
@@ -23025,11 +23145,23 @@
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 478,
+      "sha256": "0031083d62954c88678c27fd9ed370d8afffcba912de2416740f7c935e8047f8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 2989,
-      "sha256": "a806b52d1f0503762a50ef9b478dc54c959240f9f34fd1a5d66f6cece3951302",
+      "size_bytes": 3179,
+      "sha256": "00c44ded471b167ba2ad45b8c59b3df25cd742888fde26a35f4183afd8297abd",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23039,7 +23171,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "workflow-config",
       "size_bytes": 732,
-      "sha256": "98c0ff2e5d37750946b8affd617806b12c40614f0260572614086474778f50ad",
+      "sha256": "f63c502815f3316e4ecbad37094b00855b471a0260a00105663aeab0ea82c04d",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23095,15 +23227,26 @@
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
-      "path": "README.MD",
+      "path": "README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 6367,
       "sha256": "b610cbca6e1af132997cd51ef284c91da79535121e6216b6cf0c5125fca18d66",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 506,
+      "sha256": "5171bd733fb8fbd7e609596b71b243e6f844e776271670f14aee8cedbc64c149",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
       ]
     },
     {
@@ -23111,8 +23254,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 2947,
-      "sha256": "748d025550612caa97ae9f239e83991d077ebcc9bbb42922a6aee88e77a4a4ba",
+      "size_bytes": 3137,
+      "sha256": "4c23f59aa8eecc15c703f6aeb291abecc872a69253e5438dde92238f0d614bb3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23230,11 +23373,23 @@
     },
     {
       "repository": "DonkeyJJLove/sbom",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 461,
+      "sha256": "85a57c3e11afcb3cd2ceddbe30ddd4367dc6397c1f11393dcbfe7deea82d3f1f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 2970,
-      "sha256": "18048d17aa3d496aa96a1c60bb9e596138f916b26f2fa379f4ed31e12cdbc10e",
+      "size_bytes": 3160,
+      "sha256": "0c2826858c8c21d37e73180b908fd1050fd27fb26f72c0137460004dca189e22",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23604,6 +23759,18 @@
     },
     {
       "repository": "DonkeyJJLove/swarm",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 933,
+      "sha256": "a13712fe912140f2e4f646263e777914a75a24ed95d7a46643cedbf2e567609b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
       "path": "WRITEUP/MOST_MQTT.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -23810,19 +23977,6 @@
     },
     {
       "repository": "DonkeyJJLove/swarm",
-      "path": "aggregator/readme.md",
-      "classification": "CURRENT_DOCUMENTATION",
-      "classification_basis": "documentation-or-research-text",
-      "size_bytes": 10,
-      "sha256": "5a22bebfe863b8673c616358a016e724b4a38ff145a631b7fb93d7758246a3d8",
-      "naming_conformance": "NONCANONICAL_README_CASE",
-      "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
-      ]
-    },
-    {
-      "repository": "DonkeyJJLove/swarm",
       "path": "aggregator/requirements.txt",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -23836,8 +23990,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3297,
-      "sha256": "79f840103945393c242e343bd072716e68a4a5b22fc6f5fb64fb0bdc539b72b5",
+      "size_bytes": 3487,
+      "sha256": "57b35df139c8f506b02a10fcf5b6821caa8938010981997d04856dbdbdb60815",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -24047,6 +24201,18 @@
     },
     {
       "repository": "DonkeyJJLove/swarm",
+      "path": "infrastructure/istio/virtualservices/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 18665,
+      "sha256": "056a2f6d6748ba7cf3463e7e7257137084a12fba2672c8865f6481ceb4dc381d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
       "path": "infrastructure/istio/virtualservices/eegress-virtualservice.yaml",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
@@ -24054,19 +24220,6 @@
       "sha256": "95533cbc226c483fc363cd5694adddd6350782f277e944db0f165b65d8d78417",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
-    },
-    {
-      "repository": "DonkeyJJLove/swarm",
-      "path": "infrastructure/istio/virtualservices/readme.md",
-      "classification": "CURRENT_DOCUMENTATION",
-      "classification_basis": "documentation-or-research-text",
-      "size_bytes": 18665,
-      "sha256": "056a2f6d6748ba7cf3463e7e7257137084a12fba2672c8865f6481ceb4dc381d",
-      "naming_conformance": "NONCANONICAL_README_CASE",
-      "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
-      ]
     },
     {
       "repository": "DonkeyJJLove/swarm",
@@ -24256,6 +24409,18 @@
     },
     {
       "repository": "DonkeyJJLove/swarm",
+      "path": "scripts/kubediag/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 41609,
+      "sha256": "afaffb616e661fe4596ed6d669612e1d3d1bc30d2b8f00a6e6a151175d6299cc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
       "path": "scripts/kubediag/deploy_diagnostic.ps1",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
@@ -24293,19 +24458,6 @@
       "sha256": "28ca544c307c7c2e365f0815c392e4f683c0a56727ce6d999abb938d8490bc5b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
-    },
-    {
-      "repository": "DonkeyJJLove/swarm",
-      "path": "scripts/kubediag/readme.md",
-      "classification": "CURRENT_DOCUMENTATION",
-      "classification_basis": "documentation-or-research-text",
-      "size_bytes": 41609,
-      "sha256": "afaffb616e661fe4596ed6d669612e1d3d1bc30d2b8f00a6e6a151175d6299cc",
-      "naming_conformance": "NONCANONICAL_README_CASE",
-      "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
-      ]
     },
     {
       "repository": "DonkeyJJLove/swarm",
@@ -24587,7 +24739,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "workflow-config",
       "size_bytes": 698,
-      "sha256": "029af047adc381ad6b9550d4b749804753942f36f2edec2a54545b6b6aeaca56",
+      "sha256": "8bb7450e10dd9d0a83f78c84575588b9ab40bc1081a5f0615d837fe4318bbec8",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -24627,7 +24779,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 16978,
-      "sha256": "4b67917b10338bcca0138f69da4582426245fca0c4399c68d718eb52758f5005",
+      "sha256": "e50b37e364b0ec678e25244e2643c2421e7a4b7de1a9ea6998f9d98784ce749b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -24767,7 +24919,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 1324,
-      "sha256": "aac1c70aaf37aee0991a4549929ef5407e3f80a8072dcfa05284d7bad980b286",
+      "sha256": "dfdd495f7b850f0f12e8c03a008d6bb95ccf171a3033c63553c4017eda7934a9",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -24789,7 +24941,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 7068,
-      "sha256": "a8f10c1d670aa18ac3a8a6a022bd67f7677353c74d78055600707a27f166a411",
+      "sha256": "5baefc881660bb946d049d7d3962d96426b0243a91d203105079ed7fb21a2706",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -24825,15 +24977,14 @@
     },
     {
       "repository": "DonkeyJJLove/writeups",
-      "path": "README.MD",
+      "path": "README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 21102,
-      "sha256": "cbf5b22f0d8ad7f079aa88a18151547611c40ddc9c395aaf69d36bd84eb3e817",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "size_bytes": 24997,
+      "sha256": "49a513ee774842219b4c146b0c37f93b93a9e4694edabef5ad77d04c0ab67b1f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
       ]
     },
     {
@@ -24845,6 +24996,18 @@
       "sha256": "57cc498e24da1a72be7b9a8641f346af4c4e45177287374b93daa6c05be55e4b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "REPOSITORY_STANDARDIZATION_R1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 587,
+      "sha256": "c31ea57ea693822a1d37bbc7c3779748288eebcfb9d5795bae29aeb8be30c1d0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
     },
     {
       "repository": "DonkeyJJLove/writeups",
@@ -24881,8 +25044,8 @@
       "path": "artykuły/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 2047,
-      "sha256": "bf734c89075031319f8315ed0b0055ef63d4cad134c9d503749500b077997705",
+      "size_bytes": 2755,
+      "sha256": "f18763665a6f152a2053442464e5c96279bb740d251921c8c6c9034f07cb4ac7",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -24924,7 +25087,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 24103,
-      "sha256": "90821df7066c0186b1030146c56a334f194fdeaae35e37ba5167a44ffb44dd48",
+      "sha256": "28778b00e514a2f2a62ba5bbd6bb1eae2ebad3f2d2f1fbaa2f3290cbe0292db2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -25250,15 +25413,14 @@
     },
     {
       "repository": "DonkeyJJLove/writeups",
-      "path": "badania/LOCI/README.MD",
+      "path": "badania/LOCI/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 7070,
-      "sha256": "49045fd0a3019a4dc57aed03ea4f19eec1fa6f4f4d479f6d4a4a8737c2c30991",
-      "naming_conformance": "NONCANONICAL_README_CASE",
+      "sha256": "1505b63e0044b7eb6b9919b5030c304a1e73aaa32f15abe042c6d3b884c80dfb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
-        "README",
-        "README_CASE_NONCANONICAL"
+        "README"
       ]
     },
     {
@@ -25267,7 +25429,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 1737,
-      "sha256": "d4c92e56a0177e3e374aa0517d46d1eba46f79786b80a9b2061c9b9e46015df8",
+      "sha256": "8153e13b03234744d6d8b96836964b22337b187324dfa8384f98c4a74a4cbb56",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25279,7 +25441,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 855,
-      "sha256": "17fee80344f591139f5c949aba37aed9c70405921952c6ae7d4c91762fa14ab1",
+      "sha256": "7ab24a13538f12bcfb442dd29f52fff1c55fa6ece9a6816ef5c6f80e0f5d1dc0",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25341,7 +25503,7 @@
       "classification": "COMPATIBILITY_LAYER",
       "classification_basis": "compatibility-or-legacy-path",
       "size_bytes": 747,
-      "sha256": "23e13baf23f83b03e5102e8187c33419c3d5a0ba5bf1f1c577ad7d09c0712c4c",
+      "sha256": "31c933b0f749d9d5213dbe1b60fac0e33e6cc0621da091b96e54583f1f7c8dad",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25363,7 +25525,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 655,
-      "sha256": "22bae574241498633afe3fb13f1a4106b263ea07800425aca7bd6ffb6402995a",
+      "sha256": "5a2a9cba608cb3e3e4b8f5702ab0313b7624c98528d21a1f7243a6fb58e620e8",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25385,7 +25547,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 2055,
-      "sha256": "e82af39ecccf93d26f84e1a764de73b2c8c8302a4827e3bc1fe907a018e17cb0",
+      "sha256": "bf561505013890f37975492a27b7647cb93d3c6a3f5df9eb716f59a98fe82d2c",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25427,7 +25589,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 938,
-      "sha256": "236d089ee1216542077dff5a58d14690bb5a5e26c8df6b36821d539e492e994d",
+      "sha256": "5dbe58abc76ce7da46e2c3dd9a35c5ebe70147f4a1959207d4004b66de518952",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25509,7 +25671,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 515,
-      "sha256": "785d0aff5e875956a8535fcbc3a8762d36c825e7311c168389b5ec975decef80",
+      "sha256": "1b9e4655c0efee063884fc5d4b7993e82c43ce4c1dcaac8ad1e29e4faec223b0",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25561,7 +25723,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 760,
-      "sha256": "08d348f12dd186d40f1daae20c6c0447acff23abed01f9bdbeda24648ba15c94",
+      "sha256": "f0dae7709e5dd18e5630441a3291d33c30c72559a0d5fe9f4bc9dc0647d3abc2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -25593,7 +25755,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 1087,
-      "sha256": "06737785b7e293885d2157c2512659572eb63bf9be2b0d0eeffe0e78b82e995b",
+      "sha256": "c1e52919b80c09e41e3500f76fbbfed109c39844bdde8345e2e5e0b5599cc234",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -27575,7 +27737,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 1170,
-      "sha256": "7b48f8c66d55735e73cc4d2acab13882c7ad35c9a1eb9440276933c277e75fce",
+      "sha256": "6366c2ff59118191a9b735720226ef021c55391c4defe0e3062287c3bb645076",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -27867,7 +28029,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 818,
-      "sha256": "f6704340b3a5d745da284f2cf8606718e3ed325252fdf082a37be1837775cf0a",
+      "sha256": "14e647456309d5011557533deaebca3fb2d780e4bbdd9858580034e7ad3f7849",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -27929,7 +28091,7 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 1104,
-      "sha256": "77641c6d993150e5b2a2f475aaee144019c13a4f53f68a9436261161955fcaab",
+      "sha256": "57a08415c22bd67d769e8f519b509e23cd0f963f6cf6678dc649b97d7b661032",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -28561,7 +28723,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 428,
-      "sha256": "10937f13ffa7aebedcff7510ff0dfa6774838b2a74438d84b5cc02dcdc54c9f8",
+      "sha256": "c95f08b2b8df347e590a9a0f641158121080784f07e5f1d17b5b5b43e2f5f881",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -28812,8 +28974,8 @@
       "path": "badania/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 21176,
-      "sha256": "09e8cd2972659bfbd53918cad4c7aa6e71261e05b285ac7ebcb1aa1d6d104ad7",
+      "size_bytes": 23297,
+      "sha256": "e619b8c5ce768957fcb6fa1ff232cf604de71d4629d26b5bd6ffdcaa9ef54844",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -28905,7 +29067,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 3400,
-      "sha256": "d31026bf93ecd9ca38cf15b3f654fcd39e34f467399a01c65745aaa1563da534",
+      "sha256": "f53c81cce10e61df903fec243ac036dc74c851cd8a710b19d319c62667ec76e9",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -29057,7 +29219,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 869,
-      "sha256": "d5ef532e381ba4674e58f668ab6d941f19553a4148954092148b409c649693ce",
+      "sha256": "3ef42f6ba29c6a2d64292f89269b913a4e930fee2034a6a3097f9da6aeda22e9",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -29080,6 +29242,2682 @@
       "classification_basis": "config-or-data-extension",
       "size_bytes": 3327,
       "sha256": "1ec48345d1cae9b3984202be726f03e11f3766d5c206698d4e4734ccad5c0383",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/.gitignore",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 616,
+      "sha256": "8bdb87b2c1f038a924bafe8630ca28ecb50cac0906ef52f8dde0015903016b44",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/HCL_4_4_PROSPECTIVE_PROTOCOL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 24241,
+      "sha256": "93f4333ebb097de248ceb0bd19ee9a2e01b68558d28929ef87fd54e888500f37",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/PUBLICATION_INTEGRITY.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3858,
+      "sha256": "0555938b4a6d6e22d79b444208916457e6352d2cffbde330974112903e2ad63f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 40957,
+      "sha256": "4836474d12ca3cdde2f4c82da54bb9e73ab49b14c2b97b6701694ee642908c64",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/SEMANTIC_ENCODING_FROM_SIGN_TO_CONTROL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 29840,
+      "sha256": "ad6aad4dc6bf8bd4893c66790f81ec32e186128074f4e5ca9bcfec60b38a88ad",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/SEMANTIC_SCAFFOLDING_WRITEUP.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 21169,
+      "sha256": "b0de29d447ba5b31b5af2ba9aed5f5d1d3ce1d004f15629c1a655f77e0ff78d3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/STAGE_PROJECT.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 918,
+      "sha256": "a24350cfe1e78f45a93c1cf04266262a2dd3e87ad3c7397ef1ef593252ca09cf",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/artifacts/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1387,
+      "sha256": "15452c67ad0b5820cde76c8014f4aef17e8b569271ffece0ebdd0acadcc5ee93",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/artifacts/publication_validation.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 2300,
+      "sha256": "d9bfceb24bdcad35b18950f425d261a853ae47cc7700dfeaef9dbe212db6205a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/artifacts/report.html",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 31248,
+      "sha256": "199e5d8702b766cd9dfcf214d7b2c586b965f42872e4b98a7f43c34b9b7b4d81",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/artifacts/summary.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 13439,
+      "sha256": "b195965f495c62220bf944ccff545409b981623716fe4c4d18ef36d95e4a3e65",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/artifacts/trials.csv",
+      "classification": "UNKNOWN",
+      "classification_basis": "binary-or-research-data-needs-policy",
+      "size_bytes": 2539392,
+      "sha256": "fc6c591a57f83e4f819872fd65ad9327573678844f2fd2055b95cec7af8de68a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/.gitignore",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 120,
+      "sha256": "64e6a6b2af45faf73c2fe0122325a11b8abeaf65bf90ef6f87a82cc10d153dec",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/BUDGET_FIX_ANALYSIS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3458,
+      "sha256": "d7aeecb596d1eac047918b011dd123d9f262751a0354ec8d6576302bac7d5860",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/BUILD_REPORT.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3856,
+      "sha256": "c504f07bbf7d8b451de2deca5c16386fa004e816e691baa37ea8dcdef5f000dc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/BUILD_REPORT_4_3.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1365,
+      "sha256": "151bd58b06babaabae24fef6847d7a1a1175ce9c0d6e230ddac1a1f5a55b765e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/CLEAN_OLD_VERSIONS.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 267,
+      "sha256": "baadb8d30a3aa66e12f43839f948e8f0906e352f65596bf432c10b8fefb64888",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/FULL_STUDY_PROTOCOL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3227,
+      "sha256": "9e06819094a27adaed5c912e0fd00055ddb33e8e089bebd2cc8fd62599f85ad5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/HOTFIX_AUDIT.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3552,
+      "sha256": "597f2e77a7d351ca4967b0ca1a0689af0cf1f3c31cdf33a9c2b25b437a6ab4d6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 1566,
+      "sha256": "e7b112e2a8f57ea012eeae061c255b1a00a051b3607de4ca2a2dda73974f7274",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3083,
+      "sha256": "f2c663e83b368df3e5589e43ed2fdf1529628d5d81c797cba5af1c5f1ea65a7a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/RUN_SELFTEST.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 308,
+      "sha256": "bf89345cafaa062816bf719e1db41575641bf38ad62bdd43c6e8a1d9d6425905",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/RUN_STUDY.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 94,
+      "sha256": "bc59b02f5a19b71f3bbf67bb88f433f29d099cd722a3172a3125d732c28c3297",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/SHA256SUMS.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 16401,
+      "sha256": "4ffde76a818e041d1c6a1a3cc32cd591bd9e2d2059fd587643bc8e035a0e210f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/START_NEW_ACCOUNTING_STUDY.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 2771,
+      "sha256": "97d4dfd79f8c7135265af029e81b83460f77b86f23967b51e755dd3eb021a65f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/STOP_RESEARCH.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 119,
+      "sha256": "9dd5d4a30f108aaeba8d9fabace8183e41493fe3c200bd97eee1ea81ecc85407",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/STUDY_STATE.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1057,
+      "sha256": "be72e511061be5568908a910b00928307d320a3bbd84e3503326d2d303d82194",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/STUDY_STATE_ARCHIVE_20261002-122114.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 664,
+      "sha256": "89ed8c55563d6b522a1f5681ee75a9286a59ca2d400e5432eed52629e61748fc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/STUDY_STATUS.cmd",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 103,
+      "sha256": "6d58dd7123738f81b9e78e2a91b7972ef7f704f4d617dcacda0bde64490b1aa8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/ablations.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1048,
+      "sha256": "d5f69f5e57c46535f8640abc8361cf54262534dc84cc589e90c792cb3929fceb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/confirmatory.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 994,
+      "sha256": "0471f7eb54f12ffa65eea652c640f0a2aca528a62d9ec547eea7075401738b46",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/confirmatory_compiled.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 990,
+      "sha256": "c5a4bbd26a9fa5401834b86c745ba932bdc5a61fad18ba9b26429f60acf3c916",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/final_confirmatory.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1748,
+      "sha256": "34a0e1cbad1fbff060f354420e2dd015803141e732d2cadbc41c414209b4d9f4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/final_pilot.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1490,
+      "sha256": "efa89e9ebb8236cfefa65ddfd8d29195f1ead1b1ecd59b9d6b5a85fe740bf48a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/pilot.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 981,
+      "sha256": "5d0ebf2c432a3eaa2d8bb4929327d8afb83bae43816653aaf2993839cfe9b4c7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/pilot_mechanisms.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1019,
+      "sha256": "0357f51b0f432bf944b66811b544e36f47e1e9d2ff509fc2036c8b5a34adf567",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/pilot_openai_compatible.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 997,
+      "sha256": "12511c4ab923e53bf6275f80dadcef7620c3d0702f3c5fb1f577b9b400a65019",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/configs/study.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 4590,
+      "sha256": "3fea26ae4564e213a716bfab33d50f15f7f1e57577d6a1aec87d662f22e94df5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/docs/RUNTIME_7874_ANALYSIS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 6909,
+      "sha256": "5934da60233a3b43f7bd7f23f6dc5cc15c93375a8d8881b7259d3b033aaef075",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/docs/history/BUILD_REPORT_4_3.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1365,
+      "sha256": "151bd58b06babaabae24fef6847d7a1a1175ce9c0d6e230ddac1a1f5a55b765e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/docs/history/FULL_STUDY_PROTOCOL_4_3_2.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 6814,
+      "sha256": "45d07245b4b02d3ffc3948419eff4182a3a6786d6074fe7ce28dc85e02d629fa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/audit-budget-fix.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 252,
+      "sha256": "64cb241f6a1dcbd46d6d55b7ca686d9468d6f4b88d77a084b63990cd910c8639",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/budget-fix.patch",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 11580,
+      "sha256": "a45f6c6f51ff11bae36139d620496540ffc7d8aa732b57535d9b12eca0daae34",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/diagnostic_analysis.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 5094,
+      "sha256": "6baa584059cbceb3a9ccebbcd0aec6c2581130c1171d3a23e589c51178549388",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/diagnostic_live_report.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 9397,
+      "sha256": "19e6b7d18690f6219d08d1ccba35898fce1698dc4fa1e0f5252e506d491a9498",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/grader_functions_unchanged.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 72,
+      "sha256": "477b05672efbca63dbb517ea9a7d7e9360c5c95c41dc3c7224c3b64687e87010",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/observed_case_offline_replay.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 2294,
+      "sha256": "d264e6880573af1cf1e5adfeb5caf43c4caa8cdec98f330950e6e332f55b801d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/pytest-budget-fix.xml",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 40821,
+      "sha256": "8665a7844c7e33ad18cae0a0f99a8e76264c79d7e0a65442803a4f0cb33ce239",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/pytest-output-budget.xml",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 43350,
+      "sha256": "6e1a384074105b50366774577f730367578a72fc9c0bf6e81026b28783b53e36",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/runtime_7874_analysis.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 22838,
+      "sha256": "cb563eacc90dc023b3cc703185f0ba609e1f57022e0ebf7ed7183c04930b44dd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/smoke-budget-fix.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 483,
+      "sha256": "effc68ea0f094acf7d0ed8d2e22d28cfb024090befb86e740022b6bd0ddc27ec",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/smoke-output-budget.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 486,
+      "sha256": "7c9abeecd389982918ba619f5bd6f338c3427e14c77796c5f3d06fc07deba701",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/source_changes.patch",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 26163,
+      "sha256": "c09536d92173a1a3012c7edc34d9034030dd1e60a5aeb496b74ee8416299eecb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/test_environment.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 145,
+      "sha256": "ba47fecb0d17a38d7dabbe6a1a06ae9476b8e5f742b21cc7d9fb8d9942efe851",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/test_environment_budget_fix.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 150,
+      "sha256": "a46acf7c649a826d486af54186a0370dbe6f7df9d91bc9efe261464ef8dbeb4a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/unchanged_components_output_budget.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 3797,
+      "sha256": "0e0c7c6b7e68a6581f4e44c05efcb78eb814eab0b64d1aae63c27165405aa66d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/unchanged_research_components.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1767,
+      "sha256": "2765aab0089b915e0c1022c91036a8fac636aa359b4e68c6bcd9e1c519d9e810",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/unchanged_research_components_budget_fix.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 6484,
+      "sha256": "cd78eb36136a8d67e168f5f65561dc763be5b8dfa61025fe8f972942d9900965",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/__init__.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 22,
+      "sha256": "1d7713fab807b3b8d5d84a00752084222ebfd5a2a4e703a470b6b624467700ca",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/__main__.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 47,
+      "sha256": "79ee6f134c5c5193377cf9b189cbdcc3e2095e49ba9cec310114441c15a917c4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/analysis.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 17290,
+      "sha256": "d15c168d59f342941af9717a7665da844b56903eb777d06d3a9bcd267aa8218e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/ablations.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1048,
+      "sha256": "d5f69f5e57c46535f8640abc8361cf54262534dc84cc589e90c792cb3929fceb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/confirmatory.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 994,
+      "sha256": "0471f7eb54f12ffa65eea652c640f0a2aca528a62d9ec547eea7075401738b46",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/confirmatory_compiled.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 990,
+      "sha256": "c5a4bbd26a9fa5401834b86c745ba932bdc5a61fad18ba9b26429f60acf3c916",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/final_confirmatory.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1748,
+      "sha256": "34a0e1cbad1fbff060f354420e2dd015803141e732d2cadbc41c414209b4d9f4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/final_pilot.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1490,
+      "sha256": "efa89e9ebb8236cfefa65ddfd8d29195f1ead1b1ecd59b9d6b5a85fe740bf48a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/pilot.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 981,
+      "sha256": "5d0ebf2c432a3eaa2d8bb4929327d8afb83bae43816653aaf2993839cfe9b4c7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/pilot_mechanisms.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1019,
+      "sha256": "0357f51b0f432bf944b66811b544e36f47e1e9d2ff509fc2036c8b5a34adf567",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/pilot_openai_compatible.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 997,
+      "sha256": "12511c4ab923e53bf6275f80dadcef7620c3d0702f3c5fb1f577b9b400a65019",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/configs/study.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 4590,
+      "sha256": "3fea26ae4564e213a716bfab33d50f15f7f1e57577d6a1aec87d662f22e94df5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/CONDITIONS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 2642,
+      "sha256": "12940653f7cd0509a63026675f3dd6f966278b39cc70350d576efa1d96cfe74e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/FINAL_RESEARCH_PROTOCOL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3777,
+      "sha256": "625b74502994e6b401c51ccf4170fc68b8c63af13cb6b67dc8c7773b1a668944",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/FULL_STUDY_PROTOCOL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 6118,
+      "sha256": "34f454ac910479d65c3f5338e933b8f3bc0fa4a969e8c1c17af179568df828f8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/INTERPRETATION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 2735,
+      "sha256": "7a3d0a29e76f1d56632d43860951492d21b10756b514afdeb8dc3799976d930f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/MIGRATION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 951,
+      "sha256": "bbcb771c447a2da300c7f81d6bdfb3f0b50efd4f76f5e45b749319afcdc27e87",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/PILOT_1_1_DIAGNOSIS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1297,
+      "sha256": "af62f5c8e11f6a7244f4c232e2ca5af6f53c7f47010c8519a2eb16a16aab1ef1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/PROTOCOL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 8931,
+      "sha256": "814e9811f1584c88624dc7b2a0b36d8a954ffd6b6e14bdd14d9a9c18f45bdfc1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/RELATED_WORK.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1461,
+      "sha256": "4975f43401201b99b4c8a9dfdb9f7e309cbb8737b9b7660fd05261cce683cff1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/SECURITY.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 2229,
+      "sha256": "44a71d91fccf4dcd3507ff6cd7b1891f08bc9ebee71509e37c321748ce7f844f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/TASKS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 3782,
+      "sha256": "772c9eb28dea313583aa05516d48cf56aa82ed5453bf8f67b64b70fcf6e0c738",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/WINDOWS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 2725,
+      "sha256": "45ac7d44bfd45b69578263e434e1b04094dadaedbc44a8697107165a1b746012",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/docs/WINDOWS_FINAL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 951,
+      "sha256": "9a38b4a8200d257975406d65909f193c959c0532fec55f4867a671c901c7d544",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/author_raw.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9632,
+      "sha256": "8db17fea398042f333b27059ceff338a9f345a51820b483e6fe871921ff27250",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/compiled.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9609,
+      "sha256": "69cfe52c43cd91ee5bf73300f6b1f5c0fa99ac064e7f85b2889f185b74f24d9e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/neutral_shadow_policy.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 10054,
+      "sha256": "8e27dcfc6505e9f3063ccb2ebd0d44b86e5ea67d396b2b81d596238389090797",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/shuffled_words.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9616,
+      "sha256": "a7cbe9077d47caecc45a1c0725c5f6696f1f83eda666e6c884c4a3526d430d15",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/strong_control.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9624,
+      "sha256": "e47be896b04b4580858054ad46ecb423cf2cb20bb0a03877e48d815c1e324afa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/without_provenance.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9614,
+      "sha256": "6c31d81924549e53e4cece938c8ba0796d702b269eb6c455173569b29ed7284b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/without_recovery.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9614,
+      "sha256": "5448d990f4b062d5e5dd5dbb1f75925f474f7eb43c34ef398f20969ad44dee5c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/without_state.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9617,
+      "sha256": "5ca82f2db0b899546355cb3c24d35df3c1ee3413445e5ab87c795b318972bc16",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/sources/compiled_sections.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 2293,
+      "sha256": "cd17c71a5726721b138e89cc88de91961b2d11427b0d48b1caef2184009929f2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/sources/legacy_exclusion.json",
+      "classification": "COMPATIBILITY_LAYER",
+      "classification_basis": "compatibility-or-legacy-path",
+      "size_bytes": 570,
+      "sha256": "2bd1d612dfd032bf17e526fd5c8078ec8c09fecd45df6b0c0ce9aa99fdd74fe5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/sources/original_compiler_input.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 14937,
+      "sha256": "a23a2882dc3880a14e0054c48a43460d5644313c139b8527e9a397b66e81f72c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/sources/provenance.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 724,
+      "sha256": "8eff3b09ff860d9c7511c48b2492331501eab6602aac6d88d295d7cae33cc95b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/sources/traceability.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 3334,
+      "sha256": "6da8d72922d29b3767c0da9ab409c3bdce2eae14b9d04bfef774c43773f5ec79",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/autorun.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 5300,
+      "sha256": "8421aa38e598965f805c9a39e4d51b17d0a2c0ded76023b458e392a93c3d070f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/cli.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 6010,
+      "sha256": "9adad9946c4e8da52c5fe0aeab2ccda8209634423ed2a78e9c7d361585949bff",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/design.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 7681,
+      "sha256": "4ba093f223f8b1c1f6202620bcde17ce1ae75650ed74b90b6e6921876104bfbb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/diagnostics.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 8998,
+      "sha256": "1932886f862234aa73d842f0370ebbe9eb0eeab5683b2718f2a8566504a927e9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/engine.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 22150,
+      "sha256": "f9cbddaa4f78131dbc84d2e1d000025660b9d9397737727dc1c6b748b5813c03",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/fixtures.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4914,
+      "sha256": "e4e6e16c60f5ab6551b0a03fc5e80ab4efcdc8e00983fe01525931a7817304f8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/generation_budget.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 1273,
+      "sha256": "a103776dfa9e86576b63214cb5095851bc9b87fcf53b720e0f84b7eec789a670",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/generators.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 10139,
+      "sha256": "7e877101f02a159c775b98d6ae81c74d90fb51084a75a124ce28de52ed93cb2b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/grading.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 12949,
+      "sha256": "c331c2a3b668e82c5bd1055b9aacd3fdc6c94aa58834865148afbc9eee57db5b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/http_evidence.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 1842,
+      "sha256": "7eab751fc9b07280436df5461fc8a0565b9a34694603ee9afa08dca9d9f5875c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/lion_setup.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 14425,
+      "sha256": "ae6c77a4fdc38e677aff867a8663688855ebc172b1049422f33496c99854073c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/llama_guard.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 6033,
+      "sha256": "99ab3b050f917035c84beb4d9c93cfd741ade27dfb4896d1a26e534cb118f8a5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/maintenance.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3311,
+      "sha256": "270db7161131b67814638e40e6287f199c81e544070283991f52dffc05211c24",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/models.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 847,
+      "sha256": "a2a07a5bdacd48f30cb36f2966a8556dd2beeb6da9022b8715df6a09abc60f9d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/output_budget.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 767,
+      "sha256": "1e89f8daf266547c037236bf895c58e0325be7e5a172bfa349b8a326e59f516f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/protocol.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4973,
+      "sha256": "e892ce9dd640b6752bd4f280d0466cf9f1322d006ce5d50cd6ffd94bc8c9e70d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/providers.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 18712,
+      "sha256": "79831b880b2dbaeae982c7ba033d8f9b5b7926b4e3fab04c68163c7a63d1b4b5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/qualification_contract.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2411,
+      "sha256": "a75eb9adecfc7caf05f0b1c1126cba333b4dac66fdd11ef868f7571e8f4cc687",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/references.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4031,
+      "sha256": "7c07cfc761c6236eacd89ca266e8133154ee1221b5ec28eacb5954e62118080b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/research_runtime.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 12332,
+      "sha256": "858220afbcfe03f24c281fc0fa148895a8727cd2d914d38efca3e278a746368f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/runtime_cli.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 1474,
+      "sha256": "0a6343365b3d2d8140e50d3291a5337472d4bcc273fe6293894337d94aeedba5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/scientific_report.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 20561,
+      "sha256": "8ee72f08b7fd8328187bb6f00f83accd6cd23ebd8c068a3fba51c4e122eda06f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/study_runner.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 15238,
+      "sha256": "01fa0bb80704abfc8d70002a94e16c35c6c55e6cc346526824256d5e21abc582",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/tools.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 10885,
+      "sha256": "6a9ea3092184ecb330210af39bd09047eab2c87121ecbeb56aae9b8ab2b84e2a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/util.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2327,
+      "sha256": "748987ee827e5e568d8eb0b31d9381071a98fa69451999938fb11e703fe37ff9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/author_raw.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9632,
+      "sha256": "8db17fea398042f333b27059ceff338a9f345a51820b483e6fe871921ff27250",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/compiled.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9609,
+      "sha256": "69cfe52c43cd91ee5bf73300f6b1f5c0fa99ac064e7f85b2889f185b74f24d9e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/neutral_shadow_policy.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 10054,
+      "sha256": "8e27dcfc6505e9f3063ccb2ebd0d44b86e5ea67d396b2b81d596238389090797",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/shuffled_words.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9616,
+      "sha256": "a7cbe9077d47caecc45a1c0725c5f6696f1f83eda666e6c884c4a3526d430d15",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/strong_control.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9624,
+      "sha256": "e47be896b04b4580858054ad46ecb423cf2cb20bb0a03877e48d815c1e324afa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/without_provenance.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9614,
+      "sha256": "6c31d81924549e53e4cece938c8ba0796d702b269eb6c455173569b29ed7284b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/without_recovery.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9614,
+      "sha256": "5448d990f4b062d5e5dd5dbb1f75925f474f7eb43c34ef398f20969ad44dee5c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/without_state.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9617,
+      "sha256": "5ca82f2db0b899546355cb3c24d35df3c1ee3413445e5ab87c795b318972bc16",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/pyproject.toml",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 744,
+      "sha256": "a59f836c54c40533b73e0d0a7732b5e6b66d6caff073e587836463bc79b46806",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/requirements-dev.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 14,
+      "sha256": "26db60f3749b2d582ef13e54530725d1038086c5b72953678670871c2b85e15a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/requirements.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 71,
+      "sha256": "a5c0c55790a78a7cc230efbbc44ecd0695316e1b241fc3cdd09c3a1f4cd483a8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/research/POWER_SENSITIVITY.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1284,
+      "sha256": "3fd5274056fd4cc016b3144d6c42182b1de97fb1d69ac4224bdfd6e2a2cbc6f9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/research/calculate_power_sensitivity.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 1462,
+      "sha256": "0a961395a33e6c12729fdf14779a7a4e399cc0ce8893208d6d2a75483d5feae4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861.zip",
+      "classification": "UNKNOWN",
+      "classification_basis": "binary-or-research-data-needs-policy",
+      "size_bytes": 323994,
+      "sha256": "ae496cfce15d5002355843c2931f3cec3996bec6e6788b9cba03a1b778f84cb8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/audit.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 252,
+      "sha256": "64cb241f6a1dcbd46d6d55b7ca686d9468d6f4b88d77a084b63990cd910c8639",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/case_index.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 4075,
+      "sha256": "d4364fb43b6cf94eb14dc0c9f367c5ce5d7d7d02bdf911682482233831d5ad3a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/manifest.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 7879,
+      "sha256": "cc720a9c8ba205c976b67774bb111d24c1dfec6bd097cc59f44ce577e3e859d5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/policies/author_raw.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9632,
+      "sha256": "8db17fea398042f333b27059ceff338a9f345a51820b483e6fe871921ff27250",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/policies/strong_control.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 9624,
+      "sha256": "e47be896b04b4580858054ad46ecb423cf2cb20bb0a03877e48d815c1e324afa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_1811768aa3bf821499.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 444,
+      "sha256": "a5c98cce704397e58df7f912fb9a6926d3bb050a1c179de8010bd789e247dc35",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_2087346f59769f7acb.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 396,
+      "sha256": "87ea200a8881e2c6b245f3f9729a53d66ac01290cedc805efbea2cf9e8fbb719",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_2eb59a1da586a9b13f.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 394,
+      "sha256": "7b957a0d6da4a6ef1b8761562f9ff55c93bd7d0ad1d8ced3df2934681e39dfad",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_33d5c4b399e515c35c.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 397,
+      "sha256": "5f4ad9833af1f7b2e21299b87267976b6343e9773ccc20e6b1961a18163c8184",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_348255f96d97d030cb.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 423,
+      "sha256": "4fa991539b069d352ac1e78c322543cf5559bb3a4ccf1c3d32c49b1dcb8dac1c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_3af0a9a28b76526129.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 429,
+      "sha256": "b335d464717e77802ed1d002f9a950edd325a6a2f09e9d24b2000b821a69df13",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_3ebe60851911d993f7.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 396,
+      "sha256": "f88c32a57e61b6fbbc117afc80602c56840381237916076c7322bb0591085576",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_5a6e568c221fc3a14c.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 436,
+      "sha256": "43475792a000e4cb981618baea6724e9c6c8a45b9a15ac101ec2607a82b83ccc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_66d1016fa5df123bf1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 395,
+      "sha256": "9f17bf73e46d86daf021ddad6b069d53cb6a2e0d3a44e4049dd597b9d75123d5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_67c3ddbce1e5e0af7f.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 395,
+      "sha256": "81a36f45fb7ae4978cb27b4e5ea4ec3c5150bd6769c18dbc0289938e33440164",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_6dc1095ee4bdca64df.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 421,
+      "sha256": "dfce67e1eac459fffe4774234b90b5862b05a561f19ea548ad358ba2cc6b397c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_709dfe01768c2e94d4.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 427,
+      "sha256": "20bb5a49371e0ef26b0ca1ad26be002ed206b8e04c5884a1b991ca652dce1f41",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_8dcc539842fdacda9e.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 418,
+      "sha256": "c3bda44ac53d9545f03f741f700c2441c5f1d033b856dd389475d07acbfbde62",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_ac4f4c63d31a77b2bf.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 397,
+      "sha256": "98ad27658891845cf362234005a02ef67efb21780fbc9c8f74f860f2e45ece2f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_b230c6a5b123904fd3.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 427,
+      "sha256": "8c1ba0ee449a9fc249f613b4bc83161128dba92aaa491379b30da8c038ae3bfd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_b2c54e876283829fc2.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 432,
+      "sha256": "be5d07ae46266724bf7da9ffe4a78d682f8e480b72a1c9037657461789858db2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_dd1b933f22dcf974fc.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 428,
+      "sha256": "81b3904d1c6a47c496db71ccfa88d0986d203380e50192e22ce5fb5a1c5dbfa4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_e29d973ab912a7f8d8.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 432,
+      "sha256": "ce25f27ea5efd82f03311f74564eaac89c67efb07038a845148b201efdd8b4b4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_e2b2118fe7b35f6659.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 438,
+      "sha256": "7933961104901d9288c30c0b5d247380b777f326a374a4651c676dc9a8788cc2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/private/case_e721d46216adf33d72.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 396,
+      "sha256": "3d4f4ec1465b7c336a1153b612f02c8c1b0ccf1b342608f9b7762a7700d9afb0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_1811768aa3bf821499.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 849,
+      "sha256": "7132eee1c6e555c550df08a81def97a6af27dcaace808af343e71c51f361fa5c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_2087346f59769f7acb.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1234,
+      "sha256": "e5a178e3708dbffd4bab14df65ec47809db06742b99f92302e517805b1b5119a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_2eb59a1da586a9b13f.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1114,
+      "sha256": "7a1576f9287b69773b5ca35a5ee5bdaf04b9094fe0c29d5a929262e0fce1f212",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_33d5c4b399e515c35c.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 528,
+      "sha256": "94c6ed875acd5ae3d21358e0defafc5e0a924995240f27a292e1ca28f1a70421",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_348255f96d97d030cb.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 859,
+      "sha256": "3fb6bdccea71476423a7c979024bd81788ae9970c8b320a3acc25fd102b5da86",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_3af0a9a28b76526129.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 857,
+      "sha256": "1c7ec78e0acb7a757810157d880a59be28f652e39b30cece4f24bd1f4b955bf4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_3ebe60851911d993f7.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1651,
+      "sha256": "e9159f277b6a6c45ae685a5eac60d1431128472b417698989bac5a650d23a00e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_5a6e568c221fc3a14c.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1050,
+      "sha256": "5576bb122dfd0d8c48b7303a55787d4b505216ed614aa2fc0feeab161554e384",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_66d1016fa5df123bf1.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1651,
+      "sha256": "6d196d4c9a433f5a79d1e79e8973fa3e14276371fbe543ddc6b2aba8859a695c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_67c3ddbce1e5e0af7f.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1113,
+      "sha256": "9acb96c2d171e88d0ecacc4b5a1edb559bf74f5b2ea87c31e94907c741b30e23",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_6dc1095ee4bdca64df.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 921,
+      "sha256": "6fc97819d3afa37e23806bd7b87cc6d5a661d714dc23b60cc993040b600774dd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_709dfe01768c2e94d4.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1389,
+      "sha256": "2ad09d5a3ec02f84af958ca5287790b2d5b372121e028b583a7592ad780f1477",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_8dcc539842fdacda9e.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 921,
+      "sha256": "90ff2a53feb9fe8f6e645b55a28ae3093277ceb06e5ffcbccb7065e5ac39d470",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_ac4f4c63d31a77b2bf.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 527,
+      "sha256": "f5dd0e9328447beaf3158e2cb5dbe3f954212f789822c6dda7dc653b4516b28d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_b230c6a5b123904fd3.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1389,
+      "sha256": "9f22b986fa1af98fc52897d374e2361405ac2b12627b1170a9260c6bcdfec9d5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_b2c54e876283829fc2.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 975,
+      "sha256": "518067f1285b56e1884648a8a1aec75b5ca506f810408cff1b2e89a881e64012",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_dd1b933f22dcf974fc.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 975,
+      "sha256": "21ea63f899b40a1d6894aa93e59738bad941ca5aa932ce2890636d68eeeaec0b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_e29d973ab912a7f8d8.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 857,
+      "sha256": "339fe47b8130f5ef3db0081e4042e6dad1ebb748500716eeb38f66325e1cfd43",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_e2b2118fe7b35f6659.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1037,
+      "sha256": "596b559c3ae2c626331f60687ffa1ac3242853963346797fdf1e4e7eac640044",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/public/case_e721d46216adf33d72.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1290,
+      "sha256": "bf97b5fcb61f06f348e69b86e91cb3f9757e7f90b9fe225fa196512a1989086d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/report.html",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 28733,
+      "sha256": "cc54e6602d43185e175e74e2faf68de43fff494e9c1d15c624474475346fc4ee",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/schedule.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 6753,
+      "sha256": "1ceaffafc8b5efc172fc78c160be1c55095ab1c179a8f95d1cdc467d95d756a5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/source_manifest.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 4474,
+      "sha256": "d08495bda71a86cb828b148e98595778f9d4fdd3407c21df0d3d26e8e70e6f2c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/summary.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 10580,
+      "sha256": "4a8589d4e7b57e806336dee877c2f94134ad9889177d48f705feb91f087e7f63",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials.csv",
+      "classification": "UNKNOWN",
+      "classification_basis": "binary-or-research-data-needs-policy",
+      "size_bytes": 9732,
+      "sha256": "6ed441815de783e36a9647e2b5fe5a769ebf057ec5ec14e2f0b9701867e373fd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_0557f53193236d2f83d0.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 19884,
+      "sha256": "c6243647a010dba1d0de314558dd33ab7b9662ca6a49fbb3f9e8096a40d8bc5c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_0a2b03be1ce26efceda7.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21575,
+      "sha256": "5c2644b97f928d8d7b222d3d4aacedbe1c3feec1fc06b89f593206feb5eabce5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_10dc9f687a7c1e5a8160.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18630,
+      "sha256": "b903309b1b6327f1f4e070b0591abdc311d421f18cc42b9ab7664c9dd9eea9b5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_21298a5f2de8b78d2da3.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20901,
+      "sha256": "149ae8b25f9a7857ee3d6b8e3470174dcc3866bfd475dea344d4f3b73bd32894",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_22c430d845f8ac50d30c.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18641,
+      "sha256": "964c37b0d2d43fb34fe76804eb58834d9578c3b0d15ceeb23e6b0fc1b639db6d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_3461c2f04c0389a36017.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21438,
+      "sha256": "b825307737ce8802b9d2da5d6ac8dc9f402a2abd5247ec95899d2e4b24f5ee2f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_3ade313c8e786e975fda.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20383,
+      "sha256": "43882f034b79ba3d82625e32a86f6424942a5d7514260e3dce449a2d158c83f8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_44a873914fbaf8a270ef.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18731,
+      "sha256": "43b57b5273bd9e671ba1ad6423d36b76342cbd7470489e87c03e8ed1832f07a0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_50d0ed94e0bc25faf840.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21139,
+      "sha256": "c93ed8258eef37b8197f77de196ba0f9aaf53ddf1d2394645f391c49934ed2ad",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_55c3b54d8a87ea4b9f38.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18770,
+      "sha256": "5f52c371cf68e91a8ee23385dad32ba7e1389a4c989840548df69d81733be7fc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_569616724670831cc585.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21384,
+      "sha256": "72de29630312d371bb427acff197be1d583f3e61e9be9045fb02a4e65daa56fb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_6a74d70b194442c56325.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 19874,
+      "sha256": "a3aa490e77585b3d6849d83fa7dc226b4c0db91ce478cd91503335ab7e400926",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_75a95fe35a0a262f7a24.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20329,
+      "sha256": "103f3491519628dd2574d67812ea1af5b3f904ddb8db11c05e9ac0c1b06cc238",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_7cf7230a0ab996c2fe19.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21521,
+      "sha256": "cd1e480b1751e2e86a14302e661b57d57dbb5d6b284315b804796a752beff0df",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_84d865fb0ccefc198faa.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18630,
+      "sha256": "c1b5a9f5d2d7ac0df14e18551c72bfa79d09862e510f5f85eda457ed17ec6281",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_87863dd161b4b27f2173.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21195,
+      "sha256": "4754b0e18f93790ae3067b78764f9a6b21c0eaa0d7c54206fae18bd7e1f76cf2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_8c1f470203f412c455fb.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18785,
+      "sha256": "c38489ae0dad6dff5dace91f39fcefbb4f633b39adff91b95ad4ec33cbeae6bd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_8cd1235e7cd42e5d68a0.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18716,
+      "sha256": "0e83956f8cff69f279206bc6a3c64f51a305a50d59f9d35f0bd53e1a90a416a5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_94e6d22b534812e048e8.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18799,
+      "sha256": "ca6cd7ffd99b7ccf80c13cf4a7615e0b690977eba1b05640ed36069230e8c987",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_9616deb1b8fe9b5160d6.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18576,
+      "sha256": "4bdd8cbbb92831b7ff7a6d35a6a935694b74a28bf80c2679ed99b9a9607105ef",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_9ddc9446466b0fa585c4.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18875,
+      "sha256": "320853313e70a94b8b3abaeab840a302311d5753970d3791aaefbd3255ae43f3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_a1d1c2011e09b059102b.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20835,
+      "sha256": "24544ccfeb53b191116dd06d4eab95a647e76bdbc6b3984cc9833a89339c553c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_a3d4b9fd5a9cd52cc904.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18820,
+      "sha256": "561cbda3eb8a44095c429c065b5e3b3d7d470287e17607e046adce4b3e7f50c8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_a49685cd753be0dfc81b.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20888,
+      "sha256": "2be69aa39b56523c660db9d0b653d022dd37d09520d4ab5e009617de40454092",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_a5464ca89965b6c14afc.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20847,
+      "sha256": "ac572139be235f2579cd31ae0a20b8e5d3dead8a57ce490b9eee1893a1ed8323",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_a7cce16bfe1b5add468a.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18855,
+      "sha256": "2999cffcdcdc10a795511aa2c9c92d6fef5024f0f006204e29073eb090ff64f0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_a9f71ba6f05e1d608612.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18684,
+      "sha256": "42ed95ad093f681beab189a11010dcdca2b68af230450fd7d9168503809f40da",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_b2b7f5a9dfe8d7ff9ced.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18690,
+      "sha256": "6bbffc12e0b7d1d2f12cd386d3993a7361a002a5a8609c5f1a8f7dee2f60d77b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_b9f714b8c6017cbb53a3.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 19939,
+      "sha256": "b2449b3e9489c3adcbffd2a5f755e44ba0bd3d2173f5ee7235116aacd902cc6a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_bae35a87a6ad3a585c09.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21193,
+      "sha256": "c650d3c506135694505da7bcd5ce9e1535accb5f6712fd5008dce5d36313b8eb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_bd482b06a32baa0cd319.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18587,
+      "sha256": "6b7bb6b6d1a70a2fad71dcbc2729e360536e45e4caa8979e60d46fb82acea076",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_bf63d84a48f79b6bee84.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21439,
+      "sha256": "872a39f3d2b7ebb5ff7075b6754d77312eadee3b4827c06363cc48512f234f01",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_c1bc181050bf4e1ce183.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21509,
+      "sha256": "7b0f20e8b3d9454b676c4a44c68a1a33a5576a200e9a1dc1cd34485eeedc39f2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_c43fd20ba4ec076aa32d.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21455,
+      "sha256": "0d981555aeefe12017403af9b1d7dabd6c2a529142ce7cb57f6870f5e054465c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_cb95c7432780d0248884.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21141,
+      "sha256": "01979a8bb423612b35b44c89f23954363b3616b213b6bac86a04a7ddf74cd145",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_ce0932a2fe398d840d2f.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20330,
+      "sha256": "3e92a607be71b75d63abd0450d240e41f884b587c2294fff09ca736bcfd7d300",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_dde16735d38029dbe828.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 18636,
+      "sha256": "176483e47e30fe805c51a7c853d9f4c566bc42d4cc9e94cc009b7b0d3ed8547c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_e1a3b1f768c8d642cfc9.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 19928,
+      "sha256": "637df4e1df84c028571052d712c44b123ce91fd966f546e6ad92e009523ab30f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_fbdc3c80623e0b84700b.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 20384,
+      "sha256": "320c049c55bed34d1320448e725174dc9cc6c860c458780f97c583009d1c8a3e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/trials/trial_fe425ddd76d55997f206.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 21384,
+      "sha256": "ea32ac53b4984d66d5f52a3c1c7ab4b5767c746753dbcf52a1e0f947e64a7862",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/sources/compiled_sections.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 2293,
+      "sha256": "cd17c71a5726721b138e89cc88de91961b2d11427b0d48b1caef2184009929f2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/sources/legacy_exclusion.json",
+      "classification": "COMPATIBILITY_LAYER",
+      "classification_basis": "compatibility-or-legacy-path",
+      "size_bytes": 570,
+      "sha256": "2bd1d612dfd032bf17e526fd5c8078ec8c09fecd45df6b0c0ce9aa99fdd74fe5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/sources/original_compiler_input.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 14937,
+      "sha256": "a23a2882dc3880a14e0054c48a43460d5644313c139b8527e9a397b66e81f72c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/sources/provenance.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 724,
+      "sha256": "8eff3b09ff860d9c7511c48b2492331501eab6602aac6d88d295d7cae33cc95b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/sources/traceability.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 3334,
+      "sha256": "6da8d72922d29b3767c0da9ab409c3bdce2eae14b9d04bfef774c43773f5ec79",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/conftest.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 211,
+      "sha256": "90e52c588fd65aa9cd855ec96fd3ad4370ce11a7b66a667686117b6fa93d3b87",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_original/request.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13216,
+      "sha256": "595dd101c5493deac1fedf778cb0bf2de100148a3433b51e162ae4a3745430a2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_original/response.raw",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6431,
+      "sha256": "1f004a8aece93458f1c43c55daea122e134e86322ded70c914ad6c1e69cafa05",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_original/result.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 864,
+      "sha256": "035c0c6cca2c2b4d35876f7ce6306b9925467955d3b0377275381f0202d98844",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_repeat/request.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13216,
+      "sha256": "595dd101c5493deac1fedf778cb0bf2de100148a3433b51e162ae4a3745430a2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_repeat/response.raw",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6430,
+      "sha256": "ac9bbfdfd950bf1986e23d03395845835b4131de2826fae753a3ecdb7b817808",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_repeat/result.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 862,
+      "sha256": "a9077199b6c61cceeb2f956f610dd4f65d9cff33ccbe9a5901425715441ee1b0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/B_no_forced_budget_end/request.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13248,
+      "sha256": "8bd3c198c070c8e5b35cb805d89b7cd78e3bf840a40e89c2205aba4b9b508f21",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/B_no_forced_budget_end/response.raw",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 940,
+      "sha256": "cc263eb40370f1f04b5eef92534fe2cb6bc25d66e19bc8a704a391b0cd1d8927",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/B_no_forced_budget_end/result.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 982,
+      "sha256": "78dceb0c6004b40d5d0247dc7d1f5605d376f920fc50e677166096e005aa1478",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/C_original_budget_no_json_grammar/request.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13172,
+      "sha256": "2c4b1cad3cc26ff491946b88be96b048592668cfdc4c58ef5344285b3c2a4810",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/C_original_budget_no_json_grammar/response.raw",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 866,
+      "sha256": "605c32617dbc043fc2cd648decbd77d3177f30fa9e97cd7c659a7212ad6e502b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/C_original_budget_no_json_grammar/result.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 878,
+      "sha256": "588d1a086dfacdd7b99935e4c5fa0514b5c6fb8e3de26f459ccbecc237665154",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/D_no_forced_budget_end_no_json_grammar/request.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13204,
+      "sha256": "bdd31f1966acb01a7e68cda15c7b13e6ffa9e39bb05c27b6e88b0ec18f958955",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/D_no_forced_budget_end_no_json_grammar/response.raw",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 940,
+      "sha256": "32c6fa093d6a4caff1c022ed8227d946c8d867dd879f0719d3a2b1f3debd9f33",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/D_no_forced_budget_end_no_json_grammar/result.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 998,
+      "sha256": "0b06d0b8c6379f225ab84754985f94dbdb8b60600f2ae6187c2d4fddd3346c76",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/case_private.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 428,
+      "sha256": "fdbfd1a4cdf6364a34a8a4cf8994e83742904a87831d02884356f22d2338c29d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/case_public.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 975,
+      "sha256": "0c25044b3dd61a36534080556bfec728a36bdd7b263fe2f411ea67a93e037a73",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/original_episode.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 15892,
+      "sha256": "1d415024aa6080c055c16161543bf21bae8b9943f948f3201ca8673256b6e3d4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/receipt.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 442,
+      "sha256": "7d70fa3fe1db92238749acfe40c8492818cde0186c8c46832d28a00b852c4bf5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/request.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13581,
+      "sha256": "ee0a875a8c34f374cf859842a1d2ca458f5ef7ac0c79d12c2e60246e659d46ea",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/response.raw",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3954,
+      "sha256": "44359ac1cc19a7d1c6f23458c415cf87e980ca1619b6a670f94f204a615547b8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_analysis.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3554,
+      "sha256": "cb014f00d223f1fe214d41eb17f1708f3484916fb48838f455e6b40a814e31c1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_budget_fix.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 7317,
+      "sha256": "480adafdece22fa99bbb2af806a47f6d944e0623bd3dc8673dcb152cb38caf77",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_cases_and_oracles.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2834,
+      "sha256": "01e2e101e5619a672f499c9b2e9822f435d85c34dcc1347c61112d3ae48ce3ee",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_cli_and_install.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1175,
+      "sha256": "10cc5994f9f716e1b7955dd991471a3b00ba79e6fcc7dfa4eda898a4a8c288aa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_design_and_audit.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3831,
+      "sha256": "dc9f861b6e03f80b2172682fb749cf2e5ce1494bf94ec08e36bcc2fd081f10e3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_final_protocol.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6278,
+      "sha256": "a05dbb114dd49cfb55f94c11c85895a8d7eba9a54fda53b68797978c0b3aad67",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_grading_and_protocol.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6167,
+      "sha256": "9a9a854a25a4bd67c8b7a6660992d455636df470af88aeed9f14796425890ff0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_http_provider.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 5834,
+      "sha256": "921b0f79479e15c49f6296d9dda101e46da7163d40dc9bed3cc33270ac80aa94",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_lion_integration.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 12513,
+      "sha256": "fd53b26a66e5fcc5d20010918a75cf91c703b54393c855f8de92f897d10cb29e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_metamorphic_reference.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1344,
+      "sha256": "fd01af1aabfcbb03e8c3f5aaba992f61044457951e907ce3774c2265d6667a43",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_output_budget_accounting.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 9772,
+      "sha256": "dea1505fd6cf9ad2639b4f2c5f74dcf9144e72f02fccc7b3c7ba970c9d08c832",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_runtime_and_cleanup.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1970,
+      "sha256": "e9336f27511de42df7d30d500dc269fd7359302e7d0d7d585487ba6e729d2576",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_scientific_reporting.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 4195,
+      "sha256": "49eb032d325da70540c3337caa02d55ea7837de9a855b586735a281d70bba15d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_transform_contracts.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2727,
+      "sha256": "6f8026037150bbc49aa2d20fef288f7647eb2efb4681f665f0924b4c63f8f166",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_transport_integrity_hotfix.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 7895,
+      "sha256": "08bedb33a1f9456598f735a94afd85f64bfdb7190eafae5cb019debc32e8099a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/validate_publication.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 8301,
+      "sha256": "cc5a1eb6e64351812bbf3cec7e61c1b72c8bad631416c321f8060533debd378b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -29118,8 +31956,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3112,
-      "sha256": "748f76b33482019f4aa62038a196067fb080a9519dd553bc06df83755f65475d",
+      "size_bytes": 3302,
+      "sha256": "e78e5cb318bc13fa618d2472656219d9646cdb506abc74f4adbcaed217281b40",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -29239,7 +32077,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 1765,
-      "sha256": "2b5e302b1eabedd3e760e5b23ad3fe5f9075eb21435fb6c21691f872e7311368",
+      "sha256": "7a183ba5930687f06ab76f744108bbda243b92a1b3fbc4447d17259bb0aa318b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -29531,7 +32369,7 @@
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 18576,
-      "sha256": "c6f1190afd899f2bb3c78344e463542df6253d49353a691ca23e0c0fca6ca6ed",
+      "sha256": "37c736e8274d966289c75675b34ecce622537495d074f92dae019e4b91101fde",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -29574,6 +32412,26 @@
       "sha256": "96854120beb05237d5966de3d17b4c335b488f5caf7e5a0ee4e9a58b6c0cf19d",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    }
+  ],
+  "coverage_groups": [
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path_prefix": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/runs/",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "high-volume tracked research-run output covered by generated-output policy",
+      "generated_output_class": "ARCHIVED_RUN",
+      "file_count": 76869,
+      "total_bytes": 484432516,
+      "git_tree_sha": "34bd07ffb829017e301cc41ea67e6ea176b1c113",
+      "extension_counts": {
+        ".csv": 1,
+        ".html": 1,
+        ".json": 61490,
+        ".raw": 15373,
+        ".txt": 4
+      },
+      "coverage_semantics": "ALL_TRACKED_FILES_UNDER_PREFIX_AT_BOUND_HEAD"
     }
   ],
   "duplicate_content_groups": [
@@ -30044,6 +32902,54 @@
           "size_bytes": 48
         }
       ]
+    },
+    {
+      "sha256": "8db17fea398042f333b27059ceff338a9f345a51820b483e6fe871921ff27250",
+      "count": 3,
+      "repositories": [
+        "DonkeyJJLove/writeups"
+      ],
+      "items": [
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/author_raw.txt",
+          "size_bytes": 9632
+        },
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/author_raw.txt",
+          "size_bytes": 9632
+        },
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/policies/author_raw.txt",
+          "size_bytes": 9632
+        }
+      ]
+    },
+    {
+      "sha256": "e47be896b04b4580858054ad46ecb423cf2cb20bb0a03877e48d815c1e324afa",
+      "count": 3,
+      "repositories": [
+        "DonkeyJJLove/writeups"
+      ],
+      "items": [
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/strong_control.txt",
+          "size_bytes": 9624
+        },
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/strong_control.txt",
+          "size_bytes": 9624
+        },
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/results/selftest_9667_12861/policies/strong_control.txt",
+          "size_bytes": 9624
+        }
+      ]
     }
   ],
   "static_python_reference_signals": {
@@ -30073,7 +32979,7 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/ai_platform": {
-      "python_files": 836,
+      "python_files": 838,
       "statically_unreferenced_candidates": [
         "LION/evidence/r20/fleet-runner.py",
         "LION/runtime_compat/r20/sentinelx-primary/sentinelx-bridge-heartbeat.py",
@@ -30289,7 +33195,7 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/writeups": {
-      "python_files": 12,
+      "python_files": 58,
       "statically_unreferenced_candidates": [
         "badania/LOCI/parsers/diff_core.py",
         "badania/LOCI/parsers/export_matlab.py",
@@ -30299,7 +33205,36 @@
         "badania/LOCI/parsers/redact_core.py",
         "badania/LOCI/raports/generate_recursive_loci_report.py",
         "badania/MQL5Market/szkielet_badawczy.py",
-        "badania/Symulacja_GITHUB/sandbox_agentic_amplification_mc.py"
+        "badania/Symulacja_GITHUB/sandbox_agentic_amplification_mc.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/__main__.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/analysis.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/autorun.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/cli.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/design.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/diagnostics.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/engine.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/fixtures.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/generation_budget.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/generators.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/grading.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/http_evidence.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/lion_setup.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/llama_guard.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/maintenance.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/models.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/output_budget.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/protocol.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/providers.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/qualification_contract.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/references.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/research_runtime.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/runtime_cli.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/scientific_report.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/study_runner.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/tools.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/util.py",
+        "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/research/calculate_power_sensitivity.py",
+        "badania/heuristic-causal-lab-final-4.3/validate_publication.py"
       ],
       "parse_errors": [
         "badania/LOCI/parsers/diff_core.py",
@@ -30318,7 +33253,8 @@
   "classification_policy": {
     "unknown_is_legal": true,
     "static_unreferenced_is_delete_proof": false,
-    "delete_requires": "independent consumer/runtime/history/compatibility absence evidence"
+    "delete_requires": "independent consumer/runtime/history/compatibility absence evidence",
+    "coverage_group_semantics": "A coverage group classifies every tracked file under its exact path prefix at the bound repository HEAD; individual rows are intentionally omitted only for those files."
   },
   "authority_effect": "NONE"
 }

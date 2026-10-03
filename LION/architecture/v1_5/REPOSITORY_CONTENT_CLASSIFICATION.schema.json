@@ -7,7 +7,8 @@
     "schema",
     "generated_from",
     "repositories",
-    "files"
+    "files",
+    "coverage_groups"
   ],
   "properties": {
     "schema": {
@@ -75,8 +76,13 @@
           },
           "sha256": {
             "oneOf": [
-              {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-              {"const": "SELF_REFERENTIAL"}
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "const": "SELF_REFERENTIAL"
+              }
             ]
           },
           "naming_conformance": {
@@ -87,6 +93,96 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      }
+    },
+    "coverage_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "repository",
+          "path_prefix",
+          "classification",
+          "classification_basis",
+          "generated_output_class",
+          "file_count",
+          "total_bytes",
+          "git_tree_sha",
+          "extension_counts",
+          "coverage_semantics"
+        ],
+        "properties": {
+          "repository": {
+            "type": "string"
+          },
+          "path_prefix": {
+            "type": "string",
+            "minLength": 1
+          },
+          "classification": {
+            "enum": [
+              "CURRENT_SOURCE",
+              "CURRENT_CONTRACT",
+              "CURRENT_CONFIG",
+              "CURRENT_TEST",
+              "CURRENT_DOCUMENTATION",
+              "CURRENT_GENERATED",
+              "CURRENT_RUNTIME",
+              "CURRENT_UI",
+              "CURRENT_TOOL",
+              "VERSIONED_STATIC",
+              "COMPATIBILITY_LAYER",
+              "HISTORICAL",
+              "HISTORICAL_EVIDENCE",
+              "ARCHIVED",
+              "GENERATED_BUT_STALE",
+              "SOURCE_BUT_UNREFERENCED",
+              "DOCUMENTED_BUT_UNIMPLEMENTED",
+              "IMPLEMENTED_BUT_UNDOCUMENTED",
+              "DUPLICATE_SEMANTICS",
+              "DUPLICATE_IMPLEMENTATION",
+              "DUPLICATE_DOCUMENTATION",
+              "DEPRECATED",
+              "DELETE_CANDIDATE",
+              "UNKNOWN"
+            ]
+          },
+          "classification_basis": {
+            "type": "string"
+          },
+          "generated_output_class": {
+            "enum": [
+              "SOURCE_DATA",
+              "GOLDEN_FIXTURE",
+              "CANONICAL_RESULT",
+              "REPRODUCIBLE_OUTPUT",
+              "PUBLICATION_ARTIFACT",
+              "ARCHIVED_RUN"
+            ]
+          },
+          "file_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "git_tree_sha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "extension_counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "coverage_semantics": {
+            "const": "ALL_TRACKED_FILES_UNDER_PREFIX_AT_BOUND_HEAD"
           }
         }
       }

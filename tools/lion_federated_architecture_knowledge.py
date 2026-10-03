@@ -100,6 +100,29 @@ def _validate_snapshot(snapshot: dict[str, Any]) -> None:
         files = repo.get("files")
         if not isinstance(files, list):
             raise ValueError("repository files required")
+        groups = repo.get("file_coverage_groups", [])
+        if not isinstance(groups, list):
+            raise ValueError("file_coverage_groups must be an array")
+        explicit_paths = [row.get("path") for row in files if isinstance(row, dict)]
+        if any(not isinstance(path, str) or not path for path in explicit_paths):
+            raise ValueError("repository file path invalid")
+        for group in groups:
+            if not isinstance(group, dict):
+                raise ValueError("coverage group invalid")
+            prefix = group.get("path_prefix")
+            tree_sha = group.get("git_tree_sha")
+            file_count = group.get("file_count")
+            semantics = group.get("coverage_semantics")
+            if not isinstance(prefix, str) or not prefix or not prefix.endswith("/"):
+                raise ValueError("coverage group path_prefix invalid")
+            if not SHA40_RE.fullmatch(str(tree_sha or "")):
+                raise ValueError("coverage group git_tree_sha invalid")
+            if not isinstance(file_count, int) or file_count < 1:
+                raise ValueError("coverage group file_count invalid")
+            if semantics != "ALL_TRACKED_FILES_UNDER_PREFIX_AT_BOUND_HEAD":
+                raise ValueError("coverage group semantics invalid")
+            if any(path.startswith(prefix) for path in explicit_paths):
+                raise ValueError("coverage group overlaps explicit file inventory")
     if len(ids) != len(set(ids)):
         raise ValueError("duplicate repository")
     if len(repos) != 10:

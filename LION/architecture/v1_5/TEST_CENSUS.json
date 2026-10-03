@@ -1,6 +1,11 @@
 {
   "schema": "lion.test-census/v1",
-  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1",
+  "generator": "tools/lion_global_maintenance_projection.py",
+  "invalidators": [
+    "REPOSITORY_CONTENT_CHANGE",
+    "NAMING_STANDARD_CHANGE"
+  ],
+  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1-FINAL",
   "projection_mode": "BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "tests": [
     {
@@ -2836,7 +2841,7 @@
       "path": "cyber_lion/tests/test_v15_global_repository_standardization.py",
       "test_class": "CURRENT_UNIT",
       "revision_named": false,
-      "sha256": "5588e3a92cc8b12ffe62f170c20cd6c7fc4f3417b062046245a0b7450aa5dfec"
+      "sha256": "6c2c53ec37a109414708eee194f9c546dff517374e22951402b2744065f43d5a"
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -3200,7 +3205,7 @@
       "path": "badania/LOCI/tests/README.md",
       "test_class": "CURRENT_UNIT",
       "revision_named": false,
-      "sha256": "77641c6d993150e5b2a2f475aaee144019c13a4f53f68a9436261161955fcaab"
+      "sha256": "57a08415c22bd67d769e8f519b509e23cd0f963f6cf6678dc649b97d7b661032"
     },
     {
       "repository": "DonkeyJJLove/writeups",
@@ -3621,17 +3626,290 @@
       "test_class": "CURRENT_UNIT",
       "revision_named": false,
       "sha256": "a5fb4a8857d217a591a1d5fea3a068f1fd1a35fc912dcddad615d96d23716960"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/test_environment.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ba47fecb0d17a38d7dabbe6a1a06ae9476b8e5f742b21cc7d9fb8d9942efe851"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/evidence/test_environment_budget_fix.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a46acf7c649a826d486af54186a0370dbe6f7df9d91bc9efe261464ef8dbeb4a"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/conftest.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "90e52c588fd65aa9cd855ec96fd3ad4370ce11a7b66a667686117b6fa93d3b87"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_original/request.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "595dd101c5493deac1fedf778cb0bf2de100148a3433b51e162ae4a3745430a2"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_original/response.raw",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "1f004a8aece93458f1c43c55daea122e134e86322ded70c914ad6c1e69cafa05"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_original/result.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "035c0c6cca2c2b4d35876f7ce6306b9925467955d3b0377275381f0202d98844"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_repeat/request.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "595dd101c5493deac1fedf778cb0bf2de100148a3433b51e162ae4a3745430a2"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_repeat/response.raw",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "ac9bbfdfd950bf1986e23d03395845835b4131de2826fae753a3ecdb7b817808"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/A_repeat/result.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a9077199b6c61cceeb2f956f610dd4f65d9cff33ccbe9a5901425715441ee1b0"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/B_no_forced_budget_end/request.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "8bd3c198c070c8e5b35cb805d89b7cd78e3bf840a40e89c2205aba4b9b508f21"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/B_no_forced_budget_end/response.raw",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cc263eb40370f1f04b5eef92534fe2cb6bc25d66e19bc8a704a391b0cd1d8927"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/B_no_forced_budget_end/result.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "78dceb0c6004b40d5d0247dc7d1f5605d376f920fc50e677166096e005aa1478"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/C_original_budget_no_json_grammar/request.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "2c4b1cad3cc26ff491946b88be96b048592668cfdc4c58ef5344285b3c2a4810"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/C_original_budget_no_json_grammar/response.raw",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "605c32617dbc043fc2cd648decbd77d3177f30fa9e97cd7c659a7212ad6e502b"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/C_original_budget_no_json_grammar/result.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "588d1a086dfacdd7b99935e4c5fa0514b5c6fb8e3de26f459ccbecc237665154"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/D_no_forced_budget_end_no_json_grammar/request.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "bdd31f1966acb01a7e68cda15c7b13e6ffa9e39bb05c27b6e88b0ec18f958955"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/D_no_forced_budget_end_no_json_grammar/response.raw",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "32c6fa093d6a4caff1c022ed8227d946c8d867dd879f0719d3a2b1f3debd9f33"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/observed_budget_ab/D_no_forced_budget_end_no_json_grammar/result.json",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "0b06d0b8c6379f225ab84754985f94dbdb8b60600f2ae6187c2d4fddd3346c76"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/case_private.json",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "fdbfd1a4cdf6364a34a8a4cf8994e83742904a87831d02884356f22d2338c29d"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/case_public.json",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "0c25044b3dd61a36534080556bfec728a36bdd7b263fe2f411ea67a93e037a73"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/original_episode.json",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "1d415024aa6080c055c16161543bf21bae8b9943f948f3201ca8673256b6e3d4"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/receipt.json",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "7d70fa3fe1db92238749acfe40c8492818cde0186c8c46832d28a00b852c4bf5"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/request.json",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "ee0a875a8c34f374cf859842a1d2ca458f5ef7ac0c79d12c2e60246e659d46ea"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/data/runtime_7874/response.raw",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "44359ac1cc19a7d1c6f23458c415cf87e980ca1619b6a670f94f204a615547b8"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_analysis.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "cb014f00d223f1fe214d41eb17f1708f3484916fb48838f455e6b40a814e31c1"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_budget_fix.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "480adafdece22fa99bbb2af806a47f6d944e0623bd3dc8673dcb152cb38caf77"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_cases_and_oracles.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "01e2e101e5619a672f499c9b2e9822f435d85c34dcc1347c61112d3ae48ce3ee"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_cli_and_install.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "10cc5994f9f716e1b7955dd991471a3b00ba79e6fcc7dfa4eda898a4a8c288aa"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_design_and_audit.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dc9f861b6e03f80b2172682fb749cf2e5ce1494bf94ec08e36bcc2fd081f10e3"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_final_protocol.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "a05dbb114dd49cfb55f94c11c85895a8d7eba9a54fda53b68797978c0b3aad67"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_grading_and_protocol.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "9a9a854a25a4bd67c8b7a6660992d455636df470af88aeed9f14796425890ff0"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_http_provider.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "921b0f79479e15c49f6296d9dda101e46da7163d40dc9bed3cc33270ac80aa94"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_lion_integration.py",
+      "test_class": "CURRENT_INTEGRATION",
+      "revision_named": false,
+      "sha256": "fd53b26a66e5fcc5d20010918a75cf91c703b54393c855f8de92f897d10cb29e"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_metamorphic_reference.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "fd01af1aabfcbb03e8c3f5aaba992f61044457951e907ce3774c2265d6667a43"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_output_budget_accounting.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "dea1505fd6cf9ad2639b4f2c5f74dcf9144e72f02fccc7b3c7ba970c9d08c832"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_runtime_and_cleanup.py",
+      "test_class": "CURRENT_RUNTIME",
+      "revision_named": false,
+      "sha256": "e9336f27511de42df7d30d500dc269fd7359302e7d0d7d585487ba6e729d2576"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_scientific_reporting.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "49eb032d325da70540c3337caa02d55ea7837de9a855b586735a281d70bba15d"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_transform_contracts.py",
+      "test_class": "CURRENT_CONTRACT",
+      "revision_named": false,
+      "sha256": "6f8026037150bbc49aa2d20fef288f7647eb2efb4681f665f0924b4c63f8f166"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_transport_integrity_hotfix.py",
+      "test_class": "CURRENT_UNIT",
+      "revision_named": false,
+      "sha256": "08bedb33a1f9456598f735a94afd85f64bfdb7190eafae5cb019debc32e8099a"
     }
   ],
   "counts": {
-    "CURRENT_UNIT": 342,
-    "CURRENT_CONTRACT": 36,
-    "CURRENT_RUNTIME": 29,
+    "CURRENT_UNIT": 372,
+    "CURRENT_CONTRACT": 37,
+    "CURRENT_RUNTIME": 36,
     "COMPATIBILITY": 4,
     "CURRENT_SECURITY": 33,
     "CURRENT_CURRENTNESS": 20,
     "HISTORICAL_REGRESSION": 50,
-    "CURRENT_INTEGRATION": 3
+    "CURRENT_INTEGRATION": 4
   },
   "authority_effect": "NONE"
 }

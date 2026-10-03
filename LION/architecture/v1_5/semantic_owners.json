@@ -1,6 +1,6 @@
 {
   "schema": "lion.documentation.semantic-owner-map.v1",
-  "baseline_head": "c064e6aca1c5be8187ae7fd856b9f7950adfa7a4",
+  "baseline_head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
   "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
   "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
   "owners": [
@@ -311,6 +311,7 @@
       "concept": "branch_reconciliation",
       "primary": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
       "secondary": [
+        "tools/lion_global_maintenance_projection.py",
         "LION/maintenance/branch-closure-manifest-v1.json"
       ]
     },
@@ -318,6 +319,7 @@
       "concept": "test_taxonomy",
       "primary": "LION/architecture/v1_5/TEST_CENSUS.json",
       "secondary": [
+        "tools/lion_global_maintenance_projection.py",
         "cyber_lion/tests"
       ]
     },
@@ -325,6 +327,7 @@
       "concept": "workflow_taxonomy",
       "primary": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
       "secondary": [
+        "tools/lion_global_maintenance_projection.py",
         ".github/workflows",
         "tools/lion_workflow_homeostasis.py"
       ]

@@ -31,6 +31,17 @@ CLASSES = {
 README_RE = re.compile(r"(^|/)readme(?:\.md)?$", re.I)
 REVISION_RE = re.compile(r"(^|[/_.-])(r\d+|e\d+|f\d+|t\d+|epoch\d+|candidate)([/_.-]|$)", re.I)
 
+COVERAGE_RULES = (
+    {
+        "repository": "DonkeyJJLove/writeups",
+        "path_prefix": "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/runs/",
+        "classification": "CURRENT_GENERATED",
+        "classification_basis": "high-volume tracked research-run output covered by generated-output policy",
+        "generated_output_class": "ARCHIVED_RUN",
+        "min_files": 10000,
+    },
+)
+
 CURRENT_V14 = {
     "LION/architecture/v1_4/federation_current_vector.json": "CURRENT_GENERATED",
     "LION/architecture/v1_4/contract_catalog.json": "CURRENT_CONTRACT",
@@ -173,6 +184,7 @@ def main() -> int:
         raise SystemExit("overlay repository escapes baseline")
     rows=[]
     repo_summary=[]
+    coverage_groups=[]
     duplicates=defaultdict(list)
     output_path=Path(args.output).resolve()
     static_signals={}
@@ -188,7 +200,35 @@ def main() -> int:
         readmes=[]
         workflows=[]
         tests=[]
+        grouped_paths=set()
+        for rule in COVERAGE_RULES:
+            if rule["repository"] != rid:
+                continue
+            prefix=rule["path_prefix"]
+            matched=[path for path in files if path.startswith(prefix)]
+            if len(matched) < int(rule["min_files"]):
+                continue
+            tree_path=prefix.rstrip("/")
+            tree_sha=git(repo,"rev-parse",f"HEAD:{tree_path}")
+            extension_counts=Counter((Path(path).suffix.lower() or "<none>") for path in matched)
+            total_bytes=sum((repo/path).stat().st_size for path in matched)
+            coverage_groups.append({
+                "repository":rid,
+                "path_prefix":prefix,
+                "classification":rule["classification"],
+                "classification_basis":rule["classification_basis"],
+                "generated_output_class":rule["generated_output_class"],
+                "file_count":len(matched),
+                "total_bytes":total_bytes,
+                "git_tree_sha":tree_sha,
+                "extension_counts":dict(sorted(extension_counts.items())),
+                "coverage_semantics":"ALL_TRACKED_FILES_UNDER_PREFIX_AT_BOUND_HEAD",
+            })
+            grouped_paths.update(matched)
+            counts[rule["classification"]]+=len(matched)
         for path in files:
+            if path in grouped_paths:
+                continue
             raw=(repo/path).read_bytes()
             is_self=(repo/path).resolve()==output_path
             digest="SELF_REFERENTIAL" if is_self else sha256(raw).hexdigest()
@@ -221,6 +261,8 @@ def main() -> int:
             "baseline_head":exp["head"],"baseline_tree":exp["tree"],
             "identity_mode":"EXACT_OVERLAY" if rid in overlays else "EXACT_BASELINE",
             "tracked_files":len(files),"class_counts":dict(sorted(counts.items())),
+            "materialized_file_rows":sum(1 for row in rows if row["repository"]==rid),
+            "coverage_group_file_count":sum(group["file_count"] for group in coverage_groups if group["repository"]==rid),
             "readmes":readmes,"workflows":workflows,"tests_count":len(tests),
         })
     dup_groups=[]
@@ -233,29 +275,39 @@ def main() -> int:
     dup_groups.sort(key=lambda x:(-len(x["repositories"]),-x["count"],x["sha256"]))
     output={
         "schema":"lion.repository-content-census/v1",
+        "generator":"tools/lion_global_repository_census.py",
+        "invalidators":["REPOSITORY_CONTENT_CHANGE","NAMING_STANDARD_CHANGE","DEPENDENCY_CHANGE"],
         "generated_from":{
             "baseline_id":baseline["baseline_id"],
             "architecture_epoch":baseline["architecture_epoch"],
             "repository_count":len(repo_summary),
-            "tracked_file_count":len(rows),
+            "tracked_file_count":sum(row["tracked_files"] for row in repo_summary),
+            "materialized_file_row_count":len(rows),
+            "coverage_group_file_count":sum(group["file_count"] for group in coverage_groups),
+            "coverage_group_count":len(coverage_groups),
             "projection_mode":"BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY" if overlays else "EXACT_BASELINE",
             "overlay_repositories":sorted(overlays),
         },
         "repositories":repo_summary,
         "files":rows,
+        "coverage_groups":coverage_groups,
         "duplicate_content_groups":dup_groups,
         "static_python_reference_signals":static_signals,
         "classification_policy":{
             "unknown_is_legal":True,
             "static_unreferenced_is_delete_proof":False,
             "delete_requires":"independent consumer/runtime/history/compatibility absence evidence",
+            "coverage_group_semantics":"A coverage group classifies every tracked file under its exact path prefix at the bound repository HEAD; individual rows are intentionally omitted only for those files.",
         },
         "authority_effect":"NONE",
     }
     Path(args.output).write_text(json.dumps(output,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(json.dumps({
         "repositories":len(repo_summary),
-        "files":len(rows),
+        "tracked_files":sum(row["tracked_files"] for row in repo_summary),
+        "materialized_rows":len(rows),
+        "coverage_group_files":sum(group["file_count"] for group in coverage_groups),
+        "coverage_groups":len(coverage_groups),
         "duplicates":len(dup_groups),
         "unknown":sum(1 for r in rows if r["classification"]=="UNKNOWN"),
         "noncanonical_readmes":sum(1 for r in rows if r["naming_conformance"]!="NO_KNOWN_VIOLATION"),

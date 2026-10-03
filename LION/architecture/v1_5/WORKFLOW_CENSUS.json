@@ -1,6 +1,11 @@
 {
   "schema": "lion.workflow-census/v1",
-  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1",
+  "generator": "tools/lion_global_maintenance_projection.py",
+  "invalidators": [
+    "REPOSITORY_CONTENT_CHANGE",
+    "DEPENDENCY_CHANGE"
+  ],
+  "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1-FINAL",
   "projection_mode": "BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
   "workflows": [
     {
@@ -10,7 +15,7 @@
       "branch_specific_refs": [],
       "has_branch_specific_refs": false,
       "contents_write_permission": false,
-      "sha256": "7f978255abe9658827aca2438b8244836ba8ebd687a65ee0f04e00ec7c7f8671"
+      "sha256": "b1288e4254f139600dac38894bcfb960caf7dfa0df628b304bdc08b1cb1926a6"
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
@@ -253,7 +258,7 @@
       "branch_specific_refs": [],
       "has_branch_specific_refs": false,
       "contents_write_permission": false,
-      "sha256": "bb395731c7a3b6b21272bb242e9267dc26e197d3a1ed4f0daaae8e3276090655"
+      "sha256": "fd91fc997ba1a4e93c9fc961d7f7c953b4b0c762f8f764950c230c5e33ec679b"
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
@@ -289,7 +294,7 @@
       "branch_specific_refs": [],
       "has_branch_specific_refs": false,
       "contents_write_permission": false,
-      "sha256": "98c0ff2e5d37750946b8affd617806b12c40614f0260572614086474778f50ad"
+      "sha256": "f63c502815f3316e4ecbad37094b00855b471a0260a00105663aeab0ea82c04d"
     },
     {
       "repository": "DonkeyJJLove/sbom",
@@ -370,7 +375,7 @@
       "branch_specific_refs": [],
       "has_branch_specific_refs": false,
       "contents_write_permission": false,
-      "sha256": "029af047adc381ad6b9550d4b749804753942f36f2edec2a54545b6b6aeaca56"
+      "sha256": "8bb7450e10dd9d0a83f78c84575588b9ab40bc1081a5f0615d837fe4318bbec8"
     }
   ],
   "counts": {

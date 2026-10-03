@@ -265,6 +265,11 @@
         "path": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
         "class": "MACHINE_READABLE_ARCHITECTURE",
         "currentness": "LOCAL_OWNER"
+      },
+      {
+        "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "SOURCE_BOUND"
       }
     ],
     "discoverability": {

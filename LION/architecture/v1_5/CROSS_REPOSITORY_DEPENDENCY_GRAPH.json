@@ -1,6 +1,6 @@
 {
   "schema": "lion.cross-repository-dependency-graph/v1",
-  "federation_digest": "855e5782b113a9381949fac3f0bb30c412c929737f2507b324d2e02202b32d0c",
+  "federation_digest": "3100707845afec1cfdb2a9fe0349ad363558ea743aedf89b8e803fcc21026e70",
   "nodes": [
     "DonkeyJJLove/HA2D",
     "DonkeyJJLove/SymulacjaKaskadySieciowej",

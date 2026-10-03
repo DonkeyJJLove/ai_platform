@@ -24,14 +24,34 @@ class GlobalRepositoryStandardizationTests(unittest.TestCase):
         census = self.load(V15 / 'REPOSITORY_CONTENT_CENSUS.json')
         self.assertEqual(census['schema'], 'lion.repository-content-census/v1')
         self.assertEqual(census['generated_from']['repository_count'], 10)
-        self.assertEqual(census['generated_from']['tracked_file_count'], len(census['files']))
-        self.assertGreaterEqual(len(census['files']), 2776)
+        tracked = census['generated_from']['tracked_file_count']
+        covered = sum(group['file_count'] for group in census['coverage_groups'])
+        self.assertEqual(tracked, len(census['files']) + covered)
+        self.assertEqual(census['generated_from']['materialized_file_row_count'], len(census['files']))
+        self.assertEqual(census['generated_from']['coverage_group_file_count'], covered)
+        self.assertGreaterEqual(tracked, 2776)
+        self.assertEqual(census['generator'], 'tools/lion_global_repository_census.py')
+        hcl = next(group for group in census['coverage_groups'] if group['repository'] == 'DonkeyJJLove/writeups' and group['path_prefix'].endswith('/runs/'))
+        self.assertEqual(hcl['classification'], 'CURRENT_GENERATED')
+        self.assertEqual(hcl['generated_output_class'], 'ARCHIVED_RUN')
+        self.assertGreater(hcl['file_count'], 70000)
+        self.assertRegex(hcl['git_tree_sha'], r'^[0-9a-f]{40}$')
+        self.assertIn('REPOSITORY_CONTENT_CHANGE', census['invalidators'])
+        self.assertEqual(sum(1 for r in census['files'] if r['naming_conformance'] == 'NONCANONICAL_README_CASE'), 0)
         self.assertTrue(census['classification_policy']['unknown_is_legal'])
         self.assertFalse(census['classification_policy']['static_unreferenced_is_delete_proof'])
         for row in census['files']:
             self.assertTrue(row['classification'])
             if row['sha256'] != 'SELF_REFERENTIAL':
                 self.assertRegex(row['sha256'], r'^[0-9a-f]{64}$')
+
+    def test_postmerge_baseline_has_current_ten_repository_vector(self):
+        baseline = self.load(V15 / 'GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json')
+        self.assertEqual(len(baseline['repositories']), 10)
+        self.assertEqual(len({r['repository'] for r in baseline['repositories']}), 10)
+        owner = next(r for r in baseline['repositories'] if r['repository'] == 'DonkeyJJLove/ai_platform')
+        self.assertEqual(owner['branch'], 'master')
+        self.assertEqual(owner['head'], '48cb218f94860402b9dea175681a2cb20b9b0ba3')
 
     def test_naming_status_version_standards_are_typed(self):
         naming = self.load(STANDARDS / 'LION_NAMING_STANDARD.json')
@@ -77,7 +97,9 @@ class GlobalRepositoryStandardizationTests(unittest.TestCase):
         self.assertIn('MissionIntent', roadmap)
 
     def test_semantic_owner_map_remains_unique_and_covers_new_standards(self):
-        owners = self.load(V15 / 'semantic_owners.json')['owners']
+        owner_doc = self.load(V15 / 'semantic_owners.json')
+        self.assertEqual(owner_doc['baseline_head'], '48cb218f94860402b9dea175681a2cb20b9b0ba3')
+        owners = owner_doc['owners']
         concepts = [row['concept'] for row in owners]
         self.assertEqual(len(concepts), len(set(concepts)))
         for concept in ('repository_content_classification','naming_standard','status_model','version_model','panel','branch_reconciliation','test_taxonomy','workflow_taxonomy'):
@@ -85,8 +107,9 @@ class GlobalRepositoryStandardizationTests(unittest.TestCase):
 
     def test_branch_census_never_turns_unknown_into_delete(self):
         value = self.load(V15 / 'BRANCH_RECONCILIATION_R1.json')
-        self.assertEqual(len(value['rows']), 88)
+        self.assertGreaterEqual(len(value['rows']), 10)
         self.assertEqual(value['counts']['ACTIVE'], 10)
+        self.assertEqual(value['generator'], 'tools/lion_global_maintenance_projection.py')
         for row in value['rows']:
             if row['classification'] == 'DELETE_ELIGIBLE':
                 self.assertEqual(row['ahead_by'], 0)
@@ -97,8 +120,40 @@ class GlobalRepositoryStandardizationTests(unittest.TestCase):
     def test_test_and_workflow_census_preserve_historical_regressions(self):
         tests = self.load(V15 / 'TEST_CENSUS.json')
         workflows = self.load(V15 / 'WORKFLOW_CENSUS.json')
+        self.assertEqual(tests['generator'], 'tools/lion_global_maintenance_projection.py')
+        self.assertEqual(workflows['generator'], 'tools/lion_global_maintenance_projection.py')
         self.assertGreater(tests['counts'].get('HISTORICAL_REGRESSION', 0), 0)
         self.assertGreaterEqual(len(workflows['workflows']), 40)
+
+    def test_live_snapshot_compacts_high_volume_research_runs(self):
+        snapshot = self.load(V15 / "FEDERATION_LIVE_SNAPSHOT.json")
+        self.assertEqual(snapshot["schema"], "lion.federation-live-snapshot/v1")
+        self.assertEqual(len(snapshot["repositories"]), 10)
+        writeups = next(
+            row for row in snapshot["repositories"]
+            if row["repository"] == "DonkeyJJLove/writeups"
+        )
+        self.assertEqual(
+            writeups["file_inventory_mode"],
+            "FULL_EXCEPT_EXACT_COVERAGE_GROUPS",
+        )
+        groups = writeups["file_coverage_groups"]
+        self.assertEqual(len(groups), 1)
+        group = groups[0]
+        self.assertEqual(
+            group["path_prefix"],
+            "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/runs/",
+        )
+        self.assertGreater(group["file_count"], 10000)
+        self.assertRegex(group["git_tree_sha"], r"^[0-9a-f]{40}$")
+        self.assertTrue(all(
+            not row["path"].startswith(group["path_prefix"])
+            for row in writeups["files"]
+        ))
+        self.assertLess(
+            (V15 / "FEDERATION_LIVE_SNAPSHOT.json").stat().st_size,
+            5_000_000,
+        )
 
     def test_core_ci_has_no_retired_r2e_branch_routing(self):
         core = (ROOT / '.github/workflows/cyber-lion-contracts.yml').read_text(encoding='utf-8')

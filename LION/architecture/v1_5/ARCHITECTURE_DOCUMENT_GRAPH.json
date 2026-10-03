@@ -1,18 +1,20 @@
 {
   "schema": "lion.architecture-document-graph/v1",
-  "federation_digest": "855e5782b113a9381949fac3f0bb30c412c929737f2507b324d2e02202b32d0c",
+  "federation_digest": "3100707845afec1cfdb2a9fe0349ad363558ea743aedf89b8e803fcc21026e70",
   "nodes": [
     "DonkeyJJLove/HA2D:AGENTS.md",
     "DonkeyJJLove/HA2D:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/HA2D:PROCESS_GUARD.md",
+    "DonkeyJJLove/HA2D:README.md",
+    "DonkeyJJLove/HA2D:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/HA2D:cyber-lion.repository.json",
-    "DonkeyJJLove/HA2D:readme.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:AGENTS.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:PROCESS_GUARD.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:README.md",
+    "DonkeyJJLove/SymulacjaKaskadySieciowej:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
-    "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.MD",
+    "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:tests/test_simulation_contracts.py",
     "DonkeyJJLove/ai_platform:.github/AGENTS.md",
@@ -229,6 +231,7 @@
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_VERIFICATION_BUNDLE_COMMUNICATION_ENVELOPE_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FORMALIZATION_VERIFICATION_BUNDLE_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_BASELINE_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/MIGRATION_PLAN.md",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/PROCESS_CONTRACT_SHADOW_REPORT.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/RAG_DELTA_PLAN.json",
@@ -670,14 +673,17 @@
     "DonkeyJJLove/chunk-chunk:AGENTS.md",
     "DonkeyJJLove/chunk-chunk:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/chunk-chunk:PROCESS_GUARD.md",
-    "DonkeyJJLove/chunk-chunk:README.MD",
+    "DonkeyJJLove/chunk-chunk:README.md",
+    "DonkeyJJLove/chunk-chunk:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
     "DonkeyJJLove/chunk-chunk:doc/9D_process_design.md",
     "DonkeyJJLove/chunk-chunk:hmk9d_protocol.yaml",
     "DonkeyJJLove/glitchlab:AGENTS.md",
     "DonkeyJJLove/glitchlab:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/glitchlab:PROCESS_GUARD.md",
-    "DonkeyJJLove/glitchlab:bench/README.MD",
+    "DonkeyJJLove/glitchlab:README.md",
+    "DonkeyJJLove/glitchlab:REPOSITORY_STANDARDIZATION_R1.json",
+    "DonkeyJJLove/glitchlab:bench/README.md",
     "DonkeyJJLove/glitchlab:bench/artifacts/plots/coverage.png",
     "DonkeyJJLove/glitchlab:bench/schemas/__init__.py",
     "DonkeyJJLove/glitchlab:bench/schemas/ab_report.schema.json",
@@ -696,7 +702,7 @@
     "DonkeyJJLove/glitchlab:spec/schemas/delta_report.schema.json",
     "DonkeyJJLove/glitchlab:spec/schemas/node_impact.json",
     "DonkeyJJLove/glitchlab:spec/schemas/refactor_action.json",
-    "DonkeyJJLove/glitchlab:src/README.MD",
+    "DonkeyJJLove/glitchlab:src/README.md",
     "DonkeyJJLove/glitchlab:src/app/views/helpers/dragging_helper.py",
     "DonkeyJJLove/glitchlab:tests/test_ci_ratchet_contract.py",
     "DonkeyJJLove/glitchlab:tools/jsonschema_validate.py",
@@ -704,29 +710,31 @@
     "DonkeyJJLove/hipotezy_nadawcze_LLM:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/hipotezy_nadawcze_LLM:PROCESS_GUARD.md",
     "DonkeyJJLove/hipotezy_nadawcze_LLM:README.md",
+    "DonkeyJJLove/hipotezy_nadawcze_LLM:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
     "DonkeyJJLove/mosaic_lab_pro.py:AGENTS.md",
     "DonkeyJJLove/mosaic_lab_pro.py:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/mosaic_lab_pro.py:PROCESS_GUARD.md",
-    "DonkeyJJLove/mosaic_lab_pro.py:README.MD",
+    "DonkeyJJLove/mosaic_lab_pro.py:README.md",
+    "DonkeyJJLove/mosaic_lab_pro.py:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
     "DonkeyJJLove/sbom:AGENTS.md",
     "DonkeyJJLove/sbom:AID_CONTRACT.md",
     "DonkeyJJLove/sbom:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/sbom:PROCESS_GUARD.md",
     "DonkeyJJLove/sbom:README.md",
+    "DonkeyJJLove/sbom:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/sbom:cyber-lion.repository.json",
     "DonkeyJJLove/sbom:docs/01_AID_CONTRACT.md",
     "DonkeyJJLove/sbom:img/05_hybrid_architecture_sbom.png",
-    "DonkeyJJLove/sbom:środowiska-testowe/README.md",
     "DonkeyJJLove/swarm:AGENTS.md",
     "DonkeyJJLove/swarm:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/swarm:PROCESS_GUARD.md",
     "DonkeyJJLove/swarm:README.md",
+    "DonkeyJJLove/swarm:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/swarm:aggregator-api/README.md",
     "DonkeyJJLove/swarm:aggregator/README.md",
     "DonkeyJJLove/swarm:aggregator/mqtt_bridge/README.md",
-    "DonkeyJJLove/swarm:aggregator/readme.md",
     "DonkeyJJLove/swarm:cyber-lion.repository.json",
     "DonkeyJJLove/swarm:drones/README.md",
     "DonkeyJJLove/swarm:infrastructure/README.md",
@@ -735,18 +743,19 @@
     "DonkeyJJLove/swarm:infrastructure/istio/destinationrules/README.md",
     "DonkeyJJLove/swarm:infrastructure/istio/gateways/README.md",
     "DonkeyJJLove/swarm:infrastructure/istio/policies/README.md",
-    "DonkeyJJLove/swarm:infrastructure/istio/virtualservices/readme.md",
+    "DonkeyJJLove/swarm:infrastructure/istio/virtualservices/README.md",
     "DonkeyJJLove/swarm:infrastructure/kubernetes/README.md",
     "DonkeyJJLove/swarm:infrastructure/statefulset/README.md",
     "DonkeyJJLove/swarm:runtime/README.md",
     "DonkeyJJLove/swarm:runtime/contracts.py",
-    "DonkeyJJLove/swarm:scripts/kubediag/readme.md",
+    "DonkeyJJLove/swarm:scripts/kubediag/README.md",
     "DonkeyJJLove/swarm:security/README.md",
     "DonkeyJJLove/swarm:security/policies/README.md",
     "DonkeyJJLove/swarm:server/README.md",
     "DonkeyJJLove/swarm:system-ai/README.md",
     "DonkeyJJLove/swarm:tests/e6_runtime_admission_contract.py",
     "DonkeyJJLove/swarm:tests/runtime/e4_runtime_schema.sql",
+    "DonkeyJJLove/writeups:\"badania/Studium falsyfikacyjne procesu i plan implementacji algorytmu merger\\342\\200\\221arbitrage dla case\\342\\200\\231u UHG.pdf\"",
     "DonkeyJJLove/writeups:AGENTS.md",
     "DonkeyJJLove/writeups:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/writeups:LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md",
@@ -754,9 +763,9 @@
     "DonkeyJJLove/writeups:OSINT/README.md",
     "DonkeyJJLove/writeups:PROCESS_GUARD.md",
     "DonkeyJJLove/writeups:PROFILE_README.md",
-    "DonkeyJJLove/writeups:README.MD",
-    "DonkeyJJLove/writeups:artykuły/README.md",
-    "DonkeyJJLove/writeups:badania/LOCI/README.MD",
+    "DonkeyJJLove/writeups:README.md",
+    "DonkeyJJLove/writeups:REPOSITORY_STANDARDIZATION_R1.json",
+    "DonkeyJJLove/writeups:badania/LOCI/README.md",
     "DonkeyJJLove/writeups:badania/LOCI/matlab/README.md",
     "DonkeyJJLove/writeups:badania/LOCI/matlab/adapters/README.md",
     "DonkeyJJLove/writeups:badania/LOCI/matlab/compat/README.md",
@@ -774,9 +783,17 @@
     "DonkeyJJLove/writeups:badania/LOCI/tests/README.md",
     "DonkeyJJLove/writeups:badania/MQL5Market/README.md",
     "DonkeyJJLove/writeups:badania/README.md",
-    "DonkeyJJLove/writeups:badania/Studium falsyfikacyjne procesu i plan implementacji algorytmu merger‑arbitrage dla case’u UHG.pdf",
     "DonkeyJJLove/writeups:badania/Symulacja_GITHUB/README.md",
     "DonkeyJJLove/writeups:badania/conditional_decision_theory/README.md",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/README.md",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/artifacts/README.md",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/README.md",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/policies/without_provenance.txt",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/assets/sources/provenance.json",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/heuristic_lab/qualification_contract.py",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/policies/without_provenance.txt",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/sources/provenance.json",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/tests/test_transform_contracts.py",
     "DonkeyJJLove/writeups:cyber-lion.repository.json",
     "DonkeyJJLove/writeups:evolutionary-agent-systems-organization-framework.md",
     "DonkeyJJLove/writeups:global_architecture_convergence_baseline_report.md",
@@ -816,7 +833,13 @@
     },
     {
       "source": "DonkeyJJLove/HA2D:cyber-lion.repository.json",
-      "target": "DonkeyJJLove/HA2D:readme.md",
+      "target": "DonkeyJJLove/HA2D:README.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/HA2D:REPOSITORY_STANDARDIZATION_R1.json",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
     },
@@ -859,6 +882,12 @@
     {
       "source": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
       "target": "DonkeyJJLove/SymulacjaKaskadySieciowej:README.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/SymulacjaKaskadySieciowej:REPOSITORY_STANDARDIZATION_R1.json",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json"
     },
@@ -979,6 +1008,12 @@
     {
       "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
       "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_BASELINE_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/ai_platform:cyber-lion.repository.json"
     },
@@ -1116,6 +1151,12 @@
     },
     {
       "source": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/chunk-chunk:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
       "target": "DonkeyJJLove/chunk-chunk:doc/9D_process_design.md",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
@@ -1159,6 +1200,12 @@
     {
       "source": "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
       "target": "DonkeyJJLove/glitchlab:PROCESS_GUARD.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/glitchlab:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/glitchlab:REPOSITORY_STANDARDIZATION_R1.json",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/glitchlab:cyber-lion.repository.json"
     },
@@ -1217,6 +1264,12 @@
       "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
     },
     {
+      "source": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/hipotezy_nadawcze_LLM:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
+    },
+    {
       "source": "DonkeyJJLove/mosaic_lab_pro.py:AGENTS.md",
       "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
       "relation": "DISCOVERED_FROM",
@@ -1254,7 +1307,13 @@
     },
     {
       "source": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
-      "target": "DonkeyJJLove/mosaic_lab_pro.py:README.MD",
+      "target": "DonkeyJJLove/mosaic_lab_pro.py:README.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/mosaic_lab_pro.py:REPOSITORY_STANDARDIZATION_R1.json",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
     },
@@ -1302,6 +1361,12 @@
     },
     {
       "source": "DonkeyJJLove/sbom:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/sbom:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/sbom:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/sbom:cyber-lion.repository.json",
       "target": "DonkeyJJLove/sbom:docs/01_AID_CONTRACT.md",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/sbom:cyber-lion.repository.json"
@@ -1339,6 +1404,12 @@
     {
       "source": "DonkeyJJLove/swarm:cyber-lion.repository.json",
       "target": "DonkeyJJLove/swarm:PROCESS_GUARD.md",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/swarm:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/swarm:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/swarm:REPOSITORY_STANDARDIZATION_R1.json",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/swarm:cyber-lion.repository.json"
     },
@@ -1410,11 +1481,17 @@
     },
     {
       "source": "DonkeyJJLove/writeups:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/writeups:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/writeups:cyber-lion.repository.json",
       "target": "DonkeyJJLove/writeups:evolutionary-agent-systems-organization-framework.md",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json"
     }
   ],
   "authority_effect": "NONE",
-  "graph_digest": "f5480d81dce0541baafa3c8067ddc53e2eb7c67b00bb5481bf5a4c2e4433ec96"
+  "graph_digest": "ec1b84323e367820b8377bc25fbf2c07155ab5c859f884d5263b5a43a1666d4e"
 }
