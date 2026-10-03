@@ -105,6 +105,23 @@
       "compatibility_status": "CURRENT_SOURCE_BOUND"
     },
     {
+      "contract_id": "cognitive-invocation",
+      "canonical_path": "cyber_lion/contracts/cognitive_invocation.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.cognitive-invocation/v1",
+      "owner": "CognitiveInvocation",
+      "invariants": [
+        "provider != endpoint != session != invocation != transport != result",
+        "cognitive invocation != authority activation",
+        "LOCAL and SAAS legs retain separate identities",
+        "receipt != reconciled result"
+      ],
+      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_cognitive_invocation_contract.CognitiveInvocationTests"
+      ]
+    },
+    {
       "contract_id": "communication-envelope",
       "canonical_path": "cyber_lion/contracts/communication_envelope.py",
       "schema_or_runtime_type": "Python contract",
@@ -121,23 +138,6 @@
       "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
       "tests": [
         "test_communication_envelope.CommunicationEnvelopeTests"
-      ]
-    },
-    {
-      "contract_id": "cognitive-invocation",
-      "canonical_path": "cyber_lion/contracts/cognitive_invocation.py",
-      "schema_or_runtime_type": "Python contracts",
-      "version": "lion.cognitive-invocation/v1",
-      "owner": "CognitiveInvocation",
-      "invariants": [
-        "provider != endpoint != session != invocation != transport != result",
-        "cognitive invocation != authority activation",
-        "LOCAL and SAAS legs retain separate identities",
-        "receipt != reconciled result"
-      ],
-      "compatibility_status": "V1_5_CANDIDATE_NON_EFFECTFUL",
-      "tests": [
-        "test_cognitive_invocation_contract.CognitiveInvocationTests"
       ]
     },
     {
@@ -325,6 +325,22 @@
       ]
     },
     {
+      "contract_id": "mission-intent",
+      "canonical_path": "cyber_lion/contracts/mission_intent.py",
+      "schema_or_runtime_type": "Python contract",
+      "version": "lion.mission-intent/v1",
+      "owner": "MissionIntent",
+      "invariants": [
+        "immutable digest-bound intent",
+        "intent != message != QueryPlan",
+        "intent cannot carry authority or effect"
+      ],
+      "compatibility_status": "V1_5_SEMANTIC_CLOUD_R1_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_v15_semantic_cloud_contracts.SemanticCloudContractTests"
+      ]
+    },
+    {
       "contract_id": "model-call-v2",
       "canonical_path": "cyber_lion/contracts/model_call_v2.py",
       "schema_or_runtime_type": "Python contracts",
@@ -444,6 +460,39 @@
       "compatibility_status": "CURRENT_SOURCE_BOUND"
     },
     {
+      "contract_id": "query-plan",
+      "canonical_path": "cyber_lion/contracts/query_plan.py",
+      "schema_or_runtime_type": "Python contract",
+      "version": "lion.query-plan/v1",
+      "owner": "QueryPlan",
+      "invariants": [
+        "bound to exact MissionIntent digest",
+        "planning != retrieval execution",
+        "plan cannot carry authority or effect"
+      ],
+      "compatibility_status": "V1_5_SEMANTIC_CLOUD_R1_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_v15_semantic_cloud_contracts.SemanticCloudContractTests"
+      ]
+    },
+    {
+      "contract_id": "rag-context-envelope",
+      "canonical_path": "cyber_lion/contracts/rag_context_envelope.py",
+      "schema_or_runtime_type": "Python contract",
+      "version": "lion.rag-context-envelope/v1",
+      "owner": "RagContextEnvelope",
+      "invariants": [
+        "sources are provenance/currentness bound",
+        "post-cutoff evidence denied",
+        "RAG context != live truth",
+        "context cannot carry authority or effect"
+      ],
+      "compatibility_status": "V1_5_SEMANTIC_CLOUD_R1_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_v15_semantic_cloud_contracts.SemanticCloudContractTests"
+      ]
+    },
+    {
       "contract_id": "repository-manifest-architecture-knowledge",
       "canonical_path": "cyber_lion/contracts/v1/repository_manifest.schema.json",
       "schema_or_runtime_type": "JSON Schema extension on repository-manifest/v1",
@@ -511,6 +560,56 @@
         "independent observer trust"
       ],
       "compatibility_status": "CURRENT_SOURCE_BOUND"
+    },
+    {
+      "contract_id": "semantic-cloud-episode-binding",
+      "canonical_path": "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+      "schema_or_runtime_type": "Python contract",
+      "version": "lion.semantic-cloud-episode-binding/v1",
+      "owner": "EvidenceBoundLearningEpisode sidecar",
+      "invariants": [
+        "EBLE remains evidence owner",
+        "binding owns no queue scheduler runtime or authority",
+        "no private chain-of-thought required"
+      ],
+      "compatibility_status": "V1_5_SEMANTIC_CLOUD_R1_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_v15_semantic_cloud_contracts.SemanticCloudContractTests"
+      ]
+    },
+    {
+      "contract_id": "semantic-relevance",
+      "canonical_path": "cyber_lion/contracts/semantic_relevance.py",
+      "schema_or_runtime_type": "Python contracts",
+      "version": "lion.semantic-relevance/v1",
+      "owner": "SemanticRelevance",
+      "invariants": [
+        "semantic equality != provenance equality",
+        "similarity != relevance",
+        "relevance != authority",
+        "projection cannot widen graph or capability"
+      ],
+      "compatibility_status": "V1_5_SEMANTIC_CLOUD_R1_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_v15_semantic_cloud_contracts.SemanticCloudContractTests",
+        "test_semantic_cloud_r1_experiment.SemanticCloudR1ExperimentTests"
+      ]
+    },
+    {
+      "contract_id": "semantic-scaffold",
+      "canonical_path": "cyber_lion/contracts/semantic_scaffold.py",
+      "schema_or_runtime_type": "Python contract",
+      "version": "lion.semantic-scaffold/v1",
+      "owner": "SemanticScaffold",
+      "invariants": [
+        "explicit entities/relations/gaps/evidence only",
+        "no chain-of-thought storage requirement",
+        "scaffold ends before authority/effect"
+      ],
+      "compatibility_status": "V1_5_SEMANTIC_CLOUD_R1_CANDIDATE_NON_EFFECTFUL",
+      "tests": [
+        "test_v15_semantic_cloud_contracts.SemanticCloudContractTests"
+      ]
     }
   ]
 }

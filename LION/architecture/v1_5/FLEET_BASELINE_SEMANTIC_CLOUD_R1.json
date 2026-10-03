@@ -1,0 +1,513 @@
+{
+  "schema_version": "1.0.0",
+  "baseline_id": "semantic-cloud-r1-post-peer-merge",
+  "registered": [
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "default_branch": "master",
+      "expected_head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "expected_tree": "556e10fddd4668a33ec46687e93d6f9893508fb0"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "default_branch": "main",
+      "expected_head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "expected_tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "default_branch": "research/semantic-cloud-r1",
+      "expected_head": "079c5585e8190e6ff76a8c379d195aa42109095c",
+      "expected_tree": "3b643c5fffe783775908f8f9d2b107854e6d9165"
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "default_branch": "master",
+      "expected_head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "expected_tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "default_branch": "master",
+      "expected_head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "expected_tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf"
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "default_branch": "main",
+      "expected_head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "expected_tree": "e746446fc1d98890e689f8c9626d4435cc088a74"
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "default_branch": "main",
+      "expected_head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "expected_tree": "9a0c7336c3aba0509023987d9380e0fee802fab8"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "default_branch": "main",
+      "expected_head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "expected_tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "default_branch": "master",
+      "expected_head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "expected_tree": "12131ef5b055d81b80d0272104da4980e19d7221"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "default_branch": "master",
+      "expected_head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "expected_tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba"
+    }
+  ],
+  "observations": [
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "context.capture",
+        "memory.candidate",
+        "memory.replay",
+        "process.diagnostics",
+        "semantic.revision"
+      ],
+      "security_boundaries": [
+        "diagnostic state != authority",
+        "memory commit requires explicit policy and provenance",
+        "semantic coherence != empirical truth",
+        "working context != committed memory"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "model.reproduce",
+        "scenario.generate",
+        "sensitivity.morris",
+        "sensitivity.sobol",
+        "simulation.run",
+        "stress.adversarial"
+      ],
+      "security_boundaries": [
+        "convergence != model correctness",
+        "sensitivity index != empirical causal coefficient",
+        "simulated != observed",
+        "simulation recommendation != runtime authority"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/ai_platform",
+      "branch": "research/semantic-cloud-r1",
+      "head": "079c5585e8190e6ff76a8c379d195aa42109095c",
+      "tree": "3b643c5fffe783775908f8f9d2b107854e6d9165",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [],
+      "dependents": [
+        "DonkeyJJLove/HA2D",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej",
+        "DonkeyJJLove/chunk-chunk",
+        "DonkeyJJLove/glitchlab",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM",
+        "DonkeyJJLove/mosaic_lab_pro.py",
+        "DonkeyJJLove/sbom",
+        "DonkeyJJLove/swarm",
+        "DonkeyJJLove/writeups"
+      ],
+      "public_contracts": [
+        "action.propose",
+        "agent.spec",
+        "event.envelope",
+        "execution.receipt",
+        "gate.evaluate",
+        "mission.spec",
+        "mosaic.delta",
+        "process.action_intent",
+        "process.contract",
+        "process.transition.select",
+        "repository.discover",
+        "swarm.plan"
+      ],
+      "security_boundaries": [
+        "ActionIntentCandidate != ActionSpec",
+        "AgentSpec != runtime identity",
+        "GateDecision != external side effect",
+        "ProcessContract != authority",
+        "ProcessTransition != action execution",
+        "authority expansion requires independent deterministic gate",
+        "consequential execution requires causal gate binding and observable receipt",
+        "model proposal != authority",
+        "receipt != observation != reconciliation",
+        "repository registration != credentials"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "branch": "master",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "bridge.select",
+        "process.state",
+        "process.transition",
+        "threshold.request",
+        "trajectory.score"
+      ],
+      "security_boundaries": [
+        "bridge selection != permission",
+        "process score is diagnostic rather than empirical ground truth",
+        "semantic state != runtime authority",
+        "threshold crossing may request gate but cannot apply gate"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/glitchlab",
+      "branch": "master",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "change.explain",
+        "change.observability",
+        "delta.normalize",
+        "delta.structural_projection",
+        "invariant.evaluate",
+        "sast.bridge"
+      ],
+      "security_boundaries": [
+        "generated proposal != accepted mutation",
+        "local invariant pass != path safety",
+        "self-healing proposal requires external gate before consequential mutation",
+        "semantic analysis != runtime authority"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "branch": "main",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "artifact.supersede",
+        "confidence.revise",
+        "evidence.compare",
+        "experiment.design",
+        "falsifier.define",
+        "hypothesis.formalize"
+      ],
+      "security_boundaries": [
+        "R&D promotion requires external evidence and explicit gate",
+        "hypothesis confidence != runtime authority",
+        "model explanation != evidence",
+        "semantic regularity != hidden-state proof"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "branch": "main",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "authority.graph",
+        "graph.abstract",
+        "graph.project",
+        "provenance.graph",
+        "structure.anomaly",
+        "topology.analyze"
+      ],
+      "security_boundaries": [
+        "abstraction must preserve declared structural invariants",
+        "authority topology evidence feeds but does not replace deterministic policy",
+        "graph anomaly != authorization decision",
+        "visualization != source semantics"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/sbom",
+      "branch": "main",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "artifact.delta",
+        "artifact.identify",
+        "composition.risk_evidence",
+        "provenance.emit",
+        "sbom.observe",
+        "supply_chain.scan"
+      ],
+      "security_boundaries": [
+        "analytics backend != decision authority",
+        "artifact identity must remain provenance-bound",
+        "legacy gate event name != Cyber-Lion GateApplied",
+        "measurement != authority"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/swarm",
+      "branch": "master",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "capability.lease",
+        "runtime.observe",
+        "runtime.receipt",
+        "swarm.reconfigure",
+        "workload.execute",
+        "workload.identity"
+      ],
+      "security_boundaries": [
+        "execution requires bounded capability lease and gate binding",
+        "network identity != agent identity",
+        "telemetry loss reduces effective authority",
+        "workload scheduled != action authorized"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "repository": "DonkeyJJLove/writeups",
+      "branch": "master",
+      "head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba",
+      "dirty": null,
+      "build_result": "UNKNOWN",
+      "test_result": "UNKNOWN",
+      "failure_classification": "NONE",
+      "known_preexisting_failures": [],
+      "dependencies": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "dependents": [],
+      "public_contracts": [
+        "evidence.source",
+        "publication.artifact",
+        "rag.source.candidate",
+        "research.corpus"
+      ],
+      "security_boundaries": [
+        "RAG source candidate != admitted project context",
+        "publication != authority",
+        "research corpus != live currentness",
+        "writeup evidence reference != observed result"
+      ],
+      "manifest_present": true,
+      "evidence": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "DonkeyJJLove/HA2D",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/chunk-chunk",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/glitchlab",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/glitchlab:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/mosaic_lab_pro.py",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/sbom",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/sbom:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/swarm",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/swarm:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/writeups",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "IMPORTS",
+      "contract": "architecture_knowledge/v1",
+      "version_assumption": "exact candidate/default branch baseline",
+      "failure_mode": "dependency unavailable or semantic contract drift",
+      "security_impact": "semantic input only; no authority transfer",
+      "test_coverage": "manifest typed validation + federated binding",
+      "evidence": "DonkeyJJLove/writeups:cyber-lion.repository.json"
+    }
+  ],
+  "baseline_digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7",
+  "gate0": {
+    "all_repositories_inventoried": true,
+    "current_failures_separated_from_new_failures": true,
+    "cross_repo_dependency_graph_created": true,
+    "result": "PASS",
+    "baseline_digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7"
+  }
+}

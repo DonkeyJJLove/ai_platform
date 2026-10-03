@@ -1,0 +1,48 @@
+{
+  "delta_id": "delta:v15-semantic-cloud-r1",
+  "target_component": "Semantic Cloud relevance-space candidate",
+  "motivation": "Integrate the bounded semantic-organization research line through existing LION communication, evidence, capability, Action and formalization owners without creating a parallel authority or runtime plane.",
+  "evidence_refs": [
+    "writeups:HCL-4.3.3",
+    "writeups:semantic-filter-compiler-v1",
+    "cross-thread:LION-FEDERATION-RECONSOLIDATION-AND-DUAL-TRACK-EVOLUTION-20261003-R1",
+    "live-git:ai_platform:ddee531cbeaf3ed15d90d3d53828333c48820ee4"
+  ],
+  "expected_outcome": "Current manifests parse under closed typed validation and LION exposes non-effectful MissionIntent, QueryPlan, RagContextEnvelope, SemanticScaffoldIR and SemanticRelevance contracts with a deterministic no-effect qualification fixture.",
+  "falsification_conditions": [
+    "Semantic relevance creates or substitutes authority.",
+    "Semantic equality collapses provenance identity.",
+    "RAG context is promoted to live truth.",
+    "RelevanceProjection widens capability beyond explicit allowed bindings.",
+    "A new top-level scheduler or Action plane is introduced.",
+    "Current federation manifests still fail the typed parser."
+  ],
+  "candidate_scope": [
+    "cyber_lion/contracts",
+    "cyber_lion/enterprise/federation.py",
+    "cyber_lion/architecture_projection",
+    "cyber_lion/tests",
+    "cyber_lion/CONTRACT_MAP.md",
+    "cyber_lion/CAPABILITY_MAP.md",
+    "cyber-lion.repository.json",
+    "LION/architecture/v1_5",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/rag/RAG_BOOTSTRAP.json",
+    "README.md",
+    "LION/README.md"
+  ],
+  "dependency_ids": [
+    "CommunicationEnvelope",
+    "EvidenceBoundLearningEpisode",
+    "CapabilityNeed",
+    "CompositionContract",
+    "MosaicCell",
+    "CanonicalActionIR",
+    "formalization-registry:v1.5-federation-r1"
+  ],
+  "risk_class": "AMBER",
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "delta_digest": "70ecefbaf5091959e5a1e36f63e92d085e0718249db076ae1abcd150abc190e8",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,103 @@
+{
+  "binding_id": "federated-formalization:semantic-cloud-r1-post-peer-merge",
+  "formalization_manifest_digest": "9059a20cd7925af0111a06d69d7951abedf84c43210e15120569b741ad2d4089",
+  "fleet_baseline_digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7",
+  "dependency_graph_digest": "f6e5cd35878d8119dc0f8fe98a8b30417eb061d7fcd8e48e2b5afee24c4db8b4",
+  "repositories": [
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "baseline_head": "079c5585e8190e6ff76a8c379d195aa42109095c",
+      "baseline_tree": "3b643c5fffe783775908f8f9d2b107854e6d9165",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-contracts",
+        "semantic-cloud-formalization"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "baseline_head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "baseline_tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-research-program"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "baseline_head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "baseline_tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "baseline_head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "baseline_tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "baseline_head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "baseline_tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "baseline_head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "baseline_tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "baseline_head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "baseline_tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "baseline_head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "baseline_tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "baseline_head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "baseline_tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "baseline_head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "baseline_tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "disposition": "UPDATE",
+      "required_artifact_ids": [
+        "semantic-cloud-provider-declaration"
+      ]
+    }
+  ],
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "binding_digest": "4839816b6efa65eb63a7977ce3799e122b1373762de44abbaa532b2ac45078bf",
+  "schema_id": "lion.federated-formalization-binding/v1"
+}

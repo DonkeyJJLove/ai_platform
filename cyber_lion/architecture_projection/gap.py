@@ -194,8 +194,44 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         _contract(
             "CommunicationEnvelope",
             "cyber_lion/contracts/communication_envelope.py",
-            missing_runtime="existing operator/group-channel stores and transports remain operational owners; this candidate adds no runtime adapter",
-            next_minimal_gap="define MissionIntent over stable communication/cognitive refs without changing transport or authority ownership",
+            missing_runtime="existing operator/group-channel stores and transports remain operational owners; this contract adds no runtime adapter",
+            next_minimal_gap="MissionIntent is the next semantic successor; transport and authority ownership remain unchanged",
+        ),
+        _contract(
+            "MissionIntent",
+            "cyber_lion/contracts/mission_intent.py",
+            missing_runtime="intent identity is non-effectful and does not invoke cognition or tools",
+            next_minimal_gap="bind QueryPlan to exact MissionIntent identity",
+        ),
+        _contract(
+            "QueryPlan",
+            "cyber_lion/contracts/query_plan.py",
+            missing_runtime="query planning does not execute retrieval",
+            next_minimal_gap="bind retrieved evidence/currentness through RagContextEnvelope",
+        ),
+        _contract(
+            "RagContextEnvelope",
+            "cyber_lion/contracts/rag_context_envelope.py",
+            missing_runtime="RAG context remains versioned evidence input and not live truth",
+            next_minimal_gap="compile explicit SemanticScaffoldIR from intent, query and evidence",
+        ),
+        _contract(
+            "SemanticScaffoldIR",
+            "cyber_lion/contracts/semantic_scaffold.py",
+            missing_runtime="semantic scaffold is representation only and ends before authority/effect",
+            next_minimal_gap="derive SemanticDelta/RelevanceGraph/RelevanceProjection and validate no-effect qualification",
+        ),
+        _contract(
+            "SemanticRelevance",
+            "cyber_lion/contracts/semantic_relevance.py",
+            missing_runtime="relevance organization has no scheduler or execution owner",
+            next_minimal_gap="bind relevance projection to existing CapabilityNeed/Composition/Mosaic without authority widening",
+        ),
+        _contract(
+            "SemanticCloudEpisodeBinding",
+            "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+            missing_runtime="read-only research lineage binding; EBLE and EvolutionaryRnD remain evidence owners",
+            next_minimal_gap="qualify external multi-agent experiments and independent replication",
         ),
         _contract(
             "CognitiveInvocation",

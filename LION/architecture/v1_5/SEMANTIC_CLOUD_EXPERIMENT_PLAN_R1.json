@@ -1,0 +1,34 @@
+{
+  "schema": "lion.semantic-cloud.experiment-plan/v1",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "qualification": {
+    "kind": "DETERMINISTIC_NO_EFFECT_FIXTURE",
+    "path": "cyber_lion/tests/experiments/semantic_cloud_r1.py",
+    "claims": [
+      "lineage roots remain explicit",
+      "stale state can be superseded",
+      "semantic representation can reduce fixture state size"
+    ],
+    "non_claims": [
+      "model improvement",
+      "AGI",
+      "runtime deployment",
+      "mechanistic representation proof"
+    ]
+  },
+  "future_experiments": [
+    "SC-01",
+    "SC-02",
+    "SC-03",
+    "SC-04",
+    "SC-05",
+    "SC-06",
+    "SC-07",
+    "SC-08",
+    "SC-09",
+    "SC-10",
+    "SC-11",
+    "SC-12"
+  ]
+}

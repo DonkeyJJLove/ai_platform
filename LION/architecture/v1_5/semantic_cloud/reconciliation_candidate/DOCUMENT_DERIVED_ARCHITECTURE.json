@@ -1,9 +1,8 @@
 {
-  "schema": "lion.documentation.semantic-owner-map.v1",
-  "baseline_head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
-  "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
-  "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
-  "owners": [
+  "schema": "lion.document-derived-architecture/v1",
+  "projection_input_tree": "45f6f8a919a1bd1d71c080f6c293a01b9310945a",
+  "source_federation_digest": "f5e7635585a699f36e0e9ae90d6c2e5758cac90a2a3d38c4e3ef32c459b53952",
+  "semantic_owners": [
     {
       "concept": "BeanFactory",
       "primary": "cyber_lion/TARGET_ARCHITECTURE.md#bean-factory",
@@ -395,28 +394,456 @@
       ]
     }
   ],
-  "r22h_validation": {
-    "duplicate_primary_global_owner": "NONE",
-    "authority_effect": "NONE"
+  "repository_roles": [
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "tile_id": "context-memory.ha2d",
+      "roles": [
+        "ContextMemoryLab",
+        "MemoryCandidateProvider",
+        "ReplayContextProvider",
+        "ProcessStateDiagnostics"
+      ],
+      "layers": [
+        "INF",
+        "SEM"
+      ],
+      "capabilities": [
+        "context.capture",
+        "memory.candidate",
+        "memory.replay",
+        "semantic.revision",
+        "process.diagnostics"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "context_memory",
+        "memory_semantics",
+        "process_diagnostics",
+        "temporal_semantic_state_candidate",
+        "supersession_evidence"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "contracts",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "tile_id": "falsification.simulation",
+      "roles": [
+        "SimulationProvider",
+        "FalsificationEngine",
+        "StressScenarioProvider",
+        "SensitivityAnalyzer"
+      ],
+      "layers": [
+        "SEM"
+      ],
+      "capabilities": [
+        "simulation.run",
+        "scenario.generate",
+        "stress.adversarial",
+        "sensitivity.morris",
+        "sensitivity.sobol",
+        "model.reproduce"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "simulation",
+        "falsification",
+        "sensitivity_analysis",
+        "relevance_stress_result",
+        "sensitivity_result"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "formalization",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "branch": "research/semantic-cloud-r1",
+      "head": "74afd5b50ffe37b4de0cc9b9ef084ca0ca9c0870",
+      "tree": "45f6f8a919a1bd1d71c080f6c293a01b9310945a",
+      "tile_id": "control-plane.cyber-lion",
+      "roles": [
+        "EnterpriseControlPlane",
+        "AgentFoundry",
+        "SwarmPlanner",
+        "FederationRegistry",
+        "AuthorityPolicyEngine",
+        "ProcessContractIntegration"
+      ],
+      "layers": [
+        "INF",
+        "SEM",
+        "MAND"
+      ],
+      "capabilities": [
+        "agent.spec",
+        "mission.spec",
+        "swarm.plan",
+        "mosaic.delta",
+        "repository.discover",
+        "process.contract",
+        "process.transition.select",
+        "process.action_intent",
+        "action.propose",
+        "gate.evaluate",
+        "execution.receipt",
+        "event.envelope"
+      ],
+      "maximum_authority": "external_write",
+      "semantic_exports": [
+        "architecture",
+        "federation",
+        "repository_roles",
+        "contracts",
+        "capabilities",
+        "authority",
+        "runtime",
+        "currentness",
+        "formalization",
+        "roadmap",
+        "RAG",
+        "mission_intent",
+        "query_plan",
+        "rag_context",
+        "semantic_scaffold",
+        "semantic_relevance",
+        "semantic_cloud_research_binding"
+      ],
+      "semantic_imports": [
+        "process_semantics",
+        "evolution_compiler",
+        "context_memory",
+        "hypothesis_research",
+        "structure_graph",
+        "supply_chain_provenance",
+        "execution_mesh",
+        "simulation",
+        "research_corpus"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "branch": "master",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "tile_id": "process-semantics.hmk9d",
+      "roles": [
+        "ProcessSemanticsEngine",
+        "TransitionMicrocode",
+        "TrajectoryDiagnostics"
+      ],
+      "layers": [
+        "SEM"
+      ],
+      "capabilities": [
+        "process.state",
+        "process.transition",
+        "trajectory.score",
+        "bridge.select",
+        "threshold.request"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "process_semantics",
+        "hmk9d",
+        "semantic_transition_candidate",
+        "trajectory_semantics"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "contracts",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "branch": "master",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
+      "tile_id": "evolution-compiler.glitchlab",
+      "roles": [
+        "EvolutionCompiler",
+        "DeltaNormalizer",
+        "InvariantEvaluator",
+        "StructuralChangeAnalyzer"
+      ],
+      "layers": [
+        "SEM",
+        "MAND"
+      ],
+      "capabilities": [
+        "delta.normalize",
+        "delta.structural_projection",
+        "invariant.evaluate",
+        "sast.bridge",
+        "change.observability",
+        "change.explain"
+      ],
+      "maximum_authority": "local_write",
+      "semantic_exports": [
+        "evolution_compiler",
+        "delta_analysis",
+        "invariants",
+        "structure_graph",
+        "semantic_invariant_validation",
+        "structural_delta_diagnostics"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "contracts",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "branch": "main",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "tile_id": "epistemic-lab.llm-hypotheses",
+      "roles": [
+        "HypothesisLab",
+        "ExperimentDesignProvider",
+        "FalsificationEvidenceProvider"
+      ],
+      "layers": [
+        "SEM"
+      ],
+      "capabilities": [
+        "hypothesis.formalize",
+        "experiment.design",
+        "falsifier.define",
+        "evidence.compare",
+        "confidence.revise",
+        "artifact.supersede"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "hypothesis_research",
+        "experiment_design",
+        "falsification_evidence",
+        "hypothesis_candidate",
+        "falsifier_candidate"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "formalization",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "branch": "main",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "tile_id": "structural-intelligence.mosaic",
+      "roles": [
+        "StructuralIntelligenceEngine",
+        "GraphProjectionProvider",
+        "TopologyRiskAnalyzer"
+      ],
+      "layers": [
+        "INF",
+        "SEM"
+      ],
+      "capabilities": [
+        "graph.project",
+        "graph.abstract",
+        "topology.analyze",
+        "authority.graph",
+        "provenance.graph",
+        "structure.anomaly"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "structure_graph",
+        "topology_analysis",
+        "authority_graph",
+        "relevance_graph_candidate",
+        "topology_metrics"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "contracts",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "branch": "main",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "tile_id": "provenance.sbom",
+      "roles": [
+        "SupplyChainEvidenceProvider",
+        "ArtifactIdentityProvider",
+        "CompositionIntelligence"
+      ],
+      "layers": [
+        "INF",
+        "SEM",
+        "MAND"
+      ],
+      "capabilities": [
+        "artifact.identify",
+        "sbom.observe",
+        "supply_chain.scan",
+        "artifact.delta",
+        "provenance.emit",
+        "composition.risk_evidence"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "artifact_identity",
+        "supply_chain_provenance",
+        "composition_risk_evidence",
+        "artifact_provenance",
+        "lineage_binding"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "contracts",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "branch": "master",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "tile_id": "execution-mesh.swarm",
+      "roles": [
+        "ExecutionMesh",
+        "WorkloadRuntime",
+        "TelemetryPlane",
+        "CapabilityLeaseRuntime"
+      ],
+      "layers": [
+        "INF",
+        "MAND"
+      ],
+      "capabilities": [
+        "workload.execute",
+        "workload.identity",
+        "capability.lease",
+        "runtime.observe",
+        "runtime.receipt",
+        "swarm.reconfigure"
+      ],
+      "maximum_authority": "external_write",
+      "semantic_exports": [
+        "execution_mesh",
+        "workload_runtime",
+        "telemetry",
+        "capability_lease_runtime",
+        "cognitive_workload_candidate",
+        "runtime_telemetry"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "authority",
+        "contracts",
+        "currentness",
+        "semantic_relevance"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "branch": "master",
+      "head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba",
+      "tile_id": "research-corpus.writeups",
+      "roles": [
+        "ResearchCorpus",
+        "EvidenceSource",
+        "PublicationProvider"
+      ],
+      "layers": [
+        "SEM",
+        "MAND"
+      ],
+      "capabilities": [
+        "research.corpus",
+        "evidence.source",
+        "publication.artifact",
+        "rag.source.candidate"
+      ],
+      "maximum_authority": "read",
+      "semantic_exports": [
+        "research_corpus",
+        "evidence_source",
+        "publication",
+        "semantic_cloud_research",
+        "semantic_control_research",
+        "hcl_evidence"
+      ],
+      "semantic_imports": [
+        "architecture",
+        "formalization",
+        "currentness"
+      ],
+      "global_owner": "DonkeyJJLove/ai_platform"
+    }
+  ],
+  "architecture_documents": {
+    "artifact_count": 818,
+    "by_repository": {
+      "DonkeyJJLove/HA2D": 6,
+      "DonkeyJJLove/SymulacjaKaskadySieciowej": 9,
+      "DonkeyJJLove/ai_platform": 673,
+      "DonkeyJJLove/chunk-chunk": 8,
+      "DonkeyJJLove/glitchlab": 28,
+      "DonkeyJJLove/hipotezy_nadawcze_LLM": 6,
+      "DonkeyJJLove/mosaic_lab_pro.py": 6,
+      "DonkeyJJLove/sbom": 9,
+      "DonkeyJJLove/swarm": 28,
+      "DonkeyJJLove/writeups": 45
+    },
+    "by_class": {
+      "ADR": 8,
+      "CAPABILITY_CATALOG": 1,
+      "CONTRACT_CATALOG": 1,
+      "GENERATED_DOCUMENTATION": 9,
+      "HUMAN_ARCHITECTURE_DOCUMENT": 423,
+      "MACHINE_READABLE_ARCHITECTURE": 287,
+      "PROCESS_CONTRACT": 9,
+      "RAG_ROUTING": 49,
+      "REPOSITORY_MANIFEST": 10,
+      "ROADMAP": 14,
+      "SEMANTIC_OWNER_MAP": 1,
+      "SOURCE_PROVENANCE": 5,
+      "TRUTH_CARRIER": 1
+    }
   },
-  "historical_note": {
-    "concept": "v1_4_current_state_and_semantic_owners",
-    "lifecycle": "HISTORICAL_COMPATIBILITY",
-    "policy": "v1_4/current_state.json and v1_4/semantic_owners.json remain historical lineage/projection surfaces and are not the live v1.5 semantic-owner/currentness roots."
-  },
-  "r23_validation": {
-    "duplicate_primary_global_owner": "NONE",
-    "process_language_parallel_authority_owner": "NONE",
-    "authority_effect": "NONE"
-  },
-  "v15_validation": {
-    "duplicate_primary_global_owner": "NONE",
-    "new_top_level_layer": "NONE",
-    "authority_effect": "NONE",
-    "federated_architecture_knowledge": "REQUIRED",
-    "historical_v1_4_owner_map": "COMPATIBILITY_ONLY"
-  },
-  "architecture_epoch": "1.5",
-  "currentness": "CANDIDATE_SOURCE_BOUND",
-  "source_candidate_head": null
+  "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
+  "authority_effect": "NONE",
+  "projection_digest": "933bebadde2dc77c1311599f5008f145c4de8f87eecce1473add3680a221cf90"
 }

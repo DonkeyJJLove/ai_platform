@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import unittest
 
+from cyber_lion.enterprise.federation import RepositoryManifest, EnterpriseModelError
+
 try:
     import jsonschema
 except ImportError:
@@ -67,6 +69,30 @@ class RepositoryManifestArchitectureKnowledgeTests(unittest.TestCase):
         self.base["architecture_knowledge"]["discoverability"]["max_reads_to_global_owner"]=99
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.Draft202012Validator(SCHEMA).validate(self.base)
+
+
+    def test_typed_parser_accepts_architecture_knowledge_extension(self):
+        self.base["architecture_knowledge"]=self.architecture_knowledge()
+        parsed=RepositoryManifest.from_mapping(self.base)
+        self.assertIsNotNone(parsed.architecture_knowledge)
+        self.assertEqual(parsed.architecture_knowledge.global_owner,"DonkeyJJLove/ai_platform")
+        self.assertEqual(parsed.architecture_knowledge.semantic_exports,("runtime",))
+
+    def test_typed_parser_keeps_legacy_manifest_compatible(self):
+        parsed=RepositoryManifest.from_mapping(self.base)
+        self.assertIsNone(parsed.architecture_knowledge)
+
+    def test_typed_parser_rejects_unknown_architecture_knowledge_field(self):
+        self.base["architecture_knowledge"]=self.architecture_knowledge()
+        self.base["architecture_knowledge"]["unexpected"]="x"
+        with self.assertRaisesRegex(EnterpriseModelError,"architecture_knowledge shape invalid"):
+            RepositoryManifest.from_mapping(self.base)
+
+    def test_typed_parser_rejects_duplicate_semantic_export(self):
+        self.base["architecture_knowledge"]=self.architecture_knowledge()
+        self.base["architecture_knowledge"]["semantic_exports"]=["runtime","runtime"]
+        with self.assertRaisesRegex(EnterpriseModelError,"unique"):
+            RepositoryManifest.from_mapping(self.base)
 
 
 if __name__=="__main__":

@@ -1,0 +1,474 @@
+{
+  "closure_id": "fcr:v1.5-semantic-cloud-r1",
+  "candidate": {
+    "candidate_digest": "47b9f2a6aef051fc16abfc6c2202207d9ab55fd84ca1dd6541f21b346ca53ab8",
+    "head": "4c27ef71507885351aa25e484ff015a89ddd228c",
+    "tree": "c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+    "verification_digest": "6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3"
+  },
+  "formalization_manifest_digest": "9059a20cd7925af0111a06d69d7951abedf84c43210e15120569b741ad2d4089",
+  "artifact_results": [
+    {
+      "artifact_id": "architecture-contradiction-register",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:architecture-contradiction-register"
+      ]
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:architecture-docs"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:architecture-document-census"
+      ]
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:architecture-document-graph"
+      ]
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:architecture-projection"
+      ]
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:architecture-reconciliation"
+      ]
+    },
+    {
+      "artifact_id": "autonomous-evolution-control-flow",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:autonomous-evolution-control-flow"
+      ]
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:capability-catalog"
+      ]
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:code-derived-architecture"
+      ]
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:contract-catalog"
+      ]
+    },
+    {
+      "artifact_id": "cross-repository-dependency-graph",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:cross-repository-dependency-graph"
+      ]
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:currentness-carriers"
+      ]
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:discoverability-bootstrap"
+      ]
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:document-derived-architecture"
+      ]
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:documentation-currentness-model"
+      ]
+    },
+    {
+      "artifact_id": "documentation-evolution-control-flow",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:documentation-evolution-control-flow"
+      ]
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "classification": "NOT_APPLICABLE",
+      "state": "NOT_APPLICABLE",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:event-state-catalog"
+      ]
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:evolution-evals"
+      ]
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:federated-formalization-binding"
+      ]
+    },
+    {
+      "artifact_id": "federation-live-snapshot",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:federation-live-snapshot"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:fleet-baseline"
+      ]
+    },
+    {
+      "artifact_id": "fleet-baseline-instance",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:fleet-baseline-instance"
+      ]
+    },
+    {
+      "artifact_id": "formalization-closure",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:formalization-closure"
+      ]
+    },
+    {
+      "artifact_id": "formalization-manifest",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:formalization-manifest"
+      ]
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:formalization-registry"
+      ]
+    },
+    {
+      "artifact_id": "gap-projection",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:gap-projection"
+      ]
+    },
+    {
+      "artifact_id": "material-object-catalog",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:material-object-catalog"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-probes",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:rag-federated-architecture-probes"
+      ]
+    },
+    {
+      "artifact_id": "rag-federated-architecture-source-set",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:rag-federated-architecture-source-set"
+      ]
+    },
+    {
+      "artifact_id": "rag-release",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:rag-release"
+      ]
+    },
+    {
+      "artifact_id": "rag-routing",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:rag-routing"
+      ]
+    },
+    {
+      "artifact_id": "repository-documentation-plans",
+      "classification": "VALIDATE_ONLY",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:repository-documentation-plans"
+      ]
+    },
+    {
+      "artifact_id": "repository-role-matrix",
+      "classification": "REGENERATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:repository-role-matrix"
+      ]
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:roadmap-next"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owner-reconciliation",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:semantic-owner-reconciliation"
+      ]
+    },
+    {
+      "artifact_id": "semantic-owners",
+      "classification": "UPDATE",
+      "state": "PASS",
+      "evidence_refs": [
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+        "verification:6efa84e1f063a325d8eaf2863a3fcb43e4a2a75556f1414982aef6490c35c1a3",
+        "artifact:semantic-owners"
+      ]
+    }
+  ],
+  "semantic_owner_uniqueness": "PASS",
+  "catalog_coverage": "PASS",
+  "discoverability_result": "PASS",
+  "rag_result": "PASS",
+  "required_test_results": [
+    {
+      "id": "test_repository_manifest_architecture_knowledge",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "test_v15_semantic_cloud_contracts",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "test_semantic_cloud_r1_experiment",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "test_architecture_projection_full_architecture",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "test_federated_architecture_knowledge_projection",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "test_v15_global_repository_standardization",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "test_v15_communication_envelope_formalization",
+      "result": "PASS",
+      "evidence_refs": [
+        "full-suite:3567:PASS",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    }
+  ],
+  "required_eval_results": [
+    {
+      "id": "SEMANTIC_RELEVANCE_IS_NOT_AUTHORITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d3dd0d6ec81e2a1c072f2dc50d2b5d6e4d914af73ec7a4bd07ce56a0ceb7a64c",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "SEMANTIC_EQUALITY_IS_NOT_PROVENANCE_EQUALITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d3dd0d6ec81e2a1c072f2dc50d2b5d6e4d914af73ec7a4bd07ce56a0ceb7a64c",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "RAG_CONTEXT_IS_NOT_LIVE_TRUTH",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d3dd0d6ec81e2a1c072f2dc50d2b5d6e4d914af73ec7a4bd07ce56a0ceb7a64c",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    },
+    {
+      "id": "SEMANTIC_PROJECTION_CANNOT_WIDEN_CAPABILITY",
+      "result": "PASS",
+      "evidence_refs": [
+        "eval-results:d3dd0d6ec81e2a1c072f2dc50d2b5d6e4d914af73ec7a4bd07ce56a0ceb7a64c",
+        "candidate:4c27ef71507885351aa25e484ff015a89ddd228c:c50c7095c3f0eb1e1ec6f5372eac11e3013ef647"
+      ]
+    }
+  ],
+  "currentness_result": "CURRENT_CANDIDATE",
+  "unknowns": [],
+  "decision": "PASS",
+  "authority_effect": "NONE",
+  "closure_digest": "b9b850e453788a3ef4ed0bb14e7ef4bca275e93e44e8b53362f15491598c09e1",
+  "schema_id": "lion.formalization-closure-record/v1"
+}

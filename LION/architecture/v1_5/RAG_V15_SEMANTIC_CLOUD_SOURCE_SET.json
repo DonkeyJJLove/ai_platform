@@ -1,0 +1,65 @@
+{
+  "schema": "lion.rag-v15-semantic-cloud-source-set/v1",
+  "authority_effect": "NONE",
+  "currentness": "CURRENT_CANDIDATE",
+  "task_id": "LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1",
+  "baseline": {
+    "head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
+    "tree": "e2309ac9a57898c053b5470abdc5eea7b3221872"
+  },
+  "fleet_baseline": {
+    "path": "LION/architecture/v1_5/FLEET_BASELINE_SEMANTIC_CLOUD_R1.json",
+    "digest": "4c17f0c4461aec2f6100f2c00b93e1f1dbe485a25fd8643c5f6b7b268f6860a7",
+    "repositories": 10
+  },
+  "semantic_owners": {
+    "path": "LION/architecture/v1_5/semantic_owners.json",
+    "concepts": [
+      "MissionIntent",
+      "QueryPlan",
+      "RagContextEnvelope",
+      "SemanticScaffold",
+      "SemanticRelevance"
+    ]
+  },
+  "formalization": {
+    "manifest_digest": "9059a20cd7925af0111a06d69d7951abedf84c43210e15120569b741ad2d4089",
+    "federated_binding_digest": "4839816b6efa65eb63a7977ce3799e122b1373762de44abbaa532b2ac45078bf",
+    "registry_digest": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f"
+  },
+  "source_paths": [
+    "cyber_lion/contracts/mission_intent.py",
+    "cyber_lion/contracts/query_plan.py",
+    "cyber_lion/contracts/rag_context_envelope.py",
+    "cyber_lion/contracts/semantic_scaffold.py",
+    "cyber_lion/contracts/semantic_relevance.py",
+    "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+    "cyber_lion/CONTRACT_MAP.md",
+    "cyber_lion/CAPABILITY_MAP.md",
+    "LION/architecture/v1_4/contract_catalog.json",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+    "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json",
+    "LION/architecture/v1_5/SEMANTIC_CLOUD_CONCEPT_MATRIX_R1.json",
+    "LION/architecture/v1_5/SEMANTIC_CLOUD_EXPERIMENT_PLAN_R1.json",
+    "LION/architecture/v1_5/FLEET_BASELINE_SEMANTIC_CLOUD_R1.json",
+    "LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_SEMANTIC_CLOUD_R1.json",
+    "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_RECONCILIATION.json",
+    "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+    "LION/evals/evolution/evolution_cases.yaml"
+  ],
+  "retrieval_probe_path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_PROBES.json",
+  "record_ids": [
+    "RAG-V15-SEMANTIC-CLOUD-R1"
+  ],
+  "preferred_release_unchanged": "lion-rag32-v1.4-r9-auth-lifecycle-candidate",
+  "live_truth_policy": "RAG_NE_LIVE_TRUTH",
+  "candidate_binding": {
+    "head": "4c27ef71507885351aa25e484ff015a89ddd228c",
+    "tree": "c50c7095c3f0eb1e1ec6f5372eac11e3013ef647",
+    "candidate_digest": "47b9f2a6aef051fc16abfc6c2202207d9ab55fd84ca1dd6541f21b346ca53ab8",
+    "truth_subject": "d02d1c05e69161a3e905f63d02e4d979ce65e0eada8dac6561834f080d4b0d48"
+  },
+  "effect_scan_digest": "e40809017eaff04b340d8cb6d20173f7d3ebf416dba1c05717dd4fb5e2d56379",
+  "source_set_digest": "a0e74d0cd2585ce56909749d964183a27d56892eb181551ab4addc7cfe03eae1"
+}

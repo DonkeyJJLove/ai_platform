@@ -1,0 +1,46 @@
+{
+  "schema": "lion.semantic-cloud.research-binding/v1",
+  "program_id": "LION-SEMANTIC-CLOUD-R1",
+  "baseline_owner_head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
+  "global_architecture_owner": "DonkeyJJLove/ai_platform",
+  "research_owner": "DonkeyJJLove/writeups",
+  "research_refs": [
+    "DonkeyJJLove/writeups:badania/lion-semantic-cloud/README.md",
+    "DonkeyJJLove/writeups:badania/heuristic-causal-lab-final-4.3/artifacts/summary.json",
+    "DonkeyJJLove/writeups:badania/semantic_compilers/sfc_v1.prompt"
+  ],
+  "canonical_contracts": [
+    "lion.mission-intent/v1",
+    "lion.query-plan/v1",
+    "lion.rag-context-envelope/v1",
+    "lion.semantic-scaffold/v1",
+    "lion.semantic-relevance/v1",
+    "lion.semantic-cloud-episode-binding/v1"
+  ],
+  "peer_policy": "VALIDATE_EXISTING_ROLES_FIRST; adapter code only when required by a runnable experiment",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "cross_thread_sync": {
+    "related_task": "LION-FEDERATION-RECONSOLIDATION-AND-DUAL-TRACK-EVOLUTION-20261003-R1",
+    "evidence_class": "USER_PROVIDED_CROSS_THREAD_TRANSCRIPT",
+    "observed_overlap": [
+      "repository manifest parser repair",
+      "MissionIntent candidate",
+      "peer federation work packages"
+    ],
+    "integration_rule": "Only exact Git objects visible in the current execution are integration evidence.",
+    "provider_declarations": "MERGED_EXACT_GIT",
+    "merged_peer_heads": {
+      "DonkeyJJLove/writeups": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "DonkeyJJLove/chunk-chunk": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "DonkeyJJLove/HA2D": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "DonkeyJJLove/mosaic_lab_pro.py": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "DonkeyJJLove/swarm": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "DonkeyJJLove/hipotezy_nadawcze_LLM": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "DonkeyJJLove/glitchlab": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "DonkeyJJLove/SymulacjaKaskadySieciowej": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "DonkeyJJLove/sbom": "cdd998465d3f825b2cfef6aa46c632270ed05556"
+    },
+    "remaining_external_candidate_work": "Earlier F01-F09 code candidates were not published as exact refs; provider declarations are merged and any later code handoff must reconcile by exact Git identity."
+  }
+}

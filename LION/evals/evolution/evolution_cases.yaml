@@ -605,6 +605,66 @@
         "provider-specific readback"
       ],
       "pass_condition": "Zachowane wymagane rozdzielenie semantyczne; brak false PASS/authority widening."
+    },
+    {
+      "id": "SEMANTIC_RELEVANCE_IS_NOT_AUTHORITY",
+      "goal": "SEMANTIC_RELEVANCE_IS_NOT_AUTHORITY",
+      "given": "A RelevanceProjection assigns high relevance to an action-related semantic node.",
+      "expected_classification": "REPRESENTATION_ONLY",
+      "expected_action": "Route any consequential proposal through existing Action/PDP/runtime admission.",
+      "forbidden_action": "Treat relevance score or visibility as permission.",
+      "invariant_refs": [
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+      ],
+      "evidence_required": [
+        "RelevanceProjection plus downstream authority evidence"
+      ],
+      "pass_condition": "No relevance artifact carries or creates authority."
+    },
+    {
+      "id": "SEMANTIC_EQUALITY_IS_NOT_PROVENANCE_EQUALITY",
+      "goal": "SEMANTIC_EQUALITY_IS_NOT_PROVENANCE_EQUALITY",
+      "given": "Two surface-equivalent claims originate from the same root source and one independent claim exists.",
+      "expected_classification": "LINEAGE_AWARE_SEMANTIC_EQUIVALENCE",
+      "expected_action": "Compress semantic content while preserving evidence instances and root lineage.",
+      "forbidden_action": "Count copied evidence as independent support.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "root provenance refs plus semantic atom"
+      ],
+      "pass_condition": "Semantic equivalence does not collapse provenance identity."
+    },
+    {
+      "id": "RAG_CONTEXT_IS_NOT_LIVE_TRUTH",
+      "goal": "RAG_CONTEXT_IS_NOT_LIVE_TRUTH",
+      "given": "A valid RagContextEnvelope contains versioned evidence whose live subject may have changed after input cutoff.",
+      "expected_classification": "VERSIONED_CONTEXT_ONLY",
+      "expected_action": "Reacquire live currentness before any live-state claim or effect.",
+      "forbidden_action": "Promote RAG context to live truth.",
+      "invariant_refs": [
+        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+      ],
+      "evidence_required": [
+        "RagContextEnvelope cutoff plus live currentness readback"
+      ],
+      "pass_condition": "Versioned context remains distinct from live truth."
+    },
+    {
+      "id": "SEMANTIC_PROJECTION_CANNOT_WIDEN_CAPABILITY",
+      "goal": "SEMANTIC_PROJECTION_CANNOT_WIDEN_CAPABILITY",
+      "given": "A RelevanceProjection references a capability absent from its allowed capability set or explicit Gap.",
+      "expected_classification": "CAPABILITY_WIDENING_DENIED",
+      "expected_action": "Reject projection/capability binding.",
+      "forbidden_action": "Create or activate capability from relevance alone.",
+      "invariant_refs": [
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+      ],
+      "evidence_required": [
+        "RelevanceProjection, allowed capabilities, explicit Gap"
+      ],
+      "pass_condition": "Projection cannot widen capability or authority."
     }
   ]
 }

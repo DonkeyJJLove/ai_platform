@@ -1,0 +1,324 @@
+{
+  "manifest_id": "afm:v1.5-semantic-cloud-r1",
+  "baseline": {
+    "repository": "DonkeyJJLove/ai_platform",
+    "branch": "master",
+    "head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
+    "tree": "e2309ac9a57898c053b5470abdc5eea7b3221872"
+  },
+  "source_evolution_delta": {
+    "ref": "LION/architecture/v1_5/EVOLUTION_DELTA_SEMANTIC_CLOUD_R1.json",
+    "digest": "70ecefbaf5091959e5a1e36f63e92d085e0718249db076ae1abcd150abc190e8"
+  },
+  "change_class": "MIXED_ARCHITECTURE",
+  "affected_concepts": [
+    "MissionIntent",
+    "QueryPlan",
+    "RagContextEnvelope",
+    "SemanticScaffold",
+    "SemanticRelevance"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "MissionIntent",
+      "layers": [
+        "EVOLUTIONARY_EPOCH"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "QueryPlan",
+      "layers": [
+        "EVOLUTIONARY_EPOCH"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "RagContextEnvelope",
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "SemanticScaffold",
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "SemanticRelevance",
+      "layers": [
+        "EVIDENCE_AND_EPISTEMIC_PLANE"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "semantic_owner_delta": [
+    {
+      "concept": "MissionIntent",
+      "primary": "cyber_lion/contracts/mission_intent.py",
+      "secondary": [
+        "cyber_lion/contracts/communication_envelope.py"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "QueryPlan",
+      "primary": "cyber_lion/contracts/query_plan.py",
+      "secondary": [
+        "cyber_lion/contracts/mission_intent.py"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "RagContextEnvelope",
+      "primary": "cyber_lion/contracts/rag_context_envelope.py",
+      "secondary": [
+        "LION/rag/RAG_BOOTSTRAP.json"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "SemanticScaffold",
+      "primary": "cyber_lion/contracts/semantic_scaffold.py",
+      "secondary": [
+        "LION/architecture/v1_4/SEMANTIC_INFERENCE_COMPILER_TARGET.md"
+      ],
+      "operation": "ADD"
+    },
+    {
+      "concept": "SemanticRelevance",
+      "primary": "cyber_lion/contracts/semantic_relevance.py",
+      "secondary": [
+        "cyber_lion/contracts/semantic_scaffold.py"
+      ],
+      "operation": "ADD"
+    }
+  ],
+  "formalization_updates": [
+    {
+      "artifact_id": "semantic-owners",
+      "operation": "UPDATE",
+      "reason": "Register unique owners only for the new shared semantic contracts."
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "operation": "UPDATE",
+      "reason": "Register non-effectful MissionIntent, QueryPlan, RagContextEnvelope, SemanticScaffoldIR and SemanticRelevance contracts."
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Semantic relevance artifacts are representations, not executable capabilities."
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "operation": "UPDATE",
+      "reason": "Project the new contracts onto existing architecture layers without a new top-level layer."
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "operation": "NOT_APPLICABLE",
+      "reason": "The candidate adds no new runtime event owner or execution state machine."
+    },
+    {
+      "artifact_id": "gap-projection",
+      "operation": "UPDATE",
+      "reason": "Advance the dependency frontier through intent, query, context and semantic relevance."
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "operation": "UPDATE",
+      "reason": "Add regressions for relevance/authority, provenance equality and RAG currentness separation."
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing AGENTS routing reaches the v1.5 architecture owner and candidate target."
+    },
+    {
+      "artifact_id": "rag-routing",
+      "operation": "UPDATE",
+      "reason": "Add a task-specific Semantic Cloud candidate source set without replacing the preferred release."
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "operation": "REGENERATE",
+      "reason": "Source changes require carrier-last currentness regeneration after candidate stabilization."
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "operation": "UPDATE",
+      "reason": "Document the candidate chain and explicit non-authority boundary."
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "operation": "REGENERATE",
+      "reason": "New live-code contracts alter the source-derived architecture projection."
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "operation": "UPDATE",
+      "reason": "Record candidate closure of MissionIntent/QueryPlan/context prerequisites and the Semantic Cloud qualification frontier."
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Reuse the existing federation formalization registry; no parallel formalization owner is required."
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Reuse the existing exact-federation binding contract."
+    },
+    {
+      "artifact_id": "federation-live-snapshot",
+      "operation": "REGENERATE",
+      "reason": "Candidate/current peer identities must be reacquired before closure."
+    },
+    {
+      "artifact_id": "repository-role-matrix",
+      "operation": "REGENERATE",
+      "reason": "Manifest semantic exports change for the global owner/research owner."
+    },
+    {
+      "artifact_id": "cross-repository-dependency-graph",
+      "operation": "REGENERATE",
+      "reason": "Research/federation bindings must be reflected without implying runtime integration."
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "operation": "REGENERATE",
+      "reason": "New candidate architecture documents require census refresh."
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "operation": "REGENERATE",
+      "reason": "New candidate architecture documents require graph refresh."
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "operation": "REGENERATE",
+      "reason": "Reconcile code, documents, federation and historical candidate claims."
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "operation": "REGENERATE",
+      "reason": "Refresh document-derived architecture after semantic-owner and documentation changes."
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "operation": "REGENERATE",
+      "reason": "Rebind currentness to the candidate source cutoff."
+    },
+    {
+      "artifact_id": "semantic-owner-reconciliation",
+      "operation": "UPDATE",
+      "reason": "Record new unique semantic owners without rewriting history."
+    },
+    {
+      "artifact_id": "architecture-contradiction-register",
+      "operation": "UPDATE",
+      "reason": "Record concurrent-thread candidate evidence as external/unintegrated until exact Git handoff."
+    },
+    {
+      "artifact_id": "repository-documentation-plans",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Peer docs remain locally owned; only justified provider declarations are allowed."
+    }
+  ],
+  "currentness_invalidations": [
+    "semantic-owners",
+    "contract-catalog",
+    "architecture-projection",
+    "gap-projection",
+    "evolution-evals",
+    "rag-routing",
+    "currentness-carriers",
+    "architecture-docs",
+    "code-derived-architecture",
+    "roadmap-next",
+    "federation-live-snapshot",
+    "repository-role-matrix",
+    "cross-repository-dependency-graph",
+    "architecture-document-census",
+    "architecture-document-graph",
+    "architecture-reconciliation",
+    "document-derived-architecture",
+    "documentation-currentness-model",
+    "semantic-owner-reconciliation",
+    "architecture-contradiction-register"
+  ],
+  "migration": {
+    "steps": [
+      "Repair typed repository-manifest parsing for the already-admitted architecture_knowledge extension without weakening exact shape validation.",
+      "Add non-effectful semantic contracts in dependency order from MissionIntent through SemanticRelevance.",
+      "Bind SemanticRelevance to existing CapabilityNeed/Composition/Mosaic and EBLE rather than introducing a new scheduler, evidence owner or authority source.",
+      "Qualify the deterministic no-effect fixture and publish external experiments separately from architecture facts.",
+      "Regenerate source-derived architecture, RAG candidate routing and currentness carriers only after sources stabilize."
+    ],
+    "compatibility_adapter": "Legacy repository manifests without architecture_knowledge remain accepted; peer provider adapters stay local and experimental.",
+    "exit_condition": "Candidate passes required contract/falsification tests, exact federation reconciliation is complete, and no authority/runtime widening is observed."
+  },
+  "rollback": {
+    "steps": [
+      "Remove candidate Semantic Cloud contracts and candidate-only architecture/RAG artifacts.",
+      "Restore roadmap, semantic-owner and projection surfaces to the exact pre-candidate baseline.",
+      "Leave CommunicationEnvelope, CapabilityNeed, Composition/Mosaic, Action, authority and runtime owners unchanged."
+    ],
+    "compatibility_adapter": null,
+    "exit_condition": "No material runtime, authority, deployment or peer-default-branch effect remains."
+  },
+  "tests_required": [
+    "test_repository_manifest_architecture_knowledge",
+    "test_v15_semantic_cloud_contracts",
+    "test_semantic_cloud_r1_experiment",
+    "test_architecture_projection_full_architecture",
+    "test_federated_architecture_knowledge_projection",
+    "test_v15_global_repository_standardization",
+    "test_v15_communication_envelope_formalization"
+  ],
+  "evals_required": [
+    "SEMANTIC_RELEVANCE_IS_NOT_AUTHORITY",
+    "SEMANTIC_EQUALITY_IS_NOT_PROVENANCE_EQUALITY",
+    "RAG_CONTEXT_IS_NOT_LIVE_TRUTH",
+    "SEMANTIC_PROJECTION_CANNOT_WIDEN_CAPABILITY"
+  ],
+  "falsifiers": [
+    "Relevance creates or substitutes authority.",
+    "Semantic equivalence erases root provenance.",
+    "Versioned RAG context is accepted as live truth.",
+    "A RelevanceProjection widens the allowed capability set.",
+    "The candidate creates a second runtime or scheduler owner.",
+    "The current ten repository manifests do not round-trip through the typed parser."
+  ],
+  "discoverability": {
+    "bootstrap_routes": [
+      "AGENTS.md -> LION/architecture/v1_5/README.md",
+      "LION/architecture/v1_5/README.md -> semantic_owners.json",
+      "semantic_owners.json -> cyber_lion/contracts/semantic_relevance.py"
+    ],
+    "probe_questions": [
+      "Does Semantic Cloud grant authority?",
+      "What distinguishes SemanticScaffold from SemanticRelevance?",
+      "Can a RelevanceProjection widen capabilities?",
+      "Does HCL 4.3.3 prove AGI?"
+    ],
+    "max_reads_to_owner": 3
+  },
+  "rag_delta": {
+    "required": true,
+    "record_ids": [
+      "RAG-V15-SEMANTIC-CLOUD-R1"
+    ],
+    "retrieval_probes": [
+      "Semantic Cloud relevance is representation not authority; HCL evidence remains bounded research."
+    ]
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE",
+  "manifest_digest": "9059a20cd7925af0111a06d69d7951abedf84c43210e15120569b741ad2d4089",
+  "schema_id": "lion.architecture-formalization-manifest/v1"
+}
