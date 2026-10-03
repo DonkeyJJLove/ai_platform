@@ -51,7 +51,7 @@ class GlobalRepositoryStandardizationTests(unittest.TestCase):
         self.assertEqual(len({r['repository'] for r in baseline['repositories']}), 10)
         owner = next(r for r in baseline['repositories'] if r['repository'] == 'DonkeyJJLove/ai_platform')
         self.assertEqual(owner['branch'], 'master')
-        self.assertEqual(owner['head'], '48cb218f94860402b9dea175681a2cb20b9b0ba3')
+        self.assertEqual(owner['head'], 'ae1be9ba0a966f53e83e743ce518e11549a07299')
 
     def test_naming_status_version_standards_are_typed(self):
         naming = self.load(STANDARDS / 'LION_NAMING_STANDARD.json')
@@ -98,7 +98,7 @@ class GlobalRepositoryStandardizationTests(unittest.TestCase):
 
     def test_semantic_owner_map_remains_unique_and_covers_new_standards(self):
         owner_doc = self.load(V15 / 'semantic_owners.json')
-        self.assertEqual(owner_doc['baseline_head'], '48cb218f94860402b9dea175681a2cb20b9b0ba3')
+        self.assertEqual(owner_doc['baseline_head'], 'ae1be9ba0a966f53e83e743ce518e11549a07299')
         owners = owner_doc['owners']
         concepts = [row['concept'] for row in owners]
         self.assertEqual(len(concepts), len(set(concepts)))
