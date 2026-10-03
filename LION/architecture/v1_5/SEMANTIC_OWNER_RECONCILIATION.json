@@ -1,7 +1,7 @@
 {
   "schema": "lion.semantic-owner-reconciliation/v1",
-  "generated_at": "2026-09-30T13:22:16.185164Z",
-  "baseline_head": "c66bcd87994728b39d873ab71c1a29d2419a4170",
+  "generated_at": "2026-10-03T15:02:05.404396+00:00",
+  "baseline_head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
   "canonical_map": "LION/architecture/v1_5/semantic_owners.json",
   "historical_compatibility_map": "LION/architecture/v1_4/semantic_owners.json",
   "changes": [
@@ -39,6 +39,36 @@
       "concept": "formalization",
       "from": null,
       "to": "cyber_lion/contracts/formalization_registry.py",
+      "classification": "ADD"
+    },
+    {
+      "concept": "MissionIntent",
+      "from": null,
+      "to": "cyber_lion/contracts/mission_intent.py",
+      "classification": "ADD"
+    },
+    {
+      "concept": "QueryPlan",
+      "from": null,
+      "to": "cyber_lion/contracts/query_plan.py",
+      "classification": "ADD"
+    },
+    {
+      "concept": "RagContextEnvelope",
+      "from": null,
+      "to": "cyber_lion/contracts/rag_context_envelope.py",
+      "classification": "ADD"
+    },
+    {
+      "concept": "SemanticScaffold",
+      "from": null,
+      "to": "cyber_lion/contracts/semantic_scaffold.py",
+      "classification": "ADD"
+    },
+    {
+      "concept": "SemanticRelevance",
+      "from": null,
+      "to": "cyber_lion/contracts/semantic_relevance.py",
       "classification": "ADD"
     }
   ],

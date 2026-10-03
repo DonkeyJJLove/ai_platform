@@ -1,6 +1,6 @@
 {
   "schema": "lion.architecture-reconciliation/v1",
-  "federation_digest": "770949d56a07818587a91c4eee6da4b1ce4327a452ef4ba6fa137521ec31fcb6",
+  "federation_digest": "daaee095e23faf72e965bcdc2d8f57ef716397924e40e9249658d1c544bbb63c",
   "results": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -378,6 +378,24 @@
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
         "DonkeyJJLove/ai_platform:LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "concept": "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/ai_platform:cyber-lion.repository.json",
+        "DonkeyJJLove/ai_platform:LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json"
       ]
     },
     {
@@ -759,17 +777,26 @@
       ]
     },
     {
+      "repository": "DonkeyJJLove/writeups",
+      "concept": "badania/lion-semantic-cloud/README.md",
+      "classification": "ALIGNED_CURRENT",
+      "evidence_refs": [
+        "DonkeyJJLove/writeups:cyber-lion.repository.json",
+        "DonkeyJJLove/writeups:badania/lion-semantic-cloud/README.md"
+      ]
+    },
+    {
       "repository": "DonkeyJJLove/ai_platform",
       "concept": "CODE_DERIVED_ARCHITECTURE.json#projection_input_tree",
       "classification": "ALIGNED_CURRENT",
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-        "DonkeyJJLove/ai_platform:tree:bbd0942fe9615b4767d5f3671fcdcb37e1acc3b1"
+        "DonkeyJJLove/ai_platform:tree:bfc726f4e79ce92438dbba67f157deaf7d6fa8f5"
       ]
     }
   ],
   "contradictions": [],
   "unknowns": [],
   "authority_effect": "NONE",
-  "reconciliation_digest": "499e8241c3667918d12a899b68031e720969e31813a00d966ddf175a894dd2bd"
+  "reconciliation_digest": "24fd68e13c635da68a5c3a5c2a7700ca97f765447bbabdb5fa1fd071c24dc2be"
 }

@@ -1,7 +1,7 @@
 {
   "schema": "lion.rag-v15-semantic-cloud-source-set/v1",
   "authority_effect": "NONE",
-  "currentness": "CURRENT_CANDIDATE",
+  "currentness": "CURRENT_INTEGRATED",
   "task_id": "LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1",
   "baseline": {
     "head": "ddee531cbeaf3ed15d90d3d53828333c48820ee4",
@@ -61,5 +61,9 @@
     "truth_subject": "d02d1c05e69161a3e905f63d02e4d979ce65e0eada8dac6561834f080d4b0d48"
   },
   "effect_scan_digest": "e40809017eaff04b340d8cb6d20173f7d3ebf416dba1c05717dd4fb5e2d56379",
-  "source_set_digest": "a0e74d0cd2585ce56909749d964183a27d56892eb181551ab4addc7cfe03eae1"
+  "source_set_digest": "a0e74d0cd2585ce56909749d964183a27d56892eb181551ab4addc7cfe03eae1",
+  "integrated_master": {
+    "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+    "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5"
+  }
 }
