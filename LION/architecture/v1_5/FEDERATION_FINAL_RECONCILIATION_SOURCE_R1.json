@@ -1,0 +1,96 @@
+{
+  "schema": "lion.federation-final-reconciliation-source/v1",
+  "program": "LION-FEDERATION-RECONSOLIDATION-AND-DUAL-TRACK-EVOLUTION-20261003-R1",
+  "status": "SOURCE_PRE_CARRIER",
+  "global_owner": "DonkeyJJLove/ai_platform",
+  "ai_platform": {
+    "entry_master_head": "8bf33ec1115e8954b8e69f4bd5a9c3a1fcd9b6f5",
+    "integration_pr": 405,
+    "final_master_head": null,
+    "final_master_tree": null,
+    "resolution_policy": "RESOLVE_AFTER_CARRIER_LAST_MERGE"
+  },
+  "peers": {
+    "swarm": {
+      "branch": "master",
+      "head": "7c9baa0daa17d5c9c38a5e26e4e352ccd86614f8",
+      "tree": "1397c784edaa9b1c543871f5a5ee1e4fcf5b5e09",
+      "work_package": "F01"
+    },
+    "chunk-chunk": {
+      "branch": "master",
+      "head": "fd31c1732fd58f28534062c35a563a440b64f4ba",
+      "tree": "623e986cc3bde8e535d90068c6fb2379dafe726f",
+      "work_package": "F03"
+    },
+    "glitchlab": {
+      "branch": "master",
+      "head": "0afffd9ac6e0d346735615352fba9a43791cb017",
+      "tree": "14ca52d8271f8df948155e6adfe3b8408f3e2d95",
+      "work_package": "F02"
+    },
+    "HA2D": {
+      "branch": "master",
+      "head": "c14aa0f1f72f976a55057cc3ad2b50cdee5944f5",
+      "tree": "c78a7e2d3c6fffdfb9340d190418569259bd16ea",
+      "work_package": "F04"
+    },
+    "hipotezy_nadawcze_LLM": {
+      "branch": "main",
+      "head": "53d3a27014c1417ce540185c5b5554c1000357af",
+      "tree": "5ae20dd58314ef48bcad9a404a1e0cb2d9c1e7b4",
+      "work_package": "F05"
+    },
+    "mosaic_lab_pro.py": {
+      "branch": "main",
+      "head": "94c141c9f0bd8830bb9b93f11561056c629a5607",
+      "tree": "9154393fc954ccf9b6fec1d988868489ab8a275a",
+      "work_package": "F06"
+    },
+    "sbom": {
+      "branch": "main",
+      "head": "d22e141bb32b7f44112824ae67404a7d0e482da4",
+      "tree": "30f7ffbe6cce846a3959fe2b260c0b1945172eac",
+      "work_package": "F07"
+    },
+    "SymulacjaKaskadySieciowej": {
+      "branch": "main",
+      "head": "0a9413f36ee8cf7684bcb77f42abcaffcf59a60d",
+      "tree": "5d6396c52013657e36fdc296044b59cbd0d26bb1",
+      "work_package": "F08"
+    },
+    "writeups": {
+      "branch": "master",
+      "head": "c319d17cdd4e933d1e46666cf5bc28971fc02eea",
+      "tree": "ecb922dc8a8b4732c372ffc8bc215e8d17f035ae",
+      "work_package": "F09"
+    }
+  },
+  "work_packages": {
+    "F01": "INTEGRATED",
+    "F02": "INTEGRATED",
+    "F03": "INTEGRATED",
+    "F04": "INTEGRATED",
+    "F05": "INTEGRATED",
+    "F06": "INTEGRATED",
+    "F07": "INTEGRATED",
+    "F08": "INTEGRATED",
+    "F09": "INTEGRATED"
+  },
+  "runtime": {
+    "repository_runtime_effect": "NONE",
+    "privileged_broker_ping": "READY",
+    "mission64_currentness_read": "UNKNOWN_TIMEOUT_NO_RETRY",
+    "runtime_boundary": "NOOP_AUTHORITY_BOUNDARY"
+  },
+  "branch_lifecycle": {
+    "policy": "NO_DELETE_WITHOUT_EXACT_BRANCH_IDENTITY_ADMISSION",
+    "final_register": "EXTERNAL_FINAL_RECONCILIATION_ARTIFACT"
+  },
+  "rag": {
+    "preferred_release_change": "NONE",
+    "closure_policy": "BUILD_EXTERNAL_CANDIDATE_FROM_FINAL_SOURCE_VECTOR"
+  },
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE"
+}
