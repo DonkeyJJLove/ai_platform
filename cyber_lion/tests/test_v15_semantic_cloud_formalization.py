@@ -10,6 +10,8 @@ from cyber_lion.contracts.formalization_manifest_types import (
     LayerBinding,MigrationPlan,RagDelta,SemanticOwnerDelta,
 )
 from cyber_lion.contracts.formalization_registry import FormalizationRegistry
+from cyber_lion.contracts.repository_expansion import FleetBaseline,RegisteredRepository,RepositoryBaseline,RepositoryDependencyEdge
+from cyber_lion.contracts.federated_formalization_binding import FederatedFormalizationBinding,RepositoryFormalizationDisposition
 
 ROOT=Path(__file__).resolve().parents[2]
 V15=ROOT/"LION/architecture/v1_5"
@@ -109,6 +111,39 @@ class SemanticCloudFormalizationTests(unittest.TestCase):
                 "semantic-scaffold","semantic-relevance","semantic-cloud-episode-binding",
             }:
                 self.assertIn("NON_EFFECTFUL",row["compatibility_status"])
+
+    def test_fleet_baseline_and_federated_binding_cover_exact_ten_repositories(self):
+        raw=load("FLEET_BASELINE_SEMANTIC_CLOUD_R1.json")
+        fleet=FleetBaseline(
+            raw["schema_version"],raw["baseline_id"],
+            tuple(RegisteredRepository(**x) for x in raw["registered"]),
+            tuple(RepositoryBaseline(
+                x["schema_version"],x["repository"],x["branch"],x["head"],x["tree"],
+                x["dirty"],x["build_result"],x["test_result"],x["failure_classification"],
+                tuple(x["known_preexisting_failures"]),tuple(x["dependencies"]),
+                tuple(x["dependents"]),tuple(x["public_contracts"]),
+                tuple(x["security_boundaries"]),x["manifest_present"],(),
+            ) for x in raw["observations"]),
+            tuple(RepositoryDependencyEdge(**x) for x in raw["edges"]),
+        ).validate()
+        self.assertEqual(len(fleet.registered),10)
+        self.assertEqual(fleet.gate0().result,"PASS")
+        self.assertEqual(fleet.baseline_digest(),raw["baseline_digest"])
+        b=load("FEDERATED_FORMALIZATION_BINDING_SEMANTIC_CLOUD_R1.json")
+        binding=FederatedFormalizationBinding(
+            b["binding_id"],b["formalization_manifest_digest"],b["fleet_baseline_digest"],
+            b["dependency_graph_digest"],
+            tuple(RepositoryFormalizationDisposition(
+                x["repository"],x["baseline_head"],x["baseline_tree"],
+                x["disposition"],tuple(x["required_artifact_ids"])
+            ) for x in b["repositories"]),
+            b["authority_effect"],b["execution_effect"],b["binding_digest"],b["schema_id"],
+        ).validate(fleet)
+        self.assertEqual(binding.formalization_manifest_digest,manifest().manifest_digest)
+        self.assertEqual(
+            {x.repository for x in binding.repositories if x.disposition=="UPDATE"},
+            {"DonkeyJJLove/ai_platform","DonkeyJJLove/writeups"},
+        )
 
     def test_required_evals_exist(self):
         cases=json.loads((ROOT/"LION/evals/evolution/evolution_cases.yaml").read_text(encoding="utf-8"))["cases"]
