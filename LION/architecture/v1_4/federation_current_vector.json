@@ -2,10 +2,10 @@
   "schema": "lion.federation.current-vector.v1",
   "architecture_epoch": "1.5",
   "process_epoch": "V1_5_GLOBAL_REPOSITORY_RECONCILIATION_R1_FINAL_LATEST_CUTOFF",
-  "generated_at": "2026-10-03T07:04:23.143431Z",
+  "generated_at": "2026-10-03T08:04:26.214168Z",
   "registry_source": "cyber_lion/registry/repositories.json@0a94d7c50e5e631d25a7ab675c377bb5e86d50ef",
   "registry_source_semantics": "The registry snapshot supplies membership, default branches, roles, layers and maturity only. It does not grant authority.",
-  "currentness_rule": "Remote final vector binds the exact published latest-cutoff source/projection commit plus exact peer identities. Truth carriers follow this vector commit.",
+  "currentness_rule": "Remote latest-cutoff vector binds the exact owner-baseline-fixed source/projection commit plus exact live peer identities. Truth carriers follow this vector commit.",
   "carrier_last": {
     "adr": "LION/ADR/ADR-004-carrier-last-currentness.md",
     "invariants": [
@@ -14,16 +14,16 @@
       "I18_CARRIER_REBIND_IS_LAST_SEMANTIC_WRITE_OF_CURRENTNESS_EPOCH",
       "I19_NO_SELF_REFERENTIAL_CURRENTNESS"
     ],
-    "subject_head": "d7e9f0f9ac9fe59ae5dda784b307dbfe878760a4",
-    "subject_tree": "56098bed25e8dd9555fddec14e5163184437ab52",
+    "subject_head": "c6d71990612b5c0c1a34bf3f12966f35183e6a0b",
+    "subject_tree": "a658670b4245635e0cd8d453d12462ed265a37cc",
     "open_pull_requests": 0
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "maintenance/postmerge-federation-reconciliation-r1",
-      "head": "d7e9f0f9ac9fe59ae5dda784b307dbfe878760a4",
-      "tree": "56098bed25e8dd9555fddec14e5163184437ab52",
+      "head": "c6d71990612b5c0c1a34bf3f12966f35183e6a0b",
+      "tree": "a658670b4245635e0cd8d453d12462ed265a37cc",
       "roles": [
         "control_plane",
         "contracts",
@@ -38,7 +38,7 @@
       "open_prs": 0,
       "currentness": "CURRENT_SUBJECT_AT_SWEEP_PRE_CARRIER",
       "material_drift": false,
-      "lineage_note": "Remote final latest-cutoff reconciliation source/projection commit; truth carriers follow vector commit."
+      "lineage_note": "Remote latest-cutoff federation reconciliation after CommunicationEnvelope owner-baseline test fix; truth carriers follow vector commit."
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
