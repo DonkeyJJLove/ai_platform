@@ -98,3 +98,10 @@ Peer repositories own only their local architecture knowledge through `AGENTS.md
 `CommunicationEnvelope` is integrated in `master` as a non-effectful semantic contract: `CommunicationEnvelope != transport != delivery != cognition != authority`. Its completed formalization remains immutable evidence for that integration epoch.
 
 The dependency-derived contract successor is now `MissionIntent`, as tracked in `AI_NATIVE_ROADMAP_NEXT.md`. In parallel, `LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1` introduces typed repository-content classification, naming/status/version standards and a formal panel architecture. Those maintenance artifacts do not create a new top-level runtime or authority layer.
+
+
+## Semantic Cloud candidate
+
+Semantic Cloud R1 is a non-effectful candidate integration over MissionIntent, QueryPlan, RagContextEnvelope, SemanticScaffoldIR and SemanticRelevance. It reuses existing CapabilityNeed/Composition/Mosaic and the existing governed Action path; it creates no scheduler, runtime or authority owner.
+
+See [SEMANTIC_CLOUD_INTEGRATION_TARGET.md](SEMANTIC_CLOUD_INTEGRATION_TARGET.md).

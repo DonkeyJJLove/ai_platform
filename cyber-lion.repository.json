@@ -101,7 +101,13 @@
       "currentness",
       "formalization",
       "roadmap",
-      "RAG"
+      "RAG",
+      "mission_intent",
+      "query_plan",
+      "rag_context",
+      "semantic_scaffold",
+      "semantic_relevance",
+      "semantic_cloud_research_binding"
     ],
     "semantic_imports": [
       "process_semantics",
@@ -268,6 +274,16 @@
       },
       {
         "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
+        "class": "MACHINE_READABLE_ARCHITECTURE",
+        "currentness": "SOURCE_BOUND"
+      },
+      {
+        "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+        "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+        "currentness": "SOURCE_BOUND"
+      },
+      {
+        "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json",
         "class": "MACHINE_READABLE_ARCHITECTURE",
         "currentness": "SOURCE_BOUND"
       }

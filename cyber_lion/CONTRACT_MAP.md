@@ -11,6 +11,11 @@ Integracja jest prowadzona w modelu **contracts-first**. Istniejący providerzy 
 | Capability Descriptor | `ai_platform` | lokalne rejestry/dokumentacja | control plane, agenci |
 | Event Envelope | `ai_platform` | SBOM event envelope, GlitchLab BUS | wszyscy providerzy |
 | Communication Envelope | `ai_platform` | operator messages / GroupChannel projection | cognition, fleet, audit |
+| Mission Intent | `ai_platform` | CommunicationEnvelope + mission/conversation refs | planning / semantic compiler |
+| Query Plan | `ai_platform` | MissionIntent | retrieval/context planning |
+| RAG Context Envelope | `ai_platform` | versioned RAG/currentness evidence | semantic compiler |
+| Semantic Scaffold IR | `ai_platform` | SIC target + evidence-bound context | relevance organization |
+| Semantic Relevance | `ai_platform` | scaffold + specialist semantic providers | cognition / experiments |
 | Provenance Envelope | `ai_platform` | AID + metadane evidence | wszyscy providerzy |
 | Hypothesis/Evidence Record | `ai_platform` | hipotezy/writeups | cognition, graph |
 | Gate Request / Gate Applied | `ai_platform` | SBOM gate, GlitchLab Guard, evidence RBAC | control/execution |
@@ -330,3 +335,7 @@ CURRENT local contract
 ```
 
 Żaden provider nie musi zastępować swojej wewnętrznej reprezentacji wyłącznie po to, aby uczestniczyć w Cyber-Lion.
+
+## Semantic Cloud boundary
+
+MissionIntent, QueryPlan, RagContextEnvelope, SemanticScaffoldIR and SemanticRelevance are non-effectful representation contracts. Semantic relevance cannot mint authority. RelevanceProjection may request existing capabilities only through explicit Gap/CapabilityNeed binding; material effects continue through the existing Action/PDP/runtime path.

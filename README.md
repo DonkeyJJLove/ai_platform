@@ -231,3 +231,8 @@ TARGET        — kierunek, nie stan bieżący
 ```
 
 LION ma umożliwiać szeroką inteligencję przy wąskiej, jawnej, obserwowalnej i odwoływalnej władzy wykonawczej.
+
+
+## Semantic Cloud R1 candidate
+
+LION now has a candidate semantic-organization contract chain from MissionIntent through relevance projections into the existing CapabilityNeed/Composition/Mosaic and governed Action path. This is not an AGI or deployment claim.

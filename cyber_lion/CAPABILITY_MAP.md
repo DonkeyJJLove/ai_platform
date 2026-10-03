@@ -128,3 +128,8 @@ Czy wynik można odtworzyć przez replay?
 ```
 
 Jeżeli na te pytania nie da się odpowiedzieć, capability może być co najwyżej wykrywalna do celów analitycznych; nie kwalifikuje się do wykonania powodującego skutki.
+
+
+### Semantic Cloud representations are not capabilities
+
+SemanticAtom, SemanticDelta, RelevanceGraph and RelevanceProjection are representation contracts, not executable capabilities. Cognitive requirements must still resolve through the existing CapabilityNeed/Bean/Composition/Mosaic chain, and relevance never grants authority.
