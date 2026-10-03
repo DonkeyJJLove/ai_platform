@@ -1,0 +1,129 @@
+{
+  "schema": "lion.cross-repository-dependency-graph/v1",
+  "federation_digest": "f5e7635585a699f36e0e9ae90d6c2e5758cac90a2a3d38c4e3ef32c459b53952",
+  "nodes": [
+    "DonkeyJJLove/HA2D",
+    "DonkeyJJLove/SymulacjaKaskadySieciowej",
+    "DonkeyJJLove/ai_platform",
+    "DonkeyJJLove/chunk-chunk",
+    "DonkeyJJLove/glitchlab",
+    "DonkeyJJLove/hipotezy_nadawcze_LLM",
+    "DonkeyJJLove/mosaic_lab_pro.py",
+    "DonkeyJJLove/sbom",
+    "DonkeyJJLove/swarm",
+    "DonkeyJJLove/writeups"
+  ],
+  "edges": [
+    {
+      "source": "DonkeyJJLove/HA2D",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/HA2D",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/chunk-chunk",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/chunk-chunk",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/glitchlab",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/glitchlab:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/glitchlab",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/glitchlab:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/mosaic_lab_pro.py",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/mosaic_lab_pro.py",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/sbom",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/sbom:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/sbom",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/sbom:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/swarm",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/swarm:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/swarm",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/swarm:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    },
+    {
+      "source": "DonkeyJJLove/writeups",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "DEPENDS_ON",
+      "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json#architecture_knowledge.repository_dependencies"
+    },
+    {
+      "source": "DonkeyJJLove/writeups",
+      "target": "DonkeyJJLove/ai_platform",
+      "relation": "GLOBAL_ARCHITECTURE_OWNER",
+      "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json#architecture_knowledge.global_owner"
+    }
+  ],
+  "cycle_policy": "typed provider/control feedback cycles are allowed; execution DAGs remain separately acyclic",
+  "authority_effect": "NONE",
+  "graph_digest": "0f63e9dde88bcf26d5e2bee57fb5b3f29c033775a58f0cc787ba35efb2a82824"
+}

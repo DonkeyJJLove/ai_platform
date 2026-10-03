@@ -1,0 +1,70 @@
+{
+  "schema": "lion.global-repository-reconciliation-baseline/v1",
+  "baseline_id": "LION-SEMANTIC-CLOUD-R1-CANDIDATE",
+  "architecture_epoch": "1.5",
+  "observed_at": "2026-10-03T14:25:43.790480Z",
+  "observation_mode": "EXACT_SWEEP_CUTOFF_WITH_COVERAGE_GROUPS",
+  "authority_effect": "NONE",
+  "repositories": [
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "branch": "master",
+      "head": "74afd5b50ffe37b4de0cc9b9ef084ca0ca9c0870",
+      "tree": "45f6f8a919a1bd1d71c080f6c293a01b9310945a"
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "branch": "master",
+      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "branch": "master",
+      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf"
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "branch": "main",
+      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74"
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "branch": "main",
+      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "branch": "main",
+      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "branch": "master",
+      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "tree": "12131ef5b055d81b80d0272104da4980e19d7221"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "branch": "master",
+      "head": "e7a1345ab81559b318fe1be20d221acace06b565",
+      "tree": "06fb97a3a4ee106150dfe3ea1674d2c8bdd92fba"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema": "lion.documentation-currentness-model/v1",
+  "federation_digest": "f5e7635585a699f36e0e9ae90d6c2e5758cac90a2a3d38c4e3ef32c459b53952",
+  "projection_mode": "FEDERATION_BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
+  "evidence_identity_types": {
+    "LIVE_REPOSITORY_OBSERVATION": "freshly reacquired default-branch Git identity for the claim being made",
+    "EPOCH_CURRENTNESS_CARRIER": "immutable carrier binding a stabilized epoch subject",
+    "SOURCE_BOUND_PROJECTION": "deterministic projection bound to explicit source identities",
+    "CANDIDATE_BINDING": "pre-integration candidate identity used by formalization/verification",
+    "HISTORICAL_EVIDENCE": "immutable evidence of a past event or architecture epoch"
+  },
+  "evidence_invariants": [
+    "STORED_SNAPSHOT_IS_NOT_SELF_REFRESHING_LIVE_TRUTH",
+    "HISTORICAL_CARRIERS_ARE_NOT_REWRITTEN_TO_LATER_HEADS",
+    "CURRENT_CLAIMS_REQUIRE_REACQUISITION",
+    "PROJECTIONS_DECLARE_EXACT_INPUT_IDENTITY"
+  ],
+  "dimensions": {
+    "REPOSITORY_CURRENT": {
+      "owner": "exact Git observation",
+      "rule": "repository state must be reacquired for the claim being made; stored snapshots are source-bound evidence, not self-refreshing live truth"
+    },
+    "DOCUMENT_CURRENT": {
+      "owner": "artifact source binding + semantic owner",
+      "rule": "document source dependencies and invalidators must be current for the document claim"
+    },
+    "PUBLIC_ENTRYPOINT_CURRENT": {
+      "owner": "README.md + LION/README.md + v1.5 architecture root",
+      "rule": "public/project entrypoints are declared architecture artifacts and must route to the current architecture epoch"
+    },
+    "PROJECTION_CURRENT": {
+      "owner": "deterministic generator",
+      "rule": "projection digest derives from exact source-bound inputs; generator ownership must match the actual generator"
+    },
+    "FEDERATION_CURRENT": {
+      "owner": "federation_current_vector",
+      "rule": "all required repository observations are exact and reconciled for the bound epoch"
+    },
+    "RUNTIME_CURRENT": {
+      "owner": "runtime observation",
+      "rule": "never inferred from Git or documentation"
+    },
+    "RAG_CURRENT": {
+      "owner": "versioned RAG release/current source set",
+      "rule": "RAG is versioned knowledge, never live truth"
+    },
+    "FORMALIZATION_CURRENT": {
+      "owner": "AFM/RFS/FCR + federated binding",
+      "rule": "exact candidate and all required surfaces close without UNKNOWN"
+    }
+  },
+  "states": [
+    "CURRENT",
+    "STALE",
+    "UNKNOWN",
+    "SUPERSEDED",
+    "TARGET_ONLY",
+    "CONTRACT_ONLY",
+    "PARTIALLY_IMPLEMENTED",
+    "VERSIONED_STATIC"
+  ],
+  "invalidation_pipeline": [
+    "repository/source change",
+    "affected semantic exports/imports",
+    "global semantic owner lookup",
+    "cross-repository dependency traversal",
+    "RequiredFormalizationSet",
+    "architecture documents/projections invalidated",
+    "public/project entrypoints invalidated when architecture epoch or routed currentness changes",
+    "regenerate machine projections from exact source-bound inputs",
+    "refresh public/project entrypoints before discoverability closes",
+    "RAG/discoverability invalidated when required",
+    "federation vector regenerated after integration",
+    "truth carriers regenerated last"
+  ],
+  "historical_surfaces": {
+    "LION/architecture/v1_4/current_state.json": "SUPERSEDED_AS_LIVE_CURRENTNESS_OWNER",
+    "LION/architecture/v1_4/semantic_owners.json": "HISTORICAL_COMPATIBILITY_PROJECTION",
+    "AI_NATIVE_ROADMAP.md": "HISTORICAL_ROADMAP_INPUT"
+  },
+  "authority_effect": "NONE"
+}
