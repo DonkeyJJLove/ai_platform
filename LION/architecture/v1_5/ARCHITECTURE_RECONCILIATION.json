@@ -1,6 +1,6 @@
 {
   "schema": "lion.architecture-reconciliation/v1",
-  "federation_digest": "3100707845afec1cfdb2a9fe0349ad363558ea743aedf89b8e803fcc21026e70",
+  "federation_digest": "770949d56a07818587a91c4eee6da4b1ce4327a452ef4ba6fa137521ec31fcb6",
   "results": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -764,12 +764,12 @@
       "classification": "ALIGNED_CURRENT",
       "evidence_refs": [
         "DonkeyJJLove/ai_platform:LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-        "DonkeyJJLove/ai_platform:tree:861090931c0fac6ad980d91e60d660acb0512cdc"
+        "DonkeyJJLove/ai_platform:tree:bbd0942fe9615b4767d5f3671fcdcb37e1acc3b1"
       ]
     }
   ],
   "contradictions": [],
   "unknowns": [],
   "authority_effect": "NONE",
-  "reconciliation_digest": "aea76d9ac05710519ffb9661d319b9a28d9e870bf67f6d26f69cd0d6e4030e18"
+  "reconciliation_digest": "499e8241c3667918d12a899b68031e720969e31813a00d966ddf175a894dd2bd"
 }

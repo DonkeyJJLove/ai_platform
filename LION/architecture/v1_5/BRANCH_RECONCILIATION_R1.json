@@ -204,6 +204,18 @@
     {
       "repository": "DonkeyJJLove/ai_platform",
       "default_branch": "master",
+      "branch": "maintenance/postmerge-federation-reconciliation-r1",
+      "head": "63308a7b981fc2a6df5ec96cf54053bc06698433",
+      "tree": "f0576508d4bc584a95b8edb0be982c979aa01c0b",
+      "merge_base": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
+      "ahead_by": 2,
+      "behind_by": 0,
+      "classification": "UNMERGED_UNIQUE",
+      "default_branch_references": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "default_branch": "master",
       "branch": "master",
       "head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
       "tree": "41ade6f86c646349fe9d98a487a12271eced344b",
@@ -1203,7 +1215,8 @@
     "DELETE_ELIGIBLE": 42,
     "HISTORICAL_EVIDENCE": 5,
     "MERGED_REDUNDANT": 37,
-    "SUPERSEDED": 4
+    "SUPERSEDED": 4,
+    "UNMERGED_UNIQUE": 1
   },
   "delete_policy": "DELETE_ELIGIBLE requires no unique commits, ancestor/equal default state and no tracked default-branch reference.",
   "unknown_policy": "UNKNOWN remains preserved until additional PR/history/runtime evidence resolves it.",

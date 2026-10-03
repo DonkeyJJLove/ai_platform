@@ -17,7 +17,6 @@ ROOT=Path(__file__).resolve().parents[2]
 V15=ROOT/"LION/architecture/v1_5"
 INTEGRATION_BASE_HEAD="3f0f3a01e0d42c190983a0dea32b5b4abb07b589"
 INTEGRATION_BASE_TREE="3ac45ea1329938fdcd7f3c3d4705c78907533949"
-CURRENT_OWNER_BASELINE_HEAD="c064e6aca1c5be8187ae7fd856b9f7950adfa7a4"
 
 def load(name):
     return json.loads((V15/name).read_text(encoding="utf-8"))
@@ -62,7 +61,9 @@ class CommunicationEnvelopeFormalizationTests(unittest.TestCase):
 
     def test_current_owner_catalog_architecture_and_gap_are_rebound(self):
         owners=load("semantic_owners.json")
-        self.assertEqual(owners["baseline_head"],CURRENT_OWNER_BASELINE_HEAD)
+        post_merge=load("GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json")
+        owner_row=next(x for x in post_merge["repositories"] if x["repository"]=="DonkeyJJLove/ai_platform")
+        self.assertEqual(owners["baseline_head"],owner_row["head"])
         rows=[x for x in owners["owners"] if x["concept"]=="CommunicationEnvelope"]
         self.assertEqual(len(rows),1)
         self.assertEqual(rows[0]["primary"],"cyber_lion/contracts/communication_envelope.py")

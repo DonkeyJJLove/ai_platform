@@ -1,6 +1,6 @@
 {
   "schema": "lion.repository-role-matrix/v1",
-  "federation_digest": "3100707845afec1cfdb2a9fe0349ad363558ea743aedf89b8e803fcc21026e70",
+  "federation_digest": "770949d56a07818587a91c4eee6da4b1ce4327a452ef4ba6fa137521ec31fcb6",
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
@@ -76,9 +76,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "maintenance/postmerge-federation-reconciliation-r1",
-      "head": "f661bd2380d6b55b0e5596b13bc9448ede0084f4",
-      "tree": "861090931c0fac6ad980d91e60d660acb0512cdc",
+      "branch": "maintenance/postmerge-federation-reconciliation-fix-r1",
+      "head": "8faca27fe6baf184c5d15da2870f693f944598c8",
+      "tree": "bbd0942fe9615b4767d5f3671fcdcb37e1acc3b1",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -388,5 +388,5 @@
     }
   ],
   "authority_effect": "NONE",
-  "matrix_digest": "e9b24900bc8a36af57897b8d444e0916d1081f7e15c102d184419a0623f557b3"
+  "matrix_digest": "7f9ee9e046f06bd326441c68880ec85d8b53f53d00730a00f901f30b9ca2c197"
 }

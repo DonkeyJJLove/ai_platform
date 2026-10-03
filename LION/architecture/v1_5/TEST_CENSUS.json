@@ -2806,7 +2806,7 @@
       "path": "cyber_lion/tests/test_v15_communication_envelope_formalization.py",
       "test_class": "CURRENT_UNIT",
       "revision_named": false,
-      "sha256": "62649ef12dc5501a34cdbbed7412278e832d8003f728396246e120381f8bf6d9"
+      "sha256": "fbd276abcf6dd298c5676ba8b2405d03fbbdba69cc59bcc09115de3477c123b5"
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
