@@ -1,0 +1,141 @@
+name: LION Evolution Peer Source Evidence
+
+# Source-only reconstruction support. No peer code, PoCs, models or workloads run.
+# The allowlist comes from the operator task and the selected RAG source vector.
+on:
+  push:
+    branches: ['evolution/architecture-missions-20261004-r1']
+    paths: ['.github/workflows/lion-evolution-peer-source-evidence.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-evolution-peer-source-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  peer-source:
+    if: github.repository == 'DonkeyJJLove/ai_platform'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Read bounded public source and preserve exact Git provenance
+        shell: bash
+        env:
+          GH_READ_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import concurrent.futures
+          import datetime
+          import hashlib
+          import json
+          import os
+          from pathlib import Path, PurePosixPath
+          import urllib.parse
+          import urllib.request
+          import zipfile
+          owner = 'DonkeyJJLove'
+          names = ['ai_platform', 'swarm', 'chunk-chunk', 'glitchlab', 'HA2D',
+                   'hipotezy_nadawcze_LLM', 'mosaic_lab_pro.py', 'sbom',
+                   'SymulacjaKaskadySieciowej', 'writeups']
+          out = Path(os.environ['RUNNER_TEMP']) / 'lion-peer-source'
+          out.mkdir(parents=True, exist_ok=True)
+          def now():
+              return datetime.datetime.now(datetime.timezone.utc).isoformat()
+          def api(path):
+              req = urllib.request.Request('https://api.github.com/repos/' + owner + '/' + path,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_READ_TOKEN'],
+                           'Accept': 'application/vnd.github+json', 'User-Agent': 'LION-source-observer'})
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  return json.load(response)
+          vector = {'schema': 'analysis.source-vector/v1', 'atomic': False,
+                    'deployment_vector': False, 'read_started_at': now(), 'repositories': []}
+          ledgers = {}
+          sources = {}
+          extensions = {'.py', '.md', '.json', '.yml', '.yaml', '.toml', '.txt', '.csv',
+                        '.cjs', '.mjs', '.js', '.ebnf', '.rst', '.prompt'}
+          for name in names:
+              repo = api(name)
+              branch = repo['default_branch']
+              commit = api(name + '/commits/' + urllib.parse.quote(branch, safe=''))
+              head = commit['sha']; tree = commit['commit']['tree']['sha']
+              vector['repositories'].append({'repository': owner + '/' + name,
+                  'branch': branch, 'head': head, 'tree': tree, 'observed_at': now()})
+              if name == 'ai_platform':
+                  continue
+              raw_tree = api(name + '/git/trees/' + tree + '?recursive=1')
+              if raw_tree.get('truncated'):
+                  raise RuntimeError('incomplete Git tree: ' + name)
+              (out / (name + '.tree.json')).write_text(json.dumps(raw_tree, indent=2) + '\n', encoding='utf-8')
+              rows = []
+              selected = []
+              for entry in raw_tree['tree']:
+                  if entry['type'] != 'blob':
+                      continue
+                  path = entry['path']; p = PurePosixPath(path)
+                  if p.is_absolute() or '..' in p.parts:
+                      raise RuntimeError('invalid tree path')
+                  wanted = p.suffix.lower() in extensions or p.name in {'AGENTS.md', 'README', 'requirements.txt'}
+                  if name == 'writeups':
+                      wanted = wanted and (len(p.parts) == 1 or path.startswith(('federation/', 'architecture_knowledge/', 'LION/'))
+                          or path in {'badania/lion-semantic-cloud/README.md', 'badania/semantic_compilers/sfc_v1.prompt'})
+                  row = {'path': path, 'mode': entry['mode'], 'git_blob_sha1': entry['sha'],
+                         'source_bytes': entry.get('size'), 'found': True, 'downloaded': False,
+                         'read': False, 'analyzed': False, 'tested': False}
+                  if not wanted:
+                      row['disposition'] = 'EXCLUDED_NONSELECTED_SOURCE'; row['reason'] = 'bounded functional/source-document acquisition, not corpus execution'
+                  elif entry['mode'] not in {'100644', '100755'}:
+                      row['disposition'] = 'EXCLUDED_SPECIAL_MODE'; row['reason'] = 'no symlink traversal'
+                  elif entry.get('size', 0) > 1048576:
+                      row['disposition'] = 'EXCLUDED_SIZE_BOUND'; row['reason'] = 'configured 1 MiB per source file'
+                  else:
+                      selected.append(row)
+                  rows.append(row)
+              if len(selected) > 1500 or sum(r.get('source_bytes') or 0 for r in selected) > 134217728:
+                  raise RuntimeError('configured repository acquisition budget exceeded: ' + name)
+              def fetch(row):
+                  url = 'https://raw.githubusercontent.com/' + owner + '/' + name + '/' + head + '/' + urllib.parse.quote(row['path'], safe='/')
+                  try:
+                      with urllib.request.urlopen(url, timeout=30) as response:
+                          data = response.read(1048577)
+                      if len(data) > 1048576:
+                          raise ValueError('source size limit')
+                      actual = hashlib.sha1(b'blob ' + str(len(data)).encode('ascii') + b'\0' + data).hexdigest()
+                      if actual != row['git_blob_sha1']:
+                          raise ValueError('Git blob mismatch')
+                      data.decode('utf-8', errors='strict')
+                      row.update(downloaded=True, bytes=len(data), sha256=hashlib.sha256(data).hexdigest(),
+                                 disposition='BYTES_VERIFIED_NOT_YET_READ', source_url=url)
+                      return row['path'], data
+                  except Exception as exc:
+                      row.update(disposition='UNAVAILABLE', reason=type(exc).__name__ + ': ' + str(exc))
+                      return None
+              with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+                  for result in pool.map(fetch, selected):
+                      if result is not None:
+                          path, data = result; sources[name + '/' + path] = data
+              ledgers[name] = rows
+          vector['read_finished_at'] = now()
+          (out / 'source_vector.json').write_text(json.dumps(vector, indent=2) + '\n', encoding='utf-8')
+          (out / 'source_coverage.json').write_text(json.dumps(ledgers, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          with zipfile.ZipFile(out / 'peer_sources.zip', 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+              for path, data in sorted(sources.items()):
+                  archive.writestr(path, data)
+          manifest = {'schema': 'analysis.peer-source-export/v1', 'run_id': os.environ['GITHUB_RUN_ID'],
+              'authoring_head': os.environ['GITHUB_SHA'], 'runtime_effect': 'NONE',
+              'project_code_execution': 'NOT_PERFORMED', 'files': {p.name: {
+              'bytes': p.stat().st_size, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
+              for p in sorted(out.iterdir()) if p.is_file()}}
+          (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps({'vector': vector, 'downloaded_files': len(sources),
+              'unavailable': {k: [r['path'] for r in v if r.get('disposition') == 'UNAVAILABLE'] for k, v in ledgers.items()}}, indent=2))
+          PY
+      - name: Retain source vector, actual bytes and explicit coverage exclusions
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-evolution-peer-source-${{ github.sha }}
+          path: ${{ runner.temp }}/lion-peer-source/
+          if-no-files-found: error
+          retention-days: 7
