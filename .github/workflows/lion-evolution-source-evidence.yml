@@ -1,0 +1,78 @@
+name: LION Evolution Source Evidence
+
+# Bounded authoring support for the operator-launched federation evolution task.
+# This exports committed source bytes, not runtime state, and runs no project code.
+# Separate from, and never a replacement for, the existing required CI gates.
+on:
+  push:
+    branches: ['evolution/architecture-missions-20261004-r1']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lion-evolution-source-evidence-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source-evidence:
+    if: github.repository == 'DonkeyJJLove/ai_platform'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact pushed candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Export immutable source and identity
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          target="$RUNNER_TEMP/lion-evolution-source"
+          mkdir -p "$target"
+          git archive --format=tar HEAD | gzip -n > "$target/ai_platform.tar.gz"
+          git cat-file -p HEAD > "$target/commit.txt"
+          git ls-tree -r -z HEAD > "$target/tree.zlist"
+          python3 - <<'PY'
+          import datetime
+          import hashlib
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+          target = Path(os.environ['RUNNER_TEMP']) / 'lion-evolution-source'
+          def git(*args):
+              return subprocess.check_output(['git', *args]).decode('ascii').strip()
+          value = {
+              'schema': 'analysis.evolution-source-export/v1',
+              'repository': 'DonkeyJJLove/ai_platform',
+              'head': git('rev-parse', 'HEAD'),
+              'tree': git('rev-parse', 'HEAD^{tree}'),
+              'observed_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'source_class': 'EXACT_GIT_CANDIDATE',
+              'runtime_observation': 'NOT_PERFORMED',
+              'project_code_execution': 'NOT_PERFORMED',
+              'authority_effect': 'NONE',
+              'archive_note': 'git archive bytes; compare archive members to tree.zlist before claiming full coverage',
+              'files': {p.name: {'bytes': p.stat().st_size,
+                        'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
+                        for p in sorted(target.iterdir()) if p.is_file()},
+          }
+          assert value['head'] == os.environ['EXPECTED_HEAD']
+          (target / 'manifest.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(value, ensure_ascii=False, indent=2))
+          PY
+      - name: Retain exact source evidence for independent authoring and readback
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-evolution-source-${{ github.sha }}
+          path: ${{ runner.temp }}/lion-evolution-source/
+          if-no-files-found: error
+          retention-days: 7
