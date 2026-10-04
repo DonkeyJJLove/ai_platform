@@ -1,0 +1,80 @@
+--- a/tools/query_rag.py
++++ b/tools/query_rag.py
+@@ -139,7 +139,16 @@
+     if row is None:raise KeyError('unknown R9 source id')
+     return {**row,'live_truth':False,'authority_effect':'NONE'}
+ 
++def configure_utf8():
++    import sys
++    # Isolated (-I) child interpreters ignore PYTHON* environment variables.
++    for stream in (sys.stdout, sys.stderr):
++        reconfigure = getattr(stream, "reconfigure", None)
++        if callable(reconfigure):
++            reconfigure(encoding="utf-8", errors="strict")
++
+ def main():
++    configure_utf8()
+     ap=argparse.ArgumentParser(description=__doc__); group=ap.add_mutually_exclusive_group(required=True)
+     group.add_argument('--query');group.add_argument('--source-id');ap.add_argument('--output',type=Path)
+     args=ap.parse_args()
+--- a/tools/run_validation.py
++++ b/tools/run_validation.py
+@@ -40,11 +40,20 @@
+  ('AUTHORITY_BOUNDARY','authority ALLOW PDP',('authority',),()),
+ ]
+ 
++def configure_utf8():
++    import sys
++    # Isolated (-I) child interpreters ignore PYTHON* environment variables.
++    for stream in (sys.stdout, sys.stderr):
++        reconfigure = getattr(stream, "reconfigure", None)
++        if callable(reconfigure):
++            reconfigure(encoding="utf-8", errors="strict")
++
+ def main():
++ configure_utf8()
+  ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--output',type=Path);args=ap.parse_args()
+  started=datetime.now(timezone.utc).isoformat()
+- proc=subprocess.run([sys.executable,'-B','-m','unittest','discover','-s',str(ROOT/'tests'),'-v'],
+-                     cwd=ROOT,capture_output=True,text=True,timeout=60)
++ proc=subprocess.run([sys.executable,'-X','utf8','-B','-m','unittest','discover','-s',str(ROOT/'tests'),'-v'],
++                     cwd=ROOT,capture_output=True,text=True,encoding='utf-8',errors='strict',timeout=60)
+  match=re.search(r'Ran (\d+) tests',proc.stderr)
+  unit={'result':'PASS' if proc.returncode==0 else 'FAIL','count':int(match.group(1)) if match else None,
+        'returncode':proc.returncode,'stdout':proc.stdout,'stderr':proc.stderr,'scope':'PACKAGE_TESTS_NOT_FULL_REPOSITORY_SUITE'}
+@@ -58,13 +67,13 @@
+                  'checks':checks,'result':'PASS' if all(checks.values()) else 'FAIL'})
+  query='Wyjaśnij aktualny mechanizm współpracy SaaS z modelem lokalnym przy zadaniu dotyczącym swarm.'
+  # Isolated interpreter: no previous Python memory or user site-packages.
+- cold=subprocess.run([sys.executable,'-I','-B',str(ROOT/'tools/query_rag.py'),'--query',query],
+-                     cwd=ROOT,capture_output=True,text=True,timeout=30)
++ cold=subprocess.run([sys.executable,'-I','-X','utf8','-B',str(ROOT/'tools/query_rag.py'),'--query',query],
++                     cwd=ROOT,capture_output=True,text=True,encoding='utf-8',errors='strict',timeout=30)
+  try:
+   co=json.loads(cold.stdout);cp=cold.returncode==0 and 'DonkeyJJLove/swarm' in co['repositories'] and co['first_read']['base_release']=='lion-rag32-v1.4-r9-auth-lifecycle-candidate' and not co['full_ai_platform_documentation']['completed']
+  except (ValueError,KeyError):co={};cp=False
+  f=fixture();native=validate_composition(f,observed_head=HEAD,observed_peer_heads=PEER_HEADS)
+- original=json.loads((ROOT/'evidence/R9_RECORD_AND_FILE_AUDIT.json').read_text())
++ original=json.loads((ROOT/'evidence/R9_RECORD_AND_FILE_AUDIT.json').read_text(encoding='utf-8'))
+  results={'schema':'analysis.semantic-rag-validation/v1','started_at':started,'finished_at':datetime.now(timezone.utc).isoformat(),
+    'unit_tests':unit,'routing_probes':probes,
+    'original_r9_probes':{'count':len(original['original_probes']),'passed':sum(p['result']=='PASS' for p in original['original_probes']),
+--- a/tools/native_bridge.py
++++ b/tools/native_bridge.py
+@@ -273,7 +273,16 @@
+     return {"artifact_class":"SYNTHETIC_TEST_FIXTURE_NOT_LIVE_HANDOFF", "fixture_times_are_test_inputs":True,
+             "not_a_canonical_lion_schema":True,"composition":result}
+ 
++def configure_utf8():
++    import sys
++    # Isolated (-I) child interpreters ignore PYTHON* environment variables.
++    for stream in (sys.stdout, sys.stderr):
++        reconfigure = getattr(stream, "reconfigure", None)
++        if callable(reconfigure):
++            reconfigure(encoding="utf-8", errors="strict")
++
+ if __name__ == "__main__":
++    configure_utf8()
+     frame=fixture()
+     print(json.dumps({"validation":validate_composition(frame,observed_head=HEAD,observed_peer_heads=PEER_HEADS),
+                       "fixture":serialize(frame)},ensure_ascii=False,indent=2))

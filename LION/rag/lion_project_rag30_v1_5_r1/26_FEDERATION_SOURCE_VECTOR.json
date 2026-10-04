@@ -1,0 +1,79 @@
+{
+  "schema": "analysis.source-vector/v1",
+  "atomic": false,
+  "deployment_vector": false,
+  "read_started_at": "2026-10-04T16:09:47.525112+00:00",
+  "read_finished_at": "2026-10-04T16:09:49.538029+00:00",
+  "repositories": [
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "branch": "master",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "tree": "6d4e04fd6327b4e1130c7baf86090789d701b815",
+      "observed_at": "2026-10-04T16:09:47.996866+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "branch": "master",
+      "head": "7c9baa0daa17d5c9c38a5e26e4e352ccd86614f8",
+      "tree": "1397c784edaa9b1c543871f5a5ee1e4fcf5b5e09",
+      "observed_at": "2026-10-04T16:09:48.007622+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "branch": "master",
+      "head": "fd31c1732fd58f28534062c35a563a440b64f4ba",
+      "tree": "623e986cc3bde8e535d90068c6fb2379dafe726f",
+      "observed_at": "2026-10-04T16:09:48.038190+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "branch": "master",
+      "head": "0afffd9ac6e0d346735615352fba9a43791cb017",
+      "tree": "14ca52d8271f8df948155e6adfe3b8408f3e2d95",
+      "observed_at": "2026-10-04T16:09:48.416035+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "c14aa0f1f72f976a55057cc3ad2b50cdee5944f5",
+      "tree": "c78a7e2d3c6fffdfb9340d190418569259bd16ea",
+      "observed_at": "2026-10-04T16:09:48.415842+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "branch": "main",
+      "head": "53d3a27014c1417ce540185c5b5554c1000357af",
+      "tree": "5ae20dd58314ef48bcad9a404a1e0cb2d9c1e7b4",
+      "observed_at": "2026-10-04T16:09:48.437835+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "branch": "main",
+      "head": "94c141c9f0bd8830bb9b93f11561056c629a5607",
+      "tree": "9154393fc954ccf9b6fec1d988868489ab8a275a",
+      "observed_at": "2026-10-04T16:09:49.069495+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "branch": "main",
+      "head": "d22e141bb32b7f44112824ae67404a7d0e482da4",
+      "tree": "30f7ffbe6cce846a3959fe2b260c0b1945172eac",
+      "observed_at": "2026-10-04T16:09:49.069248+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "0a9413f36ee8cf7684bcb77f42abcaffcf59a60d",
+      "tree": "5d6396c52013657e36fdc296044b59cbd0d26bb1",
+      "observed_at": "2026-10-04T16:09:49.069069+00:00"
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "branch": "master",
+      "head": "ee6aa2eefcf2bdb538de4860054ce44c77314252",
+      "tree": "bc67ed1ba63a4fa051d279ef2e790b2fde48ae05",
+      "observed_at": "2026-10-04T16:09:49.537633+00:00"
+    }
+  ]
+}

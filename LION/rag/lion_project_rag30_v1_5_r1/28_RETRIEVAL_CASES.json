@@ -1,0 +1,348 @@
+{
+  "schema": "analysis.rag15-retrieval-cases/v1",
+  "cases": [
+    {
+      "id": "RAG_START",
+      "query": "Jak rozpocząć nowy wątek LION?",
+      "required_file_prefixes": [
+        "00",
+        "01",
+        "02",
+        "03"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "SEMANTIC",
+      "query": "MissionIntent QueryPlan SemanticScaffold RelevanceGraph",
+      "required_file_prefixes": [
+        "06",
+        "07"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "SAAS_LOCAL",
+      "query": "Wyjaśnij współpracę SaaS i modelu lokalnego przy zadaniu swarm",
+      "required_file_prefixes": [
+        "08",
+        "09",
+        "12",
+        "14"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/swarm"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "CONVERSATION",
+      "query": "conversation binding_epoch lost response",
+      "required_file_prefixes": [
+        "08",
+        "09",
+        "16"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "LPCL",
+      "query": "LPCL panel compile_canonical_run",
+      "required_file_prefixes": [
+        "10",
+        "21"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "FACTORY",
+      "query": "Gap CapabilityNeed BeanFactory generatywność Mosaic",
+      "required_file_prefixes": [
+        "11",
+        "20",
+        "21"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "PROVENANCE",
+      "query": "AID pochodzenie artefaktu sbom",
+      "required_file_prefixes": [
+        "12",
+        "13",
+        "14"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/sbom"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "MEMORY",
+      "query": "HA2D snapshot replay pamięć",
+      "required_file_prefixes": [
+        "13",
+        "14",
+        "16"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/HA2D"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "DELTA",
+      "query": "glitchlab delta invariants",
+      "required_file_prefixes": [
+        "06",
+        "14",
+        "17"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/glitchlab"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "GRAPH",
+      "query": "mosaic_lab_pro.py headless graph",
+      "required_file_prefixes": [
+        "06",
+        "07",
+        "14"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/mosaic_lab_pro.py"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "PROCESS_SEMANTICS",
+      "query": "chunk-chunk HMK9D semantyka",
+      "required_file_prefixes": [
+        "06",
+        "10",
+        "14"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/chunk-chunk"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "HYPOTHESIS",
+      "query": "hipotezy_nadawcze_LLM eksperyment falsyfikator",
+      "required_file_prefixes": [
+        "14",
+        "17"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "SIMULATION",
+      "query": "SymulacjaKaskadySieciowej SimulationResult ModelRiskStatement",
+      "required_file_prefixes": [
+        "13",
+        "14",
+        "17"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/SymulacjaKaskadySieciowej"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "CORPUS",
+      "query": "writeups badania retention",
+      "required_file_prefixes": [
+        "13",
+        "14",
+        "17",
+        "18"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/writeups"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "AUTHORITY",
+      "query": "PDP ALLOW runtime admission",
+      "required_file_prefixes": [
+        "12",
+        "16"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "EVOLUTION",
+      "query": "ewolucja całej federacji metaprompt program misji",
+      "required_file_prefixes": [
+        "05",
+        "14",
+        "15",
+        "20",
+        "21",
+        "22",
+        "23"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "HISTORY",
+      "query": "historyczny R9 source_id supersession",
+      "required_file_prefixes": [
+        "18",
+        "24"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    },
+    {
+      "id": "UTF8",
+      "query": "Windows cp1252 UnicodeEncodeError UTF-8",
+      "required_file_prefixes": [
+        "19"
+      ],
+      "required_repositories": [
+        "DonkeyJJLove/ai_platform"
+      ],
+      "class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+      "forbidden_claims": [
+        "LIVE_RUNTIME_READY",
+        "FULL_SOURCE_READ_COMPLETED_BY_ROUTER",
+        "AUTHORITY_GRANTED_BY_RAG"
+      ]
+    }
+  ],
+  "negative_requirements": [
+    "EMPTY_QUERY_REJECTED",
+    "UNKNOWN_SOURCE_ID_REJECTED",
+    "TAMPERED_PAYLOAD_REJECTED",
+    "EXTRA_FILE_REJECTED",
+    "HISTORY_NOT_LIVE",
+    "ROUTING_NOT_FULL_READING",
+    "CP1252_STRICT_CHILD_SUCCEEDS_AFTER_FIX"
+  ],
+  "independent_model_retrieval": "NOT_RUN"
+}

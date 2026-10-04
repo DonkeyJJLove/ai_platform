@@ -1,0 +1,129 @@
+{
+  "schema": "analysis.rag15-release-validation/v1",
+  "release_id": "lion-rag30-v1.5-r1",
+  "started_at": "2026-10-04T16:41:05.804324+00:00",
+  "finished_at": "2026-10-04T16:41:08.304538+00:00",
+  "result": "PASS",
+  "scope": "OFFLINE_KNOWLEDGE_RELEASE_AND_UTF8_PROCESS_IO_NOT_LIVE_FEDERATION",
+  "environment": {
+    "platform": "Linux",
+    "python": "3.13.5",
+    "native_windows": "NOT_RUN"
+  },
+  "unit_tests": {
+    "command": "python -B -m unittest discover -s tests -p test_lion_rag15.py -v",
+    "count": 30,
+    "returncode": 0,
+    "result": "PASS",
+    "stdout": "",
+    "stderr": "test_all_18_declared_routing_cases (test_lion_rag15.ReleaseTests.test_all_18_declared_routing_cases) ... ok\ntest_all_211_ids_lookup_without_claiming_payload (test_lion_rag15.ReleaseTests.test_all_211_ids_lookup_without_claiming_payload) ... ok\ntest_authority_widening_denied (test_lion_rag15.ReleaseTests.test_authority_widening_denied) ... ok\ntest_broken_link_denied_even_resealed (test_lion_rag15.ReleaseTests.test_broken_link_denied_even_resealed) ... ok\ntest_cp1252_stream_is_fixed_before_unicode_output (test_lion_rag15.ReleaseTests.test_cp1252_stream_is_fixed_before_unicode_output) ... ok\ntest_deterministic_zip_exact_flat_30 (test_lion_rag15.ReleaseTests.test_deterministic_zip_exact_flat_30) ... ok\ntest_duplicate_json_key_denied (test_lion_rag15.ReleaseTests.test_duplicate_json_key_denied) ... ok\ntest_duplicate_owner_denied_even_resealed (test_lion_rag15.ReleaseTests.test_duplicate_owner_denied_even_resealed) ... ok\ntest_duplicate_record_denied_even_resealed (test_lion_rag15.ReleaseTests.test_duplicate_record_denied_even_resealed) ... ok\ntest_empty_query_denied (test_lion_rag15.ReleaseTests.test_empty_query_denied) ... ok\ntest_exact_30_ready_knowledge_files (test_lion_rag15.ReleaseTests.test_exact_30_ready_knowledge_files) ... ok\ntest_extra_file_denied (test_lion_rag15.ReleaseTests.test_extra_file_denied) ... ok\ntest_false_embedded_payload_claim_denied (test_lion_rag15.ReleaseTests.test_false_embedded_payload_claim_denied) ... ok\ntest_fresh_isolated_cli (test_lion_rag15.ReleaseTests.test_fresh_isolated_cli) ... ok\ntest_invalid_git_identity_denied_even_resealed (test_lion_rag15.ReleaseTests.test_invalid_git_identity_denied_even_resealed) ... ok\ntest_missing_file_denied (test_lion_rag15.ReleaseTests.test_missing_file_denied) ... ok\ntest_omitted_peer_denied_even_resealed (test_lion_rag15.ReleaseTests.test_omitted_peer_denied_even_resealed) ... ok\ntest_query_injection_does_not_grant_authority (test_lion_rag15.ReleaseTests.test_query_injection_does_not_grant_authority) ... ok\ntest_runtime_ready_claim_denied (test_lion_rag15.ReleaseTests.test_runtime_ready_claim_denied) ... ok\ntest_source_vector_cannot_claim_deployment (test_lion_rag15.ReleaseTests.test_source_vector_cannot_claim_deployment) ... ok\ntest_symlink_denied (test_lion_rag15.ReleaseTests.test_symlink_denied) ... ok\ntest_tampered_file_denied (test_lion_rag15.ReleaseTests.test_tampered_file_denied) ... ok\ntest_unknown_manifest_field_denied (test_lion_rag15.ReleaseTests.test_unknown_manifest_field_denied) ... ok\ntest_unknown_source_denied (test_lion_rag15.ReleaseTests.test_unknown_source_denied) ... ok\ntest_unrelated_query_does_not_invent_all_peers (test_lion_rag15.ReleaseTests.test_unrelated_query_does_not_invent_all_peers) ... ok\ntest_wrong_owner_denied (test_lion_rag15.ReleaseTests.test_wrong_owner_denied) ... ok\ntest_wrong_release_denied (test_lion_rag15.ReleaseTests.test_wrong_release_denied) ... ok\ntest_wrong_repository_owner_denied_even_resealed (test_lion_rag15.ReleaseTests.test_wrong_repository_owner_denied_even_resealed) ... ok\ntest_wrong_version_denied (test_lion_rag15.ReleaseTests.test_wrong_version_denied) ... ok\ntest_zip_inside_release_denied (test_lion_rag15.ReleaseTests.test_zip_inside_release_denied) ... ok\n\n----------------------------------------------------------------------\nRan 30 tests in 1.798s\n\nOK\n"
+  },
+  "routing_cases": [
+    {
+      "id": "RAG_START",
+      "result": "PASS"
+    },
+    {
+      "id": "SEMANTIC",
+      "result": "PASS"
+    },
+    {
+      "id": "SAAS_LOCAL",
+      "result": "PASS"
+    },
+    {
+      "id": "CONVERSATION",
+      "result": "PASS"
+    },
+    {
+      "id": "LPCL",
+      "result": "PASS"
+    },
+    {
+      "id": "FACTORY",
+      "result": "PASS"
+    },
+    {
+      "id": "PROVENANCE",
+      "result": "PASS"
+    },
+    {
+      "id": "MEMORY",
+      "result": "PASS"
+    },
+    {
+      "id": "DELTA",
+      "result": "PASS"
+    },
+    {
+      "id": "GRAPH",
+      "result": "PASS"
+    },
+    {
+      "id": "PROCESS_SEMANTICS",
+      "result": "PASS"
+    },
+    {
+      "id": "HYPOTHESIS",
+      "result": "PASS"
+    },
+    {
+      "id": "SIMULATION",
+      "result": "PASS"
+    },
+    {
+      "id": "CORPUS",
+      "result": "PASS"
+    },
+    {
+      "id": "AUTHORITY",
+      "result": "PASS"
+    },
+    {
+      "id": "EVOLUTION",
+      "result": "PASS"
+    },
+    {
+      "id": "HISTORY",
+      "result": "PASS"
+    },
+    {
+      "id": "UTF8",
+      "result": "PASS"
+    }
+  ],
+  "routing_class": "DETERMINISTIC_TOPIC_ROUTING_NOT_MODEL_SEMANTIC_EVAL",
+  "historical_index_against_prior_bytes": {
+    "references_compared": 211,
+    "matching_references": 211,
+    "original_payloads_embedded": false,
+    "original_payload_roundtrip_claim": false
+  },
+  "archive": {
+    "result": "PASS",
+    "release_id": "lion-rag30-v1.5-r1",
+    "files": 30,
+    "historical_record_references": 211,
+    "historical_payloads_embedded": false,
+    "semantic_owners": 47,
+    "repositories": 10,
+    "content_digest": "6a696eeb488fc7df48e83ab4664b58444e0c150f61099cc03bc37b2a14e03172",
+    "verification_class": "BYTE_INTEGRITY_AND_STRUCTURE_NOT_AUTHENTICITY",
+    "authority_effect": "NONE",
+    "runtime_effect": "NONE",
+    "archive_sha256": "cf5a2f16420be2c94333d5b19159a15e085b5c2e2d65d097fe7b6b910468dc96",
+    "archive_bytes": 76920
+  },
+  "source_cutoff": "2026-10-04T16:09:49.538029+00:00",
+  "legacy_repair_report": "RAG15_UTF8_FIX_RESULT.json",
+  "not_run": [
+    "INDEPENDENT_NEW_SAAS_THREAD",
+    "REAL_LOCAL_OR_SAAS_INFERENCE",
+    "FULL_REPOSITORY_SUITES",
+    "MATERIAL_SWARM_WORKLOAD",
+    "GLOBAL_FULL_DOCUMENT_SEMANTIC_READING",
+    "DEPLOYMENT"
+  ],
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE"
+}
