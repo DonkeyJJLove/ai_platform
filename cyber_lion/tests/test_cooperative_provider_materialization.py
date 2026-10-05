@@ -106,8 +106,11 @@ class CooperativeProviderMaterializationTests(unittest.TestCase):
         }
         view = materialize_verifier_view(
             artifact_root=self.fixture.f.root,
+            consumer_assignment_id='verify-assignment-fixture-1',
             verify_payload=verify_payload,
-            expected_binding=self.binding(producer_ref='MD001'),
+            expected_binding=self.binding(
+                assignment_id='verify-assignment-fixture-1', producer_ref='MD001'
+            ),
             private_parent=self.verifier_parent,
         )
         verified = verify_text(view.workspace, verify_payload, worker_id='MD002')
@@ -158,11 +161,35 @@ class CooperativeProviderMaterializationTests(unittest.TestCase):
         with self.assertRaisesRegex(CooperativeProviderMaterializationError, 'digest mismatch'):
             materialize_verifier_view(
                 artifact_root=self.fixture.f.root,
+                consumer_assignment_id='verify-assignment-fixture-2',
                 verify_payload=verify_payload,
-                expected_binding=self.binding(producer_ref='MD001'),
+                expected_binding=self.binding(
+                    assignment_id='verify-assignment-fixture-2', producer_ref='MD001'
+                ),
                 private_parent=self.verifier_parent,
             )
         self.assertEqual(list(self.verifier_parent.iterdir()), [])
+
+    def test_verifier_transfer_is_bound_to_consumer_assignment_not_source(self):
+        verify_payload = {
+            'kind': 'COOPERATIVE_ARTIFACT_VERIFY',
+            'mission_id': 'M1',
+            'source_assignment_id': self.fixture.aid,
+            'generation': 1,
+            'artifact_name': 'product.txt',
+            'expected_sha256': sha256(self.fixture.f.data).hexdigest(),
+            'expected_producer_worker_id': 'MD001',
+        }
+        with self.assertRaisesRegex(CooperativeProviderMaterializationError, 'consumer'):
+            materialize_verifier_view(
+                artifact_root=self.fixture.f.root,
+                consumer_assignment_id='verify-assignment-fixture-3',
+                verify_payload=verify_payload,
+                expected_binding=self.binding(
+                    assignment_id=self.fixture.aid, producer_ref='MD001'
+                ),
+                private_parent=self.verifier_parent,
+            )
 
     def test_provider_marker_is_exact_and_non_authorizing(self):
         self.assertEqual(provider_status_marker(), {

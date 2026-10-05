@@ -116,6 +116,7 @@ class CooperativeContextMaterialization:
 
 @dataclass(frozen=True)
 class CooperativeVerifierMaterialization:
+    consumer_assignment_id: str
     source_assignment_id: str
     workspace: Path
     transfer_sha256: str
@@ -124,14 +125,19 @@ class CooperativeVerifierMaterialization:
     artifact_path: str
 
     def validate(self) -> "CooperativeVerifierMaterialization":
+        _require(type(self.consumer_assignment_id) is str and _ID.fullmatch(self.consumer_assignment_id) is not None,
+                 "consumer assignment identity")
         _require(type(self.source_assignment_id) is str and _ID.fullmatch(self.source_assignment_id) is not None,
                  "source assignment identity")
+        _require(self.consumer_assignment_id != self.source_assignment_id, "verifier/source assignment separation")
         workspace = _private_directory(self.workspace, "verifier workspace")
         _require(type(self.transfer_sha256) is str and _SHA.fullmatch(self.transfer_sha256) is not None,
                  "verifier transfer digest")
         _require(type(self.artifact_sha256) is str and _SHA.fullmatch(self.artifact_sha256) is not None,
                  "verifier artifact digest")
         binding = _transfer_binding(self.transfer_binding)
+        _require(binding["assignment_id"] == self.consumer_assignment_id,
+                 "verifier transfer consumer assignment substitution")
         carrier = workspace / "_LION_TRANSFER.json"
         _require(carrier.is_file() and not carrier.is_symlink(), "verifier transfer carrier")
         raw = carrier.read_bytes()
@@ -251,6 +257,7 @@ def build_runtime_writer_provider(
 def materialize_verifier_view(
     *,
     artifact_root: str | Path,
+    consumer_assignment_id: str,
     verify_payload: Mapping[str, Any],
     expected_binding: Mapping[str, Any],
     private_parent: str | Path,
@@ -263,20 +270,23 @@ def materialize_verifier_view(
     if not isinstance(verify_payload, Mapping) or verify_payload.get("kind") != VERIFY_KIND:
         raise CooperativeProviderMaterializationError("verify payload kind")
     mission = verify_payload.get("mission_id")
+    consumer = consumer_assignment_id
     assignment = verify_payload.get("source_assignment_id")
     generation = verify_payload.get("generation")
     name = verify_payload.get("artifact_name")
     expected = verify_payload.get("expected_sha256")
     producer = verify_payload.get("expected_producer_worker_id")
     _require(type(mission) is str and _ID.fullmatch(mission) is not None, "verify mission")
+    _require(type(consumer) is str and _ID.fullmatch(consumer) is not None, "verify consumer assignment")
     _require(type(assignment) is str and _ID.fullmatch(assignment) is not None, "verify source assignment")
+    _require(consumer != assignment, "verify consumer/source assignment separation")
     _require(type(generation) is int and 1 <= generation <= 2147483647, "verify generation")
     _require(type(name) is str and _NAME.fullmatch(name) is not None, "verify artifact name")
     _require(type(expected) is str and _SHA.fullmatch(expected) is not None, "verify artifact digest")
     _require(type(producer) is str and _ID.fullmatch(producer) is not None, "verify producer identity")
     binding = _transfer_binding(expected_binding)
     _require(binding["mission_id"] == mission, "verifier transfer mission mismatch")
-    _require(binding["assignment_id"] == assignment, "verifier transfer source assignment mismatch")
+    _require(binding["assignment_id"] == consumer, "verifier transfer consumer assignment mismatch")
     _require(binding["generation"] == generation and binding["lease_generation"] == generation,
              "verifier transfer generation mismatch")
     parent = _private_directory(private_parent, "verifier private parent")
@@ -290,6 +300,7 @@ def materialize_verifier_view(
     transfer_sha = sha256(raw).hexdigest()
     result = materialize_bundle(raw, transfer_sha, binding, parent)
     materialized = CooperativeVerifierMaterialization(
+        consumer,
         assignment,
         Path(result["workspace"]).resolve(strict=True),
         transfer_sha,

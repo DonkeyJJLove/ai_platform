@@ -63,6 +63,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         paths = {item["path"] for item in source["files"]}
         self.assertTrue({
             "cyber_lion/enterprise/cooperative_runtime_composition.py",
+            "cyber_lion/enterprise/cooperative_runtime_root.py",
             "cyber_lion/enterprise/runtime_execution.py",
             "cyber_lion/enterprise/executor_sandbox.py",
             "cyber_lion/contracts/runtime_execution.py",
