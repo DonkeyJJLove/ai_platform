@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from cyber_lion.mission_control.cooperative_readiness import observation_ready
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from cyber_lion.mission_control import global_scheduler
 from cyber_lion.mission_control.cooperative_artifacts import WRITE_KIND, VERIFY_KIND
@@ -27,6 +27,11 @@ EXECUTOR_ID = "MISSION_CONTROL_COOPERATIVE_PRODUCTION_PROVIDER"
 MODEL_SUFFIX = "__COOP_MODEL"
 WRITE_SUFFIX = "__COOP_WRITE"
 VERIFY_SUFFIX = "__COOP_VERIFY"
+WRITE_MATERIALIZATION_KIND = "RUNTIME_CONTEXT"
+WRITE_PROVIDER_ID = "COOPERATIVE_RUNTIME_WRITER_R5"
+VERIFY_MATERIALIZATION_KIND = "VERIFIER_TRANSFER"
+VERIFY_PROVIDER_ID = "COOPERATIVE_ARTIFACT_TRANSFER_R1"
+_MATERIALIZER_RESULT_FIELDS = frozenset({"materialization_kind","provider_id","evidence_digest","authority_effect"})
 
 
 class CooperativeProductionError(RuntimeError):
@@ -95,8 +100,10 @@ def _create(
     payload: dict[str, Any],
     generation: int,
     now_fn,
+    held: bool = False,
 ) -> str:
-    return global_scheduler.create_assignment(
+    creator = global_scheduler.create_held_assignment if held else global_scheduler.create_assignment
+    return creator(
         conn,
         mission_id,
         phase_id,
@@ -106,6 +113,65 @@ def _create(
         now_fn,
         lease_generation=int(generation),
     )
+
+
+def _materialize_and_release(
+    conn,
+    assignment_id: str,
+    *,
+    materializer: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None,
+    expected_kind: str,
+    expected_provider: str,
+    now_fn,
+) -> dict[str, Any] | None:
+    """Run a trusted non-authorizing materializer once for a newly HELD assignment."""
+    if materializer is None:
+        return None
+    row = conn.execute(
+        "SELECT * FROM mission_execution_assignments WHERE assignment_id=?",
+        (assignment_id,),
+    ).fetchone()
+    if row is None or row["state"] != "HELD":
+        raise CooperativeProductionError("held assignment unavailable for materialization")
+    try:
+        payload = json.loads(row["input_json"] or "{}")
+    except Exception as exc:
+        raise CooperativeProductionError("held assignment input unavailable") from exc
+    presented = {"assignment": dict(row), "input": payload}
+    result = materializer(presented)
+    if not isinstance(result, Mapping) or set(result) != _MATERIALIZER_RESULT_FIELDS:
+        raise CooperativeProductionError("materializer result schema")
+    value = dict(result)
+    if (
+        value.get("materialization_kind") != expected_kind
+        or value.get("provider_id") != expected_provider
+        or value.get("authority_effect") != "NONE"
+    ):
+        raise CooperativeProductionError("materializer identity/authority mismatch")
+    evidence_digest = value.get("evidence_digest")
+    if (
+        type(evidence_digest) is not str
+        or len(evidence_digest) != 64
+        or any(ch not in "0123456789abcdef" for ch in evidence_digest)
+    ):
+        raise CooperativeProductionError("materializer evidence digest")
+    release = {
+        "schema": global_scheduler.ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA,
+        "assignment_id": row["assignment_id"],
+        "mission_id": row["mission_id"],
+        "material_drone_id": row["material_drone_id"],
+        "lease_generation": int(row["lease_generation"]),
+        "control_epoch": int(row["control_epoch"]),
+        "context_revision": int(row["context_revision"]),
+        "plan_revision": int(row["plan_revision"]),
+        "capability": payload.get("capability"),
+        "materialization_kind": expected_kind,
+        "provider_id": expected_provider,
+        "evidence_digest": evidence_digest,
+        "authority_effect": "NONE",
+    }
+    global_scheduler.release_held_assignment(conn, assignment_id, release, now_fn)
+    return value
 
 
 def bootstrap_readiness(status_dir: str | Path, *, expected_workers: int = 32, now_fn=lambda: datetime.now(timezone.utc)) -> dict[str, Any]:
@@ -183,6 +249,8 @@ def advance_production(
     builder_worker_id: str = "MD001",
     verifier_worker_id: str = "MD002",
     artifact_name: str = "lion-pilot-artifact.txt",
+    write_materializer: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+    verify_materializer: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Advance one cooperative production edge for one mission generation."""
     model_phase = phase_id + MODEL_SUFFIX
@@ -261,8 +329,23 @@ def advance_production(
             },
             generation=generation,
             now_fn=now_fn,
+            held=True,
         )
-        return {"state": "WAITING", "gate": "ARTIFACT_WRITE", "assignment_id": aid, "authority_effect": "NONE"}
+        if write_materializer is None:
+            return {"state": "WAITING", "gate": "RUNTIME_CONTEXT_PROVIDER_REQUIRED", "assignment_id": aid, "authority_effect": "NONE"}
+        try:
+            materialized = _materialize_and_release(
+                conn, aid, materializer=write_materializer,
+                expected_kind=WRITE_MATERIALIZATION_KIND,
+                expected_provider=WRITE_PROVIDER_ID, now_fn=now_fn,
+            )
+        except Exception as exc:
+            return {"state": "FAILED", "gate": "RUNTIME_CONTEXT_MATERIALIZATION_FAILED",
+                    "assignment_id": aid, "error_class": type(exc).__name__, "authority_effect": "NONE"}
+        return {"state": "WAITING", "gate": "ARTIFACT_WRITE", "assignment_id": aid,
+                "materialization": materialized, "authority_effect": "NONE"}
+    if write["state"] == "HELD":
+        return {"state": "WAITING", "gate": "RUNTIME_CONTEXT_PROVIDER_REQUIRED", "assignment_id": write["assignment_id"], "authority_effect": "NONE"}
     if write["state"] in {"READY", "CLAIMED"}:
         return {"state": "WAITING", "gate": "ARTIFACT_WRITE", "assignment_id": write["assignment_id"], "authority_effect": "NONE"}
     if write["state"] != "PASS":
@@ -298,8 +381,23 @@ def advance_production(
             },
             generation=generation,
             now_fn=now_fn,
+            held=True,
         )
-        return {"state": "WAITING", "gate": "ARTIFACT_VERIFY", "assignment_id": aid, "authority_effect": "NONE"}
+        if verify_materializer is None:
+            return {"state": "WAITING", "gate": "VERIFIER_TRANSFER_REQUIRED", "assignment_id": aid, "authority_effect": "NONE"}
+        try:
+            materialized = _materialize_and_release(
+                conn, aid, materializer=verify_materializer,
+                expected_kind=VERIFY_MATERIALIZATION_KIND,
+                expected_provider=VERIFY_PROVIDER_ID, now_fn=now_fn,
+            )
+        except Exception as exc:
+            return {"state": "FAILED", "gate": "VERIFIER_TRANSFER_MATERIALIZATION_FAILED",
+                    "assignment_id": aid, "error_class": type(exc).__name__, "authority_effect": "NONE"}
+        return {"state": "WAITING", "gate": "ARTIFACT_VERIFY", "assignment_id": aid,
+                "materialization": materialized, "authority_effect": "NONE"}
+    if verify["state"] == "HELD":
+        return {"state": "WAITING", "gate": "VERIFIER_TRANSFER_REQUIRED", "assignment_id": verify["assignment_id"], "authority_effect": "NONE"}
     if verify["state"] in {"READY", "CLAIMED"}:
         return {"state": "WAITING", "gate": "ARTIFACT_VERIFY", "assignment_id": verify["assignment_id"], "authority_effect": "NONE"}
     if verify["state"] != "PASS":
@@ -342,6 +440,7 @@ def advance_build(
     logical_drone_id: str = "LD001",
     builder_worker_id: str = "MD001",
     artifact_name: str = "lion-pilot-artifact.txt",
+    write_materializer: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Advance MODEL -> WRITE and stop once the artifact is materially observed."""
     model_phase = phase_id + MODEL_SUFFIX
@@ -406,9 +505,23 @@ def advance_build(
                 "lease_scope": "MISSION_DRIVER",
                 "authority_effect": "NONE",
             },
-            generation=generation, now_fn=now_fn,
+            generation=generation, now_fn=now_fn, held=True,
         )
-        return {"state": "WAITING", "gate": "ARTIFACT_WRITE", "assignment_id": aid, "authority_effect": "NONE"}
+        if write_materializer is None:
+            return {"state": "WAITING", "gate": "RUNTIME_CONTEXT_PROVIDER_REQUIRED", "assignment_id": aid, "authority_effect": "NONE"}
+        try:
+            materialized = _materialize_and_release(
+                conn, aid, materializer=write_materializer,
+                expected_kind=WRITE_MATERIALIZATION_KIND,
+                expected_provider=WRITE_PROVIDER_ID, now_fn=now_fn,
+            )
+        except Exception as exc:
+            return {"state": "FAILED", "gate": "RUNTIME_CONTEXT_MATERIALIZATION_FAILED",
+                    "assignment_id": aid, "error_class": type(exc).__name__, "authority_effect": "NONE"}
+        return {"state": "WAITING", "gate": "ARTIFACT_WRITE", "assignment_id": aid,
+                "materialization": materialized, "authority_effect": "NONE"}
+    if write["state"] == "HELD":
+        return {"state": "WAITING", "gate": "RUNTIME_CONTEXT_PROVIDER_REQUIRED", "assignment_id": write["assignment_id"], "authority_effect": "NONE"}
     if write["state"] in {"READY", "CLAIMED"}:
         return {"state": "WAITING", "gate": "ARTIFACT_WRITE", "assignment_id": write["assignment_id"], "authority_effect": "NONE"}
     if write["state"] != "PASS":
@@ -445,6 +558,7 @@ def advance_verify(
     generation: int,
     now_fn,
     verifier_worker_id: str = "MD002",
+    verify_materializer: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Verify the artifact created by advance_build with a distinct worker."""
     write = _assignment(conn, mission_id, build_phase_id + WRITE_SUFFIX)
@@ -481,9 +595,23 @@ def advance_verify(
                 "lease_scope": "MISSION_DRIVER",
                 "authority_effect": "NONE",
             },
-            generation=generation, now_fn=now_fn,
+            generation=generation, now_fn=now_fn, held=True,
         )
-        return {"state": "WAITING", "gate": "ARTIFACT_VERIFY", "assignment_id": aid, "authority_effect": "NONE"}
+        if verify_materializer is None:
+            return {"state": "WAITING", "gate": "VERIFIER_TRANSFER_REQUIRED", "assignment_id": aid, "authority_effect": "NONE"}
+        try:
+            materialized = _materialize_and_release(
+                conn, aid, materializer=verify_materializer,
+                expected_kind=VERIFY_MATERIALIZATION_KIND,
+                expected_provider=VERIFY_PROVIDER_ID, now_fn=now_fn,
+            )
+        except Exception as exc:
+            return {"state": "FAILED", "gate": "VERIFIER_TRANSFER_MATERIALIZATION_FAILED",
+                    "assignment_id": aid, "error_class": type(exc).__name__, "authority_effect": "NONE"}
+        return {"state": "WAITING", "gate": "ARTIFACT_VERIFY", "assignment_id": aid,
+                "materialization": materialized, "authority_effect": "NONE"}
+    if verify["state"] == "HELD":
+        return {"state": "WAITING", "gate": "VERIFIER_TRANSFER_REQUIRED", "assignment_id": verify["assignment_id"], "authority_effect": "NONE"}
     if verify["state"] in {"READY", "CLAIMED"}:
         return {"state": "WAITING", "gate": "ARTIFACT_VERIFY", "assignment_id": verify["assignment_id"], "authority_effect": "NONE"}
     if verify["state"] != "PASS":

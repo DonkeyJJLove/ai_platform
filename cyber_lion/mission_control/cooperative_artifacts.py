@@ -143,6 +143,16 @@ def _read_at(dir_fd: int, name: str) -> bytes:
         return data
 
 
+def read_artifact_bytes(root: str | Path, *, mission_id: str, generation: int, artifact_name: str) -> bytes:
+    """Read one exact artifact through the descriptor-relative storage owner."""
+    root_path = _root(root)
+    mission = _id(mission_id, "mission_id")
+    gen = _generation(generation)
+    name = _name(artifact_name)
+    with _generation_dir(root_path, mission, gen, create=False) as dfd:
+        return _read_at(dfd, name)
+
+
 def materialize_text(root: str | Path, payload: Mapping[str, Any], *, worker_id: str) -> dict[str, Any]:
     """Publish atomically WITHOUT replacing an existing generation's artifact."""
     out, data = validate_write_payload(payload, worker_id)
@@ -188,8 +198,9 @@ def verify_text(root: str | Path, payload: Mapping[str, Any], *, worker_id: str)
     if verifier == producer:
         raise CooperativeArtifactError("verifier must differ from producer")
     root_path = _root(root)
-    with _generation_dir(root_path, mission, generation, create=False) as dfd:
-        observed = _read_at(dfd, name)
+    observed = read_artifact_bytes(
+        root_path, mission_id=mission, generation=generation, artifact_name=name,
+    )
     actual = sha256(observed).hexdigest()
     if actual != expected:
         raise CooperativeArtifactError("artifact digest mismatch")

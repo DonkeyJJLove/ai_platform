@@ -95,6 +95,15 @@ CREATE TABLE IF NOT EXISTS mission_execution_assignments(
   finished_at TEXT,
   UNIQUE(mission_id, phase_id, logical_drone_id, lease_generation)
 );
+CREATE TABLE IF NOT EXISTS mission_assignment_release_evidence(
+  assignment_id TEXT PRIMARY KEY,
+  mission_id TEXT NOT NULL,
+  evidence_digest TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  released_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_assignment_release_mission
+  ON mission_assignment_release_evidence(mission_id,released_at,assignment_id);
 CREATE TABLE IF NOT EXISTS mission_execution_receipts(
   receipt_id TEXT PRIMARY KEY,
   assignment_id TEXT NOT NULL,
@@ -287,7 +296,7 @@ def migrate(conn, now_fn):
     if 'last_dispatch_order' not in turn_cols: conn.execute('ALTER TABLE mission_scheduler_turns ADD COLUMN last_dispatch_order INTEGER NOT NULL DEFAULT 0')
     stamp = now_fn()
     conn.execute("INSERT OR IGNORE INTO mission_scheduler_state(scheduler_id,generation,state,heartbeat_at,queue_depth,active_run_count) VALUES(?,?,?,?,?,?)",(SCHEDULER_ID,1,"ACTIVE",stamp,0,0))
-    for version,schema in ((1,'lion.scheduler-storage-reconciliation/v1'),(2,'lion.generic-effect-evidence-executor/v1'),(3,'lion.process-contract-plane/v1'),(4,'lion.control-plane-reconnaissance/v1'),(5,'lion.recon-evidence-reacquisition/v1'),(6,'lion.operator-stale-result-evidence/v1')):
+    for version,schema in ((1,'lion.scheduler-storage-reconciliation/v1'),(2,'lion.generic-effect-evidence-executor/v1'),(3,'lion.process-contract-plane/v1'),(4,'lion.control-plane-reconnaissance/v1'),(5,'lion.recon-evidence-reacquisition/v1'),(6,'lion.operator-stale-result-evidence/v1'),(7,'lion.held-assignment-release-evidence/v1')):
         conn.execute('INSERT OR IGNORE INTO mission_scheduler_migrations VALUES(?,?,?)',(version,schema,stamp))
     if [r[0] for r in conn.execute('PRAGMA integrity_check')] != ['ok']: conn.rollback(); raise ValueError('scheduler database integrity after migration')
     conn.commit()
@@ -524,13 +533,88 @@ def next_dispatch(conn,now_fn):
     conn.execute('RELEASE scheduler_select_turn');active=sum(1 for r in rows if r["state"]=="ACTIVE");heartbeat(conn,now_fn,queue_depth=len(rows),active_run_count=active,dispatched=bool(rows));return rows[0] if rows else None
 
 
-def create_assignment(conn,mission_id,phase_id,logical_drone_id,material_drone_id,input_value,now_fn,*,lease_generation,dispatch_authority="AUTONOMOUS"):
+ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA="lion.assignment-release-evidence/v1"
+_RELEASE_EVIDENCE_FIELDS=frozenset({
+    "schema","assignment_id","mission_id","material_drone_id","lease_generation",
+    "control_epoch","context_revision","plan_revision","capability",
+    "materialization_kind","provider_id","evidence_digest","authority_effect",
+})
+
+
+def _create_assignment(conn,mission_id,phase_id,logical_drone_id,material_drone_id,input_value,now_fn,*,lease_generation,dispatch_authority,initial_state):
     if dispatch_authority not in {"AUTONOMOUS",operator_control.PRIMARY_OPERATOR}:raise ValueError("dispatch authority")
+    if initial_state not in {"READY","HELD"}:raise ValueError("assignment initial state")
     control=operator_control.control_state(conn,mission_id,now_fn)
     if not operator_control.assignment_allowed(conn,mission_id,dispatch_authority,int(control["control_epoch"])):raise ValueError("operator control fence")
     capability=input_value.get("capability") if isinstance(input_value,dict) else None
     if isinstance(capability,str) and operator_control.is_capability_revoked(conn,mission_id,capability):raise ValueError("capability revoked by operator")
-    aid="assignment-"+uuid.uuid4().hex;stamp=now_fn();conn.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,control_epoch,context_revision,plan_revision,dispatch_authority,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(aid,mission_id,phase_id,logical_drone_id,material_drone_id,digest(input_value),_canon(input_value),"READY",int(lease_generation),int(control["control_epoch"]),int(control["context_revision"]),int(control["plan_revision"]),dispatch_authority,stamp));conn.commit();return aid
+    aid="assignment-"+uuid.uuid4().hex;stamp=now_fn();conn.execute("INSERT INTO mission_execution_assignments(assignment_id,mission_id,phase_id,logical_drone_id,material_drone_id,input_digest,input_json,state,lease_generation,control_epoch,context_revision,plan_revision,dispatch_authority,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(aid,mission_id,phase_id,logical_drone_id,material_drone_id,digest(input_value),_canon(input_value),initial_state,int(lease_generation),int(control["control_epoch"]),int(control["context_revision"]),int(control["plan_revision"]),dispatch_authority,stamp));conn.commit();return aid
+
+
+def create_assignment(conn,mission_id,phase_id,logical_drone_id,material_drone_id,input_value,now_fn,*,lease_generation,dispatch_authority="AUTONOMOUS"):
+    return _create_assignment(conn,mission_id,phase_id,logical_drone_id,material_drone_id,input_value,now_fn,lease_generation=lease_generation,dispatch_authority=dispatch_authority,initial_state="READY")
+
+
+def create_held_assignment(conn,mission_id,phase_id,logical_drone_id,material_drone_id,input_value,now_fn,*,lease_generation,dispatch_authority="AUTONOMOUS"):
+    """Create an assignment that is invisible to workers until trusted materialization readback."""
+    return _create_assignment(conn,mission_id,phase_id,logical_drone_id,material_drone_id,input_value,now_fn,lease_generation=lease_generation,dispatch_authority=dispatch_authority,initial_state="HELD")
+
+
+def held_assignment_release_evidence(conn,assignment_id):
+    row=conn.execute("SELECT * FROM mission_assignment_release_evidence WHERE assignment_id=?",(assignment_id,)).fetchone()
+    if not row:return None
+    out=dict(row)
+    try:out["evidence"]=json.loads(out.pop("evidence_json"))
+    except Exception:out["evidence"]=None
+    return out
+
+
+def release_held_assignment(conn,assignment_id,evidence,now_fn):
+    """Release HELD->READY only after rechecking canonical scheduler/control coordinates.
+
+    Evidence is non-authorizing materialization/readback evidence supplied by a trusted
+    composition caller. Worker visibility still does not imply runtime admission.
+    """
+    if type(evidence) is not dict or set(evidence)!=_RELEASE_EVIDENCE_FIELDS:raise ValueError("assignment release evidence schema")
+    if evidence.get("schema")!=ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA or evidence.get("authority_effect")!="NONE":raise ValueError("assignment release evidence authority")
+    dg=str(evidence.get("evidence_digest") or "")
+    if len(dg)!=64 or any(ch not in "0123456789abcdef" for ch in dg):raise ValueError("assignment release evidence digest")
+    for key in ("assignment_id","mission_id","material_drone_id","capability","materialization_kind","provider_id"):
+        value=evidence.get(key)
+        if not isinstance(value,str) or not value.strip() or "\x00" in value:raise ValueError("assignment release evidence identity")
+    for key in ("lease_generation","control_epoch","context_revision","plan_revision"):
+        value=evidence.get(key)
+        if type(value) is not int or value<0 or (key=="lease_generation" and value<1):raise ValueError("assignment release evidence integer")
+    conn.execute('SAVEPOINT assignment_release_fence')
+    try:
+        conn.execute('UPDATE mission_execution_assignments SET state=state WHERE assignment_id=?',(assignment_id,))
+        row=conn.execute("SELECT * FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+        if not row:raise ValueError("assignment missing")
+        if row["state"]!="HELD":raise ValueError("assignment not held")
+        if conn.execute("SELECT 1 FROM mission_assignment_release_evidence WHERE assignment_id=?",(assignment_id,)).fetchone():raise ValueError("assignment release already recorded")
+        try:payload=json.loads(row["input_json"] or "{}")
+        except Exception as exc:raise ValueError("assignment input unavailable") from exc
+        capability=payload.get("capability")
+        expected=(row["assignment_id"],row["mission_id"],row["material_drone_id"],int(row["lease_generation"]),int(row["control_epoch"]),int(row["context_revision"]),int(row["plan_revision"]),capability)
+        actual=(evidence["assignment_id"],evidence["mission_id"],evidence["material_drone_id"],evidence["lease_generation"],evidence["control_epoch"],evidence["context_revision"],evidence["plan_revision"],evidence["capability"])
+        if actual!=expected:raise ValueError("assignment release coordinate substitution")
+        control=operator_control.control_state(conn,row["mission_id"],now_fn)
+        if not operator_control.assignment_allowed(conn,row["mission_id"],row["dispatch_authority"],int(row["control_epoch"])):raise ValueError("operator control fence")
+        if (int(control["control_epoch"]),int(control["context_revision"]),int(control["plan_revision"]))!=(int(row["control_epoch"]),int(row["context_revision"]),int(row["plan_revision"])):raise ValueError("assignment release control/context/plan drift")
+        if isinstance(capability,str) and operator_control.is_capability_revoked(conn,row["mission_id"],capability):raise ValueError("capability revoked by operator")
+        driver_cols={r[1] for r in conn.execute('PRAGMA table_info(mission_execution_drivers)')}
+        if "generation" in driver_cols:
+            driver=conn.execute("SELECT generation,state FROM mission_execution_drivers WHERE mission_id=?",(row["mission_id"],)).fetchone()
+            if not driver or int(driver["generation"])!=int(row["lease_generation"]):raise ValueError("stale assignment generation")
+            if "state" in driver.keys() and driver["state"] not in {"ACTIVE","WAITING","BLOCKED"}:raise ValueError("assignment driver not executable")
+        stamp=now_fn();raw=_canon(evidence)
+        conn.execute("INSERT INTO mission_assignment_release_evidence VALUES(?,?,?,?,?)",(assignment_id,row["mission_id"],digest(evidence),raw,stamp))
+        cur=conn.execute("UPDATE mission_execution_assignments SET state='READY' WHERE assignment_id=? AND state='HELD'",(assignment_id,))
+        if cur.rowcount!=1:raise ValueError("assignment release race")
+    except Exception:
+        conn.execute('ROLLBACK TO assignment_release_fence');conn.execute('RELEASE assignment_release_fence');raise
+    conn.execute('RELEASE assignment_release_fence');conn.commit()
+    return {"assignment_id":assignment_id,"state":"READY","release_evidence_digest":digest(evidence),"authority_effect":"NONE"}
 
 
 def record_receipt(conn,assignment_id,result,now_fn,*,material_drone_id,lease_generation,status="PASS",effect_receipt_digest=None,authority_effect="NONE"):

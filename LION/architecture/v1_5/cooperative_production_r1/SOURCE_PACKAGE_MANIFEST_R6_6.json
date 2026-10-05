@@ -32,6 +32,10 @@
       "sha256": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73"
     },
     {
+      "path": "cyber_lion/enterprise/cooperative_provider_materialization.py",
+      "sha256": "909ed070bf3cd13af34547fd3dde24d48c5095d026689fca01f73840a724b2e0"
+    },
+    {
       "path": "cyber_lion/enterprise/cooperative_runtime_composition.py",
       "sha256": "351bd7c753e24a60957ba319274741849e81a3fccd0075cc8e6342aab7a822b1"
     },
@@ -53,11 +57,11 @@
     },
     {
       "path": "cyber_lion/mission_control/cooperative_artifacts.py",
-      "sha256": "aef183c441c97c40babc42ea2264bb335841dcbb01f34cf1cd91fb82d940b607"
+      "sha256": "bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d"
     },
     {
       "path": "cyber_lion/mission_control/cooperative_production.py",
-      "sha256": "7d95dd281a0aa687bbe42e86288ea595249b3f9b06b66ae347949ffcc83fbc76"
+      "sha256": "1c32383ac58d2edcb6f2b4c1a192a9a04e34472a02114459c6c0d89fb9c1dac5"
     },
     {
       "path": "cyber_lion/mission_control/cooperative_readiness.py",
@@ -77,7 +81,7 @@
     },
     {
       "path": "cyber_lion/mission_control/global_scheduler.py",
-      "sha256": "0a01bc8d882ff00858ef27ff805f0042a39cff8eb07345c68f3d8ce121392afa"
+      "sha256": "e972bcb8dff6a415f91f360025baabf98e360044e9402b5b0f934ac3d3b55524"
     },
     {
       "path": "cyber_lion/mission_control/lpcl_runtime_selection.py",
@@ -196,6 +200,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "005fef3aa5308bdb8bc59b77617a83761e78d1a5c2e6aab9b8dfd230b61582d5",
+  "package_digest": "f3170e55e6d813a6b2f3adf24cd5bed986a20344ca321fc6605a5435a9e912c9",
   "authority_effect": "NONE"
 }

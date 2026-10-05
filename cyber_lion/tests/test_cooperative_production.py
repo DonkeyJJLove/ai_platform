@@ -39,18 +39,45 @@ class CooperativeProductionStepperTests(unittest.TestCase):
         self.phase = "LOCAL_MODEL_BUILD"
         self.now = lambda: "2026-10-04T21:30:00Z"
 
-    def fake_create(self, conn, mission_id, phase_id, logical_drone_id, material_drone_id, input_value, now_fn, *, lease_generation, dispatch_authority="AUTONOMOUS"):
+    def fake_create(self, conn, mission_id, phase_id, logical_drone_id, material_drone_id, input_value, now_fn, *, lease_generation, dispatch_authority="AUTONOMOUS", initial_state="READY"):
         self.counter += 1
         aid = f"assignment-{self.counter}"
         raw = json.dumps(input_value, sort_keys=True, separators=(",", ":"))
         conn.execute(
             "INSERT INTO mission_execution_assignments VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (aid, mission_id, phase_id, logical_drone_id, material_drone_id,
-             sha256(raw.encode()).hexdigest(), raw, "READY", lease_generation, 0, 0, 0,
+             sha256(raw.encode()).hexdigest(), raw, initial_state, lease_generation, 0, 0, 0,
              dispatch_authority, now_fn(), None, None, None),
         )
         conn.commit()
         return aid
+
+    def fake_create_held(self, conn, mission_id, phase_id, logical_drone_id, material_drone_id, input_value, now_fn, *, lease_generation, dispatch_authority="AUTONOMOUS"):
+        return self.fake_create(
+            conn, mission_id, phase_id, logical_drone_id, material_drone_id,
+            input_value, now_fn, lease_generation=lease_generation,
+            dispatch_authority=dispatch_authority, initial_state="HELD",
+        )
+
+    def fake_release(self, conn, assignment_id, evidence, now_fn):
+        row=conn.execute("SELECT state FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
+        if not row or row["state"]!="HELD":
+            raise ValueError("assignment not held")
+        conn.execute("UPDATE mission_execution_assignments SET state='READY' WHERE assignment_id=?",(assignment_id,))
+        conn.commit()
+        return {"assignment_id":assignment_id,"state":"READY","release_evidence_digest":"f"*64,"authority_effect":"NONE"}
+
+    @staticmethod
+    def write_materializer(_presented):
+        return {"materialization_kind":cp.WRITE_MATERIALIZATION_KIND,
+                "provider_id":cp.WRITE_PROVIDER_ID,
+                "evidence_digest":"a"*64,"authority_effect":"NONE"}
+
+    @staticmethod
+    def verify_materializer(_presented):
+        return {"materialization_kind":cp.VERIFY_MATERIALIZATION_KIND,
+                "provider_id":cp.VERIFY_PROVIDER_ID,
+                "evidence_digest":"b"*64,"authority_effect":"NONE"}
 
     def complete(self, aid, result):
         row = self.conn.execute("SELECT mission_id,phase_id FROM mission_execution_assignments WHERE assignment_id=?", (aid,)).fetchone()
@@ -63,11 +90,12 @@ class CooperativeProductionStepperTests(unittest.TestCase):
                           (aid, rid, row["mission_id"], row["phase_id"], dg, json.dumps(result), self.now()))
         self.conn.commit()
 
-    @patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_assignment")
-    def test_model_write_verify_chain(self, create):
-        create.side_effect = self.fake_create
+    def test_model_write_verify_chain(self):
+        with patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_assignment", side_effect=self.fake_create),              patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_held_assignment", side_effect=self.fake_create_held),              patch("cyber_lion.mission_control.cooperative_production.global_scheduler.release_held_assignment", side_effect=self.fake_release):
+            self._model_write_verify_chain()
 
-        first = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+    def _model_write_verify_chain(self):
+        first = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer, verify_materializer=self.verify_materializer)
         self.assertEqual(first["gate"], "MODEL_ASSIGNMENT")
         model_id = first["assignment_id"]
         model_result = {
@@ -80,7 +108,7 @@ class CooperativeProductionStepperTests(unittest.TestCase):
         }
         self.complete(model_id, model_result)
 
-        second = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+        second = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer, verify_materializer=self.verify_materializer)
         self.assertEqual(second["gate"], "ARTIFACT_WRITE")
         write_id = second["assignment_id"]
         write_input = json.loads(self.conn.execute("SELECT input_json FROM mission_execution_assignments WHERE assignment_id=?", (write_id,)).fetchone()[0])
@@ -93,7 +121,7 @@ class CooperativeProductionStepperTests(unittest.TestCase):
             "authority_effect": "NONE",
         })
 
-        third = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+        third = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer, verify_materializer=self.verify_materializer)
         self.assertEqual(third["gate"], "ARTIFACT_VERIFY")
         verify_id = third["assignment_id"]
         self.complete(verify_id, {
@@ -104,17 +132,19 @@ class CooperativeProductionStepperTests(unittest.TestCase):
             "authority_effect": "NONE",
         })
 
-        final = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+        final = cp.advance_production(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer, verify_materializer=self.verify_materializer)
         self.assertEqual(final["state"], "PASS")
         self.assertEqual(final["builder_worker_id"], "MD001")
         self.assertEqual(final["verifier_worker_id"], "MD002")
         self.assertEqual(final["artifact_sha256"], expected)
         self.assertNotEqual(final["write_assignment_id"], final["verify_assignment_id"])
 
-    @patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_assignment")
-    def test_split_build_then_verify(self, create):
-        create.side_effect = self.fake_create
-        first = cp.advance_build(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+    def test_split_build_then_verify(self):
+        with patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_assignment", side_effect=self.fake_create),              patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_held_assignment", side_effect=self.fake_create_held),              patch("cyber_lion.mission_control.cooperative_production.global_scheduler.release_held_assignment", side_effect=self.fake_release):
+            self._split_build_then_verify()
+
+    def _split_build_then_verify(self):
+        first = cp.advance_build(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer)
         model_id = first["assignment_id"]
         self.complete(model_id, {
             "kind": "LOCAL_MODEL_INFERENCE",
@@ -123,7 +153,7 @@ class CooperativeProductionStepperTests(unittest.TestCase):
             "response_digest": "a" * 64,
             "authority_effect": "NONE",
         })
-        second = cp.advance_build(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+        second = cp.advance_build(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer)
         write_id = second["assignment_id"]
         payload = json.loads(self.conn.execute("SELECT input_json FROM mission_execution_assignments WHERE assignment_id=?", (write_id,)).fetchone()[0])
         expected = payload["expected_sha256"]
@@ -135,9 +165,9 @@ class CooperativeProductionStepperTests(unittest.TestCase):
             "producer_worker_id": "MD001",
             "authority_effect": "NONE",
         })
-        built = cp.advance_build(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now)
+        built = cp.advance_build(self.conn, mission_id=self.mission, phase_id=self.phase, generation=1, now_fn=self.now, write_materializer=self.write_materializer)
         self.assertEqual(built["state"], "PASS")
-        third = cp.advance_verify(self.conn, mission_id=self.mission, build_phase_id=self.phase, verify_phase_id="INDEPENDENT_VERIFY", generation=1, now_fn=self.now)
+        third = cp.advance_verify(self.conn, mission_id=self.mission, build_phase_id=self.phase, verify_phase_id="INDEPENDENT_VERIFY", generation=1, now_fn=self.now, verify_materializer=self.verify_materializer)
         verify_id = third["assignment_id"]
         self.complete(verify_id, {
             "kind": "COOPERATIVE_ARTIFACT_VERIFY",
@@ -146,10 +176,29 @@ class CooperativeProductionStepperTests(unittest.TestCase):
             "verifier_worker_id": "MD002",
             "authority_effect": "NONE",
         })
-        verified = cp.advance_verify(self.conn, mission_id=self.mission, build_phase_id=self.phase, verify_phase_id="INDEPENDENT_VERIFY", generation=1, now_fn=self.now)
+        verified = cp.advance_verify(self.conn, mission_id=self.mission, build_phase_id=self.phase, verify_phase_id="INDEPENDENT_VERIFY", generation=1, now_fn=self.now, verify_materializer=self.verify_materializer)
         self.assertEqual(verified["state"], "PASS")
         self.assertEqual(verified["builder_worker_id"], "MD001")
         self.assertEqual(verified["verifier_worker_id"], "MD002")
+
+    def test_write_assignment_remains_held_without_runtime_context_materializer(self):
+        with patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_assignment", side_effect=self.fake_create),              patch("cyber_lion.mission_control.cooperative_production.global_scheduler.create_held_assignment", side_effect=self.fake_create_held):
+            first=cp.advance_build(self.conn,mission_id=self.mission,phase_id=self.phase,generation=1,now_fn=self.now)
+            self.complete(first["assignment_id"],{
+                "kind":"LOCAL_MODEL_INFERENCE","model_call_id":"modelcall-0123456789abcdef",
+                "response_text":"purpose=cooperative-production\nmission="+self.mission+"\nstatus=generated-by-local-model.",
+                "response_digest":"a"*64,"authority_effect":"NONE",
+            })
+            held=cp.advance_build(self.conn,mission_id=self.mission,phase_id=self.phase,generation=1,now_fn=self.now)
+            self.assertEqual(held["gate"],"RUNTIME_CONTEXT_PROVIDER_REQUIRED")
+            row=self.conn.execute("SELECT state FROM mission_execution_assignments WHERE assignment_id=?",(held["assignment_id"],)).fetchone()
+            self.assertEqual(row["state"],"HELD")
+            again=cp.advance_build(
+                self.conn,mission_id=self.mission,phase_id=self.phase,generation=1,now_fn=self.now,
+                write_materializer=lambda _: (_ for _ in ()).throw(AssertionError("must not auto-retry materializer")),
+            )
+            self.assertEqual(again["assignment_id"],held["assignment_id"])
+            self.assertEqual(again["gate"],"RUNTIME_CONTEXT_PROVIDER_REQUIRED")
 
     def test_registry_effect_ceilings(self):
         reg = cp.capability_registry_entries()
