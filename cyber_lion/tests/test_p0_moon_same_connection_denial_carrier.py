@@ -11,7 +11,7 @@ from tools.p0_moon_same_connection_denial_carrier import (
 from tools.p0_moon_same_connection_denial_contract import ATTACK_IDS,CREATE_TABLE_SURFACE,PRAGMA_SURFACE
 
 REPO="DonkeyJJLove/ai_platform"
-EXPECTED_SCAN="a2bcc57c3393b89503f6c37bd1e8e072ad780c436ef3d2c5b49c128155c2fab6"
+EXPECTED_SCAN="e27a0cd025c627ccdccefc1ce9fa13faaba3a2c29434dfbb6db89cc9e6f5b372"
 
 def inventory():
     root=Path(__file__).resolve().parents[2];sources={}

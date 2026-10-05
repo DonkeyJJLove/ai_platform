@@ -9,7 +9,7 @@
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
-      "sha256": "8e9f07fa147c22bad8996b284c28bede70693547b1d93e6aade9d9c590916e4b"
+      "sha256": "e67fc52b5bc3fa5b30dd92211a03434d7247151be9edbf874477aa818c1dd05f"
     },
     {
       "path": "cyber_lion/contracts/action_ir.py",
@@ -98,6 +98,10 @@
     {
       "path": "cyber_lion/mission_control/cooperative_readiness.py",
       "sha256": "c7fd62ee216d23b5fffba80b4e0a47f32b467293146d5793a3e44d7e2b7841e1"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_worker_bootstrap.py",
+      "sha256": "18ee117b08307cd7777e5ef4d682651c717b67d134b495f3c16d663158ed2de5"
     },
     {
       "path": "cyber_lion/mission_control/cooperative_worker_runtime.py",
@@ -240,6 +244,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "e92f2f7f085a28fb14672f94d30c0b98bf4440e34abd2d0419dcaf2e38f3e5d8",
+  "package_digest": "851b59e31a965c3eb99f71fe482912992444ee33c21a9f74c419e4e744ba50a4",
   "authority_effect": "NONE"
 }
