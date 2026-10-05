@@ -293,11 +293,15 @@ def _package_identity_at(
             raise R24GateError("invalid package manifest item")
         path = str(item.get("path") or "")
         expected = str(item.get("sha256") or "")
-        full = ROOT / path
-        if not full.is_file():
-            mismatch.append({"path": path, "reason": "MISSING"})
+        try:
+            # Source-package identity binds Git index bytes, not platform-specific
+            # checkout newline conversion. The gate separately rejects tracked
+            # worktree/index drift for the production inventory.
+            data = _run("show", ":" + path, text=False)
+        except subprocess.CalledProcessError:
+            mismatch.append({"path": path, "reason": "INDEX_MISSING"})
             continue
-        actual = sha256(full.read_bytes()).hexdigest()
+        actual = sha256(data).hexdigest()
         observed.append({"path": path, "sha256": actual})
         if actual != expected:
             mismatch.append({"path": path, "expected": expected, "actual": actual})
@@ -320,6 +324,7 @@ def _package_identity_at(
         "expected_package_digest": expected_digest,
         "mismatches": mismatch,
         "authority_effect": manifest.get("authority_effect"),
+        "source_bytes": "GIT_INDEX_BLOB",
     }
 
 

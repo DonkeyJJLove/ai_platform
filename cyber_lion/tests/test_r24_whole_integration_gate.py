@@ -55,6 +55,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertTrue(result["match"], result["mismatches"])
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
+        self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
         self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_R6_6.json"))
 
     def test_historical_runtime_package_is_retained_separately(self):
