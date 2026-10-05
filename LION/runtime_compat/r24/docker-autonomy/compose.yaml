@@ -2,6 +2,10 @@ x-worker-env: &worker-env
   LION_MISSION_CONTROL_URL: http://host.docker.internal:8766
   LION_LOCAL_MODEL_URL: http://host.docker.internal:8772
   LION_WORKER_IDENTITY_FILE: /identity/current.json
+  LION_COOPERATIVE_BOOTSTRAP_MODE: UNBOUND
+  LION_COOPERATIVE_BOOTSTRAP_VERSION: "1.0.0"
+  LION_COOPERATIVE_REPOSITORY_ROOT: /src
+  LION_COOPERATIVE_PRIVATE_ROOT: /cooperative
   PYTHONPATH: /src
 
 x-worker-labels: &worker-labels
@@ -37,6 +41,13 @@ services:
   worker-01:
     <<: *worker-common
     container_name: lion-r24-md001
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD001:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD001
@@ -46,6 +57,13 @@ services:
   worker-02:
     <<: *worker-common
     container_name: lion-r24-md002
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD002:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD002
@@ -55,6 +73,13 @@ services:
   worker-03:
     <<: *worker-common
     container_name: lion-r24-md003
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD003:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD003
@@ -64,6 +89,13 @@ services:
   worker-04:
     <<: *worker-common
     container_name: lion-r24-md004
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD004:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD004
@@ -73,6 +105,13 @@ services:
   worker-05:
     <<: *worker-common
     container_name: lion-r24-md005
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD005:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD005
@@ -82,6 +121,13 @@ services:
   worker-06:
     <<: *worker-common
     container_name: lion-r24-md006
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD006:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD006
@@ -91,6 +137,13 @@ services:
   worker-07:
     <<: *worker-common
     container_name: lion-r24-md007
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD007:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD007
@@ -100,6 +153,13 @@ services:
   worker-08:
     <<: *worker-common
     container_name: lion-r24-md008
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD008:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD008
@@ -109,6 +169,13 @@ services:
   worker-09:
     <<: *worker-common
     container_name: lion-r24-md009
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD009:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD009
@@ -118,6 +185,13 @@ services:
   worker-10:
     <<: *worker-common
     container_name: lion-r24-md010
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD010:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD010
@@ -127,6 +201,13 @@ services:
   worker-11:
     <<: *worker-common
     container_name: lion-r24-md011
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD011:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD011
@@ -136,6 +217,13 @@ services:
   worker-12:
     <<: *worker-common
     container_name: lion-r24-md012
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD012:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD012
@@ -145,6 +233,13 @@ services:
   worker-13:
     <<: *worker-common
     container_name: lion-r24-md013
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD013:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD013
@@ -154,6 +249,13 @@ services:
   worker-14:
     <<: *worker-common
     container_name: lion-r24-md014
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD014:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD014
@@ -163,6 +265,13 @@ services:
   worker-15:
     <<: *worker-common
     container_name: lion-r24-md015
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD015:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD015
@@ -172,6 +281,13 @@ services:
   worker-16:
     <<: *worker-common
     container_name: lion-r24-md016
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD016:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD016
@@ -181,6 +297,13 @@ services:
   worker-17:
     <<: *worker-common
     container_name: lion-r24-md017
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD017:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD017
@@ -190,6 +313,13 @@ services:
   worker-18:
     <<: *worker-common
     container_name: lion-r24-md018
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD018:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD018
@@ -199,6 +329,13 @@ services:
   worker-19:
     <<: *worker-common
     container_name: lion-r24-md019
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD019:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD019
@@ -208,6 +345,13 @@ services:
   worker-20:
     <<: *worker-common
     container_name: lion-r24-md020
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD020:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD020
@@ -217,6 +361,13 @@ services:
   worker-21:
     <<: *worker-common
     container_name: lion-r24-md021
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD021:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD021
@@ -226,6 +377,13 @@ services:
   worker-22:
     <<: *worker-common
     container_name: lion-r24-md022
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD022:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD022
@@ -235,6 +393,13 @@ services:
   worker-23:
     <<: *worker-common
     container_name: lion-r24-md023
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD023:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD023
@@ -244,6 +409,13 @@ services:
   worker-24:
     <<: *worker-common
     container_name: lion-r24-md024
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD024:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD024
@@ -253,6 +425,13 @@ services:
   worker-25:
     <<: *worker-common
     container_name: lion-r24-md025
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD025:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD025
@@ -262,6 +441,13 @@ services:
   worker-26:
     <<: *worker-common
     container_name: lion-r24-md026
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD026:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD026
@@ -271,6 +457,13 @@ services:
   worker-27:
     <<: *worker-common
     container_name: lion-r24-md027
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD027:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD027
@@ -280,6 +473,13 @@ services:
   worker-28:
     <<: *worker-common
     container_name: lion-r24-md028
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD028:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD028
@@ -289,6 +489,13 @@ services:
   worker-29:
     <<: *worker-common
     container_name: lion-r24-md029
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD029:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD029
@@ -298,6 +505,13 @@ services:
   worker-30:
     <<: *worker-common
     container_name: lion-r24-md030
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD030:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD030
@@ -307,6 +521,13 @@ services:
   worker-31:
     <<: *worker-common
     container_name: lion-r24-md031
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD031:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD031
@@ -316,6 +537,13 @@ services:
   worker-32:
     <<: *worker-common
     container_name: lion-r24-md032
+    volumes:
+      - ./source:/src:ro
+      - ./worker.py:/runtime/worker.py:ro
+      - ./identity.json:/identity/current.json:ro
+      - ./status:/status:rw
+      - ./gate:/gate:rw
+      - ./private/MD032:/cooperative:rw
     environment:
       <<: *worker-env
       LION_MATERIAL_WORKER_ID: MD032

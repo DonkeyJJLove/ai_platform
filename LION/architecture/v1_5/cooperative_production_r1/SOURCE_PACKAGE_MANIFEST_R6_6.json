@@ -8,6 +8,18 @@
       "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
     },
     {
+      "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
+      "sha256": "d50f1848a9f9979c7d5e07009a3b586aa13dfa4ec3a637e38b5ba9b9e427c382"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/fleet-currentness.py",
+      "sha256": "fb91d005e302887866a2f0c0712f6e10479e0ee35381c272c5a4efd215153e65"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/materialize.py",
+      "sha256": "f88aa045ef2049be2b2144f937d98c1ad000b8ab193fafeefb86ccd9a93d55ce"
+    },
+    {
       "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
       "sha256": "e67fc52b5bc3fa5b30dd92211a03434d7247151be9edbf874477aa818c1dd05f"
     },
@@ -244,6 +256,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "851b59e31a965c3eb99f71fe482912992444ee33c21a9f74c419e4e744ba50a4",
+  "package_digest": "91dd3d0291188af29ea5811d4e944d2b9bfe8cf8605b5756a54b76adb5b833be",
   "authority_effect": "NONE"
 }
