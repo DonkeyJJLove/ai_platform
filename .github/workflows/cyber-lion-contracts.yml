@@ -2,10 +2,23 @@ name: Cyber-Lion Core
 on:
   workflow_dispatch:
   pull_request:
-    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json"]
+    paths:
+      - "LION/architecture/canonical-state-v1-3-candidate.json"
+      - "cyber_lion/registry/repositories.json"
+      - "LION/architecture/v1_4/federation_current_vector.json"
+      - "LION/architecture/v1_5/**"
+      - "tools/lion_r24_whole_integration_gate.py"
+      - ".github/workflows/cyber-lion-contracts.yml"
   push:
-    branches: ["master", "cyber-lion/**"]
-    paths: ["cyber_lion/**", ".github/workflows/cyber-lion-contracts.yml", "README.md", "LION/evolution/SPECTRA_R2E4_EVIDENCE_BINDING.json", "LION/evolution/SPECTRA_R2E4_MERGE_AUTHORITY_FALSIFICATION_CONTRACT_V2.json"]
+    branches: ["master"]
+    paths:
+      - "LION/architecture/canonical-state-v1-3-candidate.json"
+      - "cyber_lion/registry/repositories.json"
+      - "LION/architecture/v1_4/federation_current_vector.json"
+      - "LION/architecture/v1_5/**"
+      - "tools/lion_r24_whole_integration_gate.py"
+      - ".github/workflows/cyber-lion-contracts.yml"
+run-name: "Cyber-Lion Core · CURRENTNESS_CARRIER_CLOSURE · ${{ github.ref_name }}"
 concurrency:
   group: cyber-lion-core-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false

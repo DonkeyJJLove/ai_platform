@@ -1,0 +1,68 @@
+name: LION Source Validation
+run-name: "LION Source Validation · SOURCE_VALIDATION · ${{ github.ref_name }}"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "cyber_lion/**"
+      - "tools/**"
+      - "browser_broker/**"
+      - "LION/runtime_compat/**"
+      - "requirements/**"
+      - ".github/workflows/lion-source-validation.yml"
+  push:
+    branches: ["master"]
+    paths:
+      - "cyber_lion/**"
+      - "tools/**"
+      - "browser_broker/**"
+      - "LION/runtime_compat/**"
+      - "requirements/**"
+      - ".github/workflows/lion-source-validation.yml"
+
+concurrency:
+  group: lion-source-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  source-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install bounded optional CI dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements/edge-yoke.txt
+      - name: Compile source
+        run: python -m compileall -q cyber_lion tools
+      - name: Validate source independently of carrier-last closure
+        run: python tools/lion_source_validation.py --output lion-source-validation.json
+      - name: Verify source-validation artifact
+        run: |
+          python - <<'PY'
+          import json
+          value=json.load(open("lion-source-validation.json",encoding="utf-8"))
+          assert value["result"]=="PASS", value["blocking_source_reasons"]
+          assert value["currentness_state"] in {
+              "CURRENT",
+              "CURRENTNESS_INVALIDATED_PENDING_CLOSURE",
+          }
+          assert value["authority_effect"]=="NONE"
+          assert value["runtime_effect"]=="NONE"
+          PY
+      - name: Upload source-validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lion-source-validation
+          path: lion-source-validation.json
+          if-no-files-found: error
