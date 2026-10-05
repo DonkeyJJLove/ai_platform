@@ -6,10 +6,14 @@ import tempfile
 import unittest
 
 from tools.lion_r24_whole_integration_gate import (
+    HISTORICAL_PACKAGE_MANIFEST_PATH,
     MATRIX_PATH,
     PROHIBITED_FACTS,
     REQUIRED_TRUE,
+    SOURCE_PACKAGE_MANIFEST_PATH,
     _deployment_currentness,
+    _package_identity,
+    _package_identity_at,
     evaluate_final_facts,
 )
 
@@ -45,6 +49,29 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
                 facts = passing_facts()
                 facts[key] = False
                 self.assertIn(reason, evaluate_final_facts(facts))
+
+    def test_current_source_package_is_exact_and_explicitly_not_deployment(self):
+        result = _package_identity()
+        self.assertTrue(result["match"], result["mismatches"])
+        self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertEqual(result["authority_effect"], "NONE")
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_R6_6.json"))
+
+    def test_historical_runtime_package_is_retained_separately(self):
+        result = _package_identity()
+        historical = result["historical_runtime"]
+        self.assertTrue(historical["manifest_path"].replace(chr(92), "/").endswith("LION/evidence/r24-whole-integration/PACKAGE_MANIFEST.json"))
+        self.assertIs(result["historical_runtime_mismatch"], not historical["match"])
+
+    def test_source_package_classification_drift_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "manifest.json"
+            source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+            source["classification"] = "DEPLOYED"
+            path.write_text(json.dumps(source), encoding="utf-8")
+            result = _package_identity_at(path, expected_classification="SOURCE_ONLY_NOT_DEPLOYMENT")
+        self.assertFalse(result["match"])
+        self.assertTrue(any(x["path"] == "<classification>" for x in result["mismatches"]))
 
     def test_matrix_is_exactly_t01_through_t40(self):
         value = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
