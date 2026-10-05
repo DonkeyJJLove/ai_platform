@@ -1,0 +1,48 @@
+{
+  "schema": "analysis.rag15-utf8-fix/v1",
+  "observed_at": "2026-10-04T16:17:34.374078+00:00",
+  "input_operator_result_sha256": "9cb69219e518637487342d23cf4431019d519a7f31e6f829552afab470bb6bc8",
+  "changes": [
+    {
+      "path": "tools/query_rag.py",
+      "before_sha256": "e415c238d196fb299bf8a08454a20b817857b3595d5fe74ac025a44352c90f3d",
+      "after_sha256": "55355ef8b8602ce6a6ce9d5579bb2fed08c8ecfa352e3bf27f673e3c23c4591b"
+    },
+    {
+      "path": "tools/run_validation.py",
+      "before_sha256": "7103ae64f79655fbba35be0097496e6f96819cc000204742acb092e7d953b5d6",
+      "after_sha256": "c5dfc8917aed3a444186097e4230987c308a4826146634f855314cf6037b116e"
+    },
+    {
+      "path": "tools/native_bridge.py",
+      "before_sha256": "cd8c76de86c73c8cadf2ab3c55e45725986d15fa25b986e0943065f3713552ab",
+      "after_sha256": "5bc407cb41e742a9ba48256b82da9f22ee2dbe898af6c9484d7c9ae3fd497d84"
+    }
+  ],
+  "original_package_modified": false,
+  "unit_tests": {
+    "count": 63,
+    "result": "PASS"
+  },
+  "routing_probes_passed": 23,
+  "routing_probes_count": 23,
+  "clean_process_result": "PASS",
+  "artifact_tests_result": "PASS",
+  "cp1252_stream_regression": [
+    {
+      "variant": "original",
+      "returncode": 1,
+      "unicode_encode_error": true,
+      "output_json_valid": false
+    },
+    {
+      "variant": "corrected",
+      "returncode": 0,
+      "unicode_encode_error": false,
+      "output_json_valid": true
+    }
+  ],
+  "native_windows_execution": "NOT_RUN_LINUX_STREAM_EMULATION_ONLY",
+  "model_inference": "NOT_RUN",
+  "runtime_effect": "NONE"
+}

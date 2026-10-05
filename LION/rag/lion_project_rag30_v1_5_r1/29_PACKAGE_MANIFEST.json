@@ -1,0 +1,144 @@
+{
+  "schema": "analysis.rag30-release/v1",
+  "release_id": "lion-rag30-v1.5-r1",
+  "version": "1.5.0",
+  "file_count": 30,
+  "upload_limit": 30,
+  "status": "READY_FOR_PROJECT_KNOWLEDGE_USE",
+  "canonical_owner": "DonkeyJJLove/ai_platform:LION/rag/RAG_BOOTSTRAP.json",
+  "source_cutoff": "2026-10-04T16:09:49.538029+00:00",
+  "source_state": "PINNED_SOURCES_WITH_EXPLICIT_UNKNOWNS_NOT_LIVE_RUNTIME",
+  "authority_effect": "NONE",
+  "runtime_effect": "NONE",
+  "historical_payloads_embedded": false,
+  "files": {
+    "00_START_HERE.md": {
+      "sha256": "5faa773077b9404527b5439a13b52c26cbef5ee1d4064d8c1a6473c7d1238156",
+      "bytes": 2990
+    },
+    "01_MODEL_INSTRUCTIONS.md": {
+      "sha256": "884a5bf143c98caeb71c6c92c4d56e47fb4cd2cdae9ae9cd68647ab8c97d37c9",
+      "bytes": 3697
+    },
+    "02_ROUTING_AND_SOURCE_MAP.md": {
+      "sha256": "8d82056a7d193b305b94c0e2cbfb7e4b0d9b314537a1c3f4dc4b318212299745",
+      "bytes": 3481
+    },
+    "03_STATE_AND_CONTINUATION.md": {
+      "sha256": "3e1f784575568437acf818c376d9449e9fb43542109b864776b9b74fee539ce9",
+      "bytes": 3051
+    },
+    "04_ARCHITECTURE_AS_IS.md": {
+      "sha256": "5413860a9b80878b3c3dc69e19f177acaeb82e0c8eb515d6a6f81da8df45e1dd",
+      "bytes": 2872
+    },
+    "05_FEDERATION_AND_DEPENDENCIES.md": {
+      "sha256": "1e3b7d010a3da97189133213b1db9e228b041de0fd7584c65df63b574e4237d1",
+      "bytes": 2830
+    },
+    "06_SEMANTIC_LANGUAGE.md": {
+      "sha256": "896c5e57d4e36013487ac487f5050f83b0222af544ade2ecb458b9e2d788ef33",
+      "bytes": 2806
+    },
+    "07_CONTEXT_AND_RELEVANCE.md": {
+      "sha256": "f184c634e047413908020e693c3705ab66b80da8fb83cb1f7b03d1d33ce588ff",
+      "bytes": 2662
+    },
+    "08_COMMUNICATION_AND_CONVERSATIONS.md": {
+      "sha256": "e61a7a2ec6f54b7bd44df427df948f6e2e2cdd336218de539d5dbd40d0c19e80",
+      "bytes": 2734
+    },
+    "09_SAAS_LOCAL_COOPERATION.md": {
+      "sha256": "9b316465b1293c8dd7a9ec2b8e6d10a49c554bd07f68a650e6269366d11075af",
+      "bytes": 2814
+    },
+    "10_LPCL_AND_MISSION_CONTROL.md": {
+      "sha256": "bfea1a1de5423b46541cef997f54637838eafa9177603a3f965c6d0128283348",
+      "bytes": 2764
+    },
+    "11_FACTORY_BEANS_AND_MOSAIC.md": {
+      "sha256": "4ebd17a41424c4f6517691cb84dbd2e6239ee82feb69fd93bf0d412728dde4df",
+      "bytes": 2871
+    },
+    "12_AUTHORITY_ACTION_RUNTIME.md": {
+      "sha256": "35fe55702ea81f5040995112a2271c323485f6b5e29281c9b0e937189bcacf2e",
+      "bytes": 2569
+    },
+    "13_PROVENANCE_MEMORY_AND_EVIDENCE.md": {
+      "sha256": "56ff0d10a9bda0039477edd1db8af6c8b0ef2ee6fd047e2fb55606f9b5edc9d1",
+      "bytes": 2504
+    },
+    "14_FEDERATED_WORK_PACKAGES.md": {
+      "sha256": "25eb6240e59516adde9642b6b9a2dd7aafd4045db1e6e51080d36a5eb348106a",
+      "bytes": 3068
+    },
+    "15_EVOLUTION_AND_HOMEOSTASIS.md": {
+      "sha256": "c07a5fe0bac24e6589ee37be17e2995baff2f5d6848e4a09effa4b4168c6d781",
+      "bytes": 2732
+    },
+    "16_FAILURE_RECOVERY_AND_OBSERVABILITY.md": {
+      "sha256": "32aa47e374f004b7dc579942c146d3f54b121a8394b96e70ec3c07b52ad42411",
+      "bytes": 2454
+    },
+    "17_RESEARCH_AND_FALSIFICATION.md": {
+      "sha256": "d69a5ab18f281e8e47534804b277449c92c3b3c0f04367bfad65fa065f1698e2",
+      "bytes": 2640
+    },
+    "18_HISTORY_AND_SUPERSESSION.md": {
+      "sha256": "4f8bdbb9240982e049b435c0c020da98095e74f9ccc8f50765b8a473ef8c2c3a",
+      "bytes": 2672
+    },
+    "19_VALIDATION_AND_WINDOWS_UTF8.md": {
+      "sha256": "501a13b2cbe826a68693bbe5a3eb772d75a41d8e64a287a1f08f95ba2b7dd4bb",
+      "bytes": 2531
+    },
+    "20_ARCHITECTURE_REQUIREMENTS.md": {
+      "sha256": "3add631a0fb1184e5d21d927699c834eadde56ec11660d274569391fcb12ed4f",
+      "bytes": 2972
+    },
+    "21_MISSION_PROGRAM_DESIGN.md": {
+      "sha256": "a67aa480523609e08bbacd18ffc733cbc00f0e3dd2efb619b3534ac3537cbe46",
+      "bytes": 3028
+    },
+    "22_METAPROMPT.md": {
+      "sha256": "4a0858bec67871c1723421ff5d47ee0c2f07fc435ca247d557c67526397cfb65",
+      "bytes": 7984
+    },
+    "23_EVOLUTION_EXECUTION_PROMPT.md": {
+      "sha256": "9887ec50b4035e75ea79212e2df4c63625972ace7b046c8a02898f6d83efdf8d",
+      "bytes": 18773
+    },
+    "24_SOURCE_RECORD_INDEX.json": {
+      "sha256": "c7326c6f5ae163e00556ea8cadcb916a668738d521fac1fcf326806dccd19520",
+      "bytes": 36365
+    },
+    "25_SEMANTIC_OWNERS.json": {
+      "sha256": "8a19c4bfc573d10039866b11f4c20d01cb1ea1811dba4b0a94a0e1f42b7acfb2",
+      "bytes": 13931
+    },
+    "26_FEDERATION_SOURCE_VECTOR.json": {
+      "sha256": "a6fda1d42a957d5c8ac7e549b38ef6683501fe3d29ea8167c9b4a45ce1400f83",
+      "bytes": 2818
+    },
+    "27_SOURCE_AND_COVERAGE.json": {
+      "sha256": "d878335065c00bb439c25b218a7dbcd6c65388418d6d460aefa151a40e58b161",
+      "bytes": 9621
+    },
+    "28_RETRIEVAL_CASES.json": {
+      "sha256": "53e305e95d4149d8e67017bf0a59f4192f925523692d6d5861978cc4549684fc",
+      "bytes": 9260
+    }
+  },
+  "content_digest": "6a696eeb488fc7df48e83ab4664b58444e0c150f61099cc03bc37b2a14e03172",
+  "self_hash_policy": "Manifest excluded from content_digest; exact manifest/archive hashes are detached publication receipts. No authenticity claim.",
+  "entrypoints": {
+    "start": "00_START_HERE.md",
+    "model_instructions": "01_MODEL_INSTRUCTIONS.md",
+    "routing": "02_ROUTING_AND_SOURCE_MAP.md",
+    "state": "03_STATE_AND_CONTINUATION.md",
+    "metaprompt": "22_METAPROMPT.md",
+    "execution_prompt": "23_EVOLUTION_EXECUTION_PROMPT.md"
+  },
+  "versioning_note": "Knowledge release 1.5 is independent of architecture, implementation and deployment maturity. Historical payloads remain in identified predecessor archives.",
+  "publication_note": "Repository branch/PR and canonical preferred-release promotion are separate. This manifest grants no promotion or runtime authority."
+}

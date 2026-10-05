@@ -1,0 +1,422 @@
+{
+  "schema": "lion.documentation.semantic-owner-map.v1",
+  "baseline_head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+  "process_epoch": "V1_5_FEDERATED_ARCHITECTURE_KNOWLEDGE",
+  "rule": "Exactly one primary semantic owner is assigned to each required global concept. Secondary sources may project or explain but must not silently become parallel canonical owners.",
+  "owners": [
+    {
+      "concept": "BeanFactory",
+      "primary": "cyber_lion/TARGET_ARCHITECTURE.md#bean-factory",
+      "secondary": [
+        "cyber_lion/contracts/bean.py",
+        "cyber_lion/contracts/capability_need.py",
+        "cyber_lion/contracts/bean_composition.py",
+        "cyber_lion/enterprise/bean_composition.py",
+        "cyber_lion/contracts/mosaic.py",
+        "cyber_lion/tests/experiments/bean_generativity.py",
+        "cyber_lion/tests/test_r22f_factory_falsifier.py"
+      ]
+    },
+    {
+      "concept": "CommunicationEnvelope",
+      "primary": "cyber_lion/contracts/communication_envelope.py",
+      "secondary": [
+        "cyber_lion/mission_control/operator_control.py",
+        "cyber_lion/contracts/group_channel.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ]
+    },
+    {
+      "concept": "CognitiveInvocation",
+      "primary": "cyber_lion/contracts/cognitive_invocation.py",
+      "secondary": [
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ]
+    },
+    {
+      "concept": "CoordinatorCompetencyProfile",
+      "primary": "cyber_lion/contracts/coordinator_competency.py",
+      "secondary": [
+        "LION/evals/evolution/evolution_cases.yaml"
+      ]
+    },
+    {
+      "concept": "EvidenceBoundLearningEpisode",
+      "primary": "cyber_lion/contracts/evidence_bound_learning_episode.py",
+      "secondary": [
+        "cyber_lion/contracts/evolutionary_rnd.py",
+        "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md"
+      ]
+    },
+    {
+      "concept": "ModelCallV2",
+      "primary": "cyber_lion/contracts/model_call_v2.py",
+      "secondary": [
+        "cyber_lion/mission_control/model_calls.py"
+      ]
+    },
+    {
+      "concept": "ModelRelease",
+      "primary": "cyber_lion/contracts/model_release.py",
+      "secondary": [
+        "cyber_lion/contracts/model_plane_adapter.py"
+      ]
+    },
+    {
+      "concept": "RAG",
+      "primary": "LION/rag/RAG_BOOTSTRAP.json",
+      "secondary": [
+        "LION/architecture/v1_5/RAG_V15_FEDERATED_ARCHITECTURE_SOURCE_SET.json",
+        "LION/architecture/v1_4/history_and_supersession.md"
+      ]
+    },
+    {
+      "concept": "action_model",
+      "primary": "cyber_lion/contracts/action_ir.py",
+      "secondary": [
+        "cyber_lion/contracts/action_runtime_binding.py",
+        "docs/architecture/action-ir/R19P_ACTIONPROPOSAL_CANONICAL_PDP_HANDOFF.md",
+        "LION/architecture/v1_4/current_state.json"
+      ]
+    },
+    {
+      "concept": "architecture",
+      "primary": "cyber_lion/architecture_projection/full_architecture.py",
+      "secondary": [
+        "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+        "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_AS_IS.md",
+        "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_TARGET.md",
+        "cyber_lion/TARGET_ARCHITECTURE.md"
+      ]
+    },
+    {
+      "concept": "architecture_knowledge",
+      "primary": "cyber_lion/architecture_projection/architecture_knowledge.py",
+      "secondary": [
+        "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
+        "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
+        "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json"
+      ]
+    },
+    {
+      "concept": "authority",
+      "primary": "cyber_lion/enterprise/authority_source.py",
+      "secondary": [
+        "cyber_lion/enterprise/authority_grant.py",
+        "cyber_lion/enterprise/live_authority_admission.py",
+        "cyber_lion/enterprise/README.md"
+      ]
+    },
+    {
+      "concept": "autonomy",
+      "primary": "cyber_lion/enterprise/GENERATION_EVOLUTION_PROTOCOL.md",
+      "secondary": [
+        "cyber_lion/TARGET_ARCHITECTURE.md",
+        "LION/architecture/v1_4/current_state.json",
+        "cyber_lion/tests/test_r22f_factory_falsifier.py"
+      ]
+    },
+    {
+      "concept": "capabilities",
+      "primary": "cyber_lion/CAPABILITY_MAP.md",
+      "secondary": [
+        "LION/architecture/v1_4/capability_catalog.json"
+      ]
+    },
+    {
+      "concept": "contracts",
+      "primary": "cyber_lion/CONTRACT_MAP.md",
+      "secondary": [
+        "LION/architecture/v1_4/contract_catalog.json"
+      ]
+    },
+    {
+      "concept": "currentness",
+      "primary": "LION/architecture/canonical-state-v1-3-candidate.json",
+      "secondary": [
+        "cyber_lion/architecture_projection/truth_plane.py",
+        "LION/architecture/v1_4/federation_current_vector.json",
+        "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
+        "LION/architecture/v1_4/current_state.json"
+      ]
+    },
+    {
+      "concept": "cyber_physical",
+      "primary": "cyber_lion/TARGET_ARCHITECTURE.md",
+      "secondary": [
+        "LION/architecture/v1_4/current_state.json"
+      ]
+    },
+    {
+      "concept": "effects",
+      "primary": "cyber_lion/enterprise/effect_provider.py",
+      "secondary": [
+        "cyber_lion/contracts/effect.py",
+        "cyber_lion/enterprise/runtime_currentness.py"
+      ]
+    },
+    {
+      "concept": "failure_domains",
+      "primary": "docs/HOSTS_AND_LABS.md",
+      "secondary": [
+        "cyber_lion/enterprise/host_authority_separation.py",
+        "LION/architecture/v1_4/current_state.json"
+      ]
+    },
+    {
+      "concept": "federation",
+      "primary": "LION/architecture/v1_4/federation_current_vector.json",
+      "secondary": [
+        "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
+        "cyber_lion/registry/repositories.json",
+        "peer cyber-lion.repository.json manifests"
+      ]
+    },
+    {
+      "concept": "formalization",
+      "primary": "cyber_lion/contracts/formalization_registry.py",
+      "secondary": [
+        "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+        "cyber_lion/contracts/architecture_formalization_manifest.py",
+        "cyber_lion/contracts/federated_formalization_binding.py",
+        "cyber_lion/contracts/formalization_closure.py"
+      ]
+    },
+    {
+      "concept": "history",
+      "primary": "LION/architecture/v1_4/history_and_supersession.md",
+      "secondary": [
+        "LION/status.json",
+        "cyber_lion/REPOSITORY_INVENTORY.md"
+      ]
+    },
+    {
+      "concept": "hosts",
+      "primary": "docs/HOSTS_AND_LABS.md",
+      "secondary": [
+        "cyber_lion/enterprise/host_authority_separation.py"
+      ]
+    },
+    {
+      "concept": "models",
+      "primary": "cyber_lion/contracts/model_plane_adapter.py",
+      "secondary": [
+        "cyber_lion/enterprise/models.py",
+        "cyber_lion/TARGET_ARCHITECTURE.md",
+        "LION/architecture/v1_4/current_state.json"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "primary": "LION/architecture/v1_4/LION_PROCESS_CONTRACT_PLANE.md",
+      "secondary": [
+        "cyber_lion/contracts/phase_execution_contract.py",
+        "docs/architecture/process-language/LPCL_V1_2_PROCESS_CONTRACTS.md",
+        "cyber_lion/process_language/lpcl_run_1_2.ebnf"
+      ]
+    },
+    {
+      "concept": "process_language",
+      "primary": "cyber_lion/contracts/process_ir.py",
+      "secondary": [
+        "cyber_lion/contracts/process_action.py",
+        "cyber_lion/enterprise/process_semantics.py",
+        "cyber_lion/enterprise/process_outcome_evidence.py",
+        "cyber_lion/process_language/lpcl.py",
+        "docs/architecture/process-language/LPCL_V1_CANDIDATE.md"
+      ]
+    },
+    {
+      "concept": "project_identity",
+      "primary": "README.md",
+      "secondary": [
+        "LION/README.md",
+        "cyber_lion/README.md"
+      ]
+    },
+    {
+      "concept": "reconciliation",
+      "primary": "cyber_lion/enterprise/runtime_reconciliation.py",
+      "secondary": [
+        "cyber_lion/contracts/runtime_reconciliation.py",
+        "cyber_lion/enterprise/fleet_reconciliation.py"
+      ]
+    },
+    {
+      "concept": "repository_roles",
+      "primary": "cyber_lion/registry/repositories.json",
+      "secondary": [
+        "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
+        "peer cyber-lion.repository.json manifests"
+      ]
+    },
+    {
+      "concept": "roadmap",
+      "primary": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+      "secondary": [
+        "LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+        "AI_NATIVE_ROADMAP.md"
+      ]
+    },
+    {
+      "concept": "runtime",
+      "primary": "cyber_lion/enterprise/runtime_enforcement.py",
+      "secondary": [
+        "cyber_lion/contracts/action_runtime_binding.py",
+        "cyber_lion/enterprise/runtime_execution.py",
+        "cyber_lion/enterprise/live_runtime_evidence_plane.py"
+      ]
+    },
+    {
+      "concept": "repository_content_classification",
+      "primary": "LION/architecture/v1_5/REPOSITORY_CONTENT_CLASSIFICATION.schema.json",
+      "secondary": [
+        "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
+        "tools/lion_global_repository_census.py"
+      ]
+    },
+    {
+      "concept": "naming_standard",
+      "primary": "LION/standards/LION_NAMING_STANDARD.json",
+      "secondary": [
+        "LION/standards/LION_NAMING_STANDARD.md"
+      ]
+    },
+    {
+      "concept": "status_model",
+      "primary": "LION/standards/LION_STATUS_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_STATUS_MODEL.md",
+        "LION/panel/PANEL_STATE_MODEL.json"
+      ]
+    },
+    {
+      "concept": "version_model",
+      "primary": "LION/standards/LION_VERSION_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_VERSION_MODEL.md"
+      ]
+    },
+    {
+      "concept": "panel",
+      "primary": "LION/panel/PANEL_ARCHITECTURE.md",
+      "secondary": [
+        "LION/panel/PANEL_COMPONENT_CATALOG.json",
+        "browser_broker/src/main.cjs",
+        "cyber_lion/mission_control/server.py",
+        "cyber_lion/app_coordination/r24_model_chat_ui.py"
+      ]
+    },
+    {
+      "concept": "branch_reconciliation",
+      "primary": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
+      "secondary": [
+        "tools/lion_global_maintenance_projection.py",
+        "LION/maintenance/branch-closure-manifest-v1.json"
+      ]
+    },
+    {
+      "concept": "test_taxonomy",
+      "primary": "LION/architecture/v1_5/TEST_CENSUS.json",
+      "secondary": [
+        "tools/lion_global_maintenance_projection.py",
+        "cyber_lion/tests"
+      ]
+    },
+    {
+      "concept": "workflow_taxonomy",
+      "primary": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
+      "secondary": [
+        "tools/lion_global_maintenance_projection.py",
+        ".github/workflows",
+        "tools/lion_workflow_homeostasis.py"
+      ]
+    },
+    {
+      "concept": "repository_layout_standard",
+      "primary": "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.json",
+      "secondary": [
+        "LION/standards/LION_REPOSITORY_LAYOUT_STANDARD.md"
+      ]
+    },
+    {
+      "concept": "currentness_evidence_model",
+      "primary": "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.json",
+      "secondary": [
+        "LION/standards/LION_CURRENTNESS_EVIDENCE_MODEL.md",
+        "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json"
+      ]
+    },
+    {
+      "concept": "generated_output_policy",
+      "primary": "LION/standards/LION_GENERATED_OUTPUT_POLICY.json",
+      "secondary": [
+        "LION/standards/LION_GENERATED_OUTPUT_POLICY.md"
+      ]
+    },
+    {
+      "concept": "MissionIntent",
+      "primary": "cyber_lion/contracts/mission_intent.py",
+      "secondary": [
+        "cyber_lion/contracts/communication_envelope.py",
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md"
+      ]
+    },
+    {
+      "concept": "QueryPlan",
+      "primary": "cyber_lion/contracts/query_plan.py",
+      "secondary": [
+        "cyber_lion/contracts/mission_intent.py",
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md"
+      ]
+    },
+    {
+      "concept": "RagContextEnvelope",
+      "primary": "cyber_lion/contracts/rag_context_envelope.py",
+      "secondary": [
+        "LION/rag/RAG_BOOTSTRAP.json",
+        "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md"
+      ]
+    },
+    {
+      "concept": "SemanticScaffold",
+      "primary": "cyber_lion/contracts/semantic_scaffold.py",
+      "secondary": [
+        "LION/architecture/v1_4/SEMANTIC_INFERENCE_COMPILER_TARGET.md",
+        "DonkeyJJLove/writeups:badania/semantic_compilers/sfc_v1.prompt"
+      ]
+    },
+    {
+      "concept": "SemanticRelevance",
+      "primary": "cyber_lion/contracts/semantic_relevance.py",
+      "secondary": [
+        "cyber_lion/contracts/semantic_scaffold.py",
+        "DonkeyJJLove/writeups:badania/lion-semantic-cloud/README.md"
+      ]
+    }
+  ],
+  "r22h_validation": {
+    "duplicate_primary_global_owner": "NONE",
+    "authority_effect": "NONE"
+  },
+  "historical_note": {
+    "concept": "v1_4_current_state_and_semantic_owners",
+    "lifecycle": "HISTORICAL_COMPATIBILITY",
+    "policy": "v1_4/current_state.json and v1_4/semantic_owners.json remain historical lineage/projection surfaces and are not the live v1.5 semantic-owner/currentness roots."
+  },
+  "r23_validation": {
+    "duplicate_primary_global_owner": "NONE",
+    "process_language_parallel_authority_owner": "NONE",
+    "authority_effect": "NONE"
+  },
+  "v15_validation": {
+    "duplicate_primary_global_owner": "NONE",
+    "new_top_level_layer": "NONE",
+    "authority_effect": "NONE",
+    "federated_architecture_knowledge": "REQUIRED",
+    "historical_v1_4_owner_map": "COMPATIBILITY_ONLY"
+  },
+  "architecture_epoch": "1.5",
+  "currentness": "CANDIDATE_SOURCE_BOUND",
+  "source_candidate_head": null
+}

@@ -1,0 +1,234 @@
+{
+  "schema": "analysis.rag15-source-and-coverage/v1",
+  "release_id": "lion-rag30-v1.5-r1",
+  "build_intent": "READY_VERSIONED_KNOWLEDGE_NOT_GLOBAL_ARCHITECTURE_COMPLETION",
+  "input_files": [
+    {
+      "name": "result.json",
+      "bytes": 36793,
+      "sha256": "9cb69219e518637487342d23cf4431019d519a7f31e6f829552afab470bb6bc8"
+    },
+    {
+      "name": "Wklejony Markdown(1).md",
+      "bytes": 41293,
+      "sha256": "1915be8c484c87aaf5d1ba680e52a1122701c29d13be03b0a3739d7f73b7f54a"
+    },
+    {
+      "name": "Plan architektury federacji LION i RAG(8).pdf",
+      "bytes": 103753,
+      "sha256": "1aa1924807b0434696b753c2ef6c703fe0195aee2cd7132ce45b625f37651090",
+      "pages": 8
+    },
+    {
+      "name": "Wykonawcze podsumowanie(7).docx",
+      "bytes": 51702,
+      "sha256": "fc5ec8ee06ef0d6fb98b7dd5c52ed50ed9ebb690dedf080f0fd623d9e8abc0d1",
+      "paragraphs": 159
+    },
+    {
+      "name": "LION_SEMANTIC_RAG_20261004_R1(1).zip",
+      "bytes": 3211620,
+      "sha256": "f082b5acace4ffd3665a65fdcdb0b053701f44f4639e4554b9fb85c39a2a2348"
+    },
+    {
+      "name": "LION_RAG_R9_PLUS_SEMANTIC_BRIDGE_R1_CANDIDATE(1).zip",
+      "bytes": 428294,
+      "sha256": "eed007aba40979f1ad5a8415f8e096ea5181380d0f74409e273b9bfb84bdbe8d"
+    }
+  ],
+  "selected_pinned_sources": [
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "AGENTS.md",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "5a9ce92363dc5b028355230f47e61252633828c52a8be23c1caaba25b8c14534",
+      "git_blob_sha1": "bae892726d4ba64bc830d2e5bdd21d13cc9b9328",
+      "bytes": 4534,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "README.md",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "f2c9773b95b34b76587a8bbc8f31734d6cb470e54a9128f9968d3df828f1dc5d",
+      "git_blob_sha1": "c8c9bad67374fabe13be19e3d542a2f63143c939",
+      "bytes": 8612,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/RAG_BOOTSTRAP.json",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "6f3945d6278c77257577ee3b194953a248bb4d46fe919a5fb5db2162cdd8d8a0",
+      "git_blob_sha1": "7ed5a0d91a0c0d3447fbb1e42c61b3d14e915044",
+      "bytes": 2289,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/README.md",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "24f58bc457a5e992b040444b4ce5c53be23abe25c678241358966d05556cdf87",
+      "git_blob_sha1": "490e5b5c2659ed93d492d43c4d3871e866eefb33",
+      "bytes": 5971,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_owners.json",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "8a19c4bfc573d10039866b11f4c20d01cb1ea1811dba4b0a94a0e1f42b7acfb2",
+      "git_blob_sha1": "8e107fecc28a3ec11abdde8b872266886a1cef9b",
+      "bytes": 13931,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "0a2c52fa14d39f495166ab657e7a63e2292308fc767f1f5455dabb63cffd34d9",
+      "git_blob_sha1": "5f9faaca66daa887ccf52184a7b58f0100ff5965",
+      "bytes": 34825,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/communication_envelope.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "e426874d50a6a21f29a1f2b913f0d4780ec4c482a6fcf54df5e2c10af5684017",
+      "git_blob_sha1": "09db4786b08c11218be485335a3f8967325a1788",
+      "bytes": 8534,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/mission_intent.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "1cca9c43a4f8705eedaad2e31cdc93ce0d6ecc605860a206665c3fc95076e6c5",
+      "git_blob_sha1": "1ebeeb419582b45c2b42b9b3ce9f6dc9b2e52817",
+      "bytes": 3492,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/query_plan.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "21f3afd63516c8d50dadde295a806e7b822bb07ead22602b3cd01d2b19c5967d",
+      "git_blob_sha1": "6168090c5e323ce512487258a134d579edb7d3f1",
+      "bytes": 2744,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/rag_context_envelope.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "91d4e0567752bc73eb440eb8352911fdf581cb349d85d41e865fa6038daaa8fc",
+      "git_blob_sha1": "951a3baf76784c4628d97f6e9c82b2229e045b34",
+      "bytes": 4117,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/semantic_scaffold.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "cc7b8a107bc6eb712e9da2e416285675bc16aa93d4a0fec41ee8e7c4ac207862",
+      "git_blob_sha1": "e6f03ed969653f18c26967f59000b0062f8bcbd9",
+      "bytes": 3959,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/semantic_relevance.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "1382ce4980d697d792c652fd616c8b2faccac2efe6b91726a6a5c16586f52553",
+      "git_blob_sha1": "fd8ddcc9ad9e5e01fb2b9e61eea08d692ac9a954",
+      "bytes": 9711,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/cognitive_invocation.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "8cd96c3f98e41b79263d71cad233bc3b9c3819b7de60fa0002cd8b7ea16d3268",
+      "git_blob_sha1": "f154c1630383c8795a9b03b9126d896493b36d2d",
+      "bytes": 9765,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/model_call_v2.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "c8886f2962adbe1859f4181b69abcdf1c6198087a80e475b4f2f22c7b3a3425f",
+      "git_blob_sha1": "ba1277da1ed2b0f117ac50ae0003e3c63025106f",
+      "bytes": 7060,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/model_release.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "sha256": "13ce5534e3951151e61f0756633a1503018c3fe6d0a05069c3449d1bc07ed791",
+      "git_blob_sha1": "66a8dc99340c9f497f9f1980ed7adfc28765293e",
+      "bytes": 3237,
+      "source_class": "PINNED_SOURCE",
+      "claim_scope": "SOURCE_CONTENT_NOT_DEPLOYMENT"
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/app_coordination/lion_context_provider.py",
+      "head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+      "git_blob_sha1": "798656e4a6010bf3aa4136358faf612a1d80e149",
+      "source_class": "CONNECTOR_FULL_READ",
+      "finding": "HARDCODED_ARCHITECTURE_EPOCH_1_4_AND_R10_MODEL_CONTEXT",
+      "runtime_consumer_path_verified": false
+    }
+  ],
+  "scope": {
+    "all_ten_default_refs_reacquired": true,
+    "all_repository_files_semantically_read": false,
+    "all_ai_platform_documents_semantically_read": false,
+    "full_repository_suites_run": false,
+    "independent_new_saas_thread_test": "NOT_RUN",
+    "real_local_model_inference": "NOT_RUN",
+    "real_saas_inference": "NOT_RUN",
+    "runtime_deployment": "NOT_PERFORMED"
+  },
+  "historical_census": {
+    "artifacts": 828,
+    "ai_platform_artifacts": 683,
+    "is_current_full_denominator": false,
+    "source_path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json"
+  },
+  "older_tests": {
+    "unit_tests": 63,
+    "routing_cases": 23,
+    "r9_exact_lookup_cases": 37,
+    "user_artifact_result": "FAIL",
+    "user_failure": "cp1252 UnicodeEncodeError in isolated child stdout",
+    "not_erased": true
+  },
+  "knowledge_compression": {
+    "method": "CURATED_SOURCE_BOUND_SYNTHESIS_PLUS_COMPLETE_HISTORICAL_ID_INDEX",
+    "old_full_payloads_embedded": false,
+    "historical_payload_losslessness_claim": false,
+    "full_prior_audit_zip_sha256": "f082b5acace4ffd3665a65fdcdb0b053701f44f4639e4554b9fb85c39a2a2348"
+  },
+  "canonical_owner": "DonkeyJJLove/ai_platform:LION/rag/RAG_BOOTSTRAP.json",
+  "owner_map_copy_path": "25_SEMANTIC_OWNERS.json",
+  "owner_copy_is_projection": true,
+  "authority_effect": "NONE"
+}
