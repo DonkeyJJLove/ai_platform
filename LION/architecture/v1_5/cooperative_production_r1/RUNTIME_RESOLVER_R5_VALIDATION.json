@@ -1,0 +1,133 @@
+{
+  "schema": "analysis.cooperative-resolver-r5/v1",
+  "status": "TESTED_SOURCE_CANDIDATE_NOT_DEPLOYED",
+  "base": "47015cbba498ca91f194a890110d143671c6271d",
+  "new_resolver_tests": 45,
+  "new_runtime_selection_tests": 13,
+  "selected_tests": {
+    "observed_at": "2026-10-05T05:59:33.200387+00:00",
+    "returncode": 0,
+    "tests": 278,
+    "modules": [
+      "test_cooperative_context_resolver",
+      "test_lpcl_runtime_selection",
+      "test_cooperative_runtime_composition",
+      "test_cooperative_runtime_writer",
+      "test_cooperative_artifacts",
+      "test_cooperative_worker_adapter",
+      "test_cooperative_safety",
+      "test_cooperative_readiness",
+      "test_generated_readiness_corpus",
+      "test_artifact_transfer",
+      "test_runtime_execution",
+      "test_executor_sandbox",
+      "test_runtime_currentness",
+      "test_material_worker_runtime",
+      "test_lpcl_rebind_live_currentness",
+      "test_r10_local_intelligence",
+      "test_lpcl_panel_exact_source",
+      "test_lpcl_dynamic_closure",
+      "test_r24_dynamic_docker_rematerialization"
+    ],
+    "log_sha256": "87f104b6222009d98802ac63099ab6dca662499312376abd85d0907b95e5895a",
+    "scope": "REAL_SQLITE_FILESYSTEM_WITH_SYNTHETIC_AUTHORITY_SOURCES",
+    "full_repository_suite": false,
+    "source_sha256": {
+      "cyber_lion/enterprise/cooperative_context_resolver.py": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73",
+      "cyber_lion/enterprise/cooperative_runtime_composition.py": "351bd7c753e24a60957ba319274741849e81a3fccd0075cc8e6342aab7a822b1",
+      "cyber_lion/enterprise/cooperative_runtime_writer.py": "1a2bc1d2a6d6465905a714ecec97d653750c0df97560269a81921798d81eb7c3",
+      "cyber_lion/mission_control/lpcl_runtime_selection.py": "3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1",
+      "cyber_lion/tests/test_cooperative_context_resolver.py": "92237c84bc64f1d0a86573f5ebaa35036c9b502fee690812ba40fceeac3d22d2",
+      "cyber_lion/tests/test_cooperative_runtime_composition.py": "3fe006b60c880742c6ed253d80d9882fd6219b63b20145279bfff3acedc07b65",
+      "cyber_lion/tests/test_lpcl_runtime_selection.py": "04b38c4cd5ad3077508605888cf52311d3c493e1ccf64a6a0c1d03094456e563",
+      "tools/lion_local_intelligence_runtime.py": "9c7526607360397db6f7a49e2eb3217796850e9b2bdcb335e1e2aa67edab7331",
+      "tools/lion_mission_control_v3.py": "a8e12008c0c2c8152b5035e9826cf4ccca8e58c15c7653f15c2715ab7a72902f"
+    },
+    "test_change": "Exactly two same-assignment context reads are now required; original one-read assertion was updated with two negative race controls preserved"
+  },
+  "container_tests": {
+    "observed_at": "2026-10-05T06:00:14.805777+00:00",
+    "source_count": 59,
+    "source_bytes": 654686,
+    "source_manifest_sha256": "cad18043dd1140df09675dadd029209a1aa362c8c215f29f8900acd2804e5bb5",
+    "scope": "EXISTING_R24_CONTAINERS_SYNTHETIC_AUTHORITY_TESTS",
+    "workers": {
+      "MD001": {
+        "tests": 81,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "success": true,
+        "container_id": "4d7d3e07e7bb7358459a1fdbfa136c7ffb61d677b1c707bf0d5acb353c61c374",
+        "image_id": "sha256:4ffff41daaa31a60ef4875da9926f02a458da123a951a942a56ad184d26c63d8",
+        "started_at": "2026-10-04T21:14:59.283364648Z",
+        "workspace": "/tmp/lion-coop-r5-wlqnssw1",
+        "source_files": 59,
+        "main_process_unchanged": true,
+        "log_sha256": "e0db4ef2bfd392510d4ce5c9da94d10f4f24e6ba44b7dc0d6edd86baabfb32cc",
+        "observed_at": "2026-10-05T06:00:13.812892+00:00"
+      },
+      "MD002": {
+        "tests": 81,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "success": true,
+        "container_id": "353c9520504c10ccd537a554b9cac610528481824eff6a9777ba91c5bd07c24b",
+        "image_id": "sha256:4ffff41daaa31a60ef4875da9926f02a458da123a951a942a56ad184d26c63d8",
+        "started_at": "2026-10-04T21:14:59.194092987Z",
+        "workspace": "/tmp/lion-coop-r5-ewuw3j4f",
+        "source_files": 59,
+        "main_process_unchanged": true,
+        "log_sha256": "9191e2e4b50f62a7def6e5ec9b5114d2b5c699a3bf01852ecba60d9a9e63e830",
+        "observed_at": "2026-10-05T06:00:14.805529+00:00"
+      }
+    },
+    "source_delta": [
+      "cyber_lion/enterprise/cooperative_context_resolver.py"
+    ]
+  },
+  "negative_control": {
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "mutation_detected": true
+  },
+  "historical_package_manifest_sha256": "7e738f32e26d753e21d34de18043250c826ce5385f53fac743a08241c3e5e745",
+  "candidate_source_package": {
+    "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
+    "files": {
+      ".github/workflows/lion-r24-whole-integration-closure.yml": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e",
+      "cyber_lion/app_coordination/conversation_backfill.py": "c69869bd4ac557381885350cb883406be656f1e1eeed123232a1ff729b896f74",
+      "cyber_lion/app_coordination/conversation_chat.py": "23be23d6eec76773d3c0f7a26dbb68d28a850c970eb2a6dad3f327e3f4f3debe",
+      "cyber_lion/app_coordination/conversation_domain.py": "4e0365a1cb7e26d62dda44bde6753dc2e7d14c4435f6dd68bb29787b8591b9fc",
+      "cyber_lion/app_coordination/conversation_schema.py": "3dbb9d26ce48eaf11ecebfaa741817f17fd7f292b6189c9f6b697a1bdd85d014",
+      "cyber_lion/app_coordination/local_intelligence_gateway.py": "0d9c12e8c5ea809d0949ba6c83b59e7de312a2767e10b2f5afd70a5bd4c48395",
+      "cyber_lion/app_coordination/r24_model_chat_ui.py": "d022f262d72244637ecbebb0abb6c5b43ce8aff675f78d2d9f34c2e49e23713f",
+      "cyber_lion/enterprise/cooperative_context_resolver.py": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73",
+      "cyber_lion/enterprise/cooperative_runtime_composition.py": "351bd7c753e24a60957ba319274741849e81a3fccd0075cc8e6342aab7a822b1",
+      "cyber_lion/enterprise/cooperative_runtime_writer.py": "1a2bc1d2a6d6465905a714ecec97d653750c0df97560269a81921798d81eb7c3",
+      "cyber_lion/mission_control/lpcl_runtime_selection.py": "3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1",
+      "cyber_lion/mission_control/operator_control.py": "694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697",
+      "cyber_lion/mission_control/operator_swarm_session.py": "1f473ba8e935412e8491734f1de72d73d02934517275953502cffb08e0060ef8",
+      "tools/lion_local_intelligence_runtime.py": "9c7526607360397db6f7a49e2eb3217796850e9b2bdcb335e1e2aa67edab7331",
+      "tools/lion_mission_control_v3.py": "a8e12008c0c2c8152b5035e9826cf4ccca8e58c15c7653f15c2715ab7a72902f",
+      "tools/lion_operator_gateway.py": "0a19c0f169e33e863e956013d46899805305407272319251fa478a56243e2279",
+      "tools/lion_r24_whole_integration_gate.py": "53179eea67777c09969238f23f07b01895b514d0f62a6541cf1cb7a22e11bac2"
+    }
+  },
+  "read_coverage": {
+    "new_code_and_tests": "AUTHORED_AND_TESTED",
+    "changed_tool_functions": "READ_RELEVANT_RANGES",
+    "blocked_source_batch": "NOT_RETRIED",
+    "full_repository_and_peer_audit": false
+  },
+  "live_assignment_created": false,
+  "new_model_call": false,
+  "worker_main_process_changed": false,
+  "live_admission_issued": false,
+  "registered_R1_LPCL_modified": false,
+  "live_mission_completed": false,
+  "exact_head_ci": "REQUIRES_PUBLICATION_READBACK",
+  "next_step": "Connect existing trusted admission/provisioning producer to concrete resolver and private worker storage; do not fabricate pins/admissions from payloads."
+}

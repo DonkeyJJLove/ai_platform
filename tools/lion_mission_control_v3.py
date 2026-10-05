@@ -494,8 +494,9 @@ def bind_lpcl_execution(mid):
       if m['state'] not in {'AUTHORIZED','RUNNING','WAITING','BLOCKED'} or ps['authority_state']!='EXPLICIT_USER_ACTIVATION':return None
       if not operator_control.autonomy_allowed(c,mid):return process_snapshot(mid)
       kv=_lpcl_pairs(ps['lpcl_text'])
-      docker_mode=str(kv.get('MATERIAL_RUNTIME') or '').strip().upper()=='DOCKER_LOCAL_MODEL'
-      if not docker_mode and (m['material_target']!=64 or m['logical_count'] not in {12,128}):raise ValueError('lpcl execution adapter cardinality')
+      from cyber_lion.mission_control.lpcl_runtime_selection import require_runtime_selection
+      selected_runtime=require_runtime_selection(kv,int(m['logical_count']),int(m['material_target']))
+      docker_mode=selected_runtime=='LPCL_DOCKER_LOCAL_MODEL'
       continuation_ok=(kv.get('CONTINUE_EXISTING_EPOCH3_MISSION')=='TRUE' or kv.get('CONTINUE_EXISTING_EPOCH3_LINEAGE')=='TRUE')
       explicit_parent=str(kv.get('PARENT_MISSION_ID') or '').strip()
       fresh_ok=(not continuation_ok and not explicit_parent)

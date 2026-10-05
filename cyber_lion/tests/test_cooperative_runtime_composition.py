@@ -148,7 +148,9 @@ class CooperativeRuntimeCompositionTests(unittest.TestCase):
             'expected_producer_worker_id': 'MD001',
         }, worker_id='MD002')
         self.assertTrue(verified['digest_match'])
-        self.assertEqual(self.lookups, ['assignment-fixture-1'])
+        # Initial resolution plus mandatory revalidation at the filesystem boundary.
+        # Both lookups must retain the identical assignment; one lookup is no longer sufficient.
+        self.assertEqual(self.lookups, ['assignment-fixture-1', 'assignment-fixture-1'])
         self.assertEqual([x[0] for x in calls], ['local_assignment_claim', 'local_assignment_receipt'])
 
     def test_revocation_between_claim_and_effect_prevents_write(self):

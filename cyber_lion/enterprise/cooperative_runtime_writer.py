@@ -46,8 +46,11 @@ class CooperativeArtifactBackend:
     provisioned workspace, OS identity and mounts, not this class name.
     """
     def __init__(self, *, root: Path, payload: Mapping[str, Any], worker_id: str,
-                 runtime_binding: SandboxRuntimeBinding):
+                 runtime_binding: SandboxRuntimeBinding, before_write: Callable[[], None] | None = None):
         runtime_binding.validate()
+        if before_write is not None and not callable(before_write):
+            raise CooperativeRuntimeWriterError('context revalidator must be callable')
+        self._before_write = before_write
         self._metadata, self._data = validate_write_payload(payload, worker_id)
         self._payload = dict(payload)
         self._worker = worker_id
@@ -62,6 +65,8 @@ class CooperativeArtifactBackend:
     def write_file(self, path: str, payload: bytes) -> SandboxBackendWriteResult:
         if path != self.resource or type(payload) is not bytes or payload != self._data:
             raise CooperativeRuntimeWriterError('frozen artifact operation mismatch')
+        if self._before_write is not None:
+            self._before_write()
         observed = materialize_text(self._root, self._payload, worker_id=self._worker)
         self.last_observation = observed
         event = 'cooperative-artifact:' + self._metadata['assignment_id'] + ':' + observed['artifact_sha256']

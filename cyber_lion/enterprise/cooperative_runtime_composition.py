@@ -129,8 +129,13 @@ class CooperativeRuntimeWriterProvider:
         budget = self._budgets(ctx.policy)
         if type(budget) is not SandboxBudgetLedger:
             raise CooperativeRuntimeWriterError("bound sandbox budget unavailable")
+        def revalidate_context():
+            current = self._context(assignment_id)
+            if type(current) is not CooperativeRuntimeContext or current.validate() != ctx:
+                raise CooperativeRuntimeWriterError("assignment runtime context changed before write")
         backend = CooperativeArtifactBackend(root=ctx.execution.artifact_root, payload=payload,
-                                             worker_id=worker_id, runtime_binding=ctx.runtime)
+                                             worker_id=worker_id, runtime_binding=ctx.runtime,
+                                             before_write=revalidate_context)
         sandbox = ExecutorSandbox(policy=ctx.policy, runtime_binding=ctx.runtime,
                                   fleet_dispatch=ctx.dispatch, provisioning_binding=ctx.provisioning,
                                   dispatch_source=self._dispatch, backend=backend,
