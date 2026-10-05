@@ -105,3 +105,7 @@ Peer repositories own only their local architecture knowledge through `AGENTS.md
 Semantic Cloud R1 is an integrated non-effectful representation layer over MissionIntent, QueryPlan, RagContextEnvelope, SemanticScaffoldIR and SemanticRelevance. It reuses existing CapabilityNeed/Composition/Mosaic and the existing governed Action path; it creates no scheduler, runtime or authority owner.
 
 See [SEMANTIC_CLOUD_INTEGRATION_TARGET.md](SEMANTIC_CLOUD_INTEGRATION_TARGET.md).
+
+## Edge Yoke R6 — candidate execution-boundary integration
+
+[Implementation and operator entrypoint](../../../docs/architecture/edge-yoke/README.md): existing R5 context resolver wrapped by a deny-only observer gate, original artifact transfer, isolated two-worker qualification and evidence-correction adapter. No second scheduler or authority owner. Global closure, deployment and the historical package-lineage issue remain separately evaluated.

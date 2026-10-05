@@ -17,6 +17,46 @@ from pathlib import Path
 
 CONFIRM="LION-R24-FULL-CONTROL-PLANE-FEDERATION-64L32M-R1"
 PROFILE="LION_MATERIAL_EXECUTOR_V2"
+WORKER_IDS=tuple(f"MD{i:03d}" for i in range(1,33))
+PRIVATE_SUBDIRS=("artifacts","contexts","verifiers","state")
+
+
+def cooperative_private_root(runtime: Path):
+    runtime=Path(runtime)
+    if not runtime.is_absolute() or runtime.is_symlink() or runtime.resolve(strict=True)!=runtime:
+        raise SystemExit("runtime root unavailable or unsafe")
+    private=runtime/"private"
+    if private.exists():
+        if private.is_symlink() or not private.is_dir() or private.resolve(strict=True)!=private:
+            raise SystemExit("cooperative private root unavailable or unsafe")
+    return private
+
+
+def cooperative_private_paths(runtime: Path):
+    root=cooperative_private_root(runtime)
+    return tuple(root/worker for worker in WORKER_IDS)
+
+
+def _ensure_private_directory(path: Path):
+    if path.exists():
+        if path.is_symlink() or not path.is_dir() or path.resolve(strict=True)!=path:
+            raise SystemExit("cooperative private directory unavailable or unsafe: "+str(path))
+    else:
+        path.mkdir()
+    return path
+
+
+def ensure_cooperative_private_layout(runtime: Path):
+    """Create only missing private directories; never delete persistent worker state."""
+    private=cooperative_private_root(runtime)
+    _ensure_private_directory(private)
+    roots=[]
+    for worker in WORKER_IDS:
+        worker_root=_ensure_private_directory(private/worker)
+        for name in PRIVATE_SUBDIRS:
+            _ensure_private_directory(worker_root/name)
+        roots.append(worker_root)
+    return tuple(roots)
 
 
 def run(args, **kwargs):
@@ -95,8 +135,37 @@ def main():
             raise SystemExit("canonical R24 fleet artifact missing: "+name)
         shutil.copy2(src,runtime/name)
 
+    provider_src=canonical/"cooperative-provider.py"
+    if not provider_src.is_file():
+        raise SystemExit("canonical cooperative provider artifact missing")
+    provider_artifact=runtime/"provider-artifact"
+    if provider_artifact.exists():
+        if provider_artifact.is_symlink() or not provider_artifact.is_dir():
+            raise SystemExit("cooperative provider artifact root unavailable or unsafe")
+        shutil.rmtree(provider_artifact)
+    provider_artifact.mkdir()
+    shutil.copy2(provider_src,provider_artifact/"cooperative-provider.py")
+
+    unbound=runtime/"unbound"
+    _ensure_private_directory(unbound)
+    for name in ("provider-state","control-state","mission-control"):
+        _ensure_private_directory(unbound/name)
+
     observer_uid=os.getuid()
     observer_gid=os.getgid()
+
+    private_root=cooperative_private_root(runtime)
+    if private_root.exists():
+        # Preserve replay/admission/budget/materialization bytes while temporarily
+        # reclaiming ownership for structural validation/rematerialization.
+        run([
+            "docker","run","--rm","--user","0:0","--entrypoint","/bin/sh",
+            "-v",str(private_root)+":/target",
+            "lion-r20-worker:r1","-c",
+            "chown -R "+str(observer_uid)+":"+str(observer_gid)+" /target && chmod -R u+rwX /target",
+        ])
+    private_workers=ensure_cooperative_private_layout(runtime)
+
     for name in ("status","gate"):
         target=runtime/name
         if target.exists():
@@ -126,6 +195,26 @@ def main():
         if (stat.st_uid,stat.st_gid,stat.st_mode & 0o7777)!=(65532,observer_gid,0o2750):
             raise SystemExit("worker writable directory ownership mismatch: "+str(target))
 
+    # Private cooperative state survives source rematerialization. Each container
+    # receives only its own worker root at /cooperative.
+    run([
+        "docker","run","--rm","--user","0:0","--entrypoint","/bin/sh",
+        "-v",str(private_root)+":/private",
+        "lion-r20-worker:r1","-c",
+        "chown -R 65532:"+str(observer_gid)+" /private && "
+        "find /private -type d -exec chmod 2750 {} + && "
+        "find /private -type f -exec chmod 0640 {} +",
+    ])
+    private_targets=(private_root,)+tuple(
+        child
+        for worker_root in private_workers
+        for child in (worker_root,)+(tuple(worker_root/name for name in PRIVATE_SUBDIRS))
+    )
+    for target in private_targets:
+        stat_value=target.stat()
+        if (stat_value.st_uid,stat_value.st_gid,stat_value.st_mode & 0o7777)!=(65532,observer_gid,0o2750):
+            raise SystemExit("cooperative private directory ownership mismatch: "+str(target))
+
     sys.path.insert(0,str(source))
     from cyber_lion.mission_control.material_worker_runtime import (
         PROFILE as RUNTIME_PROFILE,
@@ -139,6 +228,7 @@ def main():
     worker_sha=sha256_file(runtime/"worker.py")
     contract_sha=sha256_file(source/"cyber_lion/mission_control/material_worker_runtime.py")
     compose_sha=sha256_file(runtime/"compose.yaml")
+    provider_artifact_sha=sha256_file(provider_artifact/"cooperative-provider.py")
     body={
         "schema":"lion.material-worker-source-identity/v1",
         "profile":PROFILE,
@@ -169,9 +259,21 @@ def main():
         "worker_source_sha256":worker_sha,
         "runtime_contract_sha256":contract_sha,
         "compose_sha256":compose_sha,
+        "cooperative_provider_artifact_sha256":provider_artifact_sha,
+        "cooperative_provider_artifact_path":str(provider_artifact/"cooperative-provider.py"),
+        "cooperative_readonly_mount_contract":{
+            "provider_state":"${LION_COOPERATIVE_PROVIDER_STATE_HOST_PATH}",
+            "control_state":"${LION_COOPERATIVE_CONTROL_STATE_HOST_PATH}",
+            "mission_control":"${LION_COOPERATIVE_MISSION_CONTROL_HOST_PATH}",
+            "container_mode":"READ_ONLY",
+        },
         "identity_digest":body["identity_digest"],
         "runtime_dir":str(runtime),
         "requested_workers":32,
+        "cooperative_private_worker_roots":len(private_workers),
+        "cooperative_private_root":str(private_root),
+        "cooperative_bootstrap_mode":"UNBOUND",
+        "cooperative_private_state_preserved":True,
         "authority_effect":"NONE",
         "up":False,
     }

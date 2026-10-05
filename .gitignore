@@ -22,3 +22,6 @@ Thumbs.db
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# R6 repository component environment; existing project .venv is unchanged.
+.venv-edge-yoke/

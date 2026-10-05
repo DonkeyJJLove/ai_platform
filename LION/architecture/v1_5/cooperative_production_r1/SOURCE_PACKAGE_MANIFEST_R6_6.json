@@ -1,0 +1,285 @@
+{
+  "schema": "lion.source-package-manifest/v1",
+  "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
+  "purpose": "Exact current cooperative Mission Control source package; historical deployed/runtime package evidence remains immutable and separate.",
+  "files": [
+    {
+      "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
+      "sha256": "6d0bfe7c266dcd37e175f26eea2ade774b4309a31d8aa1d2a8c00fd1d296ca6e"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
+      "sha256": "15d03280dcd5661facb66970bee7f7ed50561cbb7210a9b83135ad487fdb5c03"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/cooperative-provider.py",
+      "sha256": "74df09c450498235e8bf30f9e5ede748dc4c7f54237357dd0b757324c7780a5d"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/fleet-currentness.py",
+      "sha256": "fb91d005e302887866a2f0c0712f6e10479e0ee35381c272c5a4efd215153e65"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/materialize.py",
+      "sha256": "792918c3b42a910c32a0b799e9e31561dd64d669d26e1816669f730faf7bfb1d"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
+      "sha256": "e67fc52b5bc3fa5b30dd92211a03434d7247151be9edbf874477aa818c1dd05f"
+    },
+    {
+      "path": "cyber_lion/contracts/action_ir.py",
+      "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8"
+    },
+    {
+      "path": "cyber_lion/contracts/executor_sandbox.py",
+      "sha256": "53a35d6ccdd4f5207b5617454bf867047c78e1029e977f8b318ca7841184d8f5"
+    },
+    {
+      "path": "cyber_lion/contracts/mission_contract_profiles.py",
+      "sha256": "285baa010c458f01232649fde3510ac705e18692c6e13d0e2039bc35f083c580"
+    },
+    {
+      "path": "cyber_lion/contracts/operator_intervention.py",
+      "sha256": "71894ed53a54bec256a6065c751d03cdd2dfbc2e784a9157bb3a8d3c0e9d953e"
+    },
+    {
+      "path": "cyber_lion/contracts/phase_execution_contract.py",
+      "sha256": "e7d4df04b0205178e538d95df1e5b86af6ea294c87e37e5c7343dbe66552e458"
+    },
+    {
+      "path": "cyber_lion/contracts/runtime_currentness.py",
+      "sha256": "19cdb8f256b6aaf0e132aa0dea304cbfcde1958b7292b6f4744e4fe17719119e"
+    },
+    {
+      "path": "cyber_lion/contracts/runtime_enforcement.py",
+      "sha256": "def310ff94cecbd98da16771b728ad81bc8304757416092811b748bda5fdeff0"
+    },
+    {
+      "path": "cyber_lion/contracts/runtime_execution.py",
+      "sha256": "7ec7add190f19893a5486b0bc2a6dec221a55e97d99cd7c7424261b82a505fdf"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_context_resolver.py",
+      "sha256": "84c669b7eaef07250e770135d91aa328c5b18c30ca7404da677dd5a24489a0a6"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
+      "sha256": "5f2fb77183cae45d9e0b7071d5dcb55d211d36a96cf94b58926b033d68846da6"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_dependency_provider.py",
+      "sha256": "35d7609382682a6ccf6323fe0f5468987060afe89f4203ee7b5986f70c946abb"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_provider_materialization.py",
+      "sha256": "b10f9689fe8beb0071ca448e66239d2318c430eeeec3a5b7a61b743158e558a5"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_runtime_composition.py",
+      "sha256": "7fbc60740e8e23bd29dfb7729ca4a8073966ec053c99289195935fdb8d94f91d"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py",
+      "sha256": "3e0e174f513baaad18c2a69fb54eb067b7f696d11c012617b69efbc45f004e86"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py",
+      "sha256": "5cbd0642e751aced9660b765f7d667bbfd2c27f83b24f3c82a4652275bc9d6ef"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_runtime_root.py",
+      "sha256": "834055f1f7de29a9cff02b8c749e204a8b5f247130ae825060331e0343671e20"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_runtime_writer.py",
+      "sha256": "1a2bc1d2a6d6465905a714ecec97d653750c0df97560269a81921798d81eb7c3"
+    },
+    {
+      "path": "cyber_lion/enterprise/executor_sandbox.py",
+      "sha256": "26a5b2e31cc96dca90023c2e871ad950efd019174b50ea6fbbbb46c5e1dfdebe"
+    },
+    {
+      "path": "cyber_lion/enterprise/runtime_execution.py",
+      "sha256": "d04c90d6c661a30e42e38b7d37f822f826e0fb720d5a72c4794a57211dc3f484"
+    },
+    {
+      "path": "cyber_lion/mission_control/__init__.py",
+      "sha256": "8d83b68f7ef8047dc9448bbd9ea0335a5a427fd6d6a3b2707c77a90d76f0448c"
+    },
+    {
+      "path": "cyber_lion/mission_control/artifact_transfer.py",
+      "sha256": "1bee7f17dd0bffd88d89436f16b50b9811a2ff37ffae42971a64260475a578ba"
+    },
+    {
+      "path": "cyber_lion/mission_control/control_plane_reconnaissance.py",
+      "sha256": "5ad1dcb85ce17bfd9ecccfbc1f132e3e6fd42295de147f9323f07c9150196564"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_artifacts.py",
+      "sha256": "bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_materialization_registry.py",
+      "sha256": "6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_production.py",
+      "sha256": "1c32383ac58d2edcb6f2b4c1a192a9a04e34472a02114459c6c0d89fb9c1dac5"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_readiness.py",
+      "sha256": "c7fd62ee216d23b5fffba80b4e0a47f32b467293146d5793a3e44d7e2b7841e1"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_worker_bootstrap.py",
+      "sha256": "6840116fb24f36033f02deea3cb482468f69cdcfbd62209b02e017cce64d9717"
+    },
+    {
+      "path": "cyber_lion/mission_control/cooperative_worker_runtime.py",
+      "sha256": "0df864ba28771c073d3c887ad82862806d83c454f26f14100eafca89f8ba12d7"
+    },
+    {
+      "path": "cyber_lion/mission_control/dual_result_join.py",
+      "sha256": "7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f"
+    },
+    {
+      "path": "cyber_lion/mission_control/execution_driver.py",
+      "sha256": "b666feb64277895b1861ab341caae1aa0acc09d463e396c75e5aa8797746dd5f"
+    },
+    {
+      "path": "cyber_lion/mission_control/execution_driver_contract.py",
+      "sha256": "aa5c7390960c835968b72eb28be76b8e2e5d0e83bc9d66fe01fdc5bd13f79821"
+    },
+    {
+      "path": "cyber_lion/mission_control/global_scheduler.py",
+      "sha256": "e972bcb8dff6a415f91f360025baabf98e360044e9402b5b0f934ac3d3b55524"
+    },
+    {
+      "path": "cyber_lion/mission_control/lpcl_runtime_selection.py",
+      "sha256": "3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1"
+    },
+    {
+      "path": "cyber_lion/mission_control/material_worker_runtime.py",
+      "sha256": "1f086e6af21ef1244a16dbcbc7f0594c6919cc67e1934944587f32ea7142f1cd"
+    },
+    {
+      "path": "cyber_lion/mission_control/mission_reconciliation.py",
+      "sha256": "69066f4ef61bd3f7283c8077d20059f102ddc1291fc824edbd418993580e31ea"
+    },
+    {
+      "path": "cyber_lion/mission_control/model_calls.py",
+      "sha256": "f5dea5c27eb0903134e6d72b775794d6dd0f7303d6ee2fc56a6097b618e334b7"
+    },
+    {
+      "path": "cyber_lion/mission_control/operator_control.py",
+      "sha256": "694ca04ba6f7ff19375a3d378eb7d4bc17d16c82afa784bd28a85713f431a697"
+    },
+    {
+      "path": "cyber_lion/mission_control/operator_swarm_session.py",
+      "sha256": "1f473ba8e935412e8491734f1de72d73d02934517275953502cffb08e0060ef8"
+    },
+    {
+      "path": "cyber_lion/mission_control/phase_control.py",
+      "sha256": "89372056bf7668edc473b0b0dc04433d376dca3e041499fc0b4e6a52f69c319e"
+    },
+    {
+      "path": "cyber_lion/mission_control/runtime_projection.py",
+      "sha256": "9a6d9d62c25bbc4a3c15aeb1731223fc7c08e62bf8099717a9c58e85aab0ed24"
+    },
+    {
+      "path": "cyber_lion/mission_control/supervisor_projection.py",
+      "sha256": "d6ffc5c07caf5db6e4040c38962987c3c0c6effb2bfb022e88373c71e773fb80"
+    },
+    {
+      "path": "cyber_lion/process_language/lpcl.py",
+      "sha256": "355af5b4073378adc4cc35254de4fc59ed6371fa125b3ffd27070a09ecad4b91"
+    },
+    {
+      "path": "deploy/mission-control/v3/app.css",
+      "sha256": "0da02e01d705b11fde1c68f2752628e66e4e8ec2be5c95a317b593c3b299bb3c"
+    },
+    {
+      "path": "deploy/mission-control/v3/app.js",
+      "sha256": "3baea82b0e2c8ae4d9b0eca36be2f7c755462b245e59c092adec47d85934ff9d"
+    },
+    {
+      "path": "deploy/mission-control/v3/control-v3.js",
+      "sha256": "e7aaa6c32251df70079eb6af838e6c541f0835928d90ce06376cc22fe9041de0"
+    },
+    {
+      "path": "deploy/mission-control/v3/index.html",
+      "sha256": "c08fa2840e317c69c868ffe4c1c992d3b0d364a4716ff567c5937e52a16dca9a"
+    },
+    {
+      "path": "deploy/mission-control/v3/passive.js",
+      "sha256": "4d1ee6e0fafd2467c6c65c8ce69079e403a4464a57a37dc8de14447a67db1465"
+    },
+    {
+      "path": "deploy/systemd/lion-operator-control.service",
+      "sha256": "48087f928e38a693852603c1f95ada80635bc13bc58da6b7a9b03aee0fbfd700"
+    },
+    {
+      "path": "tools/lion_cooperative_worker_adapter.py",
+      "sha256": "ce1b178e79297ea286bbc0118c65133b8265aff8ae4ff8926de36e6c21c88cda"
+    },
+    {
+      "path": "tools/lion_cooperative_worker_qualification.py",
+      "sha256": "9d8b56476b064efe56e22e9a05712330e4a123acd4eee4316d05c30bfb0644fc"
+    },
+    {
+      "path": "tools/lion_firefox_broker_relay.py",
+      "sha256": "be178c21e5f5ee8cffb7afa2b902fd622351f4dca84bc0f2384f1cb6ac7daf03"
+    },
+    {
+      "path": "tools/lion_local_intelligence_runtime.py",
+      "sha256": "9c7526607360397db6f7a49e2eb3217796850e9b2bdcb335e1e2aa67edab7331"
+    },
+    {
+      "path": "tools/lion_mission_control_compat.py",
+      "sha256": "f584066806fd190ff4f1752ab464e0d245172a56789f7852f0ed0df0e2fe93d0"
+    },
+    {
+      "path": "tools/lion_mission_control_v3.py",
+      "sha256": "2615bf675d7fc1909e16b95da2d3c8dc0e1801357b09de5b7cf06f02c687d516"
+    },
+    {
+      "path": "tools/lion_mission_lifecycle_db.py",
+      "sha256": "0ca42b937a21c498e9016e3f255ee796b30268ccff3dea642a468e293814a35a"
+    },
+    {
+      "path": "tools/lion_operator_client.py",
+      "sha256": "3171b674986015dc1c0e2ba5fa8907c669f1f655c0f0f7e6cecfe6bd7fc3ec0b"
+    },
+    {
+      "path": "tools/lion_operator_containment_helper.py",
+      "sha256": "378c1b36cc2ad3008cb17ad882039af9fd4ad49b3b3b41a2143a5c3615b705d8"
+    },
+    {
+      "path": "tools/lion_operator_gateway.py",
+      "sha256": "0a19c0f169e33e863e956013d46899805305407272319251fa478a56243e2279"
+    },
+    {
+      "path": "tools/lion_operator_provision.py",
+      "sha256": "b8486fc03be70baabb0801a2a02d068152208afc10ea5cc626d567266e23154a"
+    },
+    {
+      "path": "tools/lion_r24_cooperative_pilot.py",
+      "sha256": "e3326c52df7ddf4188d5a6eb357666cb8bee1572ac3d0ecefb1fb99be9857254"
+    },
+    {
+      "path": "tools/lion_r24_whole_integration_gate.py",
+      "sha256": "751eec687896cd83834cd0b86a82a2168a6303a5155ce2aef65925cee0045836"
+    },
+    {
+      "path": "tools/lion_saas_broker.py",
+      "sha256": "a8d35ac62e93fa0054dd8aad367ec55f98b576faa3d503340c867b5de761da8b"
+    },
+    {
+      "path": "tools/lion_saas_session_bridge.py",
+      "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
+    }
+  ],
+  "package_digest": "0ff886d60063f71d0505c38ec87a729b612374904c36f2948471855ba7199f2e",
+  "authority_effect": "NONE"
+}

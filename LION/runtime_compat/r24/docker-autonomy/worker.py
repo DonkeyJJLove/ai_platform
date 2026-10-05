@@ -15,6 +15,8 @@ sys.path.insert(0, "/src/LION/runtime_compat/r24/docker-autonomy")
 from transport import PersistentJsonTransport
 
 from tools.lion_local_intelligence_runtime import LpclControlBridge, local_assignment_worker_once
+from cyber_lion.mission_control.cooperative_worker_runtime import PROCESS_COOPERATIVE_RUNTIME
+from cyber_lion.mission_control.cooperative_worker_bootstrap import bootstrap_process_runtime
 from cyber_lion.mission_control.material_worker_runtime import (
     PROFILE,
     STATUS_SCHEMA,
@@ -63,6 +65,7 @@ def boot_id():
 
 IDENTITY = load_worker_identity(IDENTITY_PATH, WORKER_PATH, RUNTIME_CONTRACT_PATH)
 ARCH = architecture_profile(IDENTITY, runtime_instance_id=RUNTIME_INSTANCE_ID, boot_id=boot_id())
+COOPERATIVE_BOOTSTRAP = bootstrap_process_runtime()
 
 
 def write_status(**values):
@@ -76,6 +79,12 @@ def write_status(**values):
         "model": MODEL_NAME,
         "worker_profile": PROFILE,
         "architecture": ARCH,
+        "cooperative_runtime_bootstrap": COOPERATIVE_BOOTSTRAP,
+        "cooperative_runtime_provider": (
+            PROCESS_COOPERATIVE_RUNTIME.current(WORKER_ID).status_marker()
+            if PROCESS_COOPERATIVE_RUNTIME.current(WORKER_ID) is not None
+            else None
+        ),
         "local_model_inference_capable": True,
         "local_model_route_current": bool(values.get("model_reachability") == "OK"),
         "mission_control_route_current": bool(values.get("mission_control_reachability") == "OK"),
@@ -386,6 +395,14 @@ while True:
         if result is None:
             operation="SANDBOX_ASSIGNMENT"
             result=material_sandbox_canary_once(listing)
+        if result is None:
+            cooperative_runtime=PROCESS_COOPERATIVE_RUNTIME.current(WORKER_ID)
+            if cooperative_runtime is not None:
+                operation="COOPERATIVE_ASSIGNMENT"
+                result=cooperative_runtime.process_once(
+                    bridge,
+                    listing.get("assignments") or [],
+                )
         if result is None:
             operation="LOCAL_MODEL_ASSIGNMENT"
             result=local_assignment_worker_once(

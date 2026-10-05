@@ -22,7 +22,14 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "LION" / "evidence" / "r24-whole-integration"
 STATE_PATH = ROOT / "LION" / "architecture" / "canonical-state-v1-3-candidate.json"
 REGISTRY_PATH = ROOT / "cyber_lion" / "registry" / "repositories.json"
-PACKAGE_MANIFEST_PATH = EVIDENCE / "PACKAGE_MANIFEST.json"
+HISTORICAL_PACKAGE_MANIFEST_PATH = EVIDENCE / "PACKAGE_MANIFEST.json"
+# Current source-package identity is separate from immutable historical runtime evidence.
+# Passing this source gate never claims deployment.
+SOURCE_PACKAGE_MANIFEST_PATH = (
+    ROOT / "LION" / "architecture" / "v1_5" / "cooperative_production_r1"
+    / "SOURCE_PACKAGE_MANIFEST_R6_6.json"
+)
+PACKAGE_MANIFEST_PATH = HISTORICAL_PACKAGE_MANIFEST_PATH  # compatibility alias
 MATRIX_PATH = EVIDENCE / "TEST_MATRIX_SPEC.json"
 
 CRITICAL_TEST_MODULES = (
@@ -263,23 +270,38 @@ def _subject_currentness() -> dict[str, Any]:
     }
 
 
-def _package_identity() -> dict[str, Any]:
-    manifest = _json(PACKAGE_MANIFEST_PATH)
+def _package_identity_at(
+    manifest_path: Path,
+    *,
+    expected_classification: str | None = None,
+) -> dict[str, Any]:
+    manifest = _json(manifest_path)
     files = manifest.get("files")
     if not isinstance(files, list) or not files:
         raise R24GateError("package manifest files missing")
     observed = []
     mismatch = []
+    classification = manifest.get("classification")
+    if expected_classification is not None and classification != expected_classification:
+        mismatch.append({
+            "path": "<classification>",
+            "expected": expected_classification,
+            "actual": classification,
+        })
     for item in files:
         if not isinstance(item, dict):
             raise R24GateError("invalid package manifest item")
         path = str(item.get("path") or "")
         expected = str(item.get("sha256") or "")
-        full = ROOT / path
-        if not full.is_file():
-            mismatch.append({"path": path, "reason": "MISSING"})
+        try:
+            # Source-package identity binds Git index bytes, not platform-specific
+            # checkout newline conversion. The gate separately rejects tracked
+            # worktree/index drift for the production inventory.
+            data = _run("show", ":" + path, text=False)
+        except subprocess.CalledProcessError:
+            mismatch.append({"path": path, "reason": "INDEX_MISSING"})
             continue
-        actual = sha256(full.read_bytes()).hexdigest()
+        actual = sha256(data).hexdigest()
         observed.append({"path": path, "sha256": actual})
         if actual != expected:
             mismatch.append({"path": path, "expected": expected, "actual": actual})
@@ -289,11 +311,38 @@ def _package_identity() -> dict[str, Any]:
     expected_digest = str(manifest.get("package_digest") or "")
     if digest != expected_digest:
         mismatch.append({"path": "<package>", "expected": expected_digest, "actual": digest})
+    try:
+        manifest_label = str(manifest_path.relative_to(ROOT))
+    except ValueError:
+        manifest_label = str(manifest_path)
     return {
+        "manifest_path": manifest_label,
+        "schema": manifest.get("schema"),
+        "classification": classification,
         "match": not mismatch,
         "package_digest": digest,
         "expected_package_digest": expected_digest,
         "mismatches": mismatch,
+        "authority_effect": manifest.get("authority_effect"),
+        "source_bytes": "GIT_INDEX_BLOB",
+    }
+
+
+def _package_identity() -> dict[str, Any]:
+    """Validate current source package while preserving historical runtime evidence.
+
+    Historical mismatch is evidence that the source has not been deployed as that
+    old package. It must not be reinterpreted as current source-package drift.
+    """
+    current = _package_identity_at(
+        SOURCE_PACKAGE_MANIFEST_PATH,
+        expected_classification="SOURCE_ONLY_NOT_DEPLOYMENT",
+    )
+    historical = _package_identity_at(HISTORICAL_PACKAGE_MANIFEST_PATH)
+    return {
+        **current,
+        "historical_runtime": historical,
+        "historical_runtime_mismatch": not historical["match"],
     }
 
 
@@ -439,6 +488,9 @@ def run_gate(
         # state path is supplied, exact deployed HEAD/TREE and panel semantics
         # become fail-closed evidence rather than an assumed constant.
         "repo_live_currentness_mismatch": not deployment["current"],
+        # This is the CURRENT SOURCE package identity. Historical runtime package
+        # drift is retained in package.historical_runtime_mismatch and is not
+        # promoted into a false deployment/source failure.
         "package_identity_mismatch": not package["match"],
         "stale_exact_currentness_carrier": not (truth["state_current"] and truth["registry_current"]),
         "effect_inventory_mismatch": bool(inventory["unclassified"]) or inventory["taxonomy_status"] != "PASS",

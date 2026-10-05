@@ -100,3 +100,7 @@ Fundament Federated Architecture Knowledge oraz `CommunicationEnvelope` są zint
 ## Semantic Cloud R1 candidate
 
 The Semantic Cloud research line is integrated only as a candidate semantic contract surface. Relevance is representation, never authority. The existing Action/PDP/runtime/observation/reconciliation path remains the only governed materialization route.
+
+## Edge Yoke R6 — source candidate
+
+[Repozytoryjna kwalifikacja produktu, osobny obserwator i weto R5](../docs/architecture/edge-yoke/README.md). Zachowany owner procesu/admission; kod kandydata nie jest automatyczną aktywacją misji lub wdrożeniem.

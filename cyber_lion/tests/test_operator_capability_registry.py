@@ -12,4 +12,7 @@ class OperatorCapabilityRegistryTests(unittest.TestCase):
         ids={x['capability_id'] for x in reg['OPERATOR_CONTAINMENT']}
         self.assertEqual(ids,{'OPERATOR_CONTAINMENT_R1','OPERATOR_EMERGENCY_CONTAINMENT_R1'})
         self.assertTrue(all(x['effect_ceiling']!='NONE' for x in reg['OPERATOR_CONTAINMENT']))
+        self.assertIn('COOPERATIVE_ARTIFACT_BOOTSTRAP',reg)
+        self.assertNotIn('COOPERATIVE_ARTIFACT_PRODUCTION',reg)
+        self.assertNotIn('COOPERATIVE_ARTIFACT_VERIFY',reg)
 if __name__=='__main__':unittest.main()

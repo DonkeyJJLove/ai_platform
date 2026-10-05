@@ -217,6 +217,10 @@ class MaterialWorkerRuntimeTests(unittest.TestCase):
         self.assertFalse(profile["tool_availability_is_authority"])
         self.assertFalse(profile["logical_drone_is_material_executor"])
         self.assertTrue(profile["external_effects_require_admission"])
+        self.assertIn("COOPERATIVE_ARTIFACT_WRITE", profile["direct_assignment_kinds"])
+        self.assertIn("COOPERATIVE_ARTIFACT_VERIFY", profile["direct_assignment_kinds"])
+        self.assertIn("COOPERATIVE_ARTIFACT_MATERIALIZATION", profile["architecture_capabilities"])
+        self.assertIn("COOPERATIVE_ARTIFACT_INDEPENDENT_VERIFY", profile["architecture_capabilities"])
         probe=identity_probe(ident,worker_id="MD001",runtime_instance_id="container-1",boot_id="shared-boot")
         self.assertEqual(probe["authority_effect"],"NONE")
 

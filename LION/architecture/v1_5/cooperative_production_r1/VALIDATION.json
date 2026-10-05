@@ -1,0 +1,54 @@
+{
+  "schema": "analysis.cooperative-transfer-validation/v1",
+  "source_head": "0e24fd481697bf85fd5c4a4fdb93c39a757ff463",
+  "results": {
+    "ubuntu": {
+      "tests_run": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "success": true,
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "stderr_sha256": "f55dbf1a8b61968d6f30c76975b1b8d00e3d98cc2fbbc8f243f9ce681dd3a380"
+    },
+    "windows": {
+      "tests_run": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "success": true,
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "stderr_sha256": "73f720b6cd166a8dd17c9a2d8305e4737c0d24165dde5e3239a55ab93f68a53e"
+    }
+  },
+  "source_files": {
+    "cyber_lion/mission_control/artifact_transfer.py": {
+      "bytes": 12864,
+      "sha256": "1bee7f17dd0bffd88d89436f16b50b9811a2ff37ffae42971a64260475a578ba"
+    },
+    "cyber_lion/tests/test_artifact_transfer.py": {
+      "bytes": 11571,
+      "sha256": "ff7fab6f5300150563b063ed71d760e2763c3cb14420c21b547f0d2c05c9581f"
+    }
+  },
+  "acceptance": {
+    "T01": "NOT_RUN",
+    "T02": "NOT_RUN",
+    "T03": "NOT_RUN",
+    "T04": "NOT_RUN",
+    "T05": "NOT_RUN",
+    "T06": "NOT_RUN",
+    "T07": "NOT_RUN",
+    "T08": "NOT_RUN",
+    "T09": "NOT_RUN",
+    "T10": "NOT_RUN",
+    "T11": "NOT_RUN",
+    "T12": "NOT_RUN"
+  },
+  "runtime_integration": "NOT_WIRED",
+  "lpcl": "NOT_AUTHORED",
+  "docker": "NOT_RUN_ENGINE_UNAVAILABLE_AT_OBSERVATION",
+  "publication": "DRAFT_SOURCE_CANDIDATE_ONLY"
+}

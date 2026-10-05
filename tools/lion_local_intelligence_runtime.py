@@ -243,10 +243,12 @@ class LpclControlBridge:
             preflight=preflight_execution_contracts(contracts,runtime_registry)
         except PhaseExecutionContractError as exc:
             raise ValueError('LPCL_PHASE_EXECUTION_CONTRACT:'+str(exc)) from exc
+        from cyber_lion.mission_control.lpcl_runtime_selection import runtime_selection
+        selected_runtime=runtime_selection(kv,logical,material)
         cur=self.broker.call('MAT04','github_branch',{'repository':'DonkeyJJLove/ai_platform','branch':'master'})['result']
         dg=hashlib.sha256(text.encode('utf-8')).hexdigest()
         spec={'mission_id':mid,'title':kv['MISSION_TITLE'][:180],'objective':kv['MISSION_OBJECTIVE'][:4000],'description':kv['MISSION_DESCRIPTION'][:8000],'lpcl_digest':dg,'lpcl_text':text,'source_head':cur['head'],'source_tree':cur['tree'],'logical_count':logical,'material_target':material,'phases':phases,'protocols':prot}
-        return {'valid':True,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'capability_registry_state':registry_state,'capability_registry_digest':registry_snapshot.get('registry_digest') if isinstance(registry_snapshot,dict) else None,'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
+        return {'valid':True,'runtime_preflight':selected_runtime,'lpcl_digest':dg,'source_currentness':cur,'spec':spec,'execution_preflight':preflight.as_dict(),'capability_registry_state':registry_state,'capability_registry_digest':registry_snapshot.get('registry_digest') if isinstance(registry_snapshot,dict) else None,'phase_execution_contracts':[x.as_dict() for x in contracts],'parsed':{'run':kv.get('RUN'),'project':kv['PROJECT'],'mode':kv['MODE'],'control_language':kv['CONTROL_LANGUAGE'],'phase_count':len(phases)}}
     def __call__(self,op,args):
         args=args or {}
         if op=='recent':
