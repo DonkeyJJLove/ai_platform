@@ -254,7 +254,8 @@ class PinnedCooperativeContextResolver:
         finally:
             conn.close()
 
-    def __call__(self, assignment_id: str) -> CooperativeRuntimeContext:
+    def _resolve(self, assignment_id: str, *, assignment_state: str) -> CooperativeRuntimeContext:
+        _require(assignment_state in {"CLAIMED", "READY"}, "resolver assignment state")
         _require(type(assignment_id) is str and assignment_id in self._pins, "assignment context pin unavailable")
         snap = self._snapshot(assignment_id)
         record = self._record(self._pins[assignment_id])
@@ -271,7 +272,7 @@ class PinnedCooperativeContextResolver:
         for name in ("generation", "control_epoch", "context_revision", "plan_revision"):
             _require(type(coords[name]) is int and coords[name] >= (1 if name == "generation" else 0), "coordinate integer required")
         _require(coords == actual, "context/assignment coordinates mismatch")
-        _require(a["state"] == "CLAIMED" and driver["state"] in {"ACTIVE", "WAITING"}, "assignment/driver not active")
+        _require(a["state"] == assignment_state and driver["state"] in {"ACTIVE", "WAITING"}, "assignment/driver not active")
         _require(mission["state"] in {"RUNNING", "WAITING", "BLOCKED"}, "mission not executing")
         _require(driver["generation"] == a["lease_generation"], "stale driver generation")
         _require(all(control[n] == a[n] for n in ("control_epoch", "context_revision", "plan_revision")), "stale control/context/plan revision")
@@ -314,3 +315,11 @@ class PinnedCooperativeContextResolver:
         _require((req.mission_id, req.generation, req.resource, req.payload_digest, req.payload_size, req.admission_digest) ==
                  (a["mission_id"], a["lease_generation"], target.relative_to(binding.artifact_root).as_posix(), metadata["artifact_sha256"], len(data), dg), "artifact/request binding mismatch")
         return ctx
+
+    def __call__(self, assignment_id: str) -> CooperativeRuntimeContext:
+        """Effect-path resolution requires the canonical CLAIMED state."""
+        return self._resolve(assignment_id, assignment_state="CLAIMED")
+
+    def resolve_for_qualification(self, assignment_id: str) -> CooperativeRuntimeContext:
+        """Read-only qualification view over an already released READY assignment."""
+        return self._resolve(assignment_id, assignment_state="READY")

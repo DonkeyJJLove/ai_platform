@@ -64,6 +64,7 @@ from cyber_lion.enterprise.runtime_execution import (
     SQLiteRuntimeAdmissionSource,
 )
 from cyber_lion.mission_control.cooperative_artifacts import VERIFY_KIND, WRITE_KIND
+from cyber_lion.mission_control.global_scheduler import ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA
 from cyber_lion.mission_control.cooperative_materialization_registry import (
     CooperativeMaterializationProvider,
 )
@@ -75,6 +76,12 @@ from tools.lion_cooperative_worker_adapter import assignment_input
 
 STORE_SCHEMA = "lion.cooperative-runtime-materialization-store/v1"
 PROVENANCE_DOMAIN = b"LION/COOPERATIVE-RUNTIME-ADMISSION-COPY/1\0"
+QUALIFICATION_DOMAIN = b"LION/COOPERATIVE-WORKER-QUALIFICATION/1\0"
+_RELEASE_EVIDENCE_FIELDS = frozenset({
+    "schema", "assignment_id", "mission_id", "material_drone_id", "lease_generation",
+    "control_epoch", "context_revision", "plan_revision", "capability",
+    "materialization_kind", "provider_id", "evidence_digest", "authority_effect",
+})
 _SHA = re.compile(r"^[0-9a-f]{64}$")
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
@@ -390,6 +397,7 @@ class CooperativeRuntimeCompositionRoot:
         materialization_db: str | Path,
         runtime_state_db: str | Path,
         context_source: Callable[[str], CooperativeRuntimeContext],
+        qualification_context_source: Callable[[str], CooperativeRuntimeContext],
         upstream_admission_source,
         upstream_admission_trust: RuntimeAdmissionSourceTrustBinding,
         durable_admission_trust: RuntimeAdmissionSourceTrustBinding,
@@ -408,6 +416,7 @@ class CooperativeRuntimeCompositionRoot:
         self.verifier_parent = _direct_dir(verifier_parent, "verifier private parent")
         for callback, label in (
             (context_source, "context source"),
+            (qualification_context_source, "qualification context source"),
             (runtime_identity_source, "runtime identity source"),
             (provisioning_binding_source, "provisioning binding source"),
             (transfer_binding_source, "transfer binding source"),
@@ -429,6 +438,7 @@ class CooperativeRuntimeCompositionRoot:
                                     "currentness source")
         _require(callable(getattr(dispatch_source, "current_dispatch", None)), "dispatch source")
         self.context_source = context_source
+        self.qualification_context_source = qualification_context_source
         self.upstream_admission_source = upstream_admission_source
         self.upstream_admission_trust = upstream_admission_trust
         self.durable_admission_trust = durable_admission_trust
@@ -543,8 +553,16 @@ class CooperativeRuntimeCompositionRoot:
         _require(snap["input"].get("kind") == kind, "materializer assignment kind")
         return snap
 
-    def _validate_context(self, assignment_id: str, snapshot: Mapping[str, Any]) -> CooperativeRuntimeContext:
-        ctx = self.context_source(assignment_id)
+    def _validate_context(
+        self,
+        assignment_id: str,
+        snapshot: Mapping[str, Any],
+        *,
+        context_source: Callable[[str], CooperativeRuntimeContext] | None = None,
+    ) -> CooperativeRuntimeContext:
+        source = self.context_source if context_source is None else context_source
+        _require(callable(source), "context source unavailable")
+        ctx = source(assignment_id)
         _require(type(ctx) is CooperativeRuntimeContext, "canonical CooperativeRuntimeContext unavailable")
         ctx.validate()
         a = snapshot["assignment"]
@@ -730,6 +748,160 @@ class CooperativeRuntimeCompositionRoot:
     def verifier_workspace(self, consumer_assignment_id: str) -> Path:
         materialization, _ = self.store.resolve_verifier(consumer_assignment_id)
         return materialization.workspace
+
+    def qualify_released_write_assignment(
+        self,
+        assignment_id: str,
+        *,
+        material_worker_id: str,
+    ) -> dict[str, Any]:
+        """Qualify one released assignment without claiming or executing it.
+
+        READY must already have been produced by the canonical HELD->READY fence.
+        Qualification imports only already-issued evidence into this worker's private
+        root, rebuilds the writer factory, and performs independent readback.
+        """
+        aid = _identity(assignment_id, "qualification assignment identity")
+        worker = _identity(material_worker_id, "qualification worker identity")
+        snap = self._snapshot(aid, require_held=False)
+        assignment = snap["assignment"]
+        _require(assignment.get("state") == "READY", "qualification assignment not READY")
+        _require(assignment.get("material_drone_id") == worker, "qualification worker substitution")
+        _require(snap["input"].get("kind") == WRITE_KIND, "qualification assignment kind")
+
+        db = None
+        try:
+            db = sqlite3.connect(self.mission_db.as_uri() + "?mode=ro", uri=True, timeout=2)
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA query_only=ON")
+            release_row = db.execute(
+                "SELECT mission_id,evidence_digest,evidence_json,released_at "
+                "FROM mission_assignment_release_evidence WHERE assignment_id=?",
+                (aid,),
+            ).fetchone()
+        except sqlite3.Error as exc:
+            raise CooperativeRuntimeRootError("assignment release evidence unavailable") from exc
+        finally:
+            if db is not None:
+                try:
+                    db.close()
+                except Exception:
+                    pass
+
+        _require(release_row is not None, "assignment release evidence unavailable")
+        release = _strict_json(release_row["evidence_json"], "assignment release evidence")
+        _require(set(release) == _RELEASE_EVIDENCE_FIELDS, "assignment release evidence schema")
+        _require(
+            release.get("schema") == ASSIGNMENT_RELEASE_EVIDENCE_SCHEMA,
+            "assignment release evidence schema",
+        )
+        _require(release_row["mission_id"] == assignment["mission_id"], "release mission substitution")
+        _require(
+            sha256(_canonical(release)).hexdigest() == release_row["evidence_digest"],
+            "assignment release evidence digest mismatch",
+        )
+        control_plane_digest = _digest(
+            release.get("evidence_digest"), "control-plane evidence digest"
+        )
+        expected_release = (
+            aid,
+            assignment["mission_id"],
+            worker,
+            int(assignment["lease_generation"]),
+            int(assignment["control_epoch"]),
+            int(assignment["context_revision"]),
+            int(assignment["plan_revision"]),
+            snap["input"].get("capability"),
+            "RUNTIME_CONTEXT",
+            WRITE_PROVIDER_ID,
+            "NONE",
+        )
+        actual_release = (
+            release.get("assignment_id"),
+            release.get("mission_id"),
+            release.get("material_drone_id"),
+            release.get("lease_generation"),
+            release.get("control_epoch"),
+            release.get("context_revision"),
+            release.get("plan_revision"),
+            release.get("capability"),
+            release.get("materialization_kind"),
+            release.get("provider_id"),
+            release.get("authority_effect"),
+        )
+        _require(actual_release == expected_release, "assignment release evidence substitution")
+
+        ctx = self._validate_context(
+            aid,
+            snap,
+            context_source=self.qualification_context_source,
+        )
+        admission_digest = ctx.execution.admission.admission_digest
+        self.admission_source.publish(
+            ctx.execution.admission,
+            provenance_digest=self._admission_provenance(ctx),
+            published_at=_zoned(self.now_fn()),
+        )
+        binding = self.transfer_binding_source(aid, "CONTEXT")
+        materialized = materialize_context_reference(
+            context=ctx,
+            coordinates=self._coordinates(snap),
+            expected_binding=binding,
+            private_parent=self.context_parent,
+        )
+        descriptor_digest = self.store.record_context(
+            materialized,
+            worker_id=worker,
+            admission_digest=admission_digest,
+            recorded_at=_zoned(self.now_fn()),
+        )
+
+        observed, observed_worker, observed_admission = self.store.resolve_context(aid)
+        _require(observed_worker == worker, "qualification private worker readback mismatch")
+        _require(observed_admission == admission_digest, "qualification admission readback mismatch")
+        _require(
+            observed.pin == materialized.pin
+            and observed.transfer_sha256 == materialized.transfer_sha256
+            and observed.workspace.parent == self.context_parent,
+            "qualification private context readback mismatch",
+        )
+        copied_admission = self.admission_source.resolve(admission_digest)
+        _require(
+            type(copied_admission) is RuntimeAdmission
+            and copied_admission.validate() == ctx.execution.admission
+            and self.admission_source.is_current(admission_digest) is True,
+            "qualification durable admission readback mismatch",
+        )
+        writer = self.writer_for_assignment(aid)
+        _require(type(writer) is CooperativeRuntimeWriterProvider, "qualification writer factory")
+        marker = self.worker_status_marker()
+        _require(marker.get("authority_effect") == "NONE", "qualification provider authority")
+
+        evidence = {
+            "schema": "lion.cooperative-worker-qualification/v1",
+            "assignment_id": aid,
+            "mission_id": assignment["mission_id"],
+            "worker_id": worker,
+            "lease_generation": int(assignment["lease_generation"]),
+            "release_evidence_digest": release_row["evidence_digest"],
+            "control_plane_evidence_digest": control_plane_digest,
+            "private_context_pin_sha256": materialized.pin.sha256,
+            "private_transfer_sha256": materialized.transfer_sha256,
+            "private_materialization_digest": descriptor_digest,
+            "runtime_admission_digest": admission_digest,
+            "provider_id": marker["provider_id"],
+            "context_resolver": marker["context_resolver"],
+            "execution_engine": marker["execution_engine"],
+            "writer_factory_built": True,
+            "execution_performed": False,
+            "authority_effect": "NONE",
+        }
+        return {
+            **evidence,
+            "qualification_digest": sha256(
+                QUALIFICATION_DOMAIN + _canonical(evidence)
+            ).hexdigest(),
+        }
 
     def worker_status_marker(self) -> dict[str, Any]:
         """Provider factory readiness only; never an authority grant."""

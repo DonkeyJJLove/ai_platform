@@ -20,8 +20,12 @@ from cyber_lion.mission_control.cooperative_worker_bootstrap import (
     bootstrap_process_runtime,
     build_root_from_environment,
     load_dependencies_from_environment,
+    qualify_released_assignment_from_environment,
 )
-from cyber_lion.mission_control.cooperative_worker_runtime import CooperativeWorkerRuntimeRegistry
+from cyber_lion.mission_control.cooperative_worker_runtime import (
+    PROCESS_COOPERATIVE_RUNTIME,
+    CooperativeWorkerRuntimeRegistry,
+)
 
 
 class CooperativeWorkerBootstrapTests(unittest.TestCase):
@@ -81,6 +85,7 @@ class CooperativeWorkerBootstrapTests(unittest.TestCase):
     def dependencies(self):
         return CooperativeRuntimeBootstrapDependencies(
             context_source=lambda aid: self.f.context(aid),
+            qualification_context_source=lambda aid: self.f.context(aid),
             upstream_admission_source=self.f.source,
             upstream_admission_trust=rt.trust(),
             durable_admission_trust=self.durable_trust,
@@ -185,6 +190,64 @@ class CooperativeWorkerBootstrapTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(CooperativeWorkerBootstrapError, 'wrong type'):
             load_dependencies_from_environment(env)
+
+    def test_qualification_entrypoint_requires_unbound_exact_worker_and_does_not_install_runtime(self):
+        env = self.environment(
+            LION_COOPERATIVE_BOOTSTRAP_MODE=UNBOUND_MODE,
+            LION_MATERIAL_WORKER_ID='MD001',
+        )
+        expected = {
+            'schema': 'lion.cooperative-worker-qualification/v1',
+            'assignment_id': 'assignment-fixture-1',
+            'worker_id': 'MD001',
+            'execution_performed': False,
+            'authority_effect': 'NONE',
+        }
+
+        class Root:
+            def qualify_released_write_assignment(self, assignment_id, *, material_worker_id):
+                self_args = (assignment_id, material_worker_id)
+                if self_args != ('assignment-fixture-1', 'MD001'):
+                    raise AssertionError(self_args)
+                return dict(expected)
+
+        before = PROCESS_COOPERATIVE_RUNTIME.current('MD001')
+        with patch(
+            'cyber_lion.mission_control.cooperative_worker_bootstrap.load_dependencies_from_environment',
+            return_value=self.dependencies(),
+        ), patch(
+            'cyber_lion.mission_control.cooperative_worker_bootstrap.build_root_from_environment',
+            return_value=Root(),
+        ):
+            out = qualify_released_assignment_from_environment(
+                env,
+                assignment_id='assignment-fixture-1',
+                material_worker_id='MD001',
+            )
+        self.assertEqual(out['bootstrap_mode'], UNBOUND_MODE)
+        self.assertEqual(out['bootstrap_version'], BOOTSTRAP_VERSION)
+        self.assertFalse(out['execution_performed'])
+        self.assertEqual(out['authority_effect'], 'NONE')
+        self.assertIs(PROCESS_COOPERATIVE_RUNTIME.current('MD001'), before)
+
+    def test_qualification_entrypoint_rejects_runtime_activation_and_worker_substitution(self):
+        trusted = self.environment(LION_MATERIAL_WORKER_ID='MD001')
+        with self.assertRaisesRegex(CooperativeWorkerBootstrapError, 'requires UNBOUND'):
+            qualify_released_assignment_from_environment(
+                trusted,
+                assignment_id='assignment-fixture-1',
+                material_worker_id='MD001',
+            )
+        unbound = self.environment(
+            LION_COOPERATIVE_BOOTSTRAP_MODE=UNBOUND_MODE,
+            LION_MATERIAL_WORKER_ID='MD001',
+        )
+        with self.assertRaisesRegex(CooperativeWorkerBootstrapError, 'worker/environment mismatch'):
+            qualify_released_assignment_from_environment(
+                unbound,
+                assignment_id='assignment-fixture-1',
+                material_worker_id='MD002',
+            )
 
     def test_worker_bootstraps_before_first_status_publication(self):
         worker = (

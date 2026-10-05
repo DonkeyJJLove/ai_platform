@@ -91,6 +91,7 @@ class CooperativeRuntimeBootstrapDependencies:
     """Already-existing canonical owners supplied by a pinned trusted module."""
 
     context_source: Callable[[str], CooperativeRuntimeContext]
+    qualification_context_source: Callable[[str], CooperativeRuntimeContext]
     upstream_admission_source: Any
     upstream_admission_trust: RuntimeAdmissionSourceTrustBinding
     durable_admission_trust: RuntimeAdmissionSourceTrustBinding
@@ -120,6 +121,7 @@ class CooperativeRuntimeBootstrapDependencies:
                  "canonical LiveAuthorityAdmission required")
         for callback, label in (
             (self.context_source, "context source"),
+            (self.qualification_context_source, "qualification context source"),
             (self.runtime_identity_source, "runtime identity source"),
             (self.provisioning_binding_source, "provisioning binding source"),
             (self.transfer_binding_source, "transfer binding source"),
@@ -228,6 +230,7 @@ def build_root_from_environment(
         materialization_db=state_root / "materialization.sqlite",
         runtime_state_db=state_root / "runtime-state.sqlite",
         context_source=deps.context_source,
+        qualification_context_source=deps.qualification_context_source,
         upstream_admission_source=deps.upstream_admission_source,
         upstream_admission_trust=deps.upstream_admission_trust,
         durable_admission_trust=deps.durable_admission_trust,
@@ -240,6 +243,39 @@ def build_root_from_environment(
         transfer_binding_source=deps.transfer_binding_source,
         now_fn=deps.now_fn,
     )
+
+
+def qualify_released_assignment_from_environment(
+    environment: Mapping[str, str] | None = None,
+    *,
+    assignment_id: str,
+    material_worker_id: str,
+) -> dict[str, Any]:
+    """Qualify one worker-private projection while normal runtime stays UNBOUND."""
+    env = os.environ if environment is None else environment
+    _require(
+        env.get("LION_COOPERATIVE_BOOTSTRAP_MODE", UNBOUND_MODE) == UNBOUND_MODE,
+        "worker qualification requires UNBOUND runtime",
+    )
+    _require(
+        _required(env, "LION_COOPERATIVE_BOOTSTRAP_VERSION", limit=64) == BOOTSTRAP_VERSION,
+        "cooperative bootstrap version mismatch",
+    )
+    configured_worker = _required(env, "LION_MATERIAL_WORKER_ID", limit=128)
+    _require(configured_worker == material_worker_id, "qualification worker/environment mismatch")
+    deps = load_dependencies_from_environment(env)
+    root = build_root_from_environment(deps, env)
+    result = root.qualify_released_write_assignment(
+        assignment_id,
+        material_worker_id=material_worker_id,
+    )
+    _require(result.get("execution_performed") is False, "qualification executed effect")
+    _require(result.get("authority_effect") == "NONE", "qualification authority")
+    return {
+        **result,
+        "bootstrap_version": BOOTSTRAP_VERSION,
+        "bootstrap_mode": UNBOUND_MODE,
+    }
 
 
 def bootstrap_process_runtime(

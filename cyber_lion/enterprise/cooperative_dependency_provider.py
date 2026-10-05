@@ -319,7 +319,7 @@ def build_dependencies_from_environment() -> CooperativeRuntimeBootstrapDependen
     currentness_source = SQLiteEffectTimeCurrentnessSource(evidence_db, currentness_trust, now_fn=now_fn)
     pin_source = SQLiteContextPinSource(evidence_db, now_fn=now_fn)
 
-    def context_source(assignment_id: str):
+    def resolver_for(assignment_id: str):
         pin = pin_source(assignment_id)
         return PinnedCooperativeContextResolver(
             mission_db=mission_db,
@@ -330,7 +330,13 @@ def build_dependencies_from_environment() -> CooperativeRuntimeBootstrapDependen
             dispatch_source=dispatch_source,
             runtime_identity_source=identity_source,
             now_fn=now_fn,
-        )(assignment_id)
+        )
+
+    def context_source(assignment_id: str):
+        return resolver_for(assignment_id)(assignment_id)
+
+    def qualification_context_source(assignment_id: str):
+        return resolver_for(assignment_id).resolve_for_qualification(assignment_id)
 
     transport = ReadOnlyAuthorityControlPlaneTransport(control_db)
     authority_source = TrustedControlPlaneAuthoritySource(transport)
@@ -348,6 +354,7 @@ def build_dependencies_from_environment() -> CooperativeRuntimeBootstrapDependen
 
     return CooperativeRuntimeBootstrapDependencies(
         context_source=context_source,
+        qualification_context_source=qualification_context_source,
         upstream_admission_source=admission_source,
         upstream_admission_trust=upstream_trust,
         durable_admission_trust=durable_trust,

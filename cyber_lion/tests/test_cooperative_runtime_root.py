@@ -78,6 +78,7 @@ class CooperativeRuntimeRootTests(unittest.TestCase):
             materialization_db=self.material_db,
             runtime_state_db=self.runtime_db,
             context_source=lambda aid: self.f.context(aid),
+            qualification_context_source=lambda aid: self.f.context(aid),
             upstream_admission_source=self.f.source,
             upstream_admission_trust=rt.trust(),
             durable_admission_trust=self.durable_trust,

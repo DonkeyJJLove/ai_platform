@@ -102,6 +102,21 @@ class CooperativeContextResolverTests(unittest.TestCase):
         self.assertEqual(before, self.db.read_bytes())
         self.assertEqual(list(self.f.root.iterdir()), [])
 
+    def test_ready_state_is_qualification_only_and_effect_resolver_stays_claimed_only(self):
+        self.sql("UPDATE mission_execution_assignments SET state='READY'")
+        with self.assertRaisesRegex(CooperativeContextResolutionError, 'assignment/driver not active'):
+            self.resolver(self.aid)
+        before = self.db.read_bytes()
+        context = self.resolver.resolve_for_qualification(self.aid)
+        self.assertEqual(context, self.f.context(self.aid))
+        self.assertEqual(before, self.db.read_bytes())
+        self.assertEqual(list(self.f.root.iterdir()), [])
+
+    def test_claimed_state_is_rejected_by_qualification_resolver(self):
+        with self.assertRaisesRegex(CooperativeContextResolutionError, 'assignment/driver not active'):
+            self.resolver.resolve_for_qualification(self.aid)
+        self.assertEqual(list(self.f.root.iterdir()), [])
+
     def test_real_resolver_adapter_runtime_write_and_verifier(self):
         provider = self.f.make_provider(context_source=self.resolver)
         def control(op, args):

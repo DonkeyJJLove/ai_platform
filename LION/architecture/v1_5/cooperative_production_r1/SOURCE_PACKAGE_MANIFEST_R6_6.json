@@ -61,7 +61,7 @@
     },
     {
       "path": "cyber_lion/enterprise/cooperative_context_resolver.py",
-      "sha256": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73"
+      "sha256": "84c669b7eaef07250e770135d91aa328c5b18c30ca7404da677dd5a24489a0a6"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
@@ -69,7 +69,7 @@
     },
     {
       "path": "cyber_lion/enterprise/cooperative_dependency_provider.py",
-      "sha256": "d39015283a852a6b3248f5ffc6741d26f9265eadf8087086f739aa1dd94db420"
+      "sha256": "35d7609382682a6ccf6323fe0f5468987060afe89f4203ee7b5986f70c946abb"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_provider_materialization.py",
@@ -89,7 +89,7 @@
     },
     {
       "path": "cyber_lion/enterprise/cooperative_runtime_root.py",
-      "sha256": "e4a340973dfe16be1a3e7db8a299e6ba8304c466efcf88af975fc201ea3200f2"
+      "sha256": "834055f1f7de29a9cff02b8c749e204a8b5f247130ae825060331e0343671e20"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_runtime_writer.py",
@@ -133,7 +133,7 @@
     },
     {
       "path": "cyber_lion/mission_control/cooperative_worker_bootstrap.py",
-      "sha256": "18ee117b08307cd7777e5ef4d682651c717b67d134b495f3c16d663158ed2de5"
+      "sha256": "6840116fb24f36033f02deea3cb482468f69cdcfbd62209b02e017cce64d9717"
     },
     {
       "path": "cyber_lion/mission_control/cooperative_worker_runtime.py",
@@ -224,6 +224,10 @@
       "sha256": "ce1b178e79297ea286bbc0118c65133b8265aff8ae4ff8926de36e6c21c88cda"
     },
     {
+      "path": "tools/lion_cooperative_worker_qualification.py",
+      "sha256": "9d8b56476b064efe56e22e9a05712330e4a123acd4eee4316d05c30bfb0644fc"
+    },
+    {
       "path": "tools/lion_firefox_broker_relay.py",
       "sha256": "be178c21e5f5ee8cffb7afa2b902fd622351f4dca84bc0f2384f1cb6ac7daf03"
     },
@@ -276,6 +280,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "54e72b9d148aac3ac400bdb97cd42aa710d061c05ae97e3c02ecedb32f3d5db7",
+  "package_digest": "0ff886d60063f71d0505c38ec87a729b612374904c36f2948471855ba7199f2e",
   "authority_effect": "NONE"
 }
