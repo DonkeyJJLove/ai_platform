@@ -104,7 +104,7 @@ class SchedulerStorageReconciliationTests(unittest.TestCase):
         before = self.receipt_snapshot(); self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok'); scheduler.migrate(self.conn, now); scheduler.migrate(self.conn, now); self.assertEqual(self.receipt_snapshot(), before)
         self.assertEqual(tuple(self.conn.execute('SELECT dispatch_count,last_dispatched_at,last_dispatch_order FROM mission_scheduler_turns').fetchone()), (9, now(), 0))
         migrations=[tuple(r) for r in self.conn.execute('SELECT version,schema_id FROM mission_scheduler_migrations ORDER BY version')]
-        self.assertEqual(migrations, [(1,'lion.scheduler-storage-reconciliation/v1'),(2,'lion.generic-effect-evidence-executor/v1'),(3,'lion.process-contract-plane/v1'),(4,'lion.control-plane-reconnaissance/v1'),(5,'lion.recon-evidence-reacquisition/v1'),(6,'lion.operator-stale-result-evidence/v1')])
+        self.assertEqual(migrations, [(1,'lion.scheduler-storage-reconciliation/v1'),(2,'lion.generic-effect-evidence-executor/v1'),(3,'lion.process-contract-plane/v1'),(4,'lion.control-plane-reconnaissance/v1'),(5,'lion.recon-evidence-reacquisition/v1'),(6,'lion.operator-stale-result-evidence/v1'),(7,'lion.held-assignment-release-evidence/v1')])
         self.assertEqual(self.conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
         with self.assertRaisesRegex(ValueError, '^assignment receipt conflict$'): scheduler.record_internal_receipt(self.conn, aid, {'version': 1}, now)
         self.assertEqual(self.receipt_snapshot(), before)
