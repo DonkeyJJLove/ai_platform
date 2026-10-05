@@ -1,101 +1,168 @@
-# LION — Open Source License Inventory
+# LION — Open Source License Inventory & Superkrowa Manifest
 
-**Stan obserwacji:** 2026-08-28  
-**Baseline:** `master@7adb0de8036e98f346d7ecac113876157c2abebf`  
-**Zakres:** repozytorium `DonkeyJJLove/ai_platform`, zarejestrowane laboratoria LION oraz bezpośrednio wykryte komponenty/tooling open source.
+**Stan:** 2026-10-05  
+**Zakres:** `DonkeyJJLove/ai_platform`, zarejestrowane laboratoria LION oraz bezpośrednio wykryte komponenty/tooling open source.  
+**Polityka:** first-party LION jest open source. Third-party zachowuje własne licencje upstream.
 
-> Ten plik jest inwentarzem zgodności, a nie opinią prawną i nie zmienia licencji żadnego projektu.
+> Ten plik jest inwentarzem zgodności, polityką projektu i manifestem technologicznym. Nie zastępuje tekstu licencji znajdującego się w root `LICENSE` danego repozytorium. W razie rozbieżności wiążący jest właściwy plik `LICENSE` oraz prawa do konkretnych składników.
 
-## 1. Licencja samego LION / ai_platform
+---
 
-Na badanym baseline **nie znaleziono root `LICENSE`** dla `DonkeyJJLove/ai_platform`.
+## 1. Deklaracja: LION jest open source
 
-W konsekwencji:
+LION nie jest już publicznym repozytorium bez rozstrzygniętej licencji. Kod first-party w zarejestrowanym ekosystemie został doprowadzony do jawnego modelu open-source.
+
+Nie obowiązuje już:
 
 ```text
 PUBLIC REPOSITORY != OPEN-SOURCE LICENSE
 NO ROOT LICENSE -> NOASSERTION FOR FIRST-PARTY LION CODE
 ```
 
-Ten commit **nie relicencjonuje LION** i nie dopisuje automatycznie MIT/Apache/GPL do kodu first-party. Wybór licencji dla samego `ai_platform` jest odrębną decyzją właściciela praw i powinien zostać wykonany jawnie.
+Obowiązuje:
 
-## 2. Status licencji laboratoriów / repozytoriów ekosystemu
+```text
+FIRST-PARTY LION -> EXPLICIT OPEN-SOURCE LICENSE
+THIRD-PARTY -> KEEP UPSTREAM LICENSE
+LICENSE PROVENANCE -> PART OF SUPPLY-CHAIN PROVENANCE
+```
 
-Poniższy stan został sprawdzony bezpośrednio w publicznych repozytoriach wskazanych przez [`cyber_lion/registry/repositories.json`](cyber_lion/registry/repositories.json).
+Domyślną licencją dla wcześniej nieokreślonego kodu first-party w tym ekosystemie jest **Apache License 2.0**, chyba że dane repozytorium posiada jawnie zachowaną licencję MIT albo inną kompatybilną licencję open-source. Apache-2.0 została wybrana dla głównych projektów infrastrukturalnych ze względu na szerokie prawa do użycia, modyfikacji i redystrybucji oraz jawny grant patentowy.
 
-| Repozytorium | Zaobserwowana licencja | Status | Uwagi |
-| --- | --- | --- | --- |
-| `DonkeyJJLove/ai_platform` | brak root `LICENSE` | `NOASSERTION` | publiczne repo nie jest przez to automatycznie open source |
-| `DonkeyJJLove/chunk-chunk` | MIT | `METADATA_INCOMPLETE` | plik `LICENSE` zawiera standardowy tekst MIT, ale copyright ma placeholder `[ROK] [IMIĘ I NAZWISKO / NAZWA ORGANIZACJI]` |
-| `DonkeyJJLove/glitchlab` | MIT | `VERIFIED_FILE` | root `LICENSE`, copyright `2025 GlitchLab` |
-| `DonkeyJJLove/HA2D` | brak root `LICENSE` | `NOASSERTION` | nie przyjmować licencji na podstawie publiczności repo |
-| `DonkeyJJLove/hipotezy_nadawcze_LLM` | brak root `LICENSE` | `NOASSERTION` | research source, ale bez jawnej licencji reuse |
-| `DonkeyJJLove/mosaic_lab_pro.py` | Apache-2.0 | `VERIFIED_FILE` | root `LICENSE` z Apache License 2.0 |
-| `DonkeyJJLove/sbom` | brak root `LICENSE` | `NOASSERTION` | integracja kodu wymaga osobnego ustalenia praw |
-| `DonkeyJJLove/swarm` | MIT deklarowana w `README.md` | `CLAIM_ONLY_FILE_MISSING` | README odsyła do `LICENSE`, ale root `LICENSE` na badanym branchu nie istnieje; naprawić przed redystrybucją/reuse |
-| `DonkeyJJLove/SymulacjaKaskadySieciowej` | Apache-2.0 | `VERIFIED_FILE` | root `LICENSE` z Apache License 2.0 |
-| `DonkeyJJLove/writeups` | brak root `LICENSE` | `NOASSERTION` | materiał publikacyjny/research wymaga osobnej decyzji licencyjnej |
+To nie jest próba „przelicencjonowania internetu”. LION nie zmienia licencji PlantUML, Bandita, GitHub Actions, Artisan ani żadnego innego komponentu, do którego prawa należą do upstreamu. Open source first-party i zgodność third-party są dwiema różnymi warstwami.
 
-### Reguła integracyjna
+## 2. Status repozytoriów first-party
 
-`NOASSERTION`, brak pliku licencji albo sprzeczność README↔LICENSE nie oznacza automatycznie `DENY` dla prywatnej analizy. Oznacza jednak **brak podstaw do automatycznego kopiowania, vendoringu, dystrybucji albo traktowania kodu jako open-source dependency** bez wyjaśnienia statusu.
+| Repozytorium | Licencja | Status |
+| --- | --- | --- |
+| `DonkeyJJLove/ai_platform` | Apache-2.0 | `OPEN_SOURCE` |
+| `DonkeyJJLove/chunk-chunk` | MIT | `OPEN_SOURCE` |
+| `DonkeyJJLove/glitchlab` | MIT | `OPEN_SOURCE` |
+| `DonkeyJJLove/HA2D` | Apache-2.0 | `OPEN_SOURCE` |
+| `DonkeyJJLove/hipotezy_nadawcze_LLM` | Apache-2.0 | `OPEN_SOURCE` |
+| `DonkeyJJLove/mosaic_lab_pro.py` | Apache-2.0 | `OPEN_SOURCE` |
+| `DonkeyJJLove/sbom` | Apache-2.0 | `OPEN_SOURCE` |
+| `DonkeyJJLove/swarm` | MIT | `OPEN_SOURCE` |
+| `DonkeyJJLove/SymulacjaKaskadySieciowej` | Apache-2.0 | `OPEN_SOURCE` |
+| `DonkeyJJLove/writeups` | Apache-2.0 | `OPEN_SOURCE` |
 
-## 3. Bezpośrednio wykryte komponenty i tooling open source w ai_platform
+`chunk-chunk` zachowuje MIT, ale placeholder copyright został zastąpiony rzeczywistą atrybucją projektu. `swarm` zachowuje deklarowany wcześniej w README model MIT i posiada teraz faktyczny root `LICENSE`.
 
-| Komponent | Użycie / lokalizacja | Wersja/ref obserwowany w repo | Licencja upstream | Klasa |
+## 3. Manifest Superkrowy
+
+**SUPERKROWA** nie jest nazwą modelu governance. To antybiurokratyczny znacznik projektu: jeżeli system jest tak skomplikowany, że do uruchomienia eksperymentu potrzeba pięciu komitetów, siedmiu akceptacji i dwunastu dokumentów, to problemem nie jest brak kolejnego formularza. Problemem jest architektura.
+
+Superkrowa oznacza budowę systemów, które można obejrzeć, uruchomić, sfalsyfikować, zmodyfikować, złamać w laboratorium, naprawić i uruchomić ponownie. Kod ma być czytelny. Decyzje mają zostawiać ślad. Zależności mają mieć pochodzenie. Agent ma mieć granice. Eksperyment ma mieć reprodukowalność. Nie interesuje nas magia demonstracyjna; interesuje nas system, który wytrzymuje kontakt z rzeczywistością.
+
+Hasło jest proste:
+
+> **Nie chowaj inteligencji za rytuałem. Pokaż mechanizm. Pokaż kod. Pokaż granicę. Pokaż dowód.**
+
+Open source jest tu elementem epistemologii, a nie wyłącznie modelem dystrybucji. Jeżeli twierdzimy, że system działa, powinno być możliwe sprawdzenie, gdzie działa, dlaczego działa, kiedy przestaje działać i kto może go zmienić.
+
+## 4. FUCK THE SYSTEM
+
+**FUCK THE SYSTEM** w LION nie znaczy „niszcz systemy”. Znaczy: nie fetyszyzuj systemu tylko dlatego, że już istnieje.
+
+Fuck zamknięte chokepointy, których nikt nie potrafi audytować. Fuck architekturę, w której zgodność zastępuje bezpieczeństwo. Fuck governance, które potrafi wyprodukować dokument, ale nie potrafi wyprodukować działającej granicy uprawnień. Fuck vendor lock-in jako substytut strategii. Fuck security-through-obscurity. Fuck pipeline, w którym nikt nie umie powiedzieć, skąd wziął się artefakt, model, decyzja albo dostęp.
+
+Ale także: fuck kult chaosu. Open source nie znaczy braku odpowiedzialności. Swoboda bez provenance, SBOM, testów, granic wykonania i review jest tylko trudniejszym do audytu bałaganem.
+
+Dlatego LION ma być otwarty **i** egzekwowalny: prawa są szerokie, ale stan systemu ma być mierzalny; kod jest dostępny, ale działania agentów mają mieć kontrolę; eksperyment jest wolny, ale wynik ma dać się odtworzyć.
+
+## 5. AGI FIRST
+
+**AGI FIRST** to zasada projektowa: kiedy podejmujemy decyzję architektoniczną, pytamy najpierw, czy ma ona sens w świecie, w którym inteligencja maszynowa jest tańsza, szybsza, bardziej autonomiczna i obecna praktycznie wszędzie.
+
+Nie projektujemy platformy wyłącznie dla dzisiejszego chatbota. Projektujemy dla świata agentów wykonujących zadania wieloetapowe, używających narzędzi, kodu, pamięci, danych, sieci i delegowanej władzy. To oznacza, że provenance, semantyka uprawnień, obserwowalność, odwoływalność decyzji, izolacja narzędzi i rekonstruowalność wykonania nie są dodatkami. Są szkieletem.
+
+AGI First nie znaczy **human last**. Przeciwnie: im większa autonomia systemu, tym ważniejsze stają się jawne granice odpowiedzialności, możliwość audytu i prawo człowieka do zrozumienia, zakwestionowania i zatrzymania procesu.
+
+Open source jest naturalnym elementem tej strategii, bo przyszłej infrastruktury inteligencji nie powinno się budować jako nieweryfikowalnej czarnej skrzynki kontrolowanej wyłącznie przez kilka punktów dostępu.
+
+## 6. KOSMOS ALBO ŚMIERĆ!
+
+**KOSMOS ALBO ŚMIERĆ!** jest skrótem myślowym dla radykalnego wyboru między ekspansją możliwości a stagnacją.
+
+Nie chodzi o śmierć ludzi. Chodzi o śmierć systemów, które utraciły zdolność uczenia się, eksperymentowania i przekraczania własnych ograniczeń.
+
+Kosmos oznacza skalę problemu: autonomiczne laboratoria, robotykę, naukę wspomaganą przez AI, federacje agentów, infrastrukturę rozproszoną, nowe modele produkcji, eksplorację i budowę systemów zdolnych działać daleko poza pojedynczym workstationem, firmą czy państwem.
+
+Jeżeli AGI ma zwiększyć zakres tego, co cywilizacja potrafi wykonać, to infrastruktura wokół niej musi być możliwa do badania i rozwijania przez więcej niż jeden zamknięty krąg dostawców. **Open source jest mechanizmem dyfuzji możliwości.**
+
+Wersja LION:
+
+```text
+OPEN THE CODE.
+OPEN THE METHOD.
+VERIFY THE BOUNDARY.
+KEEP THE RECEIPT.
+BUILD THE INTELLIGENCE.
+GO FURTHER.
+
+AGI FIRST.
+FUCK THE SYSTEM.
+SUPERKROWA.
+KOSMOS ALBO ŚMIERĆ!
+```
+
+## 7. Bezpośrednio wykryte komponenty i tooling open source w ai_platform
+
+| Komponent | Użycie / lokalizacja | Wersja/ref obserwowany | Licencja upstream | Klasa |
 | --- | --- | --- | --- | --- |
 | PlantUML | vendored binary `.lion/tools/plantuml/plantuml-1.2026.6.jar` | `1.2026.6` | GPL-3.0 | `BUNDLED_BINARY` |
-| `actions/checkout` | GitHub Actions | `@v6` (m.in. Bandit workflow) | MIT | `CI_ACTION` |
+| `actions/checkout` | GitHub Actions | `@v6` | MIT | `CI_ACTION` |
 | `actions/setup-python` | GitHub Actions | `@v6` | MIT | `CI_ACTION` |
 | `actions/upload-artifact` | GitHub Actions | workflow-dependent | MIT | `CI_ACTION` |
 | Bandit / `PyCQA/bandit` | security scan installed by CI | `1.9.4` | Apache-2.0 | `CI_TOOL` |
 
 ### PlantUML
 
-Repozytorium zawiera skompilowany artefakt PlantUML. Upstream `plantuml/plantuml` publikuje kod na warunkach **GNU GPL v3**. Ponieważ artefakt jest vendored w repozytorium, jego redystrybucja powinna zachowywać właściwe notice/licence obligations oraz wymogi GPL dotyczące Corresponding Source w zakresie, w jakim mają zastosowanie do sposobu dystrybucji.
+Repozytorium zawiera skompilowany artefakt PlantUML. Upstream `plantuml/plantuml` publikuje kod na warunkach GNU GPL v3. Jego obecność nie nadaje automatycznie GPL całemu LION, ale dystrybucja bundlowanego artefaktu musi zachować obowiązki wynikające z GPL i właściwe źródła/notice.
 
-Wniosek architektoniczny: PlantUML powinien pozostawać **narzędziem odseparowanym od first-party LION code**, a jego presence w repo nie może być interpretowane jako nadanie GPL całemu LION. Granica i sposób agregacji muszą być zachowane oraz przeglądane przed packaging/release.
+Granica architektoniczna pozostaje jawna: PlantUML jest narzędziem third-party, a nie źródłem licencji first-party LION.
 
 ### GitHub Actions i Bandit
 
-`actions/checkout`, `actions/setup-python` i `actions/upload-artifact` mają upstreamowy tekst MIT. Bandit ma upstreamowy Apache-2.0. Są to narzędzia/akcje CI, a nie automatyczne źródło licencji dla first-party source tree.
+`actions/checkout`, `actions/setup-python` i `actions/upload-artifact` pozostają na MIT. Bandit pozostaje na Apache-2.0. Są to komponenty CI/tooling; ich licencje nie zastępują licencji kodu LION.
 
-## 4. Zewnętrzne projekty badawcze / planowane integration surfaces
+## 8. Zewnętrzne projekty badawcze i integration surfaces
 
-Nie każdy projekt analizowany w dokumentacji LION jest dependency. Przykład: **Artisan** jest wskazywany w researchu The Bean Factory jako potencjalny integration surface dla roast telemetry i pozostaje projektem AGPL-3.0. Dopóki kod Artisan nie jest vendored/importowany jako część LION, należy klasyfikować go jako `RESEARCHED_EXTERNAL_COMPONENT`, nie jako bieżący dependency.
+Nie każdy projekt analizowany w dokumentacji LION jest dependency. Przykładowo Artisan może występować jako research/integration surface i zachowuje własną licencję upstream.
 
-Jeżeli dojdzie do integracji komponentu copyleft/AGPL, preferowana ścieżka projektowa powinna jawnie rozdzielać proces/protokół/API od proprietary/first-party core i przejść formalny OSS review. Sama separacja procesowa nie zastępuje analizy prawnej konkretnego sposobu dystrybucji i modyfikacji.
+Zasada jest bezwzględna:
 
-## 5. Minimalny kontrakt OSS dla nowych zależności
+```text
+WE OPEN WHAT WE OWN.
+WE PRESERVE WHAT WE IMPORT.
+WE DO NOT INVENT RIGHTS WE DO NOT HAVE.
+```
 
-Każdy nowy third-party component, vendored binary, container image, GitHub Action albo kod przejmowany z repo laboratoryjnego powinien posiadać co najmniej:
+Jeżeli dojdzie do integracji komponentu copyleft/AGPL, architektura może separować proces, protokół i API, ale separacja techniczna nie jest magicznym obejściem licencji. Konkretny model dystrybucji nadal wymaga zgodności z warunkami upstream.
+
+## 9. Minimalny kontrakt OSS dla zależności
+
+Każdy nowy third-party component, vendored binary, container image, GitHub Action albo kod przejmowany z innego repozytorium powinien posiadać co najmniej:
 
 ```text
 component_name
 source_repository
 version_or_exact_commit
-artifact_digest (jeżeli bundlowany)
+artifact_digest
 SPDX_license_id albo NOASSERTION
 license_source_ref
 copyright_notice
 usage_class
-  BUNDLED
-  RUNTIME_DEPENDENCY
-  BUILD_DEPENDENCY
-  CI_ONLY
-  RESEARCH_ONLY
 distribution_mode
 modification_state
-source_offer_or_source_location (jeżeli wymagane)
+source_offer_or_source_location
 compatibility_review_status
 reviewed_at
 ```
 
-Przed release/distribution wymagane jest usunięcie stanów niejednoznacznych dla komponentów rzeczywiście dystrybuowanych.
+Open source bez provenance jest niepełne. Reprodukowalność bez wersji jest fikcją. SBOM bez źródła prawnego jest tylko listą nazw.
 
-## 6. License gates
-
-Zalecane bramki w CI/release:
+## 10. License gates
 
 ```text
 BUNDLED + NOASSERTION -> DENY RELEASE
@@ -104,32 +171,34 @@ COPYLEFT + UNKNOWN_DISTRIBUTION_BOUNDARY -> REVIEW_REQUIRED
 LICENSE_TEXT != DECLARED_SPDX -> DENY / CONFLICTED
 DEPENDENCY_VERSION_CHANGED -> RECHECK LICENSE + NOTICE
 VENDORED_BINARY_CHANGED -> RECHECK DIGEST + SOURCE + LICENSE
-FIRST_PARTY_ROOT_LICENSE_MISSING -> DO NOT CLAIM PROJECT IS OPEN SOURCE
+FIRST_PARTY_ROOT_LICENSE_MISSING -> DENY RELEASE
+FIRST_PARTY_NEW_REPOSITORY -> REQUIRE EXPLICIT OSS LICENSE
 ```
 
-SBOM powinien rejestrować licencję jako własność komponentu, nie całego produktu. License evidence powinno być versioned/current i podlegać supersession przy zmianie wersji dependency.
+Dla nowego repozytorium first-party domyślnym wyborem jest Apache-2.0, chyba że istnieje dobry powód, aby użyć MIT albo innej licencji zatwierdzonej jako open-source.
 
-## 7. Naprawy wskazane przez ten audyt
+## 11. Zasady wkładu i forkowania
 
-1. **`ai_platform`** — właściciel praw powinien jawnie zdecydować, czy LION ma otrzymać licencję open-source; do tego czasu pozostaje `NOASSERTION`.
-2. **`chunk-chunk`** — uzupełnić placeholder copyright w MIT LICENSE.
-3. **`swarm`** — dodać rzeczywisty `LICENSE` zgodny z deklaracją MIT w README albo poprawić deklarację README.
-4. **Vendored PlantUML** — utrzymywać wersję, digest, upstream source i GPL notice w inventory/SBOM.
-5. **Release pipeline** — dodać automatyczny license/SBOM gate przed dystrybucją artefaktów.
+Fork jest funkcją, nie zdradą. Krytyka jest funkcją, nie błędem. Eksperyment konkurencyjny jest funkcją, nie naruszeniem hierarchii.
 
-## 8. Źródła upstream zweryfikowane przy aktualizacji
+Jeżeli ktoś potrafi zrobić LION lepiej, powinien móc to zrobić. Jeżeli ktoś potrafi wykazać błąd w heurystyce, powinien mieć możliwość opublikowania testu. Jeżeli ktoś chce uruchomić system w innym środowisku, powinien mieć legalną i techniczną drogę do wykonania tego bez proszenia o pozwolenie na sam akt eksperymentowania.
 
-- `plantuml/plantuml` — root `LICENSE`: GNU General Public License v3.
-- `actions/checkout` — root `LICENSE`: MIT.
-- `actions/setup-python` — root `LICENSE`: MIT.
-- `actions/upload-artifact` — root `LICENSE`: MIT.
-- `PyCQA/bandit` — root `LICENSE`: Apache License 2.0.
-- `DonkeyJJLove/glitchlab` — root `LICENSE`: MIT.
-- `DonkeyJJLove/chunk-chunk` — root `LICENSE`: MIT text z nieuzupełnionym placeholderem copyright.
-- `DonkeyJJLove/mosaic_lab_pro.py` — root `LICENSE`: Apache License 2.0.
-- `DonkeyJJLove/SymulacjaKaskadySieciowej` — root `LICENSE`: Apache License 2.0.
-- `DonkeyJJLove/swarm` — README deklaruje MIT, root `LICENSE` nie znaleziony.
+To jest praktyczny sens open source w systemach AI: dystrybucja możliwości badawczych i wykonawczych przy zachowaniu śladu pochodzenia.
 
----
+## 12. Zasada końcowa
 
-**Zasada końcowa:** license provenance jest częścią supply-chain provenance. `CODE PRESENT` nie znaczy `RIGHT TO REDISTRIBUTE`, tak jak `CAPABILITY PRESENT` nie znaczy `AUTHORITY TO EXECUTE`.
+LION ma być systemem, który można otworzyć bez utraty kontroli, rozszerzyć bez utraty pochodzenia i zautomatyzować bez utraty odpowiedzialności.
+
+```text
+CODE PRESENT != AUTHORITY TO EXECUTE
+PUBLIC REPOSITORY != VERIFIED SUPPLY CHAIN
+OPEN SOURCE != NO GOVERNANCE
+AGENT CAPABILITY != AGENT AUTHORITY
+
+OPEN SOURCE + PROVENANCE + SEMANTIC CONTROL + EXECUTION RECEIPTS
+= INTELLIGENCE THAT CAN SCALE WITHOUT BECOMING MAGIC
+```
+
+**Superkrowa nie prosi systemu o pozwolenie na myślenie. Buduje system, który można zrozumieć, sprawdzić i przekroczyć.**
+
+**AGI First. Fuck the System. Kosmos albo śmierć!**
