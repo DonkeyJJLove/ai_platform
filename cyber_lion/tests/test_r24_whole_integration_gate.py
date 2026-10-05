@@ -64,6 +64,9 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertTrue({
             "cyber_lion/enterprise/cooperative_runtime_composition.py",
             "cyber_lion/enterprise/cooperative_runtime_root.py",
+            "cyber_lion/mission_control/material_worker_runtime.py",
+            "cyber_lion/mission_control/cooperative_worker_runtime.py",
+            "LION/runtime_compat/r24/docker-autonomy/worker.py",
             "cyber_lion/enterprise/runtime_execution.py",
             "cyber_lion/enterprise/executor_sandbox.py",
             "cyber_lion/contracts/runtime_execution.py",

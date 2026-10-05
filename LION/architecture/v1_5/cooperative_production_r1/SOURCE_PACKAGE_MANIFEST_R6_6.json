@@ -9,7 +9,7 @@
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
-      "sha256": "caf6e042db5d8b179c0a685921fffa1d864ee0ad276ceb029c88becde5e4baf8"
+      "sha256": "8e9f07fa147c22bad8996b284c28bede70693547b1d93e6aade9d9c590916e4b"
     },
     {
       "path": "cyber_lion/contracts/action_ir.py",
@@ -100,6 +100,10 @@
       "sha256": "c7fd62ee216d23b5fffba80b4e0a47f32b467293146d5793a3e44d7e2b7841e1"
     },
     {
+      "path": "cyber_lion/mission_control/cooperative_worker_runtime.py",
+      "sha256": "0df864ba28771c073d3c887ad82862806d83c454f26f14100eafca89f8ba12d7"
+    },
+    {
       "path": "cyber_lion/mission_control/dual_result_join.py",
       "sha256": "7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f"
     },
@@ -118,6 +122,10 @@
     {
       "path": "cyber_lion/mission_control/lpcl_runtime_selection.py",
       "sha256": "3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1"
+    },
+    {
+      "path": "cyber_lion/mission_control/material_worker_runtime.py",
+      "sha256": "1f086e6af21ef1244a16dbcbc7f0594c6919cc67e1934944587f32ea7142f1cd"
     },
     {
       "path": "cyber_lion/mission_control/mission_reconciliation.py",
@@ -232,6 +240,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "d5b4b4392fddc6a13ac3db5408585f9413fe7ec5a277e52e7c0450c9d54ee0e2",
+  "package_digest": "e92f2f7f085a28fb14672f94d30c0b98bf4440e34abd2d0419dcaf2e38f3e5d8",
   "authority_effect": "NONE"
 }
