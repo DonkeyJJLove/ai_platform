@@ -11,9 +11,9 @@ from tools.p0_surface_closure_campaign import (
 
 REPO="DonkeyJJLove/ai_platform"
 EXPECTED_CLASSES={
-    "persistent_state.write":460,"filesystem.write":14,"filesystem.delete":14,"runtime.tool_execution":9,"filesystem.replace":7,
-    "external.network.post":4,"filesystem.bootstrap.write":3,"filesystem.bootstrap.mkdir":2,"external.network.authority_observation":1,
-    "external.network.delete":1,"external.network.patch":1,"repository_ref.delete":1,"runtime.process_launch":1,
+    "persistent_state.write":466,"filesystem.write":17,"filesystem.delete":16,"runtime.tool_execution":10,"filesystem.replace":8,
+    "external.network.post":5,"filesystem.bootstrap.write":3,"filesystem.bootstrap.mkdir":2,"external.network.authority_observation":1,
+    "external.network.delete":1,"external.network.patch":1,"repository_ref.delete":1,"runtime.process_launch":3,
 }
 EXPECTED_FIRST=frozenset(RECEIPT_IMPLIED_MOON_SURFACES)
 WORKFLOW_STEP_ONLY=frozenset({
@@ -45,7 +45,7 @@ def campaign():
 
 class P0SurfaceClosureCampaignTests(unittest.TestCase):
     def test_exact_current_matrix_and_scan_digest(self):
-        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),519);self.assertEqual(c.remaining_surface_count,len(inv.surfaces)-1)
+        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),535);self.assertEqual(c.remaining_surface_count,len(inv.surfaces)-1)
         self.assertEqual(c.excluded_surface_digests,(CERTIFIED_PARTIAL_SURFACE,));self.assertEqual(c.global_status,"UNKNOWN")
         self.assertEqual(Counter(x.effect_class for x in c.work_items),Counter(EXPECTED_CLASSES))
 
@@ -65,7 +65,7 @@ class P0SurfaceClosureCampaignTests(unittest.TestCase):
 
     def test_provider_family_partition_and_concentration(self):
         _,c=campaign();multi=[f for f in c.provider_families if len(f.surface_digests)>1];single=[f for f in c.provider_families if len(f.surface_digests)==1]
-        self.assertEqual(len(multi),51);self.assertEqual(sum(len(f.surface_digests) for f in multi),len(c.work_items)-len(single));self.assertEqual(len(single),15)
+        self.assertEqual(len(multi),55);self.assertEqual(sum(len(f.surface_digests) for f in multi),len(c.work_items)-len(single));self.assertEqual(len(single),18)
         self.assertEqual(sum(len(f.surface_digests) for f in c.provider_families),len(c.work_items))
 
     def test_foreign_runtime_evidence_and_scan_drift_fail_closed(self):
