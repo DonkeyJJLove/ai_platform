@@ -3,3 +3,13 @@ LION/evidence/r19/TASK.txt -text whitespace=blank-at-eol,blank-at-eof,space-befo
 # Windows PowerShell ISE launcher intentionally uses CRLF and a UTF-8 BOM.
 browser_broker/Start-LION-Browser-ISE.ps1 -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 browser_broker/Test-LION-Browser-ISE.ps1 -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# R6 source-byte bindings: normalize only the new component, never old evidence.
+cyber_lion/enterprise/edge_yoke/*.py text eol=lf
+cyber_lion/mission_control/edge_*.py text eol=lf
+cyber_lion/tests/test_edge_*.py text eol=lf
+tools/lion_edge_yoke.py text eol=lf
+tools/lion_r24_cooperative_pilot.py text eol=lf
+tools/lion_edge_yoke_windows.ps1 text eol=lf
+requirements/edge-yoke.txt text eol=lf
+docs/architecture/edge-yoke/*.md text eol=lf

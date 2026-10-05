@@ -236,3 +236,7 @@ LION ma umożliwiać szeroką inteligencję przy wąskiej, jawnej, obserwowalnej
 ## Semantic Cloud R1 candidate
 
 LION now has a candidate semantic-organization contract chain from MissionIntent through relevance projections into the existing CapabilityNeed/Composition/Mosaic and governed Action path. This is not an AGI or deployment claim.
+
+## Edge Yoke R6 — source candidate
+
+[Repository-native cooperative pilot and deny-only observer](docs/architecture/edge-yoke/README.md). Code lives in cyber_lion/tools, runtime keys and observations outside Git. This increment is a tested source candidate, not a deployed successor, new authority source or automatic mission launcher.
