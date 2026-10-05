@@ -9,7 +9,11 @@
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
-      "sha256": "d50f1848a9f9979c7d5e07009a3b586aa13dfa4ec3a637e38b5ba9b9e427c382"
+      "sha256": "15d03280dcd5661facb66970bee7f7ed50561cbb7210a9b83135ad487fdb5c03"
+    },
+    {
+      "path": "LION/runtime_compat/r24/docker-autonomy/cooperative-provider.py",
+      "sha256": "74df09c450498235e8bf30f9e5ede748dc4c7f54237357dd0b757324c7780a5d"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/fleet-currentness.py",
@@ -17,7 +21,7 @@
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/materialize.py",
-      "sha256": "f88aa045ef2049be2b2144f937d98c1ad000b8ab193fafeefb86ccd9a93d55ce"
+      "sha256": "792918c3b42a910c32a0b799e9e31561dd64d669d26e1816669f730faf7bfb1d"
     },
     {
       "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
@@ -60,12 +64,20 @@
       "sha256": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73"
     },
     {
+      "path": "cyber_lion/enterprise/cooperative_dependency_provider.py",
+      "sha256": "d39015283a852a6b3248f5ffc6741d26f9265eadf8087086f739aa1dd94db420"
+    },
+    {
       "path": "cyber_lion/enterprise/cooperative_provider_materialization.py",
       "sha256": "b10f9689fe8beb0071ca448e66239d2318c430eeeec3a5b7a61b743158e558a5"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_runtime_composition.py",
       "sha256": "7fbc60740e8e23bd29dfb7729ca4a8073966ec053c99289195935fdb8d94f91d"
+    },
+    {
+      "path": "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py",
+      "sha256": "5cbd0642e751aced9660b765f7d667bbfd2c27f83b24f3c82a4652275bc9d6ef"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_runtime_root.py",
@@ -256,6 +268,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "91dd3d0291188af29ea5811d4e944d2b9bfe8cf8605b5756a54b76adb5b833be",
+  "package_digest": "c89fd2b1e5abf2a8f670758a725af4754c66122263a4b2e6bb385b80c9e0a58d",
   "authority_effect": "NONE"
 }

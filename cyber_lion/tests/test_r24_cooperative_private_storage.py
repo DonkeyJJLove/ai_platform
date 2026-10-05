@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 from pathlib import Path
 import tempfile
@@ -66,6 +67,10 @@ class R24CooperativePrivateStorageTests(unittest.TestCase):
         self.assertIn('LION_COOPERATIVE_BOOTSTRAP_VERSION: "1.0.0"', text)
         self.assertIn("LION_COOPERATIVE_REPOSITORY_ROOT: /src", text)
         self.assertIn("LION_COOPERATIVE_PRIVATE_ROOT: /cooperative", text)
+        self.assertIn("LION_COOPERATIVE_DEPENDENCY_MODULE_PATH: /cooperative-provider-artifact/cooperative-provider.py", text)
+        self.assertIn("LION_COOPERATIVE_MISSION_DB_PATH: /mission-control/mission-control-v3.db", text)
+        self.assertIn("LION_COOPERATIVE_PROVIDER_DB_PATH: /cooperative-provider/evidence.sqlite", text)
+        self.assertIn("LION_COOPERATIVE_CONTROL_PLANE_DB_PATH: /cooperative-control/control-plane.sqlite", text)
         self.assertNotIn("./private:/cooperative", text)
 
         positions = []
@@ -89,6 +94,26 @@ class R24CooperativePrivateStorageTests(unittest.TestCase):
             self.assertIn("- ./identity.json:/identity/current.json:ro", block)
             self.assertIn("- ./status:/status:rw", block)
             self.assertIn("- ./gate:/gate:rw", block)
+            self.assertIn("- ./provider-artifact:/cooperative-provider-artifact:ro", block)
+            self.assertIn("${LION_COOPERATIVE_PROVIDER_STATE_HOST_PATH:-./unbound/provider-state}:/cooperative-provider:ro", block)
+            self.assertIn("${LION_COOPERATIVE_CONTROL_STATE_HOST_PATH:-./unbound/control-state}:/cooperative-control:ro", block)
+            self.assertIn("${LION_COOPERATIVE_MISSION_CONTROL_HOST_PATH:-./unbound/mission-control}:/mission-control:ro", block)
+
+    def test_provider_artifact_digest_is_source_pinned_and_readonly_mounts_are_bounded(self):
+        text = COMPOSE.read_text(encoding="utf-8")
+        provider = ROOT / "LION/runtime_compat/r24/docker-autonomy/cooperative-provider.py"
+        digest = hashlib.sha256(provider.read_bytes()).hexdigest()
+        self.assertIn("LION_COOPERATIVE_DEPENDENCY_MODULE_SHA256: " + digest, text)
+        self.assertIn("LION_COOPERATIVE_BOOTSTRAP_MODE: UNBOUND", text)
+        self.assertNotIn("LION_COOPERATIVE_BOOTSTRAP_MODE: TRUSTED_EXTERNAL_R1", text)
+
+    def test_materializer_externalizes_provider_artifact_but_does_not_activate_it(self):
+        source = MATERIALIZE.read_text(encoding="utf-8")
+        self.assertIn('provider_src=canonical/"cooperative-provider.py"', source)
+        self.assertIn('provider_artifact=runtime/"provider-artifact"', source)
+        self.assertIn('"cooperative_provider_artifact_sha256":provider_artifact_sha', source)
+        self.assertIn('"cooperative_bootstrap_mode":"UNBOUND"', source)
+        self.assertIn('for name in ("provider-state","control-state","mission-control")', source)
 
     def test_materializer_preserves_private_state_instead_of_removing_it(self):
         source = MATERIALIZE.read_text(encoding="utf-8")

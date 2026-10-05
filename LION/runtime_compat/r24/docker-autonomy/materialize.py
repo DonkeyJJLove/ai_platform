@@ -135,6 +135,22 @@ def main():
             raise SystemExit("canonical R24 fleet artifact missing: "+name)
         shutil.copy2(src,runtime/name)
 
+    provider_src=canonical/"cooperative-provider.py"
+    if not provider_src.is_file():
+        raise SystemExit("canonical cooperative provider artifact missing")
+    provider_artifact=runtime/"provider-artifact"
+    if provider_artifact.exists():
+        if provider_artifact.is_symlink() or not provider_artifact.is_dir():
+            raise SystemExit("cooperative provider artifact root unavailable or unsafe")
+        shutil.rmtree(provider_artifact)
+    provider_artifact.mkdir()
+    shutil.copy2(provider_src,provider_artifact/"cooperative-provider.py")
+
+    unbound=runtime/"unbound"
+    _ensure_private_directory(unbound)
+    for name in ("provider-state","control-state","mission-control"):
+        _ensure_private_directory(unbound/name)
+
     observer_uid=os.getuid()
     observer_gid=os.getgid()
 
@@ -212,6 +228,7 @@ def main():
     worker_sha=sha256_file(runtime/"worker.py")
     contract_sha=sha256_file(source/"cyber_lion/mission_control/material_worker_runtime.py")
     compose_sha=sha256_file(runtime/"compose.yaml")
+    provider_artifact_sha=sha256_file(provider_artifact/"cooperative-provider.py")
     body={
         "schema":"lion.material-worker-source-identity/v1",
         "profile":PROFILE,
@@ -242,6 +259,14 @@ def main():
         "worker_source_sha256":worker_sha,
         "runtime_contract_sha256":contract_sha,
         "compose_sha256":compose_sha,
+        "cooperative_provider_artifact_sha256":provider_artifact_sha,
+        "cooperative_provider_artifact_path":str(provider_artifact/"cooperative-provider.py"),
+        "cooperative_readonly_mount_contract":{
+            "provider_state":"${LION_COOPERATIVE_PROVIDER_STATE_HOST_PATH}",
+            "control_state":"${LION_COOPERATIVE_CONTROL_STATE_HOST_PATH}",
+            "mission_control":"${LION_COOPERATIVE_MISSION_CONTROL_HOST_PATH}",
+            "container_mode":"READ_ONLY",
+        },
         "identity_digest":body["identity_digest"],
         "runtime_dir":str(runtime),
         "requested_workers":32,
