@@ -64,6 +64,10 @@
       "sha256": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73"
     },
     {
+      "path": "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
+      "sha256": "5f2fb77183cae45d9e0b7071d5dcb55d211d36a96cf94b58926b033d68846da6"
+    },
+    {
       "path": "cyber_lion/enterprise/cooperative_dependency_provider.py",
       "sha256": "d39015283a852a6b3248f5ffc6741d26f9265eadf8087086f739aa1dd94db420"
     },
@@ -272,6 +276,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "850cd40202957b9e170800b8f63c80d4ba8794bb038b6efc81ac5b28f2f820c4",
+  "package_digest": "54e72b9d148aac3ac400bdb97cd42aa710d061c05ae97e3c02ecedb32f3d5db7",
   "authority_effect": "NONE"
 }

@@ -67,6 +67,7 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
             "cyber_lion/enterprise/cooperative_dependency_provider.py",
             "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py",
             "cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py",
+            "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
             "cyber_lion/mission_control/material_worker_runtime.py",
             "cyber_lion/mission_control/cooperative_worker_runtime.py",
             "cyber_lion/mission_control/cooperative_worker_bootstrap.py",
