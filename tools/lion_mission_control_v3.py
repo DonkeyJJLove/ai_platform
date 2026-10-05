@@ -19,6 +19,7 @@ from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
 from cyber_lion.mission_control import control_plane_reconnaissance as control_recon
 from cyber_lion.mission_control import cooperative_production as cooperative_prod
+from cyber_lion.mission_control.cooperative_materialization_registry import CooperativeMaterializationRegistry
 from cyber_lion.contracts.action_ir import CanonicalActionIR
 from mission_control_compat import compat_get, STATIC
 try:
@@ -332,6 +333,7 @@ PROCESS_CAPABILITY_REGISTRY={
 }
 COOPERATIVE_STATUS_DIR=Path('/srv/lion-e4-candidate-r1/r20-mission/r24-autonomy/status')
 COOPERATIVE_CAPABILITY_REGISTRY=cooperative_prod.capability_registry_entries()
+COOPERATIVE_MATERIALIZERS=CooperativeMaterializationRegistry()
 PROCESS_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]=COOPERATIVE_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]
 
 def _process_capability_registry_current():
@@ -340,7 +342,14 @@ def _process_capability_registry_current():
       cooperative_prod.bootstrap_readiness(COOPERATIVE_STATUS_DIR,expected_workers=32)
     except Exception:
       return current
-    current.update(COOPERATIVE_CAPABILITY_REGISTRY)
+    # Bootstrap is observational. Material production/verification becomes
+    # bindable only when the trusted process composition installed exact
+    # non-authorizing materializers. Worker status alone cannot create this edge.
+    current[cooperative_prod.CAPABILITY_BOOTSTRAP]=COOPERATIVE_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]
+    if COOPERATIVE_MATERIALIZERS.current() is None:
+      return current
+    current[cooperative_prod.CAPABILITY_PRODUCTION]=COOPERATIVE_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_PRODUCTION]
+    current[cooperative_prod.CAPABILITY_VERIFY]=COOPERATIVE_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_VERIFY]
     return current
 
 def process_capability_registry_snapshot():
@@ -1808,10 +1817,15 @@ def drive_cooperative_once(mid):
       except Exception as exc:
        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_PROVIDER_NOT_READY',reason=type(exc).__name__+':'+str(exc)[:500]);return
       generation=int((driver_snapshot(c,mid) or {}).get('generation') or 1)
+      materializers=None
+      if capability in {cooperative_prod.CAPABILITY_ID_PRODUCTION,cooperative_prod.CAPABILITY_ID_VERIFY}:
+       materializers=COOPERATIVE_MATERIALIZERS.current()
+       if materializers is None:
+        _cooperative_wait(c,mid,pid,gate='COOPERATIVE_MATERIALIZER_NOT_BOUND',reason='Trusted cooperative materializer is not installed');return
       if capability==cooperative_prod.CAPABILITY_ID_BOOTSTRAP:
        _driver_phase_result(c,mid,pid,'PASS','Canonical cooperative worker provider is current on all 32 material workers.',{'event':'COOPERATIVE_PROVIDER_BOUND','capability':capability,**ready},'VALIDATION')
       elif capability==cooperative_prod.CAPABILITY_ID_PRODUCTION:
-       result=cooperative_prod.advance_build(c,mission_id=mid,phase_id=pid,generation=generation,now_fn=now)
+       result=cooperative_prod.advance_build(c,mission_id=mid,phase_id=pid,generation=generation,now_fn=now,write_materializer=materializers.write_materializer)
        if result.get('state')=='PASS':
         _driver_phase_result(c,mid,pid,'PASS','Model-produced artifact was written through the cooperative assignment pipeline.',{'event':'COOPERATIVE_ARTIFACT_CREATED',**result},'RECEIPT')
        elif result.get('state')=='FAILED':
@@ -1822,7 +1836,7 @@ def drive_cooperative_once(mid):
        build_phase=_cooperative_build_phase(c,mid)
        if not build_phase:
         _cooperative_wait(c,mid,pid,gate='COOPERATIVE_BUILD_PHASE_MISSING',reason='Production phase identity is unavailable',status='BLOCKED');return
-       result=cooperative_prod.advance_verify(c,mission_id=mid,build_phase_id=build_phase,verify_phase_id=pid,generation=generation,now_fn=now)
+       result=cooperative_prod.advance_verify(c,mission_id=mid,build_phase_id=build_phase,verify_phase_id=pid,generation=generation,now_fn=now,verify_materializer=materializers.verify_materializer)
        if result.get('state')=='PASS':
         _driver_phase_result(c,mid,pid,'PASS','Distinct material worker verified exact artifact bytes and digest.',{'event':'COOPERATIVE_ARTIFACT_VERIFIED',**result},'VALIDATION')
        elif result.get('state')=='FAILED':

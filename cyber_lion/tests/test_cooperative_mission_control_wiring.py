@@ -12,7 +12,9 @@ class CooperativeMissionControlWiringTests(unittest.TestCase):
         self.assertIn("elif _registered_cooperative_driver(mid):drive_cooperative_once(mid)",source)
         self.assertIn("PROCESS_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]",source)
         self.assertIn("def _process_capability_registry_current():",source)
-        self.assertIn("current.update(COOPERATIVE_CAPABILITY_REGISTRY)",source)
+        self.assertIn("COOPERATIVE_MATERIALIZERS.current()",source)
+        self.assertIn("current[cooperative_prod.CAPABILITY_PRODUCTION]",source)
+        self.assertIn("current[cooperative_prod.CAPABILITY_VERIFY]",source)
     def test_docker_binding_compiles_cooperative_handler_from_phase_contract(self):
         source=self.source()
         self.assertIn("cooperative_classes={cooperative_prod.CAPABILITY_BOOTSTRAP,cooperative_prod.CAPABILITY_PRODUCTION,cooperative_prod.CAPABILITY_VERIFY}",source)
@@ -23,6 +25,12 @@ class CooperativeMissionControlWiringTests(unittest.TestCase):
         text=ast.unparse(fn)
         self.assertNotIn("advance_build",text)
         self.assertNotIn("COOPERATIVE_ARTIFACT_PRODUCTION_R1",text)
+    def test_effectful_stepper_requires_trusted_process_materializer(self):
+        source=self.source()
+        self.assertIn("gate='COOPERATIVE_MATERIALIZER_NOT_BOUND'",source)
+        self.assertIn("write_materializer=materializers.write_materializer",source)
+        self.assertIn("verify_materializer=materializers.verify_materializer",source)
+
     def test_live_stepper_requires_canonical_worker_provider_before_assignments(self):
         source=(ROOT/"cyber_lion/mission_control/cooperative_production.py").read_text(encoding="utf-8")
         self.assertIn('"provider_id": "COOPERATIVE_RUNTIME_WRITER_R5"',source)

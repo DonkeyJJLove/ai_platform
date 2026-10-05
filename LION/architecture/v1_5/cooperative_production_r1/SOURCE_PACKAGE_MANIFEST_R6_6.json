@@ -60,6 +60,10 @@
       "sha256": "bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d"
     },
     {
+      "path": "cyber_lion/mission_control/cooperative_materialization_registry.py",
+      "sha256": "6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6"
+    },
+    {
       "path": "cyber_lion/mission_control/cooperative_production.py",
       "sha256": "1c32383ac58d2edcb6f2b4c1a192a9a04e34472a02114459c6c0d89fb9c1dac5"
     },
@@ -161,7 +165,7 @@
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "9aa4c8c5a2b14439525dde7faca0e010810a42bd3fa6481e13657b60d4de302a"
+      "sha256": "2615bf675d7fc1909e16b95da2d3c8dc0e1801357b09de5b7cf06f02c687d516"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -200,6 +204,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "f3170e55e6d813a6b2f3adf24cd5bed986a20344ca321fc6605a5435a9e912c9",
+  "package_digest": "e41bb78778f0045a8653fd6f7a4d589dacb35742be0515913e3779caa44badc3",
   "authority_effect": "NONE"
 }
