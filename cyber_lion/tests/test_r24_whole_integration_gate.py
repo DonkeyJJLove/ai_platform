@@ -58,6 +58,19 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
         self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_R6_6.json"))
 
+    def test_current_source_package_covers_runtime_state_owners(self):
+        source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        paths = {item["path"] for item in source["files"]}
+        self.assertTrue({
+            "cyber_lion/enterprise/cooperative_runtime_composition.py",
+            "cyber_lion/enterprise/runtime_execution.py",
+            "cyber_lion/enterprise/executor_sandbox.py",
+            "cyber_lion/contracts/runtime_execution.py",
+            "cyber_lion/contracts/executor_sandbox.py",
+            "cyber_lion/contracts/runtime_enforcement.py",
+            "cyber_lion/contracts/runtime_currentness.py",
+        }.issubset(paths))
+
     def test_historical_runtime_package_is_retained_separately(self):
         result = _package_identity()
         historical = result["historical_runtime"]

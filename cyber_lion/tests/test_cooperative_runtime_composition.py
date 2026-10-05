@@ -18,8 +18,10 @@ from cyber_lion.tests import test_executor_sandbox as sb
 from cyber_lion.tests import test_runtime_currentness as rc
 from cyber_lion.contracts.runtime_currentness import EffectTimeCurrentnessEvidence
 from cyber_lion.contracts.runtime_execution import RuntimeExecutionReceipt
-from cyber_lion.enterprise.executor_sandbox import InMemorySandboxReplayGuard, SandboxBudgetLedger
-from cyber_lion.enterprise.live_runtime_evidence_plane import SQLiteSingleUseGuard
+from cyber_lion.enterprise.executor_sandbox import (
+    InMemorySandboxReplayGuard, SandboxBudgetLedger, SQLiteSandboxBudgetLedger,
+)
+from cyber_lion.enterprise.runtime_execution import SQLiteAdmissionConsumptionGuard
 from cyber_lion.enterprise.cooperative_runtime_writer import CooperativeExecutionBinding
 from cyber_lion.enterprise.cooperative_runtime_composition import (
     CooperativeRuntimeContext, CooperativeRuntimeWriterProvider,
@@ -88,7 +90,7 @@ class CooperativeRuntimeCompositionTests(unittest.TestCase):
         self.currentness = rc.Source(self.authority, policy=effect.policy_binding)
         self.dispatch_source = sb.DispatchSource(self.fd)
         self.budget = SandboxBudgetLedger(self.policy)
-        self.admission_guard = SQLiteSingleUseGuard(self.guard_path)
+        self.admission_guard = SQLiteAdmissionConsumptionGuard(self.guard_path)
         self.sandbox_guard = InMemorySandboxReplayGuard()
         self.lookups = []
         self.provider = self.make_provider()
@@ -188,7 +190,7 @@ class CooperativeRuntimeCompositionTests(unittest.TestCase):
 
     def test_reconstructed_provider_preserves_durable_consumption(self):
         self.write()
-        restarted_guard = SQLiteSingleUseGuard(self.guard_path)
+        restarted_guard = SQLiteAdmissionConsumptionGuard(self.guard_path)
         replacement = self.make_provider(admission_guard=restarted_guard,
                                          sandbox_guard=InMemorySandboxReplayGuard())
         with self.assertRaisesRegex(rt.RuntimeExecutionError, 'replay'):
@@ -207,6 +209,25 @@ class CooperativeRuntimeCompositionTests(unittest.TestCase):
         with self.assertRaises(rt.RuntimeExecutionError):
             self.write(self.make_provider())
         self.assertEqual(self.budget.snapshot().operations, 1)
+        self.assert_no_artifact()
+
+    def test_reconstructed_provider_preserves_durable_budget_state(self):
+        from cyber_lion.contracts.executor_sandbox import SandboxOperation, SandboxResourceLimits
+        self.policy = replace(self.policy, resource_limits=SandboxResourceLimits(1, 1000, 1000, 1))
+        budget_path = Path(self.temp.name) / 'fixture-budget.sqlite'
+        first = SQLiteSandboxBudgetLedger(self.policy, budget_path)
+        reserved = SandboxOperation(
+            'fixture-prior-persistent', 'M1', 'drone:1', 'executor:1',
+            'sandbox:1', 'workspace:1', self.fd.dispatch_id, self.fd.fencing_token,
+            1, self.policy.digest(), 'READ_FILE', 'M1/input',
+        )
+        first.reserve(reserved)
+        replacement = self.make_provider(
+            budget_source=lambda p: SQLiteSandboxBudgetLedger(p, budget_path),
+        )
+        with self.assertRaises(rt.RuntimeExecutionError):
+            self.write(replacement)
+        self.assertEqual(SQLiteSandboxBudgetLedger(self.policy, budget_path).snapshot().operations, 1)
         self.assert_no_artifact()
 
     def test_stale_runtime_admission_prevents_write(self):

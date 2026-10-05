@@ -22,7 +22,8 @@ from cyber_lion.enterprise.cooperative_runtime_writer import (
     CooperativeExecutionBinding, CooperativeRuntimeWriterError,
 )
 from cyber_lion.enterprise.executor_sandbox import (
-    ExecutorSandbox, FleetDispatchSource, SandboxBudgetLedger, SandboxReplayGuard,
+    ExecutorSandbox, FleetDispatchSource, SandboxBudgetLedger, SQLiteSandboxBudgetLedger,
+    SandboxReplayGuard,
 )
 from cyber_lion.enterprise.live_authority_admission import LiveAuthorityAdmission
 from cyber_lion.enterprise.runtime_currentness import (
@@ -127,7 +128,7 @@ class CooperativeRuntimeWriterProvider:
         if ctx.execution.assignment_id != assignment_id:
             raise CooperativeRuntimeWriterError("context lookup returned another assignment")
         budget = self._budgets(ctx.policy)
-        if type(budget) is not SandboxBudgetLedger:
+        if type(budget) not in {SandboxBudgetLedger, SQLiteSandboxBudgetLedger}:
             raise CooperativeRuntimeWriterError("bound sandbox budget unavailable")
         def revalidate_context():
             current = self._context(assignment_id)

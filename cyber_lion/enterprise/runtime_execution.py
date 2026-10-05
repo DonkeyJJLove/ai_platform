@@ -5,7 +5,14 @@ sandbox. It never mints authority and treats unknown or partial effects as non-s
 """
 from __future__ import annotations
 
+from contextlib import closing
+from dataclasses import asdict
+from datetime import datetime, timezone
 from hashlib import sha256
+import json
+from pathlib import Path
+import sqlite3
+import stat
 from threading import Lock
 from typing import Protocol
 
@@ -30,6 +37,161 @@ class InMemoryAdmissionConsumptionGuard:
         with self._lock:
             if admission_digest in self._seen:return False
             self._seen.add(admission_digest);return True
+
+
+_RUNTIME_STATE_SCHEMA="lion.runtime-execution-state/v1"
+
+
+def _sqlite_state_path(value:Path|str)->Path:
+    path=Path(value)
+    if not path.is_absolute():raise RuntimeExecutionError("runtime state path must be absolute")
+    parent=path.parent.resolve(strict=True)
+    if not parent.is_dir():raise RuntimeExecutionError("runtime state parent unavailable")
+    if path.exists() and path.is_symlink():raise RuntimeExecutionError("runtime state symlink denied")
+    return path
+
+
+def _runtime_state_identity(path:Path)->tuple[int,int]:
+    try:st=path.stat()
+    except OSError as exc:raise RuntimeExecutionError("runtime state unavailable") from exc
+    if not stat.S_ISREG(st.st_mode) or st.st_nlink!=1:raise RuntimeExecutionError("runtime state must be private regular file")
+    return (st.st_dev,st.st_ino)
+
+
+def _check_runtime_state_identity(path:Path,expected:tuple[int,int])->None:
+    if path.is_symlink() or _runtime_state_identity(path)!=expected:raise RuntimeExecutionError("runtime state identity drift")
+
+
+def _zoned_text(value:datetime|str)->str:
+    if isinstance(value,datetime):
+        if value.tzinfo is None:raise RuntimeExecutionError("runtime state timestamp must be zoned")
+        return value.astimezone(timezone.utc).isoformat()
+    if not isinstance(value,str) or not value:raise RuntimeExecutionError("runtime state timestamp required")
+    try:parsed=datetime.fromisoformat(value.replace("Z","+00:00"))
+    except ValueError as exc:raise RuntimeExecutionError("runtime state timestamp invalid") from exc
+    if parsed.tzinfo is None:raise RuntimeExecutionError("runtime state timestamp must be zoned")
+    return parsed.astimezone(timezone.utc).isoformat()
+
+
+def _strict_runtime_admission(raw:str)->RuntimeAdmission:
+    def unique(pairs):
+        out={}
+        for key,value in pairs:
+            if key in out:raise RuntimeExecutionError("duplicate runtime admission JSON key")
+            out[key]=value
+        return out
+    try:value=json.loads(raw,object_pairs_hook=unique,parse_constant=lambda _:( _ for _ in ()).throw(RuntimeExecutionError("nonfinite runtime admission JSON")))
+    except (TypeError,ValueError,json.JSONDecodeError,UnicodeError) as exc:
+        if isinstance(exc,RuntimeExecutionError):raise
+        raise RuntimeExecutionError("runtime admission record corrupt") from exc
+    if type(value) is not dict:raise RuntimeExecutionError("runtime admission record invalid")
+    try:return RuntimeAdmission(**value).validate()
+    except Exception as exc:raise RuntimeExecutionError("runtime admission record invalid") from exc
+
+
+class SQLiteRuntimeAdmissionSource:
+    """Immutable durable RuntimeAdmission source; storage never issues authority.
+
+    The trusted composition supplies an independent RuntimeAdmissionSourceTrustBinding.
+    publish() accepts only an already-sealed RuntimeAdmission plus independent provenance
+    digest. It cannot construct a PDP decision, LiveAdmittedAuthority or RuntimeAdmission.
+    """
+    def __init__(self,path:Path|str,trust:RuntimeAdmissionSourceTrustBinding):
+        if type(trust) is not RuntimeAdmissionSourceTrustBinding:raise RuntimeExecutionError("exact admission source trust binding required")
+        trust.validate();self.path=_sqlite_state_path(path)
+        self.source_id=trust.source_id;self.source_instance_id=trust.source_instance_id
+        self.implementation_digest=trust.source_implementation_digest
+        self.trust_anchor_id=trust.trust_anchor_id;self.trust_anchor_digest=trust.trust_anchor_digest
+        with closing(sqlite3.connect(self.path)) as db,db:
+            db.execute("""CREATE TABLE IF NOT EXISTS runtime_admissions(
+              admission_digest TEXT PRIMARY KEY,
+              admission_json TEXT NOT NULL,
+              provenance_digest TEXT NOT NULL,
+              published_at TEXT NOT NULL,
+              schema_id TEXT NOT NULL
+            )""")
+        self._db_identity=_runtime_state_identity(self.path)
+
+    def publish(self,admission:RuntimeAdmission,*,provenance_digest:str,published_at:datetime|str)->str:
+        if type(admission) is not RuntimeAdmission:raise RuntimeExecutionError("exact RuntimeAdmission required")
+        admission.validate()
+        if not isinstance(provenance_digest,str) or len(provenance_digest)!=64 or any(c not in "0123456789abcdef" for c in provenance_digest):
+            raise RuntimeExecutionError("runtime admission provenance digest invalid")
+        stamp=_zoned_text(published_at)
+        raw=json.dumps(asdict(admission),sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False)
+        _check_runtime_state_identity(self.path,self._db_identity)
+        try:
+            with closing(sqlite3.connect(self.path,timeout=5,isolation_level=None)) as db:
+                db.execute("BEGIN IMMEDIATE")
+                try:
+                    db.execute("INSERT INTO runtime_admissions VALUES(?,?,?,?,?)",
+                               (admission.admission_digest,raw,provenance_digest,stamp,_RUNTIME_STATE_SCHEMA))
+                    db.execute("COMMIT")
+                except Exception:
+                    if db.in_transaction:db.execute("ROLLBACK")
+                    raise
+        except sqlite3.IntegrityError as exc:
+            raise RuntimeExecutionError("runtime admission publication replay denied") from exc
+        return admission.admission_digest
+
+    def resolve(self,admission_digest:str)->RuntimeAdmission:
+        if not isinstance(admission_digest,str) or len(admission_digest)!=64 or any(c not in "0123456789abcdef" for c in admission_digest):
+            raise RuntimeExecutionError("runtime admission digest invalid")
+        _check_runtime_state_identity(self.path,self._db_identity)
+        try:
+            with closing(sqlite3.connect(self.path,timeout=5)) as db:
+                rows=db.execute("SELECT admission_json,provenance_digest,published_at,schema_id FROM runtime_admissions WHERE admission_digest=?",(admission_digest,)).fetchall()
+        except sqlite3.Error as exc:raise RuntimeExecutionError("runtime admission source unavailable") from exc
+        if len(rows)!=1 or rows[0][3]!=_RUNTIME_STATE_SCHEMA:raise RuntimeExecutionError("runtime admission unavailable or ambiguous")
+        provenance,stamp=rows[0][1],rows[0][2]
+        if not isinstance(provenance,str) or len(provenance)!=64 or any(c not in "0123456789abcdef" for c in provenance):
+            raise RuntimeExecutionError("runtime admission provenance corrupt")
+        _zoned_text(stamp)
+        value=_strict_runtime_admission(rows[0][0])
+        if value.admission_digest!=admission_digest:raise RuntimeExecutionError("runtime admission source digest substitution")
+        return value
+
+    def is_current(self,admission_digest:str)->bool:
+        try:return self.resolve(admission_digest).admission_digest==admission_digest
+        except RuntimeExecutionError:return False
+
+
+class SQLiteAdmissionConsumptionGuard:
+    """Durable exactly-once RuntimeAdmission consumption across process restarts."""
+    def __init__(self,path:Path|str):
+        self.path=_sqlite_state_path(path)
+        with closing(sqlite3.connect(self.path)) as db,db:
+            db.execute("""CREATE TABLE IF NOT EXISTS runtime_admission_consumption(
+              admission_digest TEXT PRIMARY KEY,
+              execution_id TEXT NOT NULL UNIQUE,
+              consumed_at TEXT NOT NULL,
+              schema_id TEXT NOT NULL
+            )""")
+        self._db_identity=_runtime_state_identity(self.path)
+
+    def consume(self,admission_digest:str,execution_id:str)->bool:
+        if not isinstance(admission_digest,str) or len(admission_digest)!=64 or any(c not in "0123456789abcdef" for c in admission_digest):
+            raise RuntimeExecutionError("admission consumption digest invalid")
+        if not isinstance(execution_id,str) or not execution_id.strip() or "\x00" in execution_id:
+            raise RuntimeExecutionError("admission consumption execution identity invalid")
+        stamp=datetime.now(timezone.utc).isoformat()
+        _check_runtime_state_identity(self.path,self._db_identity)
+        try:
+            with closing(sqlite3.connect(self.path,timeout=5,isolation_level=None)) as db:
+                db.execute("BEGIN IMMEDIATE")
+                try:
+                    db.execute("INSERT INTO runtime_admission_consumption VALUES(?,?,?,?)",
+                               (admission_digest,execution_id,stamp,_RUNTIME_STATE_SCHEMA))
+                    db.execute("COMMIT")
+                except Exception:
+                    if db.in_transaction:db.execute("ROLLBACK")
+                    raise
+            return True
+        except sqlite3.IntegrityError:
+            return False
+        except sqlite3.Error as exc:
+            raise RuntimeExecutionError("admission consumption state unavailable") from exc
+
 
 class SandboxExecutor(Protocol):
     @property

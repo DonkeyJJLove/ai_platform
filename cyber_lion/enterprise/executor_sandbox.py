@@ -1,7 +1,12 @@
 """Fleet-bound fail-closed sandbox PEP (F005-C R2)."""
 from __future__ import annotations
+from contextlib import closing
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from hashlib import sha256
+from pathlib import Path
+import sqlite3
+import stat
 from threading import Lock
 from typing import Protocol
 from cyber_lion.contracts.executor_sandbox import ExecutionSandboxContractError,ExecutionSandboxPolicy,FleetDispatchBinding,ProvisioningBinding,SandboxExecutionReceipt,SandboxOperation,SandboxRuntimeBinding,path_within_scope
@@ -27,6 +32,64 @@ class InMemorySandboxReplayGuard:
         with self._lock:
             if (m,o) in self._seen:return False
             self._seen.add((m,o));return True
+
+
+_SANDBOX_STATE_SCHEMA="lion.executor-sandbox-state/v1"
+
+
+def _sandbox_state_path(value:Path|str)->Path:
+    path=Path(value)
+    if not path.is_absolute():raise SandboxEnforcementError("sandbox state path must be absolute")
+    parent=path.parent.resolve(strict=True)
+    if not parent.is_dir():raise SandboxEnforcementError("sandbox state parent unavailable")
+    if path.exists() and path.is_symlink():raise SandboxEnforcementError("sandbox state symlink denied")
+    return path
+
+
+def _sandbox_state_identity(path:Path)->tuple[int,int]:
+    try:st=path.stat()
+    except OSError as exc:raise SandboxEnforcementError("sandbox state unavailable") from exc
+    if not stat.S_ISREG(st.st_mode) or st.st_nlink!=1:raise SandboxEnforcementError("sandbox state must be private regular file")
+    return (st.st_dev,st.st_ino)
+
+
+def _check_sandbox_state_identity(path:Path,expected:tuple[int,int])->None:
+    if path.is_symlink() or _sandbox_state_identity(path)!=expected:raise SandboxEnforcementError("sandbox state identity drift")
+
+
+class SQLiteSandboxReplayGuard:
+    """Durable per-mission operation replay fence."""
+    def __init__(self,path:Path|str):
+        self.path=_sandbox_state_path(path)
+        with closing(sqlite3.connect(self.path)) as db,db:
+            db.execute("""CREATE TABLE IF NOT EXISTS sandbox_replay(
+              mission_id TEXT NOT NULL,
+              operation_id TEXT NOT NULL,
+              consumed_at TEXT NOT NULL,
+              schema_id TEXT NOT NULL,
+              PRIMARY KEY(mission_id,operation_id)
+            )""")
+        self._db_identity=_sandbox_state_identity(self.path)
+
+    def consume(self,mission_id:str,operation_id:str)->bool:
+        for value,label in ((mission_id,"mission"),(operation_id,"operation")):
+            if not isinstance(value,str) or not value.strip() or "\x00" in value:raise SandboxEnforcementError(f"sandbox replay {label} invalid")
+        _check_sandbox_state_identity(self.path,self._db_identity)
+        try:
+            with closing(sqlite3.connect(self.path,timeout=5,isolation_level=None)) as db:
+                db.execute("BEGIN IMMEDIATE")
+                try:
+                    db.execute("INSERT INTO sandbox_replay VALUES(?,?,?,?)",
+                               (mission_id,operation_id,datetime.now(timezone.utc).isoformat(),_SANDBOX_STATE_SCHEMA))
+                    db.execute("COMMIT")
+                except Exception:
+                    if db.in_transaction:db.execute("ROLLBACK")
+                    raise
+            return True
+        except sqlite3.IntegrityError:return False
+        except sqlite3.Error as exc:raise SandboxEnforcementError("sandbox replay state unavailable") from exc
+
+
 @dataclass(frozen=True)
 class SandboxBudgetSnapshot: operations:int; write_bytes:int; test_runs:int
 class SandboxBudgetLedger:
@@ -38,6 +101,60 @@ class SandboxBudgetLedger:
             self._o,self._w,self._t=o,w,t
     def snapshot(self):
         with self._lock:return SandboxBudgetSnapshot(self._o,self._w,self._t)
+
+
+class SQLiteSandboxBudgetLedger:
+    """Durable monotonic sandbox budget keyed by exact ExecutionSandboxPolicy digest."""
+    def __init__(self,policy:ExecutionSandboxPolicy,path:Path|str):
+        if type(policy) is not ExecutionSandboxPolicy:raise SandboxEnforcementError("exact sandbox policy required")
+        policy.validate();self._p=policy;self._l=policy.resource_limits;self.path=_sandbox_state_path(path);self._digest=policy.digest()
+        with closing(sqlite3.connect(self.path)) as db,db:
+            db.execute("""CREATE TABLE IF NOT EXISTS sandbox_budget(
+              policy_digest TEXT PRIMARY KEY,
+              operations INTEGER NOT NULL,
+              write_bytes INTEGER NOT NULL,
+              test_runs INTEGER NOT NULL,
+              schema_id TEXT NOT NULL
+            )""")
+            db.execute("INSERT OR IGNORE INTO sandbox_budget VALUES(?,?,?,?,?)",
+                       (self._digest,0,0,0,_SANDBOX_STATE_SCHEMA))
+        self._db_identity=_sandbox_state_identity(self.path)
+
+    def _row(self,db):
+        row=db.execute("SELECT operations,write_bytes,test_runs,schema_id FROM sandbox_budget WHERE policy_digest=?",(self._digest,)).fetchone()
+        if row is None or row[3]!=_SANDBOX_STATE_SCHEMA:raise SandboxEnforcementError("sandbox budget state unavailable")
+        return row
+
+    def reserve(self,op):
+        if type(op) is not SandboxOperation:raise SandboxEnforcementError("sandbox budget operation type")
+        op.validate()
+        if op.policy_digest!=self._digest:raise SandboxEnforcementError("sandbox budget policy substitution")
+        _check_sandbox_state_identity(self.path,self._db_identity)
+        try:
+            with closing(sqlite3.connect(self.path,timeout=5,isolation_level=None)) as db:
+                db.execute("BEGIN IMMEDIATE")
+                try:
+                    cur=self._row(db);o=int(cur[0])+1;w=int(cur[1])+(op.payload_size if op.action=="WRITE_FILE" else 0);t=int(cur[2])+(op.action=="RUN_TEST")
+                    if o>self._l.max_operations or w>self._l.max_write_bytes or t>self._l.max_test_runs:
+                        db.execute("ROLLBACK");raise SandboxEnforcementError("sandbox budget exhausted")
+                    db.execute("UPDATE sandbox_budget SET operations=?,write_bytes=?,test_runs=? WHERE policy_digest=?",(o,w,t,self._digest))
+                    db.execute("COMMIT")
+                except Exception:
+                    if db.in_transaction:db.execute("ROLLBACK")
+                    raise
+        except SandboxEnforcementError:raise
+        except sqlite3.Error as exc:raise SandboxEnforcementError("sandbox budget state unavailable") from exc
+
+    def snapshot(self):
+        _check_sandbox_state_identity(self.path,self._db_identity)
+        try:
+            with closing(sqlite3.connect(self.path,timeout=5)) as db:
+                row=self._row(db)
+            return SandboxBudgetSnapshot(int(row[0]),int(row[1]),int(row[2]))
+        except SandboxEnforcementError:raise
+        except sqlite3.Error as exc:raise SandboxEnforcementError("sandbox budget state unavailable") from exc
+
+
 @dataclass(frozen=True)
 class SandboxExecutionResult: receipt:SandboxExecutionReceipt; output:bytes
 class ExecutorSandbox:

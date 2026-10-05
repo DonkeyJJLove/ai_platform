@@ -16,6 +16,10 @@
       "sha256": "ee019272301ab2b5b334ee386bc779d60c9279b20b301a8581917305faf75be8"
     },
     {
+      "path": "cyber_lion/contracts/executor_sandbox.py",
+      "sha256": "53a35d6ccdd4f5207b5617454bf867047c78e1029e977f8b318ca7841184d8f5"
+    },
+    {
       "path": "cyber_lion/contracts/mission_contract_profiles.py",
       "sha256": "285baa010c458f01232649fde3510ac705e18692c6e13d0e2039bc35f083c580"
     },
@@ -28,6 +32,18 @@
       "sha256": "e7d4df04b0205178e538d95df1e5b86af6ea294c87e37e5c7343dbe66552e458"
     },
     {
+      "path": "cyber_lion/contracts/runtime_currentness.py",
+      "sha256": "19cdb8f256b6aaf0e132aa0dea304cbfcde1958b7292b6f4744e4fe17719119e"
+    },
+    {
+      "path": "cyber_lion/contracts/runtime_enforcement.py",
+      "sha256": "def310ff94cecbd98da16771b728ad81bc8304757416092811b748bda5fdeff0"
+    },
+    {
+      "path": "cyber_lion/contracts/runtime_execution.py",
+      "sha256": "7ec7add190f19893a5486b0bc2a6dec221a55e97d99cd7c7424261b82a505fdf"
+    },
+    {
       "path": "cyber_lion/enterprise/cooperative_context_resolver.py",
       "sha256": "b594eef30ceff24f7ef404deff3c8f59cc71033fe541b46be1ce5b133da1fa73"
     },
@@ -37,11 +53,19 @@
     },
     {
       "path": "cyber_lion/enterprise/cooperative_runtime_composition.py",
-      "sha256": "351bd7c753e24a60957ba319274741849e81a3fccd0075cc8e6342aab7a822b1"
+      "sha256": "7fbc60740e8e23bd29dfb7729ca4a8073966ec053c99289195935fdb8d94f91d"
     },
     {
       "path": "cyber_lion/enterprise/cooperative_runtime_writer.py",
       "sha256": "1a2bc1d2a6d6465905a714ecec97d653750c0df97560269a81921798d81eb7c3"
+    },
+    {
+      "path": "cyber_lion/enterprise/executor_sandbox.py",
+      "sha256": "26a5b2e31cc96dca90023c2e871ad950efd019174b50ea6fbbbb46c5e1dfdebe"
+    },
+    {
+      "path": "cyber_lion/enterprise/runtime_execution.py",
+      "sha256": "d04c90d6c661a30e42e38b7d37f822f826e0fb720d5a72c4794a57211dc3f484"
     },
     {
       "path": "cyber_lion/mission_control/__init__.py",
@@ -204,6 +228,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "e41bb78778f0045a8653fd6f7a4d589dacb35742be0515913e3779caa44badc3",
+  "package_digest": "4ec2e30173dbeeb41c31b15de1973bdf3ca19affbc67fc0db44d967ea053807e",
   "authority_effect": "NONE"
 }
