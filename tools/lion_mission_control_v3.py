@@ -12,8 +12,16 @@ from cyber_lion.mission_control.runtime_projection import normalize_snapshot, va
 from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
 from cyber_lion.contracts.phase_execution_contract import (
  PhaseExecutionContract, PhaseExecutionContractError, compile_panel_phase_contracts,
- preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
+ preflight_execution_contracts, migrated_explicit_contract, required_cognitive_providers,
+ SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
  COMPILER_VERSION as PHASE_CONTRACT_COMPILER_VERSION,
+)
+from cyber_lion.contracts.cognitive_continuity import (
+ READINESS_SCHEMA_ID as COGNITIVE_READINESS_SCHEMA,
+ SYNC_SCHEMA_ID as COGNITIVE_SYNC_SCHEMA,
+ CognitiveContinuityContractError,
+ validate_cognitive_readiness_projection,
+ validate_synchronization_checkpoint,
 )
 from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION, SAAS_AUTOMATIC_MEDIATOR_MISSION, FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
