@@ -36,6 +36,24 @@ class LpclPanelExactSourceTests(unittest.TestCase):
         self.assertEqual(out['activation_confirmation'],{'mission_id':mid,'lpcl_digest':digest,'authority_effect':'EXPLICIT_USER_ACTIVATION'})
         self.assertNotIn('lpcl_text',calls[0][1])
 
+    def test_activation_passes_exact_cognitive_evidence_when_present(self):
+        bridge=self.bridge();digest='c'*64;mid='EXACT-SOURCE-R2';calls=[]
+        readiness={'schema':'lion.mission-cognitive-continuity/v1','projection_digest':'d'*64}
+        checkpoint={'schema':'lion.thread-synchronization-checkpoint/v1','checkpoint_digest':'e'*64}
+        bridge._post=lambda path,body,timeout=10: (calls.append((path,body)) or {'mission_id':mid,'state':'AUTHORIZED'})
+        bridge('activate_lpcl',{
+            'mission_id':mid,
+            'lpcl_digest':digest,
+            'cognitive_readiness':readiness,
+            'synchronization_checkpoint':checkpoint,
+        })
+        self.assertEqual(calls,[('/api/v3/missions/'+mid+'/activate',{
+            'lpcl_digest':digest,
+            'activation_event':'EXPLICIT_UI_ACTIVATION',
+            'cognitive_readiness':readiness,
+            'synchronization_checkpoint':checkpoint,
+        })])
+
     def test_activation_rejects_nonhex_digest(self):
         bridge=self.bridge()
         with self.assertRaisesRegex(ValueError,'activation'):
@@ -86,6 +104,9 @@ class LpclPanelExactSourceTests(unittest.TestCase):
         self.assertIn("VALID · WAITING FOR CAPABILITIES",UI)
         self.assertIn("VALID · EXECUTION READY",UI)
         self.assertIn("Activation will start this mission parked until matching capabilities become available.",UI)
+        self.assertIn("/api/lpcl/prepare-cognitive",UI)
+        self.assertIn("activationBody.conversation_id=activeConversation",UI)
+        self.assertIn("cognitive_preflight",UI)
 
 
 if __name__=='__main__':unittest.main()

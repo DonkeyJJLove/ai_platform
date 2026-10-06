@@ -194,7 +194,10 @@ class SynchronizationCheckpoint:
 
     def to_dict(self) -> dict[str, Any]:
         self.validate()
-        return {"schema": SYNC_SCHEMA_ID, **asdict(self)}
+        value = asdict(self)
+        for name in ("history_message_ids", "artifact_refs", "open_dependencies"):
+            value[name] = list(value[name])
+        return {"schema": SYNC_SCHEMA_ID, **value}
 
 
 def build_synchronization_checkpoint(
@@ -252,13 +255,22 @@ def _provider_message_evidence(messages: Sequence[Mapping[str, Any]], lane_ids: 
             continue
         meta = _meta(message.get("metadata"))
         response_meta = _meta(meta.get("response_meta"))
+        provider_provenance = _meta(response_meta.get("provider_provenance"))
         candidate = {
             "message_id": message.get("message_id"),
             "provider_session_ref": meta.get("provider_session_ref"),
             "provider_session_ref_class": meta.get("provider_session_ref_class"),
-            "projection_digest": response_meta.get("projection_digest"),
-            "actual_payload_bytes_digest": response_meta.get("actual_payload_bytes_digest"),
-            "response_digest": response_meta.get("response_digest"),
+            "shared_context_digest": (
+                response_meta.get("shared_context_digest")
+                or provider_provenance.get("shared_context_digest")
+                or meta.get("shared_context_digest")
+            ),
+            "projection_digest": response_meta.get("projection_digest") or provider_provenance.get("projection_digest"),
+            "actual_payload_bytes_digest": (
+                response_meta.get("actual_payload_bytes_digest")
+                or provider_provenance.get("actual_payload_bytes_digest")
+            ),
+            "response_digest": response_meta.get("response_digest") or provider_provenance.get("response_digest"),
             "receipt_digest": response_meta.get("receipt_digest"),
             "created_at": message.get("created_at"),
         }
@@ -357,12 +369,19 @@ def build_mission_cognitive_continuity(
                     path_blockers.append(blocker)
         else:
             # LOCAL is stateless in the current canonical path; a fabricated
-            # provider session is not required.  Response evidence remains
-            # distinct from provider session identity.
+            # provider session is not required.  A completed synchronization
+            # turn still needs source-bound projection/payload/response evidence.
             if lanes and evidence and evidence.get("provider_session_ref_class") not in {
                 None, "UNKNOWN_NOT_PROVIDER_ATTESTED"
             }:
                 path_blockers.append("LOCAL_SYNTHETIC_PROVIDER_SESSION_DENIED")
+            for field, blocker in (
+                ("projection_digest", "LOCAL_PROJECTION_DIGEST_REQUIRED"),
+                ("actual_payload_bytes_digest", "LOCAL_ACTUAL_PAYLOAD_DIGEST_REQUIRED"),
+                ("response_digest", "LOCAL_RESPONSE_DIGEST_REQUIRED"),
+            ):
+                if _HEX64.fullmatch(str(evidence.get(field) or "")) is None:
+                    path_blockers.append(blocker)
         provider_paths[provider] = {
             "lane_ids": sorted(lane_ids),
             "provider_session_refs": sorted(
@@ -404,6 +423,129 @@ def build_mission_cognitive_continuity(
         "authority_effect": "NONE",
     }
     return {**payload, "projection_digest": _digest(payload)}
+
+
+def latest_shared_context_digest(messages: Sequence[Mapping[str, Any]]) -> str:
+    candidates: list[tuple[str, str, str]] = []
+    for message in messages:
+        if not isinstance(message, Mapping):
+            continue
+        meta = _meta(message.get("metadata"))
+        response_meta = _meta(meta.get("response_meta"))
+        provider_provenance = _meta(response_meta.get("provider_provenance"))
+        digest = (
+            meta.get("shared_context_digest")
+            or response_meta.get("shared_context_digest")
+            or provider_provenance.get("shared_context_digest")
+        )
+        if _HEX64.fullmatch(str(digest or "")) is None:
+            continue
+        candidates.append((
+            str(message.get("created_at") or ""),
+            str(message.get("message_id") or ""),
+            str(digest),
+        ))
+    if not candidates:
+        raise CognitiveContinuityError("shared context evidence missing")
+    candidates.sort()
+    return candidates[-1][2]
+
+
+def provider_capability_evidence(
+    conversation: Mapping[str, Any],
+    messages: Sequence[Mapping[str, Any]],
+    providers: Sequence[str],
+) -> dict[str, dict[str, Any]]:
+    lanes = conversation.get("lanes") if isinstance(conversation, Mapping) else ()
+    result: dict[str, dict[str, Any]] = {}
+    for provider in sorted(set(providers)):
+        lane_ids = {
+            str(row.get("lane_id"))
+            for row in (lanes or ())
+            if isinstance(row, Mapping) and row.get("provider") == provider and row.get("lane_id")
+        }
+        evidence = _provider_message_evidence(messages, lane_ids)
+        complete = all(
+            _HEX64.fullmatch(str(evidence.get(name) or "")) is not None
+            for name in ("projection_digest", "actual_payload_bytes_digest", "response_digest")
+        )
+        result[provider] = {
+            "currentness": "CURRENT" if complete else "UNKNOWN",
+            "text_input": "SUPPORTED" if complete else "UNKNOWN",
+            "evidence_message_id": evidence.get("message_id"),
+        }
+    return result
+
+
+def build_activation_evidence(
+    *,
+    mission: Mapping[str, Any],
+    conversation: Mapping[str, Any],
+    messages: Sequence[Mapping[str, Any]],
+    observed_at: str,
+    consumer_role: str = "MISSION_ACTIVATION_PREFLIGHT",
+) -> dict[str, Any]:
+    if not isinstance(mission, Mapping):
+        raise CognitiveContinuityError("mission")
+    process = mission.get("process")
+    if not isinstance(process, Mapping):
+        raise CognitiveContinuityError("mission process")
+    mission_id = _id(mission.get("mission_id"), "mission_id")
+    lpcl_digest = _hex(process.get("lpcl_digest") or mission.get("spec_digest"), "lpcl_digest", 64)
+    source_head = _hex(mission.get("source_head"), "source_head", 40)
+    source_tree = _hex(mission.get("source_tree"), "source_tree", 40)
+    phase_contracts = mission.get("phase_execution_contracts") or ()
+    required = provider_requirements(phase_contracts)
+    if not required:
+        readiness = build_mission_cognitive_continuity(
+            mission_id=mission_id,
+            lpcl_digest=lpcl_digest,
+            source_head=source_head,
+            source_tree=source_tree,
+            phase_contracts=phase_contracts,
+            conversation=None,
+            observed_at=observed_at,
+        )
+        return {
+            "required_providers": [],
+            "synchronization_checkpoint": None,
+            "readiness_projection": readiness,
+            "authority_effect": "NONE",
+        }
+
+    shared = latest_shared_context_digest(messages)
+    checkpoint = build_synchronization_checkpoint(
+        mission_id=mission_id,
+        lpcl_digest=lpcl_digest,
+        source_head=source_head,
+        source_tree=source_tree,
+        conversation=conversation,
+        messages=messages,
+        consumer_role=consumer_role,
+        shared_context_digest=shared,
+        currentness="CURRENT",
+    )
+    readiness = build_mission_cognitive_continuity(
+        mission_id=mission_id,
+        lpcl_digest=lpcl_digest,
+        source_head=source_head,
+        source_tree=source_tree,
+        phase_contracts=phase_contracts,
+        conversation=conversation,
+        messages=messages,
+        provider_capabilities=provider_capability_evidence(conversation, messages, required),
+        expected_conversation_id=checkpoint.conversation_id,
+        expected_binding_epoch=checkpoint.binding_epoch,
+        shared_context_digest=shared,
+        synchronization_checkpoint_digest=checkpoint.checkpoint_digest,
+        observed_at=observed_at,
+    )
+    return {
+        "required_providers": list(required),
+        "synchronization_checkpoint": checkpoint.to_dict(),
+        "readiness_projection": readiness,
+        "authority_effect": "NONE",
+    }
 
 
 def validate_activation_readiness(

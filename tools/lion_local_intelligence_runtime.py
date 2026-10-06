@@ -346,7 +346,14 @@ class LpclControlBridge:
         if op=='activate_lpcl':
             mid=args.get('mission_id');dg=args.get('lpcl_digest')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(dg,str) or not re.fullmatch('[0-9a-f]{64}',dg):raise ValueError('activation')
-            out=self._post('/api/v3/missions/'+mid+'/activate',{'lpcl_digest':dg,'activation_event':'EXPLICIT_UI_ACTIVATION'})
+            body={'lpcl_digest':dg,'activation_event':'EXPLICIT_UI_ACTIVATION'}
+            has_readiness='cognitive_readiness' in args or 'synchronization_checkpoint' in args
+            if has_readiness:
+                if not isinstance(args.get('cognitive_readiness'),dict) or not isinstance(args.get('synchronization_checkpoint'),dict):
+                    raise ValueError('cognitive activation evidence')
+                body['cognitive_readiness']=args['cognitive_readiness']
+                body['synchronization_checkpoint']=args['synchronization_checkpoint']
+            out=self._post('/api/v3/missions/'+mid+'/activate',body)
             if not isinstance(out,dict) or out.get('mission_id')!=mid:raise ValueError('ACTIVATION_SOURCE_DRIFT')
             return {**out,'activation_confirmation':{'mission_id':mid,'lpcl_digest':dg,'authority_effect':'EXPLICIT_USER_ACTIVATION'}}
         if op=='current_action':
@@ -749,11 +756,4 @@ def main():
     if not a.staging_model_chat_only:
         threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
         for material_id in ('MD025','MD026','MD027'):
-            threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
-        threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
-        from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
-        threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
-    threading.Thread(target=conversation_delivery_loop,args=(threads,control,canary_stop),daemon=True,name='conversation-saas-delivery').start()
-    try: serve_gateway(g,a.port)
-    finally: canary_stop.set()
-if __name__=='__main__':main()
+            threading.Thread(target=local_assignment_worker_loop,args=(control,mp,can

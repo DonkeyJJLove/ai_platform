@@ -231,6 +231,11 @@ class TimelineProjection(_ProjectionBase):
 
 
 @dataclass(frozen=True)
+class CommunicationProjection(_ProjectionBase):
+    KIND: ClassVar[str] = "COMMUNICATION"
+
+
+@dataclass(frozen=True)
 class EvolutionProjection(_ProjectionBase):
     KIND: ClassVar[str] = "EVOLUTION"
 
@@ -245,6 +250,7 @@ PROJECTION_TYPES = {
         RepositoryProjection,
         ArtifactProjection,
         TimelineProjection,
+        CommunicationProjection,
         EvolutionProjection,
     )
 }

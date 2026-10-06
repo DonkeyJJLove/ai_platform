@@ -5,6 +5,7 @@ import unittest
 from cyber_lion.app_coordination.cognitive_continuity import (
     CognitiveContinuityError,
     active_saas_bridge,
+    build_activation_evidence,
     build_mission_cognitive_continuity,
     build_synchronization_checkpoint,
     provider_requirements,
@@ -47,7 +48,14 @@ class CognitiveContinuityTests(unittest.TestCase):
                 "content": "local", "created_at": 1, "metadata": {
                     "canonical_context": True,
                     "provider_session_ref_class": "UNKNOWN_NOT_PROVIDER_ATTESTED",
-                    "response_meta": {},
+                    "response_meta": {
+                        "provider_provenance": {
+                            "shared_context_digest": "4" * 64,
+                            "projection_digest": "6" * 64,
+                            "actual_payload_bytes_digest": "7" * 64,
+                            "response_digest": "8" * 64,
+                        }
+                    },
                 },
             },
             {
@@ -117,6 +125,67 @@ class CognitiveContinuityTests(unittest.TestCase):
         validate_activation_readiness(
             projection, mission_id="M1", lpcl_digest="1" * 64,
             required_providers=("LOCAL", "SAAS"), conversation_id="conv-1", binding_epoch=2,
+        )
+
+    def test_activation_evidence_composes_checkpoint_and_readiness(self):
+        mission = {
+            "mission_id": "M1",
+            "spec_digest": "1" * 64,
+            "source_head": "2" * 40,
+            "source_tree": "3" * 40,
+            "process": {"lpcl_digest": "1" * 64},
+            "phase_execution_contracts": self.contracts("LOCAL_MODEL_INFERENCE", "SAAS_DELEGATION"),
+        }
+        messages = self.messages()
+        # Canonical request metadata carries the shared source context.
+        messages.insert(0, {
+            "message_id": "msg-user", "lane_id": "lane-local", "role": "USER",
+            "content": "sync", "created_at": 0, "metadata": {
+                "canonical_context": True,
+                "shared_context_digest": "4" * 64,
+            },
+        })
+        evidence = build_activation_evidence(
+            mission=mission,
+            conversation=self.conversation(),
+            messages=messages,
+            observed_at="2026-10-06T12:00:00Z",
+        )
+        self.assertEqual(evidence["required_providers"], ["LOCAL", "SAAS"])
+        checkpoint = evidence["synchronization_checkpoint"]
+        readiness = evidence["readiness_projection"]
+        self.assertEqual(checkpoint["conversation_id"], "conv-1")
+        self.assertEqual(readiness["synchronization_checkpoint_digest"], checkpoint["checkpoint_digest"])
+        self.assertEqual(readiness["state"], "READY")
+
+    def test_activation_evidence_requires_real_provider_payload_evidence(self):
+        mission = {
+            "mission_id": "M1",
+            "spec_digest": "1" * 64,
+            "source_head": "2" * 40,
+            "source_tree": "3" * 40,
+            "process": {"lpcl_digest": "1" * 64},
+            "phase_execution_contracts": self.contracts("LOCAL_MODEL_INFERENCE"),
+        }
+        messages = self.messages()
+        messages[0]["metadata"]["response_meta"]["provider_provenance"].pop("actual_payload_bytes_digest")
+        messages.insert(0, {
+            "message_id": "msg-user", "lane_id": "lane-local", "role": "USER",
+            "content": "sync", "created_at": 0, "metadata": {
+                "canonical_context": True,
+                "shared_context_digest": "4" * 64,
+            },
+        })
+        evidence = build_activation_evidence(
+            mission=mission,
+            conversation=self.conversation(),
+            messages=messages,
+            observed_at="2026-10-06T12:00:00Z",
+        )
+        self.assertEqual(evidence["readiness_projection"]["state"], "WAITING")
+        self.assertIn(
+            "LOCAL_ACTUAL_PAYLOAD_DIGEST_REQUIRED",
+            evidence["readiness_projection"]["blockers"],
         )
 
     def test_saas_actual_payload_digest_missing_blocks(self):
