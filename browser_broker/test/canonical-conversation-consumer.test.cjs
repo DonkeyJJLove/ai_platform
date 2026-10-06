@@ -118,6 +118,8 @@ test('first canonical SaaS request auto-creates a dedicated native thread and pe
  assert.equal(f.calls.dispatchBodies[0].bridge_id,'bridge-new');
  assert.equal(f.calls.dispatchBodies[0].external_thread_ref,'native-1');
  assert.equal(f.calls.dispatchBodies[0].actual_payload_bytes_digest,state[candidate.request_id].actual_payload_bytes_digest);
+ assert.equal(f.calls.dispatchBodies[0].attachment_payload_bytes_digest,createHash('sha256').update(f.turn.input).digest('hex'));
+ assert.equal(state[candidate.request_id].attachment_payload_bytes_digest,f.calls.dispatchBodies[0].attachment_payload_bytes_digest);
 });
 
 test('existing canonical bridge wins over current browser state and exact bound URL is used',async()=>{

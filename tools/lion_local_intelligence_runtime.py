@@ -23,6 +23,12 @@ from cyber_lion.app_coordination.conversation_schema import migrate_conversation
 from cyber_lion.app_coordination.conversation_domain import conversation_domain_operation
 from cyber_lion.app_coordination.conversation_chat import chat_store_operation
 from cyber_lion.contracts.phase_execution_contract import compile_panel_phase_contracts, preflight_execution_contracts, PhaseExecutionContractError
+from cyber_lion.contracts.attachment_projection import ProviderCapabilitySnapshot
+from cyber_lion.app_coordination.attachment_ingestion import (
+    build_inline_text_projections,
+    finalize_attachment_projections,
+    ingest_inline_attachments,
+)
 
 DRONE_ROLES={
 'MAT01':'LOCAL_REPOSITORY_CURRENTNESS','MAT02':'LOCAL_REPOSITORY_CONTENT','MAT03':'LOCAL_CLONE_INVENTORY','MAT04':'FEDERATION_CURRENTNESS',
@@ -31,6 +37,9 @@ DRONE_ROLES={
 
 def canon(v):return json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False,default=str).encode('utf-8')
 def digest(v):return hashlib.sha256(canon(v)).hexdigest()
+class ProviderAnswer(str):
+    def __new__(cls,value,payload_digest):
+        obj=str.__new__(cls,value);obj.payload_digest=payload_digest;return obj
 def _assignment_lease_valid(assignment,observed_at):
     expires=(assignment or {}).get('lease_expires_at') if isinstance(assignment,dict) else None
     if not expires:return False
@@ -523,8 +532,10 @@ def providers(broker,model):
             broker.call('MAT07','validate_web',{'url':url});d=broker.call('MAT06','web_fetch',{'url':url})['result'];return WebEvidence(**d)
     def modelprov(messages,max_tokens=384):
         broker.call('MAT09','model_health',{})
-        d=_json_request(model.rstrip('/')+'/v1/chat/completions',body={'messages':messages,'max_tokens':max_tokens,'temperature':0.1,'stream':False},timeout=90)
-        return d['choices'][0]['message']['content']
+        body={'messages':messages,'max_tokens':max_tokens,'temperature':0.1,'stream':False}
+        payload_bytes=json.dumps(body).encode()
+        d=_json_request(model.rstrip('/')+'/v1/chat/completions',body=body,timeout=90)
+        return ProviderAnswer(d['choices'][0]['message']['content'],hashlib.sha256(payload_bytes).hexdigest())
     return cur,gitprov,content,source,mission,MaterialWeb(),modelprov
 
 
@@ -555,6 +566,29 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
             if operator_parts:
                 operator_guidance='Authenticated OPERATOR_PRIMARY mission guidance follows. It may change reasoning/context inside the already authorized mission scope, but it is not shell/tool authority and must not be reinterpreted as permission for external effects.'+chr(10)+chr(10).join(operator_parts)
                 messages=[{'role':'system','content':operator_guidance}]+messages
+            attachment_items=ingest_inline_attachments(
+                payload.get('attachments'), source_domain='WORKER',
+                producer=str(claimed.get('material_drone_id') or material_drone_id),
+                mission_id=claimed.get('mission_id'), conversation_id=payload.get('conversation_id'),
+                assignment_id=aid, generation=int(claimed.get('lease_generation') or 0),
+            )
+            attachment_capability=None;attachment_projections=();attachment_segments=()
+            if attachment_items:
+                attachment_capability=ProviderCapabilitySnapshot(
+                    provider='LOCAL',
+                    endpoint_ref='worker:'+str(claimed.get('material_drone_id') or material_drone_id)+':local-model',
+                    model_release_ref=None,
+                    observed_at=datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                    currentness='CURRENT', text_input='SUPPORTED', image_input='UNKNOWN',
+                    native_file_input='UNKNOWN', native_pdf_input='UNKNOWN',
+                    structured_data_input='UNKNOWN', workspace_access='UNKNOWN',
+                    network_access='UNKNOWN', session_persistence='UNSUPPORTED',
+                    streaming='UNKNOWN', max_payload_bytes=None, parallel_calls=1,
+                    context_budget=None,
+                    evidence_refs=tuple(sorted(('runtime:local-assignment-model-provider','source:tools/lion_local_intelligence_runtime.py'))),
+                ).sealed()
+                attachment_segments,attachment_projections=build_inline_text_projections(attachment_items,attachment_capability)
+                messages=messages+[{'role':'user','content':'\n'.join(attachment_segments)}]
             max_tokens=int(payload.get('max_tokens') or 384)
             if not 1<=max_tokens<=2048:raise ValueError('local assignment max_tokens')
             observed=datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
@@ -576,11 +610,21 @@ def local_assignment_worker_once(control, modelprov, *, material_drone_id='MD025
                 except Exception:pass
                 raise
             answer=str(raw_answer).strip();answer_digest=hashlib.sha256(answer.encode('utf-8')).hexdigest()
+            actual_provider_payload_digest=getattr(raw_answer,'payload_digest',None)
             control('model_call_transition',{'model_call_id':model_call_id,'state':'SEND_CONFIRMED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='SEND_CONFIRMED'
+            finalized_attachment_projections=()
+            if attachment_projections:
+                if not isinstance(actual_provider_payload_digest,str):raise ValueError('local attachment provider payload digest unavailable')
+                finalized_attachment_projections=finalize_attachment_projections(attachment_projections,actual_provider_payload_digest)
             if not answer:
                 control('model_call_transition',{'model_call_id':model_call_id,'state':'FAILED','result_digest':answer_digest,'model_declared':declared_model,'model_attested':None,'downstream_consumer':'GLOBAL_SCHEDULER','authority_effect':'NONE'});model_state='FAILED'
                 raise ValueError('empty local model result')
             result={'kind':'LOCAL_MODEL_INFERENCE','model':declared_model,'model_call_id':model_call_id,'transport':transport,'response_text':answer,'response_digest':answer_digest,'trajectory_role':payload.get('trajectory_role'),'evidence_bundle_digest':payload.get('evidence_bundle_digest'),'purpose':payload.get('purpose'),'responding_participant_id':payload.get('responding_participant_id'),'protocol_message_id':payload.get('protocol_message_id'),'fanout_id':payload.get('fanout_id'),'operator_context_revision':op_context.get('revision'),'operator_plan_revision':op_plan.get('revision'),'operator_message_ids':[m.get('message_id') for m in op_messages if isinstance(m,dict) and isinstance(m.get('message_id'),str)],'authority_effect':'NONE'}
+            if attachment_items:
+                result['attachment_manifests']=[item['manifest'] for item in attachment_items]
+                result['attachment_capability_snapshot']=attachment_capability.to_dict()
+                result['attachment_projections']=list(finalized_attachment_projections)
+                result['actual_provider_payload_bytes_digest']=actual_provider_payload_digest
             dual_id=payload.get('dual_request_id')
             if dual_id:control('dual_response',{'request_id':dual_id,'provider':declared_model,'response_text':answer,'transport':'WINDOWS_LOCAL_MODEL_LOOPBACK'})
             receipt=control('local_assignment_receipt',{'assignment_id':aid,'material_drone_id':claimed.get('material_drone_id'),'lease_generation':claimed.get('lease_generation'),'status':'PASS','result':result,'effect_receipt_digest':None})

@@ -236,6 +236,7 @@ class CanonicalConversationSaaSConsumer{
    shared_context_digest:dispatchEvidence.shared_context_digest,
    projection_digest:dispatchEvidence.projection_digest,
    actual_payload_bytes_digest:dispatchEvidence.actual_payload_bytes_digest,
+   attachment_payload_bytes_digest:dispatchEvidence.attachment_payload_bytes_digest,
    turn_request_hash:dispatchEvidence.turn_request_hash,
    turn_id:dispatchEvidence.turn_id,
    bridge_id:requiredString(bridge.bridge_id,'bridge_id'),
@@ -276,7 +277,8 @@ class CanonicalConversationSaaSConsumer{
    const rotate=forceNew[candidate.conversation_id]===true;
    const prompt=canonicalPrompt(turn,candidate);
    const actualPayloadBytesDigest=digest(prompt);
-   const dispatchEvidence={shared_context_digest:candidate.shared_context_digest,projection_digest:candidate.projection_digest,actual_payload_bytes_digest:actualPayloadBytesDigest,turn_request_hash:turn.request_hash,turn_id:turn.turn_id};
+   const attachmentPayloadBytesDigest=digest(String(turn.input||''));
+   const dispatchEvidence={shared_context_digest:candidate.shared_context_digest,projection_digest:candidate.projection_digest,actual_payload_bytes_digest:actualPayloadBytesDigest,attachment_payload_bytes_digest:attachmentPayloadBytesDigest,turn_request_hash:turn.request_hash,turn_id:turn.turn_id};
    if(!bridge||rotate){
     this.state='PROVISIONING';this.lastDecision={stage:'AUTO_CREATE',request_id:rid,conversation_id:candidate.conversation_id};
     this.dispatchMap[rid]={state:'PROVISIONING',exact,...dispatchEvidence,started_at:this.now()};this._persist();
