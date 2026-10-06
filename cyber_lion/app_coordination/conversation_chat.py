@@ -265,9 +265,10 @@ def prepare_chat(
         for index, provider in enumerate(providers):
             suffix = correlation_id[-16:]
             lane_id = f"lane-{provider.lower()}-{suffix}"
-            provider_session_ref = _stable(
-                "ps-", provider, conversation_id, str(binding_epoch), correlation_id
-            )
+            # Provider session identity is not invented at request preparation.
+            # LOCAL uses a stateless HTTP request in the canonical runtime, while
+            # SAAS obtains an attested broker binding only after a real response.
+            provider_session_ref = None
             message_id = _stable("msg-user-", provider, conversation_id, correlation_id)
             conn.execute(
                 """INSERT INTO conversation_provider_lanes(
@@ -360,7 +361,7 @@ def link_saas_request(
     if _HEX64.fullmatch(projection_digest) is None or _HEX64.fullmatch(shared_context_digest) is None:
         raise ConversationDomainError("SaaS projection/shared digest")
     row = conn.execute(
-        """SELECT m.*,l.provider FROM conversation_messages m
+        """SELECT m.*,l.provider,l.provider_session_ref AS lane_provider_session_ref FROM conversation_messages m
            JOIN conversation_provider_lanes l
              ON l.conversation_id=m.conversation_id
             AND l.binding_epoch=m.binding_epoch
@@ -570,12 +571,34 @@ def record_response(
                 "idempotent_replay": True,
                 "authority_effect": "NONE",
             }
+        provider_session_ref = request["lane_provider_session_ref"]
+        if provider == "SAAS":
+            observed_binding = response_meta.get("broker_binding_id")
+            if not isinstance(observed_binding, str) or _ID.fullmatch(observed_binding) is None:
+                raise ConversationConflict("SaaS provider session binding missing")
+            if provider_session_ref not in (None, observed_binding):
+                raise ConversationConflict("SaaS provider session binding conflict")
+            provider_session_ref = observed_binding
+            conn.execute(
+                """UPDATE conversation_provider_lanes
+                   SET provider_session_ref=?,updated_at=?
+                   WHERE conversation_id=? AND binding_epoch=? AND lane_id=?""",
+                (
+                    provider_session_ref, t, conversation_id,
+                    request["binding_epoch"], request["lane_id"],
+                ),
+            )
         metadata = {
             "authority_effect": "NONE",
             "canonical_context": canonical,
             "request_route": request_meta.get("request_route"),
             "request_leg": provider,
-            "provider_session_ref": request_meta.get("provider_session_ref"),
+            "provider_session_ref": provider_session_ref,
+            "provider_session_ref_class": (
+                "SAAS_BROKER_SESSION_BINDING"
+                if provider == "SAAS"
+                else "UNKNOWN_NOT_PROVIDER_ATTESTED"
+            ),
             "request_message_id": request_message_id,
             "response_meta": dict(response_meta),
         }
