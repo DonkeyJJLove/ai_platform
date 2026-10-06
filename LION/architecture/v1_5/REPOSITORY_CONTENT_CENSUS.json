@@ -7,34 +7,45 @@
     "DEPENDENCY_CHANGE"
   ],
   "generated_from": {
-    "baseline_id": "LION-GLOBAL-REPOSITORY-RECONCILIATION-AND-STANDARDIZATION-R1-FINAL",
+    "baseline_id": "LION-SEMANTIC-CLOUD-R1-POSTMERGE",
     "architecture_epoch": "1.5",
     "repository_count": 10,
-    "tracked_file_count": 79954,
-    "materialized_file_row_count": 3085,
+    "tracked_file_count": 80195,
+    "materialized_file_row_count": 3326,
     "coverage_group_file_count": 76869,
     "coverage_group_count": 1,
     "projection_mode": "BASELINE_PLUS_EXACT_REPOSITORY_OVERLAY",
     "overlay_repositories": [
-      "DonkeyJJLove/ai_platform"
+      "DonkeyJJLove/HA2D",
+      "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "DonkeyJJLove/ai_platform",
+      "DonkeyJJLove/chunk-chunk",
+      "DonkeyJJLove/glitchlab",
+      "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "DonkeyJJLove/mosaic_lab_pro.py",
+      "DonkeyJJLove/sbom",
+      "DonkeyJJLove/swarm",
+      "DonkeyJJLove/writeups"
     ]
   },
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
-      "baseline_head": "1a40fb4807a7098c5aea84a4f6fcd8a8014092ee",
-      "baseline_tree": "3f616645b4034b41fb93ad987cc6c237be523d50",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 21,
+      "head": "f41cd0f089b714c9474a1f11757fc8c9bbcf1358",
+      "tree": "ba2687a75270e64c3772a50ee4177d3e0642972f",
+      "baseline_head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
+      "baseline_tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 25,
       "class_counts": {
         "CURRENT_CONFIG": 3,
         "CURRENT_DOCUMENTATION": 16,
-        "UNKNOWN": 2
+        "CURRENT_SOURCE": 2,
+        "CURRENT_TEST": 1,
+        "UNKNOWN": 3
       },
-      "materialized_file_rows": 21,
+      "materialized_file_rows": 25,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md"
@@ -42,26 +53,26 @@
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
       ],
-      "tests_count": 0
+      "tests_count": 1
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
-      "baseline_head": "bc7d1cae30302f7e38153891ae08677c386ac880",
-      "baseline_tree": "0d1b3a9fc6aa7bc2023b550aaad59ed5f8d04add",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 184,
+      "head": "0a9413f36ee8cf7684bcb77f42abcaffcf59a60d",
+      "tree": "5d6396c52013657e36fdc296044b59cbd0d26bb1",
+      "baseline_head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
+      "baseline_tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 187,
       "class_counts": {
-        "CURRENT_CONFIG": 10,
+        "CURRENT_CONFIG": 11,
         "CURRENT_DOCUMENTATION": 16,
         "CURRENT_GENERATED": 92,
-        "CURRENT_SOURCE": 15,
-        "CURRENT_TEST": 3,
+        "CURRENT_SOURCE": 16,
+        "CURRENT_TEST": 4,
         "UNKNOWN": 48
       },
-      "materialized_file_rows": 184,
+      "materialized_file_rows": 187,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
@@ -70,46 +81,50 @@
       "workflows": [
         ".github/workflows/falsification-guard.yml"
       ],
-      "tests_count": 3
+      "tests_count": 4
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "46f1b42ce9dccaecefb83dc3289347099365af19",
-      "tree": "b2c3df99540151afcc4f3bdcdb79d12f15f986c8",
-      "baseline_head": "48cb218f94860402b9dea175681a2cb20b9b0ba3",
-      "baseline_tree": "41ade6f86c646349fe9d98a487a12271eced344b",
+      "head": "820a6d9e6643782b7e025ebf563c5c0f0e475d73",
+      "tree": "336abb90a1c4b0bfda6c26cf79e1ead6ae413da8",
+      "baseline_head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
+      "baseline_tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
       "identity_mode": "EXACT_OVERLAY",
-      "tracked_files": 1577,
+      "tracked_files": 1764,
       "class_counts": {
         "ARCHIVED": 4,
-        "COMPATIBILITY_LAYER": 28,
-        "CURRENT_CONFIG": 78,
-        "CURRENT_CONTRACT": 144,
-        "CURRENT_DOCUMENTATION": 114,
-        "CURRENT_GENERATED": 102,
+        "COMPATIBILITY_LAYER": 30,
+        "CURRENT_CONFIG": 79,
+        "CURRENT_CONTRACT": 153,
+        "CURRENT_DOCUMENTATION": 137,
+        "CURRENT_GENERATED": 137,
         "CURRENT_RUNTIME": 33,
-        "CURRENT_SOURCE": 246,
-        "CURRENT_TEST": 429,
-        "CURRENT_TOOL": 89,
+        "CURRENT_SOURCE": 277,
+        "CURRENT_TEST": 472,
+        "CURRENT_TOOL": 97,
         "CURRENT_UI": 14,
         "HISTORICAL": 140,
-        "HISTORICAL_EVIDENCE": 79,
-        "UNKNOWN": 6,
-        "VERSIONED_STATIC": 71
+        "HISTORICAL_EVIDENCE": 80,
+        "UNKNOWN": 7,
+        "VERSIONED_STATIC": 104
       },
-      "materialized_file_rows": 1577,
+      "materialized_file_rows": 1764,
       "coverage_group_file_count": 0,
       "readmes": [
         "LION/README.md",
         "LION/architecture/v1_4/README.md",
         "LION/architecture/v1_5/README.md",
+        "LION/architecture/v1_5/cooperative_production_r1/README.md",
+        "LION/architecture/v1_5/evolution_program_r1/README.md",
         "LION/archive/E001/README.md",
         "LION/codex/README.md",
         "LION/evals/evolution/README.md",
         "LION/evals/retrieval/README.md",
         "LION/evals/scaffolding/README.md",
+        "LION/evidence/cooperative_production_r3/README.md",
         "LION/panel/README.md",
+        "LION/rag/README.md",
         "LION/runtime_compat/r20/lion-turn-ingress-node-r2/README.md",
         "LION/runtime_compat/r20/node-panel/README.md",
         "LION/runtime_compat/r20/sentinelx-primary/README.md",
@@ -122,6 +137,7 @@
         "cyber_lion/process_language/README.md",
         "cyber_lion/startup_agent/README.md",
         "docs/README.md",
+        "docs/architecture/edge-yoke/README.md",
         "docs/architecture/process-language/README.md",
         "docs/architecture/production-entry/README.md",
         "docs/architecture/uml/README.md",
@@ -151,26 +167,30 @@
         ".github/workflows/lion-r24-whole-integration-closure.yml",
         ".github/workflows/lion-rag32-validate.yml",
         ".github/workflows/lion-repository-maintenance-sandbox.yml",
+        ".github/workflows/lion-source-validation.yml",
         ".github/workflows/lion-workflow-homeostasis.yml",
         ".github/workflows/moon-file-write.yml"
       ],
-      "tests_count": 429
+      "tests_count": 472
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
-      "baseline_head": "518d8b0885c00b077b9ab39831da33eb51a2992a",
-      "baseline_tree": "8040aff98806d6bb7a623f7b81476aff9a30eeb7",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 27,
+      "head": "b8327059360b675d01d091d70ef3eaef17ed1972",
+      "tree": "2450a14943aa762b30933670911531aff2d93955",
+      "baseline_head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
+      "baseline_tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 31,
       "class_counts": {
         "CURRENT_CONFIG": 4,
+        "CURRENT_CONTRACT": 1,
         "CURRENT_DOCUMENTATION": 15,
+        "CURRENT_SOURCE": 1,
+        "CURRENT_TEST": 2,
         "UNKNOWN": 8
       },
-      "materialized_file_rows": 27,
+      "materialized_file_rows": 31,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md"
@@ -178,27 +198,27 @@
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
       ],
-      "tests_count": 0
+      "tests_count": 2
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
-      "baseline_head": "01fe396e67a1072a92a6fbbdaef96de12010b94e",
-      "baseline_tree": "936422ccb904c027d85511bb5a68f9c0dd8b62b8",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 355,
+      "head": "0afffd9ac6e0d346735615352fba9a43791cb017",
+      "tree": "14ca52d8271f8df948155e6adfe3b8408f3e2d95",
+      "baseline_head": "a1ef17e377835e66fbf3af235df7377f5228e402",
+      "baseline_tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 358,
       "class_counts": {
         "CURRENT_CONFIG": 63,
         "CURRENT_CONTRACT": 9,
         "CURRENT_DOCUMENTATION": 48,
-        "CURRENT_SOURCE": 187,
-        "CURRENT_TEST": 16,
+        "CURRENT_SOURCE": 189,
+        "CURRENT_TEST": 17,
         "CURRENT_TOOL": 1,
         "UNKNOWN": 31
       },
-      "materialized_file_rows": 355,
+      "materialized_file_rows": 358,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
@@ -210,23 +230,26 @@
         ".github/workflows/ci.yml",
         ".github/workflows/ruff-inventory.yml"
       ],
-      "tests_count": 16
+      "tests_count": 17
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
-      "baseline_head": "3b9df9207aef81aed652c11d37903e4553554d8c",
-      "baseline_tree": "cae3e26f015b1ff18b97e1d9fab8e694bda877a8",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 9,
+      "head": "25b432b7a57b83e0a97387bce4fce45eab5c15c9",
+      "tree": "18b3320ab3da1d95d8f819236aa19586f2abdd18",
+      "baseline_head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
+      "baseline_tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 14,
       "class_counts": {
-        "CURRENT_CONFIG": 3,
+        "CURRENT_CONFIG": 4,
+        "CURRENT_CONTRACT": 1,
         "CURRENT_DOCUMENTATION": 5,
-        "UNKNOWN": 1
+        "CURRENT_SOURCE": 1,
+        "CURRENT_TEST": 1,
+        "UNKNOWN": 2
       },
-      "materialized_file_rows": 9,
+      "materialized_file_rows": 14,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md"
@@ -234,24 +257,26 @@
       "workflows": [
         ".github/workflows/epistemic-lab-guard.yml"
       ],
-      "tests_count": 0
+      "tests_count": 1
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
-      "baseline_head": "4f9cd75f6f1f76eadffb9aae6f3e3a295e6a5f56",
-      "baseline_tree": "5aa7bf1c27735d8f0268f937c08a21ece5105af9",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 10,
+      "head": "94c141c9f0bd8830bb9b93f11561056c629a5607",
+      "tree": "9154393fc954ccf9b6fec1d988868489ab8a275a",
+      "baseline_head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
+      "baseline_tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 13,
       "class_counts": {
         "CURRENT_CONFIG": 3,
+        "CURRENT_CONTRACT": 1,
         "CURRENT_DOCUMENTATION": 4,
-        "CURRENT_SOURCE": 1,
+        "CURRENT_SOURCE": 2,
+        "CURRENT_TEST": 1,
         "UNKNOWN": 2
       },
-      "materialized_file_rows": 10,
+      "materialized_file_rows": 13,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md"
@@ -259,23 +284,25 @@
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
       ],
-      "tests_count": 0
+      "tests_count": 1
     },
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
-      "baseline_head": "a004be254849a842131a8c0c218bcc8c71d889de",
-      "baseline_tree": "57979058ff9efc672483bbab2e2f479c8a69657d",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 36,
+      "head": "48aab54cc260bfbfea4881f7a6f264caef814440",
+      "tree": "1e8c563e51a1d55f4003acd98255b45983f98214",
+      "baseline_head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
+      "baseline_tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 39,
       "class_counts": {
         "CURRENT_CONFIG": 8,
         "CURRENT_DOCUMENTATION": 15,
-        "UNKNOWN": 13
+        "CURRENT_SOURCE": 1,
+        "CURRENT_TEST": 1,
+        "UNKNOWN": 14
       },
-      "materialized_file_rows": 36,
+      "materialized_file_rows": 39,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
@@ -285,25 +312,25 @@
         ".github/workflows/docker.yml",
         ".github/workflows/repository-hygiene.yml"
       ],
-      "tests_count": 0
+      "tests_count": 1
     },
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
-      "baseline_head": "8d88321ee494d1d0d1aa24cd5309f9b711f43959",
-      "baseline_tree": "73399fa85e798a834623fd7b9e034a8229731ae6",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 103,
+      "head": "91b0a4174300b5efb3e6072b44ad323136a77337",
+      "tree": "4e620eb4e37801225d51c930d18ec46f34c22e24",
+      "baseline_head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
+      "baseline_tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 107,
       "class_counts": {
         "CURRENT_CONFIG": 40,
         "CURRENT_DOCUMENTATION": 30,
-        "CURRENT_SOURCE": 16,
-        "CURRENT_TEST": 8,
-        "UNKNOWN": 9
+        "CURRENT_SOURCE": 18,
+        "CURRENT_TEST": 9,
+        "UNKNOWN": 10
       },
-      "materialized_file_rows": 103,
+      "materialized_file_rows": 107,
       "coverage_group_file_count": 0,
       "readmes": [
         "README.md",
@@ -335,28 +362,29 @@
         ".github/workflows/e6-runtime-admission.yml",
         ".github/workflows/process-guard.yml"
       ],
-      "tests_count": 8
+      "tests_count": 9
     },
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
-      "tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
-      "baseline_head": "9a0cab0e3100266461693ca71ead0b9f3d1b97ac",
-      "baseline_tree": "8e702c8b7b8d93e4788cd5a3bcefbb2904314d58",
-      "identity_mode": "EXACT_BASELINE",
-      "tracked_files": 77632,
+      "head": "adff63c38f2c83ab3f8d37e7e802d5209b59faad",
+      "tree": "9f718bdeb843ce9edbb6f6bff60a128475a222c4",
+      "baseline_head": "b30ad1ac45c256889572bfe9d83440b51470f126",
+      "baseline_tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
+      "identity_mode": "EXACT_OVERLAY",
+      "tracked_files": 77657,
       "class_counts": {
         "COMPATIBILITY_LAYER": 4,
-        "CURRENT_CONFIG": 202,
+        "CURRENT_CONFIG": 208,
         "CURRENT_CONTRACT": 3,
-        "CURRENT_DOCUMENTATION": 209,
+        "CURRENT_DOCUMENTATION": 225,
         "CURRENT_GENERATED": 76869,
         "CURRENT_SOURCE": 39,
-        "CURRENT_TEST": 100,
-        "UNKNOWN": 206
+        "CURRENT_TEST": 101,
+        "CURRENT_TOOL": 1,
+        "UNKNOWN": 207
       },
-      "materialized_file_rows": 763,
+      "materialized_file_rows": 788,
       "coverage_group_file_count": 76869,
       "readmes": [
         "OSINT/README.md",
@@ -382,12 +410,13 @@
         "badania/heuristic-causal-lab-final-4.3/README.md",
         "badania/heuristic-causal-lab-final-4.3/artifacts/README.md",
         "badania/heuristic-causal-lab-final-4.3/hcl_final_4_3/README.md",
+        "badania/lion-semantic-cloud/README.md",
         "images/README.md"
       ],
       "workflows": [
         ".github/workflows/repository-hygiene.yml"
       ],
-      "tests_count": 100
+      "tests_count": 101
     }
   ],
   "files": [
@@ -458,6 +487,16 @@
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 6368,
       "sha256": "a51623a653fc682cab68b4d32e3ec1dac033a42fca5254a90c02f5d9bd4e19dc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "path": "LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 11342,
+      "sha256": "72073123b7a980612034dc65d1b228c5beab09612c3f0f253f4717035c0535c3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -547,11 +586,21 @@
     },
     {
       "repository": "DonkeyJJLove/HA2D",
+      "path": "contracts/context_snapshot.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2965,
+      "sha256": "e31c83eb64b497bb0cc86f6aa5d670939f518d61826e5f8d6434e73ff2380255",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3058,
-      "sha256": "329a219e8bdc7039f180c3a0212db1faf8b03b6cf0a3a3e96e69e8d0a9ecdb12",
+      "size_bytes": 3424,
+      "sha256": "bac837ff9928710698672528e3d2d3d1ae2125e31b4d4d6d0b0230184c55a9ca",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -597,11 +646,31 @@
     },
     {
       "repository": "DonkeyJJLove/HA2D",
+      "path": "reference/context_importer.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 1386,
+      "sha256": "01f95f6031c6876eee78489754e7e4644bcd1106ed8403444e50f9334369ae23",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
       "path": "revision_viewer.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 5184,
       "sha256": "b4387ca8924204427946487dd12371124b51ed52fbafb1028ed44d8737905cae",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "path": "tests/test_context_snapshot_contract.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1735,
+      "sha256": "b6632e6158cf8baa97cf6bae19a779436b2d923780f83dc26bd8ab7b9a578d28",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -1324,8 +1393,18 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3268,
-      "sha256": "cdab4bd5c9dd8ff73c6431e9ed4476fe3cd8303dae46ebee02f1cdeb556784de",
+      "size_bytes": 3535,
+      "sha256": "a1d61bd0f044efcd857e6ca04cf642cac1bfb44146e4d9bfa377da38e662a1d1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "examples/federation_minimal_scenario.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 159,
+      "sha256": "12a9e86247ecb74d96bac781dad8319b678400161e43b6f909511aee22c3cf4a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -2363,6 +2442,16 @@
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/federation_fixture_provider.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2103,
+      "sha256": "e0fad6069de82abcfd4683d0e2b0a0bb3a7618f37d37a9ac83e48c348398c58c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/gsa_common.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
@@ -2423,6 +2512,16 @@
     },
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "path": "tests/test_federation_result_export.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1518,
+      "sha256": "cee0b68ef034ec7276496fcf1c78cc681dc7f9c171d38b7416d8253ed5ae7b73",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "path": "tests/test_iran_cascade_provider.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -2466,8 +2565,8 @@
       "path": ".gitattributes",
       "classification": "UNKNOWN",
       "classification_basis": "no-safe-classification-rule",
-      "size_bytes": 468,
-      "sha256": "49fba5c751e4b85cf92021567c3ffcc2425418da7280fbdc938034925d4a1863",
+      "size_bytes": 905,
+      "sha256": "6fff2e45dd7074cd6611fec69697d26b537325a0684de9e5aefb9b9f9d06462a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -2496,8 +2595,8 @@
       "path": ".github/workflows/cyber-lion-contracts.yml",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "workflow-config",
-      "size_bytes": 14796,
-      "sha256": "4e5403c574ddd08564686de39ac19df68f3f7a1204d76127428edb2ed379775f",
+      "size_bytes": 15299,
+      "sha256": "cb47e6e72efeb1df39672d00e2824a74dab5bcded67b097873b80a95794753ec",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -2737,6 +2836,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": ".github/workflows/lion-source-validation.yml",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "workflow-config",
+      "size_bytes": 2160,
+      "sha256": "2023b7a1488a4e99d005be4356f003aec52275661871829cb50102f9a7aa0547",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": ".github/workflows/lion-workflow-homeostasis.yml",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "workflow-config",
@@ -2760,8 +2869,8 @@
       "path": ".gitignore",
       "classification": "UNKNOWN",
       "classification_basis": "no-safe-classification-rule",
-      "size_bytes": 232,
-      "sha256": "c1686b639875ae1efe8347a97e0abfaa70703176e1fc07b74eb26a7ff3ce8f75",
+      "size_bytes": 326,
+      "sha256": "6088785985bf8b8b0e977febfbad1617025a56ffee1305c6920a7494b6a45963",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -2814,6 +2923,16 @@
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 6081,
       "sha256": "061dffb246b7183ef2033bca9523bd357b7f7da50ab1b897c8961344c28cda10",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 11342,
+      "sha256": "72073123b7a980612034dc65d1b228c5beab09612c3f0f253f4717035c0535c3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -2912,8 +3031,8 @@
       "path": "LION/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 4635,
-      "sha256": "d24ed0d6f86f52afc10c866b377de2e27a5be26926a954c55cbd7f0da3eb3715",
+      "size_bytes": 5177,
+      "sha256": "a343acf697bcc7d8ef1fd0921d3468a0f9c55a969085428a5c5e5396c1048def",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -2925,7 +3044,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
       "size_bytes": 7981,
-      "sha256": "48442ca2653a7e55eeb5cb30f2607671bfc433b6b08192fb054061f89373ef0e",
+      "sha256": "9dc482854ea19021eda930c88687a40a301d1e68cb42e0c0a36184565308e195",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -4166,8 +4285,8 @@
       "path": "LION/architecture/v1_4/contract_catalog.json",
       "classification": "CURRENT_CONTRACT",
       "classification_basis": "explicit-current-v1.4-compatibility-surface",
-      "size_bytes": 20765,
-      "sha256": "550009f9cb913e38c8064c6690e620e96c3a2b84d07a436d4d5a612fb157041c",
+      "size_bytes": 24586,
+      "sha256": "b78f2a6948f3bc8eea40cdaf9f29790100a6cedf27c1516931773d6964e49155",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4480,8 +4599,8 @@
       "path": "LION/architecture/v1_4/federation_current_vector.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "explicit-current-v1.4-compatibility-surface",
-      "size_bytes": 7562,
-      "sha256": "869ceb5c4d5ecdb6e9703729b2c9180729e78a47cfc022db95f7d7f158bbe67b",
+      "size_bytes": 7769,
+      "sha256": "3b8e9846ff3e51676050a6f9fdd52c59a376ec6d6703e4e997cfc1f3a0f27b47",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4664,8 +4783,8 @@
       "path": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "v1.5-architecture-documentation",
-      "size_bytes": 1919,
-      "sha256": "7606d50dadf364a58949bf113d63c1655bd2c52ee704454135b5238c545acbc1",
+      "size_bytes": 2338,
+      "sha256": "4f52e3fc5781363cd01302b8d420f3089f5791cd3e9da6cb4612c2a08d3f939b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4674,8 +4793,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 4254,
-      "sha256": "5262d68d83349364d6e526c384b49bacc7a3b6d01a23f510e4b8725f755a4f1e",
+      "size_bytes": 4992,
+      "sha256": "6757e2f74c94fc8674d2b1829fb42905964502da7f604ceb81b94be2c8a7f2f2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4684,8 +4803,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 544343,
-      "sha256": "c22dabd72a559bafcb0f78bfe732ee119a0c856932980dfce6034e98add2d264",
+      "size_bytes": 566659,
+      "sha256": "8c9fc9c1610e677223654f6c6d8518dbeb395cdcba36dc5fd428fed30fa88e13",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4694,8 +4813,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 95874,
-      "sha256": "0403710489d28e6a325d2294d6d14c81d35049b5f6d1a12ed60837426fc491cf",
+      "size_bytes": 99820,
+      "sha256": "ae205fd43959aa4f2ae8d2be6e0cb5bce38911d2efccf33c3114987342b33d57",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4735,6 +4854,18 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 11719,
+      "sha256": "214e55c62aa2db27a5ba92cb00650db175c5e3e31084e9b9fcf07541c32eaa0d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST_TASK2.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
@@ -4748,8 +4879,8 @@
       "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 27398,
-      "sha256": "23cc8f869f05be5927f09dab80f06860230f4e7ff14ebc10bab048ac3c288fe9",
+      "size_bytes": 28476,
+      "sha256": "810273f5a1471749650b9cdfd6382c24dcf3a12d0839594feaa4b1bab6745007",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4768,8 +4899,8 @@
       "path": "LION/architecture/v1_5/BRANCH_RECONCILIATION_R1.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 45493,
-      "sha256": "674e802c987e927b8c0c35a78c6185216d0ac43720b7202f3afab6fda92dd709",
+      "size_bytes": 45988,
+      "sha256": "6445f0d11dc189bd1981cab0d65e5230a430fc56ccb27cc45312e155d9a47c3a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -4790,8 +4921,8 @@
       "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 35623,
-      "sha256": "52235d02730c14d0db4721baca4168032588d71ad0c5d5a9da01f09dec34d744",
+      "size_bytes": 44390,
+      "sha256": "29a27622ec0715b959d9a85167ffbc17171bdf902ee1d4661d87e4244039a67a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4835,7 +4966,7 @@
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 5404,
-      "sha256": "4683a664ea59723c9a53bc2d39acbed536259710e12cbf779cc1dfbbc19b1890",
+      "sha256": "12c70ef8629b7c6e0a1874a6a12c198dc062fbe5dd74d05dd263e1df5057c601",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4855,7 +4986,7 @@
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 3612,
-      "sha256": "9ec82aee01673db7365be7bce3b1739d18791c25f42adab3de5c2e6adbfdd3c6",
+      "sha256": "1a74d5b13eafd7e1e7f45156dcf3ebaa75cbed4ec05e04d01418bf98c07e7dd6",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4874,8 +5005,8 @@
       "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 22727,
-      "sha256": "05dc7bd679da1285e413673daed1ece0fa7be5756265438ead24794cf5bfda86",
+      "size_bytes": 25061,
+      "sha256": "87e757187a8745d284cce070cbc4bc6d9ff12ea7eaf71675abff5be6a84dce4e",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -4922,6 +5053,18 @@
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 2283,
       "sha256": "3de63f41ad2e744152aa2d99924f6b3c8ef08d103e1dd5367de18f3a93e2dd9d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/EVOLUTION_DELTA_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 2111,
+      "sha256": "121e8850bc59011bece64a7acf673ff25a1cd5f5c58444bdc23c2b4c3dff697f",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -5007,13 +5150,61 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3765,
+      "sha256": "8b4b1e822d9ab536337f8e340633d2d3c7dbe856bf68523077536666931fa191",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FEDERATION_FINAL_RECONCILIATION_SOURCE_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3678,
+      "sha256": "6fc1f03df3dcaa8697b097fbfec163b4be4d100c46b8a4276a5f9b31a291d903",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FEDERATION_FINAL_RECONCILIATION_SOURCE_R1.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 3373,
+      "sha256": "00e3dcfd736031c7304e0d1bf9d9f1ac23a68667b8937805a61f1f39c7095bc8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 537477,
-      "sha256": "4929f89115955240cedc38f6ee1aa60ffa9c6301bff2e7b5ed7fef304623ee20",
+      "size_bytes": 548875,
+      "sha256": "b449a345055841186726667308e62dd6d075fb70ef75b29f7bc830676e0b1b88",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 546956,
+      "sha256": "a5f99edfa25139ea405ecc27905c54d1c72249b152161c5dd16038519acf3065",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -5034,6 +5225,18 @@
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 20062,
       "sha256": "d61924e60950e29d15dd2996eaf7a38e26352437e3b497c3b2ff5d7b699ac532",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FLEET_BASELINE_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 18430,
+      "sha256": "b2ba07b7638e89ff46e2761ca1a54501fb1e74ebaf91210ef23b3541a857a806",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -5092,6 +5295,18 @@
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 24237,
       "sha256": "a5a7a7d19a80ec0d25c38f669589cc47f7a8c4665f5eb21683659fd62895e2d6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/FORMALIZATION_CLOSURE_RECORD_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 18151,
+      "sha256": "81af65a15275afd3afb46119d481dd2f81ccb79e5a88a81e7ae764650dc05c64",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -5212,8 +5427,20 @@
       "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 2370,
-      "sha256": "4bc749a2719aa6795aed91824805c3213eff56b20f04eceeba452d4edb605ba4",
+      "size_bytes": 2336,
+      "sha256": "33d9f933bc3d6bfeba5bc70b69728ecfc0725b620a74bdbbb6353c5cf3c4a5f0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 2336,
+      "sha256": "bc53d4a07a77ec0e6bc191aaaba5def0e37b55e5eea1e6bfb99d35de6951c827",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -5331,6 +5558,26 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_PROBES.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 1904,
+      "sha256": "bda96985f49ada396711955a839e05d581b857530d6350621075382dad676a54",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3174,
+      "sha256": "7946cf9dd14194dc39f70d1679d8ded4ab3517e6c4368e3a77250d94f195d1a3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_OWNER_SET.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
@@ -5364,8 +5611,8 @@
       "path": "LION/architecture/v1_5/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "v1.5-architecture-documentation",
-      "size_bytes": 5492,
-      "sha256": "021cbcc890efa9bf7d453987cc59fdad55b469ff7a07a0e749211ac371a71277",
+      "size_bytes": 6423,
+      "sha256": "da12e74849dfb72bf5db108e006bcc6f4c4e76fded77195f148fba1ab91751a2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -5375,13 +5622,11 @@
       "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
       "classification": "CURRENT_GENERATED",
-      "classification_basis": "self-referential-generated-census-carrier",
+      "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 1316408,
-      "sha256": "SELF_REFERENTIAL",
+      "sha256": "1f41e3f79dad5b08a1744a05fc2d4f6d10a10436969e6267c27aa39de4ffda4c",
       "naming_conformance": "NO_KNOWN_VIOLATION",
-      "flags": [
-        "SELF_REFERENTIAL_HASH_EXEMPTION"
-      ]
+      "flags": []
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -5408,8 +5653,8 @@
       "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 10347,
-      "sha256": "588e35b23a0552906cfaefbe9653b56524c5a93ae5b0d3f860f883f678fa0f21",
+      "size_bytes": 11364,
+      "sha256": "38dd604ba30a0cec9100d73163697908159322fb2cf0722a6c0ad881486f18c1",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5432,6 +5677,18 @@
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 14026,
       "sha256": "50836aa70f619ed5d0e4a777e7ff59d751051de150800834a55d4f8cfc65176b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_SEMANTIC_CLOUD_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 13622,
+      "sha256": "a76b51c41a0d215033fab78a3be53812e932adf835ebd65d94ae0545252f1cef",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -5469,11 +5726,81 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_CONCEPT_MATRIX_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 1759,
+      "sha256": "407253d7696649f490d272315250d6745daaec195951d14a2fab9855b3346996",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_EVAL_RESULTS_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3610,
+      "sha256": "7ecd896c75d5168249853566d03ed8ce533eecdf44c6b2b9bee3d098e5272b87",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_EXPERIMENT_PLAN_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 737,
+      "sha256": "58a712cacad9239811f1c1530918d236e6f0d96639ca73542584dbf16c98d4d9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_INTEGRATION_TARGET.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 1819,
+      "sha256": "111695fabae3b079a3b7a7a3a9036f1f0b31ecc4487e27392397fcf3fea81785",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_RESEARCH_BINDING_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 2365,
+      "sha256": "9b0b352d400f651850e96fa10ffc75c036a2172496a61b0984a1b65ef9f5e5e6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/SEMANTIC_CLOUD_VERIFICATION_BUNDLE_R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 1420,
+      "sha256": "3d8ec2d0bb2a60787e1c4b8d09c30f0e95a055fa84045bae4f0f84bf76448ce0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 1552,
-      "sha256": "072ad0f4fc33deeb91032f455621f658af8026294abc223b073490410bff5160",
+      "size_bytes": 2329,
+      "sha256": "65bc8b4ad5ca7ab2249e026708f7c64ec282c5d63b887cd52e111e6c53ed6a92",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5493,7 +5820,7 @@
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
       "size_bytes": 158878,
-      "sha256": "72e733efdcbc8a0d9a8b5c0b7ffcd2621570fcac4b38396b12b7d273e0ff9430",
+      "sha256": "d0a1fedb74dc914befb97c7c4f8c4db3899f3f6fda55e414932a694c1462a254",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5519,11 +5846,433 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/CHECKPOINT.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 1882,
+      "sha256": "5a5146265abaa04fc5dd6a0bc8bea4332226f13fb3544b1c6d4f84e7d0f45684",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_CONTROL_PLANE_SEQUENCE_R6_16.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 2992,
+      "sha256": "b746cccf4bae9246ba76a2c59f2284e31be66934d57a56b94a9f0d4d07947842",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_EVIDENCE_EXPORTER_R6_15.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 2217,
+      "sha256": "d38493704510df52565b6bd05d4061d4ecd7d4dd79a540bc3d42f2a94f831c59",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PRIVATE_STORAGE_R6_13.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 2015,
+      "sha256": "3f4a25794a1e0c6220cbbe3ec5e7f0f2c148aa8a259ef3e26a5915a75672cc45",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_RUNTIME_ROOT_R6_10.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 2794,
+      "sha256": "528d87e51ffc81df09845afb99af7011d0724dcdbc2108c7760e218fff30c42a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_SINGLE_WORKER_QUALIFICATION_R6_17.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 3311,
+      "sha256": "b3474b868cf20c35535ab89013d230735649bfa31df657b3009e57979a630642",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_TRUSTED_PROVIDER_R6_14.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 2641,
+      "sha256": "83e0b5827a1ade789bf888bdb5324e2c220bbe067c64ea22cea25d909b26f028",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_WORKER_BOOTSTRAP_R6_12.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 2298,
+      "sha256": "e21795dbfe0aeaa8e583032004213cc928ae5a548ed9582eb13c5eb53c4109f7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_WORKER_INJECTION_R6_11.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 1998,
+      "sha256": "0fefc02515d286d32fc47f56b7ded6429c17fdd914a2ef1a38e23c66d1c16642",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/PERSISTENT_RUNTIME_STATE_R6_9.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 1753,
+      "sha256": "525e17ecf0f383ce798574600dc89ee6208d92f018f2fadda2b1edacfc028683",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 3537,
+      "sha256": "ffa51dc4bca000be4e585f5a7ac21f7aa02f1a4859c0ed4a66a7649a5ae673c0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README",
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_COMPOSITION_R4.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 6669,
+      "sha256": "a7d6a953f1251273516dad54763790e8323dafe3456f1cf3429dace84f84fd46",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_COMPOSITION_R4_VALIDATION.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3311,
+      "sha256": "826e6ad5237a119b862e189a80d61e1b664460cbd420247ef5deeb56f4657055",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_RESOLVER_R5.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 7117,
+      "sha256": "054bc30c97d0310360dca675f4a1403bf4e305af9f6435c6cc137eef213c3a79",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_RESOLVER_R5_VALIDATION.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 7445,
+      "sha256": "9a2a09ffc70bd48e89de9534a199d038ce8a3c9ecb04ee4f6ef1389147c7a767",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_CURRENTNESS_R6_6.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 1667,
+      "sha256": "1f9638972265c50c9793abb0a1c09394900735542276b5019358d8aba5163ff9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_R6_6.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 11413,
+      "sha256": "bf07e695a662c1fd11f6bc96c20aa114def9446d39a5f5534911cf9f237b75c9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/cooperative_production_r1/VALIDATION.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 1694,
+      "sha256": "c11e94a6b22d9b57ca34ebc820682aef4579f96490febc02109f26b78db631b3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/ARCHITECTURE.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 12760,
+      "sha256": "a14e92f661b330755c7102f13311c2382cfde9b404b1a8246971070252bfe86d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/CHECKPOINT.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 1815,
+      "sha256": "0f6883eb4700297f4ce47554ac14531552c0aa3bd7050f15c495be0269b278c4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/MISSION_PROGRAM.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 16503,
+      "sha256": "075f84fa2783802f97435f46a124aa764c6e450991a24d25326611130c6da173",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/PEER_DISPOSITIONS.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 5107,
+      "sha256": "b79bc92ecf38ca5a1665400eb56c31c9cfe4e29d5ea15d657d8293740f31df53",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 1101,
+      "sha256": "178018dd5cc6e2327d7c2bcdcabf206bceac665bc28e441efd66470a3aa12ae7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README",
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/SOURCE_COVERAGE.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 13004,
+      "sha256": "eab05ef09b326aab7f34cef8d45fac7d54a030092a76d8be9a168fdce947dded",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/SOURCE_VECTOR.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3642,
+      "sha256": "0498904007a6eb85f9713ba94aa6b4126267703031c0a9f751898c693d2693a6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/evolution_program_r1/VALIDATION.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 2395,
+      "sha256": "b45b4fee25583c7dd83e059c7f68ed37605c32f47c3cbf6f40ebb4ea4da3102b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/SEMANTIC_CLOUD_INTEGRATION_REPORT_LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "v1.5-architecture-documentation",
+      "size_bytes": 3454,
+      "sha256": "de3fd33d64d7a82baed102e4e05ff3e9868f3c61ec03ffc4d6a298860d1d113a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/SEMANTIC_CLOUD_INTEGRATION_STATE_LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 8539,
+      "sha256": "bc5036f4f106da932673bac8fe01cf6ac7cfc2bfd1f9c28cc631eeaaecd779c8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_CENSUS.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 559041,
+      "sha256": "be837907c695d26fb2beed3d7f1f290324fa402d83c45dc16f0cbcd64b160a9b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_GRAPH.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 98611,
+      "sha256": "ee146ca4af51c1e8aee622ee668626c425c7dd7273dd8fe1f5d9876fe4f71684",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_RECONCILIATION.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 28798,
+      "sha256": "3d477365f1529f819a4cefd3b5cf8ae3f50a52182230df3affed62a2964a6f08",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 5404,
+      "sha256": "f7e2a320f5eb6449689e151fe02c398aedd65023e3217a0025942333668c456a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/DOCUMENTATION_CURRENTNESS_MODEL.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 3612,
+      "sha256": "0b4e720c28ac96783cf929519ad70c254e4b724928ad9cba0f2ac20689730d88",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/DOCUMENT_DERIVED_ARCHITECTURE.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 25081,
+      "sha256": "4edf7d7d946c47152d015b0ba14900d404194e6d783c5729801612707960fa15",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/REPOSITORY_ROLE_MATRIX.json",
+      "classification": "CURRENT_GENERATED",
+      "classification_basis": "v1.5-architecture-machine-surface",
+      "size_bytes": 11384,
+      "sha256": "5cf9ac5c88e9e50c91c3aa4cb37db524b1b746d2e8d906ba3014f3ada12df73b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/architecture/v1_5/semantic_owners.json",
       "classification": "CURRENT_GENERATED",
       "classification_basis": "v1.5-architecture-machine-surface",
-      "size_bytes": 12614,
-      "sha256": "c68b4929494c53c33c9b9e6c2b81125c4e909376f04b04b44f5979a85d243ef4",
+      "size_bytes": 13931,
+      "sha256": "8a19c4bfc573d10039866b11f4c20d01cb1ea1811dba4b0a94a0e1f42b7acfb2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5727,8 +6476,8 @@
       "path": "LION/evals/evolution/evolution_cases.yaml",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 26645,
-      "sha256": "ddbe5fc1ec320a8258e9d24d3ee75d6f0d8ac12b61af7a60a07b7ce2eba8dfa8",
+      "size_bytes": 29546,
+      "sha256": "6bbe231c97fcc0e016c39c3c21633b0c2a8a7661aa08f5179a3b0c2138694000",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -5765,6 +6514,19 @@
       "sha256": "ffc190c05d962bf1452c8ee8956e8a48af65445720ff9b987108f695c737b42f",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/evidence/cooperative_production_r3/README.md",
+      "classification": "HISTORICAL_EVIDENCE",
+      "classification_basis": "evidence-path",
+      "size_bytes": 3272,
+      "sha256": "44dded7d92bad64a63956e8a0fc557187c9d42c6c0abbc5839ff40e3d6b6f909",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README",
+        "REVISION_NAMED"
+      ]
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -7217,10 +7979,382 @@
       "path": "LION/rag/RAG_BOOTSTRAP.json",
       "classification": "VERSIONED_STATIC",
       "classification_basis": "versioned-rag-path",
-      "size_bytes": 1887,
-      "sha256": "1ff517cb1eb595a316980ff6dbfe232e822073edac5464c114edc915d88418fe",
+      "size_bytes": 2289,
+      "sha256": "6f3945d6278c77257577ee3b194953a248bb4d46fe919a5fb5db2162cdd8d8a0",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/README.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 4005,
+      "sha256": "24c0c8888bb7da703bef2318a8062c7a83c5d55e2716b5b609462c48562f5864",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/00_START_HERE.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2990,
+      "sha256": "5faa773077b9404527b5439a13b52c26cbef5ee1d4064d8c1a6473c7d1238156",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/01_MODEL_INSTRUCTIONS.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 3697,
+      "sha256": "884a5bf143c98caeb71c6c92c4d56e47fb4cd2cdae9ae9cd68647ab8c97d37c9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/02_ROUTING_AND_SOURCE_MAP.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 3481,
+      "sha256": "8d82056a7d193b305b94c0e2cbfb7e4b0d9b314537a1c3f4dc4b318212299745",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/03_STATE_AND_CONTINUATION.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 3051,
+      "sha256": "3e1f784575568437acf818c376d9449e9fb43542109b864776b9b74fee539ce9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/04_ARCHITECTURE_AS_IS.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2872,
+      "sha256": "5413860a9b80878b3c3dc69e19f177acaeb82e0c8eb515d6a6f81da8df45e1dd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/05_FEDERATION_AND_DEPENDENCIES.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2830,
+      "sha256": "1e3b7d010a3da97189133213b1db9e228b041de0fd7584c65df63b574e4237d1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/06_SEMANTIC_LANGUAGE.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2806,
+      "sha256": "896c5e57d4e36013487ac487f5050f83b0222af544ade2ecb458b9e2d788ef33",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/07_CONTEXT_AND_RELEVANCE.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2662,
+      "sha256": "f184c634e047413908020e693c3705ab66b80da8fb83cb1f7b03d1d33ce588ff",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/08_COMMUNICATION_AND_CONVERSATIONS.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2734,
+      "sha256": "e61a7a2ec6f54b7bd44df427df948f6e2e2cdd336218de539d5dbd40d0c19e80",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/09_SAAS_LOCAL_COOPERATION.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2814,
+      "sha256": "9b316465b1293c8dd7a9ec2b8e6d10a49c554bd07f68a650e6269366d11075af",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/10_LPCL_AND_MISSION_CONTROL.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2764,
+      "sha256": "bfea1a1de5423b46541cef997f54637838eafa9177603a3f965c6d0128283348",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/11_FACTORY_BEANS_AND_MOSAIC.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2871,
+      "sha256": "4ebd17a41424c4f6517691cb84dbd2e6239ee82feb69fd93bf0d412728dde4df",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/12_AUTHORITY_ACTION_RUNTIME.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2569,
+      "sha256": "35fe55702ea81f5040995112a2271c323485f6b5e29281c9b0e937189bcacf2e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/13_PROVENANCE_MEMORY_AND_EVIDENCE.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2504,
+      "sha256": "56ff0d10a9bda0039477edd1db8af6c8b0ef2ee6fd047e2fb55606f9b5edc9d1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/14_FEDERATED_WORK_PACKAGES.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 3068,
+      "sha256": "25eb6240e59516adde9642b6b9a2dd7aafd4045db1e6e51080d36a5eb348106a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/15_EVOLUTION_AND_HOMEOSTASIS.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2732,
+      "sha256": "c07a5fe0bac24e6589ee37be17e2995baff2f5d6848e4a09effa4b4168c6d781",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/16_FAILURE_RECOVERY_AND_OBSERVABILITY.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2454,
+      "sha256": "32aa47e374f004b7dc579942c146d3f54b121a8394b96e70ec3c07b52ad42411",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/17_RESEARCH_AND_FALSIFICATION.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2640,
+      "sha256": "d69a5ab18f281e8e47534804b277449c92c3b3c0f04367bfad65fa065f1698e2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/18_HISTORY_AND_SUPERSESSION.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2672,
+      "sha256": "4f8bdbb9240982e049b435c0c020da98095e74f9ccc8f50765b8a473ef8c2c3a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/19_VALIDATION_AND_WINDOWS_UTF8.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2531,
+      "sha256": "501a13b2cbe826a68693bbe5a3eb772d75a41d8e64a287a1f08f95ba2b7dd4bb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/20_ARCHITECTURE_REQUIREMENTS.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2972,
+      "sha256": "3add631a0fb1184e5d21d927699c834eadde56ec11660d274569391fcb12ed4f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/21_MISSION_PROGRAM_DESIGN.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 3028,
+      "sha256": "a67aa480523609e08bbacd18ffc733cbc00f0e3dd2efb619b3534ac3537cbe46",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/22_METAPROMPT.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 7984,
+      "sha256": "4a0858bec67871c1723421ff5d47ee0c2f07fc435ca247d557c67526397cfb65",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/23_EVOLUTION_EXECUTION_PROMPT.md",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 18773,
+      "sha256": "9887ec50b4035e75ea79212e2df4c63625972ace7b046c8a02898f6d83efdf8d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/24_SOURCE_RECORD_INDEX.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 36365,
+      "sha256": "c7326c6f5ae163e00556ea8cadcb916a668738d521fac1fcf326806dccd19520",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/25_SEMANTIC_OWNERS.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 13931,
+      "sha256": "8a19c4bfc573d10039866b11f4c20d01cb1ea1811dba4b0a94a0e1f42b7acfb2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/26_FEDERATION_SOURCE_VECTOR.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 2818,
+      "sha256": "a6fda1d42a957d5c8ac7e549b38ef6683501fe3d29ea8167c9b4a45ce1400f83",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/27_SOURCE_AND_COVERAGE.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 9621,
+      "sha256": "d878335065c00bb439c25b218a7dbcd6c65388418d6d460aefa151a40e58b161",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/28_RETRIEVAL_CASES.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 9260,
+      "sha256": "53e305e95d4149d8e67017bf0a59f4192f925523692d6d5861978cc4549684fc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/lion_project_rag30_v1_5_r1/29_PACKAGE_MANIFEST.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 5736,
+      "sha256": "a9ade27872da45f49bf1647ec1c0902ce2e52b5183076b9d7273433fb52e62b3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -8016,6 +9150,36 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/validation/RAG15_LEGACY_UTF8.patch",
+      "classification": "COMPATIBILITY_LAYER",
+      "classification_basis": "compatibility-or-legacy-path",
+      "size_bytes": 4542,
+      "sha256": "188d3bb76efcc0a3a5bd4177c0a7e40564df20faf3c46938aa737e6dc133a145",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/validation/RAG15_RELEASE_VALIDATION.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 6316,
+      "sha256": "1c06b6897774731cf9dac0310297983bf102f8ffa70940870d11aa21b9beeb1d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/rag/validation/RAG15_UTF8_FIX_RESULT.json",
+      "classification": "VERSIONED_STATIC",
+      "classification_basis": "versioned-rag-path",
+      "size_bytes": 1578,
+      "sha256": "23afc877d68c1b80487a9faee0601d01c785f61f4b390ec8295187529aaa6802",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "LION/runtime_compat/r20/lion-turn-ingress-node-r2/README.md",
       "classification": "COMPATIBILITY_LAYER",
       "classification_basis": "compatibility-or-legacy-path",
@@ -8262,8 +9426,20 @@
       "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
       "classification": "COMPATIBILITY_LAYER",
       "classification_basis": "compatibility-or-legacy-path",
-      "size_bytes": 8111,
-      "sha256": "94e960c2e1b351c2679e7bc643b9d9d2f09761974f7e3371d903fd5d3655a5e3",
+      "size_bytes": 28754,
+      "sha256": "15d03280dcd5661facb66970bee7f7ed50561cbb7210a9b83135ad487fdb5c03",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "LION/runtime_compat/r24/docker-autonomy/cooperative-provider.py",
+      "classification": "COMPATIBILITY_LAYER",
+      "classification_basis": "compatibility-or-legacy-path",
+      "size_bytes": 378,
+      "sha256": "74df09c450498235e8bf30f9e5ede748dc4c7f54237357dd0b757324c7780a5d",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -8286,8 +9462,8 @@
       "path": "LION/runtime_compat/r24/docker-autonomy/materialize.py",
       "classification": "COMPATIBILITY_LAYER",
       "classification_basis": "compatibility-or-legacy-path",
-      "size_bytes": 8160,
-      "sha256": "2e3b347408c0423cc926c446ab2a21213fa009d19c9dedfeefd0717888e12139",
+      "size_bytes": 12775,
+      "sha256": "792918c3b42a910c32a0b799e9e31561dd64d669d26e1816669f730faf7bfb1d",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -8310,8 +9486,8 @@
       "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
       "classification": "COMPATIBILITY_LAYER",
       "classification_basis": "compatibility-or-legacy-path",
-      "size_bytes": 18095,
-      "sha256": "caf6e042db5d8b179c0a685921fffa1d864ee0ad276ceb029c88becde5e4baf8",
+      "size_bytes": 18985,
+      "sha256": "e67fc52b5bc3fa5b30dd92211a03434d7247151be9edbf874477aa818c1dd05f",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -8496,8 +9672,8 @@
       "path": "OPEN_SOURCE_LICENSES.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 8111,
-      "sha256": "70330403ca0aafb779b5ee3a169c15648c7d56aae581019c4dc37e59fb15f057",
+      "size_bytes": 11502,
+      "sha256": "e0e3f8b781d3a6b7171226aa3514381354be3b9a7d2ecc1904740ba811ff2af8",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -8518,8 +9694,8 @@
       "path": "README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 8349,
-      "sha256": "07bf9d52128b4ae43bc8facef523f675ffd75cb7e8184f6a7a869bd18c3d6c73",
+      "size_bytes": 8950,
+      "sha256": "3e670f26e2ffbf83c07a73425e7cab531451b37a87f8bcfda2a1d159ab4e47fc",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -8762,8 +9938,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 8771,
-      "sha256": "e124e9235f4e489879bd26e00d71bcb9fa78c5f58303656e198658af3c1095a6",
+      "size_bytes": 9301,
+      "sha256": "bbbb42a6419c40844f6bf31127973ea0315ea549fc3301e4d62e088acd3821a3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -8782,8 +9958,8 @@
       "path": "cyber_lion/CAPABILITY_MAP.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 6686,
-      "sha256": "bfe6a22a562d6ee5fd2d33b6dad4ea66e730633cf7af21ba3478cb0f0d93d90b",
+      "size_bytes": 7019,
+      "sha256": "ad8bf1bc123bc852c38573393ac5e7542740517321212b4112c2e0477ec88442",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -8792,8 +9968,8 @@
       "path": "cyber_lion/CONTRACT_MAP.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 11099,
-      "sha256": "fc5f1b1ccabbbdb99ffcd5f3740ffa80082b5b112b0b1a40857c13ac238dbd8e",
+      "size_bytes": 11981,
+      "sha256": "6ecb5a9b012321247109a9ca073913e76a91e1f8276c09779d84d807b9913be6",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -9096,8 +10272,8 @@
       "path": "cyber_lion/app_coordination/lion_context_provider.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 5733,
-      "sha256": "e2e2ce5ae49aa7820aa737ddbdab5e4c8c67d79e9645633c4b4e1eb89f43a10e",
+      "size_bytes": 6960,
+      "sha256": "36008be7abff67d43234430702ef22bbaa09f0bdd7ae512f115195fe186cae05",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -9358,8 +10534,8 @@
       "path": "cyber_lion/architecture_projection/full_architecture.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 11155,
-      "sha256": "cea2a8411f33831719230c542a8baeb74013c9563def056a315bc8c3ebbdca2a",
+      "size_bytes": 12351,
+      "sha256": "607f799faf588a01c35cd74bc7e4f8b0645b4f079fcea058101d86f2842e2ea4",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -9398,8 +10574,8 @@
       "path": "cyber_lion/architecture_projection/gap.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 10637,
-      "sha256": "1a9064465c0052c26dd1532cff933b2398b0dbbd3ce04d8bbc28643c0db237e3",
+      "size_bytes": 12560,
+      "sha256": "c447a30bf2e288e9a296dbdbab0937c6f0924509b053005431db921e0c1539aa",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -9652,6 +10828,26 @@
       "classification_basis": "contract-or-schema-path",
       "size_bytes": 8593,
       "sha256": "348503cff81f58377fe863ad62f4bdfbb6582251624cc0ee4ffba7cf9089b8d9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/bounded_task_profile.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 15246,
+      "sha256": "ef56b4150565d20af1edc8a19e2b71a3d4a0ef214ef6e56564f4e78c05fba9ae",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/bounded_task_profiles.json",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 12372,
+      "sha256": "ab0715601126e10ef683070932f24673a5973de0870e49da400b58454535ccbc",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -10209,6 +11405,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/mission_intent.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 3492,
+      "sha256": "1cca9c43a4f8705eedaad2e31cdc93ce0d6ecc605860a206665c3fc95076e6c5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/contracts/model_call_v2.py",
       "classification": "CURRENT_CONTRACT",
       "classification_basis": "contract-or-schema-path",
@@ -10269,6 +11475,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/panel_projection.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 9590,
+      "sha256": "fb80b150913e869329e8d69cc2fb2ed4352fdd5cddddc64942b99c55ff7a60c9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/contracts/phase_execution_contract.py",
       "classification": "CURRENT_CONTRACT",
       "classification_basis": "contract-or-schema-path",
@@ -10324,6 +11540,26 @@
       "classification_basis": "contract-or-schema-path",
       "size_bytes": 6644,
       "sha256": "87154cda250f0a5f6d10755e6d0f630124fa61cee501f17364131bf20480fcea",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/query_plan.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 2744,
+      "sha256": "21f3afd63516c8d50dadde295a806e7b822bb07ead22602b3cd01d2b19c5967d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/rag_context_envelope.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 4117,
+      "sha256": "91d4e0567752bc73eb440eb8352911fdf581cb349d85d41e865fa6038daaa8fc",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -10414,6 +11650,36 @@
       "classification_basis": "contract-or-schema-path",
       "size_bytes": 7040,
       "sha256": "6dbcbac27bb2d74faeb0c7411f96c5f7047ea818e76d712bab99ece92be3bc9b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/semantic_cloud_episode_binding.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 3454,
+      "sha256": "2b3243dee3b96ad26455a4554f098e5033088889d7d09fe1d90bf158cf41e38b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/semantic_relevance.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 9711,
+      "sha256": "1382ce4980d697d792c652fd616c8b2faccac2efe6b91726a6a5c16586f52553",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/contracts/semantic_scaffold.py",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 3959,
+      "sha256": "cc7b8a107bc6eb712e9da2e416285675bc16aa93d4a0fec41ee8e7c4ac207862",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -11203,6 +12469,176 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_context_resolver.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 19475,
+      "sha256": "84c669b7eaef07250e770135d91aa328c5b18c30ca7404da677dd5a24489a0a6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 18920,
+      "sha256": "5f2fb77183cae45d9e0b7071d5dcb55d211d36a96cf94b58926b033d68846da6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_dependency_provider.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 16831,
+      "sha256": "35d7609382682a6ccf6323fe0f5468987060afe89f4203ee7b5986f70c946abb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_provider_materialization.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 14624,
+      "sha256": "b10f9689fe8beb0071ca448e66239d2318c430eeeec3a5b7a61b743158e558a5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_runtime_composition.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 9827,
+      "sha256": "7fbc60740e8e23bd29dfb7729ca4a8073966ec053c99289195935fdb8d94f91d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 15160,
+      "sha256": "3e0e174f513baaad18c2a69fb54eb067b7f696d11c012617b69efbc45f004e86",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 23457,
+      "sha256": "5cbd0642e751aced9660b765f7d667bbfd2c27f83b24f3c82a4652275bc9d6ef",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_runtime_root.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 45092,
+      "sha256": "834055f1f7de29a9cff02b8c749e204a8b5f247130ae825060331e0343671e20",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/cooperative_runtime_writer.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 8112,
+      "sha256": "1a2bc1d2a6d6465905a714ecec97d653750c0df97560269a81921798d81eb7c3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/__init__.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 104,
+      "sha256": "6b75d31e87dcf324855a729a3027c9cbb6971b07d5de205affb306dd569fe860",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/evidence.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4474,
+      "sha256": "252f3922f306e818bf40d9de073066d901467c911c5acfe333e5af8e4ebfd639",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/executor.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 5438,
+      "sha256": "5ba2533d3665d048a55dc37a07262486b4ce373f8887aa38141813339a987b59",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/gate.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2990,
+      "sha256": "2551ded484c3f644a034c294b13756fa9df3b54638bae6a8cbb32a8a175ff880",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/observer.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 6041,
+      "sha256": "aaaaca0d18a752e344da1a2683f89eb2b98b44d65c3764a2d94dc455dda71b32",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/pilot.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 5712,
+      "sha256": "9ce6a98ae1b0a9452d337a0daf8f4a5c8586b3d56fd7cd2b146dd08748b9e0ed",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/policy.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4808,
+      "sha256": "002067fae6c364dd060ae386bd470db17ebc42fe5248428d3a8cc8f235c4d7ac",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/enterprise/edge_yoke/winjob.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2378,
+      "sha256": "314ac491906939ab380c41a291375d52772a9053bea007bdd234d6389e940f70",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/enterprise/effect_provider.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
@@ -11286,8 +12722,8 @@
       "path": "cyber_lion/enterprise/executor_sandbox.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 9803,
-      "sha256": "d3001f7eb8e562613ea0ffa4921d6a9363198c86fc0e5463dc423b5284f5e46e",
+      "size_bytes": 15725,
+      "sha256": "26a5b2e31cc96dca90023c2e871ad950efd019174b50ea6fbbbb46c5e1dfdebe",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -11306,8 +12742,8 @@
       "path": "cyber_lion/enterprise/federation.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 8901,
-      "sha256": "a39aab4dfddbde19c678d849ac798f41b4aa7098d32ad581f4bdb576daf565c8",
+      "size_bytes": 16522,
+      "sha256": "ff6fb7d9936ef806f8ba4e1b9198b3a00094add456087d155f2f33ea97c58bcc",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -11976,8 +13412,8 @@
       "path": "cyber_lion/enterprise/runtime_execution.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 10373,
-      "sha256": "da6cf30fab004eb5fa3a576dffa99564a8e653817797a1249eef639fae81e53c",
+      "size_bytes": 19364,
+      "sha256": "d04c90d6c661a30e42e38b7d37f822f826e0fb720d5a72c4794a57211dc3f484",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -12205,6 +13641,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/artifact_transfer.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 12864,
+      "sha256": "1bee7f17dd0bffd88d89436f16b50b9811a2ff37ffae42971a64260475a578ba",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/mission_control/artifacts.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
@@ -12235,11 +13681,131 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/control_read_model.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 7627,
+      "sha256": "ab3377b1b4486ed842b16480f3e3eb4cdd7401f2cf2f844bf7ef306176fa42fd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/cooperative_artifacts.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 9346,
+      "sha256": "bc84a9fe3cbd3892477c948101bc7c02b6126e7c04af1b918a28696f0de6fe6d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/cooperative_materialization_registry.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3128,
+      "sha256": "6f9093422b1a1fc6657d916ff6b31b9a497dd66dfca03df95b667c424ffdb1f6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/cooperative_production.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 30721,
+      "sha256": "1c32383ac58d2edcb6f2b4c1a192a9a04e34472a02114459c6c0d89fb9c1dac5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/cooperative_readiness.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4815,
+      "sha256": "c7fd62ee216d23b5fffba80b4e0a47f32b467293146d5793a3e44d7e2b7841e1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/cooperative_worker_bootstrap.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 14112,
+      "sha256": "6840116fb24f36033f02deea3cb482468f69cdcfbd62209b02e017cce64d9717",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/cooperative_worker_runtime.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4627,
+      "sha256": "0df864ba28771c073d3c887ad82862806d83c454f26f14100eafca89f8ba12d7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/mission_control/dual_result_join.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
       "size_bytes": 7285,
       "sha256": "7ce631308f4150525330a56421c55353906d49ad2217206fa4d7ff314bb8139f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/edge_correction.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3625,
+      "sha256": "016396df01ffe4981cf4fb2a4e938ed3efd4e554663ca972185a64869b5d5456",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/edge_product.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3423,
+      "sha256": "89d365e0f0dea8d42086c6ca5634652c436add82879f8025f41046913db717e7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/edge_support.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4701,
+      "sha256": "e95b1096ce694823a5c25de85e454db73526f1c2b6b096ef36602db3ced98a42",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/edge_work_unit.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3162,
+      "sha256": "9bfd7469e528b655e26f5359cf1dc3b414730ce1946ebc5ffbea31dcb43889f5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/edge_worker.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 10014,
+      "sha256": "1dd8c6bc6e4bc24610b327b2d13b6f673196866470672de8cd5c3ce5c3745137",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -12278,8 +13844,18 @@
       "path": "cyber_lion/mission_control/global_scheduler.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 50696,
-      "sha256": "0a01bc8d882ff00858ef27ff805f0042a39cff8eb07345c68f3d8ce121392afa",
+      "size_bytes": 58002,
+      "sha256": "70742f0173d8965d4d190a3da52ede0261024547bb4babc51e55b31f300fd73f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/mission_control/lpcl_runtime_selection.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2550,
+      "sha256": "3804b73c8d12378538f4e3c51897c557c4d3220003ff74d54f9a78386730bff1",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -12288,8 +13864,8 @@
       "path": "cyber_lion/mission_control/material_worker_runtime.py",
       "classification": "CURRENT_SOURCE",
       "classification_basis": "source-extension",
-      "size_bytes": 10941,
-      "sha256": "4a2794c482fcafa11f1a106c902e31a7615fdbf81ff8f1c977d5a913e1560372",
+      "size_bytes": 11144,
+      "sha256": "1f086e6af21ef1244a16dbcbc7f0594c6919cc67e1934944587f32ea7142f1cd",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -12651,7 +14227,7 @@
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
       "size_bytes": 3884,
-      "sha256": "a28cf4d7ddfe7e01b0d59717560b0494825af2e97f239ab0f04dd259fa25f038",
+      "sha256": "4c90d65488287279ee37c3f07402196e8728bea118f29c5123693eecb6165bf7",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -12842,6 +14418,30 @@
       "sha256": "4e753874579755234f6112f93f8a3991c45f4e5429491ff6134e2bb650952e16",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/experiments/semantic_cloud_r1.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2684,
+      "sha256": "e9f7435d9ec4b93a28988d451b37b0ef40dfb873f9a5e6f8e90f83d55067743c",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/fixtures/cooperative_readiness_r3.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1400,
+      "sha256": "1864a7bada4efcda446f393a4b1afb5ef579888e4d56a5025c45a769b1784ebc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -13245,6 +14845,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_artifact_transfer.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 11571,
+      "sha256": "ff7fab6f5300150563b063ed71d760e2763c3cb14420c21b547f0d2c05c9581f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/tests/test_authority_grant.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -13372,6 +14982,16 @@
       "classification_basis": "test-path",
       "size_bytes": 7570,
       "sha256": "c8d6ce6225df78bf4d3e4a2d2e0088786b49d810defd8f0bbbaf7ca83c607216",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_bounded_task_profile.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 4592,
+      "sha256": "38141f150b2de1b619a866ebd536af3b72a50a2ae5ea222419ef1fa7cadd03b3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -13721,6 +15341,216 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_control_read_model.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3991,
+      "sha256": "0e91891084c49dfb99481603a9ef4854f1837b544d7807034791dae754b02a7d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_artifacts.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 5392,
+      "sha256": "32c5f10a84ef84c15cfe56b18b3d5f0a4f0974baf316dfce82f61d3c2d68a83a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_context_resolver.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 16821,
+      "sha256": "9d7c0ee2171f47c4f4539e91d3cb2f2ace65247fee77c018ade5783b60e5bd1b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_control_plane_materializer.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 11880,
+      "sha256": "c7ba28c1eafda950251d854da206631eb86947abdb5542a8fe50cc41cb75ae42",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_dependency_provider.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 8666,
+      "sha256": "b227d524c2c81ed6eb725d282989a5b937efdcf5783453f6d9c5d83ae83a74aa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_integration_guards.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 5895,
+      "sha256": "88c76926ad97b18a83e10325f4202de6f9f64ba011d5df274e731d5b2d2aecbb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_materialization_registry.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2234,
+      "sha256": "364821bef41ed0048f0b1fe3821db3969147eae2dd562bb9d25df3d625aaf17e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_mission_control_wiring.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2577,
+      "sha256": "be3807b44c0dcfb5d1b0b72dfaa5ab21f1b8a48599f8418e5cad88b4288ee0a3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_production.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13381,
+      "sha256": "1641c6310f6e8920db74465841f3341e19f419ff19cdadf2f9a5fb3bdd554a52",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_provider_materialization.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 9824,
+      "sha256": "c361dcd7a544c99eaff742512e468fa9b4ff48f13d70629aa7cf50e27cd02849",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_readiness.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3773,
+      "sha256": "90a2d327ca2a8263c0c7301e4e7a370733820194dddcbd0a591d58b588e4acad",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_runtime_composition.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 17731,
+      "sha256": "096ae773532877fd308c692641a4c95407811bd0cacc715766fcee63914677c2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_runtime_evidence_exporter.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 9507,
+      "sha256": "7692bbffe16cd53e9ff20f04e3a2ea007cf83225ba533c36179af33625a5b2bf",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_runtime_evidence_sources.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 8852,
+      "sha256": "68a01ba1f701041b2444b903a947079beec971edcb7bb1c1fde0de364ea4a20d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_runtime_root.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13582,
+      "sha256": "8989713d6e6cd566b6f5a8ae4d7c3229e39a456a601de8fe81027308a06d6f69",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_runtime_writer.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 7291,
+      "sha256": "8ebe742c380362aad5c8f247d6ba83a860c51e6e428fe2e37286479c95f610fa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_safety.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 5100,
+      "sha256": "4e609592e39508e551a79d2391900fe0445fa2320c5978a646794014a28b028b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_worker_adapter.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 5215,
+      "sha256": "3c3fc5e049cb697f1bcd8ea6fb887d0e40939e06dce6020d0c75bfe621fa119e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_worker_bootstrap.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 12191,
+      "sha256": "66d8388b79a437fe770800474a7f1806db9c6ae25efd0b996b893b3257495eae",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_worker_qualification.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 13832,
+      "sha256": "b93af5d84d240caa2298b7fc3ed5b8744ce0508625a5bbe998199beebaa784fa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_cooperative_worker_runtime.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 4864,
+      "sha256": "0f90b32268ba59e2f5388e526f828599327bdbdca58d095bf5388da2ecf76da0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/tests/test_coordinator_competency.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -13884,6 +15714,58 @@
       "flags": [
         "REVISION_NAMED"
       ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_edge_correction.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3096,
+      "sha256": "d1b1acd3740d089b4bebbc6578e155427e8151ce1c16f20631a0a58c9a60ede4",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_edge_r5_integration.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3975,
+      "sha256": "a7399c7fe9eeae8184490fde3414707a26fce408e6572f786d31ae776b86d79b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_edge_work_unit.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6835,
+      "sha256": "18d2c5010baf4d14295b73eea76272762410341257cc0b868f41901d35e5ebbf",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_edge_yoke_gate.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6060,
+      "sha256": "64fd3aa2c640f119854b807146a6d5f551a6280973bd00341e65dbdee888aad0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_edge_yoke_policy.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3642,
+      "sha256": "524d2b1f1d3ada1217e4d76cffba332912911b41403c1590ca7ff805d09cd7f7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -14232,6 +16114,16 @@
       "classification_basis": "test-path",
       "size_bytes": 4022,
       "sha256": "6f5713d4faad7ecf1e06adb89a0be43457b11ca94799fd254e082a74d88ab565",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_federation_e2e_tool.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2209,
+      "sha256": "02e692a6af6b692fd86459e53bdf3596164750e24a716dacf2dc0eaeee19e161",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -14627,6 +16519,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_generated_readiness_corpus.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 966,
+      "sha256": "09816282439703d36fb0adb9cd290a77b33e926a67a678dca1b37b9bf8254705",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/tests/test_github_repository_read_source.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -14650,8 +16552,8 @@
       "path": "cyber_lion/tests/test_global_mission_scheduler.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 12670,
-      "sha256": "d4a03c49cc4859fdb954c2a7c42dffa0045fd4f2ca262b98e3c780e7cf8f847c",
+      "size_bytes": 14519,
+      "sha256": "274e7584d87366d6f07e658b32a1104adcd9e894233df258ef9bd7220ace2726",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -14737,6 +16639,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_held_assignment_release.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 5429,
+      "sha256": "ae01043918f93805f7f4ebe786fb7f4ce89b48d901632f77498b4e863bf88860",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/tests/test_hmk9d_ablation_contract.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -14750,8 +16662,8 @@
       "path": "cyber_lion/tests/test_host_authority_separation.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 26367,
-      "sha256": "2a6f35526d6761238efa68c9b38ab5a06bfa89293d8bc9b48fb76dedc8e97c2f",
+      "size_bytes": 26435,
+      "sha256": "bde88575848ad2d7c96404640dc0355b3f21d8295eba39d745b6e1a1e17aa41c",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -14792,6 +16704,16 @@
       "classification_basis": "test-path",
       "size_bytes": 9639,
       "sha256": "57dba05ca5d33e79a4b1bb6f8f9d53ee35dbc789af924a80a2b3bba0d07557bd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lion_context_source_binding.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 9375,
+      "sha256": "56d6ff4d2c4d1f56d8e5a94e178b66567fd5b958afaa27f2fe2d7a9f938ac737",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15129,6 +17051,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_lpcl_runtime_selection.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 7283,
+      "sha256": "04b38c4cd5ad3077508605888cf52311d3c493e1ccf64a6a0c1d03094456e563",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/tests/test_market_intelligence.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -15142,8 +17074,8 @@
       "path": "cyber_lion/tests/test_material_worker_runtime.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 9092,
-      "sha256": "b26a9db7eb1dcfe852488044869416a42a0ee6cbc44d48bd06d6834f3c3d1e46",
+      "size_bytes": 9472,
+      "sha256": "cbd89d30708d1d02defdec6089b2c8faeed557fbdfa8aa25b6202ed2c2acc9ae",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15252,8 +17184,8 @@
       "path": "cyber_lion/tests/test_mission_control_v3_restart_package.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 11601,
-      "sha256": "4b392e9c9c385f9cd4f91eb33e6b11d84f0e5984348ccdc26a9dc24519427761",
+      "size_bytes": 12117,
+      "sha256": "957f61a8fb114a05300561f90bbb83188c883e2dd3cbaf816637067eb5ca608f",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15454,8 +17386,8 @@
       "path": "cyber_lion/tests/test_operator_capability_registry.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 980,
-      "sha256": "b79adda74aeb9bc4e8fcc278989526a46f193808f7702a5c73008a83199e9fd3",
+      "size_bytes": 1164,
+      "sha256": "db20fc48f2ab7e3b51f39b4c692e8f37705539496751ee21b6ee13129f65dcdc",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15605,7 +17537,7 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 4248,
-      "sha256": "d209db4a42d625f66fe02c9ed5d292dc86881391e61ad940ae936191ba9e9bfb",
+      "sha256": "82e958bec98317aca1e5d0f13f81c51746d0fd94b765476b052f8b082cea6ec3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15615,7 +17547,7 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 8940,
-      "sha256": "ab4bdfa04ed8084cda0c40f8f911b669d940743a7bc57faa290a41b2a7752897",
+      "sha256": "c1a9514a05a8848b19f7e06b13189dac4c68378231e86144e3ef2dae9bf7e0a4",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15625,7 +17557,7 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 10598,
-      "sha256": "5203d225648229e66046b756eb46602047aff7c00119eb08e8e2a743766e2795",
+      "sha256": "10833b83617dcdc3c8e5b6eedf0ae732d1a558985ef4df6b28ebae6137a041f8",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15635,7 +17567,7 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 4928,
-      "sha256": "bb75247351a96422e20f0e524058c8acbc6d4ce0fd44eae7d35f37c75ab97c78",
+      "sha256": "d817e57e5b448daa9669b99383f00aac5e2ef625838b3dfd20aa038a43b2a1e8",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15645,7 +17577,7 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 7649,
-      "sha256": "ef014333c983b51e3e55b604bc351c3f8d4df3bfea2896e7c65f4161414c91e4",
+      "sha256": "d865e1e5a60bbde7b16712302a1e7f6883067b94913c51c2c47f71c55a68e67a",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15674,8 +17606,18 @@
       "path": "cyber_lion/tests/test_p0_surface_closure_campaign.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 6217,
-      "sha256": "db091a8c31095419032aa4297779bccd178fe5c11666abf6bb34a8955b802fbc",
+      "size_bytes": 6218,
+      "sha256": "1be716fd6b038209925ca42d049d6e65e27d7dda01b966e3005df919c82de7bb",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_panel_projection.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 4593,
+      "sha256": "cd4def418e28dc7a60c37d6aa5786f0712a32d7b2e8973527c796944714ba8c2",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15686,6 +17628,16 @@
       "classification_basis": "test-path",
       "size_bytes": 23922,
       "sha256": "e4b46dd2568ade91084ce902c94f781f3e49f05e30649d736e216e2d9f5d8daa",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_persistent_runtime_state.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 8823,
+      "sha256": "f3fb7312c403471be4dc7625c5a99c2344914ebdc5ecb5552e9f9d00a2a1c19d",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -15959,6 +17911,18 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_r24_cooperative_private_storage.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 6954,
+      "sha256": "2893ffc6c91ef3fcbb6af759006d8b9a5321d872b8eff1f22eeaeb975f9c682d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "cyber_lion/tests/test_r24_dynamic_docker_rematerialization.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -16010,8 +17974,8 @@
       "path": "cyber_lion/tests/test_r24_whole_integration_gate.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 4472,
-      "sha256": "4c9926822b211b7e413fa6ca5e57d78908bff6faaf11f0f6e4204f4665db1954",
+      "size_bytes": 7723,
+      "sha256": "fad8121860fd4044ae0b011d0b8277e66b4113eb35a39b0411a50e32d26a033e",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
@@ -16298,8 +18262,8 @@
       "path": "cyber_lion/tests/test_repository_manifest_architecture_knowledge.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 3594,
-      "sha256": "63c4089e86a38df40f8da260d9aa6ca1f217b90ae8566bbc7236f354fda26f68",
+      "size_bytes": 5032,
+      "sha256": "08848b70b2f47b39be65c991df560563a1d9e3bc95f35e6bcb6ec340af21804b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -16528,8 +18492,8 @@
       "path": "cyber_lion/tests/test_scheduler_storage_reconciliation.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
-      "size_bytes": 7434,
-      "sha256": "d488042113ca8cfd070638fd81b80dae9b98f2cfc211af06ecd7369f13e791a0",
+      "size_bytes": 7481,
+      "sha256": "ec0ecbf511daec3f951d0332a80d646d5762f7716d50badf7dc4f6c490ce5582",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -16542,6 +18506,18 @@
       "sha256": "777bc1c6f0a9cc477a303dcb001a1b5ad6e0b1099ceb1f5881855e784c714ddb",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_semantic_cloud_r1_experiment.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 714,
+      "sha256": "fb5922aa32566eed53d0562ed781d4f7c9fdcfb5d76a1ce8cd709391fee3e143",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -16811,7 +18787,27 @@
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
       "size_bytes": 9425,
-      "sha256": "6c2c53ec37a109414708eee194f9c546dff517374e22951402b2744065f43d5a",
+      "sha256": "09ca760a33ae956f7db20f84bc20ed9cf2dd112b1f52a256d86c8ff5640534ad",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_semantic_cloud_contracts.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 8564,
+      "sha256": "ed9dc474b1c9c8aa7481dea5560e2f57aeac3acc6df4dfa926e6449b56147b50",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "cyber_lion/tests/test_v15_semantic_cloud_formalization.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 10800,
+      "sha256": "62a809305cfefe39f09c0c574dfef330702951135a35057111e7567b14e0de72",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -17557,6 +19553,48 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "docs/architecture/edge-yoke/INTEGRATION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-path",
+      "size_bytes": 5364,
+      "sha256": "dc6557202bce6200f1f36dcd387a9919ea924d2bea90292627f5ddfe8479bffd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "docs/architecture/edge-yoke/MOON_WINDOWS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-path",
+      "size_bytes": 4508,
+      "sha256": "e8e3207bb6660c84e0e9950379133d867a345ef50d25cf97bc2869c6de02f58e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "docs/architecture/edge-yoke/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-path",
+      "size_bytes": 2653,
+      "sha256": "0f7fcaadebdc35c6c784b88f56a92b5e7c50f48858f8fd320584241f82c5ecbd",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "docs/architecture/edge-yoke/VALIDATION_AND_LIMITS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-path",
+      "size_bytes": 3852,
+      "sha256": "431d644f649cfbc7ab13c386c56feedbf704642a6d5e3a6511b56885c561bfa0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "docs/architecture/local-swarm-p0-docker-polygon.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-path",
@@ -18139,6 +20177,16 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "requirements/edge-yoke.txt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 117,
+      "sha256": "c2c8fdf520442bb96bd08cf0ab7849fa6ce88e4b3d8bcae372761b6681b5d6c0",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "tests/images/q3_mosty9d.PNG",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -18234,6 +20282,26 @@
       "classification_basis": "test-path",
       "size_bytes": 8080,
       "sha256": "d79f1fb921495380d839833c24f8f6996957935321136fa73c5fdf574bd30159",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/test_lion_rag15.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 8083,
+      "sha256": "c205bca0bf4ede200d22b283100f7820512c5ed14bfa93b03918a65badb68d66",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tests/test_lion_source_validation.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2606,
+      "sha256": "995da8d8da26b05e2cc854fa69d47037e453a6d0fb6c5cde6947ef4d65b004d0",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18351,11 +20419,51 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_cooperative_worker_adapter.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 6888,
+      "sha256": "ce1b178e79297ea286bbc0118c65133b8265aff8ae4ff8926de36e6c21c88cda",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_cooperative_worker_qualification.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 959,
+      "sha256": "9d8b56476b064efe56e22e9a05712330e4a123acd4eee4316d05c30bfb0644fc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_edge_yoke.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 4743,
+      "sha256": "1135148910ae188119cc160f160657817904ad1191d060cac5ded6b15cc33377",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_edge_yoke_windows.ps1",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 3889,
+      "sha256": "2bfe1dbee8ad241e3425f3d82597bf0b34bf6f5b349aa02b29de2a3fb6aa1a2f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
       "path": "tools/lion_effect_admission_broker.py",
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
-      "size_bytes": 86674,
-      "sha256": "c0cc972fad7e55aadb8171314de593ab656ab39bdfd9c82cd308ca1c84af2366",
+      "size_bytes": 87182,
+      "sha256": "9677da980d374d0f7d7288f940cf0df596ed87440e6a4be1bd3e67554dad543d",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18376,6 +20484,16 @@
       "classification_basis": "tool-path",
       "size_bytes": 30339,
       "sha256": "90fb6abdc5a56788c4415f0130f991aac894dfc0c0e5fb31076c478786cda226",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_federation_e2e_verify.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 7194,
+      "sha256": "80cbc29e8db074e5dc439ebed222029fa870ca562c328abd2aea5d3ecac417fa",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18494,8 +20612,8 @@
       "path": "tools/lion_local_intelligence_runtime.py",
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
-      "size_bytes": 65543,
-      "sha256": "66ef28b63e0acb3650762e95d22b87d4072e15d4ddfad1a22cac1d30c3483819",
+      "size_bytes": 65732,
+      "sha256": "9c7526607360397db6f7a49e2eb3217796850e9b2bdcb335e1e2aa67edab7331",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18574,8 +20692,8 @@
       "path": "tools/lion_mission_control_v3.py",
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
-      "size_bytes": 213098,
-      "sha256": "513d863960b3e14e4ad7a6fb87152010afb92f18f2481c74b94d880bf899bba9",
+      "size_bytes": 221849,
+      "sha256": "2615bf675d7fc1909e16b95da2d3c8dc0e1801357b09de5b7cf06f02c687d516",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18651,15 +20769,37 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "path": "tools/lion_r24_whole_integration_gate.py",
+      "path": "tools/lion_r24_cooperative_pilot.py",
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
-      "size_bytes": 19698,
-      "sha256": "53179eea67777c09969238f23f07b01895b514d0f62a6541cf1cb7a22e11bac2",
+      "size_bytes": 5653,
+      "sha256": "e3326c52df7ddf4188d5a6eb357666cb8bee1572ac3d0ecefb1fb99be9857254",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "REVISION_NAMED"
       ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_r24_whole_integration_gate.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 21985,
+      "sha256": "751eec687896cd83834cd0b86a82a2168a6303a5155ce2aef65925cee0045836",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "REVISION_NAMED"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_rag15.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 13021,
+      "sha256": "3ae8ac3b65cf76e827e5517ba8d733c539e2c4192ed6b2c4eb22040a3926d683",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
@@ -18738,6 +20878,16 @@
       "classification_basis": "tool-path",
       "size_bytes": 13585,
       "sha256": "52d45dbd59a23f12b1f25f5be2b8f3d33af3795791ce7c8f1fb8f0bed267b565",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/ai_platform",
+      "path": "tools/lion_source_validation.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 3295,
+      "sha256": "bd89c41b412654c6e3ff6ade40634c112088bf6224d3f3c27fe0b7b3e82839fa",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18887,7 +21037,7 @@
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
       "size_bytes": 37225,
-      "sha256": "ec289adc4a773770a0103b1f01c784417cef5693a5748873973c263a35110539",
+      "sha256": "1ce5383b48fc093f00ae730bdb5528f00df6c37c6aeb3cc22ed9d50319f483ac",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18917,7 +21067,7 @@
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
       "size_bytes": 7869,
-      "sha256": "20bf7556db6034ff049c8061e14313dc6f14bb24a42392e9d3a3e671a5b5d18b",
+      "sha256": "30ecba8898640033ac6d5b37b853647daa9cbb9b38f5e98207dfca25600d2dfc",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -18967,7 +21117,7 @@
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
       "size_bytes": 10351,
-      "sha256": "12dc7a4b4946762a6d27e8c7cc3dc8adbf5d79a56ecbdcd27c06c6f8db4f7399",
+      "sha256": "31afe7f7dd397b11aed4fed1da7c0efd0648ec5b6ff81b9e16596131bc89bde1",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19007,7 +21157,7 @@
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
       "size_bytes": 14534,
-      "sha256": "1310f4bcaff4de9ba1d7d1fd6f6f0a14f18674679721f92a2abe412f7e553513",
+      "sha256": "e16b89d20220273d5bc212095505970e6900fd903fdcbeb6b6ed992a77f01432",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19087,7 +21237,7 @@
       "classification": "CURRENT_TOOL",
       "classification_basis": "tool-path",
       "size_bytes": 5123,
-      "sha256": "a479a99b789567cfd221dea5b157da87b6ac2da9538f568609f3e2e8b6e574f1",
+      "sha256": "4b6bf8b0e40d91902441758fa29d9a67934cbfb40ed263edafbd6da858329e77",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19212,8 +21362,8 @@
       "path": "LICENSE",
       "classification": "UNKNOWN",
       "classification_basis": "no-safe-classification-rule",
-      "size_bytes": 1096,
-      "sha256": "4ffd7a0aa4d37139ec7e4ef0a14249a499f0333c99e55c6c2bac54c605886d70",
+      "size_bytes": 1069,
+      "sha256": "c5dd128bd4bf593cbe215d5d724df16cbf271e66ee2922fa5197906c7f9f3e72",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19263,11 +21413,31 @@
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
+      "path": "contracts/process_semantics.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3904,
+      "sha256": "e737933e5266c3ea8ad96b8d6e0d3ca19e431b64687ee0508341d7edaf70a994",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "path": "contracts/process_semantics.schema.json",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 1599,
+      "sha256": "42559da2024f02ae229fc560e10ccce860c0009fe6d05aee1a9621209d751187",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3080,
-      "sha256": "c1fb5349127b4fb3e86a267f240bf987f62e2308bd1d20f9dc306a623e5a48ec",
+      "size_bytes": 3450,
+      "sha256": "6dd5e95c4186e9bf68ac53910dbf10b34a688e7ccd4315cef8a1f392b668ac6e",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -19418,6 +21588,26 @@
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 4597,
       "sha256": "4b7e483a90d8d1c51acbd9a5fce046a41d7e1c065b26a75bc5770bf42959b53e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "path": "tests/fixtures/process_semantics/hmk9d_minimal.json",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 834,
+      "sha256": "37866021a21c3e91c6216b87052375e740f88dbbd24126f16a121393fc0af7c9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/chunk-chunk",
+      "path": "tests/test_process_semantics_contract.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1355,
+      "sha256": "021a2e0d30797be71b358566b93e90f527bd84022ec57a52504f216b7921a09e",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -20702,8 +22892,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3302,
-      "sha256": "d1bcf4c4e30eb11f5d7ad846782c50697a4b7c8f529e7db4170aa77e5e10a232",
+      "size_bytes": 3542,
+      "sha256": "0e3c8233651eae94fa15a873912960b6adae783059b20efd8c303ff9f59daae0",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -21164,6 +23354,26 @@
       "classification_basis": "source-extension",
       "size_bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "glx/federation/__init__.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 37,
+      "sha256": "9a1e62969c52fee98039bfa070b89031722806025d0847119e893b1237fe0fbc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
+      "path": "glx/federation/delta_provider.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 4716,
+      "sha256": "e3fcb00507a7dd64eb9c698d899a6bd8b4929524966ee82862584d24b3b4d272",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23023,6 +25233,16 @@
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
+      "path": "tests/unit/test_federation_delta_provider.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 3609,
+      "sha256": "4fcf07cfe48833140516f53e7b2b65243e5dcd80e7573dac7c4464b1cd784e1a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/glitchlab",
       "path": "tests/unit/test_glx_tools_suite.py",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -23123,6 +25343,16 @@
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": "LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 11342,
+      "sha256": "72073123b7a980612034dc65d1b228c5beab09612c3f0f253f4717035c0535c3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "path": "PROCESS_GUARD.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -23157,11 +25387,51 @@
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": "contracts/hypothesis_spec.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3167,
+      "sha256": "f87f551793dbe6246426bf11cd678b4fdb6bacc23dace39ca42fb9f8bd45e4e1",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": "contracts/hypothesis_spec.schema.json",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 790,
+      "sha256": "ac902e38b6411e2396e1882a54a1bc9dbbf0195f41406953a3b59baf173d8a39",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3179,
-      "sha256": "00c44ded471b167ba2ad45b8c59b3df25cd742888fde26a35f4183afd8297abd",
+      "size_bytes": 3535,
+      "sha256": "44324f76a8b2da90c3b9378a6dca92171919b592f7e672436726e36c7d2f8b77",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": "examples/falsification_fixture.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1072,
+      "sha256": "f910f193ec5a8b7fde9d01a8f372ee6f2f241be49175b330c4fd22c5969cba1a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+      "path": "tests/test_hypothesis_spec.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1603,
+      "sha256": "11b990a90b303d67f7b73b514fef73302587731001c8ab2727046f168debe5f1",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23251,11 +25521,31 @@
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "path": "contracts/graph_projection.schema.json",
+      "classification": "CURRENT_CONTRACT",
+      "classification_basis": "contract-or-schema-path",
+      "size_bytes": 346,
+      "sha256": "bd09020b71252cd5c5edf2f08da8328222e0d1650cdcc0a414b23bf93384fb99",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3137,
-      "sha256": "4c23f59aa8eecc15c703f6aeb291abecc872a69253e5438dde92238f0d614bb3",
+      "size_bytes": 3482,
+      "sha256": "9d54841d217543fa527d7cb16e714ec838d6ba6bc93a4254304c815bde12d229",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "path": "mosaic_core.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 3978,
+      "sha256": "de93aaaa16e0ba57226cea355d42f6beeecd609b2c7ee6b8ad8d1e24e0b985f4",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23266,6 +25556,16 @@
       "classification_basis": "source-extension",
       "size_bytes": 72725,
       "sha256": "ca0fe31c9fd171ff559c6c906f4ff349bfebb1cda6210f088f436b65713f2f5a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/mosaic_lab_pro.py",
+      "path": "tests/test_headless_graph_projection.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1318,
+      "sha256": "d35da0b808539f9a203e1b38dab46cc6a2bdbea3e7f9475214f6ad0527a90c64",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23351,6 +25651,16 @@
     },
     {
       "repository": "DonkeyJJLove/sbom",
+      "path": "LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 11342,
+      "sha256": "72073123b7a980612034dc65d1b228c5beab09612c3f0f253f4717035c0535c3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
       "path": "PROCESS_GUARD.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -23388,8 +25698,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3160,
-      "sha256": "0c2826858c8c21d37e73180b908fd1050fd27fb26f72c0137460004dca189e22",
+      "size_bytes": 3383,
+      "sha256": "fe4fcc08ff58b2cf17b0ae10fcd8cbc9a454b9648a7512f16d4b092a87638845",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23585,11 +25895,31 @@
     },
     {
       "repository": "DonkeyJJLove/sbom",
+      "path": "reference/artifact_identity_adapter.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 2723,
+      "sha256": "db03f8b96b4ab7f8bbabcbe0af772f9c19d0be705324614d20aaebf0e04d78f2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
       "path": "sbom_arkusz_jenkins_elastic_lab.xlsx",
       "classification": "UNKNOWN",
       "classification_basis": "binary-or-research-data-needs-policy",
       "size_bytes": 9811,
       "sha256": "171efe0773b3b71478792f73e2c703c9ebe3214a9a9b72ceaf2a991a262f208a",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/sbom",
+      "path": "tests/test_federation_artifact_identity.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1202,
+      "sha256": "d895cc3be21dd232789d0229a51775d6c9144f04d1bf33c47bb815fdc46989da",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23732,6 +26062,16 @@
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 4065,
       "sha256": "df7c1ee29bcd61276262424cfb91997a1536140cbf59a5854c9e8530ad9d0e9d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 1069,
+      "sha256": "c5dd128bd4bf593cbe215d5d724df16cbf271e66ee2922fa5197906c7f9f3e72",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -23990,8 +26330,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3487,
-      "sha256": "57b35df139c8f506b02a10fcf5b6821caa8938010981997d04856dbdbdb60815",
+      "size_bytes": 3724,
+      "sha256": "8a9de8b2e3dbc014713dfe80a7ee32f604caac825004bcf98671b3766d17753f",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -24054,6 +26394,26 @@
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "federation/__init__.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 62,
+      "sha256": "124590216983177635cdea0c81c9ba4c00e9b113b547434e434bc4e1d297b3a2",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
+      "path": "federation/ai_platform_runtime_adapter.py",
+      "classification": "CURRENT_SOURCE",
+      "classification_basis": "source-extension",
+      "size_bytes": 6381,
+      "sha256": "686c43c871eb26e34ce9f83de0c0fbd13fbe59cf758d66e4878f13b3d245aece",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -24699,6 +27059,16 @@
     },
     {
       "repository": "DonkeyJJLove/swarm",
+      "path": "tests/federation/test_ai_platform_roundtrip.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 2759,
+      "sha256": "58e35512d37fad9c1d2d26f888fe31362d993b0492327a0e55aef7dd7a09bc0b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/swarm",
       "path": "tests/runtime/e4_runtime_compose.yml",
       "classification": "CURRENT_TEST",
       "classification_basis": "test-path",
@@ -24875,6 +27245,16 @@
     },
     {
       "repository": "DonkeyJJLove/writeups",
+      "path": "LICENSE",
+      "classification": "UNKNOWN",
+      "classification_basis": "no-safe-classification-rule",
+      "size_bytes": 11342,
+      "sha256": "72073123b7a980612034dc65d1b228c5beab09612c3f0f253f4717035c0535c3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
       "path": "LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -24980,8 +27360,8 @@
       "path": "README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 24997,
-      "sha256": "49a513ee774842219b4c146b0c37f93b93a9e4694edabef5ad77d04c0ab67b1f",
+      "size_bytes": 25923,
+      "sha256": "465455fed902e7ad3babdc91927017b1c536989e7f1a102371a1b7e0964dd197",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -28974,8 +31354,8 @@
       "path": "badania/README.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
-      "size_bytes": 23297,
-      "sha256": "e619b8c5ce768957fcb6fa1ff232cf604de71d4629d26b5bd6ffdcaa9ef54844",
+      "size_bytes": 23571,
+      "sha256": "3a15473df38ba7aec9b529fc6cbcd0d661db34cbb6a06b229c99ce8b7ba9bca3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": [
         "README"
@@ -31923,11 +34303,213 @@
     },
     {
       "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/EVIDENCE_INDEX.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 681,
+      "sha256": "d875cf55e87feaff63f68a48fcc4588d0e55010936cfdc0939bf33efcb786a2e",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/EXPERIMENT_MATRIX.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 3093,
+      "sha256": "58e197e4d8eb71d751799720787150932d8f100ac6a952ff6c0f51668abab324",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/FEDERATION_RESEARCH_BINDING.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 2324,
+      "sha256": "182c2ab7647f282dd8dc7a5821821e1c18d0e5f69ffda46cb2b23a50dd6b3816",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/HYPOTHESIS_REGISTER.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 1197,
+      "sha256": "1d211565f444e98d4bd385fb4a3c984f99749a1eaaf504d0ff2cccdce173e0bc",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/README.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 2104,
+      "sha256": "bba48a8815488232ffa2e44646e8d6536401eca1eb4b89aae0ea094b7dcda646",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": [
+        "README"
+      ]
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/RESEARCH_PROGRAM.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1366,
+      "sha256": "2d5ba8be5e3049dadd228b8df0b4413db7093af28780eb2062d1e4db342e04a8",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/baselines/HCL_4_3_3_BINDING.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 518,
+      "sha256": "56ea55a1ef1d10fa0dd5030f7bef56b06e203d1a78903dd92748144d52e5e059",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-01_RELEVANCE_COMPRESSION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1054,
+      "sha256": "ba9e1c45b38d69cae830f9179bfb7006eb1eef49a8b433d2de0d4258498247f5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-02_SEMANTIC_DELTA_COMMUNICATION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1067,
+      "sha256": "c13a8437d70801e022fa8df5f2ba04cbb09611451e4673935252ff23c3878093",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-03_DYNAMIC_AGENT_FORMATION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1046,
+      "sha256": "fb11a8ea9eab46fc1337ec5e960c22fdfa9e4bf1e9e60739c6c0529c4c1e8033",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-04_RELATION_ABLATION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1038,
+      "sha256": "6284dfbdf055194ddd71fe4fbdd1db7c656c1e61a27a1ebf258d93167cac2e7f",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-05_FALSE_CONSENSUS.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1049,
+      "sha256": "379b7772e9beb3dce8748e670704bb7078b461f8d25567caaea7ca59d1e9c7cf",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-06_TEMPORAL_SUPERSESSION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1035,
+      "sha256": "2ff67362bb70b46ad978f4579d577cc747156c9a1e9b86fd53994ee07e7d9356",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-07_RELEVANCE_ATTACK.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1051,
+      "sha256": "22a28282604135496c03825c89302fe3da25b015303529ed7651f7d2a226f516",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-08_COLLECTIVE_DECISION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1002,
+      "sha256": "c216962d571e59c05229265b73c3b27f2b7e6b43db68e8717b85d7553d411dd9",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-09_NOVEL_CAPABILITY.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1064,
+      "sha256": "bccaee9ac2cda40c9d4f9ac56eb51a0cd1ce71efeebd42cca3369b80847b3b5b",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-10_YOKE_CLOSURE.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1061,
+      "sha256": "ac7277e331cdae4e23f863ae3edebe4e29faa0d9717fb9875d76f755d9106ac3",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-11_CROSS_MODEL.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1034,
+      "sha256": "44f6af70a5a24adb4c8704578966104023c5fcc75e28ed20d022aeb0c81c1be7",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/lion-semantic-cloud/protocols/SC-12_MECHANISTIC_INTERVENTION.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 1024,
+      "sha256": "7857b6816b909b73b70fdcdb33cdc0899569f1a9e1de99f288a11e08c6f1d37d",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
       "path": "badania/oczy_kasyno_study_v1_with_writeup.zip",
       "classification": "UNKNOWN",
       "classification_basis": "binary-or-research-data-needs-policy",
       "size_bytes": 1618111,
       "sha256": "36b24dd36593d63c36c4ac8f3f802fc7a4a5644a84a01991215d9094caa28ca6",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "badania/semantic_compilers/sfc_v1.prompt",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 13362,
+      "sha256": "de4f110970586808e35911f0714144b5a01d8be09c912bd6922cca24cd7f998b",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -31956,8 +34538,8 @@
       "path": "cyber-lion.repository.json",
       "classification": "CURRENT_CONFIG",
       "classification_basis": "config-or-data-extension",
-      "size_bytes": 3302,
-      "sha256": "e78e5cb318bc13fa618d2472656219d9646cdb506abc74f4adbcaed217281b40",
+      "size_bytes": 3815,
+      "sha256": "5e7c7ce892bc40fcdd59c4aa57c05818f9b219230dffc226869043adbf423a36",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -32385,6 +34967,16 @@
     },
     {
       "repository": "DonkeyJJLove/writeups",
+      "path": "research_index.json",
+      "classification": "CURRENT_CONFIG",
+      "classification_basis": "config-or-data-extension",
+      "size_bytes": 25223,
+      "sha256": "5deca0ef51f7e3d1b13a7bf9b0cdf1fc886ff40c2725b6480ec86e6988edf4d5",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
       "path": "sbom-as-sigillum-relationis_systemic-risk-control.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
@@ -32395,11 +34987,41 @@
     },
     {
       "repository": "DonkeyJJLove/writeups",
+      "path": "semanticzna-architektura-systemow-multiagentowych-agi.md",
+      "classification": "CURRENT_DOCUMENTATION",
+      "classification_basis": "documentation-or-research-text",
+      "size_bytes": 13238,
+      "sha256": "8ef1671840f8faa3b480924c6a8f5b944a7f807d82732a3ac7e85b2227d633cf",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
       "path": "teoria-pojemnosci-modeli-obliczalnosc.md",
       "classification": "CURRENT_DOCUMENTATION",
       "classification_basis": "documentation-or-research-text",
       "size_bytes": 20850,
       "sha256": "812f170fa22f7c14643ae1bb97c7b33719ed950691672a522518316ffec023ff",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "tests/test_research_index.py",
+      "classification": "CURRENT_TEST",
+      "classification_basis": "test-path",
+      "size_bytes": 1323,
+      "sha256": "40ca8aab7bddc23c0a2785522c1d1252e86332d8853690b4fd011f4cab3f0a10",
+      "naming_conformance": "NO_KNOWN_VIOLATION",
+      "flags": []
+    },
+    {
+      "repository": "DonkeyJJLove/writeups",
+      "path": "tools/research_index.py",
+      "classification": "CURRENT_TOOL",
+      "classification_basis": "tool-path",
+      "size_bytes": 4181,
+      "sha256": "b5ca144fc621fb8e884e633fd57df9f97cb19aa5162c7636e2aa3cbd4054acf3",
       "naming_conformance": "NO_KNOWN_VIOLATION",
       "flags": []
     },
@@ -32435,6 +35057,44 @@
     }
   ],
   "duplicate_content_groups": [
+    {
+      "sha256": "72073123b7a980612034dc65d1b228c5beab09612c3f0f253f4717035c0535c3",
+      "count": 5,
+      "repositories": [
+        "DonkeyJJLove/HA2D",
+        "DonkeyJJLove/ai_platform",
+        "DonkeyJJLove/hipotezy_nadawcze_LLM",
+        "DonkeyJJLove/sbom",
+        "DonkeyJJLove/writeups"
+      ],
+      "items": [
+        {
+          "repository": "DonkeyJJLove/HA2D",
+          "path": "LICENSE",
+          "size_bytes": 11342
+        },
+        {
+          "repository": "DonkeyJJLove/ai_platform",
+          "path": "LICENSE",
+          "size_bytes": 11342
+        },
+        {
+          "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
+          "path": "LICENSE",
+          "size_bytes": 11342
+        },
+        {
+          "repository": "DonkeyJJLove/sbom",
+          "path": "LICENSE",
+          "size_bytes": 11342
+        },
+        {
+          "repository": "DonkeyJJLove/writeups",
+          "path": "LICENSE",
+          "size_bytes": 11342
+        }
+      ]
+    },
     {
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "count": 18,
@@ -32532,6 +35192,26 @@
           "repository": "DonkeyJJLove/swarm",
           "path": "system-ai/ai-service-service.yam",
           "size_bytes": 0
+        }
+      ]
+    },
+    {
+      "sha256": "c5dd128bd4bf593cbe215d5d724df16cbf271e66ee2922fa5197906c7f9f3e72",
+      "count": 2,
+      "repositories": [
+        "DonkeyJJLove/chunk-chunk",
+        "DonkeyJJLove/swarm"
+      ],
+      "items": [
+        {
+          "repository": "DonkeyJJLove/chunk-chunk",
+          "path": "LICENSE",
+          "size_bytes": 1069
+        },
+        {
+          "repository": "DonkeyJJLove/swarm",
+          "path": "LICENSE",
+          "size_bytes": 1069
         }
       ]
     },
@@ -32954,13 +35634,13 @@
   ],
   "static_python_reference_signals": {
     "DonkeyJJLove/HA2D": {
-      "python_files": 0,
+      "python_files": 3,
       "statically_unreferenced_candidates": [],
       "parse_errors": [],
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/SymulacjaKaskadySieciowej": {
-      "python_files": 18,
+      "python_files": 20,
       "statically_unreferenced_candidates": [
         "main.py",
         "scripts/analyze_bifurcation.py",
@@ -32968,6 +35648,7 @@
         "scripts/run_morris.py",
         "scripts/run_sobol.py",
         "src/abstrakcyjna_symulacja_kaskady_sieciowej/config.py",
+        "src/abstrakcyjna_symulacja_kaskady_sieciowej/federation_fixture_provider.py",
         "src/abstrakcyjna_symulacja_kaskady_sieciowej/gsa_common.py",
         "src/abstrakcyjna_symulacja_kaskady_sieciowej/io_utils.py",
         "src/abstrakcyjna_symulacja_kaskady_sieciowej/iran_cascade_provider.py",
@@ -32979,12 +35660,13 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/ai_platform": {
-      "python_files": 838,
+      "python_files": 927,
       "statically_unreferenced_candidates": [
         "LION/evidence/r20/fleet-runner.py",
         "LION/runtime_compat/r20/sentinelx-primary/sentinelx-bridge-heartbeat.py",
         "LION/runtime_compat/r23/docker-autonomy/fleet-currentness.py",
         "LION/runtime_compat/r23/docker-autonomy/worker.py",
+        "LION/runtime_compat/r24/docker-autonomy/cooperative-provider.py",
         "LION/runtime_compat/r24/docker-autonomy/fleet-currentness.py",
         "LION/runtime_compat/r24/docker-autonomy/materialize.py",
         "LION/runtime_compat/r24/docker-autonomy/transport.py",
@@ -32995,13 +35677,13 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/chunk-chunk": {
-      "python_files": 0,
+      "python_files": 2,
       "statically_unreferenced_candidates": [],
       "parse_errors": [],
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/glitchlab": {
-      "python_files": 204,
+      "python_files": 207,
       "statically_unreferenced_candidates": [
         "__main__.py",
         "analysis/ast_delta.py",
@@ -33033,20 +35715,6 @@
         "delta/features.py",
         "delta/fingerprint.py",
         "delta/tokens.py",
-        "glx/tools/ast_mosaic_dashboard.py",
-        "glx/tools/delta_fingerprint.py",
-        "glx/tools/demo_scope_showcase.py",
-        "glx/tools/doclint.py",
-        "glx/tools/fields_3d.py",
-        "glx/tools/file_ast_3d.py",
-        "glx/tools/file_mosaic_3d.py",
-        "glx/tools/file_scope_studio_plus.py",
-        "glx/tools/file_scope_viz.py",
-        "glx/tools/invariants_and_rules_demo.py",
-        "glx/tools/invariants_check.py",
-        "glx/tools/project_graph_3d.py",
-        "glx/tools/recompute_scope_fields.py",
-        "glx/tools/scope_meta_cli.py",
         "mosaic/git_delta.py",
         "mosaic/hybrid_ast_mosaic.py",
         "mosaic/hybrid_schema_builder.py",
@@ -33160,13 +35828,15 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/hipotezy_nadawcze_LLM": {
-      "python_files": 0,
-      "statically_unreferenced_candidates": [],
+      "python_files": 2,
+      "statically_unreferenced_candidates": [
+        "contracts/hypothesis_spec.py"
+      ],
       "parse_errors": [],
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/mosaic_lab_pro.py": {
-      "python_files": 1,
+      "python_files": 3,
       "statically_unreferenced_candidates": [
         "mosaic_lab_pro.py"
       ],
@@ -33174,13 +35844,15 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/sbom": {
-      "python_files": 0,
-      "statically_unreferenced_candidates": [],
+      "python_files": 2,
+      "statically_unreferenced_candidates": [
+        "reference/artifact_identity_adapter.py"
+      ],
       "parse_errors": [],
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/swarm": {
-      "python_files": 21,
+      "python_files": 24,
       "statically_unreferenced_candidates": [
         "aggregator-api/aggregator_api.py",
         "aggregator/aggregator.py",
@@ -33195,7 +35867,7 @@
       "policy": "SIGNAL_ONLY_NOT_DELETE_PROOF"
     },
     "DonkeyJJLove/writeups": {
-      "python_files": 58,
+      "python_files": 60,
       "statically_unreferenced_candidates": [
         "badania/LOCI/parsers/diff_core.py",
         "badania/LOCI/parsers/export_matlab.py",
