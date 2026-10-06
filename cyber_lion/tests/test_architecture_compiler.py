@@ -1,0 +1,177 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import subprocess
+import unittest
+
+from cyber_lion.architecture_projection.architecture_compiler import (
+    ArchitectureCompiler,
+    ArchitectureCompilerError,
+    CandidateDesign,
+    CandidateLayerBinding,
+)
+from cyber_lion.architecture_projection.flows import canonical_flows
+from cyber_lion.architecture_projection.full_architecture import build_full_architecture_model
+from cyber_lion.contracts.formalization_manifest_types import BaselineIdentity
+from cyber_lion.contracts.formalization_registry import FormalizationRegistry
+from cyber_lion.tests.architecture_projection_candidate import staged_sources, staged_tree
+
+
+ROOT = Path(__file__).resolve().parents[2]
+V15 = ROOT / "LION/architecture/v1_5"
+
+
+def git(*args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(ROOT), *args],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ).stdout.strip()
+
+
+def registry() -> FormalizationRegistry:
+    return FormalizationRegistry.from_dict(
+        json.loads((V15 / "FORMALIZATION_REGISTRY_FEDERATION_R1.json").read_text(encoding="utf-8"))
+    )
+
+
+def owners() -> dict[str, str]:
+    raw = json.loads((V15 / "semantic_owners.json").read_text(encoding="utf-8"))
+    return {row["concept"]: row["primary"] for row in raw["owners"]}
+
+
+def candidate(head: str, tree: str) -> CandidateDesign:
+    return CandidateDesign(
+        candidate_id="architecture-studio-compiler-r1",
+        baseline=BaselineIdentity("DonkeyJJLove/ai_platform", "master", head, tree),
+        target_component="architecture studio compiler",
+        motivation="compile a source-bound design proposal through the existing architecture formalization spine",
+        evidence_refs=("source:architecture_projection", "source:formalization_kernel"),
+        expected_outcome="deterministic non-effectful EvolutionDelta and formalization impact preview",
+        falsification_conditions=(
+            "canonical flow substitution is rejected",
+            "stale baseline is rejected",
+            "unknown semantic owner is rejected",
+        ),
+        candidate_scope=(
+            "cyber_lion/architecture_projection/architecture_compiler.py",
+            "cyber_lion/architecture_projection/architecture_studio.py",
+        ),
+        dependency_ids=("architecture", "architecture_knowledge", "formalization"),
+        risk_class="GREEN",
+        change_class="ARCHITECTURE_CONCEPT",
+        affected_concepts=("architecture", "formalization"),
+        layer_bindings=(
+            CandidateLayerBinding("architecture", ("ARCHITECTURE_PROJECTION",)),
+            CandidateLayerBinding("formalization", ("ARCHITECTURE_PROJECTION",)),
+        ),
+        tests_required=("test:architecture-compiler",),
+        evals_required=("eval:architecture-compiler",),
+        falsifiers=("falsifier:no-authority-bypass",),
+    ).validate()
+
+
+class ArchitectureCompilerTests(unittest.TestCase):
+    def setUp(self):
+        self.head = git("rev-parse", "HEAD")
+        self.tree = staged_tree(ROOT)
+        self.architecture = build_full_architecture_model(
+            source_tree_sha=self.tree,
+            source_files=staged_sources(ROOT),
+        )
+        self.registry = registry()
+        self.owners = owners()
+        self.compiler = ArchitectureCompiler()
+
+    def test_same_inputs_produce_same_evolution_delta_and_required_set(self):
+        left = self.compiler.compile(
+            candidate=candidate(self.head, self.tree),
+            architecture=self.architecture,
+            registry=self.registry,
+            semantic_owners=self.owners,
+            current_head=self.head,
+            current_tree=self.tree,
+        )
+        right = self.compiler.compile(
+            candidate=candidate(self.head, self.tree),
+            architecture=self.architecture,
+            registry=self.registry,
+            semantic_owners=self.owners,
+            current_head=self.head,
+            current_tree=self.tree,
+        )
+        self.assertEqual(left.compilation_digest, right.compilation_digest)
+        self.assertEqual(left.evolution_delta.delta_digest, right.evolution_delta.delta_digest)
+        self.assertEqual(left.required_formalization_set.set_digest, right.required_formalization_set.set_digest)
+        self.assertEqual(left.authority_effect, "NONE")
+        self.assertEqual(left.execution_effect, "NONE")
+        self.assertTrue(left.ends_before_admission)
+
+    def test_compiler_routes_through_existing_required_formalization_set(self):
+        result = self.compiler.compile(
+            candidate=candidate(self.head, self.tree),
+            architecture=self.architecture,
+            registry=self.registry,
+            semantic_owners=self.owners,
+            current_head=self.head,
+            current_tree=self.tree,
+        )
+        ids = {item.artifact_id for item in result.required_formalization_set.items}
+        self.assertIn("architecture-projection", ids)
+        self.assertIn("currentness-carriers", ids)
+        self.assertEqual(result.formalization_manifest.authority_effect, "NONE")
+        self.assertEqual(result.formalization_manifest.execution_effect, "NONE")
+
+    def test_unknown_owner_fails_closed(self):
+        incomplete = dict(self.owners)
+        incomplete.pop("formalization", None)
+        with self.assertRaisesRegex(ArchitectureCompilerError, "unknown semantic owner"):
+            self.compiler.compile(
+                candidate=candidate(self.head, self.tree),
+                architecture=self.architecture,
+                registry=self.registry,
+                semantic_owners=incomplete,
+                current_head=self.head,
+                current_tree=self.tree,
+            )
+
+    def test_stale_currentness_fails_closed(self):
+        with self.assertRaisesRegex(ArchitectureCompilerError, "stale or substituted"):
+            self.compiler.compile(
+                candidate=candidate(self.head, self.tree),
+                architecture=self.architecture,
+                registry=self.registry,
+                semantic_owners=self.owners,
+                current_head="f" * 40,
+                current_tree=self.tree,
+            )
+
+    def test_canonical_flow_spine_cannot_be_substituted(self):
+        broken = type(self.architecture)(
+            source_tree_sha=self.architecture.source_tree_sha,
+            elements=self.architecture.elements,
+            flows=tuple(reversed(canonical_flows())),
+            gaps=self.architecture.gaps,
+            layout=self.architecture.layout,
+        )
+        with self.assertRaisesRegex(ArchitectureCompilerError, "FLOW-01..FLOW-10"):
+            self.compiler.compile(
+                candidate=candidate(self.head, self.tree),
+                architecture=broken,
+                registry=self.registry,
+                semantic_owners=self.owners,
+                current_head=self.head,
+                current_tree=self.tree,
+            )
+
+    def test_candidate_contract_has_no_history_version_lifecycle_or_currentness_authority(self):
+        fields = set(CandidateDesign.__dataclass_fields__)
+        self.assertFalse(fields.intersection({"history_relation", "version", "lifecycle", "currentness"}))
+        ArchitectureCompiler.assert_no_effect_surface()
+
+
+if __name__ == "__main__":
+    unittest.main()
