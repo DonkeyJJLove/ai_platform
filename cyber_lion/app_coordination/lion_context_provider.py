@@ -47,7 +47,7 @@ def build_lion_context(root):
     architecture = _source_json_object(captured[SOURCES[-2]], "v1.5 semantic owners")
     architecture_epoch = architecture.get("architecture_epoch")
     if (not isinstance(architecture_epoch, str)
-            or re.fullmatch(r"[0-9]+(?:\\.[0-9]+){0,3}", architecture_epoch) is None):
+            or re.fullmatch(r"[0-9]+(?:\.[0-9]+){0,3}", architecture_epoch) is None):
         raise ValueError("architecture epoch source must be a bounded version")
     bootstrap = _source_json_object(captured[SOURCES[-1]], "RAG bootstrap")
     release = bootstrap.get("preferred_release")
