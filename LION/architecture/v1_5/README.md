@@ -117,4 +117,3 @@ Thread B extends the existing architecture/evolution owner with a deterministic,
 Architecture Studio remains PARTIAL: the repository already provides the source-bound architecture read-model, federation knowledge graph, status/currentness/gap projections and visual render plans, but the interactive Electron graph explorer/composer and formalization-impact preview are not implemented by this candidate.
 
 The candidate package is [architecture_studio_compiler_r1/](architecture_studio_compiler_r1/). It is source-candidate evidence, not current master truth, formalization closure, authority, integration or deployment. Truth/currentness carriers remain carrier-last after accepted non-carrier source stabilization.
-
