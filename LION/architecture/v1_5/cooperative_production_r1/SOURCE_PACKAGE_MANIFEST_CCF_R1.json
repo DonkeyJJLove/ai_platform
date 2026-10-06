@@ -1,7 +1,7 @@
 {
   "schema": "lion.source-package-manifest/v1",
   "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
-  "purpose": "Exact cognitive communication fabric R2 source package with bounded attachment ingestion and provider-payload projection; historical deployed/runtime evidence remains immutable and separate.",
+  "purpose": "Exact cognitive communication fabric R2 source package with bounded attachment ingestion, provider-payload projection, and ThreadStore delivery-safety repair; historical deployed/runtime evidence remains immutable and separate.",
   "files": [
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
@@ -269,7 +269,7 @@
     },
     {
       "path": "tools/lion_local_intelligence_runtime.py",
-      "sha256": "2bdb7f4aaef1193a9a7e489e42955a300e0aeea4f4969c4b51723214eca2afa7"
+      "sha256": "f05bfe344cde05252f3cd911e5f141297123145100a8e6fd1262c5e534912dad"
     },
     {
       "path": "tools/lion_mission_control_compat.py",
@@ -316,6 +316,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "6b7657ffb9251726769d50e962ed49457a9818f6ad4a562dffb714b3db9a1b3c",
+  "package_digest": "b73dcd11c52dd806ff077de0a720f2f52e33db94b6eae8bb58c2cc0b3142e47e",
   "authority_effect": "NONE"
 }
