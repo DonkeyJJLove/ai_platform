@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from dataclasses import dataclass
 import argparse,hashlib,json,os,threading,time,urllib.request,urllib.error,urllib.parse,uuid,sqlite3,re,sys,inspect
 from datetime import datetime,timezone
-from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway,UI
+from cyber_lion.app_coordination.local_intelligence_gateway import Gateway,serve_gateway,UI,local_model_payload_bytes
 from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
 apply_hybrid_gateway_extension(Gateway)
 from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
@@ -512,7 +512,9 @@ def providers(broker,model):
             broker.call('MAT07','validate_web',{'url':url});d=broker.call('MAT06','web_fetch',{'url':url})['result'];return WebEvidence(**d)
     def modelprov(messages,max_tokens=384):
         broker.call('MAT09','model_health',{})
-        d=_json_request(model.rstrip('/')+'/v1/chat/completions',body={'messages':messages,'max_tokens':max_tokens,'temperature':0.1,'stream':False},timeout=90)
+        body=local_model_payload_bytes(messages,max_tokens)
+        req=urllib.request.Request(model.rstrip('/')+'/v1/chat/completions',data=body,headers={'User-Agent':'LION-R10-R2-runtime/1','Content-Type':'application/json'},method='POST')
+        with urllib.request.urlopen(req,timeout=90) as res:d=json.load(res)
         return d['choices'][0]['message']['content']
     return cur,gitprov,content,source,mission,MaterialWeb(),modelprov
 
