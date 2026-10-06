@@ -93,6 +93,14 @@ class GatewayContextBindingA01Tests(unittest.TestCase):
         self.assertIn("AUTOMATIC_SAAS_HOP_AVAILABLE=FALSE",payload)
         self.assertNotIn("EXTERNAL_SESSION_MEDIATED",payload)
 
+    def test_sentinelx_completed_turn_is_fenced_to_original_claim_generation(self):
+        source=(Path(__file__).resolve().parents[2]/"LION/runtime_compat/r20/node-panel/src/secure-mcp-relay.js").read_text(encoding="utf-8")
+        self.assertIn("makeTurn(row, claim.claim_generation)",source)
+        self.assertIn("turn.request_hash !== rec.turn_request_hash",source)
+        self.assertIn("STALE_TURN_GENERATION",source)
+        self.assertIn("NEW_BROKER_REQUEST_REQUIRED",source)
+        self.assertNotIn("rec.claim_generation = claim.claim_generation",source)
+
     def test_capability_answer_keeps_unknown_identity_unknown(self):
         td,root=self.repo();self.addCleanup(td.cleanup)
         g=self.gateway(root,lambda messages,max_tokens:(_ for _ in ()).throw(AssertionError("model should not run")),lambda kind,args:{})
