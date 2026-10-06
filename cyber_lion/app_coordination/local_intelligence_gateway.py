@@ -817,7 +817,7 @@ class Gateway:
             'response_digest':response_digest,
             'provider':'LOCAL',
             'provider_session_ref':binding.get('provider_session_ref'),
-            'provider_session_ref_class':'LION_LANE_REF_NOT_PROVIDER_ATTESTATION' if binding.get('provider_session_ref') else 'UNKNOWN',
+            'provider_session_ref_class':'LION_LANE_REF_NOT_PROVIDER_ATTESTATION' if binding.get('provider_session_ref') else 'UNKNOWN_NOT_PROVIDER_ATTESTED',
             'conversation_id':binding.get('conversation_id'),
             'binding_epoch':binding.get('binding_epoch'),
             'lane_id':binding.get('lane_id'),
