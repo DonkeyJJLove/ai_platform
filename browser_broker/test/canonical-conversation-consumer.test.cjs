@@ -18,6 +18,8 @@ const candidate={
  causation_id:'cause-1',
  correlation_id:'corr-1',
  context_digest:'a'.repeat(64),
+ shared_context_digest:'c'.repeat(64),
+ projection_digest:'d'.repeat(64),
  binding_context_digest:'b'.repeat(64),
  mission_id:null,
  provider_session_ref:'ps-1',
@@ -35,6 +37,8 @@ function turnInput(c=candidate){
   'causation_id='+c.causation_id,
   'correlation_id='+c.correlation_id,
   'context_digest='+c.context_digest,
+  'shared_context_digest='+c.shared_context_digest,
+  'projection_digest='+c.projection_digest,
   'USER: hello',
  ].join('\n');
 }
@@ -45,7 +49,7 @@ function fixture({bridges=[]}={}){
  let conversation={conversation_id:candidate.conversation_id,state:'UNBOUND',current_binding:{binding_epoch:1,mission_id:null,context_digest:'b'.repeat(64)},external_bridges:[...bridges]};
  const turn={
   turn_id:'turn_1',command_id:'MC-'+candidate.request_id,thread_id:null,session_id:'CHATGPT-SAAS',status:'PENDING',
-  parent_event_id:'saas_request:'+candidate.request_id,input:turnInput(),
+  parent_event_id:'saas_request:'+candidate.request_id,input:turnInput(),request_hash:'e'.repeat(64),
  };
  const panel=async(path,method='GET',body)=>{
   calls.panel.push([path,method,body]);
@@ -96,6 +100,10 @@ test('first canonical SaaS request auto-creates a dedicated native thread and pe
  const state=JSON.parse(f.store.setting('canonical_dispatch_map'));
  assert.equal(state[candidate.request_id].state,'BOUND_SENT');
  assert.equal(state[candidate.request_id].bridge_id,'bridge-new');
+ assert.equal(state[candidate.request_id].shared_context_digest,candidate.shared_context_digest);
+ assert.equal(state[candidate.request_id].projection_digest,candidate.projection_digest);
+ assert.match(state[candidate.request_id].actual_payload_bytes_digest,/^[a-f0-9]{64}$/);
+ assert.equal(state[candidate.request_id].turn_request_hash,f.turn.request_hash);
 });
 
 test('existing canonical bridge wins over current browser state and exact bound URL is used',async()=>{
