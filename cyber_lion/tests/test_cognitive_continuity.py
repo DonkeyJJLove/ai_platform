@@ -73,7 +73,7 @@ class CognitiveContinuityTests(unittest.TestCase):
 
     def test_provider_requirements_use_capability_classes_not_mission_enum(self):
         self.assertEqual(provider_requirements(self.contracts("LOCAL_MODEL_INFERENCE")), ("LOCAL",))
-        self.assertEqual(provider_requirements(self.contracts("DUAL_MODEL_INFERENCE")), ("LOCAL", "SAAS"))
+        self.assertEqual(provider_requirements(self.contracts("LOCAL_MODEL_INFERENCE", "SAAS_DELEGATION")), ("LOCAL", "SAAS"))
         self.assertEqual(provider_requirements(self.contracts("UNRELATED_CAPABILITY")), ())
 
     def test_successor_checkpoint_is_bounded_and_does_not_inherit_bridge_or_session(self):
@@ -104,7 +104,7 @@ class CognitiveContinuityTests(unittest.TestCase):
     def test_dual_readiness_requires_separate_provider_evidence(self):
         projection = build_mission_cognitive_continuity(
             mission_id="M1", lpcl_digest="1" * 64, source_head="2" * 40, source_tree="3" * 40,
-            phase_contracts=self.contracts("DUAL_MODEL_INFERENCE"),
+            phase_contracts=self.contracts("LOCAL_MODEL_INFERENCE", "SAAS_DELEGATION"),
             conversation=self.conversation(), messages=self.messages(),
             provider_capabilities=self.capabilities(), expected_conversation_id="conv-1",
             expected_binding_epoch=2, shared_context_digest="4" * 64,

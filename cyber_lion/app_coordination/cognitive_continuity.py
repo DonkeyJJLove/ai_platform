@@ -11,6 +11,10 @@ from hashlib import sha256
 import json
 import re
 from typing import Any, Iterable, Mapping, Sequence
+from cyber_lion.contracts.phase_execution_contract import (
+    PhaseExecutionContractError,
+    required_cognitive_providers,
+)
 
 SYNC_SCHEMA_ID = "lion.thread-synchronization-checkpoint/v1"
 READINESS_SCHEMA_ID = "lion.mission-cognitive-continuity/v1"
@@ -22,14 +26,6 @@ _HEX40 = re.compile(r"^[0-9a-f]{40}$")
 PROVIDERS = frozenset({"LOCAL", "SAAS"})
 READINESS_STATES = frozenset({"READY", "WAITING", "BLOCKED", "UNKNOWN"})
 CURRENTNESS_STATES = frozenset({"CURRENT", "STALE", "UNKNOWN"})
-
-# These are process capability classes, not mission lifecycle states.
-PROVIDER_CAPABILITY_CLASSES = {
-    "LOCAL_MODEL_INFERENCE": ("LOCAL",),
-    "SAAS_DELEGATION": ("SAAS",),
-    "DUAL_MODEL_INFERENCE": ("LOCAL", "SAAS"),
-}
-
 
 class CognitiveContinuityError(ValueError):
     pass
@@ -81,20 +77,10 @@ def _meta(value: Any) -> Mapping[str, Any]:
 
 
 def provider_requirements(phase_contracts: Sequence[Mapping[str, Any]]) -> tuple[str, ...]:
-    providers: set[str] = set()
-    for contract in phase_contracts:
-        if not isinstance(contract, Mapping):
-            raise CognitiveContinuityError("phase contract")
-        classes = contract.get("capability_classes") or ()
-        if isinstance(classes, str):
-            classes = (classes,)
-        if not isinstance(classes, (list, tuple)):
-            raise CognitiveContinuityError("capability_classes")
-        for capability_class in classes:
-            if not isinstance(capability_class, str):
-                raise CognitiveContinuityError("capability_class")
-            providers.update(PROVIDER_CAPABILITY_CLASSES.get(capability_class, ()))
-    return tuple(sorted(providers))
+    try:
+        return required_cognitive_providers(phase_contracts)
+    except PhaseExecutionContractError as exc:
+        raise CognitiveContinuityError(str(exc)) from exc
 
 
 def active_saas_bridge(bridges: Iterable[Mapping[str, Any]]) -> Mapping[str, Any] | None:
