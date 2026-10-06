@@ -1,10 +1,11 @@
 """A01 regression tests for source/session-bound effective model context."""
 import json
+from hashlib import sha256
 from pathlib import Path
 import tempfile
 import unittest
 
-from cyber_lion.app_coordination.local_intelligence_gateway import Gateway
+from cyber_lion.app_coordination.local_intelligence_gateway import Gateway, local_model_payload_bytes
 from cyber_lion.app_coordination.hybrid_gateway_extension import apply_hybrid_gateway_extension
 from cyber_lion.app_coordination.saas_handoff_extension import apply_saas_handoff_extension
 from cyber_lion.app_coordination.lion_context_provider import SOURCES
@@ -60,6 +61,12 @@ class GatewayContextBindingA01Tests(unittest.TestCase):
         payload=calls[0][0]["content"]+"\n"+calls[0][1]["content"]
         self.assertIn("observed-local-model",payload)
         self.assertIn("LOCAL_MODEL_IDENTITY_EVIDENCE=LOCAL_RUNTIME_OBSERVATION",payload)
+        provenance=g.chat("Explain LION architecture",output_language="en")["provider_provenance"]
+        sent_messages=calls[-1]
+        expected=sha256(local_model_payload_bytes(sent_messages,520)).hexdigest()
+        self.assertEqual(provenance["actual_payload_bytes_digest"],expected)
+        self.assertEqual(provenance["shared_context_digest"],g.ctx.digest)
+        self.assertEqual(provenance["response_digest"],sha256(b"ok").hexdigest())
 
     def test_bound_supervisor_projection_drives_outbound_transport(self):
         td,root=self.repo();self.addCleanup(td.cleanup);calls=[]
