@@ -25,6 +25,7 @@ LOGGER = logging.getLogger(__name__)
 ROUTES = frozenset({"LOCAL", "SAAS", "DUAL"})
 PROVIDER_FOR_LEG = {"LOCAL": "LOCAL", "SAAS": "SAAS"}
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _NAMESPACE = uuid.UUID("cb90965e-f0b3-4c9d-bbec-825fe68eea0d")
 
 
@@ -186,7 +187,7 @@ def prepare_chat(
 ) -> dict[str, Any]:
     if not isinstance(args, Mapping):
         raise ConversationDomainError("chat prepare schema")
-    allowed = {"conversation_id", "message", "route", "client_request_id", "output_language"}
+    allowed = {"conversation_id", "message", "route", "client_request_id", "output_language", "shared_context_digest"}
     if set(args) - allowed:
         raise ConversationDomainError("chat prepare schema")
     conversation_id = _id(args.get("conversation_id"), "conversation_id")
@@ -198,6 +199,9 @@ def prepare_chat(
         raise ConversationDomainError("route")
     client_request_id = _id(args.get("client_request_id"), "client_request_id")
     output_language = str(args.get("output_language") or "auto")[:32]
+    shared_context_digest = str(args.get("shared_context_digest") or "")
+    if _HEX64.fullmatch(shared_context_digest) is None:
+        raise ConversationDomainError("shared_context_digest")
     conversation = _conversation(conn, conversation_id)
     if conversation["state"] == "FROZEN":
         raise ConversationConflict("frozen conversation cannot accept Model Chat")
@@ -212,6 +216,7 @@ def prepare_chat(
             first_meta.get("client_request_id") != client_request_id
             or first_meta.get("request_route") != route
             or first_meta.get("request_content_digest") != _digest(message)
+            or first_meta.get("shared_context_digest") != shared_context_digest
         ):
             raise ConversationConflict("chat request idempotency conflict")
         history = first_meta.get("frozen_history")
@@ -226,6 +231,7 @@ def prepare_chat(
             "correlation_id": correlation_id,
             "causation_id": causation_id,
             "context_digest": existing[0]["context_digest"],
+            "shared_context_digest": shared_context_digest,
             "history": history,
             "message": message,
             "output_language": output_language,
@@ -244,6 +250,7 @@ def prepare_chat(
 
     history = _canonical_history(conn, conversation_id)
     snapshot = {
+        "shared_context_digest": shared_context_digest,
         "conversation_id": conversation_id,
         "binding_epoch": binding_epoch,
         "history": history,
@@ -279,6 +286,7 @@ def prepare_chat(
                 "request_route": route,
                 "request_leg": provider,
                 "request_content_digest": _digest(message),
+                "shared_context_digest": shared_context_digest,
                 "frozen_history": history,
                 "provider_session_ref": provider_session_ref,
             }
@@ -328,6 +336,7 @@ def prepare_chat(
         "correlation_id": correlation_id,
         "causation_id": causation_id,
         "context_digest": context_digest,
+        "shared_context_digest": shared_context_digest,
         "history": history,
         "message": message,
         "output_language": output_language,
@@ -1004,6 +1013,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "route": payload.get("route"),
         "client_request_id": payload.get("client_request_id"),
         "output_language": payload.get("output_language", "auto"),
+        "shared_context_digest": gateway.ctx.digest,
     })
     responses: dict[str, Any] = {}
     saas_handoff = None
@@ -1014,9 +1024,11 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         try:
             if not callable(getattr(gateway, "control_provider", None)):
                 raise RuntimeError("SaaS handoff control provider unavailable")
+            saas_projection = _saas_prompt(plan, leg)
+            saas_projection_digest = sha256(saas_projection.encode("utf-8")).hexdigest()
             handoff = gateway.control_provider("saas_request", {
                 "scope_type": "CONTROL_PLANE",
-                "question": _saas_prompt(plan, leg),
+                "question": saas_projection,
                 "authority_effect": "NONE",
             })
             request_id = handoff.get("request_id")
@@ -1034,6 +1046,9 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 )
             except Exception:
                 broker_readback = {}
+            observed_question_digest = broker_readback.get("question_digest")
+            if observed_question_digest not in (None, saas_projection_digest):
+                raise ConversationConflict("SaaS projection digest mismatch")
             saas_handoff = {
                 "request_id": request_id,
                 "request_code": handoff.get("request_code"),
@@ -1041,6 +1056,10 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "lane_id": leg["lane_id"],
                 "provider_session_ref": leg["provider_session_ref"],
                 "context_digest": plan["context_digest"],
+                "shared_context_digest": plan["shared_context_digest"],
+                "projection_digest": saas_projection_digest,
+                "broker_question_digest": observed_question_digest,
+                "actual_provider_payload_bytes_digest": None,
             }
         except Exception as error:
             threads("conversation_chat_record_failure", {
@@ -1060,6 +1079,15 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                     plan["message"],
                     history=list(plan["history"]),
                     output_language=plan["output_language"],
+                    provider_binding={
+                        "conversation_id": conversation_id,
+                        "binding_epoch": plan["binding_epoch"],
+                        "lane_id": leg["lane_id"],
+                        "provider_session_ref": leg["provider_session_ref"],
+                        "correlation_id": plan["correlation_id"],
+                        "causation_id": plan["causation_id"],
+                        "context_digest": plan["context_digest"],
+                    },
                 )
             finally:
                 ROUTE_CONTEXT.reset(token)
@@ -1073,6 +1101,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "response_text": answer,
                 "response_meta": {
                     "result_route": local.get("route"),
+                    "provider_provenance": local.get("provider_provenance"),
                     "authority_effect": "NONE",
                 },
             })
@@ -1083,6 +1112,8 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "lane_id": leg["lane_id"],
                 "provider_session_ref": leg["provider_session_ref"],
                 "context_digest": plan["context_digest"],
+                "shared_context_digest": plan["shared_context_digest"],
+                "provider_provenance": local.get("provider_provenance"),
             }
             if stored.get("join"):
                 responses["JOIN"] = {
@@ -1112,6 +1143,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "correlation_id": plan["correlation_id"],
         "causation_id": plan["causation_id"],
         "context_digest": plan["context_digest"],
+        "shared_context_digest": plan["shared_context_digest"],
         "legs": plan["legs"],
         "responses": responses,
         "saas_handoff": saas_handoff,
