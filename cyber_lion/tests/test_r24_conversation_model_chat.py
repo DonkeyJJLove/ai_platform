@@ -183,10 +183,11 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(after[-1]["content"], "SAAS-DELAYED-ANSWER")
         self.assertEqual(after[-1]["context_digest"], out["context_digest"])
         self.assertEqual(after[-1]["correlation_id"], out["correlation_id"])
-        self.assertEqual(after[-1]["metadata"]["projection_digest"], out["saas_handoff"]["projection_digest"])
-        self.assertEqual(after[-1]["metadata"]["response_digest"], sha256(b"SAAS-DELAYED-ANSWER").hexdigest())
-        self.assertEqual(after[-1]["metadata"]["broker_binding_id"], "binding-" + request_id)
-        self.assertEqual(after[-1]["metadata"]["broker_claim_generation"], 1)
+        provider_meta=after[-1]["metadata"]["provider_meta"]
+        self.assertEqual(provider_meta["projection_digest"], out["saas_handoff"]["projection_digest"])
+        self.assertEqual(provider_meta["response_digest"], sha256(b"SAAS-DELAYED-ANSWER").hexdigest())
+        self.assertEqual(provider_meta["broker_binding_id"], "binding-" + request_id)
+        self.assertEqual(provider_meta["broker_claim_generation"], 1)
 
     def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
         conv = self.create("saas-cancel-root")
