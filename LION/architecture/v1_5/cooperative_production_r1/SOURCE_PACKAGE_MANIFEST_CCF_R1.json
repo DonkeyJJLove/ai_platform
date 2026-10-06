@@ -1,7 +1,7 @@
 {
   "schema": "lion.source-package-manifest/v1",
   "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
-  "purpose": "Exact cognitive communication fabric R1 source package; R6.6 predecessor and historical deployed/runtime evidence remain immutable and separate.",
+  "purpose": "Exact cognitive communication fabric R2 source package with bounded attachment ingestion and provider-payload projection; historical deployed/runtime evidence remains immutable and separate.",
   "files": [
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
@@ -29,7 +29,11 @@
     },
     {
       "path": "browser_broker/src/canonical-conversation-consumer.cjs",
-      "sha256": "0251304aff802d9cb652c875e8175095d3c92fab2c2883e83ccec9988979aa0c"
+      "sha256": "94b83ea7d3035478f6470517680ec50f0d4514f96a98bffdcb3f9d0bef1077ee"
+    },
+    {
+      "path": "cyber_lion/app_coordination/attachment_ingestion.py",
+      "sha256": "b99662e25891fdce5737c500688b026c257764301f01f07eaad6981c64eade1c"
     },
     {
       "path": "cyber_lion/app_coordination/cognitive_continuity.py",
@@ -37,11 +41,11 @@
     },
     {
       "path": "cyber_lion/app_coordination/conversation_chat.py",
-      "sha256": "c13eec1d846ca156a7ca71f37169f349eae4cb5bb1c4f0486d2bb155df798ce2"
+      "sha256": "9c189f911ed5eb81e25862d0215fb351c030bf7286a3c47a19e3473b58f4a588"
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "3132e50eeb63d7e5e93c613db39acc90276f8fe4a2e861d8b61d4c8ece41c479"
+      "sha256": "b5a275c4a345c52391efaa80c5f556871935b2e8d6f541bc589ef67cdef9fd2b"
     },
     {
       "path": "cyber_lion/contracts/action_ir.py",
@@ -265,7 +269,7 @@
     },
     {
       "path": "tools/lion_local_intelligence_runtime.py",
-      "sha256": "079560ef30469507b1a0de0f6132e105db4c2130953bc13b7a838b00269dc81b"
+      "sha256": "2bdb7f4aaef1193a9a7e489e42955a300e0aeea4f4969c4b51723214eca2afa7"
     },
     {
       "path": "tools/lion_mission_control_compat.py",
@@ -312,6 +316,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "d6e3e35e9dfc0c94ec06e26e609e2a7692024913b66ac1d54608892038e8d13b",
+  "package_digest": "dd7027a9e93334a1998b3ece421504e5c3d0867caa4aaa51a65c5bf29f627c4a",
   "authority_effect": "NONE"
 }
