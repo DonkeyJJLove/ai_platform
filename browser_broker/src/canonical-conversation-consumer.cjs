@@ -28,6 +28,8 @@ function canonicalPrompt(turn,candidate){
   ['causation_id',candidate.causation_id],
   ['correlation_id',candidate.correlation_id],
   ['context_digest',candidate.context_digest],
+  ['shared_context_digest',candidate.shared_context_digest],
+  ['projection_digest',candidate.projection_digest],
   ['broker_request_id',candidate.request_id],
  ];
  return [
@@ -49,7 +51,7 @@ function canonicalPrompt(turn,candidate){
 
 function parseCanonicalIdentity(input){
  const out={};
- for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','broker_request_id']){
+ for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest','broker_request_id']){
   const m=String(input||'').match(new RegExp('(?:^|\\n)'+key+'=([^\\n]+)'));
   if(m)out[key]=m[1].trim();
  }
@@ -136,7 +138,8 @@ class CanonicalConversationSaaSConsumer{
   return (await this.ingress('/v1/turns/'+encodeURIComponent(mapped.turn_id))).turn;
  }
  _validate(candidate,turn,broker){
-  for(const key of ['request_id','conversation_id','lane_id','request_message_id','causation_id','correlation_id','context_digest'])requiredString(candidate[key],key);
+  for(const key of ['request_id','conversation_id','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest'])requiredString(candidate[key],key);
+  if(!/^[a-f0-9]{64}$/.test(candidate.shared_context_digest)||!/^[a-f0-9]{64}$/.test(candidate.projection_digest))throw Error('CANONICAL_DIGEST_REQUIRED');
   if(!Number.isSafeInteger(Number(candidate.binding_epoch))||Number(candidate.binding_epoch)<1)throw Error('CANONICAL_BINDING_EPOCH_REQUIRED');
   if(!turn||turn.command_id!=='MC-'+candidate.request_id||turn.parent_event_id!=='saas_request:'+candidate.request_id)throw Error('CANONICAL_TURN_REQUEST_MISMATCH');
   if(turn.thread_id!==null)throw Error('CANONICAL_TURN_LEGACY_THREAD_DENIED');
@@ -152,9 +155,11 @@ class CanonicalConversationSaaSConsumer{
    causation_id:candidate.causation_id,
    correlation_id:candidate.correlation_id,
    context_digest:candidate.context_digest,
+   shared_context_digest:candidate.shared_context_digest,
+   projection_digest:candidate.projection_digest,
    broker_request_id:candidate.request_id,
   };
-  for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest'])if(embedded[key]!==exact[key])throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_'+key.toUpperCase());
+  for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest'])if(embedded[key]!==exact[key])throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_'+key.toUpperCase());
   return exact;
  }
  _bridgeFor(conversation){
@@ -240,9 +245,11 @@ class CanonicalConversationSaaSConsumer{
    const forceNew=loadJson(this.store,'canonical_force_new_bridge',{});
    const rotate=forceNew[candidate.conversation_id]===true;
    const prompt=canonicalPrompt(turn,candidate);
+   const actualPayloadBytesDigest=digest(prompt);
+   const dispatchEvidence={shared_context_digest:candidate.shared_context_digest,projection_digest:candidate.projection_digest,actual_payload_bytes_digest:actualPayloadBytesDigest,turn_request_hash:turn.request_hash,turn_id:turn.turn_id};
    if(!bridge||rotate){
     this.state='PROVISIONING';this.lastDecision={stage:'AUTO_CREATE',request_id:rid,conversation_id:candidate.conversation_id};
-    this.dispatchMap[rid]={state:'PROVISIONING',exact,started_at:this.now()};this._persist();
+    this.dispatchMap[rid]={state:'PROVISIONING',exact,...dispatchEvidence,started_at:this.now()};this._persist();
     const created=await this.browser.createProjectConversationWithPrompt(prompt,()=>this.dispatchMap[rid]?.state==='PROVISIONING');
     this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_COMMITTED',conversation_url:created.conversation_url,external_thread_ref:created.external_thread_ref,sent_at:this.now()};this._persist();
     const persisted=await this._persistBridge(candidate,created,rotate?bridge:null);
@@ -252,7 +259,7 @@ class CanonicalConversationSaaSConsumer{
    }else{
     const url=this._conversationUrl(bridge);
     this.state='DISPATCHING';this.lastDecision={stage:'EXACT_BRIDGE_SEND',request_id:rid,bridge_id:bridge.bridge_id,conversation_id:candidate.conversation_id};
-    this.dispatchMap[rid]={state:'DISPATCHING',exact,bridge_id:bridge.bridge_id,conversation_url:url,started_at:this.now()};this._persist();
+    this.dispatchMap[rid]={state:'DISPATCHING',exact,...dispatchEvidence,bridge_id:bridge.bridge_id,conversation_url:url,started_at:this.now()};this._persist();
     try{
      await this.browser.sendToConversation(url,prompt,()=>this.dispatchMap[rid]?.state==='DISPATCHING');
      this.dispatchMap[rid]={...this.dispatchMap[rid],state:'SEND_COMMITTED',sent_at:this.now()};this._persist();
