@@ -536,7 +536,7 @@ def record_response(
     if not isinstance(response_meta, Mapping):
         raise ConversationDomainError("response_meta")
     request = conn.execute(
-        """SELECT m.*,l.provider FROM conversation_messages m
+        """SELECT m.*,l.provider,l.provider_session_ref AS lane_provider_session_ref FROM conversation_messages m
            JOIN conversation_provider_lanes l
              ON l.conversation_id=m.conversation_id
             AND l.binding_epoch=m.binding_epoch
