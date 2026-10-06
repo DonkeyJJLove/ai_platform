@@ -355,6 +355,10 @@ def link_saas_request(
     conversation_id = _id(args.get("conversation_id"), "conversation_id")
     message_id = _id(args.get("message_id"), "message_id")
     request_id = _id(args.get("request_id"), "request_id")
+    projection_digest = str(args.get("projection_digest") or "")
+    shared_context_digest = str(args.get("shared_context_digest") or "")
+    if _HEX64.fullmatch(projection_digest) is None or _HEX64.fullmatch(shared_context_digest) is None:
+        raise ConversationDomainError("SaaS projection/shared digest")
     row = conn.execute(
         """SELECT m.*,l.provider FROM conversation_messages m
            JOIN conversation_provider_lanes l
@@ -375,6 +379,8 @@ def link_saas_request(
         "kind": "SAAS_BROKER_REQUEST",
         "request_message_id": message_id,
         "correlation_id": row["correlation_id"],
+        "shared_context_digest": shared_context_digest,
+        "projection_digest": projection_digest,
     })
     conn.execute("SAVEPOINT conversation_saas_link")
     try:
@@ -748,7 +754,7 @@ def saas_delivery_candidates(conn: sqlite3.Connection, limit: int = 128) -> dict
     rows = []
     for row in conn.execute(
         """SELECT t.thread_ref AS request_id,t.thread_map_id,t.conversation_id,
-                  t.binding_epoch,t.lane_id,m.message_id,
+                  t.binding_epoch,t.lane_id,t.provenance_json,m.message_id,
                   m.message_id AS request_message_id,m.causation_id,
                   m.correlation_id,m.context_digest,l.provider_session_ref,
                   b.mission_id,b.context_digest AS binding_context_digest
@@ -771,7 +777,11 @@ def saas_delivery_candidates(conn: sqlite3.Connection, limit: int = 128) -> dict
            ORDER BY t.created_at,t.thread_map_id LIMIT ?""",
         (int(limit),),
     ):
-        rows.append(dict(row))
+        item=dict(row)
+        provenance=_json(item.pop("provenance_json", "{}"))
+        item["shared_context_digest"]=provenance.get("shared_context_digest")
+        item["projection_digest"]=provenance.get("projection_digest")
+        rows.append(item)
     return {"candidates": rows, "authority_effect": "NONE"}
 
 
@@ -1038,6 +1048,8 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "conversation_id": conversation_id,
                 "message_id": leg["message_id"],
                 "request_id": request_id,
+                "shared_context_digest": plan["shared_context_digest"],
+                "projection_digest": saas_projection_digest,
             })
             broker_readback = {}
             try:
