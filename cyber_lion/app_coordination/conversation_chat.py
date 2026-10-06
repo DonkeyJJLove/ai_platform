@@ -1401,12 +1401,10 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
             from .saas_handoff_extension import ROUTE_CONTEXT
             token = ROUTE_CONTEXT.set("LOCAL")
             try:
-                local = gateway.chat(
-                    plan["message"],
-                    history=list(plan["history"]),
-                    output_language=plan["output_language"],
-                    attachment_segments=local_attachment_segments,
-                    provider_binding={
+                local_kwargs = {
+                    "history": list(plan["history"]),
+                    "output_language": plan["output_language"],
+                    "provider_binding": {
                         "conversation_id": conversation_id,
                         "binding_epoch": plan["binding_epoch"],
                         "lane_id": leg["lane_id"],
@@ -1415,7 +1413,10 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                         "causation_id": plan["causation_id"],
                         "context_digest": plan["context_digest"],
                     },
-                )
+                }
+                if local_attachment_segments:
+                    local_kwargs["attachment_segments"] = local_attachment_segments
+                local = gateway.chat(plan["message"], **local_kwargs)
             finally:
                 ROUTE_CONTEXT.reset(token)
             answer = str(local.get("answer") or "")
