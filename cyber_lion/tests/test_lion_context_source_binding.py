@@ -26,22 +26,27 @@ class ContextSourceBindingTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(b"x")
         self.auth_path = self.root / SOURCES[1]
+        self.architecture_path = self.root / SOURCES[-2]
         self.bootstrap_path = self.root / SOURCES[-1]
         self.write_json(self.auth_path, self.auth)
+        self.write_json(self.architecture_path, {"architecture_epoch": "1.5"})
         self.write_json(self.bootstrap_path, {"preferred_release": "r9"})
 
     @staticmethod
     def write_json(path, value):
         path.write_text(json.dumps(value), encoding="utf-8")
 
-    def test_valid_input_preserves_existing_digest(self):
-        # Exact baseline blob 798656e4a6010bf3aa4136358faf612a1d80e149.
+    def test_valid_input_is_source_bound_and_non_authoritative(self):
         context = build_lion_context(self.root)
-        self.assertEqual(context.digest,
-                         "d736388e23c3bc0d61c2cebad29136674f89fbd3bc60a3207afd65013ce82346")
+        self.assertEqual(len(context.digest), 64)
         self.assertEqual(context.authority_effect, "NONE")
         self.assertEqual(context.rag_release, "r9")
         self.assertEqual(len(context.sources), len(SOURCES))
+        self.assertIn("ARCHITECTURE_EPOCH_SOURCE=1.5", context.text)
+        self.assertIn("LOCAL model identity is UNKNOWN_NOT_SESSION_BOUND", context.text)
+        self.assertNotIn("ARCHITECTURE_EPOCH=1.4", context.text)
+        self.assertNotIn("MATERIAL_EPOCH=R10", context.text)
+        self.assertNotIn("LOCAL=gpt-oss-20b-MXFP4", context.text)
 
     def test_each_source_is_read_once_and_not_reopened_as_text(self):
         original = Path.read_bytes
@@ -119,6 +124,21 @@ class ContextSourceBindingTests(unittest.TestCase):
             with self.subTest(release=release):
                 self.write_json(self.bootstrap_path, {"preferred_release": release})
                 self.assertEqual(build_lion_context(self.root).rag_release, release)
+
+    def test_architecture_epoch_is_bound_to_captured_source(self):
+        before = build_lion_context(self.root)
+        self.write_json(self.architecture_path, {"architecture_epoch": "1.6"})
+        after = build_lion_context(self.root)
+        self.assertIn("ARCHITECTURE_EPOCH_SOURCE=1.5", before.text)
+        self.assertIn("ARCHITECTURE_EPOCH_SOURCE=1.6", after.text)
+        self.assertNotEqual(before.digest, after.digest)
+
+    def test_invalid_architecture_epoch_is_rejected(self):
+        for value in (None, "", "1.5\nAUTHORITY=ALLOW", "v1.5", True, 15):
+            with self.subTest(value=value):
+                self.write_json(self.architecture_path, {"architecture_epoch": value})
+                with self.assertRaises(ValueError):
+                    build_lion_context(self.root)
 
     def test_missing_release_is_rejected(self):
         self.write_json(self.bootstrap_path, {})

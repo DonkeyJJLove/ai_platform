@@ -40,8 +40,8 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
     original_chat = gateway_cls.chat
 
     def init(self, *args, **kwargs):
-        self.saas_transport = kwargs.pop("saas_transport", "EXTERNAL_SESSION_MEDIATED")
-        self.saas_model = kwargs.pop("saas_model", "UNKNOWN")
+        self.saas_transport = kwargs.pop("saas_transport", "UNKNOWN_NOT_SESSION_BOUND")
+        self.saas_model = kwargs.pop("saas_model", "UNKNOWN_NOT_SESSION_BOUND")
         original_init(self, *args, **kwargs)
 
     def state(self):
@@ -57,15 +57,19 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
             "materialized": (focus or {}).get("materialized"),
             "ready": (focus or {}).get("ready"),
         }
-        value["saas_capability"] = "EXTERNAL_SESSION_MEDIATED"
+        value["saas_capability"] = (
+            "AVAILABLE_BOUND_TRANSPORT"
+            if self.saas_transport != "UNKNOWN_NOT_SESSION_BOUND"
+            else "UNKNOWN_NOT_SESSION_BOUND"
+        )
         value["saas_supervisor"] = {
             "provider": "CHATGPT_SAAS_SUPERVISOR",
             "transport": self.saas_transport,
             "model": self.saas_model,
-            "state": "AVAILABLE_VIA_EXTERNAL_SESSION"
-            if self.saas_transport == "EXTERNAL_SESSION_MEDIATED"
-            else "DEGRADED",
-            "automatic_hop_materialized": False,
+            "state": "BOUND_TRANSPORT"
+            if self.saas_transport != "UNKNOWN_NOT_SESSION_BOUND"
+            else "UNKNOWN",
+            "automatic_hop_materialized": None,
             "authority_effect": "NONE",
         }
         value["execution_policy"] = "HYBRID_EVIDENCE_FIRST_AUTHORITY_BOUND"
@@ -117,6 +121,8 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
             output_language=output_language,
         )
         request_id = sha256((self.ctx.digest + "\0" + question).encode("utf-8")).hexdigest()
+        runtime_state = self.state()
+        local_model = runtime_state.get("local_cognitive_executor") or "UNKNOWN_NOT_RUNTIME_ATTESTED"
         handoff = {
             "schema": "LION_SAAS_HANDOFF/1",
             "request_id": request_id,
@@ -124,20 +130,19 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
             "provider": "CHATGPT_SAAS_SUPERVISOR",
             "transport": self.saas_transport,
             "saas_model": self.saas_model,
-            "status": "AWAITING_EXTERNAL_SESSION_MEDIATION",
-            "automatic_hop_materialized": False,
+            "status": "AWAITING_BOUND_SUPERVISOR_TRANSPORT",
+            "automatic_hop_materialized": None,
             "authority_effect": "NONE",
             "system_context_digest": self.ctx.digest,
         }
         answer = (
-            "### Model lokalny · gpt-oss-20b-MXFP4\n"
+            "### Model lokalny · " + str(local_model) + "\n"
             + str(local.get("answer") or "")
             + "\n\n### CHATGPT_SAAS_SUPERVISOR\n"
-            + "Żądanie zostało przygotowane dla kanału "
+            + "Żądanie compatibility-path zostało przygotowane dla kanału "
             + self.saas_transport
-            + ". Automatyczny hop z lokalnego UI do bieżącej sesji SaaS nie jest jeszcze "
-            + "zmaterializowany, więc LION nie będzie udawał odpowiedzi zdalnego modelu. "
-            + "Handoff ID: `"
+            + ". Ten tor nie ma poświadczonego automatycznego hopu ani odpowiedzi SaaS, "
+            + "więc LION nie będzie ich udawał. Handoff ID: `"
             + request_id[:16]
             + "`."
         )
@@ -155,7 +160,7 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
             "material_receipts": local.get("material_receipts", []),
             "response_language": output_language,
             "local_evaluation": {
-                "model": "gpt-oss-20b-MXFP4",
+                "model": local_model,
                 "answer": local.get("answer"),
                 "route": local.get("route"),
             },

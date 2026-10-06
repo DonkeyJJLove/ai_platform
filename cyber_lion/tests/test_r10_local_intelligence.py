@@ -17,6 +17,7 @@ class T(unittest.TestCase):
         auth={'invariants':['LPCL_GENERATION_NE_AUTHORITY','USER_EXPLICIT_LAUNCH_OR_RUN_OF_EXACT_LPCL_IS_EXTERNAL_ACTIVATION_EVENT','SUCCESSOR_IDENTITY_OUTSIDE_BOUND_SCOPE_REQUIRES_NEW_LPCL_AND_NEW_USER_LAUNCH']}
         (r/SOURCES[1]).write_text(json.dumps(auth),encoding='utf-8')
         for rel in SOURCES[2:-1]:(r/rel).write_text('x',encoding='utf-8')
+        (r/SOURCES[-2]).write_text(json.dumps({'architecture_epoch':'1.5'}),encoding='utf-8')
         (r/SOURCES[-1]).write_text(json.dumps({'preferred_release':'r9'}),encoding='utf-8')
         subprocess.run(['git','init',str(r)],check=True,capture_output=True)
         subprocess.run(['git','-C',str(r),'add','.'],check=True)
