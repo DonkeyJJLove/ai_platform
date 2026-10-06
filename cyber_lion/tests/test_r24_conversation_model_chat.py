@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from hashlib import sha256
 from pathlib import Path
 import tempfile
 import threading
@@ -32,6 +33,7 @@ class FakeControl:
             self.requests[request_id] = {
                 "status": "PENDING",
                 "request_id": request_id,
+                "question_digest": sha256(args["question"].encode("utf-8")).hexdigest(),
                 "thread_id": None,
                 "receipt_digest": None,
                 "response_text": None,
@@ -69,19 +71,31 @@ class FakeGateway:
         self.control = control
         self.local_calls = []
         self.order = control.order
+        self.ctx = type("Ctx", (), {"digest": "a" * 64})()
 
-    def chat(self, message, use_web=False, history=None, output_language="auto"):
+    def chat(self, message, use_web=False, history=None, output_language="auto", provider_binding=None):
         self.order.append(("LOCAL_CHAT", message, list(history or [])))
         self.local_calls.append({
             "message": message,
             "history": list(history or []),
             "output_language": output_language,
+            "provider_binding": dict(provider_binding or {}),
         })
+        answer = "LOCAL-SECRET-OUTPUT:" + message
         return {
             "route": "LOCAL_MODEL",
-            "answer": "LOCAL-SECRET-OUTPUT:" + message,
+            "answer": answer,
             "authority_boundary": False,
             "authority_effect": "NONE",
+            "provider_provenance": {
+                "shared_context_digest": self.ctx.digest,
+                "projection_digest": "b" * 64,
+                "actual_payload_bytes_digest": "c" * 64,
+                "response_digest": sha256(answer.encode("utf-8")).hexdigest(),
+                "provider": "LOCAL",
+                "provider_session_ref": (provider_binding or {}).get("provider_session_ref"),
+                "authority_effect": "NONE",
+            },
         }
 
     def state(self):
@@ -220,6 +234,12 @@ class R24ConversationModelChatTests(unittest.TestCase):
             if x["lane_id"] in {leg["lane_id"] for leg in out["legs"]}
         ]
         self.assertEqual({x["context_digest"] for x in dual_rows}, {out["context_digest"]})
+        self.assertEqual(out["shared_context_digest"], self.gateway.ctx.digest)
+        self.assertEqual(out["responses"]["LOCAL"]["provider_provenance"]["shared_context_digest"], out["shared_context_digest"])
+        self.assertEqual(out["saas_handoff"]["shared_context_digest"], out["shared_context_digest"])
+        self.assertNotEqual(out["responses"]["LOCAL"]["provider_provenance"]["projection_digest"], out["saas_handoff"]["projection_digest"])
+        self.assertEqual(out["saas_handoff"]["projection_digest"], out["saas_handoff"]["broker_question_digest"])
+        self.assertIsNone(out["saas_handoff"]["actual_provider_payload_bytes_digest"])
         request_id = out["saas_handoff"]["request_id"]
         self.control.respond(request_id, "SAAS-GAMMA")
         delivered = deliver_saas_once(self.store, self.control)
