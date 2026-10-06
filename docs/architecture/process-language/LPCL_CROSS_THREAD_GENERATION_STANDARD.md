@@ -261,4 +261,3 @@ A new HEAD invalidates prior exact-head CI.
 
 This rule preserves the existing continuation semantics: failure/unknown must retain exact
 identities, the last completed phase, the blocking phase, and the next legal phase.
-
