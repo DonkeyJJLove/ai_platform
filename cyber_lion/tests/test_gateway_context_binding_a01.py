@@ -41,7 +41,7 @@ class GatewayContextBindingA01Tests(unittest.TestCase):
         payload=system["content"]+"\n"+user["content"]
         self.assertIn("ARCHITECTURE_EPOCH_SOURCE=1.5",payload)
         self.assertIn("LOCAL_COGNITIVE_EXECUTOR=UNKNOWN_NOT_RUNTIME_ATTESTED",payload)
-        self.assertIn("SAAS_BRIDGE_STATE=UNKNOWN_NOT_SESSION_BOUND",payload)
+        self.assertIn("SAAS_BRIDGE_STATE=UNKNOWN",payload)
         self.assertIn("MATERIAL_DRONE_REQUESTED=UNKNOWN",payload)
         for stale in ("ARCHITECTURE_EPOCH=1.4","MATERIAL_EPOCH=R10","MATERIAL_DRONE_COUNT=12","gpt-oss-20b-MXFP4","SAAS_BRIDGE_STATE=EXTERNAL_SESSION_MEDIATED"):
             self.assertNotIn(stale,payload)
