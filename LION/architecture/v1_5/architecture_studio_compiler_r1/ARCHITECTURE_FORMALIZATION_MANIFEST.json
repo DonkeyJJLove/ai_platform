@@ -1,0 +1,232 @@
+{
+  "affected_concepts": [
+    "architecture",
+    "formalization"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "master",
+    "head": "c62cb8ba9f5a13d961d659c02f832ed764ef862f",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "e9cd6e569c7c6199723d3b4b336f2e56ab067c9e"
+  },
+  "change_class": "ARCHITECTURE_CONCEPT",
+  "currentness_invalidations": [
+    "architecture-docs",
+    "architecture-document-census",
+    "architecture-document-graph",
+    "architecture-projection",
+    "architecture-reconciliation",
+    "code-derived-architecture",
+    "currentness-carriers",
+    "document-derived-architecture",
+    "documentation-currentness-model",
+    "evolution-evals",
+    "gap-projection"
+  ],
+  "discoverability": {
+    "bootstrap_routes": [
+      "AGENTS.md -> LION/architecture/v1_5/README.md",
+      "LION/architecture/v1_5/semantic_owners.json -> architecture/formalization owner"
+    ],
+    "max_reads_to_owner": 3,
+    "probe_questions": [
+      "Does Architecture Studio or the Architecture Compiler grant authority?",
+      "Where is the Architecture Compiler owned?"
+    ]
+  },
+  "evals_required": [
+    "ARCHITECTURE_COMPILER_DETERMINISTIC",
+    "ARCHITECTURE_COMPILER_NO_AUTHORITY_BYPASS"
+  ],
+  "execution_effect": "NONE",
+  "falsifiers": [
+    "Architecture Compiler can derive admission, execute an effect, or create a second scheduler/PDP.",
+    "Architecture Studio projection is treated as authority.",
+    "Canonical FLOW-01..FLOW-10 are replaced by a parallel evolution spine.",
+    "Same candidate and source identities produce different EvolutionDelta or RequiredFormalizationSet digests.",
+    "Unknown semantic owner or stale source identity compiles successfully."
+  ],
+  "formalization_updates": [
+    {
+      "artifact_id": "semantic-owners",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing architecture and formalization semantic owners remain canonical; no owner mutation."
+    },
+    {
+      "artifact_id": "contract-catalog",
+      "operation": "NOT_APPLICABLE",
+      "reason": "No new public runtime or cross-system contract is introduced by the architecture compiler projection."
+    },
+    {
+      "artifact_id": "capability-catalog",
+      "operation": "NOT_APPLICABLE",
+      "reason": "The compiler adds no runtime capability or authority-bearing capability."
+    },
+    {
+      "artifact_id": "architecture-projection",
+      "operation": "UPDATE",
+      "reason": "Expose the deterministic compiler in the canonical architecture projection after source review."
+    },
+    {
+      "artifact_id": "event-state-catalog",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Canonical FLOW-01..FLOW-10 and event-state ordering remain unchanged."
+    },
+    {
+      "artifact_id": "gap-projection",
+      "operation": "UPDATE",
+      "reason": "Classify ArchitectureCompiler as a source candidate while Architecture Studio interactive UI remains partial."
+    },
+    {
+      "artifact_id": "evolution-evals",
+      "operation": "UPDATE",
+      "reason": "Add deterministic, stale-baseline, owner, flow-substitution and no-authority compiler regressions."
+    },
+    {
+      "artifact_id": "discoverability-bootstrap",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Existing AGENTS to v1.5 architecture routing reaches architecture and formalization owners."
+    },
+    {
+      "artifact_id": "rag-routing",
+      "operation": "VALIDATE_ONLY",
+      "reason": "No preferred RAG release change is required for this bounded source candidate."
+    },
+    {
+      "artifact_id": "currentness-carriers",
+      "operation": "REGENERATE",
+      "reason": "Carrier-last truth/currentness must be rebound only after source and formalization stabilization."
+    },
+    {
+      "artifact_id": "architecture-docs",
+      "operation": "UPDATE",
+      "reason": "Document Architecture Studio partial state and the compiler boundary before admission."
+    },
+    {
+      "artifact_id": "code-derived-architecture",
+      "operation": "REGENERATE",
+      "reason": "Compiler source changes the exact code-derived architecture projection."
+    },
+    {
+      "artifact_id": "roadmap-next",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Validate dependency-derived frontier; do not advance it solely from candidate source."
+    },
+    {
+      "artifact_id": "formalization-registry",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Reuse the existing federation-aware formalization registry without parallel ownership."
+    },
+    {
+      "artifact_id": "federated-formalization-binding",
+      "operation": "VALIDATE_ONLY",
+      "reason": "Reuse existing federation binding semantics; no peer update is implied."
+    },
+    {
+      "artifact_id": "architecture-document-census",
+      "operation": "REGENERATE",
+      "reason": "New architecture source and documentation require a refreshed document census after source stabilization."
+    },
+    {
+      "artifact_id": "architecture-document-graph",
+      "operation": "REGENERATE",
+      "reason": "New architecture source/document relations require document graph regeneration."
+    },
+    {
+      "artifact_id": "architecture-reconciliation",
+      "operation": "REGENERATE",
+      "reason": "Code/document/federation reconciliation must be refreshed for the candidate."
+    },
+    {
+      "artifact_id": "document-derived-architecture",
+      "operation": "REGENERATE",
+      "reason": "Document-derived architecture must reflect the compiler candidate and Studio status."
+    },
+    {
+      "artifact_id": "documentation-currentness-model",
+      "operation": "REGENERATE",
+      "reason": "Documentation currentness must be rebound to the candidate source epoch."
+    }
+  ],
+  "layer_bindings": [
+    {
+      "concept": "architecture",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    },
+    {
+      "concept": "formalization",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ],
+      "new_top_level_layer_required": false
+    }
+  ],
+  "manifest_digest": "3c577264222d081e04b448d1df9118ad0802824a6b78a1679341e44ef7a7bc03",
+  "manifest_id": "afm:v1.5-architecture-studio-compiler-r1",
+  "migration": {
+    "compatibility_adapter": null,
+    "exit_condition": "Exact candidate formalization is independently verified with no unknown required non-carrier surface and no authority/effect widening.",
+    "steps": [
+      "Bind the tested compiler candidate to exact base and candidate Git identities.",
+      "Regenerate or validate only the RequiredFormalizationSet surfaces derived by the existing Formalization Kernel.",
+      "Keep Architecture Studio as a projection/composer target; do not mint authority or modify Mission Control.",
+      "Perform independent verification on the exact candidate tree.",
+      "Rebind truth/currentness carriers last only after non-carrier source stabilization."
+    ]
+  },
+  "rag_delta": {
+    "record_ids": [],
+    "required": false,
+    "retrieval_probes": []
+  },
+  "rollback": {
+    "compatibility_adapter": null,
+    "exit_condition": "Master remains unchanged and no runtime, authority, deployment or carrier state was mutated.",
+    "steps": [
+      "Drop the compiler candidate branch changes and candidate-specific formalization artifacts.",
+      "Retain existing FLOW-01..FLOW-10, Formalization Kernel, panel, authority and runtime owners unchanged."
+    ]
+  },
+  "schema_id": "lion.architecture-formalization-manifest/v1",
+  "semantic_owner_delta": [
+    {
+      "concept": "architecture",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/architecture_projection/full_architecture.py",
+      "secondary": [
+        "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
+        "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_AS_IS.md",
+        "LION/architecture/v1_5/FEDERATED_ARCHITECTURE_TARGET.md",
+        "cyber_lion/TARGET_ARCHITECTURE.md"
+      ]
+    },
+    {
+      "concept": "formalization",
+      "operation": "VALIDATE_ONLY",
+      "primary": "cyber_lion/contracts/formalization_registry.py",
+      "secondary": [
+        "LION/architecture/v1_5/FORMALIZATION_REGISTRY_FEDERATION_R1.json",
+        "cyber_lion/contracts/architecture_formalization_manifest.py",
+        "cyber_lion/contracts/federated_formalization_binding.py",
+        "cyber_lion/contracts/formalization_closure.py"
+      ]
+    }
+  ],
+  "source_evolution_delta": {
+    "digest": "90edda33137a35fc7a03ee6140b42f13ea21123e76f7550eadf21017d9d773dd",
+    "ref": "LION/architecture/v1_5/architecture_studio_compiler_r1/EVOLUTION_DELTA.json"
+  },
+  "tests_required": [
+    "test_architecture_compiler",
+    "test_architecture_projection_flows",
+    "test_architecture_projection_gap",
+    "test_architecture_projection_status",
+    "test_formalization_kernel",
+    "test_governed_change_formalized_admission",
+    "test_lpcl_cross_thread_conformance"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "cyber_lion/architecture_projection/__init__.py",
+    "cyber_lion/architecture_projection/architecture_compiler.py",
+    "cyber_lion/tests/test_architecture_compiler.py"
+  ],
+  "delta_digest": "90edda33137a35fc7a03ee6140b42f13ea21123e76f7550eadf21017d9d773dd",
+  "delta_id": "delta:architecture-studio-compiler-r1",
+  "dependency_ids": [
+    "architecture",
+    "architecture_knowledge",
+    "formalization"
+  ],
+  "evidence_refs": [
+    "git:a31c508e1010b32873a988c1ba3fe59c6ce4366e",
+    "source:cyber_lion/architecture_projection/architecture_compiler.py",
+    "test:thread-b-86-targeted-pass"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "deterministic CandidateDesign to EvolutionDelta and RequiredFormalizationSet compilation without authority or execution effect",
+  "falsification_conditions": [
+    "canonical FLOW-01..FLOW-10 substitution is accepted",
+    "compiler crosses the formalization boundary into admission or effect",
+    "stale baseline or unknown semantic owner is accepted"
+  ],
+  "motivation": "extend the existing architecture projection and formalization spine with a deterministic non-effectful candidate compiler",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "architecture compiler"
+}
