@@ -51,7 +51,7 @@ function canonicalPrompt(turn,candidate){
 
 function parseCanonicalIdentity(input){
  const out={};
- for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest','broker_request_id']){
+ for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','broker_request_id']){
   const m=String(input||'').match(new RegExp('(?:^|\\n)'+key+'=([^\\n]+)'));
   if(m)out[key]=m[1].trim();
  }
@@ -145,6 +145,7 @@ class CanonicalConversationSaaSConsumer{
   if(turn.thread_id!==null)throw Error('CANONICAL_TURN_LEGACY_THREAD_DENIED');
   if(turn.session_id!==null&&turn.session_id!=='CHATGPT-SAAS')throw Error('CANONICAL_TURN_SESSION_MISMATCH');
   if(!broker||broker.request_id!==candidate.request_id||broker.scope_type!=='CONTROL_PLANE'||broker.thread_id!==null||broker.authority_effect!=='NONE'||broker.transport!==TRANSPORT)throw Error('CANONICAL_BROKER_MISMATCH');
+  if(typeof broker.question!=='string'||digest(broker.question)!==candidate.projection_digest||broker.question_digest!==candidate.projection_digest)throw Error('CANONICAL_PROJECTION_DIGEST_MISMATCH');
   const embedded=parseCanonicalIdentity(turn.input);
   if(embedded.broker_request_id!==candidate.request_id)throw Error('CANONICAL_TURN_BROKER_ID_MISMATCH');
   const exact={
@@ -159,7 +160,7 @@ class CanonicalConversationSaaSConsumer{
    projection_digest:candidate.projection_digest,
    broker_request_id:candidate.request_id,
   };
-  for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest','projection_digest'])if(embedded[key]!==exact[key])throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_'+key.toUpperCase());
+  for(const key of ['conversation_id','binding_epoch','lane_id','request_message_id','causation_id','correlation_id','context_digest','shared_context_digest'])if(embedded[key]!==exact[key])throw Error('CANONICAL_TURN_IDENTITY_MISMATCH_'+key.toUpperCase());
   return exact;
  }
  _bridgeFor(conversation){
