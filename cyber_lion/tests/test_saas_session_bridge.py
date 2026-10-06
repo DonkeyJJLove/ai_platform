@@ -159,7 +159,8 @@ class SaaSHandoffExtensionTests(unittest.TestCase):
         out=d.chat('No to wykonaj na SaaS zapytanie: Kim jesteś?',output_language='pl')
         self.assertEqual(out['route'],'SAAS_HANDOFF')
         self.assertIn('automatycznie',out['answer'])
-        self.assertIn('UNKNOWN_NOT_SESSION_BOUND',out['answer'])\n        self.assertNotIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
+        self.assertIn('UNKNOWN_NOT_SESSION_BOUND',out['answer'])
+        self.assertNotIn('EXTERNAL_SESSION_MEDIATED',out['answer'])
 
     def test_explicit_saas_route_reports_firefox_mediator_when_request_is_browser_bound(self):
         class Dummy:
