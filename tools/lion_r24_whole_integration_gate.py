@@ -27,7 +27,7 @@ HISTORICAL_PACKAGE_MANIFEST_PATH = EVIDENCE / "PACKAGE_MANIFEST.json"
 # Passing this source gate never claims deployment.
 SOURCE_PACKAGE_MANIFEST_PATH = (
     ROOT / "LION" / "architecture" / "v1_5" / "cooperative_production_r1"
-    / "SOURCE_PACKAGE_MANIFEST_R6_6.json"
+    / "SOURCE_PACKAGE_MANIFEST_CCF_R1.json"
 )
 PACKAGE_MANIFEST_PATH = HISTORICAL_PACKAGE_MANIFEST_PATH  # compatibility alias
 MATRIX_PATH = EVIDENCE / "TEST_MATRIX_SPEC.json"

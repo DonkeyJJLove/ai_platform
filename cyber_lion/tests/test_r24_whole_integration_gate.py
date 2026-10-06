@@ -56,11 +56,23 @@ class R24WholeIntegrationGateTests(unittest.TestCase):
         self.assertEqual(result["classification"], "SOURCE_ONLY_NOT_DEPLOYMENT")
         self.assertEqual(result["authority_effect"], "NONE")
         self.assertEqual(result["source_bytes"], "GIT_INDEX_BLOB")
-        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_R6_6.json"))
+        self.assertTrue(result["manifest_path"].endswith("SOURCE_PACKAGE_MANIFEST_CCF_R1.json"))
 
     def test_current_source_package_covers_runtime_state_owners(self):
         source = json.loads(SOURCE_PACKAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
         paths = {item["path"] for item in source["files"]}
+        self.assertTrue({
+            "browser_broker/src/canonical-conversation-consumer.cjs",
+            "cyber_lion/app_coordination/cognitive_continuity.py",
+            "cyber_lion/app_coordination/conversation_chat.py",
+            "cyber_lion/app_coordination/local_intelligence_gateway.py",
+            "cyber_lion/contracts/attachment_projection.py",
+            "cyber_lion/contracts/cognitive_continuity.py",
+            "cyber_lion/contracts/panel_projection.py",
+            "cyber_lion/mission_control/control_read_model.py",
+            "tools/lion_local_intelligence_runtime.py",
+            "tools/lion_mission_control_v3.py",
+        }.issubset(paths))
         self.assertTrue({
             "cyber_lion/enterprise/cooperative_runtime_composition.py",
             "cyber_lion/enterprise/cooperative_runtime_root.py",
