@@ -11,6 +11,7 @@ Integracja jest prowadzona w modelu **contracts-first**. Istniejący providerzy 
 | Capability Descriptor | `ai_platform` | lokalne rejestry/dokumentacja | control plane, agenci |
 | Event Envelope | `ai_platform` | SBOM event envelope, GlitchLab BUS | wszyscy providerzy |
 | Communication Envelope | `ai_platform` | operator messages / GroupChannel projection | cognition, fleet, audit |
+| Artifact Candidate Observation | `ai_platform` | Generation Evolution Protocol + durable mission/artifact evidence | coordinator, verifier, build observability |
 | Mission Intent | `ai_platform` | CommunicationEnvelope + mission/conversation refs | planning / semantic compiler |
 | Query Plan | `ai_platform` | MissionIntent | retrieval/context planning |
 | RAG Context Envelope | `ai_platform` | versioned RAG/currentness evidence | semantic compiler |
