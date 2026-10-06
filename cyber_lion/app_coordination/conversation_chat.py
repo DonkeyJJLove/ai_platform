@@ -1182,6 +1182,10 @@ def deliver_saas_once(threads, control) -> list[dict[str, Any]]:
                 continue
             if result.get("thread_id") not in (None, ""):
                 raise ConversationConflict("conversation SaaS request unexpectedly bound to legacy thread")
+            expected_projection = candidate.get("projection_digest")
+            observed_projection = result.get("question_digest")
+            if expected_projection and observed_projection != expected_projection:
+                raise ConversationConflict("SaaS response projection digest mismatch")
             response_meta = json.loads(result.get("response_meta_json") or "{}")
             if not isinstance(response_meta, dict):
                 response_meta = {}
@@ -1189,6 +1193,10 @@ def deliver_saas_once(threads, control) -> list[dict[str, Any]]:
                 **response_meta,
                 "receipt_digest": result["receipt_digest"],
                 "saas_request_id": candidate["request_id"],
+                "projection_digest": observed_projection,
+                "response_digest": result.get("response_digest"),
+                "broker_binding_id": result.get("binding_id"),
+                "broker_claim_generation": result.get("claim_generation"),
                 "authority_effect": "NONE",
             }
             saved = threads("conversation_chat_complete_saas", {
