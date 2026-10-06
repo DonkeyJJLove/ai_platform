@@ -1,1134 +1,15 @@
 {
   "schema": "lion.federation-live-snapshot/v1",
-  "observed_at": "2026-10-03T15:17:25.035443Z",
+  "observed_at": "2026-10-06T08:05:18.743634Z",
   "observation_mode": "EXACT_SWEEP_CUTOFF_WITH_COVERAGE_GROUPS",
   "authority_effect": "NONE",
   "repositories": [
     {
-      "repository": "DonkeyJJLove/HA2D",
-      "branch": "master",
-      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
-      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
-      "open_prs": 0,
-      "manifest_blob": "85179fe1ec80a9f938adc685fcc0619967be1ac1",
-      "manifest": {
-        "schema_version": "1.0.0",
-        "repository": {
-          "id": "DonkeyJJLove/HA2D",
-          "url": "https://github.com/DonkeyJJLove/HA2D",
-          "owner": "DonkeyJJLove",
-          "default_branch": "master",
-          "vcs_ref": null
-        },
-        "cyber_lion": {
-          "tile_id": "context-memory.ha2d",
-          "roles": [
-            "ContextMemoryLab",
-            "MemoryCandidateProvider",
-            "ReplayContextProvider",
-            "ProcessStateDiagnostics"
-          ],
-          "layers": [
-            "INF",
-            "SEM"
-          ],
-          "disposition": [
-            "KEEP",
-            "REFINE",
-            "EXPERIMENTAL",
-            "INTEGRATE"
-          ]
-        },
-        "capabilities": [
-          "context.capture",
-          "memory.candidate",
-          "memory.replay",
-          "semantic.revision",
-          "process.diagnostics"
-        ],
-        "authority": {
-          "maximum_level": "read",
-          "required_gates": [
-            "memory.commit.policy",
-            "cyber-lion.mand"
-          ]
-        },
-        "observability": {
-          "logs": [
-            "context.snapshot",
-            "memory.candidate",
-            "semantic.revision"
-          ],
-          "metrics": [
-            "context.age",
-            "candidate.count",
-            "revision.count",
-            "diagnostic.drift"
-          ],
-          "traces": [
-            "working-context→candidate→review→commit/supersede"
-          ]
-        },
-        "security": {
-          "trust_boundaries": [
-            "working context != committed memory",
-            "semantic coherence != empirical truth",
-            "diagnostic state != authority",
-            "memory commit requires explicit policy and provenance"
-          ]
-        },
-        "epistemic": {
-          "status": "EXPERIMENTAL",
-          "confidence": 0.74
-        },
-        "architecture_knowledge": {
-          "schema_version": "1.0.0",
-          "global_owner": "DonkeyJJLove/ai_platform",
-          "semantic_exports": [
-            "context_memory",
-            "memory_semantics",
-            "process_diagnostics",
-            "temporal_semantic_state_candidate",
-            "supersession_evidence"
-          ],
-          "semantic_imports": [
-            "architecture",
-            "contracts",
-            "currentness",
-            "semantic_relevance"
-          ],
-          "repository_dependencies": [
-            "DonkeyJJLove/ai_platform"
-          ],
-          "architecture_artifacts": [
-            {
-              "path": "AGENTS.md",
-              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "AI_NATIVE_ROADMAP.md",
-              "class": "ROADMAP",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "PROCESS_GUARD.md",
-              "class": "PROCESS_GUARD",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "README.md",
-              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "REPOSITORY_STANDARDIZATION_R1.json",
-              "class": "MACHINE_READABLE_ARCHITECTURE",
-              "currentness": "LOCAL_OWNER"
-            }
-          ],
-          "discoverability": {
-            "entrypoint": "AGENTS.md",
-            "global_owner_route": "AGENTS.md -> cyber-lion.repository.json -> DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
-            "max_reads_to_global_owner": 3
-          },
-          "invalidation_triggers": [
-            "SOURCE_CHANGE",
-            "CONTRACT_CHANGE",
-            "CAPABILITY_CHANGE",
-            "CURRENTNESS_CHANGE",
-            "REPOSITORY_ROLE_CHANGE",
-            "DEPENDENCY_CHANGE",
-            "NAMING_STANDARD_CHANGE"
-          ]
-        }
-      },
-      "file_inventory_mode": "FULL",
-      "files": [
-        {
-          "path": ".github/workflows/repository-hygiene.yml",
-          "blob": "58457406cac87f22481ea8e9b7e4c8e475c32ab7"
-        },
-        {
-          "path": ".gitignore",
-          "blob": "2ead6dac883d1cc36468ea60de22d37da3e7f6f7"
-        },
-        {
-          "path": "AGENTS.md",
-          "blob": "d5d1482de2fcd10aca2e30785d24a2776ee54ebd"
-        },
-        {
-          "path": "AI_NATIVE_ROADMAP.md",
-          "blob": "e5930c3b94f0a40a912e037d1b8fd2d6b2357045"
-        },
-        {
-          "path": "EXPAND/fast2gen.prompt",
-          "blob": "c723b6914b523857756741f14553a0553cd7ba63"
-        },
-        {
-          "path": "HUD_spec.md",
-          "blob": "b6f1fcc45ceb236511486cece8a84406c922cabd"
-        },
-        {
-          "path": "HYBRID-AI-DRIVEN.md",
-          "blob": "a50359de3d9fad3cac5acc05774a9d7964db5792"
-        },
-        {
-          "path": "MEN_diagram.md",
-          "blob": "0bdf3da908f1dc4be3c20a8e574ad723f50a3d7f"
-        },
-        {
-          "path": "PROCESS_GUARD.md",
-          "blob": "c91419bb9ba338af86d7d39ffb43de4914ba4002"
-        },
-        {
-          "path": "PSEP_paradox.md",
-          "blob": "9b722a0af98055267e10378e5a3efe9a1719f57d"
-        },
-        {
-          "path": "README.md",
-          "blob": "3dc57ff5c580baadc2d07b4210a0c5e3f5eb882e"
-        },
-        {
-          "path": "REPOSITORY_STANDARDIZATION_R1.json",
-          "blob": "bb35ab07ed1cbeab6b58afbd6969f84025bd2fd8"
-        },
-        {
-          "path": "SEED/HYBRID-AI-DRIVEN.prompt",
-          "blob": "a8fdcda84d0f46333e8e54973de3f2b837b3df51"
-        },
-        {
-          "path": "SMA_neuro_model.md",
-          "blob": "0e84f134153f575ad041174ec2d6f928244039a9"
-        },
-        {
-          "path": "context_protocol.md",
-          "blob": "3c01258bcf66721d96587eed0d3b0166b429d8a7"
-        },
-        {
-          "path": "cyber-lion.repository.json",
-          "blob": "85179fe1ec80a9f938adc685fcc0619967be1ac1"
-        },
-        {
-          "path": "fast2gen.md",
-          "blob": "85e0a47e472a1ab79e7767b784a35180822cdf4a"
-        },
-        {
-          "path": "img/math.jpg",
-          "blob": "b63a9b74f8a6529a52887dd4f9538822c339036a"
-        },
-        {
-          "path": "opcje.md",
-          "blob": "f33d840b1ae5adf4f502fc8ed4eeb225925b3a3c"
-        },
-        {
-          "path": "placeholders_matrix.md",
-          "blob": "1ae4480f5aafd64793d1baede05e791d63e946b5"
-        },
-        {
-          "path": "revision_viewer.md",
-          "blob": "6a966468812ded37f6d103d52e5d6b31fe00bcd1"
-        }
-      ],
-      "file_coverage_groups": [],
-      "tracked_file_count": 21,
-      "explicit_file_count": 21,
-      "coverage_group_file_count": 0
-    },
-    {
-      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-      "branch": "main",
-      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
-      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
-      "open_prs": 0,
-      "manifest_blob": "0cab403831f3f4be7849080a3bc33bfcdb8fc55c",
-      "manifest": {
-        "schema_version": "1.0.0",
-        "repository": {
-          "id": "DonkeyJJLove/SymulacjaKaskadySieciowej",
-          "url": "https://github.com/DonkeyJJLove/SymulacjaKaskadySieciowej",
-          "owner": "DonkeyJJLove",
-          "default_branch": "main",
-          "vcs_ref": null
-        },
-        "cyber_lion": {
-          "tile_id": "falsification.simulation",
-          "roles": [
-            "SimulationProvider",
-            "FalsificationEngine",
-            "StressScenarioProvider",
-            "SensitivityAnalyzer"
-          ],
-          "layers": [
-            "SEM"
-          ],
-          "disposition": [
-            "KEEP",
-            "REFINE",
-            "GENERALIZE",
-            "INTEGRATE"
-          ]
-        },
-        "capabilities": [
-          "simulation.run",
-          "scenario.generate",
-          "stress.adversarial",
-          "sensitivity.morris",
-          "sensitivity.sobol",
-          "model.reproduce"
-        ],
-        "authority": {
-          "maximum_level": "read",
-          "required_gates": [
-            "cyber-lion.mand"
-          ]
-        },
-        "observability": {
-          "logs": [
-            "simulation.run",
-            "scenario.parameters",
-            "seed.record",
-            "model.version"
-          ],
-          "metrics": [
-            "run.count",
-            "convergence.error",
-            "tail.loss",
-            "sensitivity.index"
-          ],
-          "traces": [
-            "assumptions→parameters→model→scenario→simulation→interpretation"
-          ]
-        },
-        "security": {
-          "trust_boundaries": [
-            "simulated != observed",
-            "convergence != model correctness",
-            "sensitivity index != empirical causal coefficient",
-            "simulation recommendation != runtime authority"
-          ]
-        },
-        "epistemic": {
-          "status": "FORMALISED",
-          "confidence": 0.84
-        },
-        "architecture_knowledge": {
-          "schema_version": "1.0.0",
-          "global_owner": "DonkeyJJLove/ai_platform",
-          "semantic_exports": [
-            "simulation",
-            "falsification",
-            "sensitivity_analysis",
-            "relevance_stress_result",
-            "sensitivity_result"
-          ],
-          "semantic_imports": [
-            "architecture",
-            "formalization",
-            "currentness",
-            "semantic_relevance"
-          ],
-          "repository_dependencies": [
-            "DonkeyJJLove/ai_platform"
-          ],
-          "architecture_artifacts": [
-            {
-              "path": "AGENTS.md",
-              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "AI_NATIVE_ROADMAP.md",
-              "class": "ROADMAP",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "PROCESS_GUARD.md",
-              "class": "PROCESS_GUARD",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "README.md",
-              "class": "RESEARCH_ARCHITECTURE",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
-              "class": "CONTRACT",
-              "currentness": "SOURCE_BOUND"
-            },
-            {
-              "path": "REPOSITORY_STANDARDIZATION_R1.json",
-              "class": "MACHINE_READABLE_ARCHITECTURE",
-              "currentness": "LOCAL_OWNER"
-            }
-          ],
-          "discoverability": {
-            "entrypoint": "AGENTS.md",
-            "global_owner_route": "AGENTS.md -> cyber-lion.repository.json -> DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
-            "max_reads_to_global_owner": 3
-          },
-          "invalidation_triggers": [
-            "SOURCE_CHANGE",
-            "CONTRACT_CHANGE",
-            "CAPABILITY_CHANGE",
-            "CURRENTNESS_CHANGE",
-            "REPOSITORY_ROLE_CHANGE",
-            "DEPENDENCY_CHANGE",
-            "NAMING_STANDARD_CHANGE"
-          ]
-        }
-      },
-      "file_inventory_mode": "FULL",
-      "files": [
-        {
-          "path": ".github/workflows/falsification-guard.yml",
-          "blob": "2e8a64fdb5f7e551621a4ecaf5e932c6e8b71fa0"
-        },
-        {
-          "path": ".gitignore",
-          "blob": "f7f7b02d04152265a123c3520cf345e257fe0446"
-        },
-        {
-          "path": "AGENTS.md",
-          "blob": "99263fa5a2d0166d99b974f6d1a1de00e54e7292"
-        },
-        {
-          "path": "AI_NATIVE_ROADMAP.md",
-          "blob": "297dd0b2a12ab6cebbdeec1269c05f3c3f04942b"
-        },
-        {
-          "path": "LICENSE",
-          "blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
-        },
-        {
-          "path": "PROCESS_GUARD.md",
-          "blob": "3eb2490b7779551fa8e37184f1c20b4e9baa4c11"
-        },
-        {
-          "path": "README.md",
-          "blob": "43d9a45b8b1d784e3fba35466209745e87331abf"
-        },
-        {
-          "path": "REPOSITORY_STANDARDIZATION_R1.json",
-          "blob": "7e10e04e5eafc1778ad139f7cd21c780bf86ac22"
-        },
-        {
-          "path": "\"badania/Engine poboru danych dla rzetelnej analizy sytuacji w Iranie i post\\304\\231p\\303\\263w proces\\303\\263w kaskadowych.pdf\"",
-          "blob": "695a859592cf0b3495a5b141eafac7b87361fad1"
-        },
-        {
-          "path": "badania/Formalny model badawczy odporno#U015bci re#U017cimu autorytarnego i kaskad kryzysu.pdf",
-          "blob": "200d0eed641a0d64db7a84c518b02dc244dd4be9"
-        },
-        {
-          "path": "\"badania/Formalny model badawczy odporno\\305\\233ci re\\305\\274imu autorytarnego i kaskad kryzysu.pdf\"",
-          "blob": "200d0eed641a0d64db7a84c518b02dc244dd4be9"
-        },
-        {
-          "path": "badania/Global sensitivity analysis dla modelu SD Iranu metodami Morris i Sobol w Pythonie.pdf",
-          "blob": "05e48504ca8854afb3731a72b41334076c6c6c8e"
-        },
-        {
-          "path": "badania/Interpretacja wynik#U00f3w analizy wra#U017cliwo#U015bci metod#U0105 Morrisa dla Twojego modelu SD.pdf",
-          "blob": "7378368da320e90f2f8c1be67ac11ccd89ca0de8"
-        },
-        {
-          "path": "\"badania/Interpretacja wynik\\303\\263w analizy wra\\305\\274liwo\\305\\233ci metod\\304\\205 Morrisa dla Twojego modelu SD.pdf\"",
-          "blob": "7378368da320e90f2f8c1be67ac11ccd89ca0de8"
-        },
-        {
-          "path": "badania/Kaskadowe awarie cyber#U2011fizyczne a infrastruktura Iranu.pdf",
-          "blob": "dc92de7087334cb95063c746b4e6d6fe9eb18533"
-        },
-        {
-          "path": "badania/Kaskadowe awarie cyber#U2011fizyczne w infrastrukturze krytycznej_ analiza badawcza i odporno#U015b#U0107 systemowa.pdf",
-          "blob": "bb8d40ee4dbd1784e80a2de4612198ff8ebfac22"
-        },
-        {
-          "path": "\"badania/Kaskadowe awarie cyber\\342\\200\\221fizyczne a infrastruktura Iranu.pdf\"",
-          "blob": "dc92de7087334cb95063c746b4e6d6fe9eb18533"
-        },
-        {
-          "path": "\"badania/Kaskadowe awarie cyber\\342\\200\\221fizyczne w infrastrukturze krytycznej_ analiza badawcza i odporno\\305\\233\\304\\207 systemowa.pdf\"",
-          "blob": "bb8d40ee4dbd1784e80a2de4612198ff8ebfac22"
-        },
-        {
-          "path": "badania/Pe#U0142ny model system dynamics konfliktu_ #Ue200entity#Ue202[_country_,_Iran_,_country in middle east_]#Ue201 w scenar.pdf",
-          "blob": "293e6d5727bd56aef21fba556df1015ee7d80741"
-        },
-        {
-          "path": "\"badania/Pe\\305\\202ny model system dynamics konfliktu_ \\356\\210\\200entity\\356\\210\\202[_country_,_Iran_,_country in middle east_]\\356\\210\\201 w scenar.pdf\"",
-          "blob": "293e6d5727bd56aef21fba556df1015ee7d80741"
-        },
-        {
-          "path": "\"badania/Sekwencje Sobola, pr\\303\\263bkowanie hipersze\\305\\233cianu 27D i parametryzacja 9R w psycholingwistyce i transform.pdf\"",
-          "blob": "35b91eb767ca7217c940d78c42b6c581f369cf0c"
-        },
-        {
-          "path": "\"badania/Sobol i badanie efekt\\303\\263w kaskadowych w ataku strukturalnym Monte Carlo w re\\305\\274imie naukowym absolutnym.pdf\"",
-          "blob": "f45cf9ab0384ffe7d7417aa1e72ca253faf17098"
-        },
-        {
-          "path": "\"badania/Sobol i meta_ re\\305\\274im naukowy absolutny w identyfikacji metarelacji w systemach z\\305\\202o\\305\\274onych.pdf\"",
-          "blob": "049b99cc3d5860fbeed7a02647bde9bbc7217cd3"
-        },
-        {
-          "path": "\"badania/Sobol, HyperCube i Monte Carlo_ metaprzestrze\\305\\204 oraz sposoby mapowania metaprzestrzeni na struktury.pdf\"",
-          "blob": "27f3a63956eec1b5f3fa30e85b355edfc2bb39e8"
-        },
-        {
-          "path": "\"badania/Sp\\303\\263jny model matematyczny i autotesty jako\\305\\233ci dla systemu badaj\\304\\205cego zale\\305\\274no\\305\\233ci kaskadowe w Iranie C.pdf\"",
-          "blob": "07f9fc602aa6b32fdf90f9b3e8da8b56210c33d8"
-        },
-        {
-          "path": "\"badania/Zdarzenia kaskadowe w energetyce wywo\\305\\202ane dzia\\305\\202aniami w polu informacyjnym.pdf\"",
-          "blob": "3fbf0ad7646bfe889f3263353591ee9eea9ba255"
-        },
-        {
-          "path": "badania/html/matj_1.html",
-          "blob": "26c170ff439942a8df1407a08315e5e221961d62"
-        },
-        {
-          "path": "badania/matj_1.m",
-          "blob": "be63eb917389716ffdec04f8d21f8de9c50585e8"
-        },
-        {
-          "path": "badania/model.md",
-          "blob": "f7475c1abd2fe1ad92824a76a433ea249391d32b"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/SPEC.yaml",
-          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/maij_1_workspace.mat",
-          "blob": "ff7bb8f9fbe279e3f3c3bab12e75557617a52ce6"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/matlab_monte_carlo.csv",
-          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_dlugotrwala_wojna.csv",
-          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_eskalacja_regionalna.csv",
-          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_impas.csv",
-          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_szybka_wojna.csv",
-          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/report.txt",
-          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095209484/run_manifest.txt",
-          "blob": "bdf99511b214fde611c425ea66f3de9646455e63"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/SPEC.yaml",
-          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/maij_1_monte_carlo.png",
-          "blob": "7335f7aa745c1ed4ffd4e4656542da4483e01e08"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/maij_1_scenarios.png",
-          "blob": "ffdf6d1e7ea5f8111b34b2c1698ae77f272aef58"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/maij_1_workspace.mat",
-          "blob": "fb8c037aa16268286daa99e0e145c6de203e5bd0"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/matlab_monte_carlo.csv",
-          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_dlugotrwala_wojna.csv",
-          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_eskalacja_regionalna.csv",
-          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_impas.csv",
-          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_szybka_wojna.csv",
-          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/report.txt",
-          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_095301469/run_manifest.txt",
-          "blob": "1e70180d241d73b05acd0c6ee18624d009bbba17"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/SPEC.yaml",
-          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/maij_1_workspace.mat",
-          "blob": "f0b6b0b053cd40e1593a936c108c028f8f5d3173"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/matlab_monte_carlo.csv",
-          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_dlugotrwala_wojna.csv",
-          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_eskalacja_regionalna.csv",
-          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_impas.csv",
-          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_szybka_wojna.csv",
-          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/report.txt",
-          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144848259/run_manifest.txt",
-          "blob": "ec2ae059e47a2d78925b13968fe21c29be3d6321"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/SPEC.yaml",
-          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/maij_1_workspace.mat",
-          "blob": "caababdbab5de3583c35e1697d1427ce2634ff95"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/matlab_monte_carlo.csv",
-          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_dlugotrwala_wojna.csv",
-          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_eskalacja_regionalna.csv",
-          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_impas.csv",
-          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_szybka_wojna.csv",
-          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/report.txt",
-          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
-        },
-        {
-          "path": "badania/outputs_matlab/20260318_144928538/run_manifest.txt",
-          "blob": "a091ac16dd866ca4aef1e3e6332040704edfad5a"
-        },
-        {
-          "path": "badania/quality.md",
-          "blob": "aada776d575240f829f9d0708c7351013b5d0391"
-        },
-        {
-          "path": "config/config.yaml",
-          "blob": "9570afb93e43cee5f04f5bed9b9711658cfd1070"
-        },
-        {
-          "path": "config/impas_small_mc.yml.py",
-          "blob": "03971c68e5fea7dc37be16635eb454f498867f58"
-        },
-        {
-          "path": "config/variants/impas_small_mc.yaml",
-          "blob": "e0772308d7d9bd0355e244be3492a7f25fdbbfe5"
-        },
-        {
-          "path": "cyber-lion.repository.json",
-          "blob": "0cab403831f3f4be7849080a3bc33bfcdb8fc55c"
-        },
-        {
-          "path": "main.py",
-          "blob": "d3164799da1f64de78b3a831bd9d0703859eab15"
-        },
-        {
-          "path": "outputs/matlab_monte_carlo.csv",
-          "blob": "469e6f9858586f909177f79fbd4a64c72c9ab0bd"
-        },
-        {
-          "path": "outputs/mc_hist_szybka_wojna.png",
-          "blob": "79d77e6b039e70eeb7451f65bce37a843bec9563"
-        },
-        {
-          "path": "outputs/mc_summary_szybka_wojna.json",
-          "blob": "4e151a0bfe3eedbec5f77eb091a4c8888e2a6532"
-        },
-        {
-          "path": "outputs/metrics_szybka_wojna.json",
-          "blob": "786ca5ee851878285dfe12263878f6df4693a4e4"
-        },
-        {
-          "path": "outputs/morris/morris_indices.json",
-          "blob": "1c9ca54407368f27961e3185061f8cd2bbfb2b15"
-        },
-        {
-          "path": "outputs/morris/morris_model_outputs.csv",
-          "blob": "3a64f354fbb62389691c408282d9de8e37bf6ce4"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_Tcrit_mean.png",
-          "blob": "19b29aa1c41d0068c3f796a73d23efd97779b0dc"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_avg_loyal_mean.png",
-          "blob": "0f2640a0a530e1700459a7360991a399cad0f48c"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_elite_fracture_prob_mean.png",
-          "blob": "5a934004fce74bd833ff127947b30158ab25e663"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_end_displaced_m_mean.png",
-          "blob": "e210912f2a3d59b66b0a9997ebf921cd20740e61"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_mean_elite_mean.png",
-          "blob": "ea78978a4de005cda5cfa462fffd8ab17630b407"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_mean_stab_mean.png",
-          "blob": "83fe300b99a760d2e0062a09d5a59ab28f3e152f"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_min_elite_mean.png",
-          "blob": "ce5473de203810293bd6339ca71ff026a0800a30"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_min_stab_mean.png",
-          "blob": "76df4681fc2ed5e733dc3401ee7e2f495a4e97c9"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_peak_protest_mean.png",
-          "blob": "e859a85843a9ae910a3d9f473374e9ebdad8b52f"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_time_to_elite_fracture_mean.png",
-          "blob": "910a68eea3ae70fdc45a278215c8a8e050b967eb"
-        },
-        {
-          "path": "outputs/morris/morris_mu_star_weeks_below_elite_crit_mean.png",
-          "blob": "6f4452849fd72fc858a7dbe2a9e7ce87f8f46d69"
-        },
-        {
-          "path": "outputs/morris/runtime_config.json",
-          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
-        },
-        {
-          "path": "outputs/plot_szybka_wojna.png",
-          "blob": "9ed1d8fa3334e8569b52de9ab7517783267f5f56"
-        },
-        {
-          "path": "outputs/run_szybka_wojna.csv",
-          "blob": "1574e2159e453b182ddd1d6d3661d6c75ec8246f"
-        },
-        {
-          "path": "outputs/runtime_config.json",
-          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
-        },
-        {
-          "path": "outputs/sobol/runtime_config.json",
-          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
-        },
-        {
-          "path": "outputs/sobol/sobol_Tcrit_mean_bars.png",
-          "blob": "f1f8665ed3df178afe94a098aeda20426f84ac26"
-        },
-        {
-          "path": "outputs/sobol/sobol_Tcrit_mean_main.csv",
-          "blob": "820bee174e8b2bfcd2f2975bc6f8783d3e872e6c"
-        },
-        {
-          "path": "outputs/sobol/sobol_avg_loyal_mean_bars.png",
-          "blob": "cfa01ea11069c320acbe57a97bf90845c1aefbdd"
-        },
-        {
-          "path": "outputs/sobol/sobol_avg_loyal_mean_main.csv",
-          "blob": "13405ac1ba25b17453d87824c276cc967235b3d0"
-        },
-        {
-          "path": "outputs/sobol/sobol_elite_fracture_prob_mean_bars.png",
-          "blob": "c3b838e3f7176ae45b29e84e9e741696411d5e25"
-        },
-        {
-          "path": "outputs/sobol/sobol_elite_fracture_prob_mean_main.csv",
-          "blob": "bf39bafc0ef8b28f25a99762d80abfa234d345d0"
-        },
-        {
-          "path": "outputs/sobol/sobol_end_displaced_m_mean_bars.png",
-          "blob": "0951589048bcd6f6126f1e642d9fa51f25c18cb6"
-        },
-        {
-          "path": "outputs/sobol/sobol_end_displaced_m_mean_main.csv",
-          "blob": "1d4b5bfdc653e8105e1d31ee76c71010c281ea5c"
-        },
-        {
-          "path": "outputs/sobol/sobol_mean_elite_mean_bars.png",
-          "blob": "6dce57ae00b52c0344a134a629185219c3cbcc9c"
-        },
-        {
-          "path": "outputs/sobol/sobol_mean_elite_mean_main.csv",
-          "blob": "e7606b3e08512e1c8ad9f2f98613f39a3003f06f"
-        },
-        {
-          "path": "outputs/sobol/sobol_mean_stab_mean_bars.png",
-          "blob": "a0e542365bf571fec2ee2d10bedfc54e0941b09f"
-        },
-        {
-          "path": "outputs/sobol/sobol_mean_stab_mean_main.csv",
-          "blob": "5f68d0333d16ed7968442bedb95988aafd9ff92d"
-        },
-        {
-          "path": "outputs/sobol/sobol_min_elite_mean_bars.png",
-          "blob": "10b624e9ea650ed0177cba20dfbdbe85b931ee2f"
-        },
-        {
-          "path": "outputs/sobol/sobol_min_elite_mean_main.csv",
-          "blob": "15d1a93726be64a1b97dea0cac27245a8c5b2589"
-        },
-        {
-          "path": "outputs/sobol/sobol_min_stab_mean_bars.png",
-          "blob": "28c9a40f28ac5f41bb8bc2c80eaba7d5f90d9fc0"
-        },
-        {
-          "path": "outputs/sobol/sobol_min_stab_mean_main.csv",
-          "blob": "3f29756e0fbcfb55ecbbbb79a861ec003909342e"
-        },
-        {
-          "path": "outputs/sobol/sobol_model_outputs.csv",
-          "blob": "ae39ba235bfdd0fe3c68686dca9b0c91ce134255"
-        },
-        {
-          "path": "outputs/sobol/sobol_peak_protest_mean_bars.png",
-          "blob": "f33073d589b2ba5bcbd87d6cf19c1e1c88339fcd"
-        },
-        {
-          "path": "outputs/sobol/sobol_peak_protest_mean_main.csv",
-          "blob": "2d80455b2f8bbe86e464d2ebec022ccb0aea2960"
-        },
-        {
-          "path": "outputs/sobol/sobol_summary.json",
-          "blob": "702dfd8396b581e8249dea1ecf29cb46b526a90b"
-        },
-        {
-          "path": "outputs/sobol/sobol_time_to_elite_fracture_mean_bars.png",
-          "blob": "110fc5cd6bae1558e401ff31050d7ab685fa988e"
-        },
-        {
-          "path": "outputs/sobol/sobol_time_to_elite_fracture_mean_main.csv",
-          "blob": "290f1685293dd0b8cd0ecc1c0770b04a44a89dc6"
-        },
-        {
-          "path": "outputs/sobol/sobol_weeks_below_elite_crit_mean_bars.png",
-          "blob": "c8617af6fa8a687c2be735dda6e1f118fc253c73"
-        },
-        {
-          "path": "outputs/sobol/sobol_weeks_below_elite_crit_mean_main.csv",
-          "blob": "aa8576ee06577565579bb600b365bc56b8e5e2fc"
-        },
-        {
-          "path": "pyproject.toml",
-          "blob": "37f7ad7d7009007c6e021a79858fc66d6d3a7d5e"
-        },
-        {
-          "path": "requirements.txt",
-          "blob": "66fd4b0367f3b6b526eba57cebed5143f8557320"
-        },
-        {
-          "path": "scripts/analyze_bifurcation.py",
-          "blob": "86a0a03ee1823a467f82b482f2f6281923634cf1"
-        },
-        {
-          "path": "scripts/outputs/matlab_monte_carlo.csv",
-          "blob": "469e6f9858586f909177f79fbd4a64c72c9ab0bd"
-        },
-        {
-          "path": "scripts/outputs/mc_hist_szybka_wojna.png",
-          "blob": "79d77e6b039e70eeb7451f65bce37a843bec9563"
-        },
-        {
-          "path": "scripts/outputs/mc_summary_szybka_wojna.json",
-          "blob": "4e151a0bfe3eedbec5f77eb091a4c8888e2a6532"
-        },
-        {
-          "path": "scripts/outputs/metrics_szybka_wojna.json",
-          "blob": "786ca5ee851878285dfe12263878f6df4693a4e4"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_indices.json",
-          "blob": "1c9ca54407368f27961e3185061f8cd2bbfb2b15"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_model_outputs.csv",
-          "blob": "3a64f354fbb62389691c408282d9de8e37bf6ce4"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_Tcrit_mean.png",
-          "blob": "19b29aa1c41d0068c3f796a73d23efd97779b0dc"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_avg_loyal_mean.png",
-          "blob": "0f2640a0a530e1700459a7360991a399cad0f48c"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_elite_fracture_prob_mean.png",
-          "blob": "5a934004fce74bd833ff127947b30158ab25e663"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_end_displaced_m_mean.png",
-          "blob": "e210912f2a3d59b66b0a9997ebf921cd20740e61"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_mean_elite_mean.png",
-          "blob": "ea78978a4de005cda5cfa462fffd8ab17630b407"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_mean_stab_mean.png",
-          "blob": "83fe300b99a760d2e0062a09d5a59ab28f3e152f"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_min_elite_mean.png",
-          "blob": "ce5473de203810293bd6339ca71ff026a0800a30"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_min_stab_mean.png",
-          "blob": "76df4681fc2ed5e733dc3401ee7e2f495a4e97c9"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_peak_protest_mean.png",
-          "blob": "e859a85843a9ae910a3d9f473374e9ebdad8b52f"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_time_to_elite_fracture_mean.png",
-          "blob": "910a68eea3ae70fdc45a278215c8a8e050b967eb"
-        },
-        {
-          "path": "scripts/outputs/morris/morris_mu_star_weeks_below_elite_crit_mean.png",
-          "blob": "6f4452849fd72fc858a7dbe2a9e7ce87f8f46d69"
-        },
-        {
-          "path": "scripts/outputs/morris/runtime_config.json",
-          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
-        },
-        {
-          "path": "scripts/outputs/plot_szybka_wojna.png",
-          "blob": "9ed1d8fa3334e8569b52de9ab7517783267f5f56"
-        },
-        {
-          "path": "scripts/outputs/run_szybka_wojna.csv",
-          "blob": "1574e2159e453b182ddd1d6d3661d6c75ec8246f"
-        },
-        {
-          "path": "scripts/outputs/runtime_config.json",
-          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
-        },
-        {
-          "path": "scripts/outputs/sobol/runtime_config.json",
-          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_Tcrit_mean_bars.png",
-          "blob": "2f45a79b18bbf83f3d00c388f7ce88f81e1727c9"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_Tcrit_mean_main.csv",
-          "blob": "94a23d6b46caf7e96c0e3f2f1b5b99dd4dcf9990"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_avg_loyal_mean_bars.png",
-          "blob": "d842b67502896bf20f98eb9ef70b111ca0da4b8b"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_avg_loyal_mean_main.csv",
-          "blob": "9c919a7bcaa2af75df9f60626b2604e622b9c657"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_elite_fracture_prob_mean_bars.png",
-          "blob": "361c2cb90b065059a4b6c687119998a53ac26f82"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_elite_fracture_prob_mean_main.csv",
-          "blob": "f77766daa0071777426a0ed09dd973266183e4dc"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_end_displaced_m_mean_bars.png",
-          "blob": "47668eace7c8e0d95d39c01bd882a83359410b9e"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_end_displaced_m_mean_main.csv",
-          "blob": "5a3a292b7caa0d89506e908b23c027fecf5eadcf"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_mean_elite_mean_bars.png",
-          "blob": "59c871aef67bb75ab2534801650b88a765aa045e"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_mean_elite_mean_main.csv",
-          "blob": "206a9c1d455fb2e0f00b321b343707b9e25c3eae"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_mean_stab_mean_bars.png",
-          "blob": "0e2ab4f6d8bac4b716af5cc05936ceb55350774e"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_mean_stab_mean_main.csv",
-          "blob": "93103d3e678577504ed57e18901e8bf2307a0d77"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_min_elite_mean_bars.png",
-          "blob": "386ece524b3a43a91edde0e3ffd203301249bcbd"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_min_elite_mean_main.csv",
-          "blob": "2cfc8b407720397e69e933bc9a3e526ca6ec2737"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_min_stab_mean_bars.png",
-          "blob": "6df8b2938776d02a9ea43c4f055c58e9532a6598"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_min_stab_mean_main.csv",
-          "blob": "cb0c1844592aaeba4bf51779dbd429e02191bbaa"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_model_outputs.csv",
-          "blob": "ae39ba235bfdd0fe3c68686dca9b0c91ce134255"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_peak_protest_mean_bars.png",
-          "blob": "616aef407bea560279e03065a2780664b8df9717"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_peak_protest_mean_main.csv",
-          "blob": "422cb13cf4f4bd23cc1af626034e37fdcc19a12e"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_summary.json",
-          "blob": "a957b5b58c715f5a123c68e1a199424bc8ad68a1"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_time_to_elite_fracture_mean_bars.png",
-          "blob": "b037ed8ecb9fb26d05df833e52311fe701ad2bf6"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_time_to_elite_fracture_mean_main.csv",
-          "blob": "59154fb270c88b4741a46f2b46ff0ddde1d081b1"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_weeks_below_elite_crit_mean_bars.png",
-          "blob": "0dcac7d9be23d544ae44e62be89b157dd42b8e7c"
-        },
-        {
-          "path": "scripts/outputs/sobol/sobol_weeks_below_elite_crit_mean_main.csv",
-          "blob": "77bbb31ab0fb26bbc9d48aa1afac2d38e525238f"
-        },
-        {
-          "path": "scripts/run_model.py",
-          "blob": "175f52ca9d8255151ad90e3442280ecadd09e3d0"
-        },
-        {
-          "path": "scripts/run_morris.py",
-          "blob": "f6152face4b44b34f8bb61176086702135dcc877"
-        },
-        {
-          "path": "scripts/run_sobol.py",
-          "blob": "4844f7265c6d7194ee9a2e2447e9434deabea306"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/__init__.py",
-          "blob": "ecf4aa17bac785fde774ae26bb8b2bb4a3023cf5"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/cli.py",
-          "blob": "5fc6e0655bb18fe5fcdcffac64fd602497a837d5"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/config.py",
-          "blob": "d4442a114dde7a89730b185d2425fd3425220095"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.md",
-          "blob": "671691bc3754705c4f057990b7330148647271c4"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/gsa_common.py",
-          "blob": "d931a9334159e7ea9bd450e60806f9ed0ef6f6f4"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/io_utils.py",
-          "blob": "bd6454193f380a64038c2dfe50f472ac7362ee3e"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/iran_cascade_provider.py",
-          "blob": "358edbeff9b8374a55608ec7cb76053641dcf091"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/model.py",
-          "blob": "a4888d0024fb797fbaa0a2f68e800b90f5bf0a52"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/model_interface.py",
-          "blob": "63121056e99608af532fe66af5451a56e83fe155"
-        },
-        {
-          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
-          "blob": "0d0f6d6b14f94405ac988ff540bfd227cf96bca5"
-        },
-        {
-          "path": "tests/test_iran_cascade_provider.py",
-          "blob": "684b55f709ab02d19f182dc0965382687614a032"
-        },
-        {
-          "path": "tests/test_simulation_contracts.py",
-          "blob": "eeee4b3878b75263314189d3bd16fd77fdd35f15"
-        },
-        {
-          "path": "tests/test_simulation_provider_conformance.py",
-          "blob": "fe64bdac7b39028b852cf285888f3cf9b9d3150a"
-        }
-      ],
-      "file_coverage_groups": [],
-      "tracked_file_count": 184,
-      "explicit_file_count": 184,
-      "coverage_group_file_count": 0
-    },
-    {
       "repository": "DonkeyJJLove/ai_platform",
       "branch": "master",
-      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
-      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
-      "open_prs": 0,
+      "head": "820a6d9e6643782b7e025ebf563c5c0f0e475d73",
+      "tree": "336abb90a1c4b0bfda6c26cf79e1ead6ae413da8",
+      "open_prs": 2,
       "manifest_blob": "46e9d26cba916c5dfd10bbbb31695b25e5a056d9",
       "manifest": {
         "schema_version": "1.0.0",
@@ -1452,7 +333,7 @@
         },
         {
           "path": ".gitattributes",
-          "blob": "312d74ecf6f1dea30f8b3aa53fd61ada43b4b071"
+          "blob": "6a0f7d52c373df7102711c1d599dc1ac46f3a8cf"
         },
         {
           "path": ".github/AGENTS.md",
@@ -1464,7 +345,7 @@
         },
         {
           "path": ".github/workflows/cyber-lion-contracts.yml",
-          "blob": "0aaab287efb217efd49df189dc3c085d2ef56077"
+          "blob": "995a3e8c3d3237bbd3437bf37476a6fa7b4c4aec"
         },
         {
           "path": ".github/workflows/f005-branch-ownership-registry-ci.yml",
@@ -1551,6 +432,10 @@
           "blob": "cfa3fe1c3f186e3b26b68409997f353fe936d28f"
         },
         {
+          "path": ".github/workflows/lion-source-validation.yml",
+          "blob": "49b4f8e8ec94b6d6622a3c70b4ec74f48989ce96"
+        },
+        {
           "path": ".github/workflows/lion-workflow-homeostasis.yml",
           "blob": "3537c6ff43f2b1b826e165a723cfbf2927b56041"
         },
@@ -1560,7 +445,7 @@
         },
         {
           "path": ".gitignore",
-          "blob": "397f0dafa83fce8c2eb92db224d2ebbfc6fc0afd"
+          "blob": "b32e97fff10f2386adb3019e2684907ce36a7614"
         },
         {
           "path": ".lion/runtime/f005-runtime-plane-state.json",
@@ -1581,6 +466,10 @@
         {
           "path": "LAT_GLX_PROJECT_MOSAIC.MD",
           "blob": "d226594bdc3591b3197f2d56b2bb80f46b39db88"
+        },
+        {
+          "path": "LICENSE",
+          "blob": "9eb053548a32333bcc8568cf95a658006e821c46"
         },
         {
           "path": "LION/ADR/ADR-001-proposal-is-not-authority.md",
@@ -1620,11 +509,11 @@
         },
         {
           "path": "LION/README.md",
-          "blob": "932cdead04c18132516902b6cf35638582c15ac8"
+          "blob": "8455175b7670350b40d96d64f85dca9d68ff137f"
         },
         {
           "path": "LION/architecture/canonical-state-v1-3-candidate.json",
-          "blob": "1e8bb02f7b02d1922c4369666558900f0752e286"
+          "blob": "4d00027c8538d00dcba1da665126f01bf07494c8"
         },
         {
           "path": "LION/architecture/evolution-map.json",
@@ -2160,7 +1049,7 @@
         },
         {
           "path": "LION/architecture/v1_4/federation_current_vector.json",
-          "blob": "291d45e5ec1f71f179eae9c1793584e0ee1882b3"
+          "blob": "4331556e59cee0ef539b597c95987a89ac5fadf2"
         },
         {
           "path": "LION/architecture/v1_4/history_and_supersession.md",
@@ -2228,15 +1117,15 @@
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_CONTRADICTION_REGISTER.json",
-          "blob": "1a48c98544c78122c7dd79d41c97c55f7213b5c0"
+          "blob": "a7f32b776ca6884128c91b33caf89e38e5a49d0a"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_CENSUS.json",
-          "blob": "1457023cfd0dc2591540a22cb7cf9b59dafaf493"
+          "blob": "b0a004ac2ac494c317405bd7ce068c81c378f3ae"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_DOCUMENT_GRAPH.json",
-          "blob": "4231d37fb2735ee6a1b90a46a6fbda6a84d86ddc"
+          "blob": "7ec8a1fe7f02e0b6d3fedb190984e511cf5208ae"
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_FORMALIZATION_MANIFEST.schema.json",
@@ -2260,7 +1149,7 @@
         },
         {
           "path": "LION/architecture/v1_5/ARCHITECTURE_RECONCILIATION.json",
-          "blob": "65f90a151a96b026005d92bbc9f2baa7ea5a696e"
+          "blob": "0702fd66def722d15bcaedf548c75aa7bcd424cb"
         },
         {
           "path": "LION/architecture/v1_5/AUTONOMOUS_EVOLUTION_CONTROL_FLOW.json",
@@ -2276,7 +1165,7 @@
         },
         {
           "path": "LION/architecture/v1_5/CODE_DERIVED_ARCHITECTURE.json",
-          "blob": "01199e285414145ddc9097a350205fab47fa04ac"
+          "blob": "b2bdd840e8fc6facd852ccf4bf961946961a6299"
         },
         {
           "path": "LION/architecture/v1_5/COGNITIVE_EVOLUTION_INTEGRATION.md",
@@ -2292,7 +1181,7 @@
         },
         {
           "path": "LION/architecture/v1_5/CROSS_REPOSITORY_DEPENDENCY_GRAPH.json",
-          "blob": "55d02dfa1cffb5727ef0ceb70a89fcb8ef661658"
+          "blob": "682eaa9abb2e83291302d31afe5a093e1a021142"
         },
         {
           "path": "LION/architecture/v1_5/DISCOVERABILITY_TEST_MATRIX.json",
@@ -2300,7 +1189,7 @@
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENTATION_CURRENTNESS_MODEL.json",
-          "blob": "283500aaf3f8462356edebae8f0d9e7ea5a7034c"
+          "blob": "4f511de4e642cd1d9b95639a3360e8aca41ac0ed"
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENTATION_EVOLUTION_CONTROL_FLOW.json",
@@ -2308,7 +1197,7 @@
         },
         {
           "path": "LION/architecture/v1_5/DOCUMENT_DERIVED_ARCHITECTURE.json",
-          "blob": "35d0c05d67667cdbaaac64955bf9bafb1ee6b02b"
+          "blob": "98a190019cdf74f6ed15fdb6b2b356abed3dda48"
         },
         {
           "path": "LION/architecture/v1_5/EFFECT_SURFACE_SCAN_REBIND_COMMUNICATION_ENVELOPE_R1.json",
@@ -2363,8 +1252,16 @@
           "blob": "cff6e89414db2218de29d3a062e230dcbba0d04e"
         },
         {
+          "path": "LION/architecture/v1_5/FEDERATION_FINAL_RECONCILIATION_SOURCE_R1.json",
+          "blob": "b205ee192120c281c7d3e29b2f39482e4cdb6c10"
+        },
+        {
+          "path": "LION/architecture/v1_5/FEDERATION_FINAL_RECONCILIATION_SOURCE_R1.md",
+          "blob": "476238b3b56d8cacd16030ed302df1e0a69436eb"
+        },
+        {
           "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
-          "blob": "5c1116df252ee1709f7e411f95dfa2f5b1babb30"
+          "blob": "706b86fcaa0c8b5833faf8dd89a77cc72bc81944"
         },
         {
           "path": "LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT_SEMANTIC_CLOUD_R1.json",
@@ -2448,7 +1345,7 @@
         },
         {
           "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_POSTMERGE_BASELINE_R1.json",
-          "blob": "7ae01fb0530c41256be433b32532062255d90726"
+          "blob": "22cb2ba1c6606f692af83000534beda081be5877"
         },
         {
           "path": "LION/architecture/v1_5/GLOBAL_REPOSITORY_RECONCILIATION_SEMANTIC_CLOUD_R1.json",
@@ -2500,11 +1397,11 @@
         },
         {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_PROBES.json",
-          "blob": "0a0ff2e967efb04189e2216793b2fcf155c88478"
+          "blob": "87d269c9d60772ee9c6916b74fb30acff25908de"
         },
         {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_CLOUD_SOURCE_SET.json",
-          "blob": "d72ae01e4b07cd56093c5be87b06984386c90172"
+          "blob": "51b6eed88a2735200214bd2d525a04db5e6205bd"
         },
         {
           "path": "LION/architecture/v1_5/RAG_V15_SEMANTIC_OWNER_SET.json",
@@ -2520,7 +1417,7 @@
         },
         {
           "path": "LION/architecture/v1_5/README.md",
-          "blob": "d001ef73013c943271fda85b1bbbc82298128a95"
+          "blob": "06ae087702d6b5cad5db2aa95212dfbcc858fd03"
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_CONTENT_CENSUS.json",
@@ -2536,7 +1433,7 @@
         },
         {
           "path": "LION/architecture/v1_5/REPOSITORY_ROLE_MATRIX.json",
-          "blob": "4dc025296ddf6f34ad4c3e990ba1fb81e27d2847"
+          "blob": "973d2d1e3ce7403f6efb13ddb123e3183ea81e06"
         },
         {
           "path": "LION/architecture/v1_5/REQUIRED_FORMALIZATION_SET_COMMUNICATION_ENVELOPE_R1.json",
@@ -2588,7 +1485,7 @@
         },
         {
           "path": "LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
-          "blob": "a8d051bbc5ad193027fc823b2fccd90b718c66da"
+          "blob": "1a656a48718ca24908576e94aa08eaf9351c1880"
         },
         {
           "path": "LION/architecture/v1_5/TASK2_INPUT_MANIFEST.json",
@@ -2605,6 +1502,118 @@
         {
           "path": "LION/architecture/v1_5/WORKFLOW_CENSUS.json",
           "blob": "abab3fc5c9810b28fc749bcac3a9e1e81cd02d5b"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/CHECKPOINT.json",
+          "blob": "40c3105e42fe842732e5768de6b600dda70e154d"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_CONTROL_PLANE_SEQUENCE_R6_16.md",
+          "blob": "f3be8bc25a434006337f4305a3a8ea1be1714e18"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_EVIDENCE_EXPORTER_R6_15.md",
+          "blob": "14b7317137ab8dda9f549db5a73da14101817ee1"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PRIVATE_STORAGE_R6_13.md",
+          "blob": "dca9000756d5220432d43badd37acbaabb77092d"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_RUNTIME_ROOT_R6_10.md",
+          "blob": "4e7f38c3f55e14b5c74dc8a9915f687c17af8158"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_SINGLE_WORKER_QUALIFICATION_R6_17.md",
+          "blob": "ba9658fbbc817b8953d09ecd667f5934ab3e9abc"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_TRUSTED_PROVIDER_R6_14.md",
+          "blob": "f2d489ba7e29103dc645f22f47749bd79167bd5f"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_WORKER_BOOTSTRAP_R6_12.md",
+          "blob": "f60416fabca42da13a8c739457bfbe492246e326"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_WORKER_INJECTION_R6_11.md",
+          "blob": "95d078fc15525c1864f87cda32c2599c366a87da"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/PERSISTENT_RUNTIME_STATE_R6_9.md",
+          "blob": "686265613783bf12fe60d1a5aee87b23a08e19b5"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/README.md",
+          "blob": "8f1b07a0e4230cdfdbffd6d73493140bd5fbcbd8"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_COMPOSITION_R4.md",
+          "blob": "a89003c0b262bc4bc985590ad24582759fa3afde"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_COMPOSITION_R4_VALIDATION.json",
+          "blob": "d832b0db50d2ff66f929850a2e9ee88593628aa5"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_RESOLVER_R5.md",
+          "blob": "e43d580beacf5fb590e544a8bb6caa8ad4983e69"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/RUNTIME_RESOLVER_R5_VALIDATION.json",
+          "blob": "cab11a617ae8d42609df4ada4d46bca87defbd46"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_CURRENTNESS_R6_6.md",
+          "blob": "76c75d2a744a24297a8b673a75c6bc3c86cfe17d"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_R6_6.json",
+          "blob": "e51d9e1c2b32b7b74a0ab2e8bf3b148e487c6cb9"
+        },
+        {
+          "path": "LION/architecture/v1_5/cooperative_production_r1/VALIDATION.json",
+          "blob": "a776031ab6c4238421e805e2c674db68d480ad28"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/ARCHITECTURE.md",
+          "blob": "54f0ddc2dbd9470be333e5605ac7f9ad4d2fed90"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/CHECKPOINT.json",
+          "blob": "11a508d3dd10f2f6b2d7084d813a8ae79665fe70"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/MISSION_PROGRAM.json",
+          "blob": "36394e5b07604392c7f62e716b837a0e8e278479"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/PEER_DISPOSITIONS.json",
+          "blob": "66d9c29bba312488efcce13f67dc115b36450ad3"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/README.md",
+          "blob": "48d3f85e12326ee24f3079c49567d894db046305"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/SOURCE_COVERAGE.json",
+          "blob": "44a1750bcffb3854109665db372b28e8b460723f"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/SOURCE_VECTOR.json",
+          "blob": "79243619275571daf246beb2e6ff9da288a8cd95"
+        },
+        {
+          "path": "LION/architecture/v1_5/evolution_program_r1/VALIDATION.json",
+          "blob": "977d6c902e5baf904d5b45d8796eaaf9333c6c09"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/SEMANTIC_CLOUD_INTEGRATION_REPORT_LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1.md",
+          "blob": "47f90c01fce076faaf3959e0234ee2fca1c34537"
+        },
+        {
+          "path": "LION/architecture/v1_5/semantic_cloud/SEMANTIC_CLOUD_INTEGRATION_STATE_LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1.json",
+          "blob": "81a3a0a43a1214174b353fcd97b899774893c89c"
         },
         {
           "path": "LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_CENSUS.json",
@@ -2636,7 +1645,7 @@
         },
         {
           "path": "LION/architecture/v1_5/semantic_owners.json",
-          "blob": "1c07b94e2cf20ea9f2447e73922f56a9c39acd9d"
+          "blob": "8e107fecc28a3ec11abdde8b872266886a1cef9b"
         },
         {
           "path": "LION/archive/E001/MANIFEST.json",
@@ -2725,6 +1734,10 @@
         {
           "path": "LION/evals/scaffolding/tiger_geometry_cases.yaml",
           "blob": "fc2a3ef48fc188250e8261cfadebf6aeea7b8e2f"
+        },
+        {
+          "path": "LION/evidence/cooperative_production_r3/README.md",
+          "blob": "a84a48238d06a27924739f4dac62224a5d480602"
         },
         {
           "path": "LION/evidence/r19/STATUS.md",
@@ -3224,7 +2237,131 @@
         },
         {
           "path": "LION/rag/RAG_BOOTSTRAP.json",
-          "blob": "6467746763e23fd158086e4b14e41768310bc516"
+          "blob": "7ed5a0d91a0c0d3447fbb1e42c61b3d14e915044"
+        },
+        {
+          "path": "LION/rag/README.md",
+          "blob": "0ac385bdb4690d805fc208093ff4d335f04463c0"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/00_START_HERE.md",
+          "blob": "b9348d9bd448a1c38d12d6d16ed0945d5beee30f"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/01_MODEL_INSTRUCTIONS.md",
+          "blob": "708be645debe834286968b49b300ce018aaf6588"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/02_ROUTING_AND_SOURCE_MAP.md",
+          "blob": "55f2abd680612917768b2d9ef43e725c45135fb7"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/03_STATE_AND_CONTINUATION.md",
+          "blob": "908adc4fbad578403b69e3aecf1f09ad396ff13d"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/04_ARCHITECTURE_AS_IS.md",
+          "blob": "24760517985080d575962fde04407c7bf4d88152"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/05_FEDERATION_AND_DEPENDENCIES.md",
+          "blob": "9076bfe460474ea34ab7d6e00a9f5f317020974a"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/06_SEMANTIC_LANGUAGE.md",
+          "blob": "b07b9eef5e115820e63bd3d89adae38ec3295c81"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/07_CONTEXT_AND_RELEVANCE.md",
+          "blob": "9df208c0f01d0c92f515166f8b9be95261439ebe"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/08_COMMUNICATION_AND_CONVERSATIONS.md",
+          "blob": "7322a751f2ce3aae355b6f522c9760b638818f22"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/09_SAAS_LOCAL_COOPERATION.md",
+          "blob": "8fdcd44d7899716851850afb4775fc4b2e963d0a"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/10_LPCL_AND_MISSION_CONTROL.md",
+          "blob": "cafef23d8cfdca5e55db11ffa2cfa986d680a057"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/11_FACTORY_BEANS_AND_MOSAIC.md",
+          "blob": "aa95509673e7e13642c4130920a5f8f49fa032dd"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/12_AUTHORITY_ACTION_RUNTIME.md",
+          "blob": "fc12c460100b1b6ede4d75c3798ca4d0d6926b43"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/13_PROVENANCE_MEMORY_AND_EVIDENCE.md",
+          "blob": "8e12ac1e9c2af6c497b352938b1f8058c6026c13"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/14_FEDERATED_WORK_PACKAGES.md",
+          "blob": "61aa826fe7ba9cf2484f8c2aee02b95c3735c7b9"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/15_EVOLUTION_AND_HOMEOSTASIS.md",
+          "blob": "38248d96a3ae7f1a5bb8847911e9615ed304aea4"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/16_FAILURE_RECOVERY_AND_OBSERVABILITY.md",
+          "blob": "2aec5b44fc628d13e85b3a6cb755bb6c4f70e073"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/17_RESEARCH_AND_FALSIFICATION.md",
+          "blob": "2437600add8a77d93a21cfa50c21716d977fd7ec"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/18_HISTORY_AND_SUPERSESSION.md",
+          "blob": "0a736fc084b29cfa9d6dd642c542eaf3622cb094"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/19_VALIDATION_AND_WINDOWS_UTF8.md",
+          "blob": "c8e9585637d7f421b9c7ddab199f88fb454ba116"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/20_ARCHITECTURE_REQUIREMENTS.md",
+          "blob": "fbd8c88d6e4488b910e36dff15683dd2c2d50bac"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/21_MISSION_PROGRAM_DESIGN.md",
+          "blob": "879b14eeef6b77fbc22f656162ee17e00b85f34f"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/22_METAPROMPT.md",
+          "blob": "b619b9e1b7404a34b5e6141254b800f0d513310f"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/23_EVOLUTION_EXECUTION_PROMPT.md",
+          "blob": "f465fe9183a09547a3a7971038937daf33d553d7"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/24_SOURCE_RECORD_INDEX.json",
+          "blob": "233b03c7d72f62b9451d18f34883a386617cc706"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/25_SEMANTIC_OWNERS.json",
+          "blob": "8e107fecc28a3ec11abdde8b872266886a1cef9b"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/26_FEDERATION_SOURCE_VECTOR.json",
+          "blob": "b8b9d1d14fd13001272dd19dd822eb4bb3cb40b8"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/27_SOURCE_AND_COVERAGE.json",
+          "blob": "812872f022a2b897ba43cf6446b2105986055c6e"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/28_RETRIEVAL_CASES.json",
+          "blob": "74b514920f08fce7cb17ee093784dbca84705d1e"
+        },
+        {
+          "path": "LION/rag/lion_project_rag30_v1_5_r1/29_PACKAGE_MANIFEST.json",
+          "blob": "8a0f2908038d3e16bc418689d0220ff7af326ec8"
         },
         {
           "path": "LION/rag/lion_project_rag32_v1_4_process_contract_r1/00_START_HERE.md",
@@ -3491,6 +2628,18 @@
           "blob": "430f100493b41cf27d8ec3a330cbd2791b9f8d79"
         },
         {
+          "path": "LION/rag/validation/RAG15_LEGACY_UTF8.patch",
+          "blob": "3018c19708541d346a1073cede11eb36bc809004"
+        },
+        {
+          "path": "LION/rag/validation/RAG15_RELEASE_VALIDATION.json",
+          "blob": "ee64b9f1ca15fc3919dd6044b650137e6a390a44"
+        },
+        {
+          "path": "LION/rag/validation/RAG15_UTF8_FIX_RESULT.json",
+          "blob": "39f332c8c73424e49135df2e73f41555cf2f7890"
+        },
+        {
           "path": "LION/runtime_compat/r20/lion-turn-ingress-node-r2/README.md",
           "blob": "085a0b64f5b595b96edacf4ed4b05f7cd149445d"
         },
@@ -3572,7 +2721,11 @@
         },
         {
           "path": "LION/runtime_compat/r24/docker-autonomy/compose.yaml",
-          "blob": "05686b048070fb4092c3bd9132caf0c81f759e41"
+          "blob": "cee2489855996deea6eb4e899b713ddcfa74745e"
+        },
+        {
+          "path": "LION/runtime_compat/r24/docker-autonomy/cooperative-provider.py",
+          "blob": "0ec163bea5184a83aac42f51e7de374e24bcf832"
         },
         {
           "path": "LION/runtime_compat/r24/docker-autonomy/fleet-currentness.py",
@@ -3580,7 +2733,7 @@
         },
         {
           "path": "LION/runtime_compat/r24/docker-autonomy/materialize.py",
-          "blob": "a7d5a47c5cd6d5ae6e6fbb4e95d0d9c87bc783e9"
+          "blob": "93ec814dea1498d07b9b3781b056866f735b59d5"
         },
         {
           "path": "LION/runtime_compat/r24/docker-autonomy/transport.py",
@@ -3588,7 +2741,7 @@
         },
         {
           "path": "LION/runtime_compat/r24/docker-autonomy/worker.py",
-          "blob": "99d87e743089c082b50e3eb5b1866f4ed088a4df"
+          "blob": "d275235e824eb8ade179d62213ab79546450fc2e"
         },
         {
           "path": "LION/runtime_compat/t07/lion_mission_control_v3.py",
@@ -3660,7 +2813,7 @@
         },
         {
           "path": "OPEN_SOURCE_LICENSES.md",
-          "blob": "d53c12e5d4c9a932f32b4438acd7b3df79531839"
+          "blob": "aef927f062bb3847bc929295eff2b383fa3dbb53"
         },
         {
           "path": "R3_MISSION_UI_REPAIR.md",
@@ -3668,7 +2821,7 @@
         },
         {
           "path": "README.md",
-          "blob": "c8c9bad67374fabe13be19e3d542a2f63143c939"
+          "blob": "7b98edf7182f9374934a7915ac048613821f3ba6"
         },
         {
           "path": "browser_broker/.gitignore",
@@ -3888,7 +3041,7 @@
         },
         {
           "path": "cyber_lion/app_coordination/lion_context_provider.py",
-          "blob": "798656e4a6010bf3aa4136358faf612a1d80e149"
+          "blob": "7a42aa40f6ae390654748aeb0df7b7c165a56f37"
         },
         {
           "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
@@ -4109,6 +3262,14 @@
         {
           "path": "cyber_lion/contracts/bounded_mutation.py",
           "blob": "58dfc2d54139a3455d822dc4b1ecd56191f280ed"
+        },
+        {
+          "path": "cyber_lion/contracts/bounded_task_profile.py",
+          "blob": "ce109cc38f7e35c24881934b95b3bee844f6aab0"
+        },
+        {
+          "path": "cyber_lion/contracts/bounded_task_profiles.json",
+          "blob": "1708eb3a64fa927b91db349d48f1d74a76947db7"
         },
         {
           "path": "cyber_lion/contracts/branch_ownership_registry.py",
@@ -4357,6 +3518,10 @@
         {
           "path": "cyber_lion/contracts/operator_intervention.py",
           "blob": "dfa8725aa76f83559142070cba756fd7b53c7178"
+        },
+        {
+          "path": "cyber_lion/contracts/panel_projection.py",
+          "blob": "56e451d6612045694ce9e8585bdc0a2020bd6dc7"
         },
         {
           "path": "cyber_lion/contracts/phase_execution_contract.py",
@@ -4751,6 +3916,74 @@
           "blob": "bdf05bac2cffe4d40d0f910edcd0a4955ec2abdb"
         },
         {
+          "path": "cyber_lion/enterprise/cooperative_context_resolver.py",
+          "blob": "fcc21872c96d210ce189a1b4c6fef025af844778"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_control_plane_materializer.py",
+          "blob": "827eabd9f9ce4c9a9e4c6e96e986a31f59b97179"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_dependency_provider.py",
+          "blob": "a278a517c42098395c1419442f7ffbac21ad4b6a"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_provider_materialization.py",
+          "blob": "e8a16032d08a8a50b6ec74a68df7fe4ad4c62445"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_runtime_composition.py",
+          "blob": "239c7a38b02668cb6224030f6b79af42212d915e"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_runtime_evidence_exporter.py",
+          "blob": "75f75812e030a8a606f7ed7a8acb74a67adfcd5c"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_runtime_evidence_sources.py",
+          "blob": "fe183ff92a6eb04bf2c0d48f80e938364da5d5de"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_runtime_root.py",
+          "blob": "01b6ac5121b10253ea3d880da9401a37d11035b6"
+        },
+        {
+          "path": "cyber_lion/enterprise/cooperative_runtime_writer.py",
+          "blob": "c4e9576453bfdbf7ba9563b7b82674c03d21b8ef"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/__init__.py",
+          "blob": "707fd34f43b860395beca27ad0b9ab62a5768ff4"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/evidence.py",
+          "blob": "0de2c1a35eec0408cba490aa84518aee8364fece"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/executor.py",
+          "blob": "cc6903b034b0007591d08b33ff7be218ddb3285d"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/gate.py",
+          "blob": "31b24492ff9e78cc2c2928f4e59d49d7728634f5"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/observer.py",
+          "blob": "47bda6de73a38d759df8c98bf7b3aa673b397801"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/pilot.py",
+          "blob": "842c92a945a4f3b6bbe3323e78503a9af45386dd"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/policy.py",
+          "blob": "4ebb7d9ebca1282f59f492b06d3ae6105562fe1b"
+        },
+        {
+          "path": "cyber_lion/enterprise/edge_yoke/winjob.py",
+          "blob": "beb9e6d0387961ea8fb25e944ee9d41e8b9cee3b"
+        },
+        {
           "path": "cyber_lion/enterprise/effect_provider.py",
           "blob": "e8b10b1c4ee96d26a3ac97a342cc8dbc9f2bdcab"
         },
@@ -4784,7 +4017,7 @@
         },
         {
           "path": "cyber_lion/enterprise/executor_sandbox.py",
-          "blob": "de74b0da64f300c5f8bf96f7b303c0cdddba678c"
+          "blob": "98416b11af68c173302d95a1ccf7aea86e5090a2"
         },
         {
           "path": "cyber_lion/enterprise/failure_domain_evidence.py",
@@ -5060,7 +4293,7 @@
         },
         {
           "path": "cyber_lion/enterprise/runtime_execution.py",
-          "blob": "1599fe5a6aa2cdc573047b2900bade1b57cf7cc9"
+          "blob": "40b28c406dce225a301f9c9b01227ecddf779e0a"
         },
         {
           "path": "cyber_lion/enterprise/runtime_reconciliation.py",
@@ -5151,6 +4384,10 @@
           "blob": "4a4a3d637e3c03f8d840c3f70bd11bce934daecb"
         },
         {
+          "path": "cyber_lion/mission_control/artifact_transfer.py",
+          "blob": "c2c5d99a1dbfda05f1b13f789594ef169981ca71"
+        },
+        {
           "path": "cyber_lion/mission_control/artifacts.py",
           "blob": "41b9419d1d5554d456ca82a710cb4cb12ada4d00"
         },
@@ -5163,8 +4400,56 @@
           "blob": "b9785617025a35d241a4e6137aa4ceeb21a4ab68"
         },
         {
+          "path": "cyber_lion/mission_control/control_read_model.py",
+          "blob": "99cbce3e27781f9eaa655187557fc65fc808aa47"
+        },
+        {
+          "path": "cyber_lion/mission_control/cooperative_artifacts.py",
+          "blob": "f74cb3671efc1a1e73663a288cf96f67c9c42a6b"
+        },
+        {
+          "path": "cyber_lion/mission_control/cooperative_materialization_registry.py",
+          "blob": "66ce108d08eb919cad36442d57e41653ca6e95c4"
+        },
+        {
+          "path": "cyber_lion/mission_control/cooperative_production.py",
+          "blob": "32bacc9959fe3fc00d90801379a5e9254fd44c2c"
+        },
+        {
+          "path": "cyber_lion/mission_control/cooperative_readiness.py",
+          "blob": "f20c46c3ad09fe1044509fe4cbbfdb3b6ef6d3ce"
+        },
+        {
+          "path": "cyber_lion/mission_control/cooperative_worker_bootstrap.py",
+          "blob": "dc47274ccde0dab8efdbfc617f572b27b8ec4f0a"
+        },
+        {
+          "path": "cyber_lion/mission_control/cooperative_worker_runtime.py",
+          "blob": "778132c502a1ee418fbdb5fa01cf057ee3da3e7c"
+        },
+        {
           "path": "cyber_lion/mission_control/dual_result_join.py",
           "blob": "64341f01187e3b0cacd184ee649df17583302992"
+        },
+        {
+          "path": "cyber_lion/mission_control/edge_correction.py",
+          "blob": "ca15ff65d7a6ac6d871d5f00b1adbf649a49dbc6"
+        },
+        {
+          "path": "cyber_lion/mission_control/edge_product.py",
+          "blob": "25256d86ac96670f04c40ba3809a8d9d77a86ce5"
+        },
+        {
+          "path": "cyber_lion/mission_control/edge_support.py",
+          "blob": "0fdbdb48ed568dbea461bd46d3d32e5a73990dde"
+        },
+        {
+          "path": "cyber_lion/mission_control/edge_work_unit.py",
+          "blob": "2d856444d526f6b1a010eaf3849205b85e783a6d"
+        },
+        {
+          "path": "cyber_lion/mission_control/edge_worker.py",
+          "blob": "702e712622e3a8580114053787b02bdda6a49b6f"
         },
         {
           "path": "cyber_lion/mission_control/events.py",
@@ -5180,11 +4465,15 @@
         },
         {
           "path": "cyber_lion/mission_control/global_scheduler.py",
-          "blob": "27c31f8261d2b87b25a1d416743cf05d504d002c"
+          "blob": "419deda2b00ef767b6235d573ffce874bc306c32"
+        },
+        {
+          "path": "cyber_lion/mission_control/lpcl_runtime_selection.py",
+          "blob": "2eb2987b1c951a2e40399c20791197f377c25622"
         },
         {
           "path": "cyber_lion/mission_control/material_worker_runtime.py",
-          "blob": "3bd51fcbd7f3e8040ec2351f27f2aed8e20968f5"
+          "blob": "19009c67dcf2dfb1796daf1680c95f5cae5d71a9"
         },
         {
           "path": "cyber_lion/mission_control/mission_reconciliation.py",
@@ -5328,7 +4617,7 @@
         },
         {
           "path": "cyber_lion/registry/repositories.json",
-          "blob": "c3906319621273c32b5afbc290eb51d44f31abbd"
+          "blob": "e8625049d428a0fc94e7622cff3e3647d6453558"
         },
         {
           "path": "cyber_lion/startup_agent/README.md",
@@ -5405,6 +4694,10 @@
         {
           "path": "cyber_lion/tests/experiments/semantic_cloud_r1.py",
           "blob": "af0820fb5cb43638d31332d84c90f6b325cd2cce"
+        },
+        {
+          "path": "cyber_lion/tests/fixtures/cooperative_readiness_r3.json",
+          "blob": "c96a2edd35945322d57624ddc4ae8b27b4837d43"
         },
         {
           "path": "cyber_lion/tests/formalization_test_support.py",
@@ -5567,6 +4860,10 @@
           "blob": "431ea313d0bbddfdbe4516fce96d14473920577a"
         },
         {
+          "path": "cyber_lion/tests/test_artifact_transfer.py",
+          "blob": "3ed8ac3d2975b9519bfd42b6d75181858b7655c7"
+        },
+        {
           "path": "cyber_lion/tests/test_authority_grant.py",
           "blob": "485e1579f5e96e2e0a5003cbf3e03a0c96a77cc8"
         },
@@ -5617,6 +4914,10 @@
         {
           "path": "cyber_lion/tests/test_bounded_mutation_substrate.py",
           "blob": "cb4c2e3e9dbc65b19c5e3c217bc764f76381fab5"
+        },
+        {
+          "path": "cyber_lion/tests/test_bounded_task_profile.py",
+          "blob": "e3e9b232b0db752bc72b23423843c9f04ab9d472"
         },
         {
           "path": "cyber_lion/tests/test_branch_ownership_registry.py",
@@ -5755,6 +5056,90 @@
           "blob": "7b0c825c5477ab74817c7b468bf373ece173f8f9"
         },
         {
+          "path": "cyber_lion/tests/test_control_read_model.py",
+          "blob": "802c46f5a5d383f0cdb47413c4b36781d0f78805"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_artifacts.py",
+          "blob": "559eafff458f2cd762370482b1c435e4a945b5d1"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_context_resolver.py",
+          "blob": "e7c4829b1433c063f0b4a9e32ca72e1de472c6e7"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_control_plane_materializer.py",
+          "blob": "9d7e3ca8c6ce41b639ecee4af467f679f99a0578"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_dependency_provider.py",
+          "blob": "86c47b9243eae1937a4a4843e1f4863645ff0104"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_integration_guards.py",
+          "blob": "56302ae2fa84d6554cca010ddb3ff7965a086423"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_materialization_registry.py",
+          "blob": "4a3335893ff7d1767e5b43d7bc3052d37596b29a"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_mission_control_wiring.py",
+          "blob": "c8e367e011053fa48bb61c10a19900a2caa5eed0"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_production.py",
+          "blob": "85089a36dc15416c5ebb7a4d43dc6736b5e9f853"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_provider_materialization.py",
+          "blob": "eea15a6ff12031b2e0e609fc870991a4694b6b59"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_readiness.py",
+          "blob": "9d7ad128b18c1253d9bf8601dfb0c4bad990aca0"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_runtime_composition.py",
+          "blob": "73989b688de6f21a0eb829fc8c3551c92d421924"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_runtime_evidence_exporter.py",
+          "blob": "8328e981358befc6c8719df24c2cd0ddf05e3734"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_runtime_evidence_sources.py",
+          "blob": "88a493a633cea3d8391946bfa31bfcd9516c276c"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_runtime_root.py",
+          "blob": "43fe4f2dd0a46b797bb17b66d5f80a0451494d6a"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_runtime_writer.py",
+          "blob": "6074e7ea052a9f0a8921155e64864e5f3fd35e06"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_safety.py",
+          "blob": "b2dad50e5bf9620f2814cf90778bc53872e5be13"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_worker_adapter.py",
+          "blob": "979fb0894d34577e31ded0873f577114126aa85c"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_worker_bootstrap.py",
+          "blob": "7f7d84f3d3feaa4a49b11a088ba061895d1fe47c"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_worker_qualification.py",
+          "blob": "7568ed4690b913b8da60bba2bd6935dba903cde7"
+        },
+        {
+          "path": "cyber_lion/tests/test_cooperative_worker_runtime.py",
+          "blob": "5c9969c4197a93600a2fd53ff149fb89969be0fc"
+        },
+        {
           "path": "cyber_lion/tests/test_coordinator_competency.py",
           "blob": "fdd5796d053ccf78d39576352e9701f7a5563cd7"
         },
@@ -5813,6 +5198,26 @@
         {
           "path": "cyber_lion/tests/test_e02_trust_primitives.py",
           "blob": "039838420767fa8ac192d4866e326ce6a870e4d4"
+        },
+        {
+          "path": "cyber_lion/tests/test_edge_correction.py",
+          "blob": "7fcfb7d151fe05ec5b4f5bdecddefd6f53272f56"
+        },
+        {
+          "path": "cyber_lion/tests/test_edge_r5_integration.py",
+          "blob": "6dd36a1efa1a0d41f68d428749078b934d997970"
+        },
+        {
+          "path": "cyber_lion/tests/test_edge_work_unit.py",
+          "blob": "d8d31edb3b03355f7da416714e50062673e6314b"
+        },
+        {
+          "path": "cyber_lion/tests/test_edge_yoke_gate.py",
+          "blob": "0761642ea4ad9d3a127cd08702aba7e06e40985a"
+        },
+        {
+          "path": "cyber_lion/tests/test_edge_yoke_policy.py",
+          "blob": "cf49bfd7d53cba340254b21a1ba7285e31c86aa9"
         },
         {
           "path": "cyber_lion/tests/test_effect_provider.py",
@@ -5949,6 +5354,10 @@
         {
           "path": "cyber_lion/tests/test_federated_formalization_binding.py",
           "blob": "9462f3e5fcc304d4224d547a344595027728397f"
+        },
+        {
+          "path": "cyber_lion/tests/test_federation_e2e_tool.py",
+          "blob": "661c4cf06b6fe61133ea0948ca27a3b3a4e5914b"
         },
         {
           "path": "cyber_lion/tests/test_firefox_node_mission_threads.py",
@@ -6107,6 +5516,10 @@
           "blob": "274bf8676a6ad5ef6ccf2212d135ef92c173a920"
         },
         {
+          "path": "cyber_lion/tests/test_generated_readiness_corpus.py",
+          "blob": "35140075bcfc42cb3a73466104e918cda8e4078d"
+        },
+        {
           "path": "cyber_lion/tests/test_github_repository_read_source.py",
           "blob": "8438012a3e96cb2d8d728c5fd96bc88d31913296"
         },
@@ -6116,7 +5529,7 @@
         },
         {
           "path": "cyber_lion/tests/test_global_mission_scheduler.py",
-          "blob": "b19a93933946505df86fe4c14286853864520e7a"
+          "blob": "e9121711b8c5e81a35be03752f9eb6ddcbee8676"
         },
         {
           "path": "cyber_lion/tests/test_governed_change_admission.py",
@@ -6151,12 +5564,16 @@
           "blob": "edb4a81243eef55fd82354cc542f3160436bb2f2"
         },
         {
+          "path": "cyber_lion/tests/test_held_assignment_release.py",
+          "blob": "7572c9b33250b5835ecd7323449a0e53bb61fc62"
+        },
+        {
           "path": "cyber_lion/tests/test_hmk9d_ablation_contract.py",
           "blob": "7b808fbc77235b3226f4ae261e0180e180321637"
         },
         {
           "path": "cyber_lion/tests/test_host_authority_separation.py",
-          "blob": "52d91b40ec75c0ab061e8dce10edae09724b9e58"
+          "blob": "bd50f7a9188460c91d2d9b97bd63ac5fcc80c314"
         },
         {
           "path": "cyber_lion/tests/test_hybrid_routing.py",
@@ -6173,6 +5590,10 @@
         {
           "path": "cyber_lion/tests/test_issue_comment_write_mediation.py",
           "blob": "bc21ca7fabcc602434d1e77248151bb491dc4ea3"
+        },
+        {
+          "path": "cyber_lion/tests/test_lion_context_source_binding.py",
+          "blob": "1bf58984becfb038c881c43c1e61889da9a296d2"
         },
         {
           "path": "cyber_lion/tests/test_lion_git_logical_tree.py",
@@ -6307,12 +5728,16 @@
           "blob": "77ef0fd434f7c44b57a8acb3d42d7efa9520dcf9"
         },
         {
+          "path": "cyber_lion/tests/test_lpcl_runtime_selection.py",
+          "blob": "0afa224a3f541a8703a092b52a7bed0883736a81"
+        },
+        {
           "path": "cyber_lion/tests/test_market_intelligence.py",
           "blob": "2e46cf9a9ac5526e5052abb4d516c5dd75ccf292"
         },
         {
           "path": "cyber_lion/tests/test_material_worker_runtime.py",
-          "blob": "6edd63824251cbb42e7789017f18940422e7abb9"
+          "blob": "42acdb7c9d623c5877eb4c361d424c398afc2a23"
         },
         {
           "path": "cyber_lion/tests/test_mediation_falsification.py",
@@ -6356,7 +5781,7 @@
         },
         {
           "path": "cyber_lion/tests/test_mission_control_v3_restart_package.py",
-          "blob": "ea4256b5374f36f0634fd133bcb38de1cb7172e8"
+          "blob": "95e6d87d924eccccfccbf11d1c710200f3fb1d5a"
         },
         {
           "path": "cyber_lion/tests/test_mission_execution_driver.py",
@@ -6436,7 +5861,7 @@
         },
         {
           "path": "cyber_lion/tests/test_operator_capability_registry.py",
-          "blob": "160f67ed9103e1acff5570d39d695f6441ce93ce"
+          "blob": "1c9d7de85b90d2b3756d7a2db20b5da8fea2cea8"
         },
         {
           "path": "cyber_lion/tests/test_operator_client.py",
@@ -6496,23 +5921,23 @@
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_permission_policy_reclassification.py",
-          "blob": "e180aa3713f0b6e6309be4c32d2f5948f34125f5"
+          "blob": "ed12cb8fa719dd97fe7675a53a4d4244e9cc0a38"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_readonly_observer_falsification_runtime.py",
-          "blob": "52bb5b076ad2792bc0c7f99d8caea99575636765"
+          "blob": "a3c5b00145fa7c87536fce3307bbf090115c782d"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_runner_attested_execution_bridge.py",
-          "blob": "ef5bd0e00aec4a5e1cb160b6d9b840f4c398d455"
+          "blob": "6b18a6f65bd2dd8ddbd61b3a65f5d70de3856a21"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_same_connection_denial_carrier.py",
-          "blob": "478a6eb68dea99875a02fcff5a3da622690a3a1b"
+          "blob": "e184c18c01aa5b747d00070a8d6d60cc8e09318e"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_seven_binding_chain.py",
-          "blob": "eeaa479032fde596882ec7d7f803a80304f782a4"
+          "blob": "52736f6c4c921a1c06b18e3470d00b0e16d119c6"
         },
         {
           "path": "cyber_lion/tests/test_p0_moon_seven_closure_readiness.py",
@@ -6524,11 +5949,19 @@
         },
         {
           "path": "cyber_lion/tests/test_p0_surface_closure_campaign.py",
-          "blob": "ab80bf2c26f94d3d059c59c6de8d68f7b88c077c"
+          "blob": "9fcc1adddbf1e46f2e53fd06b21d4dbf80ee38ca"
+        },
+        {
+          "path": "cyber_lion/tests/test_panel_projection.py",
+          "blob": "10f94b7e1d3ea8788969c2a7d2871e13e631b836"
         },
         {
           "path": "cyber_lion/tests/test_persistent_authority_state.py",
           "blob": "cb7a21021bcf9695f3939def7f900e1cb0e445ac"
+        },
+        {
+          "path": "cyber_lion/tests/test_persistent_runtime_state.py",
+          "blob": "aaebab44cd99c01251f40c1d986f60a5a4eddf04"
         },
         {
           "path": "cyber_lion/tests/test_phase_control.py",
@@ -6631,6 +6064,10 @@
           "blob": "52a9e64716ac57a335c7c5a5d2ad5bb4e10641a7"
         },
         {
+          "path": "cyber_lion/tests/test_r24_cooperative_private_storage.py",
+          "blob": "7da4069e15c692961919ba285b3560f36f05a377"
+        },
+        {
           "path": "cyber_lion/tests/test_r24_dynamic_docker_rematerialization.py",
           "blob": "7d54aa350cfa3156ca446fd3398a6eecd7dbe1c3"
         },
@@ -6648,7 +6085,7 @@
         },
         {
           "path": "cyber_lion/tests/test_r24_whole_integration_gate.py",
-          "blob": "4cb3ba2966cbdcc22ce6d9bd40c9d8f22be6b3fa"
+          "blob": "7b3bf860324b7aeb95ea0bbd2ebfab555c82b7f4"
         },
         {
           "path": "cyber_lion/tests/test_r24_worker_cognitive_readiness.py",
@@ -6852,7 +6289,7 @@
         },
         {
           "path": "cyber_lion/tests/test_scheduler_storage_reconciliation.py",
-          "blob": "a0c21b7498680daecda89bd51ca0585a7ce227cf"
+          "blob": "48ee01466ddd676c66bf0ebc989378436b3b01d3"
         },
         {
           "path": "cyber_lion/tests/test_secure_mcp_broker_relay.py",
@@ -6968,7 +6405,7 @@
         },
         {
           "path": "cyber_lion/tests/test_v15_global_repository_standardization.py",
-          "blob": "c92b5101d0767a0c706fa27c2d0a42cf96a93440"
+          "blob": "1d0806711826eb7b98958c18781ec4295d6748ee"
         },
         {
           "path": "cyber_lion/tests/test_v15_semantic_cloud_contracts.py",
@@ -6976,7 +6413,7 @@
         },
         {
           "path": "cyber_lion/tests/test_v15_semantic_cloud_formalization.py",
-          "blob": "c381507763251d1e26fe52edda56d817d0a3154b"
+          "blob": "5a93806874709280b12f54ab160ab8faf3b8cef0"
         },
         {
           "path": "cyber_lion/tests/test_v15_task2_formalization.py",
@@ -7255,6 +6692,22 @@
           "blob": "0ea5b525c20bcb832c53855dbd3892038f63e118"
         },
         {
+          "path": "docs/architecture/edge-yoke/INTEGRATION.md",
+          "blob": "5fc036d4eebd425967749cd2a2ed88b4709fccc3"
+        },
+        {
+          "path": "docs/architecture/edge-yoke/MOON_WINDOWS.md",
+          "blob": "8e942bc57f1e5b8c22982fb175309d84923d858e"
+        },
+        {
+          "path": "docs/architecture/edge-yoke/README.md",
+          "blob": "d077b6432df8506ea4fa2f73e21bda2eec334c4f"
+        },
+        {
+          "path": "docs/architecture/edge-yoke/VALIDATION_AND_LIMITS.md",
+          "blob": "000712ef000a417c5a2c9bf0643c818b9e979182"
+        },
+        {
           "path": "docs/architecture/local-swarm-p0-docker-polygon.md",
           "blob": "06215c5cb4181a807d6f1df1eb21d21ab498e621"
         },
@@ -7483,6 +6936,10 @@
           "blob": "de354909e568e766a0c0cebc6ee0a0d7db8a90b4"
         },
         {
+          "path": "requirements/edge-yoke.txt",
+          "blob": "766920a04dba3b199295d55f2b9bfcccee0cce47"
+        },
+        {
           "path": "tests/images/q3_mosty9d.PNG",
           "blob": "ec1cc956df2ad1297475ff94b7923e9d50c3dba0"
         },
@@ -7521,6 +6978,14 @@
         {
           "path": "tests/raport_test_imagemosty9d_vs_bez.md",
           "blob": "b3ef5e55ec9dd2238bccdde1cf06b5353131fd8f"
+        },
+        {
+          "path": "tests/test_lion_rag15.py",
+          "blob": "a7f6c11814a8d1d2cd417462f70dd45a2a7b9b8f"
+        },
+        {
+          "path": "tests/test_lion_source_validation.py",
+          "blob": "70024664338aa8108cda08ebad36c51cc6ff8447"
         },
         {
           "path": "tools/AGENTS.md",
@@ -7567,8 +7032,24 @@
           "blob": "29125aaba39afea36fce8abde660ad94196c9892"
         },
         {
+          "path": "tools/lion_cooperative_worker_adapter.py",
+          "blob": "1f8771b1296635eaa184ff19e50b91a6068a26d5"
+        },
+        {
+          "path": "tools/lion_cooperative_worker_qualification.py",
+          "blob": "330f58100dd2b2ce13e690a6d50a799e866d28bc"
+        },
+        {
+          "path": "tools/lion_edge_yoke.py",
+          "blob": "98d7c16db2513588901a11874d6fbfecb06a3172"
+        },
+        {
+          "path": "tools/lion_edge_yoke_windows.ps1",
+          "blob": "5606e48b3d9b517da8554afde25819b330764ba2"
+        },
+        {
           "path": "tools/lion_effect_admission_broker.py",
-          "blob": "685e6c50ecad90f1094d4f40201db1fc19bec93a"
+          "blob": "cfb123fb462da4e99255171480212cd0f20d8bfe"
         },
         {
           "path": "tools/lion_effect_admission_client.py",
@@ -7577,6 +7058,10 @@
         {
           "path": "tools/lion_federated_architecture_knowledge.py",
           "blob": "782ab8f5aa65ae4bee201045e7e6ac1f6b25d5e1"
+        },
+        {
+          "path": "tools/lion_federation_e2e_verify.py",
+          "blob": "43414420dbddb753c115473e80ce84b315258ce1"
         },
         {
           "path": "tools/lion_federation_snapshot.py",
@@ -7624,7 +7109,7 @@
         },
         {
           "path": "tools/lion_local_intelligence_runtime.py",
-          "blob": "62008d9f57073e6740e9bc265117b971bad29031"
+          "blob": "7a8920c81831185a9dcf54f7a8b560cfce2f8b21"
         },
         {
           "path": "tools/lion_lpcl_autonomous_vulnerability_research.py",
@@ -7656,7 +7141,7 @@
         },
         {
           "path": "tools/lion_mission_control_v3.py",
-          "blob": "c10afd73d165754f40e62d9a750885064194e595"
+          "blob": "f251ba2cd227e05ec7f213e55a1430f34e39fa15"
         },
         {
           "path": "tools/lion_mission_lifecycle_db.py",
@@ -7687,8 +7172,16 @@
           "blob": "7d01a32171b5ad5509abb563c46315e34c398448"
         },
         {
+          "path": "tools/lion_r24_cooperative_pilot.py",
+          "blob": "9a8df6a38ec6823747ac7bf69952501b48199924"
+        },
+        {
           "path": "tools/lion_r24_whole_integration_gate.py",
-          "blob": "ec231cb26c3a3e0bd400f1f38d615d29c96be60a"
+          "blob": "60ee0b3736853699a95cfe464570e7ec00eebb06"
+        },
+        {
+          "path": "tools/lion_rag15.py",
+          "blob": "ab65b1a1d3d22be6073f03ea5d8f4cb64dbcbccc"
         },
         {
           "path": "tools/lion_rag32_validate.py",
@@ -7721,6 +7214,10 @@
         {
           "path": "tools/lion_secure_mcp_broker_relay.py",
           "blob": "92bdb584a7f07750b14bdbbb57c91665c7510f2e"
+        },
+        {
+          "path": "tools/lion_source_validation.py",
+          "blob": "2c63358ecdf5f21108de1e2ab82dac9c47ea16d8"
         },
         {
           "path": "tools/lion_vkt_effect_admission_broker.py",
@@ -7780,7 +7277,7 @@
         },
         {
           "path": "tools/p0_moon_attested_adjudication.py",
-          "blob": "ed2905dc65fe325ce9d40313ab0773acfcee7532"
+          "blob": "881e6b9bc8a8d756df7f13756dd07ff66b80288d"
         },
         {
           "path": "tools/p0_moon_attested_adjudication_contract.py",
@@ -7792,7 +7289,7 @@
         },
         {
           "path": "tools/p0_moon_readonly_observer_falsification.py",
-          "blob": "27062acd12499e13e6e034b57913e3a6faf60112"
+          "blob": "bd8a520cc00b177e0fe7aa72ad7bd7c6ec10aa95"
         },
         {
           "path": "tools/p0_moon_readonly_observer_falsification_contract.py",
@@ -7812,7 +7309,7 @@
         },
         {
           "path": "tools/p0_moon_same_connection_denial_carrier.py",
-          "blob": "4ab7d95bb8b7fe224aebac9e81ff19226e6b1909"
+          "blob": "cade627521e0714448ede04f96878e8001a6681d"
         },
         {
           "path": "tools/p0_moon_same_connection_denial_contract.py",
@@ -7828,7 +7325,7 @@
         },
         {
           "path": "tools/p0_moon_seven_binding.py",
-          "blob": "ad36e806a5086dfaa59b8b360947f1c087babd03"
+          "blob": "31bdf058302528223f1e8a692c221d10cd9452cc"
         },
         {
           "path": "tools/p0_moon_seven_binding_contract.py",
@@ -7860,7 +7357,7 @@
         },
         {
           "path": "tools/p0_surface_closure_campaign.py",
-          "blob": "da26f494223966d36b43d5ff4fba11ab956db5b9"
+          "blob": "b403d81563a55b2e9d834d23ac8c750aedbc2098"
         },
         {
           "path": "tools/p0_surface_closure_campaign_contract.py",
@@ -7888,17 +7385,17 @@
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 1610,
-      "explicit_file_count": 1610,
+      "tracked_file_count": 1764,
+      "explicit_file_count": 1764,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
-      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "head": "b8327059360b675d01d091d70ef3eaef17ed1972",
+      "tree": "2450a14943aa762b30933670911531aff2d93955",
       "open_prs": 0,
-      "manifest_blob": "263674acf15c5d0e416a5e18960a1d95f6fac36c",
+      "manifest_blob": "e6ca238e0418b73fb435b7f62447e152827a921d",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -8000,6 +7497,21 @@
               "currentness": "LOCAL_OWNER"
             },
             {
+              "path": "REPOSITORY_STANDARDIZATION_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "contracts/process_semantics.py",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "contracts/process_semantics.schema.json",
+              "class": "SCHEMA",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
               "path": "doc/9D_process_design.md",
               "class": "HUMAN_ARCHITECTURE_DOCUMENT",
               "currentness": "LOCAL_OWNER"
@@ -8007,11 +7519,6 @@
             {
               "path": "hmk9d_protocol.yaml",
               "class": "SCHEMA",
-              "currentness": "LOCAL_OWNER"
-            },
-            {
-              "path": "REPOSITORY_STANDARDIZATION_R1.json",
-              "class": "MACHINE_READABLE_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
             }
           ],
@@ -8055,7 +7562,7 @@
         },
         {
           "path": "LICENSE",
-          "blob": "41c3fa1b6b3685deabe5e1604cf7a5e13228f7ff"
+          "blob": "eefd0d66cf3a7c91291b0b6c2bbf08f9e8e916d6"
         },
         {
           "path": "MICROCODE_ASCII_HMK9D_CANON.PROMPT",
@@ -8074,8 +7581,16 @@
           "blob": "dc3fb3a9107fcc1f695322637c84070b867e035b"
         },
         {
+          "path": "contracts/process_semantics.py",
+          "blob": "899e478727c3905922c283b52684725caed3b876"
+        },
+        {
+          "path": "contracts/process_semantics.schema.json",
+          "blob": "d7ad869548200e727eaccf3c0036ebf46626b4e3"
+        },
+        {
           "path": "cyber-lion.repository.json",
-          "blob": "263674acf15c5d0e416a5e18960a1d95f6fac36c"
+          "blob": "e6ca238e0418b73fb435b7f62447e152827a921d"
         },
         {
           "path": "doc/9D_process_design.md",
@@ -8138,22 +7653,30 @@
           "blob": "80babd0577c0273afaa7e318df5e76da638bcfc0"
         },
         {
+          "path": "tests/fixtures/process_semantics/hmk9d_minimal.json",
+          "blob": "10ddf2f423862a139a7f52ae777ec63ac9cdc450"
+        },
+        {
+          "path": "tests/test_process_semantics_contract.py",
+          "blob": "b73c328d63bcf65ca161b02a6274ad3256c55292"
+        },
+        {
           "path": "writeups.code-workspace",
           "blob": "493a06d7f7dc33f54e3d7ef5f21b7f7bc72d1ca5"
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 27,
-      "explicit_file_count": 27,
+      "tracked_file_count": 31,
+      "explicit_file_count": 31,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
-      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
+      "head": "0afffd9ac6e0d346735615352fba9a43791cb017",
+      "tree": "14ca52d8271f8df948155e6adfe3b8408f3e2d95",
       "open_prs": 0,
-      "manifest_blob": "65ebab16e3ff460e65395a072720be77638bb2c9",
+      "manifest_blob": "a430f65f95174b9f6398ce6262eed77a93a5caf2",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -8262,18 +7785,23 @@
               "currentness": "LOCAL_OWNER"
             },
             {
+              "path": "REPOSITORY_STANDARDIZATION_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
               "path": "docs/10_architecture.md",
               "class": "HUMAN_ARCHITECTURE_DOCUMENT",
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "spec/invariants.yaml",
-              "class": "SCHEMA",
+              "path": "glx/federation/delta_provider.py",
+              "class": "CONTRACT",
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "REPOSITORY_STANDARDIZATION_R1.json",
-              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "path": "spec/invariants.yaml",
+              "class": "SCHEMA",
               "currentness": "LOCAL_OWNER"
             }
           ],
@@ -8769,7 +8297,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "65ebab16e3ff460e65395a072720be77638bb2c9"
+          "blob": "a430f65f95174b9f6398ce6262eed77a93a5caf2"
         },
         {
           "path": "delta/__init__.py",
@@ -8954,6 +8482,14 @@
         {
           "path": "glx/__init__.py",
           "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+        },
+        {
+          "path": "glx/federation/__init__.py",
+          "blob": "2cfd4d0bb5e5644b0e1bb952a225005853c0234b"
+        },
+        {
+          "path": "glx/federation/delta_provider.py",
+          "blob": "a2881f996734961f3cceac7c7bc32bf430f53eeb"
         },
         {
           "path": "glx/tools/__init__.py",
@@ -9696,6 +9232,10 @@
           "blob": "d7a9a0791a890042116db2b891757ca545edef00"
         },
         {
+          "path": "tests/unit/test_federation_delta_provider.py",
+          "blob": "96f1014361872a89f4f1f99616b9b5152b2d765c"
+        },
+        {
           "path": "tests/unit/test_glx_tools_suite.py",
           "blob": "93e91d82947f6d4a2ebe8b740be60169932f7425"
         },
@@ -9717,17 +9257,274 @@
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 355,
-      "explicit_file_count": 355,
+      "tracked_file_count": 358,
+      "explicit_file_count": 358,
+      "coverage_group_file_count": 0
+    },
+    {
+      "repository": "DonkeyJJLove/HA2D",
+      "branch": "master",
+      "head": "f41cd0f089b714c9474a1f11757fc8c9bbcf1358",
+      "tree": "ba2687a75270e64c3772a50ee4177d3e0642972f",
+      "open_prs": 0,
+      "manifest_blob": "8051ad1ea531fc1082b48cb132ce0c1dae88e5d8",
+      "manifest": {
+        "schema_version": "1.0.0",
+        "repository": {
+          "id": "DonkeyJJLove/HA2D",
+          "url": "https://github.com/DonkeyJJLove/HA2D",
+          "owner": "DonkeyJJLove",
+          "default_branch": "master",
+          "vcs_ref": null
+        },
+        "cyber_lion": {
+          "tile_id": "context-memory.ha2d",
+          "roles": [
+            "ContextMemoryLab",
+            "MemoryCandidateProvider",
+            "ReplayContextProvider",
+            "ProcessStateDiagnostics"
+          ],
+          "layers": [
+            "INF",
+            "SEM"
+          ],
+          "disposition": [
+            "KEEP",
+            "REFINE",
+            "EXPERIMENTAL",
+            "INTEGRATE"
+          ]
+        },
+        "capabilities": [
+          "context.capture",
+          "memory.candidate",
+          "memory.replay",
+          "semantic.revision",
+          "process.diagnostics"
+        ],
+        "authority": {
+          "maximum_level": "read",
+          "required_gates": [
+            "memory.commit.policy",
+            "cyber-lion.mand"
+          ]
+        },
+        "observability": {
+          "logs": [
+            "context.snapshot",
+            "memory.candidate",
+            "semantic.revision"
+          ],
+          "metrics": [
+            "context.age",
+            "candidate.count",
+            "revision.count",
+            "diagnostic.drift"
+          ],
+          "traces": [
+            "working-context→candidate→review→commit/supersede"
+          ]
+        },
+        "security": {
+          "trust_boundaries": [
+            "working context != committed memory",
+            "semantic coherence != empirical truth",
+            "diagnostic state != authority",
+            "memory commit requires explicit policy and provenance"
+          ]
+        },
+        "epistemic": {
+          "status": "EXPERIMENTAL",
+          "confidence": 0.74
+        },
+        "architecture_knowledge": {
+          "schema_version": "1.0.0",
+          "global_owner": "DonkeyJJLove/ai_platform",
+          "semantic_exports": [
+            "context_memory",
+            "memory_semantics",
+            "process_diagnostics",
+            "temporal_semantic_state_candidate",
+            "supersession_evidence"
+          ],
+          "semantic_imports": [
+            "architecture",
+            "contracts",
+            "currentness",
+            "semantic_relevance"
+          ],
+          "repository_dependencies": [
+            "DonkeyJJLove/ai_platform"
+          ],
+          "architecture_artifacts": [
+            {
+              "path": "AGENTS.md",
+              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "AI_NATIVE_ROADMAP.md",
+              "class": "ROADMAP",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "PROCESS_GUARD.md",
+              "class": "PROCESS_GUARD",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "README.md",
+              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "REPOSITORY_STANDARDIZATION_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "contracts/context_snapshot.py",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "reference/context_importer.py",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
+            }
+          ],
+          "discoverability": {
+            "entrypoint": "AGENTS.md",
+            "global_owner_route": "AGENTS.md -> cyber-lion.repository.json -> DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
+            "max_reads_to_global_owner": 3
+          },
+          "invalidation_triggers": [
+            "SOURCE_CHANGE",
+            "CONTRACT_CHANGE",
+            "CAPABILITY_CHANGE",
+            "CURRENTNESS_CHANGE",
+            "REPOSITORY_ROLE_CHANGE",
+            "DEPENDENCY_CHANGE",
+            "NAMING_STANDARD_CHANGE"
+          ]
+        }
+      },
+      "file_inventory_mode": "FULL",
+      "files": [
+        {
+          "path": ".github/workflows/repository-hygiene.yml",
+          "blob": "58457406cac87f22481ea8e9b7e4c8e475c32ab7"
+        },
+        {
+          "path": ".gitignore",
+          "blob": "2ead6dac883d1cc36468ea60de22d37da3e7f6f7"
+        },
+        {
+          "path": "AGENTS.md",
+          "blob": "d5d1482de2fcd10aca2e30785d24a2776ee54ebd"
+        },
+        {
+          "path": "AI_NATIVE_ROADMAP.md",
+          "blob": "e5930c3b94f0a40a912e037d1b8fd2d6b2357045"
+        },
+        {
+          "path": "EXPAND/fast2gen.prompt",
+          "blob": "c723b6914b523857756741f14553a0553cd7ba63"
+        },
+        {
+          "path": "HUD_spec.md",
+          "blob": "b6f1fcc45ceb236511486cece8a84406c922cabd"
+        },
+        {
+          "path": "HYBRID-AI-DRIVEN.md",
+          "blob": "a50359de3d9fad3cac5acc05774a9d7964db5792"
+        },
+        {
+          "path": "LICENSE",
+          "blob": "9eb053548a32333bcc8568cf95a658006e821c46"
+        },
+        {
+          "path": "MEN_diagram.md",
+          "blob": "0bdf3da908f1dc4be3c20a8e574ad723f50a3d7f"
+        },
+        {
+          "path": "PROCESS_GUARD.md",
+          "blob": "c91419bb9ba338af86d7d39ffb43de4914ba4002"
+        },
+        {
+          "path": "PSEP_paradox.md",
+          "blob": "9b722a0af98055267e10378e5a3efe9a1719f57d"
+        },
+        {
+          "path": "README.md",
+          "blob": "3dc57ff5c580baadc2d07b4210a0c5e3f5eb882e"
+        },
+        {
+          "path": "REPOSITORY_STANDARDIZATION_R1.json",
+          "blob": "bb35ab07ed1cbeab6b58afbd6969f84025bd2fd8"
+        },
+        {
+          "path": "SEED/HYBRID-AI-DRIVEN.prompt",
+          "blob": "a8fdcda84d0f46333e8e54973de3f2b837b3df51"
+        },
+        {
+          "path": "SMA_neuro_model.md",
+          "blob": "0e84f134153f575ad041174ec2d6f928244039a9"
+        },
+        {
+          "path": "context_protocol.md",
+          "blob": "3c01258bcf66721d96587eed0d3b0166b429d8a7"
+        },
+        {
+          "path": "contracts/context_snapshot.py",
+          "blob": "c4a129539ba9c1afbd21400af57dbea17c12123b"
+        },
+        {
+          "path": "cyber-lion.repository.json",
+          "blob": "8051ad1ea531fc1082b48cb132ce0c1dae88e5d8"
+        },
+        {
+          "path": "fast2gen.md",
+          "blob": "85e0a47e472a1ab79e7767b784a35180822cdf4a"
+        },
+        {
+          "path": "img/math.jpg",
+          "blob": "b63a9b74f8a6529a52887dd4f9538822c339036a"
+        },
+        {
+          "path": "opcje.md",
+          "blob": "f33d840b1ae5adf4f502fc8ed4eeb225925b3a3c"
+        },
+        {
+          "path": "placeholders_matrix.md",
+          "blob": "1ae4480f5aafd64793d1baede05e791d63e946b5"
+        },
+        {
+          "path": "reference/context_importer.py",
+          "blob": "03c3cb45811bc85bb7712cd5574597f6eb8e432b"
+        },
+        {
+          "path": "revision_viewer.md",
+          "blob": "6a966468812ded37f6d103d52e5d6b31fe00bcd1"
+        },
+        {
+          "path": "tests/test_context_snapshot_contract.py",
+          "blob": "468d2f80b23bfb640110b8420f983befe3b95ffe"
+        }
+      ],
+      "file_coverage_groups": [],
+      "tracked_file_count": 25,
+      "explicit_file_count": 25,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
-      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "head": "25b432b7a57b83e0a97387bce4fce45eab5c15c9",
+      "tree": "18b3320ab3da1d95d8f819236aa19586f2abdd18",
       "open_prs": 0,
-      "manifest_blob": "cf61b0c762b4cc0199801d35ac2945bb110b94d3",
+      "manifest_blob": "9f49ddf4a2d01f45095cca86cfa0ab1c5a12ce52",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -9842,6 +9639,16 @@
               "path": "REPOSITORY_STANDARDIZATION_R1.json",
               "class": "MACHINE_READABLE_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "contracts/hypothesis_spec.py",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "contracts/hypothesis_spec.schema.json",
+              "class": "SCHEMA",
+              "currentness": "LOCAL_OWNER"
             }
           ],
           "discoverability": {
@@ -9883,6 +9690,10 @@
           "blob": "eac217c0ae0441c2cf73e2ba7294f144f776026b"
         },
         {
+          "path": "LICENSE",
+          "blob": "9eb053548a32333bcc8568cf95a658006e821c46"
+        },
+        {
           "path": "PROCESS_GUARD.md",
           "blob": "572044c9bd6a777203aad94cdd17871bb8386f6f"
         },
@@ -9895,22 +9706,38 @@
           "blob": "ad47a78a6428d91530ed43e97708fc200dafc603"
         },
         {
+          "path": "contracts/hypothesis_spec.py",
+          "blob": "8076964e80b871729bb0ad258fbed62459cd6214"
+        },
+        {
+          "path": "contracts/hypothesis_spec.schema.json",
+          "blob": "17259484e44c730b9edfab64c3391b040d714f17"
+        },
+        {
           "path": "cyber-lion.repository.json",
-          "blob": "cf61b0c762b4cc0199801d35ac2945bb110b94d3"
+          "blob": "9f49ddf4a2d01f45095cca86cfa0ab1c5a12ce52"
+        },
+        {
+          "path": "examples/falsification_fixture.json",
+          "blob": "42f03b7e544a4fb32c7ea5ac490a6668c2a891d8"
+        },
+        {
+          "path": "tests/test_hypothesis_spec.py",
+          "blob": "832824bdea819cc98eec7f0f85c8d54f14558cdb"
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 9,
-      "explicit_file_count": 9,
+      "tracked_file_count": 14,
+      "explicit_file_count": 14,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
-      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "head": "94c141c9f0bd8830bb9b93f11561056c629a5607",
+      "tree": "9154393fc954ccf9b6fec1d988868489ab8a275a",
       "open_prs": 0,
-      "manifest_blob": "97a13ee3f7f491facff65bd15fbdf879ae9fc99b",
+      "manifest_blob": "e1683d0cc273b538a97f8694d6feb41e4bcb838b",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -10024,6 +9851,16 @@
               "path": "REPOSITORY_STANDARDIZATION_R1.json",
               "class": "MACHINE_READABLE_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "contracts/graph_projection.schema.json",
+              "class": "SCHEMA",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "mosaic_core.py",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
             }
           ],
           "discoverability": {
@@ -10077,26 +9914,38 @@
           "blob": "2172e47d4ff2fbc1327881ced69f9b43b865b2ab"
         },
         {
+          "path": "contracts/graph_projection.schema.json",
+          "blob": "d3fb9a89445b7ff4b4b20b3fb9849832f4223911"
+        },
+        {
           "path": "cyber-lion.repository.json",
-          "blob": "97a13ee3f7f491facff65bd15fbdf879ae9fc99b"
+          "blob": "e1683d0cc273b538a97f8694d6feb41e4bcb838b"
+        },
+        {
+          "path": "mosaic_core.py",
+          "blob": "82c25fed78b98cbd1f6f318e1253cde7aea246e8"
         },
         {
           "path": "mosaic_lab_pro.py",
           "blob": "73e0862bf5f3f600d366e6b25dbe31ecb4ec12da"
+        },
+        {
+          "path": "tests/test_headless_graph_projection.py",
+          "blob": "ca9c47f46b9aa0306352977083beb9d85b4248db"
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 10,
-      "explicit_file_count": 10,
+      "tracked_file_count": 13,
+      "explicit_file_count": 13,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
-      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "head": "48aab54cc260bfbfea4881f7a6f264caef814440",
+      "tree": "1e8c563e51a1d55f4003acd98255b45983f98214",
       "open_prs": 0,
-      "manifest_blob": "2821a5aa677ab77fee56390d5e30ce41856118e5",
+      "manifest_blob": "2b198d74092209a02c2c0c89d1131e273b4cb1b6",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -10193,6 +10042,11 @@
               "currentness": "LOCAL_OWNER"
             },
             {
+              "path": "AID_CONTRACT.md",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
               "path": "AI_NATIVE_ROADMAP.md",
               "class": "ROADMAP",
               "currentness": "LOCAL_OWNER"
@@ -10203,8 +10057,8 @@
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "AID_CONTRACT.md",
-              "class": "CONTRACT",
+              "path": "REPOSITORY_STANDARDIZATION_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
             },
             {
@@ -10213,8 +10067,8 @@
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "REPOSITORY_STANDARDIZATION_R1.json",
-              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "path": "reference/artifact_identity_adapter.py",
+              "class": "CONTRACT",
               "currentness": "LOCAL_OWNER"
             }
           ],
@@ -10269,6 +10123,10 @@
           "blob": "ac416da8b088590a7ea29641a3261af569a14dc7"
         },
         {
+          "path": "LICENSE",
+          "blob": "9eb053548a32333bcc8568cf95a658006e821c46"
+        },
+        {
           "path": "PROCESS_GUARD.md",
           "blob": "686a92ea76e3ef06da27006080e2593d6eb5856d"
         },
@@ -10282,7 +10140,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "2821a5aa677ab77fee56390d5e30ce41856118e5"
+          "blob": "2b198d74092209a02c2c0c89d1131e273b4cb1b6"
         },
         {
           "path": "docs/01_AID_CONTRACT.md",
@@ -10361,8 +10219,16 @@
           "blob": "9f3e31c2f4dbba55fc6edff368b71768aeadcff5"
         },
         {
+          "path": "reference/artifact_identity_adapter.py",
+          "blob": "1ad182532a2ce6e137a21e43b9a4bdd73adcce96"
+        },
+        {
           "path": "sbom_arkusz_jenkins_elastic_lab.xlsx",
           "blob": "1bfd9adba489ed5f189fefd6a6cabc81e4c03c1d"
+        },
+        {
+          "path": "tests/test_federation_artifact_identity.py",
+          "blob": "9f7379b47a1c24c7161ca56384aefc2b9a0a65e2"
         },
         {
           "path": "\"\\305\\233rodowiska-testowe/.env.lab\"",
@@ -10382,17 +10248,17 @@
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 36,
-      "explicit_file_count": 36,
+      "tracked_file_count": 39,
+      "explicit_file_count": 39,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
-      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "head": "91b0a4174300b5efb3e6072b44ad323136a77337",
+      "tree": "4e620eb4e37801225d51c930d18ec46f34c22e24",
       "open_prs": 0,
-      "manifest_blob": "ee08046027d7a5113b2d88e3e97d2d42c31a6b47",
+      "manifest_blob": "fac14b36374eddab25c101aa926e2348df45992d",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -10503,13 +10369,13 @@
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "runtime/README.md",
-              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "path": "REPOSITORY_STANDARDIZATION_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "security/README.md",
-              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "path": "federation/ai_platform_runtime_adapter.py",
+              "class": "CONTRACT",
               "currentness": "LOCAL_OWNER"
             },
             {
@@ -10518,8 +10384,13 @@
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "REPOSITORY_STANDARDIZATION_R1.json",
-              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "path": "runtime/README.md",
+              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "security/README.md",
+              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
               "currentness": "LOCAL_OWNER"
             }
           ],
@@ -10576,6 +10447,10 @@
         {
           "path": "AI_NATIVE_ROADMAP.md",
           "blob": "b1db3529ee001784c4e3ba89745e852f3f24ad8d"
+        },
+        {
+          "path": "LICENSE",
+          "blob": "eefd0d66cf3a7c91291b0b6c2bbf08f9e8e916d6"
         },
         {
           "path": "PROCESS_GUARD.md",
@@ -10675,7 +10550,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "ee08046027d7a5113b2d88e3e97d2d42c31a6b47"
+          "blob": "fac14b36374eddab25c101aa926e2348df45992d"
         },
         {
           "path": "drones/Dockerfile",
@@ -10700,6 +10575,14 @@
         {
           "path": "drones/requirements.txt",
           "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+        },
+        {
+          "path": "federation/__init__.py",
+          "blob": "a04a7c10abc9b8ad2943f68abacda3ac606b13f8"
+        },
+        {
+          "path": "federation/ai_platform_runtime_adapter.py",
+          "blob": "8dedae9757efe3085fd644cea03ba1d778f0efbd"
         },
         {
           "path": "infrastructure/README.md",
@@ -10942,6 +10825,10 @@
           "blob": "3f9b133222f217e14cc00cfbfb63fa2fa9fdef56"
         },
         {
+          "path": "tests/federation/test_ai_platform_roundtrip.py",
+          "blob": "83487f4866ecbffb4a309e00839ab566e73fed46"
+        },
+        {
           "path": "tests/runtime/e4_runtime_compose.yml",
           "blob": "17c80091882f84f4dc233b3a75c712d69d1f316d"
         },
@@ -10955,17 +10842,922 @@
         }
       ],
       "file_coverage_groups": [],
-      "tracked_file_count": 103,
-      "explicit_file_count": 103,
+      "tracked_file_count": 107,
+      "explicit_file_count": 107,
+      "coverage_group_file_count": 0
+    },
+    {
+      "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+      "branch": "main",
+      "head": "0a9413f36ee8cf7684bcb77f42abcaffcf59a60d",
+      "tree": "5d6396c52013657e36fdc296044b59cbd0d26bb1",
+      "open_prs": 0,
+      "manifest_blob": "11bd867f068ea7a7342aaf157e3083e9cb294c91",
+      "manifest": {
+        "schema_version": "1.0.0",
+        "repository": {
+          "id": "DonkeyJJLove/SymulacjaKaskadySieciowej",
+          "url": "https://github.com/DonkeyJJLove/SymulacjaKaskadySieciowej",
+          "owner": "DonkeyJJLove",
+          "default_branch": "main",
+          "vcs_ref": null
+        },
+        "cyber_lion": {
+          "tile_id": "falsification.simulation",
+          "roles": [
+            "SimulationProvider",
+            "FalsificationEngine",
+            "StressScenarioProvider",
+            "SensitivityAnalyzer"
+          ],
+          "layers": [
+            "SEM"
+          ],
+          "disposition": [
+            "KEEP",
+            "REFINE",
+            "GENERALIZE",
+            "INTEGRATE"
+          ]
+        },
+        "capabilities": [
+          "simulation.run",
+          "scenario.generate",
+          "stress.adversarial",
+          "sensitivity.morris",
+          "sensitivity.sobol",
+          "model.reproduce"
+        ],
+        "authority": {
+          "maximum_level": "read",
+          "required_gates": [
+            "cyber-lion.mand"
+          ]
+        },
+        "observability": {
+          "logs": [
+            "simulation.run",
+            "scenario.parameters",
+            "seed.record",
+            "model.version"
+          ],
+          "metrics": [
+            "run.count",
+            "convergence.error",
+            "tail.loss",
+            "sensitivity.index"
+          ],
+          "traces": [
+            "assumptions→parameters→model→scenario→simulation→interpretation"
+          ]
+        },
+        "security": {
+          "trust_boundaries": [
+            "simulated != observed",
+            "convergence != model correctness",
+            "sensitivity index != empirical causal coefficient",
+            "simulation recommendation != runtime authority"
+          ]
+        },
+        "epistemic": {
+          "status": "FORMALISED",
+          "confidence": 0.84
+        },
+        "architecture_knowledge": {
+          "schema_version": "1.0.0",
+          "global_owner": "DonkeyJJLove/ai_platform",
+          "semantic_exports": [
+            "simulation",
+            "falsification",
+            "sensitivity_analysis",
+            "relevance_stress_result",
+            "sensitivity_result"
+          ],
+          "semantic_imports": [
+            "architecture",
+            "formalization",
+            "currentness",
+            "semantic_relevance"
+          ],
+          "repository_dependencies": [
+            "DonkeyJJLove/ai_platform"
+          ],
+          "architecture_artifacts": [
+            {
+              "path": "AGENTS.md",
+              "class": "HUMAN_ARCHITECTURE_DOCUMENT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "AI_NATIVE_ROADMAP.md",
+              "class": "ROADMAP",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "PROCESS_GUARD.md",
+              "class": "PROCESS_GUARD",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "README.md",
+              "class": "RESEARCH_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "REPOSITORY_STANDARDIZATION_R1.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/federation_fixture_provider.py",
+              "class": "CONTRACT",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
+              "class": "CONTRACT",
+              "currentness": "SOURCE_BOUND"
+            }
+          ],
+          "discoverability": {
+            "entrypoint": "AGENTS.md",
+            "global_owner_route": "AGENTS.md -> cyber-lion.repository.json -> DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
+            "max_reads_to_global_owner": 3
+          },
+          "invalidation_triggers": [
+            "SOURCE_CHANGE",
+            "CONTRACT_CHANGE",
+            "CAPABILITY_CHANGE",
+            "CURRENTNESS_CHANGE",
+            "REPOSITORY_ROLE_CHANGE",
+            "DEPENDENCY_CHANGE",
+            "NAMING_STANDARD_CHANGE"
+          ]
+        }
+      },
+      "file_inventory_mode": "FULL",
+      "files": [
+        {
+          "path": ".github/workflows/falsification-guard.yml",
+          "blob": "2e8a64fdb5f7e551621a4ecaf5e932c6e8b71fa0"
+        },
+        {
+          "path": ".gitignore",
+          "blob": "f7f7b02d04152265a123c3520cf345e257fe0446"
+        },
+        {
+          "path": "AGENTS.md",
+          "blob": "99263fa5a2d0166d99b974f6d1a1de00e54e7292"
+        },
+        {
+          "path": "AI_NATIVE_ROADMAP.md",
+          "blob": "297dd0b2a12ab6cebbdeec1269c05f3c3f04942b"
+        },
+        {
+          "path": "LICENSE",
+          "blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+        },
+        {
+          "path": "PROCESS_GUARD.md",
+          "blob": "3eb2490b7779551fa8e37184f1c20b4e9baa4c11"
+        },
+        {
+          "path": "README.md",
+          "blob": "43d9a45b8b1d784e3fba35466209745e87331abf"
+        },
+        {
+          "path": "REPOSITORY_STANDARDIZATION_R1.json",
+          "blob": "7e10e04e5eafc1778ad139f7cd21c780bf86ac22"
+        },
+        {
+          "path": "\"badania/Engine poboru danych dla rzetelnej analizy sytuacji w Iranie i post\\304\\231p\\303\\263w proces\\303\\263w kaskadowych.pdf\"",
+          "blob": "695a859592cf0b3495a5b141eafac7b87361fad1"
+        },
+        {
+          "path": "badania/Formalny model badawczy odporno#U015bci re#U017cimu autorytarnego i kaskad kryzysu.pdf",
+          "blob": "200d0eed641a0d64db7a84c518b02dc244dd4be9"
+        },
+        {
+          "path": "\"badania/Formalny model badawczy odporno\\305\\233ci re\\305\\274imu autorytarnego i kaskad kryzysu.pdf\"",
+          "blob": "200d0eed641a0d64db7a84c518b02dc244dd4be9"
+        },
+        {
+          "path": "badania/Global sensitivity analysis dla modelu SD Iranu metodami Morris i Sobol w Pythonie.pdf",
+          "blob": "05e48504ca8854afb3731a72b41334076c6c6c8e"
+        },
+        {
+          "path": "badania/Interpretacja wynik#U00f3w analizy wra#U017cliwo#U015bci metod#U0105 Morrisa dla Twojego modelu SD.pdf",
+          "blob": "7378368da320e90f2f8c1be67ac11ccd89ca0de8"
+        },
+        {
+          "path": "\"badania/Interpretacja wynik\\303\\263w analizy wra\\305\\274liwo\\305\\233ci metod\\304\\205 Morrisa dla Twojego modelu SD.pdf\"",
+          "blob": "7378368da320e90f2f8c1be67ac11ccd89ca0de8"
+        },
+        {
+          "path": "badania/Kaskadowe awarie cyber#U2011fizyczne a infrastruktura Iranu.pdf",
+          "blob": "dc92de7087334cb95063c746b4e6d6fe9eb18533"
+        },
+        {
+          "path": "badania/Kaskadowe awarie cyber#U2011fizyczne w infrastrukturze krytycznej_ analiza badawcza i odporno#U015b#U0107 systemowa.pdf",
+          "blob": "bb8d40ee4dbd1784e80a2de4612198ff8ebfac22"
+        },
+        {
+          "path": "\"badania/Kaskadowe awarie cyber\\342\\200\\221fizyczne a infrastruktura Iranu.pdf\"",
+          "blob": "dc92de7087334cb95063c746b4e6d6fe9eb18533"
+        },
+        {
+          "path": "\"badania/Kaskadowe awarie cyber\\342\\200\\221fizyczne w infrastrukturze krytycznej_ analiza badawcza i odporno\\305\\233\\304\\207 systemowa.pdf\"",
+          "blob": "bb8d40ee4dbd1784e80a2de4612198ff8ebfac22"
+        },
+        {
+          "path": "badania/Pe#U0142ny model system dynamics konfliktu_ #Ue200entity#Ue202[_country_,_Iran_,_country in middle east_]#Ue201 w scenar.pdf",
+          "blob": "293e6d5727bd56aef21fba556df1015ee7d80741"
+        },
+        {
+          "path": "\"badania/Pe\\305\\202ny model system dynamics konfliktu_ \\356\\210\\200entity\\356\\210\\202[_country_,_Iran_,_country in middle east_]\\356\\210\\201 w scenar.pdf\"",
+          "blob": "293e6d5727bd56aef21fba556df1015ee7d80741"
+        },
+        {
+          "path": "\"badania/Sekwencje Sobola, pr\\303\\263bkowanie hipersze\\305\\233cianu 27D i parametryzacja 9R w psycholingwistyce i transform.pdf\"",
+          "blob": "35b91eb767ca7217c940d78c42b6c581f369cf0c"
+        },
+        {
+          "path": "\"badania/Sobol i badanie efekt\\303\\263w kaskadowych w ataku strukturalnym Monte Carlo w re\\305\\274imie naukowym absolutnym.pdf\"",
+          "blob": "f45cf9ab0384ffe7d7417aa1e72ca253faf17098"
+        },
+        {
+          "path": "\"badania/Sobol i meta_ re\\305\\274im naukowy absolutny w identyfikacji metarelacji w systemach z\\305\\202o\\305\\274onych.pdf\"",
+          "blob": "049b99cc3d5860fbeed7a02647bde9bbc7217cd3"
+        },
+        {
+          "path": "\"badania/Sobol, HyperCube i Monte Carlo_ metaprzestrze\\305\\204 oraz sposoby mapowania metaprzestrzeni na struktury.pdf\"",
+          "blob": "27f3a63956eec1b5f3fa30e85b355edfc2bb39e8"
+        },
+        {
+          "path": "\"badania/Sp\\303\\263jny model matematyczny i autotesty jako\\305\\233ci dla systemu badaj\\304\\205cego zale\\305\\274no\\305\\233ci kaskadowe w Iranie C.pdf\"",
+          "blob": "07f9fc602aa6b32fdf90f9b3e8da8b56210c33d8"
+        },
+        {
+          "path": "\"badania/Zdarzenia kaskadowe w energetyce wywo\\305\\202ane dzia\\305\\202aniami w polu informacyjnym.pdf\"",
+          "blob": "3fbf0ad7646bfe889f3263353591ee9eea9ba255"
+        },
+        {
+          "path": "badania/html/matj_1.html",
+          "blob": "26c170ff439942a8df1407a08315e5e221961d62"
+        },
+        {
+          "path": "badania/matj_1.m",
+          "blob": "be63eb917389716ffdec04f8d21f8de9c50585e8"
+        },
+        {
+          "path": "badania/model.md",
+          "blob": "f7475c1abd2fe1ad92824a76a433ea249391d32b"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/SPEC.yaml",
+          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/maij_1_workspace.mat",
+          "blob": "ff7bb8f9fbe279e3f3c3bab12e75557617a52ce6"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/matlab_monte_carlo.csv",
+          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_dlugotrwala_wojna.csv",
+          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_eskalacja_regionalna.csv",
+          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_impas.csv",
+          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/matlab_run_szybka_wojna.csv",
+          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/report.txt",
+          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095209484/run_manifest.txt",
+          "blob": "bdf99511b214fde611c425ea66f3de9646455e63"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/SPEC.yaml",
+          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/maij_1_monte_carlo.png",
+          "blob": "7335f7aa745c1ed4ffd4e4656542da4483e01e08"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/maij_1_scenarios.png",
+          "blob": "ffdf6d1e7ea5f8111b34b2c1698ae77f272aef58"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/maij_1_workspace.mat",
+          "blob": "fb8c037aa16268286daa99e0e145c6de203e5bd0"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/matlab_monte_carlo.csv",
+          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_dlugotrwala_wojna.csv",
+          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_eskalacja_regionalna.csv",
+          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_impas.csv",
+          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/matlab_run_szybka_wojna.csv",
+          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/report.txt",
+          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_095301469/run_manifest.txt",
+          "blob": "1e70180d241d73b05acd0c6ee18624d009bbba17"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/SPEC.yaml",
+          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/maij_1_workspace.mat",
+          "blob": "f0b6b0b053cd40e1593a936c108c028f8f5d3173"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/matlab_monte_carlo.csv",
+          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_dlugotrwala_wojna.csv",
+          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_eskalacja_regionalna.csv",
+          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_impas.csv",
+          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/matlab_run_szybka_wojna.csv",
+          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/report.txt",
+          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144848259/run_manifest.txt",
+          "blob": "ec2ae059e47a2d78925b13968fe21c29be3d6321"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/SPEC.yaml",
+          "blob": "9cdb9f426fcbaddf7389fc76752e57cbbcf1751f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/maij_1_workspace.mat",
+          "blob": "caababdbab5de3583c35e1697d1427ce2634ff95"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/matlab_monte_carlo.csv",
+          "blob": "f4e3a24307621d61cfbbd286ef8bf893c46bd56d"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_dlugotrwala_wojna.csv",
+          "blob": "4b2669e5014db52086e248aba164a8c76587d3d8"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_eskalacja_regionalna.csv",
+          "blob": "9d4ebcfcaa3e3f3d15376242bde12ecfd949112e"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_impas.csv",
+          "blob": "92fea714bbb6a7d037e6954ac152f279445eccc6"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/matlab_run_szybka_wojna.csv",
+          "blob": "aa59a9271e048d3f7ce60989f68a77039a0b73b7"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/report.txt",
+          "blob": "4ca34c8b41a74bb5d1b4f8efd0956bfac5c2391f"
+        },
+        {
+          "path": "badania/outputs_matlab/20260318_144928538/run_manifest.txt",
+          "blob": "a091ac16dd866ca4aef1e3e6332040704edfad5a"
+        },
+        {
+          "path": "badania/quality.md",
+          "blob": "aada776d575240f829f9d0708c7351013b5d0391"
+        },
+        {
+          "path": "config/config.yaml",
+          "blob": "9570afb93e43cee5f04f5bed9b9711658cfd1070"
+        },
+        {
+          "path": "config/impas_small_mc.yml.py",
+          "blob": "03971c68e5fea7dc37be16635eb454f498867f58"
+        },
+        {
+          "path": "config/variants/impas_small_mc.yaml",
+          "blob": "e0772308d7d9bd0355e244be3492a7f25fdbbfe5"
+        },
+        {
+          "path": "cyber-lion.repository.json",
+          "blob": "11bd867f068ea7a7342aaf157e3083e9cb294c91"
+        },
+        {
+          "path": "examples/federation_minimal_scenario.json",
+          "blob": "9e9149f1c22d5b6c0982c59c3c6c4878873ede1d"
+        },
+        {
+          "path": "main.py",
+          "blob": "d3164799da1f64de78b3a831bd9d0703859eab15"
+        },
+        {
+          "path": "outputs/matlab_monte_carlo.csv",
+          "blob": "469e6f9858586f909177f79fbd4a64c72c9ab0bd"
+        },
+        {
+          "path": "outputs/mc_hist_szybka_wojna.png",
+          "blob": "79d77e6b039e70eeb7451f65bce37a843bec9563"
+        },
+        {
+          "path": "outputs/mc_summary_szybka_wojna.json",
+          "blob": "4e151a0bfe3eedbec5f77eb091a4c8888e2a6532"
+        },
+        {
+          "path": "outputs/metrics_szybka_wojna.json",
+          "blob": "786ca5ee851878285dfe12263878f6df4693a4e4"
+        },
+        {
+          "path": "outputs/morris/morris_indices.json",
+          "blob": "1c9ca54407368f27961e3185061f8cd2bbfb2b15"
+        },
+        {
+          "path": "outputs/morris/morris_model_outputs.csv",
+          "blob": "3a64f354fbb62389691c408282d9de8e37bf6ce4"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_Tcrit_mean.png",
+          "blob": "19b29aa1c41d0068c3f796a73d23efd97779b0dc"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_avg_loyal_mean.png",
+          "blob": "0f2640a0a530e1700459a7360991a399cad0f48c"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_elite_fracture_prob_mean.png",
+          "blob": "5a934004fce74bd833ff127947b30158ab25e663"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_end_displaced_m_mean.png",
+          "blob": "e210912f2a3d59b66b0a9997ebf921cd20740e61"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_mean_elite_mean.png",
+          "blob": "ea78978a4de005cda5cfa462fffd8ab17630b407"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_mean_stab_mean.png",
+          "blob": "83fe300b99a760d2e0062a09d5a59ab28f3e152f"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_min_elite_mean.png",
+          "blob": "ce5473de203810293bd6339ca71ff026a0800a30"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_min_stab_mean.png",
+          "blob": "76df4681fc2ed5e733dc3401ee7e2f495a4e97c9"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_peak_protest_mean.png",
+          "blob": "e859a85843a9ae910a3d9f473374e9ebdad8b52f"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_time_to_elite_fracture_mean.png",
+          "blob": "910a68eea3ae70fdc45a278215c8a8e050b967eb"
+        },
+        {
+          "path": "outputs/morris/morris_mu_star_weeks_below_elite_crit_mean.png",
+          "blob": "6f4452849fd72fc858a7dbe2a9e7ce87f8f46d69"
+        },
+        {
+          "path": "outputs/morris/runtime_config.json",
+          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
+        },
+        {
+          "path": "outputs/plot_szybka_wojna.png",
+          "blob": "9ed1d8fa3334e8569b52de9ab7517783267f5f56"
+        },
+        {
+          "path": "outputs/run_szybka_wojna.csv",
+          "blob": "1574e2159e453b182ddd1d6d3661d6c75ec8246f"
+        },
+        {
+          "path": "outputs/runtime_config.json",
+          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
+        },
+        {
+          "path": "outputs/sobol/runtime_config.json",
+          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
+        },
+        {
+          "path": "outputs/sobol/sobol_Tcrit_mean_bars.png",
+          "blob": "f1f8665ed3df178afe94a098aeda20426f84ac26"
+        },
+        {
+          "path": "outputs/sobol/sobol_Tcrit_mean_main.csv",
+          "blob": "820bee174e8b2bfcd2f2975bc6f8783d3e872e6c"
+        },
+        {
+          "path": "outputs/sobol/sobol_avg_loyal_mean_bars.png",
+          "blob": "cfa01ea11069c320acbe57a97bf90845c1aefbdd"
+        },
+        {
+          "path": "outputs/sobol/sobol_avg_loyal_mean_main.csv",
+          "blob": "13405ac1ba25b17453d87824c276cc967235b3d0"
+        },
+        {
+          "path": "outputs/sobol/sobol_elite_fracture_prob_mean_bars.png",
+          "blob": "c3b838e3f7176ae45b29e84e9e741696411d5e25"
+        },
+        {
+          "path": "outputs/sobol/sobol_elite_fracture_prob_mean_main.csv",
+          "blob": "bf39bafc0ef8b28f25a99762d80abfa234d345d0"
+        },
+        {
+          "path": "outputs/sobol/sobol_end_displaced_m_mean_bars.png",
+          "blob": "0951589048bcd6f6126f1e642d9fa51f25c18cb6"
+        },
+        {
+          "path": "outputs/sobol/sobol_end_displaced_m_mean_main.csv",
+          "blob": "1d4b5bfdc653e8105e1d31ee76c71010c281ea5c"
+        },
+        {
+          "path": "outputs/sobol/sobol_mean_elite_mean_bars.png",
+          "blob": "6dce57ae00b52c0344a134a629185219c3cbcc9c"
+        },
+        {
+          "path": "outputs/sobol/sobol_mean_elite_mean_main.csv",
+          "blob": "e7606b3e08512e1c8ad9f2f98613f39a3003f06f"
+        },
+        {
+          "path": "outputs/sobol/sobol_mean_stab_mean_bars.png",
+          "blob": "a0e542365bf571fec2ee2d10bedfc54e0941b09f"
+        },
+        {
+          "path": "outputs/sobol/sobol_mean_stab_mean_main.csv",
+          "blob": "5f68d0333d16ed7968442bedb95988aafd9ff92d"
+        },
+        {
+          "path": "outputs/sobol/sobol_min_elite_mean_bars.png",
+          "blob": "10b624e9ea650ed0177cba20dfbdbe85b931ee2f"
+        },
+        {
+          "path": "outputs/sobol/sobol_min_elite_mean_main.csv",
+          "blob": "15d1a93726be64a1b97dea0cac27245a8c5b2589"
+        },
+        {
+          "path": "outputs/sobol/sobol_min_stab_mean_bars.png",
+          "blob": "28c9a40f28ac5f41bb8bc2c80eaba7d5f90d9fc0"
+        },
+        {
+          "path": "outputs/sobol/sobol_min_stab_mean_main.csv",
+          "blob": "3f29756e0fbcfb55ecbbbb79a861ec003909342e"
+        },
+        {
+          "path": "outputs/sobol/sobol_model_outputs.csv",
+          "blob": "ae39ba235bfdd0fe3c68686dca9b0c91ce134255"
+        },
+        {
+          "path": "outputs/sobol/sobol_peak_protest_mean_bars.png",
+          "blob": "f33073d589b2ba5bcbd87d6cf19c1e1c88339fcd"
+        },
+        {
+          "path": "outputs/sobol/sobol_peak_protest_mean_main.csv",
+          "blob": "2d80455b2f8bbe86e464d2ebec022ccb0aea2960"
+        },
+        {
+          "path": "outputs/sobol/sobol_summary.json",
+          "blob": "702dfd8396b581e8249dea1ecf29cb46b526a90b"
+        },
+        {
+          "path": "outputs/sobol/sobol_time_to_elite_fracture_mean_bars.png",
+          "blob": "110fc5cd6bae1558e401ff31050d7ab685fa988e"
+        },
+        {
+          "path": "outputs/sobol/sobol_time_to_elite_fracture_mean_main.csv",
+          "blob": "290f1685293dd0b8cd0ecc1c0770b04a44a89dc6"
+        },
+        {
+          "path": "outputs/sobol/sobol_weeks_below_elite_crit_mean_bars.png",
+          "blob": "c8617af6fa8a687c2be735dda6e1f118fc253c73"
+        },
+        {
+          "path": "outputs/sobol/sobol_weeks_below_elite_crit_mean_main.csv",
+          "blob": "aa8576ee06577565579bb600b365bc56b8e5e2fc"
+        },
+        {
+          "path": "pyproject.toml",
+          "blob": "37f7ad7d7009007c6e021a79858fc66d6d3a7d5e"
+        },
+        {
+          "path": "requirements.txt",
+          "blob": "66fd4b0367f3b6b526eba57cebed5143f8557320"
+        },
+        {
+          "path": "scripts/analyze_bifurcation.py",
+          "blob": "86a0a03ee1823a467f82b482f2f6281923634cf1"
+        },
+        {
+          "path": "scripts/outputs/matlab_monte_carlo.csv",
+          "blob": "469e6f9858586f909177f79fbd4a64c72c9ab0bd"
+        },
+        {
+          "path": "scripts/outputs/mc_hist_szybka_wojna.png",
+          "blob": "79d77e6b039e70eeb7451f65bce37a843bec9563"
+        },
+        {
+          "path": "scripts/outputs/mc_summary_szybka_wojna.json",
+          "blob": "4e151a0bfe3eedbec5f77eb091a4c8888e2a6532"
+        },
+        {
+          "path": "scripts/outputs/metrics_szybka_wojna.json",
+          "blob": "786ca5ee851878285dfe12263878f6df4693a4e4"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_indices.json",
+          "blob": "1c9ca54407368f27961e3185061f8cd2bbfb2b15"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_model_outputs.csv",
+          "blob": "3a64f354fbb62389691c408282d9de8e37bf6ce4"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_Tcrit_mean.png",
+          "blob": "19b29aa1c41d0068c3f796a73d23efd97779b0dc"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_avg_loyal_mean.png",
+          "blob": "0f2640a0a530e1700459a7360991a399cad0f48c"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_elite_fracture_prob_mean.png",
+          "blob": "5a934004fce74bd833ff127947b30158ab25e663"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_end_displaced_m_mean.png",
+          "blob": "e210912f2a3d59b66b0a9997ebf921cd20740e61"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_mean_elite_mean.png",
+          "blob": "ea78978a4de005cda5cfa462fffd8ab17630b407"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_mean_stab_mean.png",
+          "blob": "83fe300b99a760d2e0062a09d5a59ab28f3e152f"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_min_elite_mean.png",
+          "blob": "ce5473de203810293bd6339ca71ff026a0800a30"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_min_stab_mean.png",
+          "blob": "76df4681fc2ed5e733dc3401ee7e2f495a4e97c9"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_peak_protest_mean.png",
+          "blob": "e859a85843a9ae910a3d9f473374e9ebdad8b52f"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_time_to_elite_fracture_mean.png",
+          "blob": "910a68eea3ae70fdc45a278215c8a8e050b967eb"
+        },
+        {
+          "path": "scripts/outputs/morris/morris_mu_star_weeks_below_elite_crit_mean.png",
+          "blob": "6f4452849fd72fc858a7dbe2a9e7ce87f8f46d69"
+        },
+        {
+          "path": "scripts/outputs/morris/runtime_config.json",
+          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
+        },
+        {
+          "path": "scripts/outputs/plot_szybka_wojna.png",
+          "blob": "9ed1d8fa3334e8569b52de9ab7517783267f5f56"
+        },
+        {
+          "path": "scripts/outputs/run_szybka_wojna.csv",
+          "blob": "1574e2159e453b182ddd1d6d3661d6c75ec8246f"
+        },
+        {
+          "path": "scripts/outputs/runtime_config.json",
+          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
+        },
+        {
+          "path": "scripts/outputs/sobol/runtime_config.json",
+          "blob": "6b11cf57bf9c44b44348c3c13f69822f20c77cff"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_Tcrit_mean_bars.png",
+          "blob": "2f45a79b18bbf83f3d00c388f7ce88f81e1727c9"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_Tcrit_mean_main.csv",
+          "blob": "94a23d6b46caf7e96c0e3f2f1b5b99dd4dcf9990"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_avg_loyal_mean_bars.png",
+          "blob": "d842b67502896bf20f98eb9ef70b111ca0da4b8b"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_avg_loyal_mean_main.csv",
+          "blob": "9c919a7bcaa2af75df9f60626b2604e622b9c657"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_elite_fracture_prob_mean_bars.png",
+          "blob": "361c2cb90b065059a4b6c687119998a53ac26f82"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_elite_fracture_prob_mean_main.csv",
+          "blob": "f77766daa0071777426a0ed09dd973266183e4dc"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_end_displaced_m_mean_bars.png",
+          "blob": "47668eace7c8e0d95d39c01bd882a83359410b9e"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_end_displaced_m_mean_main.csv",
+          "blob": "5a3a292b7caa0d89506e908b23c027fecf5eadcf"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_mean_elite_mean_bars.png",
+          "blob": "59c871aef67bb75ab2534801650b88a765aa045e"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_mean_elite_mean_main.csv",
+          "blob": "206a9c1d455fb2e0f00b321b343707b9e25c3eae"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_mean_stab_mean_bars.png",
+          "blob": "0e2ab4f6d8bac4b716af5cc05936ceb55350774e"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_mean_stab_mean_main.csv",
+          "blob": "93103d3e678577504ed57e18901e8bf2307a0d77"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_min_elite_mean_bars.png",
+          "blob": "386ece524b3a43a91edde0e3ffd203301249bcbd"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_min_elite_mean_main.csv",
+          "blob": "2cfc8b407720397e69e933bc9a3e526ca6ec2737"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_min_stab_mean_bars.png",
+          "blob": "6df8b2938776d02a9ea43c4f055c58e9532a6598"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_min_stab_mean_main.csv",
+          "blob": "cb0c1844592aaeba4bf51779dbd429e02191bbaa"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_model_outputs.csv",
+          "blob": "ae39ba235bfdd0fe3c68686dca9b0c91ce134255"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_peak_protest_mean_bars.png",
+          "blob": "616aef407bea560279e03065a2780664b8df9717"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_peak_protest_mean_main.csv",
+          "blob": "422cb13cf4f4bd23cc1af626034e37fdcc19a12e"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_summary.json",
+          "blob": "a957b5b58c715f5a123c68e1a199424bc8ad68a1"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_time_to_elite_fracture_mean_bars.png",
+          "blob": "b037ed8ecb9fb26d05df833e52311fe701ad2bf6"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_time_to_elite_fracture_mean_main.csv",
+          "blob": "59154fb270c88b4741a46f2b46ff0ddde1d081b1"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_weeks_below_elite_crit_mean_bars.png",
+          "blob": "0dcac7d9be23d544ae44e62be89b157dd42b8e7c"
+        },
+        {
+          "path": "scripts/outputs/sobol/sobol_weeks_below_elite_crit_mean_main.csv",
+          "blob": "77bbb31ab0fb26bbc9d48aa1afac2d38e525238f"
+        },
+        {
+          "path": "scripts/run_model.py",
+          "blob": "175f52ca9d8255151ad90e3442280ecadd09e3d0"
+        },
+        {
+          "path": "scripts/run_morris.py",
+          "blob": "f6152face4b44b34f8bb61176086702135dcc877"
+        },
+        {
+          "path": "scripts/run_sobol.py",
+          "blob": "4844f7265c6d7194ee9a2e2447e9434deabea306"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/__init__.py",
+          "blob": "ecf4aa17bac785fde774ae26bb8b2bb4a3023cf5"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/cli.py",
+          "blob": "5fc6e0655bb18fe5fcdcffac64fd602497a837d5"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/config.py",
+          "blob": "d4442a114dde7a89730b185d2425fd3425220095"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.md",
+          "blob": "671691bc3754705c4f057990b7330148647271c4"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/federation_fixture_provider.py",
+          "blob": "83915b9f71f06cea473c7fd30205683121a30cb2"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/gsa_common.py",
+          "blob": "d931a9334159e7ea9bd450e60806f9ed0ef6f6f4"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/io_utils.py",
+          "blob": "bd6454193f380a64038c2dfe50f472ac7362ee3e"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/iran_cascade_provider.py",
+          "blob": "358edbeff9b8374a55608ec7cb76053641dcf091"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/model.py",
+          "blob": "a4888d0024fb797fbaa0a2f68e800b90f5bf0a52"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/model_interface.py",
+          "blob": "63121056e99608af532fe66af5451a56e83fe155"
+        },
+        {
+          "path": "src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
+          "blob": "0d0f6d6b14f94405ac988ff540bfd227cf96bca5"
+        },
+        {
+          "path": "tests/test_federation_result_export.py",
+          "blob": "47f075e474a1d90666f8371e7b6d3f88e0b98b9d"
+        },
+        {
+          "path": "tests/test_iran_cascade_provider.py",
+          "blob": "684b55f709ab02d19f182dc0965382687614a032"
+        },
+        {
+          "path": "tests/test_simulation_contracts.py",
+          "blob": "eeee4b3878b75263314189d3bd16fd77fdd35f15"
+        },
+        {
+          "path": "tests/test_simulation_provider_conformance.py",
+          "blob": "fe64bdac7b39028b852cf285888f3cf9b9d3150a"
+        }
+      ],
+      "file_coverage_groups": [],
+      "tracked_file_count": 187,
+      "explicit_file_count": 187,
       "coverage_group_file_count": 0
     },
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
-      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
+      "head": "adff63c38f2c83ab3f8d37e7e802d5209b59faad",
+      "tree": "9f718bdeb843ce9edbb6f6bff60a128475a222c4",
       "open_prs": 0,
-      "manifest_blob": "8e4cb03a8d4b96d30d7d28376c3a8d0d560f94dd",
+      "manifest_blob": "37db42e93a1e4014ad0ec5d65e0bf1cd0647665c",
       "manifest": {
         "schema_version": "1.0.0",
         "repository": {
@@ -11062,9 +11854,9 @@
               "currentness": "LOCAL_OWNER"
             },
             {
-              "path": "PROCESS_GUARD.md",
-              "class": "PROCESS_GUARD",
-              "currentness": "LOCAL_OWNER"
+              "path": "LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md",
+              "class": "RESEARCH_ARCHITECTURE",
+              "currentness": "VERSIONED_STATIC"
             },
             {
               "path": "LION_ARCHITECTURE_ROLE_v1_4.md",
@@ -11072,14 +11864,9 @@
               "currentness": "HISTORICAL"
             },
             {
-              "path": "LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md",
-              "class": "RESEARCH_ARCHITECTURE",
-              "currentness": "VERSIONED_STATIC"
-            },
-            {
-              "path": "evolutionary-agent-systems-organization-framework.md",
-              "class": "RESEARCH_ARCHITECTURE",
-              "currentness": "VERSIONED_STATIC"
+              "path": "PROCESS_GUARD.md",
+              "class": "PROCESS_GUARD",
+              "currentness": "LOCAL_OWNER"
             },
             {
               "path": "REPOSITORY_STANDARDIZATION_R1.json",
@@ -11089,6 +11876,21 @@
             {
               "path": "badania/lion-semantic-cloud/README.md",
               "class": "RESEARCH_ARCHITECTURE",
+              "currentness": "LOCAL_OWNER"
+            },
+            {
+              "path": "evolutionary-agent-systems-organization-framework.md",
+              "class": "RESEARCH_ARCHITECTURE",
+              "currentness": "VERSIONED_STATIC"
+            },
+            {
+              "path": "research_index.json",
+              "class": "MACHINE_READABLE_ARCHITECTURE",
+              "currentness": "SOURCE_BOUND"
+            },
+            {
+              "path": "tools/research_index.py",
+              "class": "CONTRACT",
               "currentness": "LOCAL_OWNER"
             }
           ],
@@ -11167,6 +11969,10 @@
           "blob": "32b78663af23a5aa8000db94e56ca958aa05ae4b"
         },
         {
+          "path": "LICENSE",
+          "blob": "9eb053548a32333bcc8568cf95a658006e821c46"
+        },
+        {
           "path": "LINUX_MULTI_AGENT_CONTROL_MESH_REFERENCE_ARCHITECTURE.md",
           "blob": "c7c4f268982128c58353c5bd18a423a7d1ee0158"
         },
@@ -11208,7 +12014,7 @@
         },
         {
           "path": "README.md",
-          "blob": "37dafe507d3b64bf1822522957aa713dc923459c"
+          "blob": "c59363caf5a20d93c12668930b78eabf35ffbb04"
         },
         {
           "path": "REPOSITORY_AUDIT_2026-08-18.md",
@@ -14060,7 +14866,7 @@
         },
         {
           "path": "cyber-lion.repository.json",
-          "blob": "8e4cb03a8d4b96d30d7d28376c3a8d0d560f94dd"
+          "blob": "37db42e93a1e4014ad0ec5d65e0bf1cd0647665c"
         },
         {
           "path": "cybersecurity-evolusion.md",
@@ -14231,12 +15037,28 @@
           "blob": "ce3ba48adb771edcb732b787c0825950cc685c72"
         },
         {
+          "path": "research_index.json",
+          "blob": "f9da55fb2b1453b4e5ce38096530108b96590b42"
+        },
+        {
           "path": "sbom-as-sigillum-relationis_systemic-risk-control.md",
           "blob": "b124806f8632a9d2b35e1a0f6bdfa6e89c3880fc"
         },
         {
+          "path": "semanticzna-architektura-systemow-multiagentowych-agi.md",
+          "blob": "ee95e30be820a39c191f9d276ab49154d54d2423"
+        },
+        {
           "path": "teoria-pojemnosci-modeli-obliczalnosc.md",
           "blob": "deaee18b83dcdd79bbb8db6a25c2b23fefdc4537"
+        },
+        {
+          "path": "tests/test_research_index.py",
+          "blob": "eed09689cfa795bb881853fc6f95f17fafdf29e5"
+        },
+        {
+          "path": "tools/research_index.py",
+          "blob": "00cf473c5e91a5560e20882832b97c0a7017201c"
         },
         {
           "path": "writeup_ascii_microcode_hmk9d_deterministic_metrology_repo.md",
@@ -14252,8 +15074,8 @@
           "coverage_semantics": "ALL_TRACKED_FILES_UNDER_PREFIX_AT_BOUND_HEAD"
         }
       ],
-      "tracked_file_count": 77652,
-      "explicit_file_count": 783,
+      "tracked_file_count": 77657,
+      "explicit_file_count": 788,
       "coverage_group_file_count": 76869
     }
   ]

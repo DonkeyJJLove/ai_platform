@@ -1,13 +1,16 @@
 {
   "schema": "lion.architecture-document-graph/v1",
-  "federation_digest": "c93af1493b3b7dc79367811bd331279782a5e0ef64eb628185a44773123b8ed0",
+  "federation_digest": "4e4980f87543283879f2a8681108e6040a8eaa0aed3db4ea1deb34f48d8aac41",
   "nodes": [
     "DonkeyJJLove/HA2D:AGENTS.md",
     "DonkeyJJLove/HA2D:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/HA2D:PROCESS_GUARD.md",
     "DonkeyJJLove/HA2D:README.md",
     "DonkeyJJLove/HA2D:REPOSITORY_STANDARDIZATION_R1.json",
+    "DonkeyJJLove/HA2D:contracts/context_snapshot.py",
     "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+    "DonkeyJJLove/HA2D:reference/context_importer.py",
+    "DonkeyJJLove/HA2D:tests/test_context_snapshot_contract.py",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:AGENTS.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:PROCESS_GUARD.md",
@@ -15,6 +18,7 @@
     "DonkeyJJLove/SymulacjaKaskadySieciowej:REPOSITORY_STANDARDIZATION_R1.json",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/dataengine/README.md",
+    "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/federation_fixture_provider.py",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/simulation_contracts.py",
     "DonkeyJJLove/SymulacjaKaskadySieciowej:tests/test_simulation_contracts.py",
     "DonkeyJJLove/ai_platform:.github/AGENTS.md",
@@ -216,6 +220,8 @@
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_COMMUNICATION_ENVELOPE_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATED_FORMALIZATION_BINDING_SEMANTIC_CLOUD_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATION_FINAL_RECONCILIATION_SOURCE_R1.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATION_FINAL_RECONCILIATION_SOURCE_R1.md",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FEDERATION_LIVE_SNAPSHOT_SEMANTIC_CLOUD_R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/FLEET_BASELINE_COMMUNICATION_ENVELOPE_R1.json",
@@ -274,6 +280,34 @@
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/SEMANTIC_OWNER_RECONCILIATION.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/TASK2_INPUT_MANIFEST.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/UNKNOWN_REGISTER.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/CHECKPOINT.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_CONTROL_PLANE_SEQUENCE_R6_16.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_EVIDENCE_EXPORTER_R6_15.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PRIVATE_STORAGE_R6_13.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_RUNTIME_ROOT_R6_10.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_SINGLE_WORKER_QUALIFICATION_R6_17.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_TRUSTED_PROVIDER_R6_14.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_WORKER_BOOTSTRAP_R6_12.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_WORKER_INJECTION_R6_11.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/PERSISTENT_RUNTIME_STATE_R6_9.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/RUNTIME_COMPOSITION_R4.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/RUNTIME_COMPOSITION_R4_VALIDATION.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/RUNTIME_RESOLVER_R5.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/RUNTIME_RESOLVER_R5_VALIDATION.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_CURRENTNESS_R6_6.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/SOURCE_PACKAGE_MANIFEST_R6_6.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/cooperative_production_r1/VALIDATION.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/ARCHITECTURE.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/CHECKPOINT.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/MISSION_PROGRAM.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/PEER_DISPOSITIONS.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/README.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/SOURCE_COVERAGE.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/SOURCE_VECTOR.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/evolution_program_r1/VALIDATION.json",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_cloud/SEMANTIC_CLOUD_INTEGRATION_REPORT_LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1.md",
+    "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_cloud/SEMANTIC_CLOUD_INTEGRATION_STATE_LION-SEMANTIC-CLOUD-FEDERATION-INTEGRATION-TASK-R1.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_CENSUS.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_DOCUMENT_GRAPH.json",
     "DonkeyJJLove/ai_platform:LION/architecture/v1_5/semantic_cloud/reconciliation_candidate/ARCHITECTURE_RECONCILIATION.json",
@@ -288,6 +322,7 @@
     "DonkeyJJLove/ai_platform:LION/evals/evolution/README.md",
     "DonkeyJJLove/ai_platform:LION/evals/retrieval/README.md",
     "DonkeyJJLove/ai_platform:LION/evals/scaffolding/README.md",
+    "DonkeyJJLove/ai_platform:LION/evidence/cooperative_production_r3/README.md",
     "DonkeyJJLove/ai_platform:LION/evidence/r20/task-provenance.json",
     "DonkeyJJLove/ai_platform:LION/evolution/E001/ARCHITECTURE_DELTA.json",
     "DonkeyJJLove/ai_platform:LION/evolution/SPECTRA_R2E4_MERGE_AUTHORITY_FALSIFICATION_CONTRACT_V2.json",
@@ -303,6 +338,37 @@
     "DonkeyJJLove/ai_platform:LION/rag/PROVENANCE_R7_CANDIDATE.md",
     "DonkeyJJLove/ai_platform:LION/rag/R9_AUTHORIZATION_LIFECYCLE_RECORDS.md",
     "DonkeyJJLove/ai_platform:LION/rag/RAG_BOOTSTRAP.json",
+    "DonkeyJJLove/ai_platform:LION/rag/README.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/00_START_HERE.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/01_MODEL_INSTRUCTIONS.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/02_ROUTING_AND_SOURCE_MAP.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/03_STATE_AND_CONTINUATION.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/04_ARCHITECTURE_AS_IS.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/05_FEDERATION_AND_DEPENDENCIES.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/06_SEMANTIC_LANGUAGE.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/07_CONTEXT_AND_RELEVANCE.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/08_COMMUNICATION_AND_CONVERSATIONS.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/09_SAAS_LOCAL_COOPERATION.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/10_LPCL_AND_MISSION_CONTROL.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/11_FACTORY_BEANS_AND_MOSAIC.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/12_AUTHORITY_ACTION_RUNTIME.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/13_PROVENANCE_MEMORY_AND_EVIDENCE.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/14_FEDERATED_WORK_PACKAGES.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/15_EVOLUTION_AND_HOMEOSTASIS.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/16_FAILURE_RECOVERY_AND_OBSERVABILITY.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/17_RESEARCH_AND_FALSIFICATION.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/18_HISTORY_AND_SUPERSESSION.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/19_VALIDATION_AND_WINDOWS_UTF8.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/20_ARCHITECTURE_REQUIREMENTS.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/21_MISSION_PROGRAM_DESIGN.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/22_METAPROMPT.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/23_EVOLUTION_EXECUTION_PROMPT.md",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/24_SOURCE_RECORD_INDEX.json",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/25_SEMANTIC_OWNERS.json",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/26_FEDERATION_SOURCE_VECTOR.json",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/27_SOURCE_AND_COVERAGE.json",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/28_RETRIEVAL_CASES.json",
+    "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag30_v1_5_r1/29_PACKAGE_MANIFEST.json",
     "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag32_v1_4_process_contract_r1/00_START_HERE.md",
     "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag32_v1_4_process_contract_r1/01_FORMAT_AND_LIFECYCLE.md",
     "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag32_v1_4_process_contract_r1/02_ROUTING_AND_SOURCE_MAP.md",
@@ -369,6 +435,9 @@
     "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag32_v1_4_r1/29_LION_SCAFFOLD_V13.md",
     "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag32_v1_4_r1/30_LION_SCAFFOLD_V14.md",
     "DonkeyJJLove/ai_platform:LION/rag/lion_project_rag32_v1_4_r1/31_LION_SOURCE_PROVENANCE.md",
+    "DonkeyJJLove/ai_platform:LION/rag/validation/RAG15_LEGACY_UTF8.patch",
+    "DonkeyJJLove/ai_platform:LION/rag/validation/RAG15_RELEASE_VALIDATION.json",
+    "DonkeyJJLove/ai_platform:LION/rag/validation/RAG15_UTF8_FIX_RESULT.json",
     "DonkeyJJLove/ai_platform:LION/runtime_compat/r20/lion-turn-ingress-node-r2/README.md",
     "DonkeyJJLove/ai_platform:LION/runtime_compat/r20/node-panel/README.md",
     "DonkeyJJLove/ai_platform:LION/runtime_compat/r20/sentinelx-primary/README.md",
@@ -428,6 +497,8 @@
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/bean_candidate.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/bean_composition.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/bounded_mutation.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/contracts/bounded_task_profile.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/contracts/bounded_task_profiles.json",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/branch_ownership_registry.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/branch_ownership_registry_refresh.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/build_authorization_consumption.py",
@@ -490,6 +561,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/moon_file_write.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/mosaic.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/operator_intervention.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/contracts/panel_projection.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/phase_execution_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/policy_gate.py",
     "DonkeyJJLove/ai_platform:cyber_lion/contracts/process_action.py",
@@ -606,6 +678,7 @@
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_process_contract_plane_integration.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_r24_conversation_identity_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_r24_conversation_schema_migration.py",
+    "DonkeyJJLove/ai_platform:cyber_lion/tests/test_r24_cooperative_private_storage.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_r9d8u_workflow_contract.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_rag_v15_task3_inputs.py",
     "DonkeyJJLove/ai_platform:cyber_lion/tests/test_repository_maintenance_sandbox_contract.py",
@@ -630,6 +703,10 @@
     "DonkeyJJLove/ai_platform:docs/architecture/action-ir/R19M_LAIR_ACTIONPROPOSAL_STATIC_PROJECTION.md",
     "DonkeyJJLove/ai_platform:docs/architecture/action-ir/R19O_LAIR_ACTIONPROPOSAL_EXPLICIT_CONTEXT_BINDING.md",
     "DonkeyJJLove/ai_platform:docs/architecture/action-ir/R19P_ACTIONPROPOSAL_CANONICAL_PDP_HANDOFF.md",
+    "DonkeyJJLove/ai_platform:docs/architecture/edge-yoke/INTEGRATION.md",
+    "DonkeyJJLove/ai_platform:docs/architecture/edge-yoke/MOON_WINDOWS.md",
+    "DonkeyJJLove/ai_platform:docs/architecture/edge-yoke/README.md",
+    "DonkeyJJLove/ai_platform:docs/architecture/edge-yoke/VALIDATION_AND_LIMITS.md",
     "DonkeyJJLove/ai_platform:docs/architecture/local-swarm-p0-docker-polygon.md",
     "DonkeyJJLove/ai_platform:docs/architecture/native-host-preflight.md",
     "DonkeyJJLove/ai_platform:docs/architecture/process-language/LPCL_CROSS_THREAD_GENERATION_STANDARD.md",
@@ -683,9 +760,11 @@
     "DonkeyJJLove/ai_platform:docs/architecture/uml/generated/manifests/lion-full-architecture.manifest.json",
     "DonkeyJJLove/ai_platform:docs/architecture/uml/generated/manifests/lion-implementation-gap-map.manifest.json",
     "DonkeyJJLove/ai_platform:docs/architecture/uml/generated/r18-render-summary.json",
+    "DonkeyJJLove/ai_platform:tests/test_lion_rag15.py",
     "DonkeyJJLove/ai_platform:tools/AGENTS.md",
     "DonkeyJJLove/ai_platform:tools/firefox_mediator/README.md",
     "DonkeyJJLove/ai_platform:tools/lion_federated_architecture_knowledge.py",
+    "DonkeyJJLove/ai_platform:tools/lion_rag15.py",
     "DonkeyJJLove/ai_platform:tools/lion_rag32_validate.py",
     "DonkeyJJLove/ai_platform:tools/lion_rag_artifact_currentness.py",
     "DonkeyJJLove/ai_platform:tools/p0_docker_fleet_contract.py",
@@ -705,9 +784,12 @@
     "DonkeyJJLove/chunk-chunk:PROCESS_GUARD.md",
     "DonkeyJJLove/chunk-chunk:README.md",
     "DonkeyJJLove/chunk-chunk:REPOSITORY_STANDARDIZATION_R1.json",
+    "DonkeyJJLove/chunk-chunk:contracts/process_semantics.py",
+    "DonkeyJJLove/chunk-chunk:contracts/process_semantics.schema.json",
     "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
     "DonkeyJJLove/chunk-chunk:doc/9D_process_design.md",
     "DonkeyJJLove/chunk-chunk:hmk9d_protocol.yaml",
+    "DonkeyJJLove/chunk-chunk:tests/test_process_semantics_contract.py",
     "DonkeyJJLove/glitchlab:AGENTS.md",
     "DonkeyJJLove/glitchlab:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/glitchlab:PROCESS_GUARD.md",
@@ -725,6 +807,7 @@
     "DonkeyJJLove/glitchlab:docs/schemas/git.delta.ready.schema.json",
     "DonkeyJJLove/glitchlab:docs/schemas/publish.schema.json",
     "DonkeyJJLove/glitchlab:docs/schemas/refactor.plan.ready.schema.json",
+    "DonkeyJJLove/glitchlab:glx/federation/delta_provider.py",
     "DonkeyJJLove/glitchlab:mosaic/README.md",
     "DonkeyJJLove/glitchlab:mosaic/hybrid_schema_builder.py",
     "DonkeyJJLove/glitchlab:spec/invariants.yaml",
@@ -741,13 +824,17 @@
     "DonkeyJJLove/hipotezy_nadawcze_LLM:PROCESS_GUARD.md",
     "DonkeyJJLove/hipotezy_nadawcze_LLM:README.md",
     "DonkeyJJLove/hipotezy_nadawcze_LLM:REPOSITORY_STANDARDIZATION_R1.json",
+    "DonkeyJJLove/hipotezy_nadawcze_LLM:contracts/hypothesis_spec.py",
+    "DonkeyJJLove/hipotezy_nadawcze_LLM:contracts/hypothesis_spec.schema.json",
     "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
     "DonkeyJJLove/mosaic_lab_pro.py:AGENTS.md",
     "DonkeyJJLove/mosaic_lab_pro.py:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/mosaic_lab_pro.py:PROCESS_GUARD.md",
     "DonkeyJJLove/mosaic_lab_pro.py:README.md",
     "DonkeyJJLove/mosaic_lab_pro.py:REPOSITORY_STANDARDIZATION_R1.json",
+    "DonkeyJJLove/mosaic_lab_pro.py:contracts/graph_projection.schema.json",
     "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+    "DonkeyJJLove/mosaic_lab_pro.py:mosaic_core.py",
     "DonkeyJJLove/sbom:AGENTS.md",
     "DonkeyJJLove/sbom:AID_CONTRACT.md",
     "DonkeyJJLove/sbom:AI_NATIVE_ROADMAP.md",
@@ -757,6 +844,7 @@
     "DonkeyJJLove/sbom:cyber-lion.repository.json",
     "DonkeyJJLove/sbom:docs/01_AID_CONTRACT.md",
     "DonkeyJJLove/sbom:img/05_hybrid_architecture_sbom.png",
+    "DonkeyJJLove/sbom:reference/artifact_identity_adapter.py",
     "DonkeyJJLove/swarm:AGENTS.md",
     "DonkeyJJLove/swarm:AI_NATIVE_ROADMAP.md",
     "DonkeyJJLove/swarm:PROCESS_GUARD.md",
@@ -767,6 +855,7 @@
     "DonkeyJJLove/swarm:aggregator/mqtt_bridge/README.md",
     "DonkeyJJLove/swarm:cyber-lion.repository.json",
     "DonkeyJJLove/swarm:drones/README.md",
+    "DonkeyJJLove/swarm:federation/ai_platform_runtime_adapter.py",
     "DonkeyJJLove/swarm:infrastructure/README.md",
     "DonkeyJJLove/swarm:infrastructure/istio/README.md",
     "DonkeyJJLove/swarm:infrastructure/istio/alertrules/README.md",
@@ -829,7 +918,9 @@
     "DonkeyJJLove/writeups:evolutionary-agent-systems-organization-framework.md",
     "DonkeyJJLove/writeups:global_architecture_convergence_baseline_report.md",
     "DonkeyJJLove/writeups:images/README.md",
-    "DonkeyJJLove/writeups:images/relacyjne_protokoly_percepcyjne_pmas_schemat.png"
+    "DonkeyJJLove/writeups:images/relacyjne_protokoly_percepcyjne_pmas_schemat.png",
+    "DonkeyJJLove/writeups:research_index.json",
+    "DonkeyJJLove/writeups:tools/research_index.py"
   ],
   "edges": [
     {
@@ -871,6 +962,18 @@
     {
       "source": "DonkeyJJLove/HA2D:cyber-lion.repository.json",
       "target": "DonkeyJJLove/HA2D:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/HA2D:contracts/context_snapshot.py",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/HA2D:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/HA2D:reference/context_importer.py",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/HA2D:cyber-lion.repository.json"
     },
@@ -919,6 +1022,12 @@
     {
       "source": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
       "target": "DonkeyJJLove/SymulacjaKaskadySieciowej:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/SymulacjaKaskadySieciowej:src/abstrakcyjna_symulacja_kaskady_sieciowej/federation_fixture_provider.py",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/SymulacjaKaskadySieciowej:cyber-lion.repository.json"
     },
@@ -1200,6 +1309,18 @@
     },
     {
       "source": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/chunk-chunk:contracts/process_semantics.py",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/chunk-chunk:contracts/process_semantics.schema.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json",
       "target": "DonkeyJJLove/chunk-chunk:doc/9D_process_design.md",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/chunk-chunk:cyber-lion.repository.json"
@@ -1260,6 +1381,12 @@
     },
     {
       "source": "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/glitchlab:glx/federation/delta_provider.py",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/glitchlab:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/glitchlab:cyber-lion.repository.json",
       "target": "DonkeyJJLove/glitchlab:spec/invariants.yaml",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/glitchlab:cyber-lion.repository.json"
@@ -1313,6 +1440,18 @@
       "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
     },
     {
+      "source": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/hipotezy_nadawcze_LLM:contracts/hypothesis_spec.py",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/hipotezy_nadawcze_LLM:contracts/hypothesis_spec.schema.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/hipotezy_nadawcze_LLM:cyber-lion.repository.json"
+    },
+    {
       "source": "DonkeyJJLove/mosaic_lab_pro.py:AGENTS.md",
       "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
       "relation": "DISCOVERED_FROM",
@@ -1357,6 +1496,18 @@
     {
       "source": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
       "target": "DonkeyJJLove/mosaic_lab_pro.py:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/mosaic_lab_pro.py:contracts/graph_projection.schema.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/mosaic_lab_pro.py:mosaic_core.py",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/mosaic_lab_pro.py:cyber-lion.repository.json"
     },
@@ -1415,6 +1566,12 @@
       "evidence_ref": "DonkeyJJLove/sbom:cyber-lion.repository.json"
     },
     {
+      "source": "DonkeyJJLove/sbom:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/sbom:reference/artifact_identity_adapter.py",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/sbom:cyber-lion.repository.json"
+    },
+    {
       "source": "DonkeyJJLove/swarm:AGENTS.md",
       "target": "DonkeyJJLove/ai_platform:LION/architecture/v1_5/README.md",
       "relation": "DISCOVERED_FROM",
@@ -1453,6 +1610,12 @@
     {
       "source": "DonkeyJJLove/swarm:cyber-lion.repository.json",
       "target": "DonkeyJJLove/swarm:REPOSITORY_STANDARDIZATION_R1.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/swarm:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/swarm:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/swarm:federation/ai_platform_runtime_adapter.py",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/swarm:cyber-lion.repository.json"
     },
@@ -1539,8 +1702,20 @@
       "target": "DonkeyJJLove/writeups:evolutionary-agent-systems-organization-framework.md",
       "relation": "PROJECTS",
       "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/writeups:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/writeups:research_index.json",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json"
+    },
+    {
+      "source": "DonkeyJJLove/writeups:cyber-lion.repository.json",
+      "target": "DonkeyJJLove/writeups:tools/research_index.py",
+      "relation": "PROJECTS",
+      "evidence_ref": "DonkeyJJLove/writeups:cyber-lion.repository.json"
     }
   ],
   "authority_effect": "NONE",
-  "graph_digest": "df6faff826f1a9dd1d43c2183162c749a6b7fa74c5484f0bfcd705a83c440fdf"
+  "graph_digest": "2c1b4ca3d20a36c7fd6bd79900c172b77dea1e4f36f96b67bee3f3527b15814a"
 }

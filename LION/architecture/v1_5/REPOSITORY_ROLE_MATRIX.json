@@ -1,12 +1,12 @@
 {
   "schema": "lion.repository-role-matrix/v1",
-  "federation_digest": "c93af1493b3b7dc79367811bd331279782a5e0ef64eb628185a44773123b8ed0",
+  "federation_digest": "4e4980f87543283879f2a8681108e6040a8eaa0aed3db4ea1deb34f48d8aac41",
   "repositories": [
     {
       "repository": "DonkeyJJLove/HA2D",
       "branch": "master",
-      "head": "2d637f9b82ce3e4847d9534d8bf62084df4d51d3",
-      "tree": "556e10fddd4668a33ec46687e93d6f9893508fb0",
+      "head": "f41cd0f089b714c9474a1f11757fc8c9bbcf1358",
+      "tree": "ba2687a75270e64c3772a50ee4177d3e0642972f",
       "tile_id": "context-memory.ha2d",
       "roles": [
         "ContextMemoryLab",
@@ -44,8 +44,8 @@
     {
       "repository": "DonkeyJJLove/SymulacjaKaskadySieciowej",
       "branch": "main",
-      "head": "1d6ac476cdf36dd2c24b795d1fddb37002a5821b",
-      "tree": "32ab98bd3e4f8cf16fccc103076a58b02e0c5c10",
+      "head": "0a9413f36ee8cf7684bcb77f42abcaffcf59a60d",
+      "tree": "5d6396c52013657e36fdc296044b59cbd0d26bb1",
       "tile_id": "falsification.simulation",
       "roles": [
         "SimulationProvider",
@@ -82,9 +82,9 @@
     },
     {
       "repository": "DonkeyJJLove/ai_platform",
-      "branch": "master",
-      "head": "ae1be9ba0a966f53e83e743ce518e11549a07299",
-      "tree": "bfc726f4e79ce92438dbba67f157deaf7d6fa8f5",
+      "branch": "convergence/federation-carrier-closure-r1",
+      "head": "820a6d9e6643782b7e025ebf563c5c0f0e475d73",
+      "tree": "336abb90a1c4b0bfda6c26cf79e1ead6ae413da8",
       "tile_id": "control-plane.cyber-lion",
       "roles": [
         "EnterpriseControlPlane",
@@ -149,8 +149,8 @@
     {
       "repository": "DonkeyJJLove/chunk-chunk",
       "branch": "master",
-      "head": "97f49e05afd7d5d732f87243f345cf87a9350e63",
-      "tree": "6ab7e69f984702982e5191dddb44d6c0e5c37662",
+      "head": "b8327059360b675d01d091d70ef3eaef17ed1972",
+      "tree": "2450a14943aa762b30933670911531aff2d93955",
       "tile_id": "process-semantics.hmk9d",
       "roles": [
         "ProcessSemanticsEngine",
@@ -185,8 +185,8 @@
     {
       "repository": "DonkeyJJLove/glitchlab",
       "branch": "master",
-      "head": "a1ef17e377835e66fbf3af235df7377f5228e402",
-      "tree": "2e8edeaad630d3210fb1d44b28bb29cfea368ccf",
+      "head": "0afffd9ac6e0d346735615352fba9a43791cb017",
+      "tree": "14ca52d8271f8df948155e6adfe3b8408f3e2d95",
       "tile_id": "evolution-compiler.glitchlab",
       "roles": [
         "EvolutionCompiler",
@@ -226,8 +226,8 @@
     {
       "repository": "DonkeyJJLove/hipotezy_nadawcze_LLM",
       "branch": "main",
-      "head": "48a599683edf719ac41e23d6aa40fe615f8a59eb",
-      "tree": "e746446fc1d98890e689f8c9626d4435cc088a74",
+      "head": "25b432b7a57b83e0a97387bce4fce45eab5c15c9",
+      "tree": "18b3320ab3da1d95d8f819236aa19586f2abdd18",
       "tile_id": "epistemic-lab.llm-hypotheses",
       "roles": [
         "HypothesisLab",
@@ -264,8 +264,8 @@
     {
       "repository": "DonkeyJJLove/mosaic_lab_pro.py",
       "branch": "main",
-      "head": "fb8d58fd9cc5b83dc7015af38ec0be09a72790fb",
-      "tree": "9a0c7336c3aba0509023987d9380e0fee802fab8",
+      "head": "94c141c9f0bd8830bb9b93f11561056c629a5607",
+      "tree": "9154393fc954ccf9b6fec1d988868489ab8a275a",
       "tile_id": "structural-intelligence.mosaic",
       "roles": [
         "StructuralIntelligenceEngine",
@@ -303,8 +303,8 @@
     {
       "repository": "DonkeyJJLove/sbom",
       "branch": "main",
-      "head": "cdd998465d3f825b2cfef6aa46c632270ed05556",
-      "tree": "5ad8d8f652a05ae1cde3c31e85a1bd74aca471c4",
+      "head": "48aab54cc260bfbfea4881f7a6f264caef814440",
+      "tree": "1e8c563e51a1d55f4003acd98255b45983f98214",
       "tile_id": "provenance.sbom",
       "roles": [
         "SupplyChainEvidenceProvider",
@@ -343,8 +343,8 @@
     {
       "repository": "DonkeyJJLove/swarm",
       "branch": "master",
-      "head": "657e0c1c7d215e09ff0c12c2d56644b627e4900c",
-      "tree": "12131ef5b055d81b80d0272104da4980e19d7221",
+      "head": "91b0a4174300b5efb3e6072b44ad323136a77337",
+      "tree": "4e620eb4e37801225d51c930d18ec46f34c22e24",
       "tile_id": "execution-mesh.swarm",
       "roles": [
         "ExecutionMesh",
@@ -385,8 +385,8 @@
     {
       "repository": "DonkeyJJLove/writeups",
       "branch": "master",
-      "head": "b30ad1ac45c256889572bfe9d83440b51470f126",
-      "tree": "4ea24b98bea6b5c93d0d2f06aa3e82704c3e770f",
+      "head": "adff63c38f2c83ab3f8d37e7e802d5209b59faad",
+      "tree": "9f718bdeb843ce9edbb6f6bff60a128475a222c4",
       "tile_id": "research-corpus.writeups",
       "roles": [
         "ResearchCorpus",
@@ -421,5 +421,5 @@
     }
   ],
   "authority_effect": "NONE",
-  "matrix_digest": "368423b076c073124e9055d6642a2793693b3089a27953906a815e898ffd83a1"
+  "matrix_digest": "50e5f730c7b4f9c7de8f3c30fcf86975118acdf75f0285e7ddb3ef7e8a481a79"
 }
