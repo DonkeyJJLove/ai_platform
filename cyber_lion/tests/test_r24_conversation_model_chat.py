@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from hashlib import sha256
 from pathlib import Path
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -108,6 +110,42 @@ class FakeGateway:
 
     def state(self):
         return {"authority_effect": "NONE"}
+
+
+class ThreadStoreConnectionSafetyTests(unittest.TestCase):
+    class FakeConnection:
+        def __init__(self, fail_on=None):
+            self.fail_on=fail_on
+            self.statements=[]
+            self.closed=False
+            self.row_factory=None
+        def execute(self, statement):
+            self.statements.append(statement)
+            if statement==self.fail_on:
+                raise sqlite3.OperationalError("simulated pragma failure")
+            return self
+        def close(self):
+            self.closed=True
+
+    def store_without_init(self):
+        store=ThreadStore.__new__(ThreadStore)
+        store.path=Path("synthetic-thread-store.db")
+        return store
+
+    def test_connection_setup_does_not_renegotiate_journal_mode_per_request(self):
+        fake=self.FakeConnection()
+        with patch("tools.lion_local_intelligence_runtime.sqlite3.connect",return_value=fake):
+            result=self.store_without_init()._conn()
+        self.assertIs(result,fake)
+        self.assertEqual(fake.statements,["PRAGMA busy_timeout=10000","PRAGMA foreign_keys=ON"])
+        self.assertFalse(fake.closed)
+
+    def test_connection_setup_closes_descriptor_if_pragma_fails(self):
+        fake=self.FakeConnection(fail_on="PRAGMA foreign_keys=ON")
+        with patch("tools.lion_local_intelligence_runtime.sqlite3.connect",return_value=fake):
+            with self.assertRaises(sqlite3.OperationalError):
+                self.store_without_init()._conn()
+        self.assertTrue(fake.closed)
 
 
 class R24ConversationModelChatTests(unittest.TestCase):

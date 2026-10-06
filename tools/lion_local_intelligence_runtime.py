@@ -63,7 +63,21 @@ class ThreadStore:
     def __init__(self,path):
         self.path=Path(path).resolve();self.path.parent.mkdir(parents=True,exist_ok=True);self.lock=threading.RLock();self._init()
     def _conn(self):
-        c=sqlite3.connect(self.path,timeout=10);c.row_factory=sqlite3.Row;c.execute('PRAGMA journal_mode=WAL');c.execute('PRAGMA foreign_keys=ON');return c
+        c=sqlite3.connect(self.path,timeout=10)
+        try:
+            c.row_factory=sqlite3.Row
+            # Do not negotiate journal_mode on every request. The canonical store
+            # can live on Windows-backed DrvFS where a cross-process mode switch
+            # may fail with OperationalError while still leaving the connection
+            # open. ThreadStore already serializes its own callers; keep the
+            # existing on-disk journal mode and only configure per-connection
+            # bounded waiting plus foreign-key enforcement.
+            c.execute('PRAGMA busy_timeout=10000')
+            c.execute('PRAGMA foreign_keys=ON')
+            return c
+        except BaseException:
+            c.close()
+            raise
     def _init(self):
         with self.lock:
             c=self._conn();c.executescript("""
