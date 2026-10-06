@@ -1009,6 +1009,7 @@ def _saas_prompt(plan: Mapping[str, Any], leg: Mapping[str, Any]) -> str:
         "causation_id=" + str(plan["causation_id"]),
         "correlation_id=" + str(plan["correlation_id"]),
         "context_digest=" + str(plan["context_digest"]),
+        "shared_context_digest=" + str(plan["shared_context_digest"]),
     ]
     for item in plan["history"]:
         lines.append(str(item["role"]).upper() + ": " + str(item["content"]))
