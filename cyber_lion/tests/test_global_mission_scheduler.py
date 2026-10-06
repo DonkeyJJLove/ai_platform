@@ -137,6 +137,28 @@ class GlobalSchedulerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'not ready'):
             g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
 
+    def test_pending_projection_hides_terminal_mission_without_mutating_history(self):
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('T','SUPERSEDED',now(),'x','x',0,0,None))
+        aid=g.create_assignment(self.c,'T','P','LD001','MD001',{'x':1},now,lease_generation=1)
+        self.assertEqual(g.pending_local_assignments(self.c,mission_id='T'),[])
+        row=self.c.execute("SELECT state FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+        self.assertEqual(row['state'],'READY')
+        with self.assertRaisesRegex(ValueError,'mission terminal:SUPERSEDED'):
+            g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
+        row=self.c.execute("SELECT state FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+        self.assertEqual(row['state'],'READY')
+
+    def test_pending_projection_hides_stale_generation_without_weakening_claim_fence(self):
+        self.c.execute("ALTER TABLE mission_execution_drivers ADD COLUMN generation INTEGER NOT NULL DEFAULT 1")
+        self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('S','RUNNING',now(),'x','x',0,0,None))
+        self.c.execute("INSERT INTO mission_execution_drivers(mission_id,state,heartbeat_at,current_phase,generation) VALUES(?,?,?,?,?)",('S','ACTIVE',now(),'P',2))
+        aid=g.create_assignment(self.c,'S','P','LD001','MD001',{'x':1},now,lease_generation=1)
+        self.assertEqual(g.pending_local_assignments(self.c,mission_id='S'),[])
+        row=self.c.execute("SELECT state FROM mission_execution_assignments WHERE assignment_id=?",(aid,)).fetchone()
+        self.assertEqual(row['state'],'READY')
+        with self.assertRaisesRegex(ValueError,'stale assignment generation'):
+            g.claim_assignment(self.c,aid,now,expected_material_drone_id='MD001')
+
     def test_duplicate_receipt_fails_closed_without_replacing_first(self):
         self.c.execute("INSERT INTO missions VALUES(?,?,?,?,?,?,?,?)",('M','RUNNING',now(),'x','x',0,0,None))
         aid=g.create_assignment(self.c,'M','P','LD001','MD001',{'x':1},now,lease_generation=1)
