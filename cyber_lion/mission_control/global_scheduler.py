@@ -663,11 +663,47 @@ def _record_receipt(conn,assignment_id,result,now_fn,*,status,effect_receipt_dig
     conn.execute('RELEASE scheduler_receipt_ingress');conn.commit();return {"receipt_id":rid,"duplicate":False,"result_digest":result_digest}
 
 
+def assignment_claim_eligibility(conn,row):
+    """Read-only projection of the same lifecycle/generation fences used by claim.
+
+    Historical assignment rows are preserved.  This predicate only answers
+    whether a READY row is currently safe to advertise to a worker.
+    """
+    if row is None:return False,"assignment missing"
+    if row['state']!='READY':return False,"assignment not ready"
+    terminal=operator_control.mission_terminal_state(conn,row['mission_id'])
+    if terminal is not None:return False,"mission terminal:"+terminal
+    if not operator_control.assignment_allowed(
+        conn,row['mission_id'],row['dispatch_authority'],int(row['control_epoch'])
+    ):
+        return False,"operator control fence"
+    driver_cols={r[1] for r in conn.execute('PRAGMA table_info(mission_execution_drivers)')}
+    if 'generation' in driver_cols:
+        driver=conn.execute(
+            'SELECT generation FROM mission_execution_drivers WHERE mission_id=?',
+            (row['mission_id'],),
+        ).fetchone()
+        if not driver or int(driver['generation'])!=int(row['lease_generation']):
+            return False,"stale assignment generation"
+    return True,None
+
+
 def pending_local_assignments(conn,*,mission_id=None,limit=16):
     if type(limit) is not int or not 1<=limit<=64:raise ValueError("assignment limit")
-    rows=conn.execute("SELECT * FROM mission_execution_assignments WHERE state='READY' AND mission_id=? ORDER BY created_at,assignment_id LIMIT ?",(mission_id,max(limit*4,limit))).fetchall() if mission_id else conn.execute("SELECT * FROM mission_execution_assignments WHERE state='READY' ORDER BY created_at,assignment_id LIMIT ?",(max(limit*4,limit),)).fetchall();allowed=[]
+    rows=(
+        conn.execute(
+            "SELECT * FROM mission_execution_assignments WHERE state='READY' AND mission_id=? ORDER BY created_at,assignment_id",
+            (mission_id,),
+        ).fetchall()
+        if mission_id else
+        conn.execute(
+            "SELECT * FROM mission_execution_assignments WHERE state='READY' ORDER BY created_at,assignment_id"
+        ).fetchall()
+    )
+    allowed=[]
     for row in rows:
-        if operator_control.assignment_allowed(conn,row['mission_id'],row['dispatch_authority'],int(row['control_epoch'])):allowed.append(dict(row))
+        ok,_=assignment_claim_eligibility(conn,row)
+        if ok:allowed.append(dict(row))
         if len(allowed)>=limit:break
     return allowed
 
@@ -690,13 +726,9 @@ def claim_assignment(conn,assignment_id,now_fn,*,expected_material_drone_id=None
     try:
         conn.execute('UPDATE mission_execution_assignments SET state=state WHERE assignment_id=?',(assignment_id,));row=conn.execute("SELECT * FROM mission_execution_assignments WHERE assignment_id=?",(assignment_id,)).fetchone()
         if not row:raise ValueError("assignment missing")
-        if row['state']!='READY':raise ValueError("assignment not ready")
         if expected_material_drone_id and row['material_drone_id']!=expected_material_drone_id:raise ValueError("material identity mismatch")
-        if not operator_control.assignment_allowed(conn,row['mission_id'],row['dispatch_authority'],int(row['control_epoch'])):raise ValueError('operator control fence')
-        driver_cols={r[1] for r in conn.execute('PRAGMA table_info(mission_execution_drivers)')}
-        if 'generation' in driver_cols:
-            driver=conn.execute('SELECT generation FROM mission_execution_drivers WHERE mission_id=?',(row['mission_id'],)).fetchone()
-            if not driver or int(driver['generation'])!=int(row['lease_generation']):raise ValueError('stale assignment generation')
+        eligible,reason=assignment_claim_eligibility(conn,row)
+        if not eligible:raise ValueError(reason)
         stamp=now_fn();expires=_assignment_lease_deadline(stamp,lease_seconds);cur=conn.execute("UPDATE mission_execution_assignments SET state='CLAIMED',claimed_at=?,lease_expires_at=? WHERE assignment_id=? AND state='READY'",(stamp,expires,assignment_id))
         if cur.rowcount!=1:raise ValueError("assignment claim race")
     except Exception:conn.execute('ROLLBACK TO assignment_claim_fence');conn.execute('RELEASE assignment_claim_fence');raise
