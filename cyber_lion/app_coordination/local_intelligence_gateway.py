@@ -561,10 +561,11 @@ class _DeferredRag:
 
 def local_model_payload_bytes(messages,max_tokens):
     """Exact UTF-8 request body used by the canonical local model provider."""
+    # Must remain byte-identical to tools/lion_local_intelligence_runtime.py
+    # _json_request(body=...) -> json.dumps(body).encode().
     return json.dumps(
-        {'messages':messages,'max_tokens':max_tokens,'temperature':0.1,'stream':False},
-        ensure_ascii=False,separators=(',',':')
-    ).encode('utf-8')
+        {'messages':messages,'max_tokens':max_tokens,'temperature':0.1,'stream':False}
+    ).encode()
 
 def _projection_digest(messages):
     raw=json.dumps(messages,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode('utf-8')
