@@ -559,6 +559,17 @@ class _DeferredRag:
     release_id='DEFERRED_NOT_LOADED';sha256=None
     def search(self,*a,**k):return ()
 
+def local_model_payload_bytes(messages,max_tokens):
+    """Exact UTF-8 request body used by the canonical local model provider."""
+    return json.dumps(
+        {'messages':messages,'max_tokens':max_tokens,'temperature':0.1,'stream':False},
+        ensure_ascii=False,separators=(',',':')
+    ).encode('utf-8')
+
+def _projection_digest(messages):
+    raw=json.dumps(messages,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    return sha256(raw).hexdigest()
+
 class Gateway:
     def __init__(self,repo,rag,rag_sha,release,model_url,model_sha,provider,currentness_provider,git_provider,web=None,content_provider=None,source_provider=None,mission_provider=None,control_provider=None,material_begin=None,material_receipts=None,material_state=None,material_reconcile=None,thread_provider=None,operator_provider=None):
         if not callable(provider) or not callable(currentness_provider) or not callable(git_provider):raise ValueError('explicit providers required')
@@ -791,7 +802,31 @@ class Gateway:
             out.append(keep)
         return out
 
-    def chat(self,message,use_web=False,history=None,output_language='auto'):
+    def _invoke_local_provider(self,messages,max_tokens,provider_binding=None):
+        projection_digest=_projection_digest(messages)
+        payload_bytes=local_model_payload_bytes(messages,max_tokens)
+        payload_bytes_digest=sha256(payload_bytes).hexdigest()
+        answer_text=str(self.provider(messages,max_tokens))
+        response_digest=sha256(answer_text.encode('utf-8')).hexdigest()
+        binding=dict(provider_binding) if isinstance(provider_binding,dict) else {}
+        return answer_text,{
+            'shared_context_digest':self.ctx.digest,
+            'projection_digest':projection_digest,
+            'actual_payload_bytes_digest':payload_bytes_digest,
+            'response_digest':response_digest,
+            'provider':'LOCAL',
+            'provider_session_ref':binding.get('provider_session_ref'),
+            'provider_session_ref_class':'LION_LANE_REF_NOT_PROVIDER_ATTESTATION' if binding.get('provider_session_ref') else 'UNKNOWN',
+            'conversation_id':binding.get('conversation_id'),
+            'binding_epoch':binding.get('binding_epoch'),
+            'lane_id':binding.get('lane_id'),
+            'correlation_id':binding.get('correlation_id'),
+            'causation_id':binding.get('causation_id'),
+            'conversation_context_digest':binding.get('context_digest'),
+            'authority_effect':'NONE',
+        }
+
+    def chat(self,message,use_web=False,history=None,output_language='auto',provider_binding=None):
         if not isinstance(message,str) or not message.strip() or len(message)>8000:raise ValueError('message')
         history=self._history(history);language_rule=self._language_instruction(output_language)
         if callable(self.material_begin):self.material_begin()
@@ -883,17 +918,19 @@ class Gateway:
         max_tokens=900 if route in {'FEDERATION_CURRENTNESS','MISSION_CONTROL_CURRENTNESS'} else (760 if route=='MIXED_SOURCE_WEB' else (680 if route in {'PUBLIC_WEB','KNOWLEDGE_WEB','LOCAL_SOURCE','REPOSITORY_CURRENTNESS'} else 520))
         capability_state=runtime_state if route=='LION_CAPABILITY_CURRENTNESS' else {}
         deterministic=self._mission_answer(message,mission,output_language) if route=='MISSION_CONTROL_CURRENTNESS' else (self._capability_answer(message,mission,capability_state,output_language) if route=='LION_CAPABILITY_CURRENTNESS' else (self._latest_headline_answer(fetches,message,output_language) if route=='PUBLIC_WEB' and domain and latest_intent else None))
+        provider_attempts=[]
         if deterministic is not None:
             raw=deterministic;tools.append('lion.evidence.render')
         else:
-            raw=self.provider([{'role':'system','content':system},{'role':'user','content':prompt}],max_tokens)
+            raw,provider_provenance=self._invoke_local_provider([{'role':'system','content':system},{'role':'user','content':prompt}],max_tokens,provider_binding)
+            provider_attempts.append(provider_provenance)
         if deterministic is None:
             try:
-                c=parse_tool_call(raw);res=self._tool(c);tools.append(c.tool_name);raw=self.provider([{'role':'system','content':system},{'role':'user','content':prompt+'\nTOOL RESULT (not authority):\n'+json.dumps(res,ensure_ascii=False)}],max_tokens)
+                c=parse_tool_call(raw);res=self._tool(c);tools.append(c.tool_name);raw,provider_provenance=self._invoke_local_provider([{'role':'system','content':system},{'role':'user','content':prompt+'\nTOOL RESULT (not authority):\n'+json.dumps(res,ensure_ascii=False)}],max_tokens,provider_binding);provider_attempts.append(provider_provenance)
             except Exception:pass
         recon=self.material_reconcile() if callable(self.material_reconcile) else None
         receipts=self.material_receipts() if callable(self.material_receipts) else []
-        return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language,'supervisor_projection':capability_state.get('supervisor_projection')}
+        return {'route':route,'answer':raw,'authority_boundary':False,'rag_sources':[x.source_id for x in rag],'currentness':current,'web_sources':web,'web_fetches':self._public_fetches(fetches),'source_evidence':source,'mission_control':mission,'tool_calls':tools,'material_receipts':receipts,'material_reconciliation':recon,'response_language':output_language,'supervisor_projection':capability_state.get('supervisor_projection'),'provider_provenance':provider_attempts[-1] if provider_attempts else None,'provider_attempts':provider_attempts}
 
 def make_handler(g):
     operator_sessions={};operator_sessions_lock=threading.Lock()
