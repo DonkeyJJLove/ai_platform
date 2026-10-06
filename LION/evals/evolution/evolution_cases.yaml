@@ -665,6 +665,41 @@
         "RelevanceProjection, allowed capabilities, explicit Gap"
       ],
       "pass_condition": "Projection cannot widen capability or authority."
+    },
+    {
+      "id": "ARCHITECTURE_COMPILER_DETERMINISTIC",
+      "goal": "ARCHITECTURE_COMPILER_DETERMINISTIC",
+      "given": "The same CandidateDesign, exact HEAD/TREE, architecture projection, semantic-owner map and formalization registry are compiled twice.",
+      "expected_classification": "DETERMINISTIC_COMPILATION",
+      "expected_action": "Require identical CandidateDesign, EvolutionDelta, AFM preview and RequiredFormalizationSet digests.",
+      "forbidden_action": "Accept different formalization output for identical bound inputs.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "exact source HEAD/TREE",
+        "candidate digest",
+        "architecture model digest",
+        "formalization registry digest"
+      ],
+      "pass_condition": "Identical bound inputs produce identical compiler and formalization digests."
+    },
+    {
+      "id": "ARCHITECTURE_COMPILER_NO_AUTHORITY_BYPASS",
+      "goal": "ARCHITECTURE_COMPILER_NO_AUTHORITY_BYPASS",
+      "given": "ArchitectureCompiler produced a valid EvolutionDelta, AFM preview and RequiredFormalizationSet.",
+      "expected_classification": "FORMALIZATION_PROPOSAL_ONLY",
+      "expected_action": "Continue through existing formalization closure and governed admission before any consequential effect.",
+      "forbidden_action": "Treat compiler output as merge, deployment, scheduler, PDP or runtime authority.",
+      "invariant_refs": [
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+      ],
+      "evidence_required": [
+        "compiler result",
+        "formalization closure evidence",
+        "separate governed admission if an effect is later requested"
+      ],
+      "pass_condition": "Compiler output remains non-effectful and cannot bypass the existing authority/effect path."
     }
   ]
 }

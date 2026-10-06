@@ -34,6 +34,18 @@ class FullArchitectureProjectionTests(unittest.TestCase):
         self.assertEqual(len({element.layer for element in first.elements}), 15)
         self.assertEqual(len(first.flows), 10)
 
+    def test_architecture_compiler_is_source_bound_and_studio_remains_target_only(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        model = build_full_architecture_model(source_tree_sha=staged_tree(repo_root), source_files=staged_sources(repo_root))
+        by_id = {element.element_id: element for element in model.elements}
+        compiler = by_id["architecture-compiler"]
+        self.assertEqual(compiler.status.status, "PARTIALLY_IMPLEMENTED")
+        self.assertEqual(compiler.source_path, "cyber_lion/architecture_projection/architecture_compiler.py")
+        studio = by_id["architecture-studio"]
+        self.assertEqual(studio.status.status, "TARGET_ONLY")
+        self.assertTrue(studio.target_ref)
+        self.assertEqual(studio.source_path, "")
+
     def test_wrong_source_tree_fails_closed(self):
         with clean_git_repo() as (repo_root, actual):
             wrong = "0" * 40 if actual != "0" * 40 else "1" * 40

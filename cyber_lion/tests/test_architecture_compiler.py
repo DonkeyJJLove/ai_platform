@@ -167,6 +167,14 @@ class ArchitectureCompilerTests(unittest.TestCase):
                 current_tree=self.tree,
             )
 
+    def test_required_evolution_eval_cases_are_materialized(self):
+        cases = json.loads((ROOT / "LION/evals/evolution/evolution_cases.yaml").read_text(encoding="utf-8"))["cases"]
+        ids = {case["id"] for case in cases}
+        self.assertTrue({
+            "ARCHITECTURE_COMPILER_DETERMINISTIC",
+            "ARCHITECTURE_COMPILER_NO_AUTHORITY_BYPASS",
+        } <= ids)
+
     def test_candidate_contract_has_no_history_version_lifecycle_or_currentness_authority(self):
         fields = set(CandidateDesign.__dataclass_fields__)
         self.assertFalse(fields.intersection({"history_relation", "version", "lifecycle", "currentness"}))

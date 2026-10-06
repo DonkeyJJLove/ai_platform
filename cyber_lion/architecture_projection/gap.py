@@ -191,6 +191,17 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
         _observed("FederatedArchitectureKnowledge", "cyber_lion/architecture_projection/architecture_knowledge.py"),
         _observed("FederatedFormalizationBinding", "cyber_lion/contracts/federated_formalization_binding.py"),
         _observed("FormalizedArchitectureAdmission", "cyber_lion/enterprise/governed_change_admission.py"),
+        _partial(
+            "ArchitectureCompiler",
+            "cyber_lion/architecture_projection/architecture_compiler.py",
+            missing_runtime="formalization closure, parent serialization and post-integration projection/currentness regeneration remain open; compiler stops before admission",
+            next_minimal_gap="serialize accepted source through the existing Formalization Kernel and close required non-carrier surfaces before carrier-last rebinding",
+        ),
+        _target(
+            "ArchitectureStudio",
+            missing_runtime="interactive Electron architecture graph explorer/composer and formalization-impact preview are not implemented",
+            next_minimal_gap="project the existing architecture read-model and compiler proposal surfaces into the non-authoritative Electron panel",
+        ),
         _contract(
             "CommunicationEnvelope",
             "cyber_lion/contracts/communication_envelope.py",

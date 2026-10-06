@@ -1,5 +1,5 @@
 {
-  "architecture_compiler": "CANDIDATE_TESTED_FORMALIZATION_OPEN",
+  "architecture_compiler": "CANDIDATE_TESTED_DIRECT_FORMALIZATION_SURFACES_UPDATED",
   "architecture_studio": "PARTIAL",
   "authority_effect": "NONE",
   "base": {
@@ -14,19 +14,40 @@
   },
   "execution_effect": "NONE",
   "formalization_closure": "NOT_CREATED_REQUIRED_SURFACES_REMAIN_OPEN",
-  "next_exact_step": "independent exact-tree verification then update required non-carrier architecture/gap/eval/docs surfaces; carriers remain last",
+  "next_exact_step": "verify direct formalization surfaces on exact Thread B branch, then parent serialization; regenerate generated global projections from the final serialized non-carrier tree and rebind carriers last",
   "schema": "lion.thread-b.architecture-studio-compiler-checkpoint/v1",
   "source_candidate": {
     "branch": "mission/architecture-studio-compiler-r1",
     "head": "a31c508e1010b32873a988c1ba3fe59c6ce4366e",
     "tree": "c91b1a14116e283add957c032044ffa6c5f29278"
   },
-  "status": "FORMALIZED_REQUIRED_SET_OPEN_NOT_CLOSED",
+  "status": "FORMALIZATION_PROGRESS_DIRECT_SURFACES_UPDATED_NOT_CLOSED",
   "targeted_tests": {
     "errors": 0,
     "failures": 0,
     "git_diff_check": "PASS",
     "total": 86
   },
-  "truth_currentness_carriers": "NOT_TOUCHED"
+  "truth_currentness_carriers": "NOT_TOUCHED",
+  "formalization_progress": {
+    "candidate_updated": [
+      "architecture-docs",
+      "architecture-projection",
+      "evolution-evals",
+      "gap-projection"
+    ],
+    "still_open_before_closure": [
+      "architecture-document-census",
+      "architecture-document-graph",
+      "architecture-reconciliation",
+      "code-derived-architecture",
+      "document-derived-architecture",
+      "documentation-currentness-model",
+      "currentness-carriers"
+    ],
+    "carrier_last": [
+      "currentness-carriers"
+    ],
+    "closure_state": "OPEN"
+  }
 }
