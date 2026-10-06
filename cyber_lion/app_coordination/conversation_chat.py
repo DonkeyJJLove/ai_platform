@@ -20,6 +20,10 @@ from .conversation_domain import (
     ConversationDomainError,
     ConversationNotFound,
 )
+from cyber_lion.contracts.cognitive_continuity import (
+    CognitiveContinuityContractError,
+    validate_synchronization_checkpoint,
+)
 
 LOGGER = logging.getLogger(__name__)
 ROUTES = frozenset({"LOCAL", "SAAS", "DUAL"})
@@ -187,7 +191,7 @@ def prepare_chat(
 ) -> dict[str, Any]:
     if not isinstance(args, Mapping):
         raise ConversationDomainError("chat prepare schema")
-    allowed = {"conversation_id", "message", "route", "client_request_id", "output_language", "shared_context_digest"}
+    allowed = {"conversation_id", "message", "route", "client_request_id", "output_language", "shared_context_digest", "synchronization_checkpoint_digest", "synchronization_checkpoint"}
     if set(args) - allowed:
         raise ConversationDomainError("chat prepare schema")
     conversation_id = _id(args.get("conversation_id"), "conversation_id")
@@ -202,6 +206,28 @@ def prepare_chat(
     shared_context_digest = str(args.get("shared_context_digest") or "")
     if _HEX64.fullmatch(shared_context_digest) is None:
         raise ConversationDomainError("shared_context_digest")
+    synchronization_checkpoint_digest = args.get("synchronization_checkpoint_digest")
+    synchronization_checkpoint = args.get("synchronization_checkpoint")
+    if synchronization_checkpoint_digest is not None:
+        synchronization_checkpoint_digest = str(synchronization_checkpoint_digest)
+        if _HEX64.fullmatch(synchronization_checkpoint_digest) is None:
+            raise ConversationDomainError("synchronization_checkpoint_digest")
+        if not isinstance(synchronization_checkpoint, Mapping):
+            raise ConversationDomainError("synchronization_checkpoint")
+        try:
+            validate_synchronization_checkpoint(
+                synchronization_checkpoint,
+                mission_id=str(synchronization_checkpoint.get("mission_id") or ""),
+                lpcl_digest=str(synchronization_checkpoint.get("lpcl_digest") or ""),
+                source_head=str(synchronization_checkpoint.get("source_head") or ""),
+                source_tree=str(synchronization_checkpoint.get("source_tree") or ""),
+            )
+        except CognitiveContinuityContractError as exc:
+            raise ConversationDomainError("synchronization_checkpoint") from exc
+        if synchronization_checkpoint.get("checkpoint_digest") != synchronization_checkpoint_digest:
+            raise ConversationDomainError("synchronization checkpoint digest mismatch")
+    elif synchronization_checkpoint is not None:
+        raise ConversationDomainError("synchronization_checkpoint_digest required")
     conversation = _conversation(conn, conversation_id)
     if conversation["state"] == "FROZEN":
         raise ConversationConflict("frozen conversation cannot accept Model Chat")
@@ -217,6 +243,7 @@ def prepare_chat(
             or first_meta.get("request_route") != route
             or first_meta.get("request_content_digest") != _digest(message)
             or first_meta.get("shared_context_digest") != shared_context_digest
+            or first_meta.get("synchronization_checkpoint_digest") != synchronization_checkpoint_digest
         ):
             raise ConversationConflict("chat request idempotency conflict")
         history = first_meta.get("frozen_history")
@@ -232,6 +259,7 @@ def prepare_chat(
             "causation_id": causation_id,
             "context_digest": existing[0]["context_digest"],
             "shared_context_digest": shared_context_digest,
+            "synchronization_checkpoint_digest": synchronization_checkpoint_digest,
             "history": history,
             "message": message,
             "output_language": output_language,
@@ -251,6 +279,7 @@ def prepare_chat(
     history = _canonical_history(conn, conversation_id)
     snapshot = {
         "shared_context_digest": shared_context_digest,
+        "synchronization_checkpoint_digest": synchronization_checkpoint_digest,
         "conversation_id": conversation_id,
         "binding_epoch": binding_epoch,
         "history": history,
@@ -288,6 +317,8 @@ def prepare_chat(
                 "request_leg": provider,
                 "request_content_digest": _digest(message),
                 "shared_context_digest": shared_context_digest,
+                "synchronization_checkpoint_digest": synchronization_checkpoint_digest,
+                "synchronization_checkpoint": dict(synchronization_checkpoint) if isinstance(synchronization_checkpoint, Mapping) else None,
                 "frozen_history": history,
                 "provider_session_ref": provider_session_ref,
             }
@@ -338,6 +369,7 @@ def prepare_chat(
         "causation_id": causation_id,
         "context_digest": context_digest,
         "shared_context_digest": shared_context_digest,
+        "synchronization_checkpoint_digest": synchronization_checkpoint_digest,
         "history": history,
         "message": message,
         "output_language": output_language,
@@ -550,6 +582,24 @@ def record_response(
         raise ConversationConflict("response provider/request mismatch")
     request_meta = _json(request["metadata_json"])
     canonical = request_meta.get("request_route") == provider
+    response_meta = dict(response_meta)
+    if provider == "SAAS":
+        dispatch = request_meta.get("dispatch_evidence")
+        sync_digest = request_meta.get("synchronization_checkpoint_digest")
+        if sync_digest is not None and not isinstance(dispatch, Mapping):
+            raise ConversationConflict("SaaS dispatch evidence missing for synchronized request")
+        if isinstance(dispatch, Mapping):
+            for key in (
+                "shared_context_digest", "projection_digest", "actual_payload_bytes_digest",
+                "turn_request_hash", "turn_id", "bridge_id", "external_thread_ref",
+            ):
+                observed = dispatch.get(key)
+                supplied = response_meta.get(key)
+                if supplied is not None and supplied != observed:
+                    raise ConversationConflict("SaaS response/dispatch evidence mismatch")
+                response_meta[key] = observed
+        if sync_digest is not None:
+            response_meta["synchronization_checkpoint_digest"] = sync_digest
     response_message_id = _stable(
         "msg-assistant-", provider, conversation_id, request["correlation_id"]
     )
@@ -600,6 +650,7 @@ def record_response(
                 else "UNKNOWN_NOT_PROVIDER_ATTESTED"
             ),
             "request_message_id": request_message_id,
+            "synchronization_checkpoint_digest": request_meta.get("synchronization_checkpoint_digest"),
             "response_meta": dict(response_meta),
         }
         conn.execute(
@@ -779,8 +830,9 @@ def saas_delivery_candidates(conn: sqlite3.Connection, limit: int = 128) -> dict
         """SELECT t.thread_ref AS request_id,t.thread_map_id,t.conversation_id,
                   t.binding_epoch,t.lane_id,t.provenance_json,m.message_id,
                   m.message_id AS request_message_id,m.causation_id,
-                  m.correlation_id,m.context_digest,l.provider_session_ref,
-                  b.mission_id,b.context_digest AS binding_context_digest
+                  m.correlation_id,m.context_digest,m.metadata_json,
+                  l.provider_session_ref,b.mission_id,
+                  b.context_digest AS binding_context_digest
            FROM conversation_threads t
            JOIN conversation_provider_lanes l
              ON l.conversation_id=t.conversation_id
@@ -802,10 +854,122 @@ def saas_delivery_candidates(conn: sqlite3.Connection, limit: int = 128) -> dict
     ):
         item=dict(row)
         provenance=_json(item.pop("provenance_json", "{}"))
+        metadata=_json(item.pop("metadata_json", "{}"))
         item["shared_context_digest"]=provenance.get("shared_context_digest")
         item["projection_digest"]=provenance.get("projection_digest")
+        item["synchronization_checkpoint_digest"]=metadata.get("synchronization_checkpoint_digest")
         rows.append(item)
     return {"candidates": rows, "authority_effect": "NONE"}
+
+
+def record_saas_dispatch_evidence(
+    conn: sqlite3.Connection,
+    args: Mapping[str, Any],
+    *,
+    now: float | None = None,
+) -> dict[str, Any]:
+    required = {
+        "conversation_id", "request_message_id", "request_id", "binding_epoch", "lane_id",
+        "shared_context_digest", "projection_digest", "actual_payload_bytes_digest",
+        "turn_request_hash", "turn_id", "bridge_id", "external_thread_ref", "dispatch_state",
+    }
+    if not isinstance(args, Mapping) or set(args) != required:
+        raise ConversationDomainError("SaaS dispatch evidence schema")
+    conversation_id = _id(args.get("conversation_id"), "conversation_id")
+    request_message_id = _id(args.get("request_message_id"), "request_message_id")
+    request_id = _id(args.get("request_id"), "request_id")
+    lane_id = _id(args.get("lane_id"), "lane_id")
+    bridge_id = _id(args.get("bridge_id"), "bridge_id")
+    external_thread_ref = _id(args.get("external_thread_ref"), "external_thread_ref")
+    turn_id = _id(args.get("turn_id"), "turn_id")
+    dispatch_state = str(args.get("dispatch_state") or "")
+    if dispatch_state not in {"SEND_COMMITTED", "BOUND_SENT"}:
+        raise ConversationDomainError("SaaS dispatch state")
+    binding_epoch = args.get("binding_epoch")
+    if type(binding_epoch) is not int or binding_epoch < 1:
+        raise ConversationDomainError("binding_epoch")
+    for name in (
+        "shared_context_digest", "projection_digest", "actual_payload_bytes_digest",
+        "turn_request_hash",
+    ):
+        if _HEX64.fullmatch(str(args.get(name) or "")) is None:
+            raise ConversationDomainError(name)
+
+    row = conn.execute(
+        """SELECT m.*,l.provider,t.provenance_json
+           FROM conversation_messages m
+           JOIN conversation_provider_lanes l
+             ON l.conversation_id=m.conversation_id
+            AND l.binding_epoch=m.binding_epoch
+            AND l.lane_id=m.lane_id
+           JOIN conversation_threads t
+             ON t.conversation_id=m.conversation_id
+            AND t.binding_epoch=m.binding_epoch
+            AND t.lane_id=m.lane_id
+           WHERE m.conversation_id=? AND m.message_id=?
+             AND t.thread_system='LION_SAAS_BROKER' AND t.thread_ref=?""",
+        (conversation_id, request_message_id, request_id),
+    ).fetchone()
+    if row is None:
+        raise ConversationNotFound(request_id)
+    if row["role"] != "USER" or row["provider"] != "SAAS":
+        raise ConversationConflict("SaaS dispatch target mismatch")
+    if int(row["binding_epoch"]) != binding_epoch or row["lane_id"] != lane_id:
+        raise ConversationConflict("SaaS dispatch identity mismatch")
+    meta = _json(row["metadata_json"])
+    if meta.get("shared_context_digest") != args["shared_context_digest"]:
+        raise ConversationConflict("SaaS dispatch shared context mismatch")
+    thread_provenance = _json(row["provenance_json"])
+    if thread_provenance.get("projection_digest") != args["projection_digest"]:
+        raise ConversationConflict("SaaS dispatch projection mismatch")
+    if thread_provenance.get("shared_context_digest") != args["shared_context_digest"]:
+        raise ConversationConflict("SaaS dispatch thread context mismatch")
+
+    evidence = {
+        "request_id": request_id,
+        "binding_epoch": binding_epoch,
+        "lane_id": lane_id,
+        "shared_context_digest": args["shared_context_digest"],
+        "projection_digest": args["projection_digest"],
+        "actual_payload_bytes_digest": args["actual_payload_bytes_digest"],
+        "turn_request_hash": args["turn_request_hash"],
+        "turn_id": turn_id,
+        "bridge_id": bridge_id,
+        "external_thread_ref": external_thread_ref,
+        "dispatch_state": dispatch_state,
+        "authority_effect": "NONE",
+    }
+    existing = meta.get("dispatch_evidence")
+    if existing is not None and existing != evidence:
+        raise ConversationConflict("SaaS dispatch evidence conflict")
+    if existing == evidence:
+        return {
+            "conversation_id": conversation_id,
+            "request_message_id": request_message_id,
+            "request_id": request_id,
+            "dispatch_evidence": evidence,
+            "idempotent_replay": True,
+            "authority_effect": "NONE",
+        }
+    meta["dispatch_evidence"] = evidence
+    t = float(time.time() if now is None else now)
+    conn.execute(
+        "UPDATE conversation_messages SET metadata_json=? WHERE message_id=? AND conversation_id=?",
+        (_canon(meta), request_message_id, conversation_id),
+    )
+    conn.execute(
+        """UPDATE conversation_provider_lanes SET updated_at=?
+           WHERE conversation_id=? AND binding_epoch=? AND lane_id=?""",
+        (t, conversation_id, binding_epoch, lane_id),
+    )
+    return {
+        "conversation_id": conversation_id,
+        "request_message_id": request_message_id,
+        "request_id": request_id,
+        "dispatch_evidence": evidence,
+        "idempotent_replay": False,
+        "authority_effect": "NONE",
+    }
 
 
 def complete_saas_delivery(
@@ -1008,6 +1172,8 @@ def chat_store_operation(
         return record_leg_failure(conn, args)
     if op == "saas_candidates":
         return saas_delivery_candidates(conn, int(args.get("limit") or 128))
+    if op == "record_saas_dispatch":
+        return record_saas_dispatch_evidence(conn, args)
     if op == "complete_saas":
         return complete_saas_delivery(conn, args)
     if op == "close_saas_terminal":
@@ -1034,6 +1200,8 @@ def _saas_prompt(plan: Mapping[str, Any], leg: Mapping[str, Any]) -> str:
         "context_digest=" + str(plan["context_digest"]),
         "shared_context_digest=" + str(plan["shared_context_digest"]),
     ]
+    if plan.get("synchronization_checkpoint_digest"):
+        lines.append("synchronization_checkpoint_digest=" + str(plan["synchronization_checkpoint_digest"]))
     for item in plan["history"]:
         lines.append(str(item["role"]).upper() + ": " + str(item["content"]))
     lines.append("USER: " + str(plan["message"]))
@@ -1048,6 +1216,8 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "client_request_id": payload.get("client_request_id"),
         "output_language": payload.get("output_language", "auto"),
         "shared_context_digest": gateway.ctx.digest,
+        "synchronization_checkpoint_digest": payload.get("synchronization_checkpoint_digest"),
+        "synchronization_checkpoint": payload.get("synchronization_checkpoint"),
     })
     responses: dict[str, Any] = {}
     saas_handoff = None
@@ -1138,6 +1308,9 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "response_meta": {
                     "result_route": local.get("route"),
                     "provider_provenance": local.get("provider_provenance"),
+                    "projection_digest": (local.get("provider_provenance") or {}).get("projection_digest"),
+                    "actual_payload_bytes_digest": (local.get("provider_provenance") or {}).get("actual_payload_bytes_digest"),
+                    "response_digest": (local.get("provider_provenance") or {}).get("response_digest"),
                     "authority_effect": "NONE",
                 },
             })
@@ -1180,6 +1353,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "causation_id": plan["causation_id"],
         "context_digest": plan["context_digest"],
         "shared_context_digest": plan["shared_context_digest"],
+        "synchronization_checkpoint_digest": plan.get("synchronization_checkpoint_digest"),
         "legs": plan["legs"],
         "responses": responses,
         "saas_handoff": saas_handoff,

@@ -3,7 +3,7 @@ from cyber_lion.contracts.panel_projection import ProjectionError
 from cyber_lion.mission_control.control_read_model import (
  build_artifact_projection,build_evolution_projection,build_federation_projection,
  build_mission_projection,build_model_projection,build_repository_projection,
- build_swarm_projection,build_timeline_projection,
+ build_swarm_projection,build_timeline_projection,build_communication_projection,
 )
 
 class ControlReadModelTests(unittest.TestCase):
@@ -34,6 +34,36 @@ class ControlReadModelTests(unittest.TestCase):
  def test_timeline_unknown_and_raw_omitted(self):
   rows=build_timeline_projection([{"event_id":"e2","timestamp":"2026-10-05T20:00:02Z","event_class":"INVENTED","raw_field":"omit"},{"event_id":"e1","timestamp":"2026-10-05T20:00:01Z","event_class":"COGNITION"}],**self.h()).payload()["events"]
   self.assertEqual([x["event_id"] for x in rows],["e1","e2"]);self.assertEqual(rows[1]["event_class"],"UNKNOWN");self.assertNotIn("raw_field",rows[1])
+ def test_communication_graph_uses_only_durable_records_and_is_deterministic(self):
+  kwargs=dict(
+   operator_messages=[{"message_id":"m1","mission_id":"M1","from_participant":"operator:primary","target":"drone:LD01","state":"PERSISTED","created_at":"2026-10-05T20:00:00Z","correlation_id":"corr1","causation_id":"cause1"}],
+   deliveries=[{"message_id":"m1","recipient":"drone:LD01","delivery_state":"DELIVERED","delivered_at":"2026-10-05T20:00:01Z"}],
+   trajectories=[{"trajectory_id":"t1","message_id":"m1","mission_id":"M1","participant_id":"drone:LD01","local_assignment_id":"a1","state":"READY","created_at":"2026-10-05T20:00:02Z"}],
+   assignments=[{"assignment_id":"a1","mission_id":"M1","phase_id":"P1","logical_drone_id":"LD01","material_drone_id":"MD001","lease_generation":4,"state":"CLAIMED","created_at":"2026-10-05T20:00:03Z"}],
+   model_calls=[{"model_call_id":"mc1","mission_id":"M1","phase_id":"P1","assignment_id":"a1","logical_drone_id":"LD01","material_worker_id":"MD001","provider":"LOCAL","model_attested":"gpt-oss","state":"RESPONSE_RECONCILED","created_at":"2026-10-05T20:00:04Z"}],
+   artifacts=[{"artifact_id":"art1","mission_id":"M1","phase_id":"P1","verification_state":"PASS","created_at":"2026-10-05T20:00:05Z"}],
+   conversation_messages=[{"message_id":"cm1","conversation_id":"conv1","role":"ASSISTANT","correlation_id":"corr1","causation_id":"cause1","created_at":"2026-10-05T20:00:06Z"}],
+   conversation_events=[{"event_id":"ce1","conversation_id":"conv1","message_id":"cm1","state":"DELIVERED","correlation_id":"corr1","causation_id":"cause1","created_at":"2026-10-05T20:00:07Z"}],
+  )
+  a=build_communication_projection(**kwargs,**self.h())
+  b=build_communication_projection(**{k:list(reversed(v)) for k,v in kwargs.items()},**self.h())
+  self.assertEqual(a.projection_digest,b.projection_digest)
+  payload=a.payload()
+  self.assertGreaterEqual(payload["edge_count"],8)
+  self.assertIn("drone:LD01",{n["node_id"] for n in payload["nodes"]})
+  self.assertIn("worker:MD001",{n["node_id"] for n in payload["nodes"]})
+  self.assertTrue(all(edge["authority_effect"]=="NONE" for edge in payload["edges"]))
+  self.assertNotIn("inferred_edge",str(payload))
+
+ def test_communication_graph_does_not_infer_missing_edges(self):
+  payload=build_communication_projection(
+   operator_messages=[{"message_id":"m1","mission_id":"M1","from_participant":"operator:primary","target":"drone:LD01","state":"PERSISTED"}],
+   **self.h(),
+  ).payload()
+  self.assertEqual(payload["edge_count"],1)
+  self.assertEqual(payload["edges"][0]["edge_kind"],"MESSAGE")
+  self.assertFalse(any(edge["edge_kind"]=="INVOKES" for edge in payload["edges"]))
+
  def test_bounds_and_types(self):
   with self.assertRaisesRegex(ProjectionError,"exceeds bound"):build_model_projection([{"model_call_id":str(i)} for i in range(513)],**self.h())
   with self.assertRaises(ProjectionError):build_mission_projection("bad",**self.h())

@@ -4,6 +4,7 @@ import unittest
 
 from cyber_lion.contracts.panel_projection import (
     ArtifactProjection,
+    CommunicationProjection,
     EvolutionProjection,
     FederationProjection,
     MissionProjection,
@@ -37,6 +38,7 @@ class PanelProjectionTests(unittest.TestCase):
             RepositoryProjection,
             ArtifactProjection,
             TimelineProjection,
+            CommunicationProjection,
             EvolutionProjection,
         )
         for cls in types:

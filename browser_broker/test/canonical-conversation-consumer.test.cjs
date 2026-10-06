@@ -49,7 +49,7 @@ function turnInput(c=candidate){
 
 function fixture({bridges=[]}={}){
  const store=new FakeStore();
- const calls={panel:[],browser:[],bridgeBodies:[]};
+ const calls={panel:[],browser:[],bridgeBodies:[],dispatchBodies:[]};
  let conversation={conversation_id:candidate.conversation_id,state:'UNBOUND',current_binding:{binding_epoch:1,mission_id:null,context_digest:'b'.repeat(64)},external_bridges:[...bridges]};
  const turn={
   turn_id:'turn_1',command_id:'MC-'+candidate.request_id,thread_id:null,session_id:'CHATGPT-SAAS',status:'PENDING',
@@ -64,6 +64,10 @@ function fixture({bridges=[]}={}){
    const row={bridge_id:'bridge-new',conversation_id:candidate.conversation_id,external_thread_ref:body.external_thread_ref,external_system:body.external_system,created_at:1,provenance_json:JSON.stringify({supplied:body.provenance}),context_snapshot_digest:body.context_snapshot_digest,authority_effect:'NONE'};
    conversation={...conversation,external_bridges:[...conversation.external_bridges,row]};
    return row;
+  }
+  if(path==='/api/conversations/saas/dispatch'&&method==='POST'){
+   calls.dispatchBodies.push(body);
+   return {dispatch_evidence:body,authority_effect:'NONE'};
   }
   throw new Error('panel '+method+' '+path);
  };
@@ -109,6 +113,11 @@ test('first canonical SaaS request auto-creates a dedicated native thread and pe
  assert.equal(state[candidate.request_id].projection_digest,candidate.projection_digest);
  assert.match(state[candidate.request_id].actual_payload_bytes_digest,/^[a-f0-9]{64}$/);
  assert.equal(state[candidate.request_id].turn_request_hash,f.turn.request_hash);
+ assert.match(String(state[candidate.request_id].dispatch_evidence_recorded_at),/^1000$/);
+ assert.equal(f.calls.dispatchBodies.length,1);
+ assert.equal(f.calls.dispatchBodies[0].bridge_id,'bridge-new');
+ assert.equal(f.calls.dispatchBodies[0].external_thread_ref,'native-1');
+ assert.equal(f.calls.dispatchBodies[0].actual_payload_bytes_digest,state[candidate.request_id].actual_payload_bytes_digest);
 });
 
 test('existing canonical bridge wins over current browser state and exact bound URL is used',async()=>{
@@ -119,6 +128,9 @@ test('existing canonical bridge wins over current browser state and exact bound 
  const sends=f.calls.browser.filter(x=>x[0]==='send');assert.equal(sends.length,1);
  assert.equal(sends[0][1],'https://chatgpt.com/c/native-existing');
  assert.equal(f.calls.bridgeBodies.length,0);
+ assert.equal(f.calls.dispatchBodies.length,1);
+ assert.equal(f.calls.dispatchBodies[0].bridge_id,'bridge-existing');
+ assert.equal(f.calls.dispatchBodies[0].external_thread_ref,'native-existing');
 });
 
 test('operator rotation provisions a fresh thread and preserves supersession provenance',async()=>{

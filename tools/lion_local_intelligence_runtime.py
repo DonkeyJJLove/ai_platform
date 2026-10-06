@@ -346,9 +346,20 @@ class LpclControlBridge:
         if op=='activate_lpcl':
             mid=args.get('mission_id');dg=args.get('lpcl_digest')
             if not isinstance(mid,str) or not self.MID_RE.fullmatch(mid) or not isinstance(dg,str) or not re.fullmatch('[0-9a-f]{64}',dg):raise ValueError('activation')
-            out=self._post('/api/v3/missions/'+mid+'/activate',{'lpcl_digest':dg,'activation_event':'EXPLICIT_UI_ACTIVATION'})
+            body={'lpcl_digest':dg,'activation_event':'EXPLICIT_UI_ACTIVATION'}
+            cognitive={'conversation_id','binding_epoch','readiness_projection_digest'}
+            supplied={k:args.get(k) for k in cognitive if k in args}
+            if supplied:
+                if set(supplied)!=cognitive:raise ValueError('cognitive activation binding incomplete')
+                if not isinstance(supplied['conversation_id'],str) or not self.MID_RE.fullmatch(supplied['conversation_id']):raise ValueError('conversation_id')
+                if type(supplied['binding_epoch']) is not int or supplied['binding_epoch']<1:raise ValueError('binding_epoch')
+                if not isinstance(supplied['readiness_projection_digest'],str) or not re.fullmatch('[0-9a-f]{64}',supplied['readiness_projection_digest']):raise ValueError('readiness_projection_digest')
+                body.update(supplied)
+            out=self._post('/api/v3/missions/'+mid+'/activate',body)
             if not isinstance(out,dict) or out.get('mission_id')!=mid:raise ValueError('ACTIVATION_SOURCE_DRIFT')
-            return {**out,'activation_confirmation':{'mission_id':mid,'lpcl_digest':dg,'authority_effect':'EXPLICIT_USER_ACTIVATION'}}
+            confirmation={'mission_id':mid,'lpcl_digest':dg,'authority_effect':'EXPLICIT_USER_ACTIVATION'}
+            if supplied:confirmation['cognitive_binding']=supplied
+            return {**out,'activation_confirmation':confirmation}
         if op=='current_action':
             action=args.get('action');pod=args.get('pod_name')
             if action not in {'START','PAUSE','RESUME','VALIDATE','STOP','RESTART_ONE'}:raise ValueError('action')
@@ -744,16 +755,4 @@ def main():
     operator_key_file=a.operator_panel_proxy_key_file or a.operator_key_file
     operator=OperatorControlBridge(a.operator_control_url,operator_key_file,a.operator_pairing_key_file) if operator_key_file else None
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads,operator_provider=operator)
-    canary_stop=threading.Event()
-    from cyber_lion.app_coordination.conversation_chat import delivery_loop as conversation_delivery_loop
-    if not a.staging_model_chat_only:
-        threading.Thread(target=local_canary_loop,args=(control,mp,canary_stop,a.port,a.model),daemon=True).start()
-        for material_id in ('MD025','MD026','MD027'):
-            threading.Thread(target=local_assignment_worker_loop,args=(control,mp,canary_stop,material_id),daemon=True,name='local-model-'+material_id).start()
-        threading.Thread(target=control_plane_recon_observer_loop,args=(control,b,gp,thread_db,a.repo,a.model,canary_stop),daemon=True,name='control-plane-recon-observer').start()
-        from cyber_lion.app_coordination.saas_thread_delivery import delivery_loop
-        threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
-    threading.Thread(target=conversation_delivery_loop,args=(threads,control,canary_stop),daemon=True,name='conversation-saas-delivery').start()
-    try: serve_gateway(g,a.port)
-    finally: canary_stop.set()
-if __name__=='__main__':main()
+   

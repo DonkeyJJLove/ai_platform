@@ -47,7 +47,13 @@ class CognitiveContinuityTests(unittest.TestCase):
                 "content": "local", "created_at": 1, "metadata": {
                     "canonical_context": True,
                     "provider_session_ref_class": "UNKNOWN_NOT_PROVIDER_ATTESTED",
-                    "response_meta": {},
+                    "synchronization_checkpoint_digest": "5" * 64,
+                    "response_meta": {
+                        "projection_digest": "6" * 64,
+                        "actual_payload_bytes_digest": "7" * 64,
+                        "response_digest": "8" * 64,
+                        "synchronization_checkpoint_digest": "5" * 64,
+                    },
                 },
             },
             {
@@ -56,10 +62,12 @@ class CognitiveContinuityTests(unittest.TestCase):
                     "canonical_context": True,
                     "provider_session_ref": "binding-saas-1",
                     "provider_session_ref_class": "SAAS_BROKER_SESSION_BINDING",
+                    "synchronization_checkpoint_digest": "5" * 64,
                     "response_meta": {
                         "projection_digest": "a" * 64,
                         "actual_payload_bytes_digest": "b" * 64,
                         "response_digest": "c" * 64,
+                        "synchronization_checkpoint_digest": "5" * 64,
                     },
                 },
             },

@@ -84,7 +84,10 @@ def provider_requirements(phase_contracts: Sequence[Mapping[str, Any]]) -> tuple
 
 
 def active_saas_bridge(bridges: Iterable[Mapping[str, Any]]) -> Mapping[str, Any] | None:
-    rows = [dict(row) for row in bridges if isinstance(row, Mapping) and row.get("external_system") == "CHATGPT_PROJECT"]
+    rows = [
+        dict(row) for row in bridges
+        if isinstance(row, Mapping) and row.get("external_system") in {"CHATGPT_SAAS", "CHATGPT_PROJECT"}
+    ]
     superseded: set[str] = set()
     for row in rows:
         supplied = _meta(_meta(row.get("provenance_json")).get("supplied"))
@@ -243,7 +246,11 @@ def build_synchronization_checkpoint(
     ).sealed()
 
 
-def _provider_message_evidence(messages: Sequence[Mapping[str, Any]], lane_ids: set[str]) -> dict[str, Any]:
+def _provider_message_evidence(
+    messages: Sequence[Mapping[str, Any]],
+    lane_ids: set[str],
+    synchronization_checkpoint_digest: str | None = None,
+) -> dict[str, Any]:
     response = None
     for message in messages:
         if not isinstance(message, Mapping) or message.get("lane_id") not in lane_ids:
@@ -252,6 +259,12 @@ def _provider_message_evidence(messages: Sequence[Mapping[str, Any]], lane_ids: 
             continue
         meta = _meta(message.get("metadata"))
         response_meta = _meta(meta.get("response_meta"))
+        observed_sync = (
+            meta.get("synchronization_checkpoint_digest")
+            or response_meta.get("synchronization_checkpoint_digest")
+        )
+        if synchronization_checkpoint_digest is not None and observed_sync != synchronization_checkpoint_digest:
+            continue
         candidate = {
             "message_id": message.get("message_id"),
             "provider_session_ref": meta.get("provider_session_ref"),
@@ -260,6 +273,7 @@ def _provider_message_evidence(messages: Sequence[Mapping[str, Any]], lane_ids: 
             "actual_payload_bytes_digest": response_meta.get("actual_payload_bytes_digest"),
             "response_digest": response_meta.get("response_digest"),
             "receipt_digest": response_meta.get("receipt_digest"),
+            "synchronization_checkpoint_digest": observed_sync,
             "created_at": message.get("created_at"),
         }
         if response is None or str(candidate.get("created_at") or "") >= str(response.get("created_at") or ""):
@@ -342,19 +356,14 @@ def build_mission_cognitive_continuity(
             path_blockers.append(provider + "_CAPABILITY_CURRENTNESS_REQUIRED")
         elif capability.get("text_input") != "SUPPORTED":
             path_blockers.append(provider + "_TEXT_INPUT_REQUIRED")
-        evidence = _provider_message_evidence(messages, lane_ids)
+        evidence = _provider_message_evidence(
+            messages, lane_ids, synchronization_checkpoint_digest
+        )
         if provider == "SAAS":
             if bridge is None:
                 path_blockers.append("SAAS_BRIDGE_REQUIRED")
             if not any(row.get("provider_session_ref") for row in lanes):
                 path_blockers.append("SAAS_PROVIDER_SESSION_EVIDENCE_REQUIRED")
-            for field, blocker in (
-                ("projection_digest", "SAAS_PROJECTION_DIGEST_REQUIRED"),
-                ("actual_payload_bytes_digest", "SAAS_ACTUAL_PAYLOAD_DIGEST_REQUIRED"),
-                ("response_digest", "SAAS_RESPONSE_DIGEST_REQUIRED"),
-            ):
-                if _HEX64.fullmatch(str(evidence.get(field) or "")) is None:
-                    path_blockers.append(blocker)
         else:
             # LOCAL is stateless in the current canonical path; a fabricated
             # provider session is not required.  Response evidence remains
@@ -363,6 +372,13 @@ def build_mission_cognitive_continuity(
                 None, "UNKNOWN_NOT_PROVIDER_ATTESTED"
             }:
                 path_blockers.append("LOCAL_SYNTHETIC_PROVIDER_SESSION_DENIED")
+        for field, blocker in (
+            ("projection_digest", provider + "_PROJECTION_DIGEST_REQUIRED"),
+            ("actual_payload_bytes_digest", provider + "_ACTUAL_PAYLOAD_DIGEST_REQUIRED"),
+            ("response_digest", provider + "_RESPONSE_DIGEST_REQUIRED"),
+        ):
+            if _HEX64.fullmatch(str(evidence.get(field) or "")) is None:
+                path_blockers.append(blocker)
         provider_paths[provider] = {
             "lane_ids": sorted(lane_ids),
             "provider_session_refs": sorted(
