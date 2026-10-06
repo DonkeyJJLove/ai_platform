@@ -55,6 +55,9 @@ class FakeControl:
             "status": "RESPONDED",
             "receipt_digest": ("d" if request_id.endswith("1") else "e") * 64,
             "response_text": text,
+            "response_digest": sha256(text.encode("utf-8")).hexdigest(),
+            "binding_id": "binding-" + request_id,
+            "claim_generation": 1,
             "response_meta_json": json.dumps({
                 "model_identity": model,
                 "transport": "CHATGPT_FIREFOX_PROJECT_MEDIATED",
@@ -180,6 +183,10 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(after[-1]["content"], "SAAS-DELAYED-ANSWER")
         self.assertEqual(after[-1]["context_digest"], out["context_digest"])
         self.assertEqual(after[-1]["correlation_id"], out["correlation_id"])
+        self.assertEqual(after[-1]["metadata"]["projection_digest"], out["saas_handoff"]["projection_digest"])
+        self.assertEqual(after[-1]["metadata"]["response_digest"], sha256(b"SAAS-DELAYED-ANSWER").hexdigest())
+        self.assertEqual(after[-1]["metadata"]["broker_binding_id"], "binding-" + request_id)
+        self.assertEqual(after[-1]["metadata"]["broker_claim_generation"], 1)
 
     def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
         conv = self.create("saas-cancel-root")
