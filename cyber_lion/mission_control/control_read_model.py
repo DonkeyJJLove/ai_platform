@@ -25,6 +25,7 @@ WORKER_ARCH_FIELDS=("runtime_instance_id","boot_id","source_head","source_tree",
 MODEL_CALL_FIELDS=("model_call_id","mission_id","phase_id","task_id","assignment_id","logical_drone_id","material_worker_id","requested_capability","provider","model_requested","model_declared","model_attested","transport","selection_reason","candidate_set_digest","context_revision","input_digest","result_digest","state","created_at","updated_at","finished_at","authority_effect")
 REPOSITORY_FIELDS=("repository","branch","head","tree","role","currentness","active_pr","ci_state","updated_at")
 ARTIFACT_FIELDS=("artifact_id","mission_id","phase_id","artifact_type","schema_id","revision","content_digest","authority_effect","created_at","updated_at","byte_length","bytes_sha256","origin_repository","origin_head","verification_state","verifier_ref","publication_state")
+ARTIFACT_CANDIDATE_FIELDS=("run_id","mission_id","task_id","generation","attempt","state","source_digest","stream_state","worker_state","observed_at","artifact_ref","artifact_digest","verifier_receipt_digest","authority_effect","observation_digest")
 TIMELINE_FIELDS=("event_id","event_class","timestamp","mission_id","phase_id","participant_id","logical_drone_id","material_worker_id","model_call_id","assignment_id","artifact_id","correlation_id","causation_id","generation","state","authority_effect")
 EVOLUTION_FIELDS=("repository","current_head","candidate_head","target_ref","active_pr","mission_id","task_id","worker_id","artifact_id","test_state","integration_state","deployment_state","currentness")
 
@@ -86,6 +87,19 @@ def build_artifact_projection(artifacts:Iterable[Mapping[str,Any]],**h)->Artifac
     rows=[_project_fields(x,ARTIFACT_FIELDS) for x in _rows(artifacts,name="artifacts")]
     rows.sort(key=lambda x:(str(x.get("created_at") or ""),str(x.get("artifact_id") or "")))
     return ArtifactProjection.build(_header(**h),{"artifact_count":len(rows),"artifacts":rows})
+
+def build_artifact_candidate_projection(observations:Iterable[Mapping[str,Any]],**h)->ArtifactProjection:
+    rows=[_project_fields(x,ARTIFACT_CANDIDATE_FIELDS) for x in _rows(observations,name="artifact candidate observations")]
+    rows.sort(key=lambda x:(int(x.get("generation") or 0),int(x.get("attempt") or 0),str(x.get("run_id") or "")))
+    terminal={"VERIFIED","REJECTED","SUPERSEDED"}
+    degraded={"LOST","EXPIRED"}
+    return ArtifactProjection.build(_header(**h),{
+        "candidate_count":len(rows),
+        "running_count":sum(1 for x in rows if x.get("state")=="RUNNING"),
+        "terminal_count":sum(1 for x in rows if x.get("state") in terminal),
+        "stream_degraded_count":sum(1 for x in rows if x.get("stream_state") in degraded),
+        "candidates":rows,
+    })
 
 def build_timeline_projection(events:Iterable[Mapping[str,Any]],**h)->TimelineProjection:
     rows=[]
