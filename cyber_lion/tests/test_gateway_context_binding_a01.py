@@ -67,6 +67,11 @@ class GatewayContextBindingA01Tests(unittest.TestCase):
         self.assertEqual(provenance["actual_payload_bytes_digest"],expected)
         self.assertEqual(provenance["shared_context_digest"],g.ctx.digest)
         self.assertEqual(provenance["response_digest"],sha256(b"ok").hexdigest())
+        self.assertIsNone(provenance["provider_session_ref"])
+        self.assertEqual(
+            provenance["provider_session_ref_class"],
+            "UNKNOWN_NOT_PROVIDER_ATTESTED",
+        )
 
     def test_bound_supervisor_projection_drives_outbound_transport(self):
         td,root=self.repo();self.addCleanup(td.cleanup);calls=[]
