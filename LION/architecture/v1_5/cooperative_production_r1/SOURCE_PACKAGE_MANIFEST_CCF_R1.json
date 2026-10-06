@@ -145,7 +145,7 @@
     },
     {
       "path": "cyber_lion/mission_control/control_read_model.py",
-      "sha256": "3daaeaf6bcbf34d7d8bf901df47bf1eae345fbaeb106fa9bb39954857bc5f856"
+      "sha256": "960516891e92cbd4b640c22a34d42a4dc89a72ce33c1c1e93c4b6edd2433336c"
     },
     {
       "path": "cyber_lion/mission_control/cooperative_artifacts.py",
@@ -312,6 +312,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "0731fa66de8029f6be42dbd064e630f8c63f69bdf824b1cc835de6132e05905c",
+  "package_digest": "d6e3e35e9dfc0c94ec06e26e609e2a7692024913b66ac1d54608892038e8d13b",
   "authority_effect": "NONE"
 }
