@@ -305,7 +305,7 @@
     },
     {
       "path": "tools/lion_r24_whole_integration_gate.py",
-      "sha256": "475ddae1836e0b94b2c8dbafa9ed6f3b207728a1a39b5d8c6cbe81d8eeb19985"
+      "sha256": "5fb7555045c136489dd574f05c5ff48cf08ef4e93e2a93f05fb72012f3eff91f"
     },
     {
       "path": "tools/lion_saas_broker.py",
@@ -316,6 +316,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "dd7027a9e93334a1998b3ece421504e5c3d0867caa4aaa51a65c5bf29f627c4a",
+  "package_digest": "6b7657ffb9251726769d50e962ed49457a9818f6ad4a562dffb714b3db9a1b3c",
   "authority_effect": "NONE"
 }
