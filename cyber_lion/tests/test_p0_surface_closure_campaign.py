@@ -11,7 +11,7 @@ from tools.p0_surface_closure_campaign import (
 
 REPO="DonkeyJJLove/ai_platform"
 EXPECTED_CLASSES={
-    "persistent_state.write":491,"filesystem.write":17,"filesystem.delete":18,"runtime.tool_execution":10,"filesystem.replace":9,
+    "persistent_state.write":493,"filesystem.write":17,"filesystem.delete":18,"runtime.tool_execution":10,"filesystem.replace":9,
     "external.network.post":5,"filesystem.bootstrap.write":3,"filesystem.bootstrap.mkdir":2,"external.network.authority_observation":1,
     "external.network.delete":1,"external.network.patch":1,"repository_ref.delete":1,"runtime.process_launch":3,
 }
@@ -45,7 +45,7 @@ def campaign():
 
 class P0SurfaceClosureCampaignTests(unittest.TestCase):
     def test_exact_current_matrix_and_scan_digest(self):
-        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),563);self.assertEqual(c.remaining_surface_count,len(inv.surfaces)-1)
+        inv,c=campaign();self.assertEqual(inv.scan_digest,EXPECTED_SCAN_DIGEST);self.assertEqual(len(inv.surfaces),565);self.assertEqual(c.remaining_surface_count,len(inv.surfaces)-1)
         self.assertEqual(c.excluded_surface_digests,(CERTIFIED_PARTIAL_SURFACE,));self.assertEqual(c.global_status,"UNKNOWN")
         self.assertEqual(Counter(x.effect_class for x in c.work_items),Counter(EXPECTED_CLASSES))
 

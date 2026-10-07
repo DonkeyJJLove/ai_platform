@@ -25,6 +25,7 @@ LOGGER = logging.getLogger(__name__)
 ROUTES = frozenset({"LOCAL", "SAAS", "DUAL"})
 PROVIDER_FOR_LEG = {"LOCAL": "LOCAL", "SAAS": "SAAS"}
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$")
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _NAMESPACE = uuid.UUID("cb90965e-f0b3-4c9d-bbec-825fe68eea0d")
 
 
@@ -186,7 +187,7 @@ def prepare_chat(
 ) -> dict[str, Any]:
     if not isinstance(args, Mapping):
         raise ConversationDomainError("chat prepare schema")
-    allowed = {"conversation_id", "message", "route", "client_request_id", "output_language"}
+    allowed = {"conversation_id", "message", "route", "client_request_id", "output_language", "shared_context_digest"}
     if set(args) - allowed:
         raise ConversationDomainError("chat prepare schema")
     conversation_id = _id(args.get("conversation_id"), "conversation_id")
@@ -198,6 +199,9 @@ def prepare_chat(
         raise ConversationDomainError("route")
     client_request_id = _id(args.get("client_request_id"), "client_request_id")
     output_language = str(args.get("output_language") or "auto")[:32]
+    shared_context_digest = str(args.get("shared_context_digest") or "")
+    if _HEX64.fullmatch(shared_context_digest) is None:
+        raise ConversationDomainError("shared_context_digest")
     conversation = _conversation(conn, conversation_id)
     if conversation["state"] == "FROZEN":
         raise ConversationConflict("frozen conversation cannot accept Model Chat")
@@ -212,6 +216,7 @@ def prepare_chat(
             first_meta.get("client_request_id") != client_request_id
             or first_meta.get("request_route") != route
             or first_meta.get("request_content_digest") != _digest(message)
+            or first_meta.get("shared_context_digest") != shared_context_digest
         ):
             raise ConversationConflict("chat request idempotency conflict")
         history = first_meta.get("frozen_history")
@@ -226,6 +231,7 @@ def prepare_chat(
             "correlation_id": correlation_id,
             "causation_id": causation_id,
             "context_digest": existing[0]["context_digest"],
+            "shared_context_digest": shared_context_digest,
             "history": history,
             "message": message,
             "output_language": output_language,
@@ -244,6 +250,7 @@ def prepare_chat(
 
     history = _canonical_history(conn, conversation_id)
     snapshot = {
+        "shared_context_digest": shared_context_digest,
         "conversation_id": conversation_id,
         "binding_epoch": binding_epoch,
         "history": history,
@@ -258,9 +265,10 @@ def prepare_chat(
         for index, provider in enumerate(providers):
             suffix = correlation_id[-16:]
             lane_id = f"lane-{provider.lower()}-{suffix}"
-            provider_session_ref = _stable(
-                "ps-", provider, conversation_id, str(binding_epoch), correlation_id
-            )
+            # Provider session identity is not invented at request preparation.
+            # LOCAL uses a stateless HTTP request in the canonical runtime, while
+            # SAAS obtains an attested broker binding only after a real response.
+            provider_session_ref = None
             message_id = _stable("msg-user-", provider, conversation_id, correlation_id)
             conn.execute(
                 """INSERT INTO conversation_provider_lanes(
@@ -279,6 +287,7 @@ def prepare_chat(
                 "request_route": route,
                 "request_leg": provider,
                 "request_content_digest": _digest(message),
+                "shared_context_digest": shared_context_digest,
                 "frozen_history": history,
                 "provider_session_ref": provider_session_ref,
             }
@@ -328,6 +337,7 @@ def prepare_chat(
         "correlation_id": correlation_id,
         "causation_id": causation_id,
         "context_digest": context_digest,
+        "shared_context_digest": shared_context_digest,
         "history": history,
         "message": message,
         "output_language": output_language,
@@ -346,8 +356,12 @@ def link_saas_request(
     conversation_id = _id(args.get("conversation_id"), "conversation_id")
     message_id = _id(args.get("message_id"), "message_id")
     request_id = _id(args.get("request_id"), "request_id")
+    projection_digest = str(args.get("projection_digest") or "")
+    shared_context_digest = str(args.get("shared_context_digest") or "")
+    if _HEX64.fullmatch(projection_digest) is None or _HEX64.fullmatch(shared_context_digest) is None:
+        raise ConversationDomainError("SaaS projection/shared digest")
     row = conn.execute(
-        """SELECT m.*,l.provider FROM conversation_messages m
+        """SELECT m.*,l.provider,l.provider_session_ref AS lane_provider_session_ref FROM conversation_messages m
            JOIN conversation_provider_lanes l
              ON l.conversation_id=m.conversation_id
             AND l.binding_epoch=m.binding_epoch
@@ -366,6 +380,8 @@ def link_saas_request(
         "kind": "SAAS_BROKER_REQUEST",
         "request_message_id": message_id,
         "correlation_id": row["correlation_id"],
+        "shared_context_digest": shared_context_digest,
+        "projection_digest": projection_digest,
     })
     conn.execute("SAVEPOINT conversation_saas_link")
     try:
@@ -520,7 +536,7 @@ def record_response(
     if not isinstance(response_meta, Mapping):
         raise ConversationDomainError("response_meta")
     request = conn.execute(
-        """SELECT m.*,l.provider FROM conversation_messages m
+        """SELECT m.*,l.provider,l.provider_session_ref AS lane_provider_session_ref FROM conversation_messages m
            JOIN conversation_provider_lanes l
              ON l.conversation_id=m.conversation_id
             AND l.binding_epoch=m.binding_epoch
@@ -555,12 +571,34 @@ def record_response(
                 "idempotent_replay": True,
                 "authority_effect": "NONE",
             }
+        provider_session_ref = request["lane_provider_session_ref"]
+        if provider == "SAAS":
+            observed_binding = response_meta.get("broker_binding_id")
+            if not isinstance(observed_binding, str) or _ID.fullmatch(observed_binding) is None:
+                raise ConversationConflict("SaaS provider session binding missing")
+            if provider_session_ref not in (None, observed_binding):
+                raise ConversationConflict("SaaS provider session binding conflict")
+            provider_session_ref = observed_binding
+            conn.execute(
+                """UPDATE conversation_provider_lanes
+                   SET provider_session_ref=?,updated_at=?
+                   WHERE conversation_id=? AND binding_epoch=? AND lane_id=?""",
+                (
+                    provider_session_ref, t, conversation_id,
+                    request["binding_epoch"], request["lane_id"],
+                ),
+            )
         metadata = {
             "authority_effect": "NONE",
             "canonical_context": canonical,
             "request_route": request_meta.get("request_route"),
             "request_leg": provider,
-            "provider_session_ref": request_meta.get("provider_session_ref"),
+            "provider_session_ref": provider_session_ref,
+            "provider_session_ref_class": (
+                "SAAS_BROKER_SESSION_BINDING"
+                if provider == "SAAS"
+                else "UNKNOWN_NOT_PROVIDER_ATTESTED"
+            ),
             "request_message_id": request_message_id,
             "response_meta": dict(response_meta),
         }
@@ -739,7 +777,7 @@ def saas_delivery_candidates(conn: sqlite3.Connection, limit: int = 128) -> dict
     rows = []
     for row in conn.execute(
         """SELECT t.thread_ref AS request_id,t.thread_map_id,t.conversation_id,
-                  t.binding_epoch,t.lane_id,m.message_id,
+                  t.binding_epoch,t.lane_id,t.provenance_json,m.message_id,
                   m.message_id AS request_message_id,m.causation_id,
                   m.correlation_id,m.context_digest,l.provider_session_ref,
                   b.mission_id,b.context_digest AS binding_context_digest
@@ -762,7 +800,11 @@ def saas_delivery_candidates(conn: sqlite3.Connection, limit: int = 128) -> dict
            ORDER BY t.created_at,t.thread_map_id LIMIT ?""",
         (int(limit),),
     ):
-        rows.append(dict(row))
+        item=dict(row)
+        provenance=_json(item.pop("provenance_json", "{}"))
+        item["shared_context_digest"]=provenance.get("shared_context_digest")
+        item["projection_digest"]=provenance.get("projection_digest")
+        rows.append(item)
     return {"candidates": rows, "authority_effect": "NONE"}
 
 
@@ -990,6 +1032,7 @@ def _saas_prompt(plan: Mapping[str, Any], leg: Mapping[str, Any]) -> str:
         "causation_id=" + str(plan["causation_id"]),
         "correlation_id=" + str(plan["correlation_id"]),
         "context_digest=" + str(plan["context_digest"]),
+        "shared_context_digest=" + str(plan["shared_context_digest"]),
     ]
     for item in plan["history"]:
         lines.append(str(item["role"]).upper() + ": " + str(item["content"]))
@@ -1004,6 +1047,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "route": payload.get("route"),
         "client_request_id": payload.get("client_request_id"),
         "output_language": payload.get("output_language", "auto"),
+        "shared_context_digest": gateway.ctx.digest,
     })
     responses: dict[str, Any] = {}
     saas_handoff = None
@@ -1014,9 +1058,11 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         try:
             if not callable(getattr(gateway, "control_provider", None)):
                 raise RuntimeError("SaaS handoff control provider unavailable")
+            saas_projection = _saas_prompt(plan, leg)
+            saas_projection_digest = sha256(saas_projection.encode("utf-8")).hexdigest()
             handoff = gateway.control_provider("saas_request", {
                 "scope_type": "CONTROL_PLANE",
-                "question": _saas_prompt(plan, leg),
+                "question": saas_projection,
                 "authority_effect": "NONE",
             })
             request_id = handoff.get("request_id")
@@ -1026,6 +1072,8 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "conversation_id": conversation_id,
                 "message_id": leg["message_id"],
                 "request_id": request_id,
+                "shared_context_digest": plan["shared_context_digest"],
+                "projection_digest": saas_projection_digest,
             })
             broker_readback = {}
             try:
@@ -1034,6 +1082,9 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 )
             except Exception:
                 broker_readback = {}
+            observed_question_digest = broker_readback.get("question_digest")
+            if observed_question_digest not in (None, saas_projection_digest):
+                raise ConversationConflict("SaaS projection digest mismatch")
             saas_handoff = {
                 "request_id": request_id,
                 "request_code": handoff.get("request_code"),
@@ -1041,6 +1092,10 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "lane_id": leg["lane_id"],
                 "provider_session_ref": leg["provider_session_ref"],
                 "context_digest": plan["context_digest"],
+                "shared_context_digest": plan["shared_context_digest"],
+                "projection_digest": saas_projection_digest,
+                "broker_question_digest": observed_question_digest,
+                "actual_provider_payload_bytes_digest": None,
             }
         except Exception as error:
             threads("conversation_chat_record_failure", {
@@ -1060,6 +1115,15 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                     plan["message"],
                     history=list(plan["history"]),
                     output_language=plan["output_language"],
+                    provider_binding={
+                        "conversation_id": conversation_id,
+                        "binding_epoch": plan["binding_epoch"],
+                        "lane_id": leg["lane_id"],
+                        "provider_session_ref": leg["provider_session_ref"],
+                        "correlation_id": plan["correlation_id"],
+                        "causation_id": plan["causation_id"],
+                        "context_digest": plan["context_digest"],
+                    },
                 )
             finally:
                 ROUTE_CONTEXT.reset(token)
@@ -1073,6 +1137,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "response_text": answer,
                 "response_meta": {
                     "result_route": local.get("route"),
+                    "provider_provenance": local.get("provider_provenance"),
                     "authority_effect": "NONE",
                 },
             })
@@ -1083,6 +1148,8 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
                 "lane_id": leg["lane_id"],
                 "provider_session_ref": leg["provider_session_ref"],
                 "context_digest": plan["context_digest"],
+                "shared_context_digest": plan["shared_context_digest"],
+                "provider_provenance": local.get("provider_provenance"),
             }
             if stored.get("join"):
                 responses["JOIN"] = {
@@ -1112,6 +1179,7 @@ def submit_chat(threads, gateway, conversation_id: str, payload: Mapping[str, An
         "correlation_id": plan["correlation_id"],
         "causation_id": plan["causation_id"],
         "context_digest": plan["context_digest"],
+        "shared_context_digest": plan["shared_context_digest"],
         "legs": plan["legs"],
         "responses": responses,
         "saas_handoff": saas_handoff,
@@ -1137,6 +1205,10 @@ def deliver_saas_once(threads, control) -> list[dict[str, Any]]:
                 continue
             if result.get("thread_id") not in (None, ""):
                 raise ConversationConflict("conversation SaaS request unexpectedly bound to legacy thread")
+            expected_projection = candidate.get("projection_digest")
+            observed_projection = result.get("question_digest")
+            if expected_projection and observed_projection != expected_projection:
+                raise ConversationConflict("SaaS response projection digest mismatch")
             response_meta = json.loads(result.get("response_meta_json") or "{}")
             if not isinstance(response_meta, dict):
                 response_meta = {}
@@ -1144,6 +1216,10 @@ def deliver_saas_once(threads, control) -> list[dict[str, Any]]:
                 **response_meta,
                 "receipt_digest": result["receipt_digest"],
                 "saas_request_id": candidate["request_id"],
+                "projection_digest": observed_projection,
+                "response_digest": result.get("response_digest"),
+                "broker_binding_id": result.get("binding_id"),
+                "broker_claim_generation": result.get("claim_generation"),
                 "authority_effect": "NONE",
             }
             saved = threads("conversation_chat_complete_saas", {

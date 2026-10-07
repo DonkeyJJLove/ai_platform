@@ -36,7 +36,7 @@ function atomicJson(file, value) {
   fs.renameSync(temp, file);
 }
 
-function makeTurn(row) {
+function makeTurn(row, claimGeneration = null) {
   const rid = row.request_id;
   return {
     command_id: `MC-${rid}`,
@@ -49,6 +49,7 @@ function makeTurn(row) {
       source: 'LION_MISSION_CONTROL', broker_request_id: rid, parent_event_id: 'saas_request:' + rid, request_code: row.request_code || null,
       scope_type: row.scope_type || null, scope_id: row.scope_id || null, mission_id: row.mission_id || null, thread_id: row.thread_id || null,
       transport: SECURE, authority_effect: 'NONE', browser_automation: 'DISABLED_BY_POLICY',
+      claim_generation: Number.isSafeInteger(claimGeneration) ? claimGeneration : null,
     },
   };
 }
@@ -147,7 +148,7 @@ class BrowserlessSecureMcpRelay {
     };
     this.save(base);
     try {
-      const created = await this.ingress('/v1/turns', { method: 'POST', body: makeTurn(row), timeoutMs: 10000 });
+      const created = await this.ingress('/v1/turns', { method: 'POST', body: makeTurn(row, claim.claim_generation), timeoutMs: 10000 });
       const turn = created.turn || {};
       if (!turn.turn_id) throw new Error('turn create missing turn_id');
       return this.save({ ...base, state: 'SAAS_ACTIVE', turn_id: turn.turn_id, turn_command_id: `MC-${rid}`, turn_request_hash: turn.request_hash || null, last_observed_at: now() });
@@ -194,6 +195,9 @@ class BrowserlessSecureMcpRelay {
     let turn;
     try { turn = (await this.ingress(`/v1/turns/${encodeURIComponent(rec.turn_id)}`, { timeoutMs: 5000 })).turn || {}; }
     catch { this.save(rec); return; }
+    if (turn.request_hash !== rec.turn_request_hash || turn.command_id !== rec.turn_command_id) {
+      rec.state = 'TURN_IDENTITY_MISMATCH'; rec.reconciliation_state = 'FAIL_CLOSED_REQUEST_HASH_OR_COMMAND'; this.save(rec); return;
+    }
     if (turn.status !== 'COMPLETED') { this.save(rec); return; }
     const answer = turn.response && typeof turn.response === 'object' ? turn.response.text : turn.response;
     if (typeof answer !== 'string' || !answer.trim()) { rec.state = 'FAILED'; rec.error = 'completed turn missing response text'; this.save(rec); return; }
@@ -201,14 +205,17 @@ class BrowserlessSecureMcpRelay {
     let claim = this.claims.get(rid);
     if (claim && !claimUsable(claim, brokerState)) {
       this.claims.delete(rid); claim = null;
+      rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'NEW_BROKER_REQUEST_REQUIRED'; this.save(rec); return;
     }
     if (!claim) {
       if (brokerState.status === 'CLAIMED') { this.save(rec); return; }
-      if (!WAITING.has(brokerState.status)) { this.save(rec); return; }
-      try {
-        claim = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}/claim`, { method: 'POST', body: {}, timeoutMs: 8000 });
-        this.claims.set(rid, claim); rec.claim_generation = claim.claim_generation; rec.claim_expires_at = claim.claim_expires_at || null;
-      } catch { this.save(rec); return; }
+      if (WAITING.has(brokerState.status)) {
+        rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'NEW_BROKER_REQUEST_REQUIRED'; this.save(rec); return;
+      }
+      this.save(rec); return;
+    }
+    if (Number(rec.claim_generation) !== Number(claim.claim_generation)) {
+      rec.state = 'STALE_TURN_GENERATION'; rec.reconciliation_state = 'CLAIM_GENERATION_MISMATCH'; this.save(rec); return;
     }
     rec.state = 'BROKER_RESPOND_ATTEMPT'; this.save(rec);
     try {
