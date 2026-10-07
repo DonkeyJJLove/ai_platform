@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import sqlite3
 from hashlib import sha256
@@ -18,6 +19,7 @@ from cyber_lion.app_coordination.conversation_chat import (
 )
 from cyber_lion.app_coordination.local_intelligence_gateway import make_handler
 from cyber_lion.app_coordination.conversation_domain import ConversationConflict
+from cyber_lion.contracts.attachment_projection import ProviderCapabilitySnapshot
 from tools.lion_local_intelligence_runtime import ThreadStore
 
 
@@ -243,15 +245,42 @@ class R24ConversationModelChatTests(unittest.TestCase):
         )
 
     def test_saas_dispatch_evidence_survives_threadstore_connection_close(self):
+        self.gateway._provider_capability_snapshots = lambda conversation, messages: {
+            "SAAS": ProviderCapabilitySnapshot(
+                provider="SAAS",
+                endpoint_ref="test:saas-dispatch-persistence",
+                model_release_ref=None,
+                observed_at="2026-10-07T08:00:00Z",
+                currentness="CURRENT",
+                text_input="SUPPORTED",
+                image_input="UNKNOWN",
+                native_file_input="UNKNOWN",
+                native_pdf_input="UNKNOWN",
+                structured_data_input="UNKNOWN",
+                workspace_access="UNKNOWN",
+                network_access="UNKNOWN",
+                session_persistence="UNKNOWN",
+                streaming="UNKNOWN",
+                max_payload_bytes=None,
+                parallel_calls=None,
+                context_budget=None,
+                evidence_refs=("test:saas-dispatch-persistence",),
+            ).sealed().to_dict(),
+        }
         conv = self.create("saas-dispatch-persistence")
         out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
-            "message": "persist dispatch",
+            "message": "persist dispatch attachment",
             "route": "SAAS",
             "client_request_id": "saas-dispatch-persist-1",
+            "attachments": [{
+                "display_name": "dispatch.txt",
+                "media_type": "text/plain",
+                "data_b64": base64.b64encode(b"durable dispatch attachment").decode("ascii"),
+            }],
         })
         request_id = out["saas_handoff"]["request_id"]
         candidate = self.store("conversation_chat_saas_candidates", {"limit": 16})["candidates"][0]
-        evidence = self.store("conversation_chat_record_saas_dispatch", {
+        evidence_args = {
             "conversation_id": conv["conversation_id"],
             "request_message_id": candidate["message_id"],
             "request_id": request_id,
@@ -260,12 +289,14 @@ class R24ConversationModelChatTests(unittest.TestCase):
             "shared_context_digest": candidate["shared_context_digest"],
             "projection_digest": candidate["projection_digest"],
             "actual_payload_bytes_digest": "1" * 64,
+            "attachment_payload_bytes_digest": "3" * 64,
             "turn_request_hash": "2" * 64,
             "turn_id": "turn-dispatch-persistence",
             "bridge_id": "bridge-dispatch-persistence",
             "external_thread_ref": "external-dispatch-persistence",
             "dispatch_state": "BOUND_SENT",
-        })
+        }
+        evidence = self.store("conversation_chat_record_saas_dispatch", evidence_args)
         self.assertFalse(evidence["idempotent_replay"])
         with sqlite3.connect(self.store.path) as conn:
             raw = conn.execute(
@@ -277,21 +308,19 @@ class R24ConversationModelChatTests(unittest.TestCase):
             persisted["dispatch_evidence"]["actual_payload_bytes_digest"],
             "1" * 64,
         )
-        replay = self.store("conversation_chat_record_saas_dispatch", {
-            "conversation_id": conv["conversation_id"],
-            "request_message_id": candidate["message_id"],
-            "request_id": request_id,
-            "binding_epoch": candidate["binding_epoch"],
-            "lane_id": candidate["lane_id"],
-            "shared_context_digest": candidate["shared_context_digest"],
-            "projection_digest": candidate["projection_digest"],
-            "actual_payload_bytes_digest": "1" * 64,
-            "turn_request_hash": "2" * 64,
-            "turn_id": "turn-dispatch-persistence",
-            "bridge_id": "bridge-dispatch-persistence",
-            "external_thread_ref": "external-dispatch-persistence",
-            "dispatch_state": "BOUND_SENT",
-        })
+        self.assertEqual(
+            persisted["dispatch_evidence"]["attachment_payload_bytes_digest"],
+            "3" * 64,
+        )
+        self.assertEqual(
+            persisted["attachment_projections"][0]["actual_provider_payload_digest"],
+            "3" * 64,
+        )
+        self.assertEqual(
+            persisted["attachment_capability_snapshot"]["provider"],
+            "SAAS",
+        )
+        replay = self.store("conversation_chat_record_saas_dispatch", evidence_args)
         self.assertTrue(replay["idempotent_replay"])
 
     def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
