@@ -199,6 +199,11 @@ class BrowserlessSecureMcpRelay {
       rec.state = 'TURN_IDENTITY_MISMATCH'; rec.reconciliation_state = 'FAIL_CLOSED_REQUEST_HASH_OR_COMMAND'; this.save(rec); return;
     }
     if (turn.status !== 'COMPLETED') { this.save(rec); return; }
+    if (typeof turn.input !== 'string' || !turn.input) {
+      rec.state = 'TURN_PAYLOAD_EVIDENCE_MISSING'; rec.reconciliation_state = 'FAIL_CLOSED_NO_TURN_INPUT'; this.save(rec); return;
+    }
+    const transportPayloadDigest = sha(turn.input);
+    rec.transport_payload_digest = transportPayloadDigest;
     const answer = turn.response && typeof turn.response === 'object' ? turn.response.text : turn.response;
     if (typeof answer !== 'string' || !answer.trim()) { rec.state = 'FAILED'; rec.error = 'completed turn missing response text'; this.save(rec); return; }
     rec.response_digest = sha(answer);
@@ -221,7 +226,15 @@ class BrowserlessSecureMcpRelay {
     try {
       const result = await this.broker(`/api/v3/saas-broker/requests/${encodeURIComponent(rid)}/respond`, {
         method: 'POST', timeoutMs: 30000,
-        body: { response_token: claim.response_token, claim_generation: claim.claim_generation, answer, model_identity: 'ChatGPT SaaS / SentinelX MCP / durable turn completion', transport: SECURE, attestation_class: ATTEST },
+        body: {
+          response_token: claim.response_token, claim_generation: claim.claim_generation, answer,
+          model_identity: 'ChatGPT SaaS / SentinelX MCP / durable turn completion',
+          transport: SECURE, attestation_class: ATTEST,
+          transport_payload_digest: transportPayloadDigest,
+          turn_id: turn.turn_id,
+          turn_request_hash: turn.request_hash,
+          transport_evidence_class: 'SENTINELX_MCP_TURN_INPUT_SHA256',
+        },
       });
       const receipt = result.receipt || {};
       rec.broker_receipt_digest = receipt.receipt_digest || null;
