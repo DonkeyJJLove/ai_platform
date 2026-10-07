@@ -41,7 +41,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/conversation_chat.py",
-      "sha256": "9c189f911ed5eb81e25862d0215fb351c030bf7286a3c47a19e3473b58f4a588"
+      "sha256": "fb3443c34b2bf122ce8d368a7c2d1bcea23480b425d7e6d4347db991728e8d49"
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
@@ -316,6 +316,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "332f4559d184f43778a45b68df63794ee02143abc4ce62f9555c4f478dc06e6a",
+  "package_digest": "805791fb9629b117db664f88a4821d9cf435193d72c2d7ef51f805c23f5a91b8",
   "authority_effect": "NONE"
 }
