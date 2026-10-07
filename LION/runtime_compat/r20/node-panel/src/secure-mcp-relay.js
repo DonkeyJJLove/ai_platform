@@ -162,24 +162,38 @@ class BrowserlessSecureMcpRelay {
 
   async recordCanonicalDispatch(rec, turn) {
     if (rec.dispatch_evidence_recorded_at) return { required: false, recorded: true };
+    const turnInput = typeof turn.input === 'string' ? turn.input : '';
+    const attachmentRequired = turnInput.includes('LION_ATTACHMENT_DATA=');
     let pending;
     try {
       pending = await this.panel('/api/conversations/saas/pending?limit=128', { timeoutMs: 5000 });
     } catch (error) {
       rec.dispatch_evidence_error = 'PANEL_PENDING:' + error.name;
       this.save(rec);
-      return { required: false, recorded: false };
+      return { required: attachmentRequired, recorded: false };
     }
     const candidate = (pending.candidates || []).find((row) => row && row.request_id === rec.request_id);
-    if (!candidate) return { required: false, recorded: false };
+    if (!candidate) {
+      if (attachmentRequired) {
+        rec.dispatch_evidence_error = 'CANONICAL_ATTACHMENT_CANDIDATE_REQUIRED';
+        this.save(rec);
+      }
+      return { required: attachmentRequired, recorded: false };
+    }
     const projections = Array.isArray(candidate.attachment_projections) ? candidate.attachment_projections : [];
-    const required = projections.length > 0;
-    if (typeof turn.input !== 'string' || !turn.input) {
+    const projectionRequiresAttachment = projections.length > 0;
+    const required = attachmentRequired || projectionRequiresAttachment;
+    if (attachmentRequired !== projectionRequiresAttachment) {
+      rec.dispatch_evidence_error = 'CANONICAL_ATTACHMENT_PROJECTION_MISMATCH';
+      this.save(rec);
+      return { required: true, recorded: false };
+    }
+    if (!turnInput) {
       rec.dispatch_evidence_error = 'TURN_INPUT_REQUIRED';
       this.save(rec);
       return { required, recorded: false };
     }
-    const payloadDigest = sha(turn.input);
+    const payloadDigest = sha(turnInput);
     const body = {
       conversation_id: candidate.conversation_id,
       request_message_id: candidate.request_message_id,

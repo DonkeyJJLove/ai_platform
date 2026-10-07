@@ -77,7 +77,7 @@ test('recordCanonicalDispatch finalizes attachment evidence from exact completed
     throw new Error('unexpected route');
   };
   const rec = { request_id: 'saas-1' };
-  const turn = { turn_id: 'turn_1', request_hash: 'c'.repeat(64), input: 'exact transport payload' };
+  const turn = { turn_id: 'turn_1', request_hash: 'c'.repeat(64), input: 'exact transport payload\nLION_ATTACHMENT_DATA={"content":"x"}' };
   const out = await relay.recordCanonicalDispatch(rec, turn);
   assert.deepEqual(out, { required: true, recorded: true });
   assert.equal(recorded.length, 1);
@@ -86,4 +86,27 @@ test('recordCanonicalDispatch finalizes attachment evidence from exact completed
   assert.equal(recorded[0].actual_payload_bytes_digest, recorded[0].attachment_payload_bytes_digest);
   assert.match(recorded[0].actual_payload_bytes_digest, /^[0-9a-f]{64}$/);
   assert.equal(rec.dispatch_evidence_recorded_at !== undefined, true);
+});
+
+
+test('attachment turn fails closed when canonical panel lookup is unavailable', async () => {
+  const relay = Object.create(BrowserlessSecureMcpRelay.prototype);
+  relay.save = value => value;
+  relay.panel = async () => { throw new Error('panel unavailable'); };
+  const rec = { request_id: 'saas-2' };
+  const turn = { turn_id: 'turn_2', request_hash: 'd'.repeat(64), input: 'USER: x\nLION_ATTACHMENT_DATA={"content":"x"}' };
+  const out = await relay.recordCanonicalDispatch(rec, turn);
+  assert.deepEqual(out, { required: true, recorded: false });
+  assert.equal(rec.dispatch_evidence_error, 'PANEL_PENDING:Error');
+});
+
+test('attachment turn fails closed when canonical candidate is missing', async () => {
+  const relay = Object.create(BrowserlessSecureMcpRelay.prototype);
+  relay.save = value => value;
+  relay.panel = async () => ({ candidates: [] });
+  const rec = { request_id: 'saas-3' };
+  const turn = { turn_id: 'turn_3', request_hash: 'e'.repeat(64), input: 'LION_ATTACHMENT_DATA={"content":"x"}' };
+  const out = await relay.recordCanonicalDispatch(rec, turn);
+  assert.deepEqual(out, { required: true, recorded: false });
+  assert.equal(rec.dispatch_evidence_error, 'CANONICAL_ATTACHMENT_CANDIDATE_REQUIRED');
 });
