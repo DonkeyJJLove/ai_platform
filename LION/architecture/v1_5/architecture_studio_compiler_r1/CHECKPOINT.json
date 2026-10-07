@@ -1,0 +1,53 @@
+{
+  "architecture_compiler": "CANDIDATE_TESTED_DIRECT_FORMALIZATION_SURFACES_UPDATED",
+  "architecture_studio": "PARTIAL",
+  "authority_effect": "NONE",
+  "base": {
+    "head": "c62cb8ba9f5a13d961d659c02f832ed764ef862f",
+    "tree": "e9cd6e569c7c6199723d3b4b336f2e56ab067c9e"
+  },
+  "digests": {
+    "evolution_delta": "90edda33137a35fc7a03ee6140b42f13ea21123e76f7550eadf21017d9d773dd",
+    "formalization_manifest": "3c577264222d081e04b448d1df9118ad0802824a6b78a1679341e44ef7a7bc03",
+    "formalization_registry": "629673df9a656dd575889d6959047f8f1e1b5a525f0f7190d32c315e01a4006f",
+    "required_formalization_set": "c003f408853778a88baf9beab212b6053c293eb49264e8abf67d617e00c42b12"
+  },
+  "execution_effect": "NONE",
+  "formalization_closure": "NOT_CREATED_REQUIRED_SURFACES_REMAIN_OPEN",
+  "next_exact_step": "verify direct formalization surfaces on exact Thread B branch, then parent serialization; regenerate generated global projections from the final serialized non-carrier tree and rebind carriers last",
+  "schema": "lion.thread-b.architecture-studio-compiler-checkpoint/v1",
+  "source_candidate": {
+    "branch": "mission/architecture-studio-compiler-r1",
+    "head": "a31c508e1010b32873a988c1ba3fe59c6ce4366e",
+    "tree": "c91b1a14116e283add957c032044ffa6c5f29278"
+  },
+  "status": "FORMALIZATION_PROGRESS_DIRECT_SURFACES_UPDATED_NOT_CLOSED",
+  "targeted_tests": {
+    "errors": 0,
+    "failures": 0,
+    "git_diff_check": "PASS",
+    "total": 86
+  },
+  "truth_currentness_carriers": "NOT_TOUCHED",
+  "formalization_progress": {
+    "candidate_updated": [
+      "architecture-docs",
+      "architecture-projection",
+      "evolution-evals",
+      "gap-projection"
+    ],
+    "still_open_before_closure": [
+      "architecture-document-census",
+      "architecture-document-graph",
+      "architecture-reconciliation",
+      "code-derived-architecture",
+      "document-derived-architecture",
+      "documentation-currentness-model",
+      "currentness-carriers"
+    ],
+    "carrier_last": [
+      "currentness-carriers"
+    ],
+    "closure_state": "OPEN"
+  }
+}

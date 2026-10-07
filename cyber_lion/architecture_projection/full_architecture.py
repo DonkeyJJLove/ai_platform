@@ -85,6 +85,7 @@ class FullArchitectureModel:
 _ELEMENT_SPECS = (
     ("architecture-projection", "ARCHITECTURE_PROJECTION", "Canonical architecture projection", "VERIFIED_REFERENCE", "cyber_lion/architecture_projection/extractor.py", "ArchitectureProjectionExtractor", "LIVE_CODE"),
     ("architecture-knowledge", "ARCHITECTURE_PROJECTION", "Federated architecture knowledge projection", "IMPLEMENTED", "cyber_lion/architecture_projection/architecture_knowledge.py", "FederatedArchitectureKnowledge", "LIVE_CODE"),
+    ("architecture-compiler", "ARCHITECTURE_PROJECTION", "Deterministic architecture candidate compiler", "PARTIALLY_IMPLEMENTED", "cyber_lion/architecture_projection/architecture_compiler.py", "ArchitectureCompiler", "LIVE_CODE"),
     ("formalization-kernel", "ARCHITECTURE_PROJECTION", "Architecture formalization kernel", "IMPLEMENTED", "cyber_lion/contracts/formalization_closure.py", "FormalizationClosureRecord", "LIVE_CODE"),
     ("federated-formalization-binding", "EVOLUTIONARY_EPOCH", "Federated formalization binding", "CONTRACT_ONLY", "cyber_lion/contracts/federated_formalization_binding.py", "FederatedFormalizationBinding", "LIVE_CODE"),
     ("authority-effect", "AUTHORITY_AND_EFFECT", "Authority and effect boundary", "VERIFIED_REFERENCE", "cyber_lion/enterprise/policy_gate.py", "CanonicalPolicyDecisionPoint", "LIVE_CODE"),
@@ -119,6 +120,7 @@ _ELEMENT_SPECS = (
 
 _TARGET_ELEMENTS = (
     ("bean-factory", "TARGET_BEAN_FACTORY", "Target Bean Factory", "cyber_lion/TARGET_ARCHITECTURE.md#bean-factory"),
+    ("architecture-studio", "ARCHITECTURE_PROJECTION", "Interactive Architecture Studio", "LION/architecture/v1_5/architecture_studio_compiler_r1/README.md#architecture-studio--compiler-r1--source-candidate"),
 )
 
 

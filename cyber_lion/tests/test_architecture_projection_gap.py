@@ -38,6 +38,16 @@ class ArchitectureProjectionGapTests(unittest.TestCase):
             self.assertEqual(by_id[integrated].evidence_class, "LIVE_CODE")
             self.assertTrue(by_id[integrated].evidence_ref)
 
+        compiler = by_id["ArchitectureCompiler"]
+        self.assertEqual(compiler.status, "PARTIALLY_IMPLEMENTED")
+        self.assertEqual(compiler.evidence_class, "LIVE_CODE")
+        self.assertEqual(compiler.evidence_ref, "cyber_lion/architecture_projection/architecture_compiler.py")
+        self.assertIn("stops before admission", compiler.missing_runtime)
+
+        studio = by_id["ArchitectureStudio"]
+        self.assertEqual(studio.status, "TARGET_ONLY")
+        self.assertIn("Electron", studio.missing_runtime)
+
         action = by_id["ActionSpec"]
         self.assertEqual(action.status, "PARTIALLY_IMPLEMENTED")
         self.assertEqual(action.evidence_class, "LIVE_CODE")

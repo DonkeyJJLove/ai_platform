@@ -17,6 +17,10 @@ from .full_plantuml import (
     serialize_flow_atlas_plantuml,
     serialize_gap_overlay_plantuml,
 )
+from .architecture_compiler import (
+    ArchitectureCompiler, ArchitectureCompilerError, ArchitectureCompilationResult,
+    CandidateDesign, CandidateLayerBinding,
+)
 from .render_adapter import (
     RendererPin, VisualRenderArtifactPlan, VisualRenderPlan, VisualRenderManifest,
     build_visual_render_plan, build_visual_render_manifest,
@@ -37,5 +41,7 @@ __all__ = [
     "serialize_full_architecture_plantuml", "serialize_flow_atlas_plantuml",
     "serialize_gap_overlay_plantuml", "RendererPin", "VisualRenderArtifactPlan",
     "VisualRenderPlan", "VisualRenderManifest", "build_visual_render_plan",
-    "build_visual_render_manifest",
+    "build_visual_render_manifest", "ArchitectureCompiler",
+    "ArchitectureCompilerError", "ArchitectureCompilationResult",
+    "CandidateDesign", "CandidateLayerBinding",
 ]
