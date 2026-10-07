@@ -24,9 +24,12 @@ Session lease expiry is independent: NOT_ATTESTED, BOUND, EXPIRED. A successful
 new mediated roundtrip establishes a new BOUND lease; previous BOUND evidence
 becomes SUPERSEDED. Rebinding is represented by distinct immutable binding IDs,
 not a fabricated provider login. Stale observation is projected separately as
-freshness STALE. Transport is CHATGPT_SENTINELX_SESSION_MEDIATED, attested as
-OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP. This is not cryptographic provider
-attestation. AUTO_HOP remains UNAVAILABLE; session BOUND never implies an
+freshness STALE. Transport is explicit per request and may be the legacy
+CHATGPT_SENTINELX_SESSION_MEDIATED path, the Firefox project mediator, the
+OpenAI Secure MCP tunnel, or CHATGPT_SENTINELX_MCP. The accepted transport
+selects its matching attestation class; none of these is cryptographic provider
+attestation. A fresh READY mediator heartbeat may make automatic handoff
+available for its own transport. Session BOUND by itself never implies an
 automatic provider invocation.
 
 ## API and consumers
