@@ -153,9 +153,11 @@ class ThreadStoreRuntimeLeaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             path=Path(td)/"threads.db"
             first=ThreadStore(path,runtime_owner="WINDOWS_PANEL",lease_seconds=30)
-            self.addCleanup(first.close)
-            with self.assertRaisesRegex(RuntimeError,"already owned"):
-                ThreadStore(path,runtime_owner="WSL_RECOVERY",lease_seconds=30)
+            try:
+                with self.assertRaisesRegex(RuntimeError,"already owned"):
+                    ThreadStore(path,runtime_owner="WSL_RECOVERY",lease_seconds=30)
+            finally:
+                first.close()
 
     def test_released_runtime_lease_allows_successor(self):
         with tempfile.TemporaryDirectory() as td:
