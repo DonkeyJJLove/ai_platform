@@ -98,7 +98,9 @@ class ThreadStore:
                 if op=='ui_runtime_event':
                     return ui_runtime_events.record(c,args)
                 if op.startswith('conversation_chat_'):
-                    return chat_store_operation(c,op[len('conversation_chat_'):],args)
+                    result=chat_store_operation(c,op[len('conversation_chat_'):],args)
+                    c.commit()
+                    return result
                 if op.startswith('conversation_'):
                     return conversation_domain_operation(c,op[len('conversation_'):],args)
                 if op=='list':
