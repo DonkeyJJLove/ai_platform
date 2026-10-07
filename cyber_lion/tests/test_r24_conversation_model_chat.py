@@ -242,6 +242,58 @@ class R24ConversationModelChatTests(unittest.TestCase):
             "SAAS_BROKER_SESSION_BINDING",
         )
 
+    def test_saas_dispatch_evidence_survives_threadstore_connection_close(self):
+        conv = self.create("saas-dispatch-persistence")
+        out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
+            "message": "persist dispatch",
+            "route": "SAAS",
+            "client_request_id": "saas-dispatch-persist-1",
+        })
+        request_id = out["saas_handoff"]["request_id"]
+        candidate = self.store("conversation_chat_saas_candidates", {"limit": 16})["candidates"][0]
+        evidence = self.store("conversation_chat_record_saas_dispatch", {
+            "conversation_id": conv["conversation_id"],
+            "request_message_id": candidate["message_id"],
+            "request_id": request_id,
+            "binding_epoch": candidate["binding_epoch"],
+            "lane_id": candidate["lane_id"],
+            "shared_context_digest": candidate["shared_context_digest"],
+            "projection_digest": candidate["projection_digest"],
+            "actual_payload_bytes_digest": "1" * 64,
+            "turn_request_hash": "2" * 64,
+            "turn_id": "turn-dispatch-persistence",
+            "bridge_id": "bridge-dispatch-persistence",
+            "external_thread_ref": "external-dispatch-persistence",
+            "dispatch_state": "BOUND_SENT",
+        })
+        self.assertFalse(evidence["idempotent_replay"])
+        with sqlite3.connect(self.store.path) as conn:
+            raw = conn.execute(
+                "SELECT metadata_json FROM conversation_messages WHERE message_id=?",
+                (candidate["message_id"],),
+            ).fetchone()[0]
+        persisted = json.loads(raw)
+        self.assertEqual(
+            persisted["dispatch_evidence"]["actual_payload_bytes_digest"],
+            "1" * 64,
+        )
+        replay = self.store("conversation_chat_record_saas_dispatch", {
+            "conversation_id": conv["conversation_id"],
+            "request_message_id": candidate["message_id"],
+            "request_id": request_id,
+            "binding_epoch": candidate["binding_epoch"],
+            "lane_id": candidate["lane_id"],
+            "shared_context_digest": candidate["shared_context_digest"],
+            "projection_digest": candidate["projection_digest"],
+            "actual_payload_bytes_digest": "1" * 64,
+            "turn_request_hash": "2" * 64,
+            "turn_id": "turn-dispatch-persistence",
+            "bridge_id": "bridge-dispatch-persistence",
+            "external_thread_ref": "external-dispatch-persistence",
+            "dispatch_state": "BOUND_SENT",
+        })
+        self.assertTrue(replay["idempotent_replay"])
+
     def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
         conv = self.create("saas-cancel-root")
         out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
