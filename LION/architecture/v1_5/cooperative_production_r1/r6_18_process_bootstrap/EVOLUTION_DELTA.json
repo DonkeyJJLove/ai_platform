@@ -1,0 +1,36 @@
+{
+  "authority_effect": "NONE",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_PROCESS_BOOTSTRAP_R6_18.md",
+    "cyber_lion/mission_control/cooperative_process_bootstrap.py",
+    "cyber_lion/tests/test_cooperative_mission_control_wiring.py",
+    "cyber_lion/tests/test_cooperative_process_bootstrap.py",
+    "tools/lion_mission_control_v3.py"
+  ],
+  "delta_digest": "f06af255dfb6060e4bfc3b64a839e7af237789703f27062517087b38b5fb3da9",
+  "delta_id": "architecture:9425e43795e9da21a9e53dc6",
+  "dependency_ids": [
+    "R6.10",
+    "R6.16",
+    "R6.17"
+  ],
+  "evidence_refs": [
+    "source:cooperative-materialization-registry",
+    "source:mission-control-wiring",
+    "source:r6.10-runtime-root",
+    "source:r6.16-control-plane-materializer"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "default UNBOUND remains fail-closed; explicit pinned external process composition can install exact R6.16 WRITE and existing verifier-transfer materializers without authority or execution",
+  "falsification_conditions": [
+    "bootstrap advances a HELD assignment to READY",
+    "bootstrap exposes authority or runtime effect",
+    "more than one process install path is active",
+    "process evidence source depends on the worker provider database it is producing",
+    "write and verifier roots bind different Mission Control databases"
+  ],
+  "motivation": "install exactly one pre-composed non-authorizing cooperative materializer pair into the existing Mission Control registry without using worker provider evidence as its own source",
+  "risk_class": "GREEN",
+  "schema_version": "1.0.0",
+  "target_component": "Mission Control cooperative process composition bootstrap"
+}

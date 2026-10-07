@@ -31,6 +31,19 @@ class CooperativeMissionControlWiringTests(unittest.TestCase):
         self.assertIn("write_materializer=materializers.write_materializer",source)
         self.assertIn("verify_materializer=materializers.verify_materializer",source)
 
+    def test_process_bootstrap_owns_exactly_one_registry_install_path(self):
+        source=self.source()
+        self.assertIn(
+            "from cyber_lion.mission_control import cooperative_process_bootstrap as cooperative_process_bootstrap",
+            source,
+        )
+        self.assertIn(
+            "COOPERATIVE_PROCESS_BOOTSTRAP=cooperative_process_bootstrap.bootstrap_process_materializers(",
+            source,
+        )
+        self.assertEqual(source.count("COOPERATIVE_MATERIALIZERS=CooperativeMaterializationRegistry()"),1)
+        self.assertEqual(source.count("bootstrap_process_materializers("),1)
+
     def test_live_stepper_requires_canonical_worker_provider_before_assignments(self):
         source=(ROOT/"cyber_lion/mission_control/cooperative_production.py").read_text(encoding="utf-8")
         self.assertIn('"provider_id": "COOPERATIVE_RUNTIME_WRITER_R5"',source)

@@ -27,6 +27,7 @@ from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
 from cyber_lion.mission_control import control_plane_reconnaissance as control_recon
 from cyber_lion.mission_control import cooperative_production as cooperative_prod
+from cyber_lion.mission_control import cooperative_process_bootstrap as cooperative_process_bootstrap
 from cyber_lion.mission_control.cooperative_materialization_registry import CooperativeMaterializationRegistry
 from cyber_lion.contracts.action_ir import CanonicalActionIR
 from mission_control_compat import compat_get, STATIC
@@ -342,6 +343,9 @@ PROCESS_CAPABILITY_REGISTRY={
 COOPERATIVE_STATUS_DIR=Path('/srv/lion-e4-candidate-r1/r20-mission/r24-autonomy/status')
 COOPERATIVE_CAPABILITY_REGISTRY=cooperative_prod.capability_registry_entries()
 COOPERATIVE_MATERIALIZERS=CooperativeMaterializationRegistry()
+COOPERATIVE_PROCESS_BOOTSTRAP=cooperative_process_bootstrap.bootstrap_process_materializers(
+    registry=COOPERATIVE_MATERIALIZERS
+)
 PROCESS_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]=COOPERATIVE_CAPABILITY_REGISTRY[cooperative_prod.CAPABILITY_BOOTSTRAP]
 
 def _process_capability_registry_current():
