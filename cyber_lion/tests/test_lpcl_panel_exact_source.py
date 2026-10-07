@@ -86,6 +86,12 @@ class LpclPanelExactSourceTests(unittest.TestCase):
         self.assertIn("VALID · WAITING FOR CAPABILITIES",UI)
         self.assertIn("VALID · EXECUTION READY",UI)
         self.assertIn("Activation will start this mission parked until matching capabilities become available.",UI)
+        self.assertIn('id="lpclPrepareCognitiveButton"',UI)
+        self.assertIn("/cognitive-readiness?",UI)
+        self.assertIn("/cognitive-sync",UI)
+        self.assertIn("readiness_projection_digest",UI)
+        self.assertIn("Cognitive readiness nie jest READY",UI)
+        self.assertIn("Canonical conversation nie jest związana z misją.",UI)
 
 
 if __name__=='__main__':unittest.main()

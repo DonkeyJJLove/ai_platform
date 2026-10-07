@@ -7,13 +7,21 @@ from copy import deepcopy
 from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse,unquote,parse_qs
+from urllib.parse import urlparse,unquote,parse_qs,urlencode
 from cyber_lion.mission_control.runtime_projection import normalize_snapshot, validate_registration, SCHEMA_VERSION as RUNTIME_SCHEMA_VERSION
 from cyber_lion.mission_control.phase_control import apply_phase_action, fence_phase_action
 from cyber_lion.contracts.phase_execution_contract import (
  PhaseExecutionContract, PhaseExecutionContractError, compile_panel_phase_contracts,
- preflight_execution_contracts, migrated_explicit_contract, SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
+ preflight_execution_contracts, migrated_explicit_contract, required_cognitive_providers,
+ SCHEMA_ID as PHASE_CONTRACT_SCHEMA,
  COMPILER_VERSION as PHASE_CONTRACT_COMPILER_VERSION,
+)
+from cyber_lion.contracts.cognitive_continuity import (
+ READINESS_SCHEMA_ID as COGNITIVE_READINESS_SCHEMA,
+ SYNC_SCHEMA_ID as COGNITIVE_SYNC_SCHEMA,
+ CognitiveContinuityContractError,
+ validate_cognitive_readiness_projection,
+ validate_synchronization_checkpoint,
 )
 from cyber_lion.contracts.mission_contract_profiles import migrated_contract_for, GENERIC_ADAPTER_REPAIR_MISSION, SAAS_AUTOMATIC_MEDIATOR_MISSION, FIREFOX_PROJECT_MEDIATOR_SUCCESSOR_MISSION
 from cyber_lion.mission_control.mission_reconciliation import evaluate_completion_predicates
@@ -788,22 +796,145 @@ def register_lpcl_mission(x):
     c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,t))
     c.commit();c.close();return {'idempotent':False,'mission':process_snapshot(mid)}
 
+def _cognitive_requirements(c,mid):
+    rows=c.execute(
+      'SELECT phase_id FROM mission_phase_execution_contracts WHERE mission_id=? ORDER BY ordinal',
+      (mid,),
+    ).fetchall()
+    contracts=[]
+    for row in rows:
+      contract=global_sched.phase_execution_contract(c,mid,row['phase_id'])
+      if contract:contracts.append(contract)
+    return required_cognitive_providers(contracts)
+
+
+def _cognitive_readiness_readback(mid,conversation_id,binding_epoch):
+    base=os.environ.get('LION_COGNITIVE_READINESS_URL','http://127.0.0.1:8780').rstrip('/')
+    parsed=urlparse(base)
+    if parsed.scheme!='http' or parsed.hostname not in {'127.0.0.1','localhost','::1'}:
+      raise ValueError('cognitive readiness endpoint must be local HTTP')
+    query=urlencode({'conversation_id':conversation_id,'binding_epoch':binding_epoch})
+    url=base+'/api/missions/'+mid+'/cognitive-readiness?'+query
+    req=urllib.request.Request(url,headers={'User-Agent':'LION-MISSION-CONTROL-COGNITIVE-READINESS/1','Accept':'application/json'})
+    try:
+      with urllib.request.urlopen(req,timeout=5) as response:
+       if response.status!=200:raise ValueError('cognitive readiness HTTP status')
+       raw=response.read(1024*1024+1)
+    except (urllib.error.URLError,TimeoutError,OSError) as exc:
+      raise ValueError('cognitive readiness unavailable:'+type(exc).__name__) from exc
+    if len(raw)>1024*1024:raise ValueError('cognitive readiness response too large')
+    try:value=json.loads(raw.decode('utf-8'))
+    except (UnicodeDecodeError,json.JSONDecodeError) as exc:raise ValueError('cognitive readiness malformed') from exc
+    if not isinstance(value,dict):raise ValueError('cognitive readiness malformed')
+    return value
+
+
 def activate_lpcl_mission(mid,x):
-    if type(x) is not dict or set(x)!={'lpcl_digest','activation_event'} or x.get('activation_event')!='EXPLICIT_UI_ACTIVATION' or not _hex(x.get('lpcl_digest'),64):raise ValueError('activation schema')
-    c=connect();m=c.execute('SELECT state,spec_digest FROM missions WHERE mission_id=?',(mid,)).fetchone()
-    if not m: c.close();raise ValueError('mission not found')
-    if m['spec_digest']!=x['lpcl_digest']:c.close();raise ValueError('activation digest drift')
-    if m['state'] not in {'REGISTERED','AUTHORIZED'}:c.close();raise ValueError('activation state')
-    preflight=global_sched.execution_preflight(c,mid)
-    if preflight is None:raise ValueError('phase execution preflight missing')
-    if preflight.get('mission_readiness')=='INVALID':raise ValueError('phase execution preflight invalid')
-    t=now();c.execute('UPDATE missions SET state=?,authorized_at=?,updated_at=? WHERE mission_id=?',('AUTHORIZED',t,t,mid));c.execute('UPDATE mission_process_specs SET authority_state=?,updated_at=? WHERE mission_id=?',('EXPLICIT_USER_ACTIVATION',t,mid))
-    _process_message(c,mid,'AUTHORITY','OPERATOR','MISSION_CONTROL',None,{'event':'MISSION_AUTHORIZED','lpcl_digest':x['lpcl_digest']},'IN')
-    c.execute('INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',('focus_mission_id',mid,t))
-    c.commit();c.close()
+    base_fields={'lpcl_digest','activation_event'}
+    cognitive_fields={'conversation_id','binding_epoch','readiness_projection_digest'}
+    if (
+      type(x) is not dict
+      or not base_fields.issubset(x)
+      or set(x)-base_fields-cognitive_fields
+      or x.get('activation_event')!='EXPLICIT_UI_ACTIVATION'
+      or not _hex(x.get('lpcl_digest'),64)
+    ):raise ValueError('activation schema')
+
+    c=connect()
+    try:
+      m=c.execute(
+        'SELECT state,spec_digest,source_head,source_tree FROM missions WHERE mission_id=?',
+        (mid,),
+      ).fetchone()
+      if not m:raise ValueError('mission not found')
+      if m['spec_digest']!=x['lpcl_digest']:raise ValueError('activation digest drift')
+      if m['state'] not in {'REGISTERED','AUTHORIZED'}:raise ValueError('activation state')
+      preflight=global_sched.execution_preflight(c,mid)
+      if preflight is None:raise ValueError('phase execution preflight missing')
+      if preflight.get('mission_readiness')=='INVALID':raise ValueError('phase execution preflight invalid')
+      required_providers=_cognitive_requirements(c,mid)
+      source_head=m['source_head'];source_tree=m['source_tree']
+    finally:
+      c.close()
+
+    readiness_projection=None
+    if required_providers:
+      if not cognitive_fields.issubset(x):
+        raise ValueError('cognitive readiness binding required')
+      conversation_id=x.get('conversation_id')
+      binding_epoch=x.get('binding_epoch')
+      readiness_digest=x.get('readiness_projection_digest')
+      if not _safe_id(conversation_id,255) or type(binding_epoch) is not int or binding_epoch<1 or not _hex(readiness_digest,64):
+        raise ValueError('cognitive readiness binding')
+      readback=_cognitive_readiness_readback(mid,conversation_id,binding_epoch)
+      readiness_projection=readback.get('readiness')
+      try:
+        validate_cognitive_readiness_projection(
+          readiness_projection,
+          mission_id=mid,
+          lpcl_digest=x['lpcl_digest'],
+          required_providers=required_providers,
+          source_head=source_head,
+          source_tree=source_tree,
+          conversation_id=conversation_id,
+          binding_epoch=binding_epoch,
+        )
+      except CognitiveContinuityContractError as exc:
+        raise ValueError('cognitive readiness invalid:'+str(exc)) from exc
+      if readiness_projection.get('projection_digest')!=readiness_digest:
+        raise ValueError('cognitive readiness digest drift')
+    elif set(x)&cognitive_fields:
+      raise ValueError('cognitive readiness binding not required')
+
+    # Reacquire all mission/process identities after the external read-only
+    # readiness observation and before the authority transition.  This closes
+    # the TOCTOU window without promoting readiness to authority.
+    c=connect()
+    try:
+      m=c.execute(
+        'SELECT state,spec_digest,source_head,source_tree FROM missions WHERE mission_id=?',
+        (mid,),
+      ).fetchone()
+      if (
+        not m
+        or m['spec_digest']!=x['lpcl_digest']
+        or m['state'] not in {'REGISTERED','AUTHORIZED'}
+        or m['source_head']!=source_head
+        or m['source_tree']!=source_tree
+      ):raise ValueError('activation currentness drift')
+      preflight=global_sched.execution_preflight(c,mid)
+      if preflight is None or preflight.get('mission_readiness')=='INVALID':
+        raise ValueError('phase execution preflight drift')
+      if _cognitive_requirements(c,mid)!=required_providers:
+        raise ValueError('cognitive provider requirement drift')
+      t=now()
+      c.execute('UPDATE missions SET state=?,authorized_at=?,updated_at=? WHERE mission_id=?',('AUTHORIZED',t,t,mid))
+      c.execute('UPDATE mission_process_specs SET authority_state=?,updated_at=? WHERE mission_id=?',('EXPLICIT_USER_ACTIVATION',t,mid))
+      event={
+        'event':'MISSION_AUTHORIZED',
+        'lpcl_digest':x['lpcl_digest'],
+        'cognitive_providers':list(required_providers),
+        'cognitive_readiness_projection_digest':(
+          readiness_projection.get('projection_digest') if readiness_projection else None
+        ),
+        'authority_source':'EXPLICIT_UI_ACTIVATION',
+      }
+      _process_message(c,mid,'AUTHORITY','OPERATOR','MISSION_CONTROL',None,event,'IN')
+      c.execute(
+        'INSERT INTO mission_meta(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',
+        ('focus_mission_id',mid,t),
+      )
+      c.commit()
+    finally:
+      c.close()
     try:return bind_lpcl_execution(mid) or process_snapshot(mid)
     except Exception as e:
-      c=connect();c.execute('UPDATE missions SET last_error=?,updated_at=? WHERE mission_id=?',('LPCL_EXECUTION_BIND:'+type(e).__name__+':'+str(e)[:800],now(),mid));c.commit();c.close();return process_snapshot(mid)
+      c=connect()
+      try:
+       c.execute('UPDATE missions SET last_error=?,updated_at=? WHERE mission_id=?',('LPCL_EXECUTION_BIND:'+type(e).__name__+':'+str(e)[:800],now(),mid))
+       c.commit()
+      finally:c.close()
+      return process_snapshot(mid)
 
 def update_lpcl_phase(mid,x):
     required={'phase_id','status','progress','protocol','from_id','to_id','detail','payload'}
@@ -1207,6 +1338,8 @@ def process_snapshot(mid, *, read_only=False, _connection=None):
     d['phases']=[dict(r) for r in c.execute('SELECT * FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,))]
     d['phase_execution_specs']=[dict(r) for r in c.execute('SELECT * FROM mission_phase_execution_specs WHERE mission_id=? ORDER BY phase_id',(mid,))]
     d['phase_execution_contracts']=[global_sched.phase_execution_contract(c,mid,r['phase_id']) for r in c.execute('SELECT phase_id FROM mission_phases WHERE mission_id=? ORDER BY ordinal',(mid,)).fetchall() if global_sched.phase_execution_contract(c,mid,r['phase_id'])]
+    cognitive_providers=required_cognitive_providers(d['phase_execution_contracts'])
+    d['cognitive_requirements']={'required':bool(cognitive_providers),'providers':list(cognitive_providers),'authority_effect':'NONE'}
     d['phase_capability_bindings']=global_sched.phase_capability_bindings(c,mid)
     d['execution_preflight']=global_sched.execution_preflight(c,mid)
     d['phase_evidence_counts']={r['phase']:r['total'] for r in c.execute("SELECT phase,COUNT(*) AS total FROM protocol_messages WHERE mission_id=? AND protocol IN ('EVIDENCE','VALIDATION','RECEIPT') GROUP BY phase",(mid,))}

@@ -26,6 +26,10 @@ EFFECT_CEILINGS = frozenset({"NONE", "CONTROL_STATE", "BOUNDED_LOCAL", "BOUNDED_
 CONTRACT_SOURCES = frozenset({"DECLARED", "MIGRATED_EXPLICIT", "LEGACY_INFERRED_SAFE"})
 PHASE_CONTRACT_STATES = frozenset({"VALID_BOUND", "VALID_DYNAMIC", "VALID_UNBOUND_WAITING", "LEGACY_INFERRED_SAFE", "INVALID"})
 MISSION_READINESS_STATES = frozenset({"READY_BOUND", "VALID_WITH_DYNAMIC_BINDING", "WAITING_FOR_CAPABILITIES", "INVALID"})
+COGNITIVE_PROVIDER_CAPABILITY_CLASSES = {
+    "LOCAL_MODEL_INFERENCE": ("LOCAL",),
+    "SAAS_DELEGATION": ("SAAS",),
+}
 
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$")
 _TOKEN = re.compile(r"^[A-Z][A-Z0-9_.:-]{0,255}$")
@@ -191,6 +195,31 @@ class ExecutionPreflight:
         }
         value["preflight_digest"] = _digest(value)
         return value
+
+
+def required_cognitive_providers(contracts: Sequence[Mapping[str, Any] | PhaseExecutionContract]) -> tuple[str, ...]:
+    """Derive provider requirements from existing process capability classes.
+
+    DUAL is represented by declaring both LOCAL_MODEL_INFERENCE and
+    SAAS_DELEGATION; this function does not introduce a parallel mission enum.
+    """
+    providers: set[str] = set()
+    for contract in contracts:
+        if isinstance(contract, PhaseExecutionContract):
+            classes = contract.capability_classes
+        elif isinstance(contract, Mapping):
+            classes = contract.get("capability_classes") or ()
+        else:
+            raise PhaseExecutionContractError("phase contract")
+        if isinstance(classes, str):
+            classes = (classes,)
+        if not isinstance(classes, (list, tuple)):
+            raise PhaseExecutionContractError("capability_classes")
+        for capability_class in classes:
+            if not isinstance(capability_class, str):
+                raise PhaseExecutionContractError("capability_class")
+            providers.update(COGNITIVE_PROVIDER_CAPABILITY_CLASSES.get(capability_class, ()))
+    return tuple(sorted(providers))
 
 
 def _completion_values(pairs: Mapping[str, str], prefix: str) -> tuple[str, ...]:
