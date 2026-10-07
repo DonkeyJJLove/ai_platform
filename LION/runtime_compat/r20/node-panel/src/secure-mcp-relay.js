@@ -89,6 +89,9 @@ class BrowserlessSecureMcpRelay {
   broker(pathname, options = {}) {
     return jsonRequest(this.config.broker, pathname, { ...options, headers: { ...(options.headers || {}), ...(options.method === 'POST' ? { 'X-LION-Mediator-Key': this.mediatorKey } : {}) } });
   }
+  panel(pathname, options = {}) {
+    return jsonRequest(this.config.panel, pathname, options);
+  }
   ingress(pathname, options = {}) {
     return jsonRequest(this.config.ingress, pathname, { ...options, headers: { ...(options.headers || {}), 'X-LION-Token': this.ingressToken } });
   }
@@ -157,6 +160,56 @@ class BrowserlessSecureMcpRelay {
     }
   }
 
+  async recordCanonicalDispatch(rec, turn) {
+    if (rec.dispatch_evidence_recorded_at) return { required: false, recorded: true };
+    let pending;
+    try {
+      pending = await this.panel('/api/conversations/saas/pending?limit=128', { timeoutMs: 5000 });
+    } catch (error) {
+      rec.dispatch_evidence_error = 'PANEL_PENDING:' + error.name;
+      this.save(rec);
+      return { required: false, recorded: false };
+    }
+    const candidate = (pending.candidates || []).find((row) => row && row.request_id === rec.request_id);
+    if (!candidate) return { required: false, recorded: false };
+    const projections = Array.isArray(candidate.attachment_projections) ? candidate.attachment_projections : [];
+    const required = projections.length > 0;
+    if (typeof turn.input !== 'string' || !turn.input) {
+      rec.dispatch_evidence_error = 'TURN_INPUT_REQUIRED';
+      this.save(rec);
+      return { required, recorded: false };
+    }
+    const payloadDigest = sha(turn.input);
+    const body = {
+      conversation_id: candidate.conversation_id,
+      request_message_id: candidate.request_message_id,
+      request_id: candidate.request_id,
+      binding_epoch: candidate.binding_epoch,
+      lane_id: candidate.lane_id,
+      shared_context_digest: candidate.shared_context_digest,
+      projection_digest: candidate.projection_digest,
+      actual_payload_bytes_digest: payloadDigest,
+      turn_request_hash: turn.request_hash,
+      turn_id: turn.turn_id,
+      bridge_id: 'sentinelx-mcp',
+      external_thread_ref: turn.turn_id,
+      dispatch_state: 'SEND_COMMITTED',
+      ...(required ? { attachment_payload_bytes_digest: payloadDigest } : {}),
+    };
+    try {
+      await this.panel('/api/conversations/saas/dispatch', { method: 'POST', body, timeoutMs: 5000 });
+      rec.dispatch_evidence_recorded_at = now();
+      rec.dispatch_payload_digest = payloadDigest;
+      rec.dispatch_evidence_error = null;
+      this.save(rec);
+      return { required, recorded: true };
+    } catch (error) {
+      rec.dispatch_evidence_error = error.name + ':' + String(error.message).slice(0, 240);
+      this.save(rec);
+      return { required, recorded: false };
+    }
+  }
+
   async claimNew(readiness) {
     if (!readiness.durable_turn_dispatch_ready) return null;
     const pending = await jsonRequest(this.config.broker, '/api/v3/saas-broker/pending', { timeoutMs: 5000 });
@@ -199,6 +252,13 @@ class BrowserlessSecureMcpRelay {
       rec.state = 'TURN_IDENTITY_MISMATCH'; rec.reconciliation_state = 'FAIL_CLOSED_REQUEST_HASH_OR_COMMAND'; this.save(rec); return;
     }
     if (turn.status !== 'COMPLETED') { this.save(rec); return; }
+    const dispatch = await this.recordCanonicalDispatch(rec, turn);
+    if (dispatch.required && !dispatch.recorded) {
+      rec.state = 'DISPATCH_EVIDENCE_PENDING';
+      rec.reconciliation_state = 'CANONICAL_ATTACHMENT_EVIDENCE_REQUIRED';
+      this.save(rec);
+      return;
+    }
     const answer = turn.response && typeof turn.response === 'object' ? turn.response.text : turn.response;
     if (typeof answer !== 'string' || !answer.trim()) { rec.state = 'FAILED'; rec.error = 'completed turn missing response text'; this.save(rec); return; }
     rec.response_digest = sha(answer);
@@ -262,7 +322,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const helper = path.resolve(__dirname, '..', 'scripts', 'unprotect_secret.ps1');
   const config = {
-    broker: args.broker || 'http://127.0.0.1:8766', ingress: args.ingress || 'http://127.0.0.1:8791',
+    broker: args.broker || 'http://127.0.0.1:8766', ingress: args.ingress || 'http://127.0.0.1:8791', panel: args.panel || 'http://127.0.0.1:8780',
     mediatorKeyFile: path.resolve(args['mediator-key-file']), ingressTokenFile: path.resolve(args['ingress-token-file']),
     stateDir: path.resolve(args['state-dir']), legacyTurnMap: path.resolve(args['legacy-turn-map']), unprotectHelper: helper,
     sentinelxStatusFile: path.resolve(args['sentinelx-status-file'] || path.join(process.env.LOCALAPPDATA || '.', 'LION', 'sentinelx-bridge', 'status.json')),
