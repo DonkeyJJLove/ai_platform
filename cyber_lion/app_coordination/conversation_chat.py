@@ -1521,6 +1521,30 @@ def deliver_saas_once(threads, control) -> list[dict[str, Any]]:
             response_meta = json.loads(result.get("response_meta_json") or "{}")
             if not isinstance(response_meta, dict):
                 response_meta = {}
+            provisional_attachments = candidate.get("attachment_projections")
+            if provisional_attachments:
+                transport = response_meta.get("transport") or result.get("transport")
+                if transport == "CHATGPT_SENTINELX_MCP":
+                    evidence = response_meta.get("transport_evidence")
+                    if not isinstance(evidence, dict):
+                        raise ConversationConflict("SaaS SentinelX attachment transport evidence missing")
+                    if evidence.get("evidence_class") != "SENTINELX_MCP_TURN_INPUT_SHA256":
+                        raise ConversationConflict("SaaS SentinelX attachment transport evidence class")
+                    payload_digest = str(evidence.get("payload_digest") or "")
+                    if _HEX64.fullmatch(payload_digest) is None:
+                        raise ConversationConflict("SaaS SentinelX attachment payload digest")
+                    if _HEX64.fullmatch(str(evidence.get("turn_request_hash") or "")) is None:
+                        raise ConversationConflict("SaaS SentinelX turn request hash")
+                    _id(evidence.get("turn_id"), "turn_id")
+                    try:
+                        finalized_attachments = finalize_attachment_projections(
+                            provisional_attachments, payload_digest
+                        )
+                    except AttachmentProjectionError as exc:
+                        raise ConversationConflict("SaaS SentinelX attachment projection finalization failed") from exc
+                    response_meta["actual_provider_payload_bytes_digest"] = payload_digest
+                    response_meta["attachment_capability_snapshot"] = candidate.get("attachment_capability_snapshot")
+                    response_meta["attachment_projections"] = list(finalized_attachments)
             response_meta = {
                 **response_meta,
                 "receipt_digest": result["receipt_digest"],
