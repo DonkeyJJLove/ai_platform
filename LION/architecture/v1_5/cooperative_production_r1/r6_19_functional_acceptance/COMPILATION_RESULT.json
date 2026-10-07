@@ -1,0 +1,15 @@
+{
+  "authority_effect": "NONE",
+  "candidate_digest": "f66c389764ff62aa70f1a36643ae168107d3e3b3589c0c5b5af7f4bfca621354",
+  "compilation_digest": "9040b1521b15f0a2cc0c3510566c5041c167e35a3ba5a9f90efbb449d9eef54b",
+  "ends_before_admission": true,
+  "evolution_delta_digest": "515d7bf0806c92e5eb7953a3fbdc37124f8d61742953265c8b473f547c35ba74",
+  "execution_effect": "NONE",
+  "formalization_manifest_digest": "116fd3bc7bcf9b83da0c4b9e4cb9c37af974d5b1704a14601ed10948e9fe8cfa",
+  "generated_artifacts_excluded_from_source_tree": true,
+  "required_formalization_set_digest": "8c69609743e755c11da507a440dfc2e034d0a8bc9b2b45cbfdaae96866387d16",
+  "required_formalization_surfaces": 32,
+  "schema": "lion.cooperative-functional-acceptance-r6.19-compilation/v1",
+  "source_tree": "e4f5544ba7203890c52318d4324728c3818f2c05",
+  "stacked_parent_head": "b3a1c560db11fe389c9275b800a5b52bc4162bba"
+}

@@ -1,0 +1,81 @@
+{
+  "affected_concepts": [
+    "capabilities",
+    "process_contract_plane",
+    "runtime"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "candidate/cooperative-functional-acceptance-r1",
+    "head": "b3a1c560db11fe389c9275b800a5b52bc4162bba",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "e4f5544ba7203890c52318d4324728c3818f2c05"
+  },
+  "candidate_digest": "f66c389764ff62aa70f1a36643ae168107d3e3b3589c0c5b5af7f4bfca621354",
+  "candidate_id": "cooperative-functional-acceptance-r6-19",
+  "candidate_scope": [
+    "LION/architecture/v1_5/cooperative_production_r1/COOPERATIVE_FUNCTIONAL_ACCEPTANCE_R6_19.md",
+    "LION/architecture/v1_5/cooperative_production_r1/README.md",
+    "cyber_lion/tests/test_cooperative_context_resolver.py",
+    "cyber_lion/tests/test_cooperative_functional_acceptance.py"
+  ],
+  "change_class": "EVAL",
+  "dependency_ids": [
+    "R6.16",
+    "R6.17",
+    "R6.18"
+  ],
+  "evals_required": [
+    "eval:cooperative-current-scheduler-functional-chain"
+  ],
+  "evidence_refs": [
+    "source:r6.16",
+    "source:r6.17",
+    "source:r6.18",
+    "test:cooperative-runtime-regression-167",
+    "test:functional-r616-r617-current-scheduler"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "current scheduler storage accepts the qualification fixture and the exact MD001 write plus MD002 verification chain completes with byte and digest readback while authority remains NONE",
+  "falsification_conditions": [
+    "MD002 verifier digest differs from the builder artifact digest",
+    "current scheduler migration rejects the qualification fixture",
+    "functional acceptance changes authority state",
+    "material write readback differs from expected bytes",
+    "qualified builder cannot traverse current scheduler claim and receipt ledger"
+  ],
+  "falsifiers": [
+    "falsifier:artifact-byte-mismatch",
+    "falsifier:builder-verifier-identity-collapse",
+    "falsifier:fixture-current-schema-drift"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "capabilities",
+      "layers": [
+        "FLEET_AND_SWARM"
+      ]
+    },
+    {
+      "concept": "process_contract_plane",
+      "layers": [
+        "GOVERNED_SELF_IMPLEMENTATION"
+      ]
+    },
+    {
+      "concept": "runtime",
+      "layers": [
+        "TRUSTED_RUNTIME"
+      ]
+    }
+  ],
+  "motivation": "bind the historical R6.17 qualification fixture to current scheduler storage and prove the existing cooperative write and independent verification path as one deterministic regression",
+  "risk_class": "GREEN",
+  "target_component": "cooperative production functional acceptance over current scheduler storage",
+  "tests_required": [
+    "test:cooperative-context-resolver",
+    "test:cooperative-functional-acceptance",
+    "test:cooperative-worker-qualification",
+    "test:scheduler-storage-reconciliation"
+  ]
+}

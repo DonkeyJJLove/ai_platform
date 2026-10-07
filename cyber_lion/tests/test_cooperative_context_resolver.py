@@ -50,7 +50,7 @@ class CooperativeContextResolverTests(unittest.TestCase):
             CREATE TABLE mission_execution_drivers(mission_id TEXT PRIMARY KEY,state TEXT,generation INTEGER,current_phase TEXT,lease_expires_at TEXT);
             CREATE TABLE mission_operator_control(mission_id TEXT PRIMARY KEY,control_owner TEXT,pause_latch INTEGER,stop_latch INTEGER,control_epoch INTEGER,context_revision INTEGER,plan_revision INTEGER);
             CREATE TABLE operator_capability_revocations(mission_id TEXT,capability TEXT,released_at TEXT);
-            CREATE TABLE mission_execution_assignments(assignment_id TEXT PRIMARY KEY,mission_id TEXT,material_drone_id TEXT,logical_drone_id TEXT,phase_id TEXT,lease_generation INTEGER,state TEXT,lease_expires_at TEXT,input_json TEXT,input_digest TEXT,control_epoch INTEGER,context_revision INTEGER,plan_revision INTEGER,dispatch_authority TEXT);
+            CREATE TABLE mission_execution_assignments(assignment_id TEXT PRIMARY KEY,mission_id TEXT,material_drone_id TEXT,logical_drone_id TEXT,phase_id TEXT,lease_generation INTEGER,state TEXT,lease_expires_at TEXT,input_json TEXT,input_digest TEXT,control_epoch INTEGER,context_revision INTEGER,plan_revision INTEGER,dispatch_authority TEXT,created_at TEXT,claimed_at TEXT,finished_at TEXT);
             ''')
             c.execute('INSERT INTO missions VALUES(?,?,?)', ('M1', 'RUNNING', self.lpcl_digest))
             c.execute('INSERT INTO mission_process_specs VALUES(?,?,?,?)', ('M1', 'EXPLICIT_USER_ACTIVATION', self.lpcl, self.lpcl_digest))
@@ -58,6 +58,7 @@ class CooperativeContextResolverTests(unittest.TestCase):
             c.execute('INSERT INTO mission_operator_control VALUES(?,?,?,?,?,?,?)', ('M1', 'AUTONOMOUS', 0, 0, 1, 0, 0))
             names = tuple(self.claim)
             c.execute('INSERT INTO mission_execution_assignments (' + ','.join(names) + ') VALUES(' + ','.join('?' for _ in names) + ')', tuple(self.claim[n] for n in names))
+            c.execute('UPDATE mission_execution_assignments SET created_at=? WHERE assignment_id=?', (self.f.now.isoformat(), self.aid))
         self.record = asdict(self.f.context(self.aid))
         ex = self.record['execution']
         ex['artifact_root'] = str(ex['artifact_root'])

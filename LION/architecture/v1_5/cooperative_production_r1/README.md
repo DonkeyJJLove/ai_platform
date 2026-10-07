@@ -23,3 +23,12 @@ Thirty distinct tests run successfully in the assistant sandbox, Ubuntu on MOON 
 Existing R24 `material_contract_assignment_once` remains the worker consumer; `material_worker_runtime.py` remains the capability/identity contract. `execution_driver.py` remains the mission cursor owner. No production call site is wired to this new module yet. Read the complete assignment producer, receipt-fencing tests, R24 materializer and currentness consumer before changing the advertised worker profile. Add the bundle consumer through that existing assignment/receipt path, then compile and test the actual LPCL ingress.
 
 This increment supports the artifact-exchange part of B02/C02 and acceptance T04/T05/T11 from the cooperative-production requirements; it does not close those acceptances. A00/PR407 and unfinished A01 remain preserved. No merge, live DB migration, engine restart, fleet mutation, new model session or mission activation is performed by this source increment.
+
+
+## Later source evolution — R6.18/R6.19
+
+Subsequent source candidates advance beyond the initial R1 carrier boundary without rewriting this document's historical R1 claims.
+
+[R6.18 process bootstrap](COOPERATIVE_PROCESS_BOOTSTRAP_R6_18.md) supplies the missing fail-closed Mission Control process-composition install path for the existing cooperative materializer registry. Default mode remains UNBOUND; no authority, assignment or runtime effect is created by source integration.
+
+[R6.19 functional acceptance](COOPERATIVE_FUNCTIONAL_ACCEPTANCE_R6_19.md) updates the historical R6.17 fixture to current scheduler storage and proves the isolated chain R6.16 release → R6.17 qualification → current scheduler claim → material write → distinct MD002 verification. This is functional source acceptance, not live deployment acceptance. The live R24 fleet remains a separately observed state.
