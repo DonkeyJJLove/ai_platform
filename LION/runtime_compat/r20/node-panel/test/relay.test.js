@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { makeTurn, claimUsable } = require('../src/secure-mcp-relay');
+const { BrowserlessSecureMcpRelay, makeTurn, claimUsable } = require('../src/secure-mcp-relay');
 
 test('SentinelX relay creates authority-NONE durable turn with causal lineage', () => {
   const rid = 'saas-686efeb1627247548d52ec4a2576f1fa';
@@ -50,4 +50,40 @@ test('secure MCP relay records canonical attachment dispatch evidence before bro
   assert.match(source, /attachment_payload_bytes_digest: payloadDigest/);
   assert.match(source, /CANONICAL_ATTACHMENT_EVIDENCE_REQUIRED/);
   assert.match(source, /panel: args\.panel \|\| 'http:\/\/127\.0\.0\.1:8780'/);
+});
+
+
+test('recordCanonicalDispatch finalizes attachment evidence from exact completed turn input', async () => {
+  const relay = Object.create(BrowserlessSecureMcpRelay.prototype);
+  const recorded = [];
+  relay.save = value => value;
+  relay.panel = async (route, options = {}) => {
+    if (route === '/api/conversations/saas/pending?limit=128') return {
+      candidates: [{
+        request_id: 'saas-1',
+        conversation_id: 'conv-1',
+        request_message_id: 'msg-1',
+        binding_epoch: 1,
+        lane_id: 'lane-1',
+        shared_context_digest: 'a'.repeat(64),
+        projection_digest: 'b'.repeat(64),
+        attachment_projections: [{ projection_id: 'ap-1' }],
+      }],
+    };
+    if (route === '/api/conversations/saas/dispatch') {
+      recorded.push(options.body);
+      return { authority_effect: 'NONE' };
+    }
+    throw new Error('unexpected route');
+  };
+  const rec = { request_id: 'saas-1' };
+  const turn = { turn_id: 'turn_1', request_hash: 'c'.repeat(64), input: 'exact transport payload' };
+  const out = await relay.recordCanonicalDispatch(rec, turn);
+  assert.deepEqual(out, { required: true, recorded: true });
+  assert.equal(recorded.length, 1);
+  assert.equal(recorded[0].bridge_id, 'sentinelx-mcp');
+  assert.equal(recorded[0].external_thread_ref, 'turn_1');
+  assert.equal(recorded[0].actual_payload_bytes_digest, recorded[0].attachment_payload_bytes_digest);
+  assert.match(recorded[0].actual_payload_bytes_digest, /^[0-9a-f]{64}$/);
+  assert.equal(rec.dispatch_evidence_recorded_at !== undefined, true);
 });
