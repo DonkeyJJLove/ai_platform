@@ -1,7 +1,7 @@
 {
   "schema": "lion.source-package-manifest/v1",
   "classification": "SOURCE_ONLY_NOT_DEPLOYMENT",
-  "purpose": "Exact cognitive communication fabric R2 source package with bounded attachment ingestion, provider-payload projection, and ThreadStore delivery-safety repair; historical deployed/runtime evidence remains immutable and separate.",
+  "purpose": "Exact cognitive communication fabric R2 source package with bounded attachment ingestion, provider-payload projection, SentinelX turn-payload evidence binding, and ThreadStore delivery-safety repair; historical deployed/runtime evidence remains immutable and separate.",
   "files": [
     {
       "path": ".github/workflows/lion-r24-whole-integration-closure.yml",
@@ -41,7 +41,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/conversation_chat.py",
-      "sha256": "9c189f911ed5eb81e25862d0215fb351c030bf7286a3c47a19e3473b58f4a588"
+      "sha256": "2de50ecb430baca7e1b92a2ce6e4f0bd27d997b73a7263acc6a44a535e14bdaf"
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
@@ -277,7 +277,7 @@
     },
     {
       "path": "tools/lion_mission_control_v3.py",
-      "sha256": "6a5c2fbc38d675a2e68b45b601ea00074505d2c8a679dd616067fa23068e50f9"
+      "sha256": "c638ca27d7321daafa75efc120ef12de085613cbd5fa980d27dc8133301e04b9"
     },
     {
       "path": "tools/lion_mission_lifecycle_db.py",
@@ -309,13 +309,13 @@
     },
     {
       "path": "tools/lion_saas_broker.py",
-      "sha256": "a8d35ac62e93fa0054dd8aad367ec55f98b576faa3d503340c867b5de761da8b"
+      "sha256": "caaada9c5247e491ab4b60d6e453e19361ae47da26ad54d70b82131189779b59"
     },
     {
       "path": "tools/lion_saas_session_bridge.py",
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "332f4559d184f43778a45b68df63794ee02143abc4ce62f9555c4f478dc06e6a",
+  "package_digest": "7129be467c9efc14a8566b44b850e2cddf676aa40eebcb6426f577e502d5824b",
   "authority_effect": "NONE"
 }
