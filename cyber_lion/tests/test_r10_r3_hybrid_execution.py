@@ -14,6 +14,24 @@ from tools.lion_local_intelligence_runtime import LpclControlBridge
 
 
 class HybridGatewayTests(unittest.TestCase):
+    def test_hybrid_wrapper_preserves_canonical_provider_binding_and_attachments(self):
+        calls=[]
+        class Dummy:
+            def __init__(self,*args,**kwargs):self.ctx=type('Ctx',(),{'digest':'d'*64})()
+            def state(self):return {'status':'ok'}
+            def _route(self,message):return ('MODEL_ONLY','local')
+            def chat(self,message,use_web=False,history=None,output_language='auto',provider_binding=None,attachment_segments=None):
+                calls.append((message,provider_binding,attachment_segments,history))
+                return {'route':'MODEL_ONLY','answer':'ok'}
+        apply_hybrid_gateway_extension(Dummy)
+        binding={'conversation_id':'conv-1','binding_epoch':3,'lane_id':'lane-local'}
+        segments=('LION_ATTACHMENT_DATA={"content":"x"}',)
+        out=Dummy().chat('ordinary prompt',history=[{'role':'user','content':'prior'}],provider_binding=binding,attachment_segments=segments)
+        self.assertEqual(out['answer'],'ok')
+        self.assertEqual(calls[0][1],binding)
+        self.assertEqual(calls[0][2],segments)
+        self.assertEqual(calls[0][3],[{'role':'user','content':'prior'}])
+
     def ctxrepo(self):
         td = tempfile.TemporaryDirectory()
         root = Path(td.name)
