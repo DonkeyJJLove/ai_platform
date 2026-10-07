@@ -1018,29 +1018,36 @@ def record_saas_dispatch_evidence(
             "idempotent_replay": True,
             "authority_effect": "NONE",
         }
-    meta["dispatch_evidence"] = evidence
-    provisional = thread_provenance.get("attachment_projections")
-    if provisional:
-        if attachment_payload_bytes_digest is None:
-            raise ConversationConflict("SaaS attachment payload digest missing")
-        try:
-            finalized = finalize_attachment_projections(
-                provisional, str(attachment_payload_bytes_digest)
-            )
-        except AttachmentProjectionError as exc:
-            raise ConversationConflict("SaaS attachment projection finalization failed") from exc
-        meta["attachment_capability_snapshot"] = thread_provenance.get("attachment_capability_snapshot")
-        meta["attachment_projections"] = list(finalized)
-    t = float(time.time() if now is None else now)
-    conn.execute(
-        "UPDATE conversation_messages SET metadata_json=? WHERE message_id=? AND conversation_id=?",
-        (_canon(meta), request_message_id, conversation_id),
-    )
-    conn.execute(
-        """UPDATE conversation_provider_lanes SET updated_at=?
-           WHERE conversation_id=? AND binding_epoch=? AND lane_id=?""",
-        (t, conversation_id, binding_epoch, lane_id),
-    )
+    conn.execute("SAVEPOINT conversation_saas_dispatch")
+    try:
+        meta["dispatch_evidence"] = evidence
+        provisional = thread_provenance.get("attachment_projections")
+        if provisional:
+            if attachment_payload_bytes_digest is None:
+                raise ConversationConflict("SaaS attachment payload digest missing")
+            try:
+                finalized = finalize_attachment_projections(
+                    provisional, str(attachment_payload_bytes_digest)
+                )
+            except AttachmentProjectionError as exc:
+                raise ConversationConflict("SaaS attachment projection finalization failed") from exc
+            meta["attachment_capability_snapshot"] = thread_provenance.get("attachment_capability_snapshot")
+            meta["attachment_projections"] = list(finalized)
+        t = float(time.time() if now is None else now)
+        conn.execute(
+            "UPDATE conversation_messages SET metadata_json=? WHERE message_id=? AND conversation_id=?",
+            (_canon(meta), request_message_id, conversation_id),
+        )
+        conn.execute(
+            """UPDATE conversation_provider_lanes SET updated_at=?
+               WHERE conversation_id=? AND binding_epoch=? AND lane_id=?""",
+            (t, conversation_id, binding_epoch, lane_id),
+        )
+        conn.execute("RELEASE SAVEPOINT conversation_saas_dispatch")
+    except BaseException:
+        conn.execute("ROLLBACK TO SAVEPOINT conversation_saas_dispatch")
+        conn.execute("RELEASE SAVEPOINT conversation_saas_dispatch")
+        raise
     return {
         "conversation_id": conversation_id,
         "request_message_id": request_message_id,
