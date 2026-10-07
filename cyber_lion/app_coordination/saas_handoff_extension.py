@@ -144,10 +144,21 @@ def apply_saas_handoff_extension(cls):
             return answer
         return original_capability(message, mission, state, output_language) if callable(original_capability) else None
 
-    def chat(self, message, use_web=False, history=None, output_language="auto"):
+    def chat(self, message, use_web=False, history=None, output_language="auto", provider_binding=None, attachment_segments=None):
+        def call_original(current_message, current_history):
+            kwargs = {
+                "use_web": use_web,
+                "history": current_history,
+                "output_language": output_language,
+            }
+            if provider_binding is not None:
+                kwargs["provider_binding"] = provider_binding
+            if attachment_segments:
+                kwargs["attachment_segments"] = attachment_segments
+            return original_chat(self, current_message, **kwargs)
         if isinstance(message, str) and _dual_saas_local(message):
             if not callable(getattr(self, "control_provider", None)):
-                return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+                return call_original(message, history)
             recent = self.control_provider("recent", {})
             mission_id = recent.get("focus_mission_id")
 
@@ -174,7 +185,7 @@ def apply_saas_handoff_extension(cls):
             else:
                 local_prompt,saas_prompt,independent=_dual_queries(message)
                 dual={"request_id":None,"local_prompt":local_prompt,"saas_prompt":saas_prompt,"independent":independent}
-            local = original_chat(self, local_prompt, use_web=use_web, history=None, output_language=output_language)
+            local = call_original(local_prompt, None)
             runtime_state = self.state()
             local_model = runtime_state.get("local_cognitive_executor") or "UNKNOWN_NOT_RUNTIME_ATTESTED"
             if durable_dual:
@@ -241,7 +252,7 @@ def apply_saas_handoff_extension(cls):
                 "saas_handoff": handoff,
                 "response_language": output_language,
             }
-        return original_chat(self, message, use_web=use_web, history=history, output_language=output_language)
+        return call_original(message, history)
 
     cls._route = route
     cls._capability_answer = staticmethod(capability_answer)
