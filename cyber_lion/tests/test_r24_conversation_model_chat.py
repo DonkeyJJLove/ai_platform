@@ -205,6 +205,45 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(transcript[0]["causation_id"], transcript[1]["causation_id"])
         self.assertEqual(transcript[0]["context_digest"], transcript[1]["context_digest"])
 
+    def test_saas_dispatch_evidence_persists_through_threadstore_boundary(self):
+        conv = self.create("saas-dispatch-persist")
+        out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
+            "message": "persist dispatch",
+            "route": "SAAS",
+            "client_request_id": "saas-dispatch-persist-1",
+        })
+        leg = next(x for x in out["legs"] if x["provider"] == "SAAS")
+        handoff = out["saas_handoff"]
+        payload_digest = "d" * 64
+        turn_hash = "e" * 64
+        saved = self.store("conversation_chat_record_saas_dispatch", {
+            "conversation_id": conv["conversation_id"],
+            "request_message_id": leg["message_id"],
+            "request_id": handoff["request_id"],
+            "binding_epoch": out["binding_epoch"],
+            "lane_id": leg["lane_id"],
+            "shared_context_digest": out["shared_context_digest"],
+            "projection_digest": handoff["projection_digest"],
+            "actual_payload_bytes_digest": payload_digest,
+            "turn_request_hash": turn_hash,
+            "turn_id": "turn-dispatch-persist-1",
+            "bridge_id": "sentinelx-mcp",
+            "external_thread_ref": "turn-dispatch-persist-1",
+            "dispatch_state": "SEND_COMMITTED",
+        })
+        self.assertEqual(saved["dispatch_evidence"]["actual_payload_bytes_digest"], payload_digest)
+        check = sqlite3.connect(self.store.path)
+        try:
+            raw = check.execute(
+                "SELECT metadata_json FROM conversation_messages WHERE message_id=?",
+                (leg["message_id"],),
+            ).fetchone()[0]
+        finally:
+            check.close()
+        metadata = json.loads(raw)
+        self.assertEqual(metadata["dispatch_evidence"]["actual_payload_bytes_digest"], payload_digest)
+        self.assertEqual(metadata["dispatch_evidence"]["turn_request_hash"], turn_hash)
+
     def test_saas_request_uses_distinct_broker_identity_and_delivers_later(self):
         conv = self.create("saas-root")
         out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
