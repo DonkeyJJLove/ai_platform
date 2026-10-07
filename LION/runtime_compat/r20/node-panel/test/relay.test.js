@@ -27,6 +27,9 @@ test('relay preserves legacy turn identity and fails closed across unknown creat
   assert.match(source, /CLAIM_UNKNOWN_RECONCILE_REQUIRED[\s\S]*WAITING\.has\(brokerState\.status\)/);
   assert.match(source, /TURN_CREATE_UNKNOWN_RECONCILE_REQUIRED/);
   assert.match(source, /NO_BLIND_RETRY_AFTER_PROCESS_RESTART/);
+  assert.match(source, /typeof turn\.input !== 'string'/);
+  assert.match(source, /transport_payload_digest: transportPayloadDigest/);
+  assert.match(source, /SENTINELX_MCP_TURN_INPUT_SHA256/);
   assert.doesNotMatch(source, /msedge\.exe|edge_session_worker|saas-background-profile-r1/i);
 });
 
