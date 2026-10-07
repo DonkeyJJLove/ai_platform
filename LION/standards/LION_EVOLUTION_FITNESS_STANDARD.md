@@ -60,7 +60,7 @@ Pressure musi mieć `evidence_ref`. Nie może dodać nowego wymiaru, zmienić br
 
 ## Kierunek po R1
 
-Pierwszy konsument istnieje już źródłowo: `ArchitectureCompiler.compile_selected(...)` przyjmuje dokładnie związany zestaw `CandidateDesign` i odpowiadające mu wektory fitness, wybiera jeden kandydat i przekazuje wyłącznie jego do istniejącego `compile(...)`. Następną luką nie jest więc integracja z kompilatorem, lecz zbudowanie source-bound adapterów pressure z bieżących Gap/currentness/effect/collision observations oraz podłączenie tego wyboru do autorowania Mission Program.
+Pierwszy konsument istnieje już źródłowo: `ArchitectureCompiler.compile_selected(...)` przyjmuje dokładnie związany zestaw `CandidateDesign` i odpowiadające mu wektory fitness, wybiera jeden kandydat i przekazuje wyłącznie jego do istniejącego `compile(...)`. Kandydat `ProjectRealityAdapter` dostarcza teraz source-bound bramki i pressure z `ProjectRealitySnapshot`; nadal otwarte są live collectory Git/runtime/conversation/currentness oraz podłączenie wyniku do autorowania Mission Program.
 
 Najwyższy oczekiwany fitness w obecnym frontierze ma nie „więcej dokumentacji” ani „większa flota”, lecz **pierwszy prawdziwy zamknięty obieg SaaS + LOCAL + material worker + niezależny verifier, który tworzy użyteczny artefakt w ai_platform, a następnie ten sam mechanizm obsługuje drugą rodzinę produktu bez osobnego hard-coded workflow**. To jest przejście od systemu budującego siebie do kontrolowanej fabryki aplikacji.
 

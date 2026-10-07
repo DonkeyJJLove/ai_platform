@@ -1,0 +1,349 @@
+{
+  "schema": "lion.project-reality-evolution-path/v1",
+  "path_id": "LION_PROJECT_REALITY_EVOLUTION_PATH_R1",
+  "lifecycle": "CANDIDATE",
+  "currentness": "SOURCE_BOUND_TO_PARENT_CANDIDATE",
+  "purpose": "Compose project reality, epistemic claims, semantic relevance, deterministic evolution selection, formalization, mission execution and knowledge homeostasis into one path without creating a second truth store, scheduler, graph authority or runtime owner.",
+  "architectural_decisions": [
+    {
+      "id": "PR-01",
+      "decision": "ProjectRealitySnapshot is a digest-bound projection over existing WorldSnapshot, SystemSnapshot, federation/currentness evidence and EnterpriseGraph; it is not a new canonical database.",
+      "disposition": "EXTEND_EXISTING_ARCHITECTURE_PROJECTION"
+    },
+    {
+      "id": "PR-02",
+      "decision": "Mental Matrix ClaimGraph maps to existing SemanticAtom/EvidenceInstance plus EnterpriseGraph DATA_PROVENANCE relations; no second claim graph store is introduced.",
+      "disposition": "REUSE_EXISTING_GRAPH"
+    },
+    {
+      "id": "PR-03",
+      "decision": "Mental Matrix narrative, visual continuity and publication packages are downstream read-only projections of verified project reality. Narrative never upgrades epistemic class.",
+      "disposition": "TARGET_CONSUMER"
+    },
+    {
+      "id": "PR-04",
+      "decision": "Dynamic Evolution Fitness consumes candidate-specific reality gates and evidence-bound pressure before ArchitectureCompiler. Fitness does not grant authority or schedule execution.",
+      "disposition": "CANDIDATE_IMPLEMENTED_SOURCE"
+    },
+    {
+      "id": "PR-05",
+      "decision": "Architecture Studio and Mental Matrix consume the same project-reality/lineage substrate with different projections; neither owns execution.",
+      "disposition": "SHARED_READ_MODEL"
+    }
+  ],
+  "stages": [
+    {
+      "id": "R00_REACQUIRE",
+      "owner": "currentness/federation",
+      "status": "SOURCE_IMPLEMENTED_RUNTIME_REACQUIRE_REQUIRED",
+      "inputs": [
+        "Git refs",
+        "runtime observations",
+        "conversation state",
+        "RAG orientation"
+      ],
+      "outputs": [
+        "WorldSnapshot",
+        "SystemSnapshot",
+        "federation/currentness evidence"
+      ]
+    },
+    {
+      "id": "R01_PROJECT_REALITY",
+      "owner": "architecture_knowledge",
+      "status": "CANDIDATE_SOURCE_IMPLEMENTED",
+      "inputs": [
+        "WorldSnapshot",
+        "SystemSnapshot",
+        "federation digest",
+        "architecture knowledge digest",
+        "EnterpriseGraphProjection"
+      ],
+      "outputs": [
+        "ProjectRealitySnapshot"
+      ]
+    },
+    {
+      "id": "R02_EPISTEMIC_GRAPH",
+      "owner": "EvidenceBoundLearningEpisode/SemanticRelevance",
+      "status": "SOURCE_SUBSTRATE_IMPLEMENTED_CANDIDATE_PROJECTION",
+      "inputs": [
+        "EvidenceObservation",
+        "Hypothesis",
+        "RnDMemoryRecord",
+        "SemanticAtom",
+        "EnterpriseGraphProjection"
+      ],
+      "outputs": [
+        "ProjectClaimProjection"
+      ]
+    },
+    {
+      "id": "R03_RELEVANCE",
+      "owner": "SemanticRelevance",
+      "status": "SOURCE_IMPLEMENTED",
+      "inputs": [
+        "MissionIntent",
+        "RagContextEnvelope",
+        "SemanticScaffoldIR",
+        "ProjectClaimProjection"
+      ],
+      "outputs": [
+        "RelevanceGraph",
+        "RelevanceProjection"
+      ]
+    },
+    {
+      "id": "R04_GAP",
+      "owner": "architecture/autonomy",
+      "status": "SOURCE_IMPLEMENTED",
+      "inputs": [
+        "GoalContract",
+        "WorldSnapshot",
+        "SystemSnapshot",
+        "RelevanceProjection"
+      ],
+      "outputs": [
+        "Gap",
+        "CapabilityNeed"
+      ]
+    },
+    {
+      "id": "R05_CANDIDATES",
+      "owner": "autonomy/BeanFactory",
+      "status": "PARTIAL_COMPOSITION",
+      "inputs": [
+        "Gap",
+        "CapabilityNeed",
+        "existing capabilities",
+        "R&D evidence"
+      ],
+      "outputs": [
+        "CandidateDesign set",
+        "BeanCandidate/Composition candidates"
+      ]
+    },
+    {
+      "id": "R06_REALITY_BINDING",
+      "owner": "roadmap",
+      "status": "CANDIDATE_SOURCE_IMPLEMENTED",
+      "inputs": [
+        "ProjectRealitySnapshot",
+        "candidate-specific gate observations",
+        "pressure observations"
+      ],
+      "outputs": [
+        "EvolutionRealityContext",
+        "evidence-bound fitness inputs"
+      ]
+    },
+    {
+      "id": "R07_SELECT",
+      "owner": "roadmap",
+      "status": "CANDIDATE_SOURCE_IMPLEMENTED",
+      "inputs": [
+        "CandidateDesign set",
+        "EvolutionFitnessCandidate set",
+        "EvolutionRealityContext"
+      ],
+      "outputs": [
+        "one critical-path CandidateDesign"
+      ]
+    },
+    {
+      "id": "R08_COMPILE",
+      "owner": "architecture",
+      "status": "SOURCE_IMPLEMENTED",
+      "inputs": [
+        "selected CandidateDesign",
+        "FullArchitectureModel",
+        "FormalizationRegistry",
+        "semantic owners"
+      ],
+      "outputs": [
+        "EvolutionDelta",
+        "ArchitectureFormalizationManifest",
+        "RequiredFormalizationSet"
+      ]
+    },
+    {
+      "id": "R09_FORMALIZE",
+      "owner": "formalization",
+      "status": "SOURCE_IMPLEMENTED_CLOSURE_PER_CANDIDATE_REQUIRED",
+      "inputs": [
+        "EvolutionDelta",
+        "AFM",
+        "RequiredFormalizationSet",
+        "federation baseline"
+      ],
+      "outputs": [
+        "FederatedFormalizationBinding",
+        "FormalizationClosureRecord when independently verified"
+      ]
+    },
+    {
+      "id": "R10_PLAN_MISSION",
+      "owner": "process_contract_plane/Mission Control",
+      "status": "SOURCE_SUBSTRATE_IMPLEMENTED_BINDING_PER_SUCCESSOR_REQUIRED",
+      "inputs": [
+        "formalized candidate",
+        "process contracts",
+        "capability registry"
+      ],
+      "outputs": [
+        "finite Mission Program/LPCL",
+        "phase contracts",
+        "capability bindings"
+      ]
+    },
+    {
+      "id": "R11_ADMISSION",
+      "owner": "authority/runtime",
+      "status": "SOURCE_IMPLEMENTED_SEPARATE_OPERATOR_ACTIVATION_REQUIRED",
+      "inputs": [
+        "exact mission source",
+        "authority/currentness evidence",
+        "runtime identity"
+      ],
+      "outputs": [
+        "bounded admission or DENY"
+      ]
+    },
+    {
+      "id": "R12_COGNITION",
+      "owner": "conversation/model plane",
+      "status": "SOURCE_PATH_IMPLEMENTED_RUNTIME_ACCEPTANCE_PARTIAL",
+      "inputs": [
+        "shared context",
+        "LOCAL/SAAS projections",
+        "payload digests"
+      ],
+      "outputs": [
+        "separate provider-leg results",
+        "provenance-bound cognitive proposals"
+      ]
+    },
+    {
+      "id": "R13_MATERIALIZE",
+      "owner": "Mission Control/cooperative runtime",
+      "status": "CURRENT_EXECUTION_FRONTIER",
+      "inputs": [
+        "admitted assignment",
+        "provider qualification",
+        "artifact spec"
+      ],
+      "outputs": [
+        "material artifact bytes",
+        "producer receipt"
+      ]
+    },
+    {
+      "id": "R14_VERIFY",
+      "owner": "independent verifier",
+      "status": "CURRENT_EXECUTION_FRONTIER",
+      "inputs": [
+        "exact artifact bytes",
+        "generation/binding evidence"
+      ],
+      "outputs": [
+        "verification receipt",
+        "counterexample on failure"
+      ]
+    },
+    {
+      "id": "R15_RECONCILE",
+      "owner": "reconciliation/EvolutionaryRnD",
+      "status": "PARTIALLY_COMPOSED",
+      "inputs": [
+        "reported effect",
+        "independent observation",
+        "counterexample",
+        "receipts"
+      ],
+      "outputs": [
+        "reconciled result",
+        "EvidenceObservation",
+        "RnDMemoryRecord",
+        "updated Gap/currentness"
+      ]
+    },
+    {
+      "id": "R16_HOMEOSTASIS",
+      "owner": "architecture_knowledge/RAG",
+      "status": "PARTIALLY_COMPOSED",
+      "inputs": [
+        "reconciled source/evidence delta"
+      ],
+      "outputs": [
+        "regenerated projections",
+        "RAG source-set delta",
+        "federation vector",
+        "truth/currentness carriers last"
+      ]
+    },
+    {
+      "id": "R17_HUMAN_PROJECTIONS",
+      "owner": "panel/architecture_knowledge",
+      "status": "TARGET_PARTIAL",
+      "inputs": [
+        "ProjectRealitySnapshot",
+        "ProjectClaimProjection",
+        "lineage",
+        "reconciled artifacts"
+      ],
+      "outputs": [
+        "Architecture Studio views",
+        "Mental Matrix narrative/visual/publication projections"
+      ]
+    }
+  ],
+  "feedback_edges": [
+    [
+      "R15_RECONCILE",
+      "R00_REACQUIRE"
+    ],
+    [
+      "R16_HOMEOSTASIS",
+      "R00_REACQUIRE"
+    ],
+    [
+      "R17_HUMAN_PROJECTIONS",
+      "R03_RELEVANCE"
+    ]
+  ],
+  "invariants": [
+    "PROJECT_REALITY_NE_LIVE_TRUTH_OWNER",
+    "CLAIM_PROJECTION_NE_AUTHORITY",
+    "NARRATIVE_NE_EVIDENCE_PROMOTION",
+    "FITNESS_NE_AUTHORITY",
+    "ARCHITECTURE_STUDIO_NE_EXECUTOR",
+    "MENTAL_MATRIX_NE_SECOND_ORCHESTRATOR",
+    "MODEL_OUTPUT_NE_VERIFIED_ARTIFACT",
+    "RECEIPT_NE_RECONCILED_CLOSURE",
+    "UNKNOWN_FAILS_CLOSED",
+    "TRUTH_CARRIERS_LAST"
+  ],
+  "next_functional_acceptance": {
+    "id": "FIRST_CLOSED_APPLICATION_FACTORY_LOOP",
+    "path": [
+      "R00_REACQUIRE",
+      "R01_PROJECT_REALITY",
+      "R04_GAP",
+      "R06_REALITY_BINDING",
+      "R07_SELECT",
+      "R08_COMPILE",
+      "R09_FORMALIZE",
+      "R10_PLAN_MISSION",
+      "R11_ADMISSION",
+      "R12_COGNITION",
+      "R13_MATERIALIZE",
+      "R14_VERIFY",
+      "R15_RECONCILE",
+      "R16_HOMEOSTASIS"
+    ],
+    "artifact_family": "source-bound project reality/currentness pressure adapter or another useful ai_platform artifact selected by the same path",
+    "second_acceptance": "A materially different artifact/application family must traverse the same path without a dedicated hard-coded workflow."
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE"
+}

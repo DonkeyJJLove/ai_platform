@@ -1,0 +1,160 @@
+{
+  "schema": "lion.project-reality-document-reconciliation/v1",
+  "candidate_id": "project-reality-evolution-r1",
+  "source_parent": {
+    "head": "7e943f24958fbedc0933c4a145b3cadc55b2153a",
+    "tree": "4c58045909a9e1d4fe46d80f61f35d843ed5c65f",
+    "relation": "STACKED_ON_DYNAMIC_EVOLUTION_FITNESS_R1"
+  },
+  "documents": [
+    {
+      "title": "Architektura systemu Mental Matrix – badania i projekt",
+      "disposition": "ABSORB_AS_READ_ONLY_PROJECT_REALITY_AND_STORY_PROJECTION",
+      "preserved": [
+        "ProjectRealitySnapshot concept",
+        "source-bound ClaimGraph semantics",
+        "narrative cannot promote claim status",
+        "prompt/thread plans as projections",
+        "visual continuity and publication lineage"
+      ],
+      "changed": [
+        "ProjectRealitySnapshot reuses WorldSnapshot/SystemSnapshot/federation/currentness and EnterpriseGraph",
+        "ClaimGraph reuses SemanticAtom/EvidenceInstance and EnterpriseGraph DATA_PROVENANCE",
+        "Mental Matrix is not a new orchestrator or database",
+        "UI is a downstream consumer after source-bound reality exists"
+      ],
+      "status": "CANDIDATE_CONSUMER_PATH"
+    },
+    {
+      "title": "Architektura ewolucyjna LION v1.5",
+      "disposition": "MERGE_WITH_EXISTING_EVOLUTION_SPINE_AND_CURRENT_SOURCE",
+      "preserved": [
+        "Evolution Cognition Map",
+        "AS_IS/CANDIDATE/TARGET/HISTORY separation",
+        "ArchitectureCompiler",
+        "eligibility before ranking",
+        "lifecycle and lineage",
+        "RAG invalidation/homeostasis",
+        "two-goal generativity test"
+      ],
+      "advanced_since_document": [
+        "ArchitectureCompiler exists in current source",
+        "Dynamic Evolution Fitness candidate implements deterministic hard-gate/Pareto/pressure selection",
+        "ProjectRealityAdapter candidate binds reality evidence into fitness",
+        "conversation schema and LOCAL/SAAS identity chain exist in source"
+      ],
+      "status": "PARTIALLY_SUPERSEDED_BY_IMPLEMENTATION"
+    },
+    {
+      "title": "LION Cooperative Production Authoring Receipt R1",
+      "disposition": "HISTORICAL_AUTHORING_EVIDENCE_ONLY",
+      "preserved": [
+        "finite production-focused chain",
+        "bidirectional artifact flow",
+        "acceptance scenarios",
+        "explicit distinction authoring vs execution"
+      ],
+      "limitations": [
+        "validation was text/document integrity, not LPCL/runtime",
+        "no model roundtrip",
+        "no Docker workload",
+        "no repository writes",
+        "source anchor predates current master"
+      ],
+      "status": "HISTORY"
+    },
+    {
+      "title": "Wykonawcze podsumowanie / Plan architektury federacji LION i RAG",
+      "disposition": "RETAIN_REQUIREMENTS_RECONCILE_AS_IS_CLAIMS",
+      "preserved": [
+        "Panel→SaaS→material worker→verifier→artifact loop",
+        "reuse existing broker/control plane rather than parallel infrastructure",
+        "AS_IS/CANDIDATE/TARGET evidence separation",
+        "RAG as versioned execution knowledge",
+        "real E2E required before ready claim"
+      ],
+      "superseded_or_corrected": [
+        "older claims of missing SaaS bridge are superseded by canonical conversation consumer source",
+        "older claims of missing conversation schema are superseded by current R24 conversation-domain source",
+        "offline/simulated artifact path does not prove current runtime production",
+        "swarm repository is not synonymous with Docker Swarm runtime"
+      ],
+      "status": "REQUIREMENTS_VALUABLE_CURRENTNESS_MIXED"
+    },
+    {
+      "title": "Pełna architektura ekosystemu / RAG upgrade prompt",
+      "disposition": "NORMATIVE_RESEARCH_INPUT_NOT_RUNTIME",
+      "preserved": [
+        "whole-federation evidence discipline",
+        "do not create parallel scheduler/PDP/RAG owner",
+        "existing formalization path",
+        "two knowledge epochs before/after execution",
+        "finite artifact-producing outcome",
+        "carrier-last homeostasis"
+      ],
+      "status": "VERSIONED_PROJECT_KNOWLEDGE"
+    },
+    {
+      "title": "Prompt autorujący Panel–SaaS–Swarm–Artefakt",
+      "disposition": "HISTORICAL_TASK_AUTHORING_REQUIREMENT",
+      "preserved": [
+        "one useful artifact is terminal user value",
+        "four acceptance tests",
+        "mission/conversation/invocation/lease/artifact/receipt lineage",
+        "real SaaS and Docker domains",
+        "no blind retry on unknown effect"
+      ],
+      "advanced_since_document": [
+        "conversation identity/source continuity advanced",
+        "cooperative production source R6.11-R6.17 exists",
+        "live R3 remains registered/not-started and stale vs current source",
+        "first current successor must include pre-qualification materialization/release prerequisite"
+      ],
+      "status": "HISTORY_PLUS_ACTIVE_REQUIREMENTS"
+    },
+    {
+      "title": "Podsumowanie Executive Summary – conversation migration",
+      "disposition": "MOSTLY_REALIZED_SOURCE_MODEL_RETAIN_AS_ACCEPTANCE_GUIDE",
+      "preserved": [
+        "conversation_id/binding_epoch lineage",
+        "LOCAL/SAAS/DUAL separate lanes",
+        "provider_session_ref",
+        "worker/drone identity separation",
+        "same-conversation response return"
+      ],
+      "current_source_relation": [
+        "conversation schema exists",
+        "bindings/provider lanes/threads/messages/delivery events exist",
+        "actual payload/shared/projection digest continuity exists in cognitive paths",
+        "runtime acceptance remains separately observable"
+      ],
+      "status": "SOURCE_MODEL_ADVANCED_RUNTIME_ACCEPTANCE_PARTIAL"
+    }
+  ],
+  "common_path": [
+    "REACQUIRE",
+    "PROJECT_REALITY",
+    "EPISTEMIC_CLAIMS",
+    "RELEVANCE",
+    "GAP_CAPABILITY_NEED",
+    "CANDIDATES",
+    "REALITY_BOUND_FITNESS",
+    "ARCHITECTURE_COMPILER",
+    "FORMALIZATION",
+    "MISSION_PROGRAM",
+    "AUTHORITY_RUNTIME_ADMISSION",
+    "SAAS_LOCAL_COGNITION",
+    "MATERIALIZATION",
+    "INDEPENDENT_VERIFICATION",
+    "RECONCILIATION",
+    "KNOWLEDGE_HOMEOSTASIS",
+    "HUMAN_PROJECTIONS"
+  ],
+  "next_boundary": {
+    "current_source_gap": "Existing control-plane reconnaissance can produce the raw observation; ProjectReality candidate now normalizes it. Live producer binding into one current ProjectReality revision and successor Mission Program are still open.",
+    "next_effectful_program": "FIRST_CLOSED_APPLICATION_FACTORY_LOOP",
+    "activation": "SEPARATE_OPERATOR_ACTION_REQUIRED"
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE"
+}

@@ -196,7 +196,7 @@
     "evaluator": "cyber_lion/architecture_projection/evolution_fitness.py",
     "tests": "cyber_lion/tests/test_evolution_fitness.py",
     "first_consumer_target": "cyber_lion.architecture_projection.ArchitectureCompiler.compile_selected",
-    "current_runtime_binding": "SOURCE_CONSUMER_IMPLEMENTED_PRESSURE_ADAPTER_AND_MISSION_AUTHORING_NOT_BOUND"
+    "current_runtime_binding": "PROJECT_REALITY_ADAPTER_CANDIDATE_SOURCE_IMPLEMENTED_LIVE_COLLECTORS_AND_MISSION_AUTHORING_NOT_BOUND"
   },
   "authority_effect": "NONE",
   "execution_effect": "NONE"

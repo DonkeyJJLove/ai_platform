@@ -27,6 +27,13 @@ from .evolution_fitness import (
     EvolutionFitnessAssessment, EvolutionFitnessSelection, EvolutionFitnessOptimizer,
     BENEFIT_DIMENSIONS, COST_DIMENSIONS, DEFAULT_POLICY,
 )
+from .project_reality import (
+    ProjectRealityError, ProjectSystemSnapshotBinding, ProjectRealitySnapshot,
+    ClaimAtomBinding, ProjectClaimProjection, GateObservation,
+    CandidateRealityBinding, PressureObservation, EvolutionRealityContext,
+    ProjectRealityAdapter, build_project_reality_snapshot,
+    build_project_claim_projection, system_snapshot_from_control_plane_observations,
+)
 from .render_adapter import (
     RendererPin, VisualRenderArtifactPlan, VisualRenderPlan, VisualRenderManifest,
     build_visual_render_plan, build_visual_render_manifest,
@@ -54,5 +61,10 @@ __all__ = [
     "EvolutionFitnessPolicy", "EvolutionFitnessCandidate",
     "EvolutionFitnessAssessment", "EvolutionFitnessSelection",
     "EvolutionFitnessOptimizer", "BENEFIT_DIMENSIONS", "COST_DIMENSIONS",
-    "DEFAULT_POLICY",
+    "DEFAULT_POLICY", "ProjectRealityError", "ProjectSystemSnapshotBinding",
+    "ProjectRealitySnapshot", "ClaimAtomBinding", "ProjectClaimProjection",
+    "GateObservation", "CandidateRealityBinding", "PressureObservation",
+    "EvolutionRealityContext", "ProjectRealityAdapter",
+    "build_project_reality_snapshot", "build_project_claim_projection",
+    "system_snapshot_from_control_plane_observations",
 ]

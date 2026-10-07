@@ -118,8 +118,16 @@ Architecture Studio remains PARTIAL: the repository provides the source-bound ar
 
 The [architecture_studio_compiler_r1/](architecture_studio_compiler_r1/) directory preserves source-candidate/formalization evidence from its authoring boundary; do not reinterpret that historical package status as a claim that the current source is absent. Integration, formalization/currentness closure and deployment remain distinct planes.
 
+## Project Reality / Mental Matrix reconciliation — candidate
+
+The candidate [Project Reality → Evolution Path R1](PROJECT_REALITY_EVOLUTION_PATH_R1.md) composes existing `WorldSnapshot`, `SystemSnapshot`, federation/currentness evidence, `SemanticAtom` and `EnterpriseGraph` into a source-bound `ProjectRealitySnapshot` and a read-only `ProjectClaimProjection`.
+
+This deliberately **does not** create a second truth database or a separate Mental Matrix orchestrator. Mental Matrix narrative/visual/publication views and the future interactive Architecture Studio are different read/proposal projections over the same reality, evidence and lineage substrate. Narrative cannot promote epistemic state, and neither surface carries authority/effect.
+
+The candidate implementation is `cyber_lion/architecture_projection/project_reality.py`. Its first functional consumer is Dynamic Evolution Fitness: candidate-specific gate observations and evidence-bound pressure are converted into `EvolutionRealityContext`, preserving UNKNOWN as fail-closed.
+
 ## Dynamic Evolution Fitness R1 candidate
 
-The roadmap/evolution owner now has a candidate deterministic fitness projection for selecting **one** bounded critical-path evolution candidate. `ArchitectureCompiler.compile_selected(...)` consumes that selection and delegates only the chosen `CandidateDesign` to the existing compiler. Hard source/authority/effect/collision/evidence gates run before Pareto and evidence-bound pressure.
+The roadmap/evolution owner now has a candidate deterministic fitness projection for selecting **one** bounded critical-path evolution candidate. `ProjectRealityAdapter` supplies source-bound gates/pressure, then `ArchitectureCompiler.compile_selected(...)` delegates only the chosen `CandidateDesign` to the existing compiler. Hard source/authority/effect/collision/evidence gates run before Pareto and evidence-bound pressure.
 
 See [LION Evolution Fitness Standard](../../standards/LION_EVOLUTION_FITNESS_STANDARD.md). It adds no scheduler, FLOW-11, authority source or execution surface. The intended next high-value acceptance is a real SaaS + LOCAL + material-worker artifact loop followed by a second task-family proof using the same factory mechanism.
