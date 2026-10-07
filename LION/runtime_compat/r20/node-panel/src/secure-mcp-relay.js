@@ -241,7 +241,7 @@ class BrowserlessSecureMcpRelay {
     if (['SUPERSEDED','CANCELLED','FAILED','REJECTED'].includes(brokerState.status)) {
       rec.state = ['SUPERSEDED','CANCELLED'].includes(brokerState.status) ? 'SUPERSEDED' : 'FAILED'; rec.reconciliation_state = `BROKER_TERMINAL_${brokerState.status}`; this.save(rec); return;
     }
-    if (brokerState.status === 'RESPONDED' && brokerState.receipt_digest) {
+    if (brokerState.status === 'RESPONDED' && brokerState.receipt_digest && rec.dispatch_evidence_recorded_at) {
       rec.state = 'RECONCILED'; rec.broker_receipt_digest = brokerState.receipt_digest; rec.reconciliation_state = 'BROKER_RECEIPT_BOUND'; this.save(rec); return;
     }
     if (!rec.turn_id) {
@@ -270,6 +270,13 @@ class BrowserlessSecureMcpRelay {
     if (dispatch.required && !dispatch.recorded) {
       rec.state = 'DISPATCH_EVIDENCE_PENDING';
       rec.reconciliation_state = 'CANONICAL_ATTACHMENT_EVIDENCE_REQUIRED';
+      this.save(rec);
+      return;
+    }
+    if (brokerState.status === 'RESPONDED' && brokerState.receipt_digest) {
+      rec.state = 'RECONCILED';
+      rec.broker_receipt_digest = brokerState.receipt_digest;
+      rec.reconciliation_state = dispatch.recorded ? 'BROKER_RECEIPT_AND_DISPATCH_EVIDENCE_BOUND' : 'BROKER_RECEIPT_BOUND';
       this.save(rec);
       return;
     }

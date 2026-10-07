@@ -89,6 +89,17 @@ test('recordCanonicalDispatch finalizes attachment evidence from exact completed
 });
 
 
+test('responded broker receipt cannot bypass canonical attachment dispatch evidence', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/secure-mcp-relay.js'), 'utf8');
+  const early = source.indexOf("brokerState.status === 'RESPONDED' && brokerState.receipt_digest && rec.dispatch_evidence_recorded_at");
+  const dispatch = source.indexOf("const dispatch = await this.recordCanonicalDispatch(rec, turn)");
+  const post = source.indexOf("reconciliation_state = dispatch.recorded ? 'BROKER_RECEIPT_AND_DISPATCH_EVIDENCE_BOUND'");
+  assert.ok(early >= 0);
+  assert.ok(dispatch > early);
+  assert.ok(post > dispatch);
+  assert.match(source, /dispatch\.required && !dispatch\.recorded[\s\S]*CANONICAL_ATTACHMENT_EVIDENCE_REQUIRED/);
+});
+
 test('attachment turn fails closed when canonical panel lookup is unavailable', async () => {
   const relay = Object.create(BrowserlessSecureMcpRelay.prototype);
   relay.save = value => value;
