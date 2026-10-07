@@ -138,10 +138,18 @@ def saas_broker_api(method,path,payload=None):
     if x:raise ValueError('cancel schema')
     return saas_broker.cancel_request(c,rid,now)
    if action=='respond':
-    if set(x)!={'response_token','claim_generation','answer','model_identity','transport','attestation_class'}:raise ValueError('response schema')
+    required={'response_token','claim_generation','answer','model_identity','transport','attestation_class'}
+    optional={'transport_payload_digest','turn_id','turn_request_hash','transport_evidence_class'}
+    if not required.issubset(x) or set(x)-required-optional:raise ValueError('response schema')
     row=c.execute('SELECT claim_generation FROM saas_handoff_requests WHERE request_id=?',(rid,)).fetchone()
     if row is None or type(x['claim_generation']) is not int or row[0]!=x['claim_generation']:raise ValueError('stale claim')
-    out=saas_broker.respond(c,rid,x['response_token'],x['answer'],now,model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'],claim_generation=x['claim_generation'])
+    out=saas_broker.respond(
+     c,rid,x['response_token'],x['answer'],now,
+     model_identity=x['model_identity'],transport=x['transport'],attestation_class=x['attestation_class'],
+     claim_generation=x['claim_generation'],
+     transport_payload_digest=x.get('transport_payload_digest'),turn_id=x.get('turn_id'),
+     turn_request_hash=x.get('turn_request_hash'),transport_evidence_class=x.get('transport_evidence_class')
+    )
     dual=c.execute('SELECT request_id FROM mission_dual_evaluations WHERE saas_request_id=? ORDER BY updated_at DESC LIMIT 1',(rid,)).fetchone()
     if dual:
      drid=dual['request_id']
