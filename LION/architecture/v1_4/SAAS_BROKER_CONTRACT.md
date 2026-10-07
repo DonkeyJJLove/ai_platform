@@ -1,7 +1,7 @@
 # Cognitive SaaS broker
 
 The canonical implementation is `tools/lion_saas_broker.py`, schema
-`lion.saas-broker/v1`, migration version 6. The former
+`lion.saas-broker/v1`, migration version 8. The former
 `lion_saas_session_bridge.py` only re-exports compatibility functions.
 This document describes source behavior; it does not attest deployment or CI.
 
@@ -39,6 +39,11 @@ Under `/api/v3/saas-broker`:
 - POST `/requests/{request_id}/claim`: empty JSON, mediator authentication.
 - POST `/requests/{request_id}/respond`: token, claim_generation, answer,
   model_identity, transport and attestation_class; mediator authentication.
+  SentinelX MCP responses may additionally carry one all-or-none transport
+  evidence tuple: transport_payload_digest, turn_id, turn_request_hash and
+  transport_evidence_class=SENTINELX_MCP_TURN_INPUT_SHA256. When present it is
+  validated as transport-specific evidence and bound into both response metadata
+  and the immutable broker receipt; it grants no authority.
 - POST `/requests/{request_id}/cancel`: explicit cancellation.
 - POST `/session/attest`: confirms a current accepted request/receipt pair;
   cannot invent or renew a lease; mediator authentication.
@@ -48,6 +53,13 @@ Mediator authentication uses X-LION-Mediator-Key and the private
 tokens must never be printed or returned to normal UI reads. Keep the service
 loopback-only. Provision the key for the local service owner; it is not a
 provider credential.
+
+For CHATGPT_SENTINELX_MCP, the relay hashes the exact completed turn input
+bytes and returns that digest with the turn identity and request hash. The
+conversation delivery plane may use this broker-bound evidence to finalize an
+AttachmentProjection.actual_provider_payload_digest. Missing or malformed
+transport evidence leaves an attachment-bearing SaaS delivery fail-closed; it is
+never reconstructed from a model answer or from source knowledge.
 
 The 8780 LpclControlBridge routes scoped requests and status to the new API.
 The SaaS extension supplies thread context from the HTTP handler; explicit
