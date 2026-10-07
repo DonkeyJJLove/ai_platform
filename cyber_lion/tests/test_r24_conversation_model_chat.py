@@ -148,6 +148,30 @@ class ThreadStoreConnectionSafetyTests(unittest.TestCase):
         self.assertTrue(fake.closed)
 
 
+class ThreadStoreRuntimeLeaseTests(unittest.TestCase):
+    def test_second_runtime_is_rejected_while_lease_is_current(self):
+        with tempfile.TemporaryDirectory() as td:
+            path=Path(td)/"threads.db"
+            first=ThreadStore(path,runtime_owner="WINDOWS_PANEL",lease_seconds=30)
+            try:
+                with self.assertRaisesRegex(RuntimeError,"already owned"):
+                    ThreadStore(path,runtime_owner="WSL_RECOVERY",lease_seconds=30)
+            finally:
+                first.close()
+
+    def test_released_runtime_lease_allows_successor(self):
+        with tempfile.TemporaryDirectory() as td:
+            path=Path(td)/"threads.db"
+            first=ThreadStore(path,runtime_owner="WINDOWS_PANEL",lease_seconds=30)
+            first.close()
+            second=ThreadStore(path,runtime_owner="WSL_RECOVERY",lease_seconds=30)
+            try:
+                created=second("conversation_create",{"title":"successor","idempotency_key":"lease-successor"})
+                self.assertTrue(created["conversation_id"].startswith("conv-"))
+            finally:
+                second.close()
+
+
 class R24ConversationModelChatTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

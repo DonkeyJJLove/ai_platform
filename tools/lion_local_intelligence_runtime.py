@@ -60,8 +60,16 @@ class ThreadStore:
     """Persistent local conversation store. Not exposed as model authority."""
     ID_RE=re.compile(r"^[0-9a-f]{32}$")
     BUS_TARGET_RE=re.compile(r"^(?:mission|drone|swarm|group|operator):[A-Za-z0-9][A-Za-z0-9._:-]{0,191}$")
-    def __init__(self,path):
-        self.path=Path(path).resolve();self.path.parent.mkdir(parents=True,exist_ok=True);self.lock=threading.RLock();self._init()
+    def __init__(self,path,runtime_owner=None,lease_seconds=15):
+        self.path=Path(path).resolve();self.path.parent.mkdir(parents=True,exist_ok=True);self.lock=threading.RLock()
+        self.runtime_owner=str(runtime_owner or '').strip() or None
+        self.lease_seconds=max(5,int(lease_seconds))
+        self._lease_stop=threading.Event();self._lease_lost=None;self._lease_thread=None
+        self._init()
+        if self.runtime_owner:
+            self._claim_runtime_lease()
+            self._lease_thread=threading.Thread(target=self._lease_loop,daemon=True,name='thread-store-runtime-lease')
+            self._lease_thread.start()
     def _conn(self):
         c=sqlite3.connect(self.path,timeout=10)
         try:
@@ -86,12 +94,74 @@ class ThreadStore:
             CREATE TABLE IF NOT EXISTS thread_bindings(thread_id TEXT PRIMARY KEY,mission_id TEXT,target TEXT NOT NULL,channel TEXT NOT NULL,binding_revision INTEGER NOT NULL,binding_state TEXT NOT NULL,created_at REAL NOT NULL,updated_at REAL NOT NULL,FOREIGN KEY(thread_id) REFERENCES threads(thread_id) ON DELETE CASCADE);
             CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_thread_seq ON messages(thread_id,seq);
+            CREATE TABLE IF NOT EXISTS thread_store_runtime_lease(
+                lease_name TEXT PRIMARY KEY,
+                owner_id TEXT NOT NULL,
+                heartbeat_at REAL NOT NULL,
+                expires_at REAL NOT NULL
+            );
             """);c.commit();ui_runtime_events.migrate(c);migrate_conversation_schema(c);c.close()
+    def _lease_write(self, *, claim):
+        if not self.runtime_owner:return
+        deadline=time.time()+10.0;last=None
+        while True:
+            c=self._conn()
+            try:
+                c.execute('BEGIN IMMEDIATE')
+                now=time.time()
+                row=c.execute("SELECT owner_id,expires_at FROM thread_store_runtime_lease WHERE lease_name='CANONICAL_THREAD_STORE'").fetchone()
+                if claim:
+                    if row is not None and row['owner_id']!=self.runtime_owner and float(row['expires_at'])>now:
+                        c.rollback()
+                        raise RuntimeError('canonical thread store already owned by active runtime: '+str(row['owner_id']))
+                    c.execute("""INSERT INTO thread_store_runtime_lease(lease_name,owner_id,heartbeat_at,expires_at)
+                                 VALUES('CANONICAL_THREAD_STORE',?,?,?)
+                                 ON CONFLICT(lease_name) DO UPDATE SET owner_id=excluded.owner_id,heartbeat_at=excluded.heartbeat_at,expires_at=excluded.expires_at""",
+                              (self.runtime_owner,now,now+self.lease_seconds))
+                else:
+                    cur=c.execute("""UPDATE thread_store_runtime_lease SET heartbeat_at=?,expires_at=?
+                                     WHERE lease_name='CANONICAL_THREAD_STORE' AND owner_id=?""",
+                                  (now,now+self.lease_seconds,self.runtime_owner))
+                    if cur.rowcount!=1:
+                        c.rollback();raise RuntimeError('canonical thread store runtime lease lost')
+                c.commit();return
+            except sqlite3.OperationalError as error:
+                last=error
+                try:c.rollback()
+                except Exception:pass
+                if 'locked' in str(error).lower() and time.time()<deadline:
+                    time.sleep(.1);continue
+                raise
+            finally:
+                c.close()
+        if last:raise last
+    def _claim_runtime_lease(self):
+        self._lease_write(claim=True)
+    def _lease_loop(self):
+        interval=max(1.0,self.lease_seconds/3.0)
+        while not self._lease_stop.wait(interval):
+            try:self._lease_write(claim=False)
+            except Exception as error:
+                self._lease_lost=type(error).__name__+':'+str(error)
+                return
+    def _assert_runtime_lease(self):
+        if self.runtime_owner and self._lease_lost:
+            raise RuntimeError('canonical thread store runtime lease unavailable: '+self._lease_lost)
+    def close(self):
+        self._lease_stop.set()
+        if self._lease_thread and self._lease_thread.is_alive():self._lease_thread.join(timeout=2)
+        if not self.runtime_owner:return
+        c=self._conn()
+        try:
+            c.execute("DELETE FROM thread_store_runtime_lease WHERE lease_name='CANONICAL_THREAD_STORE' AND owner_id=?",(self.runtime_owner,))
+            c.commit()
+        finally:c.close()
     def _id(self,v):
         if not isinstance(v,str) or not self.ID_RE.fullmatch(v):raise ValueError('thread_id')
         return v
     def __call__(self,op,args):
         args=args or {}
+        self._assert_runtime_lease()
         with self.lock:
             c=self._conn()
             try:
@@ -811,7 +881,9 @@ def local_canary_loop(control, modelprov, stop_event, panel_port, model_url):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--repo',required=True);p.add_argument('--material-runtime-dir',required=True);p.add_argument('--rag');p.add_argument('--rag-sha');p.add_argument('--release');p.add_argument('--model',default='http://127.0.0.1:8772');p.add_argument('--model-sha',required=True);p.add_argument('--mission-control-url',default='http://127.0.0.1:8766');p.add_argument('--operator-control-url',default='http://127.0.0.1:8767');p.add_argument('--operator-key-file');p.add_argument('--operator-panel-proxy-key-file');p.add_argument('--operator-pairing-key-file');p.add_argument('--port',type=int,default=8780);p.add_argument('--thread-db');p.add_argument('--staging-model-chat-only',action='store_true');a=p.parse_args()
     if bool(a.rag)!=bool(a.rag_sha) or bool(a.rag)!=bool(a.release):raise SystemExit('rag, rag-sha and release must be supplied together')
-    b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db';threads=ThreadStore(thread_db);control=LpclControlBridge(b,a.mission_control_url)
+    b=MaterialDroneBroker(a.material_runtime_dir);cur,gp,cp,sp,mission,web,mp=providers(b,a.model);thread_db=Path(a.thread_db).resolve() if a.thread_db else Path(a.material_runtime_dir).resolve().parent/'threads'/'lion-local-model.db'
+    runtime_owner='panel:'+os.name+':'+str(os.getpid())+':'+hashlib.sha256(str(Path(a.repo).resolve()).encode('utf-8')).hexdigest()[:16]
+    threads=ThreadStore(thread_db,runtime_owner=runtime_owner);control=LpclControlBridge(b,a.mission_control_url)
     operator_key_file=a.operator_panel_proxy_key_file or a.operator_key_file
     operator=OperatorControlBridge(a.operator_control_url,operator_key_file,a.operator_pairing_key_file) if operator_key_file else None
     g=Gateway(a.repo,a.rag,a.rag_sha,a.release,a.model,a.model_sha,mp,cur,gp,web=web,content_provider=cp,source_provider=sp,mission_provider=mission,control_provider=control,material_begin=b.begin,material_receipts=b.receipts,material_state=b.fleet_state,material_reconcile=b.aggregate,thread_provider=threads,operator_provider=operator)
@@ -826,5 +898,7 @@ def main():
         threading.Thread(target=delivery_loop,args=(threads,control,canary_stop),daemon=True,name='saas-thread-delivery').start()
     threading.Thread(target=conversation_delivery_loop,args=(threads,control,canary_stop),daemon=True,name='conversation-saas-delivery').start()
     try: serve_gateway(g,a.port)
-    finally: canary_stop.set()
+    finally:
+        canary_stop.set()
+        threads.close()
 if __name__=='__main__':main()
