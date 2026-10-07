@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import sqlite3
 from hashlib import sha256
@@ -18,6 +19,7 @@ from cyber_lion.app_coordination.conversation_chat import (
 )
 from cyber_lion.app_coordination.local_intelligence_gateway import make_handler
 from cyber_lion.app_coordination.conversation_domain import ConversationConflict
+from cyber_lion.contracts.attachment_projection import ProviderCapabilitySnapshot
 from tools.lion_local_intelligence_runtime import ThreadStore
 
 
@@ -67,6 +69,31 @@ class FakeControl:
             }),
         })
 
+    def respond_sentinelx(self, request_id, text, payload_digest):
+        row = self.requests[request_id]
+        row.update({
+            "status": "RESPONDED",
+            "transport": "CHATGPT_SENTINELX_MCP",
+            "receipt_digest": "f" * 64,
+            "response_text": text,
+            "response_digest": sha256(text.encode("utf-8")).hexdigest(),
+            "binding_id": "binding-" + request_id,
+            "claim_generation": 1,
+            "response_meta_json": json.dumps({
+                "model_identity": "FAKE_SENTINELX_SAAS",
+                "transport": "CHATGPT_SENTINELX_MCP",
+                "attestation_class": "OPERATOR_SESSION_PLUS_CONNECTOR_ROUNDTRIP",
+                "authority_effect": "NONE",
+                "transport_evidence": {
+                    "evidence_class": "SENTINELX_MCP_TURN_INPUT_SHA256",
+                    "turn_id": "turn_test_payload_1",
+                    "turn_request_hash": "a" * 64,
+                    "payload_digest": payload_digest,
+                    "authority_effect": "NONE",
+                },
+            }),
+        })
+
 
 class FakeGateway:
     def __init__(self, store, control):
@@ -107,6 +134,30 @@ class FakeGateway:
                 "authority_effect": "NONE",
             },
         }
+
+    def _provider_capability_snapshots(self, conversation, messages):
+        def snapshot(provider):
+            return ProviderCapabilitySnapshot(
+                provider=provider,
+                endpoint_ref="test:" + provider.lower(),
+                model_release_ref=None,
+                observed_at="2026-10-07T07:00:00Z",
+                currentness="CURRENT",
+                text_input="SUPPORTED",
+                image_input="UNKNOWN",
+                native_file_input="UNKNOWN",
+                native_pdf_input="UNKNOWN",
+                structured_data_input="UNKNOWN",
+                workspace_access="UNKNOWN",
+                network_access="UNKNOWN",
+                session_persistence="UNKNOWN",
+                streaming="UNKNOWN",
+                max_payload_bytes=None,
+                parallel_calls=None,
+                context_budget=None,
+                evidence_refs=("test:r24-model-chat",),
+            ).sealed().to_dict()
+        return {"LOCAL": snapshot("LOCAL"), "SAAS": snapshot("SAAS")}
 
     def state(self):
         return {"authority_effect": "NONE"}
@@ -240,6 +291,41 @@ class R24ConversationModelChatTests(unittest.TestCase):
         self.assertEqual(
             after[-1]["metadata"]["provider_session_ref_class"],
             "SAAS_BROKER_SESSION_BINDING",
+        )
+
+    def test_sentinelx_saas_attachment_finalizes_projection_from_transport_payload_evidence(self):
+        conv = self.create("saas-attachment-root")
+        out = submit_chat(self.store, self.gateway, conv["conversation_id"], {
+            "message": "read attachment",
+            "route": "SAAS",
+            "client_request_id": "saas-attachment-1",
+            "attachments": [{
+                "display_name": "evidence.txt",
+                "media_type": "text/plain",
+                "data_b64": base64.b64encode(b"sentinelx attachment evidence").decode("ascii"),
+            }],
+        })
+        self.assertEqual(out["state"], "SAAS_QUEUED")
+        handoff=out["saas_handoff"]
+        self.assertEqual(len(handoff["attachment_projections"]),1)
+        self.assertIsNone(handoff["attachment_projections"][0]["actual_provider_payload_digest"])
+        payload_digest="9"*64
+        self.control.respond_sentinelx(handoff["request_id"],"SAAS-ATTACHMENT-ANSWER",payload_digest)
+        delivered=deliver_saas_once(self.store,self.control)
+        self.assertEqual(len(delivered),1)
+        after=self.transcript(conv["conversation_id"])["messages"]
+        meta=after[-1]["metadata"]["response_meta"]
+        self.assertEqual(meta["actual_provider_payload_bytes_digest"],payload_digest)
+        self.assertEqual(meta["attachment_capability_snapshot"]["provider"],"SAAS")
+        self.assertEqual(meta["attachment_capability_snapshot"]["currentness"],"CURRENT")
+        self.assertEqual(len(meta["attachment_projections"]),1)
+        self.assertEqual(
+            meta["attachment_projections"][0]["actual_provider_payload_digest"],
+            payload_digest,
+        )
+        self.assertEqual(
+            meta["transport_evidence"]["evidence_class"],
+            "SENTINELX_MCP_TURN_INPUT_SHA256",
         )
 
     def test_cancelled_saas_closes_mapping_without_fabricating_response(self):
