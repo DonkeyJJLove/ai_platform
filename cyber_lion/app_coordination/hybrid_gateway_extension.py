@@ -102,24 +102,23 @@ def apply_hybrid_gateway_extension(gateway_cls) -> None:
             return "SYSTEM_CONTEXT", "canonical LION identity from system context"
         return base
 
-    def chat(self, message, use_web=False, history=None, output_language="auto"):
+    def chat(self, message, use_web=False, history=None, output_language="auto", provider_binding=None, attachment_segments=None):
+        def call_original(current_message, current_history):
+            kwargs = {
+                "use_web": use_web,
+                "history": current_history,
+                "output_language": output_language,
+            }
+            if provider_binding is not None:
+                kwargs["provider_binding"] = provider_binding
+            if attachment_segments:
+                kwargs["attachment_segments"] = attachment_segments
+            return original_chat(self, current_message, **kwargs)
         route_name, _ = route(self, message)
         if route_name != "DUAL_EVALUATION":
-            return original_chat(
-                self,
-                message,
-                use_web=use_web,
-                history=history,
-                output_language=output_language,
-            )
+            return call_original(message, history)
         question = _dual_question(message)
-        local = original_chat(
-            self,
-            question,
-            use_web=use_web,
-            history=history,
-            output_language=output_language,
-        )
+        local = call_original(question, history)
         request_id = sha256((self.ctx.digest + "\0" + question).encode("utf-8")).hexdigest()
         runtime_state = self.state()
         local_model = runtime_state.get("local_cognitive_executor") or "UNKNOWN_NOT_RUNTIME_ATTESTED"
