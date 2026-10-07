@@ -769,9 +769,41 @@ class Gateway:
 
         bridge=active_saas_bridge((conversation or {}).get("external_bridges") or ())
         saas_current=isinstance(bridge,dict) and isinstance(bridge.get("bridge_id"),str)
+        saas_endpoint=("bridge:"+str(bridge.get("bridge_id"))) if saas_current else "CHATGPT_SAAS"
+        saas_evidence=(("conversation_bridge:"+str(bridge.get("bridge_id"))) if saas_current else "conversation_bridge:unknown")
+        # A fresh conversation has no external bridge before the first SaaS request.
+        # Capability projection must therefore be able to bind to an actually
+        # observed ready transport without fabricating a provider session.
+        if not saas_current and callable(self.control_provider):
+            try:
+                bridge_status=self.control_provider("saas_status",{})
+            except Exception:
+                bridge_status=None
+            if isinstance(bridge_status,dict):
+                transport=bridge_status.get("transport")
+                mediator=bridge_status.get("mediator")
+                mediator_ready=(
+                    isinstance(mediator,dict)
+                    and mediator.get("state")=="READY"
+                    and mediator.get("fresh") is True
+                )
+                transport_ready=(
+                    transport=="CHATGPT_SENTINELX_MCP"
+                    and bridge_status.get("channel_state")=="SENTINELX_MCP_READY"
+                    and bridge_status.get("sentinelx_ready") is True
+                    and mediator_ready
+                )
+                if transport_ready:
+                    saas_current=True
+                    saas_endpoint="transport:CHATGPT_SENTINELX_MCP"
+                    mediator_id=mediator.get("mediator_id")
+                    saas_evidence=(
+                        "runtime:saas_status:CHATGPT_SENTINELX_MCP"
+                        + ((":"+str(mediator_id)) if isinstance(mediator_id,str) and mediator_id else "")
+                    )
         saas=ProviderCapabilitySnapshot(
             provider="SAAS",
-            endpoint_ref=("bridge:"+str(bridge.get("bridge_id"))) if saas_current else "CHATGPT_SAAS",
+            endpoint_ref=saas_endpoint,
             model_release_ref=None,
             observed_at=observed_at,
             currentness="CURRENT" if saas_current else "UNKNOWN",
@@ -787,7 +819,7 @@ class Gateway:
             max_payload_bytes=None,
             parallel_calls=None,
             context_budget=None,
-            evidence_refs=(("conversation_bridge:"+str(bridge.get("bridge_id"))) if saas_current else "conversation_bridge:unknown",),
+            evidence_refs=(saas_evidence,),
         ).sealed()
         snapshots["SAAS"]=saas.to_dict()
         return snapshots

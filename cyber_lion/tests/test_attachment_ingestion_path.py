@@ -13,6 +13,7 @@ from cyber_lion.app_coordination.attachment_ingestion import (
 )
 from cyber_lion.app_coordination.conversation_chat import prepare_chat
 from cyber_lion.app_coordination.conversation_domain import create_conversation
+from cyber_lion.app_coordination.local_intelligence_gateway import Gateway
 from cyber_lion.app_coordination.conversation_schema import migrate_conversation_schema
 from cyber_lion.contracts.attachment_projection import (
     AttachmentProjectionError,
@@ -53,6 +54,42 @@ class AttachmentIngestionPathTests(unittest.TestCase):
         final = finalize_attachment_projections(provisional, "d" * 64)
         self.assertEqual(final[0]["actual_provider_payload_digest"], "d" * 64)
         self.assertNotEqual(final[0]["projection_digest"], provisional[0]["projection_digest"])
+
+    def test_fresh_saas_transport_capability_is_current_before_conversation_bridge_exists(self):
+        gateway = Gateway.__new__(Gateway)
+        gateway.model = "http://127.0.0.1:8772"
+        gateway.currentness_provider = lambda kind, args: {"models": [{"id": "local-model"}]}
+        gateway.control_provider = lambda op, args: {
+            "transport": "CHATGPT_SENTINELX_MCP",
+            "channel_state": "SENTINELX_MCP_READY",
+            "sentinelx_ready": True,
+            "mediator": {
+                "state": "READY",
+                "fresh": True,
+                "mediator_id": "LION_SENTINELX_MCP_BRIDGE_R1",
+            },
+        } if op == "saas_status" else {}
+        snapshots = gateway._provider_capability_snapshots({"external_bridges": []}, [])
+        saas = snapshots["SAAS"]
+        self.assertEqual(saas["currentness"], "CURRENT")
+        self.assertEqual(saas["text_input"], "SUPPORTED")
+        self.assertEqual(saas["endpoint_ref"], "transport:CHATGPT_SENTINELX_MCP")
+        self.assertIn("runtime:saas_status:CHATGPT_SENTINELX_MCP", saas["evidence_refs"][0])
+
+    def test_stale_saas_transport_does_not_promote_attachment_capability(self):
+        gateway = Gateway.__new__(Gateway)
+        gateway.model = "http://127.0.0.1:8772"
+        gateway.currentness_provider = lambda kind, args: {"models": [{"id": "local-model"}]}
+        gateway.control_provider = lambda op, args: {
+            "transport": "CHATGPT_SENTINELX_MCP",
+            "channel_state": "SENTINELX_MCP_READY",
+            "sentinelx_ready": True,
+            "mediator": {"state": "READY", "fresh": False},
+        } if op == "saas_status" else {}
+        snapshots = gateway._provider_capability_snapshots({"external_bridges": []}, [])
+        saas = snapshots["SAAS"]
+        self.assertEqual(saas["currentness"], "UNKNOWN")
+        self.assertEqual(saas["text_input"], "UNKNOWN")
 
     def test_binary_or_native_input_does_not_silently_fall_back_to_text(self):
         items = ingest_inline_attachments(
