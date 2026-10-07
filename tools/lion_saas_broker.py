@@ -522,7 +522,13 @@ def bridge_status(conn, mission_id, now_fn):
     return out
 
 
-def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_identity, transport=TRANSPORT, attestation_class=ATTESTATION_CLASS, lease_seconds=7200, claim_generation=None):
+def _respond_locked(
+    conn, request_id, response_token, answer, now_fn, *, model_identity,
+    transport=TRANSPORT, attestation_class=ATTESTATION_CLASS,
+    lease_seconds=7200, claim_generation=None,
+    transport_payload_digest=None, turn_id=None, turn_request_hash=None,
+    transport_evidence_class=None,
+):
     if type(lease_seconds) is not int or not 1 <= lease_seconds <= 86400:
         raise ValueError('session lease')
     if not isinstance(answer, str) or not answer.strip() or len(answer) > 24000:
@@ -546,6 +552,22 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
     row_transport=row["transport"] or TRANSPORT
     expected_attestation=_attestation_for_transport(row_transport)
     if transport!=row_transport or attestation_class!=expected_attestation:raise ValueError("request transport/attestation")
+    transport_evidence=None
+    supplied=(transport_payload_digest,turn_id,turn_request_hash,transport_evidence_class)
+    if any(value is not None for value in supplied):
+        if transport!=SENTINELX_MCP_TRANSPORT:raise ValueError("transport evidence is SentinelX MCP only")
+        if not all(isinstance(value,str) and value for value in supplied):raise ValueError("transport evidence incomplete")
+        if len(transport_payload_digest)!=64 or any(ch not in "0123456789abcdef" for ch in transport_payload_digest):raise ValueError("transport payload digest")
+        if len(turn_request_hash)!=64 or any(ch not in "0123456789abcdef" for ch in turn_request_hash):raise ValueError("turn request hash")
+        if not turn_id.startswith("turn_") or len(turn_id)>128:raise ValueError("turn_id")
+        if transport_evidence_class!="SENTINELX_MCP_TURN_INPUT_SHA256":raise ValueError("transport evidence class")
+        transport_evidence={
+            "evidence_class":transport_evidence_class,
+            "turn_id":turn_id,
+            "turn_request_hash":turn_request_hash,
+            "payload_digest":transport_payload_digest,
+            "authority_effect":"NONE",
+        }
     supervisor_role="CHATGPT_FIREFOX_PROJECT_MEDIATOR" if transport==FIREFOX_TRANSPORT else "CHATGPT_SAAS_SUPERVISOR"
     answer = answer.strip()
     rdigest = hashlib.sha256(answer.encode("utf-8")).hexdigest()
@@ -579,6 +601,8 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
         (binding_id,row["mission_id"],row["lpcl_digest"],supervisor_role,model_identity.strip(),transport,attestation_class,"NONE","BOUND",stamp,stamp,expires,request_id,_canon(attestation),adigest,"GLOBAL_SUPERVISOR_CHANNEL"),
     )
     meta = {"model_identity": model_identity.strip(), "transport": transport, "attestation_class": attestation_class, "authority_effect": "NONE", "binding_scope": "GLOBAL_SUPERVISOR_CHANNEL"}
+    if transport_evidence is not None:
+        meta["transport_evidence"]=transport_evidence
     receipt = {
         "request_id": request_id,
         "request_code": row["request_code"],
@@ -593,6 +617,8 @@ def _respond_locked(conn, request_id, response_token, answer, now_fn, *, model_i
         "responded_at": stamp,
         "authority_effect": "NONE",
     }
+    if transport_evidence is not None:
+        receipt["transport_evidence"]=transport_evidence
     receipt_digest = _digest(receipt)
     conn.execute("INSERT INTO saas_broker_receipts VALUES(?,?,?,?)",(request_id,receipt_digest,_canon(receipt),stamp))
     conn.execute(
