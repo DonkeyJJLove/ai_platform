@@ -700,6 +700,57 @@
         "separate governed admission if an effect is later requested"
       ],
       "pass_condition": "Compiler output remains non-effectful and cannot bypass the existing authority/effect path."
+    },
+    {
+      "id": "EVOLUTION_FITNESS_HARD_GATE_BEATS_SCORE",
+      "goal": "EVOLUTION_FITNESS_HARD_GATE_BEATS_SCORE",
+      "given": "A high-utility candidate has an unreconciled possible effect while a lower-utility bounded candidate is fully reconciled.",
+      "expected_classification": "HIGH_SCORE_INELIGIBLE",
+      "expected_action": "Reject the unreconciled candidate before Pareto/utility selection and keep it out of the critical path.",
+      "forbidden_action": "Let utility, generativity or operator pressure override the hard effect-state gate.",
+      "invariant_refs": [
+        "I20_NO_FALSE_COMPLETION"
+      ],
+      "evidence_required": [
+        "effect reconciliation state",
+        "fitness assessment blockers",
+        "candidate evidence refs"
+      ],
+      "pass_condition": "No score or pressure converts an unreconciled candidate into eligible."
+    },
+    {
+      "id": "EVOLUTION_FITNESS_PRESSURE_REQUIRES_EVIDENCE",
+      "goal": "EVOLUTION_FITNESS_PRESSURE_REQUIRES_EVIDENCE",
+      "given": "Currentness is an observed bottleneck and a pressure override raises the currentness_debt penalty.",
+      "expected_classification": "EVIDENCE_BOUND_DYNAMIC_PRIORITY",
+      "expected_action": "Bind the pressure to an explicit evidence_ref and deterministically recompute selection.",
+      "forbidden_action": "Use model preference or an unreferenced number as dynamic pressure.",
+      "invariant_refs": [
+        "I13_UNKNOWN_NEVER_PROMOTES_TO_PASS"
+      ],
+      "evidence_required": [
+        "pressure evidence_ref",
+        "same candidate vectors",
+        "selection digest"
+      ],
+      "pass_condition": "Dynamic priority is reproducible and remains evidence-bound."
+    },
+    {
+      "id": "EVOLUTION_FITNESS_GENERATIVITY_IS_NOT_AUTHORITY",
+      "goal": "EVOLUTION_FITNESS_GENERATIVITY_IS_NOT_AUTHORITY",
+      "given": "A candidate substantially improves the ability to build multiple application families.",
+      "expected_classification": "HIGH_GENERATIVITY_PROPOSAL_ONLY",
+      "expected_action": "Prefer it when otherwise eligible, then send the selected CandidateDesign through ArchitectureCompiler, formalization and the existing authority/effect path.",
+      "forbidden_action": "Translate generativity score into runtime, repository, merge or deployment authority.",
+      "invariant_refs": [
+        "I15_CAPABILITY_IS_NOT_AUTHORITY"
+      ],
+      "evidence_required": [
+        "fitness selection",
+        "ArchitectureCompiler result",
+        "separate authority evidence for later effects"
+      ],
+      "pass_condition": "Generativity can affect ordering but never widens authority."
     }
   ]
 }

@@ -1,0 +1,203 @@
+{
+  "schema": "lion.evolution-fitness-standard/v1",
+  "standard_id": "LION_DYNAMIC_EVOLUTION_FITNESS_R1",
+  "title": "LION Dynamic Evolution Fitness Standard",
+  "lifecycle": "CANDIDATE",
+  "currentness": "SOURCE_BOUND",
+  "purpose": "Select the highest-value bounded next evolution candidate on the existing LION Evolution Spine, preferring reusable generative capability over one-off output while preserving authority, currentness, collision and reconciliation invariants.",
+  "placement": {
+    "semantic_owner": "roadmap",
+    "layer": "ARCHITECTURE_PROJECTION",
+    "consumes": [
+      "source-bound gap/currentness evidence",
+      "CandidateDesign or equivalent bounded candidate description",
+      "dependency and collision state",
+      "operator objective pressure",
+      "recovery/effect reconciliation state"
+    ],
+    "produces": "lion.evolution-fitness-selection/v1",
+    "forbidden_roles": [
+      "authority source",
+      "scheduler",
+      "runtime executor",
+      "repository writer",
+      "merge/deployment decision"
+    ]
+  },
+  "hard_gates": [
+    {
+      "field": "source_current",
+      "blocker": "SOURCE_CURRENT_REQUIRED"
+    },
+    {
+      "field": "semantic_owner_bound",
+      "blocker": "SEMANTIC_OWNER_REQUIRED"
+    },
+    {
+      "field": "dependency_closure",
+      "blocker": "DEPENDENCY_CLOSURE_REQUIRED"
+    },
+    {
+      "field": "authority_nonexpanding",
+      "blocker": "AUTHORITY_EXPANSION_DENIED"
+    },
+    {
+      "field": "effect_state_reconciled",
+      "blocker": "UNRECONCILED_EFFECT_DENIED"
+    },
+    {
+      "field": "collision_free",
+      "blocker": "COLLISION_OR_COMPETING_WRITER"
+    },
+    {
+      "field": "bounded_scope",
+      "blocker": "UNBOUNDED_SCOPE_DENIED"
+    },
+    {
+      "field": "evidence_bound",
+      "blocker": "EVIDENCE_BINDING_REQUIRED"
+    },
+    {
+      "field": "owner_resolved",
+      "blocker": "IMPLEMENTATION_OWNER_REQUIRED"
+    }
+  ],
+  "benefit_dimensions": [
+    {
+      "dimension": "capability_gain",
+      "weight": 6,
+      "meaning": "new reusable functional capability available after closure"
+    },
+    {
+      "dimension": "federation_leverage",
+      "weight": 4,
+      "meaning": "useful producer-consumer integration across existing peers without decorative coupling"
+    },
+    {
+      "dimension": "functional_value",
+      "weight": 5,
+      "meaning": "direct useful outcome for the operator or downstream product"
+    },
+    {
+      "dimension": "generativity_gain",
+      "weight": 7,
+      "meaning": "ability to build or adapt artifacts across more than one task family"
+    },
+    {
+      "dimension": "integration_closure",
+      "weight": 6,
+      "meaning": "degree to which intent-context-provider-artifact-verification-readback becomes one closed path"
+    },
+    {
+      "dimension": "knowledge_feedback",
+      "weight": 3,
+      "meaning": "quality of evidence returned into RAG, lineage, memory and future selection"
+    },
+    {
+      "dimension": "recovery_strength",
+      "weight": 4,
+      "meaning": "improvement in deterministic recovery, idempotency and unknown-effect handling"
+    },
+    {
+      "dimension": "reuse_leverage",
+      "weight": 4,
+      "meaning": "reuse of existing owners, contracts, Beans and materializers rather than parallel infrastructure"
+    },
+    {
+      "dimension": "verification_strength",
+      "weight": 4,
+      "meaning": "independent falsifiability, negative controls and exact readback"
+    }
+  ],
+  "cost_dimensions": [
+    {
+      "dimension": "authority_risk",
+      "weight": 8,
+      "meaning": "risk of widened, inherited or ambiguous authority"
+    },
+    {
+      "dimension": "blast_radius",
+      "weight": 6,
+      "meaning": "scope of possible failure or unintended material effect"
+    },
+    {
+      "dimension": "change_surface",
+      "weight": 3,
+      "meaning": "number and coupling of architecture/source surfaces invalidated"
+    },
+    {
+      "dimension": "currentness_debt",
+      "weight": 5,
+      "meaning": "stale, unknown or expensive-to-refresh evidence introduced or retained"
+    },
+    {
+      "dimension": "implementation_cost",
+      "weight": 3,
+      "meaning": "engineering effort and dependency burden"
+    },
+    {
+      "dimension": "operational_cost",
+      "weight": 2,
+      "meaning": "runtime, inference, infrastructure and ongoing maintenance cost"
+    }
+  ],
+  "dynamic_pressure": {
+    "scale": [
+      0,
+      1000
+    ],
+    "semantics": "Pressure may only increase the weight of an existing dimension. It never waives a hard gate and must carry evidence_ref.",
+    "suggested_sources": [
+      "canonical GapRecord severity/currentness",
+      "operator-declared objective",
+      "unreconciled failure/recovery debt",
+      "observed federation bottleneck",
+      "context/model/material runtime bottleneck",
+      "measured cost or WIP constraint"
+    ],
+    "forbidden_sources": [
+      "model preference without evidence",
+      "marketing priority",
+      "stale document title",
+      "self-granted authority"
+    ]
+  },
+  "selection": {
+    "algorithm": [
+      "validate exact candidate inputs",
+      "apply hard gates",
+      "remove Pareto-dominated eligible candidates",
+      "apply source-bound dynamic pressure to canonical integer weights",
+      "select highest deterministic utility score",
+      "tie-break by candidate_id ascending"
+    ],
+    "score_scale": 1000,
+    "critical_path_wip_limit": 1,
+    "arithmetic": "integer-only",
+    "deterministic": true
+  },
+  "optimization_target": {
+    "near_term": "close one real SaaS+LOCAL+material artifact loop inside ai_platform",
+    "medium_term": "make the same mechanism solve at least two different artifact/application families",
+    "long_term": "evolve ai_platform into a governed application factory that can improve its own production substrate and build external applications without creating parallel authority or scheduler spines"
+  },
+  "invariants": [
+    "FITNESS_SELECTION_NE_AUTHORITY",
+    "FITNESS_SELECTION_NE_SCHEDULING",
+    "DYNAMIC_PRESSURE_NE_HARD_GATE_BYPASS",
+    "GENERATIVITY_GAIN_REQUIRES_MULTI_FAMILY_EVIDENCE",
+    "REUSE_BEFORE_NEW_INFRASTRUCTURE",
+    "ONE_CRITICAL_PATH_WRITER_BY_DEFAULT",
+    "UNKNOWN_EFFECT_REQUIRES_RECONCILIATION",
+    "MODEL_OUTPUT_NE_EVIDENCE_ROOT",
+    "AUTHORITY_MUST_NOT_AMPLIFY_THROUGH_RECURSION"
+  ],
+  "implementation": {
+    "evaluator": "cyber_lion/architecture_projection/evolution_fitness.py",
+    "tests": "cyber_lion/tests/test_evolution_fitness.py",
+    "first_consumer_target": "cyber_lion.architecture_projection.ArchitectureCompiler.compile_selected",
+    "current_runtime_binding": "SOURCE_CONSUMER_IMPLEMENTED_PRESSURE_ADAPTER_AND_MISSION_AUTHORING_NOT_BOUND"
+  },
+  "authority_effect": "NONE",
+  "execution_effect": "NONE"
+}

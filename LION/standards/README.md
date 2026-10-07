@@ -10,6 +10,7 @@ Read order:
 4. LION_REPOSITORY_LAYOUT_STANDARD.md / .json
 5. LION_CURRENTNESS_EVIDENCE_MODEL.md / .json
 6. LION_GENERATED_OUTPUT_POLICY.md / .json
+7. LION_EVOLUTION_FITNESS_STANDARD.md / .json
 
 These standards do not rewrite immutable historical evidence and do not grant runtime or merge authority.
 

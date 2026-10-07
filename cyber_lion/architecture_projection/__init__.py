@@ -19,7 +19,13 @@ from .full_plantuml import (
 )
 from .architecture_compiler import (
     ArchitectureCompiler, ArchitectureCompilerError, ArchitectureCompilationResult,
-    CandidateDesign, CandidateLayerBinding,
+    FitnessSelectedArchitectureCompilation, CandidateDesign, CandidateLayerBinding,
+)
+from .evolution_fitness import (
+    EvolutionFitnessError, EvolutionFitnessVector, EvolutionGateState,
+    EvolutionPressure, EvolutionFitnessPolicy, EvolutionFitnessCandidate,
+    EvolutionFitnessAssessment, EvolutionFitnessSelection, EvolutionFitnessOptimizer,
+    BENEFIT_DIMENSIONS, COST_DIMENSIONS, DEFAULT_POLICY,
 )
 from .render_adapter import (
     RendererPin, VisualRenderArtifactPlan, VisualRenderPlan, VisualRenderManifest,
@@ -43,5 +49,10 @@ __all__ = [
     "VisualRenderPlan", "VisualRenderManifest", "build_visual_render_plan",
     "build_visual_render_manifest", "ArchitectureCompiler",
     "ArchitectureCompilerError", "ArchitectureCompilationResult",
-    "CandidateDesign", "CandidateLayerBinding",
+    "FitnessSelectedArchitectureCompilation", "CandidateDesign", "CandidateLayerBinding", "EvolutionFitnessError",
+    "EvolutionFitnessVector", "EvolutionGateState", "EvolutionPressure",
+    "EvolutionFitnessPolicy", "EvolutionFitnessCandidate",
+    "EvolutionFitnessAssessment", "EvolutionFitnessSelection",
+    "EvolutionFitnessOptimizer", "BENEFIT_DIMENSIONS", "COST_DIMENSIONS",
+    "DEFAULT_POLICY",
 ]

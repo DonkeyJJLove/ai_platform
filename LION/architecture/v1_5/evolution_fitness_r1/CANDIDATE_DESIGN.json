@@ -1,0 +1,100 @@
+{
+  "affected_concepts": [
+    "architecture",
+    "architecture_knowledge",
+    "formalization",
+    "roadmap"
+  ],
+  "authority_effect": "NONE",
+  "baseline": {
+    "branch": "master",
+    "head": "b6cc132095deb268b2754d2afc0634aeac5a7ac4",
+    "repository": "DonkeyJJLove/ai_platform",
+    "tree": "92acd3916ed5cad62bfa3c5ffd0d282885b76005"
+  },
+  "candidate_digest": "68feb5c7a56ff86c7555459f79ac73808320f1b9ee8c02842e6c63fd7dd250a7",
+  "candidate_id": "dynamic-evolution-fitness-r1",
+  "candidate_scope": [
+    "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
+    "LION/architecture/v1_5/README.md",
+    "LION/architecture/v1_5/semantic_owners.json",
+    "LION/evals/evolution/evolution_cases.yaml",
+    "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.json",
+    "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.md",
+    "LION/standards/README.md",
+    "cyber_lion/architecture_projection/__init__.py",
+    "cyber_lion/architecture_projection/architecture_compiler.py",
+    "cyber_lion/architecture_projection/evolution_fitness.py",
+    "cyber_lion/architecture_projection/gap.py",
+    "cyber_lion/tests/test_architecture_compiler.py",
+    "cyber_lion/tests/test_evolution_fitness.py"
+  ],
+  "change_class": "ARCHITECTURE_CONCEPT",
+  "dependency_ids": [
+    "architecture",
+    "architecture_knowledge",
+    "formalization",
+    "roadmap"
+  ],
+  "evals_required": [
+    "eval:evolution-fitness-generativity",
+    "eval:evolution-fitness-hard-gates",
+    "eval:evolution-fitness-pressure"
+  ],
+  "evidence_refs": [
+    "source:architecture_compiler",
+    "source:flow-09-flow-10",
+    "source:formalization_kernel",
+    "source:gap_projection",
+    "source:typed_status_model"
+  ],
+  "execution_effect": "NONE",
+  "expected_outcome": "deterministic hard-gated Pareto/pressure selection followed by the existing non-effectful ArchitectureCompiler and formalization spine",
+  "falsification_conditions": [
+    "dynamic pressure changes a hard-gate failure into PASS",
+    "fitness/design identities diverge without rejection",
+    "identical bound inputs produce different selection/compilation digests",
+    "optimizer or selected compiler exposes authority/scheduling/effect methods",
+    "strictly Pareto-dominated candidate wins selection"
+  ],
+  "falsifiers": [
+    "falsifier:dynamic-pressure-hard-gate-bypass",
+    "falsifier:fitness-design-identity-mismatch",
+    "falsifier:no-authority-bypass",
+    "falsifier:pareto-dominance"
+  ],
+  "layer_bindings": [
+    {
+      "concept": "architecture",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ]
+    },
+    {
+      "concept": "architecture_knowledge",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ]
+    },
+    {
+      "concept": "formalization",
+      "layers": [
+        "ARCHITECTURE_PROJECTION"
+      ]
+    },
+    {
+      "concept": "roadmap",
+      "layers": [
+        "EVOLUTIONARY_EPOCH"
+      ]
+    }
+  ],
+  "motivation": "select one bounded high-value evolution candidate and feed exactly that CandidateDesign into the existing ArchitectureCompiler, prioritizing reusable generativity without widening authority",
+  "risk_class": "GREEN",
+  "target_component": "dynamic evolution fitness selection",
+  "tests_required": [
+    "test:architecture-compiler",
+    "test:architecture-projection-gap",
+    "test:evolution-fitness"
+  ]
+}

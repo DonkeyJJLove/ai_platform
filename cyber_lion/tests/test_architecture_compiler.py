@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from pathlib import Path
 import subprocess
@@ -12,6 +13,11 @@ from cyber_lion.architecture_projection.architecture_compiler import (
     CandidateLayerBinding,
 )
 from cyber_lion.architecture_projection.flows import canonical_flows
+from cyber_lion.architecture_projection.evolution_fitness import (
+    EvolutionFitnessCandidate,
+    EvolutionFitnessVector,
+    EvolutionGateState,
+)
 from cyber_lion.architecture_projection.full_architecture import build_full_architecture_model
 from cyber_lion.contracts.formalization_manifest_types import BaselineIdentity
 from cyber_lion.contracts.formalization_registry import FormalizationRegistry
@@ -179,6 +185,143 @@ class ArchitectureCompilerTests(unittest.TestCase):
         fields = set(CandidateDesign.__dataclass_fields__)
         self.assertFalse(fields.intersection({"history_relation", "version", "lifecycle", "currentness"}))
         ArchitectureCompiler.assert_no_effect_surface()
+
+    def test_fitness_selection_feeds_one_design_into_existing_compiler(self):
+        low = replace(
+            candidate(self.head, self.tree),
+            candidate_id="a-local-maintenance",
+            target_component="local maintenance candidate",
+            motivation="close one bounded local maintenance gap",
+        ).validate()
+        high = replace(
+            candidate(self.head, self.tree),
+            candidate_id="b-application-factory-loop",
+            target_component="application factory artifact loop",
+            motivation="close reusable SaaS LOCAL material artifact production and verification",
+        ).validate()
+
+        gate = EvolutionGateState(
+            source_current=True,
+            semantic_owner_bound=True,
+            dependency_closure=True,
+            authority_nonexpanding=True,
+            effect_state_reconciled=True,
+            collision_free=True,
+            bounded_scope=True,
+            evidence_bound=True,
+            owner_resolved=True,
+        ).validate()
+        low_fitness = EvolutionFitnessCandidate(
+            candidate_id=low.candidate_id,
+            vector=EvolutionFitnessVector(
+                capability_gain=400,
+                federation_leverage=200,
+                functional_value=500,
+                generativity_gain=100,
+                integration_closure=300,
+                knowledge_feedback=200,
+                recovery_strength=300,
+                reuse_leverage=400,
+                verification_strength=400,
+                authority_risk=100,
+                blast_radius=100,
+                change_surface=200,
+                currentness_debt=100,
+                implementation_cost=250,
+                operational_cost=150,
+            ).validate(),
+            gates=gate,
+            evidence_refs=("evidence:maintenance",),
+            repository_scope=("DonkeyJJLove/ai_platform",),
+            task_family_count=1,
+        ).validate()
+        high_fitness = EvolutionFitnessCandidate(
+            candidate_id=high.candidate_id,
+            vector=EvolutionFitnessVector(
+                capability_gain=850,
+                federation_leverage=800,
+                functional_value=850,
+                generativity_gain=900,
+                integration_closure=900,
+                knowledge_feedback=750,
+                recovery_strength=700,
+                reuse_leverage=750,
+                verification_strength=800,
+                authority_risk=150,
+                blast_radius=180,
+                change_surface=350,
+                currentness_debt=120,
+                implementation_cost=500,
+                operational_cost=300,
+            ).validate(),
+            gates=gate,
+            evidence_refs=("evidence:artifact-loop",),
+            repository_scope=("DonkeyJJLove/ai_platform",),
+            task_family_count=2,
+        ).validate()
+
+        result = self.compiler.compile_selected(
+            candidates=(low, high),
+            fitness_candidates=(low_fitness, high_fitness),
+            architecture=self.architecture,
+            registry=self.registry,
+            semantic_owners=self.owners,
+            current_head=self.head,
+            current_tree=self.tree,
+        )
+        self.assertEqual(result.selection.selected_candidate_id, high.candidate_id)
+        self.assertEqual(result.compilation.candidate_digest, high.digest())
+        self.assertTrue(result.result_digest)
+        self.assertEqual(result.authority_effect, "NONE")
+        self.assertEqual(result.execution_effect, "NONE")
+
+    def test_fitness_selection_rejects_design_identity_mismatch(self):
+        design = replace(candidate(self.head, self.tree), candidate_id="a-design").validate()
+        gate = EvolutionGateState(
+            source_current=True,
+            semantic_owner_bound=True,
+            dependency_closure=True,
+            authority_nonexpanding=True,
+            effect_state_reconciled=True,
+            collision_free=True,
+            bounded_scope=True,
+            evidence_bound=True,
+            owner_resolved=True,
+        ).validate()
+        wrong = EvolutionFitnessCandidate(
+            candidate_id="b-other",
+            vector=EvolutionFitnessVector(
+                capability_gain=500,
+                federation_leverage=500,
+                functional_value=500,
+                generativity_gain=500,
+                integration_closure=500,
+                knowledge_feedback=500,
+                recovery_strength=500,
+                reuse_leverage=500,
+                verification_strength=500,
+                authority_risk=100,
+                blast_radius=100,
+                change_surface=100,
+                currentness_debt=100,
+                implementation_cost=100,
+                operational_cost=100,
+            ).validate(),
+            gates=gate,
+            evidence_refs=("evidence:mismatch",),
+            repository_scope=("DonkeyJJLove/ai_platform",),
+            task_family_count=1,
+        ).validate()
+        with self.assertRaisesRegex(ArchitectureCompilerError, "identity mismatch"):
+            self.compiler.compile_selected(
+                candidates=(design,),
+                fitness_candidates=(wrong,),
+                architecture=self.architecture,
+                registry=self.registry,
+                semantic_owners=self.owners,
+                current_head=self.head,
+                current_tree=self.tree,
+            )
 
 
 if __name__ == "__main__":

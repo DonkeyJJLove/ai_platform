@@ -255,6 +255,8 @@
       "primary": "LION/architecture/v1_5/AI_NATIVE_ROADMAP_NEXT.md",
       "secondary": [
         "LION/architecture/v1_5/ROADMAP_RECONCILIATION.json",
+        "LION/standards/LION_EVOLUTION_FITNESS_STANDARD.json",
+        "cyber_lion/architecture_projection/evolution_fitness.py",
         "AI_NATIVE_ROADMAP.md"
       ]
     },

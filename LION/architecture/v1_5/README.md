@@ -110,10 +110,16 @@ See [SEMANTIC_CLOUD_INTEGRATION_TARGET.md](SEMANTIC_CLOUD_INTEGRATION_TARGET.md)
 
 [Implementation and operator entrypoint](../../../docs/architecture/edge-yoke/README.md): existing R5 context resolver wrapped by a deny-only observer gate, original artifact transfer, isolated two-worker qualification and evidence-correction adapter. No second scheduler or authority owner. Global closure, deployment and the historical package-lineage issue remain separately evaluated.
 
-## Architecture Studio / Compiler R1 candidate
+## Architecture Studio / Compiler R1
 
-Thread B extends the existing architecture/evolution owner with a deterministic, non-effectful ArchitectureCompiler. The compiler binds an exact source baseline and a typed CandidateDesign to the existing EvolutionDelta -> ArchitectureFormalizationManifest -> RequiredFormalizationSet path and stops before governed admission.
+The deterministic, non-effectful ArchitectureCompiler is present in the current source tree. It binds an exact source baseline and typed CandidateDesign to the existing EvolutionDelta -> ArchitectureFormalizationManifest -> RequiredFormalizationSet path and stops before governed admission.
 
-Architecture Studio remains PARTIAL: the repository already provides the source-bound architecture read-model, federation knowledge graph, status/currentness/gap projections and visual render plans, but the interactive Electron graph explorer/composer and formalization-impact preview are not implemented by this candidate.
+Architecture Studio remains PARTIAL: the repository provides the source-bound architecture read-model, federation knowledge graph, status/currentness/gap projections and visual render plans, but the interactive Electron graph explorer/composer and formalization-impact preview are still not implemented.
 
-The candidate package is [architecture_studio_compiler_r1/](architecture_studio_compiler_r1/). It is source-candidate evidence, not current master truth, formalization closure, authority, integration or deployment. Truth/currentness carriers remain carrier-last after accepted non-carrier source stabilization.
+The [architecture_studio_compiler_r1/](architecture_studio_compiler_r1/) directory preserves source-candidate/formalization evidence from its authoring boundary; do not reinterpret that historical package status as a claim that the current source is absent. Integration, formalization/currentness closure and deployment remain distinct planes.
+
+## Dynamic Evolution Fitness R1 candidate
+
+The roadmap/evolution owner now has a candidate deterministic fitness projection for selecting **one** bounded critical-path evolution candidate. `ArchitectureCompiler.compile_selected(...)` consumes that selection and delegates only the chosen `CandidateDesign` to the existing compiler. Hard source/authority/effect/collision/evidence gates run before Pareto and evidence-bound pressure.
+
+See [LION Evolution Fitness Standard](../../standards/LION_EVOLUTION_FITNESS_STANDARD.md). It adds no scheduler, FLOW-11, authority source or execution surface. The intended next high-value acceptance is a real SaaS + LOCAL + material-worker artifact loop followed by a second task-family proof using the same factory mechanism.

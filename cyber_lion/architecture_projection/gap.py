@@ -197,6 +197,12 @@ def canonical_gap_projection() -> tuple[GapRecord, ...]:
             missing_runtime="formalization closure, parent serialization and post-integration projection/currentness regeneration remain open; compiler stops before admission",
             next_minimal_gap="serialize accepted source through the existing Formalization Kernel and close required non-carrier surfaces before carrier-last rebinding",
         ),
+        _partial(
+            "EvolutionFitnessStandard",
+            "cyber_lion/architecture_projection/evolution_fitness.py",
+            missing_runtime="source-bound pressure adapters and Mission Program authoring are not yet bound; compile_selected already feeds one selected CandidateDesign into the existing compiler",
+            next_minimal_gap="bind exact Gap/currentness/effect/collision state into fitness pressure and let mission authoring consume the resulting source-bound selection",
+        ),
         _target(
             "ArchitectureStudio",
             missing_runtime="interactive Electron architecture graph explorer/composer and formalization-impact preview are not implemented",
