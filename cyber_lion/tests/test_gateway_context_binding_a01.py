@@ -104,6 +104,8 @@ class GatewayContextBindingA01Tests(unittest.TestCase):
         self.assertIn("turn.request_hash !== rec.turn_request_hash",source)
         self.assertIn("STALE_TURN_GENERATION",source)
         self.assertIn("NEW_BROKER_REQUEST_REQUIRED",source)
+        self.assertIn("transport_payload_digest: transportPayloadDigest",source)
+        self.assertIn("SENTINELX_MCP_TURN_INPUT_SHA256",source)
         self.assertNotIn("rec.claim_generation = claim.claim_generation",source)
 
     def test_capability_answer_keeps_unknown_identity_unknown(self):
