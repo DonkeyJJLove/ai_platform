@@ -45,7 +45,7 @@
     },
     {
       "path": "cyber_lion/app_coordination/local_intelligence_gateway.py",
-      "sha256": "b5a275c4a345c52391efaa80c5f556871935b2e8d6f541bc589ef67cdef9fd2b"
+      "sha256": "864c2c36cbb7d424f65ee3128d92f789203a2ec436d96e6d722de6fbd6739ce7"
     },
     {
       "path": "cyber_lion/contracts/action_ir.py",
@@ -316,6 +316,6 @@
       "sha256": "4b41e592d381c78a4cea528dce50de616c6d565b0741ac6b17f7fb5fc373a3d7"
     }
   ],
-  "package_digest": "b73dcd11c52dd806ff077de0a720f2f52e33db94b6eae8bb58c2cc0b3142e47e",
+  "package_digest": "332f4559d184f43778a45b68df63794ee02143abc4ce62f9555c4f478dc06e6a",
   "authority_effect": "NONE"
 }
