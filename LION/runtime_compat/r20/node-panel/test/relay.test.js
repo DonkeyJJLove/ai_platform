@@ -39,3 +39,15 @@ test('expired or released cached claim is never reused', () => {
   assert.equal(claimUsable({...claim,claim_expires_at:past},{status:'CLAIMED',claim_generation:2,claim_expires_at:past}),false);
   assert.equal(claimUsable(claim,{status:'CLAIMED',claim_generation:3,claim_expires_at:future}),false);
 });
+
+
+test('secure MCP relay records canonical attachment dispatch evidence before broker response', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/secure-mcp-relay.js'), 'utf8');
+  assert.match(source, /recordCanonicalDispatch\(rec, turn\)/);
+  assert.match(source, /\/api\/conversations\/saas\/pending\?limit=128/);
+  assert.match(source, /\/api\/conversations\/saas\/dispatch/);
+  assert.match(source, /actual_payload_bytes_digest: payloadDigest/);
+  assert.match(source, /attachment_payload_bytes_digest: payloadDigest/);
+  assert.match(source, /CANONICAL_ATTACHMENT_EVIDENCE_REQUIRED/);
+  assert.match(source, /panel: args\.panel \|\| 'http:\/\/127\.0\.0\.1:8780'/);
+});
