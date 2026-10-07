@@ -1,4 +1,5 @@
 """Cognitive broker acceptance without any mission records or executor."""
+import json
 import sqlite3
 import unittest
 import tempfile
@@ -45,6 +46,46 @@ class CognitiveBrokerTests(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             self.conn.execute("UPDATE saas_broker_receipts SET receipt_json='{}'")
         self.conn.rollback()
+
+    def test_sentinelx_turn_payload_evidence_is_bound_into_receipt_and_status(self):
+        request=self.request(transport=broker.SENTINELX_MCP_TRANSPORT)
+        claim=broker.claim(self.conn,request['request_id'],self.now)
+        result=self.answer(
+            claim,
+            transport=broker.SENTINELX_MCP_TRANSPORT,
+            attestation_class=broker.SENTINELX_MCP_ATTESTATION_CLASS,
+            transport_payload_digest='c'*64,
+            turn_id='turn_payload_evidence_1',
+            turn_request_hash='d'*64,
+            transport_evidence_class='SENTINELX_MCP_TURN_INPUT_SHA256',
+        )
+        evidence={
+            'evidence_class':'SENTINELX_MCP_TURN_INPUT_SHA256',
+            'turn_id':'turn_payload_evidence_1',
+            'turn_request_hash':'d'*64,
+            'payload_digest':'c'*64,
+            'authority_effect':'NONE',
+        }
+        saved=broker.request_status(self.conn,request['request_id'],self.now)
+        meta=json.loads(saved['response_meta_json'])
+        self.assertEqual(meta['transport_evidence'],evidence)
+        self.assertEqual(result['receipt']['transport_evidence'],evidence)
+        receipt=json.loads(self.conn.execute(
+            'SELECT receipt_json FROM saas_broker_receipts WHERE request_id=?',
+            (request['request_id'],),
+        ).fetchone()[0])
+        self.assertEqual(receipt['transport_evidence'],evidence)
+
+    def test_sentinelx_transport_evidence_is_all_or_none(self):
+        request=self.request(transport=broker.SENTINELX_MCP_TRANSPORT)
+        claim=broker.claim(self.conn,request['request_id'],self.now)
+        with self.assertRaisesRegex(ValueError,'transport evidence incomplete'):
+            self.answer(
+                claim,
+                transport=broker.SENTINELX_MCP_TRANSPORT,
+                attestation_class=broker.SENTINELX_MCP_ATTESTATION_CLASS,
+                transport_payload_digest='c'*64,
+            )
 
     def test_expired_claim_cannot_answer_after_reclaim(self):
         request = self.request(ttl_seconds=1)
